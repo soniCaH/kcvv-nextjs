@@ -10,23 +10,40 @@
   ],
   "packageRules": [
     {
-      "updateTypes": ["minor", "patch", "pin", "digest"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
       "automerge": true
     },
     {
-      "depTypeList": ["devDependencies"],
+      "matchDepTypes": [
+        "devDependencies"
+      ],
       "automerge": true
     },
     {
-      "matchPackageNames": ["/eslint/"],
-      "labels": ["linting"]
+      "matchPackageNames": [
+        "/eslint/"
+      ],
+      "labels": [
+        "linting"
+      ]
     },
     {
-      "matchDepTypes": ["optionalDependencies"],
-      "addLabels": ["optional"]
+      "matchDepTypes": [
+        "optionalDependencies"
+      ],
+      "addLabels": [
+        "optional"
+      ]
     }
   ],
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "timezone": "Europe/Brussels",
-  "masterIssue": true
+  "dependencyDashboard": true
 }
