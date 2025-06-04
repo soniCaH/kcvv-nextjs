@@ -1,0 +1,32 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    "npm:unpublishSafe",
+    "group:nextjsMonorepo",
+    "helpers:followTypescriptNext",
+    "security:openssf-scorecard",
+    ":pinAllExceptPeerDependencies"
+  ],
+  "packageRules": [
+    {
+      "updateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    },
+    {
+      "depTypeList": ["devDependencies"],
+      "automerge": true
+    },
+    {
+      "matchPackageNames": ["/eslint/"],
+      "labels": ["linting"]
+    },
+    {
+      "matchDepTypes": ["optionalDependencies"],
+      "addLabels": ["optional"]
+    }
+  ],
+  "labels": ["dependencies"],
+  "timezone": "Europe/Brussels",
+  "masterIssue": true
+}
