@@ -30,13 +30,13 @@
       "addLabels": ["optional"]
     },
     {
-      "matchManagers": ["node", "nvm"],
+      "matchManagers": ["nvm"],
       "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
       "automerge": true,
       "addLabels": ["node-version"]
     },
     {
-      "matchManagers": ["node", "nvm"],
+      "matchManagers": ["nvm"],
       "matchUpdateTypes": ["major"],
       "automerge": false,
       "addLabels": ["node-version"]
