@@ -10,40 +10,39 @@
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "pin",
-        "digest"
-      ],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
       "automerge": true
     },
     {
-      "matchDepTypes": [
-        "devDependencies"
-      ],
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
       "automerge": true
     },
     {
-      "matchPackageNames": [
-        "/eslint/"
-      ],
-      "labels": [
-        "linting"
-      ]
+      "matchPackageNames": ["/eslint/"],
+      "labels": ["linting"]
     },
     {
-      "matchDepTypes": [
-        "optionalDependencies"
-      ],
-      "addLabels": [
-        "optional"
-      ]
+      "matchDepTypes": ["optionalDependencies"],
+      "addLabels": ["optional"]
+    },
+    {
+      "matchManagers": ["node", "nvm"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
+      "automerge": true,
+      "addLabels": ["node-version"]
+    },
+    {
+      "matchManagers": ["node", "nvm"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "addLabels": ["node-version"]
     }
   ],
-  "labels": [
-    "dependencies"
-  ],
+  "labels": ["dependencies"],
   "timezone": "Europe/Brussels",
   "dependencyDashboard": true
 }
