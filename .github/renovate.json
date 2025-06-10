@@ -8,7 +8,17 @@
     "security:openssf-scorecard",
     ":pinAllExceptPeerDependencies"
   ],
-  "enabledManagers": ["cd", "ci", "docker", "node", "js", ""],
+  "enabledManagers": [
+    "html",
+    "circleci",
+    "github-actions",
+    "travis",
+    "dockerfile",
+    "docker-compose",
+    "npm",
+    "nvm",
+    "nodenv"
+  ],
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
