@@ -10,7 +10,7 @@
     "test": "echo \"No tests specified\" && exit 0"
   },
   "dependencies": {
-    "motion": "12.23.18",
+    "motion": "12.23.21",
     "next": "15.5.3",
     "react": "19.1.1",
     "react-dom": "19.1.1",
