@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:best-practices",
-    "npm:unpublishSafe",
+    "security:minimumReleaseAgeNpm",
     "group:nextjsMonorepo",
     "helpers:followTypescriptNext",
     "security:openssf-scorecard",
@@ -21,39 +21,73 @@
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest",
+        "pin"
+      ],
       "automerge": true
     },
     {
-      "matchUpdateTypes": ["major"],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "automerge": false
     },
     {
-      "matchDepTypes": ["devDependencies"],
+      "matchDepTypes": [
+        "devDependencies"
+      ],
       "automerge": true
     },
     {
-      "matchPackageNames": ["/eslint/"],
-      "labels": ["linting"]
+      "matchPackageNames": [
+        "/eslint/"
+      ],
+      "labels": [
+        "linting"
+      ]
     },
     {
-      "matchDepTypes": ["optionalDependencies"],
-      "addLabels": ["optional"]
+      "matchDepTypes": [
+        "optionalDependencies"
+      ],
+      "addLabels": [
+        "optional"
+      ]
     },
     {
-      "matchManagers": ["nvm"],
-      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
+      "matchManagers": [
+        "nvm"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest",
+        "pin"
+      ],
       "automerge": true,
-      "addLabels": ["node-version"]
+      "addLabels": [
+        "node-version"
+      ]
     },
     {
-      "matchManagers": ["nvm"],
-      "matchUpdateTypes": ["major"],
+      "matchManagers": [
+        "nvm"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "automerge": false,
-      "addLabels": ["node-version"]
+      "addLabels": [
+        "node-version"
+      ]
     }
   ],
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "timezone": "Europe/Brussels",
   "dependencyDashboard": true
 }
