@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="nl">
+    <html lang="nl" suppressHydrationWarning>
       <head>
         {/* Adobe Typekit Fonts */}
         <Script
@@ -29,7 +29,7 @@ export default function RootLayout({
           {`try{Typekit.load({ async: true });}catch(e){console.error('Typekit load error:', e);}`}
         </Script>
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <Navbar />
         {children}
       </body>
