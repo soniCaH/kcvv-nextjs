@@ -260,7 +260,7 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
                       )}
                     >
                       <ul
-                        className="list-none m-0 p-0 bg-gray-800"
+                        className="list-none m-0 p-0 bg-[#292c31]"
                         style={{
                           boxShadow:
                             'inset 0 7px 9px -7px #1E2024, inset 0 -7px 9px -7px #1E2024',
@@ -274,7 +274,7 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
                               <Link
                                 href={child.href}
                                 className={cn(
-                                  'mobile-nav-link block px-8 py-4 text-[0.6875rem] uppercase font-bold border-b border-gray-600 no-underline transition-colors',
+                                  'mobile-nav-link block px-8 py-4 text-[0.6875rem] uppercase font-bold border-b border-[#62656A] no-underline transition-colors',
                                   childActive
                                     ? 'text-kcvv-green-bright active'
                                     : 'text-white hover:text-kcvv-green-bright'
