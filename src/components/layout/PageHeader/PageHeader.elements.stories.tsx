@@ -136,105 +136,139 @@ export const NavigationItemDefault: Story = {
  * White 2px underline that animates from center
  * Transition: width 0.3s ease, left 0.3s ease
  * Width: 0 -> 100%, left: 50% -> 0
+ *
+ * Implementation: Uses after pseudo-element with center-out animation
  */
 export const NavigationItemHover: Story = {
   render: () => (
-    <div className="bg-kcvv-green-bright p-8">
-      <style>{`
-        .nav-link-hover {
-          position: relative;
-        }
-        .nav-link-hover::after {
-          content: "";
-          display: block;
-          position: absolute;
-          bottom: 0;
-          left: 50%;
-          height: 2px;
-          width: 0;
-          background: #fff;
-          transition: width 0.3s ease 0s, left 0.3s ease 0s;
-        }
-        .nav-link-hover:hover::after {
-          width: 100%;
-          left: 0;
-        }
-      `}</style>
-      <nav>
-        <ul className="flex gap-6 items-center">
-          <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
-            <a
-              href="#"
-              className="nav-link-hover text-white no-underline whitespace-nowrap inline-block pb-0.5"
-            >
-              Hover Me
-            </a>
-          </li>
-          <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
-            <a
-              href="#"
-              className="nav-link-hover text-white no-underline whitespace-nowrap inline-block pb-0.5"
-            >
-              Another Link
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </div>
+    <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .story-nav-link-hover {
+              position: relative;
+              display: inline-block;
+              padding-bottom: 0.125rem;
+            }
+            .story-nav-link-hover::after {
+              content: "";
+              display: block;
+              position: absolute;
+              bottom: 0;
+              left: 50%;
+              height: 2px;
+              width: 0;
+              background: #fff;
+              transition: width 0.3s ease 0s, left 0.3s ease 0s;
+            }
+            .story-nav-link-hover:hover::after {
+              width: 100%;
+              left: 0;
+            }
+          `,
+        }}
+      />
+      <div className="bg-kcvv-green-bright p-8">
+        <nav>
+          <ul className="flex gap-6 items-center list-none m-0 p-0">
+            <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
+              <a
+                href="#"
+                className="story-nav-link-hover text-white no-underline whitespace-nowrap"
+              >
+                Hover Me
+              </a>
+            </li>
+            <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
+              <a
+                href="#"
+                className="story-nav-link-hover text-white no-underline whitespace-nowrap"
+              >
+                Another Link
+              </a>
+            </li>
+            <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
+              <a
+                href="#"
+                className="story-nav-link-hover text-white no-underline whitespace-nowrap"
+              >
+                Third Link
+              </a>
+            </li>
+          </ul>
+        </nav>
+        <p className="text-white text-xs mt-4 opacity-75">
+          Hover over the links above to see the underline animate from center
+        </p>
+      </div>
+    </>
   ),
 }
 
 /**
  * 06. Navigation Item - Active State
  * Same as hover: white 2px underline at 100% width
+ *
+ * Implementation: Permanent underline to show current page
  */
 export const NavigationItemActive: Story = {
   render: () => (
-    <div className="bg-kcvv-green-bright p-8">
-      <style>{`
-        .nav-link-active {
-          position: relative;
-        }
-        .nav-link-active::after {
-          content: "";
-          display: block;
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          height: 2px;
-          width: 100%;
-          background: #fff;
-        }
-      `}</style>
-      <nav>
-        <ul className="flex gap-6 items-center">
-          <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
-            <a
-              href="#"
-              className="text-white no-underline whitespace-nowrap opacity-50"
-            >
-              Regular Link
-            </a>
-          </li>
-          <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
-            <a
-              href="#"
-              className="nav-link-active text-white no-underline whitespace-nowrap inline-block pb-0.5"
-            >
-              Active Link
-            </a>
-          </li>
-          <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
-            <a
-              href="#"
-              className="text-white no-underline whitespace-nowrap opacity-50"
-            >
-              Regular Link
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </div>
+    <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .story-nav-link-active {
+              position: relative;
+              display: inline-block;
+              padding-bottom: 0.125rem;
+            }
+            .story-nav-link-active::after {
+              content: "";
+              display: block;
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              height: 2px;
+              width: 100%;
+              background: #fff;
+            }
+          `,
+        }}
+      />
+      <div className="bg-kcvv-green-bright p-8">
+        <nav>
+          <ul className="flex gap-6 items-center list-none m-0 p-0">
+            <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
+              <a
+                href="#"
+                className="text-white no-underline whitespace-nowrap opacity-60"
+              >
+                Home
+              </a>
+            </li>
+            <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
+              <a
+                href="#"
+                className="story-nav-link-active text-white no-underline whitespace-nowrap"
+              >
+                Nieuws
+              </a>
+            </li>
+            <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
+              <a
+                href="#"
+                className="text-white no-underline whitespace-nowrap opacity-60"
+              >
+                Ploegen
+              </a>
+            </li>
+          </ul>
+        </nav>
+        <p className="text-white text-xs mt-4 opacity-75">
+          "Nieuws" is the active page with permanent underline
+        </p>
+      </div>
+    </>
   ),
 }
 
@@ -242,46 +276,65 @@ export const NavigationItemActive: Story = {
  * 07. Dropdown Menu Trigger
  * Has white chevron-down icon after text
  * Icon: 6px wide, 4px tall
+ *
+ * Implementation: SVG data URI in ::after pseudo-element
  */
 export const DropdownTrigger: Story = {
   render: () => (
-    <div className="bg-kcvv-green-bright p-8">
-      <style>{`
-        .dropdown-trigger::after {
-          content: "";
-          display: inline-block;
-          margin-left: 9px;
-          width: 6px;
-          height: 4px;
-          background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 4'%3E%3Cpath transform='translate(-586.156 -1047.28)' fill='%23fff' d='M586.171,1048l0.708-.71,2.828,2.83-0.707.71Zm4.95-.71,0.707,0.71L589,1050.83l-0.707-.71Z'/%3E%3C/svg%3E");
-          background-size: 6px 4px;
-          background-repeat: no-repeat;
-          background-position: center center;
-          position: relative;
-          top: -2px;
-        }
-      `}</style>
-      <nav>
-        <ul className="flex gap-6 items-center">
-          <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
-            <a
-              href="#"
-              className="dropdown-trigger text-white no-underline whitespace-nowrap"
-            >
-              Ploegen
-            </a>
-          </li>
-          <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
-            <a
-              href="#"
-              className="dropdown-trigger text-white no-underline whitespace-nowrap"
-            >
-              Info
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </div>
+    <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .story-dropdown-trigger::after {
+              content: "";
+              display: inline-block;
+              margin-left: 9px;
+              width: 6px;
+              height: 4px;
+              background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 4'%3E%3Cpath transform='translate(-586.156 -1047.28)' fill='%23fff' d='M586.171,1048l0.708-.71,2.828,2.83-0.707.71Zm4.95-.71,0.707,0.71L589,1050.83l-0.707-.71Z'/%3E%3C/svg%3E");
+              background-size: 6px 4px;
+              background-repeat: no-repeat;
+              background-position: center center;
+              position: relative;
+              top: -2px;
+            }
+          `,
+        }}
+      />
+      <div className="bg-kcvv-green-bright p-8">
+        <nav>
+          <ul className="flex gap-6 items-center list-none m-0 p-0">
+            <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
+              <a
+                href="#"
+                className="story-dropdown-trigger text-white no-underline whitespace-nowrap"
+              >
+                Ploegen
+              </a>
+            </li>
+            <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
+              <a
+                href="#"
+                className="story-dropdown-trigger text-white no-underline whitespace-nowrap"
+              >
+                Info
+              </a>
+            </li>
+            <li className="text-[0.7rem] xl:text-[0.875rem] uppercase font-bold">
+              <a
+                href="#"
+                className="story-dropdown-trigger text-white no-underline whitespace-nowrap"
+              >
+                De club
+              </a>
+            </li>
+          </ul>
+        </nav>
+        <p className="text-white text-xs mt-4 opacity-75">
+          Dropdown indicators (chevron-down icons) after menu items
+        </p>
+      </div>
+    </>
   ),
 }
 
@@ -395,56 +448,67 @@ export const SearchButton: Story = {
  * 11. Mobile Menu Item with Active Border
  * 4px green left border on hover/active (::before pseudo-element)
  * Border-bottom: 1px solid #292c31
+ *
+ * Implementation: ::before pseudo-element for left border accent
  */
 export const MobileMenuItem: Story = {
   render: () => (
-    <div className="bg-[#1E2024] p-8">
-      <style>{`
-        .mobile-nav-link {
-          position: relative;
-        }
-        .mobile-nav-link::before {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 0;
-          bottom: 0;
-          width: 4px;
-          background-color: transparent;
-          transition: background-color 0.3s ease;
-        }
-        .mobile-nav-link:hover::before,
-        .mobile-nav-link.active::before {
-          background-color: #4acf52;
-        }
-      `}</style>
-      <ul className="list-none m-0 p-0">
-        <li>
-          <a
-            href="#"
-            className="mobile-nav-link block px-8 py-4 text-white text-[0.6875rem] uppercase font-bold border-b border-[#292c31] no-underline"
-          >
-            Regular Link
-          </a>
-        </li>
-        <li>
-          <a
-            href="#"
-            className="mobile-nav-link active block px-8 py-4 text-white text-[0.6875rem] uppercase font-bold border-b border-[#292c31] no-underline"
-          >
-            Active Link (with green border)
-          </a>
-        </li>
-        <li>
-          <a
-            href="#"
-            className="mobile-nav-link block px-8 py-4 text-white text-[0.6875rem] uppercase font-bold border-b border-[#292c31] no-underline"
-          >
-            Another Link
-          </a>
-        </li>
-      </ul>
-    </div>
+    <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .story-mobile-nav-link {
+              position: relative;
+            }
+            .story-mobile-nav-link::before {
+              content: "";
+              position: absolute;
+              left: 0;
+              top: 0;
+              bottom: 0;
+              width: 4px;
+              background-color: transparent;
+              transition: background-color 0.3s ease;
+            }
+            .story-mobile-nav-link:hover::before,
+            .story-mobile-nav-link.active::before {
+              background-color: #4acf52;
+            }
+          `,
+        }}
+      />
+      <div className="bg-[#1E2024] p-8">
+        <ul className="list-none m-0 p-0">
+          <li>
+            <a
+              href="#"
+              className="story-mobile-nav-link block px-8 py-4 text-white text-[0.6875rem] uppercase font-bold border-b border-[#292c31] no-underline"
+            >
+              Home
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              className="story-mobile-nav-link active block px-8 py-4 text-white text-[0.6875rem] uppercase font-bold border-b border-[#292c31] no-underline"
+            >
+              Nieuws
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              className="story-mobile-nav-link block px-8 py-4 text-white text-[0.6875rem] uppercase font-bold border-b border-[#292c31] no-underline"
+            >
+              Ploegen
+            </a>
+          </li>
+        </ul>
+        <p className="text-white text-xs mt-4 opacity-75">
+          Hover over links or see "Nieuws" with 4px green left border (active state)
+        </p>
+      </div>
+    </>
   ),
   parameters: {
     viewport: {
