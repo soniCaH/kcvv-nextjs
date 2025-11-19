@@ -516,3 +516,104 @@ export const MobileMenuItem: Story = {
     },
   },
 }
+
+/**
+ * 12. Mobile Menu Submenu (Accordion)
+ * Darker background (gray-800) with inset shadows
+ * Border-bottom: 1px solid gray-600 between items
+ * Items have same 4px green left border on hover/active
+ *
+ * Implementation: Accordion-style submenu that expands under parent items
+ */
+export const MobileMenuSubmenu: Story = {
+  render: () => (
+    <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .story-mobile-submenu-link {
+              position: relative;
+            }
+            .story-mobile-submenu-link::before {
+              content: "";
+              position: absolute;
+              left: 0;
+              top: 0;
+              bottom: 0;
+              width: 4px;
+              background-color: transparent;
+              transition: background-color 0.3s ease;
+            }
+            .story-mobile-submenu-link:hover::before,
+            .story-mobile-submenu-link.active::before {
+              background-color: #4acf52;
+            }
+          `,
+        }}
+      />
+      <div className="bg-[#1E2024] p-8">
+        {/* Parent Item */}
+        <div className="mb-0">
+          <button className="w-full flex items-center justify-between px-8 py-4 text-white text-[0.6875rem] uppercase font-bold border-b border-[#292c31] text-left">
+            <span>Ploegen</span>
+            <span className="text-xs">▼</span>
+          </button>
+        </div>
+
+        {/* Submenu (Expanded) */}
+        <div
+          className="bg-gray-800 list-none m-0 p-0"
+          style={{
+            boxShadow:
+              'inset 0 7px 9px -7px #1E2024, inset 0 -7px 9px -7px #1E2024',
+          }}
+        >
+          <ul className="list-none m-0 p-0">
+            <li>
+              <a
+                href="#"
+                className="story-mobile-submenu-link block px-8 py-4 text-white text-[0.6875rem] uppercase font-bold border-b border-gray-600 no-underline"
+              >
+                A-Ploeg
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                className="story-mobile-submenu-link active block px-8 py-4 text-kcvv-green-bright text-[0.6875rem] uppercase font-bold border-b border-gray-600 no-underline"
+              >
+                B-Ploeg
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                className="story-mobile-submenu-link block px-8 py-4 text-white text-[0.6875rem] uppercase font-bold border-b border-gray-600 no-underline"
+              >
+                U21
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                className="story-mobile-submenu-link block px-8 py-4 text-white text-[0.6875rem] uppercase font-bold border-b border-gray-600 no-underline"
+              >
+                U19
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <p className="text-white text-xs mt-4 opacity-75">
+          Submenu accordion with darker background (gray-800) and inset shadows.
+          "B-Ploeg" is active with green text and 4px left border.
+        </p>
+      </div>
+    </>
+  ),
+  parameters: {
+    viewport: {
+      defaultViewport: 'mobile1',
+    },
+  },
+}
