@@ -252,13 +252,20 @@ kcvv-nextjs/
 
 ---
 
-## Phase 0: Design System Extraction (Week 1)
+## Phase 0: Design System Extraction (Week 1) ✅ COMPLETED
 
 ### Goals
 - ✅ Extract and document current design system from Gatsby site
 - ✅ Create comprehensive visual inventory
 - ✅ Configure Tailwind with exact brand tokens
 - ✅ Set up visual regression testing baseline
+
+### Status: COMPLETED
+- DESIGN_SYSTEM.md created with full visual inventory
+- Tailwind CSS v4 configured with KCVV brand tokens
+- Adobe Typekit fonts loaded (quasimoda, acumin-pro, etc.)
+- Testing infrastructure set up (Vitest, happy-dom)
+- Git commit: Phase 0 complete
 
 ### Tasks
 
@@ -562,13 +569,45 @@ test.describe('Visual Regression Baseline', () => {
 
 ---
 
-## Phase 1: Foundation + Component Library (Weeks 2-3)
+## Phase 1: Foundation + Component Library (Weeks 2-3) ✅ COMPLETED
 
 ### Goals
 - ✅ Build core Effect services for data fetching
 - ✅ Create base UI component library with tests
 - ✅ Build layout components (Header, Footer, Navigation)
 - ✅ Establish component development workflow
+
+### Status: COMPLETED (3 sub-phases)
+
+#### Phase 1A: Effect Services ✅
+- Complete Effect schemas for all Drupal content types
+- DrupalService with JSON:API integration (articles, teams, players, events)
+- FootbalistoService with 5-minute caching
+- Effect runtime with runPromise helper
+- 25 passing tests with retry logic and error handling
+- Git commit: b20ccc1
+
+#### Phase 1B: Base UI Components ✅
+- Button component: 4 variants (primary, secondary, ghost, link), 26 tests
+- Card component: 4 variants with sub-components, 30 tests
+- Icon component: Wrapper for react-icons, 20 tests
+- Spinner component: Loading indicators, 26 tests
+- Storybook 10.0.8 configured with @storybook/nextjs
+- 102 UI component tests passing
+- Git commit: 8a65a7f
+
+#### Phase 1C: Layout Components ✅
+- PageHeader: Sticky header with logo and navigation, 10 tests
+- Navigation: Desktop menu with hover dropdowns
+- MobileMenu: Off-canvas slide-in (#1E2024 dark theme)
+- PageFooter: Contact info, social links, sponsors
+- All 49 menu items from Gatsby site preserved
+- Storybook stories for all layout components
+- Git commit: 4fd02af
+
+**Total Tests: 137/137 passing**
+**Components Created: 8 (4 UI + 4 Layout)**
+**Storybook Stories: 19 stories**
 
 ### Tasks
 
@@ -1436,12 +1475,16 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 ---
 
-## Phase 2: Layout & Navigation (Week 3)
+## Phase 2: Content Pages (Weeks 4-5) 🚧 IN PROGRESS
 
 ### Goals
-- ✅ Pixel-perfect recreation of header and footer
-- ✅ Responsive navigation matching current site
-- ✅ Mobile menu with off-canvas behavior
+- Build article detail pages with Drupal content
+- Create news overview with pagination
+- Implement homepage with latest news
+- Add search functionality
+- Dynamic content rendering with ISR
+
+### Status: NOT STARTED
 
 ### Tasks
 
