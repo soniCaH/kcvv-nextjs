@@ -77,8 +77,8 @@ export function FontLoadingCheck() {
         <p className="font-bold mb-2">How to verify fonts in DevTools:</p>
         <ol className="list-decimal list-inside space-y-1">
           <li>Right-click any heading → Inspect</li>
-          <li>Go to "Computed" tab</li>
-          <li>Search for "font-family"</li>
+          <li>Go to &ldquo;Computed&rdquo; tab</li>
+          <li>Search for &ldquo;font-family&rdquo;</li>
           <li>
             First font should be <code className="bg-white px-1 rounded">quasimoda</code> or{' '}
             <code className="bg-white px-1 rounded">acumin-pro</code>
