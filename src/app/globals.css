@@ -212,14 +212,24 @@ p {
 }
 
 /* Link Styles */
-a {
+/* Apply green link color only to content links, not navigation */
+main a,
+article a,
+.content a {
   color: var(--color-kcvv-green-bright);
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
-a:hover {
+main a:hover,
+article a:hover,
+.content a:hover {
   color: var(--color-kcvv-green-hover);
+}
+
+/* Ensure navigation links stay white (override any default link styles) */
+nav a {
+  text-decoration: none;
 }
 
 /* Blockquote Styles (from design system) */

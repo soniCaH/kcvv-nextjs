@@ -1,6 +1,11 @@
 /**
  * PageHeader Component Stories
  * Showcases the main site header with navigation
+ *
+ * The PageHeader is the primary navigation component for the KCVV Elewijt website.
+ * It features a bright green background (#4acf52) with pattern overlay, white text,
+ * and responsive behavior that switches between desktop horizontal navigation and
+ * mobile hamburger menu at 960px.
  */
 
 import type { Meta, StoryObj } from '@storybook/nextjs'
@@ -11,30 +16,48 @@ const meta = {
   component: PageHeader,
   parameters: {
     layout: 'fullscreen',
+    docs: {
+      description: {
+        component:
+          'Main site header with logo and navigation. Matches Gatsby design with green background, white text, and pattern image overlay.',
+      },
+    },
   },
   tags: ['autodocs'],
+  argTypes: {
+    className: {
+      description: 'Additional CSS classes to apply to the header',
+      control: 'text',
+    },
+  },
 } satisfies Meta<typeof PageHeader>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * Default header with logo and navigation
+ * Default header with logo and navigation.
+ * Green background (#4acf52) with pattern overlay.
+ * Desktop navigation shows on screens 960px and wider.
+ * Hover over navigation items to see underline animation.
+ * Dropdown menus appear on "A-Ploeg", "B-Ploeg", "Jeugd", and "De club".
  */
 export const Default: Story = {
+  args: {},
   render: () => (
     <div>
       <PageHeader />
       <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">Page Content</h1>
+        <h1 className="text-2xl font-bold mb-4">KCVV Elewijt</h1>
         <p className="text-gray-600 mb-4">
-          Scroll down to see the sticky header behavior.
+          The header above shows the main navigation with green background and white text.
+          Hover over menu items to see the underline animation effect.
         </p>
         <div className="space-y-4">
           {Array.from({ length: 20 }).map((_, i) => (
             <p key={i} className="text-gray-600">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua.
+              This is example content to demonstrate the fixed header behavior.
+              The header remains visible as you scroll down the page.
             </p>
           ))}
         </div>
