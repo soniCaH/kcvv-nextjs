@@ -159,9 +159,11 @@ export const Navigation = ({ className }: NavigationProps) => {
 
       <nav className={cn('flex flex-grow max-w-[90%]', className)}>
         <ul className="flex items-center justify-between flex-grow flex-nowrap list-none m-0 p-0">
-          {menuItems.map((item) => {
+          {menuItems.map((item, index) => {
             const active = isActive(item.href) || hasActiveChild(item)
             const hasDropdown = item.children && item.children.length > 0
+            // Align dropdown to right for last 2 items to prevent overflow
+            const isNearEnd = index >= menuItems.length - 2
 
             return (
               <li
@@ -183,7 +185,12 @@ export const Navigation = ({ className }: NavigationProps) => {
 
                 {/* Dropdown Menu */}
                 {hasDropdown && openDropdown === item.href && (
-                  <div className="absolute top-full left-0 mt-0 min-w-[200px] bg-[#1E2024] border border-gray-700 z-10">
+                  <div
+                    className={cn(
+                      'absolute top-full mt-0 min-w-[200px] bg-[#1E2024] border border-gray-700 z-10',
+                      isNearEnd ? 'right-0' : 'left-0'
+                    )}
+                  >
                     <ul className="list-none m-0 p-0">
                       {item.children?.map((child) => {
                         const childActive = isActive(child.href)
