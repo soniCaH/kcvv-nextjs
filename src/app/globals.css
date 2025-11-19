@@ -54,6 +54,10 @@
 
 /* Tailwind v4 Theme Configuration */
 @theme {
+  /* ===== Breakpoints (Custom) ===== */
+  /* Override default Tailwind breakpoints to match Gatsby */
+  --breakpoint-lg: 960px;   /* Gatsby desktop breakpoint (60rem) - matches @media screen and (min-width: 60rem) */
+
   /* ===== Color Palette ===== */
 
   /* KCVV Brand Colors */
@@ -130,11 +134,12 @@
 
   /* ===== Breakpoints ===== */
 
-  --breakpoint-sm: 768px;     /* Foundation medium */
-  --breakpoint-desk: 960px;   /* Common desktop breakpoint */
-  --breakpoint-md: 992px;     /* Foundation large */
-  --breakpoint-lg: 1280px;    /* Foundation xlarge */
-  --breakpoint-xl: 1440px;    /* Foundation xxlarge */
+  --breakpoint-sm: 640px;     /* Tailwind sm */
+  --breakpoint-md: 768px;     /* Tailwind md - Foundation medium */
+  --breakpoint-desk: 960px;   /* Gatsby desktop breakpoint (60rem) */
+  --breakpoint-lg: 1024px;    /* Tailwind lg */
+  --breakpoint-xl: 1280px;    /* Tailwind xl - Foundation xlarge */
+  --breakpoint-2xl: 1536px;   /* Tailwind 2xl */
 
   /* ===== Max Widths ===== */
 
