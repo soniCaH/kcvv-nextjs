@@ -32,10 +32,10 @@ describe('PageHeader', () => {
       expect(logos.length).toBeGreaterThan(0)
     })
 
-    it('should have sticky positioning', () => {
+    it('should have fixed navigation', () => {
       const { container } = render(<PageHeader />)
-      const header = container.querySelector('header')
-      expect(header).toHaveClass('sticky', 'top-0')
+      const nav = container.querySelector('nav')
+      expect(nav).toHaveClass('fixed', 'top-0')
     })
   })
 

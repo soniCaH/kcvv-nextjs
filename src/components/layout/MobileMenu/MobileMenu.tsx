@@ -109,12 +109,14 @@ const menuItems: MenuItem[] = [
 /**
  * Mobile off-canvas navigation menu
  *
- * Features:
- * - Slides in from left
- * - Backdrop overlay
- * - Accordion-style sub-menus
- * - Social links at bottom
- * - Body scroll lock when open
+ * Visual specifications (matching Gatsby):
+ * - Width: 280px
+ * - Background: #1E2024 (black)
+ * - Links: 4px green left border on hover/active
+ * - Font: 0.6875rem (11px), uppercase, bold
+ * - Border-bottom: 1px solid #292c31
+ * - Padding: 1rem 2rem (16px 32px)
+ * - Submenu: darker background with inset shadows
  */
 export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
   const pathname = usePathname()
@@ -151,6 +153,28 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
 
   return (
     <>
+      {/* Styles for mobile menu left border effect */}
+      <style jsx>{`
+        .mobile-nav-link {
+          position: relative;
+        }
+        .mobile-nav-link::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 4px;
+          background-color: transparent;
+          transition: background-color 0.3s ease;
+          z-index: 1;
+        }
+        .mobile-nav-link:hover::before,
+        .mobile-nav-link.active::before {
+          background-color: #4acf52;
+        }
+      `}</style>
+
       {/* Backdrop */}
       <div
         className={cn(
@@ -195,30 +219,28 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
         </div>
 
         {/* Menu Items */}
-        <ul className="py-4">
+        <ul className="list-none m-0 p-0">
           {menuItems.map((item) => {
             const active = isActive(item.href)
             const hasChildren = item.children && item.children.length > 0
             const isSubmenuOpen = openSubmenu === item.href
 
             return (
-              <li key={item.href}>
+              <li key={item.href} className="relative">
                 {hasChildren ? (
                   <>
                     {/* Parent with submenu */}
                     <button
                       onClick={() => toggleSubmenu(item.href)}
                       className={cn(
-                        'w-full flex items-center justify-between px-6 py-3 text-left transition-colors',
-                        active
-                          ? 'text-kcvv-green-bright bg-white/5'
-                          : 'text-white hover:text-kcvv-green-bright hover:bg-white/5'
+                        'mobile-nav-link w-full flex items-center justify-between px-8 py-4 text-left border-b border-[#292c31] text-white text-[0.6875rem] uppercase font-bold transition-colors',
+                        active && 'active'
                       )}
                     >
-                      <span className="font-medium">{item.label}</span>
+                      <span>{item.label}</span>
                       <Icon
                         icon={<FaChevronDown />}
-                        size="sm"
+                        size="xs"
                         className={cn(
                           'transition-transform',
                           isSubmenuOpen && 'rotate-180'
@@ -233,7 +255,13 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
                         isSubmenuOpen ? 'max-h-[800px]' : 'max-h-0'
                       )}
                     >
-                      <ul className="bg-black/20">
+                      <ul
+                        className="list-none m-0 p-0 bg-gray-800"
+                        style={{
+                          boxShadow:
+                            'inset 0 7px 9px -7px #1E2024, inset 0 -7px 9px -7px #1E2024',
+                        }}
+                      >
                         {item.children?.map((child) => {
                           const childActive = isActive(child.href)
 
@@ -242,10 +270,10 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
                               <Link
                                 href={child.href}
                                 className={cn(
-                                  'block px-10 py-2 text-sm transition-colors',
+                                  'mobile-nav-link block px-8 py-4 text-[0.6875rem] uppercase font-bold border-b border-gray-600 no-underline transition-colors',
                                   childActive
-                                    ? 'text-kcvv-green-bright font-medium'
-                                    : 'text-white/80 hover:text-kcvv-green-bright'
+                                    ? 'text-kcvv-green-bright active'
+                                    : 'text-white hover:text-kcvv-green-bright'
                                 )}
                               >
                                 {child.label}
@@ -260,15 +288,13 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
                   <Link
                     href={item.href}
                     className={cn(
-                      'block px-6 py-3 font-medium transition-colors',
-                      active
-                        ? 'text-kcvv-green-bright bg-white/5'
-                        : 'text-white hover:text-kcvv-green-bright hover:bg-white/5'
+                      'mobile-nav-link block px-8 py-4 text-[0.6875rem] uppercase font-bold border-b border-[#292c31] text-white no-underline transition-colors',
+                      active && 'active'
                     )}
                   >
                     {item.label}
                     {item.href === '/search' && (
-                      <Icon icon={<FaSearch />} size="sm" className="ml-2 inline" />
+                      <Icon icon={<FaSearch />} size="xs" className="ml-2 inline" />
                     )}
                   </Link>
                 )}
