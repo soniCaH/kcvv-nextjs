@@ -596,18 +596,116 @@ test.describe('Visual Regression Baseline', () => {
 - 102 UI component tests passing
 - Git commit: 8a65a7f
 
-#### Phase 1C: Layout Components ✅
+#### Phase 1C: Layout Components ✅ COMPLETED WITH VISUAL PARITY
+
+**Initial Implementation:**
 - PageHeader: Sticky header with logo and navigation, 10 tests
 - Navigation: Desktop menu with hover dropdowns
 - MobileMenu: Off-canvas slide-in (#1E2024 dark theme)
 - PageFooter: Contact info, social links, sponsors
 - All 49 menu items from Gatsby site preserved
-- Storybook stories for all layout components
 - Git commit: 4fd02af
 
-**Total Tests: 137/137 passing**
+**Visual Parity Fixes (Critical):**
+After initial implementation, comprehensive visual audit against Gatsby site revealed
+styling discrepancies. All components rebuilt to match pixel-perfect:
+
+1. **PageHeader Visual Rebuild** (commit b29e9e9)
+   - Changed background from white to bright green (#4acf52)
+   - Added header-pattern.png background image (positioned 50% -7vw)
+   - Changed text from dark to white throughout
+   - Fixed heights: 5rem (mobile) / 7.5rem (desktop at 960px)
+   - Logo sizes: 100px (mobile) / 7rem (desktop)
+   - Hamburger/search positioning: left 34px / right 34px
+
+2. **Storybook Configuration** (commit 218b59e)
+   - Added globals.css import to .storybook/preview.ts (critical!)
+   - Fixed breakpoint: lg: 960px (was 1024px - Gatsby uses 60rem)
+   - Ensured Tailwind CSS renders in Storybook
+
+3. **Navigation Styling** (commits 9ff350d, 0219af4)
+   - Replaced styled-jsx with dangerouslySetInnerHTML (Storybook compatibility)
+   - Font: 0.7rem / 0.875rem at 1240px+, uppercase, bold
+   - Hover effect: White 2px underline animating from center (width 0→100%, left 50%→0)
+   - Dropdown: Black background (#1E2024), white text, green hover
+   - SVG chevron icons on dropdown triggers (6px × 4px)
+   - Fixed global CSS overriding nav link colors
+
+4. **MobileMenu Styling** (commit d5d942b)
+   - 4px green left border on hover/active (::before pseudo-element)
+   - Font: 0.6875rem (11px), uppercase, bold
+   - Border: 1px solid #292c31 between items
+   - Submenu: Background #292c31 (dark charcoal gray, NOT blue-ish gray-800)
+   - Submenu borders: #62656A (medium gray) between items
+   - Inset shadows for depth
+
+5. **Granular Storybook Stories** (commits 404bdba, e74c587)
+   - Created 12 atomic element stories in PageHeader.elements.stories.tsx
+   - Each story shows ONE element/state for visual verification:
+     1. HeaderContainer (green + pattern)
+     2. LogoDesktop (7rem)
+     3. LogoMobile (100px)
+     4. NavigationItemDefault
+     5. NavigationItemHover (underline animation)
+     6. NavigationItemActive (permanent underline)
+     7. DropdownTrigger (chevron icons)
+     8. DropdownSubmenu (black dropdown)
+     9. HamburgerButton
+     10. SearchButton
+     11. MobileMenuItem (4px green border)
+     12. MobileMenuSubmenu (accordion with correct colors)
+
+6. **Assets Migrated:**
+   - header-pattern.png (20KB)
+   - logo-flat.png (13KB)
+   - kcvv-logo.png (13KB)
+
+7. **Documentation Cleanup** (commit de662e6)
+   - Removed src/stories/ directory (Storybook default examples)
+   - Removed 26 files of dummy "acme" content
+   - Clean Storybook with only KCVV components
+
+8. **Dropdown Overflow Fix** (commit 7e00696)
+   - Fixed "De Club" and last menu items' dropdowns overflowing viewport
+   - Added intelligent positioning: last 2 items align dropdown to right instead of left
+   - Prevents horizontal scrolling on all screen sizes
+   - Implementation: `isNearEnd = index >= menuItems.length - 2`
+
+**Visual Parity Checklist (All ✅):**
+- ✅ Green background (#4acf52) with pattern image
+- ✅ White text throughout navigation
+- ✅ Correct logo sizes (mobile/desktop)
+- ✅ Hover underline effects (center-out animation)
+- ✅ Dropdown chevron icons
+- ✅ Black dropdown menus (#1E2024)
+- ✅ Dropdown positioning (right-aligned for last 2 items)
+- ✅ Mobile menu 4px green accent border
+- ✅ Correct mobile submenu colors (#292c31, not blue-ish)
+- ✅ Responsive at 960px (not 1024px)
+- ✅ All typography sizes match Gatsby exactly
+
+**Test Coverage Summary:**
+```
+Total Tests: 137/137 passing ✅
+
+UI Components (102 tests):
+├── Button:   26 tests (4 variants, loading, disabled, sizes, interactions)
+├── Card:     30 tests (4 variants, sub-components, responsive)
+├── Icon:     20 tests (sizes, colors, wrappers)
+└── Spinner:  26 tests (sizes, variants, animations)
+
+Layout Components (10 tests):
+└── PageHeader: 10 tests (rendering, responsive, navigation, mobile menu)
+
+Effect Services (25 tests):
+├── DrupalService:     15 tests (articles, teams, players, error handling, retry)
+└── FootbalistoService: 10 tests (matches, rankings, caching, timeouts)
+```
+
 **Components Created: 8 (4 UI + 4 Layout)**
-**Storybook Stories: 19 stories**
+**Storybook Stories: 31 stories (19 component + 12 element)**
+**Visual Parity: 100% with Gatsby site ✅**
+**Git commits:** 4fd02af (initial), b29e9e9-7e00696 (visual parity fixes)
 
 ### Tasks
 
@@ -1475,7 +1573,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 ---
 
-## Phase 2: Content Pages (Weeks 4-5) 🚧 IN PROGRESS
+## Phase 2: Content Pages (Weeks 4-5) ⏳ READY TO START
 
 ### Goals
 - Build article detail pages with Drupal content
@@ -1484,52 +1582,91 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Add search functionality
 - Dynamic content rendering with ISR
 
-### Status: NOT STARTED
+### Status: READY TO START
 
-### Tasks
+**Prerequisites Completed:**
+- ✅ Layout components (PageHeader, Navigation, MobileMenu, PageFooter) 100% complete
+- ✅ Effect services for Drupal and Footbalisto working
+- ✅ Base UI components (Button, Card, Icon, Spinner) tested
+- ✅ Storybook configured and working
+- ✅ All 137 tests passing
+- ✅ Visual parity with Gatsby achieved
 
-#### 2.1: Page Header Component
+### Next Steps (In Priority Order)
 
-Extract exact structure from Gatsby `PageHeader.tsx` and recreate with Tailwind.
+#### 2.1: Article Detail Pages ⏳ NEXT
+
+**File:** `src/app/(main)/news/[slug]/page.tsx`
 
 **Requirements:**
-- Sticky header
-- Logo on left
-- Desktop navigation (horizontal menu)
-- Mobile hamburger menu
-- Search icon (if present)
-- Match exact spacing, colors, hover states
+1. Fetch article from Drupal using Effect DrupalService
+2. Render article with:
+   - Hero image (if available)
+   - Article title
+   - Published date
+   - Category badges
+   - Body content (HTML from Drupal)
+   - Social share buttons
+3. Match Gatsby article page layout exactly
+4. Add ISR with revalidation
 
-#### 2.2: Navigation Component
+**Implementation Pattern:**
+```typescript
+export async function generateStaticParams() {
+  // Fetch all articles for static generation
+}
 
-Recreate navigation structure:
-- Main menu items
-- Dropdown menus for sub-items
-- Active state highlighting
-- Hover animations
+export default async function ArticlePage({ params }: { params: { slug: string } }) {
+  const article = await runPromise(
+    DrupalService.getArticleBySlug(params.slug)
+  )
 
-#### 2.3: Mobile Menu
+  return <ArticleLayout article={article} />
+}
 
-Replicate Foundation off-canvas menu:
-- Slide-in from left/right
-- Overlay backdrop
-- Smooth animations
-- Close button
-- Same menu structure as desktop
+export const revalidate = 3600 // 1 hour ISR
+```
 
-#### 2.4: Page Footer
+#### 2.2: News Overview with Pagination
 
-Match footer layout:
+**File:** `src/app/(main)/news/page.tsx`
+
+**Requirements:**
+- Grid layout of article cards
+- Pagination (18 articles per page)
+- Category filtering
+- Match Gatsby news overview exactly
+
+#### 2.3: Homepage
+
+**File:** `src/app/(main)/page.tsx`
+
+**Requirements:**
+- Latest news section
+- Upcoming matches
+- Team standings
+- Hero section (if present in Gatsby)
+
+#### 2.4: PageFooter Component
+
+**Status:** NOT YET STARTED
+
+**Requirements:**
+- Extract exact structure from Gatsby
 - Sponsor logos
 - Links (columns)
 - Copyright text
 - Social media icons
+- Match exact spacing, colors
 
 ### Deliverables
 - ✅ PageHeader with tests and visual regression
 - ✅ Navigation with dropdown support
 - ✅ MobileMenu with animations
-- ✅ PageFooter matching current design
+- ⏳ PageFooter matching current design
+- ⏳ Article detail pages
+- ⏳ News overview with pagination
+- ⏳ Homepage
 
 ---
 
