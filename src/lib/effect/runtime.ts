@@ -32,14 +32,17 @@ export const runtime = ManagedRuntime.make(AppLayer)
  * )
  * ```
  */
-export const runPromise = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  runtime.runPromise(effect)
+export const runPromise = <A, E>(
+  effect: Effect.Effect<A, E, DrupalService | FootbalistoService>
+) => runtime.runPromise(effect)
 
 /**
  * Run an Effect and return a Promise, logging errors
  * Useful for debugging in development
  */
-export const runPromiseWithLogging = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+export const runPromiseWithLogging = <A, E>(
+  effect: Effect.Effect<A, E, DrupalService | FootbalistoService>
+) =>
   runtime.runPromise(
     effect.pipe(
       Effect.tapError((error) =>

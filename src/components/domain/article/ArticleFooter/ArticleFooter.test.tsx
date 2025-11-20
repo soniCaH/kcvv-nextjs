@@ -56,7 +56,9 @@ describe('ArticleFooter', () => {
   })
 
   it('does not render when relatedContent is undefined', () => {
-    const { container } = render(<ArticleFooter relatedContent={undefined as any} />)
+    const { container } = render(
+      <ArticleFooter relatedContent={undefined as unknown as RelatedContent[]} />
+    )
     expect(container.firstChild).toBeNull()
   })
 

@@ -265,7 +265,7 @@ export const NavigationItemActive: Story = {
           </ul>
         </nav>
         <p className="text-white text-xs mt-4 opacity-75">
-          "Nieuws" is the active page with permanent underline
+          &quot;Nieuws&quot; is the active page with permanent underline
         </p>
       </div>
     </>
@@ -505,7 +505,7 @@ export const MobileMenuItem: Story = {
           </li>
         </ul>
         <p className="text-white text-xs mt-4 opacity-75">
-          Hover over links or see "Nieuws" with 4px green left border (active state)
+          Hover over links or see &quot;Nieuws&quot; with 4px green left border (active state)
         </p>
       </div>
     </>
@@ -608,7 +608,7 @@ export const MobileMenuSubmenu: Story = {
 
         <p className="text-white text-xs mt-4 opacity-75">
           Submenu accordion with darker background (#292c31 - dark gray) and inset shadows.
-          "B-Ploeg" is active with green text and 4px left border.
+          &quot;B-Ploeg&quot; is active with green text and 4px left border.
         </p>
       </div>
     </>

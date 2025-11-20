@@ -3,7 +3,7 @@
  * Showcases social media links in different variants
  */
 
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/nextjs'
 import { SocialLinks } from './SocialLinks'
 
 const meta = {

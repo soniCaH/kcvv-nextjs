@@ -149,6 +149,9 @@ export const Disabled: Story = {
  * All variants side by side
  */
 export const AllVariants: Story = {
+  args: {
+    children: 'Button',
+  },
   render: () => (
     <div className="flex flex-col gap-4 items-start">
       <Button variant="primary">Primary</Button>
@@ -163,6 +166,9 @@ export const AllVariants: Story = {
  * All sizes comparison
  */
 export const AllSizes: Story = {
+  args: {
+    children: 'Button',
+  },
   render: () => (
     <div className="flex flex-col gap-4 items-start">
       <Button size="sm">Small Button</Button>
@@ -176,6 +182,9 @@ export const AllSizes: Story = {
  * Button with arrow in all variants
  */
 export const WithArrowVariants: Story = {
+  args: {
+    children: 'Button',
+  },
   render: () => (
     <div className="flex flex-col gap-4 items-start">
       <Button variant="primary" withArrow>
@@ -195,6 +204,9 @@ export const WithArrowVariants: Story = {
  * Real-world usage examples
  */
 export const Examples: Story = {
+  args: {
+    children: 'Button',
+  },
   render: () => (
     <div className="flex flex-col gap-6 max-w-md">
       <div>
