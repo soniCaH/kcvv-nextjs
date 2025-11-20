@@ -2,8 +2,13 @@
  * Effect Schemas - Central Export
  */
 
-// Common schemas
+// Common schemas (includes JSON:API types)
 export * from './common.schema'
+
+// Drupal entity schemas
+export * from './file.schema'
+export * from './media.schema'
+export * from './taxonomy.schema'
 
 // Content type schemas
 export * from './article.schema'

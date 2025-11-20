@@ -5,10 +5,11 @@
  */
 
 import { cn } from '@/lib/utils/cn'
+import { convertDrupalImagesToAbsolute } from '@/lib/utils/drupal-content'
 
 export interface ArticleBodyProps {
   /**
-   * HTML content to render
+   * HTML content to display
    */
   content: string
   /**
@@ -18,18 +19,21 @@ export interface ArticleBodyProps {
 }
 
 /**
- * Article body content container
+ * Article body component with Gatsby-matched styling
  *
- * Visual specifications (matching Gatsby):
- * - Font-size: 0.875rem (mobile) / 1rem (desktop at 70rem+)
- * - Padding: 0.75rem (mobile) / 0.75rem 0 1.25rem (desktop)
- * - Margin-top: 1rem
- * - Desktop: margin-right 2rem
- * - Links: Green underline animation (gradient background 0→100% on hover)
- * - External links: Font Awesome icon after link
+ * Visual specifications:
+ * - Font-size: 0.875rem (14px) mobile, 1rem (16px) desktop
+ * - Padding: 0.75rem mobile, 0.75rem 0 1.25rem desktop
+ * - Margin-right: 2rem desktop (to sidebar)
+ * - Links: Green underline animation (background-image gradient)
+ * - External links: FontAwesome external icon appended
+ * - Images: Zoom on hover (scale 1.1), 0.3s ease, cursor zoom-in
  * - Transition: background-size 0.4s ease
  */
 export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
+  // Convert relative Drupal image URLs to absolute URLs
+  const processedContent = convertDrupalImagesToAbsolute(content)
+
   return (
     <>
       {/* Inline styles for article body - using dangerouslySetInnerHTML for Storybook compatibility */}
@@ -50,19 +54,12 @@ export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
               background-size: 100% 100%;
               cursor: pointer;
             }
-            /* External links - external icon using SVG */
+            /* External links - FontAwesome icon */
             .article-body a[target="_blank"]:after {
-              content: '';
+              font-family: FontAwesome;
               display: inline-block;
-              width: 0.75em;
-              height: 0.75em;
-              margin-left: 0.35em;
-              margin-bottom: 0.05em;
-              background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%234acf52' d='M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z'/%3E%3C/svg%3E");
-              background-size: contain;
-              background-repeat: no-repeat;
-              background-position: center;
-              vertical-align: middle;
+              content: '\\f08e';
+              margin-left: 0.5em;
             }
 
             /* Blockquote - large green opening quote */
@@ -93,14 +90,13 @@ export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
             }
 
             /* Headings */
-            .article-body h2 {
+            .article-body h1,
+            .article-body h2,
+            .article-body h3,
+            .article-body h4,
+            .article-body h5,
+            .article-body h6 {
               margin-top: 1.5rem;
-              margin-bottom: 1rem;
-              font-size: 1.5rem;
-              font-weight: bold;
-            }
-            .article-body h3 {
-              margin-top: 1.25rem;
               margin-bottom: 0.75rem;
               font-size: 1.25rem;
               font-weight: bold;
@@ -112,21 +108,93 @@ export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
               line-height: 1.6;
             }
 
-            /* Lists */
+            /* Lists - Foundation-style defaults */
             .article-body ul,
             .article-body ol {
               margin-bottom: 1rem;
-              padding-left: 2rem;
+              margin-left: 1.25rem;
+              line-height: 1.6;
             }
 
-            /* Images */
+            .article-body ul {
+              list-style-type: disc;
+              list-style-position: outside;
+            }
+
+            .article-body ol {
+              list-style-type: decimal;
+              list-style-position: outside;
+            }
+
+            .article-body li {
+              margin-bottom: 0.5rem;
+            }
+
+            .article-body ul ul,
+            .article-body ol ul {
+              list-style-type: circle;
+              margin-left: 1.25rem;
+              margin-top: 0.5rem;
+            }
+
+            .article-body ul ol,
+            .article-body ol ol {
+              margin-left: 1.25rem;
+              margin-top: 0.5rem;
+            }
+
+            /* Tables - Foundation-style defaults with zebra striping */
+            .article-body table {
+              width: 100%;
+              margin-bottom: 1rem;
+              border-collapse: collapse;
+              border-spacing: 0;
+              border: 1px solid #e6e6e6;
+              border-radius: 0;
+            }
+
+            .article-body table thead,
+            .article-body table tbody,
+            .article-body table tfoot {
+              background-color: transparent;
+              border: 1px solid #f1f1f1;
+            }
+
+            .article-body table thead {
+              background-color: #f8f8f8;
+            }
+
+            .article-body table th,
+            .article-body table td {
+              padding: 0.5rem 0.625rem 0.625rem;
+              text-align: left;
+              vertical-align: top;
+              border: 1px solid #f1f1f1;
+            }
+
+            .article-body table thead th,
+            .article-body table thead td {
+              font-weight: bold;
+              line-height: 1.6;
+            }
+
+            /* Zebra striping */
+            .article-body table tbody tr:nth-child(even) {
+              background-color: #f8f8f8;
+              border-bottom: 0;
+            }
+
+            .article-body table tbody tr:nth-child(odd) {
+              background-color: #ffffff;
+            }
+
+            /* Images - default styles for images without zoom effect */
             .article-body img {
               max-width: 100%;
               height: auto;
-              margin: 1rem 0;
             }
 
-            /* Image zoom effect on hover */
+            /* Image zoom effect on hover - container has margin, image has no margin */
             .article-body p:has(img) {
               overflow: hidden;
               border-radius: 4px;
@@ -136,12 +204,41 @@ export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
             .article-body p img {
               display: block;
               width: 100%;
+              margin: 0;
               transition: transform 0.3s ease;
               will-change: transform;
               cursor: zoom-in;
             }
 
             .article-body p img:hover {
+              transform: scale(1.1);
+            }
+
+            /* Drupal embedded media (with data-entity-type="media") */
+            .article-body div[data-entity-type="media"] {
+              overflow: hidden;
+              border-radius: 4px;
+              margin: 1.5rem 0;
+            }
+
+            /* Container breakout effect on desktop */
+            @media (min-width: 960px) {
+              .article-body div[data-entity-type="media"] {
+                margin: 2rem -50rem 2rem 0;
+                max-width: 70rem;
+              }
+            }
+
+            .article-body div[data-entity-type="media"] img {
+              display: block;
+              width: 100%;
+              margin: 0;
+              transition: transform 0.3s ease;
+              will-change: transform;
+              cursor: zoom-in;
+            }
+
+            .article-body div[data-entity-type="media"] img:hover {
               transform: scale(1.1);
             }
           `,
@@ -152,10 +249,11 @@ export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
         className={cn(
           'article-body',
           'p-3 text-sm mt-4',
-          'xl:mr-8 xl:p-0 xl:pb-5 xl:text-base',
+          '[70rem]:mr-8 [70rem]:pt-3 [70rem]:px-0 [70rem]:pb-5 [70rem]:text-base',
+          'lg:flex-grow lg:min-w-0',
           className
         )}
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: processedContent }}
       />
     </>
   )

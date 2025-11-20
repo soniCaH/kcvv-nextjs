@@ -37,6 +37,10 @@ describe('DrupalService', () => {
             },
           },
         ],
+        links: {
+          self: { href: '/jsonapi/node/article' },
+          next: { href: '/jsonapi/node/article?page[offset]=10' },
+        },
       }
 
       ;(global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
@@ -53,8 +57,9 @@ describe('DrupalService', () => {
         program.pipe(Effect.provide(DrupalServiceLive))
       )
 
-      expect(result).toHaveLength(1)
-      expect(result[0].attributes.title).toBe('Test Article')
+      expect(result.articles).toHaveLength(1)
+      expect(result.articles[0].attributes.title).toBe('Test Article')
+      expect(result.links).toBeDefined()
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/jsonapi/node/article'),
         expect.objectContaining({
@@ -200,7 +205,27 @@ describe('DrupalService', () => {
     })
 
     it('should normalize slug with leading slash', async () => {
-      const mockResponse = { data: [] }
+      // Note: getArticleBySlug uses getArticles() as a workaround for Drupal API bug
+      // It fetches all articles and filters in memory rather than using API filter
+      const mockResponse = {
+        data: [
+          {
+            id: '1',
+            type: 'node--article',
+            attributes: {
+              title: 'Test Article',
+              created: '2025-01-01T00:00:00Z',
+              path: {
+                alias: '/news/test-article',
+              },
+            },
+            relationships: {},
+          },
+        ],
+        links: {
+          self: { href: '/jsonapi/node/article' },
+        },
+      }
 
       ;(global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
@@ -209,18 +234,19 @@ describe('DrupalService', () => {
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService
-        return yield* drupal.getArticleBySlug('/news/test-article')
+        return yield* drupal.getArticleBySlug('test-article') // Without leading slash
       })
 
-      await Effect.runPromise(
-        program.pipe(
-          Effect.provide(DrupalServiceLive),
-          Effect.catchAll(() => Effect.succeed(null))
-        )
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive))
       )
 
+      // Should normalize slug to /news/test-article
+      expect(result.attributes.path.alias).toBe('/news/test-article')
+
+      // Should fetch articles (workaround for API filter bug)
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('filter%5Bpath.alias%5D=%2Fnews%2Ftest-article'),
+        expect.stringContaining('/jsonapi/node/article'),
         expect.anything()
       )
     })
@@ -357,7 +383,8 @@ describe('DrupalService', () => {
         program.pipe(Effect.provide(DrupalServiceLive))
       )
 
-      expect(result).toEqual([])
+      expect(result.articles).toEqual([])
+      expect(result.links).toBeUndefined()
       expect(global.fetch).toHaveBeenCalledTimes(3)
     }, 15000)
 

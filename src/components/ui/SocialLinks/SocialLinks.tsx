@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * SocialLinks Component
  * Social media links with icon buttons
