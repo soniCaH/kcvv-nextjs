@@ -12,11 +12,19 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/',
 }))
 
+interface ImageProps {
+  src: string
+  alt: string
+  width?: number
+  height?: number
+  priority?: boolean
+  className?: string
+}
+
 vi.mock('next/image', () => ({
-  default: (props: any) => {
-    // eslint-disable-next-line jsx-a11y/alt-text, @next/next/no-img-element
-    return <img {...props} />
-  },
+  default: ({ alt, ...props }: ImageProps) => (
+    <img alt={alt} {...props} />
+  ),
 }))
 
 describe('PageHeader', () => {

@@ -21,7 +21,10 @@ import {
 export class FootbalistoService extends Context.Tag('FootbalistoService')<
   FootbalistoService,
   {
-    readonly getMatches: (teamId: number) => Effect.Effect<Match[], FootbalistoError | ValidationError>
+    readonly getMatches: (teamId: number) => Effect.Effect<
+      readonly Match[],
+      FootbalistoError | ValidationError
+    >
 
     readonly getMatchById: (matchId: number) => Effect.Effect<
       Match,
@@ -29,7 +32,7 @@ export class FootbalistoService extends Context.Tag('FootbalistoService')<
     >
 
     readonly getRanking: (leagueId: number) => Effect.Effect<
-      RankingEntry[],
+      readonly RankingEntry[],
       FootbalistoError | ValidationError
     >
 
@@ -105,7 +108,16 @@ export const FootbalistoServiceLive = Layer.effect(
             Schedule.intersect(Schedule.recurs(3))
           )
         ),
-        Effect.timeout('30 seconds')
+        Effect.timeout('30 seconds'),
+        Effect.mapError((error) => {
+          if (error._tag === 'TimeoutException') {
+            return new FootbalistoError({
+              message: 'Request timed out after 30 seconds',
+              cause: error,
+            })
+          }
+          return error
+        })
       )
 
     /**

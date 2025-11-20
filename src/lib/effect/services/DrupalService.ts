@@ -35,7 +35,7 @@ export class DrupalService extends Context.Tag('DrupalService')<
       limit?: number
       category?: string
       sort?: string
-    }) => Effect.Effect<Article[], DrupalError | ValidationError>
+    }) => Effect.Effect<readonly Article[], DrupalError | ValidationError>
 
     readonly getArticleBySlug: (slug: string) => Effect.Effect<
       Article,
@@ -48,7 +48,7 @@ export class DrupalService extends Context.Tag('DrupalService')<
     >
 
     // Teams
-    readonly getTeams: () => Effect.Effect<Team[], DrupalError | ValidationError>
+    readonly getTeams: () => Effect.Effect<readonly Team[], DrupalError | ValidationError>
 
     readonly getTeamBySlug: (slug: string) => Effect.Effect<
       Team,
@@ -64,7 +64,7 @@ export class DrupalService extends Context.Tag('DrupalService')<
     readonly getPlayers: (params?: {
       teamId?: string
       limit?: number
-    }) => Effect.Effect<Player[], DrupalError | ValidationError>
+    }) => Effect.Effect<readonly Player[], DrupalError | ValidationError>
 
     readonly getPlayerBySlug: (slug: string) => Effect.Effect<
       Player,
@@ -80,7 +80,7 @@ export class DrupalService extends Context.Tag('DrupalService')<
     readonly getEvents: (params?: {
       upcoming?: boolean
       limit?: number
-    }) => Effect.Effect<Event[], DrupalError | ValidationError>
+    }) => Effect.Effect<readonly Event[], DrupalError | ValidationError>
 
     readonly getEventBySlug: (slug: string) => Effect.Effect<
       Event,
@@ -171,7 +171,16 @@ export const DrupalServiceLive = Layer.effect(
             Schedule.intersect(Schedule.recurs(3))
           )
         ),
-        Effect.timeout('30 seconds')
+        Effect.timeout('30 seconds'),
+        Effect.mapError((error) => {
+          if (error._tag === 'TimeoutException') {
+            return new DrupalError({
+              message: 'Request timed out after 30 seconds',
+              cause: error,
+            })
+          }
+          return error
+        })
       )
 
     /**

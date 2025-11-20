@@ -71,6 +71,7 @@ export const Primary: Story = {
  * All available sizes
  */
 export const AllSizes: Story = {
+  args: { icon: <FaFutbol /> },
   render: () => (
     <div className="flex items-center gap-4">
       <div className="text-center">
@@ -105,6 +106,7 @@ export const AllSizes: Story = {
  * All available colors
  */
 export const AllColors: Story = {
+  args: { icon: <FaFutbol /> },
   render: () => (
     <div className="flex flex-wrap gap-6">
       <div className="text-center">
@@ -143,6 +145,7 @@ export const AllColors: Story = {
  * Common KCVV icons
  */
 export const CommonIcons: Story = {
+  args: { icon: <FaFutbol /> },
   render: () => (
     <div className="grid grid-cols-5 gap-4">
       <div className="text-center">
@@ -173,6 +176,7 @@ export const CommonIcons: Story = {
  * Contact icons
  */
 export const ContactIcons: Story = {
+  args: { icon: <FaFutbol /> },
   render: () => (
     <div className="flex gap-4">
       <Icon icon={<FaPhone />} size="md" color="secondary" />
@@ -185,6 +189,7 @@ export const ContactIcons: Story = {
  * Social media icons
  */
 export const SocialIcons: Story = {
+  args: { icon: <FaFutbol /> },
   render: () => (
     <div className="flex gap-4">
       <Icon icon={<FaFacebookF />} size="lg" color="muted" />
@@ -198,6 +203,7 @@ export const SocialIcons: Story = {
  * Navigation icons
  */
 export const NavigationIcons: Story = {
+  args: { icon: <FaFutbol /> },
   render: () => (
     <div className="flex gap-4 items-center">
       <Icon icon={<FaSearch />} size="md" />
@@ -213,6 +219,7 @@ export const NavigationIcons: Story = {
  * Icons with text
  */
 export const WithText: Story = {
+  args: { icon: <FaFutbol /> },
   render: () => (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">

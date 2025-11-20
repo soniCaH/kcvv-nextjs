@@ -44,6 +44,7 @@ type Story = StoryObj<typeof meta>
  * Basic card with default styling
  */
 export const Default: Story = {
+  args: { children: null },
   render: () => (
     <Card padded>
       <h3 className="font-bold text-lg mb-2">Card Title</h3>
@@ -56,6 +57,7 @@ export const Default: Story = {
  * Card with header, content, and footer
  */
 export const WithSections: Story = {
+  args: { children: null },
   render: () => (
     <Card>
       <CardHeader>
@@ -82,6 +84,7 @@ export const WithSections: Story = {
  * Teaser card with image (for news/articles)
  */
 export const Teaser: Story = {
+  args: { children: null },
   render: () => (
     <div className="max-w-sm">
       <Card variant="teaser" hoverable>
@@ -109,6 +112,7 @@ export const Teaser: Story = {
  * Bordered variant for emphasis
  */
 export const Bordered: Story = {
+  args: { children: null },
   render: () => (
     <Card variant="bordered" padded>
       <h3 className="font-bold text-lg mb-2">Important Information</h3>
@@ -123,6 +127,7 @@ export const Bordered: Story = {
  * Elevated variant with shadow
  */
 export const Elevated: Story = {
+  args: { children: null },
   render: () => (
     <Card variant="elevated" padded>
       <h3 className="font-bold text-lg mb-2">Featured Card</h3>
@@ -135,6 +140,7 @@ export const Elevated: Story = {
  * Hoverable card with interaction
  */
 export const Hoverable: Story = {
+  args: { children: null },
   render: () => (
     <div className="max-w-sm">
       <Card hoverable padded>
@@ -151,6 +157,7 @@ export const Hoverable: Story = {
  * Different aspect ratios for images
  */
 export const AspectRatios: Story = {
+  args: { children: null },
   render: () => (
     <div className="grid grid-cols-2 gap-4 max-w-2xl">
       <div>
@@ -201,6 +208,7 @@ export const AspectRatios: Story = {
  * Player card example
  */
 export const PlayerCard: Story = {
+  args: { children: null },
   render: () => (
     <div className="max-w-xs">
       <Card variant="teaser" hoverable>
@@ -230,6 +238,7 @@ export const PlayerCard: Story = {
  * Match card example
  */
 export const MatchCard: Story = {
+  args: { children: null },
   render: () => (
     <Card>
       <CardHeader>
@@ -267,6 +276,7 @@ export const MatchCard: Story = {
  * News grid example
  */
 export const NewsGrid: Story = {
+  args: { children: null },
   render: () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {[1, 2, 3].map((i) => (
