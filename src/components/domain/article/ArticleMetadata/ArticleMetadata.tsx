@@ -83,7 +83,7 @@ export const ArticleMetadata = ({
       <section
         className={cn(
           'article-metadata-border',
-          'relative w-full h-full mt-4 mb-3 p-3 text-xs',
+          'relative w-full mt-4 mb-3 p-3 text-xs',
           // Mobile: bottom border only
           'border-b',
           // Desktop: left + bottom border, max-width, flex column

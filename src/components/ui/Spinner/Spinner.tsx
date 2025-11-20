@@ -7,7 +7,7 @@ import { forwardRef, type HTMLAttributes } from 'react'
 import { cn } from '@/lib/utils/cn'
 
 export type SpinnerSize = 'sm' | 'md' | 'lg' | 'xl'
-export type SpinnerVariant = 'primary' | 'secondary' | 'white'
+export type SpinnerVariant = 'primary' | 'secondary' | 'white' | 'logo'
 
 export interface SpinnerProps extends HTMLAttributes<HTMLDivElement> {
   /**
@@ -39,6 +39,8 @@ export interface SpinnerProps extends HTMLAttributes<HTMLDivElement> {
  * <Spinner size="lg" variant="primary" />
  *
  * <Spinner label="Loading articles..." />
+ *
+ * <Spinner variant="logo" /> // KCVV logo spinner
  * ```
  */
 export const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
@@ -52,6 +54,35 @@ export const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
     },
     ref
   ) => {
+    // Logo variant with 3D Y-axis rotation (matches Gatsby site)
+    if (variant === 'logo') {
+      return (
+        <div
+          ref={ref}
+          role="status"
+          aria-label={label}
+          className={cn('inline-flex items-center justify-center', className)}
+          {...props}
+        >
+          <img
+            src="/images/logo-flat.png"
+            alt="KCVV Logo"
+            className={cn(
+              'animate-kcvv-logo-spin',
+              {
+                'h-12 w-12': size === 'sm',
+                'h-14 w-14': size === 'md',  // 3.5rem to match Gatsby
+                'h-20 w-20': size === 'lg',
+                'h-24 w-24': size === 'xl',
+              }
+            )}
+          />
+          <span className="sr-only">{label}</span>
+        </div>
+      )
+    }
+
+    // SVG spinner for other variants
     return (
       <div
         ref={ref}

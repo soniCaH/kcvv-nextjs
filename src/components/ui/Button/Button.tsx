@@ -75,10 +75,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled}
         className={cn(
           // Base styles
-          'inline-flex items-center justify-center gap-2',
+          'group inline-flex items-center justify-center gap-2',
           'font-medium transition-all duration-300',
+          'cursor-pointer',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kcvv-green focus-visible:ring-offset-2',
-          'disabled:pointer-events-none disabled:opacity-50',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
 
           // Variant styles
           {
@@ -94,9 +95,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             'border-2 border-kcvv-green-bright text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white':
               variant === 'ghost',
 
-            // Link: Text only
+            // Link: Text only with underline on hover (including arrow)
             'text-kcvv-green-bright underline-offset-4 hover:underline':
               variant === 'link',
+          },
+
+          // Disabled: prevent hover effects
+          {
+            'disabled:hover:bg-kcvv-green-bright': variant === 'primary',
+            'disabled:hover:bg-gray-600': variant === 'secondary',
+            'disabled:hover:bg-transparent disabled:hover:text-kcvv-green-bright':
+              variant === 'ghost',
+            'disabled:hover:no-underline': variant === 'link',
           },
 
           // Size styles

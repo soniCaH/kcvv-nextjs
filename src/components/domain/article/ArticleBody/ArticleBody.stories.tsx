@@ -133,18 +133,43 @@ export const WithExternalLinks: Story = {
 }
 
 /**
- * With images
- * Shows how images are rendered in the article
+ * With images (hover to zoom!)
+ * Images zoom to 110% on hover with smooth transition
  */
 export const WithImages: Story = {
   args: {
     content: `
       <h2>Fotoverslag van de wedstrijd</h2>
-      <p>Hieronder enkele hoogtepunten in beeld:</p>
-      <img src="https://picsum.photos/800/400?random=1" alt="Match action" />
-      <p>Het team viert de overwinning na de wedstrijd.</p>
-      <img src="https://picsum.photos/800/400?random=2" alt="Team celebration" />
+      <p>KCVV Elewijt behaalde een indrukwekkende 3-1 overwinning tegen de tegenstander. Hieronder enkele hoogtepunten in beeld:</p>
+
+      <p>
+        <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop" alt="Team celebrating victory" />
+      </p>
+
+      <p>Het team viert de opening goal in de 23e minuut. De aanval was perfect opgebouwd vanuit de verdediging.</p>
+
+      <p>
+        <img src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&h=600&fit=crop" alt="Match action shot" />
+      </p>
+
+      <h3>Tweede Helft</h3>
+      <p>De tweede helft bracht nog meer spektakel. Zie hier de beslissende aanval:</p>
+
+      <p>
+        <img src="https://images.unsplash.com/photo-1551958219-acbc608c6377?w=800&h=600&fit=crop" alt="Fans in the stadium" />
+      </p>
+
+      <p><em><strong>💡 Tip:</strong> Hover over de afbeeldingen om ze te vergroten!</em></p>
+
+      <p>Voor meer foto's en video's, bezoek onze <a href="https://www.facebook.com/KCVVElewijt" target="_blank">Facebook pagina</a>.</p>
     `,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Images have a zoom hover effect (scale 1.1) matching the Gatsby site behavior. The transition is smooth (0.3s ease) and cursor changes to zoom-in.',
+      },
+    },
   },
 }
 

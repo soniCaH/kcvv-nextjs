@@ -98,11 +98,12 @@ describe('Button', () => {
   })
 
   describe('Disabled State', () => {
-    it('should render disabled button', () => {
+    it('has correct disabled styles', () => {
       render(<Button disabled>Disabled</Button>)
-      const button = screen.getByRole('button')
+      const button = screen.getByRole('button', { name: /disabled/i })
       expect(button).toBeDisabled()
-      expect(button).toHaveClass('disabled:pointer-events-none', 'disabled:opacity-50')
+      expect(button).toHaveClass('disabled:opacity-50')
+      expect(button).toHaveClass('disabled:cursor-not-allowed')
     })
 
     it('should not call onClick when disabled', async () => {

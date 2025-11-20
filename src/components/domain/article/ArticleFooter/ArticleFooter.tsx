@@ -64,13 +64,12 @@ export const ArticleFooter = ({ relatedContent, className }: ArticleFooterProps)
   return (
     <div
       className={cn(
-        'bg-kcvv-green-bright mt-4 -mb-[125px]',
-        'px-3 pt-4 pb-[50px]',
-        'xl:px-0',
+        'bg-kcvv-green-bright mt-4',
+        'py-6',
         className
       )}
     >
-      <section className="w-full max-w-[70rem] mx-auto my-3">
+      <section className="w-full max-w-[70rem] mx-auto px-3 lg:px-0">
         <h3 className="uppercase text-white mb-4">Gerelateerde inhoud</h3>
 
         <div
@@ -95,7 +94,8 @@ export const ArticleFooter = ({ relatedContent, className }: ArticleFooterProps)
               {/* Link */}
               <Link
                 href={item.href}
-                className="text-white hover:underline no-underline flex-1"
+                className="text-white hover:underline flex-1 break-words"
+                style={{ color: '#FFF' }}
               >
                 {item.title}
               </Link>
