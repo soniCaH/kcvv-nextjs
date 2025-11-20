@@ -135,31 +135,28 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </header>
       )}
 
-      <div className="w-full max-w-[70rem] mx-auto px-0">
-        <div className="flex flex-col xl:flex-row">
-          {/* Main Content */}
-          <div className="flex-1 xl:order-2">
-            {/* Article Body */}
-            {article.attributes.body && (
-              <ArticleBody content={article.attributes.body.processed} />
-            )}
-          </div>
+      <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
+        {/* Metadata - First in HTML, displays on RIGHT on desktop */}
+        <aside className="lg:flex lg:flex-col lg:max-w-[20rem]">
+          <ArticleMetadata
+            author="KCVV Elewijt" // TODO: Fetch actual author from uid relationship
+            date={article.attributes.created.toLocaleDateString('nl-BE', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
+            tags={tags}
+            shareConfig={shareConfig}
+          />
+        </aside>
 
-          {/* Sidebar */}
-          <aside className="xl:w-64 xl:order-1 flex-shrink-0">
-            <ArticleMetadata
-              author="KCVV Elewijt" // TODO: Fetch actual author from uid relationship
-              date={article.attributes.created.toLocaleDateString('nl-BE', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })}
-              tags={tags}
-              shareConfig={shareConfig}
-            />
-          </aside>
+        {/* Body - Second in HTML, displays on LEFT on desktop, takes remaining space */}
+        <div className="flex-1">
+          {article.attributes.body && (
+            <ArticleBody content={article.attributes.body.processed} />
+          )}
         </div>
-      </div>
+      </main>
 
       {/* Article Footer */}
       {relatedContent.length > 0 && <ArticleFooter relatedContent={relatedContent} />}

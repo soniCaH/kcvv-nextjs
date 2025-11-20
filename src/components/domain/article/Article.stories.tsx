@@ -66,31 +66,29 @@ export const Default: Story = {
         imageAlt="Voetbalwedstrijd KCVV Elewijt"
       />
 
-      <div className="w-full max-w-[70rem] mx-auto px-0">
-        <div className="flex flex-col xl:flex-row">
-          {/* Main Content */}
-          <div className="flex-1 xl:order-2">
-            <ArticleBody content={sampleArticleContent} />
-          </div>
+      <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
+        {/* Metadata - First in HTML, displays on RIGHT on desktop */}
+        <aside className="lg:flex lg:flex-col lg:max-w-[20rem]">
+          <ArticleMetadata
+            author="Tom Redactie"
+            date="15 januari 2025"
+            tags={[
+              { name: 'A-Ploeg', href: '/news?category=a-ploeg' },
+              { name: 'Wedstrijdverslag', href: '/news?category=wedstrijdverslag' },
+              { name: 'Derby', href: '/news?category=derby' },
+            ]}
+            shareConfig={{
+              url: 'https://kcvvelewijt.be/news/overwinning-derby',
+              title: 'KCVV Elewijt wint met 3-1 in spannende derby',
+            }}
+          />
+        </aside>
 
-          {/* Sidebar */}
-          <aside className="xl:w-64 xl:order-1 flex-shrink-0">
-            <ArticleMetadata
-              author="Tom Redactie"
-              date="15 januari 2025"
-              tags={[
-                { name: 'A-Ploeg', href: '/news?category=a-ploeg' },
-                { name: 'Wedstrijdverslag', href: '/news?category=wedstrijdverslag' },
-                { name: 'Derby', href: '/news?category=derby' },
-              ]}
-              shareConfig={{
-                url: 'https://kcvvelewijt.be/news/overwinning-derby',
-                title: 'KCVV Elewijt wint met 3-1 in spannende derby',
-              }}
-            />
-          </aside>
+        {/* Body - Second in HTML, displays on LEFT on desktop */}
+        <div className="flex-1">
+          <ArticleBody content={sampleArticleContent} />
         </div>
-      </div>
+      </main>
 
       <ArticleFooter
         relatedContent={[
@@ -139,33 +137,31 @@ export const WithoutImage: Story = {
         </div>
       </header>
 
-      <div className="w-full max-w-[70rem] mx-auto px-0">
-        <div className="flex flex-col xl:flex-row">
-          <div className="flex-1 xl:order-2">
-            <ArticleBody
-              content={`
-                <p>Wegens de winterstop wordt het trainingsschema aangepast. Alle teams trainen vanaf nu op dinsdag- en donderdagavond.</p>
-                <p>Meer informatie over de <a href="/team/a-ploeg">trainingstijden per ploeg</a>.</p>
-              `}
-            />
-          </div>
+      <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
+        <aside className="lg:flex lg:flex-col lg:max-w-[20rem]">
+          <ArticleMetadata
+            author="Club Secretariaat"
+            date="20 december 2024"
+            tags={[
+              { name: 'Training', href: '/news?category=training' },
+              { name: 'Algemeen', href: '/news?category=algemeen' },
+            ]}
+            shareConfig={{
+              url: 'https://kcvvelewijt.be/news/trainingsschema',
+              title: 'Trainingsschema aangepast voor winterstop',
+            }}
+          />
+        </aside>
 
-          <aside className="xl:w-64 xl:order-1 flex-shrink-0">
-            <ArticleMetadata
-              author="Club Secretariaat"
-              date="20 december 2024"
-              tags={[
-                { name: 'Training', href: '/news?category=training' },
-                { name: 'Algemeen', href: '/news?category=algemeen' },
-              ]}
-              shareConfig={{
-                url: 'https://kcvvelewijt.be/news/trainingsschema',
-                title: 'Trainingsschema aangepast voor winterstop',
-              }}
-            />
-          </aside>
+        <div className="flex-1">
+          <ArticleBody
+            content={`
+              <p>Wegens de winterstop wordt het trainingsschema aangepast. Alle teams trainen vanaf nu op dinsdag- en donderdagavond.</p>
+              <p>Meer informatie over de <a href="/team/a-ploeg">trainingstijden per ploeg</a>.</p>
+            `}
+          />
         </div>
-      </div>
+      </main>
 
       <ArticleFooter
         relatedContent={[
@@ -197,58 +193,56 @@ export const LongArticle: Story = {
         imageAlt="KCVV Elewijt seizoen analyse"
       />
 
-      <div className="w-full max-w-[70rem] mx-auto px-0">
-        <div className="flex flex-col xl:flex-row">
-          <div className="flex-1 xl:order-2">
-            <ArticleBody
-              content={`
-                <p>Het seizoen 2024-2025 is tot nu toe een memorabel seizoen geweest voor KCVV Elewijt. Met een mix van jonge talenten en ervaren spelers heeft het team uitstekende resultaten behaald.</p>
+      <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
+        <aside className="lg:flex lg:flex-col lg:max-w-[20rem]">
+          <ArticleMetadata
+            author="Marc Analyse"
+            date="18 december 2024"
+            tags={[
+              { name: 'A-Ploeg', href: '/news?category=a-ploeg' },
+              { name: 'Analyse', href: '/news?category=analyse' },
+              { name: 'Seizoen 2024-2025', href: '/news?category=seizoen-2024-2025' },
+            ]}
+            shareConfig={{
+              url: 'https://kcvvelewijt.be/news/seizoensoverzicht',
+              title: 'Seizoensoverzicht 2024-2025: Een analyse van onze prestaties',
+            }}
+          />
+        </aside>
 
-                <h2>Augustus - September: Sterke Start</h2>
-                <p>De competitie begon veelbelovend met vier opeenvolgende overwinningen. De ploeg toonde direct aan klaar te zijn voor een succesvol seizoen.</p>
+        <div className="flex-1">
+          <ArticleBody
+            content={`
+              <p>Het seizoen 2024-2025 is tot nu toe een memorabel seizoen geweest voor KCVV Elewijt. Met een mix van jonge talenten en ervaren spelers heeft het team uitstekende resultaten behaald.</p>
 
-                <blockquote>
-                  <p>We zijn trots op wat het team tot nu toe heeft gepresteerd. De chemie tussen de spelers is uitstekend.</p>
-                </blockquote>
+              <h2>Augustus - September: Sterke Start</h2>
+              <p>De competitie begon veelbelovend met vier opeenvolgende overwinningen. De ploeg toonde direct aan klaar te zijn voor een succesvol seizoen.</p>
 
-                <h2>Oktober - November: Uitdagingen</h2>
-                <p>Deze maanden brachten enkele uitdagingen met zich mee. Blessures bij belangrijke spelers dwongen de coach om tactische aanpassingen te maken.</p>
+              <blockquote>
+                <p>We zijn trots op wat het team tot nu toe heeft gepresteerd. De chemie tussen de spelers is uitstekend.</p>
+              </blockquote>
 
-                <h3>Belangrijke Statistieken</h3>
-                <ul>
-                  <li>20 wedstrijden gespeeld</li>
-                  <li>13 overwinningen</li>
-                  <li>4 gelijke spelen</li>
-                  <li>3 nederlagen</li>
-                  <li>42 doelpunten voor</li>
-                  <li>18 doelpunten tegen</li>
-                </ul>
+              <h2>Oktober - November: Uitdagingen</h2>
+              <p>Deze maanden brachten enkele uitdagingen met zich mee. Blessures bij belangrijke spelers dwongen de coach om tactische aanpassingen te maken.</p>
 
-                <h2>December: Herstel en Groei</h2>
-                <p>Met de terugkeer van belangrijke spelers herpakte het team zich en behaalde opnieuw uitstekende resultaten. De winterstop komt op een goed moment om te herstellen en voorbereidingen te treffen voor de tweede helft van het seizoen.</p>
+              <h3>Belangrijke Statistieken</h3>
+              <ul>
+                <li>20 wedstrijden gespeeld</li>
+                <li>13 overwinningen</li>
+                <li>4 gelijke spelen</li>
+                <li>3 nederlagen</li>
+                <li>42 doelpunten voor</li>
+                <li>18 doelpunten tegen</li>
+              </ul>
 
-                <p>Lees meer over onze <a href="/team/a-ploeg">A-Ploeg spelers</a> en bekijk het volledige <a href="https://kcvvelewijt.be/ranking" target="_blank">klassement</a>.</p>
-              `}
-            />
-          </div>
+              <h2>December: Herstel en Groei</h2>
+              <p>Met de terugkeer van belangrijke spelers herpakte het team zich en behaalde opnieuw uitstekende resultaten. De winterstop komt op een goed moment om te herstellen en voorbereidingen te treffen voor de tweede helft van het seizoen.</p>
 
-          <aside className="xl:w-64 xl:order-1 flex-shrink-0">
-            <ArticleMetadata
-              author="Marc Analyse"
-              date="18 december 2024"
-              tags={[
-                { name: 'A-Ploeg', href: '/news?category=a-ploeg' },
-                { name: 'Analyse', href: '/news?category=analyse' },
-                { name: 'Seizoen 2024-2025', href: '/news?category=seizoen-2024-2025' },
-              ]}
-              shareConfig={{
-                url: 'https://kcvvelewijt.be/news/seizoensoverzicht',
-                title: 'Seizoensoverzicht 2024-2025: Een analyse van onze prestaties',
-              }}
-            />
-          </aside>
+              <p>Lees meer over onze <a href="/team/a-ploeg">A-Ploeg spelers</a> en bekijk het volledige <a href="https://kcvvelewijt.be/ranking" target="_blank">klassement</a>.</p>
+            `}
+          />
         </div>
-      </div>
+      </main>
 
       <ArticleFooter
         relatedContent={[
