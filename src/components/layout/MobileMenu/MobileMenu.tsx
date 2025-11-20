@@ -10,15 +10,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils/cn'
-import { Icon } from '@/components/ui'
-import {
-  FaTimes,
-  FaChevronDown,
-  FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaSearch,
-} from 'react-icons/fa'
+import { Icon, SocialLinks } from '@/components/ui'
+import { FaTimes, FaChevronDown, FaSearch } from 'react-icons/fa'
 
 export interface MobileMenuProps {
   /**
@@ -309,34 +302,8 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
 
         {/* Social Links */}
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-white/10">
-          <div className="flex items-center justify-center gap-4">
-            <a
-              href="https://www.facebook.com/KCVVElewijt"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Facebook"
-              className="p-3 text-white hover:text-kcvv-green-bright transition-colors rounded-full hover:bg-white/5"
-            >
-              <Icon icon={<FaFacebookF />} size="lg" />
-            </a>
-            <a
-              href="https://twitter.com/kcvve"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Twitter"
-              className="p-3 text-white hover:text-kcvv-green-bright transition-colors rounded-full hover:bg-white/5"
-            >
-              <Icon icon={<FaTwitter />} size="lg" />
-            </a>
-            <a
-              href="https://www.instagram.com/kcvve/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Instagram"
-              className="p-3 text-white hover:text-kcvv-green-bright transition-colors rounded-full hover:bg-white/5"
-            >
-              <Icon icon={<FaInstagram />} size="lg" />
-            </a>
+          <div className="flex items-center justify-center">
+            <SocialLinks variant="inline" size="lg" />
           </div>
         </div>
       </nav>

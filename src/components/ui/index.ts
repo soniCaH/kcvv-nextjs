@@ -31,3 +31,7 @@ export type { IconProps, IconSize, IconColor } from './Icon'
 // Spinner
 export { Spinner, FullPageSpinner } from './Spinner'
 export type { SpinnerProps, SpinnerSize, SpinnerVariant, FullPageSpinnerProps } from './Spinner'
+
+// SocialLinks
+export { SocialLinks } from './SocialLinks'
+export type { SocialLinksProps } from './SocialLinks'
