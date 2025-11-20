@@ -684,28 +684,49 @@ styling discrepancies. All components rebuilt to match pixel-perfect:
 - ✅ Responsive at 960px (not 1024px)
 - ✅ All typography sizes match Gatsby exactly
 
+9. **PageFooter Visual Rebuild** (commit 7464a0c)
+   - Black background (#1E2024) with SVG wavy top edge (footer-top.svg)
+   - All 8 contact rows (added missing: Jeugdwerking, Verhuur, Website, Privacy)
+   - Contact table: 0.875rem, uppercase labels, green links
+   - Social links: Circular buttons with 2px border (using reusable SocialLinks component)
+   - Sponsors: 4-column grid with opacity 0.5→1 hover
+   - Vertical gradient divider between sections
+   - Bottom motto with gradient line separator
+   - **Created SocialLinks reusable component** (2 variants: circle, inline)
+   - Refactored MobileMenu to use SocialLinks component (DRY principle)
+   - 17 PageFooter tests + 10 SocialLinks tests
+   - 3 component stories + 7 element stories + 5 SocialLinks stories
+
 **Test Coverage Summary:**
 ```
-Total Tests: 137/137 passing ✅
+Total Tests: 164/164 passing ✅
 
-UI Components (102 tests):
-├── Button:   26 tests (4 variants, loading, disabled, sizes, interactions)
-├── Card:     30 tests (4 variants, sub-components, responsive)
-├── Icon:     20 tests (sizes, colors, wrappers)
-└── Spinner:  26 tests (sizes, variants, animations)
+UI Components (112 tests):
+├── Button:      26 tests (4 variants, loading, disabled, sizes, interactions)
+├── Card:        30 tests (4 variants, sub-components, responsive)
+├── Icon:        20 tests (sizes, colors, wrappers)
+├── Spinner:     26 tests (sizes, variants, animations)
+└── SocialLinks: 10 tests (circle/inline variants, URLs, accessibility) [NEW]
 
-Layout Components (10 tests):
-└── PageHeader: 10 tests (rendering, responsive, navigation, mobile menu)
+Layout Components (27 tests):
+├── PageHeader:  10 tests (rendering, responsive, navigation, mobile menu)
+└── PageFooter:  17 tests (all 8 contact rows, logo, social, sponsors, motto) [NEW]
 
 Effect Services (25 tests):
-├── DrupalService:     15 tests (articles, teams, players, error handling, retry)
-└── FootbalistoService: 10 tests (matches, rankings, caching, timeouts)
+├── DrupalService:     14 tests (articles, teams, players, error handling, retry)
+└── FootbalistoService: 11 tests (matches, rankings, caching, timeouts)
 ```
 
-**Components Created: 8 (4 UI + 4 Layout)**
-**Storybook Stories: 31 stories (19 component + 12 element)**
+**Components Created: 10 (5 UI + 5 Layout)**
+- UI: Button, Card, Icon, Spinner, SocialLinks
+- Layout: PageHeader, Navigation, MobileMenu, PageFooter, (Container)
+
+**Storybook Stories: 46 stories**
+- 27 component stories
+- 19 element stories (12 PageHeader + 7 PageFooter)
+
 **Visual Parity: 100% with Gatsby site ✅**
-**Git commits:** 4fd02af (initial), b29e9e9-7e00696 (visual parity fixes)
+**Git commits:** 4fd02af (initial), b29e9e9-7464a0c (visual parity complete)
 
 ### Tasks
 
@@ -1660,10 +1681,10 @@ export const revalidate = 3600 // 1 hour ISR
 - Match exact spacing, colors
 
 ### Deliverables
-- ✅ PageHeader with tests and visual regression
+- ✅ PageHeader with tests and visual parity
 - ✅ Navigation with dropdown support
 - ✅ MobileMenu with animations
-- ⏳ PageFooter matching current design
+- ✅ PageFooter with all sections (contact, social, sponsors, motto)
 - ⏳ Article detail pages
 - ⏳ News overview with pagination
 - ⏳ Homepage
