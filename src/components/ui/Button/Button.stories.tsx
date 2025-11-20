@@ -133,6 +133,13 @@ export const FullWidth: Story = {
   parameters: {
     layout: 'padded',
   },
+  decorators: [
+    (Story) => (
+      <div style={{ width: '100%', maxWidth: '600px' }}>
+        <Story />
+      </div>
+    ),
+  ],
 }
 
 /**

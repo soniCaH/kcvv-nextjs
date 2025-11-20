@@ -108,7 +108,8 @@ export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
 
             /* Paragraphs */
             .article-body p {
-              margin-bottom: 1rem;
+              margin-bottom: 0.875rem;
+              line-height: 1.6;
             }
 
             /* Lists */
@@ -123,6 +124,25 @@ export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
               max-width: 100%;
               height: auto;
               margin: 1rem 0;
+            }
+
+            /* Image zoom effect on hover */
+            .article-body p:has(img) {
+              overflow: hidden;
+              border-radius: 4px;
+              margin: 1.5rem 0;
+            }
+
+            .article-body p img {
+              display: block;
+              width: 100%;
+              transition: transform 0.3s ease;
+              will-change: transform;
+              cursor: zoom-in;
+            }
+
+            .article-body p img:hover {
+              transform: scale(1.1);
             }
           `,
         }}

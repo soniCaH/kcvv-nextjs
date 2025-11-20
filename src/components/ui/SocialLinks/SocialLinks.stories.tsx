@@ -104,7 +104,7 @@ export const InlineVertical: Story = {
 }
 
 /**
- * Different icon sizes
+ * Different icon sizes (inline variant)
  */
 export const Sizes: Story = {
   render: () => (
@@ -124,3 +124,27 @@ export const Sizes: Story = {
     </div>
   ),
 }
+
+/**
+ * Circle variant in different sizes
+ * Small: 24px, Medium: 32px, Large: 40px
+ */
+export const CircleSizes: Story = {
+  render: () => (
+    <div className="bg-black p-8 space-y-6">
+      <div>
+        <p className="text-white text-sm mb-2">Small (24px)</p>
+        <SocialLinks variant="circle" size="sm" />
+      </div>
+      <div>
+        <p className="text-white text-sm mb-2">Medium (32px - Default)</p>
+        <SocialLinks variant="circle" size="md" />
+      </div>
+      <div>
+        <p className="text-white text-sm mb-2">Large (40px)</p>
+        <SocialLinks variant="circle" size="lg" />
+      </div>
+    </div>
+  ),
+}
+

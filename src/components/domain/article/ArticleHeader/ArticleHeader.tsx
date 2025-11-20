@@ -59,7 +59,9 @@ export const ArticleHeader = ({
         }}
       >
         <div className="w-full max-w-[70rem] mx-auto px-6 py-5 lg:px-0 lg:pb-5">
-          <h1 className="text-white leading-[0.92] m-0">{title}</h1>
+          <h1 className="text-white text-4xl lg:text-5xl leading-[0.92] m-0 font-bold">
+            {title}
+          </h1>
         </div>
       </div>
 

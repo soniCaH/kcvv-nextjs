@@ -137,7 +137,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
       <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
         {/* Metadata - First in HTML, displays on RIGHT on desktop */}
-        <aside className="lg:flex lg:flex-col lg:max-w-[20rem]">
+        <aside className="lg:flex lg:flex-col lg:max-w-[20rem] lg:self-start">
           <ArticleMetadata
             author="KCVV Elewijt" // TODO: Fetch actual author from uid relationship
             date={article.attributes.created.toLocaleDateString('nl-BE', {

@@ -23,7 +23,7 @@ const meta = {
     },
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'white'],
+      options: ['primary', 'secondary', 'white', 'logo'],
       description: 'Color variant',
     },
     label: {
@@ -192,6 +192,69 @@ export const LoadingStates: Story = {
           </div>
         </CardContent>
       </Card>
+    </div>
+  ),
+}
+
+/**
+ * KCVV Logo Spinner (matches Gatsby site)
+ * Rotates the KCVV logo around Y-axis with smooth 3D effect
+ */
+export const LogoSpinner: Story = {
+  args: {
+    variant: 'logo',
+    size: 'lg',
+    label: 'Loading KCVV content...',
+  },
+}
+
+/**
+ * Logo spinner in all sizes
+ */
+export const LogoSizes: Story = {
+  render: () => (
+    <div className="flex items-end gap-8">
+      <div className="text-center">
+        <Spinner variant="logo" size="sm" />
+        <div className="text-xs mt-2 text-gray-600">Small</div>
+      </div>
+      <div className="text-center">
+        <Spinner variant="logo" size="md" />
+        <div className="text-xs mt-2 text-gray-600">Medium</div>
+      </div>
+      <div className="text-center">
+        <Spinner variant="logo" size="lg" />
+        <div className="text-xs mt-2 text-gray-600">Large</div>
+      </div>
+      <div className="text-center">
+        <Spinner variant="logo" size="xl" />
+        <div className="text-xs mt-2 text-gray-600">Extra Large</div>
+      </div>
+    </div>
+  ),
+}
+
+/**
+ * Comparison: SVG Spinner vs Logo Spinner
+ * Shows both spinner types side-by-side
+ */
+export const SpinnerComparison: Story = {
+  render: () => (
+    <div className="grid grid-cols-2 gap-8">
+      <div className="flex flex-col items-center gap-4">
+        <h4 className="font-bold text-sm">SVG Spinner</h4>
+        <Spinner variant="primary" size="lg" />
+        <p className="text-xs text-gray-600 text-center max-w-xs">
+          Generic circular spinner (fast, lightweight)
+        </p>
+      </div>
+      <div className="flex flex-col items-center gap-4">
+        <h4 className="font-bold text-sm">Logo Spinner</h4>
+        <Spinner variant="logo" size="lg" />
+        <p className="text-xs text-gray-600 text-center max-w-xs">
+          KCVV branded spinner (page loads, branded experiences)
+        </p>
+      </div>
     </div>
   ),
 }

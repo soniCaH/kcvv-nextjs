@@ -31,12 +31,20 @@ type Story = StoryObj<typeof meta>
 const sampleArticleContent = `
   <p>KCVV Elewijt heeft afgelopen weekend een indrukwekkende overwinning behaald tegen hun rivalen met een score van 3-1. Het team toonde uitstekende teamwork en determinatie gedurende de hele wedstrijd.</p>
 
+  <p>
+    <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop" alt="Team celebrating the opening goal" />
+  </p>
+
   <h2>Eerste Helft Dominantie</h2>
   <p>Vanaf het eerste fluitsignaal nam KCVV Elewijt de controle over de wedstrijd. Met een sterk middenveld en uitstekende passing creëerden ze kans na kans. In de 23e minuut opende <a href="/player/jan-janssens">Jan Janssens</a> de score met een prachtig schot van buiten de zestien.</p>
 
   <blockquote>
     <p>Dit was een van onze beste prestaties van het seizoen. Het team heeft hard gewerkt en het resultaat laat dat zien.</p>
   </blockquote>
+
+  <p>
+    <img src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&h=600&fit=crop" alt="Match action shot" />
+  </p>
 
   <h2>Tweede Helft Spanning</h2>
   <p>De tweede helft begon met meer druk van de tegenstander, maar onze verdediging bleef sterk. <a href="/player/piet-pieters">Piet Pieters</a> verdubbelde de voorsprong in de 67e minuut met een kopbal na een perfecte hoekschop.</p>
@@ -52,6 +60,8 @@ const sampleArticleContent = `
   </ul>
 
   <p>Meer informatie over <a href="/team/a-ploeg">onze A-Ploeg</a> en de komende wedstrijden vind je op <a href="https://kcvvelewijt.be/calendar" target="_blank">onze kalender</a>.</p>
+
+  <p><em><strong>💡 Tip:</strong> Hover over de afbeeldingen om ze te vergroten!</em></p>
 `
 
 /**
@@ -68,7 +78,7 @@ export const Default: Story = {
 
       <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
         {/* Metadata - First in HTML, displays on RIGHT on desktop */}
-        <aside className="lg:flex lg:flex-col lg:max-w-[20rem]">
+        <aside className="lg:flex lg:flex-col lg:max-w-[20rem] lg:self-start">
           <ArticleMetadata
             author="Tom Redactie"
             date="15 januari 2025"
@@ -111,7 +121,7 @@ export const Default: Story = {
       />
 
       {/* Next section to show footer overlap */}
-      <div className="bg-gray-100 pt-32 pb-16">
+      <div className="bg-gray-100 pt-8 pb-16">
         <div className="max-w-[70rem] mx-auto px-6">
           <h2 className="text-2xl font-bold mb-4">Andere Artikelen</h2>
           <p className="text-gray-600">

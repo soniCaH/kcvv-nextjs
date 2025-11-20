@@ -99,9 +99,11 @@ export const Teaser: Story = {
           <p className="text-sm text-gray-600 mb-3">
             Een spannende wedstrijd eindigde in een 3-2 overwinning voor KCVV Elewijt.
           </p>
-          <Button variant="link" size="sm" withArrow>
-            Lees meer
-          </Button>
+          <div className="flex justify-end border-t border-[#edeff4] pt-3 -mx-4 px-4">
+            <Button variant="link" size="sm" withArrow>
+              Lees meer
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -262,7 +264,7 @@ export const MatchCard: Story = {
         </div>
       </CardContent>
       <CardFooter>
-        <div className="flex justify-center">
+        <div className="flex justify-end">
           <Button variant="link" size="sm" withArrow>
             Match Details
           </Button>
@@ -277,50 +279,67 @@ export const MatchCard: Story = {
  */
 export const NewsGrid: Story = {
   args: { children: null },
-  render: () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {[1, 2, 3].map((i) => (
-        <Card key={i} variant="teaser" hoverable>
-          <CardImage
-            src={`https://images.unsplash.com/photo-${
-              1543326727 + i * 1000
-            }-cf6c39e8f84c?w=600&h=400&fit=crop`}
-            alt={`News ${i}`}
-          />
-          <CardContent>
-            <div className="text-xs text-gray-500 mb-2">12 Jan 2025</div>
-            <h3 className="font-bold text-base mb-2 line-clamp-2">
-              Article Title {i}
-            </h3>
-            <p className="text-sm text-gray-600 line-clamp-3 mb-3">
-              A brief description of the article goes here. This gives readers a
-              preview of what to expect.
-            </p>
-            <Button variant="link" size="sm" withArrow>
-              Read Article
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  ),
+  render: () => {
+    // Use reliable, fixed image URLs
+    const images = [
+      'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=600&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1551958219-acbc608c6377?w=600&h=400&fit=crop',
+    ]
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} variant="teaser" hoverable>
+            <CardImage
+              src={images[i - 1]}
+              alt={`News ${i}`}
+            />
+            <CardContent>
+              <div className="text-xs text-gray-500 mb-2">12 Jan 2025</div>
+              <h3 className="font-bold text-base mb-2 line-clamp-2">
+                Article Title {i}
+              </h3>
+              <p className="text-sm text-gray-600 line-clamp-3 mb-3">
+                A brief description of the article goes here. This gives readers a
+                preview of what to expect.
+              </p>
+              <div className="flex justify-end border-t border-[#edeff4] pt-3 -mx-4 px-4">
+                <Button variant="link" size="sm" withArrow>
+                  Read Article
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  },
 }
 
 /**
- * Interactive playground
+ * Interactive Playground
+ *
+ * Use the Controls panel on the right (or below) to experiment with different
+ * card configurations. Try changing:
+ * - variant (default, teaser, bordered, elevated)
+ * - hoverable (adds scale + shadow on hover)
+ * - padded (adds internal padding)
  */
 export const Playground: Story = {
   args: {
     variant: 'default',
     hoverable: false,
     padded: true,
-    children: (
-      <>
-        <h3 className="font-bold text-lg mb-2">Customize Me!</h3>
-        <p className="text-gray-600">
-          Use the controls to change the card appearance.
-        </p>
-      </>
-    ),
+    children: null
   },
+  render: (args) => (
+    <Card variant={args.variant} hoverable={args.hoverable} padded={args.padded}>
+      <h3 className="font-bold text-lg mb-2">Customize Me!</h3>
+      <p className="text-gray-600">
+        Use the controls panel to change variant, hoverable, and padded properties.
+        Watch how the card updates in real-time!
+      </p>
+    </Card>
+  ),
 }

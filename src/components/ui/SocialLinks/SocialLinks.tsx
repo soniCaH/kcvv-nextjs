@@ -62,6 +62,27 @@ export const SocialLinks = ({
   direction = 'horizontal',
 }: SocialLinksProps) => {
   if (variant === 'circle') {
+    // Size configurations for circle variant
+    const sizeClasses = {
+      sm: {
+        container: 'w-6 h-6',      // 24px circle
+        text: 'text-xs',           // 12px icon
+        lineHeight: 'calc(1.5rem - 4px)', // Adjust for border
+      },
+      md: {
+        container: 'w-8 h-8',      // 32px circle (default)
+        text: 'text-sm',           // 14px icon
+        lineHeight: 'calc(2rem - 4px)',
+      },
+      lg: {
+        container: 'w-10 h-10',    // 40px circle
+        text: 'text-base',         // 16px icon
+        lineHeight: 'calc(2.5rem - 4px)',
+      },
+    }
+
+    const sizeConfig = sizeClasses[size]
+
     return (
       <ul
         className={cn(
@@ -77,10 +98,15 @@ export const SocialLinks = ({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={link.name}
-              className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-[#787C80] text-white transition-all duration-300 hover:border-kcvv-green-bright"
+              className={cn(
+                'flex items-center justify-center rounded-full',
+                'border-2 border-[#787C80] text-white',
+                'transition-all duration-300 hover:border-kcvv-green-bright',
+                sizeConfig.container,
+                sizeConfig.text
+              )}
               style={{
-                fontSize: '0.875rem',
-                lineHeight: 'calc(2rem - 4px)',
+                lineHeight: sizeConfig.lineHeight,
               }}
             >
               <Icon icon={link.icon} />

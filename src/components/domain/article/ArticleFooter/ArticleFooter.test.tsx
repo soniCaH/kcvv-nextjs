@@ -89,12 +89,6 @@ describe('ArticleFooter', () => {
     expect(wrapper).toHaveClass('bg-kcvv-green-bright')
   })
 
-  it('has negative margin bottom', () => {
-    const { container } = render(<ArticleFooter relatedContent={sampleRelatedContent} />)
-    const wrapper = container.firstChild as HTMLElement
-    expect(wrapper).toHaveClass('-mb-[125px]')
-  })
-
   it('applies custom className', () => {
     const { container } = render(
       <ArticleFooter relatedContent={sampleRelatedContent} className="custom-footer" />

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
-import { Navbar } from "./components/Navbar";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { PageFooter } from "@/components/layout/PageFooter";
 
 export const metadata: Metadata = {
   title: {
@@ -30,8 +31,9 @@ export default function RootLayout({
         </Script>
       </head>
       <body suppressHydrationWarning>
-        <Navbar />
+        <PageHeader />
         {children}
+        <PageFooter />
       </body>
     </html>
   );
