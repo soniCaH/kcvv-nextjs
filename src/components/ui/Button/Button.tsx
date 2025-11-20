@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Button Component
  * Reusable button with KCVV design system variants

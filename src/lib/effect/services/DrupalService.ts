@@ -9,6 +9,7 @@ import {
   Article,
   ArticlesResponse,
   ArticleResponse,
+  ArticleIncludedResource,
   Team,
   TeamsResponse,
   TeamResponse,
@@ -20,6 +21,7 @@ import {
   DrupalError,
   NotFoundError,
   ValidationError,
+  JsonApiLinks,
 } from '../schemas'
 
 /**
@@ -30,12 +32,15 @@ export class DrupalService extends Context.Tag('DrupalService')<
   DrupalService,
   {
     // Articles
-    readonly getArticles: (params?: {
+    readonly  getArticles: (params?: {
       page?: number
       limit?: number
       category?: string
       sort?: string
-    }) => Effect.Effect<readonly Article[], DrupalError | ValidationError>
+    }) => Effect.Effect<
+      { articles: readonly Article[]; links: JsonApiLinks | undefined },
+      DrupalError | ValidationError
+    >
 
     readonly getArticleBySlug: (slug: string) => Effect.Effect<
       Article,
@@ -184,6 +189,75 @@ export const DrupalServiceLive = Layer.effect(
       )
 
     /**
+     * Map included data to main resources
+     *
+     * Resolves relationships from the JSON:API included section into the main entities.
+     * For articles, this primarily resolves:
+     * - Featured images: media--image -> file--file -> URL
+     * - Tags: taxonomy term references
+     *
+     * @param data - Array of article entities
+     * @param included - Array of related entities from JSON:API included section
+     * @returns Articles with resolved relationships
+     *
+     * @example
+     * ```typescript
+     * // Before: article.relationships.field_media_article_image.data = { type: "media--image", id: "123" }
+     * // After:  article.relationships.field_media_article_image.data = { uri: { url: "..." }, alt: "..." }
+     * ```
+     */
+    const mapIncluded = (
+      data: readonly Article[],
+      included: readonly ArticleIncludedResource[] = []
+    ): readonly Article[] => {
+      const includedMap = new Map<string, ArticleIncludedResource>(
+        included.map((item) => [`${item.type}:${item.id}`, item])
+      )
+
+      return data.map((article) => {
+        // Clone article to avoid mutation issues
+        const newArticle: Article = {
+          ...article,
+          relationships: { ...article.relationships },
+        }
+
+        // Resolve featured image: media--image -> file--file -> URL
+        const mediaRef = newArticle.relationships.field_media_article_image?.data
+        if (mediaRef && 'id' in mediaRef && 'type' in mediaRef) {
+          const media = includedMap.get(`media--image:${mediaRef.id}`)
+
+          // Type guard: verify this is a MediaImage
+          if (media && media.type === 'media--image') {
+            const fileRef = media.relationships?.field_media_image?.data
+
+            if (fileRef) {
+              const file = includedMap.get(`file--file:${fileRef.id}`)
+
+              // Type guard: verify this is a File
+              if (file && file.type === 'file--file') {
+                // Construct DrupalImage structure matching schema
+                // file.attributes.uri.url is guaranteed to exist by schema
+                const fileUrl = file.attributes.uri.url
+                const absoluteUrl = fileUrl.startsWith('http')
+                  ? fileUrl
+                  : `${baseUrl}${fileUrl}`
+
+                newArticle.relationships.field_media_article_image.data = {
+                  uri: { url: absoluteUrl },
+                  alt: (fileRef as any).meta?.alt || '', // meta not in schema yet
+                  width: (fileRef as any).meta?.width,
+                  height: (fileRef as any).meta?.height,
+                }
+              }
+            }
+          }
+        }
+
+        return newArticle
+      })
+    }
+
+    /**
      * Get articles with optional filtering
      */
     const getArticles = (params?: {
@@ -194,7 +268,7 @@ export const DrupalServiceLive = Layer.effect(
     }) =>
       Effect.gen(function* () {
         const queryParams: Record<string, string | number> = {
-          'include': 'field_image,field_category',
+          'include': 'field_media_article_image.field_media_image,field_tags',
           'sort': params?.sort || '-created',
         }
 
@@ -213,7 +287,10 @@ export const DrupalServiceLive = Layer.effect(
         const url = buildUrl('node/article', queryParams)
         const response = yield* fetchJson(url, ArticlesResponse)
 
-        return response.data
+        return {
+          articles: mapIncluded(response.data, response.included),
+          links: response.links
+        }
       })
 
     /**
@@ -222,16 +299,36 @@ export const DrupalServiceLive = Layer.effect(
     const getArticleBySlug = (slug: string) =>
       Effect.gen(function* () {
         const normalizedSlug = slug.startsWith('/') ? slug : `/news/${slug}`
+        const limit = 50
+        let page = 1
+        let foundArticle: typeof Article.Type | undefined
 
-        const queryParams = {
-          'filter[path.alias]': normalizedSlug,
-          'include': 'field_image,field_category',
+        // Workaround: API crashes on filter[path.alias], so we fetch all articles and filter in memory
+        // We paginate until we find it or run out of articles
+        while (!foundArticle) {
+          const { articles, links } = yield* getArticles({ page, limit })
+
+          console.log(`[getArticleBySlug] Page ${page}: Fetched ${articles.length} articles`)
+          if (articles.length > 0) {
+            console.log(`[getArticleBySlug] Sample slugs:`, articles.slice(0, 3).map(a => a.attributes.path.alias))
+            console.log(`[getArticleBySlug] Searching for: ${normalizedSlug}`)
+          }
+
+          if (articles.length === 0) break
+
+          foundArticle = articles.find(
+            (a) => a.attributes.path.alias === normalizedSlug
+          )
+
+          if (foundArticle) break
+
+          if (!links?.next) break // End of list
+          page++
+
+          if (page > 20) break // Safety break to prevent infinite loops
         }
 
-        const url = buildUrl('node/article', queryParams)
-        const response = yield* fetchJson(url, ArticlesResponse)
-
-        if (!response.data || response.data.length === 0) {
+        if (!foundArticle) {
           return yield* Effect.fail(
             new NotFoundError({
               resource: 'article',
@@ -241,7 +338,7 @@ export const DrupalServiceLive = Layer.effect(
           )
         }
 
-        return response.data[0]
+        return foundArticle
       })
 
     /**
@@ -250,10 +347,11 @@ export const DrupalServiceLive = Layer.effect(
     const getArticleById = (id: string) =>
       Effect.gen(function* () {
         const url = buildUrl(`node/article/${id}`, {
-          include: 'field_image,field_category',
+          include: 'field_media_article_image.field_media_image,field_tags',
         })
         const response = yield* fetchJson(url, ArticleResponse)
-        return response.data
+        const mapped = mapIncluded([response.data], response.included)
+        return mapped[0]
       })
 
     /**

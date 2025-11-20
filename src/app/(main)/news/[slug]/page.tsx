@@ -5,7 +5,12 @@
 
 import { Effect } from 'effect'
 import { notFound } from 'next/navigation'
-import { DrupalService, runPromise } from '@/lib/effect/runtime'
+import { runPromise } from '@/lib/effect/runtime'
+import { DrupalService } from '@/lib/effect/services/DrupalService'
+import type { Metadata } from 'next'
+import type { Article } from '@/lib/effect/schemas/article.schema'
+import { isDrupalImage } from '@/lib/utils/drupal-content'
+import { formatArticleDate } from '@/lib/utils/dates'
 import {
   ArticleHeader,
   ArticleMetadata,
@@ -23,10 +28,10 @@ interface ArticlePageProps {
  */
 export async function generateStaticParams() {
   try {
-    const articles = await runPromise(
+    const { articles } = await runPromise(
       Effect.gen(function* () {
         const drupal = yield* DrupalService
-        return yield* drupal.getArticles({ limit: 100 })
+        return yield* drupal.getArticles({ limit: 50 })
       })
     )
 
@@ -53,6 +58,9 @@ export async function generateMetadata({ params }: ArticlePageProps) {
       })
     )
 
+    const imageData = article.relationships.field_media_article_image?.data
+    const hasImage = imageData && isDrupalImage(imageData)
+
     return {
       title: `${article.attributes.title} | KCVV Elewijt`,
       description: article.attributes.body?.summary || undefined,
@@ -63,13 +71,11 @@ export async function generateMetadata({ params }: ArticlePageProps) {
         publishedTime: article.attributes.created.toISOString(),
         modifiedTime: article.attributes.changed?.toISOString(),
         authors: ['KCVV Elewijt'],
-        images: article.relationships.field_image?.data?.uri.url
+        images: hasImage
           ? [
               {
-                url: article.relationships.field_image.data.uri.url,
-                alt:
-                  article.relationships.field_image.data.alt ||
-                  article.attributes.title,
+                url: imageData.uri.url,
+                alt: imageData.alt || article.attributes.title,
               },
             ]
           : undefined,
@@ -99,20 +105,21 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   })
 
   // Build image URL
-  const imageUrl = article.relationships.field_image?.data?.uri.url
-  const imageAlt =
-    article.relationships.field_image?.data?.alt || article.attributes.title
+  const imageData = article.relationships.field_media_article_image?.data
+  const hasValidImage = imageData && isDrupalImage(imageData)
+  const imageUrl = hasValidImage ? imageData.uri.url : undefined
+  const imageAlt = hasValidImage ? imageData.alt || article.attributes.title : article.attributes.title
 
   // Build share configuration
   const shareConfig = {
     url: `https://kcvvelewijt.be${article.attributes.path.alias}`,
     title: article.attributes.title,
-    hashtags: article.relationships.field_category?.data.map((cat) => cat.id) || [],
+    hashtags: article.relationships.field_tags?.data.map((cat) => cat.id) || [],
   }
 
   // Build tags from categories
   const tags =
-    article.relationships.field_category?.data.map((cat) => ({
+    article.relationships.field_tags?.data.map((cat) => ({
       name: cat.id, // TODO: Fetch actual category names
       href: `/news?category=${cat.id}`,
     })) || []
@@ -135,31 +142,30 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </header>
       )}
 
-      <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
-        {/* Metadata - First in HTML, displays on RIGHT on desktop */}
-        <aside className="lg:flex lg:flex-col lg:max-w-[20rem] lg:self-start">
-          <ArticleMetadata
-            author="KCVV Elewijt" // TODO: Fetch actual author from uid relationship
-            date={article.attributes.created.toLocaleDateString('nl-BE', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
-            tags={tags}
-            shareConfig={shareConfig}
-          />
-        </aside>
+      {/* Article Wrapper - matches Gatsby margin-bottom values */}
+      <div className="mb-6 lg:mb-10">
+        <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
+          {/* Metadata - First in HTML, displays RIGHT on desktop */}
+          <aside className="lg:flex lg:flex-col lg:max-w-[20rem] lg:self-start">
+            <ArticleMetadata
+              author="KCVV Elewijt" // TODO: Fetch actual author from uid relationship
+              date={formatArticleDate(article.attributes.created)}
+              tags={tags}
+              shareConfig={shareConfig}
+            />
+          </aside>
 
-        {/* Body - Second in HTML, displays on LEFT on desktop, takes remaining space */}
-        <div className="flex-1">
-          {article.attributes.body && (
-            <ArticleBody content={article.attributes.body.processed} />
-          )}
-        </div>
-      </main>
+          {/* Body - Second in HTML, displays LEFT on desktop */}
+          <div className="flex-1">
+            {article.attributes.body && (
+              <ArticleBody content={article.attributes.body.processed} />
+            )}
+          </div>
+        </main>
 
-      {/* Article Footer */}
-      {relatedContent.length > 0 && <ArticleFooter relatedContent={relatedContent} />}
+        {/* Article Footer */}
+        {relatedContent.length > 0 && <ArticleFooter relatedContent={relatedContent} />}
+      </div>
     </>
   )
 }

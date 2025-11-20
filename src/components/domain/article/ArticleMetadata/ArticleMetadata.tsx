@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * ArticleMetadata Component
  * Sidebar with author, date, tags, and social share buttons
@@ -61,36 +63,17 @@ export const ArticleMetadata = ({
   className,
 }: ArticleMetadataProps) => {
   return (
-    <>
-      {/* Inline styles for border-image gradient - cannot be done with Tailwind */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            .article-metadata-border {
-              border-width: 1px;
-              border-image-slice: 0 0 1 0;
-              border-image-source: linear-gradient(to right, rgba(74, 207, 82, 0.5), #FFF);
-            }
-            @media (min-width: 960px) {
-              .article-metadata-border {
-                border-image-slice: 0 0 1 1;
-              }
-            }
-          `,
-        }}
-      />
-
-      <section
-        className={cn(
-          'article-metadata-border',
-          'relative w-full mt-4 mb-3 p-3 text-xs',
-          // Mobile: bottom border only
-          'border-b',
-          // Desktop: left + bottom border, max-width, flex column
-          'lg:border-l lg:max-w-[20rem] lg:flex lg:flex-col',
-          className
-        )}
-      >
+    <section
+      className={cn(
+        'article-metadata-border',
+        'relative w-full mt-4 mb-3 p-3 text-xs',
+        // Mobile: bottom border only
+        'border-b',
+        // Desktop: left + bottom border, max-width, flex column, no shrink, self-start
+        'lg:border-l lg:max-w-[20rem] lg:flex lg:flex-col lg:flex-shrink-0 lg:self-start',
+        className
+      )}
+    >
       {/* Author */}
       <div className="mb-2">
         Geschreven door <strong>{author}</strong>.
@@ -147,6 +130,5 @@ export const ArticleMetadata = ({
         </div>
       )}
       </section>
-    </>
   )
 }

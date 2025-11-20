@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Icon Component
  * Wrapper for react-icons with consistent sizing and styling

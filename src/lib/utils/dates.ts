@@ -39,3 +39,12 @@ export const formatLongDate = (date: Date | string): string => {
   const dt = typeof date === 'string' ? DateTime.fromISO(date) : DateTime.fromJSDate(date)
   return dt.setLocale('nl').toFormat('cccc d MMMM yyyy')
 }
+
+/**
+ * Format date for article display in Belgian Dutch format (e.g., "15 januari 2024")
+ * @param date - Date object or ISO string
+ */
+export const formatArticleDate = (date: Date | string): string => {
+  const dt = typeof date === 'string' ? DateTime.fromISO(date) : DateTime.fromJSDate(date)
+  return dt.setLocale('nl').toFormat('d MMMM yyyy')
+}
