@@ -32,10 +32,11 @@ export interface ArticleBodyProps {
 export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
   return (
     <>
-      {/* Inline styles for article body link effects - using dangerouslySetInnerHTML for Storybook compatibility */}
+      {/* Inline styles for article body - using dangerouslySetInnerHTML for Storybook compatibility */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
+            /* Links - green underline animation */
             .article-body a:not(.btn) {
               position: relative;
               background-image: linear-gradient(180deg, transparent 75%, #4acf52 0);
@@ -43,20 +44,49 @@ export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
               background-repeat: no-repeat;
               text-decoration: none;
               transition: background-size 0.4s ease;
-              color: inherit;
+              color: #4acf52;
             }
             .article-body a:not(.btn):hover {
               background-size: 100% 100%;
               cursor: pointer;
             }
+            /* External links - Font Awesome external icon */
             .article-body a[target="_blank"]:after {
               content: '\\f08e';
-              font-family: 'Font Awesome 5 Free';
+              font-family: FontAwesome, 'Font Awesome 5 Free';
               font-weight: 900;
               display: inline-block;
               margin-left: 0.5em;
-              font-size: 0.875em;
             }
+
+            /* Blockquote - large green opening quote */
+            .article-body blockquote {
+              font-size: 1.5rem;
+              font-weight: 500;
+              line-height: 1;
+              border: 0;
+              margin: 2rem 0;
+              padding: 0;
+              overflow: hidden;
+              color: var(--color-kcvv-gray-dark, #292c31);
+            }
+            .article-body blockquote::before {
+              color: #4acf52;
+              font-size: 15rem;
+              line-height: 0.8;
+              content: '\\201C';
+              float: left;
+              margin-bottom: -6rem;
+              margin-left: -0.5rem;
+              overflow: hidden;
+            }
+            .article-body blockquote p {
+              padding-left: 6rem;
+              line-height: 1.25;
+              color: var(--color-kcvv-gray-dark, #292c31);
+            }
+
+            /* Headings */
             .article-body h2 {
               margin-top: 1.5rem;
               margin-bottom: 1rem;
@@ -69,25 +99,24 @@ export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
               font-size: 1.25rem;
               font-weight: bold;
             }
+
+            /* Paragraphs */
             .article-body p {
               margin-bottom: 1rem;
             }
+
+            /* Lists */
             .article-body ul,
             .article-body ol {
               margin-bottom: 1rem;
               padding-left: 2rem;
             }
+
+            /* Images */
             .article-body img {
               max-width: 100%;
               height: auto;
               margin: 1rem 0;
-            }
-            .article-body blockquote {
-              border-left: 4px solid #4acf52;
-              padding-left: 1rem;
-              margin: 1rem 0;
-              font-style: italic;
-              color: #6b7280;
             }
           `,
         }}
