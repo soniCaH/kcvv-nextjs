@@ -49,8 +49,9 @@ const sampleContent = `
     <li>Beslissende goal in de slotfase</li>
   </ul>
   <blockquote>
-    "Dit team toont week na week verbetering. We zijn op de goede weg." - Hoofdcoach
+    <p>Dit team toont week na week verbetering. We zijn op de goede weg.</p>
   </blockquote>
+  <p><em>- Hoofdcoach</em></p>
   <p>
     Voor meer informatie, bezoek de <a href="https://kcvvelewijt.be" target="_blank">officiële website</a>.
   </p>
@@ -176,9 +177,10 @@ export const ComplexFormatting: Story = {
       </ol>
 
       <blockquote>
-        "Dit team heeft het potentieel om ver te komen dit seizoen. De progressie
-        die we zien is enorm." - Technisch directeur
+        <p>Dit team heeft het potentieel om ver te komen dit seizoen. De progressie
+        die we zien is enorm.</p>
       </blockquote>
+      <p><em>- Technisch directeur</em></p>
 
       <h3>Volgende wedstrijden</h3>
       <p>
