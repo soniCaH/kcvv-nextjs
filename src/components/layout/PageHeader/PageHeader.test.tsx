@@ -5,21 +5,13 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ImageProps } from 'next/image'
 import { PageHeader } from './PageHeader'
 
 // Mock Next.js modules
 vi.mock('next/navigation', () => ({
   usePathname: () => '/',
 }))
-
-interface ImageProps {
-  src: string
-  alt: string
-  width?: number
-  height?: number
-  priority?: boolean
-  className?: string
-}
 
 vi.mock('next/image', () => ({
   default: ({ alt, ...props }: ImageProps) => (
