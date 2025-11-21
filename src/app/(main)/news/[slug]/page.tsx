@@ -111,7 +111,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // Build tags from resolved taxonomy terms
   const tags =
     article.relationships.field_tags?.data
-      .map((tag) => {
+      ?.map((tag) => {
         // Check if this is a resolved TaxonomyTerm (has attributes)
         if ('attributes' in tag && tag.attributes?.name) {
           return {
