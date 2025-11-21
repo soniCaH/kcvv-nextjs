@@ -12,3 +12,5 @@ export type { ArticleFooterProps, RelatedContent } from './ArticleFooter'
 
 export { ArticleCard } from './ArticleCard'
 export type { ArticleCardProps } from './ArticleCard'
+
+export { CategoryFilters } from './CategoryFilters'

@@ -7,7 +7,7 @@ import { Effect } from 'effect'
 import Link from 'next/link'
 import { runPromise } from '@/lib/effect/runtime'
 import { DrupalService } from '@/lib/effect/services/DrupalService'
-import { ArticleCard } from '@/components/domain/article'
+import { ArticleCard, CategoryFilters } from '@/components/domain/article'
 import { PageTitle } from '@/components/layout'
 import { formatArticleDate } from '@/lib/utils/dates'
 import { isDrupalImage } from '@/lib/utils/drupal-content'
@@ -58,38 +58,13 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
         {/* Category filters */}
         <section className="mb-6 uppercase">
           <h5 className="mb-2">Filter op categorie</h5>
-          <div className="relative">
-            {/* Fade gradients for scroll indication */}
-            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 lg:hidden" />
-            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 lg:hidden" />
-
-            {/* Scrollable filter container */}
-            <div className="flex gap-2 lg:gap-3 flex-nowrap overflow-x-auto pb-2 scroll-smooth -mx-3 px-3 lg:mx-0 lg:px-0">
-              <Link
-                href="/news"
-                className={`shrink-0 text-xs font-medium px-3 py-2 rounded transition-all duration-300 ${
-                  !category
-                    ? 'bg-kcvv-green-bright text-white'
-                    : 'bg-transparent text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white border border-kcvv-green-bright'
-                }`}
-              >
-                Alles
-              </Link>
-              {tags.map((tag) => (
-                <Link
-                  key={tag.id}
-                  href={`/news?category=${encodeURIComponent(tag.attributes.name)}`}
-                  className={`shrink-0 text-xs font-medium px-3 py-2 rounded transition-all duration-300 whitespace-nowrap ${
-                    category === tag.attributes.name
-                      ? 'bg-kcvv-green-bright text-white'
-                      : 'bg-transparent text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white border border-kcvv-green-bright'
-                  }`}
-                >
-                  {tag.attributes.name}
-                </Link>
-              ))}
-            </div>
-          </div>
+          <CategoryFilters
+            categories={tags.map((tag) => ({
+              id: tag.id,
+              attributes: { name: tag.attributes.name },
+            }))}
+            activeCategory={category}
+          />
         </section>
 
         {/* Articles grid */}
