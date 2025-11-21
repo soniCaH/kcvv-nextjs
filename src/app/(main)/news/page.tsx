@@ -48,7 +48,17 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
 
   return (
     <>
-      <header className="bg-kcvv-green-bright px-3 pt-4 pb-4 xl:px-0">
+      <header
+        className="px-3 pt-4 pb-4 xl:px-0"
+        style={{
+          background: '#4acf52',
+          backgroundImage: 'url(/images/header-pattern.png)',
+          backgroundPosition: '50% -7vw',
+          backgroundAttachment: 'fixed',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: '100vw auto',
+        }}
+      >
         <div className="w-full max-w-[70rem] mx-auto">
           <h1 className="text-white text-[2.5rem] leading-[0.92] font-bold">
             Nieuwsarchief KCVV Elewijt
