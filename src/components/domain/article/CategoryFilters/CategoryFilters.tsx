@@ -8,6 +8,7 @@ interface Category {
   id: string
   attributes: {
     name: string
+    slug: string
   }
 }
 
@@ -104,9 +105,9 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
         {categories.map((category) => (
           <Link
             key={category.id}
-            href={`/news?category=${encodeURIComponent(category.attributes.name)}`}
+            href={`/news?category=${encodeURIComponent(category.attributes.slug)}`}
             className={`shrink-0 text-xs font-medium px-3 py-2 rounded transition-all duration-300 whitespace-nowrap ${
-              activeCategory === category.attributes.name
+              activeCategory === category.attributes.slug
                 ? 'bg-kcvv-green-bright text-white'
                 : 'bg-transparent text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white border border-kcvv-green-bright'
             }`}

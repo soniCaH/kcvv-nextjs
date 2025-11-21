@@ -37,7 +37,7 @@ export class DrupalService extends Context.Tag("DrupalService")<
     readonly getArticles: (params?: {
       page?: number;
       limit?: number;
-      category?: string;
+      categoryId?: number;
       sort?: string;
     }) => Effect.Effect<
       { articles: readonly Article[]; links: JsonApiLinks | undefined },
@@ -316,7 +316,7 @@ export const DrupalServiceLive = Layer.effect(
     const getArticles = (params?: {
       page?: number;
       limit?: number;
-      category?: string;
+      categoryId?: number;
       sort?: string;
     }) =>
       Effect.gen(function* () {
@@ -334,8 +334,8 @@ export const DrupalServiceLive = Layer.effect(
           queryParams["page[offset]"] = (params.page - 1) * params.limit;
         }
 
-        if (params?.category) {
-          queryParams["filter[field_category.name]"] = params.category;
+        if (params?.categoryId) {
+          queryParams["filter[field_tags.drupal_internal__tid]"] = params.categoryId;
         }
 
         const url = buildUrl("node/article", queryParams);

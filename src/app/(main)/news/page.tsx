@@ -27,26 +27,36 @@ interface NewsPageProps {
  */
 export default async function NewsPage({ searchParams }: NewsPageProps) {
   const params = await searchParams
-  const category = params.category
+  const categorySlug = params.category
   const page = params.page ? parseInt(params.page, 10) : 1
   const limit = 9 // 3 complete rows in 3-column grid
 
-  // Fetch articles and tags in parallel
-  const [{ articles, links }, tags] = await runPromise(
+  // First fetch tags to look up category ID
+  const tags = await runPromise(
     Effect.gen(function* () {
       const drupal = yield* DrupalService
+      return yield* drupal.getTags({ vocabulary: 'category' })
+    })
+  )
 
-      const articlesEffect = drupal.getArticles({
+  // Extract slug from path and find matching category
+  const categoryId = categorySlug
+    ? tags.find((tag) => {
+        const slug = tag.attributes.path?.alias?.split('/').pop()
+        return slug === categorySlug
+      })?.attributes.drupal_internal__tid
+    : undefined
+
+  // Fetch articles with category filter
+  const { articles, links } = await runPromise(
+    Effect.gen(function* () {
+      const drupal = yield* DrupalService
+      return yield* drupal.getArticles({
         page,
         limit,
-        category,
+        categoryId,
         sort: '-created',
       })
-
-      const tagsEffect = drupal.getTags({ vocabulary: 'category' })
-
-      // Run both requests in parallel
-      return yield* Effect.all([articlesEffect, tagsEffect])
     })
   )
 
@@ -61,9 +71,12 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
           <CategoryFilters
             categories={tags.map((tag) => ({
               id: tag.id,
-              attributes: { name: tag.attributes.name },
+              attributes: {
+                name: tag.attributes.name,
+                slug: tag.attributes.path?.alias?.split('/').pop() || '',
+              },
             }))}
-            activeCategory={category}
+            activeCategory={categorySlug}
           />
         </section>
 
@@ -96,7 +109,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
           <div>
             {links?.prev && (
               <Link
-                href={`/news${category ? `?category=${category}&page=${page - 1}` : `?page=${page - 1}`}`}
+                href={`/news${categorySlug ? `?category=${categorySlug}&page=${page - 1}` : `?page=${page - 1}`}`}
                 className="text-kcvv-green-bright hover:underline"
               >
                 &laquo; Vorige
@@ -107,7 +120,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
           <div className="text-right">
             {links?.next && (
               <Link
-                href={`/news${category ? `?category=${category}&page=${page + 1}` : `?page=${page + 1}`}`}
+                href={`/news${categorySlug ? `?category=${categorySlug}&page=${page + 1}` : `?page=${page + 1}`}`}
                 className="text-kcvv-green-bright hover:underline"
               >
                 Volgende &raquo;
