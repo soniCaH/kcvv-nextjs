@@ -18,7 +18,7 @@
  * ```
  */
 export function isDrupalImage(
-  data: any
+  data: unknown
 ): data is { uri: { url: string }; alt?: string; width?: number; height?: number } {
   return !!(data && typeof data === 'object' && 'uri' in data && data.uri && 'url' in data.uri)
 }

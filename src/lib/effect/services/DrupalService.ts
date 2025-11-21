@@ -253,6 +253,30 @@ export const DrupalServiceLive = Layer.effect(
           }
         }
 
+        // Resolve taxonomy terms (tags)
+        const tagsData = newArticle.relationships.field_tags?.data
+        if (tagsData && Array.isArray(tagsData)) {
+          newArticle.relationships.field_tags.data = tagsData.map((tagRef) => {
+            // If already resolved (has attributes.name), return as-is
+            if ('attributes' in tagRef && tagRef.attributes) {
+              return tagRef
+            }
+
+            // Otherwise, resolve from included
+            if ('id' in tagRef && 'type' in tagRef) {
+              const resolvedTag = includedMap.get(`${tagRef.type}:${tagRef.id}`)
+
+              // Type guard: verify this is a TaxonomyTerm
+              if (resolvedTag && resolvedTag.type.startsWith('taxonomy_term--')) {
+                return resolvedTag
+              }
+            }
+
+            // Fallback: return reference as-is
+            return tagRef
+          })
+        }
+
         return newArticle
       })
     }

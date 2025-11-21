@@ -7,8 +7,6 @@ import { Effect } from 'effect'
 import { notFound } from 'next/navigation'
 import { runPromise } from '@/lib/effect/runtime'
 import { DrupalService } from '@/lib/effect/services/DrupalService'
-import type { Metadata } from 'next'
-import type { Article } from '@/lib/effect/schemas/article.schema'
 import { isDrupalImage } from '@/lib/utils/drupal-content'
 import { formatArticleDate } from '@/lib/utils/dates'
 import {
@@ -110,19 +108,28 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const imageUrl = hasValidImage ? imageData.uri.url : undefined
   const imageAlt = hasValidImage ? imageData.alt || article.attributes.title : article.attributes.title
 
+  // Build tags from resolved taxonomy terms
+  const tags =
+    article.relationships.field_tags?.data
+      .map((tag) => {
+        // Check if this is a resolved TaxonomyTerm (has attributes)
+        if ('attributes' in tag && tag.attributes?.name) {
+          return {
+            name: tag.attributes.name,
+            href: `/news?category=${encodeURIComponent(tag.attributes.name)}`,
+          }
+        }
+        // Fallback for unresolved references (shouldn't happen after mapIncluded)
+        return null
+      })
+      .filter((tag): tag is { name: string; href: string } => tag !== null) || []
+
   // Build share configuration
   const shareConfig = {
     url: `https://kcvvelewijt.be${article.attributes.path.alias}`,
     title: article.attributes.title,
-    hashtags: article.relationships.field_tags?.data.map((cat) => cat.id) || [],
+    hashtags: tags.map((tag) => tag.name),
   }
-
-  // Build tags from categories
-  const tags =
-    article.relationships.field_tags?.data.map((cat) => ({
-      name: cat.id, // TODO: Fetch actual category names
-      href: `/news?category=${cat.id}`,
-    })) || []
 
   // TODO: Fetch related content based on categories
   // For now, use empty array
