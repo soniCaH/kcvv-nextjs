@@ -174,7 +174,7 @@ export const Minimal: Story = {
  */
 export const InGridLayout: Story = {
   render: () => (
-    <div className="w-full max-w-[70rem] mx-auto px-3 lg:px-0">
+    <div className="w-full max-w-inner-lg mx-auto px-3 lg:px-0">
       <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-10">
         <ArticleCard
           title="KCVV Elewijt wint derby"

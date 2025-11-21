@@ -86,6 +86,7 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
           )
         )
       ),
+      links: S.optional(S.Unknown), // Drupal includes links even when data is null
     })
   ),
 
@@ -100,6 +101,7 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
           type: S.Literal('user--user'),
         })
       ),
+      links: S.optional(S.Unknown), // Drupal includes links even when data is null
     })
   ),
 
@@ -110,6 +112,7 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
   field_related_content: S.optional(
     S.Struct({
       data: S.Array(DrupalNodeReference),
+      links: S.optional(S.Unknown),
     })
   ),
 
@@ -125,6 +128,7 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
           type: S.Literal('node_type--node_type'),
         })
       ),
+      links: S.optional(S.Unknown), // Drupal includes links even when data is null
     })
   ),
 
@@ -139,6 +143,7 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
           type: S.Literal('user--user'),
         })
       ),
+      links: S.optional(S.Unknown), // Drupal includes links even when data is null
     })
   ),
 }) {}

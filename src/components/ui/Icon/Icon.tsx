@@ -81,7 +81,7 @@ export const Icon = forwardRef<HTMLSpanElement, IconProps>(
           value={{
             size: sizeMap[size],
             color: colorMap[color],
-            className: 'flex-shrink-0',
+            className: 'shrink-0',
           }}
         >
           {icon}

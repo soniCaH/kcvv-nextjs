@@ -76,7 +76,7 @@ export const Default: Story = {
         imageAlt="Voetbalwedstrijd KCVV Elewijt"
       />
 
-      <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
+      <main className="w-full max-w-inner-lg mx-auto px-0 lg:flex lg:flex-row-reverse">
         {/* Metadata - First in HTML, displays on RIGHT on desktop */}
         <aside className="lg:flex lg:flex-col lg:max-w-[20rem] lg:self-start">
           <ArticleMetadata
@@ -122,7 +122,7 @@ export const Default: Story = {
 
       {/* Next section to show footer overlap */}
       <div className="bg-gray-100 pt-8 pb-16">
-        <div className="max-w-[70rem] mx-auto px-6">
+        <div className="max-w-inner-lg mx-auto px-6">
           <h2 className="text-2xl font-bold mb-4">Andere Artikelen</h2>
           <p className="text-gray-600">
             Hier komen andere artikelen of widgets...
@@ -140,14 +140,14 @@ export const WithoutImage: Story = {
   render: () => (
     <div className="min-h-screen bg-white">
       <header className="bg-kcvv-green-bright px-3 pt-4 pb-4 xl:px-0">
-        <div className="w-full max-w-[70rem] mx-auto">
+        <div className="w-full max-w-inner-lg mx-auto">
           <h1 className="text-white text-[2.5rem] leading-[0.92] font-bold">
             Trainingsschema aangepast voor winterstop
           </h1>
         </div>
       </header>
 
-      <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
+      <main className="w-full max-w-inner-lg mx-auto px-0 lg:flex lg:flex-row-reverse">
         <aside className="lg:flex lg:flex-col lg:max-w-[20rem]">
           <ArticleMetadata
             author="Club Secretariaat"
@@ -203,7 +203,7 @@ export const LongArticle: Story = {
         imageAlt="KCVV Elewijt seizoen analyse"
       />
 
-      <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
+      <main className="w-full max-w-inner-lg mx-auto px-0 lg:flex lg:flex-row-reverse">
         <aside className="lg:flex lg:flex-col lg:max-w-[20rem]">
           <ArticleMetadata
             author="Marc Analyse"

@@ -69,7 +69,7 @@ export const ArticleFooter = ({ relatedContent, className }: ArticleFooterProps)
         className
       )}
     >
-      <section className="w-full max-w-[70rem] mx-auto px-3 lg:px-0">
+      <section className="w-full max-w-inner-lg mx-auto px-3 lg:px-0">
         <h3 className="uppercase text-white mb-4">Gerelateerde inhoud</h3>
 
         <div
@@ -87,7 +87,7 @@ export const ArticleFooter = ({ relatedContent, className }: ArticleFooterProps)
               )}
             >
               {/* Content type icon */}
-              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-kcvv-green-dark text-white text-sm">
+              <div className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-kcvv-green-dark text-white text-sm">
                 <Icon icon={contentTypeIcons[item.type]} size="xs" />
               </div>
 

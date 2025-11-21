@@ -20,7 +20,7 @@ export interface PageTitleProps {
    */
   padding?: string
   /**
-   * Container max width (default: max-w-[70rem])
+   * Container max width (default: max-w-inner-lg)
    */
   containerWidth?: string
 }
@@ -44,7 +44,7 @@ export const PageTitle = ({
   title,
   className,
   padding = 'px-3 pt-4 pb-4 xl:px-0',
-  containerWidth = 'max-w-[70rem]',
+  containerWidth = 'max-w-inner-lg',
 }: PageTitleProps) => {
   return (
     <header

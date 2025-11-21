@@ -52,7 +52,7 @@ export const ArticleCard = ({
       >
         {/* Image Header */}
         {imageUrl && (
-          <div className="relative flex-shrink-0 w-[105px] min-w-[105px] mr-4 lg:w-full lg:mr-0 overflow-hidden">
+          <div className="relative shrink-0 w-[105px] min-w-[105px] mr-4 lg:w-full lg:mr-0 overflow-hidden">
             <div className="relative aspect-[16/10] lg:aspect-[4/3]">
               <Image
                 src={imageUrl}

@@ -162,7 +162,7 @@ export const InContext: Story = {
   render: (args) => (
     <div className="min-h-screen bg-white">
       {/* Article content */}
-      <div className="max-w-[70rem] mx-auto px-6 py-8">
+      <div className="max-w-inner-lg mx-auto px-6 py-8">
         <h2 className="text-2xl font-bold mb-4">Article Title</h2>
         <p className="text-gray-700 mb-4">
           Dit is het einde van het artikel. Hieronder volgt de sectie met gerelateerde inhoud.
@@ -177,7 +177,7 @@ export const InContext: Story = {
 
       {/* Next section */}
       <div className="bg-gray-100 pt-32 pb-16">
-        <div className="max-w-[70rem] mx-auto px-6">
+        <div className="max-w-inner-lg mx-auto px-6">
           <p className="text-gray-600">
             Volgende sectie op de pagina (let op de overlap met de groene footer)
           </p>
