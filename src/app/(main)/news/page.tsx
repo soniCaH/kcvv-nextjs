@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { runPromise } from '@/lib/effect/runtime'
 import { DrupalService } from '@/lib/effect/services/DrupalService'
 import { ArticleCard } from '@/components/domain/article'
+import { PageTitle } from '@/components/layout'
 import { formatArticleDate } from '@/lib/utils/dates'
 import { isDrupalImage } from '@/lib/utils/drupal-content'
 import type { Metadata } from 'next'
@@ -48,23 +49,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
 
   return (
     <>
-      <header
-        className="px-3 pt-4 pb-4 xl:px-0"
-        style={{
-          background: '#4acf52',
-          backgroundImage: 'url(/images/header-pattern.png)',
-          backgroundPosition: '50% -7vw',
-          backgroundAttachment: 'fixed',
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: '100vw auto',
-        }}
-      >
-        <div className="w-full max-w-[70rem] mx-auto">
-          <h1 className="text-white text-[2.5rem] leading-[0.92] font-bold">
-            Nieuwsarchief KCVV Elewijt
-          </h1>
-        </div>
-      </header>
+      <PageTitle title="Nieuwsarchief KCVV Elewijt" />
 
       <div className="w-full max-w-[70rem] mx-auto px-3 lg:px-0 py-6">
         {/* Category filters */}
