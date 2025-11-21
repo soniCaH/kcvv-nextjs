@@ -94,8 +94,20 @@ export const ArticleFooter = ({ relatedContent, className }: ArticleFooterProps)
               {/* Link */}
               <Link
                 href={item.href}
-                className="text-white hover:underline flex-1 break-words"
-                style={{ color: '#FFF' }}
+                className="text-white flex-1 break-words relative no-underline transition-all duration-400"
+                style={{
+                  color: '#FFF',
+                  backgroundImage: 'linear-gradient(180deg, transparent 75%, #FFF 0)',
+                  backgroundSize: '0 100%',
+                  backgroundRepeat: 'no-repeat',
+                  transition: 'background-size 0.4s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundSize = '100% 100%'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundSize = '0 100%'
+                }}
               >
                 {item.title}
               </Link>
