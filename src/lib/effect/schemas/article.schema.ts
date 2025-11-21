@@ -78,10 +78,12 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
    */
   field_tags: S.optional(
     S.Struct({
-      data: S.Array(
-        S.Union(
-          TaxonomyTerm, // Fully resolved term
-          DrupalTermReference // Just a reference
+      data: S.NullOr(
+        S.Array(
+          S.Union(
+            TaxonomyTerm, // Fully resolved term
+            DrupalTermReference // Just a reference
+          )
         )
       ),
     })

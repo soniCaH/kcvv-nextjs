@@ -78,7 +78,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
             const hasValidImage = imageData && isDrupalImage(imageData)
             const tags =
               article.relationships.field_tags?.data
-                .map((tag) => ('attributes' in tag && tag.attributes?.name ? { name: tag.attributes.name } : null))
+                ?.map((tag) => ('attributes' in tag && tag.attributes?.name ? { name: tag.attributes.name } : null))
                 .filter((tag): tag is { name: string } => tag !== null) || []
 
             return (
