@@ -94,7 +94,7 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
    */
   uid: S.optional(
     S.Struct({
-      data: S.optional(
+      data: S.NullOr(
         S.Struct({
           id: S.String,
           type: S.Literal('user--user'),
@@ -119,7 +119,7 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
    */
   node_type: S.optional(
     S.Struct({
-      data: S.optional(
+      data: S.NullOr(
         S.Struct({
           id: S.String,
           type: S.Literal('node_type--node_type'),
@@ -133,7 +133,7 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
    */
   revision_uid: S.optional(
     S.Struct({
-      data: S.optional(
+      data: S.NullOr(
         S.Struct({
           id: S.String,
           type: S.Literal('user--user'),
