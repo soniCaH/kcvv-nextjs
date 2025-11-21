@@ -9,3 +9,6 @@ export type { ArticleBodyProps } from './ArticleBody'
 
 export { ArticleFooter } from './ArticleFooter'
 export type { ArticleFooterProps, RelatedContent } from './ArticleFooter'
+
+export { ArticleCard } from './ArticleCard'
+export type { ArticleCardProps } from './ArticleCard'
