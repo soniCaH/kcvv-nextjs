@@ -14,7 +14,7 @@
  */
 
 import { Schema as S } from 'effect'
-import { DrupalPath } from './common.schema'
+import { DrupalPath, RelationshipReference } from './common.schema'
 
 /**
  * Media Image attributes
@@ -84,16 +84,12 @@ export class MediaImageAttributes extends S.Class<MediaImageAttributes>('MediaIm
 export class MediaImageRelationships extends S.Class<MediaImageRelationships>('MediaImageRelationships')({
   /**
    * Reference to the actual file entity (file--file)
-   * This can be either a reference (just id/type) or the full file entity when included
+   * Uses RelationshipReference to include metadata like alt text, dimensions
+   * The meta field contains image-specific data that's not part of the file entity
    */
   field_media_image: S.optional(
     S.Struct({
-      data: S.optional(
-        S.Struct({
-          id: S.String,
-          type: S.Literal('file--file'),
-        })
-      ),
+      data: S.optional(RelationshipReference),
     })
   ),
 

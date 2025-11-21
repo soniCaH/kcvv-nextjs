@@ -54,6 +54,77 @@ export class DrupalNodeReference extends S.Class<DrupalNodeReference>('DrupalNod
 }) {}
 
 /**
+ * JSON:API Relationship Metadata
+ *
+ * Contains additional metadata about a relationship reference.
+ * Commonly used for image fields to store alt text, dimensions, etc.
+ *
+ * @see https://jsonapi.org/format/#document-resource-object-relationships
+ *
+ * @example
+ * ```typescript
+ * // Image reference with alt text
+ * {
+ *   data: {
+ *     id: "file-123",
+ *     type: "file--file",
+ *     meta: {
+ *       alt: "Team photo 2024",
+ *       width: 1920,
+ *       height: 1080
+ *     }
+ *   }
+ * }
+ * ```
+ */
+export class RelationshipMeta extends S.Class<RelationshipMeta>('RelationshipMeta')({
+  /**
+   * Alt text for images
+   */
+  alt: S.optional(S.String),
+
+  /**
+   * Title text for images/links
+   */
+  title: S.optional(S.String),
+
+  /**
+   * Image width in pixels
+   */
+  width: S.optional(S.Number),
+
+  /**
+   * Image height in pixels
+   */
+  height: S.optional(S.Number),
+}) {}
+
+/**
+ * JSON:API Relationship Reference with Metadata
+ *
+ * A relationship reference that includes optional metadata.
+ * Used when the relationship carries additional information beyond just the ID.
+ *
+ * @example
+ * ```typescript
+ * {
+ *   id: "file-abc-123",
+ *   type: "file--file",
+ *   meta: {
+ *     alt: "Homepage hero image",
+ *     width: 1920,
+ *     height: 1080
+ *   }
+ * }
+ * ```
+ */
+export class RelationshipReference extends S.Class<RelationshipReference>('RelationshipReference')({
+  id: S.String,
+  type: S.String,
+  meta: S.optional(RelationshipMeta),
+}) {}
+
+/**
  * Base attributes shared by all Drupal nodes
  */
 export const BaseDrupalNodeAttributes = {

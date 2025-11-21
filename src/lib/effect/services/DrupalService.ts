@@ -244,9 +244,9 @@ export const DrupalServiceLive = Layer.effect(
 
                 newArticle.relationships.field_media_article_image.data = {
                   uri: { url: absoluteUrl },
-                  alt: (fileRef as any).meta?.alt || '', // meta not in schema yet
-                  width: (fileRef as any).meta?.width,
-                  height: (fileRef as any).meta?.height,
+                  alt: fileRef.meta?.alt || '',
+                  width: fileRef.meta?.width,
+                  height: fileRef.meta?.height,
                 }
               }
             }

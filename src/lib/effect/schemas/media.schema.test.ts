@@ -73,19 +73,22 @@ describe('Media Schema', () => {
       expect(result.field_media_image).toBeUndefined()
     })
 
-    it('should reject invalid file type', () => {
-      const invalidRelationships = {
+    it('should accept any type value (validation happens at included resource level)', () => {
+      const relationships = {
         field_media_image: {
           data: {
             id: 'file-123',
-            type: 'wrong--type', // Should be 'file--file'
+            type: 'any--type', // Type validated in ArticleIncludedResource, not here
           },
         },
       }
 
-      expect(() =>
-        S.decodeUnknownSync(MediaImageRelationships)(invalidRelationships)
-      ).toThrow()
+      const result = S.decodeUnknownSync(MediaImageRelationships)(relationships)
+
+      expect(result.field_media_image?.data).toBeDefined()
+      if (result.field_media_image?.data && 'type' in result.field_media_image.data) {
+        expect(result.field_media_image.data.type).toBe('any--type')
+      }
     })
   })
 
