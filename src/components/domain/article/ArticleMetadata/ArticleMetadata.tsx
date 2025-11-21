@@ -70,7 +70,7 @@ export const ArticleMetadata = ({
         // Mobile: bottom border only
         'border-b',
         // Desktop: left + bottom border, max-width, flex column, no shrink, self-start
-        'lg:border-l lg:max-w-[20rem] lg:flex lg:flex-col lg:flex-shrink-0 lg:self-start',
+        'lg:border-l lg:max-w-[20rem] lg:flex lg:flex-col lg:shrink-0 lg:self-start',
         className
       )}
     >

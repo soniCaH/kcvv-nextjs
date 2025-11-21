@@ -30,7 +30,7 @@ const meta = {
     },
     containerWidth: {
       control: 'text',
-      description: 'Container max width class (default: max-w-[70rem])',
+      description: 'Container max width class (default: max-w-inner-lg)',
     },
   },
 } satisfies Meta<typeof PageTitle>
@@ -79,7 +79,7 @@ export const WithContent: Story = {
   render: (args) => (
     <div className="min-h-screen bg-white">
       <PageTitle {...args} />
-      <div className="max-w-[70rem] mx-auto px-3 lg:px-0 py-6">
+      <div className="max-w-inner-lg mx-auto px-3 lg:px-0 py-6">
         <p className="text-gray-700 mb-4">
           KCVV Elewijt is een voetbalclub met een rijke geschiedenis en een sterke verbondenheid
           met de lokale gemeenschap.

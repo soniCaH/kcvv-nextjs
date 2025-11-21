@@ -31,38 +31,57 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
   const page = params.page ? parseInt(params.page, 10) : 1
   const limit = 12
 
-  // Fetch articles
-  const { articles, links } = await runPromise(
+  // Fetch articles and tags in parallel
+  const [{ articles, links }, tags] = await runPromise(
     Effect.gen(function* () {
       const drupal = yield* DrupalService
-      return yield* drupal.getArticles({
+
+      const articlesEffect = drupal.getArticles({
         page,
         limit,
         category,
         sort: '-created',
       })
+
+      const tagsEffect = drupal.getTags({ vocabulary: 'category' })
+
+      // Run both requests in parallel
+      return yield* Effect.all([articlesEffect, tagsEffect])
     })
   )
-
-  // TODO: Fetch categories for filter (will be added in next iteration)
-  // For now, we'll just have "Alles" link
 
   return (
     <>
       <PageTitle title="Nieuwsarchief KCVV Elewijt" />
 
-      <div className="w-full max-w-[70rem] mx-auto px-3 lg:px-0 py-6">
+      <div className="w-full max-w-inner-lg mx-auto px-3 lg:px-0 py-6">
         {/* Category filters */}
         <section className="mb-6 uppercase">
           <h5 className="mb-2">Filter op categorie</h5>
           <div className="flex gap-4 flex-nowrap overflow-x-auto scrollbar-none pb-1 scroll-smooth">
             <Link
               href="/news"
-              className="flex-shrink-0 lg:text-xs lg:font-medium lg:px-2 lg:py-1 lg:bg-kcvv-green-bright lg:text-white lg:transition-all lg:duration-300 lg:hover:bg-transparent lg:hover:text-kcvv-green-bright"
+              className={`shrink-0 lg:text-xs lg:font-medium lg:px-2 lg:py-1 lg:transition-all lg:duration-300 ${
+                !category
+                  ? 'lg:bg-kcvv-green-bright lg:text-white'
+                  : 'lg:bg-transparent lg:text-kcvv-green-bright lg:hover:bg-kcvv-green-bright lg:hover:text-white'
+              }`}
             >
               Alles
             </Link>
-            {/* TODO: Add dynamic category links */}
+            {tags.map((tag) => (
+              <Link
+                key={tag.id}
+                href={`/news?category=${encodeURIComponent(tag.attributes.name)}`}
+                className={`shrink-0 lg:text-xs lg:font-medium lg:px-2 lg:py-1 lg:transition-all lg:duration-300 ${
+                  category === tag.attributes.name
+                    ? 'lg:bg-kcvv-green-bright lg:text-white'
+                    : 'lg:bg-transparent lg:text-kcvv-green-bright lg:hover:bg-kcvv-green-bright lg:hover:text-white'
+                }`}
+              >
+                {tag.attributes.name}
+              </Link>
+            ))}
           </div>
         </section>
 
@@ -91,7 +110,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
         </main>
 
         {/* Pagination */}
-        <footer className="border-t border-[rgba(74,207,82,0.25)] pt-6 grid grid-cols-2 gap-4">
+        <footer className="border-t border-kcvv-green-100 pt-6 grid grid-cols-2 gap-4">
           <div>
             {links?.prev && (
               <Link

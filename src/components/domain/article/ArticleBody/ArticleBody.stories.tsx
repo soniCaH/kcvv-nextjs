@@ -225,7 +225,7 @@ export const InContext: Story = {
     content: sampleContent,
   },
   render: (args) => (
-    <div className="max-w-[70rem] mx-auto">
+    <div className="max-w-inner-lg mx-auto">
       <div className="flex flex-col lg:flex-row-reverse">
         {/* Sidebar placeholder */}
         <div className="lg:w-[20rem] p-3 bg-gray-100 text-xs">

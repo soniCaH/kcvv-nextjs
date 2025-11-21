@@ -102,6 +102,25 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound()
   })
 
+  // Fetch related articles based on first tag
+  const firstTagName = article.relationships.field_tags?.data
+    ?.find((tag): tag is { attributes: { name: string } } => 'attributes' in tag && !!tag.attributes?.name)
+    ?.attributes.name
+
+  const relatedArticles = firstTagName
+    ? await runPromise(
+        Effect.gen(function* () {
+          const drupal = yield* DrupalService
+          const { articles } = yield* drupal.getArticles({
+            category: firstTagName,
+            limit: 4, // Fetch 4 to ensure we have 3 after excluding current
+          })
+          // Exclude current article and limit to 3
+          return articles.filter((a) => a.id !== article.id).slice(0, 3)
+        })
+      )
+    : []
+
   // Build image URL
   const imageData = article.relationships.field_media_article_image?.data
   const hasValidImage = imageData && isDrupalImage(imageData)
@@ -131,9 +150,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     hashtags: tags.map((tag) => tag.name),
   }
 
-  // TODO: Fetch related content based on categories
-  // For now, use empty array
-  const relatedContent: RelatedContent[] = []
+  // Build related content from related articles
+  const relatedContent: RelatedContent[] = relatedArticles.map((relatedArticle) => ({
+    title: relatedArticle.attributes.title,
+    href: relatedArticle.attributes.path.alias,
+    type: 'article' as const,
+  }))
 
   return (
     <>
@@ -141,7 +163,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       {imageUrl && <ArticleHeader title={article.attributes.title} imageUrl={imageUrl} imageAlt={imageAlt} />}
       {!imageUrl && (
         <header className="bg-kcvv-green-bright px-3 pt-4 pb-4 xl:px-0">
-          <div className="w-full max-w-[70rem] mx-auto">
+          <div className="w-full max-w-inner-lg mx-auto">
             <h1 className="text-white text-[2.5rem] leading-[0.92] font-bold">
               {article.attributes.title}
             </h1>
@@ -151,11 +173,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
       {/* Article Wrapper - matches Gatsby margin-bottom values */}
       <div className="mb-6 lg:mb-10">
-        <main className="w-full max-w-[70rem] mx-auto px-0 lg:flex lg:flex-row-reverse">
+        <main className="w-full max-w-inner-lg mx-auto px-0 lg:flex lg:flex-row-reverse">
           {/* Metadata - First in HTML, displays RIGHT on desktop */}
           <aside className="lg:flex lg:flex-col lg:max-w-[20rem] lg:self-start">
             <ArticleMetadata
-              author="KCVV Elewijt" // TODO: Fetch actual author from uid relationship
+              author="KCVV Elewijt"
               date={formatArticleDate(article.attributes.created)}
               tags={tags}
               shareConfig={shareConfig}

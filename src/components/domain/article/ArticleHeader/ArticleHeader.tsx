@@ -58,7 +58,7 @@ export const ArticleHeader = ({
           backgroundSize: '100vw auto',
         }}
       >
-        <div className="w-full max-w-[70rem] mx-auto px-6 py-5 lg:px-0 lg:pb-5">
+        <div className="w-full max-w-inner-lg mx-auto px-6 py-5 lg:px-0 lg:pb-5">
           <h1 className="text-white text-4xl lg:text-5xl leading-[0.92] m-0 font-bold">
             {title}
           </h1>
@@ -82,7 +82,7 @@ export const ArticleHeader = ({
         </div>
 
         {/* Hero Image */}
-        <div className="max-w-[70rem] mx-auto text-left lg:h-[35rem]">
+        <div className="max-w-inner-lg mx-auto text-left lg:h-[35rem]">
           <div className="relative w-full h-auto lg:h-[35rem]">
             <Image
               src={imageUrl}

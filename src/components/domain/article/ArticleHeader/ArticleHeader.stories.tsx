@@ -87,7 +87,7 @@ export const WithContent: Story = {
   render: (args) => (
     <div className="min-h-screen bg-white">
       <ArticleHeader {...args} />
-      <div className="max-w-[70rem] mx-auto px-6 py-8">
+      <div className="max-w-inner-lg mx-auto px-6 py-8">
         <p className="text-gray-700 mb-4">
           KCVV Elewijt heeft deze week twee nieuwe spelers aangetrokken voor het komende seizoen.
           De club is verheugd om deze nieuwe talenten te verwelkomen.

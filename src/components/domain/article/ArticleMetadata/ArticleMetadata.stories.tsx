@@ -137,7 +137,7 @@ export const InContext: Story = {
     },
   },
   render: (args) => (
-    <div className="max-w-[70rem] mx-auto">
+    <div className="max-w-inner-lg mx-auto">
       <div className="flex flex-col lg:flex-row-reverse gap-4">
         {/* Metadata Sidebar */}
         <div className="lg:w-[20rem]">

@@ -17,7 +17,7 @@
  */
 
 import { Schema as S } from 'effect'
-import { DrupalPath } from './common.schema'
+import { DrupalPath, JsonApiLinks, JsonApiVersion } from './common.schema'
 
 /**
  * Taxonomy term attributes
@@ -60,14 +60,16 @@ export class TaxonomyTermAttributes extends S.Class<TaxonomyTermAttributes>('Tax
 
   /**
    * Term description (optional, can be rich text)
-   * Drupal may return null values for empty descriptions
+   * Drupal may return null directly when description is empty
    */
   description: S.optional(
-    S.Struct({
-      value: S.optional(S.NullOr(S.String)),
-      format: S.optional(S.NullOr(S.String)),
-      processed: S.optional(S.NullOr(S.String)),
-    })
+    S.NullOr(
+      S.Struct({
+        value: S.optional(S.NullOr(S.String)),
+        format: S.optional(S.NullOr(S.String)),
+        processed: S.optional(S.NullOr(S.String)),
+      })
+    )
   ),
 
   /**
@@ -92,9 +94,19 @@ export class TaxonomyTermAttributes extends S.Class<TaxonomyTermAttributes>('Tax
   changed: S.optional(S.DateFromString),
 
   /**
+   * Revision creation timestamp
+   */
+  revision_created: S.optional(S.DateFromString),
+
+  /**
    * Whether the term is the default term in its vocabulary
    */
   default_langcode: S.optional(S.Boolean),
+
+  /**
+   * Whether this revision was affected by translation
+   */
+  revision_translation_affected: S.optional(S.Boolean),
 
   /**
    * Path alias for this term
@@ -119,15 +131,32 @@ export class TaxonomyTermRelationships extends S.Class<TaxonomyTermRelationships
         S.Struct({
           id: S.String,
           type: S.String, // Usually matches the term's own type
+          meta: S.optional(S.Unknown), // Drupal can include metadata on parent references
         })
       ),
+      links: S.optional(S.Unknown), // Drupal includes links even when data is present
     })
   ),
 
   /**
    * Vocabulary/bundle this term belongs to
    */
-  vid: S.optional(S.Unknown),
+  vid: S.optional(
+    S.Struct({
+      data: S.NullOr(S.Unknown),
+      links: S.optional(S.Unknown),
+    })
+  ),
+
+  /**
+   * User who created this revision
+   */
+  revision_user: S.optional(
+    S.Struct({
+      data: S.NullOr(S.Unknown),
+      links: S.optional(S.Unknown),
+    })
+  ),
 }) {}
 
 /**
@@ -173,4 +202,32 @@ export class TaxonomyTerm extends S.Class<TaxonomyTerm>('TaxonomyTerm')({
   attributes: TaxonomyTermAttributes,
   relationships: S.optional(TaxonomyTermRelationships),
   links: S.optional(S.Unknown),
+}) {}
+
+/**
+ * Array of taxonomy terms
+ */
+export const TaxonomyTermsArray = S.Array(TaxonomyTerm)
+
+/**
+ * Drupal JSON:API response for taxonomy term collections
+ *
+ * Standard JSON:API response structure for fetching multiple terms.
+ * Used for getting all tags, categories, or other vocabulary terms.
+ *
+ * @example
+ * ```typescript
+ * const response: TaxonomyTermsResponse = await fetch('/jsonapi/taxonomy_term/tags')
+ * const tags = response.data  // TaxonomyTerm[]
+ * ```
+ */
+export class TaxonomyTermsResponse extends S.Class<TaxonomyTermsResponse>('TaxonomyTermsResponse')({
+  data: TaxonomyTermsArray,
+  jsonapi: S.optional(JsonApiVersion),
+  links: S.optional(JsonApiLinks),
+  meta: S.optional(
+    S.Struct({
+      count: S.optional(S.NumberFromString),
+    })
+  ),
 }) {}
