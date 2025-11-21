@@ -29,7 +29,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
   const params = await searchParams
   const category = params.category
   const page = params.page ? parseInt(params.page, 10) : 1
-  const limit = 12
+  const limit = 9 // 3 complete rows in 3-column grid
 
   // Fetch articles and tags in parallel
   const [{ articles, links }, tags] = await runPromise(

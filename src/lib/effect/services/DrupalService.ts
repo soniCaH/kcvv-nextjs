@@ -323,6 +323,7 @@ export const DrupalServiceLive = Layer.effect(
         const queryParams: Record<string, string | number> = {
           include: "field_media_article_image.field_media_image,field_tags",
           sort: params?.sort || "-created",
+          "filter[status]": 1, // Only fetch published articles
         };
 
         if (params?.limit) {

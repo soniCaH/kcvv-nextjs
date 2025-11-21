@@ -65,7 +65,7 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
       {showLeftArrow && (
         <button
           onClick={() => scroll('left')}
-          className="flex absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
+          className="flex absolute left-0 top-[18px] -translate-y-1/2 z-20 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
           aria-label="Scroll left"
         >
           <FaChevronLeft className="w-3 h-3" />
@@ -75,7 +75,7 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
       {showRightArrow && (
         <button
           onClick={() => scroll('right')}
-          className="flex absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
+          className="flex absolute right-0 top-[18px] -translate-y-1/2 z-20 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
           aria-label="Scroll right"
         >
           <FaChevronRight className="w-3 h-3" />
@@ -85,7 +85,11 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
       {/* Scrollable filter container */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-2 lg:gap-3 flex-nowrap overflow-x-auto pb-2 scroll-smooth px-10 lg:px-8"
+        className={`flex gap-2 lg:gap-3 flex-nowrap overflow-x-auto scroll-smooth transition-all ${
+          showLeftArrow ? 'pl-10' : 'pl-0'
+        } ${
+          showRightArrow ? 'pr-10' : 'pr-0'
+        }`}
       >
         <Link
           href="/news"
