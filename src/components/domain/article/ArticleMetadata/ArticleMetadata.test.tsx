@@ -55,7 +55,7 @@ describe('ArticleMetadata', () => {
   })
 
   it('does not render tags section when empty', () => {
-    const { container } = render(<ArticleMetadata {...defaultProps} tags={[]} />)
+    render(<ArticleMetadata {...defaultProps} tags={[]} />)
     expect(screen.queryByText(/#/)).not.toBeInTheDocument()
   })
 

@@ -4,6 +4,7 @@
  */
 
 import { forwardRef, type HTMLAttributes, type ReactNode } from 'react'
+import Image from 'next/image'
 import { cn } from '@/lib/utils/cn'
 
 export type CardVariant = 'default' | 'teaser' | 'bordered' | 'elevated'
@@ -208,11 +209,12 @@ export const CardImage = forwardRef<HTMLDivElement, CardImageProps>(
         className={cn('relative overflow-hidden', ratioClasses[aspectRatio], className)}
         {...props}
       >
-        <img
+        <Image
           src={src}
           alt={alt}
-          className="absolute inset-0 w-full h-full object-cover"
-          loading="lazy"
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       </div>
     )

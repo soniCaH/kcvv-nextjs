@@ -13,13 +13,55 @@ import { formatArticleDate } from '@/lib/utils/dates'
 import { isDrupalImage } from '@/lib/utils/drupal-content'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = {
-  title: 'Nieuwsarchief | KCVV Elewijt',
-  description: 'Bekijk al het nieuws van KCVV Elewijt. Filter op categorie of zoek naar specifieke artikelen.',
-}
-
 interface NewsPageProps {
   searchParams: Promise<{ category?: string; page?: string }>
+}
+
+/**
+ * Generate dynamic metadata based on category filter
+ */
+export async function generateMetadata({ searchParams }: NewsPageProps): Promise<Metadata> {
+  const params = await searchParams
+  const categorySlug = params.category
+
+  // If no category filter, return default metadata
+  if (!categorySlug) {
+    return {
+      title: 'Nieuwsarchief | KCVV Elewijt',
+      description: 'Bekijk al het nieuws van KCVV Elewijt. Filter op categorie of zoek naar specifieke artikelen.',
+    }
+  }
+
+  // Fetch tags to find category name
+  try {
+    const tags = await runPromise(
+      Effect.gen(function* () {
+        const drupal = yield* DrupalService
+        return yield* drupal.getTags({ vocabulary: 'category' })
+      })
+    )
+
+    // Find matching category
+    const category = tags.find((tag) => {
+      const slug = tag.attributes.path?.alias?.split('/').pop()
+      return slug === categorySlug
+    })
+
+    if (category) {
+      return {
+        title: `${category.attributes.name} - Nieuwsarchief | KCVV Elewijt`,
+        description: `Bekijk al het ${category.attributes.name} nieuws van KCVV Elewijt.`,
+      }
+    }
+  } catch (error) {
+    console.error('Failed to generate metadata:', error)
+  }
+
+  // Fallback if category not found
+  return {
+    title: 'Nieuwsarchief | KCVV Elewijt',
+    description: 'Bekijk al het nieuws van KCVV Elewijt. Filter op categorie of zoek naar specifieke artikelen.',
+  }
 }
 
 /**

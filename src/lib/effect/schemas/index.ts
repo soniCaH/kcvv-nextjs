@@ -14,6 +14,7 @@ export * from './taxonomy.schema'
 export * from './article.schema'
 export * from './team.schema'
 export * from './player.schema'
+export * from './staff.schema'
 export * from './event.schema'
 
 // External API schemas

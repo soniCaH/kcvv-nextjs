@@ -4,6 +4,7 @@
  */
 
 import { forwardRef, type HTMLAttributes } from 'react'
+import Image from 'next/image'
 import { cn } from '@/lib/utils/cn'
 
 export type SpinnerSize = 'sm' | 'md' | 'lg' | 'xl'
@@ -64,9 +65,11 @@ export const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
           className={cn('inline-flex items-center justify-center', className)}
           {...props}
         >
-          <img
+          <Image
             src="/images/logo-flat.png"
             alt="KCVV Logo"
+            width={size === 'sm' ? 48 : size === 'md' ? 56 : size === 'lg' ? 80 : 96}
+            height={size === 'sm' ? 48 : size === 'md' ? 56 : size === 'lg' ? 80 : 96}
             className={cn(
               'animate-kcvv-logo-spin',
               {

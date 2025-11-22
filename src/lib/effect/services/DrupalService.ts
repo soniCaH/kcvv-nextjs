@@ -24,6 +24,9 @@ import {
   NotFoundError,
   ValidationError,
   JsonApiLinks,
+  DrupalImage,
+  MediaImage,
+  File,
 } from "../schemas";
 
 /**
@@ -177,10 +180,7 @@ export const DrupalServiceLive = Layer.effect(
             Effect.mapError(
               (error) => {
                 console.error('[DrupalService] Schema validation failed:');
-                console.error('[DrupalService] Error details:', {
-                  _id: error._id,
-                  message: error.message,
-                });
+                console.error("[DrupalService] Error details:", { error });
                 console.error('[DrupalService] Response URL:', url);
                 console.error('[DrupalService] Response data sample:', JSON.stringify(json, null, 2).substring(0, 1000));
 
@@ -231,56 +231,60 @@ export const DrupalServiceLive = Layer.effect(
      */
     const mapIncluded = (
       data: readonly Article[],
-      included: readonly ArticleIncludedResource[] = []
+      included: readonly S.Schema.Type<typeof ArticleIncludedResource>[] = []
     ): readonly Article[] => {
-      const includedMap = new Map<string, ArticleIncludedResource>(
+      const includedMap = new Map<string, S.Schema.Type<typeof ArticleIncludedResource>>(
         included.map((item) => [`${item.type}:${item.id}`, item])
       );
 
       return data.map((article) => {
-        // Clone article to avoid mutation issues
-        const newArticle: Article = {
-          ...article,
-          relationships: { ...article.relationships },
-        };
-
         // Resolve featured image: media--image -> file--file -> URL
-        const mediaRef =
-          newArticle.relationships.field_media_article_image?.data;
-        if (mediaRef && "id" in mediaRef && "type" in mediaRef) {
-          const media = includedMap.get(`media--image:${mediaRef.id}`);
-
-          // Type guard: verify this is a MediaImage
-          if (media && media.type === "media--image") {
-            const fileRef = media.relationships?.field_media_image?.data;
-
-            if (fileRef) {
-              const file = includedMap.get(`file--file:${fileRef.id}`);
-
-              // Type guard: verify this is a File
-              if (file && file.type === "file--file") {
-                // Construct DrupalImage structure matching schema
-                // file.attributes.uri.url is guaranteed to exist by schema
-                const fileUrl = file.attributes.uri.url;
-                const absoluteUrl = fileUrl.startsWith("http")
-                  ? fileUrl
-                  : `${baseUrl}${fileUrl}`;
-
-                newArticle.relationships.field_media_article_image.data = {
-                  uri: { url: absoluteUrl },
-                  alt: fileRef.meta?.alt || "",
-                  width: fileRef.meta?.width,
-                  height: fileRef.meta?.height,
-                };
-              }
-            }
+        const mediaRef = article.relationships.field_media_article_image?.data;
+        const resolvedMediaImage = (() => {
+          if (!mediaRef || !("id" in mediaRef) || !("type" in mediaRef)) {
+            return article.relationships.field_media_article_image;
           }
-        }
+
+          const media = includedMap.get(`media--image:${mediaRef.id}`);
+          if (!media || media.type !== "media--image") {
+            return article.relationships.field_media_article_image;
+          }
+
+          // Decode media to ensure it's a valid MediaImage
+          const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
+          const fileRef = decodedMedia.relationships?.field_media_image?.data;
+          if (!fileRef) {
+            return article.relationships.field_media_article_image;
+          }
+
+          const file = includedMap.get(`file--file:${fileRef.id}`);
+          if (!file || file.type !== "file--file") {
+            return article.relationships.field_media_article_image;
+          }
+
+          // Decode file to ensure it's a valid File
+          const decodedFile = S.decodeUnknownSync(File)(file);
+          const fileUrl = decodedFile.attributes.uri.url;
+          const absoluteUrl = fileUrl.startsWith("http") ? fileUrl : `${baseUrl}${fileUrl}`;
+
+          return {
+            data: new DrupalImage({
+              uri: { url: absoluteUrl },
+              alt: fileRef.meta?.alt || "",
+              width: fileRef.meta?.width,
+              height: fileRef.meta?.height,
+            })
+          };
+        })();
 
         // Resolve taxonomy terms (tags)
-        const tagsData = newArticle.relationships.field_tags?.data;
-        if (tagsData && Array.isArray(tagsData)) {
-          newArticle.relationships.field_tags.data = tagsData.map((tagRef) => {
+        const tagsData = article.relationships.field_tags?.data;
+        const resolvedTags = (() => {
+          if (!tagsData || !Array.isArray(tagsData)) {
+            return article.relationships.field_tags;
+          }
+
+          const mappedTags = tagsData.map((tagRef) => {
             // If already resolved (has attributes.name), return as-is
             if ("attributes" in tagRef && tagRef.attributes) {
               return tagRef;
@@ -288,25 +292,32 @@ export const DrupalServiceLive = Layer.effect(
 
             // Otherwise, resolve from included
             if ("id" in tagRef && "type" in tagRef) {
-              const resolvedTag = includedMap.get(
-                `${tagRef.type}:${tagRef.id}`
-              );
+              const resolvedTag = includedMap.get(`${tagRef.type}:${tagRef.id}`);
 
-              // Type guard: verify this is a TaxonomyTerm
-              if (
-                resolvedTag &&
-                resolvedTag.type.startsWith("taxonomy_term--")
-              ) {
-                return resolvedTag;
+              // Decode and verify this is a valid TaxonomyTerm
+              if (resolvedTag && resolvedTag.type.startsWith("taxonomy_term--")) {
+                // Use Schema decoding to validate the taxonomy term - returns validated TaxonomyTerm
+                return S.decodeUnknownSync(TaxonomyTerm)(resolvedTag);
               }
             }
 
             // Fallback: return reference as-is
             return tagRef;
           });
-        }
 
-        return newArticle;
+          return { data: mappedTags };
+        })();
+
+        // Return article with resolved relationships
+        // Note: Article is already validated from API response, no need to decode again
+        return {
+          ...article,
+          relationships: {
+            ...article.relationships,
+            field_media_article_image: resolvedMediaImage,
+            field_tags: resolvedTags,
+          },
+        };
       });
     };
 

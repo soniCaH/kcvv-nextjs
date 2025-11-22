@@ -29,27 +29,27 @@ describe('Icon', () => {
     })
 
     it('should apply small size', () => {
-      const { container } = render(<Icon icon={<FaFutbol data-testid="icon" />} size="sm" />)
+      render(<Icon icon={<FaFutbol data-testid="icon" />} size="sm" />)
       expect(screen.getByTestId('icon')).toBeInTheDocument()
     })
 
     it('should apply large size', () => {
-      const { container } = render(<Icon icon={<FaFutbol data-testid="icon" />} size="lg" />)
+      render(<Icon icon={<FaFutbol data-testid="icon" />} size="lg" />)
       expect(screen.getByTestId('icon')).toBeInTheDocument()
     })
 
     it('should apply extra small size', () => {
-      const { container } = render(<Icon icon={<FaFutbol data-testid="icon" />} size="xs" />)
+      render(<Icon icon={<FaFutbol data-testid="icon" />} size="xs" />)
       expect(screen.getByTestId('icon')).toBeInTheDocument()
     })
 
     it('should apply extra large size', () => {
-      const { container } = render(<Icon icon={<FaFutbol data-testid="icon" />} size="xl" />)
+      render(<Icon icon={<FaFutbol data-testid="icon" />} size="xl" />)
       expect(screen.getByTestId('icon')).toBeInTheDocument()
     })
 
     it('should apply 2xl size', () => {
-      const { container } = render(<Icon icon={<FaFutbol data-testid="icon" />} size="2xl" />)
+      render(<Icon icon={<FaFutbol data-testid="icon" />} size="2xl" />)
       expect(screen.getByTestId('icon')).toBeInTheDocument()
     })
   })
@@ -61,34 +61,34 @@ describe('Icon', () => {
     })
 
     it('should apply primary color', () => {
-      const { container } = render(<Icon icon={<FaFutbol data-testid="icon" />} color="primary" />)
+      render(<Icon icon={<FaFutbol data-testid="icon" />} color="primary" />)
       expect(screen.getByTestId('icon')).toBeInTheDocument()
     })
 
     it('should apply secondary color', () => {
-      const { container } = render(
+      render(
         <Icon icon={<FaFutbol data-testid="icon" />} color="secondary" />
       )
       expect(screen.getByTestId('icon')).toBeInTheDocument()
     })
 
     it('should apply success color', () => {
-      const { container } = render(<Icon icon={<FaFutbol data-testid="icon" />} color="success" />)
+      render(<Icon icon={<FaFutbol data-testid="icon" />} color="success" />)
       expect(screen.getByTestId('icon')).toBeInTheDocument()
     })
 
     it('should apply warning color', () => {
-      const { container } = render(<Icon icon={<FaFutbol data-testid="icon" />} color="warning" />)
+      render(<Icon icon={<FaFutbol data-testid="icon" />} color="warning" />)
       expect(screen.getByTestId('icon')).toBeInTheDocument()
     })
 
     it('should apply error color', () => {
-      const { container } = render(<Icon icon={<FaFutbol data-testid="icon" />} color="error" />)
+      render(<Icon icon={<FaFutbol data-testid="icon" />} color="error" />)
       expect(screen.getByTestId('icon')).toBeInTheDocument()
     })
 
     it('should apply muted color', () => {
-      const { container } = render(<Icon icon={<FaFutbol data-testid="icon" />} color="muted" />)
+      render(<Icon icon={<FaFutbol data-testid="icon" />} color="muted" />)
       expect(screen.getByTestId('icon')).toBeInTheDocument()
     })
   })
@@ -119,7 +119,7 @@ describe('Icon', () => {
 
   describe('Combination Props', () => {
     it('should combine size and color', () => {
-      const { container } = render(
+      render(
         <Icon
           icon={<FaFutbol data-testid="icon" />}
           size="lg"
