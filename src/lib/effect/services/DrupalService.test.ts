@@ -135,13 +135,13 @@ describe('DrupalService', () => {
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService
-        return yield* drupal.getArticles({ category: 'youth' })
+        return yield* drupal.getArticles({ categoryId: 123 })
       })
 
       await Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive)))
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('filter%5Bfield_category.name%5D=youth'),
+        expect.stringContaining('filter%5Bfield_tags.drupal_internal__tid%5D=123'),
         expect.anything()
       )
     })

@@ -26,7 +26,7 @@ describe('PageTitle', () => {
 
     it('should render container with max-width', () => {
       const { container } = render(<PageTitle title="Test Title" />)
-      const innerContainer = container.querySelector('.max-w-\\[70rem\\]')
+      const innerContainer = container.querySelector('.max-w-inner-lg')
       expect(innerContainer).toBeInTheDocument()
     })
 
@@ -85,7 +85,7 @@ describe('PageTitle', () => {
 
     it('should use default container width when not specified', () => {
       const { container } = render(<PageTitle title="Test Title" />)
-      const innerContainer = container.querySelector('.max-w-\\[70rem\\]')
+      const innerContainer = container.querySelector('.max-w-inner-lg')
       expect(innerContainer).toBeInTheDocument()
     })
   })
@@ -159,7 +159,7 @@ describe('PageTitle', () => {
     it('should have correct container structure', () => {
       const { container } = render(<PageTitle title="Test Title" />)
       const header = container.querySelector('header')
-      const innerContainer = header?.querySelector('.max-w-\\[70rem\\]')
+      const innerContainer = header?.querySelector('.max-w-inner-lg')
       const heading = innerContainer?.querySelector('h1')
 
       expect(header).toBeInTheDocument()

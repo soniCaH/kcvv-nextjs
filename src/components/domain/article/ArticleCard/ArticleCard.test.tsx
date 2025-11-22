@@ -9,8 +9,10 @@ import { ArticleCard } from './ArticleCard'
 
 // Mock Next.js Image component
 vi.mock('next/image', () => ({
-  default: ({ alt, ...props }: ImageProps) => (
-    <img alt={alt} {...(props as React.ImgHTMLAttributes<HTMLImageElement>)} />
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  default: ({ alt, src, priority, fill, sizes, quality, ...props }: ImageProps) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img alt={alt} src={typeof src === 'string' ? src : ''} {...props} />
   ),
 }))
 
@@ -169,14 +171,14 @@ describe('ArticleCard', () => {
 
   describe('Responsive Design', () => {
     it('should have mobile layout classes', () => {
-      const { container } = render(<ArticleCard {...defaultProps} imageUrl="/test.jpg" />)
+      render(<ArticleCard {...defaultProps} imageUrl="/test.jpg" />)
       const link = screen.getByRole('link')
       // flex on mobile
       expect(link).toHaveClass('flex')
     })
 
     it('should have desktop layout classes', () => {
-      const { container } = render(<ArticleCard {...defaultProps} imageUrl="/test.jpg" />)
+      render(<ArticleCard {...defaultProps} imageUrl="/test.jpg" />)
       const link = screen.getByRole('link')
       // block on desktop (lg:block)
       expect(link).toHaveClass('lg:block')
@@ -203,7 +205,7 @@ describe('ArticleCard', () => {
     })
 
     it('should have image zoom classes', () => {
-      const { container } = render(<ArticleCard {...defaultProps} imageUrl="/test.jpg" />)
+      render(<ArticleCard {...defaultProps} imageUrl="/test.jpg" />)
       const image = screen.getByRole('img')
       expect(image).toHaveClass('lg:group-hover:scale-110')
     })

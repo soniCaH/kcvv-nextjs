@@ -1594,71 +1594,117 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 ---
 
-## Phase 2: Content Pages (Weeks 4-5) ⏳ READY TO START
+## Phase 2: Content Pages (Weeks 4-5) ✅ IN PROGRESS
 
 ### Goals
-- Build article detail pages with Drupal content
-- Create news overview with pagination
-- Implement homepage with latest news
-- Add search functionality
-- Dynamic content rendering with ISR
+- ✅ Build article detail pages with Drupal content
+- ✅ Create news overview with pagination and filtering
+- ⏳ Implement homepage with latest news
+- ⏳ Add search functionality
+- ✅ Dynamic content rendering with ISR
 
-### Status: READY TO START
+### Status: PARTIALLY COMPLETE
 
-**Prerequisites Completed:**
+**Completed:**
 - ✅ Layout components (PageHeader, Navigation, MobileMenu, PageFooter) 100% complete
 - ✅ Effect services for Drupal and Footbalisto working
 - ✅ Base UI components (Button, Card, Icon, Spinner) tested
+- ✅ Article detail pages working with ISR
+- ✅ News overview with pagination (9 per page, 3-column grid)
+- ✅ Category filtering with slug-based URLs
+- ✅ Published articles filter
+- ✅ CategoryFilters component with scroll arrows
 - ✅ Storybook configured and working
-- ✅ All 137 tests passing
+- ✅ All 164 tests passing
 - ✅ Visual parity with Gatsby achieved
 
-### Next Steps (In Priority Order)
+**Verification Results (2025-11-21):**
+- ✅ Main news page (`/news`) loads successfully with 9 articles
+- ✅ Category filtering works (`/news?category=jeugd`, `/news?category=evenement`, `/news?category=ploeg`)
+- ✅ Article detail pages render correctly (`/news/2025-06-20-definitieve-reeksindeling-3e-nationale-bis`)
+- ✅ 16 category filters displayed with scroll arrows on all screen sizes
+- ✅ Slug-based filtering using taxonomy term ID lookup
+- ✅ 118 total articles in Drupal
+- ⚠️ Minor issue: Category page titles don't change (metadata not dynamic)
 
-#### 2.1: Article Detail Pages ⏳ NEXT
+### Components Created
 
-**File:** `src/app/(main)/news/[slug]/page.tsx`
+#### 2.1: Article Components ✅ COMPLETE
 
-**Requirements:**
-1. Fetch article from Drupal using Effect DrupalService
-2. Render article with:
-   - Hero image (if available)
-   - Article title
-   - Published date
-   - Category badges
-   - Body content (HTML from Drupal)
-   - Social share buttons
-3. Match Gatsby article page layout exactly
-4. Add ISR with revalidation
+**Created Components:**
+- `ArticleCard` - Grid card for news listings (with image, title, date, tags)
+- `ArticleHeader` - Article hero section
+- `ArticleMetadata` - Date, author, category badges
+- `ArticleBody` - HTML content renderer
+- `ArticleFooter` - Social share + related articles
+- `CategoryFilters` - Horizontal scrollable category filters with arrows
 
-**Implementation Pattern:**
+**File:** `src/app/(main)/news/[slug]/page.tsx` ✅
+- Article detail rendering with full content
+- Hero image with Next.js Image optimization
+- Category badges and metadata
+- Social share buttons (Twitter, Facebook, WhatsApp)
+- Related articles section
+- ISR with 1-hour revalidation
+
+**Features:**
+- ✅ Effect Schema validation for all article data
+- ✅ Image optimization with next/image
+- ✅ Drupal HTML content rendering
+- ✅ Category tag display
+- ✅ Social sharing integration
+- ✅ Related articles by category
+- ✅ 404 handling for missing articles
+
+#### 2.2: News Overview with Pagination ✅ COMPLETE
+
+**File:** `src/app/(main)/news/page.tsx` ✅
+
+**Implementation:**
 ```typescript
-export async function generateStaticParams() {
-  // Fetch all articles for static generation
-}
+// Query parameter structure:
+// /news - all articles
+// /news?page=2 - pagination
+// /news?category=jeugd - filter by category slug
+// /news?category=jeugd&page=2 - combined
 
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
-  const article = await runPromise(
-    DrupalService.getArticleBySlug(params.slug)
-  )
-
-  return <ArticleLayout article={article} />
-}
-
-export const revalidate = 3600 // 1 hour ISR
+// Features:
+- 9 articles per page (3 complete rows in 3-column grid)
+- Slug-based category filtering (extracts slug from taxonomy term path.alias)
+- Published articles only (filter[status]=1)
+- Pagination with prev/next links
+- CategoryFilters component with scroll arrows (all screen sizes)
+- ISR with 1-hour revalidation
+- Effect Schema validation
 ```
 
-#### 2.2: News Overview with Pagination
+**CategoryFilters Component Features:**
+- ✅ Horizontal scrollable filter buttons
+- ✅ Circular scroll arrows (left/right) on all screen sizes
+- ✅ Native CSS smooth scroll behavior
+- ✅ Dynamic arrow visibility based on scroll position
+- ✅ Slug-based URLs (`/news?category=jeugd`)
+- ✅ Active state highlighting
+- ✅ MacOS scrollbar hiding handled
 
-**File:** `src/app/(main)/news/page.tsx`
+**Grid Layout:**
+- Desktop: 3-column grid (`lg:grid-cols-3`)
+- Mobile: Single column stack
+- Cards: Image (16:10 mobile, 4:3 desktop), title, date, tags
+- Hover effects: Image zoom, card lift
 
-**Requirements:**
-- Grid layout of article cards
-- Pagination (18 articles per page)
-- Category filtering
-- Match Gatsby news overview exactly
+**Pagination:**
+- "Alles" filter shows all categories
+- Clean URLs: `/news?category=ploeg&page=2`
+- Prev/Next navigation with disabled states
 
-#### 2.3: Homepage
+**Data Flow:**
+1. Fetch taxonomy terms to get category slugs
+2. Match URL slug to taxonomy term ID
+3. Filter articles by `field_tags.drupal_internal__tid`
+4. Return paginated results with links
+
+#### 2.3: Homepage ⏳ NOT STARTED
 
 **File:** `src/app/(main)/page.tsx`
 
@@ -1668,26 +1714,46 @@ export const revalidate = 3600 // 1 hour ISR
 - Team standings
 - Hero section (if present in Gatsby)
 
-#### 2.4: PageFooter Component
+#### 2.4: Search Functionality ⏳ NOT STARTED
 
-**Status:** NOT YET STARTED
+**Future Implementation:**
+- Global search across articles, teams, players
+- Search page: `/search?q=goalkeeper`
+- Combined filters: `/news?category=jeugd&search=goalkeeper&page=2`
+- Query parameter design ready for search integration
 
-**Requirements:**
-- Extract exact structure from Gatsby
-- Sponsor logos
-- Links (columns)
-- Copyright text
-- Social media icons
-- Match exact spacing, colors
+### Technical Achievements
+
+**Effect Schema Validation:**
+- All Drupal responses validated with Effect Schema
+- Type-safe article, taxonomy, and media data
+- Automatic error handling and retry logic
+- Schema transformations (e.g., DateFromString)
+
+**Performance:**
+- ISR with 1-hour revalidation
+- Parallel data fetching (articles + tags)
+- Next.js Image optimization
+- Smooth scroll with native CSS
+
+**UX Improvements:**
+- Scroll arrows for category filters (all screen sizes)
+- Dynamic padding based on arrow visibility
+- Proper vertical alignment of arrows with buttons
+- Complete rows in grid (9 items = 3×3)
 
 ### Deliverables
 - ✅ PageHeader with tests and visual parity
 - ✅ Navigation with dropdown support
 - ✅ MobileMenu with animations
 - ✅ PageFooter with all sections (contact, social, sponsors, motto)
-- ⏳ Article detail pages
-- ⏳ News overview with pagination
+- ✅ Article detail pages with ISR
+- ✅ News overview with pagination and category filtering
+- ✅ CategoryFilters component with scroll arrows
+- ✅ Published articles filter
+- ✅ Slug-based category URLs
 - ⏳ Homepage
+- ⏳ Search functionality
 
 ---
 

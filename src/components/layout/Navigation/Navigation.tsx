@@ -69,13 +69,13 @@ const menuItems: MenuItem[] = [
     ],
   },
   { label: 'Sponsors', href: '/sponsors' },
+  { label: 'Hulp', href: '/hulp' },
   {
     label: 'De club',
     href: '/club',
     children: [
       { label: 'Geschiedenis', href: '/club/history' },
-      { label: 'Bestuur', href: '/club/bestuur' },
-      { label: 'Jeugdbestuur', href: '/club/jeugdbestuur' },
+      { label: 'Organogram', href: '/club/organogram' },
       { label: 'KCVV Angels', href: '/club/angels' },
       { label: 'KCVV Ultras', href: '/club/ultras' },
       { label: 'Contact', href: '/club/contact' },

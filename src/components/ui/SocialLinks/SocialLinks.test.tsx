@@ -11,13 +11,13 @@ describe('SocialLinks', () => {
   })
 
   it('renders circle variant by default', () => {
-    const { container } = render(<SocialLinks />)
+    render(<SocialLinks />)
     const link = screen.getByLabelText('Facebook')
     expect(link).toHaveClass('rounded-full', 'border-2')
   })
 
   it('renders inline variant', () => {
-    const { container } = render(<SocialLinks variant="inline" />)
+    render(<SocialLinks variant="inline" />)
     const link = screen.getByLabelText('Facebook')
     expect(link).not.toHaveClass('border-2')
   })
