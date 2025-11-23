@@ -14,6 +14,7 @@
 import { Schema as S } from 'effect'
 import {
   BaseDrupalNodeAttributes,
+  DateFromStringOrDate,
   DrupalBody,
   DrupalImage,
   JsonApiVersion,
@@ -28,8 +29,8 @@ import { File } from './file.schema'
  */
 export class EventAttributes extends S.Class<EventAttributes>('EventAttributes')({
   ...BaseDrupalNodeAttributes,
-  field_event_date: S.optional(S.DateFromString),
-  field_event_end_date: S.optional(S.DateFromString),
+  field_event_date: S.optional(DateFromStringOrDate),
+  field_event_end_date: S.optional(DateFromStringOrDate),
   field_location: S.optional(S.String),
   body: S.optional(DrupalBody),
 }) {}

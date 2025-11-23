@@ -173,9 +173,13 @@ export const Minimal: Story = {
  * Shows multiple cards in a 3-column grid like the news listing page
  */
 export const InGridLayout: Story = {
+  args: {
+    title: '',
+    href: '',
+  },
   render: () => (
     <div className="w-full max-w-inner-lg mx-auto px-3 lg:px-0">
-      <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10">
         <ArticleCard
           title="KCVV Elewijt wint derby"
           href="/news/derby-overwinning"

@@ -345,7 +345,7 @@ export const AccessibilityTest: Story = {
   args: {},
   parameters: {
     a11y: {
-      element: '#storybook-root',
+      context: '#storybook-root',
       config: {
         rules: [
           {

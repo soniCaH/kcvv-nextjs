@@ -16,6 +16,7 @@
 import { Schema as S } from 'effect'
 import {
   BaseDrupalNodeAttributes,
+  DateFromStringOrDate,
   DrupalBody,
   DrupalImage,
   DrupalNodeReference,
@@ -36,7 +37,7 @@ export class PlayerAttributes extends S.Class<PlayerAttributes>('PlayerAttribute
   field_last_name: S.optional(S.String),
   field_position: S.optional(S.String),
   field_number: S.optional(S.Number),
-  field_birth_date: S.optional(S.DateFromString),
+  field_birth_date: S.optional(DateFromStringOrDate),
   field_nationality: S.optional(S.String),
   field_height: S.optional(S.Number),
   field_weight: S.optional(S.Number),

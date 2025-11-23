@@ -15,15 +15,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { OrgChart as D3OrgChart } from 'd3-org-chart'
 import type { OrgChartNode, OrgChartConfig } from '@/types/organogram'
+import type { HierarchyNode } from 'd3-hierarchy'
 
-// Internal d3-org-chart node structure
-interface D3OrgChartNode {
-  data: OrgChartNode
-  children?: D3OrgChartNode[]
-  _children?: D3OrgChartNode[]
+interface ExtendedHierarchyNode extends HierarchyNode<OrgChartNode> {
+  _children?: this[]
   _expanded?: boolean
-  parent?: D3OrgChartNode
 }
+
+
 
 interface OrgChartProps {
   data: OrgChartNode[]
@@ -49,20 +48,20 @@ export function OrgChart({ data, config = {}, onNodeClick, className = '' }: Org
     const chart = new D3OrgChart<OrgChartNode>()
 
     chartInstance.current = chart
-      .container(containerElement)
+      .container('#org-chart-container')
       .data(data)
       .nodeWidth(() => 280)
       .nodeHeight(() => 140)
       .childrenMargin(() => 50)
       .compactMarginBetween(() => 40)
       .compactMarginPair(() => 30)
-      .neighbourMargin(() => 40, 40)
+      .neighbourMargin(() => 40)
       .siblingsMargin(() => 40)
       .initialZoom(config.initialZoom || 0.7)
       .scaleExtent([0.3, 3]) // Allow zoom from 30% to 300%
       .onNodeClick((node: unknown) => {
         // Toggle expand/collapse on click (more accessible than tiny button)
-        const d = node as unknown as D3OrgChartNode
+        const d = node as ExtendedHierarchyNode
         if (d.children || d._children) {
           if (d._expanded === false) {
             chartInstance.current?.setExpanded(d.data.id).render()
@@ -72,13 +71,14 @@ export function OrgChart({ data, config = {}, onNodeClick, className = '' }: Org
         }
         // Also trigger the detail modal
         if (onNodeClick) {
-          onNodeClick(node.data as OrgChartNode)
+          const d3Node = node as HierarchyNode<OrgChartNode>
+          onNodeClick(d3Node.data)
         }
       })
       // Custom node template with KCVV branding
       .nodeContent((d: unknown) => {
-        const typedNode = d as D3OrgChartNode
-        const node = typedNode.data as OrgChartNode
+        const typedNode = d as ExtendedHierarchyNode
+        const node = typedNode.data
         const imageUrl = node.imageUrl || '/images/logo-flat.png'
         const hasChildren = typedNode.children || typedNode._children
 
@@ -223,18 +223,22 @@ export function OrgChart({ data, config = {}, onNodeClick, className = '' }: Org
           chartInstance.current.collapseAll()
           // Then expand to depth
           const expandToLevel = (depth: number) => {
-            const expandRecursive = (nodes: D3OrgChartNode[], level: number) => {
+            const expandRecursive = (nodes: ExtendedHierarchyNode[], level: number) => {
               if (level >= depth) return
               nodes.forEach(node => {
-                if (node._children || node.children) {
+                // Check if node has children (either expanded or collapsed)
+                if (node.children || node._children) {
                   chartInstance.current?.setExpanded(node.data.id)
                   if (node.children) {
-                    expandRecursive(node.children, level + 1)
+                    expandRecursive(node.children as ExtendedHierarchyNode[], level + 1)
                   }
                 }
               })
             }
-            const rootNodes = chartInstance.current?.getChartState().allNodes.filter((n: D3OrgChartNode) => !n.parent)
+            // Get root nodes (nodes with no parent)
+            const allNodes = chartInstance.current?.getChartState().allNodes as ExtendedHierarchyNode[]
+            const rootNodes = allNodes?.filter(n => !n.parent)
+
             if (rootNodes) {
               expandRecursive(rootNodes, 0)
             }
@@ -289,15 +293,15 @@ export function OrgChart({ data, config = {}, onNodeClick, className = '' }: Org
   // Zoom controls (more accessible than scroll wheel)
   const zoomIn = useCallback(() => {
     if (chartInstance.current) {
-      const currentZoom = chartInstance.current.getChartState().lastTransform.k
-      chartInstance.current.zoomIn(currentZoom + 0.2).render()
+      chartInstance.current.zoomIn()
+      chartInstance.current.render()
     }
   }, [])
 
   const zoomOut = useCallback(() => {
     if (chartInstance.current) {
-      const currentZoom = chartInstance.current.getChartState().lastTransform.k
-      chartInstance.current.zoomOut(currentZoom - 0.2).render()
+      chartInstance.current.zoomOut()
+      chartInstance.current.render()
     }
   }, [])
 
@@ -414,8 +418,9 @@ export function OrgChart({ data, config = {}, onNodeClick, className = '' }: Org
 
       {/* Chart Container */}
       <div
+        id="org-chart-container"
         ref={chartRef}
-        className="org-chart-container bg-white rounded-lg border border-gray-light shadow-sm"
+        className="org-chart-container w-full h-full rounded-lg border border-gray-light shadow-sm"
         style={{
           minHeight: '600px',
           width: '100%',

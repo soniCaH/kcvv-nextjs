@@ -14,7 +14,7 @@
  */
 
 import { Schema as S } from 'effect'
-import { DrupalPath, RelationshipReference } from './common.schema'
+import { DrupalPath, RelationshipReference, DateFromStringOrDate } from './common.schema'
 
 /**
  * Media Image attributes
@@ -56,12 +56,12 @@ export class MediaImageAttributes extends S.Class<MediaImageAttributes>('MediaIm
   /**
    * Creation timestamp
    */
-  created: S.optional(S.DateFromString),
+  created: S.optional(DateFromStringOrDate),
 
   /**
    * Last changed timestamp
    */
-  changed: S.optional(S.DateFromString),
+  changed: S.optional(DateFromStringOrDate),
 
   /**
    * Publication status (true = published)

@@ -15,6 +15,7 @@
  */
 
 import { Schema as S } from 'effect'
+import { DateFromStringOrDate } from './common.schema'
 
 /**
  * File URI structure
@@ -102,12 +103,12 @@ export class FileAttributes extends S.Class<FileAttributes>('FileAttributes')({
   /**
    * Creation timestamp
    */
-  created: S.optional(S.DateFromString),
+  created: S.optional(DateFromStringOrDate),
 
   /**
    * Last changed timestamp
    */
-  changed: S.optional(S.DateFromString),
+  changed: S.optional(DateFromStringOrDate),
 }) {}
 
 /**

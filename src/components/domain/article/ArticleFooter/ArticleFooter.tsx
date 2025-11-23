@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * ArticleFooter Component
  * Related content section with green background
@@ -94,19 +96,20 @@ export const ArticleFooter = ({ relatedContent, className }: ArticleFooterProps)
               {/* Link */}
               <Link
                 href={item.href}
-                className="text-white flex-1 break-words relative no-underline transition-all duration-400"
+                className="text-white flex-1 break-words relative transition-all duration-400"
                 style={{
                   color: '#FFF',
-                  backgroundImage: 'linear-gradient(180deg, transparent 75%, #FFF 0)',
-                  backgroundSize: '0 100%',
-                  backgroundRepeat: 'no-repeat',
-                  transition: 'background-size 0.4s ease',
+                  textDecoration: 'underline',
+                  textDecorationColor: 'transparent',
+                  textDecorationThickness: '2px',
+                  textUnderlineOffset: '3px',
+                  transition: 'text-decoration-color 0.4s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundSize = '100% 100%'
+                  e.currentTarget.style.textDecorationColor = '#FFF'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundSize = '0 100%'
+                  e.currentTarget.style.textDecorationColor = 'transparent'
                 }}
               >
                 {item.title}

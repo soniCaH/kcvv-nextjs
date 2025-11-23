@@ -16,6 +16,7 @@ import {
   ArticleFooter,
 } from '@/components/domain/article'
 import type { RelatedContent } from '@/components/domain/article'
+import { TaxonomyTerm } from '@/lib/effect/schemas'
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>
@@ -103,16 +104,19 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   })
 
   // Fetch related articles based on first tag
-  const firstTagName = article.relationships.field_tags?.data
-    ?.find((tag): tag is { attributes: { name: string } } => 'attributes' in tag && !!tag.attributes?.name)
-    ?.attributes.name
+  // Fetch related articles based on first tag
+  const firstTag = article.relationships.field_tags?.data
+    ?.find((tag): tag is TaxonomyTerm =>
+      'attributes' in tag &&
+      !!tag.attributes?.drupal_internal__tid
+    )
 
-  const relatedArticles = firstTagName
+  const relatedArticles = firstTag?.attributes.drupal_internal__tid
     ? await runPromise(
         Effect.gen(function* () {
           const drupal = yield* DrupalService
           const { articles } = yield* drupal.getArticles({
-            category: firstTagName,
+            categoryId: firstTag.attributes.drupal_internal__tid!,
             limit: 4, // Fetch 4 to ensure we have 3 after excluding current
           })
           // Exclude current article and limit to 3
