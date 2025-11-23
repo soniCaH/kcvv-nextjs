@@ -3,7 +3,7 @@
  * Shows article sidebar with author, date, tags, and social share
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { ArticleMetadata } from './ArticleMetadata'
 
 const meta = {

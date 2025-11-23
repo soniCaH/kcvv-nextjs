@@ -3,7 +3,7 @@
  * Showcases all Card variants and compositions
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import {
   Card,
   CardHeader,

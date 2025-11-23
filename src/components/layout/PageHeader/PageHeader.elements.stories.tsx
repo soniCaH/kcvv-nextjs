@@ -3,7 +3,7 @@
  * Each story shows individual elements and states for pixel-perfect matching with Gatsby
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import Image from 'next/image'
 import { FaBars, FaSearch } from 'react-icons/fa'
 

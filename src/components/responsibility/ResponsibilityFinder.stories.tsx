@@ -10,7 +10,7 @@
  * - Mobile responsive
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { ResponsibilityFinder } from './ResponsibilityFinder'
 import type { ResponsibilityPath } from '@/types/responsibility'
 

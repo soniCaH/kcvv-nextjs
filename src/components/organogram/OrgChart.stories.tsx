@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { OrgChart } from './OrgChart'
 import type { OrgChartNode } from '@/types/organogram'
 
