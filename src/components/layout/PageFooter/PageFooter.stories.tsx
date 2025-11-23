@@ -3,7 +3,7 @@
  * Showcases the site footer with black background and wavy SVG top
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { PageFooter } from './PageFooter'
 
 const meta = {

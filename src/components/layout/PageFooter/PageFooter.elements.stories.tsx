@@ -3,7 +3,7 @@
  * Granular stories showing individual footer elements for visual verification
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import Link from 'next/link'
 import Image from 'next/image'
 import { SocialLinks } from '@/components/ui'

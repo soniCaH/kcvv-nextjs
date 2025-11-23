@@ -3,7 +3,7 @@
  * Combines CategoryFilters and ArticleCard grid to show the complete /news page layout
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { CategoryFilters } from './CategoryFilters/CategoryFilters'
 import { ArticleCard } from './ArticleCard/ArticleCard'
 

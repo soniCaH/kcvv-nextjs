@@ -3,7 +3,7 @@
  * Showcases loading indicators
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Spinner, FullPageSpinner } from './Spinner'
 import { Button } from '../Button'
 import { Card, CardContent } from '../Card'

@@ -3,7 +3,7 @@
  * Shows article content with HTML rendering and styled links
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { ArticleBody } from './ArticleBody'
 
 const meta = {

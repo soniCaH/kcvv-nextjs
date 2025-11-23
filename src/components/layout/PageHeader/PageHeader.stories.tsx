@@ -8,7 +8,7 @@
  * mobile hamburger menu at 960px.
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { PageHeader } from './PageHeader'
 
 const meta = {

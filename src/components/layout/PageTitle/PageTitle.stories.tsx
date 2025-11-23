@@ -3,7 +3,7 @@
  * Page heading with green background and texture pattern
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { PageTitle } from './PageTitle'
 
 const meta = {

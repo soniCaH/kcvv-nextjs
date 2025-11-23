@@ -3,7 +3,7 @@
  * Showcases Icon wrapper with react-icons
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Icon } from './Icon'
 import {
   FaFutbol,

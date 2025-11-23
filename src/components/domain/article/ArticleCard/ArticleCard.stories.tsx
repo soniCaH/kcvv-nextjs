@@ -3,7 +3,7 @@
  * Article teaser card for news listing pages
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { ArticleCard } from './ArticleCard'
 
 const meta = {

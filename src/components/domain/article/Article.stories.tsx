@@ -3,7 +3,7 @@
  * Complete article page combining all article components
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import {
   ArticleHeader,
   ArticleMetadata,

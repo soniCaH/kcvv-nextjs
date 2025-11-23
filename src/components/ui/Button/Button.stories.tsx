@@ -3,7 +3,7 @@
  * Showcases all Button variants and use cases
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Button } from './Button'
 
 const meta = {

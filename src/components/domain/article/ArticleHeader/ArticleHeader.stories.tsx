@@ -3,7 +3,7 @@
  * Shows article title and hero image section
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { ArticleHeader } from './ArticleHeader'
 
 const meta = {

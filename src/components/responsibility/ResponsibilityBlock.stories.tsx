@@ -5,7 +5,7 @@
  * Designed for homepage integration with quick links
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { ResponsibilityBlock } from './ResponsibilityBlock'
 
 const meta = {
