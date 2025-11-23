@@ -2,6 +2,12 @@
  * Drupal Content Utilities
  * Functions for processing Drupal HTML content
  */
+import { Schema as S } from 'effect'
+import { Option } from 'effect'
+import { DrupalImage } from '@/lib/effect/schemas'
+
+// Type derived from the DrupalImage schema
+type DrupalImageData = S.Schema.Type<typeof DrupalImage>
 
 /**
  * Type guard to check if image data is a fully-resolved DrupalImage
@@ -19,8 +25,8 @@
  */
 export function isDrupalImage(
   data: unknown
-): data is { uri: { url: string }; alt?: string; width?: number; height?: number } {
-  return !!(data && typeof data === 'object' && 'uri' in data && data.uri && 'url' in data.uri)
+): data is DrupalImageData {
+  return Option.isSome(S.decodeUnknownOption(DrupalImage)(data))
 }
 
 /**

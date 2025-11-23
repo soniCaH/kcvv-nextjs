@@ -14,6 +14,7 @@
 import { Schema as S } from 'effect'
 import {
   BaseDrupalNodeAttributes,
+  DateFromStringOrDate,
   DrupalBody,
   DrupalImage,
   JsonApiVersion,
@@ -32,8 +33,8 @@ export class StaffAttributes extends S.Class<StaffAttributes>('StaffAttributes')
   field_lastname: S.optional(S.String),
   field_position_staff: S.optional(S.String),
   field_position_short: S.optional(S.String),
-  field_birth_date: S.optional(S.DateFromString),
-  field_join_date: S.optional(S.DateFromString),
+  field_birth_date: S.optional(DateFromStringOrDate),
+  field_join_date: S.optional(DateFromStringOrDate),
   field_vv_id: S.optional(S.String),
   body: S.optional(DrupalBody),
 }) {}

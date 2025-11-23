@@ -6,9 +6,22 @@
 import { Schema as S } from 'effect'
 
 /**
- * Drupal JSON:API Image field structure
+ * Flexible date schema that accepts both ISO date strings and Date objects
+ * Useful for handling data that may have been serialized/deserialized
+ *
+ * - Decoding: Accepts both string and Date, outputs Date
+ * - Encoding: Accepts Date, outputs ISO string
  */
-export class DrupalImage extends S.Class<DrupalImage>('DrupalImage')({
+export const DateFromStringOrDate = S.Union(
+  S.DateFromString,  // Handles string → Date (decode) and Date → string (encode)
+  S.DateFromSelf     // Handles Date → Date (passthrough)
+)
+
+/**
+ * Drupal JSON:API Image field structure
+ * Plain struct (not class) since API returns plain objects
+ */
+export const DrupalImage = S.Struct({
   uri: S.Struct({
     url: S.String,
   }),
@@ -16,7 +29,7 @@ export class DrupalImage extends S.Class<DrupalImage>('DrupalImage')({
   title: S.optional(S.String),
   width: S.optional(S.Number),
   height: S.optional(S.Number),
-}) {}
+})
 
 /**
  * Drupal path alias structure
@@ -131,11 +144,11 @@ export const BaseDrupalNodeAttributes = {
   drupal_internal__nid: S.optional(S.Number),
   drupal_internal__vid: S.optional(S.Number),
   langcode: S.optional(S.String),
-  revision_timestamp: S.optional(S.DateFromString),
+  revision_timestamp: S.optional(DateFromStringOrDate),
   status: S.optional(S.Boolean),
   title: S.String,
-  created: S.DateFromString,
-  changed: S.optional(S.DateFromString),
+  created: DateFromStringOrDate,
+  changed: S.optional(DateFromStringOrDate),
   promote: S.optional(S.Boolean),
   sticky: S.optional(S.Boolean),
   path: DrupalPath,

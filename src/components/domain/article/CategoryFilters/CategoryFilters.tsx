@@ -61,12 +61,12 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
   }
 
   return (
-    <div className="relative">
+    <div className="relative flex items-center">
       {/* Scroll arrows - visible on all screen sizes */}
       {showLeftArrow && (
         <button
           onClick={() => scroll('left')}
-          className="flex absolute left-0 top-[18px] -translate-y-1/2 z-20 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
+          className="flex absolute left-0 z-10 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
           aria-label="Scroll left"
         >
           <FaChevronLeft className="w-3 h-3" />
@@ -76,7 +76,7 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
       {showRightArrow && (
         <button
           onClick={() => scroll('right')}
-          className="flex absolute right-0 top-[18px] -translate-y-1/2 z-20 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
+          className="flex absolute right-0 z-10 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
           aria-label="Scroll right"
         >
           <FaChevronRight className="w-3 h-3" />

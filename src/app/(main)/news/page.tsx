@@ -123,7 +123,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
         </section>
 
         {/* Articles grid */}
-        <main className="grid grid-cols-1 lg:grid-cols-3 lg:gap-10 mb-6">
+        <main className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10 mb-6">
           {articles.map((article) => {
             const imageData = article.relationships.field_media_article_image?.data
             const hasValidImage = imageData && isDrupalImage(imageData)

@@ -17,7 +17,7 @@
  */
 
 import { Schema as S } from 'effect'
-import { DrupalPath, JsonApiLinks, JsonApiVersion } from './common.schema'
+import { DrupalPath, JsonApiLinks, JsonApiVersion, DateFromStringOrDate } from './common.schema'
 
 /**
  * Taxonomy term attributes
@@ -86,17 +86,17 @@ export class TaxonomyTermAttributes extends S.Class<TaxonomyTermAttributes>('Tax
   /**
    * Creation timestamp
    */
-  created: S.optional(S.DateFromString),
+  created: S.optional(DateFromStringOrDate),
 
   /**
    * Last changed timestamp
    */
-  changed: S.optional(S.DateFromString),
+  changed: S.optional(DateFromStringOrDate),
 
   /**
    * Revision creation timestamp
    */
-  revision_created: S.optional(S.DateFromString),
+  revision_created: S.optional(DateFromStringOrDate),
 
   /**
    * Whether the term is the default term in its vocabulary

@@ -24,7 +24,6 @@ import {
   NotFoundError,
   ValidationError,
   JsonApiLinks,
-  DrupalImage,
   MediaImage,
   File,
 } from "../schemas";
@@ -268,12 +267,12 @@ export const DrupalServiceLive = Layer.effect(
           const absoluteUrl = fileUrl.startsWith("http") ? fileUrl : `${baseUrl}${fileUrl}`;
 
           return {
-            data: new DrupalImage({
+            data: {
               uri: { url: absoluteUrl },
               alt: fileRef.meta?.alt || "",
               width: fileRef.meta?.width,
               height: fileRef.meta?.height,
-            })
+            }
           };
         })();
 

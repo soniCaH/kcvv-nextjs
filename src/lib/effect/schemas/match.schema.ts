@@ -4,6 +4,7 @@
  */
 
 import { Schema as S } from 'effect'
+import { DateFromStringOrDate } from './common.schema'
 
 /**
  * Team information in match
@@ -25,7 +26,7 @@ export const MatchStatus = S.Literal('scheduled', 'live', 'finished', 'postponed
  */
 export class Match extends S.Class<Match>('Match')({
   id: S.Number,
-  date: S.DateFromString,
+  date: DateFromStringOrDate,
   time: S.optional(S.String),
   venue: S.optional(S.String),
   home_team: MatchTeam,
@@ -79,7 +80,7 @@ export class RankingResponse extends S.Class<RankingResponse>('RankingResponse')
   ranking: RankingArray,
   season: S.optional(S.String),
   competition: S.optional(S.String),
-  last_updated: S.optional(S.DateFromString),
+  last_updated: S.optional(DateFromStringOrDate),
 }) {}
 
 /**
