@@ -12,7 +12,6 @@
 
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { ResponsibilityFinder } from './ResponsibilityFinder'
-import type { ResponsibilityPath } from '@/types/responsibility'
 
 const meta = {
   title: 'Features/ResponsibilityFinder',
@@ -387,9 +386,6 @@ export const AccessibilityTest: Story = {
 export const Playground: Story = {
   args: {
     compact: false,
-    onResultSelect: (path: ResponsibilityPath) => {
-      console.log('Selected:', path)
-    },
   },
   parameters: {
     docs: {

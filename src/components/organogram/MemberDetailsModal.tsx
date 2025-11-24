@@ -7,7 +7,7 @@
  * in the organizational chart.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { OrgChartNode } from '@/types/organogram'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -36,6 +36,16 @@ export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsMod
     }
   }, [isOpen, onClose])
 
+  const [imageSrc, setImageSrc] = useState<string>('/images/logo-flat.png')
+
+  useEffect(() => {
+    if (member?.imageUrl) {
+      setImageSrc(member.imageUrl)
+    } else {
+      setImageSrc('/images/logo-flat.png')
+    }
+  }, [member])
+
   if (!isOpen || !member) return null
 
   return (
@@ -59,13 +69,15 @@ export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsMod
 
           <div className="flex items-center gap-6">
             <Image
-              src={member.imageUrl || '/images/logo-flat.png'}
+              src={imageSrc}
               alt={member.name}
               width={96}
               height={96}
               className="w-24 h-24 rounded-full border-4 border-white/30 object-cover"
-              onError={(e) => {
-                e.currentTarget.src = '/images/logo-flat.png'
+              onError={() => {
+                if (imageSrc !== '/images/logo-flat.png') {
+                  setImageSrc('/images/logo-flat.png')
+                }
               }}
             />
             <div>

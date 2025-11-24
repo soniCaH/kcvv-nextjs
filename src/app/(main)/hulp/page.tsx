@@ -5,6 +5,7 @@
  */
 
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { ResponsibilityFinder } from '@/components/responsibility'
 
 export const metadata: Metadata = {
@@ -52,7 +53,7 @@ export default function HelpPage() {
             <p className="text-gray-dark text-sm mb-3">
               Wil je een overzicht van alle bestuursleden en hun verantwoordelijkheden?
             </p>
-            <a
+            <Link
               href="/club/organogram"
               className="text-green-main hover:text-green-hover font-semibold inline-flex items-center gap-1"
             >
@@ -60,7 +61,7 @@ export default function HelpPage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </a>
+            </Link>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-main">

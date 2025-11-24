@@ -7,7 +7,7 @@
  * Separated from page.tsx to allow for server-side metadata.
  */
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { OrgChart, MemberDetailsModal } from '@/components/organogram'
 import { clubStructure } from '@/data/club-structure'
 import type { OrgChartNode, OrgChartConfig } from '@/types/organogram'
@@ -33,6 +33,16 @@ export function OrganogramClient() {
     departmentFilter: departmentFilter,
   }
 
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
+
   const handleNodeClick = (node: OrgChartNode) => {
     setSelectedMember(node)
     setIsModalOpen(true)
@@ -40,7 +50,10 @@ export function OrganogramClient() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setTimeout(() => setSelectedMember(null), 300)
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+    timeoutRef.current = setTimeout(() => setSelectedMember(null), 300)
   }
 
   return (

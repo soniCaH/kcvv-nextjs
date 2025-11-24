@@ -201,6 +201,7 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
                     <button
                       key={suggestion.path.id}
                       onClick={() => handleSuggestionClick(suggestion.path)}
+                      aria-label={suggestion.path.question}
                       className={`
                         w-full text-left px-6 py-4 hover:bg-green-main/10 transition-colors
                         ${idx !== 0 ? 'border-t border-gray-light' : ''}
