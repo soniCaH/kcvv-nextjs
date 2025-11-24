@@ -84,7 +84,11 @@ export async function generateMetadata({ searchParams }: NewsPageProps): Promise
 export default async function NewsPage({ searchParams }: NewsPageProps) {
   const params = await searchParams
   const categorySlug = params.category
-  const page = params.page ? parseInt(params.page, 10) : 1
+
+  // Parse and validate page parameter
+  const parsedPage = params.page ? parseInt(params.page, 10) : 1
+  const page = Number.isFinite(parsedPage) && parsedPage >= 1 ? parsedPage : 1
+
   const limit = 9 // 3 complete rows in 3-column grid
 
   // First fetch tags to look up category ID
