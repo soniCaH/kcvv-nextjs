@@ -7,7 +7,7 @@
  * in the organizational chart.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import type { OrgChartNode } from '@/types/organogram'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -43,15 +43,20 @@ export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsMod
     }
   }, [isOpen, onClose])
 
-  const [imageSrc, setImageSrc] = useState<string>('/images/logo-flat.png')
+  // Derive image source directly from props (no useEffect needed)
+  const defaultImage = '/images/logo-flat.png'
 
-  useEffect(() => {
-    if (member?.imageUrl) {
-      setImageSrc(member.imageUrl)
-    } else {
-      setImageSrc('/images/logo-flat.png')
+  // Track if the member's image failed to load (only state we need)
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
+
+  // Determine which image to show
+  const imageSrc = useMemo(() => {
+    const memberImage = member?.imageUrl
+    if (!memberImage || failedImages.has(memberImage)) {
+      return defaultImage
     }
-  }, [member])
+    return memberImage
+  }, [member?.imageUrl, failedImages, defaultImage])
 
   if (!isOpen || !member) return null
 
@@ -82,8 +87,8 @@ export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsMod
               height={96}
               className="w-24 h-24 rounded-full border-4 border-white/30 object-cover"
               onError={() => {
-                if (imageSrc !== '/images/logo-flat.png') {
-                  setImageSrc('/images/logo-flat.png')
+                if (member.imageUrl) {
+                  setFailedImages((prev) => new Set(prev).add(member.imageUrl!))
                 }
               }}
             />
