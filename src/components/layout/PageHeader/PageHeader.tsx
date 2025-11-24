@@ -6,7 +6,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { cn } from '@/lib/utils/cn'
@@ -34,6 +34,10 @@ export interface PageHeaderProps {
  */
 export const PageHeader = ({ className }: PageHeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const handleClose = useCallback(() => {
+    setIsMobileMenuOpen(false)
+  }, [])
 
   return (
     <>
@@ -113,7 +117,7 @@ export const PageHeader = ({ className }: PageHeaderProps) => {
       {/* Mobile Menu Overlay */}
       <MobileMenu
         isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
+        onClose={handleClose}
       />
     </>
   )
