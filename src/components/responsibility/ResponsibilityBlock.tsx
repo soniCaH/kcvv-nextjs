@@ -9,6 +9,11 @@
 import Link from 'next/link'
 import { ResponsibilityFinder } from './ResponsibilityFinder'
 
+/**
+ * Renders the homepage responsibility block containing a compact responsibility finder, a link to the full help page, and three quick-link cards (Organogram, Contact, Inschrijven).
+ *
+ * @returns The rendered ResponsibilityBlock UI as a JSX.Element
+ */
 export function ResponsibilityBlock() {
   return (
     <section className="bg-gradient-to-br from-green-main/5 to-green-hover/5 py-16 px-4">

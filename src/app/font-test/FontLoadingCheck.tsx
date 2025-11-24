@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from 'react'
 
+/**
+ * Displays a small status UI that reports whether the site's title, body, alt, and mono fonts are loaded by reading the relevant CSS custom properties.
+ *
+ * The component checks font-family CSS variables, shows success messages when expected fonts are present, otherwise shows the detected fallback, and re-checks shortly after mount to catch late-loading fonts.
+ *
+ * @returns A React element that presents the load status for title, body, alt, and mono fonts and optional Typekit ID information.
+ */
 export function FontLoadingCheck() {
   const [fontStatus, setFontStatus] = useState<{
     title: string

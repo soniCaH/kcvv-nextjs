@@ -17,6 +17,13 @@ interface CategoryFiltersProps {
   activeCategory?: string
 }
 
+/**
+ * Render a horizontally scrollable list of news category filters with left/right scroll controls and active-category highlighting.
+ *
+ * @param categories - Array of category objects; each item includes `id` and `attributes` with `name` and `slug`.
+ * @param activeCategory - Slug of the currently active category, if any.
+ * @returns A React element that renders the scrollable category filter bar with optional arrow controls and active styling.
+ */
 export function CategoryFilters({ categories, activeCategory }: CategoryFiltersProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)

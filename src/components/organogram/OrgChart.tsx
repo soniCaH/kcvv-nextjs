@@ -31,6 +31,19 @@ interface OrgChartProps {
   className?: string
 }
 
+/**
+ * Render an interactive organizational chart with search, zoom/pan, expand/collapse, and fullscreen controls.
+ *
+ * Renders a D3-based org chart from the provided node data, exposes UI controls for searching and highlighting nodes,
+ * zooming, expanding/collapsing nodes, and toggling fullscreen. Clicking a node toggles its expansion when it has children
+ * and invokes the optional `onNodeClick` callback with that node's data.
+ *
+ * @param data - Array of organization nodes to render in the chart
+ * @param config - Optional configuration for initial zoom and expansion behavior (e.g., `initialZoom`, `expandToDepth`)
+ * @param onNodeClick - Optional callback invoked with the node's data when a node is clicked
+ * @param className - Optional additional class name applied to the chart wrapper
+ * @returns The JSX element that contains the interactive organizational chart
+ */
 export function OrgChart({ data, config = {}, onNodeClick, className = '' }: OrgChartProps) {
   const chartRef = useRef<HTMLDivElement>(null)
   const chartInstance = useRef<D3OrgChart<OrgChartNode> | null>(null)
