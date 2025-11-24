@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 
@@ -29,14 +29,14 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(false)
 
-  const checkScrollPosition = () => {
+  const checkScrollPosition = useCallback(() => {
     const container = scrollContainerRef.current
     if (!container) return
 
     const { scrollLeft, scrollWidth, clientWidth } = container
     setShowLeftArrow(scrollLeft > 0)
     setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1)
-  }
+  }, [])
 
   useEffect(() => {
     checkScrollPosition()
@@ -50,7 +50,7 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
       container.removeEventListener('scroll', checkScrollPosition)
       window.removeEventListener('resize', checkScrollPosition)
     }
-  }, [categories])
+  }, [checkScrollPosition])
 
   const scroll = (direction: 'left' | 'right') => {
     const container = scrollContainerRef.current
@@ -72,6 +72,7 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
       {/* Scroll arrows - visible on all screen sizes */}
       {showLeftArrow && (
         <button
+          type="button"
           onClick={() => scroll('left')}
           className="flex absolute left-0 z-10 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
           aria-label="Scroll left"
@@ -82,6 +83,7 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
 
       {showRightArrow && (
         <button
+          type="button"
           onClick={() => scroll('right')}
           className="flex absolute right-0 z-10 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
           aria-label="Scroll right"

@@ -32,13 +32,8 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedResult, setSelectedResult] = useState<ResponsibilityPath | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Highlight matching text
-  const highlightMatch = (text: string, query: string): string => {
-    if (!query) return text
-    // Simple highlighting - could be enhanced
-    return text
-  }
 
   // Smart matching algorithm
   const suggestions = useMemo((): AutocompleteSuggestion[] => {
@@ -66,10 +61,11 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
           score += 50
         }
 
-        // Keyword matching
-        const matchedKeywords = path.keywords.filter(kw =>
-          kw.includes(query) || query.includes(kw)
-        )
+        // Keyword matching (case-insensitive)
+        const matchedKeywords = path.keywords.filter((kw) => {
+          const kwLower = kw.toLowerCase()
+          return kwLower.includes(query) || query.includes(kwLower)
+        })
         score += matchedKeywords.length * 10
 
         // Word-by-word matching
@@ -77,7 +73,8 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
         queryWords.forEach(word => {
           if (questionLower.includes(word)) score += 5
           path.keywords.forEach(kw => {
-            if (kw.includes(word)) score += 3
+            const kwLower = kw.toLowerCase()
+            if (kwLower.includes(word)) score += 3
           })
         })
       }
@@ -87,7 +84,6 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
         matches.push({
           path,
           score,
-          highlightedText: highlightMatch(path.question, query),
         })
       }
     })
@@ -100,7 +96,17 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
   const handleRoleSelect = (role: string) => {
     setSelectedRole(role as UserRole)
     setSelectedResult(null)
-    setTimeout(() => inputRef.current?.focus(), 100)
+
+    // Clear any existing timeout
+    if (focusTimeoutRef.current) {
+      clearTimeout(focusTimeoutRef.current)
+    }
+
+    // Schedule focus with cleanup tracking
+    focusTimeoutRef.current = setTimeout(() => {
+      inputRef.current?.focus()
+      focusTimeoutRef.current = null
+    }, 100)
   }
 
   // Handle suggestion click
@@ -122,6 +128,15 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
     }
     document.addEventListener('click', handleClick)
     return () => document.removeEventListener('click', handleClick)
+  }, [])
+
+  // Cleanup focus timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current)
+      }
+    }
   }, [])
 
   return (
@@ -253,22 +268,7 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
         </div>
       )}
 
-      <style>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
 
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-      `}</style>
     </div>
   )
 }

@@ -24,17 +24,23 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const typekitId = process.env.NEXT_PUBLIC_TYPEKIT_ID
+
   return (
     <html lang="nl" suppressHydrationWarning>
       <head>
         {/* Adobe Typekit Fonts */}
-        <Script
-          src={`https://use.typekit.net/${process.env.NEXT_PUBLIC_TYPEKIT_ID}.js`}
-          strategy="beforeInteractive"
-        />
-        <Script id="typekit-init" strategy="beforeInteractive">
-          {`try{Typekit.load({ async: true });}catch(e){console.error('Typekit load error:', e);}`}
-        </Script>
+        {typekitId && (
+          <>
+            <Script
+              src={`https://use.typekit.net/${typekitId}.js`}
+              strategy="beforeInteractive"
+            />
+            <Script id="typekit-init" strategy="beforeInteractive">
+              {`try{Typekit.load({ async: true });}catch(e){console.error('Typekit load error:', e);}`}
+            </Script>
+          </>
+        )}
       </head>
       <body suppressHydrationWarning>
         <PageHeader />

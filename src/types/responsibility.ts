@@ -79,6 +79,4 @@ export interface AutocompleteSuggestion {
   path: ResponsibilityPath
   /** Match score (0-100) */
   score: number
-  /** Highlighted text */
-  highlightedText: string
 }

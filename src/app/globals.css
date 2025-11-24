@@ -77,6 +77,22 @@
   animation: kcvv-logo-spin 6s linear infinite;
 }
 
+/* Fade In Animation (for result cards, modals, etc.) */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
 /* Tailwind v4 Theme Configuration */
 @theme {
   /* ===== Breakpoints (Custom) ===== */
