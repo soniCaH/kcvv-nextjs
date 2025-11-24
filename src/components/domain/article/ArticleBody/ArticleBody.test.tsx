@@ -56,7 +56,6 @@ describe('ArticleBody', () => {
   })
 
   it('renders empty content without crashing', () => {
-    render(<ArticleBody content="" />)
     const { container } = render(<ArticleBody content="" />)
     expect(container.querySelector('.article-body')).toBeInTheDocument()
   })
@@ -78,12 +77,17 @@ describe('ArticleBody', () => {
     expect(screen.getByText('Important quote')).toBeInTheDocument()
   })
 
-  it('sanitizes dangerous scripts (security)', () => {
+  it('renders raw HTML and trusts upstream sanitization', () => {
+    // Component uses dangerouslySetInnerHTML and trusts Drupal to sanitize
+    // This test verifies that HTML is rendered as-is without client-side sanitization
     const html = '<p>Safe content</p><script>alert("XSS")</script>'
     const { container } = render(<ArticleBody content={html} />)
-    // Script tags should be rendered as-is (browser handles security)
-    // We trust Drupal to sanitize content before sending
+
+    // Verify content is rendered
     expect(container.textContent).toContain('Safe content')
+
+    // Script tag is preserved in HTML (browser security prevents execution in test environment)
+    expect(container.innerHTML).toContain('<script>')
   })
 
   it('renders images', () => {
