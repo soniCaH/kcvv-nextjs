@@ -25,7 +25,7 @@ Het "Hulp" systeem helpt bezoekers snel de juiste contactpersoon te vinden door 
 ### Bestand Locatie
 
 Alle vragen en antwoorden staan in:
-```
+```txt
 src/data/responsibility-paths.ts
 ```
 
@@ -112,7 +112,7 @@ steps: [
 ## ✏️ Nieuwe Vraag Toevoegen - Stap voor Stap
 
 ### 1. Open het bestand
-```
+```txt
 src/data/responsibility-paths.ts
 ```
 
@@ -186,7 +186,7 @@ Denk aan verschillende manieren waarop mensen kunnen zoeken:
 Maak de stappen concreet en actionable:
 
 ✅ **GOED**:
-```
+```txt
 1. Ga naar de inschrijvingspagina
 2. Vul het formulier in met je gegevens
 3. Upload een pasfoto
@@ -194,7 +194,7 @@ Maak de stappen concreet en actionable:
 ```
 
 ❌ **SLECHT**:
-```
+```txt
 1. Schrijf je in
 2. Geef je gegevens door
 3. Betaal
