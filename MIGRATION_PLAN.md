@@ -1866,6 +1866,51 @@ Each phase builds on previous work, maintaining:
 
 ## Package Dependencies
 
+### Dependency Status & Recommendations (Updated 2025-01-24)
+
+#### QR Code Generation
+**Status:** Not yet installed (will be added during Gatsby migration)
+- **Recommended:** `qrcode.react@^4.2.0` ✅
+- **Actively maintained:** Last update December 2024
+- **TypeScript:** Built-in types included (no @types package needed)
+- **Note:** The `@types/qrcode.react` package is deprecated - the main package now includes TypeScript definitions
+- **Alternative:** `react-qr-code` - Simpler API, works with React and React Native
+- **Planned usage:** Player card sharing feature during migration
+
+**Installation when needed:**
+```bash
+npm install qrcode.react
+```
+
+**Example usage with built-in types:**
+```typescript
+import { QRCodeSVG } from 'qrcode.react'
+
+<QRCodeSVG value="https://kcvvelewijt.be/player/john-doe" size={256} />
+```
+
+#### Class Name Utilities
+**Current:** `clsx@^2.1.1` (✅ Keep)
+- **Status:** Stable and mature (last update: April 2024)
+- **Note:** Not abandoned - this is a complete, stable package that doesn't need frequent updates
+- **Usage:** Combined with `tailwind-merge` via the `cn()` utility function (src/lib/utils/cn.ts:1)
+- **Why keep:** Industry-standard utility with 80M+ downloads/month, highly performant
+
+#### Organization Chart
+**Current:** `d3-org-chart@^3.1.1` (⚠️ Old but working)
+- **Status:** Last updated September 2023 (2+ years old)
+- **Current usage:** Heavily used in organogram component (src/components/organogram/OrgChart.tsx:16)
+- **Recommendation:** Keep for now - works with React 19 and Next.js 16
+- **Alternatives if migration needed:**
+  - `react-organizational-chart` - Pure React hierarchy tree
+  - `@unicef/react-org-chart` - Feature-rich with zoom/download
+  - `react-orgchart` (dabeng) - Simple and direct
+  - `PrimeReact OrganizationChart` - Part of PrimeReact UI library
+- **Migration effort:** High (requires complete rewrite of organogram component)
+- **Risk:** Low (library is stable, no reported compatibility issues)
+
+### Production Dependencies
+
 ```json
 {
   "dependencies": {
@@ -1884,15 +1929,18 @@ Each phase builds on previous work, maintaining:
     "react-icons": "^5.5.x",
     "clsx": "^2.1.x",
     "tailwind-merge": "^2.x",
-    "qrcode.react": "^4.2.x",
+    // Note: qrcode.react will be installed when needed for player card sharing during migration
     "react-share": "^5.2.x",
-    "motion": "^12.18.x"
+    "motion": "^12.18.x",
+    "d3-org-chart": "^3.1.x"           // ⚠️ Old but stable
   },
   "devDependencies": {
     "@types/node": "^22.x",
     "@types/react": "^19.x",
     "@types/react-dom": "^19.x",
     "@types/luxon": "^3.x",
+    // Note: @types/qrcode.react is DEPRECATED - not needed with qrcode.react@^4.x
+    "@types/d3-org-chart": "^3.x",     // ⚠️ Needed for d3-org-chart
     "typescript": "^5.8.x",
     "vitest": "^3.x",
     "@vitest/ui": "^3.x",
