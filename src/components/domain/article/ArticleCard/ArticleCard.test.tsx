@@ -95,9 +95,8 @@ describe('ArticleCard', () => {
     })
 
     it('should not render meta section when no date or tags', () => {
-      const { container } = render(<ArticleCard {...defaultProps} />)
-      const metaSection = container.querySelector('.mt-4')
-      expect(metaSection).not.toBeInTheDocument()
+      render(<ArticleCard {...defaultProps} />)
+      expect(screen.queryByTestId('article-meta')).not.toBeInTheDocument()
     })
 
     it('should render clock icon with date', () => {

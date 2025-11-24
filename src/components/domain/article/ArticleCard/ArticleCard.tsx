@@ -90,7 +90,7 @@ export const ArticleCard = ({
 
           {/* Meta */}
           {(date || tags.length > 0) && (
-            <div className="mt-4 flex flex-wrap gap-3 text-xs lg:text-sm text-kcvv-green-bright">
+            <div data-testid="article-meta" className="mt-4 flex flex-wrap gap-3 text-xs lg:text-sm text-kcvv-green-bright">
               {date && (
                 <span className="flex items-center gap-2">
                   <FaClock />
