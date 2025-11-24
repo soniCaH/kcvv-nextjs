@@ -167,19 +167,16 @@ export const InContext: Story = {
         <p className="text-gray-700 mb-4">
           Dit is het einde van het artikel. Hieronder volgt de sectie met gerelateerde inhoud.
         </p>
-        <p className="text-gray-700 mb-4">
-          De footer heeft een negatieve margin-bottom waardoor het de volgende sectie overlapt.
-        </p>
       </div>
 
       {/* Article footer */}
       <ArticleFooter {...args} />
 
       {/* Next section */}
-      <div className="bg-gray-100 pt-32 pb-16">
+      <div className="bg-gray-100 pt-12 pb-16">
         <div className="max-w-inner-lg mx-auto px-6">
           <p className="text-gray-600">
-            Volgende sectie op de pagina (let op de overlap met de groene footer)
+            Volgende sectie op de pagina (let op de spacing na de groene footer)
           </p>
         </div>
       </div>

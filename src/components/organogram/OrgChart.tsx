@@ -66,7 +66,7 @@ export function OrgChart({ data, config = {}, onNodeClick, className = '' }: Org
           if (d._expanded === false) {
             chartInstance.current?.setExpanded(d.data.id).render()
           } else {
-            chartInstance.current?.setUpToTheRootHighlighted(d.data.id).setCentered(d.data.id).render()
+            chartInstance.current?.setExpanded(d.data.id, false).render()
           }
         }
         // Also trigger the detail modal

@@ -200,9 +200,7 @@ Maak de stappen concreet en actionable:
 3. Betaal
 ```
 
-## 📁 Categor
-
-ieën
+## 📁 Categorieën
 
 | Categorie | Wanneer Gebruiken | Voorbeelden |
 |-----------|-------------------|-------------|

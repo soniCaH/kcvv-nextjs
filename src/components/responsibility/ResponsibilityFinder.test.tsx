@@ -9,6 +9,7 @@
  * - Edge cases
  */
 
+
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -140,10 +141,9 @@ describe('ResponsibilityFinder', () => {
 
       await waitFor(() => {
         const suggestionContainer = screen.getByRole('textbox').parentElement?.querySelector('.absolute')
-        if (suggestionContainer) {
-          const buttons = suggestionContainer.querySelectorAll('button')
-          expect(buttons.length).toBeLessThanOrEqual(6)
-        }
+        expect(suggestionContainer).toBeInTheDocument()
+        const buttons = suggestionContainer!.querySelectorAll('button')
+        expect(buttons.length).toBeLessThanOrEqual(6)
       })
     })
 
@@ -194,24 +194,13 @@ describe('ResponsibilityFinder', () => {
       const input = screen.getByPlaceholderText(/typ je vraag/i)
       await user.type(input, 'ongeval')
 
+      const suggestions = await screen.findAllByRole('button', { name: /ongeval/i })
+      const suggestion = suggestions[0]
+      await user.click(suggestion)
+
       await waitFor(() => {
-        const suggestion = screen.getAllByRole('button').find(btn =>
-          btn.textContent?.includes('ongeval')
-        )
-        return suggestion
+        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument()
       })
-
-      const suggestion = screen.getAllByRole('button').find(btn =>
-        btn.textContent?.includes('ongeval')
-      )
-
-      if (suggestion) {
-        await user.click(suggestion)
-
-        await waitFor(() => {
-          expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument()
-        })
-      }
     })
 
     it('calls onResultSelect callback', async () => {
@@ -225,24 +214,13 @@ describe('ResponsibilityFinder', () => {
       const input = screen.getByPlaceholderText(/typ je vraag/i)
       await user.type(input, 'ongeval')
 
+      const suggestions = await screen.findAllByRole('button', { name: /ongeval/i })
+      const suggestion = suggestions[0]
+      await user.click(suggestion)
+
       await waitFor(() => {
-        const suggestion = screen.getAllByRole('button').find(btn =>
-          btn.textContent?.includes('ongeval')
-        )
-        return suggestion
+        expect(onResultSelect).toHaveBeenCalled()
       })
-
-      const suggestion = screen.getAllByRole('button').find(btn =>
-        btn.textContent?.includes('ongeval')
-      )
-
-      if (suggestion) {
-        await user.click(suggestion)
-
-        await waitFor(() => {
-          expect(onResultSelect).toHaveBeenCalled()
-        })
-      }
     })
 
     it('displays all result card sections', async () => {
@@ -255,25 +233,14 @@ describe('ResponsibilityFinder', () => {
       const input = screen.getByPlaceholderText(/typ je vraag/i)
       await user.type(input, 'ongeval')
 
+      const suggestions = await screen.findAllByRole('button', { name: /ongeval/i })
+      const suggestion = suggestions[0]
+      await user.click(suggestion)
+
       await waitFor(() => {
-        const suggestion = screen.getAllByRole('button').find(btn =>
-          btn.textContent?.includes('ongeval')
-        )
-        return suggestion
+        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument()
+        expect(screen.getByText(/Wat moet je doen/i)).toBeInTheDocument()
       })
-
-      const suggestion = screen.getAllByRole('button').find(btn =>
-        btn.textContent?.includes('ongeval')
-      )
-
-      if (suggestion) {
-        await user.click(suggestion)
-
-        await waitFor(() => {
-          expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument()
-          expect(screen.getByText(/Wat moet je doen/i)).toBeInTheDocument()
-        })
-      }
     })
   })
 

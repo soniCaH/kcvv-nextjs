@@ -710,8 +710,8 @@ The site uses Adobe Typekit for loading custom fonts. The Typekit ID is stored i
 **Next.js Implementation:**
 ```tsx
 // In app/layout.tsx or _document.tsx
-<Script src={`https://use.typekit.net/${process.env.NEXT_PUBLIC_TYPEKIT_ID}.js`} />
-<Script id="typekit-load">
+<Script src={`https://use.typekit.net/${process.env.NEXT_PUBLIC_TYPEKIT_ID}.js`} strategy="beforeInteractive" />
+<Script id="typekit-load" strategy="beforeInteractive">
   {`try{Typekit.load({ async: true });}catch(e){}`}
 </Script>
 ```
