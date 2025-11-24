@@ -13,11 +13,11 @@ import { clubStructure } from '@/data/club-structure'
 import type { OrgChartNode, OrgChartConfig } from '@/types/organogram'
 
 /**
- * Renders an interactive organizational chart with department filtering, helper info cards, and a details modal.
+ * Render an interactive organizational chart with department filtering, helper info cards, and a member details modal.
  *
- * Presents buttons to filter the chart (full club, hoofdbestuur, jeugdbestuur), an OrgChart that supports expand/collapse, zoom and pan, and a MemberDetailsModal showing contact and role information for the selected node.
+ * The component provides controls to filter the chart by department, displays informational cards about interactions and controls, renders the OrgChart with zoom/expand capabilities, and exposes a modal to view contact and role details for the selected member.
  *
- * @returns The component's rendered React nodes.
+ * @returns The rendered React nodes for the organogram UI
  */
 export function OrganogramClient() {
   const [selectedMember, setSelectedMember] = useState<OrgChartNode | null>(null)

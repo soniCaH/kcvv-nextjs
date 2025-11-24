@@ -48,10 +48,12 @@ export async function generateStaticParams() {
 }
 
 /**
- * Produce SEO and Open Graph metadata for an article identified by the route `slug`.
+ * Build SEO and Open Graph metadata for the article identified by `params.slug`.
  *
- * @param params - An object (resolved from a Promise) containing the `slug` used to fetch the article.
- * @returns Metadata including `title` and optional `description` and `openGraph` fields (title, description, type, publishedTime, modifiedTime, authors, and optional images). If the article cannot be fetched, returns a minimal metadata object with the title "Artikel niet gevonden | KCVV Elewijt".
+ * Fetches the article by slug and returns a metadata object containing `title`, optional `description`, and an `openGraph` block with `title`, `description`, `type`, `publishedTime`, optional `modifiedTime`, `authors`, and optional `images`.
+ *
+ * @param params - A promise-resolved object containing the route `slug`
+ * @returns A metadata object for the article; if the article cannot be fetched, returns an object with the title "Artikel niet gevonden | KCVV Elewijt"
  */
 export async function generateMetadata({ params }: ArticlePageProps) {
   const { slug } = await params
@@ -95,11 +97,9 @@ export async function generateMetadata({ params }: ArticlePageProps) {
 }
 
 /**
- * Render the article detail page for the provided slug.
+ * Render the article detail page for the given slug.
  *
- * Fetches the article by slug and renders its header (image-based or fallback),
- * metadata (date, author, tags, share config), body content, and an optional
- * related-content footer. If the article cannot be loaded, a 404 route is triggered.
+ * Triggers a 404 route if the article cannot be loaded.
  *
  * @param params - Promise resolving to an object with a `slug` string used to load the article
  * @returns The article detail page element
