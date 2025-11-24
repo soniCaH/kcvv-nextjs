@@ -16,6 +16,16 @@ interface ResponsibilityFinderProps {
   compact?: boolean
 }
 
+/**
+ * Interactive UI for selecting a user role and composing a question to find a matching responsibility path.
+ *
+ * Renders a role selector, a contextual question input that appears after a role is chosen, a ranked autocomplete
+ * suggestions list based on the typed query and selected role, and a detailed result card when a suggestion is selected.
+ *
+ * @param onResultSelect - Optional callback invoked with the chosen ResponsibilityPath when a suggestion is selected.
+ * @param compact - If true, renders a more compact layout and typography.
+ * @returns The component element that provides role selection, question input with smart autocomplete, and a selected result display.
+ */
 export function ResponsibilityFinder({ onResultSelect, compact = false }: ResponsibilityFinderProps) {
   const [selectedRole, setSelectedRole] = useState<UserRole | ''>('')
   const [questionText, setQuestionText] = useState('')
@@ -264,7 +274,12 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
 }
 
 /**
- * Result Card showing the solution path
+ * Render a card that displays a responsibility path including its header, primary contact, and ordered steps.
+ *
+ * Shows the path icon, question, and summary; a primary contact panel with role, name, email, phone and optional organogram link; and an ordered list of actionable steps with optional links and contact information.
+ *
+ * @param path - The ResponsibilityPath to render in the result card
+ * @returns A React element representing the formatted result card for the given responsibility path
  */
 function ResultCard({ path }: { path: ResponsibilityPath }) {
   return (

@@ -5,6 +5,13 @@
 
 import { FontLoadingCheck } from './FontLoadingCheck'
 
+/**
+ * Renders a visual page demonstrating and validating the project's font families, typographic scales, color swatches, utilities, and button styles.
+ *
+ * The page displays samples for heading, body, alternative, and monospace fonts (driven by CSS variables), brand color swatches, a blockquote example, utility class previews, button variants, and a font loading status check.
+ *
+ * @returns The React element for the Font Loading Test page.
+ */
 export default function FontTestPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">

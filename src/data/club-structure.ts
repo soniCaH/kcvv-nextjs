@@ -330,8 +330,12 @@ export const clubStructure: OrgChartNode[] = [
 ]
 
 /**
- * Helper function to get organization structure in hierarchical format
- * (for display purposes)
+ * Constructs the organization as a hierarchical tree with nested `_children` arrays.
+ *
+ * Each node is a shallow copy of the original entry with an added `_children` array containing its direct descendants.
+ *
+ * @returns The root `OrgChartNode` whose descendants are linked via the `_children` arrays.
+ * @throws Error if no root node (a node without `parentId`) is found in `clubStructure`.
  */
 export function getHierarchicalStructure(): OrgChartNode {
   const nodeMap = new Map<string, OrgChartNode>()
@@ -362,14 +366,20 @@ export function getHierarchicalStructure(): OrgChartNode {
 }
 
 /**
- * Get all members by department
+ * Filter club members by department.
+ *
+ * @param department - The department to match on each member's `department` field
+ * @returns An array of `OrgChartNode` entries belonging to the specified department
  */
 export function getMembersByDepartment(department: 'hoofdbestuur' | 'jeugdbestuur' | 'general') {
   return clubStructure.filter((node) => node.department === department)
 }
 
 /**
- * Search members by name or title
+ * Finds club members whose name or title contains the given query string (case-insensitive).
+ *
+ * @param query - The text to search for in member `name` and `title`
+ * @returns An array of `OrgChartNode` objects whose `name` or `title` contains `query`, case-insensitive
  */
 export function searchMembers(query: string): OrgChartNode[] {
   const lowercaseQuery = query.toLowerCase()

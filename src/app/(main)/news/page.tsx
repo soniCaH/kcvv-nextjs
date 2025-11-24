@@ -18,7 +18,14 @@ interface NewsPageProps {
 }
 
 /**
- * Generate dynamic metadata based on category filter
+ * Generate page title and description for the news archive, optionally tailored to a category filter.
+ *
+ * If a category slug is provided and matches a known category, the returned metadata includes that
+ * category's name in the title and description. On error or when no matching category is found,
+ * returns the default archive title and description.
+ *
+ * @returns Metadata object containing `title` and `description`; when a category match is found
+ * the values include the category name, otherwise they are the default archive metadata.
  */
 export async function generateMetadata({ searchParams }: NewsPageProps): Promise<Metadata> {
   const params = await searchParams
@@ -65,7 +72,14 @@ export async function generateMetadata({ searchParams }: NewsPageProps): Promise
 }
 
 /**
- * News listing page
+ * Render the news listing page with category filters, a paginated article grid, and navigation controls.
+ *
+ * Reads query parameters from `searchParams` to determine the active category and page, fetches category tags
+ * and articles from Drupal (applying an optional category filter and pagination), and renders the UI including
+ * CategoryFilters, ArticleCard items, and previous/next links that preserve the category filter.
+ *
+ * @param searchParams - A promise resolving to an object containing optional `category` and `page` string values
+ * @returns The JSX for the news listing page
  */
 export default async function NewsPage({ searchParams }: NewsPageProps) {
   const params = await searchParams

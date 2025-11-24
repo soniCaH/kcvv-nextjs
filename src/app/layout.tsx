@@ -13,6 +13,12 @@ export const metadata: Metadata = {
   keywords: ["KCVV Elewijt", "voetbal", "football", "Elewijt", "voetbalclub"],
 };
 
+/**
+ * Root layout that wraps pages with HTML structure, loads Adobe Typekit, and renders the global header and footer.
+ *
+ * @param children - The page content to render between the header and footer.
+ * @returns The root JSX element for the application layout.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

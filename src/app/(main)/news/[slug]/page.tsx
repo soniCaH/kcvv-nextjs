@@ -23,7 +23,11 @@ interface ArticlePageProps {
 }
 
 /**
- * Generate static paths for all articles
+ * Generate route parameters for article pages from Drupal articles.
+ *
+ * Fetches up to 50 articles and derives each route `slug` by removing the "/news/" prefix from the article path alias.
+ *
+ * @returns An array of route parameter objects, each with a `slug` property derived from an article's path alias; an empty array is returned if fetching fails.
  */
 export async function generateStaticParams() {
   try {
@@ -44,7 +48,10 @@ export async function generateStaticParams() {
 }
 
 /**
- * Article page metadata
+ * Produce SEO and Open Graph metadata for an article identified by the route `slug`.
+ *
+ * @param params - An object (resolved from a Promise) containing the `slug` used to fetch the article.
+ * @returns Metadata including `title` and optional `description` and `openGraph` fields (title, description, type, publishedTime, modifiedTime, authors, and optional images). If the article cannot be fetched, returns a minimal metadata object with the title "Artikel niet gevonden | KCVV Elewijt".
  */
 export async function generateMetadata({ params }: ArticlePageProps) {
   const { slug } = await params
@@ -88,7 +95,14 @@ export async function generateMetadata({ params }: ArticlePageProps) {
 }
 
 /**
- * Article detail page
+ * Render the article detail page for the provided slug.
+ *
+ * Fetches the article by slug and renders its header (image-based or fallback),
+ * metadata (date, author, tags, share config), body content, and an optional
+ * related-content footer. If the article cannot be loaded, a 404 route is triggered.
+ *
+ * @param params - Promise resolving to an object with a `slug` string used to load the article
+ * @returns The article detail page element
  */
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params

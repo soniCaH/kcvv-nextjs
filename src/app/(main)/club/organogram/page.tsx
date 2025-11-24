@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   },
 }
 
+/**
+ * Renders the Organogram page for KCVV Elewijt, including a hero banner and the interactive organogram client.
+ *
+ * @returns The React element for the organogram page.
+ */
 export default function OrganogramPage() {
   return (
     <div className="min-h-screen bg-gray-50">

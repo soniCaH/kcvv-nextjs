@@ -19,6 +19,12 @@ export const metadata: Metadata = {
   },
 }
 
+/**
+ * Renders the Help / Responsibility Finder page containing a hero banner, the ResponsibilityFinder component,
+ * informational cards (organogram and general contact), and a three-step "How it works" FAQ section.
+ *
+ * @returns The React element for the help page layout including interactive and informational sections.
+ */
 export default function HelpPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">

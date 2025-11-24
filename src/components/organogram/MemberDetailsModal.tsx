@@ -18,6 +18,16 @@ interface MemberDetailsModalProps {
   onClose: () => void
 }
 
+/**
+ * Renders a modal showing detailed information for a selected board member.
+ *
+ * Displays the member's avatar, name, title, contact details, responsibilities, department badge, and an optional link to the full profile. While open, the component locks body scroll and closes when the Escape key is pressed or when the provided close handlers are invoked.
+ *
+ * @param member - The member to display; when `null`, nothing is rendered
+ * @param isOpen - Controls visibility of the modal
+ * @param onClose - Callback invoked to close the modal (called on backdrop click, Close buttons, and Escape)
+ * @returns The modal JSX element when `isOpen` is true and `member` is provided, otherwise `null`
+ */
 export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsModalProps) {
   // Close on Escape key
   useEffect(() => {
