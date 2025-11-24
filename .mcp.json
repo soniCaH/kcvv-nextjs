@@ -5,7 +5,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "next-devtools-mcp@latest"
+        "next-devtools-mcp@0.3.4"
       ],
       "env": {}
     }

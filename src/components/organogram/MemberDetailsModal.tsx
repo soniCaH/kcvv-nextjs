@@ -88,7 +88,12 @@ export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsMod
               className="w-24 h-24 rounded-full border-4 border-white/30 object-cover"
               onError={() => {
                 if (member.imageUrl) {
-                  setFailedImages((prev) => new Set(prev).add(member.imageUrl!))
+                  setFailedImages((prev) => {
+                    if (prev.has(member.imageUrl!)) return prev
+                    const next = new Set(prev)
+                    next.add(member.imageUrl!)
+                    return next
+                  })
                 }
               }}
             />

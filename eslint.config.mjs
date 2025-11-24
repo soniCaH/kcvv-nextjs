@@ -5,13 +5,7 @@ import storybook from "eslint-plugin-storybook";
 const eslintConfig = [
   ...nextCoreWebVitals,
   ...nextTypescript,
-  {
-    files: ["**/*.stories.@(ts|tsx|js|jsx|mjs|cjs)"],
-    plugins: {
-      storybook,
-    },
-    rules: storybook.configs.recommended.overrides[0].rules,
-  },
+  ...storybook.configs["flat/recommended"],
   {
     ignores: [
       "node_modules/**",
