@@ -60,11 +60,12 @@
     "happy-dom": "^20.0.10",
     "storybook": "^10.0.8",
     "tailwindcss": "4.1.17",
-    "typescript": "5.8.3",
+    "typescript": "6.0.0-dev.20251124",
     "vitest": "^4.0.9"
   },
   "overrides": {
     "@types/react": "19.2.7",
-    "@types/react-dom": "19.2.3"
+    "@types/react-dom": "19.2.3",
+    "typescript": "6.0.0-dev.20251124"
   }
 }
