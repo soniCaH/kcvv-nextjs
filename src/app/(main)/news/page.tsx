@@ -74,12 +74,8 @@ export async function generateMetadata({ searchParams }: NewsPageProps): Promise
 /**
  * Render the news listing page with category filters, a paginated article grid, and navigation controls.
  *
- * Reads query parameters from `searchParams` to determine the active category and page, fetches category tags
- * and articles from Drupal (applying an optional category filter and pagination), and renders the UI including
- * CategoryFilters, ArticleCard items, and previous/next links that preserve the category filter.
- *
- * @param searchParams - A promise resolving to an object containing optional `category` and `page` string values
- * @returns The JSX for the news listing page
+ * @param searchParams - A promise resolving to an object with optional `category` and `page` string values used to determine the active category filter and current page
+ * @returns The JSX element for the news listing page
  */
 export default async function NewsPage({ searchParams }: NewsPageProps) {
   const params = await searchParams
