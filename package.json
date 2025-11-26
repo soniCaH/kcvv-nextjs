@@ -59,7 +59,7 @@
     "storybook": "^10.0.8",
     "tailwindcss": "4.1.17",
     "typescript": "6.0.0-dev.20251124",
-    "vitest": "^4.0.9"
+    "vitest": "^4.0.14"
   },
   "overrides": {
     "@types/react": "19.2.7",
