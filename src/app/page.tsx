@@ -13,7 +13,9 @@ import type { Metadata } from 'next'
 import type { Article } from '@/lib/effect/schemas/article.schema'
 
 /**
- * Generate homepage metadata
+ * Provide metadata for the homepage.
+ *
+ * @returns The page metadata object containing `title`, `description`, and `keywords`.
  */
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -24,7 +26,19 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Helper function to map Drupal article to homepage article format
+ * Convert a Drupal Article record into the simplified shape used by the homepage.
+ *
+ * @param article - Drupal article to map
+ * @param includeDescription - When true, include the article summary as `description`
+ * @returns An object with properties:
+ * - `href`: article URL path alias
+ * - `title`: article title
+ * - `description`: optional article summary (present only if `includeDescription` is true)
+ * - `imageUrl`: URL of the article image, or `undefined` if none
+ * - `imageAlt`: image alt text if available, otherwise the article title
+ * - `date`: human-friendly formatted date
+ * - `dateIso`: ISO string of the article creation date
+ * - `tags`: array of tag objects `{ name }`, empty if no tags
  */
 function mapArticleForHomepage(article: Article, includeDescription = false) {
   const imageData = article.relationships.field_media_article_image?.data
@@ -46,7 +60,12 @@ function mapArticleForHomepage(article: Article, includeDescription = false) {
 }
 
 /**
- * Render the homepage with featured articles and latest news
+ * Render the homepage with a featured articles carousel and a latest-news list.
+ *
+ * Fetches nine most-recent articles, uses the first three as featured items (including descriptions)
+ * and the remaining six as latest-news items, then returns the composed homepage element.
+ *
+ * @returns The homepage React element containing the featured articles carousel and latest news section
  */
 export default async function HomePage() {
   // Fetch latest articles for homepage
