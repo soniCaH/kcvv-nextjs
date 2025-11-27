@@ -10,7 +10,7 @@ import { FeaturedArticles, LatestNews } from '@/components/domain/home'
 import { formatArticleDate } from '@/lib/utils/dates'
 import { isDrupalImage } from '@/lib/utils/drupal-content'
 import type { Metadata } from 'next'
-import type { Article } from '@/types/drupal'
+import type { Article } from '@/lib/effect/schemas/article.schema'
 
 /**
  * Generate homepage metadata
@@ -37,7 +37,7 @@ function mapArticleForHomepage(article: Article, includeDescription = false) {
     imageUrl: hasValidImage ? imageData.uri.url : undefined,
     imageAlt: hasValidImage ? imageData.alt || article.attributes.title : article.attributes.title,
     date: formatArticleDate(article.attributes.created),
-    dateIso: article.attributes.created,
+    dateIso: article.attributes.created.toISOString(),
     tags:
       article.relationships.field_tags?.data
         ?.map((tag) => ('attributes' in tag && tag.attributes?.name ? { name: tag.attributes.name } : null))
