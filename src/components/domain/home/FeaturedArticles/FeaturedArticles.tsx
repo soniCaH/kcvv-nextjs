@@ -124,38 +124,21 @@ export const FeaturedArticles = ({
             href={activeArticle.href}
             className="group flex flex-col justify-center max-w-2xl"
           >
-            {/* Title with text shadow for better readability */}
-            <h2
-              className="frontpage__featured_article__title text-white text-4xl lg:text-6xl font-bold leading-tight mb-4 group-hover:text-kcvv-green-bright transition-colors"
-              style={{
-                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.6)'
-              }}
-            >
+            {/* Title */}
+            <h2 className="frontpage__featured_article__title text-white text-4xl lg:text-6xl font-bold leading-tight mb-4 group-hover:text-kcvv-green-bright transition-colors">
               {activeArticle.title}
             </h2>
 
-            {/* Description with text shadow */}
+            {/* Description */}
             {activeArticle.description && (
-              <p
-                className="frontpage__featured_article__title__description text-white text-lg lg:text-xl mb-6 line-clamp-3"
-                style={{
-                  textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 0, 0, 0.6)'
-                }}
-              >
+              <p className="frontpage__featured_article__title__description text-white/90 text-lg lg:text-xl mb-6 line-clamp-3">
                 {activeArticle.description}
               </p>
             )}
 
             {/* Metadata */}
-            <div className="frontpage__featured_article__meta__wrapper flex items-center gap-4 text-sm text-white">
-              <time
-                className="frontpage__featured_article__meta font-medium"
-                style={{
-                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                {activeArticle.date}
-              </time>
+            <div className="frontpage__featured_article__meta__wrapper flex items-center gap-4 text-sm text-white/80">
+              <time className="frontpage__featured_article__meta">{activeArticle.date}</time>
 
               {/* Tags */}
               {activeArticle.tags && activeArticle.tags.length > 0 && (
@@ -163,7 +146,7 @@ export const FeaturedArticles = ({
                   {activeArticle.tags.slice(0, 3).map((tag, i) => (
                     <span
                       key={i}
-                      className="px-2 py-1 bg-kcvv-green-bright border border-kcvv-green-bright rounded text-white text-xs uppercase font-semibold shadow-lg"
+                      className="px-2 py-1 bg-kcvv-green-bright/20 border border-kcvv-green-bright/40 rounded text-white text-xs uppercase"
                     >
                       {tag.name}
                     </span>
