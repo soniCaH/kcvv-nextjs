@@ -96,12 +96,14 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
   )
 
   // Extract slug from path and find matching category
-  const categoryId = categorySlug
+  const activeCategory = categorySlug
     ? tags.find((tag) => {
         const slug = tag.attributes.path?.alias?.split('/').pop()
         return slug === categorySlug
-      })?.attributes.drupal_internal__tid
+      })
     : undefined
+
+  const categoryId = activeCategory?.attributes.drupal_internal__tid
 
   // Fetch articles with category filter
   const { articles, links } = await runPromise(
@@ -116,9 +118,14 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
     })
   )
 
+  // Generate dynamic page title
+  const pageTitle = activeCategory
+    ? `${activeCategory.attributes.name} - Nieuwsarchief KCVV Elewijt`
+    : 'Nieuwsarchief KCVV Elewijt'
+
   return (
     <>
-      <PageTitle title="Nieuwsarchief KCVV Elewijt" />
+      <PageTitle title={pageTitle} />
 
       <div className="w-full max-w-inner-lg mx-auto px-3 lg:px-0 py-6">
         {/* Category filters */}
