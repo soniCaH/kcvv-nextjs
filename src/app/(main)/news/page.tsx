@@ -72,9 +72,9 @@ export async function generateMetadata({ searchParams }: NewsPageProps): Promise
 }
 
 /**
- * Render the news listing page with category filters, a paginated article grid, and navigation controls.
+ * Renders the news listing page with category filters, a paginated article grid, and navigation controls.
  *
- * @param searchParams - A promise resolving to an object with optional `category` and `page` string values used to determine the active category filter and current page
+ * @param searchParams - Promise resolving to an object with optional `category` and `page` string values used to determine the active category filter and current page
  * @returns The JSX element for the news listing page
  */
 export default async function NewsPage({ searchParams }: NewsPageProps) {

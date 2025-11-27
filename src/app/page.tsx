@@ -12,7 +12,9 @@ import { isDrupalImage } from '@/lib/utils/drupal-content'
 import type { Metadata } from 'next'
 
 /**
- * Generate homepage metadata
+ * Provide metadata for the homepage.
+ *
+ * @returns Metadata object containing `title`, `description`, and `keywords` for the homepage
  */
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -23,7 +25,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Render the homepage with featured articles and latest news
+ * Render the homepage by fetching recent articles and displaying a featured carousel and latest news list.
+ *
+ * Fetches up to nine recent articles, uses the first three as featured items and the remainder as latest news entries, and renders corresponding components when content is available.
+ *
+ * @returns The page JSX containing the featured articles carousel and the latest news section
  */
 export default async function HomePage() {
   // Fetch latest articles for homepage
