@@ -44,7 +44,9 @@ describe('FeaturedArticles', () => {
   it('renders the first article by default', () => {
     render(<FeaturedArticles articles={mockArticles} />)
 
-    expect(screen.getAllByText('First Featured Article').length).toBeGreaterThan(0)
+    // Use role-based query for the main heading
+    const heading = screen.getByRole('heading', { name: 'First Featured Article', level: 2 })
+    expect(heading).toBeInTheDocument()
     expect(
       screen.getByText('This is the first featured article description')
     ).toBeInTheDocument()
@@ -82,7 +84,9 @@ describe('FeaturedArticles', () => {
     const secondDot = screen.getByRole('button', { name: 'Go to article 2' })
     await user.click(secondDot)
 
-    expect(screen.getAllByText('Second Featured Article').length).toBeGreaterThan(0)
+    // Use role-based query for the heading
+    const heading = screen.getByRole('heading', { name: 'Second Featured Article', level: 2 })
+    expect(heading).toBeInTheDocument()
     expect(
       screen.getByText('This is the second featured article description')
     ).toBeInTheDocument()
@@ -98,7 +102,9 @@ describe('FeaturedArticles', () => {
     const secondThumbnail = screen.getByRole('button', { name: 'Go to article: Second Featured Article' })
     await user.click(secondThumbnail)
 
-    expect(screen.getAllByText('Second Featured Article').length).toBeGreaterThan(0)
+    // Use role-based query for the heading
+    const heading = screen.getByRole('heading', { name: 'Second Featured Article', level: 2 })
+    expect(heading).toBeInTheDocument()
     expect(
       screen.getByText('This is the second featured article description')
     ).toBeInTheDocument()

@@ -10,6 +10,7 @@ import { FeaturedArticles, LatestNews } from '@/components/domain/home'
 import { formatArticleDate } from '@/lib/utils/dates'
 import { isDrupalImage } from '@/lib/utils/drupal-content'
 import type { Metadata } from 'next'
+import type { Article } from '@/types/drupal'
 
 /**
  * Generate homepage metadata
@@ -19,6 +20,28 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'Er is maar één plezante compagnie | KCVV Elewijt',
     description: 'Startpagina van stamnummer 00055: KCVV Elewijt.',
     keywords: 'KCVV, Voetbal, Elewijt, Crossing, KCVVE, Zemst, 00055, 55, 1982, 1980',
+  }
+}
+
+/**
+ * Helper function to map Drupal article to homepage article format
+ */
+function mapArticleForHomepage(article: Article, includeDescription = false) {
+  const imageData = article.relationships.field_media_article_image?.data
+  const hasValidImage = imageData && isDrupalImage(imageData)
+
+  return {
+    href: article.attributes.path.alias,
+    title: article.attributes.title,
+    ...(includeDescription && { description: article.attributes.body?.summary || undefined }),
+    imageUrl: hasValidImage ? imageData.uri.url : undefined,
+    imageAlt: hasValidImage ? imageData.alt || article.attributes.title : article.attributes.title,
+    date: formatArticleDate(article.attributes.created),
+    dateIso: article.attributes.created,
+    tags:
+      article.relationships.field_tags?.data
+        ?.map((tag) => ('attributes' in tag && tag.attributes?.name ? { name: tag.attributes.name } : null))
+        .filter((tag): tag is { name: string } => tag !== null) || [],
   }
 }
 
@@ -40,40 +63,9 @@ export default async function HomePage() {
   )
 
   // Split articles: first 3 for featured carousel, remaining 6 for latest news
-  const featuredArticles = articles.slice(0, 3).map((article) => {
-    const imageData = article.relationships.field_media_article_image?.data
-    const hasValidImage = imageData && isDrupalImage(imageData)
+  const featuredArticles = articles.slice(0, 3).map((article) => mapArticleForHomepage(article, true))
 
-    return {
-      href: article.attributes.path.alias,
-      title: article.attributes.title,
-      description: article.attributes.body?.summary || undefined,
-      imageUrl: hasValidImage ? imageData.uri.url : undefined,
-      imageAlt: hasValidImage ? imageData.alt || article.attributes.title : article.attributes.title,
-      date: formatArticleDate(article.attributes.created),
-      tags:
-        article.relationships.field_tags?.data
-          ?.map((tag) => ('attributes' in tag && tag.attributes?.name ? { name: tag.attributes.name } : null))
-          .filter((tag): tag is { name: string } => tag !== null) || [],
-    }
-  })
-
-  const latestNewsArticles = articles.slice(3, 9).map((article) => {
-    const imageData = article.relationships.field_media_article_image?.data
-    const hasValidImage = imageData && isDrupalImage(imageData)
-
-    return {
-      href: article.attributes.path.alias,
-      title: article.attributes.title,
-      imageUrl: hasValidImage ? imageData.uri.url : undefined,
-      imageAlt: hasValidImage ? imageData.alt || article.attributes.title : article.attributes.title,
-      date: formatArticleDate(article.attributes.created),
-      tags:
-        article.relationships.field_tags?.data
-          ?.map((tag) => ('attributes' in tag && tag.attributes?.name ? { name: tag.attributes.name } : null))
-          .filter((tag): tag is { name: string } => tag !== null) || [],
-    }
-  })
+  const latestNewsArticles = articles.slice(3, 9).map((article) => mapArticleForHomepage(article, false))
 
   return (
     <>

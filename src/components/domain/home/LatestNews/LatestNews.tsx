@@ -126,9 +126,9 @@ export const LatestNews = ({
 
         {/* Articles Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10">
-          {articles.map((article, index) => (
+          {articles.map((article) => (
             <ArticleCard
-              key={index}
+              key={article.href}
               title={article.title}
               href={article.href}
               imageUrl={article.imageUrl}

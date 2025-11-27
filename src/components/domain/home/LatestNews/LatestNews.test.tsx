@@ -95,10 +95,12 @@ describe('LatestNews', () => {
   it('renders correct number of articles', () => {
     render(<LatestNews articles={mockArticles} />)
 
-    const articleLinks = screen.getAllByRole('link').filter((link) =>
-      link.getAttribute('href')?.startsWith('/news/')
-    )
-    expect(articleLinks.length).toBeGreaterThanOrEqual(3)
+    const articleLinks = screen.getAllByRole('link').filter((link) => {
+      const href = link.getAttribute('href')
+      // Exclude the "View All" link which is exactly '/news'
+      return href?.startsWith('/news/') && href !== '/news'
+    })
+    expect(articleLinks.length).toBe(3)
   })
 
   it('handles single article', () => {

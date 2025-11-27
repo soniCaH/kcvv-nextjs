@@ -37,6 +37,10 @@ export interface FeaturedArticle {
    */
   date: string
   /**
+   * ISO 8601 date for machine-readable semantic HTML
+   */
+  dateIso?: string
+  /**
    * Article tags/categories
    */
   tags?: Array<{ name: string }>
@@ -81,26 +85,58 @@ export const FeaturedArticles = ({
   autoRotate = true,
 }: FeaturedArticlesProps) => {
   const [activeIndex, setActiveIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
 
-  // Auto-rotate through articles
+  // Clamp autoRotateInterval to minimum 1000ms to prevent runaway intervals
+  const safeInterval = Math.max(autoRotateInterval, 1000)
+
+  // Clamp activeIndex if articles array shrinks - use derived state instead of effect
+  const clampedIndex = activeIndex >= articles.length && articles.length > 0 ? 0 : activeIndex
+
+  // Auto-rotate through articles (pause when user interacts)
   useEffect(() => {
-    if (!autoRotate || articles.length <= 1) return
+    if (!autoRotate || articles.length <= 1 || isPaused) return
 
     const timer = setInterval(() => {
-      setActiveIndex((current) => (current + 1) % articles.length)
-    }, autoRotateInterval)
+      setActiveIndex((current) => {
+        // Ensure index is always within bounds
+        const nextIndex = (current + 1) % articles.length
+        return nextIndex
+      })
+    }, safeInterval)
 
     return () => clearInterval(timer)
-  }, [autoRotate, autoRotateInterval, articles.length])
+  }, [autoRotate, safeInterval, articles.length, isPaused])
+
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault()
+      setActiveIndex((current) => (current - 1 + articles.length) % articles.length)
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      setActiveIndex((current) => (current + 1) % articles.length)
+    }
+  }
 
   if (articles.length === 0) {
     return null
   }
 
-  const activeArticle = articles[activeIndex]
+  const activeArticle = articles[clampedIndex]
 
   return (
-    <section className="frontpage__featured_articles w-full bg-black relative overflow-hidden">
+    <section
+      className="frontpage__featured_articles w-full bg-black relative overflow-hidden"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onFocus={() => setIsPaused(true)}
+      onBlur={() => setIsPaused(false)}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="region"
+      aria-label="Featured articles carousel"
+    >
       <div className="relative w-full h-[400px] lg:h-[600px]">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0">
@@ -138,7 +174,9 @@ export const FeaturedArticles = ({
 
             {/* Metadata - Pure white */}
             <div className="frontpage__featured_article__meta__wrapper flex items-center gap-4 text-sm !text-white">
-              <time className="frontpage__featured_article__meta">{activeArticle.date}</time>
+              <time className="frontpage__featured_article__meta" dateTime={activeArticle.dateIso}>
+                {activeArticle.date}
+              </time>
 
               {/* Tags */}
               {activeArticle.tags && activeArticle.tags.length > 0 && (
@@ -166,12 +204,12 @@ export const FeaturedArticles = ({
                 onClick={() => setActiveIndex(index)}
                 className={cn(
                   'w-3 h-3 rounded-full transition-all',
-                  index === activeIndex
+                  index === clampedIndex
                     ? 'bg-kcvv-green-bright w-8'
                     : 'bg-white/50 hover:bg-white/75'
                 )}
                 aria-label={`Go to article ${index + 1}`}
-                aria-current={index === activeIndex ? 'true' : 'false'}
+                aria-current={index === clampedIndex ? 'true' : 'false'}
               />
             ))}
           </div>
@@ -186,12 +224,12 @@ export const FeaturedArticles = ({
                 onClick={() => setActiveIndex(index)}
                 className={cn(
                   'frontpage__featured_article group flex items-center gap-3 p-2 rounded transition-all cursor-pointer',
-                  index === activeIndex
+                  index === clampedIndex
                     ? 'frontpage__featured_article--active bg-kcvv-green-bright/20 border border-kcvv-green-bright'
                     : 'hover:bg-white/10 border border-transparent hover:border-white/30'
                 )}
                 aria-label={`Go to article: ${article.title}`}
-                aria-pressed={index === activeIndex}
+                aria-pressed={index === clampedIndex}
               >
                 {/* Thumbnail */}
                 {article.imageUrl && (
