@@ -1,103 +1,104 @@
-import Image from "next/image";
+/**
+ * Homepage
+ * Main landing page for KCVV Elewijt website
+ */
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import { Effect } from 'effect'
+import { runPromise } from '@/lib/effect/runtime'
+import { DrupalService } from '@/lib/effect/services/DrupalService'
+import { FeaturedArticles, LatestNews } from '@/components/domain/home'
+import { formatArticleDate } from '@/lib/utils/dates'
+import { isDrupalImage } from '@/lib/utils/drupal-content'
+import type { Metadata } from 'next'
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+/**
+ * Generate homepage metadata
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Er is maar één plezante compagnie | KCVV Elewijt',
+    description: 'Startpagina van stamnummer 00055: KCVV Elewijt.',
+    keywords: 'KCVV, Voetbal, Elewijt, Crossing, KCVVE, Zemst, 00055, 55, 1982, 1980',
+  }
 }
+
+/**
+ * Render the homepage with featured articles and latest news
+ */
+export default async function HomePage() {
+  // Fetch latest articles for homepage
+  const { articles } = await runPromise(
+    Effect.gen(function* () {
+      const drupal = yield* DrupalService
+      // Get 9 latest articles (3 featured + 6 latest news)
+      return yield* drupal.getArticles({
+        page: 1,
+        limit: 9,
+        sort: '-created',
+      })
+    })
+  )
+
+  // Split articles: first 3 for featured carousel, remaining 6 for latest news
+  const featuredArticles = articles.slice(0, 3).map((article) => {
+    const imageData = article.relationships.field_media_article_image?.data
+    const hasValidImage = imageData && isDrupalImage(imageData)
+
+    return {
+      href: article.attributes.path.alias,
+      title: article.attributes.title,
+      description: article.attributes.body?.summary || undefined,
+      imageUrl: hasValidImage ? imageData.uri.url : undefined,
+      imageAlt: hasValidImage ? imageData.alt || article.attributes.title : article.attributes.title,
+      date: formatArticleDate(article.attributes.created),
+      tags:
+        article.relationships.field_tags?.data
+          ?.map((tag) => ('attributes' in tag && tag.attributes?.name ? { name: tag.attributes.name } : null))
+          .filter((tag): tag is { name: string } => tag !== null) || [],
+    }
+  })
+
+  const latestNewsArticles = articles.slice(3, 9).map((article) => {
+    const imageData = article.relationships.field_media_article_image?.data
+    const hasValidImage = imageData && isDrupalImage(imageData)
+
+    return {
+      href: article.attributes.path.alias,
+      title: article.attributes.title,
+      imageUrl: hasValidImage ? imageData.uri.url : undefined,
+      imageAlt: hasValidImage ? imageData.alt || article.attributes.title : article.attributes.title,
+      date: formatArticleDate(article.attributes.created),
+      tags:
+        article.relationships.field_tags?.data
+          ?.map((tag) => ('attributes' in tag && tag.attributes?.name ? { name: tag.attributes.name } : null))
+          .filter((tag): tag is { name: string } => tag !== null) || [],
+    }
+  })
+
+  return (
+    <>
+      {/* Featured Articles Hero Carousel */}
+      {featuredArticles.length > 0 && (
+        <FeaturedArticles articles={featuredArticles} autoRotate={true} autoRotateInterval={5000} />
+      )}
+
+      {/* Latest News Section */}
+      {latestNewsArticles.length > 0 && (
+        <LatestNews articles={latestNewsArticles} title="Laatste nieuws" showViewAll={true} viewAllHref="/news" />
+      )}
+
+      {/* TODO: Add more homepage sections:
+       * - Upcoming matches slider (frontpage__matches_slider)
+       * - Team standings/rankings
+       * - KCVVTV video section (frontpage__kcvvtv)
+       * - Youth news section (frontpage__main_content__youth)
+       * - Sponsors/Advertisement (frontpage__advertisement)
+       */}
+    </>
+  )
+}
+
+/**
+ * Enable ISR with 1 hour revalidation
+ */
+export const revalidate = 3600

@@ -31,7 +31,7 @@ const mockArticles = [
   {
     href: '/news/2025-06-20-definitieve-reeksindeling-3e-nationale-bis',
     title: 'Definitieve reeksindeling 3e Nationale BIS',
-    imageUrl: 'https://api.kcvvelewijt.be/sites/default/files/2025-01/stadium.jpg',
+    imageUrl: 'https://placehold.co/600x400/4acf52/fff?text=Stadion',
     imageAlt: 'Stadion KCVV Elewijt',
     date: '20 juni 2025',
     tags: [{ name: 'Ploeg' }, { name: 'Competitie' }],
@@ -39,7 +39,7 @@ const mockArticles = [
   {
     href: '/news/2025-03-25-overlijden-jean-lepage',
     title: 'Overlijden Jean Lepage',
-    imageUrl: 'https://api.kcvvelewijt.be/sites/default/files/2025-01/tribute.jpg',
+    imageUrl: 'https://placehold.co/600x400/1e2024/fff?text=In+Memoriam',
     imageAlt: 'Jean Lepage tribute',
     date: '25 maart 2025',
     tags: [{ name: 'In Memoriam' }],
@@ -47,7 +47,7 @@ const mockArticles = [
   {
     href: '/news/2025-01-15-winterstage-spanje',
     title: 'Winterstage in Spanje',
-    imageUrl: 'https://api.kcvvelewijt.be/sites/default/files/2025-01/training.jpg',
+    imageUrl: 'https://placehold.co/600x400/4acf52/fff?text=Training',
     imageAlt: 'Training KCVV Elewijt',
     date: '15 januari 2025',
     tags: [{ name: 'Ploeg' }, { name: 'Training' }],
@@ -55,7 +55,7 @@ const mockArticles = [
   {
     href: '/news/2025-01-10-jeugdwerking-uitbreiding',
     title: 'Jeugdwerking breidt uit met nieuwe trainers',
-    imageUrl: 'https://api.kcvvelewijt.be/sites/default/files/2025-01/youth.jpg',
+    imageUrl: 'https://placehold.co/600x400/ffd700/000?text=Jeugd',
     imageAlt: 'Jeugdtraining',
     date: '10 januari 2025',
     tags: [{ name: 'Jeugd' }],
@@ -63,7 +63,7 @@ const mockArticles = [
   {
     href: '/news/2025-01-05-nieuwe-sponsor',
     title: 'Nieuwe hoofdsponsor voor seizoen 2025-2026',
-    imageUrl: 'https://api.kcvvelewijt.be/sites/default/files/2025-01/sponsor.jpg',
+    imageUrl: 'https://placehold.co/600x400/4acf52/fff?text=Sponsor',
     imageAlt: 'Sponsorcontract ondertekening',
     date: '5 januari 2025',
     tags: [{ name: 'Sponsoring' }],
@@ -71,7 +71,7 @@ const mockArticles = [
   {
     href: '/news/2024-12-20-kersttoernooi',
     title: 'Kersttoernooi groot succes',
-    imageUrl: 'https://api.kcvvelewijt.be/sites/default/files/2024-12/christmas.jpg',
+    imageUrl: 'https://placehold.co/600x400/ff0000/fff?text=Kerst',
     imageAlt: 'Kersttoernooi',
     date: '20 december 2024',
     tags: [{ name: 'Evenement' }, { name: 'Jeugd' }],

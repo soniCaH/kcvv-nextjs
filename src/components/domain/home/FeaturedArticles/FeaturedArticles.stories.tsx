@@ -29,7 +29,7 @@ const mockArticles = [
     title: 'Definitieve reeksindeling 3e Nationale BIS',
     description:
       'De reeksindeling voor het seizoen 2025-2026 in 3e Nationale BIS is bekend. KCVV Elewijt komt uit in reeks A.',
-    imageUrl: 'https://api.kcvvelewijt.be/sites/default/files/2025-01/stadium.jpg',
+    imageUrl: 'https://placehold.co/800x600/4acf52/fff?text=Stadion',
     imageAlt: 'Stadion KCVV Elewijt',
     date: '20 juni 2025',
     tags: [{ name: 'Ploeg' }, { name: 'Competitie' }],
@@ -39,7 +39,7 @@ const mockArticles = [
     title: 'Overlijden Jean Lepage',
     description:
       'Met diepe droefheid hebben we vernomen dat Jean Lepage op 82-jarige leeftijd is overleden. Jean was jarenlang een trouwe supporter en vrijwilliger van KCVV Elewijt.',
-    imageUrl: 'https://api.kcvvelewijt.be/sites/default/files/2025-01/tribute.jpg',
+    imageUrl: 'https://placehold.co/800x600/1e2024/fff?text=In+Memoriam',
     imageAlt: 'Jean Lepage tribute',
     date: '25 maart 2025',
     tags: [{ name: 'In Memoriam' }],
@@ -49,7 +49,7 @@ const mockArticles = [
     title: 'Winterstage in Spanje: voorbereiding op play-offs',
     description:
       'De A-ploeg vertrekt volgende week naar Spanje voor een intensieve winterstage. Coach Deferm wil zijn spelers optimaal voorbereiden op de cruciale play-off wedstrijden.',
-    imageUrl: 'https://api.kcvvelewijt.be/sites/default/files/2025-01/training.jpg',
+    imageUrl: 'https://placehold.co/800x600/4acf52/fff?text=Training',
     imageAlt: 'Training KCVV Elewijt',
     date: '15 januari 2025',
     tags: [{ name: 'Ploeg' }, { name: 'Training' }, { name: 'Stage' }],
