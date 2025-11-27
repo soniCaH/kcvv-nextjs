@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/nextjs'
 import { FeaturedArticles } from './FeaturedArticles'
 
 const meta: Meta<typeof FeaturedArticles> = {
