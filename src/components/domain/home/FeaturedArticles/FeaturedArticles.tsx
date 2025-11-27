@@ -171,6 +171,7 @@ export const FeaturedArticles = ({
                     : 'bg-white/50 hover:bg-white/75'
                 )}
                 aria-label={`Go to article ${index + 1}`}
+                aria-current={index === activeIndex ? 'true' : 'false'}
               />
             ))}
           </div>
