@@ -114,8 +114,8 @@ export const FeaturedArticles = ({
               sizes="100vw"
             />
           )}
-          {/* Dark overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+          {/* Dark overlay for text readability - lighter on desktop */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent lg:from-black/60 lg:via-black/30 lg:to-transparent" />
         </div>
 
         {/* Content Overlay */}
@@ -184,11 +184,12 @@ export const FeaturedArticles = ({
                 key={index}
                 onClick={() => setActiveIndex(index)}
                 className={cn(
-                  'frontpage__featured_article group flex items-center gap-3 p-2 rounded transition-all',
+                  'frontpage__featured_article group flex items-center gap-3 p-2 rounded transition-all cursor-pointer',
                   index === activeIndex
                     ? 'frontpage__featured_article--active bg-kcvv-green-bright/20 border border-kcvv-green-bright'
-                    : 'hover:bg-white/10 border border-transparent'
+                    : 'hover:bg-white/10 border border-transparent hover:border-white/30'
                 )}
+                aria-label={`View ${article.title}`}
               >
                 {/* Thumbnail */}
                 {article.imageUrl && (
@@ -197,7 +198,7 @@ export const FeaturedArticles = ({
                       src={article.imageUrl}
                       alt={article.imageAlt}
                       fill
-                      className="object-cover"
+                      className="object-cover transition-transform duration-300 group-hover:scale-110"
                       sizes="80px"
                     />
                   </div>

@@ -88,6 +88,22 @@ describe('FeaturedArticles', () => {
     vi.useFakeTimers() // Restore fake timers for other tests
   })
 
+  it('switches articles when side thumbnail is clicked', async () => {
+    vi.useRealTimers() // Use real timers for user interactions
+    const user = userEvent.setup()
+    render(<FeaturedArticles articles={mockArticles} autoRotate={false} />)
+
+    // Click second thumbnail (by aria-label)
+    const secondThumbnail = screen.getByRole('button', { name: 'View Second Featured Article' })
+    await user.click(secondThumbnail)
+
+    expect(screen.getAllByText('Second Featured Article').length).toBeGreaterThan(0)
+    expect(
+      screen.getByText('This is the second featured article description')
+    ).toBeInTheDocument()
+    vi.useFakeTimers() // Restore fake timers for other tests
+  })
+
   it('auto-rotates through articles', () => {
     render(
       <FeaturedArticles
