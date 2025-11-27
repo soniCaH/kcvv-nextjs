@@ -178,7 +178,7 @@ export const FeaturedArticles = ({
 
         {/* Side Thumbnails (Desktop only) */}
         {articles.length > 1 && (
-          <div className="hidden lg:flex absolute right-0 top-0 bottom-0 w-80 flex-col justify-center gap-4 p-6 bg-gradient-to-l from-black/60">
+          <div className="hidden lg:flex absolute right-0 top-0 bottom-0 w-80 flex-col justify-center gap-4 p-6 bg-gradient-to-l from-black/60 z-20">
             {articles.map((article, index) => (
               <button
                 key={index}
