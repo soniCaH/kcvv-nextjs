@@ -61,8 +61,9 @@ describe('FeaturedArticles', () => {
   it('renders navigation dots when multiple articles exist', () => {
     render(<FeaturedArticles articles={mockArticles} />)
 
+    // Should have both navigation dots and thumbnails (3 dots + 3 thumbnails = 6 buttons)
     const dots = screen.getAllByRole('button', { name: /Go to article/i })
-    expect(dots).toHaveLength(3)
+    expect(dots).toHaveLength(6)
   })
 
   it('does not render navigation dots when only one article exists', () => {
@@ -93,8 +94,8 @@ describe('FeaturedArticles', () => {
     const user = userEvent.setup()
     render(<FeaturedArticles articles={mockArticles} autoRotate={false} />)
 
-    // Click second thumbnail (by aria-label)
-    const secondThumbnail = screen.getByRole('button', { name: 'View Second Featured Article' })
+    // Click second thumbnail (by updated aria-label)
+    const secondThumbnail = screen.getByRole('button', { name: 'Go to article: Second Featured Article' })
     await user.click(secondThumbnail)
 
     expect(screen.getAllByText('Second Featured Article').length).toBeGreaterThan(0)

@@ -189,11 +189,12 @@ export const FeaturedArticles = ({
                     ? 'frontpage__featured_article--active bg-kcvv-green-bright/20 border border-kcvv-green-bright'
                     : 'hover:bg-white/10 border border-transparent hover:border-white/30'
                 )}
-                aria-label={`View ${article.title}`}
+                aria-label={`Go to article: ${article.title}`}
+                aria-pressed={index === activeIndex}
               >
                 {/* Thumbnail */}
                 {article.imageUrl && (
-                  <div className="relative w-20 h-20 flex-shrink-0 rounded overflow-hidden">
+                  <div className="relative w-20 h-20 shrink-0 rounded overflow-hidden">
                     <Image
                       src={article.imageUrl}
                       alt={article.imageAlt}
