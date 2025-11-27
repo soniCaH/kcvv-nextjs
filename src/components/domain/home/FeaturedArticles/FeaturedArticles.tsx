@@ -114,8 +114,8 @@ export const FeaturedArticles = ({
               sizes="100vw"
             />
           )}
-          {/* Dark overlay for text readability - lighter on desktop */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent lg:from-black/60 lg:via-black/30 lg:to-transparent" />
+          {/* Dark overlay for text readability - stronger gradient on the left where text is */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent" />
         </div>
 
         {/* Content Overlay */}
@@ -124,20 +124,20 @@ export const FeaturedArticles = ({
             href={activeArticle.href}
             className="group flex flex-col justify-center max-w-2xl"
           >
-            {/* Title */}
-            <h2 className="frontpage__featured_article__title text-white text-4xl lg:text-6xl font-bold leading-tight mb-4 group-hover:text-kcvv-green-bright transition-colors">
+            {/* Title - Force pure white with !important */}
+            <h2 className="frontpage__featured_article__title !text-white text-4xl lg:text-6xl font-bold leading-tight mb-4 group-hover:!text-kcvv-green-bright transition-colors">
               {activeArticle.title}
             </h2>
 
-            {/* Description */}
+            {/* Description - Pure white */}
             {activeArticle.description && (
-              <p className="frontpage__featured_article__title__description text-white/90 text-lg lg:text-xl mb-6 line-clamp-3">
+              <p className="frontpage__featured_article__title__description !text-white text-lg lg:text-xl mb-6 line-clamp-3">
                 {activeArticle.description}
               </p>
             )}
 
-            {/* Metadata */}
-            <div className="frontpage__featured_article__meta__wrapper flex items-center gap-4 text-sm text-white/80">
+            {/* Metadata - Pure white */}
+            <div className="frontpage__featured_article__meta__wrapper flex items-center gap-4 text-sm !text-white">
               <time className="frontpage__featured_article__meta">{activeArticle.date}</time>
 
               {/* Tags */}
@@ -146,7 +146,7 @@ export const FeaturedArticles = ({
                   {activeArticle.tags.slice(0, 3).map((tag, i) => (
                     <span
                       key={i}
-                      className="px-2 py-1 bg-kcvv-green-bright/20 border border-kcvv-green-bright/40 rounded text-white text-xs uppercase"
+                      className="px-2 py-1 bg-kcvv-green-bright border border-kcvv-green-bright !text-white text-xs uppercase font-semibold"
                     >
                       {tag.name}
                     </span>

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { LatestNews } from './LatestNews'
 
 const meta: Meta<typeof LatestNews> = {
