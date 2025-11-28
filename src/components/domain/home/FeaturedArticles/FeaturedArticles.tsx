@@ -119,6 +119,21 @@ export const FeaturedArticles = ({
     }
   }
 
+  // Handle focus events with relatedTarget checks to prevent brief unpausing during keyboard navigation
+  const handleFocus = (e: React.FocusEvent) => {
+    // Only pause if focus is coming from outside the carousel
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsPaused(true)
+    }
+  }
+
+  const handleBlur = (e: React.FocusEvent) => {
+    // Only unpause if focus is moving completely outside the carousel
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsPaused(false)
+    }
+  }
+
   if (articles.length === 0) {
     return null
   }
@@ -130,8 +145,8 @@ export const FeaturedArticles = ({
       className="frontpage__featured_articles w-full bg-black relative overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      onFocus={() => setIsPaused(true)}
-      onBlur={() => setIsPaused(false)}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="region"

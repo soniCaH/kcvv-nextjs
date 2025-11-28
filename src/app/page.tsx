@@ -49,8 +49,8 @@ function mapArticleForHomepage(article: Article, includeDescription = false) {
  * Render the homepage with featured articles and latest news
  */
 export default async function HomePage() {
-  // Fetch latest articles for homepage
-  const { articles } = await runPromise(
+  // Fetch latest articles for homepage with error handling
+  const result = await runPromise(
     Effect.gen(function* () {
       const drupal = yield* DrupalService
       // Get 9 latest articles (3 featured + 6 latest news)
@@ -59,13 +59,32 @@ export default async function HomePage() {
         limit: 9,
         sort: '-created',
       })
-    })
+    }).pipe(
+      // Graceful fallback: return empty articles array on error
+      Effect.catchAll(() => Effect.succeed({ articles: [], links: undefined }))
+    )
   )
+
+  const { articles } = result
 
   // Split articles: first 3 for featured carousel, remaining 6 for latest news
   const featuredArticles = articles.slice(0, 3).map((article) => mapArticleForHomepage(article, true))
 
   const latestNewsArticles = articles.slice(3, 9).map((article) => mapArticleForHomepage(article, false))
+
+  // Show fallback message if no articles could be loaded
+  if (articles.length === 0) {
+    return (
+      <div className="max-w-inner-lg mx-auto px-3 lg:px-0 py-16 text-center">
+        <h1 className="text-3xl lg:text-4xl font-bold text-kcvv-green-dark mb-4">
+          Welkom bij KCVV Elewijt
+        </h1>
+        <p className="text-lg text-gray-600">
+          Artikelen kunnen momenteel niet worden geladen. Probeer het later opnieuw.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <>

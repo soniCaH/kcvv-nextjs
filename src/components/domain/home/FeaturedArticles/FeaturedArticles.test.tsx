@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { FeaturedArticles, type FeaturedArticle } from './FeaturedArticles'
 
 describe('FeaturedArticles', () => {
@@ -76,13 +75,13 @@ describe('FeaturedArticles', () => {
   })
 
   it('switches articles when navigation dot is clicked', async () => {
-    vi.useRealTimers() // Use real timers for user interactions
-    const user = userEvent.setup()
     render(<FeaturedArticles articles={mockArticles} autoRotate={false} />)
 
     // Click second dot
     const secondDot = screen.getByRole('button', { name: 'Go to article 2' })
-    await user.click(secondDot)
+    await act(async () => {
+      secondDot.click()
+    })
 
     // Use role-based query for the heading
     const heading = screen.getByRole('heading', { name: 'Second Featured Article', level: 2 })
@@ -90,17 +89,16 @@ describe('FeaturedArticles', () => {
     expect(
       screen.getByText('This is the second featured article description')
     ).toBeInTheDocument()
-    vi.useFakeTimers() // Restore fake timers for other tests
   })
 
   it('switches articles when side thumbnail is clicked', async () => {
-    vi.useRealTimers() // Use real timers for user interactions
-    const user = userEvent.setup()
     render(<FeaturedArticles articles={mockArticles} autoRotate={false} />)
 
     // Click second thumbnail (by updated aria-label)
     const secondThumbnail = screen.getByRole('button', { name: 'Go to article: Second Featured Article' })
-    await user.click(secondThumbnail)
+    await act(async () => {
+      secondThumbnail.click()
+    })
 
     // Use role-based query for the heading
     const heading = screen.getByRole('heading', { name: 'Second Featured Article', level: 2 })
@@ -108,7 +106,6 @@ describe('FeaturedArticles', () => {
     expect(
       screen.getByText('This is the second featured article description')
     ).toBeInTheDocument()
-    vi.useFakeTimers() // Restore fake timers for other tests
   })
 
   it('auto-rotates through articles', () => {

@@ -498,20 +498,22 @@ export default defineConfig({
 import type { StorybookConfig } from '@storybook/nextjs-vite'
 
 const config: StorybookConfig = {
-  stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
+  stories: [
+    '../src/**/*.mdx',
+    '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
+  ],
   addons: [
-    '@storybook/addon-links',
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
+    '@chromatic-com/storybook',
+    '@storybook/addon-docs',
+    '@storybook/addon-onboarding',
     '@storybook/addon-a11y',
+    '@storybook/addon-vitest',
   ],
   framework: {
     name: '@storybook/nextjs-vite',
     options: {},
   },
-  docs: {
-    autodocs: 'tag',
-  },
+  staticDirs: ['../public'],
 }
 
 export default config
