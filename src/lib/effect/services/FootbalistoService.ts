@@ -26,6 +26,11 @@ export class FootbalistoService extends Context.Tag('FootbalistoService')<
       FootbalistoError | ValidationError
     >
 
+    readonly getNextMatches: () => Effect.Effect<
+      readonly Match[],
+      FootbalistoError | ValidationError
+    >
+
     readonly getMatchById: (matchId: number) => Effect.Effect<
       Match,
       FootbalistoError | ValidationError
@@ -135,6 +140,20 @@ export const FootbalistoServiceLive = Layer.effect(
     })
 
     /**
+     * Create cache for next matches (1 minute TTL for freshness)
+     */
+    const nextMatchesCache = yield* Cache.make({
+      capacity: 1,
+      timeToLive: Duration.minutes(1),
+      lookup: () =>
+        Effect.gen(function* () {
+          const url = `${baseUrl}/matches/next`
+          const response = yield* fetchJson(url, MatchesResponse)
+          return response.matches
+        }),
+    })
+
+    /**
      * Create cache for rankings (5 minute TTL)
      */
     const rankingCache = yield* Cache.make({
@@ -171,6 +190,21 @@ export const FootbalistoServiceLive = Layer.effect(
           Effect.fail(
             new FootbalistoError({
               message: `Failed to fetch matches for team ${teamId}`,
+              cause: error,
+            })
+          )
+        )
+      )
+
+    /**
+     * Get next/upcoming matches (cached)
+     */
+    const getNextMatches = () =>
+      nextMatchesCache.get('next').pipe(
+        Effect.catchAll((error) =>
+          Effect.fail(
+            new FootbalistoError({
+              message: 'Failed to fetch next matches',
               cause: error,
             })
           )
@@ -223,12 +257,14 @@ export const FootbalistoServiceLive = Layer.effect(
     const clearCache = () =>
       Effect.gen(function* () {
         yield* matchesCache.invalidateAll
+        yield* nextMatchesCache.invalidateAll
         yield* rankingCache.invalidateAll
         yield* teamStatsCache.invalidateAll
       })
 
     return {
       getMatches,
+      getNextMatches,
       getMatchById,
       getRanking,
       getTeamStats,

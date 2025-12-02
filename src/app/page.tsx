@@ -120,9 +120,10 @@ export default async function HomePage() {
       {/* TODO: Add more homepage sections:
        * - Upcoming matches slider (frontpage__matches_slider)
        * - Team standings/rankings
-       * - KCVVTV video section (frontpage__kcvvtv)
        * - Youth news section (frontpage__main_content__youth)
        * - Sponsors/Advertisement (frontpage__advertisement)
+       *
+       * Note: KCVVTV video section (frontpage__kcvvtv) - On hold (no cameraman available)
        */}
     </>
   )
