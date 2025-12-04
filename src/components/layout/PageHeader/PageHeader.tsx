@@ -29,7 +29,7 @@ export interface PageHeaderProps {
  * - Text color: white
  * - Height: 5rem (80px) mobile, 7.5rem (120px) desktop at 960px+
  * - Pattern image: header-pattern.png positioned at 50% -7vw
- * - Fixed positioning with z-index 11
+ * - Fixed positioning with z-index 50 (above content)
  * - Transition: height 0.3s
  */
 export const PageHeader = ({ className }: PageHeaderProps) => {
@@ -41,10 +41,10 @@ export const PageHeader = ({ className }: PageHeaderProps) => {
 
   return (
     <>
-      <header className={cn('relative z-[12]', className)}>
+      <header className={cn('relative z-50', className)}>
         {/* Navigation Container with Green Background + Pattern */}
         <nav
-          className="fixed top-0 left-0 right-0 z-[11] h-20 lg:h-[7.5rem] transition-[height] duration-300"
+          className="fixed top-0 left-0 right-0 z-50 h-20 lg:h-[7.5rem] transition-[height] duration-300"
           style={{
             backgroundColor: '#4acf52',
             backgroundImage: 'url(/images/header-pattern.png)',
