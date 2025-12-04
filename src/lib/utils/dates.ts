@@ -48,3 +48,21 @@ export const formatArticleDate = (date: Date | string): string => {
   const dt = typeof date === 'string' ? DateTime.fromISO(date) : DateTime.fromJSDate(date)
   return dt.setLocale('nl').toFormat('d MMMM yyyy')
 }
+
+/**
+ * Format date for match display (e.g., "zaterdag 15 januari")
+ * @param date - Date object or ISO string
+ */
+export const formatMatchDate = (date: Date | string): string => {
+  const dt = typeof date === 'string' ? DateTime.fromISO(date) : DateTime.fromJSDate(date)
+  return dt.setLocale('nl').toFormat('cccc d MMMM')
+}
+
+/**
+ * Format time for match display (e.g., "15:00")
+ * @param date - Date object or ISO string
+ */
+export const formatMatchTime = (date: Date | string): string => {
+  const dt = typeof date === 'string' ? DateTime.fromISO(date) : DateTime.fromJSDate(date)
+  return dt.setLocale('nl').toFormat('HH:mm')
+}
