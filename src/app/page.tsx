@@ -29,19 +29,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Convert a Drupal Article record into the simplified shape used by the homepage.
+ * Maps a Drupal Article record to the simplified homepage article shape.
  *
- * @param article - Drupal article to map
- * @param includeDescription - When true, include the article summary as `description`
- * @returns An object with properties:
- * - `href`: article URL path alias
- * - `title`: article title
- * - `description`: optional article summary (present only if `includeDescription` is true)
- * - `imageUrl`: URL of the article image, or `undefined` if none
- * - `imageAlt`: image alt text if available, otherwise the article title
- * - `date`: human-friendly formatted date
- * - `dateIso`: ISO string of the article creation date
- * - `tags`: array of tag objects `{ name }`, empty if no tags
+ * @param article - Drupal Article record to map
+ * @param includeDescription - If true, include the article body summary as `description`
+ * @returns An object with `href`, `title`, optional `description`, `imageUrl`, `imageAlt`, `date`, `dateIso`, and `tags` (array of `{ name }`)
  */
 function mapArticleForHomepage(article: Article, includeDescription = false) {
   const imageData = article.relationships.field_media_article_image?.data
