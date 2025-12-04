@@ -8,6 +8,7 @@ import { runPromise } from '@/lib/effect/runtime'
 import { DrupalService } from '@/lib/effect/services/DrupalService'
 import { FootbalistoService } from '@/lib/effect/services/FootbalistoService'
 import { FeaturedArticles, LatestNews, UpcomingMatches } from '@/components/domain/home'
+import { mockScheduledMatches } from '@/components/domain/home/UpcomingMatches/UpcomingMatches.mocks'
 import { formatArticleDate } from '@/lib/utils/dates'
 import { isDrupalImage } from '@/lib/utils/drupal-content'
 import type { Metadata } from 'next'
@@ -114,8 +115,36 @@ export default async function HomePage() {
         const footbalisto = yield* FootbalistoService
         return yield* footbalisto.getNextMatches()
       }).pipe(
-        // Graceful fallback: return empty matches array on error
-        Effect.catchAll(() => Effect.succeed([]))
+        // Graceful fallback: use mock data in development, empty in production
+        Effect.catchAll(() => {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[HomePage] Using mock matches data (API unavailable)')
+            return Effect.succeed(
+              mockScheduledMatches.map((mock) => ({
+                id: mock.id,
+                date: mock.date,
+                time: mock.time,
+                venue: mock.venue,
+                home_team: {
+                  id: mock.homeTeam.id,
+                  name: mock.homeTeam.name,
+                  logo: mock.homeTeam.logo,
+                  score: mock.homeTeam.score,
+                },
+                away_team: {
+                  id: mock.awayTeam.id,
+                  name: mock.awayTeam.name,
+                  logo: mock.awayTeam.logo,
+                  score: mock.awayTeam.score,
+                },
+                status: mock.status,
+                round: mock.round,
+                competition: mock.competition,
+              }))
+            )
+          }
+          return Effect.succeed([])
+        })
       )
     ),
   ])
