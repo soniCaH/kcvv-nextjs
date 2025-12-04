@@ -9,8 +9,9 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { cn } from '@/lib/utils/cn'
-import { formatMatchDate, formatMatchTime } from '@/lib/utils/dates'
+import { formatMatchDate } from '@/lib/utils/dates'
 
 export interface UpcomingMatch {
   /**
@@ -279,10 +280,12 @@ const MatchCard = ({ match }: { match: UpcomingMatch }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {match.homeTeam.logo && (
-                <img
+                <Image
                   src={match.homeTeam.logo}
                   alt={`${match.homeTeam.name} logo`}
-                  className="w-8 h-8 object-contain"
+                  width={32}
+                  height={32}
+                  className="object-contain"
                 />
               )}
               <span className="font-semibold text-gray-900">{match.homeTeam.name}</span>
@@ -296,10 +299,12 @@ const MatchCard = ({ match }: { match: UpcomingMatch }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {match.awayTeam.logo && (
-                <img
+                <Image
                   src={match.awayTeam.logo}
                   alt={`${match.awayTeam.name} logo`}
-                  className="w-8 h-8 object-contain"
+                  width={32}
+                  height={32}
+                  className="object-contain"
                 />
               )}
               <span className="font-semibold text-gray-900">{match.awayTeam.name}</span>
