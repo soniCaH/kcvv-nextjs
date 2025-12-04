@@ -225,15 +225,13 @@ describe('UpcomingMatches', () => {
       vi.restoreAllMocks()
     })
 
-    it('does not show navigation arrows initially', () => {
-      render(<UpcomingMatches matches={mockMatches} />)
+    it('renders scroll container without errors', () => {
+      const { container } = render(<UpcomingMatches matches={mockMatches} />)
 
-      const leftArrow = screen.queryByRole('button', { name: /Scroll left/i })
-      const rightArrow = screen.queryByRole('button', { name: /Scroll right/i })
-
-      // Initially, arrows might not be visible depending on container size
-      // This test just ensures they exist in the DOM structure
-      expect(leftArrow || rightArrow || true).toBe(true)
+      // Verify the scroll container exists
+      const scrollContainer = container.querySelector('.overflow-x-auto')
+      expect(scrollContainer).toBeInTheDocument()
+      expect(scrollContainer).toHaveClass('snap-x', 'snap-mandatory')
     })
 
     it('calls scrollTo when navigation arrows are clicked', async () => {
@@ -307,20 +305,16 @@ describe('UpcomingMatches', () => {
   })
 
   describe('Accessibility', () => {
-    it('has proper ARIA labels for navigation buttons', () => {
-      const manyMatches = Array.from({ length: 10 }, (_, i) => ({
-        ...mockMatches[0],
-        id: i + 1,
-      }))
+    it('navigation buttons have proper ARIA labels when rendered', () => {
+      const { container } = render(<UpcomingMatches matches={mockMatches} />)
 
-      render(<UpcomingMatches matches={manyMatches} />)
-
-      // Check that buttons have aria-label attributes (they may not be visible initially)
-      const leftButton = screen.queryByLabelText('Scroll left')
-      const rightButton = screen.queryByLabelText('Scroll right')
-
-      // At least one should exist in the structure
-      expect(leftButton || rightButton || true).toBe(true)
+      // Navigation buttons are conditionally rendered based on scroll state
+      // When they exist, they should have proper aria-label attributes
+      const buttons = container.querySelectorAll('button[aria-label]')
+      buttons.forEach((button) => {
+        const ariaLabel = button.getAttribute('aria-label')
+        expect(ariaLabel).toMatch(/Scroll (left|right)/)
+      })
     })
 
     it('renders section as semantic HTML', () => {

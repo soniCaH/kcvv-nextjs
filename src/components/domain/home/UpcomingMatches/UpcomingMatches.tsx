@@ -130,6 +130,12 @@ export const UpcomingMatches = ({
     checkScrollPosition()
     window.addEventListener('resize', checkScrollPosition)
     return () => window.removeEventListener('resize', checkScrollPosition)
+  }, [])
+
+  // Recalculate scroll position when matches change (after DOM updates)
+  useEffect(() => {
+    const timeoutId = setTimeout(checkScrollPosition, 0)
+    return () => clearTimeout(timeoutId)
   }, [matches])
 
   const scroll = (direction: 'left' | 'right') => {

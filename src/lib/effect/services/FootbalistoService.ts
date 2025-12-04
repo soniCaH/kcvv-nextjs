@@ -145,7 +145,8 @@ export const FootbalistoServiceLive = Layer.effect(
     const nextMatchesCache = yield* Cache.make({
       capacity: 1,
       timeToLive: Duration.minutes(1),
-      lookup: () =>
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      lookup: (_key: 'next') =>
         Effect.gen(function* () {
           const url = `${baseUrl}/matches/next`
           const response = yield* fetchJson(url, MatchesResponse)
