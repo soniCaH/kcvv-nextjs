@@ -18,6 +18,19 @@ const eslintConfig = [
     ]
   },
   {
+    // Allow unused variables that start with underscore (common convention)
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrorsIgnorePattern": "^_"
+        }
+      ]
+    }
+  },
+  {
     // Disable img-related rules for test files where we mock Next.js Image
     files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
     rules: {

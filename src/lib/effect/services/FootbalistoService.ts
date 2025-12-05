@@ -203,7 +203,7 @@ export const FootbalistoServiceLive = Layer.effect(
     const nextMatchesCache = yield* Cache.make({
       capacity: 1,
       timeToLive: Duration.minutes(1),
-      lookup: () =>
+      lookup: (_: 'next') =>
         Effect.gen(function* () {
           const url = `${baseUrl}/matches/next`
           // Fetch raw Footbalisto matches array
