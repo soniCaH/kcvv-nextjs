@@ -36,15 +36,33 @@ export interface SponsorsTierProps {
 }
 
 /**
- * Tier-specific grid column configuration
- * Gold (crossing): Larger logos, fewer columns
- * Silver (green/white): Medium logos
- * Bronze (training/panel/other): Smaller logos, more columns
+ * Tier-specific grid column configuration and styling
+ * Gold (crossing): Larger logos, fewer columns, gold accent
+ * Silver (green/white): Medium logos, silver accent
+ * Bronze (training/panel/other): Smaller logos, more columns, bronze accent
  */
-const tierConfig: Record<SponsorTier, { columns: string; imageSize: number }> = {
-  gold: { columns: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4', imageSize: 280 },
-  silver: { columns: 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5', imageSize: 200 },
-  bronze: { columns: 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6', imageSize: 160 },
+const tierConfig: Record<
+  SponsorTier,
+  { columns: string; imageSize: number; badgeColor: string; badgeIcon: string }
+> = {
+  gold: {
+    columns: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+    imageSize: 280,
+    badgeColor: 'bg-gradient-to-r from-yellow-400 to-yellow-600',
+    badgeIcon: '⭐',
+  },
+  silver: {
+    columns: 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5',
+    imageSize: 200,
+    badgeColor: 'bg-gradient-to-r from-gray-300 to-gray-500',
+    badgeIcon: '🥈',
+  },
+  bronze: {
+    columns: 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6',
+    imageSize: 160,
+    badgeColor: 'bg-gradient-to-r from-orange-400 to-orange-600',
+    badgeIcon: '🥉',
+  },
 }
 
 export const SponsorsTier = ({ tier, title, sponsors, className }: SponsorsTierProps) => {
@@ -56,7 +74,17 @@ export const SponsorsTier = ({ tier, title, sponsors, className }: SponsorsTierP
 
   return (
     <section className={cn('mb-12', className)}>
-      <h2 className="text-2xl font-bold mb-6 text-kcvv-gray-blue">{title}</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <span
+          className={cn(
+            'inline-flex items-center justify-center w-10 h-10 rounded-full text-white text-xl font-bold shadow-lg',
+            config.badgeColor
+          )}
+        >
+          {config.badgeIcon}
+        </span>
+        <h2 className="text-2xl font-bold text-kcvv-gray-blue">{title}</h2>
+      </div>
       <div className={cn('grid gap-6', config.columns)}>
         {sponsors.map((sponsor) => {
           const content = (
