@@ -14,11 +14,11 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('next/image', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  default: ({ alt, src, priority, fill, sizes, quality, ...props }: ImageProps) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img alt={alt} src={typeof src === 'string' ? src : ''} {...props} />
-  ),
+  default: ({ alt, src, ...props }: ImageProps) => {
+    // Using img in tests is acceptable as we're mocking Next.js Image
+    const imgProps = { alt, src: typeof src === 'string' ? src : '', ...props }
+    return <img {...imgProps} />
+  },
 }))
 
 describe('PageHeader', () => {

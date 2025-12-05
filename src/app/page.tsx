@@ -73,15 +73,15 @@ export default async function HomePage() {
   // Map matches to component format (Weitse Gans already filtered at service level)
   const upcomingMatches = mapMatchesToUpcomingMatches(matches)
 
-  // Show fallback message if no articles could be loaded
-  if (articles.length === 0) {
+  // Show fallback message if no content could be loaded at all
+  if (articles.length === 0 && matches.length === 0) {
     return (
       <div className="max-w-inner-lg mx-auto px-3 lg:px-0 py-16 text-center">
         <h1 className="text-3xl lg:text-4xl font-bold text-kcvv-green-dark mb-4">
           Welkom bij KCVV Elewijt
         </h1>
         <p className="text-lg text-gray-600">
-          Artikelen kunnen momenteel niet worden geladen. Probeer het later opnieuw.
+          Inhoud kan momenteel niet worden geladen. Probeer het later opnieuw.
         </p>
       </div>
     )
@@ -94,10 +94,8 @@ export default async function HomePage() {
         <FeaturedArticles articles={featuredArticles} autoRotate={true} autoRotateInterval={5000} />
       )}
 
-      {/* Upcoming Matches Slider */}
-      {upcomingMatches.length > 0 && (
-        <UpcomingMatches matches={upcomingMatches} title="Volgende wedstrijden" showViewAll={true} viewAllHref="/matches" />
-      )}
+      {/* Upcoming Matches Slider - component handles empty array internally */}
+      <UpcomingMatches matches={upcomingMatches} title="Volgende wedstrijden" showViewAll={true} viewAllHref="/matches" />
 
       {/* Latest News Section */}
       {latestNewsArticles.length > 0 && (

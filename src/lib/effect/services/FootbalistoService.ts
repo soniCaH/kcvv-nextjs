@@ -22,10 +22,13 @@ import {
  */
 function transformFootbalistoMatch(fbMatch: FootbalistoMatch): Match {
   // Parse date string "2025-12-06 09:00" to Date
-  const matchDate = new Date(fbMatch.date)
+  // Manual parsing for reliability across all JavaScript environments
+  const [datePart, timePart = '00:00'] = fbMatch.date.split(' ')
+  const [year, month, day] = datePart.split('-').map(Number)
+  const [hour, minute] = timePart.split(':').map(Number)
 
-  // Extract time from date string
-  const timePart = fbMatch.date.split(' ')[1] || '00:00'
+  // Construct Date object manually (month is 0-indexed)
+  const matchDate = new Date(year, month - 1, day, hour, minute)
 
   // Map numeric status to string status
   const statusMap: Record<number, 'scheduled' | 'live' | 'finished' | 'postponed' | 'cancelled'> = {
@@ -200,8 +203,7 @@ export const FootbalistoServiceLive = Layer.effect(
     const nextMatchesCache = yield* Cache.make({
       capacity: 1,
       timeToLive: Duration.minutes(1),
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      lookup: (_key: 'next') =>
+      lookup: () =>
         Effect.gen(function* () {
           const url = `${baseUrl}/matches/next`
           // Fetch raw Footbalisto matches array

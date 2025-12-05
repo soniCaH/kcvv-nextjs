@@ -16,6 +16,14 @@ const eslintConfig = [
       "coverage/**",
       "next-env.d.ts"
     ]
+  },
+  {
+    // Disable img-related rules for test files where we mock Next.js Image
+    files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+    rules: {
+      "@next/next/no-img-element": "off",
+      "jsx-a11y/alt-text": "off"
+    }
   }
 ];
 
