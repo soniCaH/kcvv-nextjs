@@ -7,6 +7,8 @@ import { Context, Effect, Layer, Schedule, Cache, Duration } from 'effect'
 import { Schema as S } from 'effect'
 import {
   Match,
+  FootbalistoMatch,
+  FootbalistoMatchesArray,
   MatchesResponse,
   RankingEntry,
   RankingResponse,
@@ -16,12 +18,73 @@ import {
 } from '../schemas'
 
 /**
+ * Transform Footbalisto API match to normalized Match format
+ */
+function transformFootbalistoMatch(fbMatch: FootbalistoMatch): Match {
+  // Parse date string "2025-12-06 09:00" to Date
+  // Manual parsing for reliability across all JavaScript environments
+  const [datePart, timePart = '00:00'] = fbMatch.date.split(' ')
+  const [year, month, day] = datePart.split('-').map(Number)
+  const [hour, minute] = timePart.split(':').map(Number)
+
+  // Construct Date object manually (month is 0-indexed)
+  const matchDate = new Date(year, month - 1, day, hour, minute)
+
+  // Map numeric status to string status
+  const statusMap: Record<number, 'scheduled' | 'live' | 'finished' | 'postponed' | 'cancelled'> = {
+    0: 'scheduled',
+    1: 'finished',
+    2: 'live',
+    3: 'postponed',
+    4: 'cancelled',
+  }
+  const status = statusMap[fbMatch.status] || 'scheduled'
+
+  // Determine round label based on teamId and age
+  let roundLabel: string | undefined = fbMatch.age ? `${fbMatch.age}` : undefined
+
+  // For senior teams (teamId 1 = A-ploeg, teamId 2 = B-ploeg), use team-based label
+  if (fbMatch.teamId === 1) {
+    roundLabel = 'A-ploeg'
+  } else if (fbMatch.teamId === 2) {
+    roundLabel = 'B-ploeg'
+  }
+
+  return {
+    id: fbMatch.id,
+    date: matchDate,
+    time: timePart,
+    venue: undefined, // Not provided by API
+    home_team: {
+      id: fbMatch.homeClub.id,
+      name: fbMatch.homeClub.name,
+      logo: fbMatch.homeClub.logo,
+      score: fbMatch.goalsHomeTeam ?? undefined,
+    },
+    away_team: {
+      id: fbMatch.awayClub.id,
+      name: fbMatch.awayClub.name,
+      logo: fbMatch.awayClub.logo,
+      score: fbMatch.goalsAwayTeam ?? undefined,
+    },
+    status,
+    round: roundLabel,
+    competition: fbMatch.competitionType,
+  }
+}
+
+/**
  * Footbalisto Service Interface
  */
 export class FootbalistoService extends Context.Tag('FootbalistoService')<
   FootbalistoService,
   {
     readonly getMatches: (teamId: number) => Effect.Effect<
+      readonly Match[],
+      FootbalistoError | ValidationError
+    >
+
+    readonly getNextMatches: () => Effect.Effect<
       readonly Match[],
       FootbalistoError | ValidationError
     >
@@ -135,6 +198,24 @@ export const FootbalistoServiceLive = Layer.effect(
     })
 
     /**
+     * Create cache for next matches (1 minute TTL for freshness)
+     */
+    const nextMatchesCache = yield* Cache.make({
+      capacity: 1,
+      timeToLive: Duration.minutes(1),
+      lookup: (_: 'next') =>
+        Effect.gen(function* () {
+          const url = `${baseUrl}/matches/next`
+          // Fetch raw Footbalisto matches array
+          const rawMatches = yield* fetchJson(url, FootbalistoMatchesArray)
+          // Filter out Weitse Gans (teamId 23 - not our club, but plays on our pitch)
+          const filteredMatches = rawMatches.filter((match) => match.teamId !== 23)
+          // Transform to normalized Match format
+          return filteredMatches.map(transformFootbalistoMatch)
+        }),
+    })
+
+    /**
      * Create cache for rankings (5 minute TTL)
      */
     const rankingCache = yield* Cache.make({
@@ -171,6 +252,21 @@ export const FootbalistoServiceLive = Layer.effect(
           Effect.fail(
             new FootbalistoError({
               message: `Failed to fetch matches for team ${teamId}`,
+              cause: error,
+            })
+          )
+        )
+      )
+
+    /**
+     * Get next/upcoming matches (cached)
+     */
+    const getNextMatches = () =>
+      nextMatchesCache.get('next').pipe(
+        Effect.catchAll((error) =>
+          Effect.fail(
+            new FootbalistoError({
+              message: 'Failed to fetch next matches',
               cause: error,
             })
           )
@@ -223,12 +319,14 @@ export const FootbalistoServiceLive = Layer.effect(
     const clearCache = () =>
       Effect.gen(function* () {
         yield* matchesCache.invalidateAll
+        yield* nextMatchesCache.invalidateAll
         yield* rankingCache.invalidateAll
         yield* teamStatsCache.invalidateAll
       })
 
     return {
       getMatches,
+      getNextMatches,
       getMatchById,
       getRanking,
       getTeamStats,
