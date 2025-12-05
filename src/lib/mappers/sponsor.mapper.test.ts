@@ -7,44 +7,58 @@ import { describe, it, expect } from 'vitest'
 import { mapSponsorToComponentSponsor, mapSponsorsToComponentSponsors } from './sponsor.mapper'
 import type { Sponsor as DrupalSponsor } from '@/lib/effect/schemas'
 
+/**
+ * Test fixture factory for creating mock Drupal sponsors
+ * Reduces boilerplate and ensures consistent test data
+ */
+const createMockDrupalSponsor = (overrides: {
+  id?: string
+  title?: string
+  field_website?: { uri: string; title?: string; options?: unknown } | null
+  field_media_image?: {
+    data: { uri: { url: string }; alt: string; width?: number; height?: number } | null
+  }
+} = {}): DrupalSponsor => ({
+  id: overrides.id || '123',
+  type: 'node--sponsor',
+  attributes: {
+    drupal_internal__nid: 1,
+    drupal_internal__vid: 1,
+    langcode: 'nl',
+    revision_timestamp: '2024-01-01T00:00:00+00:00',
+    status: true,
+    title: overrides.title || 'Test Sponsor',
+    created: '2024-01-01T00:00:00+00:00',
+    changed: '2024-01-01T00:00:00+00:00',
+    promote: true,
+    sticky: false,
+    default_langcode: true,
+    revision_translation_affected: true,
+    path: { alias: '/sponsors/test-sponsor', pid: 1, langcode: 'nl' },
+    field_website: overrides.field_website,
+  },
+  relationships: 'field_media_image' in overrides
+    ? { field_media_image: overrides.field_media_image }
+    : {
+        field_media_image: {
+          data: {
+            uri: { url: 'https://api.kcvvelewijt.be/sites/default/files/logo.png' },
+            alt: 'Test Sponsor Logo',
+          },
+        },
+      },
+})
+
 describe('sponsor.mapper', () => {
   describe('mapSponsorToComponentSponsor', () => {
     it('maps sponsor with all fields', () => {
-      const drupalSponsor: DrupalSponsor = {
-        id: '123',
-        type: 'node--sponsor',
-        attributes: {
-          drupal_internal__nid: 1,
-          drupal_internal__vid: 1,
-          langcode: 'nl',
-          revision_timestamp: '2024-01-01T00:00:00+00:00',
-          status: true,
-          title: 'Test Sponsor',
-          created: '2024-01-01T00:00:00+00:00',
-          changed: '2024-01-01T00:00:00+00:00',
-          promote: true,
-          sticky: false,
-          default_langcode: true,
-          revision_translation_affected: true,
-          path: { alias: '/sponsors/test-sponsor', pid: 1, langcode: 'nl' },
-          field_type: 'crossing',
-          field_website: {
-            uri: 'https://example.com',
-            title: 'Example',
-            options: {},
-          },
+      const drupalSponsor = createMockDrupalSponsor({
+        field_website: {
+          uri: 'https://example.com',
+          title: 'Example',
+          options: {},
         },
-        relationships: {
-          field_media_image: {
-            data: {
-              uri: { url: 'https://api.kcvvelewijt.be/sites/default/files/logo.png' },
-              alt: 'Test Sponsor Logo',
-              width: 200,
-              height: 133,
-            },
-          },
-        },
-      }
+      })
 
       const result = mapSponsorToComponentSponsor(drupalSponsor)
 
@@ -57,33 +71,7 @@ describe('sponsor.mapper', () => {
     })
 
     it('handles sponsor without website', () => {
-      const drupalSponsor: DrupalSponsor = {
-        id: '123',
-        type: 'node--sponsor',
-        attributes: {
-          drupal_internal__nid: 1,
-          drupal_internal__vid: 1,
-          langcode: 'nl',
-          revision_timestamp: '2024-01-01T00:00:00+00:00',
-          status: true,
-          title: 'Test Sponsor',
-          created: '2024-01-01T00:00:00+00:00',
-          changed: '2024-01-01T00:00:00+00:00',
-          promote: true,
-          sticky: false,
-          default_langcode: true,
-          revision_translation_affected: true,
-          path: { alias: '/sponsors/test-sponsor', pid: 1, langcode: 'nl' },
-        },
-        relationships: {
-          field_media_image: {
-            data: {
-              uri: { url: 'https://api.kcvvelewijt.be/sites/default/files/logo.png' },
-              alt: 'Test Sponsor Logo',
-            },
-          },
-        },
-      }
+      const drupalSponsor = createMockDrupalSponsor()
 
       const result = mapSponsorToComponentSponsor(drupalSponsor)
 
@@ -96,30 +84,9 @@ describe('sponsor.mapper', () => {
     })
 
     it('uses placeholder when logo is missing', () => {
-      const drupalSponsor: DrupalSponsor = {
-        id: '123',
-        type: 'node--sponsor',
-        attributes: {
-          drupal_internal__nid: 1,
-          drupal_internal__vid: 1,
-          langcode: 'nl',
-          revision_timestamp: '2024-01-01T00:00:00+00:00',
-          status: true,
-          title: 'Test Sponsor',
-          created: '2024-01-01T00:00:00+00:00',
-          changed: '2024-01-01T00:00:00+00:00',
-          promote: true,
-          sticky: false,
-          default_langcode: true,
-          revision_translation_affected: true,
-          path: { alias: '/sponsors/test-sponsor', pid: 1, langcode: 'nl' },
-        },
-        relationships: {
-          field_media_image: {
-            data: null,
-          },
-        },
-      }
+      const drupalSponsor = createMockDrupalSponsor({
+        field_media_image: { data: null },
+      })
 
       const result = mapSponsorToComponentSponsor(drupalSponsor)
 
@@ -127,26 +94,9 @@ describe('sponsor.mapper', () => {
     })
 
     it('uses placeholder when logo data is undefined', () => {
-      const drupalSponsor: DrupalSponsor = {
-        id: '123',
-        type: 'node--sponsor',
-        attributes: {
-          drupal_internal__nid: 1,
-          drupal_internal__vid: 1,
-          langcode: 'nl',
-          revision_timestamp: '2024-01-01T00:00:00+00:00',
-          status: true,
-          title: 'Test Sponsor',
-          created: '2024-01-01T00:00:00+00:00',
-          changed: '2024-01-01T00:00:00+00:00',
-          promote: true,
-          sticky: false,
-          default_langcode: true,
-          revision_translation_affected: true,
-          path: { alias: '/sponsors/test-sponsor', pid: 1, langcode: 'nl' },
-        },
-        relationships: {},
-      }
+      const drupalSponsor = createMockDrupalSponsor({
+        field_media_image: undefined,
+      })
 
       const result = mapSponsorToComponentSponsor(drupalSponsor)
 
@@ -154,32 +104,14 @@ describe('sponsor.mapper', () => {
     })
 
     it('uses placeholder when logo has no uri', () => {
-      const drupalSponsor: DrupalSponsor = {
-        id: '123',
-        type: 'node--sponsor',
-        attributes: {
-          drupal_internal__nid: 1,
-          drupal_internal__vid: 1,
-          langcode: 'nl',
-          revision_timestamp: '2024-01-01T00:00:00+00:00',
-          status: true,
-          title: 'Test Sponsor',
-          created: '2024-01-01T00:00:00+00:00',
-          changed: '2024-01-01T00:00:00+00:00',
-          promote: true,
-          sticky: false,
-          default_langcode: true,
-          revision_translation_affected: true,
-          path: { alias: '/sponsors/test-sponsor', pid: 1, langcode: 'nl' },
-        },
-        relationships: {
-          field_media_image: {
-            data: {
-              alt: 'Test',
-            },
+      const drupalSponsor = createMockDrupalSponsor({
+        field_media_image: {
+          data: {
+            uri: { url: '' },
+            alt: 'Test',
           },
         },
-      }
+      })
 
       const result = mapSponsorToComponentSponsor(drupalSponsor)
 
@@ -187,33 +119,9 @@ describe('sponsor.mapper', () => {
     })
 
     it('handles special characters in sponsor name', () => {
-      const drupalSponsor: DrupalSponsor = {
-        id: '123',
-        type: 'node--sponsor',
-        attributes: {
-          drupal_internal__nid: 1,
-          drupal_internal__vid: 1,
-          langcode: 'nl',
-          revision_timestamp: '2024-01-01T00:00:00+00:00',
-          status: true,
-          title: 'Café & Bar "De Plezante"',
-          created: '2024-01-01T00:00:00+00:00',
-          changed: '2024-01-01T00:00:00+00:00',
-          promote: true,
-          sticky: false,
-          default_langcode: true,
-          revision_translation_affected: true,
-          path: { alias: '/sponsors/cafe-bar', pid: 1, langcode: 'nl' },
-        },
-        relationships: {
-          field_media_image: {
-            data: {
-              uri: { url: 'https://api.kcvvelewijt.be/sites/default/files/logo.png' },
-              alt: 'Logo',
-            },
-          },
-        },
-      }
+      const drupalSponsor = createMockDrupalSponsor({
+        title: 'Café & Bar "De Plezante"',
+      })
 
       const result = mapSponsorToComponentSponsor(drupalSponsor)
 
@@ -224,65 +132,31 @@ describe('sponsor.mapper', () => {
   describe('mapSponsorsToComponentSponsors', () => {
     it('maps array of sponsors', () => {
       const drupalSponsors: readonly DrupalSponsor[] = [
-        {
+        createMockDrupalSponsor({
           id: '1',
-          type: 'node--sponsor',
-          attributes: {
-            drupal_internal__nid: 1,
-            drupal_internal__vid: 1,
-            langcode: 'nl',
-            revision_timestamp: '2024-01-01T00:00:00+00:00',
-            status: true,
-            title: 'Sponsor One',
-            created: '2024-01-01T00:00:00+00:00',
-            changed: '2024-01-01T00:00:00+00:00',
-            promote: true,
-            sticky: false,
-            default_langcode: true,
-            revision_translation_affected: true,
-            path: { alias: '/sponsors/one', pid: 1, langcode: 'nl' },
-          },
-          relationships: {
-            field_media_image: {
-              data: {
-                uri: { url: 'https://api.kcvvelewijt.be/logo1.png' },
-                alt: 'Logo 1',
-              },
+          title: 'Sponsor One',
+          field_media_image: {
+            data: {
+              uri: { url: 'https://api.kcvvelewijt.be/logo1.png' },
+              alt: 'Logo 1',
             },
           },
-        },
-        {
+        }),
+        createMockDrupalSponsor({
           id: '2',
-          type: 'node--sponsor',
-          attributes: {
-            drupal_internal__nid: 2,
-            drupal_internal__vid: 2,
-            langcode: 'nl',
-            revision_timestamp: '2024-01-01T00:00:00+00:00',
-            status: true,
+          title: 'Sponsor Two',
+          field_website: {
+            uri: 'https://sponsor2.com',
             title: 'Sponsor Two',
-            created: '2024-01-01T00:00:00+00:00',
-            changed: '2024-01-01T00:00:00+00:00',
-            promote: true,
-            sticky: false,
-            default_langcode: true,
-            revision_translation_affected: true,
-            path: { alias: '/sponsors/two', pid: 2, langcode: 'nl' },
-            field_website: {
-              uri: 'https://sponsor2.com',
-              title: 'Sponsor Two',
-              options: {},
+            options: {},
+          },
+          field_media_image: {
+            data: {
+              uri: { url: 'https://api.kcvvelewijt.be/logo2.png' },
+              alt: 'Logo 2',
             },
           },
-          relationships: {
-            field_media_image: {
-              data: {
-                uri: { url: 'https://api.kcvvelewijt.be/logo2.png' },
-                alt: 'Logo 2',
-              },
-            },
-          },
-        },
+        }),
       ]
 
       const result = mapSponsorsToComponentSponsors(drupalSponsors)
@@ -310,66 +184,9 @@ describe('sponsor.mapper', () => {
 
     it('preserves order of sponsors', () => {
       const drupalSponsors: readonly DrupalSponsor[] = [
-        {
-          id: 'a',
-          type: 'node--sponsor',
-          attributes: {
-            drupal_internal__nid: 1,
-            drupal_internal__vid: 1,
-            langcode: 'nl',
-            revision_timestamp: '2024-01-01T00:00:00+00:00',
-            status: true,
-            title: 'Alpha',
-            created: '2024-01-01T00:00:00+00:00',
-            changed: '2024-01-01T00:00:00+00:00',
-            promote: true,
-            sticky: false,
-            default_langcode: true,
-            revision_translation_affected: true,
-            path: { alias: '/sponsors/alpha', pid: 1, langcode: 'nl' },
-          },
-          relationships: {},
-        },
-        {
-          id: 'b',
-          type: 'node--sponsor',
-          attributes: {
-            drupal_internal__nid: 2,
-            drupal_internal__vid: 2,
-            langcode: 'nl',
-            revision_timestamp: '2024-01-01T00:00:00+00:00',
-            status: true,
-            title: 'Beta',
-            created: '2024-01-01T00:00:00+00:00',
-            changed: '2024-01-01T00:00:00+00:00',
-            promote: true,
-            sticky: false,
-            default_langcode: true,
-            revision_translation_affected: true,
-            path: { alias: '/sponsors/beta', pid: 2, langcode: 'nl' },
-          },
-          relationships: {},
-        },
-        {
-          id: 'c',
-          type: 'node--sponsor',
-          attributes: {
-            drupal_internal__nid: 3,
-            drupal_internal__vid: 3,
-            langcode: 'nl',
-            revision_timestamp: '2024-01-01T00:00:00+00:00',
-            status: true,
-            title: 'Gamma',
-            created: '2024-01-01T00:00:00+00:00',
-            changed: '2024-01-01T00:00:00+00:00',
-            promote: true,
-            sticky: false,
-            default_langcode: true,
-            revision_translation_affected: true,
-            path: { alias: '/sponsors/gamma', pid: 3, langcode: 'nl' },
-          },
-          relationships: {},
-        },
+        createMockDrupalSponsor({ id: 'a', title: 'Alpha' }),
+        createMockDrupalSponsor({ id: 'b', title: 'Beta' }),
+        createMockDrupalSponsor({ id: 'c', title: 'Gamma' }),
       ]
 
       const result = mapSponsorsToComponentSponsors(drupalSponsors)

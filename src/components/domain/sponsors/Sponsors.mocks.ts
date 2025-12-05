@@ -54,4 +54,15 @@ export const mockSponsors: Sponsor[] = [
     logo: 'https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+8',
     url: 'https://example.com/sponsor8',
   },
+  {
+    id: '9',
+    name: 'Sponsor Nine',
+    logo: 'https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+9',
+  },
+  {
+    id: '10',
+    name: 'Sponsor Ten',
+    logo: 'https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+10',
+    url: 'https://example.com/sponsor10',
+  },
 ]

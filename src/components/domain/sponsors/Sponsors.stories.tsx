@@ -4,6 +4,7 @@
 
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Sponsors } from './Sponsors'
+import { mockSponsors } from './Sponsors.mocks'
 
 const meta: Meta<typeof Sponsors> = {
   title: 'Domain/Sponsors/Sponsors',
@@ -22,54 +23,6 @@ const meta: Meta<typeof Sponsors> = {
 
 export default meta
 type Story = StoryObj<typeof Sponsors>
-
-// Mock sponsor data
-const mockSponsors = [
-  {
-    id: '1',
-    name: 'Sponsor One',
-    logo: 'https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+1',
-    url: 'https://example.com/sponsor1',
-  },
-  {
-    id: '2',
-    name: 'Sponsor Two',
-    logo: 'https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+2',
-    url: 'https://example.com/sponsor2',
-  },
-  {
-    id: '3',
-    name: 'Sponsor Three',
-    logo: 'https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+3',
-  },
-  {
-    id: '4',
-    name: 'Sponsor Four',
-    logo: 'https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+4',
-  },
-  {
-    id: '5',
-    name: 'Sponsor Five',
-    logo: 'https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+5',
-    url: 'https://example.com/sponsor5',
-  },
-  {
-    id: '6',
-    name: 'Sponsor Six',
-    logo: 'https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+6',
-  },
-  {
-    id: '7',
-    name: 'Sponsor Seven',
-    logo: 'https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+7',
-  },
-  {
-    id: '8',
-    name: 'Sponsor Eight',
-    logo: 'https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+8',
-    url: 'https://example.com/sponsor8',
-  },
-]
 
 /**
  * Default sponsors grid with 4 columns (light theme)

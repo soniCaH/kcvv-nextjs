@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import Link from 'next/link'
 import Image from 'next/image'
 import { SocialLinks } from '@/components/ui'
-import { Sponsors } from '@/components/domain/sponsors'
+import { Sponsors, mockSponsors } from '@/components/domain/sponsors'
 import { cn } from '@/lib/utils/cn'
 
 // Contact rows configuration (same as PageFooter)
@@ -63,14 +63,6 @@ const contactRows = [
     ),
   },
 ]
-
-// Mock sponsor data for Storybook
-const mockSponsors = Array.from({ length: 8 }, (_, i) => ({
-  id: `${i + 1}`,
-  name: `Sponsor ${i + 1}`,
-  logo: `https://placehold.co/200x133/4B9B48/FFFFFF?text=Sponsor+${i + 1}`,
-  url: i % 3 === 0 ? `https://example.com/sponsor${i + 1}` : undefined,
-}))
 
 // PageFooter component for Storybook (with inline sponsors instead of server component)
 const PageFooterStorybook = ({ className }: { className?: string }) => {
