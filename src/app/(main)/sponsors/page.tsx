@@ -9,7 +9,13 @@ import { runPromise } from '@/lib/effect/runtime'
 import { DrupalService } from '@/lib/effect/services/DrupalService'
 import { mapSponsorsToComponentSponsors } from '@/lib/mappers'
 import { PageTitle } from '@/components/layout'
-import { SponsorsTier, SponsorsStats, SponsorsSpotlight, TierDivider } from '@/components/domain/sponsors'
+import {
+  SponsorsTier,
+  SponsorsStats,
+  SponsorsSpotlight,
+  TierDivider,
+  SponsorsCallToAction,
+} from '@/components/domain/sponsors'
 
 export const metadata: Metadata = {
   title: 'Sponsors | KCVV Elewijt',
@@ -92,6 +98,8 @@ export default async function SponsorsPage() {
             <p>Er zijn momenteel geen sponsors beschikbaar.</p>
           </div>
         )}
+
+        <SponsorsCallToAction />
       </div>
     </>
   )
