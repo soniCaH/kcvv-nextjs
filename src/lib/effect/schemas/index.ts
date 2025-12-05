@@ -16,6 +16,7 @@ export * from './team.schema'
 export * from './player.schema'
 export * from './staff.schema'
 export * from './event.schema'
+export * from './sponsor.schema'
 
 // External API schemas
 export * from './match.schema'

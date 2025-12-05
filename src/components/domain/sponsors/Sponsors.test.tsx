@@ -175,7 +175,7 @@ describe('Sponsors', () => {
 
   describe('Theme Variants', () => {
     it('applies light theme classes by default', () => {
-      const { container } = render(<Sponsors sponsors={mockSponsors} />)
+      render(<Sponsors sponsors={mockSponsors} />)
 
       const title = screen.getByText('Onze sponsors')
       expect(title).toHaveClass('text-gray-900')
@@ -185,7 +185,7 @@ describe('Sponsors', () => {
     })
 
     it('applies dark theme classes when variant="dark"', () => {
-      const { container } = render(<Sponsors sponsors={mockSponsors} variant="dark" />)
+      render(<Sponsors sponsors={mockSponsors} variant="dark" />)
 
       const title = screen.getByText('Onze sponsors')
       expect(title).toHaveClass('text-white')

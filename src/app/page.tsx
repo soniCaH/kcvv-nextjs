@@ -8,9 +8,10 @@ import { runPromise } from '@/lib/effect/runtime'
 import { DrupalService } from '@/lib/effect/services/DrupalService'
 import { FootbalistoService } from '@/lib/effect/services/FootbalistoService'
 import { FeaturedArticles, LatestNews, UpcomingMatches } from '@/components/domain/home'
-import { Sponsors } from '@/components/domain/sponsors'
-import { mockSponsors } from '@/components/domain/sponsors/Sponsors.mocks'
-import { mapArticlesToHomepageArticles, mapMatchesToUpcomingMatches } from '@/lib/mappers'
+import {
+  mapArticlesToHomepageArticles,
+  mapMatchesToUpcomingMatches,
+} from '@/lib/mappers'
 import type { Metadata } from 'next'
 
 /**
@@ -104,21 +105,7 @@ export default async function HomePage() {
         <LatestNews articles={latestNewsArticles} title="Laatste nieuws" showViewAll={true} viewAllHref="/news" />
       )}
 
-      {/* Sponsors Section */}
-      <div className="max-w-inner-lg mx-auto px-3 lg:px-0 py-8">
-        <Sponsors
-          sponsors={mockSponsors}
-          title="Onze sponsors"
-          description="KCVV Elewijt wordt mede mogelijk gemaakt door onze trouwe sponsors."
-          columns={4}
-          variant="light"
-          showViewAll={true}
-          viewAllHref="/sponsors"
-        />
-      </div>
-
       {/* TODO: Future enhancements:
-       * - Fetch sponsors from CMS instead of mock data
        * - KCVVTV video section (on hold - no cameraman available)
        */}
     </>

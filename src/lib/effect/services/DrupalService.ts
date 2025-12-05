@@ -18,6 +18,9 @@ import {
   PlayerResponse,
   Event,
   EventsResponse,
+  Sponsor,
+  SponsorsResponse,
+  SponsorIncludedResource,
   TaxonomyTerm,
   TaxonomyTermsResponse,
   DrupalError,
@@ -91,6 +94,14 @@ export class DrupalService extends Context.Tag("DrupalService")<
     readonly getEventBySlug: (
       slug: string
     ) => Effect.Effect<Event, DrupalError | NotFoundError | ValidationError>;
+
+    // Sponsors
+    readonly getSponsors: (params?: {
+      type?: string | string[];
+      promoted?: boolean;
+      limit?: number;
+      sort?: string;
+    }) => Effect.Effect<readonly Sponsor[], DrupalError | ValidationError>;
 
     // Taxonomy
     readonly getTags: (params?: {
@@ -603,6 +614,112 @@ export const DrupalServiceLive = Layer.effect(
       });
 
     /**
+     * Get sponsors with optional filtering
+     */
+    const getSponsors = (params?: { type?: string | string[]; promoted?: boolean; limit?: number; sort?: string }) =>
+      Effect.gen(function* () {
+        const queryParams: Record<string, string | number> = {
+          include: "field_media_image.field_media_image",
+          "filter[status]": 1, // Only fetch published sponsors
+        };
+
+        // Default sort: field_type then title (mirrors Gatsby)
+        // Note: Sort string is comma-separated
+        queryParams["sort"] = params?.sort || "field_type,title";
+
+        if (params?.promoted) {
+          queryParams["filter[promote]"] = 1;
+        }
+
+        if (params?.type) {
+          if (Array.isArray(params.type)) {
+            // Use IN operator for multiple types
+            queryParams["filter[field_type][condition][path]"] = "field_type";
+            queryParams["filter[field_type][condition][operator]"] = "IN";
+            params.type.forEach((t, i) => {
+              queryParams[`filter[field_type][condition][value][${i}]`] = t;
+            });
+          } else {
+            queryParams["filter[field_type]"] = params.type;
+          }
+        }
+
+        if (params?.limit) {
+          queryParams["page[limit]"] = params.limit;
+        }
+
+        const url = buildUrl("node/sponsor", queryParams);
+        const response = yield* fetchJson(url, SponsorsResponse);
+
+        // Map included media/file relationships to sponsor logos
+        const mapped = mapSponsorIncluded(response.data, response.included);
+        return mapped;
+      });
+
+    /**
+     * Map included data for sponsors
+     * Similar to mapIncluded but for sponsor logo images
+     */
+    const mapSponsorIncluded = (
+      data: readonly Sponsor[],
+      included: readonly S.Schema.Type<typeof SponsorIncludedResource>[] = []
+    ): readonly Sponsor[] => {
+      const includedMap = new Map<string, S.Schema.Type<typeof SponsorIncludedResource>>(
+        included.map((item) => [`${item.type}:${item.id}`, item])
+      );
+
+      return data.map((sponsor) => {
+        // Resolve sponsor logo: media--image -> file--file -> URL
+        const mediaRef = sponsor.relationships.field_media_image?.data;
+        const resolvedMediaImage = (() => {
+          if (!mediaRef || !("id" in mediaRef) || !("type" in mediaRef)) {
+            return sponsor.relationships.field_media_image;
+          }
+
+          const media = includedMap.get(`media--image:${mediaRef.id}`);
+          if (!media || media.type !== "media--image") {
+            return sponsor.relationships.field_media_image;
+          }
+
+          // Decode media to ensure it's a valid MediaImage
+          const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
+          const fileRef = decodedMedia.relationships?.field_media_image?.data;
+          if (!fileRef) {
+            return sponsor.relationships.field_media_image;
+          }
+
+          const file = includedMap.get(`file--file:${fileRef.id}`);
+          if (!file || file.type !== "file--file") {
+            return sponsor.relationships.field_media_image;
+          }
+
+          // Decode file to ensure it's a valid File
+          const decodedFile = S.decodeUnknownSync(File)(file);
+          const fileUrl = decodedFile.attributes.uri.url;
+          const absoluteUrl = fileUrl.startsWith("http") ? fileUrl : `${baseUrl}${fileUrl}`;
+
+          return {
+            data: {
+              uri: { url: absoluteUrl },
+              alt: fileRef.meta?.alt || sponsor.attributes.title,
+              width: fileRef.meta?.width,
+              height: fileRef.meta?.height,
+            }
+          };
+        })();
+
+        // Return sponsor with resolved relationships
+        return {
+          ...sponsor,
+          relationships: {
+            ...sponsor.relationships,
+            field_media_image: resolvedMediaImage,
+          },
+        };
+      });
+    };
+
+    /**
      * Get taxonomy terms (tags/categories)
      */
     const getTags = (params?: { vocabulary?: string; limit?: number }) =>
@@ -637,6 +754,7 @@ export const DrupalServiceLive = Layer.effect(
       getPlayerById,
       getEvents,
       getEventBySlug,
+      getSponsors,
       getTags,
     };
   })
