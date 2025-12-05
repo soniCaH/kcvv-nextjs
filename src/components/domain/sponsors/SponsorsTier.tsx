@@ -30,6 +30,10 @@ export interface SponsorsTierProps {
    */
   sponsors: Sponsor[]
   /**
+   * Show sponsor names below logos (default: true)
+   */
+  showNames?: boolean
+  /**
    * Additional CSS classes
    */
   className?: string
@@ -65,7 +69,13 @@ const tierConfig: Record<
   },
 }
 
-export const SponsorsTier = ({ tier, title, sponsors, className }: SponsorsTierProps) => {
+export const SponsorsTier = ({
+  tier,
+  title,
+  sponsors,
+  showNames = true,
+  className,
+}: SponsorsTierProps) => {
   const config = tierConfig[tier]
 
   if (sponsors.length === 0) {
@@ -88,26 +98,56 @@ export const SponsorsTier = ({ tier, title, sponsors, className }: SponsorsTierP
       <div className={cn('grid gap-6', config.columns)}>
         {sponsors.map((sponsor, index) => {
           const content = (
-            <div
-              className={cn(
-                'relative bg-white rounded border border-gray-200 p-4',
-                'flex items-center justify-center aspect-[3/2]',
-                'transition-all duration-300 ease-out',
-                'hover:shadow-xl hover:scale-105 hover:-translate-y-1',
-                'animate-in fade-in slide-in-from-bottom-4'
+            <div className="group">
+              <div
+                className={cn(
+                  'relative bg-white rounded border border-gray-200 p-4',
+                  'flex items-center justify-center aspect-[3/2]',
+                  'transition-all duration-300 ease-out',
+                  'hover:shadow-xl hover:scale-105 hover:-translate-y-1',
+                  'animate-in fade-in slide-in-from-bottom-4',
+                  'overflow-hidden'
+                )}
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                  animationFillMode: 'backwards',
+                }}
+              >
+                <Image
+                  src={sponsor.logo}
+                  alt={sponsor.name}
+                  width={config.imageSize}
+                  height={config.imageSize * (2 / 3)}
+                  className="object-contain max-w-full max-h-full"
+                />
+                {sponsor.url && (
+                  <div className="absolute inset-0 bg-kcvv-green-bright/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span className="text-white font-semibold text-center px-4">
+                      Bezoek website
+                      <svg
+                        className="w-5 h-5 mx-auto mt-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                )}
+              </div>
+              {showNames && (
+                <div className="mt-2 text-center">
+                  <p className="text-sm font-medium text-gray-700 group-hover:text-kcvv-green-bright transition-colors">
+                    {sponsor.name}
+                  </p>
+                </div>
               )}
-              style={{
-                animationDelay: `${index * 50}ms`,
-                animationFillMode: 'backwards',
-              }}
-            >
-              <Image
-                src={sponsor.logo}
-                alt={sponsor.name}
-                width={config.imageSize}
-                height={config.imageSize * (2 / 3)}
-                className="object-contain max-w-full max-h-full"
-              />
             </div>
           )
 
