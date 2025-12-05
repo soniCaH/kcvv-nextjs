@@ -13,7 +13,9 @@ import {
   SponsorsStats,
   SponsorsSpotlight,
   SponsorsCallToAction,
-  SponsorsWithFilters,
+  SponsorsTier,
+  TierDivider,
+  SponsorsEmptyState,
 } from '@/components/domain/sponsors'
 
 export const metadata: Metadata = {
@@ -100,11 +102,15 @@ export default async function SponsorsPage() {
 
         {/* Main content section */}
         <div className="w-full max-w-inner-lg mx-auto px-3 lg:px-0 py-6">
-          <SponsorsWithFilters
-            goldSponsors={goldSponsors}
-            silverSponsors={silverSponsors}
-            bronzeSponsors={bronzeSponsors}
-          />
+          <SponsorsTier tier="gold" title="Gouden Sponsors" sponsors={goldSponsors} />
+          {goldSponsors.length > 0 && silverSponsors.length > 0 && <TierDivider />}
+          <SponsorsTier tier="silver" title="Zilveren Sponsors" sponsors={silverSponsors} />
+          {silverSponsors.length > 0 && bronzeSponsors.length > 0 && <TierDivider />}
+          <SponsorsTier tier="bronze" title="Bronzen Sponsors" sponsors={bronzeSponsors} />
+
+          {goldSponsors.length === 0 && silverSponsors.length === 0 && bronzeSponsors.length === 0 && (
+            <SponsorsEmptyState />
+          )}
 
           <SponsorsCallToAction />
         </div>
