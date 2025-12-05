@@ -10,12 +10,10 @@ import { DrupalService } from '@/lib/effect/services/DrupalService'
 import { mapSponsorsToComponentSponsors } from '@/lib/mappers'
 import { PageTitle } from '@/components/layout'
 import {
-  SponsorsTier,
   SponsorsStats,
   SponsorsSpotlight,
-  TierDivider,
   SponsorsCallToAction,
-  SponsorsEmptyState,
+  SponsorsWithFilters,
 } from '@/components/domain/sponsors'
 
 export const metadata: Metadata = {
@@ -88,15 +86,11 @@ export default async function SponsorsPage() {
       {featuredSponsors.length > 0 && <SponsorsSpotlight sponsors={featuredSponsors} />}
 
       <div className="w-full max-w-inner-lg mx-auto px-3 lg:px-0 py-6">
-        <SponsorsTier tier="gold" title="Gouden Sponsors" sponsors={goldSponsors} />
-        {goldSponsors.length > 0 && silverSponsors.length > 0 && <TierDivider />}
-        <SponsorsTier tier="silver" title="Zilveren Sponsors" sponsors={silverSponsors} />
-        {silverSponsors.length > 0 && bronzeSponsors.length > 0 && <TierDivider />}
-        <SponsorsTier tier="bronze" title="Bronzen Sponsors" sponsors={bronzeSponsors} />
-
-        {goldSponsors.length === 0 && silverSponsors.length === 0 && bronzeSponsors.length === 0 && (
-          <SponsorsEmptyState />
-        )}
+        <SponsorsWithFilters
+          goldSponsors={goldSponsors}
+          silverSponsors={silverSponsors}
+          bronzeSponsors={bronzeSponsors}
+        />
 
         <SponsorsCallToAction />
       </div>
