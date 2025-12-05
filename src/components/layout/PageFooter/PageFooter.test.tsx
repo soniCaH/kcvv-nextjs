@@ -1,6 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { PageFooter } from './PageFooter'
+
+// Mock the SponsorsBlock server component
+vi.mock('@/components/domain/sponsors', () => ({
+  SponsorsBlock: ({ title, description }: { title?: string; description?: string }) => (
+    <div data-testid="sponsors-block">
+      <h3>{title || 'Onze sponsors'}</h3>
+      <p>{description || 'KCVV Elewijt wordt mede mogelijk gemaakt door onze trouwe sponsors.'}</p>
+      <a href="/sponsors">Alle sponsors &raquo;</a>
+    </div>
+  ),
+}))
 
 describe('PageFooter', () => {
   it('renders the footer', () => {

@@ -7,6 +7,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { SocialLinks } from '@/components/ui'
+import { SponsorsBlock } from '@/components/domain/sponsors'
 import { cn } from '@/lib/utils/cn'
 
 export interface PageFooterProps {
@@ -142,7 +143,7 @@ export const PageFooter = ({ className }: PageFooterProps) => {
           {/* Vertical Divider - 1 column */}
           <div className="hidden lg:block lg:col-span-1 relative">
             <div
-              className="absolute h-[calc(100%-17px)] w-px bottom-0 left-1/2"
+              className="absolute h-full w-px top-0 left-1/2"
               style={{
                 background:
                   'linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.2) 100%)',
@@ -152,31 +153,11 @@ export const PageFooter = ({ className }: PageFooterProps) => {
 
           {/* Sponsors Section - 6 columns */}
           <div className="lg:col-span-6">
-            <h3 className="text-xl font-bold mb-4">Onze sponsors</h3>
-            <p className="text-sm mb-6 opacity-80">
-              KCVV Elewijt wordt mede mogelijk gemaakt door onze trouwe sponsors.
-            </p>
-
-            {/* Sponsors Grid - 4 columns, inverted logos */}
-            <div className="grid grid-cols-4 gap-3">
-              {/* Placeholder for sponsor logos - will be replaced with actual sponsors from CMS */}
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="aspect-[3/2] bg-white/10 rounded flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
-                >
-                  <span className="text-xs text-white/40">Logo</span>
-                </div>
-              ))}
-            </div>
-
-            {/* View All Link */}
-            <Link
-              href="/sponsors"
-              className="inline-block mt-6 text-kcvv-green-bright hover:underline text-sm"
-            >
-              Alle sponsors &raquo;
-            </Link>
+            <SponsorsBlock
+              variant="dark"
+              columns={4}
+              className="py-0"
+            />
           </div>
         </div>
       </div>
