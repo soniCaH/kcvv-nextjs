@@ -86,13 +86,20 @@ export const SponsorsTier = ({ tier, title, sponsors, className }: SponsorsTierP
         <h2 className="text-2xl font-bold text-kcvv-gray-blue">{title}</h2>
       </div>
       <div className={cn('grid gap-6', config.columns)}>
-        {sponsors.map((sponsor) => {
+        {sponsors.map((sponsor, index) => {
           const content = (
             <div
               className={cn(
-                'relative bg-white rounded border border-gray-200 p-4 transition-shadow hover:shadow-lg',
-                'flex items-center justify-center aspect-[3/2]'
+                'relative bg-white rounded border border-gray-200 p-4',
+                'flex items-center justify-center aspect-[3/2]',
+                'transition-all duration-300 ease-out',
+                'hover:shadow-xl hover:scale-105 hover:-translate-y-1',
+                'animate-in fade-in slide-in-from-bottom-4'
               )}
+              style={{
+                animationDelay: `${index * 50}ms`,
+                animationFillMode: 'backwards',
+              }}
             >
               <Image
                 src={sponsor.logo}

@@ -150,8 +150,9 @@ describe('SponsorsTier', () => {
       const { container } = render(<SponsorsTier tier="gold" title="Test" sponsors={[mockSponsors[0]]} />)
 
       const card = container.querySelector('.bg-white')
-      expect(card?.className).toContain('hover:shadow-lg')
-      expect(card?.className).toContain('transition-shadow')
+      expect(card?.className).toContain('hover:shadow-xl')
+      expect(card?.className).toContain('hover:scale-105')
+      expect(card?.className).toContain('transition-all')
     })
   })
 
