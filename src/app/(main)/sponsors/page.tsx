@@ -78,23 +78,38 @@ export default async function SponsorsPage() {
   }))
 
   return (
-    <>
-      <PageTitle title="Sponsors KCVV Elewijt" />
+    <div className="relative">
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-white to-gray-50 pointer-events-none" />
 
-      <SponsorsStats totalSponsors={totalSponsors} />
+      {/* Content */}
+      <div className="relative">
+        <PageTitle title="Sponsors KCVV Elewijt" />
 
-      {featuredSponsors.length > 0 && <SponsorsSpotlight sponsors={featuredSponsors} />}
+        {/* Stats section with subtle background */}
+        <div className="bg-gradient-to-r from-green-50/30 via-white to-green-50/30">
+          <SponsorsStats totalSponsors={totalSponsors} />
+        </div>
 
-      <div className="w-full max-w-inner-lg mx-auto px-3 lg:px-0 py-6">
-        <SponsorsWithFilters
-          goldSponsors={goldSponsors}
-          silverSponsors={silverSponsors}
-          bronzeSponsors={bronzeSponsors}
-        />
+        {/* Spotlight section */}
+        {featuredSponsors.length > 0 && (
+          <div className="bg-gradient-to-b from-gray-50 to-white">
+            <SponsorsSpotlight sponsors={featuredSponsors} />
+          </div>
+        )}
 
-        <SponsorsCallToAction />
+        {/* Main content section */}
+        <div className="w-full max-w-inner-lg mx-auto px-3 lg:px-0 py-6">
+          <SponsorsWithFilters
+            goldSponsors={goldSponsors}
+            silverSponsors={silverSponsors}
+            bronzeSponsors={bronzeSponsors}
+          />
+
+          <SponsorsCallToAction />
+        </div>
       </div>
-    </>
+    </div>
   )
 }
 
