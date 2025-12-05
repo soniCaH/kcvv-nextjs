@@ -7,6 +7,8 @@ import { Context, Effect, Layer, Schedule, Cache, Duration } from 'effect'
 import { Schema as S } from 'effect'
 import {
   Match,
+  FootbalistoMatch,
+  FootbalistoMatchesArray,
   MatchesResponse,
   RankingEntry,
   RankingResponse,
@@ -14,6 +16,59 @@ import {
   FootbalistoError,
   ValidationError,
 } from '../schemas'
+
+/**
+ * Transform Footbalisto API match to normalized Match format
+ */
+function transformFootbalistoMatch(fbMatch: FootbalistoMatch): Match {
+  // Parse date string "2025-12-06 09:00" to Date
+  const matchDate = new Date(fbMatch.date)
+
+  // Extract time from date string
+  const timePart = fbMatch.date.split(' ')[1] || '00:00'
+
+  // Map numeric status to string status
+  const statusMap: Record<number, 'scheduled' | 'live' | 'finished' | 'postponed' | 'cancelled'> = {
+    0: 'scheduled',
+    1: 'finished',
+    2: 'live',
+    3: 'postponed',
+    4: 'cancelled',
+  }
+  const status = statusMap[fbMatch.status] || 'scheduled'
+
+  // Determine round label based on teamId and age
+  let roundLabel: string | undefined = fbMatch.age ? `${fbMatch.age}` : undefined
+
+  // For senior teams (teamId 1 = A-ploeg, teamId 2 = B-ploeg), use team-based label
+  if (fbMatch.teamId === 1) {
+    roundLabel = 'A-ploeg'
+  } else if (fbMatch.teamId === 2) {
+    roundLabel = 'B-ploeg'
+  }
+
+  return {
+    id: fbMatch.id,
+    date: matchDate,
+    time: timePart,
+    venue: undefined, // Not provided by API
+    home_team: {
+      id: fbMatch.homeClub.id,
+      name: fbMatch.homeClub.name,
+      logo: fbMatch.homeClub.logo,
+      score: fbMatch.goalsHomeTeam ?? undefined,
+    },
+    away_team: {
+      id: fbMatch.awayClub.id,
+      name: fbMatch.awayClub.name,
+      logo: fbMatch.awayClub.logo,
+      score: fbMatch.goalsAwayTeam ?? undefined,
+    },
+    status,
+    round: roundLabel,
+    competition: fbMatch.competitionType,
+  }
+}
 
 /**
  * Footbalisto Service Interface
@@ -149,8 +204,12 @@ export const FootbalistoServiceLive = Layer.effect(
       lookup: (_key: 'next') =>
         Effect.gen(function* () {
           const url = `${baseUrl}/matches/next`
-          const response = yield* fetchJson(url, MatchesResponse)
-          return response.matches
+          // Fetch raw Footbalisto matches array
+          const rawMatches = yield* fetchJson(url, FootbalistoMatchesArray)
+          // Filter out Weitse Gans (teamId 23 - not our club, but plays on our pitch)
+          const filteredMatches = rawMatches.filter((match) => match.teamId !== 23)
+          // Transform to normalized Match format
+          return filteredMatches.map(transformFootbalistoMatch)
         }),
     })
 

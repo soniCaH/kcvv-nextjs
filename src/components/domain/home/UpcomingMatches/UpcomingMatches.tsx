@@ -160,7 +160,7 @@ export const UpcomingMatches = ({
   return (
     <section
       className={cn(
-        'frontpage__matches_slider w-full py-12 lg:py-16 bg-gray-50',
+        'frontpage__matches_slider w-full py-4 lg:py-6 bg-gray-50',
         className
       )}
     >
@@ -195,7 +195,7 @@ export const UpcomingMatches = ({
         </header>
 
         {/* Slider Container */}
-        <div className="relative">
+        <div className="relative py-2">
           {/* Left Arrow */}
           {canScrollLeft && (
             <button
@@ -213,7 +213,7 @@ export const UpcomingMatches = ({
           <div
             ref={scrollContainerRef}
             onScroll={checkScrollPosition}
-            className="flex gap-4 lg:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide"
+            className="flex gap-4 lg:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide py-8"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
@@ -260,80 +260,109 @@ const MatchCard = ({ match }: { match: UpcomingMatch }) => {
 
   return (
     <div className="snap-start shrink-0 w-[280px] lg:w-[320px]">
-      <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 h-full">
+      <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-6 h-full border border-gray-100">
         {/* Match Status Badge */}
         {isLive && (
-          <div className="mb-3 flex items-center gap-2">
+          <div className="mb-4 flex items-center gap-2">
             <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
             </span>
-            <span className="text-red-600 font-bold uppercase text-xs">Live</span>
+            <span className="text-red-600 font-bold uppercase text-xs tracking-wide">Live</span>
           </div>
         )}
 
         {/* Competition & Round */}
         {match.competition && (
-          <div className="mb-4 text-sm text-gray-600">
-            <span className="font-semibold">{match.competition}</span>
-            {match.round && <span className="ml-2">• {match.round}</span>}
+          <div className="mb-5 flex items-center gap-2 text-xs flex-wrap">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-kcvv-green-bright/10 text-kcvv-green-dark font-semibold whitespace-nowrap">
+              {match.competition}
+            </span>
+            {match.round && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold whitespace-nowrap">
+                {match.round}
+              </span>
+            )}
           </div>
         )}
 
         {/* Teams */}
-        <div className="space-y-3 mb-4">
+        <div className={cn("mb-5", (isLive || isFinished) ? "space-y-3" : "space-y-4")}>
           {/* Home Team */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               {match.homeTeam.logo && (
-                <Image
-                  src={match.homeTeam.logo}
-                  alt={`${match.homeTeam.name} logo`}
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                />
+                <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center">
+                  <Image
+                    src={match.homeTeam.logo}
+                    alt={`${match.homeTeam.name} logo`}
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
+                </div>
               )}
-              <span className="font-semibold text-gray-900">{match.homeTeam.name}</span>
+              <span className="font-semibold text-gray-900 text-sm leading-tight truncate">
+                {match.homeTeam.name}
+              </span>
             </div>
             {(isLive || isFinished) && match.homeTeam.score !== undefined && (
-              <span className="text-2xl font-bold text-kcvv-green-dark">{match.homeTeam.score}</span>
+              <span className="text-3xl font-bold text-kcvv-green-dark flex-shrink-0">
+                {match.homeTeam.score}
+              </span>
             )}
           </div>
 
+          {/* VS Divider - only show when there are scores */}
+          {(isLive || isFinished) && (
+            <div className="flex items-center justify-center -my-1">
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+            </div>
+          )}
+
           {/* Away Team */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               {match.awayTeam.logo && (
-                <Image
-                  src={match.awayTeam.logo}
-                  alt={`${match.awayTeam.name} logo`}
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                />
+                <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center">
+                  <Image
+                    src={match.awayTeam.logo}
+                    alt={`${match.awayTeam.name} logo`}
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
+                </div>
               )}
-              <span className="font-semibold text-gray-900">{match.awayTeam.name}</span>
+              <span className="font-semibold text-gray-900 text-sm leading-tight truncate">
+                {match.awayTeam.name}
+              </span>
             </div>
             {(isLive || isFinished) && match.awayTeam.score !== undefined && (
-              <span className="text-2xl font-bold text-kcvv-green-dark">{match.awayTeam.score}</span>
+              <span className="text-3xl font-bold text-kcvv-green-dark flex-shrink-0">
+                {match.awayTeam.score}
+              </span>
             )}
           </div>
         </div>
 
         {/* Match Info */}
-        <div className="pt-4 border-t border-gray-200">
+        <div className="pt-4 border-t border-gray-100">
           {isPostponed && (
-            <span className="text-orange-600 font-semibold text-sm uppercase">Uitgesteld</span>
+            <div className="inline-flex items-center px-3 py-1.5 rounded-md bg-orange-50 border border-orange-200">
+              <span className="text-orange-700 font-semibold text-xs uppercase tracking-wide">Uitgesteld</span>
+            </div>
           )}
           {isCancelled && (
-            <span className="text-red-600 font-semibold text-sm uppercase">Afgelast</span>
+            <div className="inline-flex items-center px-3 py-1.5 rounded-md bg-red-50 border border-red-200">
+              <span className="text-red-700 font-semibold text-xs uppercase tracking-wide">Afgelast</span>
+            </div>
           )}
           {!isPostponed && !isCancelled && (
-            <div className="text-sm text-gray-600">
-              <div className="font-semibold">{formatMatchDate(match.date)}</div>
-              {match.time && <div>{match.time}</div>}
-              {match.venue && <div>{match.venue}</div>}
+            <div className="text-sm text-gray-600 space-y-0.5">
+              <div className="font-semibold text-gray-900">{formatMatchDate(match.date)}</div>
+              {match.time && <div className="text-gray-500">{match.time}</div>}
+              {match.venue && <div className="text-gray-500">{match.venue}</div>}
             </div>
           )}
         </div>

@@ -8,13 +8,8 @@ import { runPromise } from '@/lib/effect/runtime'
 import { DrupalService } from '@/lib/effect/services/DrupalService'
 import { FootbalistoService } from '@/lib/effect/services/FootbalistoService'
 import { FeaturedArticles, LatestNews, UpcomingMatches } from '@/components/domain/home'
-import { mockScheduledMatches } from '@/components/domain/home/UpcomingMatches/UpcomingMatches.mocks'
-import { formatArticleDate } from '@/lib/utils/dates'
-import { isDrupalImage } from '@/lib/utils/drupal-content'
+import { mapArticlesToHomepageArticles, mapMatchesToUpcomingMatches } from '@/lib/mappers'
 import type { Metadata } from 'next'
-import type { Article } from '@/lib/effect/schemas/article.schema'
-import type { Match } from '@/lib/effect/schemas/match.schema'
-import type { UpcomingMatch } from '@/components/domain/home'
 
 /**
  * Provide metadata for the homepage.
@@ -26,62 +21,6 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'Er is maar één plezante compagnie | KCVV Elewijt',
     description: 'Startpagina van stamnummer 00055: KCVV Elewijt.',
     keywords: 'KCVV, Voetbal, Elewijt, Crossing, KCVVE, Zemst, 00055, 55, 1982, 1980',
-  }
-}
-
-/**
- * Maps a Drupal Article record to the simplified homepage article shape.
- *
- * @param article - Drupal Article record to map
- * @param includeDescription - If true, include the article body summary as `description`
- * @returns An object with `href`, `title`, optional `description`, `imageUrl`, `imageAlt`, `date`, `dateIso`, and `tags` (array of `{ name }`)
- */
-function mapArticleForHomepage(article: Article, includeDescription = false) {
-  const imageData = article.relationships.field_media_article_image?.data
-  const hasValidImage = imageData && isDrupalImage(imageData)
-
-  return {
-    href: article.attributes.path.alias,
-    title: article.attributes.title,
-    ...(includeDescription && { description: article.attributes.body?.summary || undefined }),
-    imageUrl: hasValidImage ? imageData.uri.url : undefined,
-    imageAlt: hasValidImage ? imageData.alt || article.attributes.title : article.attributes.title,
-    date: formatArticleDate(article.attributes.created),
-    dateIso: article.attributes.created.toISOString(),
-    tags:
-      article.relationships.field_tags?.data
-        ?.map((tag) => ('attributes' in tag && tag.attributes?.name ? { name: tag.attributes.name } : null))
-        .filter((tag): tag is { name: string } => tag !== null) || [],
-  }
-}
-
-/**
- * Convert a Match from Footbalisto API to UpcomingMatch format for the component.
- *
- * @param match - Match data from Footbalisto API
- * @returns An UpcomingMatch object with camelCase properties
- */
-function mapMatchForHomepage(match: Match): UpcomingMatch {
-  return {
-    id: match.id,
-    date: match.date,
-    time: match.time,
-    venue: match.venue,
-    homeTeam: {
-      id: match.home_team.id,
-      name: match.home_team.name,
-      logo: match.home_team.logo,
-      score: match.home_team.score,
-    },
-    awayTeam: {
-      id: match.away_team.id,
-      name: match.away_team.name,
-      logo: match.away_team.logo,
-      score: match.away_team.score,
-    },
-    status: match.status,
-    round: match.round,
-    competition: match.competition,
   }
 }
 
@@ -115,34 +54,9 @@ export default async function HomePage() {
         const footbalisto = yield* FootbalistoService
         return yield* footbalisto.getNextMatches()
       }).pipe(
-        // Graceful fallback: use mock data in development, empty in production
-        Effect.catchAll(() => {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[HomePage] Using mock matches data (API unavailable)')
-            return Effect.succeed(
-              mockScheduledMatches.map((mock) => ({
-                id: mock.id,
-                date: mock.date,
-                time: mock.time,
-                venue: mock.venue,
-                home_team: {
-                  id: mock.homeTeam.id,
-                  name: mock.homeTeam.name,
-                  logo: mock.homeTeam.logo,
-                  score: mock.homeTeam.score,
-                },
-                away_team: {
-                  id: mock.awayTeam.id,
-                  name: mock.awayTeam.name,
-                  logo: mock.awayTeam.logo,
-                  score: mock.awayTeam.score,
-                },
-                status: mock.status,
-                round: mock.round,
-                competition: mock.competition,
-              }))
-            )
-          }
+        // Graceful fallback: return empty array on error
+        Effect.catchAll((error) => {
+          console.error('[HomePage] Failed to fetch matches:', error)
           return Effect.succeed([])
         })
       )
@@ -153,12 +67,11 @@ export default async function HomePage() {
   const matches = matchesResult
 
   // Split articles: first 3 for featured carousel, remaining 6 for latest news
-  const featuredArticles = articles.slice(0, 3).map((article) => mapArticleForHomepage(article, true))
+  const featuredArticles = mapArticlesToHomepageArticles(articles.slice(0, 3), true)
+  const latestNewsArticles = mapArticlesToHomepageArticles(articles.slice(3, 9), false)
 
-  const latestNewsArticles = articles.slice(3, 9).map((article) => mapArticleForHomepage(article, false))
-
-  // Map matches to component format
-  const upcomingMatches = matches.map(mapMatchForHomepage)
+  // Map matches to component format (Weitse Gans already filtered at service level)
+  const upcomingMatches = mapMatchesToUpcomingMatches(matches)
 
   // Show fallback message if no articles could be loaded
   if (articles.length === 0) {
