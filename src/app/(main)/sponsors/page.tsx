@@ -9,7 +9,7 @@ import { runPromise } from '@/lib/effect/runtime'
 import { DrupalService } from '@/lib/effect/services/DrupalService'
 import { mapSponsorsToComponentSponsors } from '@/lib/mappers'
 import { PageTitle } from '@/components/layout'
-import { SponsorsTier, SponsorsStats } from '@/components/domain/sponsors'
+import { SponsorsTier, SponsorsStats, SponsorsSpotlight } from '@/components/domain/sponsors'
 
 export const metadata: Metadata = {
   title: 'Sponsors | KCVV Elewijt',
@@ -66,11 +66,19 @@ export default async function SponsorsPage() {
 
   const totalSponsors = goldSponsors.length + silverSponsors.length + bronzeSponsors.length
 
+  // Select top 3 gold sponsors for spotlight (with descriptions)
+  const featuredSponsors = goldSponsors.slice(0, 3).map((sponsor) => ({
+    ...sponsor,
+    description: 'Trotse partner van KCVV Elewijt',
+  }))
+
   return (
     <>
       <PageTitle title="Sponsors KCVV Elewijt" />
 
       <SponsorsStats totalSponsors={totalSponsors} />
+
+      {featuredSponsors.length > 0 && <SponsorsSpotlight sponsors={featuredSponsors} />}
 
       <div className="w-full max-w-inner-lg mx-auto px-3 lg:px-0 py-6">
         <SponsorsTier tier="gold" title="Gouden Sponsors" sponsors={goldSponsors} />
