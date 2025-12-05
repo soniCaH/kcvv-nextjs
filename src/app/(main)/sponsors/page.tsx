@@ -15,6 +15,7 @@ import {
   SponsorsSpotlight,
   TierDivider,
   SponsorsCallToAction,
+  SponsorsEmptyState,
 } from '@/components/domain/sponsors'
 
 export const metadata: Metadata = {
@@ -94,9 +95,7 @@ export default async function SponsorsPage() {
         <SponsorsTier tier="bronze" title="Bronzen Sponsors" sponsors={bronzeSponsors} />
 
         {goldSponsors.length === 0 && silverSponsors.length === 0 && bronzeSponsors.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            <p>Er zijn momenteel geen sponsors beschikbaar.</p>
-          </div>
+          <SponsorsEmptyState />
         )}
 
         <SponsorsCallToAction />
