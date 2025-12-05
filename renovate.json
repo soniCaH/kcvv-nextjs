@@ -1,0 +1,183 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":dependencyDashboard",
+    ":timezone(Europe/Brussels)"
+  ],
+  "packageRules": [
+    {
+      "description": "Security/vulnerability fixes with 🔒",
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "isVulnerabilityAlert": true,
+      "commitMessagePrefix": "🔒 ",
+      "semanticCommitType": "fix",
+      "semanticCommitScope": "deps",
+      "commitMessageAction": "{{semanticCommitType}}({{semanticCommitScope}}): update"
+    },
+    {
+      "description": "Pin dependencies with 📌",
+      "matchUpdateTypes": [
+        "pin"
+      ],
+      "commitMessagePrefix": "📌 ",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "commitMessageAction": "{{semanticCommitType}}({{semanticCommitScope}}): pin"
+    },
+    {
+      "description": "Digest/hash updates with 📌",
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "commitMessagePrefix": "📌 ",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "commitMessageAction": "{{semanticCommitType}}({{semanticCommitScope}}): update"
+    },
+    {
+      "description": "Major updates with 💥",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "commitMessagePrefix": "💥 ",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "commitMessageAction": "{{semanticCommitType}}({{semanticCommitScope}}): update"
+    },
+    {
+      "description": "Minor updates with ⬆️",
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "commitMessagePrefix": "⬆️ ",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "commitMessageAction": "{{semanticCommitType}}({{semanticCommitScope}}): update"
+    },
+    {
+      "description": "Patch updates with ⬆️",
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "commitMessagePrefix": "⬆️ ",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "commitMessageAction": "{{semanticCommitType}}({{semanticCommitScope}}): update"
+    },
+    {
+      "description": "Rollback/downgrade with ⬇️",
+      "matchUpdateTypes": [
+        "rollback"
+      ],
+      "commitMessagePrefix": "⬇️ ",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "commitMessageAction": "{{semanticCommitType}}({{semanticCommitScope}}): rollback"
+    },
+    {
+      "description": "Replacement packages with 🔄",
+      "matchUpdateTypes": [
+        "replacement"
+      ],
+      "commitMessagePrefix": "🔄 ",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "commitMessageAction": "{{semanticCommitType}}({{semanticCommitScope}}): replace"
+    },
+    {
+      "description": "Automerge non-major updates",
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Automerge devDependencies",
+      "matchDepTypes": [
+        "devDependencies"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Group ESLint packages",
+      "groupName": "eslint packages",
+      "matchPackageNames": [
+        "/^eslint/",
+        "/^@eslint//"
+      ]
+    },
+    {
+      "description": "Group React types together (including overrides)",
+      "groupName": "react types",
+      "matchPackageNames": [
+        "@types/react",
+        "@types/react-dom"
+      ]
+    },
+    {
+      "description": "Group TypeScript packages",
+      "groupName": "typescript packages",
+      "matchPackageNames": [
+        "/^typescript/",
+        "/^@types//",
+        "!@types/react",
+        "!@types/react-dom"
+      ]
+    },
+    {
+      "description": "Separate major Next.js updates",
+      "matchPackageNames": [
+        "next"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false,
+      "labels": [
+        "dependencies",
+        "major-update"
+      ]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": [
+      "security"
+    ],
+    "automerge": false,
+    "commitMessagePrefix": "🔒 ",
+    "semanticCommitType": "fix",
+    "semanticCommitScope": "deps",
+    "commitMessageAction": "{{semanticCommitType}}({{semanticCommitScope}}): update"
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "before 3am on Monday"
+    ],
+    "commitMessagePrefix": "🔧 ",
+    "commitMessageAction": "chore(deps): update",
+    "commitMessageTopic": "lock files"
+  },
+  "labels": [
+    "dependencies"
+  ],
+  "rangeStrategy": "pin",
+  "semanticCommits": "enabled",
+  "commitMessagePrefix": "⬆️ ",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "commitMessageAction": "{{semanticCommitType}}({{semanticCommitScope}}): update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{#if isPinDigest}}{{{newDigestShort}}}{{else}}{{#if isMajor}}{{prettyNewMajor}}{{else}}{{#if isSingleVersion}}{{prettyNewVersion}}{{else}}{{#if newValue}}{{{newValue}}}{{else}}{{{newDigestShort}}}{{/if}}{{/if}}{{/if}}{{/if}}",
+  "prCreation": "immediate",
+  "prConcurrentLimit": 3,
+  "rebaseWhen": "behind-base-branch"
+}
