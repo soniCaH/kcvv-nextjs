@@ -56,7 +56,7 @@
     "eslint-config-next": "16.0.8",
     "eslint-plugin-storybook": "^10.1.4",
     "happy-dom": "^20.0.11",
-    "storybook": "^10.0.8",
+    "storybook": "^10.1.4",
     "tailwindcss": "4.1.17",
     "typescript": "6.0.0-dev.20251124",
     "vitest": "^4.0.15"
