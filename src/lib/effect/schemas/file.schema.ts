@@ -86,10 +86,37 @@ export class FileAttributes extends S.Class<FileAttributes>('FileAttributes')({
 
   /**
    * MIME type of the file
-   * Validated to only accept image/jpeg and image/png for security
-   * Examples: 'image/jpeg', 'image/png'
+   *
+   * ⚠️ SECURITY WARNING: MIME type validation alone is INSUFFICIENT for security!
+   *
+   * This schema validates common image MIME types from Drupal, but MIME types
+   * can be easily spoofed. For production security, the server MUST perform:
+   *
+   * 1. **Magic Byte Validation**: Check file signatures (first bytes of file)
+   *    - JPEG: FF D8 FF
+   *    - PNG: 89 50 4E 47 0D 0A 1A 0A
+   *    - GIF: 47 49 46 38
+   *    - WebP: 52 49 46 46 ... 57 45 42 50
+   *
+   * 2. **File Extension Validation**: Verify extension matches MIME type
+   *    - Cross-check filename extension with MIME type and magic bytes
+   *
+   * 3. **Content Validation**: Use image processing libraries to verify
+   *    - Attempt to decode/process as image
+   *    - Reject malformed or malicious files
+   *
+   * 4. **Drupal Configuration**: Ensure Drupal's file upload validation is
+   *    properly configured with allowed extensions and MIME types
+   *
+   * This schema validation is a defense-in-depth layer but NOT the primary
+   * security control. Proper validation must happen server-side in Drupal.
+   *
+   * Common image types: 'image/jpeg', 'image/png', 'image/gif', 'image/webp'
+   * Note: 'image/svg+xml' is excluded - see SECURITY.md for SVG handling
    */
-  filemime: S.optional(S.Literal('image/jpeg', 'image/png')),
+  filemime: S.optional(
+    S.Literal('image/jpeg', 'image/png', 'image/gif', 'image/webp')
+  ),
 
   /**
    * File size in bytes

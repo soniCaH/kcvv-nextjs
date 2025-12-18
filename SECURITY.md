@@ -7,18 +7,84 @@
 **Current Status (2025-01-05):**
 - `dangerouslyAllowSVG: true` is enabled in `next.config.ts`
 - **Current Risk: LOW** - No user-uploaded SVGs are accepted
-- Drupal CMS only serves JPEG and PNG files (verified via API)
+- Drupal CMS serves common image formats (JPEG, PNG, GIF, WebP)
 - Local SVG files (`public/images/footer-top.svg`) are controlled by developers
 
 **Security Measures:**
 1. ✅ `contentDispositionType: 'attachment'` - Forces download instead of inline display
 2. ✅ Limited to specific remote patterns (placehold.co, api.kcvvelewijt.be, CloudFront)
-3. ✅ Runtime MIME type validation - Schema enforces only `image/jpeg` and `image/png`
-4. ✅ Automated test coverage - Tests verify PDF/SVG files are rejected
+3. ✅ Runtime MIME type validation - Schema enforces image MIME types (JPEG/PNG/GIF/WebP only, no SVG)
+4. ✅ Automated test coverage - Tests verify PDF/SVG files are rejected at schema level
+5. ⚠️ Drupal server-side validation - Relies on Drupal's file upload validation (see below)
+
+### File Upload Security - Defense in Depth
+
+**⚠️ CRITICAL: MIME Type Validation Alone is INSUFFICIENT!**
+
+Our file validation uses a **defense-in-depth approach** with multiple security layers. MIME types can be easily spoofed by attackers, so we implement validation at multiple levels:
+
+#### Layer 1: Schema Validation (Frontend/Runtime)
+- **Location:** `src/lib/effect/schemas/file.schema.ts`
+- **Purpose:** Type safety and basic MIME type filtering
+- **Validates:** Accepts only `image/jpeg`, `image/png`, `image/gif`, `image/webp`
+- **⚠️ Limitation:** This is NOT a security control - it's defense-in-depth and type safety
+
+#### Layer 2: Drupal Server-Side Validation (PRIMARY SECURITY CONTROL)
+Drupal MUST perform comprehensive validation on all file uploads:
+
+1. **Magic Byte Validation** (File Signature Check)
+   ```php
+   // Verify file content matches MIME type using magic bytes
+   // JPEG: FF D8 FF
+   // PNG: 89 50 4E 47 0D 0A 1A 0A
+   // GIF: 47 49 46 38 (GIF8)
+   // WebP: 52 49 46 46 ... 57 45 42 50 (RIFF...WEBP)
+   ```
+
+2. **File Extension Validation**
+   - Cross-check file extension with MIME type and magic bytes
+   - Reject files where extension, MIME type, and magic bytes don't align
+
+3. **Content Validation**
+   - Use GD Library or ImageMagick to attempt to decode the file
+   - Reject malformed or malicious files that can't be processed
+
+4. **Drupal Configuration Checklist**
+   - [ ] Configure allowed file extensions in file field settings
+   - [ ] Enable file validation modules (e.g., `file_entity`, `media`)
+   - [ ] Set maximum file size limits
+   - [ ] Configure GD/ImageMagick for image processing
+   - [ ] Enable file scanning for malware if handling user uploads
+
+**Drupal Configuration Example:**
+```php
+// In field configuration or settings.php
+$config['field.field.node.article.field_media_image']['settings']['file_extensions'] = 'jpg jpeg png gif webp';
+$config['field.field.node.article.field_media_image']['settings']['max_filesize'] = '5 MB';
+```
+
+#### Layer 3: Next.js Image Optimization
+- **Location:** `next.config.ts` `remotePatterns`
+- **Purpose:** Restrict which domains can serve images
+- **Current allowed domains:** placehold.co, api.kcvvelewijt.be, CloudFront
+- Any image from unapproved domains will be rejected
+
+#### Testing File Validation
+```bash
+# Run schema validation tests
+npm test file.schema.test.ts
+
+# Manually test Drupal upload validation:
+# 1. Rename a .txt file to .jpg
+# 2. Try uploading to Drupal
+# 3. Should be rejected by magic byte validation
+```
+
+---
 
 **⚠️ IMPORTANT - Before Adding User-Uploaded SVGs:**
 
-If you plan to allow users to upload SVG files in the future, you **MUST** implement these security measures:
+If you plan to allow users to upload SVG files in the future, you **MUST** implement these additional security measures:
 
 #### 1. Server-Side SVG Sanitization
 ```typescript

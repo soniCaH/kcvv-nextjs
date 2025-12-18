@@ -134,6 +134,7 @@ export const SponsorsFilters = ({
           </p>
           {(filters.search || filters.tier !== 'all') && (
             <button
+              aria-label="Wis alle filters"
               onClick={() =>
                 handleFilterChange({
                   tier: 'all',

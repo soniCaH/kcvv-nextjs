@@ -44,7 +44,7 @@ export const SponsorsEmptyState = ({ className }: SponsorsEmptyStateProps) => {
         href="/contact"
         className="inline-flex items-center gap-2 px-8 py-4 bg-kcvv-green-bright text-white rounded-lg font-semibold text-lg hover:bg-kcvv-green transition-colors shadow-lg"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
