@@ -24,7 +24,7 @@ export const SponsorsStats = ({ totalSponsors, className }: SponsorsStatsProps) 
           🤝
         </div>
         <h1 className="text-4xl md:text-5xl font-bold text-kcvv-gray-blue mb-4">
-          {totalSponsors} trouwe partners
+          {totalSponsors} trouwe partner{totalSponsors !== 1 ? 's' : ''}
         </h1>
         <p className="text-xl md:text-2xl text-gray-600 mb-6">steunen KCVV Elewijt</p>
         <p className="text-lg text-gray-500 max-w-2xl mx-auto">

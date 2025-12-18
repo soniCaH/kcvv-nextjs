@@ -90,13 +90,13 @@ export const ThreeColumns: Story = {
  */
 export const FiveColumns: Story = {
   args: {
-    sponsors: mockSponsors.slice(0, 10),
+    sponsors: mockSponsors,
     columns: 5,
   },
   parameters: {
     docs: {
       description: {
-        story: 'Wide grid with 5 columns for displaying many sponsors.',
+        story: 'Wide grid with 5 columns for displaying sponsors.',
       },
     },
   },

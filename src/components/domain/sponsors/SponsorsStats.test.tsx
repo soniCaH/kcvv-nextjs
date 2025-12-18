@@ -41,7 +41,7 @@ describe('SponsorsStats', () => {
     it('handles singular (1 sponsor)', () => {
       render(<SponsorsStats totalSponsors={1} />)
 
-      expect(screen.getByText('1 trouwe partners')).toBeInTheDocument()
+      expect(screen.getByText('1 trouwe partner')).toBeInTheDocument()
     })
 
     it('handles zero sponsors', () => {

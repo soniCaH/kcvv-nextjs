@@ -6,15 +6,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/lib/utils/cn'
+import type { Sponsor } from './Sponsors'
 
 export type SponsorTier = 'gold' | 'silver' | 'bronze'
-
-export interface Sponsor {
-  id: string
-  name: string
-  logo: string
-  url?: string
-}
 
 export interface SponsorsTierProps {
   /**

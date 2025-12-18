@@ -86,9 +86,10 @@ export class FileAttributes extends S.Class<FileAttributes>('FileAttributes')({
 
   /**
    * MIME type of the file
-   * Examples: 'image/jpeg', 'image/png', 'application/pdf'
+   * Validated to only accept image/jpeg and image/png for security
+   * Examples: 'image/jpeg', 'image/png'
    */
-  filemime: S.optional(S.String),
+  filemime: S.optional(S.Literal('image/jpeg', 'image/png')),
 
   /**
    * File size in bytes

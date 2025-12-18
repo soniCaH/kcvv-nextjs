@@ -214,7 +214,7 @@ describe('File Schema', () => {
       expect(result.attributes.filemime).toBe('image/png')
     })
 
-    it('should handle PDF files', () => {
+    it('should reject PDF files (only JPEG/PNG allowed for security)', () => {
       const pdfFile = {
         id: 'file-pdf',
         type: 'file--file',
@@ -226,10 +226,8 @@ describe('File Schema', () => {
         },
       }
 
-      const result = S.decodeUnknownSync(File)(pdfFile)
-
-      expect(result.attributes.filemime).toBe('application/pdf')
-      expect(result.attributes.uri.url).toContain('documents')
+      // PDF files should be rejected as per security policy
+      expect(() => S.decodeUnknownSync(File)(pdfFile)).toThrow()
     })
   })
 })

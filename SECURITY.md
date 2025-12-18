@@ -13,7 +13,8 @@
 **Security Measures:**
 1. ✅ `contentDispositionType: 'attachment'` - Forces download instead of inline display
 2. ✅ Limited to specific remote patterns (placehold.co, api.kcvvelewijt.be, CloudFront)
-3. ✅ Regular verification of Drupal file types
+3. ✅ Runtime MIME type validation - Schema enforces only `image/jpeg` and `image/png`
+4. ✅ Automated test coverage - Tests verify PDF/SVG files are rejected
 
 **⚠️ IMPORTANT - Before Adding User-Uploaded SVGs:**
 
@@ -45,16 +46,30 @@ function sanitizeSVG(svgContent: string): string {
   - External references
 
 #### 3. Content Security Policy (CSP)
-Add to `next.config.ts`:
+Add to `next.config.ts` with nonce-based CSP (recommended for Next.js App Router):
+
 ```typescript
+// Use middleware to generate nonces per request
+// See: https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy
+
 headers: async () => [{
   source: '/(.*)',
   headers: [{
     key: 'Content-Security-Policy',
-    value: "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
+    value: [
+      "default-src 'self'",
+      "img-src 'self' data: https:",
+      "script-src 'self' 'nonce-{NONCE}'",  // Replace {NONCE} with per-request value
+      "style-src 'self' 'nonce-{NONCE}'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "frame-ancestors 'none'"
+    ].join('; ')
   }]
 }]
 ```
+
+**Note:** Avoid using `'unsafe-inline'` or `'unsafe-eval'` as they significantly weaken XSS protection.
 
 #### 4. Alternative: Convert SVGs to Raster
 ```bash
