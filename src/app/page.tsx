@@ -8,7 +8,10 @@ import { runPromise } from '@/lib/effect/runtime'
 import { DrupalService } from '@/lib/effect/services/DrupalService'
 import { FootbalistoService } from '@/lib/effect/services/FootbalistoService'
 import { FeaturedArticles, LatestNews, UpcomingMatches } from '@/components/domain/home'
-import { mapArticlesToHomepageArticles, mapMatchesToUpcomingMatches } from '@/lib/mappers'
+import {
+  mapArticlesToHomepageArticles,
+  mapMatchesToUpcomingMatches,
+} from '@/lib/mappers'
 import type { Metadata } from 'next'
 
 /**
@@ -102,12 +105,8 @@ export default async function HomePage() {
         <LatestNews articles={latestNewsArticles} title="Laatste nieuws" showViewAll={true} viewAllHref="/news" />
       )}
 
-      {/* TODO: Add more homepage sections:
-       * - Team standings/rankings
-       * - Youth news section (frontpage__main_content__youth)
-       * - Sponsors/Advertisement (frontpage__advertisement)
-       *
-       * Note: KCVVTV video section (frontpage__kcvvtv) - On hold (no cameraman available)
+      {/* TODO: Future enhancements:
+       * - KCVVTV video section (on hold - no cameraman available)
        */}
     </>
   )

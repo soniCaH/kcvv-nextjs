@@ -214,7 +214,41 @@ describe('File Schema', () => {
       expect(result.attributes.filemime).toBe('image/png')
     })
 
-    it('should handle PDF files', () => {
+    it('should handle GIF files', () => {
+      const gifFile = {
+        id: 'file-gif',
+        type: 'file--file',
+        attributes: {
+          filename: 'animation.gif',
+          uri: { url: '/sites/default/files/animation.gif' },
+          filemime: 'image/gif',
+          filesize: 123456,
+        },
+      }
+
+      const result = S.decodeUnknownSync(File)(gifFile)
+
+      expect(result.attributes.filemime).toBe('image/gif')
+    })
+
+    it('should handle WebP files', () => {
+      const webpFile = {
+        id: 'file-webp',
+        type: 'file--file',
+        attributes: {
+          filename: 'modern-image.webp',
+          uri: { url: '/sites/default/files/modern-image.webp' },
+          filemime: 'image/webp',
+          filesize: 98765,
+        },
+      }
+
+      const result = S.decodeUnknownSync(File)(webpFile)
+
+      expect(result.attributes.filemime).toBe('image/webp')
+    })
+
+    it('should reject PDF files (non-image MIME types)', () => {
       const pdfFile = {
         id: 'file-pdf',
         type: 'file--file',
@@ -226,10 +260,25 @@ describe('File Schema', () => {
         },
       }
 
-      const result = S.decodeUnknownSync(File)(pdfFile)
+      // PDF files should be rejected - only image MIME types allowed
+      expect(() => S.decodeUnknownSync(File)(pdfFile)).toThrow()
+    })
 
-      expect(result.attributes.filemime).toBe('application/pdf')
-      expect(result.attributes.uri.url).toContain('documents')
+    it('should reject SVG files (XSS security risk)', () => {
+      const svgFile = {
+        id: 'file-svg',
+        type: 'file--file',
+        attributes: {
+          filename: 'icon.svg',
+          uri: { url: '/sites/default/files/icon.svg' },
+          filemime: 'image/svg+xml',
+          filesize: 12345,
+        },
+      }
+
+      // SVG files should be rejected due to XSS security concerns
+      // See SECURITY.md for SVG handling guidelines
+      expect(() => S.decodeUnknownSync(File)(svgFile)).toThrow()
     })
   })
 })
