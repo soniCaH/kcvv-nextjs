@@ -22,12 +22,30 @@ const colors = {
   bold: "\x1b[1m",
 };
 
+/**
+ * Print messages to stdout using the provided ANSI color code and reset the color after output.
+ * @param {string} color - ANSI escape sequence for the desired text color (e.g., from the `colors` map).
+ * @param {...any} args - Values to print; forwarded to console.log.
+ */
 function log(color, ...args) {
   console.log(color, ...args, colors.reset);
 }
 
 /**
- * Auto-detect what's been migrated by scanning the codebase
+ * Detect migration-related file counts in the repository's src directory.
+ *
+ * Returns counts for commonly migrated artifact types so callers can infer
+ * migration progress from the codebase.
+ *
+ * @returns {{components: number, pages: number, apiRoutes: number, schemas: number, tests: number, stories: number, mappers: number}}
+ * An object with the following numeric properties:
+ * - `components`: Number of `.tsx` files under `src/components` excluding test/spec/story files.
+ * - `pages`: Number of `page.tsx` files under `src/app`.
+ * - `apiRoutes`: Number of `route.ts` or `route.tsx` files under `src/app`.
+ * - `schemas`: Number of `*.schema.ts` files under `src/lib/effect/schemas` excluding test files.
+ * - `tests`: Number of test/spec files (`.test` or `.spec` with `.ts`/`.tsx`) under `src`.
+ * - `stories`: Number of `.stories.ts` or `.stories.tsx` files under `src`.
+ * - `mappers`: Number of `*.mapper.ts` files under `src/lib/mappers` excluding test files.
  */
 function detectMigratedContent() {
   const srcDir = path.join(process.cwd(), "src");
@@ -68,6 +86,13 @@ function detectMigratedContent() {
   };
 }
 
+/**
+ * Recursively counts files under a directory that match an include pattern and do not match an optional exclude pattern.
+ * @param {string} dir - Path to the directory to scan.
+ * @param {RegExp} includePattern - Regular expression that file names must match to be counted.
+ * @param {RegExp|null} [excludePattern=null] - Optional regular expression; matching file names are excluded.
+ * @returns {number} The number of files matching the criteria (returns 0 if the directory does not exist).
+ */
 function countFiles(dir, includePattern, excludePattern = null) {
   if (!fs.existsSync(dir)) return 0;
 
@@ -94,7 +119,17 @@ function countFiles(dir, includePattern, excludePattern = null) {
 }
 
 /**
- * Parse Phase status from MIGRATION_PLAN.md
+ * Extract migration phases from MIGRATION_PLAN.md into a structured array.
+ *
+ * Reads MIGRATION_PLAN.md in the repository root and parses lines that match
+ * phase headers (e.g., "## Phase 1: Name (Status) ✅"). For each matched phase
+ * returns an object with the phase number, name, raw status text, derived
+ * state, and the emoji found on the line.
+ *
+ * @returns {Array<{number: number, name: string, status: string, state: 'completed' | 'in-progress' | 'not-started', emoji: string}> | null}
+ * An array of phase objects when the plan file exists and contains phase headers,
+ * or `null` if MIGRATION_PLAN.md is not present. The `state` is one of
+ * "completed", "in-progress", or "not-started" determined from the line content.
  */
 function parseMigrationPlan() {
   const planPath = path.join(process.cwd(), "MIGRATION_PLAN.md");
@@ -134,6 +169,11 @@ function parseMigrationPlan() {
   return phases;
 }
 
+/**
+ * Render a migration status dashboard to the console summarizing codebase metrics and migration phases.
+ *
+ * Displays auto-detected counts (components, pages, schemas, mappers, tests, stories), computes and shows test/story coverage percentages, parses and lists migration phases with their states, and prints quick command suggestions.
+ */
 function displayStatus() {
   log(
     colors.bold + colors.cyan,
