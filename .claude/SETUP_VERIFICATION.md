@@ -32,32 +32,12 @@ Your Claude Code setup is **90% configured and operational**. The core infrastru
 **MCP Config Location:** `.mcp.json` (root)
 **API Keys Location:** `.claude/settings.local.json`
 
-### Visual Regression Testing (NEW! ✓)
-
-| Component              | Status     | Files                             |
-| ---------------------- | ---------- | --------------------------------- |
-| **Playwright Config**  | ✅ Working | `playwright.config.ts`            |
-| **Component Tests**    | ✅ Created | `tests/visual/components.spec.ts` |
-| **Page Tests**         | ✅ Created | `tests/e2e/pages.spec.ts`         |
-| **Test Documentation** | ✅ Created | `tests/README.md`                 |
-
-**Scripts Available:**
-
-```bash
-npm run test:visual              # All visual tests
-npm run test:visual:components   # Storybook component tests
-npm run test:visual:pages        # Next.js page tests
-npm run test:visual:ui           # Interactive UI mode
-npm run test:visual:update       # Update baselines
-```
-
 ### Automated Testing (VERIFIED ✓)
 
-| Type                    | Tests      | Coverage        | Status        |
-| ----------------------- | ---------- | --------------- | ------------- |
-| **Unit Tests (Vitest)** | 564 tests  | 100% components | ✅ Passing    |
-| **Storybook Stories**   | 28 stories | 82% components  | ✅ Working    |
-| **Visual Regression**   | Ready      | Not run yet     | ✅ Configured |
+| Type                    | Tests      | Coverage        | Status     |
+| ----------------------- | ---------- | --------------- | ---------- |
+| **Unit Tests (Vitest)** | 564 tests  | 100% components | ✅ Passing |
+| **Storybook Stories**   | 28 stories | 82% components  | ✅ Working |
 
 ### Migration Tracking (IMPROVED ✓)
 
@@ -159,28 +139,7 @@ Migration Progress: Phase 2 of 9 (22%)
 
 ## 🎯 What Actually Works Today
 
-### 1. Visual Regression Testing (READY!)
-
-```bash
-# Run all visual tests
-npm run test:visual
-
-# Interactive mode to review diffs
-npm run test:visual:ui
-
-# Update baselines after intentional changes
-npm run test:visual:update
-```
-
-**What It Does:**
-
-- Tests 28 components via Storybook
-- Tests pages in actual Next.js app
-- Captures screenshots
-- Compares to baselines
-- Shows pixel-perfect diffs
-
-### 2. Migration Status (AUTO-MAGIC!)
+### 1. Migration Status (AUTO-MAGIC!)
 
 ```bash
 npm run migration:status
@@ -203,7 +162,7 @@ npm run migration:status
   ⏳ Phase 3-9: Upcoming
 ```
 
-### 3. Quality Checks (ONE COMMAND!)
+### 2. Quality Checks (ONE COMMAND!)
 
 ```bash
 npm run check-all
@@ -216,7 +175,7 @@ npm run check-all
 3. All 564 unit tests
 4. Next.js build
 
-### 4. Claude Code Integration (FULL CONTEXT!)
+### 3. Claude Code Integration (FULL CONTEXT!)
 
 Claude Code has access to:
 
@@ -234,7 +193,6 @@ Claude Code has access to:
 | **MIGRATION_PLAN.md**     | Root     | Phase tracking, overall plan        |
 | **DESIGN_SYSTEM.md**      | Root     | Tailwind config, colors, components |
 | **STORYBOOK_FEATURES.md** | Root     | Storybook usage guide               |
-| **tests/README.md**       | tests/   | Visual regression guide (NEW!)      |
 | **SETUP_VERIFICATION.md** | .claude/ | This file - verification report     |
 
 **Downloaded Docs (Reference Only):**
@@ -323,7 +281,6 @@ npm run migration:create "Test Task"
 ✅ **All of it!** Everything is configured and working:
 
 - MCP servers connected
-- Visual regression tests ready
 - Migration tracking auto-detecting
 - Quality checks enforced
 - Custom skills loaded
@@ -348,10 +305,9 @@ These were in the original plan but aren't critical:
 ### What Makes This Setup Special
 
 1. **Auto-Detection:** No manual tracking - scans codebase automatically
-2. **Visual Regression:** Pixel-perfect parity testing ready to use
-3. **Full Context:** Claude Code knows everything about your project
-4. **Quality Enforced:** Can't commit broken code
-5. **Simple Workflow:** Just ask Claude Code, it handles the rest
+2. **Full Context:** Claude Code knows everything about your project
+3. **Quality Enforced:** Can't commit broken code
+4. **Simple Workflow:** Just ask Claude Code, it handles the rest
 
 ### What You DON'T Need to Do
 
@@ -417,7 +373,6 @@ None! Everything tested and working.
 
 - ✅ Verified against your actual setup
 - ✅ Simplified where beneficial
-- ✅ Enhanced with visual regression testing
 - ✅ Tested and confirmed working
 
 The main difference is the migration tracking is now **smarter** (auto-detection) rather than manual, which is actually an improvement.

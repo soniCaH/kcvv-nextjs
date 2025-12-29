@@ -28,7 +28,6 @@
    - **Storybook stories FIRST** (visual source of truth)
    - Effect Schema for data validation
    - Vitest tests (>80% coverage)
-   - Visual regression tests via Playwright + Storybook
    - TypeScript strict mode
    - Tailwind CSS styling
 
@@ -86,7 +85,6 @@
 - [x] No TypeScript errors
 - [x] No ESLint errors
 - [x] Storybook stories created (visual source of truth)
-- [x] Visual regression tests pass
 - [x] Components verified in Storybook
 - [x] MIGRATION_PLAN.md updated
 
@@ -182,11 +180,9 @@ Me:
 [Creates fix/sponsor-grid-mobile]
 [Analyzes issue, implements fix]
 [Commits: "fix(sponsors): resolve grid layout on mobile viewports"]
-[Runs visual regression tests]
 [Pushes]
 
-"Fixed the mobile layout issue. Visual regression tests confirm it
-matches the design. Create PR?"
+"Fixed the mobile layout issue. Verified in Storybook. Create PR?"
 
 You: "Yes"
 

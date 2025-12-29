@@ -215,7 +215,6 @@ export const dynamicParams = true
 - [ ] Add TypeScript types (use Effect Schema types)
 - [ ] Create Storybook stories for components
 - [ ] Write Vitest unit tests
-- [ ] Add Playwright visual regression tests
 - [ ] Update MIGRATION_PLAN.md
 - [ ] Create GitHub issue for tracking
 - [ ] Test on local dev server
@@ -244,17 +243,6 @@ describe("DrupalAPI.getArticle", () => {
     );
     expect(article).toHaveProperty("title");
   });
-});
-```
-
-### Visual Tests (Playwright)
-
-```typescript
-import { test, expect } from "@playwright/test";
-
-test("news page renders correctly", async ({ page }) => {
-  await page.goto("/nieuws");
-  await expect(page).toHaveScreenshot();
 });
 ```
 
