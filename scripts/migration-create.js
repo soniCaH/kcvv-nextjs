@@ -1,0 +1,108 @@
+#!/usr/bin/env node
+
+/**
+ * Migration Task Helper for Claude Code
+ * Generates a formatted task description that Claude Code can understand
+ * No manual tracking required - Claude Code handles everything
+ */
+
+const args = process.argv.slice(2);
+
+if (args.length === 0) {
+  console.log(`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Migration Task Helper for Claude Code
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Usage:
+  npm run migration:create "Task Description"
+
+Examples:
+  npm run migration:create "Migrate team detail page"
+  npm run migration:create "Add ranking page with table component"
+  npm run migration:create "Implement player profile pages"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 This generates a Claude Code-friendly task template.
+   Just copy the output and give it to Claude Code!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`);
+  process.exit(0);
+}
+
+const taskName = args.join(" ");
+
+// Generate Claude Code-friendly task description
+const template = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MIGRATION TASK: ${taskName}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Task: ${taskName}
+
+Requirements:
+- Implement pixel-perfect recreation from Gatsby version
+- Use Effect Schema for data validation
+- Create Storybook stories for new components
+- Write Vitest tests (>80% coverage target)
+- Add TypeScript types (strict mode)
+- Use Tailwind CSS for styling
+- Implement ISR with appropriate revalidate time
+
+Checklist:
+□ Create/update page component(s)
+□ Create/update child components
+□ Add Effect Schema(s) if needed
+□ Create data mapper(s) if needed
+□ Add Storybook stories
+□ Write Vitest unit tests
+□ Update MIGRATION_PLAN.md phase status
+□ Test responsiveness (mobile/tablet/desktop)
+□ Verify visual parity with Gatsby version
+□ Run quality checks (npm run check-all)
+
+Quality Gates:
+- All tests passing
+- No TypeScript errors
+- No ESLint errors
+- Storybook stories created
+- Visual regression tests pass
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 GIVE THIS TO CLAUDE CODE:
+
+"Help me with this migration task: ${taskName}
+
+Follow the KCVV migration standards:
+- Pixel-perfect recreation
+- Effect Schema validation
+- Full test coverage
+- Storybook documentation
+- TypeScript strict mode
+
+When done:
+1. Update MIGRATION_PLAN.md with progress
+2. Run 'npm run check-all' to verify
+3. Run 'npm run migration:status' to see updated progress"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+
+console.log(template);
+
+// Optional: Save to clipboard if available (requires clipboardy package)
+try {
+  require("child_process").execSync(
+    `echo "${template.replace(/"/g, '\\"')}" | pbcopy`,
+    {
+      stdio: "ignore",
+    },
+  );
+  console.log("\n✅ Task template copied to clipboard!\n");
+} catch (e) {
+  // Clipboard not available, that's fine
+  console.log("\n💡 Copy the task template above and give it to Claude Code\n");
+}

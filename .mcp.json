@@ -3,11 +3,36 @@
     "next-devtools": {
       "type": "stdio",
       "command": "npx",
+      "args": ["-y", "next-devtools-mcp@0.3.4"],
+      "env": {}
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "filesystem": {
+      "command": "npx",
       "args": [
         "-y",
-        "next-devtools-mcp@0.3.4"
-      ],
-      "env": {}
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/kevinvanransbeeck/Sites/KCVV/kcvv-nextjs"
+      ]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     }
   }
 }
