@@ -57,10 +57,24 @@ export default defineConfig({
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
       }
-    : {
-        command: "npm run dev",
-        url: "http://localhost:3000",
-        reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000,
-      },
+    : [
+        // Start mock API server first for page tests
+        {
+          command: "node tests/mock-api-server.mjs",
+          url: "http://localhost:8888",
+          reuseExistingServer: !process.env.CI,
+          timeout: 30 * 1000,
+        },
+        // Then start Next.js dev server with mock API URLs
+        {
+          command: "npm run dev",
+          url: "http://localhost:3000",
+          reuseExistingServer: !process.env.CI,
+          timeout: 120 * 1000,
+          env: {
+            DRUPAL_API_URL: "http://localhost:8888",
+            FOOTBALISTO_API_URL: "http://localhost:8888",
+          },
+        },
+      ],
 });

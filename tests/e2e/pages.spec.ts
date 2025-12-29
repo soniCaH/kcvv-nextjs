@@ -3,10 +3,11 @@ import { test, expect } from "@playwright/test";
 /**
  * E2E Visual Regression Tests for KCVV Pages
  *
- * Tests actual pages in the running Next.js application.
+ * Tests actual pages in the running Next.js application with mocked API responses.
  *
  * Prerequisites:
- * - npm run dev (started automatically by Playwright config)
+ * - Mock API server (started automatically by Playwright config)
+ * - Next.js dev server (started automatically by Playwright config)
  *
  * Run tests:
  * - npm run test:visual:pages
@@ -14,6 +15,9 @@ import { test, expect } from "@playwright/test";
  *
  * Update baselines:
  * - npm run test:visual:pages -- --update-snapshots
+ *
+ * Note: API calls to Drupal and Footbalisto are mocked via a local mock API server
+ * to ensure deterministic, fast tests that don't depend on external services.
  */
 
 test.describe("Page Visual Regression Tests", () => {
