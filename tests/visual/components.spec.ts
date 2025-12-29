@@ -1,137 +1,55 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * Visual Regression Tests for KCVV Components
+ * Visual Regression Tests for KCVV Components via Storybook
  *
- * These tests capture screenshots of components in different states
- * and compare them against baseline images to catch visual regressions.
+ * These tests capture screenshots of isolated components in Storybook.
+ *
+ * Prerequisites:
+ * - npm run storybook (started automatically by Playwright config with TEST_STORYBOOK=1)
  *
  * Run tests:
- * - npm run test:visual (headless)
- * - npm run test:visual:ui (interactive)
+ * - npm run test:visual:components
+ * - npm run test:visual:ui (interactive mode)
  *
  * Update baselines:
- * - npm run test:visual -- --update-snapshots
+ * - npm run test:visual:components -- --update-snapshots
+ *
+ * NOTE: This file contains example tests. Update the story paths to match
+ * your actual Storybook stories. Run `npm run storybook` to see available stories.
  */
 
 test.describe("Component Visual Regression Tests", () => {
   test.beforeEach(async ({ page }) => {
-    // Wait for fonts and images to load
+    // Wait for Storybook to load
     await page.goto("http://localhost:6006", { waitUntil: "networkidle" });
   });
 
   /**
-   * Button Component Tests
-   */
-  test.describe("Button Component", () => {
-    test("primary button", async ({ page }) => {
-      await page.goto("http://localhost:6006/?path=/story/ui-button--primary");
-      const button = page.locator('[data-testid="button"]').first();
-      await expect(button).toHaveScreenshot("button-primary.png");
-    });
-
-    test("secondary button", async ({ page }) => {
-      await page.goto(
-        "http://localhost:6006/?path=/story/ui-button--secondary",
-      );
-      const button = page.locator('[data-testid="button"]').first();
-      await expect(button).toHaveScreenshot("button-secondary.png");
-    });
-
-    test("button hover state", async ({ page }) => {
-      await page.goto("http://localhost:6006/?path=/story/ui-button--primary");
-      const button = page.locator('[data-testid="button"]').first();
-      await button.hover();
-      await expect(button).toHaveScreenshot("button-primary-hover.png");
-    });
-  });
-
-  /**
-   * Card Component Tests
-   */
-  test.describe("Card Component", () => {
-    test("default card", async ({ page }) => {
-      await page.goto("http://localhost:6006/?path=/story/ui-card--default");
-      const card = page.locator('[data-testid="card"]').first();
-      await expect(card).toHaveScreenshot("card-default.png");
-    });
-
-    test("card hover state", async ({ page }) => {
-      await page.goto("http://localhost:6006/?path=/story/ui-card--default");
-      const card = page.locator('[data-testid="card"]').first();
-      await card.hover();
-      await expect(card).toHaveScreenshot("card-hover.png");
-    });
-  });
-
-  /**
-   * Sponsor Components Tests
+   * Example: Sponsor Components Tests
+   * Update these paths to match your actual Storybook stories
    */
   test.describe("Sponsor Components", () => {
     test("sponsors grid", async ({ page }) => {
+      // Navigate to the Sponsors story in Storybook
+      // Update this path to match your actual story ID
       await page.goto(
         "http://localhost:6006/?path=/story/domain-sponsors--default",
       );
+      await page.waitForLoadState("networkidle");
+
       await expect(page).toHaveScreenshot("sponsors-grid.png", {
         fullPage: false,
         clip: { x: 0, y: 0, width: 1280, height: 800 },
       });
     });
-
-    test("sponsors tier - gold", async ({ page }) => {
-      await page.goto(
-        "http://localhost:6006/?path=/story/domain-sponsorstier--gold-tier",
-      );
-      await expect(page).toHaveScreenshot("sponsors-tier-gold.png", {
-        fullPage: false,
-        clip: { x: 0, y: 0, width: 1280, height: 800 },
-      });
-    });
   });
 
   /**
-   * Article Components Tests
+   * Add more component tests here as you create Storybook stories
+   * Example paths:
+   * - /story/ui-button--primary
+   * - /story/domain-articlecard--default
+   * - /story/domain-upcomingmatches--default
    */
-  test.describe("Article Components", () => {
-    test("article card", async ({ page }) => {
-      await page.goto(
-        "http://localhost:6006/?path=/story/domain-articlecard--default",
-      );
-      const card = page.locator('[data-testid="article-card"]').first();
-      await expect(card).toHaveScreenshot("article-card.png");
-    });
-
-    test("article header", async ({ page }) => {
-      await page.goto(
-        "http://localhost:6006/?path=/story/domain-articleheader--default",
-      );
-      await expect(page).toHaveScreenshot("article-header.png", {
-        fullPage: false,
-        clip: { x: 0, y: 0, width: 1280, height: 600 },
-      });
-    });
-  });
-
-  /**
-   * Responsive Tests
-   */
-  test.describe("Responsive Design", () => {
-    test("mobile - button", async ({ page }) => {
-      await page.setViewportSize({ width: 375, height: 667 }); // iPhone size
-      await page.goto("http://localhost:6006/?path=/story/ui-button--primary");
-      const button = page.locator('[data-testid="button"]').first();
-      await expect(button).toHaveScreenshot("button-mobile.png");
-    });
-
-    test("tablet - sponsors grid", async ({ page }) => {
-      await page.setViewportSize({ width: 768, height: 1024 }); // iPad size
-      await page.goto(
-        "http://localhost:6006/?path=/story/domain-sponsors--default",
-      );
-      await expect(page).toHaveScreenshot("sponsors-tablet.png", {
-        fullPage: false,
-        clip: { x: 0, y: 0, width: 768, height: 800 },
-      });
-    });
-  });
 });
