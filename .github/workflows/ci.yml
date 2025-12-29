@@ -80,11 +80,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright
-        run: npx playwright install --with-deps
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
 
-      - name: Run visual tests
+      - name: Run visual tests (chromium)
         run: npm run test:visual
+        # TODO: Expand to all browsers once baselines are generated for firefox, webkit, etc.
+        # run: npm run test:visual:ci
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
