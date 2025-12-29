@@ -16,11 +16,7 @@
     },
     "filesystem": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/Users/kevinvanransbeeck/Sites/KCVV/kcvv-nextjs"
-      ]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
     },
     "brave-search": {
       "command": "npx",
