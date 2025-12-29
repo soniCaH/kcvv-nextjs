@@ -4,7 +4,7 @@ This is an example of what the Migration Analyzer Agent produces.
 
 ## Input
 
-```
+```text
 "Analyze the news article page for migration"
 ```
 
@@ -109,7 +109,7 @@ query RelatedArticles($category: String!) {
 
 ### Proposed Structure
 
-```
+```text
 src/app/news/[slug]/
 ├── page.tsx              # Main page (Server Component)
 ├── loading.tsx           # Loading UI
@@ -435,7 +435,7 @@ None - all prerequisites can be created fresh.
 
 1. **Start with schemas** (Use schema-migrator agent)
 
-   ```
+   ```text
    "Generate schema for node/article"
    "Generate schema for taxonomy_term/category"
    "Generate schema for taxonomy_term/tags"
@@ -443,25 +443,25 @@ None - all prerequisites can be created fresh.
 
 2. **Migrate components** (Use component-migrator agent)
 
-   ```
+   ```text
    "Migrate ArticleContent component"
    "Migrate RelatedArticles component"
    ```
 
 3. **Implement page** (Use component-migrator agent)
 
-   ```
+   ```text
    "Migrate src/pages/news/{DrupalNodeArticle.path}.tsx"
    ```
 
 4. **Quality check** (Use quality-reviewer agent)
 
-   ```
+   ```text
    "Review the news article page"
    ```
 
 5. **Create PR**
-   ```
+   ```text
    "Create PR for news article migration"
    ```
 

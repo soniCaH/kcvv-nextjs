@@ -83,7 +83,7 @@ Invoke this agent when you need to:
 
 ## Agent Workflow
 
-```
+```markdown
 1. Receive component/page specification
 2. Analyze Gatsby source (if exists)
 3. Check/generate required schemas
@@ -99,7 +99,7 @@ Invoke this agent when you need to:
 
 Multiple invocation patterns:
 
-```
+```text
 Migrate src/pages/news/article.tsx
 Migrate the team detail page
 Convert NewsCard component to Next.js
@@ -220,7 +220,7 @@ export const dynamicParams = true;
 
 ## Commits Created
 
-```
+```text
 feat(news): create ArticleLayout Storybook story
 
 Create visual source of truth for article layout with all variants
@@ -540,7 +540,7 @@ The agent can:
 
 Can migrate in phases:
 
-```
+```text
 Migrate NewsCard component only
 Migrate news page layout (skip data fetching for now)
 Add data fetching to news page

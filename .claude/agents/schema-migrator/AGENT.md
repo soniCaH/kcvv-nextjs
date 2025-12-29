@@ -66,7 +66,7 @@ Invoke this agent when you need to:
 
 ## Agent Workflow
 
-```
+```markdown
 1. Receive entity type (e.g., "node/article")
 2. Fetch sample data from Drupal API
 3. Analyze structure:
@@ -87,7 +87,7 @@ Invoke this agent when you need to:
 
 Invoke with entity type:
 
-```
+```text
 Generate schema for node/article
 Create schema for taxonomy_term/category
 Migrate schema for node/team
@@ -96,7 +96,7 @@ Update schema for node/player
 
 Or with API URL:
 
-```
+```text
 Generate schema from https://api.kcvvelewijt.be/jsonapi/node/sponsor
 ```
 
@@ -163,6 +163,8 @@ export type Article = Schema.Schema.Type<typeof ArticleSchema>;
 ```
 ````
 
+```
+
 ## Next Steps
 
 1. Review generated schema
@@ -177,7 +179,7 @@ export type Article = Schema.Schema.Type<typeof ArticleSchema>;
 ✅ Schema added to registry
 ✅ Documentation updated
 
-````
+```
 
 ## Configuration
 
@@ -199,7 +201,7 @@ export type Article = Schema.Schema.Type<typeof ArticleSchema>;
     "path": "PathSchema"
   }
 }
-````
+```
 
 ### Nullable Handling
 
@@ -427,7 +429,7 @@ export const ArticleWithRelationsSchema = Schema.Struct({
 
 The agent can update existing schemas:
 
-```
+```text
 Update schema for node/article
 ```
 

@@ -86,7 +86,7 @@ Invoke this agent when you need to:
 
 ## Agent Workflow
 
-```
+```markdown
 1. Receive component/page path or migration PR
 2. Run automated checks:
    - TypeScript compilation
@@ -109,7 +109,7 @@ Invoke this agent when you need to:
 
 Multiple invocation patterns:
 
-```
+```text
 Review the news article page
 Quality check src/components/news/NewsCard.tsx
 Audit PR #123
@@ -319,7 +319,7 @@ export const Error: Story = {
 
 #### Overall Coverage: ✅ Exceeds Target
 
-```
+```text
 Statements   : 92% (Target: 80%) ✅
 Branches     : 88% (Target: 80%) ✅
 Functions    : 95% (Target: 80%) ✅
@@ -704,7 +704,7 @@ What the agent manually reviews:
 
 ### Overall Score Calculation
 
-```
+```text
 Overall Score = (
   Code Quality * 0.25 +
   Schema Usage * 0.15 +
@@ -728,7 +728,7 @@ Overall Score = (
 
 ### After component-migrator
 
-```
+```text
 component-migrator completes
 → quality-reviewer validates
 → Reports issues
@@ -739,7 +739,7 @@ component-migrator completes
 
 ### Periodic Audits
 
-```
+```text
 quality-reviewer can audit:
 - Entire codebase
 - Specific directory

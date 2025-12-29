@@ -59,7 +59,7 @@ Invoke this agent when you need to:
 
 ## Agent Workflow
 
-```
+```markdown
 1. Receive page/component name or path
 2. Locate file in Gatsby codebase
 3. Parse and analyze:
@@ -79,7 +79,7 @@ Invoke this agent when you need to:
 
 Invoke with one of these patterns:
 
-```
+```text
 Analyze the news article page for migration
 Analyze src/pages/team-detail.tsx
 Create migration plan for ranking page
@@ -231,7 +231,7 @@ The agent returns a structured report:
 
 ### Example 1: Simple Page
 
-```
+```text
 Input: "Analyze the about page"
 
 Output:
@@ -244,7 +244,7 @@ Output:
 
 ### Example 2: Complex Page
 
-```
+```text
 Input: "Analyze src/pages/team-detail.tsx"
 
 Output:
