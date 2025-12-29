@@ -44,9 +44,10 @@ Task: ${taskName}
 
 Requirements:
 - Implement pixel-perfect recreation from Gatsby version
+- **Create Storybook stories FIRST (visual source of truth)**
 - Use Effect Schema for data validation
-- Create Storybook stories for new components
 - Write Vitest tests (>80% coverage target)
+- Visual regression tests via Playwright + Storybook
 - Add TypeScript types (strict mode)
 - Use Tailwind CSS for styling
 - Implement ISR with appropriate revalidate time
@@ -54,13 +55,14 @@ Requirements:
 Checklist:
 □ Create/update page component(s)
 □ Create/update child components
+□ **Create Storybook stories for each component (visual source of truth)**
 □ Add Effect Schema(s) if needed
 □ Create data mapper(s) if needed
-□ Add Storybook stories
 □ Write Vitest unit tests
+□ Add visual regression tests
 □ Update MIGRATION_PLAN.md phase status
 □ Test responsiveness (mobile/tablet/desktop)
-□ Verify visual parity with Gatsby version
+□ Verify components in Storybook
 □ Run quality checks (npm run check-all)
 
 Quality Gates:
@@ -77,16 +79,19 @@ Quality Gates:
 "Help me with this migration task: ${taskName}
 
 Follow the KCVV migration standards:
-- Pixel-perfect recreation
+- **Storybook stories FIRST (visual source of truth)**
+- Pixel-perfect recreation verified in Storybook
+- Visual regression testing via Playwright + Storybook
 - Effect Schema validation
 - Full test coverage
-- Storybook documentation
 - TypeScript strict mode
 
 When done:
-1. Update MIGRATION_PLAN.md with progress
-2. Run 'npm run check-all' to verify
-3. Run 'npm run migration:status' to see updated progress"
+1. Verify components in Storybook (npm run storybook)
+2. Run visual regression tests (npm run test:visual:components)
+3. Update MIGRATION_PLAN.md with progress
+4. Run 'npm run check-all' to verify
+5. Run 'npm run migration:status' to see updated progress"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `;

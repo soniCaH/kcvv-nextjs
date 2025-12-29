@@ -25,9 +25,10 @@
 2. ✅ **Switch to the branch**
 
 3. ✅ **Implement the task** following standards:
-   - Effect Schema for data
+   - **Storybook stories FIRST** (visual source of truth)
+   - Effect Schema for data validation
    - Vitest tests (>80% coverage)
-   - Storybook stories
+   - Visual regression tests via Playwright + Storybook
    - TypeScript strict mode
    - Tailwind CSS styling
 
@@ -84,7 +85,9 @@
 - [x] All tests passing
 - [x] No TypeScript errors
 - [x] No ESLint errors
-- [x] Storybook stories added
+- [x] Storybook stories created (visual source of truth)
+- [x] Visual regression tests pass
+- [x] Components verified in Storybook
 - [x] MIGRATION_PLAN.md updated
 
 ## Screenshots
