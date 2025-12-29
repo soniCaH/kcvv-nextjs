@@ -125,6 +125,37 @@ const element = page.locator('[data-testid="component"]');
 await expect(element).toHaveScreenshot("component.png");
 ```
 
+## Cross-Platform Snapshots
+
+Playwright generates platform-specific snapshots:
+
+- macOS: `*-darwin.png`
+- Linux: `*-linux.png`
+- Windows: `*-win32.png`
+
+### Generating Linux Baselines for CI
+
+Since GitHub Actions runs on Linux, you need Linux baselines. Two options:
+
+**Option 1: Let CI Generate Them (Easiest)**
+
+1. Push your code - CI will auto-generate Linux snapshots on first run
+2. Download the `linux-snapshots-to-commit` artifact from the failed workflow
+3. Extract and add the Linux snapshots to `tests/e2e/pages.spec.ts-snapshots/`
+4. Commit and push the Linux snapshots
+
+**Option 2: Generate Locally with Docker**
+
+```bash
+# Use Playwright's official Docker image
+docker run --rm -v $(pwd):/work -w /work mcr.microsoft.com/playwright:v1.57.0-jammy \
+  npm run test:visual:update
+
+# Commit the generated Linux snapshots
+git add tests/e2e/pages.spec.ts-snapshots/*-linux.png
+git commit -m "feat(tests): add Linux visual regression baselines"
+```
+
 ## Troubleshooting
 
 ### Tests Failing Due to Fonts/Images Not Loading

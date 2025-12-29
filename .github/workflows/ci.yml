@@ -83,10 +83,30 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Check for Linux snapshots
+        id: check-snapshots
+        run: |
+          if ls tests/e2e/pages.spec.ts-snapshots/*-linux.png 1> /dev/null 2>&1; then
+            echo "snapshots_exist=true" >> $GITHUB_OUTPUT
+          else
+            echo "snapshots_exist=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate Linux baselines (first run)
+        if: steps.check-snapshots.outputs.snapshots_exist == 'false'
+        run: npm run test:visual:update
+
       - name: Run visual tests (chromium)
+        if: steps.check-snapshots.outputs.snapshots_exist == 'true'
         run: npm run test:visual
-        # TODO: Expand to all browsers once baselines are generated for firefox, webkit, etc.
-        # run: npm run test:visual:ci
+
+      - name: Upload Linux snapshots for commit (first run only)
+        uses: actions/upload-artifact@v4
+        if: steps.check-snapshots.outputs.snapshots_exist == 'false'
+        with:
+          name: linux-snapshots-to-commit
+          path: tests/e2e/pages.spec.ts-snapshots/*-linux.png
+          retention-days: 30
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
