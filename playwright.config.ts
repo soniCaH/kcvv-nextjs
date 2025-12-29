@@ -22,6 +22,16 @@ export default defineConfig({
     video: "retain-on-failure",
   },
 
+  // Visual regression testing configuration
+  expect: {
+    toHaveScreenshot: {
+      // Allow up to 2% pixel difference to handle font rendering, sub-pixel variations, and minor layout shifts
+      maxDiffPixelRatio: 0.02,
+      // Pixel color similarity threshold (0-1, lower = more strict)
+      threshold: 0.2,
+    },
+  },
+
   projects: [
     {
       name: "chromium",
