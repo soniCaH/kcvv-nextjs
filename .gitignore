@@ -45,3 +45,9 @@ storybook-static
 
 # claude
 .claude/settings.local.json
+
+# playwright
+test-results/
+playwright-report/
+# NOTE: *-snapshots/ directories are INTENTIONALLY committed
+# They contain visual regression baselines that CI needs

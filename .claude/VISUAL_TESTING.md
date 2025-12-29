@@ -175,6 +175,24 @@ test.describe("Page Visual Regression Tests", () => {
 - **Component screenshots:** `tests/visual/components.spec.ts-snapshots/`
 - **Page screenshots:** `tests/e2e/pages.spec.ts-snapshots/`
 
+### Git Commit Strategy
+
+**COMMIT to git (required):**
+
+- ✅ `tests/visual/components.spec.ts-snapshots/` - Component baselines
+- ✅ `tests/e2e/pages.spec.ts-snapshots/` - Page baselines
+
+**IGNORE (in .gitignore):**
+
+- ❌ `test-results/` - Test execution results
+- ❌ `playwright-report/` - HTML test reports
+
+**Why commit baselines?**
+
+- CI/CD needs baselines to compare against
+- Other developers need consistent visual references
+- Tracks visual changes over time in git history
+
 ### When to Update Baselines
 
 ✅ **DO update baselines when:**
@@ -231,6 +249,48 @@ webServer: {
   timeout: 120 * 1000,
 }
 ```
+
+### Automatic Server Startup
+
+**IMPORTANT:** Playwright automatically starts the required server before running tests.
+
+**How it works:**
+
+1. You run `npm run test:visual:components`
+2. Playwright checks if `http://localhost:6006` is available
+3. If not available, it runs `npm run storybook` automatically
+4. Tests run once server is ready
+5. Server stays running after tests (for reuse)
+
+**Similarly for page tests:**
+
+1. You run `npm run test:visual:pages`
+2. Playwright checks if `http://localhost:3000` is available
+3. If not available, it runs `npm run dev` automatically
+4. Tests run once server is ready
+
+**Common Issues:**
+
+❌ **Wrong server running:**
+If you have another Next.js project on port 3000, tests will use that instead!
+
+**Solution:** Always stop other dev servers before running visual tests.
+
+**Check what's running on a port:**
+
+```bash
+# Check port 3000
+lsof -ti:3000
+
+# Kill process on port 3000
+kill -9 $(lsof -ti:3000)
+
+# Check port 6006
+lsof -ti:6006
+```
+
+**In CI/CD:**
+Set `reuseExistingServer: false` in CI mode to ensure fresh server start.
 
 ## Coverage Requirements
 
