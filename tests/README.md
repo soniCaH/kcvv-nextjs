@@ -129,12 +129,23 @@ await expect(element).toHaveScreenshot("component.png");
 
 ### Tests Failing Due to Fonts/Images Not Loading
 
-Add wait conditions:
+Add deterministic wait conditions:
 
 ```typescript
+// Wait for network resources (fonts, stylesheets, etc.)
 await page.waitForLoadState("networkidle");
-await page.waitForTimeout(500); // For animations
+
+// Wait for specific images to be visible
+await page.waitForSelector("img[src]", { state: "visible" });
+
+// Wait for page content using locators
+await page.locator('[data-testid="content"]').waitFor();
+
+// Or wait for multiple elements
+await page.locator("img").first().waitFor({ state: "visible" });
 ```
+
+**Note**: Avoid using `page.waitForTimeout()` as it creates flaky tests. Always use deterministic waits that check for specific conditions.
 
 ### Flaky Tests
 

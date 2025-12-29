@@ -5,7 +5,7 @@
  * with deterministic mock data. This allows Next.js server-side rendering
  * to work during tests without relying on external services.
  *
- * Run with: node tests/mock-api-server.js
+ * Run with: node tests/mock-api-server.mjs
  */
 
 import http from "node:http";
