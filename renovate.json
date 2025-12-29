@@ -4,14 +4,15 @@
     "config:recommended",
     ":semanticCommits",
     ":dependencyDashboard",
-    ":timezone(Europe/Brussels)"
+    ":timezone(Europe/Brussels)",
+    "group:nextjsMonorepo",
+    "security:openssf-scorecard"
   ],
+  "enabledManagers": ["npm", "nvm", "github-actions", "dockerfile"],
   "packageRules": [
     {
       "description": "Security/vulnerability fixes with 🔒",
-      "matchUpdateTypes": [
-        "patch"
-      ],
+      "matchUpdateTypes": ["patch"],
       "isVulnerabilityAlert": true,
       "commitMessagePrefix": "🔒 ",
       "semanticCommitType": "fix",
@@ -20,9 +21,7 @@
     },
     {
       "description": "Pin dependencies with 📌",
-      "matchUpdateTypes": [
-        "pin"
-      ],
+      "matchUpdateTypes": ["pin"],
       "commitMessagePrefix": "📌 ",
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps",
@@ -30,9 +29,7 @@
     },
     {
       "description": "Digest/hash updates with 📌",
-      "matchUpdateTypes": [
-        "digest"
-      ],
+      "matchUpdateTypes": ["digest"],
       "commitMessagePrefix": "📌 ",
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps",
@@ -40,9 +37,7 @@
     },
     {
       "description": "Major updates with 💥",
-      "matchUpdateTypes": [
-        "major"
-      ],
+      "matchUpdateTypes": ["major"],
       "commitMessagePrefix": "💥 ",
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps",
@@ -50,9 +45,7 @@
     },
     {
       "description": "Minor updates with ⬆️",
-      "matchUpdateTypes": [
-        "minor"
-      ],
+      "matchUpdateTypes": ["minor"],
       "commitMessagePrefix": "⬆️ ",
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps",
@@ -60,9 +53,7 @@
     },
     {
       "description": "Patch updates with ⬆️",
-      "matchUpdateTypes": [
-        "patch"
-      ],
+      "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "⬆️ ",
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps",
@@ -70,9 +61,7 @@
     },
     {
       "description": "Rollback/downgrade with ⬇️",
-      "matchUpdateTypes": [
-        "rollback"
-      ],
+      "matchUpdateTypes": ["rollback"],
       "commitMessagePrefix": "⬇️ ",
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps",
@@ -80,9 +69,7 @@
     },
     {
       "description": "Replacement packages with 🔄",
-      "matchUpdateTypes": [
-        "replacement"
-      ],
+      "matchUpdateTypes": ["replacement"],
       "commitMessagePrefix": "🔄 ",
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps",
@@ -90,36 +77,23 @@
     },
     {
       "description": "Automerge non-major updates",
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "pin",
-        "digest"
-      ],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "automerge": true
     },
     {
       "description": "Automerge devDependencies",
-      "matchDepTypes": [
-        "devDependencies"
-      ],
+      "matchDepTypes": ["devDependencies"],
       "automerge": true
     },
     {
       "description": "Group ESLint packages",
       "groupName": "eslint packages",
-      "matchPackageNames": [
-        "/^eslint/",
-        "/^@eslint//"
-      ]
+      "matchPackageNames": ["/^eslint/", "/^@eslint//"]
     },
     {
       "description": "Group React types together (including overrides)",
       "groupName": "react types",
-      "matchPackageNames": [
-        "@types/react",
-        "@types/react-dom"
-      ]
+      "matchPackageNames": ["@types/react", "@types/react-dom"]
     },
     {
       "description": "Group TypeScript packages",
@@ -133,24 +107,35 @@
     },
     {
       "description": "Separate major Next.js updates",
-      "matchPackageNames": [
-        "next"
-      ],
-      "matchUpdateTypes": [
-        "major"
-      ],
+      "matchPackageNames": ["next"],
+      "matchUpdateTypes": ["major"],
       "automerge": false,
-      "labels": [
-        "dependencies",
-        "major-update"
-      ]
+      "labels": ["dependencies", "major-update"]
+    },
+    {
+      "description": "Auto-update .nvmrc minor/patch (Node.js)",
+      "matchManagers": ["nvm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "labels": ["node-version"]
+    },
+    {
+      "description": "Major Node.js updates need manual review",
+      "matchManagers": ["nvm"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["node-version", "major-update"]
+    },
+    {
+      "description": "Sync @types/node with Node.js major version from .nvmrc",
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "24.x",
+      "commitMessageTopic": "@types/node (aligned with .nvmrc)"
     }
   ],
   "vulnerabilityAlerts": {
     "enabled": true,
-    "labels": [
-      "security"
-    ],
+    "labels": ["security"],
     "automerge": false,
     "commitMessagePrefix": "🔒 ",
     "semanticCommitType": "fix",
@@ -159,16 +144,12 @@
   },
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": [
-      "before 3am on Monday"
-    ],
+    "schedule": ["before 3am on Monday"],
     "commitMessagePrefix": "🔧 ",
     "commitMessageAction": "chore(deps): update",
     "commitMessageTopic": "lock files"
   },
-  "labels": [
-    "dependencies"
-  ],
+  "labels": ["dependencies"],
   "rangeStrategy": "pin",
   "semanticCommits": "enabled",
   "commitMessagePrefix": "⬆️ ",
