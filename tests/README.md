@@ -4,7 +4,7 @@ This directory contains visual regression tests for the KCVV Next.js migration.
 
 ## Directory Structure
 
-```
+```text
 tests/
 ├── e2e/              # End-to-end page tests (full Next.js app)
 ├── visual/           # Component visual tests (Storybook)
