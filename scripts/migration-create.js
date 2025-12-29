@@ -93,14 +93,14 @@ When done:
 
 console.log(template);
 
-// Optional: Save to clipboard if available (requires clipboardy package)
+// Optional: Save to clipboard if available
 try {
-  require("child_process").execSync(
-    `echo "${template.replace(/"/g, '\\"')}" | pbcopy`,
-    {
-      stdio: "ignore",
-    },
-  );
+  const { execSync } = require("child_process");
+  // Use stdin instead of echo to avoid escaping issues
+  execSync("pbcopy", {
+    input: template,
+    stdio: ["pipe", "ignore", "ignore"],
+  });
   console.log("\n✅ Task template copied to clipboard!\n");
 } catch (e) {
   // Clipboard not available, that's fine
