@@ -106,6 +106,12 @@
       ]
     },
     {
+      "description": "Only allow stable TypeScript versions (no dev/beta/rc)",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "!/-(dev|beta|rc|alpha|next)/",
+      "commitMessageTopic": "TypeScript (stable only)"
+    },
+    {
       "description": "Separate major Next.js updates",
       "matchPackageNames": ["next"],
       "matchUpdateTypes": ["major"],
