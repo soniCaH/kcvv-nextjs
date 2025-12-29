@@ -12,10 +12,10 @@ import { DateFromStringOrDate } from './common.schema'
 export class FootbalistoClub extends S.Class<FootbalistoClub>('FootbalistoClub')({
   id: S.Number,
   name: S.String,
-  logo: S.optional(S.String),
-  abbreviation: S.optional(S.String),
-  logoSmall: S.optional(S.String),
-  version: S.optional(S.Number),
+  logo: S.optional(S.NullOr(S.String)),
+  abbreviation: S.optional(S.NullOr(S.String)),
+  logoSmall: S.optional(S.NullOr(S.String)),
+  version: S.optional(S.NullOr(S.Number)),
 }) {}
 
 /**

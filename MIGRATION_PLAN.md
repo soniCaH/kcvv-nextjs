@@ -1605,29 +1605,28 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ⏳ Add search functionality
 - ✅ Dynamic content rendering with ISR
 
-### Status: PARTIALLY COMPLETE
+### Status: MOSTLY COMPLETE (Updated 2025-12-29)
 
 **Completed:**
 - ✅ Layout components (PageHeader, Navigation, MobileMenu, PageFooter) 100% complete
 - ✅ Effect services for Drupal and Footbalisto working
-- ✅ Base UI components (Button, Card, Icon, Spinner) tested
+- ✅ Base UI components (Button, Card, Icon, Spinner, SocialLinks) tested
 - ✅ Article detail pages working with ISR
 - ✅ News overview with pagination (9 per page, 3-column grid)
 - ✅ Category filtering with slug-based URLs
 - ✅ Published articles filter
 - ✅ CategoryFilters component with scroll arrows
+- ✅ Homepage with FeaturedArticles carousel, LatestNews, UpcomingMatches
+- ✅ Sponsors page fully implemented
+- ✅ Club organogram page
+- ✅ Help page (/hulp)
 - ✅ Storybook configured and working
-- ✅ All 164 tests passing
+- ✅ 564 tests passing (up from 164)
 - ✅ Visual parity with Gatsby achieved
 
-**Verification Results (2025-11-21):**
-- ✅ Main news page (`/news`) loads successfully with 9 articles
-- ✅ Category filtering works (`/news?category=jeugd`, `/news?category=evenement`, `/news?category=ploeg`)
-- ✅ Article detail pages render correctly (`/news/2025-06-20-definitieve-reeksindeling-3e-nationale-bis`)
-- ✅ 16 category filters displayed with scroll arrows on all screen sizes
-- ✅ Slug-based filtering using taxonomy term ID lookup
-- ✅ 118 total articles in Drupal
-- ⚠️ Minor issue: Category page titles don't change (metadata not dynamic)
+**Still To Do:**
+- ⏳ Search functionality (/search page)
+- ⏳ Privacy page (/privacy)
 
 ### Components Created
 
@@ -1759,21 +1758,470 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 ---
 
-## Phases 3-8 (Weeks 4-10)
+## Phase 3: Team & Player Features (Weeks 6-7) ⏳ NOT STARTED
 
-The detailed implementation continues following the same pattern:
-- Extract existing component/page structure
-- Recreate pixel-perfect with Tailwind
-- Write tests (unit + visual regression)
-- Verify all features work identically
-- Document any differences
+### Goals
+- Build player profile pages with dynamic routes
+- Create youth team overview pages
+- Implement team detail pages with rosters and schedules
+- Add player stats and biographical information
+- Build player card sharing feature (QR codes)
 
-Each phase builds on previous work, maintaining:
-- Component reusability
-- Full type safety
-- Test coverage
-- Visual parity
+### Routes to Implement
+**From Gatsby sitemap: 500+ player pages, 15+ team pages**
+
+#### 3.1: Player Profile Pages ⏳
+**Route:** `/player/[slug]`
+- Player biographical info (name, position, number, birth date)
+- Player photo with next/image optimization
+- Team affiliation and history
+- Statistics and achievements
+- Player card sharing feature with QR code
+- Social media links
+
+**Schema:**
+- Use existing `PlayerSchema` from `src/lib/effect/schemas/player.schema.ts`
+- Add stats schema if available from Drupal
+
+**Components to Create:**
+- `PlayerProfile` - Main profile container
+- `PlayerCard` - Visual player card (photo, number, name, position)
+- `PlayerStats` - Statistics table
+- `PlayerBio` - Biography and personal info
+- `PlayerShare` - Share card with QR code (use `qrcode.react`)
+- `PlayerTeamHistory` - Team affiliation timeline
+
+**Features:**
+- ISR with 1-hour revalidation
+- Dynamic OG images for social sharing
+- Print-friendly player cards
+- generateStaticParams for all 500+ players
+
+#### 3.2: Youth Team Pages ⏳
+**Routes:**
+- `/jeugd` - Youth main overview
+- `/jeugd/u6`, `/jeugd/u7`, `/jeugd/u8`, `/jeugd/u9`
+- `/jeugd/u10` through `/jeugd/u17`
+- `/jeugd/u21`
+- `/jeugd/u8-wit` (special white team)
+
+**Components to Create:**
+- `TeamOverview` - List all youth teams
+- `TeamCard` - Team teaser card (age group, coach, photo)
+- `TeamDetail` - Full team page (roster, schedule, standings)
+- `TeamRoster` - Player grid with photos and positions
+- `TeamSchedule` - Match schedule calendar
+- `TeamStandings` - League standings table (if applicable)
+- `CoachProfile` - Coach info component
+
+**Features:**
+- Team roster with player links
+- Match schedule integration with Footbalisto
+- Team photos and group shots
+- Coach contact information
+- Training schedule
+
+#### 3.3: Match Detail Pages ⏳
+**Route:** `/game/[matchId]`
+
+**Components to Create:**
+- `MatchDetail` - Full match page container
+- `MatchHeader` - Match hero (teams, score, date, venue)
+- `MatchLineup` - Starting XI and substitutes
+- `MatchStats` - Match statistics (possession, shots, cards)
+- `MatchEvents` - Timeline (goals, cards, substitutions)
+- `MatchReport` - Written match report (if available)
+- `MatchGallery` - Photo gallery from match
+
+**Footbalisto Integration:**
+- Use existing `FootbalistoService`
+- Add `getMatchById` method (already exists)
+- Real-time score updates with ISR (5-minute revalidation during match day)
+
+### Deliverables
+- ⏳ 500+ player profile pages with ISR
+- ⏳ 15+ youth team pages
+- ⏳ Match detail pages with live scores
+- ⏳ Player sharing feature with QR codes
+- ⏳ Team rosters and schedules
+- ⏳ Full test coverage for all components
+
+---
+
+## Phase 4: Calendar & Events (Week 8) ⏳ NOT STARTED
+
+### Goals
+- Build calendar views for matches and events
+- Create event detail pages
+- Implement "Scheurkalender" (tear-off calendar) feature
+- Add internal club calendar
+
+### Routes to Implement
+**From Gatsby sitemap: 4 calendar/event pages**
+
+#### 4.1: Main Calendar Page ⏳
+**Route:** `/calendar`
+
+**Components to Create:**
+- `Calendar` - Main calendar component with month/week/day views
+- `CalendarEvent` - Event card/item
+- `CalendarFilters` - Filter by team, event type, etc.
+- `CalendarLegend` - Color-coded legend (matches, events, training)
+
+**Features:**
+- Month, week, and day views
+- Filter by team (A, B, youth teams)
+- Filter by event type (match, training, event, meeting)
+- Export to iCal/Google Calendar
+- Responsive mobile view
+
+**Data Sources:**
+- Footbalisto matches
+- Drupal events (node--event content type)
+
+#### 4.2: Events Page ⏳
+**Route:** `/events`
+
+**Components to Create:**
+- `EventsList` - Event listing with filters
+- `EventCard` - Event teaser card
+- `EventDetail` - Full event page (if not inline)
+- `EventRegistration` - Registration form (if applicable)
+
+**Event Types:**
+- Club events (BBQ, celebrations, fundraisers)
+- Youth activities
+- General meetings
+- Volunteer opportunities
+
+#### 4.3: Scheurkalender ⏳
+**Route:** `/scheurkalender`
+
+**Special Feature:**
+- Digital tear-off calendar showing upcoming matches
+- Daily view with match details
+- Print-friendly format
+- Could be displayed on clubhouse screen/kiosk
+
+#### 4.4: Internal Club Calendar ⏳
+**Route:** `/internal/clubcalendar`
+
+**Features:**
+- Full club schedule (all teams, all events)
+- Printable format
+- Facility booking overview (if available)
+- Administrative view
+
+### Deliverables
+- ⏳ Calendar views (month/week/day)
+- ⏳ Event listing and detail pages
+- ⏳ Scheurkalender feature
+- ⏳ Internal club calendar
+- ⏳ iCal export functionality
+
+---
+
+## Phase 5: Club Information Pages (Week 8-9) ⏳ NOT STARTED
+
+### Goals
+- Migrate all club info pages
+- Create contact forms
+- Build downloads/documents section
+- Implement club history timeline
+- Create registration forms
+
+### Routes to Implement
+**From Gatsby sitemap: 10+ club pages**
+
+#### 5.1: Contact Page ⏳
+**Route:** `/club/contact`
+
+**Components to Create:**
+- `ContactForm` - Contact form with validation
+- `ContactInfo` - Club address, phone, email
+- `ContactMap` - Embedded map to club location
+- `BoardMembers` - Board member directory with photos
+
+**Features:**
+- Form validation with Effect Schema
+- Email delivery (serverless function)
+- CAPTCHA/spam protection
+- Multiple contact categories (general, youth, sponsorship)
+
+#### 5.2: Club History ⏳
+**Route:** `/club/history`
+
+**Components to Create:**
+- `HistoryTimeline` - Interactive timeline
+- `HistoryMilestone` - Milestone card (founding, championships, mergers)
+- `HistoryGallery` - Historical photos
+- `HistoryStats` - Club statistics over time
+
+**Features:**
+- Interactive timeline (1980, 1982, 2025)
+- Historical photos and documents
+- Championship history
+- Notable players/coaches
+
+#### 5.3: Downloads Page ⏳
+**Route:** `/club/downloads`
+
+**Components to Create:**
+- `DownloadsList` - File listing with categories
+- `DownloadCard` - File card (name, size, date, category)
+- `DownloadFilters` - Filter by category
+
+**File Categories:**
+- Club documents (statutes, regulations)
+- Training schedules
+- Forms (registration, medical, photo consent)
+- Newsletters
+- Sponsorship packages
+
+#### 5.4: Registration Page ⏳
+**Route:** `/club/register`
+
+**Components to Create:**
+- `RegistrationForm` - Multi-step registration form
+- `RegistrationSteps` - Step indicator
+- `RegistrationConfirmation` - Success page
+
+**Features:**
+- Multi-step form (personal info, medical, payment)
+- Age-based team assignment
+- File upload (medical certificate, photo)
+- Payment integration (if applicable)
+
+#### 5.5: Board Pages ⏳
+**Routes:** `/club/bestuur`, `/club/jeugdbestuur`
+
+**Components to Create:**
+- `BoardMembers` - Board member grid
+- `BoardMember` - Member card (photo, role, contact)
+- `BoardStructure` - Organizational chart (reuse from `/club/organogram`)
+
+**Features:**
+- Main board (`/club/bestuur`)
+- Youth board (`/club/jeugdbestuur`)
+- Contact information per role
+- Photos and bios
+
+#### 5.6: Special Club Pages ⏳
+**Routes:**
+- `/club/angels` - Club Angels program
+- `/club/cashless` - Cashless payment info
+- `/club/ultras` - Supporters group
+
+**Components:**
+- Page-specific content components
+- Info sections with images
+- Call-to-action buttons
+- Contact forms where applicable
+
+### Deliverables
+- ⏳ Contact page with working form
+- ⏳ Club history timeline
+- ⏳ Downloads section with file management
+- ⏳ Registration forms
+- ⏳ Board member pages
+- ⏳ Special club pages (Angels, Cashless, Ultras)
+
+---
+
+## Phase 6: Search & Utility Pages (Week 9) ⏳ NOT STARTED
+
+### Goals
+- Implement global search functionality
+- Build search results page
+- Create privacy policy page
+- Add share functionality
+
+### Routes to Implement
+
+#### 6.1: Search Page ⏳
+**Route:** `/search?q={query}`
+
+**Components to Create:**
+- `SearchForm` - Search input with autocomplete
+- `SearchResults` - Results listing with filters
+- `SearchResult` - Individual result card
+- `SearchFilters` - Filter by content type (articles, players, teams, events)
+- `SearchPagination` - Results pagination
+
+**Search Implementation Options:**
+
+**Option A: Client-Side Search (Simple)**
+- Fetch all content on page load
+- Use Fuse.js for fuzzy search
+- Fast for small datasets (<1000 items)
+- Works with static export
+
+**Option B: API Route Search (Recommended)**
+- Create `/api/search` route
+- Search Drupal JSON:API with filters
+- Paginated results
+- Better for large datasets
+
+**Option C: Algolia/MeiliSearch (Advanced)**
+- External search service
+- Real-time indexing
+- Instant search with autocomplete
+- Costs money (Algolia) or self-hosted (MeiliSearch)
+
+**Search Scope:**
+- Articles (title, body, tags)
+- Players (name, position, team)
+- Teams (name, age group)
+- Events (title, description, date)
+- Club pages (title, content)
+
+**Features:**
+- Autocomplete suggestions
+- Recent searches
+- Search filters (content type, date range)
+- Highlighted search terms in results
+- Empty state with suggestions
+
+#### 6.2: Privacy Policy ⏳
+**Route:** `/privacy`
+
+**Simple page with:**
+- Privacy policy content from Drupal
+- GDPR compliance information
+- Cookie policy
+- Data retention policies
+- Contact for privacy questions
+
+#### 6.3: Share Page ⏳
+**Route:** `/share` (purpose unclear - check Gatsby)
+
+**Possible implementations:**
+- Generic social sharing page
+- Player card sharing interface
+- Match result sharing tool
+
+### Deliverables
+- ⏳ Global search functionality
+- ⏳ Search results page with filters
+- ⏳ Privacy policy page
+- ⏳ Share functionality
+
+---
+
+## Phase 7: Kiosk Mode (Week 9) ⏳ NOT STARTED
+
+### Goals
+- Build fullscreen kiosk displays for clubhouse
+- Auto-rotating content
+- Match schedules and results
+- Team standings
+
+### Routes to Implement
+**From Gatsby sitemap: 6 kiosk pages**
+
+#### 7.1: Kiosk Pages ⏳
+**Routes:**
+- `/kiosk/a` - A-team display
+- `/kiosk/b` - B-team display
+- `/kiosk/previous` - Recent results
+- `/kiosk/upcoming` - Upcoming matches
+- `/kiosk/ranking/a` - A-team standings
+- `/kiosk/ranking/b` - B-team standings
+- `/kiosk/ranking/u21` - U21 standings
+
+**Kiosk Features:**
+- Fullscreen layout (no header/footer)
+- Auto-refresh every 5 minutes
+- Auto-rotate between screens
+- Large, readable text
+- High contrast colors
+- No user interaction required
+
+**Components to Create:**
+- `KioskLayout` - Fullscreen container
+- `KioskMatches` - Large match display
+- `KioskRanking` - Large standings table
+- `KioskClock` - Current time display
+- `KioskNews` - Latest news ticker
+
+**Technical Requirements:**
+- ISR with 5-minute revalidation
+- Prevent screen sleep (meta tags)
+- Auto-rotation JavaScript
+- Error recovery (auto-reload on failure)
+
+### Use Cases
+- TV display in clubhouse
+- Digital signage at matches
+- Lobby information screen
+
+### Deliverables
+- ⏳ 6 kiosk display pages
+- ⏳ Auto-rotation functionality
+- ⏳ Fullscreen layouts
+- ⏳ Auto-refresh with ISR
+
+---
+
+## Phase 8: QA, Testing & Deployment (Week 10) ⏳ NOT STARTED
+
+### Goals
+- Comprehensive testing across all pages
+- Visual regression testing
 - Performance optimization
+- Accessibility audit
+- Production deployment
+
+### Tasks
+
+#### 8.1: Testing ⏳
+- ✅ Unit tests (564 passing)
+- ⏳ E2E tests for critical flows
+- ⏳ Visual regression tests for all pages
+- ⏳ Accessibility testing (WCAG 2.1 AA)
+- ⏳ Cross-browser testing (Chrome, Firefox, Safari, Edge)
+- ⏳ Mobile testing (iOS Safari, Android Chrome)
+- ⏳ Performance testing (Lighthouse)
+
+#### 8.2: Performance Optimization ⏳
+- ⏳ Analyze bundle size
+- ⏳ Optimize images (already using next/image)
+- ⏳ Implement route prefetching
+- ⏳ Add loading skeletons
+- ⏳ Optimize ISR revalidation times
+- ⏳ Configure CDN caching headers
+
+#### 8.3: SEO & Metadata ⏳
+- ⏳ Generate sitemap.xml
+- ⏳ Configure robots.txt
+- ⏳ Add structured data (JSON-LD)
+- ⏳ Verify all meta tags
+- ⏳ Set up 301 redirects from Gatsby URLs
+- ⏳ Submit to Google Search Console
+
+#### 8.4: Deployment ⏳
+**Staging:**
+- ⏳ Deploy to Vercel preview
+- ⏳ Run full test suite
+- ⏳ UAT with stakeholders
+- ⏳ Performance testing
+
+**Production:**
+- ⏳ Configure environment variables
+- ⏳ Set up Drupal webhooks for on-demand revalidation
+- ⏳ Configure analytics (Google Tag Manager)
+- ⏳ Set up error monitoring (Sentry)
+- ⏳ Deploy to production domain
+- ⏳ Update DNS records
+- ⏳ Monitor for 48 hours
+- ⏳ Decommission Gatsby site
+
+### Deliverables
+- ⏳ All tests passing
+- ⏳ Performance: Lighthouse score >90
+- ⏳ Zero accessibility violations
+- ⏳ Production deployment
+- ⏳ Monitoring and error tracking
 
 ---
 
@@ -1981,18 +2429,394 @@ import { QRCodeSVG } from 'qrcode.react'
 
 ---
 
+## Phase 9: NEW FEATURES - Beyond Gatsby Migration 💡
+
+### Modern Features Not in Current Gatsby Site
+
+These are suggestions for new features that could significantly enhance the KCVV website beyond the current Gatsby implementation:
+
+#### 9.1: Real-Time Match Updates ⚡
+**New Feature**
+- Live score updates during matches (WebSockets or polling)
+- Live match commentary
+- Push notifications for goals (with user opt-in)
+- Live player substitutions display
+- Match statistics updating in real-time
+
+**Technical Implementation:**
+- Server-Sent Events (SSE) for real-time updates
+- React Query for automatic refetching
+- Optimistic UI updates
+- PWA notifications
+
+**User Benefits:**
+- Fans can follow matches in real-time
+- No need to refresh page manually
+- Better engagement during match days
+
+---
+
+#### 9.2: Progressive Web App (PWA) 📱
+**New Feature**
+- Install website as app on mobile/desktop
+- Offline support for reading cached news
+- Push notifications for important updates
+- Add to home screen functionality
+- App-like navigation experience
+
+**Technical Implementation:**
+- Next.js PWA plugin
+- Service Worker for offline caching
+- Web App Manifest
+- Push notification API
+- Background sync
+
+**User Benefits:**
+- Access news offline
+- Faster load times on repeat visits
+- Native app-like experience
+- Push notifications for matches/news
+
+---
+
+#### 9.3: Dark Mode 🌙
+**New Feature**
+- System preference detection
+- Manual toggle switch
+- Persistent user preference (localStorage)
+- Smooth transition animations
+- Optimized for OLED screens
+
+**Technical Implementation:**
+- next-themes package
+- CSS variables for theming
+- Tailwind dark: prefix
+- localStorage persistence
+- Respect system preferences
+
+**User Benefits:**
+- Better readability at night
+- Battery saving on OLED
+- Modern user expectation
+- Accessibility improvement
+
+---
+
+#### 9.4: Advanced Match Statistics & Visualizations 📊
+**New Feature**
+- Interactive charts for team performance
+- Player heat maps
+- Shot maps and xG (expected goals)
+- Historical performance trends
+- Head-to-head comparisons
+- Season progress visualization
+
+**Technical Implementation:**
+- Chart.js or Recharts for visualizations
+- D3.js for advanced graphics
+- Footbalisto API extended data
+- CSV export functionality
+- Interactive tooltips
+
+**User Benefits:**
+- Deeper insights into team performance
+- Visual engagement with statistics
+- Better understanding of tactics
+- Data-driven fan discussions
+
+---
+
+#### 9.5: Fan Engagement Features 🎉
+**New Feature**
+- Man of the Match voting (fan polls)
+- Match prediction game
+- Photo upload for fans at matches
+- Fan wall/testimonials
+- Birthday celebrations for players
+- Fan of the month spotlight
+
+**Technical Implementation:**
+- Voting system with duplicate prevention
+- Cloudinary or Uploadcare for image uploads
+- Moderation queue for submitted content
+- Leaderboards for prediction game
+- Social sharing integration
+
+**User Benefits:**
+- Increased fan engagement
+- Community building
+- User-generated content
+- Gamification elements
+
+---
+
+#### 9.6: Enhanced Media Gallery 📸
+**New Feature**
+- Photo albums by match/event
+- Lightbox with keyboard navigation
+- Facial recognition tagging (AI)
+- Download high-res photos
+- Video highlights integration
+- Instagram feed integration
+
+**Technical Implementation:**
+- Drupal Media Library integration
+- Next.js Image Gallery component
+- Cloudinary transformations
+- Video.js or Plyr for video playback
+- Instagram API integration
+
+**User Benefits:**
+- Better photo browsing experience
+- Easy photo downloads
+- Find photos of specific players
+- Integrated social media content
+
+---
+
+#### 9.7: Personalization & User Accounts 👤
+**New Feature**
+- User registration and login
+- Favorite players/teams
+- Personalized news feed
+- Email newsletter subscriptions
+- Comment system on articles
+- Save articles for later
+- Custom match notifications
+
+**Technical Implementation:**
+- NextAuth.js for authentication
+- User profile database (Supabase/PostgreSQL)
+- JWT tokens
+- Email service (SendGrid/Mailgun)
+- Comment moderation system
+- Subscription preferences
+
+**User Benefits:**
+- Tailored content experience
+- Stay updated on favorite players
+- Engage with community
+- Manage communications
+
+---
+
+#### 9.8: Interactive Seating/Ticketing Info 🎫
+**New Feature**
+- Stadium seating map (if applicable)
+- Ticket availability checker
+- Match day information
+- Directions and parking
+- Weather forecast for match day
+- Public transport information
+
+**Technical Implementation:**
+- SVG interactive seating map
+- Integration with ticket provider API
+- Google Maps integration
+- Weather API (OpenWeatherMap)
+- Public transport API
+
+**User Benefits:**
+- Easy ticket planning
+- Match day logistics info
+- Weather-appropriate clothing
+- Transportation planning
+
+---
+
+#### 9.9: Youth Player Development Tracking 📈
+**New Feature**
+- Training attendance tracking
+- Skill progression visualization
+- Coach feedback system
+- Parent portal
+- Growth charts
+- Achievement badges
+
+**Technical Implementation:**
+- Secure parent login portal
+- Dashboard with visualizations
+- Drupal custom content type
+- Privacy-first design (GDPR)
+- PDF report generation
+
+**User Benefits:**
+- Parents see child's progress
+- Coaches track development
+- Motivational for young players
+- Transparent communication
+
+---
+
+#### 9.10: Sponsor Showcase & ROI Dashboard 💼
+**New Feature**
+- Enhanced sponsor profiles
+- Sponsor news/blogs
+- Click tracking and analytics
+- ROI reports for sponsors
+- Rotating banner ads
+- Sponsor of the month
+- Downloadable sponsorship packages
+
+**Technical Implementation:**
+- Sponsor admin dashboard
+- Analytics tracking (Plausible/Umami)
+- Automated PDF generation
+- Banner rotation system
+- Lead capture forms
+
+**User Benefits (Club):**
+- Better sponsor relationships
+- Show value to sponsors
+- Attract new sponsors
+- Professional presentation
+
+**User Benefits (Fans):**
+- Learn about club supporters
+- Support local businesses
+- Exclusive sponsor offers
+
+---
+
+#### 9.11: Mobile-First Match Day Experience 📱⚽
+**New Feature**
+- Dedicated match day page
+- Live lineup updates
+- Goal celebrations (confetti animation)
+- Fan reactions (emoji voting)
+- Share celebrations to social media
+- Match predictions before kickoff
+- Post-match player ratings
+
+**Technical Implementation:**
+- Real-time database (Firebase/Supabase)
+- Optimistic UI updates
+- Celebration animations (Framer Motion)
+- Social sharing APIs
+- Rating aggregation
+
+**User Benefits:**
+- Engaging second-screen experience
+- Community connection during matches
+- Easy sharing of celebrations
+- Interactive fan participation
+
+---
+
+#### 9.12: Content Recommendations 🎯
+**New Feature**
+- "Read next" suggestions on articles
+- Related players on team pages
+- Similar matches in history
+- Personalized homepage content
+- Trending articles
+- Popular this week section
+
+**Technical Implementation:**
+- Content similarity algorithm
+- View tracking (privacy-friendly)
+- Collaborative filtering
+- Tag-based recommendations
+- Time-decay for trending
+
+**User Benefits:**
+- Discover relevant content
+- Longer session duration
+- Better content exploration
+- Personalized experience
+
+---
+
+### Priority Recommendations
+
+**High Priority (Implement Soon):**
+1. ✅ PWA functionality - Modern expectation, big impact
+2. ✅ Dark mode - Easy win, high user demand
+3. ✅ Enhanced media gallery - Lots of photos to showcase
+4. ✅ Real-time match updates - Core football club need
+
+**Medium Priority (Consider After Launch):**
+1. Fan engagement features - Build community
+2. Advanced statistics - Differentiate from other clubs
+3. User accounts & personalization - Sticky features
+4. Mobile match day experience - Event-driven engagement
+
+**Lower Priority (Future Enhancements):**
+1. Youth development tracking - Nice-to-have
+2. Sponsor dashboard - Internal tool
+3. Ticketing integration - Depends on infrastructure
+4. Content recommendations - Optimization phase
+
+---
+
+## Technology Additions for New Features
+
+**New Dependencies Needed:**
+
+```json
+{
+  "dependencies": {
+    // PWA
+    "@ducanh2912/next-pwa": "^10.x",
+
+    // Authentication
+    "next-auth": "^5.x",
+    "@auth/prisma-adapter": "^2.x",
+
+    // Real-time
+    "socket.io-client": "^4.x",
+
+    // Charts & Visualizations
+    "recharts": "^2.x",
+    "d3": "^7.x",
+
+    // Dark Mode
+    "next-themes": "^0.4.x",
+
+    // Image Gallery
+    "yet-another-react-lightbox": "^3.x",
+    "embla-carousel-react": "^8.x", // Already have this
+
+    // Forms
+    "react-hook-form": "^7.x",
+    "@hookform/resolvers": "^3.x",
+
+    // Video
+    "react-player": "^2.x",
+
+    // Date/Time
+    "date-fns": "^4.x" // Alternative to Luxon
+  },
+  "devDependencies": {
+    "@types/d3": "^7.x"
+  }
+}
+```
+
+---
+
 ## Next Steps
 
-1. ✅ Review this planning document
-2. ⏳ Begin Phase 0: Design System Extraction
-3. Extract SCSS variables and Foundation settings
-4. Create DESIGN_SYSTEM.md
-5. Configure Tailwind with brand tokens
-6. Set up testing infrastructure
-7. Create visual regression baseline
+### Immediate Actions (Updated 2025-12-29):
+
+**Phase 2 Remaining Work:**
+1. ⏳ Implement search functionality (/search page)
+2. ⏳ Add privacy policy page (/privacy)
+3. ⏳ Fix category page title metadata issue
+
+**Begin Phase 3:**
+1. ⏳ Start player profile pages migration (500+ pages)
+2. ⏳ Implement youth team pages
+3. ⏳ Build match detail pages
+
+**New Features (After Migration Complete):**
+1. Evaluate PWA implementation
+2. Plan dark mode rollout
+3. Design real-time match updates architecture
+4. Prototype enhanced media gallery
 
 ---
 
 **End of Migration Plan**
 
-This document will be updated throughout the migration as we complete each phase and discover new requirements.
+This document will be updated throughout the migration as we complete each phase and discover new requirements. The detailed Phase 3-8 breakdown provides a clear roadmap for completing the Gatsby migration, while Phase 9 offers exciting possibilities for modern features that will set KCVV Elewijt's website apart from typical football club sites.
