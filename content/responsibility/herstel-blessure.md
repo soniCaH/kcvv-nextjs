@@ -12,7 +12,7 @@ keywords:
   - comeback
   - opnieuw spelen
 category: medisch
-icon: 💪
+icon: zap
 primaryContact:
   role: Trainer
   department: jeugdbestuur

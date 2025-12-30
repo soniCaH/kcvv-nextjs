@@ -11,7 +11,7 @@ keywords:
   - dokter
   - medisch
 category: administratief
-icon: 📋
+icon: clipboard-list
 primaryContact:
   role: Secretaris
   email: secretaris@kcvvelewijt.be

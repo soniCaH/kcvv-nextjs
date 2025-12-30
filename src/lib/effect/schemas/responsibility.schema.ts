@@ -162,7 +162,7 @@ export class SolutionStepSchema extends S.Class<SolutionStepSchema>(
  *   question: "heb een ongeval op training/wedstrijd",
  *   keywords: ["ongeval", "blessure", "letsel"],
  *   category: "medisch",
- *   icon: "🏥",
+ *   icon: "heart",
  *   primaryContact: {
  *     role: "Verzekeringverantwoordelijke",
  *     email: "verzekering@kcvvelewijt.be",
@@ -213,8 +213,8 @@ export class ResponsibilityPathSchema extends S.Class<ResponsibilityPathSchema>(
   category: CategorySchema,
 
   /**
-   * Emoji icon for visual representation
-   * @example "🏥", "⚽", "📝"
+   * Lucide icon name for visual representation
+   * @example "heart", "trophy", "file-text"
    */
   icon: S.optional(S.String),
 

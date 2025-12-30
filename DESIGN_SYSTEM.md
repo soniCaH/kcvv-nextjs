@@ -410,7 +410,7 @@ boxShadow: {
 
 **Arrow Button** (`.btn--arrow`)
 
-- **Icon**: FontAwesome arrow right (`\F178`)
+- **Icon**: Lucide ArrowRight
 - **Icon Position**: Right side, animated on hover
 - **Mobile**: Full width (`display: block`)
 

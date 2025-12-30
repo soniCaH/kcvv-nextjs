@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * ArticleMetadata Component
@@ -6,40 +6,40 @@
  * Matches Gatsby visual: gradient border, small font, desktop sidebar layout
  */
 
-import Link from 'next/link'
-import { Icon } from '@/components/ui'
-import { FaClock, FaTags, FaFacebookF, FaTwitter } from 'react-icons/fa'
-import { FacebookShareButton, TwitterShareButton } from 'react-share'
-import { cn } from '@/lib/utils/cn'
+import Link from "next/link";
+import { Icon } from "@/components/ui";
+import { Clock, Tag, Facebook, Twitter } from "@/lib/icons";
+import { FacebookShareButton, TwitterShareButton } from "react-share";
+import { cn } from "@/lib/utils/cn";
 
 export interface ArticleMetadataProps {
   /**
    * Article author name
    */
-  author: string
+  author: string;
   /**
    * Publication date (formatted string)
    */
-  date: string
+  date: string;
   /**
    * Article tags with links
    */
   tags?: Array<{
-    name: string
-    href: string
-  }>
+    name: string;
+    href: string;
+  }>;
   /**
    * Share configuration
    */
   shareConfig?: {
-    url: string
-    title: string
-    twitterHandle?: string
-  }
+    url: string;
+    title: string;
+    twitterHandle?: string;
+  };
   /**
    * Additional CSS classes
    */
-  className?: string
+  className?: string;
 }
 
 /**
@@ -65,13 +65,13 @@ export const ArticleMetadata = ({
   return (
     <section
       className={cn(
-        'article-metadata-border',
-        'relative w-full mt-4 mb-3 p-3 text-xs',
+        "article-metadata-border",
+        "relative w-full mt-4 mb-3 p-3 text-xs",
         // Mobile: bottom border only
-        'border-b',
+        "border-b",
         // Desktop: left + bottom border, max-width, flex column, no shrink, self-start
-        'lg:border-l lg:max-w-[20rem] lg:flex lg:flex-col lg:shrink-0 lg:self-start',
-        className
+        "lg:border-l lg:max-w-[20rem] lg:flex lg:flex-col lg:shrink-0 lg:self-start",
+        className,
       )}
     >
       {/* Author */}
@@ -83,14 +83,14 @@ export const ArticleMetadata = ({
       <div className="flex justify-between flex-wrap lg:flex-col">
         {/* Date */}
         <span className="flex items-center gap-1 mb-2">
-          <Icon icon={<FaClock />} size="xs" />
+          <Icon icon={Clock} size="xs" />
           {date}
         </span>
 
         {/* Tags */}
         {tags.length > 0 && (
           <span className="flex items-center gap-1 flex-wrap mb-2">
-            <Icon icon={<FaTags />} size="xs" />
+            <Icon icon={Tag} size="xs" />
             {tags.map((tag, i) => (
               <Link
                 key={i}
@@ -113,22 +113,22 @@ export const ArticleMetadata = ({
               url={shareConfig.url}
               className="flex items-center gap-2 px-3 py-2 border border-[#3b5998] rounded text-[#3b5998] hover:bg-[#3b5998] hover:text-white transition-colors text-xs font-bold uppercase"
             >
-              <Icon icon={<FaFacebookF />} size="xs" />
+              <Icon icon={Facebook} size="xs" />
               Facebook
             </FacebookShareButton>
             <TwitterShareButton
               url={shareConfig.url}
               title={shareConfig.title}
-              via={shareConfig.twitterHandle?.replace('@', '')}
+              via={shareConfig.twitterHandle?.replace("@", "")}
               hashtags={tags.map((tag) => tag.name)}
               className="flex items-center gap-2 px-3 py-2 border border-[#1da1f2] rounded text-[#1da1f2] hover:bg-[#1da1f2] hover:text-white transition-colors text-xs font-bold uppercase"
             >
-              <Icon icon={<FaTwitter />} size="xs" />
+              <Icon icon={Twitter} size="xs" />
               Twitter
             </TwitterShareButton>
           </div>
         </div>
       )}
-      </section>
-  )
-}
+    </section>
+  );
+};

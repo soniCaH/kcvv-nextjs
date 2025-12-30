@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * SocialLinks Component
@@ -6,9 +6,9 @@
  * Supports different variants: circle (footer), inline (mobile menu), etc.
  */
 
-import { Icon } from '@/components/ui'
-import { FaFacebookF, FaTwitter, FaInstagram } from 'react-icons/fa'
-import { cn } from '@/lib/utils/cn'
+import { Icon } from "@/components/ui";
+import { Facebook, Twitter, Instagram } from "@/lib/icons";
+import { cn } from "@/lib/utils/cn";
 
 export interface SocialLinksProps {
   /**
@@ -16,38 +16,38 @@ export interface SocialLinksProps {
    * - circle: Circular buttons with borders (footer style)
    * - inline: Simple inline links (mobile menu style)
    */
-  variant?: 'circle' | 'inline'
+  variant?: "circle" | "inline";
   /**
    * Size of icons
    */
-  size?: 'sm' | 'md' | 'lg'
+  size?: "sm" | "md" | "lg";
   /**
    * Additional CSS classes
    */
-  className?: string
+  className?: string;
   /**
    * Layout direction
    */
-  direction?: 'horizontal' | 'vertical'
+  direction?: "horizontal" | "vertical";
 }
 
 const socialLinks = [
   {
-    name: 'Facebook',
-    url: 'https://facebook.com/KCVVElewijt/',
-    icon: <FaFacebookF />,
+    name: "Facebook",
+    url: "https://facebook.com/KCVVElewijt/",
+    icon: Facebook,
   },
   {
-    name: 'Twitter',
-    url: 'https://twitter.com/kcvve',
-    icon: <FaTwitter />,
+    name: "Twitter",
+    url: "https://twitter.com/kcvve",
+    icon: Twitter,
   },
   {
-    name: 'Instagram',
-    url: 'https://www.instagram.com/kcvve',
-    icon: <FaInstagram />,
+    name: "Instagram",
+    url: "https://www.instagram.com/kcvve",
+    icon: Instagram,
   },
-]
+];
 
 /**
  * Social media links component with multiple variants
@@ -58,39 +58,39 @@ const socialLinks = [
  * - Hover: Border color changes to green bright
  */
 export const SocialLinks = ({
-  variant = 'circle',
-  size = 'md',
+  variant = "circle",
+  size = "md",
   className,
-  direction = 'horizontal',
+  direction = "horizontal",
 }: SocialLinksProps) => {
-  if (variant === 'circle') {
+  if (variant === "circle") {
     // Size configurations for circle variant
     const sizeClasses = {
       sm: {
-        container: 'w-6 h-6',      // 24px circle
-        text: 'text-xs',           // 12px icon
-        lineHeight: 'calc(1.5rem - 4px)', // Adjust for border
+        container: "w-6 h-6", // 24px circle
+        text: "text-xs", // 12px icon
+        lineHeight: "calc(1.5rem - 4px)", // Adjust for border
       },
       md: {
-        container: 'w-8 h-8',      // 32px circle (default)
-        text: 'text-sm',           // 14px icon
-        lineHeight: 'calc(2rem - 4px)',
+        container: "w-8 h-8", // 32px circle (default)
+        text: "text-sm", // 14px icon
+        lineHeight: "calc(2rem - 4px)",
       },
       lg: {
-        container: 'w-10 h-10',    // 40px circle
-        text: 'text-base',         // 16px icon
-        lineHeight: 'calc(2.5rem - 4px)',
+        container: "w-10 h-10", // 40px circle
+        text: "text-base", // 16px icon
+        lineHeight: "calc(2.5rem - 4px)",
       },
-    }
+    };
 
-    const sizeConfig = sizeClasses[size]
+    const sizeConfig = sizeClasses[size];
 
     return (
       <ul
         className={cn(
-          'flex list-none m-0 p-0',
-          direction === 'horizontal' ? 'flex-row gap-3' : 'flex-col gap-2',
-          className
+          "flex list-none m-0 p-0",
+          direction === "horizontal" ? "flex-row gap-3" : "flex-col gap-2",
+          className,
         )}
       >
         {socialLinks.map((link) => (
@@ -101,11 +101,11 @@ export const SocialLinks = ({
               rel="noopener noreferrer"
               aria-label={link.name}
               className={cn(
-                'flex items-center justify-center rounded-full',
-                'border-2 border-[#787C80] text-white',
-                'transition-all duration-300 hover:border-kcvv-green-bright',
+                "flex items-center justify-center rounded-full",
+                "border-2 border-[#787C80] text-white",
+                "transition-all duration-300 hover:border-kcvv-green-bright",
                 sizeConfig.container,
-                sizeConfig.text
+                sizeConfig.text,
               )}
               style={{
                 lineHeight: sizeConfig.lineHeight,
@@ -116,16 +116,16 @@ export const SocialLinks = ({
           </li>
         ))}
       </ul>
-    )
+    );
   }
 
   // Inline variant (for mobile menu)
   return (
     <div
       className={cn(
-        'flex',
-        direction === 'horizontal' ? 'flex-row gap-4' : 'flex-col gap-2',
-        className
+        "flex",
+        direction === "horizontal" ? "flex-row gap-4" : "flex-col gap-2",
+        className,
       )}
     >
       {socialLinks.map((link) => (
@@ -141,5 +141,5 @@ export const SocialLinks = ({
         </a>
       ))}
     </div>
-  )
-}
+  );
+};

@@ -12,7 +12,7 @@ keywords:
   - paastage
   - voetbalkamp
 category: administratief
-icon: ⚽
+icon: activity
 primaryContact:
   role: Evenementencoördinator
   email: evenementen@kcvvelewijt.be

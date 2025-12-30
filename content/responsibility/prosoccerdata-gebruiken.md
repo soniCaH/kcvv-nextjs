@@ -13,7 +13,7 @@ keywords:
   - account
   - toegang
 category: algemeen
-icon: 📱
+icon: smartphone
 primaryContact:
   role: Technisch Coördinator
   email: technisch@kcvvelewijt.be

@@ -14,7 +14,7 @@ keywords:
   - grensoverschrijdend
   - melding
 category: gedrag
-icon: 🛡️
+icon: shield
 primaryContact:
   role: Voorzitter
   email: voorzitter@kcvvelewijt.be
