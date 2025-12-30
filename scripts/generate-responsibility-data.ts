@@ -13,6 +13,7 @@
 
 import fs from "fs/promises";
 import path from "path";
+import { spawn } from "child_process";
 import { Schema as S } from "effect";
 import { parseResponsibilityMarkdown } from "./parsers/responsibility-markdown";
 import {
@@ -255,6 +256,32 @@ async function writeTypeScriptFile(content: string) {
 }
 
 /**
+ * Format file with Prettier
+ */
+async function formatWithPrettier(filePath: string): Promise<void> {
+  console.log("🎨 Formatting with Prettier...\n");
+
+  return new Promise((resolve, reject) => {
+    const prettier = spawn("npx", ["prettier", "--write", filePath], {
+      stdio: "inherit",
+    });
+
+    prettier.on("close", (code) => {
+      if (code === 0) {
+        console.log("✅ Formatting complete\n");
+        resolve();
+      } else {
+        reject(new Error(`Prettier exited with code ${code}`));
+      }
+    });
+
+    prettier.on("error", (err) => {
+      reject(err);
+    });
+  });
+}
+
+/**
  * Main function
  */
 async function main() {
@@ -274,6 +301,9 @@ async function main() {
 
     // Write to file
     await writeTypeScriptFile(typescript);
+
+    // Format with Prettier
+    await formatWithPrettier(OUTPUT_FILE);
 
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("  ✅ Build Complete!");
