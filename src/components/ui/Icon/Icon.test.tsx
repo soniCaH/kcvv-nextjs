@@ -78,46 +78,59 @@ describe("Icon", () => {
 
   describe("Colors", () => {
     it("should use current color by default", () => {
-      render(<Icon icon={Activity} data-testid="icon-wrapper" />);
-      expect(screen.getByTestId("icon-wrapper")).toBeInTheDocument();
+      const { container } = render(
+        <Icon icon={Activity} data-testid="icon-wrapper" />,
+      );
+      const svg = container.querySelector("svg");
+      expect(svg).toHaveAttribute("stroke", "currentColor");
     });
 
     it("should apply primary color", () => {
-      render(
+      const { container } = render(
         <Icon icon={Activity} data-testid="icon-wrapper" color="primary" />,
       );
-      expect(screen.getByTestId("icon-wrapper")).toBeInTheDocument();
+      const svg = container.querySelector("svg");
+      expect(svg).toHaveAttribute("stroke", "var(--color-kcvv-green-bright)");
     });
 
     it("should apply secondary color", () => {
-      render(
+      const { container } = render(
         <Icon icon={Activity} data-testid="icon-wrapper" color="secondary" />,
       );
-      expect(screen.getByTestId("icon-wrapper")).toBeInTheDocument();
+      const svg = container.querySelector("svg");
+      expect(svg).toHaveAttribute("stroke", "var(--color-kcvv-gray)");
     });
 
     it("should apply success color", () => {
-      render(
+      const { container } = render(
         <Icon icon={Activity} data-testid="icon-wrapper" color="success" />,
       );
-      expect(screen.getByTestId("icon-wrapper")).toBeInTheDocument();
+      const svg = container.querySelector("svg");
+      expect(svg).toHaveAttribute("stroke", "var(--color-kcvv-success)");
     });
 
     it("should apply warning color", () => {
-      render(
+      const { container } = render(
         <Icon icon={Activity} data-testid="icon-wrapper" color="warning" />,
       );
-      expect(screen.getByTestId("icon-wrapper")).toBeInTheDocument();
+      const svg = container.querySelector("svg");
+      expect(svg).toHaveAttribute("stroke", "var(--color-kcvv-warning)");
     });
 
     it("should apply error color", () => {
-      render(<Icon icon={Activity} data-testid="icon-wrapper" color="error" />);
-      expect(screen.getByTestId("icon-wrapper")).toBeInTheDocument();
+      const { container } = render(
+        <Icon icon={Activity} data-testid="icon-wrapper" color="error" />,
+      );
+      const svg = container.querySelector("svg");
+      expect(svg).toHaveAttribute("stroke", "var(--color-kcvv-alert)");
     });
 
     it("should apply muted color", () => {
-      render(<Icon icon={Activity} data-testid="icon-wrapper" color="muted" />);
-      expect(screen.getByTestId("icon-wrapper")).toBeInTheDocument();
+      const { container } = render(
+        <Icon icon={Activity} data-testid="icon-wrapper" color="muted" />,
+      );
+      const svg = container.querySelector("svg");
+      expect(svg).toHaveAttribute("stroke", "var(--color-gray--medium)");
     });
   });
 
@@ -138,10 +151,10 @@ describe("Icon", () => {
 
     it("should accept aria-label", () => {
       const { container } = render(
-        <Icon icon={Activity} aria-label="Football icon" />,
+        <Icon icon={Activity} aria-label="Activity icon" />,
       );
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper).toHaveAttribute("aria-label", "Football icon");
+      expect(wrapper).toHaveAttribute("aria-label", "Activity icon");
     });
   });
 

@@ -49,53 +49,56 @@ export function ResponsibilityFinder({
     if (!questionText.trim() && !selectedRole) return [];
 
     const query = questionText.toLowerCase();
-    const matches: AutocompleteSuggestion[] = [];
 
-    responsibilityPaths.forEach((path) => {
-      let score = 0;
+    const matches = responsibilityPaths.reduce<AutocompleteSuggestion[]>(
+      (acc, path) => {
+        let score = 0;
 
-      // Filter by role first (required match)
-      if (selectedRole && !path.role.includes(selectedRole as UserRole)) {
-        return; // Skip if role doesn't match
-      } else if (selectedRole) {
-        score += 30; // Boost if role matches
-      }
-
-      // Match against question text
-      if (query) {
-        const questionLower = path.question.toLowerCase();
-
-        // Exact match in question
-        if (questionLower.includes(query)) {
-          score += 50;
+        // Filter by role first (required match)
+        if (selectedRole && !path.role.includes(selectedRole as UserRole)) {
+          return acc; // Skip if role doesn't match
         }
 
-        // Keyword matching (case-insensitive)
-        const matchedKeywords = path.keywords.filter((kw) => {
-          const kwLower = kw.toLowerCase();
-          return kwLower.includes(query) || query.includes(kwLower);
-        });
-        score += matchedKeywords.length * 10;
+        if (selectedRole) {
+          score += 30; // Boost if role matches
+        }
 
-        // Word-by-word matching
-        const queryWords = query.split(" ").filter((w) => w.length > 2);
-        queryWords.forEach((word) => {
-          if (questionLower.includes(word)) score += 5;
-          path.keywords.forEach((kw) => {
+        // Match against question text
+        if (query) {
+          const questionLower = path.question.toLowerCase();
+
+          // Exact match in question
+          if (questionLower.includes(query)) {
+            score += 50;
+          }
+
+          // Keyword matching (case-insensitive)
+          const matchedKeywords = path.keywords.filter((kw) => {
             const kwLower = kw.toLowerCase();
-            if (kwLower.includes(word)) score += 3;
+            return kwLower.includes(query) || query.includes(kwLower);
           });
-        });
-      }
+          score += matchedKeywords.length * 10;
 
-      // Only include if there's some match
-      if (score > 0 || (!query && selectedRole)) {
-        matches.push({
-          path,
-          score,
-        });
-      }
-    });
+          // Word-by-word matching
+          const queryWords = query.split(" ").filter((w) => w.length > 2);
+          queryWords.forEach((word) => {
+            if (questionLower.includes(word)) score += 5;
+            path.keywords.forEach((kw) => {
+              const kwLower = kw.toLowerCase();
+              if (kwLower.includes(word)) score += 3;
+            });
+          });
+        }
+
+        // Only include if there's some match
+        if (score > 0 || (!query && selectedRole)) {
+          return [...acc, { path, score }];
+        }
+
+        return acc;
+      },
+      [],
+    );
 
     // Sort by score (highest first)
     return matches.sort((a, b) => b.score - a.score).slice(0, 6);
