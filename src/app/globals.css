@@ -110,6 +110,9 @@
   --color-kcvv-green-300: rgba(74, 207, 82, 0.75);
   --color-kcvv-green-alt: #BADA55;
 
+  /* Ring Colors for Focus States */
+  --color-ring-kcvv-green: #4acf52;
+
   /* Neutral Colors */
   --color-kcvv-black: #1E2024;
   --color-kcvv-gray-blue: #31404b;

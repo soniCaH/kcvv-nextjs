@@ -528,5 +528,4 @@ export const userRoles: { value: string; label: string }[] = [
   { value: "trainer", label: "Trainer" },
   { value: "supporter", label: "Supporter" },
   { value: "niet-lid", label: "Niet-lid" },
-  { value: "andere", label: "Andere" },
 ];

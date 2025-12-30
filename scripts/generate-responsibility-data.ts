@@ -233,7 +233,6 @@ function generateTypeScriptFile(data: readonly ResponsibilityPath[]): string {
   lines.push("  { value: 'trainer', label: 'Trainer' },");
   lines.push("  { value: 'supporter', label: 'Supporter' },");
   lines.push("  { value: 'niet-lid', label: 'Niet-lid' },");
-  lines.push("  { value: 'andere', label: 'Andere' },");
   lines.push("]");
   lines.push("");
 
