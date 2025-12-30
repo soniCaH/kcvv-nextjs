@@ -4,18 +4,18 @@
  * Matches Gatsby visual: styled links with underline animation, external link icons
  */
 
-import { cn } from '@/lib/utils/cn'
-import { convertDrupalImagesToAbsolute } from '@/lib/utils/drupal-content'
+import { cn } from "@/lib/utils/cn";
+import { convertDrupalImagesToAbsolute } from "@/lib/utils/drupal-content";
 
 export interface ArticleBodyProps {
   /**
    * HTML content to display
    */
-  content: string
+  content: string;
   /**
    * Additional CSS classes
    */
-  className?: string
+  className?: string;
 }
 
 /**
@@ -32,7 +32,7 @@ export interface ArticleBodyProps {
  */
 export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
   // Convert relative Drupal image URLs to absolute URLs
-  const processedContent = convertDrupalImagesToAbsolute(content)
+  const processedContent = convertDrupalImagesToAbsolute(content);
 
   return (
     <>
@@ -54,12 +54,12 @@ export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
               background-size: 100% 100%;
               cursor: pointer;
             }
-            /* External links - FontAwesome icon */
+            /* External links - Unicode external link icon */
             .article-body a[target="_blank"]:after {
-              font-family: FontAwesome;
               display: inline-block;
-              content: '\\f08e';
-              margin-left: 0.5em;
+              content: '↗';
+              margin-left: 0.25em;
+              font-size: 0.875em;
             }
 
             /* Blockquote - large green opening quote */
@@ -247,14 +247,14 @@ export const ArticleBody = ({ content, className }: ArticleBodyProps) => {
 
       <div
         className={cn(
-          'article-body',
-          'p-3 text-sm mt-4',
-          '[70rem]:mr-8 [70rem]:pt-3 [70rem]:px-0 [70rem]:pb-5 [70rem]:text-base',
-          'lg:flex-grow lg:min-w-0',
-          className
+          "article-body",
+          "p-3 text-sm mt-4",
+          "[70rem]:mr-8 [70rem]:pt-3 [70rem]:px-0 [70rem]:pb-5 [70rem]:text-base",
+          "lg:flex-grow lg:min-w-0",
+          className,
         )}
         dangerouslySetInnerHTML={{ __html: processedContent }}
       />
     </>
-  )
-}
+  );
+};
