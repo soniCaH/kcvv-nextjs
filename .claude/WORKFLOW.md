@@ -32,16 +32,20 @@
    - Tailwind CSS styling
 
 4. ✅ **Commit as I go** with conventional commits:
-   - `migrate(ranking): add ranking table component`
-   - `feat(calendar): implement match calendar view`
-   - `fix(sponsors): resolve grid layout issue`
+   - **Before each commit**, run quality checks:
+     - `npm run lint:fix` (minimum)
+     - OR `npm run check-all` (preferred for final commits)
+   - Fix any errors found
+   - Then commit with conventional format:
+     - `migrate(ranking): add ranking table component`
+     - `feat(calendar): implement match calendar view`
+     - `fix(sponsors): resolve grid layout issue`
 
-5. ✅ **Run quality checks** before finalizing:
-   - `npm run check-all`
+   **Why?** Pre-commit hooks run lint-staged, type-check, and tests. Running checks first ensures commits succeed on first attempt.
 
-6. ✅ **Push to remote** when ready
+5. ✅ **Push to remote** when ready
 
-7. ❓ **Ask about PR:**
+6. ❓ **Ask about PR:**
 
    ```
    I've completed the ranking page migration. The branch is pushed.
@@ -116,14 +120,56 @@
 
 **Scopes:** `news`, `matches`, `teams`, `players`, `sponsors`, `calendar`, `ranking`, `api`, `ui`, `schema`, `migration`, `config`, `deps`
 
+## Git Commit Workflow
+
+**CRITICAL:** Always run quality checks BEFORE attempting to commit.
+
+### The Workflow
+
+1. **Make code changes**
+2. **Run quality checks:**
+   ```bash
+   npm run lint:fix           # Minimum (auto-fixes linting)
+   # OR
+   npm run check-all          # Preferred (lint + type-check + tests + build)
+   ```
+3. **Fix any errors** reported by the checks
+4. **Then commit:**
+   ```bash
+   git add -A
+   git commit -m "type(scope): description"
+   ```
+
+### Why This Matters
+
+The pre-commit hooks run:
+
+- ✅ `lint-staged` (ESLint fix + Prettier + related tests)
+- ✅ `npm run type-check` (full TypeScript check)
+- ✅ `npm test` (full test suite)
+
+If you commit without pre-checking:
+
+- ❌ Commit fails on first attempt
+- ❌ You fix the issues
+- ❌ Second commit attempt succeeds
+- ❌ This wastes time and creates confusion
+
+If you run checks first:
+
+- ✅ Issues are caught and fixed
+- ✅ Commit succeeds on first attempt
+- ✅ Pre-commit hook acts as final safety net
+- ✅ Smooth workflow
+
 ## Quality Gates
 
-Before pushing, I verify:
+Before committing, I verify:
 
-- ✅ ESLint passes
-- ✅ TypeScript passes
-- ✅ All tests pass
-- ✅ Build succeeds
+- ✅ ESLint passes (`npm run lint:fix`)
+- ✅ TypeScript passes (`npm run type-check`)
+- ✅ All tests pass (`npm test`)
+- ✅ Build succeeds (`npm run build`) - for final commits
 
 ## Examples
 
@@ -258,7 +304,8 @@ Me: [Commits current work-in-progress]
 
 - Create appropriate feature branch automatically
 - Use conventional commit format
-- Run quality checks before pushing
+- **Run `npm run lint:fix` (minimum) or `npm run check-all` (preferred) BEFORE each commit**
+- Fix all errors before attempting to commit
 - Ask before creating PRs
 - Update MIGRATION_PLAN.md for migrations
 - Keep commits clean and atomic
@@ -266,6 +313,7 @@ Me: [Commits current work-in-progress]
 ❌ **I will never:**
 
 - Create PR without asking
+- Commit without running quality checks first
 - Push broken code
 - Skip quality checks
 - Force push without warning
