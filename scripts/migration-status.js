@@ -301,7 +301,6 @@ function displayStatus() {
   log(colors.bold, "\n💡 Quick Commands:");
   console.log();
   log(colors.gray, "  npm run test              Run all unit tests");
-  log(colors.gray, "  npm run test:visual       Run visual regression tests");
   log(colors.gray, "  npm run storybook         View component documentation");
   log(colors.gray, "  npm run type-check        TypeScript type checking");
   log(colors.gray, "  npm run check-all         Run all quality checks");
