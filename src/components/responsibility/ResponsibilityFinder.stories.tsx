@@ -10,14 +10,14 @@
  * - Mobile responsive
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { ResponsibilityFinder } from './ResponsibilityFinder'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { ResponsibilityFinder } from "./ResponsibilityFinder";
 
 const meta = {
-  title: 'Features/ResponsibilityFinder',
+  title: "Features/ResponsibilityFinder",
   component: ResponsibilityFinder,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
     docs: {
       description: {
         component: `
@@ -44,24 +44,24 @@ The **ResponsibilityFinder** helps users quickly find the right contact person b
       },
     },
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     compact: {
-      control: 'boolean',
-      description: 'Compact mode for homepage integration',
+      control: "boolean",
+      description: "Compact mode for homepage integration",
       table: {
-        defaultValue: { summary: 'false' },
+        defaultValue: { summary: "false" },
       },
     },
     onResultSelect: {
-      action: 'result-selected',
-      description: 'Callback when user selects a result',
+      action: "result-selected",
+      description: "Callback when user selects a result",
     },
   },
-} satisfies Meta<typeof ResponsibilityFinder>
+} satisfies Meta<typeof ResponsibilityFinder>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * Default full-size variant for the dedicated /hulp page
@@ -71,11 +71,12 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Full-size version with large typography (4xl-6xl) for maximum readability.',
+        story:
+          "Full-size version with large typography (4xl-6xl) for maximum readability.",
       },
     },
   },
-}
+};
 
 /**
  * Compact variant for homepage integration
@@ -87,11 +88,12 @@ export const Compact: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Compact version (2xl-4xl) perfect for homepage blocks or smaller sections.',
+        story:
+          "Compact version (2xl-4xl) perfect for homepage blocks or smaller sections.",
       },
     },
   },
-}
+};
 
 /**
  * With mobile viewport to test responsiveness
@@ -100,15 +102,16 @@ export const Mobile: Story = {
   args: {},
   parameters: {
     viewport: {
-      defaultViewport: 'mobile1',
+      defaultViewport: "mobile1",
     },
     docs: {
       description: {
-        story: 'Mobile-optimized view showing touch-friendly buttons and stacked layout.',
+        story:
+          "Mobile-optimized view showing touch-friendly buttons and stacked layout.",
       },
     },
   },
-}
+};
 
 /**
  * Tablet viewport
@@ -117,15 +120,15 @@ export const Tablet: Story = {
   args: {},
   parameters: {
     viewport: {
-      defaultViewport: 'tablet',
+      defaultViewport: "tablet",
     },
     docs: {
       description: {
-        story: 'Tablet view showing responsive layout adaptation.',
+        story: "Tablet view showing responsive layout adaptation.",
       },
     },
   },
-}
+};
 
 /**
  * Interactive test: User selects role and searches
@@ -136,11 +139,12 @@ export const WithRoleSelected: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Demonstrates the interaction flow: selecting a role reveals the question input. Click any role button to test!',
+        story:
+          "Demonstrates the interaction flow: selecting a role reveals the question input. Click any role button to test!",
       },
     },
   },
-}
+};
 
 /**
  * Interactive test: Full search flow
@@ -151,11 +155,12 @@ export const WithSearchResults: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Full interaction: select a role (e.g., "Ouder") and type a query (e.g., "inschrijv") to see autocomplete suggestions appear. Try it yourself!',
+        story:
+          'Full interaction: select a role (e.g., "Ouder") and type a query (e.g., "inschrijv") to see autocomplete suggestions appear. Try it yourself!',
       },
     },
   },
-}
+};
 
 /**
  * Interactive test: Selecting a suggestion
@@ -166,11 +171,12 @@ export const WithResultSelected: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Complete flow: select a role (e.g., "Speler") → type query (e.g., "ongeval") → click suggestion → view result card with contact info and steps. Try it yourself!',
+        story:
+          'Complete flow: select a role (e.g., "Speler") → type query (e.g., "ongeval") → click suggestion → view result card with contact info and steps. Try it yourself!',
       },
     },
   },
-}
+};
 
 /**
  * All user roles showcased
@@ -180,30 +186,44 @@ export const AllRoles: Story = {
   render: () => (
     <div className="space-y-6">
       <h3 className="text-2xl font-bold">Available Roles</h3>
-      <p className="text-gray-dark">Users can select from these roles to filter relevant questions:</p>
+      <p className="text-gray-dark">
+        Users can select from these roles to filter relevant questions:
+      </p>
       <ResponsibilityFinder />
       <div className="mt-4 p-4 bg-gray-50 rounded-lg">
         <h4 className="font-bold mb-2">Role Types:</h4>
         <ul className="list-disc list-inside space-y-1 text-sm">
-          <li><strong>Speler</strong> - Active players</li>
-          <li><strong>Ouder</strong> - Parents of players</li>
-          <li><strong>Trainer</strong> - Coaches and trainers</li>
-          <li><strong>Supporter</strong> - Fans and supporters</li>
-          <li><strong>Niet-lid</strong> - Non-members (sponsors, volunteers)</li>
-          <li><strong>Andere</strong> - Other categories</li>
+          <li>
+            <strong>Speler</strong> - Active players
+          </li>
+          <li>
+            <strong>Ouder</strong> - Parents of players
+          </li>
+          <li>
+            <strong>Trainer</strong> - Coaches and trainers
+          </li>
+          <li>
+            <strong>Supporter</strong> - Fans and supporters
+          </li>
+          <li>
+            <strong>Niet-lid</strong> - Non-members (sponsors, volunteers)
+          </li>
+          <li>
+            <strong>Andere</strong> - Other categories
+          </li>
         </ul>
       </div>
     </div>
   ),
   parameters: {
-    layout: 'padded',
+    layout: "padded",
     docs: {
       description: {
-        story: 'Overview of all available user roles with descriptions.',
+        story: "Overview of all available user roles with descriptions.",
       },
     },
   },
-}
+};
 
 /**
  * Keyboard navigation test
@@ -216,11 +236,11 @@ export const KeyboardNavigation: Story = {
       config: {
         rules: [
           {
-            id: 'label',
+            id: "label",
             enabled: true,
           },
           {
-            id: 'button-name',
+            id: "button-name",
             enabled: true,
           },
         ],
@@ -228,11 +248,12 @@ export const KeyboardNavigation: Story = {
     },
     docs: {
       description: {
-        story: 'Tests keyboard navigation and accessibility compliance. Use Tab to navigate, Enter/Space to select roles, and type to search. All interactive elements are keyboard accessible.',
+        story:
+          "Tests keyboard navigation and accessibility compliance. Use Tab to navigate, Enter/Space to select roles, and type to search. All interactive elements are keyboard accessible.",
       },
     },
   },
-}
+};
 
 /**
  * Compact vs Full size comparison
@@ -263,14 +284,14 @@ export const SizeComparison: Story = {
     </div>
   ),
   parameters: {
-    layout: 'padded',
+    layout: "padded",
     docs: {
       description: {
-        story: 'Side-by-side comparison of full and compact variants.',
+        story: "Side-by-side comparison of full and compact variants.",
       },
     },
   },
-}
+};
 
 /**
  * Real-world integration example
@@ -296,7 +317,10 @@ export const HomepageIntegration: Story = {
         </div>
 
         <div className="mt-8 text-center">
-          <a href="/hulp" className="text-green-main hover:text-green-hover font-semibold">
+          <a
+            href="/hulp"
+            className="text-green-main hover:text-green-hover font-semibold"
+          >
             Bekijk alle veelgestelde vragen →
           </a>
         </div>
@@ -304,14 +328,15 @@ export const HomepageIntegration: Story = {
     </section>
   ),
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
     docs: {
       description: {
-        story: 'Real-world example showing how the component integrates into a homepage section.',
+        story:
+          "Real-world example showing how the component integrates into a homepage section.",
       },
     },
   },
-}
+};
 
 /**
  * Dark mode variant (if supported)
@@ -327,15 +352,15 @@ export const DarkMode: Story = {
   ],
   parameters: {
     backgrounds: {
-      default: 'dark',
+      default: "dark",
     },
     docs: {
       description: {
-        story: 'Testing component appearance on dark backgrounds.',
+        story: "Testing component appearance on dark backgrounds.",
       },
     },
   },
-}
+};
 
 /**
  * Accessibility test story
@@ -344,41 +369,41 @@ export const AccessibilityTest: Story = {
   args: {},
   parameters: {
     a11y: {
-      context: '#storybook-root',
+      context: "#storybook-root",
       config: {
         rules: [
           {
-            id: 'color-contrast',
+            id: "color-contrast",
             enabled: true,
           },
           {
-            id: 'label',
+            id: "label",
             enabled: true,
           },
           {
-            id: 'button-name',
+            id: "button-name",
             enabled: true,
           },
           {
-            id: 'input-image-alt',
+            id: "input-image-alt",
             enabled: true,
           },
         ],
       },
       options: {
         runOnly: {
-          type: 'tag',
-          values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
+          type: "tag",
+          values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"],
         },
       },
     },
     docs: {
       description: {
-        story: 'Comprehensive accessibility testing with axe-core.',
+        story: "Comprehensive accessibility testing with axe-core.",
       },
     },
   },
-}
+};
 
 /**
  * Interactive playground
@@ -390,11 +415,12 @@ export const Playground: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Interactive playground to test different configurations. Use the controls panel to customize!',
+        story:
+          "Interactive playground to test different configurations. Use the controls panel to customize!",
       },
     },
   },
-}
+};
 
 /**
  * Performance test with many interactions
@@ -405,8 +431,233 @@ export const PerformanceTest: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Performance test: rapidly switch between roles (Speler → Ouder → Trainer) and type/delete text to test smooth UX and responsiveness. Component should remain smooth during heavy interaction.',
+        story:
+          "Performance test: rapidly switch between roles (Speler → Ouder → Trainer) and type/delete text to test smooth UX and responsiveness. Component should remain smooth during heavy interaction.",
       },
     },
   },
-}
+};
+
+/**
+ * VISUAL IMPROVEMENTS (Issue #435)
+ * The following stories document the visual design enhancements
+ */
+
+/**
+ * Inline dropdown role selector with green border
+ * Shows "Ik ben [dropdown ↓] en ik [search]" layout
+ */
+export const InlineDropdownDesign: Story = {
+  args: {},
+  parameters: {
+    docs: {
+      description: {
+        story: `
+**Visual Improvement #1: Inline Dropdown**
+
+Instead of large button cards, the role selector becomes an inline sentence:
+- "Ik ben [dropdown] en ik [search input]"
+- Dropdown has fat green border-bottom (4px, #4acf52)
+- Cleaner, more compact design
+- Typography reduced: 2xl-4xl instead of 4xl-6xl
+- Maintains excellent readability while being less overwhelming
+        `,
+      },
+    },
+  },
+};
+
+/**
+ * Category color coding demonstration
+ * Each category gets unique color scheme
+ */
+export const CategoryColorCoding: Story = {
+  args: {},
+  render: () => (
+    <div className="space-y-8">
+      <div>
+        <h3 className="text-2xl font-bold mb-4">Category Color System</h3>
+        <p className="text-gray-dark mb-6">
+          Each category gets distinct colors for quick visual recognition:
+        </p>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-blue-50 border-2 border-blue-400 rounded-lg">
+            <div className="text-blue-700 font-bold">Commercieel</div>
+            <div className="text-sm text-gray-600 mt-1">Blue theme</div>
+          </div>
+
+          <div className="p-4 bg-red-50 border-2 border-red-400 rounded-lg">
+            <div className="text-red-700 font-bold">Medisch</div>
+            <div className="text-sm text-gray-600 mt-1">Red theme</div>
+          </div>
+
+          <div className="p-4 bg-purple-50 border-2 border-purple-400 rounded-lg">
+            <div className="text-purple-700 font-bold">Administratief</div>
+            <div className="text-sm text-gray-600 mt-1">Purple theme</div>
+          </div>
+
+          <div className="p-4 bg-orange-50 border-2 border-orange-400 rounded-lg">
+            <div className="text-orange-700 font-bold">Gedrag</div>
+            <div className="text-sm text-gray-600 mt-1">Orange theme</div>
+          </div>
+
+          <div className="p-4 bg-gray-50 border-2 border-gray-400 rounded-lg">
+            <div className="text-gray-700 font-bold">Algemeen</div>
+            <div className="text-sm text-gray-600 mt-1">Gray theme</div>
+          </div>
+
+          <div className="p-4 bg-green-50 border-2 border-green-600 rounded-lg">
+            <div className="text-green-700 font-bold">Sportief</div>
+            <div className="text-sm text-gray-600 mt-1">Green theme</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-2xl font-bold mb-4">In Practice</h3>
+        <p className="text-gray-dark mb-4">
+          Select a role and search to see colors in action:
+        </p>
+        <ResponsibilityFinder />
+      </div>
+    </div>
+  ),
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        story: `
+**Visual Improvement #2: Category Colors**
+
+Each category type uses consistent color coding:
+- **Commercieel** (Commercial) - Blue (#3b82f6)
+- **Medisch** (Medical) - Red (#ef4444)
+- **Administratief** (Administrative) - Purple (#a855f7)
+- **Gedrag** (Behavior) - Orange (#f97316)
+- **Algemeen** (General) - Gray (#6b7280)
+- **Sportief** (Sports) - Green (#16a34a)
+
+Applied to:
+- Suggestion card left border
+- Icon backgrounds
+- Category badges
+- Result card accent bar
+        `,
+      },
+    },
+  },
+};
+
+/**
+ * Enhanced suggestion cards with better visual hierarchy
+ */
+export const EnhancedSuggestionCards: Story = {
+  args: {},
+  parameters: {
+    docs: {
+      description: {
+        story: `
+**Visual Improvement #3: Suggestion Cards**
+
+- Larger, more prominent icons (64px boxes with category colors)
+- Colored left border that widens on hover (1px → 2px)
+- Category badge with matching background
+- Better typography hierarchy
+- Smooth animations on hover (scale, shadow)
+- Arrow icon appears on hover
+        `,
+      },
+    },
+  },
+};
+
+/**
+ * Empty state design when no results found
+ */
+export const EmptyStateDesign: Story = {
+  args: {},
+  render: () => (
+    <div className="space-y-6">
+      <div className="border-2 border-dashed border-gray-300 p-6 rounded-lg">
+        <div className="bg-white border-2 border-gray-200 rounded-xl shadow-xl p-6 text-center">
+          <div className="text-5xl mb-3">🔍</div>
+          <h3 className="text-lg font-bold text-kcvv-gray-blue mb-1">
+            Geen resultaten gevonden
+          </h3>
+          <p className="text-sm text-gray-medium">
+            Probeer een andere zoekterm of selecteer een andere rol
+          </p>
+        </div>
+      </div>
+      <p className="text-sm text-gray-600">
+        This appears when searching returns no matches
+      </p>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: `
+**Visual Improvement #4: Empty State**
+
+Friendly message when no results are found:
+- Large search emoji (🔍)
+- Clear heading
+- Helpful suggestion text
+- Clean, non-intrusive design
+        `,
+      },
+    },
+  },
+};
+
+/**
+ * Result card with category accent bar and improved design
+ */
+export const EnhancedResultCard: Story = {
+  args: {},
+  parameters: {
+    docs: {
+      description: {
+        story: `
+**Visual Improvement #5: Result Card**
+
+- Category-colored accent bar at top (2px height)
+- Larger icon in colored box (64px)
+- Category badge next to title
+- Contact section with category colors
+- Step numbers in category color
+- Better spacing and hierarchy
+- Cleaner overall appearance
+        `,
+      },
+    },
+  },
+};
+
+/**
+ * Animation showcase
+ */
+export const AnimationsShowcase: Story = {
+  args: {},
+  parameters: {
+    docs: {
+      description: {
+        story: `
+**Visual Improvement #6: Smooth Animations**
+
+All animations use smooth transitions:
+- Fade-in for suggestions (0.3s ease-out)
+- Scale on hover for cards (1.01x)
+- Icon scale on hover (1.1x)
+- Dropdown rotation (chevron)
+- Border width transitions
+- Color transitions
+
+All animations use \`transition-all duration-200-300\` for consistency
+        `,
+      },
+    },
+  },
+};
