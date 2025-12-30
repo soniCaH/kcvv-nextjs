@@ -101,21 +101,24 @@ Before pushing, verify:
 ### Code Quality
 
 - ✅ **TypeScript Strict Mode** - All code must be strictly typed
-- ✅ **Effect Schema** - Use for ALL data validation (no manual parsing)
+- ✅ **Effect Schema** - Use for ALL data validation (see SCHEMA_GUIDE.md)
 - ✅ **Test Coverage** - Minimum 80% coverage target
 - ✅ **ESLint Clean** - Zero warnings, zero errors
 
 ### Component Development
 
-- ✅ **Storybook FIRST** - Create stories BEFORE implementation
+- ✅ **Design System FIRST** - Review DESIGN_SYSTEM.md before creating components
+- ✅ **Storybook SECOND** - Create stories BEFORE implementation (see STORYBOOK.md)
 - ✅ **Visual Source of Truth** - Storybook is the definitive component documentation
 - ✅ **All Variants** - Document all component states in stories
 - ✅ **Accessibility** - WCAG AA minimum (AAA preferred)
 
 ### Styling
 
+- ✅ **KCVV Design System** - Follow DESIGN_SYSTEM.md (AUTHORITATIVE)
+- ✅ **Exact Colors** - Use #4acf52 for primary green (no variations)
 - ✅ **Tailwind CSS** - Use for ALL styling (no CSS modules, no styled-components)
-- ✅ **Responsive** - Mobile-first approach
+- ✅ **Responsive** - Mobile-first approach, test on mobile/tablet/desktop
 - ✅ **shadcn/ui** - Use for base components (Card, Button, etc.)
 
 ### Next.js Patterns
@@ -131,29 +134,28 @@ Before pushing, verify:
 
 ### When Migrating Components
 
-1. **Analyze** - Use migration-analyzer agent (see `.claude/agents/`)
-2. **Schemas** - Use schema-migrator agent to generate Effect Schemas
-3. **Storybook FIRST** - Create story before implementation
-4. **Component** - Implement with TypeScript + Tailwind
+1. **Review Design System** - Check DESIGN_SYSTEM.md for patterns
+2. **Schemas** - Follow SCHEMA_GUIDE.md to create Effect Schemas
+3. **Storybook FIRST** - Create story before implementation (see STORYBOOK.md)
+4. **Component** - Implement with TypeScript + Tailwind (following DESIGN_SYSTEM.md)
 5. **Tests** - Write comprehensive Vitest tests (>80% coverage)
-6. **Quality** - Use quality-reviewer agent to validate
-7. **Document** - Update `MIGRATION_PLAN.md`
+6. **Document** - Update `MIGRATION_PLAN.md`
 
 ### Drupal API Integration
 
-- ✅ Use Effect Schema for ALL Drupal data
+- ✅ Use Effect Schema for ALL Drupal data (follow SCHEMA_GUIDE.md)
+- ✅ No S.Unknown types - always create proper schemas
 - ✅ Normalize JSON:API format with mappers
 - ✅ Handle errors with Effect's error handling
 - ✅ Cache with ISR (don't over-fetch)
+- ✅ Test with real Drupal responses
 
-### Available Agents
+### Skills Available
 
-See `.claude/agents/README.md` for detailed documentation:
+See `.claude/skills/` for:
 
-- **migration-analyzer** - Analyze and plan migrations
-- **schema-migrator** - Generate Effect Schemas from Drupal API
-- **component-migrator** - Migrate components with Storybook-first approach
-- **quality-reviewer** - Validate code quality and standards
+- **drupal-api-analyzer/** - Auto-generate schemas from Drupal API
+- **gatsby-nextjs-migration/** - Migration patterns and best practices
 
 ---
 
@@ -190,21 +192,36 @@ npm run migration:create       # Create migration tracking
 
 ```
 /
-├── .claude/                   # Claude Code configuration
-│   ├── agents/               # Migration agent specifications
-│   ├── skills/               # Reusable skills
-│   └── WORKFLOW.md           # Detailed workflow docs
+├── .claude/                      # Claude Code configuration
+│   ├── skills/                   # Reusable skills (Drupal API, migrations)
+│   ├── CLAUDE.local.md          # THIS FILE - Project instructions
+│   ├── WORKFLOW.md              # Git workflow
+│   └── SETUP_VERIFICATION.md    # Setup reference
 ├── src/
-│   ├── app/                  # Next.js 15 app directory
-│   ├── components/           # React components
-│   │   └── ui/              # shadcn/ui base components
+│   ├── app/                     # Next.js 15 app directory
+│   ├── components/              # React components
+│   │   ├── ui/                 # shadcn/ui base components
+│   │   ├── organogram/         # Organogram feature
+│   │   ├── responsibility/     # Responsibility finder
+│   │   └── ...                 # Feature-specific components
 │   ├── lib/
 │   │   ├── effect/
-│   │   │   └── schemas/     # Effect Schemas
-│   │   ├── mappers/         # JSON:API mappers
-│   │   └── drupal-api.ts    # Drupal API client
-│   └── styles/              # Global styles
-├── MIGRATION_PLAN.md         # Migration tracking
+│   │   │   ├── schemas/        # Effect Schemas
+│   │   │   └── services/       # API services
+│   │   ├── mappers/            # JSON:API mappers
+│   │   └── utils/              # Utility functions
+│   ├── data/                    # Static data
+│   │   ├── club-structure.ts   # Organogram data
+│   │   └── responsibility-paths.ts  # Help system Q&A
+│   └── styles/                  # Global styles
+├── DESIGN_SYSTEM.md             # ⭐ AUTHORITATIVE design reference
+├── SCHEMA_GUIDE.md              # ⭐ Effect Schema guide
+├── STORYBOOK.md                 # ⭐ Storybook component guide
+├── RESPONSIBILITY.md            # Responsibility finder docs
+├── ORGANOGRAM.md                # Organogram docs (feature has issues)
+├── SECURITY.md                  # Security policies
+├── MIGRATION_PLAN.md            # Migration tracking
+├── README.md                    # Project overview
 └── package.json
 ```
 
@@ -357,10 +374,29 @@ These are enforced by pre-commit hooks and CI/CD.
 
 ## 📖 Documentation
 
-- **Workflow:** `.claude/WORKFLOW.md` - Complete workflow documentation
-- **Agents:** `.claude/agents/README.md` - Agent system documentation
-- **Skills:** `.claude/skills/` - Reusable skill documentation
-- **Migration:** `MIGRATION_PLAN.md` - Migration progress tracking
+### Primary References (⭐ Use These First)
+
+- **DESIGN_SYSTEM.md** - AUTHORITATIVE design reference - use for ALL components
+- **SCHEMA_GUIDE.md** - Effect Schema patterns - use for ALL Drupal data
+- **STORYBOOK.md** - Component development guide - use for ALL components
+- **README.md** - Project overview and quick start
+
+### Feature Documentation
+
+- **RESPONSIBILITY.md** - Responsibility finder feature (active, needs expansion)
+- **ORGANOGRAM.md** - Organogram feature (⚠️ has critical usability issues)
+- **SECURITY.md** - Security policies (file upload, image handling)
+
+### Claude Code Configuration
+
+- **`.claude/WORKFLOW.md`** - Git workflow and branch strategy
+- **`.claude/CLAUDE.local.md`** - THIS FILE - Primary instructions
+- **`.claude/SETUP_VERIFICATION.md`** - Setup reference (historical)
+- **`.claude/skills/`** - Drupal API and migration skills
+
+### Migration Tracking
+
+- **MIGRATION_PLAN.md** - Migration progress (use `npm run migration:status`)
 
 ---
 
@@ -385,6 +421,29 @@ These are enforced by pre-commit hooks and CI/CD.
 5. **Conventional commits** - Always
 
 **See `.claude/WORKFLOW.md` for complete details**
+
+---
+
+---
+
+## 📝 Recent Documentation Updates (2025-12-30)
+
+### New Documentation Files
+
+- **STORYBOOK.md** - General Storybook guide (replaced feature-specific STORYBOOK_FEATURES.md)
+- **SCHEMA_GUIDE.md** - Effect Schema reference (renamed from SCHEMA_ANALYSIS.md)
+- **RESPONSIBILITY.md** - Consolidated from 3 separate files
+- **ORGANOGRAM.md** - Consolidated from 2 separate files
+- **README.md** - Completely rewritten with comprehensive project info
+
+### Documentation Standards
+
+When creating new features or components:
+
+1. Check DESIGN_SYSTEM.md for design patterns
+2. Follow SCHEMA_GUIDE.md for Drupal data
+3. Follow STORYBOOK.md for component stories
+4. Update README.md if adding major features
 
 ---
 
