@@ -3,20 +3,20 @@
  * Each story shows individual elements and states for pixel-perfect matching with Gatsby
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import Image from 'next/image'
-import { Menu, Search } from 'lucide-react'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import Image from "next/image";
+import { Menu, Search } from "@/lib/icons";
 
 const meta = {
-  title: 'Layout/PageHeader/Elements',
+  title: "Layout/PageHeader/Elements",
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
   },
-  tags: ['autodocs'],
-} satisfies Meta
+  tags: ["autodocs"],
+} satisfies Meta;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * 01. Header Container
@@ -30,11 +30,11 @@ export const HeaderContainer: Story = {
       <div
         className="h-20 lg:h-[7.5rem] fixed top-0 left-0 right-0 z-[11]"
         style={{
-          backgroundImage: 'url(/images/header-pattern.png)',
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: '100vw auto',
-          backgroundPosition: '50% -7vw',
-          backgroundColor: '#4acf52',
+          backgroundImage: "url(/images/header-pattern.png)",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "100vw auto",
+          backgroundPosition: "50% -7vw",
+          backgroundColor: "#4acf52",
         }}
       >
         <div className="flex items-center justify-center h-full text-white text-sm">
@@ -43,7 +43,7 @@ export const HeaderContainer: Story = {
       </div>
     </header>
   ),
-}
+};
 
 /**
  * 02. Logo - Desktop Size
@@ -67,7 +67,7 @@ export const LogoDesktop: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * 03. Logo - Mobile Size
@@ -93,10 +93,10 @@ export const LogoMobile: Story = {
   ),
   parameters: {
     viewport: {
-      defaultViewport: 'mobile1',
+      defaultViewport: "mobile1",
     },
   },
-}
+};
 
 /**
  * 04. Navigation Item - Default State
@@ -129,7 +129,7 @@ export const NavigationItemDefault: Story = {
       </nav>
     </div>
   ),
-}
+};
 
 /**
  * 05. Navigation Item - Hover State
@@ -203,7 +203,7 @@ export const NavigationItemHover: Story = {
       </div>
     </>
   ),
-}
+};
 
 /**
  * 06. Navigation Item - Active State
@@ -270,7 +270,7 @@ export const NavigationItemActive: Story = {
       </div>
     </>
   ),
-}
+};
 
 /**
  * 07. Dropdown Menu Trigger
@@ -336,7 +336,7 @@ export const DropdownTrigger: Story = {
       </div>
     </>
   ),
-}
+};
 
 /**
  * 08. Dropdown Menu - Submenu
@@ -389,7 +389,7 @@ export const DropdownSubmenu: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * 09. Mobile Hamburger Button
@@ -404,7 +404,7 @@ export const HamburgerButton: Story = {
         className="absolute left-[34px] top-[calc((5rem-16px)/2)] text-white text-base w-6 h-6 flex items-center justify-center"
         aria-label="Toggle navigation menu"
       >
-        <Menu className="w-4 h-4" />
+        <Menu size={16} />
       </button>
       <div className="flex items-center justify-center h-full text-white text-xs">
         Mobile header with hamburger at left
@@ -413,10 +413,10 @@ export const HamburgerButton: Story = {
   ),
   parameters: {
     viewport: {
-      defaultViewport: 'mobile1',
+      defaultViewport: "mobile1",
     },
   },
-}
+};
 
 /**
  * 10. Mobile Search Button
@@ -430,7 +430,7 @@ export const SearchButton: Story = {
         className="absolute right-[34px] top-[calc((5rem-16px)/2)] text-white text-base w-6 h-6 flex items-center justify-center"
         aria-label="Search"
       >
-        <Search className="w-4 h-4" />
+        <Search size={16} />
       </button>
       <div className="flex items-center justify-center h-full text-white text-xs">
         Mobile header with search at right
@@ -439,10 +439,10 @@ export const SearchButton: Story = {
   ),
   parameters: {
     viewport: {
-      defaultViewport: 'mobile1',
+      defaultViewport: "mobile1",
     },
   },
-}
+};
 
 /**
  * 11. Mobile Menu Item with Active Border
@@ -505,17 +505,18 @@ export const MobileMenuItem: Story = {
           </li>
         </ul>
         <p className="text-white text-xs mt-4 opacity-75">
-          Hover over links or see &quot;Nieuws&quot; with 4px green left border (active state)
+          Hover over links or see &quot;Nieuws&quot; with 4px green left border
+          (active state)
         </p>
       </div>
     </>
   ),
   parameters: {
     viewport: {
-      defaultViewport: 'mobile1',
+      defaultViewport: "mobile1",
     },
   },
-}
+};
 
 /**
  * 12. Mobile Menu Submenu (Accordion)
@@ -567,7 +568,7 @@ export const MobileMenuSubmenu: Story = {
           className="bg-[#292c31] list-none m-0 p-0"
           style={{
             boxShadow:
-              'inset 0 7px 9px -7px #1E2024, inset 0 -7px 9px -7px #1E2024',
+              "inset 0 7px 9px -7px #1E2024, inset 0 -7px 9px -7px #1E2024",
           }}
         >
           <ul className="list-none m-0 p-0">
@@ -607,15 +608,16 @@ export const MobileMenuSubmenu: Story = {
         </div>
 
         <p className="text-white text-xs mt-4 opacity-75">
-          Submenu accordion with darker background (#292c31 - dark gray) and inset shadows.
-          &quot;B-Ploeg&quot; is active with green text and 4px left border.
+          Submenu accordion with darker background (#292c31 - dark gray) and
+          inset shadows. &quot;B-Ploeg&quot; is active with green text and 4px
+          left border.
         </p>
       </div>
     </>
   ),
   parameters: {
     viewport: {
-      defaultViewport: 'mobile1',
+      defaultViewport: "mobile1",
     },
   },
-}
+};

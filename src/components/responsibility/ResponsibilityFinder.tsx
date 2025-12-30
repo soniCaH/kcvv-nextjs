@@ -15,7 +15,7 @@ import type {
 } from "@/types/responsibility";
 import { responsibilityPaths, userRoles } from "@/data/responsibility-paths";
 import { X, User, ArrowRight, Clipboard } from "lucide-react";
-import { getIcon, type IconName } from "@/lib/icons";
+import { getIcon } from "@/lib/icons";
 
 interface ResponsibilityFinderProps {
   onResultSelect?: (path: ResponsibilityPath) => void;
@@ -248,9 +248,7 @@ export function ResponsibilityFinder({
                       <div className="flex items-start gap-3">
                         {suggestion.path.icon &&
                           (() => {
-                            const IconComponent = getIcon(
-                              suggestion.path.icon as IconName,
-                            );
+                            const IconComponent = getIcon(suggestion.path.icon);
                             return (
                               <IconComponent
                                 size={48}
@@ -310,7 +308,7 @@ function ResultCard({ path }: { path: ResponsibilityPath }) {
       <div className="flex items-start gap-4 mb-6">
         {path.icon &&
           (() => {
-            const IconComponent = getIcon(path.icon as IconName);
+            const IconComponent = getIcon(path.icon);
             return (
               <IconComponent
                 size={64}

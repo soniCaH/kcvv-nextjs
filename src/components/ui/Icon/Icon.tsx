@@ -1,43 +1,46 @@
-'use client'
+"use client";
 
 /**
  * Icon Component
  * Wrapper for Lucide React icons with consistent sizing and styling
  */
 
-import { forwardRef, type HTMLAttributes } from 'react'
-import { type LucideIcon } from 'lucide-react'
-import { cn } from '@/lib/utils/cn'
+import { forwardRef, type HTMLAttributes } from "react";
+import { type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 
-export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+export type IconSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 export type IconColor =
-  | 'current'
-  | 'primary'
-  | 'secondary'
-  | 'success'
-  | 'warning'
-  | 'error'
-  | 'muted'
+  | "current"
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "error"
+  | "muted";
 
-export interface IconProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'children'> {
+export interface IconProps extends Omit<
+  HTMLAttributes<HTMLSpanElement>,
+  "children"
+> {
   /**
    * Lucide React icon component
    */
-  icon: LucideIcon
+  icon: LucideIcon;
   /**
    * Size of the icon
    * @default 'md'
    */
-  size?: IconSize
+  size?: IconSize;
   /**
    * Color of the icon
    * @default 'current'
    */
-  color?: IconColor
+  color?: IconColor;
   /**
    * Additional CSS classes
    */
-  className?: string
+  className?: string;
 }
 
 const sizeMap: Record<IconSize, number> = {
@@ -46,18 +49,18 @@ const sizeMap: Record<IconSize, number> = {
   md: 24,
   lg: 32,
   xl: 40,
-  '2xl': 48,
-}
+  "2xl": 48,
+};
 
 const colorMap: Record<IconColor, string> = {
-  current: 'currentColor',
-  primary: 'var(--color-kcvv-green-bright)',
-  secondary: 'var(--color-kcvv-gray)',
-  success: 'var(--color-kcvv-green-bright)',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  muted: '#9ca3af',
-}
+  current: "currentColor",
+  primary: "var(--color-kcvv-green-bright)",
+  secondary: "var(--color-kcvv-gray)",
+  success: "var(--color-kcvv-success)",
+  warning: "var(--color-kcvv-warning)",
+  error: "var(--color-kcvv-alert)",
+  muted: "var(--color-gray--medium)",
+};
 
 /**
  * Icon component with consistent sizing and KCVV color palette
@@ -71,11 +74,23 @@ const colorMap: Record<IconColor, string> = {
  * ```
  */
 export const Icon = forwardRef<HTMLSpanElement, IconProps>(
-  ({ icon: IconComponent, size = 'md', color = 'current', className, ...props }, ref) => {
+  (
+    {
+      icon: IconComponent,
+      size = "md",
+      color = "current",
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <span
         ref={ref}
-        className={cn('inline-flex items-center justify-center shrink-0', className)}
+        className={cn(
+          "inline-flex items-center justify-center shrink-0",
+          className,
+        )}
         {...props}
       >
         <IconComponent
@@ -85,8 +100,8 @@ export const Icon = forwardRef<HTMLSpanElement, IconProps>(
           absoluteStrokeWidth={false}
         />
       </span>
-    )
-  }
-)
+    );
+  },
+);
 
-Icon.displayName = 'Icon'
+Icon.displayName = "Icon";

@@ -167,7 +167,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     summary:
       "Check de evenementenpagina en schrijf in via het online formulier.",
     category: "administratief",
-    icon: "trophy",
+    icon: "activity",
     primaryContact: {
       role: "Evenementencoördinator",
       email: "evenementen@kcvvelewijt.be",

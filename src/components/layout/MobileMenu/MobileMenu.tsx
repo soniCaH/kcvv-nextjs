@@ -3,101 +3,101 @@
  * Off-canvas mobile navigation menu
  */
 
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils/cn'
-import { Icon, SocialLinks } from '@/components/ui'
-import { X, ChevronDown, Search } from 'lucide-react'
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils/cn";
+import { Icon, SocialLinks } from "@/components/ui";
+import { X, ChevronDown, Search } from "@/lib/icons";
 
 export interface MobileMenuProps {
   /**
    * Whether the menu is open
    */
-  isOpen: boolean
+  isOpen: boolean;
   /**
    * Callback when the menu should close
    */
-  onClose: () => void
+  onClose: () => void;
   /**
    * Additional CSS classes
    */
-  className?: string
+  className?: string;
 }
 
 interface MenuItem {
-  label: string
-  href: string
-  children?: MenuItem[]
+  label: string;
+  href: string;
+  children?: MenuItem[];
 }
 
 const menuItems: MenuItem[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Nieuws', href: '/news' },
-  { label: 'Evenementen', href: '/events' },
+  { label: "Home", href: "/" },
+  { label: "Nieuws", href: "/news" },
+  { label: "Evenementen", href: "/events" },
   {
-    label: 'A-Ploeg',
-    href: '/team/a-ploeg',
+    label: "A-Ploeg",
+    href: "/team/a-ploeg",
     children: [
-      { label: 'Info', href: '/team/a-ploeg#team-info' },
-      { label: 'Spelers & Staff', href: '/team/a-ploeg#team-lineup' },
-      { label: 'Wedstrijden', href: '/team/a-ploeg#team-matches' },
-      { label: 'Stand', href: '/team/a-ploeg#team-ranking' },
+      { label: "Info", href: "/team/a-ploeg#team-info" },
+      { label: "Spelers & Staff", href: "/team/a-ploeg#team-lineup" },
+      { label: "Wedstrijden", href: "/team/a-ploeg#team-matches" },
+      { label: "Stand", href: "/team/a-ploeg#team-ranking" },
     ],
   },
   {
-    label: 'B-Ploeg',
-    href: '/team/b-ploeg',
+    label: "B-Ploeg",
+    href: "/team/b-ploeg",
     children: [
-      { label: 'Info', href: '/team/b-ploeg#team-info' },
-      { label: 'Spelers & Staff', href: '/team/b-ploeg#team-lineup' },
-      { label: 'Wedstrijden', href: '/team/b-ploeg#team-matches' },
-      { label: 'Stand', href: '/team/b-ploeg#team-ranking' },
+      { label: "Info", href: "/team/b-ploeg#team-info" },
+      { label: "Spelers & Staff", href: "/team/b-ploeg#team-lineup" },
+      { label: "Wedstrijden", href: "/team/b-ploeg#team-matches" },
+      { label: "Stand", href: "/team/b-ploeg#team-ranking" },
     ],
   },
   {
-    label: 'Jeugd',
-    href: '/jeugd',
+    label: "Jeugd",
+    href: "/jeugd",
     children: [
-      { label: 'U21', href: '/jeugd/u21' },
-      { label: 'U17', href: '/jeugd/u17' },
-      { label: 'U16', href: '/jeugd/u16' },
-      { label: 'U15', href: '/jeugd/u15' },
-      { label: 'U14', href: '/jeugd/u14' },
-      { label: 'U13', href: '/jeugd/u13' },
-      { label: 'U12', href: '/jeugd/u12' },
-      { label: 'U11', href: '/jeugd/u11' },
-      { label: 'U10', href: '/jeugd/u10' },
-      { label: 'U9', href: '/jeugd/u9' },
-      { label: 'U8', href: '/jeugd/u8' },
-      { label: 'U7', href: '/jeugd/u7' },
-      { label: 'U6 & U5', href: '/jeugd/u6' },
+      { label: "U21", href: "/jeugd/u21" },
+      { label: "U17", href: "/jeugd/u17" },
+      { label: "U16", href: "/jeugd/u16" },
+      { label: "U15", href: "/jeugd/u15" },
+      { label: "U14", href: "/jeugd/u14" },
+      { label: "U13", href: "/jeugd/u13" },
+      { label: "U12", href: "/jeugd/u12" },
+      { label: "U11", href: "/jeugd/u11" },
+      { label: "U10", href: "/jeugd/u10" },
+      { label: "U9", href: "/jeugd/u9" },
+      { label: "U8", href: "/jeugd/u8" },
+      { label: "U7", href: "/jeugd/u7" },
+      { label: "U6 & U5", href: "/jeugd/u6" },
     ],
   },
-  { label: 'Sponsors', href: '/sponsors' },
-  { label: 'Hulp', href: '/hulp' },
+  { label: "Sponsors", href: "/sponsors" },
+  { label: "Hulp", href: "/hulp" },
   {
-    label: 'De club',
-    href: '/club',
+    label: "De club",
+    href: "/club",
     children: [
-      { label: 'Geschiedenis', href: '/club/history' },
-      { label: 'Organogram', href: '/club/organogram' },
-      { label: 'KCVV Angels', href: '/club/angels' },
-      { label: 'KCVV Ultras', href: '/club/ultras' },
-      { label: 'Contact', href: '/club/contact' },
-      { label: 'Downloads', href: '/club/downloads' },
-      { label: 'Praktische Info', href: '/club/register' },
-      { label: 'Cashless clubkaart', href: '/club/cashless' },
+      { label: "Geschiedenis", href: "/club/history" },
+      { label: "Organogram", href: "/club/organogram" },
+      { label: "KCVV Angels", href: "/club/angels" },
+      { label: "KCVV Ultras", href: "/club/ultras" },
+      { label: "Contact", href: "/club/contact" },
+      { label: "Downloads", href: "/club/downloads" },
+      { label: "Praktische Info", href: "/club/register" },
+      { label: "Cashless clubkaart", href: "/club/cashless" },
     ],
   },
   {
-    label: 'Zoeken',
-    href: '/search',
+    label: "Zoeken",
+    href: "/search",
   },
-]
+];
 
 /**
  * Mobile off-canvas navigation menu
@@ -112,37 +112,37 @@ const menuItems: MenuItem[] = [
  * - Submenu: darker background with inset shadows
  */
 export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
-  const pathname = usePathname()
-  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
+  const pathname = usePathname();
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
   // Lock body scroll when menu is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = ''
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = ''
-    }
-  }, [isOpen])
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   // Close menu when pathname changes
   useEffect(() => {
-    onClose()
-  }, [pathname, onClose])
+    onClose();
+  }, [pathname, onClose]);
 
   const isActive = (href: string) => {
-    if (href === '/') {
-      return pathname === '/'
+    if (href === "/") {
+      return pathname === "/";
     }
-    return pathname?.startsWith(href)
-  }
+    return pathname?.startsWith(href);
+  };
 
   const toggleSubmenu = (href: string) => {
-    setOpenSubmenu(openSubmenu === href ? null : href)
-  }
+    setOpenSubmenu(openSubmenu === href ? null : href);
+  };
 
   return (
     <>
@@ -175,8 +175,8 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
       {/* Backdrop */}
       <div
         className={cn(
-          'fixed inset-0 bg-black/50 z-50 transition-opacity duration-300',
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          "fixed inset-0 bg-black/50 z-50 transition-opacity duration-300",
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         onClick={onClose}
         aria-hidden="true"
@@ -185,12 +185,12 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
       {/* Menu Panel */}
       <nav
         className={cn(
-          'fixed top-0 left-0 h-full w-[280px] bg-[#1E2024] z-50',
-          'transform transition-transform duration-500 ease-in-out',
-          'shadow-[0_0_10px_rgba(0,0,0,0.7)]',
-          'overflow-y-auto',
-          isOpen ? 'translate-x-0' : '-translate-x-full',
-          className
+          "fixed top-0 left-0 h-full w-[280px] bg-[#1E2024] z-50",
+          "transform transition-transform duration-500 ease-in-out",
+          "shadow-[0_0_10px_rgba(0,0,0,0.7)]",
+          "overflow-y-auto",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+          className,
         )}
         aria-label="Mobile navigation"
       >
@@ -218,9 +218,9 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
         {/* Menu Items */}
         <ul className="list-none m-0 p-0">
           {menuItems.map((item) => {
-            const active = isActive(item.href)
-            const hasChildren = item.children && item.children.length > 0
-            const isSubmenuOpen = openSubmenu === item.href
+            const active = isActive(item.href);
+            const hasChildren = item.children && item.children.length > 0;
+            const isSubmenuOpen = openSubmenu === item.href;
 
             return (
               <li key={item.href} className="relative">
@@ -230,8 +230,8 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
                     <button
                       onClick={() => toggleSubmenu(item.href)}
                       className={cn(
-                        'mobile-nav-link w-full flex items-center justify-between px-8 py-4 text-left border-b border-[#292c31] text-white text-[0.6875rem] uppercase font-bold transition-colors',
-                        active && 'active'
+                        "mobile-nav-link w-full flex items-center justify-between px-8 py-4 text-left border-b border-[#292c31] text-white text-[0.6875rem] uppercase font-bold transition-colors",
+                        active && "active",
                       )}
                     >
                       <span>{item.label}</span>
@@ -239,8 +239,8 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
                         icon={ChevronDown}
                         size="xs"
                         className={cn(
-                          'transition-transform',
-                          isSubmenuOpen && 'rotate-180'
+                          "transition-transform",
+                          isSubmenuOpen && "rotate-180",
                         )}
                       />
                     </button>
@@ -248,35 +248,35 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
                     {/* Submenu */}
                     <div
                       className={cn(
-                        'overflow-hidden transition-all duration-300',
-                        isSubmenuOpen ? 'max-h-[800px]' : 'max-h-0'
+                        "overflow-hidden transition-all duration-300",
+                        isSubmenuOpen ? "max-h-[800px]" : "max-h-0",
                       )}
                     >
                       <ul
                         className="list-none m-0 p-0 bg-[#292c31]"
                         style={{
                           boxShadow:
-                            'inset 0 7px 9px -7px #1E2024, inset 0 -7px 9px -7px #1E2024',
+                            "inset 0 7px 9px -7px #1E2024, inset 0 -7px 9px -7px #1E2024",
                         }}
                       >
                         {item.children?.map((child) => {
-                          const childActive = isActive(child.href)
+                          const childActive = isActive(child.href);
 
                           return (
                             <li key={child.href}>
                               <Link
                                 href={child.href}
                                 className={cn(
-                                  'mobile-nav-link block px-8 py-4 text-[0.6875rem] uppercase font-bold border-b border-[#62656A] no-underline transition-colors',
+                                  "mobile-nav-link block px-8 py-4 text-[0.6875rem] uppercase font-bold border-b border-[#62656A] no-underline transition-colors",
                                   childActive
-                                    ? 'text-kcvv-green-bright active'
-                                    : 'text-white hover:text-kcvv-green-bright'
+                                    ? "text-kcvv-green-bright active"
+                                    : "text-white hover:text-kcvv-green-bright",
                                 )}
                               >
                                 {child.label}
                               </Link>
                             </li>
-                          )
+                          );
                         })}
                       </ul>
                     </div>
@@ -285,18 +285,18 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
                   <Link
                     href={item.href}
                     className={cn(
-                      'mobile-nav-link block px-8 py-4 text-[0.6875rem] uppercase font-bold border-b border-[#292c31] text-white no-underline transition-colors',
-                      active && 'active'
+                      "mobile-nav-link block px-8 py-4 text-[0.6875rem] uppercase font-bold border-b border-[#292c31] text-white no-underline transition-colors",
+                      active && "active",
                     )}
                   >
                     {item.label}
-                    {item.href === '/search' && (
+                    {item.href === "/search" && (
                       <Icon icon={Search} size="xs" className="ml-2 inline" />
                     )}
                   </Link>
                 )}
               </li>
-            )
+            );
           })}
         </ul>
 
@@ -308,5 +308,5 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
         </div>
       </nav>
     </>
-  )
-}
+  );
+};

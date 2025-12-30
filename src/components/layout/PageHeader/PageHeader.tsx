@@ -4,21 +4,21 @@
  * Matches Gatsby visual: green background (#4acf52) with pattern image
  */
 
-'use client'
+"use client";
 
-import { useState, useCallback } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { cn } from '@/lib/utils/cn'
-import { Search, Menu } from 'lucide-react'
-import { Navigation } from '../Navigation'
-import { MobileMenu } from '../MobileMenu'
+import { useState, useCallback } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { cn } from "@/lib/utils/cn";
+import { Search, Menu } from "@/lib/icons";
+import { Navigation } from "../Navigation";
+import { MobileMenu } from "../MobileMenu";
 
 export interface PageHeaderProps {
   /**
    * Additional CSS classes
    */
-  className?: string
+  className?: string;
 }
 
 /**
@@ -33,25 +33,25 @@ export interface PageHeaderProps {
  * - Transition: height 0.3s
  */
 export const PageHeader = ({ className }: PageHeaderProps) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleClose = useCallback(() => {
-    setIsMobileMenuOpen(false)
-  }, [])
+    setIsMobileMenuOpen(false);
+  }, []);
 
   return (
     <>
-      <header className={cn('relative z-50', className)}>
+      <header className={cn("relative z-50", className)}>
         {/* Navigation Container with Green Background + Pattern */}
         <nav
           className="fixed top-0 left-0 right-0 z-50 h-20 lg:h-[7.5rem] transition-[height] duration-300"
           style={{
-            backgroundColor: '#4acf52',
-            backgroundImage: 'url(/images/header-pattern.png)',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: '100vw auto',
-            backgroundPosition: '50% -7vw',
-            transform: 'translate3d(0, 0, 0)',
+            backgroundColor: "#4acf52",
+            backgroundImage: "url(/images/header-pattern.png)",
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "100vw auto",
+            backgroundPosition: "50% -7vw",
+            transform: "translate3d(0, 0, 0)",
           }}
         >
           {/* Mobile Header */}
@@ -115,10 +115,7 @@ export const PageHeader = ({ className }: PageHeaderProps) => {
       </header>
 
       {/* Mobile Menu Overlay */}
-      <MobileMenu
-        isOpen={isMobileMenuOpen}
-        onClose={handleClose}
-      />
+      <MobileMenu isOpen={isMobileMenuOpen} onClose={handleClose} />
     </>
-  )
-}
+  );
+};

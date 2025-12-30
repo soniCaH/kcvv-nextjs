@@ -4,19 +4,19 @@
  * Matches Gatsby CardTeaser design
  */
 
-import Link from 'next/link'
-import Image from 'next/image'
-import { Clock, Tag } from 'lucide-react'
-import { cn } from '@/lib/utils/cn'
+import Link from "next/link";
+import Image from "next/image";
+import { Clock, Tag } from "@/lib/icons";
+import { cn } from "@/lib/utils/cn";
 
 export interface ArticleCardProps {
-  title: string
-  href: string
-  imageUrl?: string
-  imageAlt?: string
-  date?: string
-  tags?: Array<{ name: string }>
-  className?: string
+  title: string;
+  href: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  date?: string;
+  tags?: Array<{ name: string }>;
+  className?: string;
 }
 
 /**
@@ -40,10 +40,10 @@ export const ArticleCard = ({
   return (
     <article
       className={cn(
-        'relative group',
-        'border-b border-[#e6e6e6] lg:border-b-0',
-        'last:border-b-0',
-        className
+        "relative group",
+        "border-b border-[#e6e6e6] lg:border-b-0",
+        "last:border-b-0",
+        className,
       )}
     >
       <Link
@@ -68,21 +68,21 @@ export const ArticleCard = ({
         {/* Content */}
         <div
           className={cn(
-            'flex flex-col justify-between bg-white flex-1',
-            'lg:relative lg:transition-transform lg:duration-300 lg:ease-in-out',
-            'lg:mt-[-40px] lg:ml-7 lg:p-6',
-            'lg:shadow-[0_2px_20px_0_rgba(9,52,102,0.14)]',
-            'lg:group-hover:translate-y-[-5px]'
+            "flex flex-col justify-between bg-white flex-1",
+            "lg:relative lg:transition-transform lg:duration-300 lg:ease-in-out",
+            "lg:mt-[-40px] lg:ml-7 lg:p-6",
+            "lg:shadow-[0_2px_20px_0_rgba(9,52,102,0.14)]",
+            "lg:group-hover:translate-y-[-5px]",
           )}
         >
           {/* Title */}
           <h4
             className={cn(
-              'text-base leading-[1.4] lg:text-xl',
-              'overflow-hidden',
-              'line-clamp-2',
-              'lg:h-14',
-              'mb-0'
+              "text-base leading-[1.4] lg:text-xl",
+              "overflow-hidden",
+              "line-clamp-2",
+              "lg:h-14",
+              "mb-0",
             )}
           >
             {title}
@@ -90,7 +90,10 @@ export const ArticleCard = ({
 
           {/* Meta */}
           {(date || tags.length > 0) && (
-            <div data-testid="article-meta" className="mt-4 flex flex-wrap gap-3 text-xs lg:text-sm text-kcvv-green-bright">
+            <div
+              data-testid="article-meta"
+              className="mt-4 flex flex-wrap gap-3 text-xs lg:text-sm text-kcvv-green-bright"
+            >
               {date && (
                 <span className="flex items-center gap-2">
                   <Clock size={14} />
@@ -112,5 +115,5 @@ export const ArticleCard = ({
         </div>
       </Link>
     </article>
-  )
-}
+  );
+};

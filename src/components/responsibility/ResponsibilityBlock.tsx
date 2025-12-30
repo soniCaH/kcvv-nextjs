@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Responsibility Block for Homepage
@@ -6,9 +6,9 @@
  * Compact version of the responsibility finder for the homepage
  */
 
-import Link from 'next/link'
-import { ChevronRight, Users, Mail, UserPlus } from 'lucide-react'
-import { ResponsibilityFinder } from './ResponsibilityFinder'
+import Link from "next/link";
+import { ChevronRight, Users, Mail, UserPlus } from "@/lib/icons";
+import { ResponsibilityFinder } from "./ResponsibilityFinder";
 
 /**
  * Renders the responsibility block containing a compact finder, a link to the full help page, and three quick-link cards.
@@ -23,7 +23,9 @@ export function ResponsibilityBlock() {
         <div className="text-center mb-12">
           <h2
             className="text-3xl md:text-5xl font-bold text-gray-blue mb-4"
-            style={{ fontFamily: 'quasimoda, acumin-pro, Montserrat, sans-serif' }}
+            style={{
+              fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+            }}
           >
             Hoe kunnen we je helpen?
           </h2>
@@ -59,8 +61,12 @@ export function ResponsibilityBlock() {
                 <Users size={20} />
               </div>
               <div>
-                <div className="font-semibold text-gray-blue group-hover:text-green-main">Organogram</div>
-                <div className="text-xs text-gray-medium">Alle bestuursleden</div>
+                <div className="font-semibold text-gray-blue group-hover:text-green-main">
+                  Organogram
+                </div>
+                <div className="text-xs text-gray-medium">
+                  Alle bestuursleden
+                </div>
               </div>
             </div>
           </Link>
@@ -74,7 +80,9 @@ export function ResponsibilityBlock() {
                 <Mail size={20} />
               </div>
               <div>
-                <div className="font-semibold text-gray-blue group-hover:text-green-main">Contact</div>
+                <div className="font-semibold text-gray-blue group-hover:text-green-main">
+                  Contact
+                </div>
                 <div className="text-xs text-gray-medium">Algemene info</div>
               </div>
             </div>
@@ -89,7 +97,9 @@ export function ResponsibilityBlock() {
                 <UserPlus size={20} />
               </div>
               <div>
-                <div className="font-semibold text-gray-blue group-hover:text-green-main">Inschrijven</div>
+                <div className="font-semibold text-gray-blue group-hover:text-green-main">
+                  Inschrijven
+                </div>
                 <div className="text-xs text-gray-medium">Word lid</div>
               </div>
             </div>
@@ -97,5 +107,5 @@ export function ResponsibilityBlock() {
         </div>
       </div>
     </section>
-  )
+  );
 }

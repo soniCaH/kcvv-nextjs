@@ -18,6 +18,7 @@ import {
   ArrowRight,
   ExternalLink,
   Check,
+  CircleHelp,
 
   // Social
   Facebook,
@@ -42,6 +43,7 @@ import {
   // People & Organization
   User,
   Users,
+  UserPlus,
   GraduationCap,
   UserSearch,
 
@@ -63,7 +65,7 @@ import {
   Plus,
   Zap,
   type LucideIcon,
-} from 'lucide-react'
+} from "lucide-react";
 
 /**
  * Icon components map
@@ -74,12 +76,13 @@ export const icons = {
   menu: Menu,
   x: X,
   search: Search,
-  'chevron-down': ChevronDown,
-  'chevron-left': ChevronLeft,
-  'chevron-right': ChevronRight,
-  'arrow-right': ArrowRight,
-  'external-link': ExternalLink,
+  "chevron-down": ChevronDown,
+  "chevron-left": ChevronLeft,
+  "chevron-right": ChevronRight,
+  "arrow-right": ArrowRight,
+  "external-link": ExternalLink,
   check: Check,
+  "circle-help": CircleHelp,
 
   // Social
   facebook: Facebook,
@@ -87,13 +90,13 @@ export const icons = {
   instagram: Instagram,
 
   // Content & Document
-  'file-text': FileText,
+  "file-text": FileText,
   clipboard: Clipboard,
-  'clipboard-list': ClipboardList,
+  "clipboard-list": ClipboardList,
   newspaper: Newspaper,
   tag: Tag,
   calendar: Calendar,
-  'calendar-days': CalendarDays,
+  "calendar-days": CalendarDays,
   clock: Clock,
 
   // Communication
@@ -104,8 +107,9 @@ export const icons = {
   // People & Organization
   user: User,
   users: Users,
-  'graduation-cap': GraduationCap,
-  'user-search': UserSearch,
+  "user-plus": UserPlus,
+  "graduation-cap": GraduationCap,
+  "user-search": UserSearch,
 
   // Sports & Activities
   trophy: Trophy,
@@ -114,9 +118,9 @@ export const icons = {
 
   // Medical & Safety
   heart: Heart,
-  'heart-pulse': HeartPulse,
+  "heart-pulse": HeartPulse,
   shield: Shield,
-  'shield-alert': ShieldAlert,
+  "shield-alert": ShieldAlert,
 
   // Business
   handshake: Handshake,
@@ -124,15 +128,23 @@ export const icons = {
   // Misc
   plus: Plus,
   zap: Zap,
-} as const
+} as const;
 
-export type IconName = keyof typeof icons
+export type IconName = keyof typeof icons;
 
 /**
- * Get icon component by name
+ * Get icon component by name with fallback
+ * @param name - Icon name from IconName type
+ * @returns Lucide icon component, or CircleHelp as fallback if name is invalid
  */
-export function getIcon(name: IconName): LucideIcon {
-  return icons[name]
+export function getIcon(name: string): LucideIcon {
+  // Type-safe lookup with fallback for runtime safety
+  const icon = icons[name as IconName];
+  if (!icon) {
+    console.warn(`Icon "${name}" not found, using fallback icon`);
+    return CircleHelp;
+  }
+  return icon;
 }
 
 /**
@@ -140,32 +152,32 @@ export function getIcon(name: IconName): LucideIcon {
  * Maps category to appropriate Lucide icon
  */
 export const categoryIcons = {
-  commercieel: 'handshake',
-  medisch: 'heart',
-  administratief: 'file-text',
-  gedrag: 'shield',
-  algemeen: 'users',
-  sportief: 'trophy',
-} as const satisfies Record<string, IconName>
+  commercieel: "handshake",
+  medisch: "heart",
+  administratief: "file-text",
+  gedrag: "shield",
+  algemeen: "users",
+  sportief: "trophy",
+} as const satisfies Record<string, IconName>;
 
 /**
  * Emoji to Lucide icon mapping
  * Used for backward compatibility during migration
  */
 export const emojiToIcon = {
-  '🤝': 'handshake',
-  '💪': 'zap',
-  '📝': 'file-text',
-  '⚽': 'trophy',
-  '📋': 'clipboard-list',
-  '🛡️': 'shield',
-  '🏥': 'heart',
-  '📱': 'smartphone',
-  '👤': 'user',
-  '🎓': 'graduation-cap',
-  '📅': 'calendar',
-  '🔍': 'search',
-} as const satisfies Record<string, IconName>
+  "🤝": "handshake",
+  "💪": "zap",
+  "📝": "file-text",
+  "⚽": "trophy",
+  "📋": "clipboard-list",
+  "🛡️": "shield",
+  "🏥": "heart",
+  "📱": "smartphone",
+  "👤": "user",
+  "🎓": "graduation-cap",
+  "📅": "calendar",
+  "🔍": "search",
+} as const satisfies Record<string, IconName>;
 
 /**
  * Export all icons for direct use
@@ -181,6 +193,7 @@ export {
   ArrowRight,
   ExternalLink,
   Check,
+  CircleHelp,
 
   // Social
   Facebook,
@@ -205,6 +218,7 @@ export {
   // People & Organization
   User,
   Users,
+  UserPlus,
   GraduationCap,
   UserSearch,
 
@@ -226,4 +240,4 @@ export {
   Plus,
   Zap,
   type LucideIcon,
-}
+};
