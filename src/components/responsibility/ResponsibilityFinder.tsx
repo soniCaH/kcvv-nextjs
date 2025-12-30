@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Responsibility Finder Component
@@ -7,13 +7,18 @@
  * "Ik ben [ROLE] en ik [QUESTION]"
  */
 
-import { useState, useMemo, useEffect, useRef } from 'react'
-import type { UserRole, ResponsibilityPath, AutocompleteSuggestion } from '@/types/responsibility'
-import { responsibilityPaths, userRoles } from '@/data/responsibility-paths'
+import { useState, useMemo, useEffect, useRef } from "react";
+import type {
+  UserRole,
+  ResponsibilityPath,
+  AutocompleteSuggestion,
+} from "@/types/responsibility";
+import { responsibilityPaths, userRoles } from "@/data/responsibility-paths";
+import { X, User, ArrowRight, Clipboard } from "lucide-react";
 
 interface ResponsibilityFinderProps {
-  onResultSelect?: (path: ResponsibilityPath) => void
-  compact?: boolean
+  onResultSelect?: (path: ResponsibilityPath) => void;
+  compact?: boolean;
 }
 
 /**
@@ -26,57 +31,60 @@ interface ResponsibilityFinderProps {
  * @param compact - If true, renders a more compact layout and typography.
  * @returns The component element that provides role selection, question input with smart autocomplete, and a selected result display.
  */
-export function ResponsibilityFinder({ onResultSelect, compact = false }: ResponsibilityFinderProps) {
-  const [selectedRole, setSelectedRole] = useState<UserRole | ''>('')
-  const [questionText, setQuestionText] = useState('')
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [selectedResult, setSelectedResult] = useState<ResponsibilityPath | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
+export function ResponsibilityFinder({
+  onResultSelect,
+  compact = false,
+}: ResponsibilityFinderProps) {
+  const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
+  const [questionText, setQuestionText] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedResult, setSelectedResult] =
+    useState<ResponsibilityPath | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Smart matching algorithm
   const suggestions = useMemo((): AutocompleteSuggestion[] => {
-    if (!questionText.trim() && !selectedRole) return []
+    if (!questionText.trim() && !selectedRole) return [];
 
-    const query = questionText.toLowerCase()
-    const matches: AutocompleteSuggestion[] = []
+    const query = questionText.toLowerCase();
+    const matches: AutocompleteSuggestion[] = [];
 
-    responsibilityPaths.forEach(path => {
-      let score = 0
+    responsibilityPaths.forEach((path) => {
+      let score = 0;
 
       // Filter by role first (required match)
       if (selectedRole && !path.role.includes(selectedRole as UserRole)) {
-        return // Skip if role doesn't match
+        return; // Skip if role doesn't match
       } else if (selectedRole) {
-        score += 30 // Boost if role matches
+        score += 30; // Boost if role matches
       }
 
       // Match against question text
       if (query) {
-        const questionLower = path.question.toLowerCase()
+        const questionLower = path.question.toLowerCase();
 
         // Exact match in question
         if (questionLower.includes(query)) {
-          score += 50
+          score += 50;
         }
 
         // Keyword matching (case-insensitive)
         const matchedKeywords = path.keywords.filter((kw) => {
-          const kwLower = kw.toLowerCase()
-          return kwLower.includes(query) || query.includes(kwLower)
-        })
-        score += matchedKeywords.length * 10
+          const kwLower = kw.toLowerCase();
+          return kwLower.includes(query) || query.includes(kwLower);
+        });
+        score += matchedKeywords.length * 10;
 
         // Word-by-word matching
-        const queryWords = query.split(' ').filter(w => w.length > 2)
-        queryWords.forEach(word => {
-          if (questionLower.includes(word)) score += 5
-          path.keywords.forEach(kw => {
-            const kwLower = kw.toLowerCase()
-            if (kwLower.includes(word)) score += 3
-          })
-        })
+        const queryWords = query.split(" ").filter((w) => w.length > 2);
+        queryWords.forEach((word) => {
+          if (questionLower.includes(word)) score += 5;
+          path.keywords.forEach((kw) => {
+            const kwLower = kw.toLowerCase();
+            if (kwLower.includes(word)) score += 3;
+          });
+        });
       }
 
       // Only include if there's some match
@@ -84,87 +92,90 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
         matches.push({
           path,
           score,
-        })
+        });
       }
-    })
+    });
 
     // Sort by score (highest first)
-    return matches.sort((a, b) => b.score - a.score).slice(0, 6)
-  }, [questionText, selectedRole])
+    return matches.sort((a, b) => b.score - a.score).slice(0, 6);
+  }, [questionText, selectedRole]);
 
   // Handle role selection
   const handleRoleSelect = (role: string) => {
-    setSelectedRole(role as UserRole)
-    setSelectedResult(null)
+    setSelectedRole(role as UserRole);
+    setSelectedResult(null);
 
     // Clear any existing timeout
     if (focusTimeoutRef.current) {
-      clearTimeout(focusTimeoutRef.current)
+      clearTimeout(focusTimeoutRef.current);
     }
 
     // Schedule focus with cleanup tracking
     focusTimeoutRef.current = setTimeout(() => {
-      inputRef.current?.focus()
-      focusTimeoutRef.current = null
-    }, 100)
-  }
+      inputRef.current?.focus();
+      focusTimeoutRef.current = null;
+    }, 100);
+  };
 
   // Handle suggestion click
   const handleSuggestionClick = (path: ResponsibilityPath) => {
-    setQuestionText(path.question)
-    setSelectedResult(path)
-    setShowSuggestions(false)
+    setQuestionText(path.question);
+    setSelectedResult(path);
+    setShowSuggestions(false);
     if (onResultSelect) {
-      onResultSelect(path)
+      onResultSelect(path);
     }
-  }
+  };
 
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (!(e.target as Element).closest('.suggestions-container')) {
-        setShowSuggestions(false)
+      if (!(e.target as Element).closest(".suggestions-container")) {
+        setShowSuggestions(false);
       }
-    }
-    document.addEventListener('click', handleClick)
-    return () => document.removeEventListener('click', handleClick)
-  }, [])
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, []);
 
   // Cleanup focus timeout on unmount
   useEffect(() => {
     return () => {
       if (focusTimeoutRef.current) {
-        clearTimeout(focusTimeoutRef.current)
+        clearTimeout(focusTimeoutRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   return (
-    <div className={`responsibility-finder ${compact ? 'compact' : ''}`}>
+    <div className={`responsibility-finder ${compact ? "compact" : ""}`}>
       {/* Question Builder */}
       <div className="question-builder space-y-6">
         {/* "Ik ben" - Role Selector */}
         <div className="role-selector">
           <h2
-            className={`${compact ? 'text-2xl md:text-4xl' : 'text-4xl md:text-6xl'} font-bold text-gray-blue mb-4`}
-            style={{ fontFamily: 'quasimoda, acumin-pro, Montserrat, sans-serif' }}
+            className={`${compact ? "text-2xl md:text-4xl" : "text-4xl md:text-6xl"} font-bold text-gray-blue mb-4`}
+            style={{
+              fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+            }}
           >
             IK BEN
           </h2>
 
           <div className="flex flex-wrap gap-3">
-            {userRoles.map(role => (
+            {userRoles.map((role) => (
               <button
                 key={role.value}
                 onClick={() => handleRoleSelect(role.value)}
                 className={`
                   px-6 py-3 rounded-lg font-bold text-lg transition-all
-                  ${selectedRole === role.value
-                    ? 'bg-green-main text-white shadow-lg scale-105'
-                    : 'bg-white text-gray-dark border-2 border-gray-light hover:border-green-main hover:text-green-main'
+                  ${
+                    selectedRole === role.value
+                      ? "bg-green-main text-white shadow-lg scale-105"
+                      : "bg-white text-gray-dark border-2 border-gray-light hover:border-green-main hover:text-green-main"
                   }
                 `}
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
+                style={{ fontFamily: "Montserrat, sans-serif" }}
               >
                 {role.label.toUpperCase()}
               </button>
@@ -176,8 +187,10 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
         {selectedRole && (
           <div className="question-input suggestions-container">
             <h2
-              className={`${compact ? 'text-2xl md:text-4xl' : 'text-4xl md:text-6xl'} font-bold text-gray-blue mb-4`}
-              style={{ fontFamily: 'quasimoda, acumin-pro, Montserrat, sans-serif' }}
+              className={`${compact ? "text-2xl md:text-4xl" : "text-4xl md:text-6xl"} font-bold text-gray-blue mb-4`}
+              style={{
+                fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+              }}
             >
               EN IK
             </h2>
@@ -188,34 +201,32 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
                 type="text"
                 value={questionText}
                 onChange={(e) => {
-                  setQuestionText(e.target.value)
-                  setShowSuggestions(true)
-                  setSelectedResult(null)
+                  setQuestionText(e.target.value);
+                  setShowSuggestions(true);
+                  setSelectedResult(null);
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder="typ je vraag..."
                 className={`
-                  w-full ${compact ? 'text-xl md:text-3xl' : 'text-3xl md:text-5xl'} font-bold
+                  w-full ${compact ? "text-xl md:text-3xl" : "text-3xl md:text-5xl"} font-bold
                   px-6 py-4 pr-16 border-4 border-gray-light rounded-lg
                   focus:outline-none focus:border-green-main
                   placeholder:text-gray-medium placeholder:font-normal
                   transition-all
                 `}
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
+                style={{ fontFamily: "Montserrat, sans-serif" }}
               />
 
               {questionText && (
                 <button
                   onClick={() => {
-                    setQuestionText('')
-                    inputRef.current?.focus()
+                    setQuestionText("");
+                    inputRef.current?.focus();
                   }}
                   className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-medium hover:text-gray-dark transition-colors rounded-full hover:bg-gray-100"
                   aria-label="Clear search"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X size={24} />
                 </button>
               )}
 
@@ -229,7 +240,7 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
                       aria-label={suggestion.path.question}
                       className={`
                         w-full text-left px-6 py-4 hover:bg-green-main/10 transition-colors
-                        ${idx !== 0 ? 'border-t border-gray-light' : ''}
+                        ${idx !== 0 ? "border-t border-gray-light" : ""}
                         group
                       `}
                     >
@@ -267,10 +278,8 @@ export function ResponsibilityFinder({ onResultSelect, compact = false }: Respon
           <ResultCard path={selectedResult} />
         </div>
       )}
-
-
     </div>
-  )
+  );
 }
 
 /**
@@ -288,47 +297,57 @@ function ResultCard({ path }: { path: ResponsibilityPath }) {
       <div className="flex items-start gap-4 mb-6">
         <span className="text-6xl">{path.icon}</span>
         <div className="flex-1">
-          <h3 className="text-3xl font-bold text-gray-blue mb-2" style={{ fontFamily: 'quasimoda, acumin-pro, Montserrat, sans-serif' }}>
+          <h3
+            className="text-3xl font-bold text-gray-blue mb-2"
+            style={{
+              fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+            }}
+          >
             {path.question}
           </h3>
-          <p className="text-xl text-gray-dark">
-            {path.summary}
-          </p>
+          <p className="text-xl text-gray-dark">{path.summary}</p>
         </div>
       </div>
 
       {/* Primary Contact */}
       <div className="bg-green-main/10 rounded-lg p-6 mb-6">
         <h4 className="font-bold text-gray-blue mb-3 flex items-center gap-2">
-          <svg className="w-5 h-5 text-green-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
+          <User size={20} className="text-green-main" />
           Contactpersoon
         </h4>
         <div className="space-y-2">
-          <div className="font-semibold text-lg">{path.primaryContact.role}</div>
+          <div className="font-semibold text-lg">
+            {path.primaryContact.role}
+          </div>
           {path.primaryContact.name && <div>{path.primaryContact.name}</div>}
           {path.primaryContact.email && (
             <div>
-              <a href={`mailto:${path.primaryContact.email}`} className="text-green-main hover:text-green-hover hover:underline">
+              <a
+                href={`mailto:${path.primaryContact.email}`}
+                className="text-green-main hover:text-green-hover hover:underline"
+              >
                 {path.primaryContact.email}
               </a>
             </div>
           )}
           {path.primaryContact.phone && (
             <div>
-              <a href={`tel:${path.primaryContact.phone}`} className="text-green-main hover:text-green-hover hover:underline">
+              <a
+                href={`tel:${path.primaryContact.phone}`}
+                className="text-green-main hover:text-green-hover hover:underline"
+              >
                 {path.primaryContact.phone}
               </a>
             </div>
           )}
           {path.primaryContact.orgLink && (
             <div>
-              <a href={path.primaryContact.orgLink} className="text-green-main hover:text-green-hover hover:underline inline-flex items-center gap-1">
+              <a
+                href={path.primaryContact.orgLink}
+                className="text-green-main hover:text-green-hover hover:underline inline-flex items-center gap-1"
+              >
                 Bekijk in organogram
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                <ArrowRight size={16} />
               </a>
             </div>
           )}
@@ -338,13 +357,11 @@ function ResultCard({ path }: { path: ResponsibilityPath }) {
       {/* Steps */}
       <div>
         <h4 className="font-bold text-gray-blue mb-4 flex items-center gap-2">
-          <svg className="w-5 h-5 text-green-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
+          <Clipboard size={20} className="text-green-main" />
           Wat moet je doen?
         </h4>
         <ol className="space-y-4">
-          {path.steps.map(step => (
+          {path.steps.map((step) => (
             <li key={step.order} className="flex gap-4">
               <div className="flex-shrink-0 w-8 h-8 bg-green-main text-white rounded-full flex items-center justify-center font-bold">
                 {step.order}
@@ -352,18 +369,22 @@ function ResultCard({ path }: { path: ResponsibilityPath }) {
               <div className="flex-1 pt-1">
                 <p className="text-gray-dark">{step.description}</p>
                 {step.link && (
-                  <a href={step.link} className="text-green-main hover:text-green-hover hover:underline text-sm inline-flex items-center gap-1 mt-1">
+                  <a
+                    href={step.link}
+                    className="text-green-main hover:text-green-hover hover:underline text-sm inline-flex items-center gap-1 mt-1"
+                  >
                     Meer info
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <ArrowRight size={12} />
                   </a>
                 )}
                 {step.contact && (
                   <div className="mt-2 text-sm">
-                    <strong>{step.contact.role}:</strong>{' '}
+                    <strong>{step.contact.role}:</strong>{" "}
                     {step.contact.email && (
-                      <a href={`mailto:${step.contact.email}`} className="text-green-main hover:text-green-hover hover:underline">
+                      <a
+                        href={`mailto:${step.contact.email}`}
+                        className="text-green-main hover:text-green-hover hover:underline"
+                      >
                         {step.contact.email}
                       </a>
                     )}
@@ -375,5 +396,5 @@ function ResultCard({ path }: { path: ResponsibilityPath }) {
         </ol>
       </div>
     </div>
-  )
+  );
 }

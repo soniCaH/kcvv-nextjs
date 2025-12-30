@@ -3,8 +3,8 @@
  * Showcases Icon wrapper with Lucide React icons
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { Icon } from './Icon'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Icon } from "./Icon";
 import {
   Activity,
   Trophy,
@@ -21,31 +21,39 @@ import {
   Menu,
   X,
   ChevronDown,
-} from 'lucide-react'
+} from "lucide-react";
 
 const meta = {
-  title: 'UI/Icon',
+  title: "UI/Icon",
   component: Icon,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     size: {
-      control: 'select',
-      options: ['xs', 'sm', 'md', 'lg', 'xl', '2xl'],
-      description: 'Size of the icon',
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl", "2xl"],
+      description: "Size of the icon",
     },
     color: {
-      control: 'select',
-      options: ['current', 'primary', 'secondary', 'success', 'warning', 'error', 'muted'],
-      description: 'Color of the icon',
+      control: "select",
+      options: [
+        "current",
+        "primary",
+        "secondary",
+        "success",
+        "warning",
+        "error",
+        "muted",
+      ],
+      description: "Color of the icon",
     },
   },
-} satisfies Meta<typeof Icon>
+} satisfies Meta<typeof Icon>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * Default icon (Football)
@@ -54,7 +62,7 @@ export const Default: Story = {
   args: {
     icon: Activity,
   },
-}
+};
 
 /**
  * Primary color (KCVV Green)
@@ -62,10 +70,10 @@ export const Default: Story = {
 export const Primary: Story = {
   args: {
     icon: Trophy,
-    color: 'primary',
-    size: 'lg',
+    color: "primary",
+    size: "lg",
   },
-}
+};
 
 /**
  * All available sizes
@@ -75,32 +83,32 @@ export const AllSizes: Story = {
   render: () => (
     <div className="flex items-center gap-4">
       <div className="text-center">
-        <Icon icon={<FaFutbol />} size="xs" />
+        <Icon icon={Activity} size="xs" />
         <div className="text-xs mt-2 text-gray-600">xs</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaFutbol />} size="sm" />
+        <Icon icon={Activity} size="sm" />
         <div className="text-xs mt-2 text-gray-600">sm</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaFutbol />} size="md" />
+        <Icon icon={Activity} size="md" />
         <div className="text-xs mt-2 text-gray-600">md</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaFutbol />} size="lg" />
+        <Icon icon={Activity} size="lg" />
         <div className="text-xs mt-2 text-gray-600">lg</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaFutbol />} size="xl" />
+        <Icon icon={Activity} size="xl" />
         <div className="text-xs mt-2 text-gray-600">xl</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaFutbol />} size="2xl" />
+        <Icon icon={Activity} size="2xl" />
         <div className="text-xs mt-2 text-gray-600">2xl</div>
       </div>
     </div>
   ),
-}
+};
 
 /**
  * All available colors
@@ -110,36 +118,36 @@ export const AllColors: Story = {
   render: () => (
     <div className="flex flex-wrap gap-6">
       <div className="text-center">
-        <Icon icon={<FaFutbol />} color="current" size="xl" />
+        <Icon icon={Activity} color="current" size="xl" />
         <div className="text-xs mt-2 text-gray-600">current</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaFutbol />} color="primary" size="xl" />
+        <Icon icon={Activity} color="primary" size="xl" />
         <div className="text-xs mt-2 text-gray-600">primary</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaFutbol />} color="secondary" size="xl" />
+        <Icon icon={Activity} color="secondary" size="xl" />
         <div className="text-xs mt-2 text-gray-600">secondary</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaFutbol />} color="success" size="xl" />
+        <Icon icon={Activity} color="success" size="xl" />
         <div className="text-xs mt-2 text-gray-600">success</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaFutbol />} color="warning" size="xl" />
+        <Icon icon={Activity} color="warning" size="xl" />
         <div className="text-xs mt-2 text-gray-600">warning</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaFutbol />} color="error" size="xl" />
+        <Icon icon={Activity} color="error" size="xl" />
         <div className="text-xs mt-2 text-gray-600">error</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaFutbol />} color="muted" size="xl" />
+        <Icon icon={Activity} color="muted" size="xl" />
         <div className="text-xs mt-2 text-gray-600">muted</div>
       </div>
     </div>
   ),
-}
+};
 
 /**
  * Common KCVV icons
@@ -170,7 +178,7 @@ export const CommonIcons: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * Contact icons
@@ -183,7 +191,7 @@ export const ContactIcons: Story = {
       <Icon icon={Mail} size="md" color="secondary" />
     </div>
   ),
-}
+};
 
 /**
  * Social media icons
@@ -197,7 +205,7 @@ export const SocialIcons: Story = {
       <Icon icon={Instagram} size="lg" color="muted" />
     </div>
   ),
-}
+};
 
 /**
  * Navigation icons
@@ -213,7 +221,7 @@ export const NavigationIcons: Story = {
       <Icon icon={ChevronDown} size="md" />
     </div>
   ),
-}
+};
 
 /**
  * Icons with text
@@ -236,7 +244,7 @@ export const WithText: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * Interactive playground
@@ -244,7 +252,7 @@ export const WithText: Story = {
 export const Playground: Story = {
   args: {
     icon: Activity,
-    size: 'md',
-    color: 'primary',
+    size: "md",
+    color: "primary",
   },
-}
+};
