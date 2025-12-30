@@ -15,6 +15,7 @@ import type {
 } from "@/types/responsibility";
 import { responsibilityPaths, userRoles } from "@/data/responsibility-paths";
 import { X, User, ArrowRight, Clipboard } from "lucide-react";
+import { getIcon, type IconName } from "@/lib/icons";
 
 interface ResponsibilityFinderProps {
   onResultSelect?: (path: ResponsibilityPath) => void;
@@ -245,7 +246,19 @@ export function ResponsibilityFinder({
                       `}
                     >
                       <div className="flex items-start gap-3">
-                        <span className="text-3xl">{suggestion.path.icon}</span>
+                        {suggestion.path.icon &&
+                          (() => {
+                            const IconComponent = getIcon(
+                              suggestion.path.icon as IconName,
+                            );
+                            return (
+                              <IconComponent
+                                size={48}
+                                className="text-green-main"
+                                strokeWidth={2}
+                              />
+                            );
+                          })()}
                         <div className="flex-1">
                           <div className="text-lg font-semibold text-gray-blue group-hover:text-green-main">
                             {suggestion.path.question}
@@ -295,7 +308,17 @@ function ResultCard({ path }: { path: ResponsibilityPath }) {
     <div className="bg-white rounded-xl shadow-lg border-4 border-green-main p-8">
       {/* Header */}
       <div className="flex items-start gap-4 mb-6">
-        <span className="text-6xl">{path.icon}</span>
+        {path.icon &&
+          (() => {
+            const IconComponent = getIcon(path.icon as IconName);
+            return (
+              <IconComponent
+                size={64}
+                className="text-green-main"
+                strokeWidth={2}
+              />
+            );
+          })()}
         <div className="flex-1">
           <h3
             className="text-3xl font-bold text-gray-blue mb-2"
