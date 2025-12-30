@@ -212,7 +212,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       "medisch",
     ],
     summary:
-      "Neem contact op met de secretaris voor het clubstempel en handtekening.",
+      "Neem contact op met de secretaris voor het clubstempel en de handtekening.",
     category: "administratief",
     icon: "📋",
     primaryContact: {
@@ -233,7 +233,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       {
         order: 3,
         description:
-          "Bezorg het attest aan de secretaris voor clubstempel en handtekening",
+          "Bezorg het attest aan de secretaris voor het clubstempel en de handtekening",
         contact: {
           role: "Secretaris",
           email: "secretaris@kcvvelewijt.be",

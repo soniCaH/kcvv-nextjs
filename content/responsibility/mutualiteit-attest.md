@@ -21,7 +21,7 @@ primaryContact:
 
 # Summary
 
-Neem contact op met de secretaris voor het clubstempel en handtekening.
+Neem contact op met de secretaris voor het clubstempel en de handtekening.
 
 ## Steps
 
@@ -29,7 +29,7 @@ Neem contact op met de secretaris voor het clubstempel en handtekening.
 
 ### 2. Vul het attest in met de nodige gegevens
 
-### 3. Bezorg het attest aan de secretaris voor clubstempel en handtekening
+### 3. Bezorg het attest aan de secretaris voor het clubstempel en de handtekening
 
 **Contact:** Secretaris
 **Email:** secretaris@kcvvelewijt.be
