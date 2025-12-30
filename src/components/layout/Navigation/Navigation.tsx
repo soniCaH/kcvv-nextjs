@@ -10,7 +10,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils/cn'
-import { FaSearch } from 'react-icons/fa'
+import { Search } from 'lucide-react'
 
 export interface NavigationProps {
   /**
@@ -225,7 +225,7 @@ export const Navigation = ({ className }: NavigationProps) => {
               className="nav-link text-[0.7rem] xl:text-[0.875rem] uppercase font-bold text-white whitespace-nowrap no-underline py-2 px-2 transition-all duration-300 inline-block"
               aria-label="Search"
             >
-              <FaSearch className="w-4 h-4" />
+              <Search size={16} />
               <span className="sr-only">Search</span>
             </Link>
           </li>

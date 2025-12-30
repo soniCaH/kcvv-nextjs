@@ -11,7 +11,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils/cn'
 import { Icon, SocialLinks } from '@/components/ui'
-import { FaTimes, FaChevronDown, FaSearch } from 'react-icons/fa'
+import { X, ChevronDown, Search } from 'lucide-react'
 
 export interface MobileMenuProps {
   /**
@@ -211,7 +211,7 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
             aria-label="Close menu"
             className="p-2 text-white hover:text-kcvv-green-bright transition-colors"
           >
-            <Icon icon={<FaTimes />} size="lg" />
+            <Icon icon={X} size="lg" />
           </button>
         </div>
 
@@ -236,7 +236,7 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
                     >
                       <span>{item.label}</span>
                       <Icon
-                        icon={<FaChevronDown />}
+                        icon={ChevronDown}
                         size="xs"
                         className={cn(
                           'transition-transform',
@@ -291,7 +291,7 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
                   >
                     {item.label}
                     {item.href === '/search' && (
-                      <Icon icon={<FaSearch />} size="xs" className="ml-2 inline" />
+                      <Icon icon={Search} size="xs" className="ml-2 inline" />
                     )}
                   </Link>
                 )}

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Category {
   id: string
@@ -77,7 +77,7 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
           className="flex absolute left-0 z-10 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
           aria-label="Scroll left"
         >
-          <FaChevronLeft className="w-3 h-3" />
+          <ChevronLeft size={12} />
         </button>
       )}
 
@@ -88,7 +88,7 @@ export function CategoryFilters({ categories, activeCategory }: CategoryFiltersP
           className="flex absolute right-0 z-10 w-8 h-8 items-center justify-center bg-white shadow-md rounded-full text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
           aria-label="Scroll right"
         >
-          <FaChevronRight className="w-3 h-3" />
+          <ChevronRight size={12} />
         </button>
       )}
 

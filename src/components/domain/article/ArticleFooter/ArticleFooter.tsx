@@ -8,7 +8,7 @@
 
 import Link from 'next/link'
 import { Icon } from '@/components/ui'
-import { FaNewspaper, FaUser, FaUsers, FaFutbol } from 'react-icons/fa'
+import { Newspaper, User, Users, Activity } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export interface RelatedContent {
@@ -38,10 +38,10 @@ export interface ArticleFooterProps {
 }
 
 const contentTypeIcons = {
-  article: <FaNewspaper />,
-  player: <FaUser />,
-  staff: <FaUsers />,
-  team: <FaFutbol />,
+  article: Newspaper,
+  player: User,
+  staff: Users,
+  team: Activity,
 }
 
 /**

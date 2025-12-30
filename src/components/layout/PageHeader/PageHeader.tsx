@@ -10,7 +10,7 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { cn } from '@/lib/utils/cn'
-import { FaSearch, FaBars } from 'react-icons/fa'
+import { Search, Menu } from 'lucide-react'
 import { Navigation } from '../Navigation'
 import { MobileMenu } from '../MobileMenu'
 
@@ -63,7 +63,7 @@ export const PageHeader = ({ className }: PageHeaderProps) => {
               aria-label="Toggle navigation menu"
               className="absolute left-[34px] top-[calc((5rem-16px)/2)] text-white w-6 h-6 flex items-center justify-center"
             >
-              <FaBars className="w-4 h-4" />
+              <Menu size={16} />
             </button>
 
             {/* Mobile Logo - centered */}
@@ -87,7 +87,7 @@ export const PageHeader = ({ className }: PageHeaderProps) => {
               aria-label="Search"
               className="absolute right-[34px] top-[calc((5rem-16px)/2)] text-white w-6 h-6 flex items-center justify-center"
             >
-              <FaSearch className="w-4 h-4" />
+              <Search size={16} />
             </Link>
           </div>
 
