@@ -23,16 +23,11 @@ async function selectRole(
   user: ReturnType<typeof userEvent.setup>,
   roleName: string,
 ) {
-  // Find the dropdown button (it's inside the .role-dropdown-container)
-  const dropdownContainer = document.querySelector(".role-dropdown-container");
-  if (!dropdownContainer) {
-    throw new Error("Dropdown container not found");
-  }
-
-  const dropdownButton = dropdownContainer.querySelector("button");
-  if (!dropdownButton) {
-    throw new Error("Dropdown button not found");
-  }
+  // Find the dropdown button by its text content
+  // It either shows "een..." (initial) or a role name (after selection)
+  const dropdownButton = screen.getByRole("button", {
+    name: /een\.\.\.|speler|ouder|trainer|supporter|niet-lid/i,
+  });
 
   // Click the dropdown button to open the menu
   await user.click(dropdownButton);
@@ -191,12 +186,30 @@ describe("ResponsibilityFinder", () => {
       await user.type(input, "w"); // Broad search
 
       await waitFor(() => {
-        const suggestionContainer = screen
-          .getByRole("textbox")
-          .parentElement?.querySelector(".absolute");
-        expect(suggestionContainer).toBeInTheDocument();
-        const buttons = suggestionContainer!.querySelectorAll("button");
-        expect(buttons.length).toBeLessThanOrEqual(6);
+        const allButtons = screen.queryAllByRole("button");
+
+        // Filter to get only suggestion buttons
+        // Exclude: dropdown button and clear button
+        const suggestionButtons = allButtons.filter((button) => {
+          const label = button.getAttribute("aria-label") || "";
+          const text = button.textContent || "";
+
+          // Skip clear button (has "clear" in aria-label)
+          if (label.toLowerCase().includes("clear")) return false;
+
+          // Skip dropdown button (contains "een..." or a role name)
+          if (
+            text.includes("een...") ||
+            /speler|ouder|trainer|supporter|niet-lid/i.test(text)
+          ) {
+            return false;
+          }
+
+          return true;
+        });
+
+        expect(suggestionButtons.length).toBeGreaterThan(0);
+        expect(suggestionButtons.length).toBeLessThanOrEqual(6);
       });
     });
 
@@ -375,18 +388,32 @@ describe("ResponsibilityFinder", () => {
       await user.clear(input);
       await user.type(input, "xyzabc123notfound");
 
-      // Give time for suggestions to be processed
+      // Should show empty state message when there are no matches
       await waitFor(() => {
-        expect(input).toHaveValue("xyzabc123notfound");
+        const emptyState = screen.queryByText(/Geen resultaten gevonden/i);
+        expect(emptyState).toBeInTheDocument();
       });
 
-      // Should either show empty state or no suggestions
-      // (Empty state requires showSuggestions to be true which happens on typing)
-      const emptyState = screen.queryByText(/Geen resultaten gevonden/i);
-      const suggestions = screen.queryAllByRole("button", { name: /xyzabc/i });
+      // Verify no suggestion buttons are shown
+      const allButtons = screen.queryAllByRole("button");
+      const suggestionButtons = allButtons.filter((button) => {
+        const label = button.getAttribute("aria-label") || "";
+        const text = button.textContent || "";
 
-      // Should either show empty state OR have no suggestion buttons
-      expect(emptyState || suggestions.length === 0).toBeTruthy();
+        // Skip clear button
+        if (label.toLowerCase().includes("clear")) return false;
+
+        // Skip dropdown button
+        if (
+          text.includes("een...") ||
+          /speler|ouder|trainer|supporter|niet-lid/i.test(text)
+        ) {
+          return false;
+        }
+
+        return true;
+      });
+      expect(suggestionButtons.length).toBe(0);
     });
 
     it("handles empty search gracefully", async () => {

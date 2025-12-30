@@ -14,7 +14,14 @@ import type {
   AutocompleteSuggestion,
 } from "@/types/responsibility";
 import { responsibilityPaths, userRoles } from "@/data/responsibility-paths";
-import { X, User, ArrowRight, Clipboard, ChevronDown } from "lucide-react";
+import {
+  X,
+  User,
+  ArrowRight,
+  Clipboard,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { getIcon } from "@/lib/icons";
 
 interface ResponsibilityFinderProps {
@@ -127,7 +134,11 @@ export function ResponsibilityFinder({
         }
 
         // Only include if there's some match
-        if (score > 0 || (!query && selectedRole)) {
+        // When there's a query, require matches beyond just role (score > 30)
+        // When there's no query, show all results for the selected role
+        if (!query && selectedRole) {
+          return [...acc, { path, score }];
+        } else if (query && score > 30) {
           return [...acc, { path, score }];
         }
 
@@ -256,17 +267,7 @@ export function ResponsibilityFinder({
                     >
                       <span>{role.label}</span>
                       {isSelected && (
-                        <svg
-                          className="w-5 h-5 flex-shrink-0"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                        <Check className="w-5 h-5 flex-shrink-0" />
                       )}
                     </button>
                   );
