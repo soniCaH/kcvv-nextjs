@@ -26,7 +26,7 @@ export interface ArticleBodyProps {
  * - Padding: 0.75rem mobile, 0.75rem 0 1.25rem desktop
  * - Margin-right: 2rem desktop (to sidebar)
  * - Links: Green underline animation (background-image gradient)
- * - External links: FontAwesome external icon appended
+ * - External links: Unicode arrow icon (↗) appended
  * - Images: Zoom on hover (scale 1.1), 0.3s ease, cursor zoom-in
  * - Transition: background-size 0.4s ease
  */
