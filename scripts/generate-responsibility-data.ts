@@ -107,7 +107,13 @@ function validateData(data: unknown) {
 }
 
 /**
- * Generate TypeScript file content
+ * Generate the TypeScript source file content for responsibility paths and the user roles export.
+ *
+ * Serializes the provided ResponsibilityPath items into a ready-to-write TypeScript module
+ * that includes a generated header, the `responsibilityPaths` array, and a static `userRoles` array.
+ *
+ * @param data - Array of ResponsibilityPath objects to serialize into the output file
+ * @returns The complete TypeScript file content as a string
  */
 function generateTypeScriptFile(data: readonly ResponsibilityPath[]): string {
   const lines: string[] = [];

@@ -64,14 +64,13 @@ const categoryColors = {
 } as const;
 
 /**
- * Interactive UI for selecting a user role and composing a question to find a matching responsibility path.
+ * Render a role selector, a contextual question input with scored autocomplete suggestions, and a detailed result card for a chosen responsibility path.
  *
- * Renders a role selector, a contextual question input that appears after a role is chosen, a ranked autocomplete
- * suggestions list based on the typed query and selected role, and a detailed result card when a suggestion is selected.
+ * Calls `onResultSelect` when a suggestion is chosen.
  *
- * @param onResultSelect - Optional callback invoked with the chosen ResponsibilityPath when a suggestion is selected.
- * @param compact - If true, renders a more compact layout and typography.
- * @returns The component element that provides role selection, question input with smart autocomplete, and a selected result display.
+ * @param onResultSelect - Optional callback invoked with the selected `ResponsibilityPath` when the user picks a suggestion.
+ * @param compact - When true, use a more compact layout and typography.
+ * @returns A React element that renders the ResponsibilityFinder UI (role selection, question input, suggestions, and result display).
  */
 export function ResponsibilityFinder({
   onResultSelect,
