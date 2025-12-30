@@ -24,6 +24,47 @@ All components (migrations from Gatsby AND new features) must follow this design
 
 ---
 
+## Development Workflow
+
+### When to Use This Guide
+
+**This guide is Step 1 in the component development workflow.** All component development must follow this sequence:
+
+1. **Design System FIRST** (this document) - Define design decisions
+2. **Storybook SECOND** ([STORYBOOK.md](./STORYBOOK.md)) - Create stories
+3. **Implementation THIRD** - Write component code
+
+**Rationale:** Starting with the design system ensures consistency across components and prevents costly refactoring. By defining design tokens, component patterns, and visual specifications upfront, we create a shared vocabulary between designers and developers. This approach reduces design debt, maintains brand consistency, and makes components more reusable. Creating Storybook stories before implementation serves as executable specifications and catches design issues early when they're cheapest to fix.
+
+### Workflow Steps
+
+When creating a new component or migrating an existing one:
+
+1. **Review Design System** (this document)
+   - Check existing patterns in [Components](#components) section
+   - Identify required colors from [Colors](#colors)
+   - Select typography from [Typography](#typography)
+   - Apply spacing from [Spacing](#spacing)
+   - Example artifact: _Design token decisions documented in component plan_
+
+2. **Document Component Spec** (if new pattern)
+   - Add to [Components](#components) section if creating a new pattern
+   - Define states (default, hover, active, disabled, loading, error)
+   - Specify responsive behavior at each [Breakpoint](#breakpoints)
+   - Example artifact: _`## News Card` section in DESIGN_SYSTEM.md_
+
+3. **Create Storybook Stories** → **Continue to [STORYBOOK.md](./STORYBOOK.md)**
+   - Write stories for all component states
+   - Example artifact: _`NewsCard.stories.tsx` with Default, Loading, Error states_
+
+4. **Implement Component** → **After Storybook stories exist**
+   - Build using Tailwind CSS with design system tokens
+   - Example artifact: _`NewsCard.tsx` implementing the specification_
+
+**Cross-reference:** See [STORYBOOK.md - When to Use This Guide](./STORYBOOK.md#when-to-use-this-guide-development-workflow) for Step 2 (story creation) details.
+
+---
+
 ---
 
 ## Table of Contents
