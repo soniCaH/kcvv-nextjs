@@ -225,7 +225,7 @@ export const Navigation = ({ className }: NavigationProps) => {
               className="nav-link text-[0.7rem] xl:text-[0.875rem] uppercase font-bold text-white whitespace-nowrap no-underline py-2 px-2 transition-all duration-300 inline-block"
               aria-label="Search"
             >
-              <Search size={16} />
+              <Search size={16} className="inline-block align-middle" />
               <span className="sr-only">Search</span>
             </Link>
           </li>

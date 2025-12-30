@@ -63,7 +63,7 @@ export const PageHeader = ({ className }: PageHeaderProps) => {
               aria-label="Toggle navigation menu"
               className="absolute left-[34px] top-[calc((5rem-16px)/2)] text-white w-6 h-6 flex items-center justify-center"
             >
-              <Menu size={16} />
+              <Menu size={16} className="inline-block" />
             </button>
 
             {/* Mobile Logo - centered */}
@@ -87,7 +87,7 @@ export const PageHeader = ({ className }: PageHeaderProps) => {
               aria-label="Search"
               className="absolute right-[34px] top-[calc((5rem-16px)/2)] text-white w-6 h-6 flex items-center justify-center"
             >
-              <Search size={16} />
+              <Search size={16} className="inline-block" />
             </Link>
           </div>
 
