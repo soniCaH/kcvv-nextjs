@@ -1,9 +1,28 @@
 # KCVV Elewijt Design System
+
 ## Visual Identity & Component Library
 
 **Version:** 1.0
 **Last Updated:** 2025-01-12
 **Source:** Extracted from Gatsby site
+
+---
+
+## ⚠️ AUTHORITATIVE SOURCE
+
+**This is the PRIMARY design reference for KCVV Next.js.**
+
+All components (migrations from Gatsby AND new features) must follow this design system:
+
+- ✅ Use exact color values (#4acf52 for primary green)
+- ✅ Follow typography scale and font families
+- ✅ Respect spacing and breakpoint conventions
+- ✅ Match component patterns (buttons, cards, forms)
+- ✅ Maintain brand consistency
+
+**Before creating any new component:** Review relevant sections in this document.
+
+---
 
 ---
 
@@ -26,6 +45,7 @@
 ### Brand Colors
 
 #### Primary Green
+
 - **Bright**: `#4acf52` (`--color-green--bright`)
   - Hover: `#41b147` (`--color-green--bright--dark`)
   - Alpha 50%: `rgba(74, 207, 82, 0.5)`
@@ -40,6 +60,7 @@
   - Alpha 10%: `rgba(186, 218, 85, 0.1)`
 
 **Usage:**
+
 - Primary green bright: Headers, CTAs, active states
 - Primary green dark: Theme color, backgrounds
 - Alternative green: Accents (less common)
@@ -47,6 +68,7 @@
 ### Neutral Colors
 
 #### Blacks & Grays
+
 - **Black**: `#1E2024` (`--color-black`)
 - **Gray Blue**: `#31404b` (`--color-gray-blue`) - Used for headings
 - **Gray Dark**: `#292c31` (`--color-gray--dark`) - Body font color
@@ -54,6 +76,7 @@
 - **Gray Light**: `#CCC` (`--color-gray--light`)
 
 #### Foundation Palette
+
 - **Light Gray**: `#edeff4`
 - **Medium Gray**: `#cacaca`
 - **Dark Gray**: `#9a9da2`
@@ -62,6 +85,7 @@
 ### Semantic Colors
 
 #### Foundation Semantic Palette
+
 - **Primary**: `#4acf52` (matches brand green bright)
 - **Secondary**: `#767676`
 - **Success**: `#3adb76`
@@ -75,35 +99,59 @@
 ### Font Families
 
 #### Primary Font (Headings)
+
 ```css
-font-family: quasimoda, acumin-pro, 'Montserrat', Verdana, sans-serif;
+font-family: quasimoda, acumin-pro, "Montserrat", Verdana, sans-serif;
 ```
+
 - Variable: `--font-title`, `--font-title--quasimoda`
 - Source: Adobe Typekit (ID in env variable)
 - Weight: 700 (bold) for headings
 - Used for: h1-h6, page headers, card titles
 
 #### Body Font
+
 ```css
-font-family: montserrat, -apple-system, system-ui, BlinkMacSystemFont,
-  "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+font-family:
+  montserrat,
+  -apple-system,
+  system-ui,
+  BlinkMacSystemFont,
+  "Segoe UI",
+  Roboto,
+  "Helvetica Neue",
+  Arial,
+  sans-serif;
 ```
+
 - Variable: `--font-body`
 - Weight: 400 (normal), 700 (bold)
 - Used for: Body text, paragraphs, navigation
 
 #### Alternative Font (Display)
+
 ```css
-font-family: stenciletta, -apple-system, system-ui, BlinkMacSystemFont,
-  "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+font-family:
+  stenciletta,
+  -apple-system,
+  system-ui,
+  BlinkMacSystemFont,
+  "Segoe UI",
+  Roboto,
+  "Helvetica Neue",
+  Arial,
+  sans-serif;
 ```
+
 - Variable: `--font-alt`
 - Used for: Special decorative text, badges
 
 #### Monospace Font (Numbers/Data)
+
 ```css
 font-family: ibm-plex-mono, sans-serif;
 ```
+
 - Variable: `--font-numbers`
 - Used for: Match scores, statistics, rankings
 
@@ -112,6 +160,7 @@ font-family: ibm-plex-mono, sans-serif;
 #### Headings
 
 **Mobile (< 768px)**
+
 - **h1**: 28px (1.75rem)
 - **h2**: 22px (1.375rem)
 - **h3**: 20px (1.25rem)
@@ -120,6 +169,7 @@ font-family: ibm-plex-mono, sans-serif;
 - **h6**: 14px (0.875rem)
 
 **Desktop (≥ 768px)**
+
 - **h1**: 48px (3rem)
 - **h2**: 32px (2rem)
 - **h3**: 24px (1.5rem)
@@ -128,16 +178,19 @@ font-family: ibm-plex-mono, sans-serif;
 - **h6**: 14px (0.875rem)
 
 #### Body Text
+
 - **Base**: 16px (100%, 1rem)
 - **Lead**: 20px (1.25rem) - 1.25x base
 - **Small**: 13px (0.8125rem)
 - **Tiny**: 12px (0.75rem)
 
 #### Specialized
+
 - **Quote**: 24px (1.5rem)
 - **Stat**: 40px (2.5rem)
 
 ### Line Heights
+
 - **Global**: 1.5
 - **Headers**: 1.2
 - **Paragraphs**: 1.75
@@ -146,11 +199,13 @@ font-family: ibm-plex-mono, sans-serif;
 - **Quote**: 1.25
 
 ### Font Weights
+
 - **Normal**: 400
 - **Medium**: 500 (used in buttons, UI elements)
 - **Bold**: 700 (headings, emphasis)
 
 ### Text Rendering
+
 - **Headers**: `optimizeLegibility`
 - **Paragraphs**: `optimizeLegibility`
 - **Body**: Antialiased
@@ -162,30 +217,36 @@ font-family: ibm-plex-mono, sans-serif;
 ### Spacing Scale
 
 #### Foundation Base
+
 - **Global Margin**: 1rem (16px)
 - **Global Padding**: 1rem (16px)
 - **Global Position**: 1rem (16px)
 
 #### Custom Spacing
+
 - **Mobile Padding**: 0.75rem (12px) (`--padding--mobile`)
 - **Desktop Padding**: 2.5rem (40px) (`--padding--desktop`)
 
 #### Gutters
+
 - **Small**: 1rem (16px)
 - **Medium**: 1rem (16px)
 
 #### Component Spacing
+
 - **Paragraph Margin Bottom**: 1rem
 - **Header Margin Bottom**: 1em
 - **Section Margin Top (Mobile)**: var(--margin-hero--mobile)
 - **Section Margin Top (Desktop)**: var(--margin-hero--desktop)
 
 ### Max Widths
+
 - **Outer Container**: 90rem (1440px) (`--max-width--outer`)
 - **Inner Container**: 60rem (960px) or 70rem (1120px) (`--max-width--inner`)
 - **Limited Wrapper**: 70rem (1120px)
 
 ### Container Padding
+
 - **Mobile**: 0.75rem (12px)
 - **Desktop**: 0 (content width controlled by max-width)
 
@@ -194,6 +255,7 @@ font-family: ibm-plex-mono, sans-serif;
 ## Breakpoints
 
 ### Foundation Breakpoints
+
 - **Small**: `0`
 - **Medium**: `768px` (48rem)
 - **Large**: `992px` (62rem)
@@ -201,11 +263,13 @@ font-family: ibm-plex-mono, sans-serif;
 - **XXLarge**: `1440px` (90rem)
 
 ### Common Media Queries Used in Code
+
 - **Mobile/Tablet**: `@media screen and (max-width: 60rem)` (960px)
 - **Desktop**: `@media screen and (min-width: 60rem)` (960px)
 - **Large Desktop**: `@media screen and (min-width: 70rem)` (1120px)
 
 ### Tailwind Mapping Recommendation
+
 ```typescript
 screens: {
   'sm': '768px',    // Foundation medium
@@ -216,6 +280,7 @@ screens: {
 ```
 
 **Note:** Many components use `60rem` (960px) as the desktop breakpoint. Consider adding:
+
 ```typescript
 'desk': '960px',    // Common desktop breakpoint in codebase
 ```
@@ -225,10 +290,12 @@ screens: {
 ## Border Radius
 
 ### Global Radius
+
 - **Default**: `0.25em` (4px at 16px base)
 - **Card**: `4px`
 
 ### Component-Specific
+
 - **Button**: `0.25em`
 - **Input**: `0.25em`
 - **Card**: `4px`
@@ -240,20 +307,25 @@ screens: {
 ### Box Shadows
 
 #### Default
+
 - **None**: Cards have no shadow by default
 
 #### Prototype Shadow
+
 ```css
-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16),
-            0 2px 10px 0 rgba(0, 0, 0, .12);
+box-shadow:
+  0 2px 5px 0 rgba(0, 0, 0, 0.16),
+  0 2px 10px 0 rgba(0, 0, 0, 0.12);
 ```
 
 #### Component-Specific
+
 - **Off-canvas**: `0 0 10px rgba(0, 0, 0, 0.7)`
 - **Thumbnail**: `0 0 0 1px rgba(0, 0, 0, 0.2)`
 - **Thumbnail Hover**: `0 0 6px 1px rgba(#4acf52, 0.5)`
 
 ### Tailwind Mapping Recommendation
+
 ```typescript
 boxShadow: {
   'none': 'none',
@@ -274,6 +346,7 @@ boxShadow: {
 #### Variants
 
 **Primary Button** (`.btn`)
+
 - **Background**: `#4acf52` (`--color-green--bright`)
 - **Hover Background**: `rgba(74, 207, 82, 0.5)` (`--color-green--bright--alpha--50`)
 - **Text Color**: `#FFF`
@@ -284,25 +357,30 @@ boxShadow: {
 - **Border Radius**: `0.25em`
 
 **Small Button** (`.btn--small`)
+
 - **Font Size**: `85%`
 - **Font Weight**: `500`
 - **Padding**: `0.5rem 1.5rem`
 
 **Alternative Button** (`.btn--alt`)
+
 - **Background**: `#62656A` (`--color-gray--medium`)
 - **Hover Background**: `#292c31` (`--color-gray--dark`)
 
 **Arrow Button** (`.btn--arrow`)
+
 - **Icon**: FontAwesome arrow right (`\F178`)
 - **Icon Position**: Right side, animated on hover
 - **Mobile**: Full width (`display: block`)
 
 #### Button Spacing
+
 - **Adjacent Buttons**: `margin: 0.25rem` (mobile), `margin-left: 2rem` (desktop)
 
 ### Card
 
 **Base Card** (`.card`)
+
 - **Background**: `#fefefe` (white)
 - **Border**: `1px solid #edeff4` (light gray)
 - **Border Radius**: `4px`
@@ -311,6 +389,7 @@ boxShadow: {
 - **Margin Bottom**: `1rem`
 
 **Card Teaser** (Component-specific)
+
 - Aspect ratio: 1.5:1 for images
 - Hover effects on cards
 - Content padding varies by component
@@ -318,6 +397,7 @@ boxShadow: {
 ### Page Header
 
 **Wrapper** (`.page_header__wrapper`)
+
 - **Background**: `#4acf52` with pattern image
 - **Pattern**: `url('../images/header-pattern.png')`
 - **Background Position**: `50% -7vw`
@@ -327,26 +407,31 @@ boxShadow: {
 - **Display**: `flex` with `flex-direction: column`
 
 **Header Content** (`.page_header`)
+
 - **Max Width**: `70rem` (standard), `90rem` (max variant)
 - **Padding**: `1.25rem 1.5rem` (mobile), `0 0 1.25rem` (desktop ≥70rem)
 - **h1 Color**: `#fff`
 - **h1 Line Height**: `0.92`
 
 **Inset Variants**
+
 - **Inset**: `margin-bottom: -5rem; padding-bottom: 5rem`
 - **Inset Large**: `margin-bottom: -8rem; padding-bottom: 8rem`
 
 ### Hero Image
 
 **Hero Wrapper** (`.page__header__image__hero`)
+
 - **Max Width**: `70rem`
 - **Mobile**: Natural height
 - **Desktop**: `35rem` height
 
 **Small Hero** (`.page__header__image__hero--small`)
+
 - **Desktop**: `20rem` height
 
 **Background Blur Effect** (`.page__header__image__bg`)
+
 - **Display**: `none` (mobile), `block` (desktop)
 - **Filter**: `blur(0.5rem)`
 - **Transform**: `scale(1.1)`
@@ -355,6 +440,7 @@ boxShadow: {
 ### Tables
 
 **Ranking Table**
+
 - **Background**: White
 - **Border**: `1px solid #edeff4`
 - **Row Hover**: Darken by 2%
@@ -365,6 +451,7 @@ boxShadow: {
 ### Forms
 
 **Input Fields**
+
 - **Background**: `#fefefe` (white)
 - **Border**: `1px solid #cacaca`
 - **Focus Border**: `1px solid #9a9da2`
@@ -375,10 +462,12 @@ boxShadow: {
 - **Focus Shadow**: `0 0 5px #cacaca`
 
 **Select Dropdown**
+
 - **Triangle Color**: `#9a9da2`
 - **Background**: `#fefefe`
 
 **Labels**
+
 - **Color**: `#1E2024`
 - **Font Size**: `14px`
 - **Font Weight**: `400`
@@ -406,12 +495,14 @@ boxShadow: {
 ## Layout System
 
 ### Grid System (Foundation)
+
 - **Columns**: 12
 - **Gutter**: 1rem (small), 1rem (medium)
 - **Max Width**: 1280px
 - **Column Align Edge**: true
 
 ### Container Pattern
+
 ```scss
 .page__wrapper {
   padding: 0.75rem; // Mobile
@@ -426,6 +517,7 @@ boxShadow: {
 ```
 
 ### Layout Modifiers
+
 - **Limited**: `max-width: 70rem`
 - **Max**: `max-width: 90rem`
 
@@ -436,26 +528,33 @@ boxShadow: {
 ### Transitions
 
 #### Button
+
 ```css
 transition: all 0.3s;
 ```
 
 #### Input
+
 ```css
-transition: box-shadow 0.5s, border-color 0.25s ease-in-out;
+transition:
+  box-shadow 0.5s,
+  border-color 0.25s ease-in-out;
 ```
 
 #### Slider
+
 ```css
 transition: all 0.2s ease-in-out;
 ```
 
 #### Off-canvas
+
 ```css
 transition: 0.5s ease;
 ```
 
 ### External Library
+
 - **animate.css**: Imported globally for component animations
 - Used with `react-animate-on-scroll` for scroll-triggered animations
 
@@ -464,6 +563,7 @@ transition: 0.5s ease;
 ## Special Elements
 
 ### Blockquote
+
 - **Font Size**: `1.5rem`
 - **Font Weight**: `500`
 - **Line Height**: `1.25`
@@ -474,9 +574,10 @@ transition: 0.5s ease;
   - **Float**: `left`
 
 ### Featured Border (`.featured-border`)
+
 ```css
 &::before {
-  content: '';
+  content: "";
   display: block;
   width: 4rem;
   border-top: 2px solid #4acf52;
@@ -485,6 +586,7 @@ transition: 0.5s ease;
 ```
 
 ### After Border (`.after-border`)
+
 ```css
 &::after {
   border-top: 2px solid #4acf52;
@@ -492,7 +594,7 @@ transition: 0.5s ease;
   width: 4rem;
   bottom: -8px;
   left: 0;
-  content: '';
+  content: "";
 }
 ```
 
@@ -501,12 +603,14 @@ transition: 0.5s ease;
 ## Icon System
 
 ### Font Awesome
+
 - **Version**: 4.x (based on icon codes like `\F178`)
 - **Usage**: Imported via custom SCSS (`./vendor_font_fa`)
 - **Examples**:
   - Arrow Right: `\F178`
 
 ### Simple Line Icons
+
 - **Imported**: `./vendor_font_simple_lines`
 - **Usage**: Various UI icons throughout site
 
@@ -515,18 +619,21 @@ transition: 0.5s ease;
 ## Component Inventory
 
 ### Layout Components
+
 1. **PageHeader** - Main site header with logo and navigation
 2. **PageFooter** - Footer with sponsor logos and links
 3. **Navigation** - Desktop horizontal menu
 4. **MobileMenu** - Off-canvas mobile navigation
 
 ### Content Components
+
 1. **Card** - Generic card component with image and text
 2. **CardTeaser** - Article teaser card for news
 3. **CardTVTeaser** - Video content teaser
 4. **EventCard** - Event listing card
 
 ### Match Components
+
 1. **MatchTeaser** - Individual match display
 2. **Matches** - Match list container
 3. **MatchesOverview** - Tabbed match view
@@ -536,17 +643,20 @@ transition: 0.5s ease;
 7. **ClubcalendarMatches** - Club calendar view
 
 ### Team Components
+
 1. **TeamStats** - Team statistics display
 2. **Ranking** - League table/standings
 3. **MiniRanking** - Compact ranking widget
 4. **Lineup** - Team lineup visualization
 
 ### Player Components
+
 1. **PlayerTeaser** - Player card teaser
 2. **PlayerProfile** - Full player profile
 3. **PlayerShare** - Social sharing view with QR code
 
 ### Utility Components
+
 1. **Spinner** - Loading indicator
 2. **Icon** - Icon wrapper component
 3. **AltTitle** - Alternative title styling
@@ -562,106 +672,113 @@ transition: 0.5s ease;
 Based on this design system, here's the recommended Tailwind configuration:
 
 ```typescript
-import type { Config } from 'tailwindcss'
+import type { Config } from "tailwindcss";
 
 const config: Config = {
   theme: {
     extend: {
       colors: {
         // Brand Colors
-        'kcvv-green': {
-          DEFAULT: '#4acf52',
-          bright: '#4acf52',
-          dark: '#4B9B48',
-          hover: '#41b147',
-          'hover-dark': '#3f833d',
-          50: 'rgba(74, 207, 82, 0.1)',
-          100: 'rgba(74, 207, 82, 0.25)',
-          200: 'rgba(74, 207, 82, 0.5)',
-          300: 'rgba(74, 207, 82, 0.75)',
-          alt: '#BADA55',
+        "kcvv-green": {
+          DEFAULT: "#4acf52",
+          bright: "#4acf52",
+          dark: "#4B9B48",
+          hover: "#41b147",
+          "hover-dark": "#3f833d",
+          50: "rgba(74, 207, 82, 0.1)",
+          100: "rgba(74, 207, 82, 0.25)",
+          200: "rgba(74, 207, 82, 0.5)",
+          300: "rgba(74, 207, 82, 0.75)",
+          alt: "#BADA55",
         },
         // Neutral Colors
-        'kcvv-black': '#1E2024',
-        'kcvv-gray-blue': '#31404b',
-        'kcvv-gray': {
-          dark: '#292c31',
-          DEFAULT: '#62656A',
-          light: '#CCC',
+        "kcvv-black": "#1E2024",
+        "kcvv-gray-blue": "#31404b",
+        "kcvv-gray": {
+          dark: "#292c31",
+          DEFAULT: "#62656A",
+          light: "#CCC",
         },
         // Foundation Grays
-        'foundation-gray': {
-          light: '#edeff4',
-          DEFAULT: '#cacaca',
-          dark: '#9a9da2',
+        "foundation-gray": {
+          light: "#edeff4",
+          DEFAULT: "#cacaca",
+          dark: "#9a9da2",
         },
         // Semantic
-        'kcvv-white': '#fefefe',
-        'kcvv-success': '#3adb76',
-        'kcvv-warning': '#ffae00',
-        'kcvv-alert': '#cc4b37',
+        "kcvv-white": "#fefefe",
+        "kcvv-success": "#3adb76",
+        "kcvv-warning": "#ffae00",
+        "kcvv-alert": "#cc4b37",
       },
       fontFamily: {
-        title: ['quasimoda', 'acumin-pro', 'Montserrat', 'Verdana', 'sans-serif'],
-        body: ['montserrat', '-apple-system', 'system-ui', 'sans-serif'],
-        alt: ['stenciletta', '-apple-system', 'system-ui', 'sans-serif'],
-        mono: ['ibm-plex-mono', 'monospace'],
+        title: [
+          "quasimoda",
+          "acumin-pro",
+          "Montserrat",
+          "Verdana",
+          "sans-serif",
+        ],
+        body: ["montserrat", "-apple-system", "system-ui", "sans-serif"],
+        alt: ["stenciletta", "-apple-system", "system-ui", "sans-serif"],
+        mono: ["ibm-plex-mono", "monospace"],
       },
       fontSize: {
-        'xs': ['0.75rem', { lineHeight: '1.5' }],      // 12px
-        'sm': ['0.8125rem', { lineHeight: '1.5' }],    // 13px
-        'base': ['1rem', { lineHeight: '1.75' }],       // 16px
-        'lg': ['1.125rem', { lineHeight: '1.5' }],      // 18px
-        'xl': ['1.25rem', { lineHeight: '1.6' }],       // 20px
-        '2xl': ['1.375rem', { lineHeight: '1.2' }],     // 22px
-        '3xl': ['1.5rem', { lineHeight: '1.25' }],      // 24px
-        '4xl': ['1.75rem', { lineHeight: '1.2' }],      // 28px
-        '5xl': ['2rem', { lineHeight: '1.2' }],         // 32px
-        '6xl': ['3rem', { lineHeight: '1.2' }],         // 48px
-        'stat': ['2.5rem', { lineHeight: '1' }],        // 40px
+        xs: ["0.75rem", { lineHeight: "1.5" }], // 12px
+        sm: ["0.8125rem", { lineHeight: "1.5" }], // 13px
+        base: ["1rem", { lineHeight: "1.75" }], // 16px
+        lg: ["1.125rem", { lineHeight: "1.5" }], // 18px
+        xl: ["1.25rem", { lineHeight: "1.6" }], // 20px
+        "2xl": ["1.375rem", { lineHeight: "1.2" }], // 22px
+        "3xl": ["1.5rem", { lineHeight: "1.25" }], // 24px
+        "4xl": ["1.75rem", { lineHeight: "1.2" }], // 28px
+        "5xl": ["2rem", { lineHeight: "1.2" }], // 32px
+        "6xl": ["3rem", { lineHeight: "1.2" }], // 48px
+        stat: ["2.5rem", { lineHeight: "1" }], // 40px
       },
       spacing: {
-        '0.75': '0.75rem',    // 12px (mobile padding)
-        '2.5': '2.5rem',      // 40px (desktop padding)
-        '15': '3.75rem',      // 60px
-        '17.5': '4.375rem',   // 70px
-        '22.5': '5.625rem',   // 90px
-        '35': '35rem',        // Hero image height
+        "0.75": "0.75rem", // 12px (mobile padding)
+        "2.5": "2.5rem", // 40px (desktop padding)
+        "15": "3.75rem", // 60px
+        "17.5": "4.375rem", // 70px
+        "22.5": "5.625rem", // 90px
+        "35": "35rem", // Hero image height
       },
       maxWidth: {
-        'inner': '60rem',     // 960px
-        'inner-lg': '70rem',  // 1120px
-        'outer': '90rem',     // 1440px
+        inner: "60rem", // 960px
+        "inner-lg": "70rem", // 1120px
+        outer: "90rem", // 1440px
       },
       screens: {
-        'sm': '768px',        // Foundation medium
-        'desk': '960px',      // Common desktop breakpoint
-        'md': '992px',        // Foundation large
-        'lg': '1280px',       // Foundation xlarge
-        'xl': '1440px',       // Foundation xxlarge
+        sm: "768px", // Foundation medium
+        desk: "960px", // Common desktop breakpoint
+        md: "992px", // Foundation large
+        lg: "1280px", // Foundation xlarge
+        xl: "1440px", // Foundation xxlarge
       },
       borderRadius: {
-        DEFAULT: '0.25em',
-        'card': '4px',
+        DEFAULT: "0.25em",
+        card: "4px",
       },
       boxShadow: {
-        'none': 'none',
-        'sm': '0 2px 5px 0 rgba(0, 0, 0, .16)',
-        DEFAULT: '0 2px 5px 0 rgba(0, 0, 0, .16), 0 2px 10px 0 rgba(0, 0, 0, .12)',
-        'md': '0 2px 10px 0 rgba(0, 0, 0, .12)',
-        'lg': '0 0 10px rgba(0, 0, 0, 0.7)',
-        'green': '0 0 6px 1px rgba(74, 207, 82, 0.5)',
-        'input': 'inset 0 1px 2px rgba(0, 0, 0, 0.1)',
-        'input-focus': '0 0 5px #cacaca',
+        none: "none",
+        sm: "0 2px 5px 0 rgba(0, 0, 0, .16)",
+        DEFAULT:
+          "0 2px 5px 0 rgba(0, 0, 0, .16), 0 2px 10px 0 rgba(0, 0, 0, .12)",
+        md: "0 2px 10px 0 rgba(0, 0, 0, .12)",
+        lg: "0 0 10px rgba(0, 0, 0, 0.7)",
+        green: "0 0 6px 1px rgba(74, 207, 82, 0.5)",
+        input: "inset 0 1px 2px rgba(0, 0, 0, 0.1)",
+        "input-focus": "0 0 5px #cacaca",
       },
       backgroundImage: {
-        'header-pattern': "url('../images/header-pattern.png')",
+        "header-pattern": "url('../images/header-pattern.png')",
       },
     },
   },
-}
+};
 
-export default config
+export default config;
 ```
 
 ---
@@ -701,6 +818,7 @@ export default config
 The site uses Adobe Typekit for loading custom fonts. The Typekit ID is stored in the environment variable `TYPEKIT_ID`.
 
 **Fonts to load:**
+
 - quasimoda (headings)
 - acumin-pro (headings fallback)
 - stenciletta (decorative/display)
@@ -708,6 +826,7 @@ The site uses Adobe Typekit for loading custom fonts. The Typekit ID is stored i
 - montserrat (body text - may be from Typekit or Google Fonts)
 
 **Next.js Implementation:**
+
 ```tsx
 // In app/layout.tsx or _document.tsx
 <Script src={`https://use.typekit.net/${process.env.NEXT_PUBLIC_TYPEKIT_ID}.js`} strategy="beforeInteractive" />
@@ -721,12 +840,14 @@ The site uses Adobe Typekit for loading custom fonts. The Typekit ID is stored i
 ## Accessibility Notes
 
 ### Current State
+
 - Foundation Sites provides baseline accessibility
 - Semantic HTML structure
 - ARIA labels needed for icons and interactive elements
 - Color contrast should be verified (especially green on white)
 
 ### Areas to Improve in Migration
+
 - Ensure all buttons have accessible names
 - Add ARIA labels to icon-only buttons
 - Verify focus states on all interactive elements
@@ -738,12 +859,14 @@ The site uses Adobe Typekit for loading custom fonts. The Typekit ID is stored i
 ## Performance Considerations
 
 ### Current Site
+
 - Uses gatsby-plugin-image for optimized images
 - Multiple responsive image sizes (240px, 480px, 960px, full)
 - Lazy loading with react-lazy-load
 - Service worker with gatsby-plugin-offline
 
 ### Next.js Migration Strategy
+
 - Use next/image for all images
 - Configure remote patterns for Drupal images
 - Implement blur placeholders

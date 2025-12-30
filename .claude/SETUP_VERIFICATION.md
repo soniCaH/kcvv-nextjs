@@ -258,24 +258,6 @@ npm run migration:create "Test Task"
    git commit -m "migrate(ranking): add ranking page with Effect schema"
    ```
 
-### Visual Regression Testing
-
-**When migrating a page:**
-
-1. Implement page with Claude Code
-2. Run visual tests:
-   ```bash
-   npm run test:visual:pages
-   ```
-3. Review diffs in UI mode:
-   ```bash
-   npm run test:visual:ui
-   ```
-4. If intentional changes:
-   ```bash
-   npm run test:visual:update
-   ```
-
 ## 🚀 What's Ready to Use NOW
 
 ✅ **All of it!** Everything is configured and working:
@@ -356,11 +338,6 @@ None! Everything tested and working.
 
 - Ask Claude Code: "How do I use the migration scripts?"
 - Claude Code has access to all documentation
-
-**For Visual Regression Testing:**
-
-- Read: `tests/README.md`
-- Run: `npm run test:visual:ui` for interactive mode
 
 **For Migration Workflow:**
 
