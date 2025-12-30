@@ -5,7 +5,7 @@
 
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import Image from 'next/image'
-import { FaBars, FaSearch } from 'react-icons/fa'
+import { Menu, Search } from 'lucide-react'
 
 const meta = {
   title: 'Layout/PageHeader/Elements',
@@ -404,7 +404,7 @@ export const HamburgerButton: Story = {
         className="absolute left-[34px] top-[calc((5rem-16px)/2)] text-white text-base w-6 h-6 flex items-center justify-center"
         aria-label="Toggle navigation menu"
       >
-        <FaBars className="w-4 h-4" />
+        <Menu className="w-4 h-4" />
       </button>
       <div className="flex items-center justify-center h-full text-white text-xs">
         Mobile header with hamburger at left
@@ -430,7 +430,7 @@ export const SearchButton: Story = {
         className="absolute right-[34px] top-[calc((5rem-16px)/2)] text-white text-base w-6 h-6 flex items-center justify-center"
         aria-label="Search"
       >
-        <FaSearch className="w-4 h-4" />
+        <Search className="w-4 h-4" />
       </button>
       <div className="flex items-center justify-center h-full text-white text-xs">
         Mobile header with search at right

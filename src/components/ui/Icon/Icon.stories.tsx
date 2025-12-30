@@ -1,27 +1,27 @@
 /**
  * Icon Component Stories
- * Showcases Icon wrapper with react-icons
+ * Showcases Icon wrapper with Lucide React icons
  */
 
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Icon } from './Icon'
 import {
-  FaFutbol,
-  FaTrophy,
-  FaUsers,
-  FaCalendar,
-  FaMapMarkerAlt,
-  FaPhone,
-  FaEnvelope,
-  FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaArrowRight,
-  FaSearch,
-  FaBars,
-  FaTimes,
-  FaChevronDown,
-} from 'react-icons/fa'
+  Activity,
+  Trophy,
+  Users,
+  Calendar,
+  MapPin,
+  Phone,
+  Mail,
+  Facebook,
+  Twitter,
+  Instagram,
+  ArrowRight,
+  Search,
+  Menu,
+  X,
+  ChevronDown,
+} from 'lucide-react'
 
 const meta = {
   title: 'UI/Icon',
@@ -52,7 +52,7 @@ type Story = StoryObj<typeof meta>
  */
 export const Default: Story = {
   args: {
-    icon: <FaFutbol />,
+    icon: Activity,
   },
 }
 
@@ -61,7 +61,7 @@ export const Default: Story = {
  */
 export const Primary: Story = {
   args: {
-    icon: <FaTrophy />,
+    icon: Trophy,
     color: 'primary',
     size: 'lg',
   },
@@ -71,7 +71,7 @@ export const Primary: Story = {
  * All available sizes
  */
 export const AllSizes: Story = {
-  args: { icon: <FaFutbol /> },
+  args: { icon: Activity },
   render: () => (
     <div className="flex items-center gap-4">
       <div className="text-center">
@@ -106,7 +106,7 @@ export const AllSizes: Story = {
  * All available colors
  */
 export const AllColors: Story = {
-  args: { icon: <FaFutbol /> },
+  args: { icon: Activity },
   render: () => (
     <div className="flex flex-wrap gap-6">
       <div className="text-center">
@@ -145,27 +145,27 @@ export const AllColors: Story = {
  * Common KCVV icons
  */
 export const CommonIcons: Story = {
-  args: { icon: <FaFutbol /> },
+  args: { icon: Activity },
   render: () => (
     <div className="grid grid-cols-5 gap-4">
       <div className="text-center">
-        <Icon icon={<FaFutbol />} size="lg" color="primary" />
+        <Icon icon={Activity} size="lg" color="primary" />
         <div className="text-xs mt-2 text-gray-600">Football</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaTrophy />} size="lg" color="primary" />
+        <Icon icon={Trophy} size="lg" color="primary" />
         <div className="text-xs mt-2 text-gray-600">Trophy</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaUsers />} size="lg" color="primary" />
+        <Icon icon={Users} size="lg" color="primary" />
         <div className="text-xs mt-2 text-gray-600">Team</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaCalendar />} size="lg" color="primary" />
+        <Icon icon={Calendar} size="lg" color="primary" />
         <div className="text-xs mt-2 text-gray-600">Calendar</div>
       </div>
       <div className="text-center">
-        <Icon icon={<FaMapMarkerAlt />} size="lg" color="primary" />
+        <Icon icon={MapPin} size="lg" color="primary" />
         <div className="text-xs mt-2 text-gray-600">Location</div>
       </div>
     </div>
@@ -176,11 +176,11 @@ export const CommonIcons: Story = {
  * Contact icons
  */
 export const ContactIcons: Story = {
-  args: { icon: <FaFutbol /> },
+  args: { icon: Activity },
   render: () => (
     <div className="flex gap-4">
-      <Icon icon={<FaPhone />} size="md" color="secondary" />
-      <Icon icon={<FaEnvelope />} size="md" color="secondary" />
+      <Icon icon={Phone} size="md" color="secondary" />
+      <Icon icon={Mail} size="md" color="secondary" />
     </div>
   ),
 }
@@ -189,12 +189,12 @@ export const ContactIcons: Story = {
  * Social media icons
  */
 export const SocialIcons: Story = {
-  args: { icon: <FaFutbol /> },
+  args: { icon: Activity },
   render: () => (
     <div className="flex gap-4">
-      <Icon icon={<FaFacebookF />} size="lg" color="muted" />
-      <Icon icon={<FaTwitter />} size="lg" color="muted" />
-      <Icon icon={<FaInstagram />} size="lg" color="muted" />
+      <Icon icon={Facebook} size="lg" color="muted" />
+      <Icon icon={Twitter} size="lg" color="muted" />
+      <Icon icon={Instagram} size="lg" color="muted" />
     </div>
   ),
 }
@@ -203,14 +203,14 @@ export const SocialIcons: Story = {
  * Navigation icons
  */
 export const NavigationIcons: Story = {
-  args: { icon: <FaFutbol /> },
+  args: { icon: Activity },
   render: () => (
     <div className="flex gap-4 items-center">
-      <Icon icon={<FaSearch />} size="md" />
-      <Icon icon={<FaBars />} size="md" />
-      <Icon icon={<FaTimes />} size="md" />
-      <Icon icon={<FaArrowRight />} size="md" />
-      <Icon icon={<FaChevronDown />} size="md" />
+      <Icon icon={Search} size="md" />
+      <Icon icon={Menu} size="md" />
+      <Icon icon={X} size="md" />
+      <Icon icon={ArrowRight} size="md" />
+      <Icon icon={ChevronDown} size="md" />
     </div>
   ),
 }
@@ -219,19 +219,19 @@ export const NavigationIcons: Story = {
  * Icons with text
  */
 export const WithText: Story = {
-  args: { icon: <FaFutbol /> },
+  args: { icon: Activity },
   render: () => (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <Icon icon={<FaCalendar />} size="sm" color="primary" />
+        <Icon icon={Calendar} size="sm" color="primary" />
         <span>15 Januari 2025</span>
       </div>
       <div className="flex items-center gap-2">
-        <Icon icon={<FaMapMarkerAlt />} size="sm" color="primary" />
+        <Icon icon={MapPin} size="sm" color="primary" />
         <span>Sportcomplex Elewijt</span>
       </div>
       <div className="flex items-center gap-2">
-        <Icon icon={<FaUsers />} size="sm" color="primary" />
+        <Icon icon={Users} size="sm" color="primary" />
         <span>23 Spelers</span>
       </div>
     </div>
@@ -243,7 +243,7 @@ export const WithText: Story = {
  */
 export const Playground: Story = {
   args: {
-    icon: <FaFutbol />,
+    icon: Activity,
     size: 'md',
     color: 'primary',
   },
