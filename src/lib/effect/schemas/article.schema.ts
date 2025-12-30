@@ -14,9 +14,10 @@
  * appear in the "included" array and can be resolved to get full data.
  */
 
-import { Schema as S } from 'effect'
+import { Schema as S } from "effect";
 import {
   BaseDrupalNodeAttributes,
+  DateFromStringOrDate,
   DrupalImage,
   DrupalBody,
   DrupalTermReference,
@@ -24,19 +25,21 @@ import {
   DrupalResource,
   JsonApiVersion,
   JsonApiLinks,
-} from './common.schema'
-import { MediaImage } from './media.schema'
-import { File } from './file.schema'
-import { TaxonomyTerm } from './taxonomy.schema'
+} from "./common.schema";
+import { MediaImage } from "./media.schema";
+import { File } from "./file.schema";
+import { TaxonomyTerm } from "./taxonomy.schema";
 
 /**
  * Article node attributes
  */
-export class ArticleAttributes extends S.Class<ArticleAttributes>('ArticleAttributes')({
+export class ArticleAttributes extends S.Class<ArticleAttributes>(
+  "ArticleAttributes",
+)({
   ...BaseDrupalNodeAttributes,
   body: S.optional(DrupalBody),
-  publish_on: S.optional(S.NullOr(S.String)),
-  unpublish_on: S.optional(S.NullOr(S.String)),
+  publish_on: S.optional(S.NullOr(DateFromStringOrDate)),
+  unpublish_on: S.optional(S.NullOr(DateFromStringOrDate)),
   field_featured: S.optional(S.Boolean),
 }) {}
 
@@ -51,7 +54,9 @@ export class ArticleAttributes extends S.Class<ArticleAttributes>('ArticleAttrib
  * - node_type: Drupal internal bundle reference
  * - revision_uid: User who created this revision
  */
-export class ArticleRelationships extends S.Class<ArticleRelationships>('ArticleRelationships')({
+export class ArticleRelationships extends S.Class<ArticleRelationships>(
+  "ArticleRelationships",
+)({
   /**
    * Featured article image
    * Can be either:
@@ -64,12 +69,12 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
         S.Union(
           DrupalImage,
           S.Struct({
-            type: S.Literal('media--image'),
+            type: S.Literal("media--image"),
             id: S.String,
-          })
-        )
+          }),
+        ),
       ),
-    })
+    }),
   ),
 
   /**
@@ -82,12 +87,12 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
         S.Array(
           S.Union(
             TaxonomyTerm, // Fully resolved term
-            DrupalTermReference // Just a reference
-          )
-        )
+            DrupalTermReference, // Just a reference
+          ),
+        ),
       ),
       links: S.optional(S.Unknown), // Drupal includes links even when data is null
-    })
+    }),
   ),
 
   /**
@@ -98,11 +103,11 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
       data: S.NullOr(
         S.Struct({
           id: S.String,
-          type: S.Literal('user--user'),
-        })
+          type: S.Literal("user--user"),
+        }),
       ),
       links: S.optional(S.Unknown), // Drupal includes links even when data is null
-    })
+    }),
   ),
 
   /**
@@ -113,7 +118,7 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
     S.Struct({
       data: S.Array(DrupalNodeReference),
       links: S.optional(S.Unknown),
-    })
+    }),
   ),
 
   /**
@@ -125,11 +130,11 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
       data: S.NullOr(
         S.Struct({
           id: S.String,
-          type: S.Literal('node_type--node_type'),
-        })
+          type: S.Literal("node_type--node_type"),
+        }),
       ),
       links: S.optional(S.Unknown), // Drupal includes links even when data is null
-    })
+    }),
   ),
 
   /**
@@ -140,20 +145,20 @@ export class ArticleRelationships extends S.Class<ArticleRelationships>('Article
       data: S.NullOr(
         S.Struct({
           id: S.String,
-          type: S.Literal('user--user'),
-        })
+          type: S.Literal("user--user"),
+        }),
       ),
       links: S.optional(S.Unknown), // Drupal includes links even when data is null
-    })
+    }),
   ),
 }) {}
 
 /**
  * Complete Article node
  */
-export class Article extends S.Class<Article>('Article')({
+export class Article extends S.Class<Article>("Article")({
   id: S.String,
-  type: S.Literal('node--article'),
+  type: S.Literal("node--article"),
   attributes: ArticleAttributes,
   relationships: ArticleRelationships,
 }) {}
@@ -161,7 +166,7 @@ export class Article extends S.Class<Article>('Article')({
 /**
  * Array of articles
  */
-export const ArticlesArray = S.Array(Article)
+export const ArticlesArray = S.Array(Article);
 
 /**
  * Discriminated union of all possible included resource types for articles
@@ -194,8 +199,8 @@ export const ArticleIncludedResource = S.Union(
   MediaImage,
   File,
   TaxonomyTerm,
-  DrupalResource // Fallback for unknown types
-)
+  DrupalResource, // Fallback for unknown types
+);
 
 /**
  * Drupal JSON:API response for article collections
@@ -214,7 +219,9 @@ export const ArticleIncludedResource = S.Union(
  * const links = response.links     // JsonApiLinks
  * ```
  */
-export class ArticlesResponse extends S.Class<ArticlesResponse>('ArticlesResponse')({
+export class ArticlesResponse extends S.Class<ArticlesResponse>(
+  "ArticlesResponse",
+)({
   data: ArticlesArray,
   included: S.optional(S.Array(ArticleIncludedResource)), // ✅ Strongly typed
   jsonapi: S.optional(JsonApiVersion), // ✅ Strongly typed
@@ -222,7 +229,7 @@ export class ArticlesResponse extends S.Class<ArticlesResponse>('ArticlesRespons
   meta: S.optional(
     S.Struct({
       count: S.optional(S.NumberFromString),
-    })
+    }),
   ),
 }) {}
 
@@ -238,7 +245,9 @@ export class ArticlesResponse extends S.Class<ArticlesResponse>('ArticlesRespons
  * const article = response.data  // Article (not array)
  * ```
  */
-export class ArticleResponse extends S.Class<ArticleResponse>('ArticleResponse')({
+export class ArticleResponse extends S.Class<ArticleResponse>(
+  "ArticleResponse",
+)({
   data: Article,
   included: S.optional(S.Array(ArticleIncludedResource)), // ✅ Strongly typed
   jsonapi: S.optional(JsonApiVersion), // ✅ Strongly typed
