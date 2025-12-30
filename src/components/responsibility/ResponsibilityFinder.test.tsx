@@ -217,19 +217,36 @@ describe("ResponsibilityFinder", () => {
 
     it("hides suggestions when clicking outside", async () => {
       const user = userEvent.setup();
-      render(<ResponsibilityFinder />);
+      render(
+        <div>
+          <div data-testid="outside-element">Outside</div>
+          <ResponsibilityFinder />
+        </div>,
+      );
 
       await selectRole(user, "speler");
 
       const input = screen.getByPlaceholderText(/typ je vraag/i);
       await user.type(input, "ongeval");
 
-      // Click outside
-      await user.click(document.body);
-
+      // Verify suggestions are visible
       await waitFor(() => {
-        const suggestions = document.querySelector(".absolute.z-50");
-        expect(suggestions).not.toBeInTheDocument();
+        const suggestionButtons = screen.queryAllByRole("button", {
+          name: /ongeval/i,
+        });
+        expect(suggestionButtons.length).toBeGreaterThan(0);
+      });
+
+      // Click outside - use a real DOM element for reliable clicks in CI
+      const outsideElement = screen.getByTestId("outside-element");
+      await user.click(outsideElement);
+
+      // Wait for suggestions to disappear
+      await waitFor(() => {
+        const suggestionButtons = screen.queryAllByRole("button", {
+          name: /ongeval/i,
+        });
+        expect(suggestionButtons.length).toBe(0);
       });
     });
   });
