@@ -6,7 +6,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { FaClock, FaTags } from 'react-icons/fa'
+import { Clock, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export interface ArticleCardProps {
@@ -93,13 +93,13 @@ export const ArticleCard = ({
             <div data-testid="article-meta" className="mt-4 flex flex-wrap gap-3 text-xs lg:text-sm text-kcvv-green-bright">
               {date && (
                 <span className="flex items-center gap-2">
-                  <FaClock />
+                  <Clock size={14} />
                   {date}
                 </span>
               )}
               {tags.length > 0 && (
                 <div className="flex items-center gap-2">
-                  <FaTags />
+                  <Tag size={14} />
                   {tags.map((tag, index) => (
                     <span key={index} className="mr-2">
                       #{tag.name}

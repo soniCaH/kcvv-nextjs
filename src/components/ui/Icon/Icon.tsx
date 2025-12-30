@@ -2,11 +2,11 @@
 
 /**
  * Icon Component
- * Wrapper for react-icons with consistent sizing and styling
+ * Wrapper for Lucide React icons with consistent sizing and styling
  */
 
-import { forwardRef, type HTMLAttributes, type ReactElement } from 'react'
-import { IconContext } from 'react-icons'
+import { forwardRef, type HTMLAttributes } from 'react'
+import { type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
@@ -21,9 +21,9 @@ export type IconColor =
 
 export interface IconProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'children'> {
   /**
-   * React Icon component from react-icons
+   * Lucide React icon component
    */
-  icon: ReactElement
+  icon: LucideIcon
   /**
    * Size of the icon
    * @default 'md'
@@ -40,23 +40,23 @@ export interface IconProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'childr
   className?: string
 }
 
-const sizeMap: Record<IconSize, string> = {
-  xs: '1rem', // 16px
-  sm: '1.25rem', // 20px
-  md: '1.5rem', // 24px
-  lg: '2rem', // 32px
-  xl: '2.5rem', // 40px
-  '2xl': '3rem', // 48px
+const sizeMap: Record<IconSize, number> = {
+  xs: 16,
+  sm: 20,
+  md: 24,
+  lg: 32,
+  xl: 40,
+  '2xl': 48,
 }
 
 const colorMap: Record<IconColor, string> = {
   current: 'currentColor',
-  primary: '#4acf52', // KCVV green bright
-  secondary: '#62656A', // Gray medium
-  success: '#4acf52', // Same as primary
-  warning: '#f59e0b', // Amber
-  error: '#ef4444', // Red
-  muted: '#9ca3af', // Gray 400
+  primary: 'var(--color-kcvv-green-bright)',
+  secondary: 'var(--color-kcvv-gray)',
+  success: 'var(--color-kcvv-green-bright)',
+  warning: '#f59e0b',
+  error: '#ef4444',
+  muted: '#9ca3af',
 }
 
 /**
@@ -64,28 +64,26 @@ const colorMap: Record<IconColor, string> = {
  *
  * @example
  * ```tsx
- * import { FaFutbol } from 'react-icons/fa'
+ * import { Trophy } from 'lucide-react'
+ * // or import { Trophy } from '@/lib/icons'
  *
- * <Icon icon={<FaFutbol />} size="lg" color="primary" />
+ * <Icon icon={Trophy} size="lg" color="primary" />
  * ```
  */
 export const Icon = forwardRef<HTMLSpanElement, IconProps>(
-  ({ icon, size = 'md', color = 'current', className, ...props }, ref) => {
+  ({ icon: IconComponent, size = 'md', color = 'current', className, ...props }, ref) => {
     return (
       <span
         ref={ref}
-        className={cn('inline-flex items-center justify-center', className)}
+        className={cn('inline-flex items-center justify-center shrink-0', className)}
         {...props}
       >
-        <IconContext.Provider
-          value={{
-            size: sizeMap[size],
-            color: colorMap[color],
-            className: 'shrink-0',
-          }}
-        >
-          {icon}
-        </IconContext.Provider>
+        <IconComponent
+          size={sizeMap[size]}
+          color={colorMap[color]}
+          strokeWidth={2}
+          absoluteStrokeWidth={false}
+        />
       </span>
     )
   }

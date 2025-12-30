@@ -7,7 +7,7 @@
  */
 
 import { Icon } from '@/components/ui'
-import { FaFacebookF, FaTwitter, FaInstagram } from 'react-icons/fa'
+import { Facebook, Twitter, Instagram } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export interface SocialLinksProps {
@@ -35,17 +35,17 @@ const socialLinks = [
   {
     name: 'Facebook',
     url: 'https://facebook.com/KCVVElewijt/',
-    icon: <FaFacebookF />,
+    icon: Facebook,
   },
   {
     name: 'Twitter',
     url: 'https://twitter.com/kcvve',
-    icon: <FaTwitter />,
+    icon: Twitter,
   },
   {
     name: 'Instagram',
     url: 'https://www.instagram.com/kcvve',
-    icon: <FaInstagram />,
+    icon: Instagram,
   },
 ]
 

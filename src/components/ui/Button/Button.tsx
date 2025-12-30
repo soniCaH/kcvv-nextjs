@@ -7,7 +7,7 @@
 
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { cn } from '@/lib/utils/cn'
-import { FaArrowRight } from 'react-icons/fa'
+import { ArrowRight } from 'lucide-react'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'link'
 export type ButtonSize = 'sm' | 'md' | 'lg'
@@ -130,7 +130,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {children}
 
         {withArrow && (
-          <FaArrowRight
+          <ArrowRight
+            size={16}
             className={cn(
               'transition-transform duration-300',
               'group-hover:translate-x-1'
