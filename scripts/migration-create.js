@@ -88,10 +88,9 @@ Follow the KCVV migration standards:
 
 When done:
 1. Verify components in Storybook (npm run storybook)
-2. Run visual regression tests (npm run test:visual:components)
-3. Update MIGRATION_PLAN.md with progress
-4. Run 'npm run check-all' to verify
-5. Run 'npm run migration:status' to see updated progress"
+2. Update MIGRATION_PLAN.md with progress
+3. Run 'npm run check-all' to verify
+4. Run 'npm run migration:status' to see updated progress"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `;

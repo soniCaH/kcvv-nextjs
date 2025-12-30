@@ -172,7 +172,7 @@ function parseMigrationPlan() {
 /**
  * Render a migration status dashboard to the console summarizing codebase metrics and migration phases.
  *
- * Displays auto-detected counts (components, pages, schemas, mappers, tests, stories), computes and shows test/story coverage percentages, parses and lists migration phases with their states, and prints quick command suggestions.
+ * Displays auto-detected counts for components, pages, schemas, mappers, tests, and stories; computes and shows test and story coverage percentages; parses MIGRATION_PLAN.md to list migration phases with their states and overall progress; and prints quick command suggestions.
  */
 function displayStatus() {
   log(

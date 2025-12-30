@@ -169,9 +169,6 @@ npm run check-all        # Run all quality checks (lint + type + test + build)
 ```bash
 npm run test             # Run unit tests
 npm run test:watch       # Run tests in watch mode
-npm run test:visual      # Run visual regression tests
-npm run test:visual:ui   # Open Playwright UI for visual tests
-npm run test:visual:update  # Update visual test baselines
 ```
 
 ### Storybook
@@ -214,12 +211,6 @@ The project follows a comprehensive design system documented in **`DESIGN_SYSTEM
 - Target: 80%+ coverage
 - Run: `npm test`
 
-### Visual Regression (Playwright)
-
-- Page-level visual testing
-- Catch unintended UI changes
-- Run: `npm run test:visual`
-
 ### Storybook Stories
 
 - Component development and documentation
@@ -228,7 +219,7 @@ The project follows a comprehensive design system documented in **`DESIGN_SYSTEM
 
 ### Integration Tests
 
-- E2E tests with Playwright (planned)
+- E2E tests (planned)
 
 ---
 

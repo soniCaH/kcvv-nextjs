@@ -9,12 +9,13 @@
 ## 📖 Table of Contents
 
 1. [Overview](#overview)
-2. [Getting Started](#getting-started)
-3. [Story Structure](#story-structure)
-4. [Best Practices](#best-practices)
-5. [Testing in Storybook](#testing-in-storybook)
-6. [Current Coverage](#current-coverage)
-7. [Implementation Roadmap](#implementation-roadmap)
+2. [When to Use This Guide (Development Workflow)](#when-to-use-this-guide-development-workflow)
+3. [Getting Started](#getting-started)
+4. [Story Structure](#story-structure)
+5. [Best Practices](#best-practices)
+6. [Testing in Storybook](#testing-in-storybook)
+7. [Current Coverage](#current-coverage)
+8. [Implementation Roadmap](#implementation-roadmap)
 
 ---
 
@@ -51,6 +52,69 @@ Storybook is a development environment for UI components. It allows you to:
 - Quality assurance (visual testing)
 - Component library (reusable across pages)
 - Onboarding (new developers see how components work)
+
+---
+
+## When to Use This Guide (Development Workflow)
+
+### Stories Before Implementation
+
+**⚠️ CRITICAL REQUIREMENT: Stories must be created BEFORE component implementation.**
+
+This guide represents **Step 2** in the mandatory component development workflow:
+
+1. **Design System FIRST** ([DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)) - Define design decisions
+2. **Storybook SECOND** (this document) - Create stories ← **You are here**
+3. **Implementation THIRD** - Write component code
+
+**Rationale:** Writing stories before implementation forces you to think through all component states, props, and edge cases before writing code. This "story-driven development" approach serves as executable specifications that prevent over-engineering and ensure components meet their requirements. Stories act as both documentation and visual regression tests, catching bugs before they reach production. By defining the component's API through stories first, you create a contract that guides implementation and makes refactoring safer.
+
+### Workflow Steps
+
+When you reach the Storybook phase (after reviewing the Design System):
+
+1. **Create Story File** (before component exists)
+   - Place `ComponentName.stories.tsx` next to where component will live
+   - Define all required variants based on design system specs
+   - Example artifact: _`src/components/NewsCard.stories.tsx`_
+
+2. **Write Story Specifications** (executable requirements)
+   - Default story with typical props
+   - Loading state story
+   - Error state story
+   - Empty/no-data state story
+   - All visual variants (with image, without image, featured, etc.)
+   - Example artifact: _5-7 exported story objects per component_
+
+3. **Verify in Storybook** (before implementation)
+   - Run `npm run storybook`
+   - Review all stories visually
+   - Confirm they match design system specifications
+   - Example artifact: _Visual confirmation screenshots or notes_
+
+4. **Implement Component** → **After stories are approved**
+   - Write `ComponentName.tsx` to satisfy story requirements
+   - Use design system tokens from [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)
+   - Component should render correctly in existing stories without changes
+   - Example artifact: _`src/components/NewsCard.tsx` with props matching stories_
+
+5. **Validate Implementation** (stories guide correctness)
+   - Refresh Storybook - all stories should render correctly
+   - No story modifications should be needed if spec was correct
+   - Update stories only if requirements changed during implementation
+   - Example artifact: _All stories rendering without errors_
+
+### Required Story Coverage
+
+Every component MUST have stories for:
+
+- ✅ **Default state** - Typical use case with real content
+- ✅ **Loading state** - Skeleton, spinner, or placeholder
+- ✅ **Error state** - Error message handling
+- ✅ **Empty state** - No data or null props (if applicable)
+- ✅ **All visual variants** - Different configurations from design system
+
+**Cross-reference:** See [DESIGN_SYSTEM.md - Development Workflow](./DESIGN_SYSTEM.md#development-workflow) for Step 1 (design decisions) details.
 
 ---
 

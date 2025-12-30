@@ -170,7 +170,6 @@ npm run check-all              # Run all quality checks
 # Testing
 npm run test                   # Run tests
 npm run test:watch             # Run tests in watch mode
-npm run test:visual            # Run visual regression tests
 
 # Storybook
 npm run storybook              # Start Storybook
