@@ -11,7 +11,7 @@ keywords:
   - partnership
   - steun
 category: commercieel
-icon: 🤝
+icon: handshake
 primaryContact:
   role: Verantwoordelijke Sponsoring
   email: sponsoring@kcvvelewijt.be

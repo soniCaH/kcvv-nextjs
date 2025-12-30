@@ -11,7 +11,7 @@ keywords:
   - leeftijdscategorie
   - ploeg
 category: sportief
-icon: 👤
+icon: user
 primaryContact:
   role: Jeugdcoördinator
   email: jeugd@kcvvelewijt.be

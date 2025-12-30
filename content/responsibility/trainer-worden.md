@@ -11,7 +11,7 @@ keywords:
   - helpen
   - werken
 category: algemeen
-icon: 🎓
+icon: graduation-cap
 primaryContact:
   role: Technisch Coördinator
   email: technisch@kcvvelewijt.be

@@ -29,7 +29,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     summary:
       "Neem contact op met de sponsoringverantwoordelijke voor de mogelijkheden.",
     category: "commercieel",
-    icon: "🤝",
+    icon: "handshake",
     primaryContact: {
       role: "Verantwoordelijke Sponsoring",
       email: "sponsoring@kcvvelewijt.be",
@@ -77,7 +77,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     summary:
       "Breng je trainer op de hoogte en lever een medisch attest af indien vereist.",
     category: "medisch",
-    icon: "💪",
+    icon: "zap",
     primaryContact: {
       role: "Trainer",
       department: "jeugdbestuur",
@@ -115,7 +115,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     summary:
       "Gebruik het online inschrijvingsformulier of neem contact op met de jeugdsecretaris.",
     category: "administratief",
-    icon: "📝",
+    icon: "file-text",
     primaryContact: {
       role: "Jeugdsecretaris",
       email: "jeugd@kcvvelewijt.be",
@@ -167,7 +167,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     summary:
       "Check de evenementenpagina en schrijf in via het online formulier.",
     category: "administratief",
-    icon: "⚽",
+    icon: "trophy",
     primaryContact: {
       role: "Evenementencoördinator",
       email: "evenementen@kcvvelewijt.be",
@@ -214,7 +214,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     summary:
       "Neem contact op met de secretaris voor het clubstempel en de handtekening.",
     category: "administratief",
-    icon: "📋",
+    icon: "clipboard-list",
     primaryContact: {
       role: "Secretaris",
       email: "secretaris@kcvvelewijt.be",
@@ -258,7 +258,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     summary:
       "Neem vertrouwelijk contact op met de voorzitter of de vertrouwenspersoon.",
     category: "gedrag",
-    icon: "🛡️",
+    icon: "shield",
     primaryContact: {
       role: "Voorzitter",
       email: "voorzitter@kcvvelewijt.be",
@@ -307,7 +307,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     summary:
       "Meld het ongeval onmiddellijk bij je trainer en neem contact op met de verzekeringverantwoordelijke.",
     category: "medisch",
-    icon: "🏥",
+    icon: "heart",
     primaryContact: {
       role: "Verzekeringverantwoordelijke",
       email: "verzekering@kcvvelewijt.be",
@@ -356,7 +356,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     summary:
       "Vraag je logingegevens bij je trainer of de technisch coördinator.",
     category: "algemeen",
-    icon: "📱",
+    icon: "smartphone",
     primaryContact: {
       role: "Technisch Coördinator",
       email: "technisch@kcvvelewijt.be",
@@ -401,7 +401,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     ],
     summary: "Check het organogram of neem contact op met de jeugdcoördinator.",
     category: "sportief",
-    icon: "👤",
+    icon: "user",
     primaryContact: {
       role: "Jeugdcoördinator",
       email: "jeugd@kcvvelewijt.be",
@@ -446,7 +446,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     summary:
       "Neem contact op met de technisch coördinator of jeugdcoördinator.",
     category: "algemeen",
-    icon: "🎓",
+    icon: "graduation-cap",
     primaryContact: {
       role: "Technisch Coördinator",
       email: "technisch@kcvvelewijt.be",
@@ -494,7 +494,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
     summary:
       "Bekijk de wedstrijdkalender op de website of gebruik ProSoccerData.",
     category: "sportief",
-    icon: "📅",
+    icon: "calendar",
     primaryContact: {
       role: "Website",
       email: "communicatie@kcvvelewijt.be",

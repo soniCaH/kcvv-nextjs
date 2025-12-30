@@ -12,7 +12,7 @@ keywords:
   - lidmaatschap
   - registratie
 category: administratief
-icon: 📝
+icon: file-text
 primaryContact:
   role: Jeugdsecretaris
   email: jeugd@kcvvelewijt.be

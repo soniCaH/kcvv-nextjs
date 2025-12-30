@@ -13,7 +13,7 @@ keywords:
   - schema
   - wanneer spelen
 category: sportief
-icon: 📅
+icon: calendar
 primaryContact:
   role: Website
   email: communicatie@kcvvelewijt.be

@@ -14,7 +14,7 @@ keywords:
   - wedstrijd
   - geblesseerd
 category: medisch
-icon: 🏥
+icon: heart
 primaryContact:
   role: Verzekeringverantwoordelijke
   email: verzekering@kcvvelewijt.be
