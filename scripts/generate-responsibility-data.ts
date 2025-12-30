@@ -167,16 +167,20 @@ function generateTypeScriptFile(data: readonly ResponsibilityPath[]): string {
       lines.push(`      name: '${escapeString(item.primaryContact.name)}',`);
     }
     if (item.primaryContact.email) {
-      lines.push(`      email: '${item.primaryContact.email}',`);
+      lines.push(`      email: '${escapeString(item.primaryContact.email)}',`);
     }
     if (item.primaryContact.phone) {
-      lines.push(`      phone: '${item.primaryContact.phone}',`);
+      lines.push(`      phone: '${escapeString(item.primaryContact.phone)}',`);
     }
     if (item.primaryContact.department) {
-      lines.push(`      department: '${item.primaryContact.department}',`);
+      lines.push(
+        `      department: '${escapeString(item.primaryContact.department)}',`,
+      );
     }
     if (item.primaryContact.orgLink) {
-      lines.push(`      orgLink: '${item.primaryContact.orgLink}',`);
+      lines.push(
+        `      orgLink: '${escapeString(item.primaryContact.orgLink)}',`,
+      );
     }
     lines.push("    },");
 
@@ -188,7 +192,7 @@ function generateTypeScriptFile(data: readonly ResponsibilityPath[]): string {
       lines.push(`        description: '${escapeString(step.description)}',`);
 
       if (step.link) {
-        lines.push(`        link: '${step.link}',`);
+        lines.push(`        link: '${escapeString(step.link)}',`);
       }
 
       if (step.contact) {
@@ -200,10 +204,10 @@ function generateTypeScriptFile(data: readonly ResponsibilityPath[]): string {
           lines.push(`          name: '${escapeString(step.contact.name)}',`);
         }
         if (step.contact.email) {
-          lines.push(`          email: '${step.contact.email}',`);
+          lines.push(`          email: '${escapeString(step.contact.email)}',`);
         }
         if (step.contact.phone) {
-          lines.push(`          phone: '${step.contact.phone}',`);
+          lines.push(`          phone: '${escapeString(step.contact.phone)}',`);
         }
         lines.push("        },");
       }

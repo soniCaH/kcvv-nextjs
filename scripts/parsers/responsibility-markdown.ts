@@ -216,16 +216,15 @@ function extractStepMetadata(para: Paragraph): {
     if (child.type === "strong") {
       // Bold text - likely a label
       currentLine += `**${extractText(child as Strong)}**`;
-    } else if (child.type === "text") {
-      currentLine += child.value;
-    }
-
-    // Split on newlines if present
-    if (child.type === "text" && child.value.includes("\n")) {
+    } else if (child.type === "text" && child.value.includes("\n")) {
+      // Split on newlines if present
       const parts = child.value.split("\n");
       currentLine += parts[0];
       if (currentLine.trim()) lines.push(currentLine.trim());
       currentLine = parts.slice(1).join("\n");
+    } else if (child.type === "text") {
+      // No newline, append the full value
+      currentLine += child.value;
     }
   });
 
