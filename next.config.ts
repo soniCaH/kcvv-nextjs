@@ -1,4 +1,23 @@
 import type { NextConfig } from "next";
+import { spawn } from "child_process";
+
+// Auto-start responsibility markdown watch mode during development
+if (process.env.NODE_ENV === "development") {
+  const watcher = spawn("npm", ["run", "watch:responsibility"], {
+    stdio: "inherit",
+    shell: true,
+  });
+
+  process.on("exit", () => watcher.kill());
+  process.on("SIGINT", () => {
+    watcher.kill();
+    process.exit();
+  });
+  process.on("SIGTERM", () => {
+    watcher.kill();
+    process.exit();
+  });
+}
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -6,7 +25,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "placehold.co", pathname: "/**" },
       { protocol: "https", hostname: "api.kcvvelewijt.be", pathname: "/**" },
-      { protocol: "https", hostname: "dfaozfi7c7f3s.cloudfront.net", pathname: "/**" },
+      {
+        protocol: "https",
+        hostname: "dfaozfi7c7f3s.cloudfront.net",
+        pathname: "/**",
+      },
     ],
     // SVG Security Configuration
     // Current analysis (2025-01-05):
@@ -21,7 +44,7 @@ const nextConfig: NextConfig = {
     // 4. Use Content-Security-Policy headers to restrict SVG capabilities
     // See SECURITY.md for full file validation guidelines
     dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
+    contentDispositionType: "attachment",
     // Content-Disposition: attachment forces download instead of inline display
     // This provides defense-in-depth against potential SVG XSS
   },
