@@ -208,9 +208,6 @@ export const AllRoles: Story = {
           <li>
             <strong>Niet-lid</strong> - Non-members (sponsors, volunteers)
           </li>
-          <li>
-            <strong>Andere</strong> - Other categories
-          </li>
         </ul>
       </div>
     </div>

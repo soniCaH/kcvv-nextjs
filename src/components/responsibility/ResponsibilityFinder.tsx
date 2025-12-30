@@ -14,7 +14,7 @@ import type {
   AutocompleteSuggestion,
 } from "@/types/responsibility";
 import { responsibilityPaths, userRoles } from "@/data/responsibility-paths";
-import { X, User, ArrowRight, Clipboard } from "lucide-react";
+import { X, User, ArrowRight, Clipboard, ChevronDown } from "lucide-react";
 import { getIcon } from "@/lib/icons";
 
 interface ResponsibilityFinderProps {
@@ -54,15 +54,6 @@ const categoryColors = {
     accent: "#16a34a",
     accentLight: "rgba(22, 163, 74, 0.1)",
   },
-} as const;
-
-// Role labels for dropdown
-const roleLabels = {
-  speler: "speler",
-  ouder: "ouder",
-  trainer: "trainer",
-  supporter: "supporter",
-  "niet-lid": "niet-lid",
 } as const;
 
 /**
@@ -227,21 +218,14 @@ export function ResponsibilityFinder({
               }}
             >
               {selectedRole
-                ? roleLabels[selectedRole as keyof typeof roleLabels]
+                ? (userRoles
+                    .find((r) => r.value === selectedRole)
+                    ?.label.toLowerCase() ?? selectedRole)
                 : "een..."}
-              <svg
+              <ChevronDown
                 className={`w-5 h-5 transition-transform ${showRoleDropdown ? "rotate-180" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+                strokeWidth={2}
+              />
             </button>
 
             {showRoleDropdown && (
