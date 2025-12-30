@@ -9,348 +9,468 @@
  * - Edge cases
  */
 
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ResponsibilityFinder } from "./ResponsibilityFinder";
+import { responsibilityPaths } from "@/data/responsibility-paths";
 
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { ResponsibilityFinder } from './ResponsibilityFinder'
-import { responsibilityPaths } from '@/data/responsibility-paths'
+/**
+ * Helper function to select a role from the dropdown
+ * Opens the dropdown and clicks the specified role option
+ */
+async function selectRole(
+  user: ReturnType<typeof userEvent.setup>,
+  roleName: string,
+) {
+  // Find the dropdown button by its text content
+  // It either shows "een..." (initial) or a role name (after selection)
+  const dropdownButton = screen.getByRole("button", {
+    name: /een\.\.\.|speler|ouder|trainer|supporter|niet-lid/i,
+  });
 
-describe('ResponsibilityFinder', () => {
-  describe('Rendering', () => {
-    it('renders the component', () => {
-      render(<ResponsibilityFinder />)
-      expect(screen.getByText(/IK BEN/i)).toBeInTheDocument()
-    })
+  // Click the dropdown button to open the menu
+  await user.click(dropdownButton);
 
-    it('renders all role buttons', () => {
-      render(<ResponsibilityFinder />)
+  // Wait for dropdown to be visible and click the role option
+  await waitFor(() => {
+    const roleOption = screen.getByRole("button", {
+      name: new RegExp(roleName, "i"),
+    });
+    expect(roleOption).toBeInTheDocument();
+  });
 
-      expect(screen.getByRole('button', { name: /SPELER/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /OUDER/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /TRAINER/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /SUPPORTER/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /NIET-LID/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /ANDERE/i })).toBeInTheDocument()
-    })
+  const roleOption = screen.getByRole("button", {
+    name: new RegExp(roleName, "i"),
+  });
+  await user.click(roleOption);
+}
 
-    it('does not show question input initially', () => {
-      render(<ResponsibilityFinder />)
-      expect(screen.queryByPlaceholderText(/typ je vraag/i)).not.toBeInTheDocument()
-    })
+describe("ResponsibilityFinder", () => {
+  describe("Rendering", () => {
+    it("renders the component", () => {
+      render(<ResponsibilityFinder />);
+      expect(screen.getByText(/IK BEN/i)).toBeInTheDocument();
+    });
 
-    it('renders in compact mode when prop is true', () => {
-      const { container } = render(<ResponsibilityFinder compact />)
-      expect(container.querySelector('.compact')).toBeInTheDocument()
-    })
-  })
+    it("renders dropdown with all role options", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
 
-  describe('Role Selection', () => {
-    it('shows question input after selecting a role', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+      // Check for dropdown button
+      const dropdownButton = screen.getByRole("button", { name: /een\.\.\./i });
+      expect(dropdownButton).toBeInTheDocument();
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+      // Open dropdown
+      await user.click(dropdownButton);
 
-      expect(screen.getByPlaceholderText(/typ je vraag/i)).toBeInTheDocument()
-    })
+      // Check all 5 roles are available (ANDERE was removed)
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /speler/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /ouder/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /trainer/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /supporter/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /niet-lid/i }),
+        ).toBeInTheDocument();
+      });
+    });
 
-    it('highlights selected role button', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+    it("does not show question input initially", () => {
+      render(<ResponsibilityFinder />);
+      expect(
+        screen.queryByPlaceholderText(/typ je vraag/i),
+      ).not.toBeInTheDocument();
+    });
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+    it("renders in compact mode when prop is true", () => {
+      const { container } = render(<ResponsibilityFinder compact />);
+      expect(container.querySelector(".compact")).toBeInTheDocument();
+    });
+  });
 
-      expect(spelerButton).toHaveClass('bg-green-main')
-    })
+  describe("Role Selection", () => {
+    it("shows question input after selecting a role", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
 
-    it('can change selected role', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+      await selectRole(user, "speler");
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      const ouderButton = screen.getByRole('button', { name: /OUDER/i })
+      expect(screen.getByPlaceholderText(/typ je vraag/i)).toBeInTheDocument();
+    });
 
-      await user.click(spelerButton)
-      expect(spelerButton).toHaveClass('bg-green-main')
+    it("updates dropdown button text with selected role", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
 
-      await user.click(ouderButton)
-      expect(ouderButton).toHaveClass('bg-green-main')
-      expect(spelerButton).not.toHaveClass('bg-green-main')
-    })
+      await selectRole(user, "speler");
 
-    it('focuses input after role selection', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+      // Dropdown button should now show selected role
+      const dropdownButton = screen.getByRole("button", { name: /speler/i });
+      expect(dropdownButton).toBeInTheDocument();
+    });
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+    it("can change selected role", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
+
+      await selectRole(user, "speler");
+      let dropdownButton = screen.getByRole("button", { name: /speler/i });
+      expect(dropdownButton).toBeInTheDocument();
+
+      await selectRole(user, "ouder");
+      dropdownButton = screen.getByRole("button", { name: /ouder/i });
+      expect(dropdownButton).toBeInTheDocument();
+    });
+
+    it("focuses input after role selection", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
+
+      await selectRole(user, "speler");
 
       await waitFor(() => {
-        const input = screen.getByPlaceholderText(/typ je vraag/i)
-        expect(input).toHaveFocus()
-      })
-    })
-  })
+        const input = screen.getByPlaceholderText(/typ je vraag/i);
+        expect(input).toHaveFocus();
+      });
+    });
+  });
 
-  describe('Search Functionality', () => {
-    it('shows suggestions when typing', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+  describe("Search Functionality", () => {
+    it("shows suggestions when typing", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+      await selectRole(user, "speler");
 
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
-      await user.type(input, 'ongeval')
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "ongeval");
 
       await waitFor(() => {
-        const elements = screen.getAllByText(/ongeval/i)
-        expect(elements.length).toBeGreaterThan(0)
-      })
-    })
+        const elements = screen.getAllByText(/ongeval/i);
+        expect(elements.length).toBeGreaterThan(0);
+      });
+    });
 
-    it('filters suggestions by selected role', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+    it("filters suggestions by selected role", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
 
-      const ouderButton = screen.getByRole('button', { name: /OUDER/i })
-      await user.click(ouderButton)
+      await selectRole(user, "ouder");
 
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
-      await user.type(input, 'inschrijven')
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "inschrijven");
 
       await waitFor(() => {
         // Should show registration question which is available for "ouder"
-        const suggestions = screen.queryAllByText(/inschrijven/i)
-        expect(suggestions.length).toBeGreaterThan(0)
-      })
-    })
+        const suggestions = screen.queryAllByText(/inschrijven/i);
+        expect(suggestions.length).toBeGreaterThan(0);
+      });
+    });
 
-    it('shows maximum 6 suggestions', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+    it("shows maximum 6 suggestions", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+      await selectRole(user, "speler");
 
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
-      await user.type(input, 'w') // Broad search
-
-      await waitFor(() => {
-        const suggestionContainer = screen.getByRole('textbox').parentElement?.querySelector('.absolute')
-        expect(suggestionContainer).toBeInTheDocument()
-        const buttons = suggestionContainer!.querySelectorAll('button')
-        expect(buttons.length).toBeLessThanOrEqual(6)
-      })
-    })
-
-    it('clears search when clicking clear button', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
-
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
-
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
-      await user.type(input, 'test')
-
-      const clearButton = screen.getByLabelText(/clear search/i)
-      await user.click(clearButton)
-
-      expect(input).toHaveValue('')
-    })
-
-    it('hides suggestions when clicking outside', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
-
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
-
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
-      await user.type(input, 'ongeval')
-
-      // Click outside
-      await user.click(document.body)
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "w"); // Broad search
 
       await waitFor(() => {
-        const suggestions = document.querySelector('.absolute.z-50')
-        expect(suggestions).not.toBeInTheDocument()
-      })
-    })
-  })
+        const allButtons = screen.queryAllByRole("button");
 
-  describe('Result Selection', () => {
-    it('shows result card when clicking suggestion', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+        // Filter to get only suggestion buttons
+        // Exclude: dropdown button and clear button
+        const suggestionButtons = allButtons.filter((button) => {
+          const label = button.getAttribute("aria-label") || "";
+          const text = button.textContent || "";
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+          // Skip clear button (has "clear" in aria-label)
+          if (label.toLowerCase().includes("clear")) return false;
 
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
-      await user.type(input, 'ongeval')
+          // Skip dropdown button (contains "een..." or a role name)
+          if (
+            text.includes("een...") ||
+            /speler|ouder|trainer|supporter|niet-lid/i.test(text)
+          ) {
+            return false;
+          }
 
-      const suggestions = await screen.findAllByRole('button', { name: /ongeval/i })
-      const suggestion = suggestions[0]
-      await user.click(suggestion)
+          return true;
+        });
+
+        expect(suggestionButtons.length).toBeGreaterThan(0);
+        expect(suggestionButtons.length).toBeLessThanOrEqual(6);
+      });
+    });
+
+    it("clears search when clicking clear button", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
+
+      await selectRole(user, "speler");
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "test");
+
+      const clearButton = screen.getByLabelText(/clear search/i);
+      await user.click(clearButton);
+
+      expect(input).toHaveValue("");
+    });
+
+    it("hides suggestions when clicking outside", async () => {
+      const user = userEvent.setup();
+      render(
+        <div>
+          <div data-testid="outside-element">Outside</div>
+          <ResponsibilityFinder />
+        </div>,
+      );
+
+      await selectRole(user, "speler");
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "ongeval");
+
+      // Verify suggestions are visible
+      await waitFor(() => {
+        const suggestionButtons = screen.queryAllByRole("button", {
+          name: /ongeval/i,
+        });
+        expect(suggestionButtons.length).toBeGreaterThan(0);
+      });
+
+      // Click outside - use a real DOM element for reliable clicks in CI
+      const outsideElement = screen.getByTestId("outside-element");
+      await user.click(outsideElement);
+
+      // Wait for suggestions to disappear
+      await waitFor(() => {
+        const suggestionButtons = screen.queryAllByRole("button", {
+          name: /ongeval/i,
+        });
+        expect(suggestionButtons.length).toBe(0);
+      });
+    });
+  });
+
+  describe("Result Selection", () => {
+    it("shows result card when clicking suggestion", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
+
+      await selectRole(user, "speler");
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "ongeval");
+
+      const suggestions = await screen.findAllByRole("button", {
+        name: /ongeval/i,
+      });
+      const suggestion = suggestions[0];
+      await user.click(suggestion);
 
       await waitFor(() => {
-        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument()
-      })
-    })
+        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+      });
+    });
 
-    it('calls onResultSelect callback', async () => {
-      const onResultSelect = vi.fn()
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder onResultSelect={onResultSelect} />)
+    it("calls onResultSelect callback", async () => {
+      const onResultSelect = vi.fn();
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder onResultSelect={onResultSelect} />);
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+      await selectRole(user, "speler");
 
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
-      await user.type(input, 'ongeval')
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "ongeval");
 
-      const suggestions = await screen.findAllByRole('button', { name: /ongeval/i })
-      const suggestion = suggestions[0]
-      await user.click(suggestion)
-
-      await waitFor(() => {
-        expect(onResultSelect).toHaveBeenCalled()
-      })
-    })
-
-    it('displays all result card sections', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
-
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
-
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
-      await user.type(input, 'ongeval')
-
-      const suggestions = await screen.findAllByRole('button', { name: /ongeval/i })
-      const suggestion = suggestions[0]
-      await user.click(suggestion)
+      const suggestions = await screen.findAllByRole("button", {
+        name: /ongeval/i,
+      });
+      const suggestion = suggestions[0];
+      await user.click(suggestion);
 
       await waitFor(() => {
-        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument()
-        expect(screen.getByText(/Wat moet je doen/i)).toBeInTheDocument()
-      })
-    })
-  })
+        expect(onResultSelect).toHaveBeenCalled();
+      });
+    });
 
-  describe('Accessibility', () => {
-    it('has proper ARIA labels', () => {
-      render(<ResponsibilityFinder />)
+    it("displays all result card sections", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      expect(spelerButton).toBeInTheDocument()
-    })
+      await selectRole(user, "speler");
 
-    it('is keyboard navigable', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "ongeval");
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-
-      spelerButton.focus()
-      expect(spelerButton).toHaveFocus()
-
-      await user.keyboard('{Enter}')
+      const suggestions = await screen.findAllByRole("button", {
+        name: /ongeval/i,
+      });
+      const suggestion = suggestions[0];
+      await user.click(suggestion);
 
       await waitFor(() => {
-        const input = screen.getByPlaceholderText(/typ je vraag/i)
-        expect(input).toBeInTheDocument()
-      })
-    })
+        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+        expect(screen.getByText(/Wat moet je doen/i)).toBeInTheDocument();
+      });
+    });
+  });
 
-    it('input has placeholder text', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+  describe("Accessibility", () => {
+    it("has proper ARIA labels", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+      // Dropdown button should be accessible
+      const dropdownButton = screen.getByRole("button", { name: /een\.\.\./i });
+      expect(dropdownButton).toBeInTheDocument();
 
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
-      expect(input).toHaveAttribute('placeholder')
-    })
-  })
+      // Clear button should have aria-label (shown after typing)
+      await selectRole(user, "speler");
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "test");
 
-  describe('Edge Cases', () => {
-    it('handles no search results gracefully', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+      const clearButton = screen.getByLabelText(/clear search/i);
+      expect(clearButton).toBeInTheDocument();
+    });
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+    it("is keyboard navigable", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
 
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
-      await user.type(input, 'xyzabc123notfound')
+      const dropdownButton = screen.getByRole("button", { name: /een\.\.\./i });
 
-      // Should not crash, no suggestions shown
-      const suggestions = screen.queryByRole('button', { name: /xyzabc/i })
-      expect(suggestions).not.toBeInTheDocument()
-    })
+      dropdownButton.focus();
+      expect(dropdownButton).toHaveFocus();
 
-    it('handles empty search gracefully', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+      await user.keyboard("{Enter}");
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+      await waitFor(() => {
+        // Dropdown should be open
+        const roleOption = screen.getByRole("button", { name: /speler/i });
+        expect(roleOption).toBeInTheDocument();
+      });
+    });
 
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
-      await user.clear(input)
+    it("input has placeholder text", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
+
+      await selectRole(user, "speler");
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      expect(input).toHaveAttribute("placeholder");
+    });
+  });
+
+  describe("Edge Cases", () => {
+    it("handles no search results gracefully", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
+
+      await selectRole(user, "speler");
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+
+      // Type search that won't match anything
+      await user.clear(input);
+      await user.type(input, "xyzabc123notfound");
+
+      // Should show empty state message when there are no matches
+      await waitFor(() => {
+        const emptyState = screen.queryByText(/Geen resultaten gevonden/i);
+        expect(emptyState).toBeInTheDocument();
+      });
+
+      // Verify no suggestion buttons are shown
+      const allButtons = screen.queryAllByRole("button");
+      const suggestionButtons = allButtons.filter((button) => {
+        const label = button.getAttribute("aria-label") || "";
+        const text = button.textContent || "";
+
+        // Skip clear button
+        if (label.toLowerCase().includes("clear")) return false;
+
+        // Skip dropdown button
+        if (
+          text.includes("een...") ||
+          /speler|ouder|trainer|supporter|niet-lid/i.test(text)
+        ) {
+          return false;
+        }
+
+        return true;
+      });
+      expect(suggestionButtons.length).toBe(0);
+    });
+
+    it("handles empty search gracefully", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
+
+      await selectRole(user, "speler");
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.clear(input);
 
       // Should not show suggestions for empty query
-      expect(input).toHaveValue('')
-    })
+      expect(input).toHaveValue("");
+    });
 
-    it('handles rapid role switching', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+    it("handles rapid role switching", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
 
-      const roles = ['SPELER', 'OUDER', 'TRAINER', 'SUPPORTER']
+      const roles = ["speler", "ouder", "trainer", "supporter"];
 
       for (const role of roles) {
-        const button = screen.getByRole('button', { name: new RegExp(role, 'i') })
-        await user.click(button)
-        expect(button).toHaveClass('bg-green-main')
+        await selectRole(user, role);
+        // Dropdown button should show the selected role
+        const dropdownButton = screen.getByRole("button", {
+          name: new RegExp(role, "i"),
+        });
+        expect(dropdownButton).toBeInTheDocument();
       }
-    })
-  })
+    });
+  });
 
-  describe('Data Integration', () => {
-    it('uses real responsibility paths data', () => {
-      render(<ResponsibilityFinder />)
+  describe("Data Integration", () => {
+    it("uses real responsibility paths data", () => {
+      render(<ResponsibilityFinder />);
 
       // Should have access to the imported data
-      expect(responsibilityPaths).toBeDefined()
-      expect(responsibilityPaths.length).toBeGreaterThan(0)
-    })
+      expect(responsibilityPaths).toBeDefined();
+      expect(responsibilityPaths.length).toBeGreaterThan(0);
+    });
 
-    it('matches against keywords correctly', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityFinder />)
+    it("matches against keywords correctly", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder />);
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+      await selectRole(user, "speler");
 
-      const input = screen.getByPlaceholderText(/typ je vraag/i)
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
 
       // Search by keyword (not exact question text)
-      await user.type(input, 'blessure')
+      await user.type(input, "blessure");
 
       await waitFor(() => {
         // Should find questions with "blessure" in keywords
-        const results = screen.queryAllByText(/blessure|herstel/i)
-        expect(results.length).toBeGreaterThan(0)
-      })
-    })
-  })
-})
+        const results = screen.queryAllByText(/blessure|herstel/i);
+        expect(results.length).toBeGreaterThan(0);
+      });
+    });
+  });
+});

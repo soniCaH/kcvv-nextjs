@@ -4,178 +4,189 @@
  * Tests for the homepage block variant
  */
 
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { ResponsibilityBlock } from './ResponsibilityBlock'
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ResponsibilityBlock } from "./ResponsibilityBlock";
 
-describe('ResponsibilityBlock', () => {
-  describe('Rendering', () => {
-    it('renders the component', () => {
-      render(<ResponsibilityBlock />)
-      expect(screen.getByText(/Hoe kunnen we je helpen/i)).toBeInTheDocument()
-    })
+describe("ResponsibilityBlock", () => {
+  describe("Rendering", () => {
+    it("renders the component", () => {
+      render(<ResponsibilityBlock />);
+      expect(screen.getByText(/Hoe kunnen we je helpen/i)).toBeInTheDocument();
+    });
 
-    it('renders with gradient background section', () => {
-      const { container } = render(<ResponsibilityBlock />)
-      const section = container.querySelector('section')
-      expect(section).toHaveClass('bg-gradient-to-br')
-    })
+    it("renders with gradient background section", () => {
+      const { container } = render(<ResponsibilityBlock />);
+      const section = container.querySelector("section");
+      expect(section).toHaveClass("bg-gradient-to-br");
+    });
 
-    it('contains the ResponsibilityFinder component in compact mode', () => {
-      const { container } = render(<ResponsibilityBlock />)
-      const compact = container.querySelector('.compact')
-      expect(compact).toBeInTheDocument()
-    })
-  })
+    it("contains the ResponsibilityFinder component in compact mode", () => {
+      const { container } = render(<ResponsibilityBlock />);
+      const compact = container.querySelector(".compact");
+      expect(compact).toBeInTheDocument();
+    });
+  });
 
-  describe('Quick Links', () => {
-    it('renders all three quick links', () => {
-      render(<ResponsibilityBlock />)
+  describe("Quick Links", () => {
+    it("renders all three quick links", () => {
+      render(<ResponsibilityBlock />);
 
-      expect(screen.getByText('Organogram')).toBeInTheDocument()
-      expect(screen.getByText('Contact')).toBeInTheDocument()
-      expect(screen.getByText('Inschrijven')).toBeInTheDocument()
-    })
+      expect(screen.getByText("Organogram")).toBeInTheDocument();
+      expect(screen.getByText("Contact")).toBeInTheDocument();
+      expect(screen.getByText("Inschrijven")).toBeInTheDocument();
+    });
 
-    it('organogram link points to correct URL', () => {
-      render(<ResponsibilityBlock />)
+    it("organogram link points to correct URL", () => {
+      render(<ResponsibilityBlock />);
 
-      const organogramLink = screen.getByText('Organogram').closest('a')
-      expect(organogramLink).toHaveAttribute('href', '/club/organogram')
-    })
+      const organogramLink = screen.getByText("Organogram").closest("a");
+      expect(organogramLink).toHaveAttribute("href", "/club/organogram");
+    });
 
-    it('contact link points to correct URL', () => {
-      render(<ResponsibilityBlock />)
+    it("contact link points to correct URL", () => {
+      render(<ResponsibilityBlock />);
 
-      const contactLink = screen.getByText('Contact').closest('a')
-      expect(contactLink).toHaveAttribute('href', '/club/contact')
-    })
+      const contactLink = screen.getByText("Contact").closest("a");
+      expect(contactLink).toHaveAttribute("href", "/club/contact");
+    });
 
-    it('register link points to correct URL', () => {
-      render(<ResponsibilityBlock />)
+    it("register link points to correct URL", () => {
+      render(<ResponsibilityBlock />);
 
-      const registerLink = screen.getByText('Inschrijven').closest('a')
-      expect(registerLink).toHaveAttribute('href', '/club/register')
-    })
+      const registerLink = screen.getByText("Inschrijven").closest("a");
+      expect(registerLink).toHaveAttribute("href", "/club/register");
+    });
 
-    it('quick links have proper icons', () => {
-      const { container } = render(<ResponsibilityBlock />)
+    it("quick links have proper icons", () => {
+      const { container } = render(<ResponsibilityBlock />);
 
-      const svgIcons = container.querySelectorAll('svg')
-      expect(svgIcons.length).toBeGreaterThanOrEqual(3) // At least 3 icons for quick links
-    })
-  })
+      const svgIcons = container.querySelectorAll("svg");
+      expect(svgIcons.length).toBeGreaterThanOrEqual(3); // At least 3 icons for quick links
+    });
+  });
 
-  describe('Link to Full Page', () => {
-    it('renders link to /hulp page', () => {
-      render(<ResponsibilityBlock />)
+  describe("Link to Full Page", () => {
+    it("renders link to /hulp page", () => {
+      render(<ResponsibilityBlock />);
 
-      const fullPageLink = screen.getByText(/Bekijk alle veelgestelde vragen/i)
-      expect(fullPageLink).toBeInTheDocument()
-    })
+      const fullPageLink = screen.getByText(/Bekijk alle veelgestelde vragen/i);
+      expect(fullPageLink).toBeInTheDocument();
+    });
 
-    it('link points to /hulp', () => {
-      render(<ResponsibilityBlock />)
+    it("link points to /hulp", () => {
+      render(<ResponsibilityBlock />);
 
-      const fullPageLink = screen.getByText(/Bekijk alle veelgestelde vragen/i)
-      expect(fullPageLink.closest('a')).toHaveAttribute('href', '/hulp')
-    })
-  })
+      const fullPageLink = screen.getByText(/Bekijk alle veelgestelde vragen/i);
+      expect(fullPageLink.closest("a")).toHaveAttribute("href", "/hulp");
+    });
+  });
 
-  describe('Interactive Elements', () => {
-    it('can interact with role buttons', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityBlock />)
+  describe("Interactive Elements", () => {
+    it("can interact with role dropdown", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityBlock />);
 
-      const spelerButton = screen.getByRole('button', { name: /SPELER/i })
-      await user.click(spelerButton)
+      // Click the dropdown button to open the menu
+      const dropdownButton = screen.getByRole("button", { name: /een\.\.\./i });
+      await user.click(dropdownButton);
 
-      expect(spelerButton).toHaveClass('bg-green-main')
-    })
+      // Select speler from dropdown
+      const spelerOption = screen.getByRole("button", { name: /speler/i });
+      await user.click(spelerOption);
 
-    it('shows question input after role selection', async () => {
-      const user = userEvent.setup()
-      render(<ResponsibilityBlock />)
+      // Dropdown button should now show selected role
+      const updatedButton = screen.getByRole("button", { name: /speler/i });
+      expect(updatedButton).toBeInTheDocument();
+    });
 
-      const ouderButton = screen.getByRole('button', { name: /OUDER/i })
-      await user.click(ouderButton)
+    it("shows question input after role selection", async () => {
+      const user = userEvent.setup();
+      render(<ResponsibilityBlock />);
 
-      expect(screen.getByPlaceholderText(/typ je vraag/i)).toBeInTheDocument()
-    })
-  })
+      // Click dropdown and select ouder
+      const dropdownButton = screen.getByRole("button", { name: /een\.\.\./i });
+      await user.click(dropdownButton);
 
-  describe('Accessibility', () => {
-    it('has proper heading hierarchy', () => {
-      render(<ResponsibilityBlock />)
+      const ouderOption = screen.getByRole("button", { name: /ouder/i });
+      await user.click(ouderOption);
 
-      const mainHeading = screen.getByText(/Hoe kunnen we je helpen/i)
-      expect(mainHeading.tagName).toBe('H2')
-    })
+      expect(screen.getByPlaceholderText(/typ je vraag/i)).toBeInTheDocument();
+    });
+  });
 
-    it('all links are keyboard accessible', () => {
-      render(<ResponsibilityBlock />)
+  describe("Accessibility", () => {
+    it("has proper heading hierarchy", () => {
+      render(<ResponsibilityBlock />);
 
-      const links = screen.getAllByRole('link')
-      links.forEach(link => {
-        expect(link).toBeInTheDocument()
-      })
-    })
+      const mainHeading = screen.getByText(/Hoe kunnen we je helpen/i);
+      expect(mainHeading.tagName).toBe("H2");
+    });
 
-    it('quick link cards have descriptive text', () => {
-      render(<ResponsibilityBlock />)
+    it("all links are keyboard accessible", () => {
+      render(<ResponsibilityBlock />);
 
-      expect(screen.getByText(/Alle bestuursleden/i)).toBeInTheDocument()
-      expect(screen.getByText(/Algemene info/i)).toBeInTheDocument()
-      expect(screen.getByText(/Word lid/i)).toBeInTheDocument()
-    })
-  })
+      const links = screen.getAllByRole("link");
+      links.forEach((link) => {
+        expect(link).toBeInTheDocument();
+      });
+    });
 
-  describe('Responsive Design', () => {
-    it('has responsive grid classes', () => {
-      const { container } = render(<ResponsibilityBlock />)
+    it("quick link cards have descriptive text", () => {
+      render(<ResponsibilityBlock />);
 
-      const quickLinksGrid = container.querySelector('.grid')
-      expect(quickLinksGrid).toHaveClass('md:grid-cols-3')
-    })
+      expect(screen.getByText(/Alle bestuursleden/i)).toBeInTheDocument();
+      expect(screen.getByText(/Algemene info/i)).toBeInTheDocument();
+      expect(screen.getByText(/Word lid/i)).toBeInTheDocument();
+    });
+  });
 
-    it('has responsive padding', () => {
-      const { container } = render(<ResponsibilityBlock />)
+  describe("Responsive Design", () => {
+    it("has responsive grid classes", () => {
+      const { container } = render(<ResponsibilityBlock />);
 
-      const section = container.querySelector('section')
-      expect(section).toHaveClass('py-16')
-      expect(section).toHaveClass('px-4')
-    })
-  })
+      const quickLinksGrid = container.querySelector(".grid");
+      expect(quickLinksGrid).toHaveClass("md:grid-cols-3");
+    });
 
-  describe('Visual Styling', () => {
-    it('has KCVV branding colors', () => {
-      const { container } = render(<ResponsibilityBlock />)
+    it("has responsive padding", () => {
+      const { container } = render(<ResponsibilityBlock />);
 
-      const section = container.querySelector('section')
-      expect(section).toHaveClass('bg-gradient-to-br')
-      expect(section?.className).toContain('green')
-    })
+      const section = container.querySelector("section");
+      expect(section).toHaveClass("py-16");
+      expect(section).toHaveClass("px-4");
+    });
+  });
 
-    it('quick links have hover effects', () => {
-      const { container } = render(<ResponsibilityBlock />)
+  describe("Visual Styling", () => {
+    it("has KCVV branding colors", () => {
+      const { container } = render(<ResponsibilityBlock />);
 
-      const quickLinks = container.querySelectorAll('a.hover\\:shadow-md')
-      expect(quickLinks.length).toBeGreaterThan(0)
-    })
+      const section = container.querySelector("section");
+      expect(section).toHaveClass("bg-gradient-to-br");
+      expect(section?.className).toContain("green");
+    });
 
-    it('has rounded corners', () => {
-      const { container } = render(<ResponsibilityBlock />)
+    it("quick links have hover effects", () => {
+      const { container } = render(<ResponsibilityBlock />);
 
-      const whiteCard = container.querySelector('.rounded-2xl')
-      expect(whiteCard).toBeInTheDocument()
-    })
+      const quickLinks = container.querySelectorAll("a.hover\\:shadow-md");
+      expect(quickLinks.length).toBeGreaterThan(0);
+    });
 
-    it('has shadow on main card', () => {
-      const { container } = render(<ResponsibilityBlock />)
+    it("has rounded corners", () => {
+      const { container } = render(<ResponsibilityBlock />);
 
-      const mainCard = container.querySelector('.shadow-xl')
-      expect(mainCard).toBeInTheDocument()
-    })
-  })
-})
+      const whiteCard = container.querySelector(".rounded-2xl");
+      expect(whiteCard).toBeInTheDocument();
+    });
+
+    it("has shadow on main card", () => {
+      const { container } = render(<ResponsibilityBlock />);
+
+      const mainCard = container.querySelector(".shadow-xl");
+      expect(mainCard).toBeInTheDocument();
+    });
+  });
+});

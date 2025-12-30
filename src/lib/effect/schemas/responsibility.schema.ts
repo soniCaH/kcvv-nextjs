@@ -21,7 +21,6 @@ export const UserRoleSchema = S.Literal(
   "trainer",
   "supporter",
   "niet-lid",
-  "andere",
 );
 
 export type UserRole = S.Schema.Type<typeof UserRoleSchema>;
