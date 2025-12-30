@@ -16,6 +16,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "check-all": "npm run lint && npm run type-check && npm run test && npm run build",
+    "build:responsibility": "tsx scripts/generate-responsibility-data.ts",
+    "watch:responsibility": "tsx watch scripts/generate-responsibility-data.ts",
     "migration:status": "node scripts/migration-status.js",
     "migration:create": "node scripts/migration-create.js",
     "prepare": "husky"
@@ -63,14 +65,19 @@
     "eslint": "9.39.2",
     "eslint-config-next": "16.1.1",
     "eslint-plugin-storybook": "10.1.11",
+    "gray-matter": "^4.0.3",
     "happy-dom": "20.0.11",
     "husky": "9.1.7",
     "lint-staged": "16.2.7",
     "prettier": "3.7.4",
     "prettier-plugin-tailwindcss": "0.7.2",
+    "remark": "^15.0.1",
+    "remark-parse": "^11.0.0",
     "storybook": "10.1.11",
     "tailwindcss": "4.1.18",
+    "tsx": "^4.21.0",
     "typescript": "5.9.3",
+    "unist-util-visit": "^5.0.0",
     "vitest": "4.0.16"
   },
   "overrides": {
