@@ -95,7 +95,7 @@ NEXT_PUBLIC_TYPEKIT_ID=your_typekit_id
 
 ## 📂 Project Structure
 
-```
+```text
 kcvv-nextjs/
 ├── .claude/                      # Claude Code configuration
 │   ├── agents/                   # Migration agents (deprecated)
@@ -283,7 +283,7 @@ See **`SECURITY.md`** for security policies including:
 - Drupal server-side validation requirements
 - Defense-in-depth approach
 
-**Reporting vulnerabilities:** kevin@kcvvelewijt.be
+**Reporting vulnerabilities:** [kevin@kcvvelewijt.be](mailto:kevin@kcvvelewijt.be)
 
 ---
 
@@ -331,7 +331,7 @@ gh pr create
 
 Use [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 <type>(<scope>): <description>
 
 [optional body]
@@ -458,7 +458,7 @@ Set in Vercel dashboard:
 ### For Questions
 
 - Create a [GitHub issue](https://github.com/soniCaH/kcvv-nextjs/issues)
-- Email: kevin@kcvvelewijt.be
+- Email: [kevin@kcvvelewijt.be](mailto:kevin@kcvvelewijt.be)
 
 ---
 

@@ -24,9 +24,9 @@ This feature **exists but is not usable** in its current state. See GitHub issue
 2. [Current Features](#current-features)
 3. [Known Problems](#known-problems)
 4. [File Structure](#file-structure)
-5. [How to Customize](#how-to-customize)
-6. [Accessibility Features](#accessibility-features)
-7. [Future Improvements](#future-improvements)
+5. [How to Customize the Organogram](#how-to-customize-the-organogram)
+6. [Known Accessibility Improvements (v2)](#known-accessibility-improvements-v2)
+7. [Future Enhancements](#future-enhancements)
 
 ---
 
@@ -114,7 +114,7 @@ Attempted improvements for elder users:
 
 ## File Structure
 
-```
+```text
 src/
 ├── app/(main)/club/organogram/
 │   └── page.tsx                     # Main organogram page
@@ -245,7 +245,7 @@ Both desktop and mobile navigation have been updated.
 
 Your current structure hierarchy (45 positions defined with placeholder names):
 
-```
+```text
 KCVV Elewijt
 ├── Voorzitter (President)
 │   ├── Ondervoorzitter (VP)
@@ -347,7 +347,7 @@ Instead of d3-org-chart, consider:
 ### For Developers
 
 - Check code comments in each file
-- The d3-org-chart library docs: https://github.com/bumbeishvili/org-chart
+- The [d3-org-chart library docs](https://github.com/bumbeishvili/org-chart)
 - TypeScript interfaces in `/src/types/organogram.ts` show all available fields
 
 ### For Issues

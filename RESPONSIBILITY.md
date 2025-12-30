@@ -94,7 +94,7 @@ Results sorted by score, top 6 shown.
 
 ### Components
 
-```
+```text
 src/components/responsibility/
 ├── ResponsibilityFinder.tsx    # Main interactive component
 ├── ResponsibilityBlock.tsx     # Homepage block version
@@ -103,21 +103,21 @@ src/components/responsibility/
 
 ### Data
 
-```
+```text
 src/data/
 └── responsibility-paths.ts      # All Q&A data (EDIT THIS!)
 ```
 
 ### Types
 
-```
+```text
 src/types/
 └── responsibility.ts            # TypeScript interfaces
 ```
 
 ### Pages
 
-```
+```text
 src/app/(main)/hulp/
 └── page.tsx                     # Dedicated help page
 ```
@@ -155,7 +155,7 @@ src/app/(main)/hulp/
 
 All questions and answers are in:
 
-```
+```text
 src/data/responsibility-paths.ts
 ```
 
@@ -259,7 +259,7 @@ steps: [
 
 ### Algemene Vorm
 
-```
+```text
 Ik ben een [speler|trainer|ouder|supporter|niet-lid] en ik [vraag]
 ```
 
@@ -337,7 +337,7 @@ Maak de stappen concreet en actionable:
 
 ✅ **GOED**:
 
-```
+```text
 1. Ga naar de inschrijvingspagina
 2. Vul het formulier in met je gegevens
 3. Upload een pasfoto
@@ -346,7 +346,7 @@ Maak de stappen concreet en actionable:
 
 ❌ **SLECHT**:
 
-```
+```text
 1. Schrijf je in
 2. Geef je gegevens door
 3. Betaal

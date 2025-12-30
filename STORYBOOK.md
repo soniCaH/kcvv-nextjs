@@ -86,13 +86,13 @@ Outputs static site to `storybook-static/`
 
 ### File Naming Convention
 
-```
+```text
 ComponentName.stories.tsx
 ```
 
 Place stories next to component:
 
-```
+```text
 src/components/ui/
 ├── Button.tsx
 ├── Button.stories.tsx
@@ -485,7 +485,7 @@ git commit -m "feat(storybook): add stories for ComponentName"
 
 ### Storybook Config Location
 
-```
+```text
 .storybook/
 ├── main.ts         # Addons, framework config
 ├── preview.ts      # Global decorators, parameters
@@ -672,10 +672,10 @@ Check import path in story file matches component location.
 
 ## Resources
 
-- **Storybook Docs**: https://storybook.js.org/docs
-- **Next.js Integration**: https://storybook.js.org/docs/get-started/nextjs
-- **Testing Library**: https://storybook.js.org/docs/writing-tests/interaction-testing
-- **Accessibility**: https://storybook.js.org/docs/writing-tests/accessibility-testing
+- [Storybook Docs](https://storybook.js.org/docs)
+- [Next.js Integration](https://storybook.js.org/docs/get-started/nextjs)
+- [Testing Library](https://storybook.js.org/docs/writing-tests/interaction-testing)
+- [Accessibility](https://storybook.js.org/docs/writing-tests/accessibility-testing)
 
 ---
 

@@ -11,7 +11,7 @@
 2. [Core Principles](#core-principles)
 3. [Type Inference Rules](#type-inference-rules)
 4. [Common Drupal Patterns](#common-drupal-patterns)
-5. [JSON:API Common Types](#jsonapi-common-types)
+5. [JSONAPI Common Types](#jsonapi-common-types)
 6. [Best Practices](#best-practices)
 7. [Schema Validation Checklist](#schema-validation-checklist)
 8. [Testing Requirements](#testing-requirements)
@@ -337,7 +337,7 @@ export class TaxonomyTerm extends S.Class<TaxonomyTerm>("TaxonomyTerm")({
 
 ---
 
-## JSON:API Common Types
+## JSONAPI Common Types
 
 ### Version Object
 
@@ -387,7 +387,7 @@ Use `DrupalResource` as a **fallback** in discriminated unions.
 
 **File structure:**
 
-```
+```text
 src/lib/effect/schemas/
 ├── common.schema.ts       # Shared types (JsonApiLinks, etc.)
 ├── file.schema.ts         # File entities
@@ -749,8 +749,8 @@ Create a new schema when:
 
 ### Documentation
 
-- Effect Schema: https://effect.website/docs/schema/introduction
-- Drupal JSON:API: https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module
+- [Effect Schema](https://effect.website/docs/schema/introduction)
+- [Drupal JSON:API](https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module)
 
 ---
 
