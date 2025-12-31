@@ -197,8 +197,9 @@ export function FilterTabs({
           href={tab.href}
           className={baseClasses}
           role="tab"
-          aria-selected={isActive}
+          aria-selected={isActive ? "true" : "false"}
           aria-current={isActive ? "page" : undefined}
+          tabIndex={isActive ? 0 : -1}
         >
           {content}
         </a>
@@ -211,8 +212,9 @@ export function FilterTabs({
         onClick={() => onChange?.(tab.value)}
         className={baseClasses}
         role="tab"
-        aria-selected={isActive}
+        aria-selected={isActive ? "true" : "false"}
         type="button"
+        tabIndex={isActive ? 0 : -1}
       >
         {content}
       </button>
