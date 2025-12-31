@@ -119,8 +119,11 @@ export interface DepartmentFilterProps {
   /** Show member counts */
   showCounts?: boolean;
 
-  /** Display style */
+  /** Display style (DEPRECATED - use size instead) */
   variant?: "tabs" | "pills" | "buttons";
+
+  /** Size variant (sm | md | lg) */
+  size?: "sm" | "md" | "lg";
 
   /** Optional CSS class name */
   className?: string;
