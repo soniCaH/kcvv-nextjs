@@ -13,6 +13,7 @@ import {
   X,
   Search,
   ChevronDown,
+  ChevronUp,
   ChevronLeft,
   ChevronRight,
   ArrowRight,
@@ -39,6 +40,7 @@ import {
   Mail,
   Phone,
   Smartphone,
+  MessageCircle,
 
   // People & Organization
   User,
@@ -77,6 +79,7 @@ export const icons = {
   x: X,
   search: Search,
   "chevron-down": ChevronDown,
+  "chevron-up": ChevronUp,
   "chevron-left": ChevronLeft,
   "chevron-right": ChevronRight,
   "arrow-right": ArrowRight,
@@ -103,6 +106,7 @@ export const icons = {
   mail: Mail,
   phone: Phone,
   smartphone: Smartphone,
+  "message-circle": MessageCircle,
 
   // People & Organization
   user: User,
@@ -188,6 +192,7 @@ export {
   X,
   Search,
   ChevronDown,
+  ChevronUp,
   ChevronLeft,
   ChevronRight,
   ArrowRight,
@@ -214,6 +219,7 @@ export {
   Mail,
   Phone,
   Smartphone,
+  MessageCircle,
 
   // People & Organization
   User,
