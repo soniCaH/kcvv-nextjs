@@ -147,7 +147,7 @@ export function FilterTabs({
   const activeClasses =
     "bg-kcvv-green-bright text-white border-2 border-transparent";
   const inactiveClasses =
-    "bg-transparent text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white hover:border-transparent focus:border-transparent active:border-transparent border-2 border-kcvv-green-bright";
+    "bg-transparent text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white hover:border-transparent border-2 border-kcvv-green-bright";
 
   // Render individual tab
   const renderTab = (tab: FilterTab) => {
