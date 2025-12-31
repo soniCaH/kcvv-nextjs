@@ -220,11 +220,7 @@ export function FilterTabs({
   };
 
   return (
-    <div
-      className={`relative ${className}`}
-      role="tablist"
-      aria-label={ariaLabel}
-    >
+    <div className={`relative ${className}`}>
       {/* Left Arrow */}
       {showLeftArrow && (
         <button
@@ -251,6 +247,8 @@ export function FilterTabs({
       {/* Scrollable Container */}
       <div
         ref={scrollContainerRef}
+        role="tablist"
+        aria-label={ariaLabel}
         className={`
           flex gap-2 overflow-x-auto scroll-smooth
           ${showLeftArrow ? (size === "sm" ? "pl-10" : size === "lg" ? "pl-14" : "pl-12") : "pl-0"}
