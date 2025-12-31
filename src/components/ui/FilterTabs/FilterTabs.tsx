@@ -163,7 +163,7 @@ export function FilterTabs({
       rounded
       flex
       items-center
-      focus:outline-none focus:ring-2 focus:ring-kcvv-green-bright focus:ring-offset-2
+      focus:outline-none
     `;
 
     const content = (
