@@ -284,12 +284,12 @@ export function EnhancedOrgChart({
       {/* Controls Bar */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         {/* Left: Results Count */}
-        <p className="text-sm text-gray-medium">
+        <p className="text-sm text-kcvv-gray">
           {searchResults.length === 0 ? (
             "Geen resultaten"
           ) : (
             <>
-              <span className="font-semibold text-gray-blue">
+              <span className="font-semibold text-kcvv-gray-blue">
                 {searchResults.length}
               </span>{" "}
               {searchResults.length === 1 ? "lid" : "leden"}
@@ -314,10 +314,10 @@ export function EnhancedOrgChart({
               px-3 py-2
               flex items-center gap-2
               text-sm font-medium text-white
-              bg-green-main hover:bg-green-hover
+              bg-kcvv-green hover:bg-kcvv-green-hover
               rounded-lg
               transition-colors
-              focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+              focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
             "
           >
             <Menu size={18} />
@@ -331,11 +331,11 @@ export function EnhancedOrgChart({
               className="
                 px-3 py-2
                 flex items-center gap-2
-                text-xs font-medium text-gray-dark
+                text-xs font-medium text-kcvv-gray-dark
                 bg-gray-100 hover:bg-gray-200
                 rounded-lg
                 transition-colors
-                focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
               "
               aria-label="Alles uitklappen"
             >
@@ -347,11 +347,11 @@ export function EnhancedOrgChart({
               className="
                 px-3 py-2
                 flex items-center gap-2
-                text-xs font-medium text-gray-dark
+                text-xs font-medium text-kcvv-gray-dark
                 bg-gray-100 hover:bg-gray-200
                 rounded-lg
                 transition-colors
-                focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
               "
               aria-label="Alles inklappen"
             >
@@ -367,11 +367,11 @@ export function EnhancedOrgChart({
               hidden lg:flex
               px-3 py-2
               items-center gap-2
-              text-xs font-medium text-gray-dark
+              text-xs font-medium text-kcvv-gray-dark
               bg-gray-100 hover:bg-gray-200
               rounded-lg
               transition-colors
-              focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+              focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
             "
             aria-label="Exporteren als afbeelding"
           >
@@ -386,11 +386,11 @@ export function EnhancedOrgChart({
               hidden lg:flex
               px-3 py-2
               items-center gap-2
-              text-xs font-medium text-gray-dark
+              text-xs font-medium text-kcvv-gray-dark
               bg-gray-100 hover:bg-gray-200
               rounded-lg
               transition-colors
-              focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+              focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
             "
             aria-label={
               isFullscreen ? "Volledig scherm verlaten" : "Volledig scherm"
@@ -406,14 +406,14 @@ export function EnhancedOrgChart({
         /* Empty State */
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <span className="text-3xl text-gray-medium">🔍</span>
+            <span className="text-3xl text-kcvv-gray">🔍</span>
           </div>
-          <p className="text-lg font-semibold text-gray-blue mb-2">
+          <p className="text-lg font-semibold text-kcvv-gray-blue mb-2">
             {searchQuery
               ? `Geen resultaten voor "${searchQuery}"`
               : "Geen leden in deze afdeling"}
           </p>
-          <p className="text-sm text-gray-medium max-w-md">
+          <p className="text-sm text-kcvv-gray max-w-md">
             Probeer een andere zoekopdracht of filter
           </p>
         </div>
@@ -444,12 +444,12 @@ export function EnhancedOrgChart({
                 w-12 h-12
                 flex items-center justify-center
                 bg-white hover:bg-gray-50
-                text-gray-dark
+                text-kcvv-gray-dark
                 rounded-lg
                 shadow-lg
                 border-2 border-gray-200
                 transition-colors
-                focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
               "
               aria-label="Inzoomen"
             >
@@ -461,12 +461,12 @@ export function EnhancedOrgChart({
                 w-12 h-12
                 flex items-center justify-center
                 bg-white hover:bg-gray-50
-                text-gray-dark
+                text-kcvv-gray-dark
                 rounded-lg
                 shadow-lg
                 border-2 border-gray-200
                 transition-colors
-                focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
               "
               aria-label="Uitzoomen"
             >
@@ -478,12 +478,12 @@ export function EnhancedOrgChart({
                 w-12 h-12
                 flex items-center justify-center
                 bg-white hover:bg-gray-50
-                text-gray-dark
+                text-kcvv-gray-dark
                 rounded-lg
                 shadow-lg
                 border-2 border-gray-200
                 transition-colors
-                focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
               "
               aria-label="Pas aan"
             >

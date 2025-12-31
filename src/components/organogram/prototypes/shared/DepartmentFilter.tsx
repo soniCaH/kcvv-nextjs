@@ -121,15 +121,17 @@ export function DepartmentFilter({
   };
 
   const activeClasses = {
-    tabs: "bg-green-main text-white shadow-md border-b-4 border-green-hover",
-    pills: "bg-green-main text-white shadow-md",
-    buttons: "bg-green-main text-white shadow-md",
+    tabs: "bg-kcvv-green-bright text-white",
+    pills: "bg-kcvv-green-bright text-white",
+    buttons: "bg-kcvv-green-bright text-white",
   };
 
   const inactiveClasses = {
-    tabs: "bg-white text-gray-dark hover:bg-gray-50 border-b-4 border-transparent",
-    pills: "bg-gray-100 text-gray-dark hover:bg-gray-200",
-    buttons: "bg-gray-100 text-gray-dark hover:bg-gray-200",
+    tabs: "bg-transparent text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white border border-kcvv-green-bright",
+    pills:
+      "bg-transparent text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white border border-kcvv-green-bright",
+    buttons:
+      "bg-transparent text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white border border-kcvv-green-bright",
   };
 
   return (
@@ -138,7 +140,7 @@ export function DepartmentFilter({
       {showLeftArrow && (
         <button
           onClick={() => scroll("left")}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-dark hover:text-green-main transition-colors"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
           aria-label="Scroll links"
         >
           <ChevronLeft size={20} />
@@ -171,7 +173,7 @@ export function DepartmentFilter({
                   : inactiveClasses[variant]
               }
               flex-shrink-0
-              focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+              focus:outline-none focus:ring-2 focus:ring-kcvv-green-bright focus:ring-offset-2
             `}
             aria-pressed={value === option.value}
           >
@@ -183,7 +185,7 @@ export function DepartmentFilter({
                   ${
                     value === option.value
                       ? "bg-white/20 text-white"
-                      : "bg-gray-200 text-gray-600"
+                      : "bg-kcvv-green-bright/10 text-kcvv-green-bright"
                   }
                 `}
                 style={{ fontFamily: "ibm-plex-mono, monospace" }}
@@ -199,7 +201,7 @@ export function DepartmentFilter({
       {showRightArrow && (
         <button
           onClick={() => scroll("right")}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-dark hover:text-green-main transition-colors"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-kcvv-green-bright hover:bg-kcvv-green-bright hover:text-white transition-colors"
           aria-label="Scroll rechts"
         >
           <ChevronRight size={20} />

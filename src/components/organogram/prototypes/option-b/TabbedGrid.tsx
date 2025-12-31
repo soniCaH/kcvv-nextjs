@@ -130,13 +130,13 @@ export function TabbedGrid({
       </div>
 
       {/* Results Count */}
-      <div className="flex items-center justify-between text-sm text-gray-medium">
+      <div className="flex items-center justify-between text-sm text-kcvv-gray">
         <p>
           {isLoading ? (
             "Laden..."
           ) : (
             <>
-              <span className="font-semibold text-gray-blue">
+              <span className="font-semibold text-kcvv-gray-blue">
                 {filteredMembers.length}
               </span>{" "}
               {filteredMembers.length === 1 ? "lid" : "leden"}
@@ -153,7 +153,7 @@ export function TabbedGrid({
 
         {/* Active Department Badge */}
         {activeDepartment !== "all" && !searchQuery && (
-          <span className="px-3 py-1 bg-green-main/10 text-green-main rounded-full text-xs font-medium">
+          <span className="px-3 py-1 bg-kcvv-green/10 text-kcvv-green rounded-full text-xs font-medium">
             {activeDepartment === "hoofdbestuur"
               ? "Hoofdbestuur"
               : "Jeugdbestuur"}

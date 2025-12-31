@@ -105,9 +105,9 @@ export function ExpandableCard({
                 w-8 h-8
                 flex items-center justify-center
                 bg-white border-2 border-gray-200 rounded-full
-                hover:bg-green-main hover:border-green-main hover:text-white
+                hover:bg-kcvv-green hover:border-kcvv-green hover:text-white
                 transition-all duration-200
-                focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
               "
               aria-label={
                 expanded
@@ -151,7 +151,7 @@ export function ExpandableCard({
             {renderChildren
               ? renderChildren(directReports, depth + 1)
               : directReports.map((child) => (
-                  <div key={child.id} className="text-sm text-gray-medium">
+                  <div key={child.id} className="text-sm text-kcvv-gray">
                     {child.name}
                   </div>
                 ))}

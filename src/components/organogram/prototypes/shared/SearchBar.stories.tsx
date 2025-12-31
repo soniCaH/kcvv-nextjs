@@ -351,7 +351,7 @@ export const InPageHeader: Story = {
     const [value, setValue] = useState("");
 
     return (
-      <div className="bg-gradient-to-br from-green-main to-green-hover p-8 rounded-lg">
+      <div className="bg-gradient-to-br from-kcvv-green to-kcvv-green-hover p-8 rounded-lg">
         <h1
           className="text-3xl font-bold text-white mb-4"
           style={{
@@ -402,8 +402,8 @@ export const WithFilters: Story = {
                 px-4 py-2 rounded-lg font-medium transition-all
                 ${
                   department === value
-                    ? "bg-green-main text-white shadow-md"
-                    : "bg-gray-100 text-gray-dark hover:bg-gray-200"
+                    ? "bg-kcvv-green text-white shadow-md"
+                    : "bg-gray-100 text-kcvv-gray-dark hover:bg-gray-200"
                 }
               `}
             >
@@ -421,7 +421,7 @@ export const WithFilters: Story = {
         />
 
         {/* Results Count */}
-        <p className="text-sm text-gray-medium">
+        <p className="text-sm text-kcvv-gray">
           {filteredMembers.length} leden {search && `gevonden voor "${search}"`}
         </p>
       </div>
@@ -506,7 +506,7 @@ export const LargeDataset: Story = {
           showAutocomplete={true}
           maxResults={10}
         />
-        <p className="text-sm text-gray-medium">
+        <p className="text-sm text-kcvv-gray">
           Dataset: 50 members (showing max 10 results)
         </p>
       </div>

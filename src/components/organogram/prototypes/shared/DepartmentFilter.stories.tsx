@@ -367,7 +367,7 @@ export const WithSearchBar: Story = {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Zoek in geselecteerde afdeling..."
-          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-green-main focus:outline-none"
+          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-kcvv-green focus:outline-none"
         />
 
         <div className="text-sm text-gray-600">
@@ -385,7 +385,7 @@ export const InPageHeader: Story = {
     >("all");
 
     return (
-      <div className="bg-gradient-to-br from-green-main to-green-hover p-8 rounded-lg">
+      <div className="bg-gradient-to-br from-kcvv-green to-kcvv-green-hover p-8 rounded-lg">
         <h1
           className="text-3xl font-bold text-white mb-6"
           style={{

@@ -88,17 +88,17 @@ export const SideBySide: Story = {
     return (
       <div className="p-6 space-y-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-blue mb-2">
+          <h1 className="text-3xl font-bold text-kcvv-gray-blue mb-2">
             Organogram Prototype Comparison
           </h1>
-          <p className="text-gray-medium mb-6">
+          <p className="text-kcvv-gray mb-6">
             Compare all 3 prototypes with the same dataset. Try the tasks below
             to evaluate which works best.
           </p>
 
           {/* Task Checklist */}
           <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
-            <h2 className="text-lg font-semibold text-gray-blue mb-3">
+            <h2 className="text-lg font-semibold text-kcvv-gray-blue mb-3">
               User Testing Tasks
             </h2>
             <ul className="space-y-2 text-sm">
@@ -144,7 +144,7 @@ export const SideBySide: Story = {
           <div className="grid grid-cols-1 gap-6">
             {/* Option A: Card Hierarchy */}
             <div className="bg-white rounded-lg shadow-lg border-2 border-gray-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-green-main to-green-hover p-4 text-white">
+              <div className="bg-gradient-to-r from-kcvv-green to-kcvv-green-hover p-4 text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-bold">
@@ -169,11 +169,11 @@ export const SideBySide: Story = {
                   initialExpandedDepth={2}
                 />
                 {selectedMemberA && (
-                  <div className="mt-4 p-3 bg-green-main/10 rounded-lg border border-green-main">
-                    <p className="text-xs font-semibold text-gray-blue mb-1">
+                  <div className="mt-4 p-3 bg-kcvv-green/10 rounded-lg border border-kcvv-green">
+                    <p className="text-xs font-semibold text-kcvv-gray-blue mb-1">
                       Last Selected:
                     </p>
-                    <p className="text-sm text-gray-dark">
+                    <p className="text-sm text-kcvv-gray-dark">
                       {selectedMemberA.name} - {selectedMemberA.title}
                     </p>
                   </div>
@@ -206,10 +206,10 @@ export const SideBySide: Story = {
                 />
                 {selectedMemberB && (
                   <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-500">
-                    <p className="text-xs font-semibold text-gray-blue mb-1">
+                    <p className="text-xs font-semibold text-kcvv-gray-blue mb-1">
                       Last Selected:
                     </p>
-                    <p className="text-sm text-gray-dark">
+                    <p className="text-sm text-kcvv-gray-dark">
                       {selectedMemberB.name} - {selectedMemberB.title}
                     </p>
                   </div>
@@ -242,10 +242,10 @@ export const SideBySide: Story = {
                 />
                 {selectedMemberC && (
                   <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-500">
-                    <p className="text-xs font-semibold text-gray-blue mb-1">
+                    <p className="text-xs font-semibold text-kcvv-gray-blue mb-1">
                       Last Selected:
                     </p>
-                    <p className="text-sm text-gray-dark">
+                    <p className="text-sm text-kcvv-gray-dark">
                       {selectedMemberC.name} - {selectedMemberC.title}
                     </p>
                   </div>
@@ -273,15 +273,17 @@ export const MobileComparison: Story = {
   render: () => {
     return (
       <div className="p-4 space-y-6 bg-gray-50">
-        <h1 className="text-2xl font-bold text-gray-blue">Mobile Comparison</h1>
-        <p className="text-sm text-gray-medium">
+        <h1 className="text-2xl font-bold text-kcvv-gray-blue">
+          Mobile Comparison
+        </h1>
+        <p className="text-sm text-kcvv-gray">
           All 3 prototypes in mobile viewport (375px). Evaluate mobile UX for
           each.
         </p>
 
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-lg p-4">
-            <h2 className="text-lg font-bold text-green-main mb-3">
+            <h2 className="text-lg font-bold text-kcvv-green mb-3">
               Option A: Card Hierarchy
             </h2>
             <CardHierarchy members={clubStructure} initialExpandedDepth={1} />
@@ -369,13 +371,13 @@ export const FeatureComparison: Story = {
     return (
       <div className="p-6 bg-gray-50">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-blue mb-6">
+          <h1 className="text-3xl font-bold text-kcvv-gray-blue mb-6">
             Feature Comparison Matrix
           </h1>
 
           {/* Summary Scores */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-gradient-to-br from-green-main to-green-hover text-white rounded-lg p-6 shadow-lg">
+            <div className="bg-gradient-to-br from-kcvv-green to-kcvv-green-hover text-white rounded-lg p-6 shadow-lg">
               <h2 className="text-lg font-semibold mb-1">Option A</h2>
               <p className="text-3xl font-bold">4.3/5</p>
               <p className="text-sm opacity-90 mt-2">Card Hierarchy</p>
@@ -402,10 +404,10 @@ export const FeatureComparison: Story = {
             <table className="w-full">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-blue uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-kcvv-gray-blue uppercase tracking-wider">
                     Feature (Weight)
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-green-main uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-kcvv-green uppercase tracking-wider">
                     Option A
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-blue-500 uppercase tracking-wider">
@@ -414,7 +416,7 @@ export const FeatureComparison: Story = {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-purple-500 uppercase tracking-wider">
                     Option C
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-blue uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-kcvv-gray-blue uppercase tracking-wider">
                     Winner
                   </th>
                 </tr>
@@ -425,27 +427,27 @@ export const FeatureComparison: Story = {
                     key={i}
                     className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-blue">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-kcvv-gray-blue">
                       {row.feature}
                     </td>
                     <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm ${row.winner === "A" ? "font-bold text-green-main" : "text-gray-dark"}`}
+                      className={`px-6 py-4 whitespace-nowrap text-sm ${row.winner === "A" ? "font-bold text-kcvv-green" : "text-kcvv-gray-dark"}`}
                     >
                       {row.optionA}
                     </td>
                     <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm ${row.winner === "B" ? "font-bold text-blue-500" : "text-gray-dark"}`}
+                      className={`px-6 py-4 whitespace-nowrap text-sm ${row.winner === "B" ? "font-bold text-blue-500" : "text-kcvv-gray-dark"}`}
                     >
                       {row.optionB}
                     </td>
                     <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm ${row.winner === "C" ? "font-bold text-purple-500" : "text-gray-dark"}`}
+                      className={`px-6 py-4 whitespace-nowrap text-sm ${row.winner === "C" ? "font-bold text-purple-500" : "text-kcvv-gray-dark"}`}
                     >
                       {row.optionC}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       {row.winner === "A" && (
-                        <span className="px-2 py-1 bg-green-main/20 text-green-main rounded font-semibold">
+                        <span className="px-2 py-1 bg-kcvv-green/20 text-kcvv-green rounded font-semibold">
                           A
                         </span>
                       )}
@@ -460,7 +462,7 @@ export const FeatureComparison: Story = {
                         </span>
                       )}
                       {row.winner === "A+B" && (
-                        <span className="px-2 py-1 bg-gray-200 text-gray-dark rounded font-semibold text-xs">
+                        <span className="px-2 py-1 bg-gray-200 text-kcvv-gray-dark rounded font-semibold text-xs">
                           A+B
                         </span>
                       )}
@@ -468,14 +470,14 @@ export const FeatureComparison: Story = {
                   </tr>
                 ))}
                 <tr className="bg-gray-100 font-bold">
-                  <td className="px-6 py-4 text-sm text-gray-blue">
+                  <td className="px-6 py-4 text-sm text-kcvv-gray-blue">
                     TOTAL WEIGHTED
                   </td>
-                  <td className="px-6 py-4 text-lg text-green-main">4.3/5</td>
+                  <td className="px-6 py-4 text-lg text-kcvv-green">4.3/5</td>
                   <td className="px-6 py-4 text-lg text-blue-500">4.0/5</td>
                   <td className="px-6 py-4 text-lg text-purple-500">3.8/5</td>
                   <td className="px-6 py-4 text-center">
-                    <span className="px-3 py-1 bg-green-main text-white rounded-lg font-bold">
+                    <span className="px-3 py-1 bg-kcvv-green text-white rounded-lg font-bold">
                       A WINS
                     </span>
                   </td>
@@ -485,11 +487,11 @@ export const FeatureComparison: Story = {
           </div>
 
           {/* Recommendation */}
-          <div className="mt-8 bg-green-main/10 border-2 border-green-main rounded-lg p-6">
-            <h2 className="text-xl font-bold text-green-main mb-3">
+          <div className="mt-8 bg-kcvv-green/10 border-2 border-kcvv-green rounded-lg p-6">
+            <h2 className="text-xl font-bold text-kcvv-green mb-3">
               🏆 Recommendation: Option A - Card Hierarchy
             </h2>
-            <div className="space-y-2 text-sm text-gray-dark">
+            <div className="space-y-2 text-sm text-kcvv-gray-dark">
               <p>
                 <strong>Why Option A wins:</strong>
               </p>
@@ -581,14 +583,14 @@ export const TaskBasedTesting: Story = {
     return (
       <div className="p-6 bg-gray-50 min-h-screen">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-blue mb-6">
+          <h1 className="text-3xl font-bold text-kcvv-gray-blue mb-6">
             Task-Based User Testing
           </h1>
 
           {/* Task Selector */}
           <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-blue">
+              <h2 className="text-xl font-semibold text-kcvv-gray-blue">
                 Task {task.id}: {task.title}
               </h2>
               <div className="flex gap-2">
@@ -598,8 +600,8 @@ export const TaskBasedTesting: Story = {
                     onClick={() => setCurrentTask(i)}
                     className={`w-10 h-10 rounded-full font-semibold ${
                       i === currentTask
-                        ? "bg-green-main text-white"
-                        : "bg-gray-200 text-gray-dark hover:bg-gray-300"
+                        ? "bg-kcvv-green text-white"
+                        : "bg-gray-200 text-kcvv-gray-dark hover:bg-gray-300"
                     }`}
                   >
                     {t.id}
@@ -607,8 +609,8 @@ export const TaskBasedTesting: Story = {
                 ))}
               </div>
             </div>
-            <p className="text-gray-dark mb-2">{task.description}</p>
-            <div className="flex items-center gap-4 text-sm text-gray-medium">
+            <p className="text-kcvv-gray-dark mb-2">{task.description}</p>
+            <div className="flex items-center gap-4 text-sm text-kcvv-gray">
               <span>
                 <strong>Target:</strong> {task.target}
               </span>
@@ -625,8 +627,8 @@ export const TaskBasedTesting: Story = {
                 onClick={() => setCurrentPrototype("A")}
                 className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-colors ${
                   currentPrototype === "A"
-                    ? "bg-green-main text-white"
-                    : "bg-gray-100 text-gray-dark hover:bg-gray-200"
+                    ? "bg-kcvv-green text-white"
+                    : "bg-gray-100 text-kcvv-gray-dark hover:bg-gray-200"
                 }`}
               >
                 Option A: Card Hierarchy
@@ -636,7 +638,7 @@ export const TaskBasedTesting: Story = {
                 className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-colors ${
                   currentPrototype === "B"
                     ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-dark hover:bg-gray-200"
+                    : "bg-gray-100 text-kcvv-gray-dark hover:bg-gray-200"
                 }`}
               >
                 Option B: Tabbed Grid
@@ -646,7 +648,7 @@ export const TaskBasedTesting: Story = {
                 className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-colors ${
                   currentPrototype === "C"
                     ? "bg-purple-500 text-white"
-                    : "bg-gray-100 text-gray-dark hover:bg-gray-200"
+                    : "bg-gray-100 text-kcvv-gray-dark hover:bg-gray-200"
                 }`}
               >
                 Option C: Enhanced d3

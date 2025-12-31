@@ -132,7 +132,7 @@ export function MobileNavigationDrawer({
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-blue font-heading">
+          <h2 className="text-lg font-bold text-kcvv-gray-blue font-heading">
             Navigatie
           </h2>
           <button
@@ -140,11 +140,11 @@ export function MobileNavigationDrawer({
             className="
               w-8 h-8
               flex items-center justify-center
-              text-gray-dark hover:text-gray-blue
+              text-kcvv-gray-dark hover:text-kcvv-gray-blue
               hover:bg-gray-100
               rounded-full
               transition-colors
-              focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+              focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
             "
             aria-label="Sluiten"
           >
@@ -186,12 +186,12 @@ export function MobileNavigationDrawer({
               /* Empty State */
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <span className="text-3xl text-gray-medium">🔍</span>
+                  <span className="text-3xl text-kcvv-gray">🔍</span>
                 </div>
-                <p className="text-base font-semibold text-gray-blue mb-1">
+                <p className="text-base font-semibold text-kcvv-gray-blue mb-1">
                   Geen resultaten
                 </p>
-                <p className="text-sm text-gray-medium">
+                <p className="text-sm text-kcvv-gray">
                   Probeer een andere zoekopdracht
                 </p>
               </div>
@@ -218,7 +218,7 @@ export function MobileNavigationDrawer({
                       <img
                         src={member.imageUrl || "/images/logo-flat.png"}
                         alt={member.name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-green-main"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-kcvv-green"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = "/images/logo-flat.png";
@@ -229,12 +229,12 @@ export function MobileNavigationDrawer({
                     {/* Member Info */}
                     <div className="flex-1 min-w-0">
                       {/* Name */}
-                      <p className="font-semibold text-gray-blue text-sm truncate">
+                      <p className="font-semibold text-kcvv-gray-blue text-sm truncate">
                         {member.name}
                       </p>
 
                       {/* Title */}
-                      <p className="text-xs text-gray-medium truncate">
+                      <p className="text-xs text-kcvv-gray truncate">
                         {member.title}
                       </p>
 
@@ -244,8 +244,8 @@ export function MobileNavigationDrawer({
                           className="
                             inline-block mt-1
                             px-2 py-0.5
-                            bg-green-main/10
-                            text-green-main
+                            bg-kcvv-green/10
+                            text-kcvv-green
                             rounded
                             text-xs font-semibold font-mono
                             leading-tight
@@ -280,7 +280,7 @@ export function MobileNavigationDrawer({
           {/* Results Count Footer */}
           {searchResults.length > 0 && (
             <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 bg-gray-50">
-              <p className="text-xs text-gray-medium text-center">
+              <p className="text-xs text-kcvv-gray text-center">
                 {searchResults.length === 1
                   ? "1 lid gevonden"
                   : `${searchResults.length} leden gevonden`}

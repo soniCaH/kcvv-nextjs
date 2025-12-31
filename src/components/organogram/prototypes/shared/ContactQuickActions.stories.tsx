@@ -194,12 +194,12 @@ export const InMemberCard: Story = {
   render: () => (
     <div className="bg-white rounded-lg border-2 border-gray-200 p-4 max-w-sm">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-12 h-12 rounded-full bg-green-main/20 flex items-center justify-center text-green-main font-bold">
+        <div className="w-12 h-12 rounded-full bg-kcvv-green/20 flex items-center justify-center text-kcvv-green font-bold">
           JJ
         </div>
         <div className="flex-1">
-          <h3 className="font-bold text-gray-blue">Jan Janssens</h3>
-          <p className="text-sm text-gray-dark">Voorzitter</p>
+          <h3 className="font-bold text-kcvv-gray-blue">Jan Janssens</h3>
+          <p className="text-sm text-kcvv-gray-dark">Voorzitter</p>
         </div>
       </div>
       <ContactQuickActions
@@ -240,10 +240,10 @@ export const InCompactList: Story = {
           className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200"
         >
           <div className="flex-1">
-            <p className="font-semibold text-sm text-gray-blue">
+            <p className="font-semibold text-sm text-kcvv-gray-blue">
               {member.name}
             </p>
-            <p className="text-xs text-gray-dark">{member.role}</p>
+            <p className="text-xs text-kcvv-gray-dark">{member.role}</p>
           </div>
           <ContactQuickActions
             email={member.email}

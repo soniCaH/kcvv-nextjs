@@ -87,11 +87,11 @@ const CardHierarchyWithState = (args: Partial<CardHierarchyProps>) => {
 
       {/* Selected Member Info */}
       {selectedMember && (
-        <div className="mt-6 p-4 bg-green-main/10 rounded-lg border-2 border-green-main">
-          <p className="text-sm font-semibold text-gray-blue mb-1">
+        <div className="mt-6 p-4 bg-kcvv-green/10 rounded-lg border-2 border-kcvv-green">
+          <p className="text-sm font-semibold text-kcvv-gray-blue mb-1">
             Last Selected:
           </p>
-          <p className="text-sm text-gray-dark">
+          <p className="text-sm text-kcvv-gray-dark">
             {selectedMember.name} - {selectedMember.title}
           </p>
         </div>
@@ -242,7 +242,7 @@ export const DeepHierarchy: Story = {
 
     return (
       <div>
-        <p className="text-sm text-gray-medium mb-4">
+        <p className="text-sm text-kcvv-gray mb-4">
           7-level deep hierarchy to test nested expansion
         </p>
         <CardHierarchy
@@ -270,7 +270,7 @@ export const SearchWithAutoExpand: Story = {
   render: () => {
     return (
       <div>
-        <p className="text-sm text-gray-medium mb-4">
+        <p className="text-sm text-kcvv-gray mb-4">
           Try searching for &quot;trainer&quot; or &quot;keeper&quot; - the
           hierarchy will auto-expand to show results
         </p>
@@ -374,7 +374,7 @@ export const FilteredHoofdbestuur: Story = {
 
     return (
       <div>
-        <p className="text-sm text-gray-medium mb-4">
+        <p className="text-sm text-kcvv-gray mb-4">
           Showing only Hoofdbestuur members (use Department Filter to switch)
         </p>
         <CardHierarchy
@@ -418,10 +418,10 @@ export const InteractionExample: Story = {
         {/* Interaction History */}
         {expandHistory.length > 0 && (
           <div className="p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-sm font-semibold text-gray-blue mb-2">
+            <h3 className="text-sm font-semibold text-kcvv-gray-blue mb-2">
               Interaction History
             </h3>
-            <ul className="text-xs text-gray-dark space-y-1">
+            <ul className="text-xs text-kcvv-gray-dark space-y-1">
               {expandHistory.slice(-5).map((item, i) => (
                 <li key={i}>
                   {i + 1}. {item}
@@ -429,7 +429,7 @@ export const InteractionExample: Story = {
               ))}
             </ul>
             {expandHistory.length > 5 && (
-              <p className="text-xs text-gray-medium mt-2">
+              <p className="text-xs text-kcvv-gray mt-2">
                 ... and {expandHistory.length - 5} more
               </p>
             )}
@@ -492,7 +492,7 @@ export const AnimationShowcase: Story = {
 
     return (
       <div>
-        <p className="text-sm text-gray-medium mb-4">
+        <p className="text-sm text-kcvv-gray mb-4">
           Click expand/collapse buttons to see smooth animations
         </p>
         <CardHierarchy
@@ -541,7 +541,7 @@ export const LargeDataset: Story = {
 
     return (
       <div>
-        <p className="text-sm text-gray-medium mb-4">
+        <p className="text-sm text-kcvv-gray mb-4">
           Large dataset (50 members) to test performance
         </p>
         <CardHierarchy
@@ -614,7 +614,7 @@ export const FlatHierarchy: Story = {
 
     return (
       <div>
-        <p className="text-sm text-gray-medium mb-4">
+        <p className="text-sm text-kcvv-gray mb-4">
           All members at root level (no hierarchy)
         </p>
         <CardHierarchy

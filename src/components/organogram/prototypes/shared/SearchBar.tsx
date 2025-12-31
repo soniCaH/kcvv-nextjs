@@ -187,7 +187,7 @@ export function SearchBar({
       {/* Input */}
       <div className="relative">
         {/* Search Icon */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-medium pointer-events-none">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-kcvv-gray pointer-events-none">
           <Search size={20} />
         </div>
 
@@ -204,9 +204,9 @@ export function SearchBar({
             w-full pl-12 pr-12 py-3
             border-2 border-gray-200
             rounded-lg
-            focus:border-green-main focus:outline-none focus:ring-2 focus:ring-green-main/20
+            focus:border-kcvv-green focus:outline-none focus:ring-2 focus:ring-kcvv-green/20
             transition-all duration-200
-            text-gray-blue placeholder-gray-medium
+            text-kcvv-gray-blue placeholder-kcvv-gray
           "
           aria-label="Zoek in organogram"
           aria-autocomplete="list"
@@ -219,9 +219,9 @@ export function SearchBar({
             onClick={handleClear}
             className="
               absolute right-4 top-1/2 -translate-y-1/2
-              text-gray-medium hover:text-gray-dark
+              text-kcvv-gray hover:text-kcvv-gray-dark
               transition-colors
-              focus:outline-none focus:ring-2 focus:ring-green-main rounded-full
+              focus:outline-none focus:ring-2 focus:ring-kcvv-green rounded-full
             "
             aria-label="Wis zoekopdracht"
             type="button"
@@ -260,13 +260,13 @@ export function SearchBar({
                 transition-colors
                 ${
                   index === selectedIndex
-                    ? "bg-green-main/10 border-l-4 border-l-green-main"
+                    ? "bg-kcvv-green/10 border-l-4 border-l-kcvv-green"
                     : "hover:bg-gray-50"
                 }
               `}
             >
               {/* Profile Image or Initials */}
-              <div className="w-10 h-10 rounded-full bg-green-main/20 flex items-center justify-center text-green-main font-semibold text-sm flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-kcvv-green/20 flex items-center justify-center text-kcvv-green font-semibold text-sm flex-shrink-0">
                 {result.member.name
                   .split(" ")
                   .map((n) => n[0])
@@ -277,10 +277,10 @@ export function SearchBar({
 
               {/* Text Content */}
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-gray-blue text-sm truncate">
+                <div className="font-semibold text-kcvv-gray-blue text-sm truncate">
                   {result.member.name}
                 </div>
-                <div className="text-xs text-gray-dark truncate">
+                <div className="text-xs text-kcvv-gray-dark truncate">
                   {result.member.title}
                 </div>
               </div>
@@ -288,7 +288,7 @@ export function SearchBar({
               {/* Match Badges */}
               <div className="flex gap-1 flex-shrink-0">
                 {result.matchedFields.includes("name") && (
-                  <span className="text-[10px] px-1.5 py-0.5 bg-green-main/20 text-green-main rounded">
+                  <span className="text-[10px] px-1.5 py-0.5 bg-kcvv-green/20 text-kcvv-green rounded">
                     naam
                   </span>
                 )}
@@ -313,7 +313,7 @@ export function SearchBar({
             absolute top-full left-0 right-0 mt-2
             bg-white rounded-lg border-2 border-gray-200
             shadow-lg p-4
-            text-center text-gray-medium
+            text-center text-kcvv-gray
             z-50
           "
           >

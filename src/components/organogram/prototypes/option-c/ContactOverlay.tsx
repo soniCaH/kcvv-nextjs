@@ -132,7 +132,7 @@ export function ContactOverlay({
             <img
               src={member.imageUrl || "/images/logo-flat.png"}
               alt={member.name}
-              className="w-16 h-16 rounded-full object-cover border-2 border-green-main"
+              className="w-16 h-16 rounded-full object-cover border-2 border-kcvv-green"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = "/images/logo-flat.png";
@@ -142,10 +142,10 @@ export function ContactOverlay({
 
           {/* Member Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-blue text-base leading-tight mb-1 font-heading">
+            <h3 className="font-bold text-kcvv-gray-blue text-base leading-tight mb-1 font-heading">
               {member.name}
             </h3>
-            <p className="text-sm text-gray-medium leading-snug">
+            <p className="text-sm text-kcvv-gray leading-snug">
               {member.title}
             </p>
             {member.positionShort && (
@@ -153,8 +153,8 @@ export function ContactOverlay({
                 className="
                   inline-block mt-2
                   px-2 py-0.5
-                  bg-green-main/10
-                  text-green-main
+                  bg-kcvv-green/10
+                  text-kcvv-green
                   rounded
                   text-xs font-semibold font-mono
                   leading-tight
@@ -172,11 +172,11 @@ export function ContactOverlay({
               flex-shrink-0
               w-8 h-8
               flex items-center justify-center
-              text-gray-dark hover:text-gray-blue
+              text-kcvv-gray-dark hover:text-kcvv-gray-blue
               hover:bg-gray-100
               rounded-full
               transition-colors
-              focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+              focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
             "
             aria-label="Sluiten"
           >
@@ -205,12 +205,12 @@ export function ContactOverlay({
               className="
                 w-full
                 px-4 py-2.5
-                bg-green-main hover:bg-green-hover
+                bg-kcvv-green hover:bg-kcvv-green-hover
                 text-white
                 rounded-lg
                 font-semibold text-sm
                 transition-colors
-                focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
               "
             >
               Volledige details

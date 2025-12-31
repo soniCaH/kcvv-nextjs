@@ -89,11 +89,11 @@ export function ContactQuickActions({
             className={`
               ${sizeClasses[size]}
               flex items-center justify-center
-              bg-green-main/10 text-green-main
-              hover:bg-green-main hover:text-white
+              bg-kcvv-green/10 text-kcvv-green
+              hover:bg-kcvv-green hover:text-white
               rounded-full
               transition-all duration-200
-              focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+              focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
             `}
             aria-label={`Email ${name}`}
             title={copiedEmail ? "Gekopieerd!" : email}
@@ -121,11 +121,11 @@ export function ContactQuickActions({
             className={`
               ${sizeClasses[size]}
               flex items-center justify-center
-              bg-green-main/10 text-green-main
-              hover:bg-green-main hover:text-white
+              bg-kcvv-green/10 text-kcvv-green
+              hover:bg-kcvv-green hover:text-white
               rounded-full
               transition-all duration-200
-              focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+              focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
             `}
             aria-label={`Bel ${name}`}
             title={copiedPhone ? "Gekopieerd!" : phone}

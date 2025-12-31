@@ -63,7 +63,7 @@ export function ContactCard({
         bg-white rounded-xl border-2 border-gray-200
         shadow-sm hover:shadow-md
         transition-all duration-300 ease-in-out
-        ${onClick ? "cursor-pointer hover:border-green-main hover:-translate-y-1" : ""}
+        ${onClick ? "cursor-pointer hover:border-kcvv-green hover:-translate-y-1" : ""}
         ${variantClasses[variant]}
         ${className}
       `}
@@ -79,7 +79,7 @@ export function ContactCard({
       }}
     >
       {/* Green accent bar */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-main to-green-hover rounded-t-xl" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-kcvv-green to-kcvv-green-hover rounded-t-xl" />
 
       {/* Content wrapper */}
       <div className="flex flex-1 gap-4 mt-1">
@@ -90,7 +90,7 @@ export function ContactCard({
             alt={member.name}
             width={imageSize[variant]}
             height={imageSize[variant]}
-            className="rounded-full object-cover border-2 border-green-main"
+            className="rounded-full object-cover border-2 border-kcvv-green"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.src = "/images/logo-flat.png";
@@ -103,7 +103,7 @@ export function ContactCard({
           {/* Name */}
           <h3
             className={`
-              font-bold text-gray-blue
+              font-bold text-kcvv-gray-blue
               ${variant === "compact" ? "text-sm" : "text-base md:text-lg"}
               truncate
             `}
@@ -117,7 +117,7 @@ export function ContactCard({
           {/* Title */}
           <p
             className={`
-              text-gray-dark
+              text-kcvv-gray-dark
               ${variant === "compact" ? "text-xs line-clamp-1" : "text-sm line-clamp-2"}
             `}
           >
@@ -127,7 +127,7 @@ export function ContactCard({
           {/* Position Badge */}
           {member.positionShort && variant !== "compact" && (
             <span
-              className="inline-block mt-2 px-2 py-1 bg-green-main/10 text-green-main rounded text-xs font-semibold self-start"
+              className="inline-block mt-2 px-2 py-1 bg-kcvv-green/10 text-kcvv-green rounded text-xs font-semibold self-start"
               style={{ fontFamily: "ibm-plex-mono, monospace" }}
             >
               {member.positionShort}
@@ -138,7 +138,7 @@ export function ContactCard({
           {showDepartment &&
             member.department &&
             member.department !== "general" && (
-              <span className="inline-block mt-1 px-2 py-1 bg-gray-100 text-gray-dark rounded text-xs self-start">
+              <span className="inline-block mt-1 px-2 py-1 bg-gray-100 text-kcvv-gray-dark rounded text-xs self-start">
                 {member.department === "hoofdbestuur"
                   ? "Hoofdbestuur"
                   : "Jeugdbestuur"}
@@ -154,7 +154,7 @@ export function ContactCard({
                   <a
                     href={`mailto:${member.email}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="text-xs text-green-main hover:text-green-hover hover:underline"
+                    className="text-xs text-kcvv-green hover:text-kcvv-green-hover hover:underline"
                     aria-label={`Email ${member.name}`}
                   >
                     ✉️ Email
@@ -164,7 +164,7 @@ export function ContactCard({
                   <a
                     href={`tel:${member.phone}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="text-xs text-green-main hover:text-green-hover hover:underline"
+                    className="text-xs text-kcvv-green hover:text-kcvv-green-hover hover:underline"
                     aria-label={`Call ${member.name}`}
                   >
                     📞 Bel
@@ -178,7 +178,7 @@ export function ContactCard({
       {/* Expand/Collapse Indicator */}
       {showExpandIndicator && hasChildren && (
         <div className="absolute bottom-3 right-3">
-          <div className="w-8 h-8 bg-green-main rounded-full flex items-center justify-center text-white shadow-md">
+          <div className="w-8 h-8 bg-kcvv-green rounded-full flex items-center justify-center text-white shadow-md">
             {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
         </div>
@@ -186,7 +186,7 @@ export function ContactCard({
 
       {/* Click Hint (for cards with expand) */}
       {showExpandIndicator && hasChildren && variant !== "compact" && (
-        <p className="absolute bottom-2 left-3 text-[10px] text-gray-medium opacity-70 pointer-events-none">
+        <p className="absolute bottom-2 left-3 text-[10px] text-kcvv-gray opacity-70 pointer-events-none">
           Klik om {isExpanded ? "in" : "uit"} te klappen
         </p>
       )}

@@ -256,12 +256,12 @@ export function CardHierarchy({
       {/* Controls Bar */}
       <div className="flex items-center justify-between">
         {/* Results Count */}
-        <p className="text-sm text-gray-medium">
+        <p className="text-sm text-kcvv-gray">
           {searchResults.length === 0 ? (
             "Geen resultaten"
           ) : (
             <>
-              <span className="font-semibold text-gray-blue">
+              <span className="font-semibold text-kcvv-gray-blue">
                 {searchResults.length}
               </span>{" "}
               {searchResults.length === 1 ? "lid" : "leden"}
@@ -283,11 +283,11 @@ export function CardHierarchy({
               onClick={handleExpandAll}
               className="
                 px-3 py-1.5
-                text-xs font-medium text-gray-dark
+                text-xs font-medium text-kcvv-gray-dark
                 bg-gray-100 hover:bg-gray-200
                 rounded-lg
                 transition-colors
-                focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
               "
             >
               Alles uitklappen
@@ -296,11 +296,11 @@ export function CardHierarchy({
               onClick={handleCollapseAll}
               className="
                 px-3 py-1.5
-                text-xs font-medium text-gray-dark
+                text-xs font-medium text-kcvv-gray-dark
                 bg-gray-100 hover:bg-gray-200
                 rounded-lg
                 transition-colors
-                focus:outline-none focus:ring-2 focus:ring-green-main focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
               "
             >
               Alles inklappen
@@ -313,14 +313,14 @@ export function CardHierarchy({
       {searchResults.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <span className="text-3xl text-gray-medium">🔍</span>
+            <span className="text-3xl text-kcvv-gray">🔍</span>
           </div>
-          <p className="text-lg font-semibold text-gray-blue mb-2">
+          <p className="text-lg font-semibold text-kcvv-gray-blue mb-2">
             {searchQuery
               ? `Geen resultaten voor "${searchQuery}"`
               : "Geen leden in deze afdeling"}
           </p>
-          <p className="text-sm text-gray-medium max-w-md">
+          <p className="text-sm text-kcvv-gray max-w-md">
             Probeer een andere zoekopdracht of filter
           </p>
         </div>

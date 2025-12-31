@@ -78,12 +78,12 @@ export function MemberGrid({
         `}
       >
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-          <span className="text-3xl text-gray-medium">🔍</span>
+          <span className="text-3xl text-kcvv-gray">🔍</span>
         </div>
-        <p className="text-lg font-semibold text-gray-blue mb-2">
+        <p className="text-lg font-semibold text-kcvv-gray-blue mb-2">
           {emptyMessage}
         </p>
-        <p className="text-sm text-gray-medium max-w-md">
+        <p className="text-sm text-kcvv-gray max-w-md">
           Probeer een andere zoekopdracht of filter
         </p>
       </div>

@@ -87,11 +87,11 @@ const TabbedGridWithState = (args: Partial<TabbedGridProps>) => {
 
       {/* Selected Member Info (for demo) */}
       {selectedMember && (
-        <div className="mt-6 p-4 bg-green-main/10 rounded-lg border-2 border-green-main">
-          <p className="text-sm font-semibold text-gray-blue mb-1">
+        <div className="mt-6 p-4 bg-kcvv-green/10 rounded-lg border-2 border-kcvv-green">
+          <p className="text-sm font-semibold text-kcvv-gray-blue mb-1">
             Last Selected:
           </p>
-          <p className="text-sm text-gray-dark">
+          <p className="text-sm text-kcvv-gray-dark">
             {selectedMember.name} - {selectedMember.title}
           </p>
         </div>
@@ -282,7 +282,7 @@ export const WithSearchQuery: Story = {
   render: () => {
     return (
       <div>
-        <p className="text-sm text-gray-medium mb-4">
+        <p className="text-sm text-kcvv-gray mb-4">
           Try searching for &quot;trainer&quot;, &quot;jeugd&quot;, or a
           specific name to see search results
         </p>
@@ -326,7 +326,7 @@ export const LargeDataset: Story = {
 
     return (
       <div>
-        <p className="text-sm text-gray-medium mb-4">
+        <p className="text-sm text-kcvv-gray mb-4">
           Dataset expanded to 100 members to test performance and scrolling
         </p>
         <TabbedGrid
@@ -372,21 +372,21 @@ export const InteractionExample: Story = {
 
         {/* Interaction History */}
         <div className="p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-sm font-semibold text-gray-blue mb-2">
+          <h3 className="text-sm font-semibold text-kcvv-gray-blue mb-2">
             Interaction History
           </h3>
 
           {selectedMember ? (
             <div className="space-y-2">
-              <div className="p-3 bg-white rounded border-2 border-green-main">
-                <p className="text-sm font-semibold text-gray-blue">
+              <div className="p-3 bg-white rounded border-2 border-kcvv-green">
+                <p className="text-sm font-semibold text-kcvv-gray-blue">
                   Currently Selected:
                 </p>
-                <p className="text-sm text-gray-dark">
+                <p className="text-sm text-kcvv-gray-dark">
                   {selectedMember.name} - {selectedMember.title}
                 </p>
                 {selectedMember.email && (
-                  <p className="text-xs text-gray-medium mt-1">
+                  <p className="text-xs text-kcvv-gray mt-1">
                     {selectedMember.email}
                   </p>
                 )}
@@ -394,10 +394,10 @@ export const InteractionExample: Story = {
 
               {searchHistory.length > 1 && (
                 <div className="pt-2 border-t">
-                  <p className="text-xs font-medium text-gray-medium mb-1">
+                  <p className="text-xs font-medium text-kcvv-gray mb-1">
                     Previous selections:
                   </p>
-                  <ul className="text-xs text-gray-dark space-y-0.5">
+                  <ul className="text-xs text-kcvv-gray-dark space-y-0.5">
                     {searchHistory.slice(0, -1).map((item, i) => (
                       <li key={i}>• {item}</li>
                     ))}
@@ -406,7 +406,7 @@ export const InteractionExample: Story = {
               )}
             </div>
           ) : (
-            <p className="text-sm text-gray-medium">
+            <p className="text-sm text-kcvv-gray">
               Click on a member card to see details
             </p>
           )}
@@ -458,7 +458,7 @@ export const CompareAllDepartments: Story = {
     return (
       <div className="space-y-8">
         <div>
-          <h3 className="text-lg font-semibold text-gray-blue mb-4">
+          <h3 className="text-lg font-semibold text-kcvv-gray-blue mb-4">
             Alle Leden
           </h3>
           <TabbedGrid
@@ -471,7 +471,7 @@ export const CompareAllDepartments: Story = {
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold text-gray-blue mb-4">
+          <h3 className="text-lg font-semibold text-kcvv-gray-blue mb-4">
             Hoofdbestuur
           </h3>
           <TabbedGrid
@@ -484,7 +484,7 @@ export const CompareAllDepartments: Story = {
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold text-gray-blue mb-4">
+          <h3 className="text-lg font-semibold text-kcvv-gray-blue mb-4">
             Jeugdbestuur
           </h3>
           <TabbedGrid
