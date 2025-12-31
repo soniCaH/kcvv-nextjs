@@ -60,6 +60,7 @@ export function ContactCard({
   return (
     <div
       className={`
+        relative overflow-hidden
         bg-white rounded-xl border-2 border-gray-200
         shadow-sm hover:shadow-md
         transition-all duration-300 ease-in-out
