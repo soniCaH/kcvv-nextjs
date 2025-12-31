@@ -102,12 +102,13 @@ export function MemberGrid({
       aria-label="Ledenlijst"
     >
       {members.map((member) => (
-        <MemberCard
-          key={member.id}
-          member={member}
-          onClick={onMemberClick}
-          showQuickActions={true}
-        />
+        <div key={member.id} role="listitem">
+          <MemberCard
+            member={member}
+            onClick={onMemberClick}
+            showQuickActions={true}
+          />
+        </div>
       ))}
     </div>
   );
