@@ -153,6 +153,7 @@ export function FilterTabs({
   const renderTab = (tab: FilterTab) => {
     const isActive = activeTab === tab.value;
     const baseClasses = `
+      group
       ${currentSize.tab}
       ${isActive ? activeClasses : inactiveClasses}
       font-medium
@@ -178,7 +179,7 @@ export function FilterTabs({
               ${
                 isActive
                   ? "bg-white/20 text-white"
-                  : "bg-kcvv-green-bright/10 text-kcvv-green-bright"
+                  : "bg-kcvv-green-bright/10 text-kcvv-green-bright group-hover:bg-white/20 group-hover:text-white"
               }
             `}
             style={{ fontFamily: "ibm-plex-mono, monospace" }}

@@ -26,6 +26,8 @@ interface CategoryFiltersProps {
   activeCategory?: string;
   size?: "sm" | "md" | "lg";
   showCounts?: boolean;
+  renderAsLinks?: boolean;
+  onChange?: (category: string) => void;
 }
 
 /**
@@ -36,12 +38,16 @@ interface CategoryFiltersProps {
  * @param activeCategory - Slug of the currently active category
  * @param size - Size variant (sm | md | lg)
  * @param showCounts - Show article counts (future enhancement)
+ * @param renderAsLinks - Render as Next.js links (true) or buttons (false)
+ * @param onChange - Change handler for button mode
  */
 export function CategoryFilters({
   categories,
   activeCategory,
   size = "sm",
   showCounts = false,
+  renderAsLinks = true,
+  onChange,
 }: CategoryFiltersProps) {
   // Convert categories to FilterTab format with hrefs for Next.js routing
   const tabs: FilterTab[] = useMemo(() => {
@@ -66,7 +72,8 @@ export function CategoryFilters({
       activeTab={activeCategory || "all"}
       size={size}
       showCounts={showCounts}
-      renderAsLinks={true}
+      renderAsLinks={renderAsLinks}
+      onChange={onChange}
       ariaLabel="Filter news by category"
     />
   );
