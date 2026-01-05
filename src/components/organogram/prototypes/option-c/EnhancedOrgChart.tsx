@@ -130,16 +130,50 @@ export function EnhancedOrgChart({
 
   // Transform data for d3-org-chart
   const chartData = useMemo<NodeData[]>(() => {
-    return searchResults.map((member) => ({
+    if (searchResults.length === 0) {
+      return [];
+    }
+
+    // IMPORTANT: Always use the FULL members list (not filtered) to look up ancestors
+    // This ensures we can always find parent nodes even when filtering
+    const fullMembersList = members;
+
+    // Build a complete set of nodes including all necessary ancestors
+    const nodeMap = new Map<string, OrgChartNode>();
+
+    // Function to add a node and all its ancestors
+    const addNodeWithAncestors = (nodeId: string) => {
+      if (nodeMap.has(nodeId)) return;
+
+      // Look up in FULL members list, not filtered results
+      const node = fullMembersList.find((m) => m.id === nodeId);
+      if (!node) return;
+
+      nodeMap.set(nodeId, node);
+
+      // Recursively add parent
+      if (node.parentId) {
+        addNodeWithAncestors(node.parentId);
+      }
+    };
+
+    // Add all search results and their ancestors
+    searchResults.forEach((member) => {
+      addNodeWithAncestors(member.id);
+    });
+
+    // Convert to array and add d3-org-chart properties
+    return Array.from(nodeMap.values()).map((member) => ({
       ...member,
       _expanded: true,
       children: [],
     }));
-  }, [searchResults]);
+  }, [searchResults, members]);
 
   // Initialize d3-org-chart
   useEffect(() => {
-    if (!chartContainerRef.current || chartData.length === 0) return;
+    const containerElement = chartContainerRef.current;
+    if (!containerElement || chartData.length === 0) return;
 
     const chart = new OrgChart<NodeData>()
       .container("#enhanced-org-chart-container")
@@ -169,10 +203,13 @@ export function EnhancedOrgChart({
     chartRef.current = chart;
     chart.render();
 
+    // Note: You may see "translate(NaN,NaN)" warnings in console during d3-org-chart's
+    // initial layout calculations. These are harmless and don't affect functionality.
+
     return () => {
       // Cleanup: clear container innerHTML
-      if (chartContainerRef.current) {
-        chartContainerRef.current.innerHTML = "";
+      if (containerElement) {
+        containerElement.innerHTML = "";
       }
     };
   }, [chartData, members, onMemberClick, isMobile]);
@@ -235,12 +272,18 @@ export function EnhancedOrgChart({
     }
   };
 
-  // Export as image
-  const handleExport = () => {
+  // Export as Image (PNG)
+  const handleExportImage = () => {
     if (chartRef.current) {
+      console.log("Starting export with scale: 6 (2x default)");
       chartRef.current.exportImg({
         full: true,
         save: true,
+        scale: 6, // Higher quality: 6x scale (default is 3)
+        backgroundColor: "#ffffff",
+        onLoad: () => {
+          console.log("Export completed");
+        },
       });
     }
   };
@@ -360,11 +403,11 @@ export function EnhancedOrgChart({
             </button>
           </div>
 
-          {/* Export Button (Desktop) */}
+          {/* Export Button */}
           <button
-            onClick={handleExport}
+            onClick={handleExportImage}
             className="
-              hidden lg:flex
+              flex
               px-3 py-2
               items-center gap-2
               text-xs font-medium text-kcvv-gray-dark

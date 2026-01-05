@@ -225,18 +225,14 @@ export const Tablet: Story = {
 
 export const FilteredHoofdbestuur: Story = {
   render: () => {
-    // Pre-filtered to Hoofdbestuur
-    const hoofdbestuurMembers = clubStructure.filter(
-      (m) => m.department === "hoofdbestuur" || m.department === "general",
-    );
-
     return (
       <div>
         <p className="text-sm text-kcvv-gray mb-4">
-          Showing only Hoofdbestuur members (use Department Filter to switch)
+          Showing only Hoofdbestuur members (use Department Filter to switch) -
+          The component handles filtering internally to maintain hierarchy
         </p>
         <EnhancedOrgChart
-          members={hoofdbestuurMembers}
+          members={clubStructure}
           onMemberClick={(member) =>
             alert(`Clicked: ${member.name} - ${member.title}`)
           }
@@ -255,18 +251,14 @@ export const FilteredHoofdbestuur: Story = {
 
 export const FilteredJeugdbestuur: Story = {
   render: () => {
-    // Pre-filtered to Jeugdbestuur
-    const jeugdbestuurMembers = clubStructure.filter(
-      (m) => m.department === "jeugdbestuur",
-    );
-
     return (
       <div>
         <p className="text-sm text-kcvv-gray mb-4">
-          Showing only Jeugdbestuur members
+          Showing only Jeugdbestuur members - The component handles filtering
+          internally to maintain hierarchy
         </p>
         <EnhancedOrgChart
-          members={jeugdbestuurMembers}
+          members={clubStructure}
           onMemberClick={(member) =>
             alert(`Clicked: ${member.name} - ${member.title}`)
           }
@@ -464,7 +456,9 @@ export const LargeDataset: Story = {
         email: `member${i}@kcvvelewijt.be`,
         department:
           i % 2 === 0 ? ("hoofdbestuur" as const) : ("jeugdbestuur" as const),
-        parentId: i < 15 ? "root" : `member-${Math.floor(i / 4) - 4}`,
+        // Fix parentId calculation to ensure valid references
+        parentId:
+          i < 15 ? "root" : `member-${Math.max(0, Math.floor(i / 4) - 4)}`,
       })),
     ];
 

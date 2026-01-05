@@ -76,26 +76,30 @@ export function ExpandableCard({
   const indentClass =
     {
       0: "ml-0",
-      1: "ml-4",
-      2: "ml-8",
-      3: "ml-12",
-      4: "ml-16",
-    }[Math.min(depth, 4)] || "ml-16";
+      1: "ml-6",
+      2: "ml-12",
+      3: "ml-18",
+      4: "ml-24",
+    }[Math.min(depth, 4)] || "ml-24";
+
+  // Background color for depth levels - subtle gradient
+  const depthBackground =
+    {
+      0: "bg-white",
+      1: "bg-gray-50/30",
+      2: "bg-gray-50/50",
+      3: "bg-gray-50/70",
+      4: "bg-gray-100/50",
+    }[Math.min(depth, 4)] || "bg-gray-100/50";
 
   return (
     <div className={`${className}`}>
       {/* Card with expand button */}
       <div className={`relative ${indentClass}`}>
-        {/* Hierarchy connector line (for depth > 0) */}
-        {depth > 0 && (
-          <div
-            className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-200"
-            aria-hidden="true"
-          />
-        )}
-
-        {/* Card container */}
-        <div className="flex items-start gap-2">
+        {/* Card container with depth-based background */}
+        <div
+          className={`flex items-start gap-2 rounded-xl ${depthBackground} p-1`}
+        >
           {/* Expand/Collapse Button */}
           {hasChildren && (
             <button
@@ -105,6 +109,7 @@ export function ExpandableCard({
                 w-8 h-8
                 flex items-center justify-center
                 bg-white border-2 border-gray-200 rounded-full
+                text-kcvv-gray-dark
                 hover:bg-kcvv-green hover:border-kcvv-green hover:text-white
                 transition-all duration-200
                 focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
@@ -116,7 +121,11 @@ export function ExpandableCard({
               }
               aria-expanded={expanded}
             >
-              {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {expanded ? (
+                <ChevronUp size={16} strokeWidth={2.5} />
+              ) : (
+                <ChevronDown size={16} strokeWidth={2.5} />
+              )}
             </button>
           )}
 

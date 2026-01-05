@@ -179,8 +179,12 @@ export function ContactCard({
       {/* Expand/Collapse Indicator */}
       {showExpandIndicator && hasChildren && (
         <div className="absolute bottom-3 right-3">
-          <div className="w-8 h-8 bg-kcvv-green rounded-full flex items-center justify-center text-white shadow-md">
-            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          <div className="w-8 h-8 bg-kcvv-green rounded-full flex items-center justify-center shadow-md">
+            {isExpanded ? (
+              <ChevronUp size={20} className="text-white" strokeWidth={2.5} />
+            ) : (
+              <ChevronDown size={20} className="text-white" strokeWidth={2.5} />
+            )}
           </div>
         </div>
       )}

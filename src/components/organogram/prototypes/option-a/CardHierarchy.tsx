@@ -27,10 +27,13 @@
  * - Can lose context when deeply nested
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { OrgChart } from "d3-org-chart";
+import { Download } from "lucide-react";
 import { SearchBar } from "../shared/SearchBar";
 import { DepartmentFilter } from "../shared/DepartmentFilter";
 import { HierarchyLevel } from "./HierarchyLevel";
+import { renderNode, type NodeData } from "../option-c/NodeRenderer";
 import type { OrgChartNode } from "@/types/organogram";
 
 export interface CardHierarchyProps {
@@ -60,6 +63,10 @@ export function CardHierarchy({
   isLoading = false,
   className = "",
 }: CardHierarchyProps) {
+  const hierarchyContainerRef = useRef<HTMLDivElement>(null);
+  const exportChartContainerRef = useRef<HTMLDivElement>(null);
+  const exportChartRef = useRef<OrgChart<NodeData> | null>(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [activeDepartment, setActiveDepartment] = useState<
     "all" | "hoofdbestuur" | "jeugdbestuur"
@@ -209,6 +216,95 @@ export function CardHierarchy({
     onMemberClick?.(member);
   };
 
+  // Transform data for d3-org-chart (for export)
+  const exportChartData = useMemo<NodeData[]>(() => {
+    if (searchResults.length === 0) {
+      return [];
+    }
+
+    const fullMembersList = members;
+    const nodeMap = new Map<string, OrgChartNode>();
+
+    const addNodeWithAncestors = (nodeId: string) => {
+      if (nodeMap.has(nodeId)) return;
+
+      const node = fullMembersList.find((m) => m.id === nodeId);
+      if (!node) return;
+
+      nodeMap.set(nodeId, node);
+
+      if (node.parentId) {
+        addNodeWithAncestors(node.parentId);
+      }
+    };
+
+    searchResults.forEach((member) => {
+      addNodeWithAncestors(member.id);
+    });
+
+    return Array.from(nodeMap.values()).map((member) => ({
+      ...member,
+      _expanded: true,
+      children: [],
+    }));
+  }, [searchResults, members]);
+
+  // Initialize hidden d3-org-chart for export
+  useEffect(() => {
+    const containerElement = exportChartContainerRef.current;
+    if (!containerElement || exportChartData.length === 0) return;
+
+    const chart = new OrgChart<NodeData>()
+      .container("#export-org-chart-container")
+      .data(exportChartData)
+      .nodeWidth(() => 280)
+      .nodeHeight(() => 140)
+      .childrenMargin(() => 50)
+      .compactMarginBetween(() => 35)
+      .compactMarginPair(() => 50)
+      .neighbourMargin(() => 50)
+      .siblingsMargin(() => 50)
+      .nodeContent((d) => {
+        const hasChildren =
+          members.filter((m) => m.parentId === d.data.id).length > 0;
+        return renderNode(d.data, hasChildren);
+      });
+
+    exportChartRef.current = chart;
+    chart.render();
+
+    return () => {
+      if (containerElement) {
+        containerElement.innerHTML = "";
+      }
+    };
+  }, [exportChartData, members]);
+
+  // Export as Image (PNG) - exports the d3 org chart visualization
+  const handleExportImage = () => {
+    if (exportChartRef.current) {
+      console.log("Exporting d3 org chart with scale: 6");
+
+      // Expand all nodes before export
+      exportChartRef.current.expandAll();
+
+      // Wait for expansion animation to complete, then export
+      setTimeout(() => {
+        if (exportChartRef.current) {
+          exportChartRef.current.exportImg({
+            full: true,
+            save: true,
+            scale: 6,
+            backgroundColor: "#ffffff",
+            onLoad: () => {
+              console.log("Export completed");
+            },
+          });
+        }
+      }, 500);
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -276,9 +372,9 @@ export function CardHierarchy({
           )}
         </p>
 
-        {/* Expand/Collapse All */}
+        {/* Controls: Expand/Collapse + Export */}
         {searchResults.length > 0 && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={handleExpandAll}
               className="
@@ -305,36 +401,62 @@ export function CardHierarchy({
             >
               Alles inklappen
             </button>
+            <button
+              onClick={handleExportImage}
+              className="
+                px-3 py-1.5
+                flex items-center gap-1.5
+                text-xs font-medium text-kcvv-gray-dark
+                bg-gray-100 hover:bg-gray-200
+                rounded-lg
+                transition-colors
+                focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2
+              "
+              aria-label="Exporteren als afbeelding"
+            >
+              <Download size={14} />
+              <span>Exporteren</span>
+            </button>
           </div>
         )}
       </div>
 
       {/* Hierarchy */}
-      {searchResults.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <span className="text-3xl text-kcvv-gray">🔍</span>
+      <div ref={hierarchyContainerRef} className="bg-white">
+        {searchResults.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <span className="text-3xl text-kcvv-gray">🔍</span>
+            </div>
+            <p className="text-lg font-semibold text-kcvv-gray-blue mb-2">
+              {searchQuery
+                ? `Geen resultaten voor "${searchQuery}"`
+                : "Geen leden in deze afdeling"}
+            </p>
+            <p className="text-sm text-kcvv-gray max-w-md">
+              Probeer een andere zoekopdracht of filter
+            </p>
           </div>
-          <p className="text-lg font-semibold text-kcvv-gray-blue mb-2">
-            {searchQuery
-              ? `Geen resultaten voor "${searchQuery}"`
-              : "Geen leden in deze afdeling"}
-          </p>
-          <p className="text-sm text-kcvv-gray max-w-md">
-            Probeer een andere zoekopdracht of filter
-          </p>
-        </div>
-      ) : (
-        <HierarchyLevel
-          members={rootMembers}
-          allMembers={searchResults}
-          depth={0}
-          maxDepth={maxDepth}
-          expandedIds={effectiveExpandedIds}
-          onToggle={handleToggle}
-          onMemberClick={onMemberClick}
-        />
-      )}
+        ) : (
+          <HierarchyLevel
+            members={rootMembers}
+            allMembers={searchResults}
+            depth={0}
+            maxDepth={maxDepth}
+            expandedIds={effectiveExpandedIds}
+            onToggle={handleToggle}
+            onMemberClick={onMemberClick}
+          />
+        )}
+      </div>
+
+      {/* Hidden d3-org-chart container for export */}
+      <div
+        id="export-org-chart-container"
+        ref={exportChartContainerRef}
+        className="fixed -left-[9999px] top-0 w-[1200px] h-[800px] bg-white"
+        aria-hidden="true"
+      />
     </div>
   );
 }
