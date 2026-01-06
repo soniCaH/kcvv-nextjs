@@ -3,16 +3,18 @@
 /**
  * UnifiedOrganogramClient Component
  *
- * Unified interface combining Option A (Card Hierarchy), Option C (D3 Chart),
- * and ResponsibilityFinder into a single user-friendly experience.
+ * Unified interface combining three organogram views into a single tabbed experience:
+ * - Card Hierarchy: Collapsible card-based hierarchical view
+ * - Interactive Chart: D3-based visual organizational diagram
+ * - Responsibility Finder: Help system to find the right contact person
  *
  * Features:
  * - View toggle: Cards, Chart, Verantwoordelijkheden (Responsibilities)
  * - Responsive defaults: Mobile → Cards, Desktop → Chart
- * - Shared search and filter state across views
+ * - Shared state across all views
  * - localStorage preference persistence
  * - User-friendly for ages 6-99 on all devices
- * - Two-way integration with responsibility finder
+ * - Seamless integration with responsibility finder
  */
 
 import { useState } from "react";

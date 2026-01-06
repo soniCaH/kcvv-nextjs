@@ -2,9 +2,9 @@
  * Organogram Page
  *
  * Unified interface showing KCVV club structure with multiple views:
- * - Card Hierarchy (Option A)
- * - Visual Chart (Option C)
- * - Responsibility Finder integration
+ * - Card Hierarchy: Collapsible card-based view
+ * - Interactive Chart: D3-based visual diagram
+ * - Responsibility Finder: Help system integration
  */
 
 import type { Metadata } from "next";

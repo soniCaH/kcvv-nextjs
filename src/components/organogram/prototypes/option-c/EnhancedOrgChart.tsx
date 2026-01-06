@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * EnhancedOrgChart Component (Option C: Enhanced d3)
+ * EnhancedOrgChart Component
  *
- * Enhanced version of d3-org-chart with better mobile UX.
- * Improves upon the current OrgChart.tsx implementation.
+ * Interactive D3-based organizational chart with enhanced mobile UX.
+ * Provides visual diagram view of organizational hierarchy.
  *
- * Enhancements:
+ * Mobile Enhancements:
  * - Mobile navigation drawer (off-canvas)
  * - Contact overlay on node hover/tap
  * - Improved mobile controls (larger touch targets)
@@ -22,7 +22,7 @@
  * - Zoom/pan controls
  * - Expand/collapse nodes
  * - Fullscreen mode
- * - Export as image
+ * - Export as high-quality PNG image
  */
 
 import { useEffect, useRef, useState, useMemo } from "react";

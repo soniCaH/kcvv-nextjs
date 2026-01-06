@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * CardHierarchy Component (Option A: Card Hierarchy)
+ * CardHierarchy Component
  *
- * Main organogram prototype with expandable/collapsible cards.
- * Shows organizational hierarchy through nested, expandable cards.
+ * Collapsible card-based organogram view showing hierarchical structure
+ * through nested, expandable cards with progressive disclosure.
  *
  * Features:
  * - Expandable card hierarchy (preserves reporting relationships)
@@ -16,8 +16,8 @@
  * - Keyboard accessible
  *
  * Strengths:
- * - Shows hierarchical relationships
- * - Progressive disclosure reduces overwhelm
+ * - Shows hierarchical relationships clearly
+ * - Progressive disclosure reduces cognitive load
  * - Mobile-native expandable pattern
  * - Clear parent-child connections
  *
