@@ -1,26 +1,42 @@
 /**
  * Organogram Page
  *
- * Interactive organizational chart showing the complete KCVV club structure,
- * including Hoofdbestuur and Jeugdbestuur.
+ * Unified interface showing KCVV club structure with multiple views:
+ * - Card Hierarchy (Option A)
+ * - Visual Chart (Option C)
+ * - Responsibility Finder integration
  */
 
-import type { Metadata } from 'next'
-import { OrganogramClient } from '@/components/organogram'
+import type { Metadata } from "next";
+import { UnifiedOrganogramClient } from "@/components/organogram";
+import { clubStructure } from "@/data/club-structure";
 
 export const metadata: Metadata = {
-  title: 'Organogram | KCVV Elewijt',
-  description: 'Ontdek de organisatiestructuur van KCVV Elewijt met ons interactieve organogram. Bekijk het hoofdbestuur, jeugdbestuur en alle verantwoordelijkheden binnen de club.',
-  keywords: ['KCVV Elewijt', 'organogram', 'bestuur', 'jeugdbestuur', 'hoofdbestuur', 'organisatie', 'voetbalclub'],
+  title: "Organogram & Hulp | KCVV Elewijt",
+  description:
+    "Ontdek de organisatiestructuur van KCVV Elewijt en vind snel de juiste contactpersoon. Bekijk het organogram als kaartjes of diagram, en zoek wie je kan helpen met jouw vraag.",
+  keywords: [
+    "KCVV Elewijt",
+    "organogram",
+    "bestuur",
+    "jeugdbestuur",
+    "hoofdbestuur",
+    "organisatie",
+    "voetbalclub",
+    "contactpersoon",
+    "hulp",
+  ],
   openGraph: {
-    title: 'Organogram KCVV Elewijt',
-    description: 'Interactieve organisatiestructuur van KCVV Elewijt - Hoofdbestuur en Jeugdbestuur',
-    type: 'website',
+    title: "Organogram & Hulp - KCVV Elewijt",
+    description:
+      "Interactieve organisatiestructuur en hulp bij KCVV Elewijt - Kies je eigen weergave en vind snel de juiste persoon",
+    type: "website",
   },
-}
+};
 
 /**
- * Renders the Organogram page for KCVV Elewijt, including a hero banner and the interactive organogram client.
+ * Renders the unified Organogram and Responsibility Finder page.
+ * User-friendly for all ages (6-99) and all devices.
  *
  * @returns The React element for the organogram page.
  */
@@ -30,19 +46,25 @@ export default function OrganogramPage() {
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-green-main via-green-hover to-green-dark-hover text-white py-12 px-4">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: 'quasimoda, acumin-pro, Montserrat, sans-serif' }}>
-            Organogram KCVV Elewijt
+          <h1
+            className="text-3xl md:text-5xl font-bold mb-4"
+            style={{
+              fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+            }}
+          >
+            Clubstructuur & Hulp
           </h1>
           <p className="text-lg md:text-xl text-white/90 max-w-3xl">
-            Ontdek de organisatiestructuur van onze club. Klik op een bestuurslid voor meer informatie.
+            Ontdek wie er bij KCVV werkt en vind snel de juiste contactpersoon
+            voor jouw vraag.
           </p>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <OrganogramClient />
+        <UnifiedOrganogramClient members={clubStructure} />
       </div>
     </div>
-  )
+  );
 }

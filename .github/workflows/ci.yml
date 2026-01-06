@@ -84,12 +84,6 @@ jobs:
       - name: Generate migration report
         run: npm run migration:status
 
-      - name: Update GitHub Project
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          node scripts/update-migration-project.js
-
   security-scan:
     name: Security Audit
     runs-on: ubuntu-latest
