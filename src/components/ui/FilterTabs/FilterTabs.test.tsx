@@ -242,7 +242,25 @@ describe("FilterTabs", () => {
   });
 
   describe("Scroll Arrows", () => {
+    let originalScrollWidth: PropertyDescriptor | undefined;
+    let originalClientWidth: PropertyDescriptor | undefined;
+    let originalScrollTo: PropertyDescriptor | undefined;
+
     beforeEach(() => {
+      // Store original descriptors
+      originalScrollWidth = Object.getOwnPropertyDescriptor(
+        HTMLElement.prototype,
+        "scrollWidth",
+      );
+      originalClientWidth = Object.getOwnPropertyDescriptor(
+        HTMLElement.prototype,
+        "clientWidth",
+      );
+      originalScrollTo = Object.getOwnPropertyDescriptor(
+        HTMLElement.prototype,
+        "scrollTo",
+      );
+
       // Mock scrollWidth to trigger arrow visibility
       Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
         configurable: true,
@@ -252,9 +270,47 @@ describe("FilterTabs", () => {
         configurable: true,
         value: 500,
       });
+      Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+        configurable: true,
+        value: vi.fn(),
+      });
     });
 
     afterEach(() => {
+      // Restore original descriptors
+      if (originalScrollWidth) {
+        Object.defineProperty(
+          HTMLElement.prototype,
+          "scrollWidth",
+          originalScrollWidth,
+        );
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (HTMLElement.prototype as any).scrollWidth;
+      }
+
+      if (originalClientWidth) {
+        Object.defineProperty(
+          HTMLElement.prototype,
+          "clientWidth",
+          originalClientWidth,
+        );
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (HTMLElement.prototype as any).clientWidth;
+      }
+
+      if (originalScrollTo) {
+        Object.defineProperty(
+          HTMLElement.prototype,
+          "scrollTo",
+          originalScrollTo,
+        );
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (HTMLElement.prototype as any).scrollTo;
+      }
+
       vi.restoreAllMocks();
     });
 
@@ -268,19 +324,13 @@ describe("FilterTabs", () => {
 
     it("should call scroll when arrow is clicked", async () => {
       const user = userEvent.setup();
-      const scrollToMock = vi.fn();
-
-      Object.defineProperty(HTMLElement.prototype, "scrollTo", {
-        configurable: true,
-        value: scrollToMock,
-      });
 
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
 
       const rightArrow = screen.getByLabelText("Scroll right");
       await user.click(rightArrow);
 
-      expect(scrollToMock).toHaveBeenCalled();
+      expect(HTMLElement.prototype.scrollTo).toHaveBeenCalled();
     });
   });
 
