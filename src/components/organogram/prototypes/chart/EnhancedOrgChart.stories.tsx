@@ -6,14 +6,14 @@ import type { OrgChartNode } from "@/types/organogram";
 import { clubStructure } from "@/data/club-structure";
 
 const meta: Meta<typeof EnhancedOrgChart> = {
-  title: "Organogram/Prototypes/Option C - Enhanced d3",
+  title: "Organogram/Views/InteractiveChart",
   component: EnhancedOrgChart,
   parameters: {
     layout: "padded",
     docs: {
       description: {
         component: `
-**Option C: Enhanced d3-org-chart** - Improved hierarchical visualization with mobile enhancements
+**Interactive Chart View** - D3-based hierarchical visualization with mobile enhancements
 
 **Pattern:** Enhanced d3-org-chart with better mobile UX
 

@@ -6,14 +6,14 @@ import type { OrgChartNode } from "@/types/organogram";
 import { clubStructure } from "@/data/club-structure";
 
 const meta: Meta<typeof CardHierarchy> = {
-  title: "Organogram/Prototypes/Option A - Card Hierarchy",
+  title: "Organogram/Views/CardHierarchy",
   component: CardHierarchy,
   parameters: {
     layout: "padded",
     docs: {
       description: {
         component: `
-**Option A: Card Hierarchy** - Expandable/collapsible cards with visual hierarchy
+**Card Hierarchy View** - Expandable/collapsible cards with visual hierarchy
 
 **Pattern:** Vertical accordion-style cards with expand/collapse
 

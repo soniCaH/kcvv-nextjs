@@ -6,7 +6,7 @@ import type { OrgChartNode } from "@/types/organogram";
 import { clubStructure } from "@/data/club-structure";
 
 const meta: Meta = {
-  title: "Organogram/Prototypes/Comparison",
+  title: "Organogram/Archive/PrototypeComparison",
   parameters: {
     layout: "fullscreen",
     docs: {
