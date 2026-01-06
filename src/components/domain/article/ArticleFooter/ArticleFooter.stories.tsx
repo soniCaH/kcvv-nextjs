@@ -3,45 +3,45 @@
  * Shows related content section with green background
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { ArticleFooter } from './ArticleFooter'
-import type { RelatedContent } from './ArticleFooter'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { ArticleFooter } from "./ArticleFooter";
+import type { RelatedContent } from "./ArticleFooter";
 
 const meta = {
-  title: 'Domain/Article/ArticleFooter',
+  title: "Components/Article/ArticleFooter",
   component: ArticleFooter,
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
     docs: {
       description: {
         component:
-          'Article footer with related content. Features bright green background, white text, and grid layout on desktop.',
+          "Article footer with related content. Features bright green background, white text, and grid layout on desktop.",
       },
     },
   },
-  tags: ['autodocs'],
-} satisfies Meta<typeof ArticleFooter>
+  tags: ["autodocs"],
+} satisfies Meta<typeof ArticleFooter>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const sampleRelatedContent: RelatedContent[] = [
   {
-    title: 'A-Ploeg behaalt belangrijke overwinning',
-    href: '/news/overwinning',
-    type: 'article',
+    title: "A-Ploeg behaalt belangrijke overwinning",
+    href: "/news/overwinning",
+    type: "article",
   },
   {
-    title: 'Jan Janssens - Speler Profiel',
-    href: '/player/jan-janssens',
-    type: 'player',
+    title: "Jan Janssens - Speler Profiel",
+    href: "/player/jan-janssens",
+    type: "player",
   },
   {
-    title: 'A-Ploeg Informatie',
-    href: '/team/a-ploeg',
-    type: 'team',
+    title: "A-Ploeg Informatie",
+    href: "/team/a-ploeg",
+    type: "team",
   },
-]
+];
 
 /**
  * Default footer with multiple related items
@@ -51,7 +51,7 @@ export const Default: Story = {
   args: {
     relatedContent: sampleRelatedContent,
   },
-}
+};
 
 /**
  * With many items
@@ -61,38 +61,38 @@ export const ManyItems: Story = {
   args: {
     relatedContent: [
       {
-        title: 'Nieuw seizoen begint met overwinning',
-        href: '/news/seizoen-start',
-        type: 'article',
+        title: "Nieuw seizoen begint met overwinning",
+        href: "/news/seizoen-start",
+        type: "article",
       },
       {
-        title: 'Piet Pieters verlengt contract',
-        href: '/news/contract',
-        type: 'article',
+        title: "Piet Pieters verlengt contract",
+        href: "/news/contract",
+        type: "article",
       },
       {
-        title: 'Jan Janssens - Topscorer',
-        href: '/player/jan-janssens',
-        type: 'player',
+        title: "Jan Janssens - Topscorer",
+        href: "/player/jan-janssens",
+        type: "player",
       },
       {
-        title: 'Tom Tomassen - Nieuwe aanwinst',
-        href: '/player/tom-tomassen',
-        type: 'player',
+        title: "Tom Tomassen - Nieuwe aanwinst",
+        href: "/player/tom-tomassen",
+        type: "player",
       },
       {
-        title: 'Hoofdcoach John Doe',
-        href: '/staff/john-doe',
-        type: 'staff',
+        title: "Hoofdcoach John Doe",
+        href: "/staff/john-doe",
+        type: "staff",
       },
       {
-        title: 'B-Ploeg Informatie',
-        href: '/team/b-ploeg',
-        type: 'team',
+        title: "B-Ploeg Informatie",
+        href: "/team/b-ploeg",
+        type: "team",
       },
     ],
   },
-}
+};
 
 /**
  * Single related item
@@ -102,13 +102,13 @@ export const SingleItem: Story = {
   args: {
     relatedContent: [
       {
-        title: 'Lees meer over onze A-Ploeg',
-        href: '/team/a-ploeg',
-        type: 'team',
+        title: "Lees meer over onze A-Ploeg",
+        href: "/team/a-ploeg",
+        type: "team",
       },
     ],
   },
-}
+};
 
 /**
  * Different content types
@@ -118,28 +118,28 @@ export const AllContentTypes: Story = {
   args: {
     relatedContent: [
       {
-        title: 'Nieuws artikel over de wedstrijd',
-        href: '/news/wedstrijd',
-        type: 'article',
+        title: "Nieuws artikel over de wedstrijd",
+        href: "/news/wedstrijd",
+        type: "article",
       },
       {
-        title: 'Speler profiel: Jan Janssens',
-        href: '/player/jan-janssens',
-        type: 'player',
+        title: "Speler profiel: Jan Janssens",
+        href: "/player/jan-janssens",
+        type: "player",
       },
       {
-        title: 'Staff profiel: Coach John Doe',
-        href: '/staff/john-doe',
-        type: 'staff',
+        title: "Staff profiel: Coach John Doe",
+        href: "/staff/john-doe",
+        type: "staff",
       },
       {
-        title: 'Team pagina: A-Ploeg',
-        href: '/team/a-ploeg',
-        type: 'team',
+        title: "Team pagina: A-Ploeg",
+        href: "/team/a-ploeg",
+        type: "team",
       },
     ],
   },
-}
+};
 
 /**
  * Empty state
@@ -149,7 +149,7 @@ export const Empty: Story = {
   args: {
     relatedContent: [],
   },
-}
+};
 
 /**
  * In article context
@@ -165,7 +165,8 @@ export const InContext: Story = {
       <div className="max-w-inner-lg mx-auto px-6 py-8">
         <h2 className="text-2xl font-bold mb-4">Article Title</h2>
         <p className="text-gray-700 mb-4">
-          Dit is het einde van het artikel. Hieronder volgt de sectie met gerelateerde inhoud.
+          Dit is het einde van het artikel. Hieronder volgt de sectie met
+          gerelateerde inhoud.
         </p>
       </div>
 
@@ -182,4 +183,4 @@ export const InContext: Story = {
       </div>
     </div>
   ),
-}
+};

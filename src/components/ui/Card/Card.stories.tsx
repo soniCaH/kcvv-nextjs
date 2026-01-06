@@ -3,42 +3,36 @@
  * Showcases all Card variants and compositions
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-  CardImage,
-} from './Card'
-import { Button } from '../Button'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Card, CardHeader, CardContent, CardFooter, CardImage } from "./Card";
+import { Button } from "../Button";
 
 const meta = {
-  title: 'UI/Card',
+  title: "Design System/Card",
   component: Card,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     variant: {
-      control: 'select',
-      options: ['default', 'teaser', 'bordered', 'elevated'],
-      description: 'Visual variant of the card',
+      control: "select",
+      options: ["default", "teaser", "bordered", "elevated"],
+      description: "Visual variant of the card",
     },
     hoverable: {
-      control: 'boolean',
-      description: 'Add hover effects',
+      control: "boolean",
+      description: "Add hover effects",
     },
     padded: {
-      control: 'boolean',
-      description: 'Add padding to the card',
+      control: "boolean",
+      description: "Add padding to the card",
     },
   },
-} satisfies Meta<typeof Card>
+} satisfies Meta<typeof Card>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * Basic card with default styling
@@ -48,10 +42,12 @@ export const Default: Story = {
   render: () => (
     <Card padded>
       <h3 className="font-bold text-lg mb-2">Card Title</h3>
-      <p className="text-gray-600">This is a basic card with default styling.</p>
+      <p className="text-gray-600">
+        This is a basic card with default styling.
+      </p>
     </Card>
   ),
-}
+};
 
 /**
  * Card with header, content, and footer
@@ -65,7 +61,8 @@ export const WithSections: Story = {
       </CardHeader>
       <CardContent>
         <p className="text-gray-600">
-          Card content goes here. This section is padded and contains the main information.
+          Card content goes here. This section is padded and contains the main
+          information.
         </p>
       </CardContent>
       <CardFooter>
@@ -78,7 +75,7 @@ export const WithSections: Story = {
       </CardFooter>
     </Card>
   ),
-}
+};
 
 /**
  * Teaser card with image (for news/articles)
@@ -97,7 +94,8 @@ export const Teaser: Story = {
             KCVV wint thuiswedstrijd
           </h3>
           <p className="text-sm text-gray-600 mb-3">
-            Een spannende wedstrijd eindigde in een 3-2 overwinning voor KCVV Elewijt.
+            Een spannende wedstrijd eindigde in een 3-2 overwinning voor KCVV
+            Elewijt.
           </p>
           <div className="flex justify-end border-t border-[#edeff4] pt-3 -mx-4 px-4">
             <Button variant="link" size="sm" withArrow>
@@ -108,7 +106,7 @@ export const Teaser: Story = {
       </Card>
     </div>
   ),
-}
+};
 
 /**
  * Bordered variant for emphasis
@@ -123,7 +121,7 @@ export const Bordered: Story = {
       </p>
     </Card>
   ),
-}
+};
 
 /**
  * Elevated variant with shadow
@@ -136,7 +134,7 @@ export const Elevated: Story = {
       <p className="text-gray-600">This card has a subtle shadow for depth.</p>
     </Card>
   ),
-}
+};
 
 /**
  * Hoverable card with interaction
@@ -153,7 +151,7 @@ export const Hoverable: Story = {
       </Card>
     </div>
   ),
-}
+};
 
 /**
  * Different aspect ratios for images
@@ -204,7 +202,7 @@ export const AspectRatios: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * Player card example
@@ -221,7 +219,9 @@ export const PlayerCard: Story = {
         />
         <CardContent>
           <div className="text-center">
-            <div className="text-4xl font-bold text-kcvv-green-bright mb-1">10</div>
+            <div className="text-4xl font-bold text-kcvv-green-bright mb-1">
+              10
+            </div>
             <h3 className="font-bold text-lg text-kcvv-gray-blue mb-1">
               John Doe
             </h3>
@@ -234,7 +234,7 @@ export const PlayerCard: Story = {
       </Card>
     </div>
   ),
-}
+};
 
 /**
  * Match card example
@@ -272,7 +272,7 @@ export const MatchCard: Story = {
       </CardFooter>
     </Card>
   ),
-}
+};
 
 /**
  * News grid example
@@ -282,27 +282,24 @@ export const NewsGrid: Story = {
   render: () => {
     // Use reliable, fixed image URLs
     const images = [
-      'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=600&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1551958219-acbc608c6377?w=600&h=400&fit=crop',
-    ]
+      "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1551958219-acbc608c6377?w=600&h=400&fit=crop",
+    ];
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
           <Card key={i} variant="teaser" hoverable>
-            <CardImage
-              src={images[i - 1]}
-              alt={`News ${i}`}
-            />
+            <CardImage src={images[i - 1]} alt={`News ${i}`} />
             <CardContent>
               <div className="text-xs text-gray-500 mb-2">12 Jan 2025</div>
               <h3 className="font-bold text-base mb-2 line-clamp-2">
                 Article Title {i}
               </h3>
               <p className="text-sm text-gray-600 line-clamp-3 mb-3">
-                A brief description of the article goes here. This gives readers a
-                preview of what to expect.
+                A brief description of the article goes here. This gives readers
+                a preview of what to expect.
               </p>
               <div className="flex justify-end border-t border-[#edeff4] pt-3 -mx-4 px-4">
                 <Button variant="link" size="sm" withArrow>
@@ -313,9 +310,9 @@ export const NewsGrid: Story = {
           </Card>
         ))}
       </div>
-    )
+    );
   },
-}
+};
 
 /**
  * Interactive Playground
@@ -328,18 +325,22 @@ export const NewsGrid: Story = {
  */
 export const Playground: Story = {
   args: {
-    variant: 'default',
+    variant: "default",
     hoverable: false,
     padded: true,
-    children: null
+    children: null,
   },
   render: (args) => (
-    <Card variant={args.variant} hoverable={args.hoverable} padded={args.padded}>
+    <Card
+      variant={args.variant}
+      hoverable={args.hoverable}
+      padded={args.padded}
+    >
       <h3 className="font-bold text-lg mb-2">Customize Me!</h3>
       <p className="text-gray-600">
-        Use the controls panel to change variant, hoverable, and padded properties.
-        Watch how the card updates in real-time!
+        Use the controls panel to change variant, hoverable, and padded
+        properties. Watch how the card updates in real-time!
       </p>
     </Card>
   ),
-}
+};

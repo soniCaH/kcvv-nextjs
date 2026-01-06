@@ -3,52 +3,52 @@
  * Article teaser card for news listing pages
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { ArticleCard } from './ArticleCard'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { ArticleCard } from "./ArticleCard";
 
 const meta = {
-  title: 'Domain/Article/ArticleCard',
+  title: "Components/Article/ArticleCard",
   component: ArticleCard,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
     docs: {
       description: {
         component:
-          'Article teaser card matching Gatsby CardTeaser design. Features responsive layout (horizontal on mobile, vertical on desktop), image zoom on hover, and lifted shadow effect.',
+          "Article teaser card matching Gatsby CardTeaser design. Features responsive layout (horizontal on mobile, vertical on desktop), image zoom on hover, and lifted shadow effect.",
       },
     },
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     title: {
-      control: 'text',
-      description: 'Article title',
+      control: "text",
+      description: "Article title",
     },
     href: {
-      control: 'text',
-      description: 'Link URL to article detail page',
+      control: "text",
+      description: "Link URL to article detail page",
     },
     imageUrl: {
-      control: 'text',
-      description: 'Featured image URL',
+      control: "text",
+      description: "Featured image URL",
     },
     imageAlt: {
-      control: 'text',
-      description: 'Alt text for the featured image',
+      control: "text",
+      description: "Alt text for the featured image",
     },
     date: {
-      control: 'text',
-      description: 'Formatted publication date',
+      control: "text",
+      description: "Formatted publication date",
     },
     tags: {
-      control: 'object',
-      description: 'Array of tag objects with name property',
+      control: "object",
+      description: "Array of tag objects with name property",
     },
   },
-} satisfies Meta<typeof ArticleCard>
+} satisfies Meta<typeof ArticleCard>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * Default article card
@@ -56,14 +56,14 @@ type Story = StoryObj<typeof meta>
  */
 export const Default: Story = {
   args: {
-    title: 'KCVV Elewijt behaalt belangrijke overwinning',
-    href: '/news/belangrijke-overwinning',
-    imageUrl: 'https://picsum.photos/400/300?random=1',
-    imageAlt: 'Match photo',
-    date: '15 januari 2025',
-    tags: [{ name: 'Nieuws' }, { name: 'Competitie' }],
+    title: "KCVV Elewijt behaalt belangrijke overwinning",
+    href: "/news/belangrijke-overwinning",
+    imageUrl: "https://picsum.photos/400/300?random=1",
+    imageAlt: "Match photo",
+    date: "15 januari 2025",
+    tags: [{ name: "Nieuws" }, { name: "Competitie" }],
   },
-}
+};
 
 /**
  * Long title
@@ -72,28 +72,28 @@ export const Default: Story = {
 export const LongTitle: Story = {
   args: {
     title:
-      'KCVV Elewijt behaalt een fantastische overwinning in de belangrijke wedstrijd tegen de rivaal van de regio en klimt naar de tweede plaats',
-    href: '/news/fantastische-overwinning',
-    imageUrl: 'https://picsum.photos/400/300?random=2',
-    imageAlt: 'Team celebration',
-    date: '14 januari 2025',
-    tags: [{ name: 'Competitie' }],
+      "KCVV Elewijt behaalt een fantastische overwinning in de belangrijke wedstrijd tegen de rivaal van de regio en klimt naar de tweede plaats",
+    href: "/news/fantastische-overwinning",
+    imageUrl: "https://picsum.photos/400/300?random=2",
+    imageAlt: "Team celebration",
+    date: "14 januari 2025",
+    tags: [{ name: "Competitie" }],
   },
-}
+};
 
 /**
  * Short title
  */
 export const ShortTitle: Story = {
   args: {
-    title: 'Overwinning!',
-    href: '/news/overwinning',
-    imageUrl: 'https://picsum.photos/400/300?random=3',
-    imageAlt: 'Victory',
-    date: '13 januari 2025',
-    tags: [{ name: 'Nieuws' }],
+    title: "Overwinning!",
+    href: "/news/overwinning",
+    imageUrl: "https://picsum.photos/400/300?random=3",
+    imageAlt: "Victory",
+    date: "13 januari 2025",
+    tags: [{ name: "Nieuws" }],
   },
-}
+};
 
 /**
  * Without image
@@ -101,12 +101,12 @@ export const ShortTitle: Story = {
  */
 export const WithoutImage: Story = {
   args: {
-    title: 'Nieuwe trainingsschema bekendgemaakt',
-    href: '/news/trainingsschema',
-    date: '12 januari 2025',
-    tags: [{ name: 'Jeugd' }, { name: 'Training' }],
+    title: "Nieuwe trainingsschema bekendgemaakt",
+    href: "/news/trainingsschema",
+    date: "12 januari 2025",
+    tags: [{ name: "Jeugd" }, { name: "Training" }],
   },
-}
+};
 
 /**
  * Without date
@@ -114,13 +114,13 @@ export const WithoutImage: Story = {
  */
 export const WithoutDate: Story = {
   args: {
-    title: 'Vrijwilligers gezocht voor clubactiviteiten',
-    href: '/news/vrijwilligers',
-    imageUrl: 'https://picsum.photos/400/300?random=4',
-    imageAlt: 'Volunteers',
-    tags: [{ name: 'Club' }],
+    title: "Vrijwilligers gezocht voor clubactiviteiten",
+    href: "/news/vrijwilligers",
+    imageUrl: "https://picsum.photos/400/300?random=4",
+    imageAlt: "Volunteers",
+    tags: [{ name: "Club" }],
   },
-}
+};
 
 /**
  * Without tags
@@ -128,14 +128,14 @@ export const WithoutDate: Story = {
  */
 export const WithoutTags: Story = {
   args: {
-    title: 'Update van het bestuur',
-    href: '/news/bestuur-update',
-    imageUrl: 'https://picsum.photos/400/300?random=5',
-    imageAlt: 'Board meeting',
-    date: '11 januari 2025',
+    title: "Update van het bestuur",
+    href: "/news/bestuur-update",
+    imageUrl: "https://picsum.photos/400/300?random=5",
+    imageAlt: "Board meeting",
+    date: "11 januari 2025",
     tags: [],
   },
-}
+};
 
 /**
  * Multiple tags
@@ -143,19 +143,19 @@ export const WithoutTags: Story = {
  */
 export const MultipleTags: Story = {
   args: {
-    title: 'Groot evenement met activiteiten voor alle leeftijden',
-    href: '/news/groot-evenement',
-    imageUrl: 'https://picsum.photos/400/300?random=6',
-    imageAlt: 'Event',
-    date: '10 januari 2025',
+    title: "Groot evenement met activiteiten voor alle leeftijden",
+    href: "/news/groot-evenement",
+    imageUrl: "https://picsum.photos/400/300?random=6",
+    imageAlt: "Event",
+    date: "10 januari 2025",
     tags: [
-      { name: 'Evenement' },
-      { name: 'Jeugd' },
-      { name: 'Seniors' },
-      { name: 'Vrouwen' },
+      { name: "Evenement" },
+      { name: "Jeugd" },
+      { name: "Seniors" },
+      { name: "Vrouwen" },
     ],
   },
-}
+};
 
 /**
  * Minimal card
@@ -163,10 +163,10 @@ export const MultipleTags: Story = {
  */
 export const Minimal: Story = {
   args: {
-    title: 'Minimaal artikel',
-    href: '/news/minimaal',
+    title: "Minimaal artikel",
+    href: "/news/minimaal",
   },
-}
+};
 
 /**
  * In grid layout
@@ -174,8 +174,8 @@ export const Minimal: Story = {
  */
 export const InGridLayout: Story = {
   args: {
-    title: '',
-    href: '',
+    title: "",
+    href: "",
   },
   render: () => (
     <div className="w-full max-w-inner-lg mx-auto px-3 lg:px-0">
@@ -186,7 +186,7 @@ export const InGridLayout: Story = {
           imageUrl="https://picsum.photos/400/300?random=10"
           imageAlt="Derby match"
           date="15 januari 2025"
-          tags={[{ name: 'Competitie' }]}
+          tags={[{ name: "Competitie" }]}
         />
         <ArticleCard
           title="Nieuwe spelers aangetrokken voor komend seizoen"
@@ -194,7 +194,7 @@ export const InGridLayout: Story = {
           imageUrl="https://picsum.photos/400/300?random=11"
           imageAlt="New players"
           date="14 januari 2025"
-          tags={[{ name: 'Transfers' }, { name: 'Nieuws' }]}
+          tags={[{ name: "Transfers" }, { name: "Nieuws" }]}
         />
         <ArticleCard
           title="Jeugdwerking start zomertrainingen"
@@ -202,7 +202,7 @@ export const InGridLayout: Story = {
           imageUrl="https://picsum.photos/400/300?random=12"
           imageAlt="Youth training"
           date="13 januari 2025"
-          tags={[{ name: 'Jeugd' }]}
+          tags={[{ name: "Jeugd" }]}
         />
         <ArticleCard
           title="Clubkampioenschap resultaten"
@@ -210,7 +210,7 @@ export const InGridLayout: Story = {
           imageUrl="https://picsum.photos/400/300?random=13"
           imageAlt="Championship"
           date="12 januari 2025"
-          tags={[{ name: 'Evenement' }]}
+          tags={[{ name: "Evenement" }]}
         />
         <ArticleCard
           title="Bestuursverkiezingen aangekondigd"
@@ -218,7 +218,7 @@ export const InGridLayout: Story = {
           imageUrl="https://picsum.photos/400/300?random=14"
           imageAlt="Board elections"
           date="11 januari 2025"
-          tags={[{ name: 'Club' }, { name: 'Bestuur' }]}
+          tags={[{ name: "Club" }, { name: "Bestuur" }]}
         />
         <ArticleCard
           title="Nieuwe sponsor welkom"
@@ -226,12 +226,12 @@ export const InGridLayout: Story = {
           imageUrl="https://picsum.photos/400/300?random=15"
           imageAlt="Sponsor announcement"
           date="10 januari 2025"
-          tags={[{ name: 'Nieuws' }]}
+          tags={[{ name: "Nieuws" }]}
         />
       </div>
     </div>
   ),
-}
+};
 
 /**
  * Mobile view
@@ -239,35 +239,35 @@ export const InGridLayout: Story = {
  */
 export const MobileView: Story = {
   args: {
-    title: 'Training hervat na winterpauze',
-    href: '/news/training-hervat',
-    imageUrl: 'https://picsum.photos/400/300?random=7',
-    imageAlt: 'Winter training',
-    date: '9 januari 2025',
-    tags: [{ name: 'Training' }],
+    title: "Training hervat na winterpauze",
+    href: "/news/training-hervat",
+    imageUrl: "https://picsum.photos/400/300?random=7",
+    imageAlt: "Winter training",
+    date: "9 januari 2025",
+    tags: [{ name: "Training" }],
   },
   parameters: {
     viewport: {
-      defaultViewport: 'mobile1',
+      defaultViewport: "mobile1",
     },
   },
-}
+};
 
 /**
  * Tablet view
  */
 export const TabletView: Story = {
   args: {
-    title: 'Nieuwe materialen aangekocht',
-    href: '/news/nieuwe-materialen',
-    imageUrl: 'https://picsum.photos/400/300?random=8',
-    imageAlt: 'New equipment',
-    date: '8 januari 2025',
-    tags: [{ name: 'Club' }],
+    title: "Nieuwe materialen aangekocht",
+    href: "/news/nieuwe-materialen",
+    imageUrl: "https://picsum.photos/400/300?random=8",
+    imageAlt: "New equipment",
+    date: "8 januari 2025",
+    tags: [{ name: "Club" }],
   },
   parameters: {
     viewport: {
-      defaultViewport: 'tablet',
+      defaultViewport: "tablet",
     },
   },
-}
+};

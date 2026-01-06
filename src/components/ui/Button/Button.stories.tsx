@@ -3,161 +3,161 @@
  * Showcases all Button variants and use cases
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { Button } from './Button'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Button } from "./Button";
 
 const meta = {
-  title: 'UI/Button',
+  title: "Design System/Button",
   component: Button,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     variant: {
-      control: 'select',
-      options: ['primary', 'secondary', 'ghost', 'link'],
-      description: 'Visual variant of the button',
+      control: "select",
+      options: ["primary", "secondary", "ghost", "link"],
+      description: "Visual variant of the button",
     },
     size: {
-      control: 'select',
-      options: ['sm', 'md', 'lg'],
-      description: 'Size of the button',
+      control: "select",
+      options: ["sm", "md", "lg"],
+      description: "Size of the button",
     },
     withArrow: {
-      control: 'boolean',
-      description: 'Show arrow icon on the right',
+      control: "boolean",
+      description: "Show arrow icon on the right",
     },
     fullWidth: {
-      control: 'boolean',
-      description: 'Make button full width',
+      control: "boolean",
+      description: "Make button full width",
     },
     disabled: {
-      control: 'boolean',
-      description: 'Disable the button',
+      control: "boolean",
+      description: "Disable the button",
     },
   },
-} satisfies Meta<typeof Button>
+} satisfies Meta<typeof Button>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * Primary button with KCVV bright green
  */
 export const Primary: Story = {
   args: {
-    children: 'Primary Button',
-    variant: 'primary',
+    children: "Primary Button",
+    variant: "primary",
   },
-}
+};
 
 /**
  * Secondary button with gray background
  */
 export const Secondary: Story = {
   args: {
-    children: 'Secondary Button',
-    variant: 'secondary',
+    children: "Secondary Button",
+    variant: "secondary",
   },
-}
+};
 
 /**
  * Ghost button with transparent background and border
  */
 export const Ghost: Story = {
   args: {
-    children: 'Ghost Button',
-    variant: 'ghost',
+    children: "Ghost Button",
+    variant: "ghost",
   },
-}
+};
 
 /**
  * Link-styled button
  */
 export const Link: Story = {
   args: {
-    children: 'Link Button',
-    variant: 'link',
+    children: "Link Button",
+    variant: "link",
   },
-}
+};
 
 /**
  * Small button size
  */
 export const Small: Story = {
   args: {
-    children: 'Small Button',
-    size: 'sm',
+    children: "Small Button",
+    size: "sm",
   },
-}
+};
 
 /**
  * Medium button size (default)
  */
 export const Medium: Story = {
   args: {
-    children: 'Medium Button',
-    size: 'md',
+    children: "Medium Button",
+    size: "md",
   },
-}
+};
 
 /**
  * Large button size
  */
 export const Large: Story = {
   args: {
-    children: 'Large Button',
-    size: 'lg',
+    children: "Large Button",
+    size: "lg",
   },
-}
+};
 
 /**
  * Button with animated arrow icon
  */
 export const WithArrow: Story = {
   args: {
-    children: 'Learn More',
+    children: "Learn More",
     withArrow: true,
   },
-}
+};
 
 /**
  * Full width button (mobile-friendly)
  */
 export const FullWidth: Story = {
   args: {
-    children: 'Full Width Button',
+    children: "Full Width Button",
     fullWidth: true,
   },
   parameters: {
-    layout: 'padded',
+    layout: "padded",
   },
   decorators: [
     (Story) => (
-      <div style={{ width: '100%', maxWidth: '600px' }}>
+      <div style={{ width: "100%", maxWidth: "600px" }}>
         <Story />
       </div>
     ),
   ],
-}
+};
 
 /**
  * Disabled button state
  */
 export const Disabled: Story = {
   args: {
-    children: 'Disabled Button',
+    children: "Disabled Button",
     disabled: true,
   },
-}
+};
 
 /**
  * All variants side by side
  */
 export const AllVariants: Story = {
   args: {
-    children: 'Button',
+    children: "Button",
   },
   render: () => (
     <div className="flex flex-col gap-4 items-start">
@@ -167,14 +167,14 @@ export const AllVariants: Story = {
       <Button variant="link">Link</Button>
     </div>
   ),
-}
+};
 
 /**
  * All sizes comparison
  */
 export const AllSizes: Story = {
   args: {
-    children: 'Button',
+    children: "Button",
   },
   render: () => (
     <div className="flex flex-col gap-4 items-start">
@@ -183,14 +183,14 @@ export const AllSizes: Story = {
       <Button size="lg">Large Button</Button>
     </div>
   ),
-}
+};
 
 /**
  * Button with arrow in all variants
  */
 export const WithArrowVariants: Story = {
   args: {
-    children: 'Button',
+    children: "Button",
   },
   render: () => (
     <div className="flex flex-col gap-4 items-start">
@@ -205,14 +205,14 @@ export const WithArrowVariants: Story = {
       </Button>
     </div>
   ),
-}
+};
 
 /**
  * Real-world usage examples
  */
 export const Examples: Story = {
   args: {
-    children: 'Button',
+    children: "Button",
   },
   render: () => (
     <div className="flex flex-col gap-6 max-w-md">
@@ -256,20 +256,20 @@ export const Examples: Story = {
     </div>
   ),
   parameters: {
-    layout: 'padded',
+    layout: "padded",
   },
-}
+};
 
 /**
  * Interactive playground
  */
 export const Playground: Story = {
   args: {
-    children: 'Customize me!',
-    variant: 'primary',
-    size: 'md',
+    children: "Customize me!",
+    variant: "primary",
+    size: "md",
     withArrow: false,
     fullWidth: false,
     disabled: false,
   },
-}
+};

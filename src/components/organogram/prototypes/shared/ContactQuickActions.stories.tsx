@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { ContactQuickActions } from "./ContactQuickActions";
 
 const meta: Meta<typeof ContactQuickActions> = {
-  title: "Organogram/Components/ContactQuickActions",
+  title: "Components/Organogram/ContactQuickActions",
   component: ContactQuickActions,
   parameters: {
     layout: "centered",

@@ -3,32 +3,32 @@
  * Shows article content with HTML rendering and styled links
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { ArticleBody } from './ArticleBody'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { ArticleBody } from "./ArticleBody";
 
 const meta = {
-  title: 'Domain/Article/ArticleBody',
+  title: "Components/Article/ArticleBody",
   component: ArticleBody,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
     docs: {
       description: {
         component:
-          'Article body content with HTML rendering. Features styled links with green underline animation and external link icons.',
+          "Article body content with HTML rendering. Features styled links with green underline animation and external link icons.",
       },
     },
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     content: {
-      control: 'text',
-      description: 'HTML content to render',
+      control: "text",
+      description: "HTML content to render",
     },
   },
-} satisfies Meta<typeof ArticleBody>
+} satisfies Meta<typeof ArticleBody>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const sampleContent = `
   <h2>KCVV Elewijt behaalt belangrijke overwinning</h2>
@@ -55,7 +55,7 @@ const sampleContent = `
   <p>
     Voor meer informatie, bezoek de <a href="https://kcvvelewijt.be" target="_blank">officiële website</a>.
   </p>
-`
+`;
 
 /**
  * Default article body
@@ -65,7 +65,7 @@ export const Default: Story = {
   args: {
     content: sampleContent,
   },
-}
+};
 
 /**
  * Simple text
@@ -87,7 +87,7 @@ export const SimpleText: Story = {
       </p>
     `,
   },
-}
+};
 
 /**
  * With internal links
@@ -107,7 +107,7 @@ export const WithInternalLinks: Story = {
       </p>
     `,
   },
-}
+};
 
 /**
  * With external links
@@ -130,7 +130,7 @@ export const WithExternalLinks: Story = {
       </p>
     `,
   },
-}
+};
 
 /**
  * With images (hover to zoom!)
@@ -167,11 +167,12 @@ export const WithImages: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Images have a zoom hover effect (scale 1.1) matching the Gatsby site behavior. The transition is smooth (0.3s ease) and cursor changes to zoom-in.',
+        story:
+          "Images have a zoom hover effect (scale 1.1) matching the Gatsby site behavior. The transition is smooth (0.3s ease) and cursor changes to zoom-in.",
       },
     },
   },
-}
+};
 
 /**
  * Complex formatting
@@ -215,7 +216,7 @@ export const ComplexFormatting: Story = {
       </p>
     `,
   },
-}
+};
 
 /**
  * In article layout context
@@ -229,7 +230,9 @@ export const InContext: Story = {
       <div className="flex flex-col lg:flex-row-reverse">
         {/* Sidebar placeholder */}
         <div className="lg:w-[20rem] p-3 bg-gray-100 text-xs">
-          <p className="mb-2"><strong>Metadata sidebar</strong></p>
+          <p className="mb-2">
+            <strong>Metadata sidebar</strong>
+          </p>
           <p>Author, date, tags...</p>
         </div>
 
@@ -240,4 +243,4 @@ export const InContext: Story = {
       </div>
     </div>
   ),
-}
+};

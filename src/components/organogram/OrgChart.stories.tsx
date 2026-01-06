@@ -3,7 +3,7 @@ import { OrgChart } from "./OrgChart";
 import type { OrgChartNode } from "@/types/organogram";
 
 const meta: Meta<typeof OrgChart> = {
-  title: "Organogram/Archive/OrgChart (Legacy)",
+  title: "Archive/Organogram/OrgChart (Legacy)",
   component: OrgChart,
   parameters: {
     layout: "fullscreen",

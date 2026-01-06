@@ -3,56 +3,56 @@
  * Showcases loading indicators
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { Spinner, FullPageSpinner } from './Spinner'
-import { Button } from '../Button'
-import { Card, CardContent } from '../Card'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Spinner, FullPageSpinner } from "./Spinner";
+import { Button } from "../Button";
+import { Card, CardContent } from "../Card";
 
 const meta = {
-  title: 'UI/Spinner',
+  title: "Design System/Spinner",
   component: Spinner,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     size: {
-      control: 'select',
-      options: ['sm', 'md', 'lg', 'xl'],
-      description: 'Size of the spinner',
+      control: "select",
+      options: ["sm", "md", "lg", "xl"],
+      description: "Size of the spinner",
     },
     variant: {
-      control: 'select',
-      options: ['primary', 'secondary', 'white', 'logo'],
-      description: 'Color variant',
+      control: "select",
+      options: ["primary", "secondary", "white", "logo"],
+      description: "Color variant",
     },
     label: {
-      control: 'text',
-      description: 'Accessible label for screen readers',
+      control: "text",
+      description: "Accessible label for screen readers",
     },
   },
-} satisfies Meta<typeof Spinner>
+} satisfies Meta<typeof Spinner>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * Primary spinner with KCVV green
  */
 export const Primary: Story = {
   args: {
-    variant: 'primary',
+    variant: "primary",
   },
-}
+};
 
 /**
  * Secondary spinner with gray
  */
 export const Secondary: Story = {
   args: {
-    variant: 'secondary',
+    variant: "secondary",
   },
-}
+};
 
 /**
  * White spinner for dark backgrounds
@@ -63,7 +63,7 @@ export const White: Story = {
       <Spinner variant="white" />
     </div>
   ),
-}
+};
 
 /**
  * All sizes
@@ -89,7 +89,7 @@ export const AllSizes: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * Spinner in button
@@ -101,7 +101,7 @@ export const InButton: Story = {
       <span>Loading...</span>
     </Button>
   ),
-}
+};
 
 /**
  * Spinner in card
@@ -117,7 +117,7 @@ export const InCard: Story = {
       </CardContent>
     </Card>
   ),
-}
+};
 
 /**
  * Centered in container
@@ -128,17 +128,17 @@ export const Centered: Story = {
       <Spinner size="lg" label="Loading content..." />
     </div>
   ),
-}
+};
 
 /**
  * With custom label
  */
 export const CustomLabel: Story = {
   args: {
-    label: 'Loading match data...',
-    size: 'lg',
+    label: "Loading match data...",
+    size: "lg",
   },
-}
+};
 
 /**
  * Full page spinner overlay
@@ -153,7 +153,7 @@ export const FullPage: Story = {
       <FullPageSpinner />
     </div>
   ),
-}
+};
 
 /**
  * Loading states comparison
@@ -194,7 +194,7 @@ export const LoadingStates: Story = {
       </Card>
     </div>
   ),
-}
+};
 
 /**
  * KCVV Logo Spinner (matches Gatsby site)
@@ -202,11 +202,11 @@ export const LoadingStates: Story = {
  */
 export const LogoSpinner: Story = {
   args: {
-    variant: 'logo',
-    size: 'lg',
-    label: 'Loading KCVV content...',
+    variant: "logo",
+    size: "lg",
+    label: "Loading KCVV content...",
   },
-}
+};
 
 /**
  * Logo spinner in all sizes
@@ -232,7 +232,7 @@ export const LogoSizes: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * Comparison: SVG Spinner vs Logo Spinner
@@ -257,15 +257,15 @@ export const SpinnerComparison: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * Interactive playground
  */
 export const Playground: Story = {
   args: {
-    size: 'md',
-    variant: 'primary',
-    label: 'Loading...',
+    size: "md",
+    variant: "primary",
+    label: "Loading...",
   },
-}
+};

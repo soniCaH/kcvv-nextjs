@@ -3,7 +3,7 @@ import { ContactCard } from "./ContactCard";
 import type { OrgChartNode } from "@/types/organogram";
 
 const meta: Meta<typeof ContactCard> = {
-  title: "Organogram/Components/ContactCard",
+  title: "Components/Organogram/ContactCard",
   component: ContactCard,
   parameters: {
     layout: "padded",

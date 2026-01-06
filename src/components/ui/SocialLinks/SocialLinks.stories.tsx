@@ -3,43 +3,43 @@
  * Showcases social media links in different variants
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { SocialLinks } from './SocialLinks'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { SocialLinks } from "./SocialLinks";
 
 const meta = {
-  title: 'UI/SocialLinks',
+  title: "Design System/SocialLinks",
   component: SocialLinks,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
     docs: {
       description: {
         component:
-          'Social media links component with circle and inline variants. Used in footer, mobile menu, and other locations.',
+          "Social media links component with circle and inline variants. Used in footer, mobile menu, and other locations.",
       },
     },
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     variant: {
-      control: 'select',
-      options: ['circle', 'inline'],
-      description: 'Visual variant of the social links',
+      control: "select",
+      options: ["circle", "inline"],
+      description: "Visual variant of the social links",
     },
     size: {
-      control: 'select',
-      options: ['sm', 'md', 'lg'],
-      description: 'Size of the icons',
+      control: "select",
+      options: ["sm", "md", "lg"],
+      description: "Size of the icons",
     },
     direction: {
-      control: 'select',
-      options: ['horizontal', 'vertical'],
-      description: 'Layout direction',
+      control: "select",
+      options: ["horizontal", "vertical"],
+      description: "Layout direction",
     },
   },
-} satisfies Meta<typeof SocialLinks>
+} satisfies Meta<typeof SocialLinks>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * Circle variant (footer style)
@@ -47,29 +47,29 @@ type Story = StoryObj<typeof meta>
  */
 export const Circle: Story = {
   args: {
-    variant: 'circle',
+    variant: "circle",
   },
   render: (args) => (
     <div className="bg-black p-8">
       <SocialLinks {...args} />
     </div>
   ),
-}
+};
 
 /**
  * Circle variant - vertical direction
  */
 export const CircleVertical: Story = {
   args: {
-    variant: 'circle',
-    direction: 'vertical',
+    variant: "circle",
+    direction: "vertical",
   },
   render: (args) => (
     <div className="bg-black p-8">
       <SocialLinks {...args} />
     </div>
   ),
-}
+};
 
 /**
  * Inline variant (mobile menu style)
@@ -77,31 +77,31 @@ export const CircleVertical: Story = {
  */
 export const Inline: Story = {
   args: {
-    variant: 'inline',
-    size: 'lg',
+    variant: "inline",
+    size: "lg",
   },
   render: (args) => (
     <div className="bg-[#1E2024] p-8">
       <SocialLinks {...args} />
     </div>
   ),
-}
+};
 
 /**
  * Inline variant - vertical direction
  */
 export const InlineVertical: Story = {
   args: {
-    variant: 'inline',
-    size: 'lg',
-    direction: 'vertical',
+    variant: "inline",
+    size: "lg",
+    direction: "vertical",
   },
   render: (args) => (
     <div className="bg-[#1E2024] p-8">
       <SocialLinks {...args} />
     </div>
   ),
-}
+};
 
 /**
  * Different icon sizes (inline variant)
@@ -123,7 +123,7 @@ export const Sizes: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * Circle variant in different sizes
@@ -146,5 +146,4 @@ export const CircleSizes: Story = {
       </div>
     </div>
   ),
-}
-
+};

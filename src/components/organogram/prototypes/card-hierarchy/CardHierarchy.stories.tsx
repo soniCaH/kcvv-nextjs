@@ -6,7 +6,7 @@ import type { OrgChartNode } from "@/types/organogram";
 import { clubStructure } from "@/data/club-structure";
 
 const meta: Meta<typeof CardHierarchy> = {
-  title: "Organogram/Views/CardHierarchy",
+  title: "Features/Organogram/CardHierarchy",
   component: CardHierarchy,
   parameters: {
     layout: "padded",

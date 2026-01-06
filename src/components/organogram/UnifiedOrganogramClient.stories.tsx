@@ -17,7 +17,7 @@ import { clubStructure } from "@/data/club-structure";
  * - Member details modal
  */
 const meta = {
-  title: "Organogram/UnifiedOrganogram",
+  title: "Features/Organogram/UnifiedOrganogram",
   component: UnifiedOrganogramClient,
   parameters: {
     layout: "fullscreen",

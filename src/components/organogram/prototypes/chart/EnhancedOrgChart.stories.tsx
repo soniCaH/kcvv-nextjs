@@ -6,7 +6,7 @@ import type { OrgChartNode } from "@/types/organogram";
 import { clubStructure } from "@/data/club-structure";
 
 const meta: Meta<typeof EnhancedOrgChart> = {
-  title: "Organogram/Views/InteractiveChart",
+  title: "Features/Organogram/InteractiveChart",
   component: EnhancedOrgChart,
   parameters: {
     layout: "padded",

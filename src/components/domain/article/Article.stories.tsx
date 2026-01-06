@@ -3,30 +3,30 @@
  * Complete article page combining all article components
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   ArticleHeader,
   ArticleMetadata,
   ArticleBody,
   ArticleFooter,
-} from './index'
+} from "./index";
 
 const meta = {
-  title: 'Domain/Article/Complete Article Page',
+  title: "Pages/Article",
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
     docs: {
       description: {
         component:
-          'Complete article page combining ArticleHeader, ArticleMetadata, ArticleBody, and ArticleFooter components. This demonstrates the full article layout as it appears on the website.',
+          "Complete article page combining ArticleHeader, ArticleMetadata, ArticleBody, and ArticleFooter components. This demonstrates the full article layout as it appears on the website.",
       },
     },
   },
-  tags: ['autodocs'],
-} satisfies Meta
+  tags: ["autodocs"],
+} satisfies Meta;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const sampleArticleContent = `
   <p>KCVV Elewijt heeft afgelopen weekend een indrukwekkende overwinning behaald tegen hun rivalen met een score van 3-1. Het team toonde uitstekende teamwork en determinatie gedurende de hele wedstrijd.</p>
@@ -62,7 +62,7 @@ const sampleArticleContent = `
   <p>Meer informatie over <a href="/team/a-ploeg">onze A-Ploeg</a> en de komende wedstrijden vind je op <a href="https://kcvvelewijt.be/calendar" target="_blank">onze kalender</a>.</p>
 
   <p><em><strong>💡 Tip:</strong> Hover over de afbeeldingen om ze te vergroten!</em></p>
-`
+`;
 
 /**
  * Default article page with all components
@@ -83,13 +83,16 @@ export const Default: Story = {
             author="Tom Redactie"
             date="15 januari 2025"
             tags={[
-              { name: 'A-Ploeg', href: '/news?category=a-ploeg' },
-              { name: 'Wedstrijdverslag', href: '/news?category=wedstrijdverslag' },
-              { name: 'Derby', href: '/news?category=derby' },
+              { name: "A-Ploeg", href: "/news?category=a-ploeg" },
+              {
+                name: "Wedstrijdverslag",
+                href: "/news?category=wedstrijdverslag",
+              },
+              { name: "Derby", href: "/news?category=derby" },
             ]}
             shareConfig={{
-              url: 'https://kcvvelewijt.be/news/overwinning-derby',
-              title: 'KCVV Elewijt wint met 3-1 in spannende derby',
+              url: "https://kcvvelewijt.be/news/overwinning-derby",
+              title: "KCVV Elewijt wint met 3-1 in spannende derby",
             }}
           />
         </aside>
@@ -103,19 +106,19 @@ export const Default: Story = {
       <ArticleFooter
         relatedContent={[
           {
-            title: 'Volgende wedstrijd: KCVV Elewijt vs SK Wolvertem',
-            href: '/news/volgende-wedstrijd',
-            type: 'article',
+            title: "Volgende wedstrijd: KCVV Elewijt vs SK Wolvertem",
+            href: "/news/volgende-wedstrijd",
+            type: "article",
           },
           {
-            title: 'Jan Janssens - Speler van de Maand',
-            href: '/player/jan-janssens',
-            type: 'player',
+            title: "Jan Janssens - Speler van de Maand",
+            href: "/player/jan-janssens",
+            type: "player",
           },
           {
-            title: 'A-Ploeg Teaminfo',
-            href: '/team/a-ploeg',
-            type: 'team',
+            title: "A-Ploeg Teaminfo",
+            href: "/team/a-ploeg",
+            type: "team",
           },
         ]}
       />
@@ -131,7 +134,7 @@ export const Default: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * Article without image - uses simple header
@@ -153,12 +156,12 @@ export const WithoutImage: Story = {
             author="Club Secretariaat"
             date="20 december 2024"
             tags={[
-              { name: 'Training', href: '/news?category=training' },
-              { name: 'Algemeen', href: '/news?category=algemeen' },
+              { name: "Training", href: "/news?category=training" },
+              { name: "Algemeen", href: "/news?category=algemeen" },
             ]}
             shareConfig={{
-              url: 'https://kcvvelewijt.be/news/trainingsschema',
-              title: 'Trainingsschema aangepast voor winterstop',
+              url: "https://kcvvelewijt.be/news/trainingsschema",
+              title: "Trainingsschema aangepast voor winterstop",
             }}
           />
         </aside>
@@ -176,20 +179,20 @@ export const WithoutImage: Story = {
       <ArticleFooter
         relatedContent={[
           {
-            title: 'Winterstop: Wat je moet weten',
-            href: '/news/winterstop-info',
-            type: 'article',
+            title: "Winterstop: Wat je moet weten",
+            href: "/news/winterstop-info",
+            type: "article",
           },
           {
-            title: 'Hoofdtrainer John Doe',
-            href: '/staff/john-doe',
-            type: 'staff',
+            title: "Hoofdtrainer John Doe",
+            href: "/staff/john-doe",
+            type: "staff",
           },
         ]}
       />
     </div>
   ),
-}
+};
 
 /**
  * Long article with multiple sections
@@ -209,13 +212,17 @@ export const LongArticle: Story = {
             author="Marc Analyse"
             date="18 december 2024"
             tags={[
-              { name: 'A-Ploeg', href: '/news?category=a-ploeg' },
-              { name: 'Analyse', href: '/news?category=analyse' },
-              { name: 'Seizoen 2024-2025', href: '/news?category=seizoen-2024-2025' },
+              { name: "A-Ploeg", href: "/news?category=a-ploeg" },
+              { name: "Analyse", href: "/news?category=analyse" },
+              {
+                name: "Seizoen 2024-2025",
+                href: "/news?category=seizoen-2024-2025",
+              },
             ]}
             shareConfig={{
-              url: 'https://kcvvelewijt.be/news/seizoensoverzicht',
-              title: 'Seizoensoverzicht 2024-2025: Een analyse van onze prestaties',
+              url: "https://kcvvelewijt.be/news/seizoensoverzicht",
+              title:
+                "Seizoensoverzicht 2024-2025: Een analyse van onze prestaties",
             }}
           />
         </aside>
@@ -257,30 +264,30 @@ export const LongArticle: Story = {
       <ArticleFooter
         relatedContent={[
           {
-            title: 'Topscorer Jan Janssens: 18 doelpunten',
-            href: '/player/jan-janssens',
-            type: 'player',
+            title: "Topscorer Jan Janssens: 18 doelpunten",
+            href: "/player/jan-janssens",
+            type: "player",
           },
           {
-            title: 'Trainer reflecteert op eerste seizoenshelft',
-            href: '/news/trainer-reflectie',
-            type: 'article',
+            title: "Trainer reflecteert op eerste seizoenshelft",
+            href: "/news/trainer-reflectie",
+            type: "article",
           },
           {
-            title: 'A-Ploeg Selectie 2024-2025',
-            href: '/team/a-ploeg',
-            type: 'team',
+            title: "A-Ploeg Selectie 2024-2025",
+            href: "/team/a-ploeg",
+            type: "team",
           },
           {
-            title: 'Jeugdwerking ook succesvol',
-            href: '/news/jeugd-succes',
-            type: 'article',
+            title: "Jeugdwerking ook succesvol",
+            href: "/news/jeugd-succes",
+            type: "article",
           },
         ]}
       />
     </div>
   ),
-}
+};
 
 /**
  * Mobile viewport preview
@@ -289,10 +296,10 @@ export const MobileView: Story = {
   ...Default,
   parameters: {
     viewport: {
-      defaultViewport: 'mobile1',
+      defaultViewport: "mobile1",
     },
   },
-}
+};
 
 /**
  * Tablet viewport preview
@@ -301,7 +308,7 @@ export const TabletView: Story = {
   ...Default,
   parameters: {
     viewport: {
-      defaultViewport: 'tablet',
+      defaultViewport: "tablet",
     },
   },
-}
+};

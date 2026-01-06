@@ -5,7 +5,7 @@ import type { DepartmentFilterProps } from "./types";
 import type { OrgChartNode } from "@/types/organogram";
 
 const meta: Meta<typeof DepartmentFilter> = {
-  title: "Organogram/Components/DepartmentFilter",
+  title: "Components/Organogram/DepartmentFilter",
   component: DepartmentFilter,
   parameters: {
     layout: "padded",
