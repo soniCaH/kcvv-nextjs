@@ -18,15 +18,18 @@ import { FilterTabs, type FilterTab } from "@/components/ui/FilterTabs";
 import type { DepartmentFilterProps } from "./types";
 
 /**
- * DepartmentFilter - Filter by department with member counts
+ * Render a department filter as tabs with optional member counts.
  *
- * @param value - Current active department
- * @param onChange - Change handler
- * @param members - All members (for counting)
- * @param showCounts - Show member counts
- * @param variant - DEPRECATED: Use size prop instead (kept for backward compatibility)
- * @param size - Size variant (sm | md | lg)
- * @param className - Additional CSS classes
+ * Computes counts for the three tabs: "Alle" (total members), "Hoofdbestuur" (members whose department is "hoofdbestuur" or "general"), and "Jeugdbestuur" (members whose department is "jeugdbestuur").
+ *
+ * @param value - The currently active department key ("all" | "hoofdbestuur" | "jeugdbestuur")
+ * @param onChange - Called when the active tab changes with the new department key
+ * @param members - Array of members used to derive per-tab counts
+ * @param showCounts - Whether to display member counts next to each tab
+ * @param variant - DEPRECATED: legacy prop kept for backward compatibility; use `size` instead
+ * @param size - Size variant for the tabs ("sm" | "md" | "lg")
+ * @param className - Additional CSS class names applied to the tabs container
+ * @returns The FilterTabs element configured for department filtering
  */
 export function DepartmentFilter({
   value,

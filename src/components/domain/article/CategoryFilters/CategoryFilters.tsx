@@ -31,15 +31,18 @@ interface CategoryFiltersProps {
 }
 
 /**
- * Render a horizontally scrollable list of news category filters
- * with left/right scroll controls and active-category highlighting.
+ * Render a horizontally scrollable set of category filter tabs for the news listing.
  *
- * @param categories - Array of category objects
- * @param activeCategory - Slug of the currently active category
- * @param size - Size variant (sm | md | lg)
- * @param showCounts - Show article counts (future enhancement)
- * @param renderAsLinks - Render as Next.js links (true) or buttons (false)
- * @param onChange - Change handler for button mode
+ * Converts the provided categories into tabs (including a default "Alles" tab) and delegates
+ * rendering and navigation to the shared FilterTabs component.
+ *
+ * @param categories - Array of category objects to create tabs from
+ * @param activeCategory - Slug of the currently active category; defaults to `"all"` when not provided
+ * @param size - Visual size variant for the tabs (`"sm" | "md" | "lg"`)
+ * @param showCounts - Whether to display article counts for each category
+ * @param renderAsLinks - When `true`, tabs render as links with hrefs; when `false`, tabs render as interactive buttons
+ * @param onChange - Callback invoked with the selected category slug when `renderAsLinks` is `false`
+ * @returns A React element containing the category filter tabs
  */
 export function CategoryFilters({
   categories,

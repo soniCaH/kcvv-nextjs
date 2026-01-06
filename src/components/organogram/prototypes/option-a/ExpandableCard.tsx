@@ -35,16 +35,19 @@ export interface ExpandableCardProps {
 }
 
 /**
- * ExpandableCard - Single card with expand/collapse for hierarchy
+ * Render a member card that can expand or collapse to show its direct reports.
  *
- * @param member - The member to display
- * @param directReports - Direct reports of this member
- * @param depth - Nesting depth (0 = root)
- * @param isExpanded - Controlled expanded state
- * @param onToggle - Toggle handler (memberId, newState)
- * @param onMemberClick - Click handler for member card
- * @param renderChildren - Function to render nested direct reports
- * @param className - Additional CSS classes
+ * Renders a depth-indented ContactCard for `member` with an optional expand/collapse control when `directReports` are present; expansion can be controlled via `onToggle`/`isExpanded` or managed internally. When expanded, nested children are rendered either by `renderChildren` or as a fallback list of names.
+ *
+ * @param member - The OrgChartNode to display in the card
+ * @param directReports - Array of direct report nodes for this member
+ * @param depth - Nesting depth where 0 is the root (affects indentation and background)
+ * @param isExpanded - Controlled expanded state (used when `onToggle` is provided)
+ * @param onToggle - Optional handler invoked with `(memberId, newState)` when expansion is toggled; presence of this prop enables controlled mode
+ * @param onMemberClick - Optional click handler forwarded to the ContactCard
+ * @param renderChildren - Optional function `(children, nextDepth) => ReactNode` to custom-render nested direct reports
+ * @param className - Optional additional CSS classes applied to the root container
+ * @returns A JSX element containing the member card and its optionally rendered nested children
  */
 export function ExpandableCard({
   member,

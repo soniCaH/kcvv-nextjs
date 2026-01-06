@@ -19,13 +19,17 @@ import { useState } from "react";
 import type { ContactQuickActionsProps } from "./types";
 
 /**
- * ContactQuickActions - Display inline contact action buttons
+ * Render inline contact action buttons for email, phone, and WhatsApp.
  *
- * @param email - Email address
- * @param phone - Phone number
- * @param name - Name for ARIA labels and tooltips
- * @param size - Button size (sm | md | lg)
- * @param className - Additional CSS classes
+ * Renders one or more circular action buttons (email, phone, WhatsApp) with accessible labels,
+ * tooltips, and context-menu copy-to-clipboard behavior; returns nothing when neither email nor phone is provided.
+ *
+ * @param email - Optional email address shown in the email action and tooltip; right-click copies it to clipboard
+ * @param phone - Optional phone number shown in the phone action and tooltip; right-click copies it to clipboard
+ * @param name - Display name used in ARIA labels for each action (e.g., "Email {name}", "Bel {name}")
+ * @param size - Visual size variant for buttons and icons; one of `"sm" | "md" | "lg"` (default: `"md"`)
+ * @param className - Additional CSS classes applied to the actions container
+ * @returns The action buttons JSX (or `null` if neither `email` nor `phone` is provided)
  */
 export function ContactQuickActions({
   email,

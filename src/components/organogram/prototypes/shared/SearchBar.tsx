@@ -21,16 +21,19 @@ import type { OrgChartNode } from "@/types/organogram";
 import type { SearchBarProps, SearchResult } from "./types";
 
 /**
- * SearchBar - Searchable input with autocomplete
+ * Render a searchable input with an optional autocomplete dropdown for selecting org chart members.
  *
- * @param value - Current search value
- * @param onChange - Change handler
- * @param members - Available members to search
- * @param placeholder - Placeholder text
- * @param showAutocomplete - Show autocomplete dropdown
- * @param maxResults - Max autocomplete results
- * @param onSelect - Select handler for autocomplete
- * @param className - Additional CSS classes
+ * Performs a fuzzy search over the provided members and displays scored results with keyboard and mouse navigation.
+ *
+ * @param value - Current text in the search input
+ * @param onChange - Called when the input value changes
+ * @param members - Array of members to search through
+ * @param placeholder - Input placeholder text (default: "Zoek persoon of functie...")
+ * @param showAutocomplete - Whether to show the autocomplete dropdown (default: true)
+ * @param maxResults - Maximum number of results to display in the dropdown (default: 6)
+ * @param onSelect - Called with the selected member when a result is chosen
+ * @param className - Additional CSS class names applied to the component container
+ * @returns The SearchBar UI element ready to be rendered in a React tree
  */
 export function SearchBar({
   value,
