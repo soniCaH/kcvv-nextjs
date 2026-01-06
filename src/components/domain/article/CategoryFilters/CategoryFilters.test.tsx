@@ -234,11 +234,17 @@ describe("CategoryFilters", () => {
       // The tabs should render but without count badges
       const tabs = screen.getAllByRole("tab");
       expect(tabs.length).toBe(4); // All + 3 categories
+
+      // Verify no count badge elements are rendered
+      // Count badges would appear as separate elements within tab labels
+      tabs.forEach((tab) => {
+        const textContent = tab.textContent || "";
+        // Tab should only contain the label text, no numbers
+        expect(textContent).not.toMatch(/\d+/);
+      });
     });
 
     it("should not show count badges when showCounts is false", () => {
-      // Note: CategoryFilters doesn't include counts in tabs by default
-      // This test verifies the default behavior
       render(
         <CategoryFilters
           categories={categoriesWithCounts}
@@ -249,25 +255,30 @@ describe("CategoryFilters", () => {
       // Count values should not appear in the document
       expect(screen.queryByText("15")).not.toBeInTheDocument();
       expect(screen.queryByText("8")).not.toBeInTheDocument();
+
+      // Verify tabs don't contain any numeric values
+      const tabs = screen.getAllByRole("tab");
+      tabs.forEach((tab) => {
+        const textContent = tab.textContent || "";
+        expect(textContent).not.toMatch(/\d+/);
+      });
     });
 
-    it("should show count badges when showCounts is true", () => {
-      // Note: CategoryFilters would need to include counts in the tabs array
-      // for counts to actually display. This test documents expected behavior
-      // when counts are provided in the future.
+    it("should not show count badges even when showCounts is true", () => {
+      // Note: CategoryFilters currently doesn't include counts in the tabs array,
+      // so even with showCounts={true}, no counts are displayed.
+      // This test verifies the current behavior.
       render(
         <CategoryFilters categories={categoriesWithCounts} showCounts={true} />,
       );
 
-      // Since CategoryFilters doesn't currently pass counts to tabs,
-      // verify the component renders without errors
+      // Count values should not appear since CategoryFilters doesn't pass them to tabs
+      expect(screen.queryByText("15")).not.toBeInTheDocument();
+      expect(screen.queryByText("8")).not.toBeInTheDocument();
+
+      // Verify component renders successfully
       const tablist = screen.getByRole("tablist");
       expect(tablist).toBeInTheDocument();
-
-      // When counts are added to the tabs array in the future,
-      // these assertions should pass:
-      // expect(screen.getByText("15")).toBeInTheDocument();
-      // expect(screen.getByText("8")).toBeInTheDocument();
     });
   });
 
