@@ -1,0 +1,515 @@
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { useState } from "react";
+import { SearchBar } from "./SearchBar";
+import type { SearchBarProps } from "./types";
+import type { OrgChartNode } from "@/types/organogram";
+
+const meta: Meta<typeof SearchBar> = {
+  title: "Organogram/Prototypes/Shared/SearchBar",
+  component: SearchBar,
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component: `
+**SearchBar** - Unified search with fuzzy matching and autocomplete
+
+**Features:**
+- 🔍 Fuzzy search by name, title, position, email, department
+- 📊 Scoring algorithm for relevance ranking
+- ⌨️ Keyboard navigation (Arrow keys, Enter, Escape)
+- 🎯 Autocomplete dropdown with visual match indicators
+- ✨ Click-outside to close
+- 🧹 Clear button
+
+**Keyboard Shortcuts:**
+- \`Arrow Down/Up\`: Navigate results
+- \`Enter\`: Select highlighted result
+- \`Escape\`: Close dropdown or clear search
+
+**Search Algorithm:**
+- Name match: 10 points (+5 if starts with query)
+- Title match: 8 points
+- Position match: 7 points
+- Email match: 5 points
+- Department match: 3 points
+        `,
+      },
+    },
+  },
+  tags: ["autodocs"],
+  argTypes: {
+    value: {
+      control: "text",
+      description: "Current search value",
+    },
+    placeholder: {
+      control: "text",
+      description: "Placeholder text",
+    },
+    showAutocomplete: {
+      control: "boolean",
+      description: "Show autocomplete dropdown",
+    },
+    maxResults: {
+      control: "number",
+      description: "Max autocomplete results",
+    },
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof SearchBar>;
+
+// Mock Data
+const mockMembers: OrgChartNode[] = [
+  {
+    id: "1",
+    name: "Jan Janssens",
+    title: "Voorzitter Hoofdbestuur",
+    positionShort: "PRES",
+    email: "jan.janssens@kcvvelewijt.be",
+    department: "hoofdbestuur",
+    imageUrl:
+      "https://ui-avatars.com/api/?name=Jan+Janssens&background=4acf52&color=fff",
+    parentId: null,
+  },
+  {
+    id: "2",
+    name: "Marie Peeters",
+    title: "Secretaris Jeugdbestuur",
+    positionShort: "JSEC",
+    email: "marie.peeters@kcvvelewijt.be",
+    department: "jeugdbestuur",
+    imageUrl:
+      "https://ui-avatars.com/api/?name=Marie+Peeters&background=random",
+    parentId: null,
+  },
+  {
+    id: "3",
+    name: "Tom Vermeulen",
+    title: "Trainer U10",
+    positionShort: "T-U10",
+    email: "tom.vermeulen@kcvvelewijt.be",
+    department: "jeugdbestuur",
+    parentId: null,
+  },
+  {
+    id: "4",
+    name: "Els Van de Broek",
+    title: "Coördinator Jeugdwerking",
+    positionShort: "COORD",
+    email: "els.vandebroek@kcvvelewijt.be",
+    department: "jeugdbestuur",
+    parentId: null,
+  },
+  {
+    id: "5",
+    name: "Peter Janssens",
+    title: "Penningmeester Hoofdbestuur",
+    positionShort: "PM",
+    email: "peter.janssens@kcvvelewijt.be",
+    department: "hoofdbestuur",
+    parentId: null,
+  },
+  {
+    id: "6",
+    name: "Anna De Vries",
+    title: "Trainer U13",
+    positionShort: "T-U13",
+    email: "anna.devries@kcvvelewijt.be",
+    department: "jeugdbestuur",
+    parentId: null,
+  },
+  {
+    id: "7",
+    name: "Dirk Smits",
+    title: "Technisch Coördinator",
+    positionShort: "TC",
+    email: "dirk.smits@kcvvelewijt.be",
+    department: "hoofdbestuur",
+    parentId: null,
+  },
+  {
+    id: "8",
+    name: "Sarah Willems",
+    title: "Jeugdcoördinator",
+    positionShort: "JC",
+    email: "sarah.willems@kcvvelewijt.be",
+    department: "jeugdbestuur",
+    parentId: null,
+  },
+];
+
+// ==================== CONTROLLED COMPONENT WRAPPER ====================
+
+const SearchBarWithState = (args: Partial<SearchBarProps>) => {
+  const [value, setValue] = useState((args.value as string) || "");
+
+  return (
+    <SearchBar
+      members={args.members || []}
+      placeholder={args.placeholder}
+      showAutocomplete={args.showAutocomplete ?? true}
+      maxResults={args.maxResults}
+      className={args.className}
+      value={value}
+      onChange={setValue}
+      onSelect={(member) => {
+        args.onSelect?.(member);
+        console.log("Selected:", member);
+        alert(`Selected: ${member.name} - ${member.title}`);
+      }}
+    />
+  );
+};
+
+// ==================== DEFAULT STORIES ====================
+
+export const Default: Story = {
+  render: SearchBarWithState,
+  args: {
+    members: mockMembers,
+    showAutocomplete: true,
+    maxResults: 6,
+  },
+};
+
+export const WithInitialValue: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "Jan",
+    members: mockMembers,
+    showAutocomplete: true,
+  },
+};
+
+export const CustomPlaceholder: Story = {
+  render: SearchBarWithState,
+  args: {
+    members: mockMembers,
+    placeholder: "Typ een naam, functie of afdeling...",
+    showAutocomplete: true,
+  },
+};
+
+// ==================== AUTOCOMPLETE VARIATIONS ====================
+
+export const WithAutocomplete: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "Jan",
+    members: mockMembers,
+    showAutocomplete: true,
+    maxResults: 6,
+  },
+};
+
+export const WithoutAutocomplete: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "Jan",
+    members: mockMembers,
+    showAutocomplete: false,
+  },
+};
+
+export const LimitedResults: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "a",
+    members: mockMembers,
+    showAutocomplete: true,
+    maxResults: 3,
+  },
+};
+
+// ==================== SEARCH SCENARIOS ====================
+
+export const SearchByName: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "jan",
+    members: mockMembers,
+    showAutocomplete: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Searching by name 'jan' finds both Jan Janssens and Peter Janssens",
+      },
+    },
+  },
+};
+
+export const SearchByTitle: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "trainer",
+    members: mockMembers,
+    showAutocomplete: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Searching by title 'trainer' finds all trainers",
+      },
+    },
+  },
+};
+
+export const SearchByDepartment: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "jeugd",
+    members: mockMembers,
+    showAutocomplete: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Searching by department 'jeugd' finds all youth board members",
+      },
+    },
+  },
+};
+
+export const SearchByEmail: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "@kcvv",
+    members: mockMembers,
+    showAutocomplete: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Searching by email domain finds all members with that domain",
+      },
+    },
+  },
+};
+
+export const PartialMatch: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "coord",
+    members: mockMembers,
+    showAutocomplete: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Partial match 'coord' finds both Coördinator Jeugdwerking and Technisch Coördinator",
+      },
+    },
+  },
+};
+
+// ==================== NO RESULTS ====================
+
+export const NoResults: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "xyz123",
+    members: mockMembers,
+    showAutocomplete: true,
+  },
+};
+
+export const EmptyMembers: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "jan",
+    members: [],
+    showAutocomplete: true,
+  },
+};
+
+// ==================== MOBILE VIEWPORT ====================
+
+export const Mobile: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "jan",
+    members: mockMembers,
+    showAutocomplete: true,
+  },
+  parameters: {
+    viewport: {
+      defaultViewport: "mobile1",
+    },
+  },
+};
+
+// ==================== INTEGRATION EXAMPLES ====================
+
+export const InPageHeader: Story = {
+  render: () => {
+    const [value, setValue] = useState("");
+
+    return (
+      <div className="bg-gradient-to-br from-kcvv-green to-kcvv-green-hover p-8 rounded-lg">
+        <h1
+          className="text-3xl font-bold text-white mb-4"
+          style={{
+            fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+          }}
+        >
+          Organogram KCVV Elewijt
+        </h1>
+        <SearchBar
+          value={value}
+          onChange={setValue}
+          members={mockMembers}
+          placeholder="Zoek een bestuurslid..."
+          showAutocomplete={true}
+        />
+      </div>
+    );
+  },
+};
+
+export const WithFilters: Story = {
+  render: () => {
+    const [search, setSearch] = useState("");
+    const [department, setDepartment] = useState<
+      "all" | "hoofdbestuur" | "jeugdbestuur"
+    >("all");
+
+    const filteredMembers =
+      department === "all"
+        ? mockMembers
+        : mockMembers.filter((m) => m.department === department);
+
+    return (
+      <div className="space-y-4">
+        {/* Department Filter */}
+        <div className="flex gap-2">
+          {(
+            [
+              ["all", "Alle"],
+              ["hoofdbestuur", "Hoofdbestuur"],
+              ["jeugdbestuur", "Jeugdbestuur"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              onClick={() => setDepartment(value)}
+              className={`
+                px-4 py-2 rounded-lg font-medium transition-all
+                ${
+                  department === value
+                    ? "bg-kcvv-green text-white shadow-md"
+                    : "bg-gray-100 text-kcvv-gray-dark hover:bg-gray-200"
+                }
+              `}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          members={filteredMembers}
+          showAutocomplete={true}
+        />
+
+        {/* Results Count */}
+        <p className="text-sm text-kcvv-gray">
+          {filteredMembers.length} leden {search && `gevonden voor "${search}"`}
+        </p>
+      </div>
+    );
+  },
+};
+
+// ==================== KEYBOARD NAVIGATION ====================
+
+export const KeyboardNavigation: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "jan",
+    members: mockMembers,
+    showAutocomplete: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `
+**Try these keyboard shortcuts:**
+- Type to search
+- \`Arrow Down\` to navigate results
+- \`Arrow Up\` to go back
+- \`Enter\` to select
+- \`Escape\` to close or clear
+        `,
+      },
+    },
+  },
+};
+
+// ==================== ACCESSIBILITY ====================
+
+export const AccessibilityTest: Story = {
+  render: SearchBarWithState,
+  args: {
+    value: "jan",
+    members: mockMembers,
+    showAutocomplete: true,
+  },
+  parameters: {
+    a11y: {
+      config: {
+        rules: [
+          { id: "color-contrast", enabled: true },
+          { id: "label", enabled: true },
+          { id: "aria-required-attr", enabled: true },
+          { id: "aria-valid-attr-value", enabled: true },
+        ],
+      },
+    },
+  },
+};
+
+// ==================== LARGE DATASET ====================
+
+export const LargeDataset: Story = {
+  render: () => {
+    const [value, setValue] = useState("");
+
+    // Generate 50 mock members
+    const largeMemberList: OrgChartNode[] = Array.from(
+      { length: 50 },
+      (_, i) => ({
+        id: `member-${i}`,
+        name: `Member ${i + 1}`,
+        title: `Position ${i + 1}`,
+        positionShort: `P${i}`,
+        email: `member${i}@kcvvelewijt.be`,
+        department: i % 2 === 0 ? "hoofdbestuur" : "jeugdbestuur",
+        parentId: null,
+      }),
+    );
+
+    return (
+      <div className="space-y-4">
+        <SearchBar
+          value={value}
+          onChange={setValue}
+          members={largeMemberList}
+          showAutocomplete={true}
+          maxResults={10}
+        />
+        <p className="text-sm text-kcvv-gray">
+          Dataset: 50 members (showing max 10 results)
+        </p>
+      </div>
+    );
+  },
+};
