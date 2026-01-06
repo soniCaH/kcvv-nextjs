@@ -63,6 +63,10 @@ import {
   // Business
   Handshake,
 
+  // Layout & Views
+  LayoutGrid,
+  Network,
+
   // Misc
   Plus,
   Zap,
@@ -128,6 +132,10 @@ export const icons = {
 
   // Business
   handshake: Handshake,
+
+  // Layout & Views
+  "layout-grid": LayoutGrid,
+  network: Network,
 
   // Misc
   plus: Plus,
@@ -241,6 +249,10 @@ export {
 
   // Business
   Handshake,
+
+  // Layout & Views
+  LayoutGrid,
+  Network,
 
   // Misc
   Plus,

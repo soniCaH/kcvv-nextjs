@@ -16,6 +16,7 @@
  */
 
 import { useState } from "react";
+import { LayoutGrid, Network, CircleHelp } from "@/lib/icons";
 import { CardHierarchy } from "./prototypes/option-a/CardHierarchy";
 import { EnhancedOrgChart } from "./prototypes/option-c/EnhancedOrgChart";
 import { ResponsibilityFinder } from "../responsibility/ResponsibilityFinder";
@@ -99,15 +100,18 @@ export function UnifiedOrganogramClient({
   const viewTabs: FilterTab[] = [
     {
       value: "cards",
-      label: "📋 Kaarten",
+      label: "Kaarten",
+      icon: LayoutGrid,
     },
     {
       value: "chart",
-      label: "📊 Diagram",
+      label: "Diagram",
+      icon: Network,
     },
     {
       value: "responsibilities",
-      label: "❓ Hulp",
+      label: "Hulp",
+      icon: CircleHelp,
     },
   ];
 

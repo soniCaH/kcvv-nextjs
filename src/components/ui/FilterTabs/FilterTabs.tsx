@@ -22,7 +22,7 @@
  */
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight } from "@/lib/icons";
+import { ChevronLeft, ChevronRight, type LucideIcon } from "@/lib/icons";
 
 export interface FilterTab {
   /** Unique identifier */
@@ -33,6 +33,8 @@ export interface FilterTab {
   count?: number;
   /** Optional custom href (for Link-based tabs) */
   href?: string;
+  /** Optional Lucide icon component */
+  icon?: LucideIcon;
 }
 
 export interface FilterTabsProps {
@@ -168,9 +170,19 @@ export function FilterTabs({
       focus:outline-none
     `;
 
+    const IconComponent = tab.icon;
+    const iconSize = size === "sm" ? 16 : size === "lg" ? 20 : 18;
+
     const content = (
       <>
-        {tab.label}
+        {IconComponent && (
+          <IconComponent
+            size={iconSize}
+            className="flex-shrink-0"
+            aria-hidden="true"
+          />
+        )}
+        <span className={IconComponent ? "ml-2" : ""}>{tab.label}</span>
         {showCounts && typeof tab.count !== "undefined" && (
           <span
             className={`
