@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { useState } from "react";
-import { CardHierarchy } from "../option-a/CardHierarchy";
-import { EnhancedOrgChart } from "../option-c/EnhancedOrgChart";
+import { CardHierarchy } from "../card-hierarchy/CardHierarchy";
+import { EnhancedOrgChart } from "../chart/EnhancedOrgChart";
 import type { OrgChartNode } from "@/types/organogram";
 import { clubStructure } from "@/data/club-structure";
 

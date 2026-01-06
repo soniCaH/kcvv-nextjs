@@ -33,7 +33,7 @@ import { Download } from "lucide-react";
 import { SearchBar } from "../shared/SearchBar";
 import { DepartmentFilter } from "../shared/DepartmentFilter";
 import { HierarchyLevel } from "./HierarchyLevel";
-import { renderNode, type NodeData } from "../option-c/NodeRenderer";
+import { renderNode, type NodeData } from "../chart/NodeRenderer";
 import type { OrgChartNode } from "@/types/organogram";
 
 export interface CardHierarchyProps {

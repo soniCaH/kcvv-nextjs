@@ -19,8 +19,8 @@
 
 import { useState } from "react";
 import { LayoutGrid, Network, CircleHelp } from "@/lib/icons";
-import { CardHierarchy } from "./prototypes/option-a/CardHierarchy";
-import { EnhancedOrgChart } from "./prototypes/option-c/EnhancedOrgChart";
+import { CardHierarchy } from "./prototypes/card-hierarchy/CardHierarchy";
+import { EnhancedOrgChart } from "./prototypes/chart/EnhancedOrgChart";
 import { ResponsibilityFinder } from "../responsibility/ResponsibilityFinder";
 import { MemberDetailsModal } from "./MemberDetailsModal";
 import { FilterTabs } from "../ui/FilterTabs";
