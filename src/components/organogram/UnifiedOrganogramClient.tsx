@@ -100,7 +100,7 @@ export function UnifiedOrganogramClient({
   const viewTabs: FilterTab[] = [
     {
       value: "cards",
-      label: "Kaarten",
+      label: "Overzicht",
       icon: LayoutGrid,
     },
     {
@@ -149,7 +149,13 @@ export function UnifiedOrganogramClient({
       </div>
 
       {/* Active View */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div
+        className={`bg-white rounded-xl shadow-sm border border-gray-200 ${
+          activeView === "responsibilities"
+            ? "overflow-visible"
+            : "overflow-hidden"
+        }`}
+      >
         {activeView === "cards" && (
           <CardHierarchy
             members={members}
