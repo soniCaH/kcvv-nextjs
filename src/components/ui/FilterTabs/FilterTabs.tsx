@@ -55,16 +55,17 @@ export interface FilterTabsProps {
 }
 
 /**
- * FilterTabs - Unified filter component
+ * Render a horizontally scrollable set of filter tabs with optional count badges, size variants, and arrow navigation.
  *
- * @param tabs - Array of filter tab options
- * @param activeTab - Currently active tab value
- * @param onChange - Change handler
- * @param size - Size variant (sm | md | lg)
- * @param showCounts - Show count badges
- * @param className - Additional CSS classes
- * @param ariaLabel - Accessibility label
- * @param renderAsLinks - Render as <a> tags instead of buttons
+ * @param tabs - Array of tab options; each item should include `value`, `label`, and optional `count` and `href`
+ * @param activeTab - The `value` of the currently active tab
+ * @param onChange - Callback invoked with a tab's `value` when a non-link tab is activated
+ * @param size - Visual size variant: `"sm" | "md" | "lg"` (default: `"md"`)
+ * @param showCounts - Whether to display per-tab numeric badges (default: `true`)
+ * @param className - Additional CSS classes applied to the root container
+ * @param ariaLabel - Accessible label for the tablist (default: `"Filter tabs"`)
+ * @param renderAsLinks - If `true`, tabs with `href` are rendered as anchor elements instead of buttons
+ * @returns The rendered filter tabs React element
  */
 export function FilterTabs({
   tabs,

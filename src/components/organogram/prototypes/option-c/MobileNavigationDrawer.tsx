@@ -32,13 +32,15 @@ export interface MobileNavigationDrawerProps {
 }
 
 /**
- * MobileNavigationDrawer - Bottom sheet for mobile org chart navigation
+ * Render a mobile bottom-sheet drawer for navigating and selecting organization members.
  *
- * @param members - All organization members
- * @param isOpen - Whether drawer is open
- * @param onClose - Close handler
- * @param onMemberSelect - Member selection handler (centers/zooms to member)
- * @param className - Additional CSS classes
+ * Includes a search input, department filter, and a scrollable list of members; selecting a member invokes `onMemberSelect` and closes the drawer.
+ *
+ * @param members - All organization members to display and filter
+ * @param isOpen - Whether the drawer is visible
+ * @param onClose - Callback invoked to close the drawer
+ * @param onMemberSelect - Callback invoked with the selected member (should center/zoom to that member)
+ * @param className - Optional additional CSS classes applied to the drawer container
  */
 export function MobileNavigationDrawer({
   members,

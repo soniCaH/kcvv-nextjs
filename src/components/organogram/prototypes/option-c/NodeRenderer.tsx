@@ -23,11 +23,11 @@ export interface NodeData extends OrgChartNode {
 }
 
 /**
- * Renders a d3-org-chart node as an HTML string
+ * Render an enhanced d3-organogram node card as an HTML string.
  *
- * @param node - The node data
- * @param hasChildren - Whether the node has children
- * @returns HTML string for the node
+ * @param node - Node data to render; may include `imageUrl`, `name`, `title`, `positionShort`, and `_expanded` to indicate expansion state
+ * @param hasChildren - Whether the node has child nodes; when `true` an expand/collapse indicator is included
+ * @returns An HTML string representing the rendered node card
  */
 export function renderNode(node: NodeData, hasChildren: boolean): string {
   const imageUrl = node.imageUrl || "/images/logo-flat.png";
@@ -161,11 +161,11 @@ export function renderNode(node: NodeData, hasChildren: boolean): string {
 }
 
 /**
- * Renders a compact mobile node (smaller for mobile view)
+ * Render a compact node card used for mobile or condensed layouts.
  *
- * @param node - The node data
- * @param hasChildren - Whether the node has children
- * @returns HTML string for the compact node
+ * @param node - Node data to render (name, title, imageUrl, and optional _expanded)
+ * @param hasChildren - Whether to display an expand/collapse indicator
+ * @returns An HTML string representing the compact node card
  */
 export function renderCompactNode(
   node: NodeData,

@@ -31,14 +31,15 @@ export interface ContactOverlayProps {
 }
 
 /**
- * ContactOverlay - Quick contact actions overlay
+ * Render a floating contact overlay showing quick actions and summary information for a member.
  *
- * @param member - The member to show contact info for
- * @param position - Overlay position (x, y coordinates)
- * @param isVisible - Whether overlay is visible
- * @param onClose - Close handler
- * @param onViewDetails - View full details handler
- * @param className - Additional CSS classes
+ * @param member - Org chart node whose contact information is displayed
+ * @param position - Screen coordinates where the overlay should be positioned (x, y)
+ * @param isVisible - Controls whether the overlay is rendered
+ * @param onClose - Callback invoked to close the overlay
+ * @param onViewDetails - Optional callback invoked with `member` to view full details
+ * @param className - Optional additional CSS classes applied to the overlay container
+ * @returns The contact overlay element, or `null` when `isVisible` is false
  */
 export function ContactOverlay({
   member,

@@ -52,12 +52,13 @@ export interface EnhancedOrgChartProps {
 }
 
 /**
- * EnhancedOrgChart - Enhanced d3-org-chart with mobile improvements
+ * Render an enhanced, responsive organizational chart with search, department filters, mobile navigation, zoom/fit controls, expand/collapse, fullscreen, and image export.
  *
- * @param members - All organization members
- * @param onMemberClick - Click handler for member details
- * @param isLoading - Loading state
- * @param className - Additional CSS classes
+ * @param members - All organization members used to build the chart and resolve ancestor nodes for search results
+ * @param onMemberClick - Optional callback invoked with the selected member when a chart node is clicked
+ * @param isLoading - Optional flag that, when true, renders loading skeletons instead of the chart
+ * @param className - Optional additional CSS classes applied to the component container
+ * @returns The React element that renders the enhanced organizational chart UI
  */
 export function EnhancedOrgChart({
   members,

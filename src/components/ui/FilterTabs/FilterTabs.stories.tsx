@@ -84,7 +84,14 @@ const roleTabs: FilterTab[] = [
   { value: "volunteer", label: "Vrijwilliger" },
 ];
 
-// Interactive wrapper component
+/**
+ * Interactive story wrapper that renders FilterTabs and shows the currently selected tab.
+ *
+ * Forwards the provided FilterTabsProps to the FilterTabs component and manages selection state internally.
+ *
+ * @param args - Props forwarded to FilterTabs; when `args.activeTab` is not provided the first tab's `value` is used as the initial selection.
+ * @returns A JSX element containing the FilterTabs bound to internal state and a panel displaying the currently selected tab value.
+ */
 function InteractiveFilterTabs(args: FilterTabsProps) {
   const [activeTab, setActiveTab] = useState(
     args.activeTab || args.tabs[0].value,

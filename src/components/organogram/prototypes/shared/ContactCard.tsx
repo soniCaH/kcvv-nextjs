@@ -17,17 +17,18 @@ import { ChevronDown, ChevronUp } from "@/lib/icons";
 import type { ContactCardProps } from "./types";
 
 /**
- * ContactCard - Displays member information in a card format
+ * Render a member contact card with configurable layout, badges, quick actions, and an optional expand/collapse indicator.
  *
- * @param member - The member data to display
- * @param variant - Display variant (compact | detailed | grid)
- * @param showQuickActions - Whether to show inline email/phone actions
- * @param showDepartment - Whether to show department badge
- * @param showExpandIndicator - Whether to show expand/collapse indicator
- * @param isExpanded - Current expansion state (for hierarchy views)
- * @param onClick - Click handler
- * @param className - Additional CSS classes
- * @param testId - Test ID for testing
+ * @param member - Member data to display (name, title, imageUrl, email, phone, department, positionShort, and optional `_children`)
+ * @param variant - Layout variant: `"compact"`, `"detailed"`, or `"grid"`; controls sizing and typography
+ * @param showQuickActions - If true, show inline email and phone action links when available
+ * @param showDepartment - If true, show a department badge when `member.department` is present and not `"general"`
+ * @param showExpandIndicator - If true and the member has children, show an expand/collapse indicator
+ * @param isExpanded - Current expanded state used to choose the expand/collapse icon and hint text
+ * @param onClick - Optional click handler invoked with `member` when the card is activated (click, Enter, or Space)
+ * @param className - Additional CSS classes applied to the root element
+ * @param testId - Optional `data-testid` applied to the root element for testing
+ * @returns A React element rendering the contact card for the provided `member`
  */
 export function ContactCard({
   member,

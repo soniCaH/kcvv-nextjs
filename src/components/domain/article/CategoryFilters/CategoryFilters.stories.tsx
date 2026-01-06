@@ -24,7 +24,14 @@ const meta: Meta<typeof CategoryFilters> = {
 export default meta;
 type Story = StoryObj<typeof CategoryFilters>;
 
-// Interactive wrapper for Storybook
+/**
+ * Storybook wrapper that renders CategoryFilters with local, interactive category state.
+ *
+ * This component initializes the active category from `props.activeCategory` (or `"all"` if not provided), keeps it in local state, and passes an `onChange` handler that updates that state. It also forces `renderAsLinks` to `false` while forwarding all other props to `CategoryFilters`.
+ *
+ * @param props - Props forwarded to `CategoryFilters`; `activeCategory` is used as the initial selected category.
+ * @returns The `CategoryFilters` element wired for interactive state updates within Storybook.
+ */
 function InteractiveCategoryFilters(
   props: React.ComponentProps<typeof CategoryFilters>,
 ) {
