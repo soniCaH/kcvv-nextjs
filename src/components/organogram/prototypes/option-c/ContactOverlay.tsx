@@ -130,6 +130,7 @@ export function ContactOverlay({
         <div className="flex items-start gap-3 p-4 border-b border-gray-100">
           {/* Profile Image */}
           <div className="flex-shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={member.imageUrl || "/images/logo-flat.png"}
               alt={member.name}
