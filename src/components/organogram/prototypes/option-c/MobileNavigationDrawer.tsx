@@ -18,6 +18,7 @@
  */
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import { X } from "@/lib/icons";
 import { SearchBar } from "../shared/SearchBar";
 import { DepartmentFilter } from "../shared/DepartmentFilter";
@@ -53,6 +54,7 @@ export function MobileNavigationDrawer({
   const [activeDepartment, setActiveDepartment] = useState<
     "all" | "hoofdbestuur" | "jeugdbestuur"
   >("all");
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   // Filter by department
   const departmentFilteredMembers = useMemo(() => {
@@ -217,15 +219,22 @@ export function MobileNavigationDrawer({
                   >
                     {/* Profile Image */}
                     <div className="flex-shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={member.imageUrl || "/images/logo-flat.png"}
+                      <Image
+                        src={
+                          imageErrors[member.id]
+                            ? "/images/logo-flat.png"
+                            : member.imageUrl || "/images/logo-flat.png"
+                        }
                         alt={member.name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-kcvv-green"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/images/logo-flat.png";
-                        }}
+                        width={48}
+                        height={48}
+                        className="rounded-full object-cover border-2 border-kcvv-green"
+                        onError={() =>
+                          setImageErrors((prev) => ({
+                            ...prev,
+                            [member.id]: true,
+                          }))
+                        }
                       />
                     </div>
 

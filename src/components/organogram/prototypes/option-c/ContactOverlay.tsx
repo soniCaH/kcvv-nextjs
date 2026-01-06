@@ -16,7 +16,8 @@
  * - Click outside to close
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { X } from "@/lib/icons";
 import { ContactQuickActions } from "../shared/ContactQuickActions";
 import type { OrgChartNode } from "@/types/organogram";
@@ -50,6 +51,7 @@ export function ContactOverlay({
   className = "",
 }: ContactOverlayProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const [imageError, setImageError] = useState(false);
 
   // Handle click outside to close
   useEffect(() => {
@@ -130,15 +132,17 @@ export function ContactOverlay({
         <div className="flex items-start gap-3 p-4 border-b border-gray-100">
           {/* Profile Image */}
           <div className="flex-shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={member.imageUrl || "/images/logo-flat.png"}
+            <Image
+              src={
+                imageError
+                  ? "/images/logo-flat.png"
+                  : member.imageUrl || "/images/logo-flat.png"
+              }
               alt={member.name}
-              className="w-16 h-16 rounded-full object-cover border-2 border-kcvv-green"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = "/images/logo-flat.png";
-              }}
+              width={64}
+              height={64}
+              className="rounded-full object-cover border-2 border-kcvv-green"
+              onError={() => setImageError(true)}
             />
           </div>
 
