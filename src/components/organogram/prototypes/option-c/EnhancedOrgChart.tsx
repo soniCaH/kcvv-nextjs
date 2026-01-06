@@ -171,14 +171,20 @@ export function EnhancedOrgChart({
     }));
   }, [searchResults, members]);
 
-  // Initialize d3-org-chart
+  // Initialize d3-org-chart (only once or when mobile state changes)
   useEffect(() => {
     const containerElement = chartContainerRef.current;
-    if (!containerElement || chartData.length === 0) return;
+    if (!containerElement) return;
 
+    // Clear any existing chart
+    if (chartRef.current) {
+      containerElement.innerHTML = "";
+      chartRef.current = null;
+    }
+
+    // Create new chart instance
     const chart = new OrgChart<NodeData>()
       .container("#enhanced-org-chart-container")
-      .data(chartData)
       .nodeWidth(() => (isMobile ? 200 : 280))
       .nodeHeight(() => (isMobile ? 100 : 140))
       .childrenMargin(() => 50)
@@ -202,7 +208,6 @@ export function EnhancedOrgChart({
       });
 
     chartRef.current = chart;
-    chart.render();
 
     // Note: You may see "translate(NaN,NaN)" warnings in console during d3-org-chart's
     // initial layout calculations. These are harmless and don't affect functionality.
@@ -212,8 +217,17 @@ export function EnhancedOrgChart({
       if (containerElement) {
         containerElement.innerHTML = "";
       }
+      chartRef.current = null;
     };
-  }, [chartData, members, onMemberClick, isMobile]);
+  }, [members, onMemberClick, isMobile]);
+
+  // Update chart data when chartData changes
+  useEffect(() => {
+    if (!chartRef.current || chartData.length === 0) return;
+
+    // Update data and re-render
+    chartRef.current.data(chartData).render();
+  }, [chartData]);
 
   // Handle search selection - zoom to member
   const handleSearchSelect = (member: OrgChartNode) => {
