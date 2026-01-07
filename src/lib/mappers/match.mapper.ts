@@ -3,8 +3,8 @@
  * Transform match data between different formats
  */
 
-import type { Match } from '@/lib/effect/schemas/match.schema'
-import type { UpcomingMatch } from '@/components/domain/home/UpcomingMatches/UpcomingMatches'
+import type { Match } from "@/lib/effect/schemas/match.schema";
+import type { UpcomingMatch } from "@/components/home/UpcomingMatches/UpcomingMatches";
 
 /**
  * Fix team name capitalization
@@ -14,7 +14,7 @@ import type { UpcomingMatch } from '@/components/domain/home/UpcomingMatches/Upc
  * @returns Team name with proper capitalization
  */
 function normalizeTeamName(name: string): string {
-  return name.replace(/^Kcvv\b/i, 'KCVV')
+  return name.replace(/^Kcvv\b/i, "KCVV");
 }
 
 /**
@@ -44,7 +44,7 @@ export function mapMatchToUpcomingMatch(match: Match): UpcomingMatch {
     status: match.status,
     round: match.round,
     competition: match.competition,
-  }
+  };
 }
 
 /**
@@ -53,6 +53,8 @@ export function mapMatchToUpcomingMatch(match: Match): UpcomingMatch {
  * @param matches - Array of Match objects from domain layer
  * @returns Array of UpcomingMatch objects for UI consumption
  */
-export function mapMatchesToUpcomingMatches(matches: readonly Match[]): UpcomingMatch[] {
-  return matches.map(mapMatchToUpcomingMatch)
+export function mapMatchesToUpcomingMatches(
+  matches: readonly Match[],
+): UpcomingMatch[] {
+  return matches.map(mapMatchToUpcomingMatch);
 }

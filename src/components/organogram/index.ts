@@ -1,4 +1,4 @@
-export { OrgChart } from "./OrgChart";
+export { OrgChart } from "./archive/OrgChart";
 export { MemberDetailsModal } from "./MemberDetailsModal";
-export { OrganogramClient } from "./OrganogramClient";
+export { OrganogramClient } from "./archive/OrganogramClient";
 export { UnifiedOrganogramClient } from "./UnifiedOrganogramClient";

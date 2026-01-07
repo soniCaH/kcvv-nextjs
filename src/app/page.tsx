@@ -3,16 +3,20 @@
  * Main landing page for KCVV Elewijt website
  */
 
-import { Effect } from 'effect'
-import { runPromise } from '@/lib/effect/runtime'
-import { DrupalService } from '@/lib/effect/services/DrupalService'
-import { FootbalistoService } from '@/lib/effect/services/FootbalistoService'
-import { FeaturedArticles, LatestNews, UpcomingMatches } from '@/components/domain/home'
+import { Effect } from "effect";
+import { runPromise } from "@/lib/effect/runtime";
+import { DrupalService } from "@/lib/effect/services/DrupalService";
+import { FootbalistoService } from "@/lib/effect/services/FootbalistoService";
+import {
+  FeaturedArticles,
+  LatestNews,
+  UpcomingMatches,
+} from "@/components/home";
 import {
   mapArticlesToHomepageArticles,
   mapMatchesToUpcomingMatches,
-} from '@/lib/mappers'
-import type { Metadata } from 'next'
+} from "@/lib/mappers";
+import type { Metadata } from "next";
 
 /**
  * Provide metadata for the homepage.
@@ -21,10 +25,11 @@ import type { Metadata } from 'next'
  */
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Er is maar één plezante compagnie | KCVV Elewijt',
-    description: 'Startpagina van stamnummer 00055: KCVV Elewijt.',
-    keywords: 'KCVV, Voetbal, Elewijt, Crossing, KCVVE, Zemst, 00055, 55, 1982, 1980',
-  }
+    title: "Er is maar één plezante compagnie | KCVV Elewijt",
+    description: "Startpagina van stamnummer 00055: KCVV Elewijt.",
+    keywords:
+      "KCVV, Voetbal, Elewijt, Crossing, KCVVE, Zemst, 00055, 55, 1982, 1980",
+  };
 }
 
 /**
@@ -40,41 +45,49 @@ export default async function HomePage() {
   const [articlesResult, matchesResult] = await Promise.all([
     runPromise(
       Effect.gen(function* () {
-        const drupal = yield* DrupalService
+        const drupal = yield* DrupalService;
         // Get 9 latest articles (3 featured + 6 latest news)
         return yield* drupal.getArticles({
           page: 1,
           limit: 9,
-          sort: '-created',
-        })
+          sort: "-created",
+        });
       }).pipe(
         // Graceful fallback: return empty articles array on error
-        Effect.catchAll(() => Effect.succeed({ articles: [], links: undefined }))
-      )
+        Effect.catchAll(() =>
+          Effect.succeed({ articles: [], links: undefined }),
+        ),
+      ),
     ),
     runPromise(
       Effect.gen(function* () {
-        const footbalisto = yield* FootbalistoService
-        return yield* footbalisto.getNextMatches()
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getNextMatches();
       }).pipe(
         // Graceful fallback: return empty array on error
         Effect.catchAll((error) => {
-          console.error('[HomePage] Failed to fetch matches:', error)
-          return Effect.succeed([])
-        })
-      )
+          console.error("[HomePage] Failed to fetch matches:", error);
+          return Effect.succeed([]);
+        }),
+      ),
     ),
-  ])
+  ]);
 
-  const { articles } = articlesResult
-  const matches = matchesResult
+  const { articles } = articlesResult;
+  const matches = matchesResult;
 
   // Split articles: first 3 for featured carousel, remaining 6 for latest news
-  const featuredArticles = mapArticlesToHomepageArticles(articles.slice(0, 3), true)
-  const latestNewsArticles = mapArticlesToHomepageArticles(articles.slice(3, 9), false)
+  const featuredArticles = mapArticlesToHomepageArticles(
+    articles.slice(0, 3),
+    true,
+  );
+  const latestNewsArticles = mapArticlesToHomepageArticles(
+    articles.slice(3, 9),
+    false,
+  );
 
   // Map matches to component format (Weitse Gans already filtered at service level)
-  const upcomingMatches = mapMatchesToUpcomingMatches(matches)
+  const upcomingMatches = mapMatchesToUpcomingMatches(matches);
 
   // Show fallback message if no content could be loaded at all
   if (articles.length === 0 && matches.length === 0) {
@@ -87,32 +100,46 @@ export default async function HomePage() {
           Inhoud kan momenteel niet worden geladen. Probeer het later opnieuw.
         </p>
       </div>
-    )
+    );
   }
 
   return (
     <>
       {/* Featured Articles Hero Carousel */}
       {featuredArticles.length > 0 && (
-        <FeaturedArticles articles={featuredArticles} autoRotate={true} autoRotateInterval={5000} />
+        <FeaturedArticles
+          articles={featuredArticles}
+          autoRotate={true}
+          autoRotateInterval={5000}
+        />
       )}
 
       {/* Upcoming Matches Slider - component handles empty array internally */}
-      <UpcomingMatches matches={upcomingMatches} title="Volgende wedstrijden" showViewAll={true} viewAllHref="/matches" />
+      <UpcomingMatches
+        matches={upcomingMatches}
+        title="Volgende wedstrijden"
+        showViewAll={true}
+        viewAllHref="/matches"
+      />
 
       {/* Latest News Section */}
       {latestNewsArticles.length > 0 && (
-        <LatestNews articles={latestNewsArticles} title="Laatste nieuws" showViewAll={true} viewAllHref="/news" />
+        <LatestNews
+          articles={latestNewsArticles}
+          title="Laatste nieuws"
+          showViewAll={true}
+          viewAllHref="/news"
+        />
       )}
 
       {/* TODO: Future enhancements:
        * - KCVVTV video section (on hold - no cameraman available)
        */}
     </>
-  )
+  );
 }
 
 /**
  * Enable ISR with 1 hour revalidation
  */
-export const revalidate = 3600
+export const revalidate = 3600;

@@ -19,13 +19,13 @@
 
 import { useState } from "react";
 import { LayoutGrid, Network, CircleHelp } from "@/lib/icons";
-import { CardHierarchy } from "./prototypes/card-hierarchy/CardHierarchy";
-import { EnhancedOrgChart } from "./prototypes/chart/EnhancedOrgChart";
+import { CardHierarchy } from "./card-hierarchy/CardHierarchy";
+import { EnhancedOrgChart } from "./chart/EnhancedOrgChart";
 import { ResponsibilityFinder } from "../responsibility/ResponsibilityFinder";
 import { MemberDetailsModal } from "./MemberDetailsModal";
-import { FilterTabs } from "../ui/FilterTabs";
+import { FilterTabs } from "../design-system/FilterTabs";
 import type { OrgChartNode } from "@/types/organogram";
-import type { FilterTab } from "../ui/FilterTabs/FilterTabs";
+import type { FilterTab } from "../design-system/FilterTabs/FilterTabs";
 
 type ViewType = "cards" | "chart" | "responsibilities";
 
