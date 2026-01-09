@@ -3,23 +3,23 @@
  * Displays individual news articles from Drupal
  */
 
-import { Effect } from 'effect'
-import { notFound } from 'next/navigation'
-import { runPromise } from '@/lib/effect/runtime'
-import { DrupalService } from '@/lib/effect/services/DrupalService'
-import { isDrupalImage } from '@/lib/utils/drupal-content'
-import { formatArticleDate } from '@/lib/utils/dates'
+import { Effect } from "effect";
+import { notFound } from "next/navigation";
+import { runPromise } from "@/lib/effect/runtime";
+import { DrupalService } from "@/lib/effect/services/DrupalService";
+import { isDrupalImage } from "@/lib/utils/drupal-content";
+import { formatArticleDate } from "@/lib/utils/dates";
 import {
   ArticleHeader,
   ArticleMetadata,
   ArticleBody,
   ArticleFooter,
-} from '@/components/domain/article'
-import type { RelatedContent } from '@/components/domain/article'
-import { TaxonomyTerm } from '@/lib/effect/schemas'
+} from "@/components/article";
+import type { RelatedContent } from "@/components/article";
+import { TaxonomyTerm } from "@/lib/effect/schemas";
 
 interface ArticlePageProps {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string }>;
 }
 
 /**
@@ -33,17 +33,17 @@ export async function generateStaticParams() {
   try {
     const { articles } = await runPromise(
       Effect.gen(function* () {
-        const drupal = yield* DrupalService
-        return yield* drupal.getArticles({ limit: 50 })
-      })
-    )
+        const drupal = yield* DrupalService;
+        return yield* drupal.getArticles({ limit: 50 });
+      }),
+    );
 
     return articles.map((article) => ({
-      slug: article.attributes.path.alias.replace('/news/', ''),
-    }))
+      slug: article.attributes.path.alias.replace("/news/", ""),
+    }));
   } catch (error) {
-    console.error('Failed to generate static params:', error)
-    return []
+    console.error("Failed to generate static params:", error);
+    return [];
   }
 }
 
@@ -56,18 +56,18 @@ export async function generateStaticParams() {
  * @returns A metadata object for the article; if the article cannot be fetched, returns an object with the title "Artikel niet gevonden | KCVV Elewijt"
  */
 export async function generateMetadata({ params }: ArticlePageProps) {
-  const { slug } = await params
+  const { slug } = await params;
 
   try {
     const article = await runPromise(
       Effect.gen(function* () {
-        const drupal = yield* DrupalService
-        return yield* drupal.getArticleBySlug(slug)
-      })
-    )
+        const drupal = yield* DrupalService;
+        return yield* drupal.getArticleBySlug(slug);
+      }),
+    );
 
-    const imageData = article.relationships.field_media_article_image?.data
-    const hasImage = imageData && isDrupalImage(imageData)
+    const imageData = article.relationships.field_media_article_image?.data;
+    const hasImage = imageData && isDrupalImage(imageData);
 
     return {
       title: `${article.attributes.title} | KCVV Elewijt`,
@@ -75,10 +75,10 @@ export async function generateMetadata({ params }: ArticlePageProps) {
       openGraph: {
         title: article.attributes.title,
         description: article.attributes.body?.summary || undefined,
-        type: 'article',
+        type: "article",
         publishedTime: article.attributes.created.toISOString(),
         modifiedTime: article.attributes.changed?.toISOString(),
-        authors: ['KCVV Elewijt'],
+        authors: ["KCVV Elewijt"],
         images: hasImage
           ? [
               {
@@ -88,11 +88,11 @@ export async function generateMetadata({ params }: ArticlePageProps) {
             ]
           : undefined,
       },
-    }
+    };
   } catch {
     return {
-      title: 'Artikel niet gevonden | KCVV Elewijt',
-    }
+      title: "Artikel niet gevonden | KCVV Elewijt",
+    };
   }
 }
 
@@ -105,80 +105,90 @@ export async function generateMetadata({ params }: ArticlePageProps) {
  * @returns The article detail page element
  */
 export default async function ArticlePage({ params }: ArticlePageProps) {
-  const { slug } = await params
+  const { slug } = await params;
 
   // Fetch article from Drupal
   const article = await runPromise(
     Effect.gen(function* () {
-      const drupal = yield* DrupalService
-      return yield* drupal.getArticleBySlug(slug)
-    })
+      const drupal = yield* DrupalService;
+      return yield* drupal.getArticleBySlug(slug);
+    }),
   ).catch(() => {
-    notFound()
-  })
+    notFound();
+  });
 
   // Fetch related articles based on first tag
   // Fetch related articles based on first tag
-  const firstTag = article.relationships.field_tags?.data
-    ?.find((tag): tag is TaxonomyTerm =>
-      'attributes' in tag &&
-      !!tag.attributes?.drupal_internal__tid
-    )
+  const firstTag = article.relationships.field_tags?.data?.find(
+    (tag): tag is TaxonomyTerm =>
+      "attributes" in tag && !!tag.attributes?.drupal_internal__tid,
+  );
 
   const relatedArticles = firstTag?.attributes.drupal_internal__tid
     ? await runPromise(
         Effect.gen(function* () {
-          const drupal = yield* DrupalService
+          const drupal = yield* DrupalService;
           const { articles } = yield* drupal.getArticles({
             categoryId: firstTag.attributes.drupal_internal__tid!,
             limit: 4, // Fetch 4 to ensure we have 3 after excluding current
-          })
+          });
           // Exclude current article and limit to 3
-          return articles.filter((a) => a.id !== article.id).slice(0, 3)
-        })
+          return articles.filter((a) => a.id !== article.id).slice(0, 3);
+        }),
       )
-    : []
+    : [];
 
   // Build image URL
-  const imageData = article.relationships.field_media_article_image?.data
-  const hasValidImage = imageData && isDrupalImage(imageData)
-  const imageUrl = hasValidImage ? imageData.uri.url : undefined
-  const imageAlt = hasValidImage ? imageData.alt || article.attributes.title : article.attributes.title
+  const imageData = article.relationships.field_media_article_image?.data;
+  const hasValidImage = imageData && isDrupalImage(imageData);
+  const imageUrl = hasValidImage ? imageData.uri.url : undefined;
+  const imageAlt = hasValidImage
+    ? imageData.alt || article.attributes.title
+    : article.attributes.title;
 
   // Build tags from resolved taxonomy terms
   const tags =
     article.relationships.field_tags?.data
       ?.map((tag) => {
         // Check if this is a resolved TaxonomyTerm (has attributes)
-        if ('attributes' in tag && tag.attributes?.name) {
+        if ("attributes" in tag && tag.attributes?.name) {
           return {
             name: tag.attributes.name,
             href: `/news?category=${encodeURIComponent(tag.attributes.name)}`,
-          }
+          };
         }
         // Fallback for unresolved references (shouldn't happen after mapIncluded)
-        return null
+        return null;
       })
-      .filter((tag): tag is { name: string; href: string } => tag !== null) || []
+      .filter((tag): tag is { name: string; href: string } => tag !== null) ||
+    [];
 
   // Build share configuration
   const shareConfig = {
     url: `https://kcvvelewijt.be${article.attributes.path.alias}`,
     title: article.attributes.title,
     hashtags: tags.map((tag) => tag.name),
-  }
+  };
 
   // Build related content from related articles
-  const relatedContent: RelatedContent[] = relatedArticles.map((relatedArticle) => ({
-    title: relatedArticle.attributes.title,
-    href: relatedArticle.attributes.path.alias,
-    type: 'article' as const,
-  }))
+  const relatedContent: RelatedContent[] = relatedArticles.map(
+    (relatedArticle) => ({
+      title: relatedArticle.attributes.title,
+      href: relatedArticle.attributes.path.alias,
+      type: "article" as const,
+    }),
+  );
 
   return (
     <>
       {/* Article Header */}
-      {imageUrl && <ArticleHeader title={article.attributes.title} imageUrl={imageUrl} imageAlt={imageAlt} />}
+      {imageUrl && (
+        <ArticleHeader
+          title={article.attributes.title}
+          imageUrl={imageUrl}
+          imageAlt={imageAlt}
+        />
+      )}
       {!imageUrl && (
         <header className="bg-kcvv-green-bright px-3 pt-4 pb-4 xl:px-0">
           <div className="w-full max-w-inner-lg mx-auto">
@@ -211,13 +221,15 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </main>
 
         {/* Article Footer */}
-        {relatedContent.length > 0 && <ArticleFooter relatedContent={relatedContent} />}
+        {relatedContent.length > 0 && (
+          <ArticleFooter relatedContent={relatedContent} />
+        )}
       </div>
     </>
-  )
+  );
 }
 
 /**
  * Enable ISR with 1 hour revalidation
  */
-export const revalidate = 3600
+export const revalidate = 3600;

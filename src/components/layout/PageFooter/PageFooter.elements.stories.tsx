@@ -3,26 +3,27 @@
  * Granular stories showing individual footer elements for visual verification
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import Link from 'next/link'
-import Image from 'next/image'
-import { SocialLinks } from '@/components/ui'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import Link from "next/link";
+import Image from "next/image";
+import { SocialLinks } from "@/components/design-system";
 
 const meta = {
-  title: 'Layout/PageFooter/Elements',
+  title: "Layout/PageFooter/Elements",
   parameters: {
-    layout: 'centered',
+    layout: "centered",
     docs: {
       description: {
-        component: 'Individual elements from the PageFooter component for visual verification',
+        component:
+          "Individual elements from the PageFooter component for visual verification",
       },
     },
   },
-  tags: ['autodocs'],
-} satisfies Meta
+  tags: ["autodocs"],
+} satisfies Meta;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * 01. Footer Background with SVG Wave
@@ -38,9 +39,9 @@ export const FooterBackground: Story = {
         className="h-64 relative z-10 mt-[50px] text-white"
         style={{
           background:
-            'linear-gradient(to bottom, transparent 0%, transparent 50px, #1E2024 50px 100%), url(/images/footer-top.svg) top center no-repeat',
-          backgroundSize: '100%',
-          padding: '75px 2rem 2rem',
+            "linear-gradient(to bottom, transparent 0%, transparent 50px, #1E2024 50px 100%), url(/images/footer-top.svg) top center no-repeat",
+          backgroundSize: "100%",
+          padding: "75px 2rem 2rem",
         }}
       >
         <p className="text-center">Footer Content Area</p>
@@ -50,7 +51,7 @@ export const FooterBackground: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * 02. Logo and Social Links Row
@@ -75,7 +76,7 @@ export const LogoAndSocial: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * 03. Contact Details Table
@@ -103,7 +104,10 @@ export const ContactTable: Story = {
               GC
             </th>
             <td className="p-0 lg:pb-1">
-              <a href="mailto:gc@kcvvelewijt.be" className="text-[#4acf52] hover:underline">
+              <a
+                href="mailto:gc@kcvvelewijt.be"
+                className="text-[#4acf52] hover:underline"
+              >
                 John De Ron
               </a>
             </td>
@@ -113,7 +117,10 @@ export const ContactTable: Story = {
               Algemeen contact
             </th>
             <td className="p-0 lg:pb-1">
-              <a href="mailto:info@kcvvelewijt.be" className="text-[#4acf52] hover:underline">
+              <a
+                href="mailto:info@kcvvelewijt.be"
+                className="text-[#4acf52] hover:underline"
+              >
                 info@kcvvelewijt.be
               </a>
             </td>
@@ -123,7 +130,10 @@ export const ContactTable: Story = {
               Jeugdwerking
             </th>
             <td className="p-0 lg:pb-1">
-              <a href="mailto:jeugd@kcvvelewijt.be" className="text-[#4acf52] hover:underline">
+              <a
+                href="mailto:jeugd@kcvvelewijt.be"
+                className="text-[#4acf52] hover:underline"
+              >
                 jeugd@kcvvelewijt.be
               </a>
             </td>
@@ -133,7 +143,10 @@ export const ContactTable: Story = {
               Verhuur kantine
             </th>
             <td className="p-0 lg:pb-1">
-              <a href="mailto:verhuur@kcvvelewijt.be" className="text-[#4acf52] hover:underline">
+              <a
+                href="mailto:verhuur@kcvvelewijt.be"
+                className="text-[#4acf52] hover:underline"
+              >
                 Ann Walgraef
               </a>
             </td>
@@ -143,7 +156,10 @@ export const ContactTable: Story = {
               Website
             </th>
             <td className="p-0 lg:pb-1">
-              <a href="mailto:kevin@kcvvelewijt.be" className="text-[#4acf52] hover:underline">
+              <a
+                href="mailto:kevin@kcvvelewijt.be"
+                className="text-[#4acf52] hover:underline"
+              >
                 Kevin Van Ransbeeck
               </a>
             </td>
@@ -162,7 +178,7 @@ export const ContactTable: Story = {
       </table>
     </div>
   ),
-}
+};
 
 /**
  * 04. Vertical Divider
@@ -176,13 +192,13 @@ export const VerticalDivider: Story = {
           className="absolute h-[calc(100%-17px)] w-px bottom-0 left-1/2"
           style={{
             background:
-              'linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.2) 100%)',
+              "linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.2) 100%)",
           }}
         />
       </div>
     </div>
   ),
-}
+};
 
 /**
  * 05. Sponsors Grid
@@ -215,7 +231,7 @@ export const SponsorsGrid: Story = {
       </Link>
     </div>
   ),
-}
+};
 
 /**
  * 06. Bottom Motto with Gradient Line
@@ -227,7 +243,7 @@ export const BottomMotto: Story = {
       <div
         className="relative pt-12 pb-4"
         style={{
-          width: '100%',
+          width: "100%",
         }}
       >
         {/* Gradient top border */}
@@ -235,7 +251,7 @@ export const BottomMotto: Story = {
           className="absolute top-4 left-0 w-full h-px"
           style={{
             background:
-              'linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.2) 33%, rgba(255, 255, 255, 0.2) 66%, rgba(255, 255, 255, 0) 100%)',
+              "linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.2) 33%, rgba(255, 255, 255, 0.2) 66%, rgba(255, 255, 255, 0) 100%)",
           }}
         />
 
@@ -246,7 +262,7 @@ export const BottomMotto: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * 07. Contact Table - Mobile View
@@ -258,13 +274,20 @@ export const ContactTableMobile: Story = {
       <table className="w-full text-[0.875rem] text-white">
         <tbody>
           <tr className="flex flex-col mb-2">
-            <th className="text-left font-normal uppercase p-0 underline">KCVV Elewijt</th>
+            <th className="text-left font-normal uppercase p-0 underline">
+              KCVV Elewijt
+            </th>
             <td className="p-0">Driesstraat 30, 1982 Elewijt</td>
           </tr>
           <tr className="flex flex-col mb-2">
-            <th className="text-left font-normal uppercase p-0 underline">Algemeen contact</th>
+            <th className="text-left font-normal uppercase p-0 underline">
+              Algemeen contact
+            </th>
             <td className="p-0">
-              <a href="mailto:info@kcvvelewijt.be" className="text-[#4acf52] hover:underline">
+              <a
+                href="mailto:info@kcvvelewijt.be"
+                className="text-[#4acf52] hover:underline"
+              >
                 info@kcvvelewijt.be
               </a>
             </td>
@@ -273,4 +296,4 @@ export const ContactTableMobile: Story = {
       </table>
     </div>
   ),
-}
+};

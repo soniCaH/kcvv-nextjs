@@ -1,1 +1,0 @@
-export { CategoryFilters } from './CategoryFilters'

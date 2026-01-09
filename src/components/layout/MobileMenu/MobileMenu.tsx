@@ -10,7 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
-import { Icon, SocialLinks } from "@/components/ui";
+import { Icon, SocialLinks } from "@/components/design-system";
 import { X, ChevronDown, Search } from "@/lib/icons";
 
 export interface MobileMenuProps {
