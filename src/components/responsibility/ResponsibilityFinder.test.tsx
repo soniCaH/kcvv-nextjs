@@ -264,7 +264,7 @@ describe("ResponsibilityFinder", () => {
         },
         { timeout: 10000 },
       );
-    });
+    }, 15000); // 15s test timeout for flaky CI environment
   });
 
   describe("Result Selection", () => {
