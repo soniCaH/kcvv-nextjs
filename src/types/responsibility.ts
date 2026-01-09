@@ -31,6 +31,8 @@ export interface Contact {
   orgLink?: string
   /** Department */
   department?: 'hoofdbestuur' | 'jeugdbestuur' | 'algemeen'
+  /** Member ID for deep linking to organogram (e.g., 'president', 'jeugdcoordinator') */
+  memberId?: string
 }
 
 /**

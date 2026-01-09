@@ -15,15 +15,23 @@
  * - localStorage preference persistence
  * - User-friendly for ages 6-99 on all devices
  * - Seamless integration with responsibility finder
+ * - URL state management for shareable links
+ * - Deep linking to specific members
  */
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutGrid, Network, CircleHelp } from "@/lib/icons";
 import { CardHierarchy } from "./card-hierarchy/CardHierarchy";
 import { EnhancedOrgChart } from "./chart/EnhancedOrgChart";
 import { ResponsibilityFinder } from "../responsibility/ResponsibilityFinder";
 import { MemberDetailsModal } from "./MemberDetailsModal";
 import { FilterTabs } from "../design-system/FilterTabs";
+import {
+  findMemberById,
+  buildOrganogramUrl,
+  parseOrganogramParams,
+} from "@/lib/organogram-utils";
 import type { OrgChartNode } from "@/types/organogram";
 import type { FilterTab } from "../design-system/FilterTabs/FilterTabs";
 
@@ -37,28 +45,16 @@ export interface UnifiedOrganogramClientProps {
 const VIEW_PREFERENCE_KEY = "kcvv-organogram-view-preference";
 
 /**
- * Get initial view based on saved preference or responsive default
+ * Get initial view based on URL or default (without localStorage to avoid hydration mismatch)
  */
-function getInitialView(): ViewType {
-  // Check for saved preference first
-  if (typeof window !== "undefined") {
-    const savedPreference = localStorage.getItem(
-      VIEW_PREFERENCE_KEY,
-    ) as ViewType | null;
-
-    if (
-      savedPreference &&
-      ["cards", "chart", "responsibilities"].includes(savedPreference)
-    ) {
-      return savedPreference;
-    }
-
-    // Responsive default: mobile → cards, desktop → chart
-    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
-    return isMobile ? "cards" : "chart";
+function getInitialView(urlView: string | null): ViewType {
+  // URL parameter takes precedence
+  if (urlView && ["cards", "chart", "responsibilities"].includes(urlView)) {
+    return urlView as ViewType;
   }
 
-  // Server-side default
+  // Default to chart for consistent SSR/CSR
+  // localStorage preference will be synced via useEffect after mount
   return "chart";
 }
 
@@ -72,30 +68,135 @@ export function UnifiedOrganogramClient({
   members,
   className = "",
 }: UnifiedOrganogramClientProps) {
-  // View state with lazy initialization
-  const [activeView, setActiveView] = useState<ViewType>(getInitialView);
-  const [selectedMember, setSelectedMember] = useState<OrgChartNode | null>(
-    null,
-  );
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  // Save preference to localStorage when view changes
+  // Parse URL parameters
+  const urlParams = parseOrganogramParams(searchParams);
+
+  // Initialize member from URL if present
+  const urlMember = urlParams.memberId
+    ? (findMemberById(members, urlParams.memberId) ?? null)
+    : null;
+
+  // Initialize view state from URL or preferences
+  const [activeView, setActiveView] = useState<ViewType>(() =>
+    getInitialView(urlParams.view),
+  );
+  const [selectedMember, setSelectedMember] = useState<OrgChartNode | null>(
+    () => urlMember,
+  );
+  const [isModalOpen, setIsModalOpen] = useState(() => !!urlMember);
+
+  // Track whether initial localStorage sync has occurred
+  const hasInitializedRef = useRef(false);
+
+  // Sync localStorage preference after mount (avoids hydration mismatch)
+  useEffect(() => {
+    // Only run once on initial mount
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
+    // Only apply localStorage preference if no URL view is set
+    if (!urlParams.view) {
+      const savedPreference = localStorage.getItem(
+        VIEW_PREFERENCE_KEY,
+      ) as ViewType | null;
+
+      if (
+        savedPreference &&
+        ["cards", "chart", "responsibilities"].includes(savedPreference)
+      ) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronizing with localStorage after mount
+        setActiveView(savedPreference);
+      } else {
+        // Apply responsive default on client
+        const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+        const responsiveDefault = isMobile ? "cards" : "chart";
+        if (responsiveDefault !== activeView) {
+          setActiveView(responsiveDefault);
+        }
+      }
+    }
+  }, [urlParams.view, activeView]);
+
+  // Sync state with URL changes (for browser back/forward navigation)
+  useEffect(() => {
+    const currentParams = parseOrganogramParams(searchParams);
+
+    // Update view if it changed in the URL
+    if (currentParams.view && currentParams.view !== activeView) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronizing with URL changes for browser navigation
+      setActiveView(currentParams.view as ViewType);
+    }
+
+    // Update selected member if it changed in the URL
+    const newMember = currentParams.memberId
+      ? (findMemberById(members, currentParams.memberId) ?? null)
+      : null;
+
+    if (newMember?.id !== selectedMember?.id) {
+      setSelectedMember(newMember);
+      setIsModalOpen(!!newMember);
+    }
+  }, [searchParams, members, activeView, selectedMember]);
+
+  // Update URL when view or member changes
+  const updateUrl = (options: {
+    view?: ViewType;
+    memberId?: string | null;
+  }) => {
+    // Preserve current member when memberId is undefined, allow null to explicitly clear
+    const memberIdToUse =
+      options.memberId === undefined
+        ? (selectedMember?.id ?? null)
+        : options.memberId;
+
+    const newUrl = buildOrganogramUrl("/club/organogram", {
+      view: options.view || activeView,
+      memberId: memberIdToUse,
+    });
+    router.push(newUrl, { scroll: false });
+  };
+
+  // Handle view change
   const handleViewChange = (view: string) => {
     const newView = view as ViewType;
     setActiveView(newView);
     localStorage.setItem(VIEW_PREFERENCE_KEY, newView);
+    updateUrl({ view: newView });
   };
 
   // Handle member click from any view
   const handleMemberClick = (member: OrgChartNode) => {
     setSelectedMember(member);
     setIsModalOpen(true);
+    updateUrl({ memberId: member.id });
   };
 
   // Handle close modal
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedMember(null);
+    // Clear member from URL
+    updateUrl({ memberId: null });
+  };
+
+  // Handle deep linking from Responsibility Finder
+  const handleResponsibilityMemberSelect = (memberId: string) => {
+    const member = findMemberById(members, memberId);
+    if (member) {
+      // Switch to chart view for better visualization
+      const bestView: ViewType = "chart";
+      setActiveView(bestView);
+      setSelectedMember(member);
+      setIsModalOpen(true);
+      updateUrl({ view: bestView, memberId: member.id });
+
+      // NOTE: Intentionally NOT updating localStorage here
+      // Deep-link navigation temporarily shows chart view for better visualization,
+      // but preserves the user's explicit view preference (set via handleViewChange)
+    }
   };
 
   // View tabs configuration
@@ -176,10 +277,7 @@ export function UnifiedOrganogramClient({
         {activeView === "responsibilities" && (
           <div className="p-6">
             <ResponsibilityFinder
-              onResultSelect={(result) => {
-                // If result has organogram link, we could navigate or show contact
-                console.log("Responsibility result selected:", result);
-              }}
+              onMemberSelect={handleResponsibilityMemberSelect}
             />
           </div>
         )}

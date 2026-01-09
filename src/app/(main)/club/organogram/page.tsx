@@ -8,6 +8,7 @@
  */
 
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { UnifiedOrganogramClient } from "@/components/organogram";
 import { clubStructure } from "@/data/club-structure";
 
@@ -63,7 +64,9 @@ export default function OrganogramPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <UnifiedOrganogramClient members={clubStructure} />
+        <Suspense fallback={<div className="text-center py-12">Laden...</div>}>
+          <UnifiedOrganogramClient members={clubStructure} />
+        </Suspense>
       </div>
     </div>
   );

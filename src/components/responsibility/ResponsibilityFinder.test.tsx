@@ -254,16 +254,13 @@ describe("ResponsibilityFinder", () => {
       const outsideElement = screen.getByTestId("outside-element");
       await user.click(outsideElement);
 
-      // Wait for suggestions to disappear with generous timeout for CI
-      await waitFor(
-        () => {
-          const suggestionButtons = screen.queryAllByRole("button", {
-            name: /ongeval/i,
-          });
-          expect(suggestionButtons.length).toBe(0);
-        },
-        { timeout: 5000 },
-      );
+      // Wait for suggestions to disappear (more reliable than waitForElementToBeRemoved)
+      await waitFor(() => {
+        const suggestionButtons = screen.queryAllByRole("button", {
+          name: /ongeval/i,
+        });
+        expect(suggestionButtons).toHaveLength(0);
+      });
     });
   });
 
@@ -474,6 +471,101 @@ describe("ResponsibilityFinder", () => {
         const results = screen.queryAllByText(/blessure|herstel/i);
         expect(results.length).toBeGreaterThan(0);
       });
+    });
+  });
+
+  describe("Deep Linking to Organogram", () => {
+    it("calls onMemberSelect when clicking organogram link", async () => {
+      const onMemberSelect = vi.fn();
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder onMemberSelect={onMemberSelect} />);
+
+      // Find a path with memberId from the actual data
+      const pathWithMemberId = responsibilityPaths.find(
+        (path) => path.primaryContact.memberId,
+      );
+      expect(pathWithMemberId).toBeDefined();
+      expect(pathWithMemberId!.primaryContact.memberId).toBeDefined();
+
+      // Select the appropriate role for this path
+      const roleForPath = Array.isArray(pathWithMemberId!.role)
+        ? pathWithMemberId!.role[0]
+        : pathWithMemberId!.role;
+      await selectRole(user, roleForPath);
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, pathWithMemberId!.question);
+
+      // Click on the specific suggestion for this path
+      const suggestion = await screen.findByRole("button", {
+        name: new RegExp(pathWithMemberId!.question, "i"),
+      });
+      await user.click(suggestion);
+
+      // Wait for result card to appear
+      await waitFor(() => {
+        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+      });
+
+      // Find and click the "Bekijk in organogram" button
+      const organogramButton = screen.getByRole("button", {
+        name: /bekijk in organogram/i,
+      });
+      await user.click(organogramButton);
+
+      // Verify callback was called with the actual memberId from data
+      expect(onMemberSelect).toHaveBeenCalledWith(
+        pathWithMemberId!.primaryContact.memberId,
+      );
+    });
+
+    it("shows organogram button for results with memberId", async () => {
+      const onMemberSelect = vi.fn();
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder onMemberSelect={onMemberSelect} />);
+
+      // Select role and search for question with memberId (sponsor question is for "niet-lid")
+      await selectRole(user, "niet-lid");
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "sponsor");
+
+      // Click on the suggestion
+      const suggestions = await screen.findAllByRole("button", {
+        name: /sponsor/i,
+      });
+      await user.click(suggestions[0]);
+
+      // Verify organogram button is rendered (findByRole waits for it to appear)
+      const organogramButton = await screen.findByRole("button", {
+        name: /bekijk in organogram/i,
+      });
+      expect(organogramButton).toBeInTheDocument();
+    });
+
+    it("shows organogram link when onMemberSelect not provided", async () => {
+      const user = userEvent.setup();
+      // Render WITHOUT onMemberSelect callback
+      render(<ResponsibilityFinder />);
+
+      // Use "niet-lid" role for sponsor question
+      await selectRole(user, "niet-lid");
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "sponsor");
+
+      // Click suggestion
+      const suggestions = await screen.findAllByRole("button", {
+        name: /sponsor/i,
+      });
+      await user.click(suggestions[0]);
+
+      // Should show link instead of button (findByRole waits for it to appear)
+      const organogramLink = await screen.findByRole("link", {
+        name: /bekijk in organogram/i,
+      });
+      expect(organogramLink).toBeInTheDocument();
+      expect(organogramLink).toHaveAttribute("href", "/club/organogram");
     });
   });
 });
