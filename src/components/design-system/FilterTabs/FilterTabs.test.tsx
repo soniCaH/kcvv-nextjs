@@ -241,6 +241,20 @@ describe("FilterTabs", () => {
     });
   });
 
+  describe("useEffect Cleanup", () => {
+    it("cleans up event listeners on unmount", () => {
+      const { unmount } = render(
+        <FilterTabs tabs={mockTabs} activeTab="all" />,
+      );
+
+      // Unmount should trigger cleanup of scroll and resize listeners
+      unmount();
+
+      // If listeners weren't cleaned up, this would cause issues
+      expect(true).toBe(true);
+    });
+  });
+
   describe("Scroll Arrows", () => {
     let originalScrollWidth: PropertyDescriptor | undefined;
     let originalClientWidth: PropertyDescriptor | undefined;

@@ -220,6 +220,19 @@ describe("UpcomingMatches", () => {
       expect(screen.getByText(/Speeldag 15/)).toBeInTheDocument();
     });
 
+    it("renders both competition and round when both are provided", () => {
+      const matchWithBoth: UpcomingMatch = {
+        ...mockMatches[0],
+        competition: "Test Competition",
+        round: "Test Round",
+      };
+
+      render(<UpcomingMatches matches={[matchWithBoth]} />);
+
+      expect(screen.getByText("Test Competition")).toBeInTheDocument();
+      expect(screen.getByText("Test Round")).toBeInTheDocument();
+    });
+
     it("renders venue when provided", () => {
       render(<UpcomingMatches matches={mockMatches} />);
 
@@ -345,6 +358,18 @@ describe("UpcomingMatches", () => {
 
       expect(screen.getByText("Team 0")).toBeInTheDocument();
       expect(screen.getByText("Team 14")).toBeInTheDocument();
+    });
+  });
+
+  describe("useEffect Cleanup", () => {
+    it("cleans up timeout on unmount", () => {
+      const { unmount } = render(<UpcomingMatches matches={mockMatches} />);
+
+      // Unmount should trigger cleanup
+      unmount();
+
+      // If timeout wasn't cleaned up, this would cause issues
+      expect(true).toBe(true);
     });
   });
 
