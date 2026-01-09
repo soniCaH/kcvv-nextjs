@@ -19,7 +19,7 @@
  * - Deep linking to specific members
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutGrid, Network, CircleHelp } from "@/lib/icons";
 import { CardHierarchy } from "./card-hierarchy/CardHierarchy";
@@ -88,8 +88,15 @@ export function UnifiedOrganogramClient({
   );
   const [isModalOpen, setIsModalOpen] = useState(() => !!urlMember);
 
+  // Track whether initial localStorage sync has occurred
+  const hasInitializedRef = useRef(false);
+
   // Sync localStorage preference after mount (avoids hydration mismatch)
   useEffect(() => {
+    // Only run once on initial mount
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
     // Only apply localStorage preference if no URL view is set
     if (!urlParams.view) {
       const savedPreference = localStorage.getItem(
@@ -100,6 +107,7 @@ export function UnifiedOrganogramClient({
         savedPreference &&
         ["cards", "chart", "responsibilities"].includes(savedPreference)
       ) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronizing with localStorage after mount
         setActiveView(savedPreference);
       } else {
         // Apply responsive default on client
@@ -110,8 +118,7 @@ export function UnifiedOrganogramClient({
         }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once after mount
+  }, [urlParams.view, activeView]);
 
   // Sync state with URL changes (for browser back/forward navigation)
   useEffect(() => {
@@ -119,6 +126,7 @@ export function UnifiedOrganogramClient({
 
     // Update view if it changed in the URL
     if (currentParams.view && currentParams.view !== activeView) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronizing with URL changes for browser navigation
       setActiveView(currentParams.view as ViewType);
     }
 
