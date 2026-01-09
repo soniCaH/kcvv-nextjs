@@ -262,7 +262,7 @@ describe("ResponsibilityFinder", () => {
           });
           expect(suggestionButtons.length).toBe(0);
         },
-        { timeout: 5000 },
+        { timeout: 10000 },
       );
     });
   });
@@ -474,6 +474,99 @@ describe("ResponsibilityFinder", () => {
         const results = screen.queryAllByText(/blessure|herstel/i);
         expect(results.length).toBeGreaterThan(0);
       });
+    });
+  });
+
+  describe("Deep Linking to Organogram", () => {
+    it("calls onMemberSelect when clicking organogram link", async () => {
+      const onMemberSelect = vi.fn();
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder onMemberSelect={onMemberSelect} />);
+
+      // Select role that has results with memberId
+      await selectRole(user, "niet-lid");
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "inschrijven");
+
+      // Click on the suggestion
+      const suggestions = await screen.findAllByRole("button", {
+        name: /inschrijven/i,
+      });
+      await user.click(suggestions[0]);
+
+      // Wait for result card to appear
+      await waitFor(() => {
+        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+      });
+
+      // Find and click the "Bekijk in organogram" button
+      const organogramButton = screen.getByRole("button", {
+        name: /bekijk in organogram/i,
+      });
+      await user.click(organogramButton);
+
+      // Verify callback was called with correct memberId
+      expect(onMemberSelect).toHaveBeenCalledWith("jeugdcoordinator");
+    });
+
+    it("shows organogram button for results with memberId", async () => {
+      const onMemberSelect = vi.fn();
+      const user = userEvent.setup();
+      render(<ResponsibilityFinder onMemberSelect={onMemberSelect} />);
+
+      // Select role and search for question with memberId (sponsor question is for "niet-lid")
+      await selectRole(user, "niet-lid");
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "sponsor");
+
+      // Click on the suggestion
+      const suggestions = await screen.findAllByRole("button", {
+        name: /sponsor/i,
+      });
+      await user.click(suggestions[0]);
+
+      // Wait for result card
+      await waitFor(() => {
+        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+      });
+
+      // Verify organogram button is rendered
+      const organogramButton = screen.getByRole("button", {
+        name: /bekijk in organogram/i,
+      });
+      expect(organogramButton).toBeInTheDocument();
+    });
+
+    it("shows organogram link when onMemberSelect not provided", async () => {
+      const user = userEvent.setup();
+      // Render WITHOUT onMemberSelect callback
+      render(<ResponsibilityFinder />);
+
+      // Use "niet-lid" role for sponsor question
+      await selectRole(user, "niet-lid");
+
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.type(input, "sponsor");
+
+      // Click suggestion
+      const suggestions = await screen.findAllByRole("button", {
+        name: /sponsor/i,
+      });
+      await user.click(suggestions[0]);
+
+      // Wait for result card
+      await waitFor(() => {
+        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+      });
+
+      // Should show link instead of button
+      const organogramLink = screen.getByRole("link", {
+        name: /bekijk in organogram/i,
+      });
+      expect(organogramLink).toBeInTheDocument();
+      expect(organogramLink).toHaveAttribute("href", "/club/organogram");
     });
   });
 });

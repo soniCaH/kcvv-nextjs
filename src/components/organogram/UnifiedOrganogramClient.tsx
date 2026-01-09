@@ -113,14 +113,40 @@ export function UnifiedOrganogramClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once after mount
 
+  // Sync state with URL changes (for browser back/forward navigation)
+  useEffect(() => {
+    const currentParams = parseOrganogramParams(searchParams);
+
+    // Update view if it changed in the URL
+    if (currentParams.view && currentParams.view !== activeView) {
+      setActiveView(currentParams.view as ViewType);
+    }
+
+    // Update selected member if it changed in the URL
+    const newMember = currentParams.memberId
+      ? (findMemberById(members, currentParams.memberId) ?? null)
+      : null;
+
+    if (newMember?.id !== selectedMember?.id) {
+      setSelectedMember(newMember);
+      setIsModalOpen(!!newMember);
+    }
+  }, [searchParams, members, activeView, selectedMember]);
+
   // Update URL when view or member changes
   const updateUrl = (options: {
     view?: ViewType;
     memberId?: string | null;
   }) => {
+    // Preserve current member when memberId is undefined, allow null to explicitly clear
+    const memberIdToUse =
+      options.memberId === undefined
+        ? (selectedMember?.id ?? null)
+        : options.memberId;
+
     const newUrl = buildOrganogramUrl("/club/organogram", {
       view: options.view || activeView,
-      memberId: options.memberId !== undefined ? options.memberId : null,
+      memberId: memberIdToUse,
     });
     router.push(newUrl, { scroll: false });
   };
@@ -152,12 +178,16 @@ export function UnifiedOrganogramClient({
   const handleResponsibilityMemberSelect = (memberId: string) => {
     const member = findMemberById(members, memberId);
     if (member) {
-      // Switch to cards or chart view (prefer chart for better visualization)
+      // Switch to chart view for better visualization
       const bestView: ViewType = "chart";
       setActiveView(bestView);
       setSelectedMember(member);
       setIsModalOpen(true);
       updateUrl({ view: bestView, memberId: member.id });
+
+      // NOTE: Intentionally NOT updating localStorage here
+      // Deep-link navigation temporarily shows chart view for better visualization,
+      // but preserves the user's explicit view preference (set via handleViewChange)
     }
   };
 
