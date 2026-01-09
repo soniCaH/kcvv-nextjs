@@ -26,6 +26,7 @@ import { getIcon } from "@/lib/icons";
 
 interface ResponsibilityFinderProps {
   onResultSelect?: (path: ResponsibilityPath) => void;
+  onMemberSelect?: (memberId: string) => void;
   compact?: boolean;
 }
 
@@ -67,13 +68,16 @@ const categoryColors = {
  * Render a role selector, a contextual question input with scored autocomplete suggestions, and a detailed result card for a chosen responsibility path.
  *
  * Calls `onResultSelect` when a suggestion is chosen.
+ * Calls `onMemberSelect` when a contact person link is clicked.
  *
  * @param onResultSelect - Optional callback invoked with the selected `ResponsibilityPath` when the user picks a suggestion.
+ * @param onMemberSelect - Optional callback invoked with a member ID when clicking a contact person link with a memberId.
  * @param compact - When true, use a more compact layout and typography.
  * @returns A React element that renders the ResponsibilityFinder UI (role selection, question input, suggestions, and result display).
  */
 export function ResponsibilityFinder({
   onResultSelect,
+  onMemberSelect,
   compact = false,
 }: ResponsibilityFinderProps) {
   const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
@@ -549,27 +553,52 @@ function ResultCard({ path }: { path: ResponsibilityPath }) {
                 </a>
               </div>
             )}
-            {path.primaryContact.orgLink && (
+            {(path.primaryContact.orgLink || path.primaryContact.memberId) && (
               <div>
-                <a
-                  href={path.primaryContact.orgLink}
-                  className="text-kcvv-green hover:text-kcvv-green-hover hover:underline inline-flex items-center gap-1 text-sm font-medium"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                {path.primaryContact.memberId && onMemberSelect ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onMemberSelect(path.primaryContact.memberId!)
+                    }
+                    className="text-kcvv-green hover:text-kcvv-green-hover hover:underline inline-flex items-center gap-1 text-sm font-medium"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                  Bekijk in organogram
-                </a>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                    Bekijk in organogram
+                  </button>
+                ) : path.primaryContact.orgLink ? (
+                  <a
+                    href={path.primaryContact.orgLink}
+                    className="text-kcvv-green hover:text-kcvv-green-hover hover:underline inline-flex items-center gap-1 text-sm font-medium"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                    Bekijk in organogram
+                  </a>
+                ) : null}
               </div>
             )}
           </div>
