@@ -348,6 +348,60 @@ describe("UpcomingMatches", () => {
     });
   });
 
+  describe("Edge Cases", () => {
+    it("handles live match without scores", () => {
+      const matchWithoutScores: UpcomingMatch[] = [
+        {
+          id: 5,
+          date: new Date("2025-01-28T15:00:00"),
+          homeTeam: {
+            id: 1,
+            name: "KCVV Elewijt",
+          },
+          awayTeam: {
+            id: 2,
+            name: "FC Opponent",
+          },
+          status: "live",
+          competition: "Tweede Provinciale",
+        },
+      ];
+
+      render(<UpcomingMatches matches={matchWithoutScores} />);
+
+      expect(screen.getByText("KCVV Elewijt")).toBeInTheDocument();
+      expect(screen.getByText("FC Opponent")).toBeInTheDocument();
+      // Should render without crashing even without scores
+      expect(screen.queryByText(/^\d+$/)).not.toBeInTheDocument();
+    });
+
+    it("handles finished match without scores", () => {
+      const matchWithoutScores: UpcomingMatch[] = [
+        {
+          id: 6,
+          date: new Date("2025-01-20T15:00:00"),
+          homeTeam: {
+            id: 1,
+            name: "KCVV Elewijt",
+          },
+          awayTeam: {
+            id: 2,
+            name: "FC Opponent",
+          },
+          status: "finished",
+          competition: "Tweede Provinciale",
+        },
+      ];
+
+      render(<UpcomingMatches matches={matchWithoutScores} />);
+
+      expect(screen.getByText("KCVV Elewijt")).toBeInTheDocument();
+      expect(screen.getByText("FC Opponent")).toBeInTheDocument();
+      // Should render without crashing even without scores
+      expect(screen.queryByText(/^\d+$/)).not.toBeInTheDocument();
+    });
+  });
+
   describe("Accessibility", () => {
     it("navigation buttons have proper ARIA labels when rendered", () => {
       const { container } = render(<UpcomingMatches matches={mockMatches} />);

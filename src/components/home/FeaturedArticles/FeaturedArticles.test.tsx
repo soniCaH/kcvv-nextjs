@@ -350,4 +350,30 @@ describe("FeaturedArticles", () => {
       screen.getByText("This is the second featured article description"),
     ).toBeInTheDocument();
   });
+
+  it("clamps activeIndex when it exceeds article length", () => {
+    const { rerender } = render(
+      <FeaturedArticles articles={mockArticles} autoRotate={false} />,
+    );
+
+    // Navigate to third article (index 2)
+    const thirdDot = screen.getByRole("button", { name: "Go to article 3" });
+    act(() => {
+      thirdDot.click();
+    });
+
+    expect(
+      screen.getByRole("heading", { name: "Third Featured Article", level: 2 }),
+    ).toBeInTheDocument();
+
+    // Remove articles - activeIndex (2) is now >= articles.length (1)
+    rerender(
+      <FeaturedArticles articles={[mockArticles[0]]} autoRotate={false} />,
+    );
+
+    // Should clamp to first article (index 0)
+    expect(
+      screen.getByRole("heading", { name: "First Featured Article", level: 2 }),
+    ).toBeInTheDocument();
+  });
 });

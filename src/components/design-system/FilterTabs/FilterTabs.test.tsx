@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FilterTabs, type FilterTab } from "./FilterTabs";
 
@@ -331,6 +331,29 @@ describe("FilterTabs", () => {
       await user.click(rightArrow);
 
       expect(HTMLElement.prototype.scrollTo).toHaveBeenCalled();
+    });
+
+    it("should hide right arrow when scrolled to end", () => {
+      const { container } = render(
+        <FilterTabs tabs={mockTabs} activeTab="all" />,
+      );
+
+      const scrollContainer = container.querySelector(
+        '[role="tablist"]',
+      ) as HTMLElement;
+
+      // Simulate scrolling to the end
+      Object.defineProperty(scrollContainer, "scrollLeft", { value: 100 });
+      Object.defineProperty(scrollContainer, "scrollWidth", { value: 200 });
+      Object.defineProperty(scrollContainer, "clientWidth", { value: 100 });
+
+      // Trigger scroll event to update arrows
+      act(() => {
+        scrollContainer.dispatchEvent(new Event("scroll"));
+      });
+
+      // Right arrow should not be visible when scrolled to end
+      expect(screen.queryByLabelText("Scroll right")).not.toBeInTheDocument();
     });
   });
 

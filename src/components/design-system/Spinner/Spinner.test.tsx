@@ -80,6 +80,22 @@ describe("Spinner", () => {
       const svg = container.querySelector("svg");
       expect(svg).toHaveClass("text-white");
     });
+
+    it("should render logo variant with image", () => {
+      const { container } = render(<Spinner variant="logo" />);
+      const img = container.querySelector("img");
+      expect(img).toBeInTheDocument();
+      expect(img).toHaveAttribute("alt", "KCVV Logo");
+      expect(img).toHaveClass("animate-kcvv-logo-spin");
+    });
+
+    it("should render logo variant with xl size", () => {
+      const { container } = render(<Spinner variant="logo" size="xl" />);
+      const img = container.querySelector("img");
+      expect(img).toHaveClass("h-24", "w-24");
+      expect(img).toHaveAttribute("width", "96");
+      expect(img).toHaveAttribute("height", "96");
+    });
   });
 
   describe("Animation", () => {
