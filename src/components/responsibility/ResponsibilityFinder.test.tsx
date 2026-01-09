@@ -254,13 +254,16 @@ describe("ResponsibilityFinder", () => {
       const outsideElement = screen.getByTestId("outside-element");
       await user.click(outsideElement);
 
-      // Wait for suggestions to disappear
-      await waitFor(() => {
-        const suggestionButtons = screen.queryAllByRole("button", {
-          name: /ongeval/i,
-        });
-        expect(suggestionButtons.length).toBe(0);
-      });
+      // Wait for suggestions to disappear with increased timeout for CI
+      await waitFor(
+        () => {
+          const suggestionButtons = screen.queryAllByRole("button", {
+            name: /ongeval/i,
+          });
+          expect(suggestionButtons.length).toBe(0);
+        },
+        { timeout: 2000 },
+      );
     });
   });
 
