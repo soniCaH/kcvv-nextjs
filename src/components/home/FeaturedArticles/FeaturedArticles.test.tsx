@@ -283,4 +283,71 @@ describe("FeaturedArticles", () => {
     const firstDot = screen.getByRole("button", { name: "Go to article 1" });
     expect(firstDot).toHaveClass("bg-kcvv-green-bright");
   });
+
+  it("supports keyboard navigation with arrow keys", async () => {
+    render(<FeaturedArticles articles={mockArticles} autoRotate={false} />);
+
+    const carousel = screen.getByRole("region", {
+      name: "Featured articles carousel",
+    });
+
+    // Navigate right with ArrowRight
+    await act(async () => {
+      carousel.focus();
+      carousel.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
+      );
+    });
+
+    // Use role-based query for heading to be specific
+    expect(
+      screen.getByRole("heading", {
+        name: "Second Featured Article",
+        level: 2,
+      }),
+    ).toBeInTheDocument();
+
+    // Navigate left with ArrowLeft
+    await act(async () => {
+      carousel.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }),
+      );
+    });
+
+    expect(
+      screen.getByRole("heading", { name: "First Featured Article", level: 2 }),
+    ).toBeInTheDocument();
+  });
+
+  it("clamps autoRotateInterval to minimum 1000ms", () => {
+    render(
+      <FeaturedArticles
+        articles={mockArticles}
+        autoRotate={true}
+        autoRotateInterval={100} // Too fast - should be clamped to 1000
+      />,
+    );
+
+    expect(
+      screen.getByText("This is the first featured article description"),
+    ).toBeInTheDocument();
+
+    // Advance by 100ms - should NOT rotate (clamped to 1000ms)
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+
+    expect(
+      screen.getByText("This is the first featured article description"),
+    ).toBeInTheDocument();
+
+    // Advance by 1000ms - should rotate
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(
+      screen.getByText("This is the second featured article description"),
+    ).toBeInTheDocument();
+  });
 });
