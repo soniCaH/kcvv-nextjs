@@ -435,7 +435,7 @@ export function ResponsibilityFinder({
       {/* Selected Result */}
       {selectedResult && (
         <div className="mt-8 animate-fadeIn">
-          <ResultCard path={selectedResult} />
+          <ResultCard path={selectedResult} onMemberSelect={onMemberSelect} />
         </div>
       )}
     </div>
@@ -448,9 +448,16 @@ export function ResponsibilityFinder({
  * Shows the path icon, question, and summary; a primary contact panel with role, name, email, phone and optional organogram link; and an ordered list of actionable steps with optional links and contact information.
  *
  * @param path - The ResponsibilityPath to render in the result card
+ * @param onMemberSelect - Optional callback for member selection (deep linking)
  * @returns A React element representing the formatted result card for the given responsibility path
  */
-function ResultCard({ path }: { path: ResponsibilityPath }) {
+function ResultCard({
+  path,
+  onMemberSelect,
+}: {
+  path: ResponsibilityPath;
+  onMemberSelect?: (memberId: string) => void;
+}) {
   const colors = categoryColors[path.category as keyof typeof categoryColors];
 
   return (

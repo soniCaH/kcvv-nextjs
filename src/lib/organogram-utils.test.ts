@@ -232,6 +232,39 @@ describe("getAncestors", () => {
     expect(ancestors[0].id).toBe("president");
     expect(ancestors[1].id).toBe("club");
   });
+
+  it("should detect and break on cycles in parent chain", () => {
+    // Create members with a cycle: A -> B -> C -> A
+    const membersWithCycle: OrgChartNode[] = [
+      {
+        id: "a",
+        name: "Member A",
+        title: "Title A",
+        parentId: "c", // Points to C, creating a cycle
+      },
+      {
+        id: "b",
+        name: "Member B",
+        title: "Title B",
+        parentId: "a",
+      },
+      {
+        id: "c",
+        name: "Member C",
+        title: "Title C",
+        parentId: "b",
+      },
+    ];
+
+    const ancestors = getAncestors(membersWithCycle, "a");
+
+    // Should detect cycle and stop, not infinite loop
+    expect(ancestors.length).toBeGreaterThan(0);
+    expect(ancestors.length).toBeLessThanOrEqual(3);
+    // Should contain C and B but stop before repeating A
+    expect(ancestors.some((m) => m.id === "c")).toBe(true);
+    expect(ancestors.some((m) => m.id === "b")).toBe(true);
+  });
 });
 
 describe("buildOrganogramUrl", () => {

@@ -19,7 +19,7 @@
  * - Deep linking to specific members
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutGrid, Network, CircleHelp } from "@/lib/icons";
 import { CardHierarchy } from "./card-hierarchy/CardHierarchy";
@@ -45,7 +45,7 @@ export interface UnifiedOrganogramClientProps {
 const VIEW_PREFERENCE_KEY = "kcvv-organogram-view-preference";
 
 /**
- * Get initial view based on URL, saved preference, or responsive default
+ * Get initial view based on URL or default (without localStorage to avoid hydration mismatch)
  */
 function getInitialView(urlView: string | null): ViewType {
   // URL parameter takes precedence
@@ -53,25 +53,8 @@ function getInitialView(urlView: string | null): ViewType {
     return urlView as ViewType;
   }
 
-  // Check for saved preference
-  if (typeof window !== "undefined") {
-    const savedPreference = localStorage.getItem(
-      VIEW_PREFERENCE_KEY,
-    ) as ViewType | null;
-
-    if (
-      savedPreference &&
-      ["cards", "chart", "responsibilities"].includes(savedPreference)
-    ) {
-      return savedPreference;
-    }
-
-    // Responsive default: mobile → cards, desktop → chart
-    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
-    return isMobile ? "cards" : "chart";
-  }
-
-  // Server-side default
+  // Default to chart for consistent SSR/CSR
+  // localStorage preference will be synced via useEffect after mount
   return "chart";
 }
 
@@ -93,7 +76,7 @@ export function UnifiedOrganogramClient({
 
   // Initialize member from URL if present
   const urlMember = urlParams.memberId
-    ? findMemberById(members, urlParams.memberId)
+    ? (findMemberById(members, urlParams.memberId) ?? null)
     : null;
 
   // Initialize view state from URL or preferences
@@ -104,6 +87,31 @@ export function UnifiedOrganogramClient({
     () => urlMember,
   );
   const [isModalOpen, setIsModalOpen] = useState(() => !!urlMember);
+
+  // Sync localStorage preference after mount (avoids hydration mismatch)
+  useEffect(() => {
+    // Only apply localStorage preference if no URL view is set
+    if (!urlParams.view) {
+      const savedPreference = localStorage.getItem(
+        VIEW_PREFERENCE_KEY,
+      ) as ViewType | null;
+
+      if (
+        savedPreference &&
+        ["cards", "chart", "responsibilities"].includes(savedPreference)
+      ) {
+        setActiveView(savedPreference);
+      } else {
+        // Apply responsive default on client
+        const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+        const responsiveDefault = isMobile ? "cards" : "chart";
+        if (responsiveDefault !== activeView) {
+          setActiveView(responsiveDefault);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once after mount
 
   // Update URL when view or member changes
   const updateUrl = (options: {

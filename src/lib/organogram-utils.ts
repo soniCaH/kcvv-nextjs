@@ -99,9 +99,14 @@ export function getAncestors(
   if (!memberId) return [];
 
   const ancestors: OrgChartNode[] = [];
+  const visited = new Set<string>();
   let current = findMemberById(members, memberId);
 
   while (current?.parentId) {
+    // Cycle detection: if we've seen this parent ID before, stop
+    if (visited.has(current.parentId)) break;
+    visited.add(current.parentId);
+
     const parent = findMemberById(members, current.parentId);
     if (!parent) break;
     ancestors.push(parent);
@@ -161,9 +166,7 @@ export function buildOrganogramUrl(
  * console.log(params.view); // 'chart'
  * ```
  */
-export function parseOrganogramParams(
-  searchParams: URLSearchParams | string,
-): {
+export function parseOrganogramParams(searchParams: URLSearchParams | string): {
   memberId: string | null;
   view: string | null;
 } {
