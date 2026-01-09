@@ -254,17 +254,14 @@ describe("ResponsibilityFinder", () => {
       const outsideElement = screen.getByTestId("outside-element");
       await user.click(outsideElement);
 
-      // Wait for suggestions to disappear with generous timeout for CI
-      await waitFor(
-        () => {
-          const suggestionButtons = screen.queryAllByRole("button", {
-            name: /ongeval/i,
-          });
-          expect(suggestionButtons.length).toBe(0);
-        },
-        { timeout: 10000 },
-      );
-    }, 15000); // 15s test timeout for flaky CI environment
+      // Wait for suggestions to disappear (more reliable than waitForElementToBeRemoved)
+      await waitFor(() => {
+        const suggestionButtons = screen.queryAllByRole("button", {
+          name: /ongeval/i,
+        });
+        expect(suggestionButtons).toHaveLength(0);
+      });
+    });
   });
 
   describe("Result Selection", () => {
@@ -483,17 +480,27 @@ describe("ResponsibilityFinder", () => {
       const user = userEvent.setup();
       render(<ResponsibilityFinder onMemberSelect={onMemberSelect} />);
 
-      // Select role that has results with memberId
-      await selectRole(user, "niet-lid");
+      // Find a path with memberId from the actual data
+      const pathWithMemberId = responsibilityPaths.find(
+        (path) => path.primaryContact.memberId,
+      );
+      expect(pathWithMemberId).toBeDefined();
+      expect(pathWithMemberId!.primaryContact.memberId).toBeDefined();
+
+      // Select the appropriate role for this path
+      const roleForPath = Array.isArray(pathWithMemberId!.role)
+        ? pathWithMemberId!.role[0]
+        : pathWithMemberId!.role;
+      await selectRole(user, roleForPath);
 
       const input = screen.getByPlaceholderText(/typ je vraag/i);
-      await user.type(input, "inschrijven");
+      await user.type(input, pathWithMemberId!.question);
 
-      // Click on the suggestion
-      const suggestions = await screen.findAllByRole("button", {
-        name: /inschrijven/i,
+      // Click on the specific suggestion for this path
+      const suggestion = await screen.findByRole("button", {
+        name: new RegExp(pathWithMemberId!.question, "i"),
       });
-      await user.click(suggestions[0]);
+      await user.click(suggestion);
 
       // Wait for result card to appear
       await waitFor(() => {
@@ -506,8 +513,10 @@ describe("ResponsibilityFinder", () => {
       });
       await user.click(organogramButton);
 
-      // Verify callback was called with correct memberId
-      expect(onMemberSelect).toHaveBeenCalledWith("jeugdcoordinator");
+      // Verify callback was called with the actual memberId from data
+      expect(onMemberSelect).toHaveBeenCalledWith(
+        pathWithMemberId!.primaryContact.memberId,
+      );
     });
 
     it("shows organogram button for results with memberId", async () => {
@@ -527,13 +536,8 @@ describe("ResponsibilityFinder", () => {
       });
       await user.click(suggestions[0]);
 
-      // Wait for result card
-      await waitFor(() => {
-        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
-      });
-
-      // Verify organogram button is rendered
-      const organogramButton = screen.getByRole("button", {
+      // Verify organogram button is rendered (findByRole waits for it to appear)
+      const organogramButton = await screen.findByRole("button", {
         name: /bekijk in organogram/i,
       });
       expect(organogramButton).toBeInTheDocument();
@@ -556,13 +560,8 @@ describe("ResponsibilityFinder", () => {
       });
       await user.click(suggestions[0]);
 
-      // Wait for result card
-      await waitFor(() => {
-        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
-      });
-
-      // Should show link instead of button
-      const organogramLink = screen.getByRole("link", {
+      // Should show link instead of button (findByRole waits for it to appear)
+      const organogramLink = await screen.findByRole("link", {
         name: /bekijk in organogram/i,
       });
       expect(organogramLink).toBeInTheDocument();
