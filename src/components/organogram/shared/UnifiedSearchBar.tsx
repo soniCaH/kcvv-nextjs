@@ -397,7 +397,7 @@ export function UnifiedSearchBar({
           "
           aria-label="Zoeken"
           aria-autocomplete="list"
-          aria-controls="search-results"
+          aria-controls={showResults ? "search-results" : undefined}
           aria-activedescendant={
             selectedIndex >= 0 && selectedIndex < searchResults.length
               ? `search-result-${selectedIndex}`

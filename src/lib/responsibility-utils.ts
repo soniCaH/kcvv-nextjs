@@ -65,7 +65,7 @@ export function getMembersWithResponsibilities(
  * Return the display label and CSS classes for a responsibility category.
  *
  * @param category - The responsibility category identifier
- * @returns An object containing `label`, `colorClass`, and `bgClass` for the given category; falls back to the "Algemeen" styling if the category is not recognized
+ * @returns An object containing `label`, `colorClass`, and `bgClass` for the given category; falls back to neutral gray styling if the category is not recognized
  */
 export function getCategoryInfo(category: ResponsibilityPath["category"]): {
   label: string;

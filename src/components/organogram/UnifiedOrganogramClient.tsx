@@ -231,6 +231,8 @@ export function UnifiedOrganogramClient({
     // Switch to responsibilities view
     setActiveView("responsibilities");
     updateUrl({ view: "responsibilities", memberId: null });
+    // Clear search query as it no longer relates to the current view
+    setSearchQuery("");
 
     // TODO: Once ResponsibilityFinder supports pre-filling,
     // we can pass _path to auto-select/highlight it

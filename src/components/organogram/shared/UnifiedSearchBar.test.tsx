@@ -253,10 +253,9 @@ describe("UnifiedSearchBar", () => {
     );
 
     const memberButton = screen.getByText("John Doe").closest("button");
-    if (memberButton) {
-      fireEvent.click(memberButton);
-      expect(handleSelectMember).toHaveBeenCalledWith(mockMembers[0]);
-    }
+    expect(memberButton).not.toBeNull();
+    fireEvent.click(memberButton!);
+    expect(handleSelectMember).toHaveBeenCalledWith(mockMembers[0]);
   });
 
   it("calls onSelectResponsibility when responsibility is clicked", () => {
@@ -291,12 +290,11 @@ describe("UnifiedSearchBar", () => {
     const responsibilityButton = screen
       .getByText("wil mij graag inschrijven")
       .closest("button");
-    if (responsibilityButton) {
-      fireEvent.click(responsibilityButton);
-      expect(handleSelectResponsibility).toHaveBeenCalledWith(
-        mockResponsibilityPaths[0],
-      );
-    }
+    expect(responsibilityButton).not.toBeNull();
+    fireEvent.click(responsibilityButton!);
+    expect(handleSelectResponsibility).toHaveBeenCalledWith(
+      mockResponsibilityPaths[0],
+    );
   });
 
   it("shows no results message when no matches found", () => {
@@ -386,7 +384,9 @@ describe("UnifiedSearchBar", () => {
 
       fireEvent.keyDown(input, { key: "ArrowDown" });
       // Should highlight first result
-      expect(input).toBeInTheDocument();
+      expect(input.getAttribute("aria-activedescendant")).toBe(
+        "search-result-0",
+      );
     });
 
     it("navigates up with ArrowUp key", () => {
@@ -416,8 +416,10 @@ describe("UnifiedSearchBar", () => {
       );
 
       fireEvent.keyDown(input, { key: "ArrowUp" });
-      // Should wrap to last result
-      expect(input).toBeInTheDocument();
+      // Should wrap to last result (verify aria-activedescendant is set)
+      const ariaDescendant = input.getAttribute("aria-activedescendant");
+      expect(ariaDescendant).toBeTruthy();
+      expect(ariaDescendant).toMatch(/^search-result-\d+$/);
     });
 
     it("selects result with Enter key", () => {
@@ -486,8 +488,8 @@ describe("UnifiedSearchBar", () => {
 
       fireEvent.keyDown(input, { key: "Escape" });
 
-      // Dropdown should close (input loses focus)
-      expect(input).toBeInTheDocument();
+      // Dropdown should close - results should no longer be visible
+      expect(screen.queryByText("John Doe")).not.toBeInTheDocument();
     });
   });
 
@@ -697,10 +699,9 @@ describe("UnifiedSearchBar", () => {
       );
 
       const memberButton = screen.getByText("John Doe").closest("button");
-      if (memberButton) {
-        fireEvent.mouseEnter(memberButton);
-        expect(memberButton).toBeInTheDocument();
-      }
+      expect(memberButton).not.toBeNull();
+      fireEvent.mouseEnter(memberButton!);
+      expect(memberButton).toBeInTheDocument();
     });
 
     it("updates search value when member is selected", () => {
@@ -734,10 +735,9 @@ describe("UnifiedSearchBar", () => {
       );
 
       const memberButton = screen.getByText("John Doe").closest("button");
-      if (memberButton) {
-        fireEvent.click(memberButton);
-        expect(handleChange).toHaveBeenCalledWith("John Doe");
-      }
+      expect(memberButton).not.toBeNull();
+      fireEvent.click(memberButton!);
+      expect(handleChange).toHaveBeenCalledWith("John Doe");
     });
 
     it("updates search value when responsibility is selected", () => {
@@ -773,10 +773,9 @@ describe("UnifiedSearchBar", () => {
       const responsibilityButton = screen
         .getByText("wil mij graag inschrijven")
         .closest("button");
-      if (responsibilityButton) {
-        fireEvent.click(responsibilityButton);
-        expect(handleChange).toHaveBeenCalledWith("wil mij graag inschrijven");
-      }
+      expect(responsibilityButton).not.toBeNull();
+      fireEvent.click(responsibilityButton!);
+      expect(handleChange).toHaveBeenCalledWith("wil mij graag inschrijven");
     });
   });
 
@@ -862,7 +861,7 @@ describe("UnifiedSearchBar", () => {
 
       rerender(
         <UnifiedSearchBar
-          value="test"
+          value="inschrijven"
           onChange={vi.fn()}
           members={[]}
           responsibilityPaths={mockResponsibilityPaths}
@@ -872,7 +871,7 @@ describe("UnifiedSearchBar", () => {
       );
 
       // Should still show responsibility results
-      expect(input).toBeInTheDocument();
+      expect(screen.getByText("wil mij graag inschrijven")).toBeInTheDocument();
     });
 
     it("handles empty responsibility paths array", () => {
