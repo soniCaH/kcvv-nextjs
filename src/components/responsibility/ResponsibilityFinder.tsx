@@ -69,16 +69,13 @@ const categoryColors = {
 } as const;
 
 /**
- * Render a role selector, a contextual question input with scored autocomplete suggestions, and a detailed result card for a chosen responsibility path.
- *
- * Calls `onResultSelect` when a suggestion is chosen.
- * Calls `onMemberSelect` when a contact person link is clicked.
+ * Render a role selector, contextual question input with scored autocomplete suggestions, and a detailed result card for a selected responsibility path.
  *
  * @param onResultSelect - Optional callback invoked with the selected `ResponsibilityPath` when the user picks a suggestion.
- * @param onMemberSelect - Optional callback invoked with a member ID when clicking a contact person link with a memberId.
+ * @param onMemberSelect - Optional callback invoked with a member ID when a contact person link is clicked.
  * @param compact - When true, use a more compact layout and typography.
  * @param initialPathId - Optional responsibility path ID to pre-select and display on mount.
- * @param initialPath - Optional responsibility path object to pre-select and display on mount. Takes precedence over initialPathId.
+ * @param initialPath - Optional responsibility path object to pre-select and display on mount; takes precedence over `initialPathId`.
  * @returns A React element that renders the ResponsibilityFinder UI (role selection, question input, suggestions, and result display).
  */
 export function ResponsibilityFinder({

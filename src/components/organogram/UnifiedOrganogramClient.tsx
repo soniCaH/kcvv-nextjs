@@ -62,14 +62,11 @@ function getInitialView(urlView: string | null): ViewType {
 }
 
 /**
- * Render a unified organogram UI that lets users switch between cards, chart,
- * and responsibilities views, search members or responsibilities, and inspect member details.
+ * Unified organogram client that combines cards, chart, and responsibilities views with shared state, URL synchronization, and view preference persistence.
  *
- * The component synchronizes the active view and selected member with the URL,
- * persists the user's view preference to localStorage, and supports deep links
- * that open the member details modal.
+ * The component provides a unified search, view switching, deep-linking to members, and a member details modal.
  *
- * @param members - All organization members used to populate the views and search
+ * @param members - Organization members used to populate the views and search
  * @param className - Optional additional CSS classes to apply to the root container
  * @returns The rendered unified organogram React element
  */
