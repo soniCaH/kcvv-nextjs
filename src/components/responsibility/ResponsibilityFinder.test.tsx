@@ -696,6 +696,7 @@ describe("ResponsibilityFinder", () => {
 
       // Initially shows the pre-filled result
       expect(screen.getByText(testPath.question)).toBeInTheDocument();
+      expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
 
       // User can type a new search
       const input = screen.getByPlaceholderText(/typ je vraag/i);
@@ -704,8 +705,11 @@ describe("ResponsibilityFinder", () => {
 
       // Should clear the selected result and show suggestions
       await waitFor(() => {
-        // May or may not find matches, but should be searching
+        // Input value should be updated
         expect(input).toHaveValue("new search");
+        // Pre-filled result card should be cleared
+        expect(screen.queryByText(testPath.question)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Contactpersoon/i)).not.toBeInTheDocument();
       });
     });
   });
