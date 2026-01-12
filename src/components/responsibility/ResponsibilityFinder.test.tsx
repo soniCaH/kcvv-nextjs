@@ -616,7 +616,9 @@ describe("ResponsibilityFinder", () => {
       render(<ResponsibilityFinder initialPath={testPath} />);
 
       // Role dropdown should show the first role from the path
-      const expectedRole = testPath.role[0];
+      const expectedRole = Array.isArray(testPath.role)
+        ? testPath.role[0]
+        : testPath.role;
       const roleButton = screen.getByRole("button", {
         name: new RegExp(expectedRole, "i"),
       });
