@@ -8,11 +8,11 @@ import type { ResponsibilityPath } from "@/types/responsibility";
 import type { OrgChartNode } from "@/types/organogram";
 
 /**
- * Find all responsibility paths where a member is the primary contact
+ * Finds responsibility paths for which the given member is the primary contact.
  *
- * @param memberId - The member ID to search for
- * @param paths - Array of all responsibility paths
- * @returns Array of responsibility paths where the member is primary contact
+ * @param memberId - The ID of the member to match as primary contact
+ * @param paths - The list of responsibility paths to search
+ * @returns Responsibility paths where the member is the primary contact
  */
 export function findMemberResponsibilities(
   memberId: string,
@@ -22,11 +22,11 @@ export function findMemberResponsibilities(
 }
 
 /**
- * Find all responsibility paths where a member is mentioned in any step contact
+ * Locate responsibility paths that include the given member as a step contact.
  *
- * @param memberId - The member ID to search for
- * @param paths - Array of all responsibility paths
- * @returns Array of responsibility paths where the member is mentioned in steps
+ * @param memberId - The member ID to match against step contacts
+ * @param paths - The list of responsibility paths to search
+ * @returns An array of responsibility paths where the member appears in any step contact
  */
 export function findMemberStepResponsibilities(
   memberId: string,
@@ -38,11 +38,10 @@ export function findMemberStepResponsibilities(
 }
 
 /**
- * Find all members who have responsibilities
+ * Collect member IDs referenced in responsibility paths.
  *
- * @param members - Array of all members
- * @param paths - Array of all responsibility paths
- * @returns Array of member IDs that have responsibilities
+ * @param paths - Responsibility paths to scan for primary and step contacts
+ * @returns An array of member IDs referenced as primary or step contacts in `paths`
  */
 export function getMembersWithResponsibilities(
   members: OrgChartNode[],
@@ -65,10 +64,10 @@ export function getMembersWithResponsibilities(
 }
 
 /**
- * Get category label and color for a responsibility path
+ * Return the display label and CSS classes for a responsibility category.
  *
- * @param category - The category identifier
- * @returns Object with label and color class
+ * @param category - The responsibility category identifier
+ * @returns An object containing `label`, `colorClass`, and `bgClass` for the given category; falls back to the "Algemeen" styling if the category is not recognized
  */
 export function getCategoryInfo(category: ResponsibilityPath["category"]): {
   label: string;

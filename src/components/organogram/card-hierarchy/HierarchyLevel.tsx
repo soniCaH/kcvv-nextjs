@@ -31,18 +31,19 @@ export interface HierarchyLevelProps {
 }
 
 /**
- * Render a nested hierarchy of organization members as expandable cards.
+ * Renders a nested hierarchy of organization members as expandable cards.
  *
- * Renders each member at the current level as an ExpandableCard and recursively renders their direct reports until `maxDepth` is reached.
+ * Renders each member at the current level as an ExpandableCard and recursively renders their direct reports until the specified `maxDepth` is reached.
  *
  * @param members - OrgChartNode items to render at this level
- * @param allMembers - All OrgChartNode items used to determine each member's direct reports
+ * @param allMembers - Complete list of OrgChartNode used to determine direct reports
  * @param depth - Current nesting depth (defaults to 0)
- * @param maxDepth - Maximum depth to render; returns `null` when `depth` is greater than or equal to this value
+ * @param maxDepth - Maximum depth to render; recursion stops when `depth` is greater than or equal to this value
  * @param expandedIds - Optional set of member IDs that should be rendered expanded (controlled expansion)
- * @param onToggle - Optional callback invoked with `(memberId, isExpanded)` when a member's expansion state is toggled
+ * @param onToggle - Optional callback invoked with `(memberId, isExpanded)` when a member's expansion state toggles
  * @param onMemberClick - Optional callback invoked with the member when a member card is clicked
  * @param className - Optional additional CSS class names applied to the container
+ * @param responsibilityPaths - Optional responsibility path data passed through to child components
  * @returns A React element containing the rendered hierarchy, or `null` when `depth` is at or beyond `maxDepth`
  */
 export function HierarchyLevel({

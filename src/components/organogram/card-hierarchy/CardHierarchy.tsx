@@ -47,15 +47,15 @@ export interface CardHierarchyProps {
 }
 
 /**
- * Render an expandable, searchable card-based organizational chart with department filtering and image export.
+ * Renders a collapsible, searchable card-based organizational chart with department filtering and image export.
  *
  * @param members - Array of organization members to display in the hierarchy
  * @param onMemberClick - Optional callback invoked when a member is selected
- * @param initialExpandedDepth - Number of hierarchy levels to auto-expand on initial render (default: 2)
- * @param maxDepth - Maximum hierarchy depth to render (default: 10)
+ * @param initialExpandedDepth - Number of hierarchy levels to auto-expand on initial render
+ * @param maxDepth - Maximum hierarchy depth to render
  * @param isLoading - When true, render loading skeletons instead of the chart
  * @param className - Additional CSS class names applied to the root container
- * @returns A JSX element containing the hierarchy UI, controls, and hidden export container
+ * @returns The JSX element containing the hierarchy UI, controls, and hidden export container
  */
 export function CardHierarchy({
   members,
