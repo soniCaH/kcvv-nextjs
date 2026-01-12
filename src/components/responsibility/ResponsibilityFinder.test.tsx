@@ -642,11 +642,24 @@ describe("ResponsibilityFinder", () => {
       const buttons = screen.queryAllByRole("button");
       const suggestionButtons = buttons.filter((button) => {
         const label = button.getAttribute("aria-label") || "";
-        return label && !label.toLowerCase().includes("clear");
+        const text = button.textContent || "";
+
+        // Skip clear button (has "clear" in aria-label)
+        if (label.toLowerCase().includes("clear")) return false;
+
+        // Skip dropdown button (contains "een..." or a role name)
+        if (
+          text.includes("een...") ||
+          /speler|ouder|trainer|supporter|niet-lid/i.test(text)
+        ) {
+          return false;
+        }
+
+        return true;
       });
 
       // Should only have role dropdown and clear buttons, no suggestions
-      expect(suggestionButtons.length).toBeLessThanOrEqual(2);
+      expect(suggestionButtons.length).toBe(0);
     });
 
     it("does not call onResultSelect on mount when initialPath is provided", () => {
