@@ -67,6 +67,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
       />,
     );
 
@@ -81,6 +82,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         placeholder="Custom placeholder"
       />,
     );
@@ -98,6 +100,7 @@ describe("UnifiedSearchBar", () => {
         onChange={handleChange}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
       />,
     );
 
@@ -114,6 +117,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
       />,
     );
 
@@ -127,6 +131,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
       />,
     );
 
@@ -141,6 +146,7 @@ describe("UnifiedSearchBar", () => {
         onChange={handleChange}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
       />,
     );
 
@@ -157,6 +163,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         showAutocomplete={true}
       />,
     );
@@ -174,6 +181,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         showAutocomplete={true}
       />,
     );
@@ -190,6 +198,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         showAutocomplete={true}
       />,
     );
@@ -204,6 +213,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         showAutocomplete={true}
       />,
     );
@@ -221,6 +231,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         onSelectMember={handleSelectMember}
         showAutocomplete={true}
       />,
@@ -235,6 +246,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         onSelectMember={handleSelectMember}
         showAutocomplete={true}
       />,
@@ -255,6 +267,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         onSelectResponsibility={handleSelectResponsibility}
         showAutocomplete={true}
       />,
@@ -269,6 +282,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         onSelectResponsibility={handleSelectResponsibility}
         showAutocomplete={true}
       />,
@@ -292,6 +306,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         showAutocomplete={true}
       />,
     );
@@ -305,6 +320,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         showAutocomplete={true}
       />,
     );
@@ -319,6 +335,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         showAutocomplete={false}
       />,
     );
@@ -332,6 +349,7 @@ describe("UnifiedSearchBar", () => {
         onChange={vi.fn()}
         members={mockMembers}
         responsibilityPaths={mockResponsibilityPaths}
+        debounceMs={0}
         showAutocomplete={false}
       />,
     );
@@ -347,6 +365,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -360,6 +379,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -376,6 +396,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -389,6 +410,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -407,6 +429,7 @@ describe("UnifiedSearchBar", () => {
           onChange={handleChange}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           onSelectMember={handleSelectMember}
           showAutocomplete={true}
         />,
@@ -421,6 +444,7 @@ describe("UnifiedSearchBar", () => {
           onChange={handleChange}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           onSelectMember={handleSelectMember}
           showAutocomplete={true}
         />,
@@ -439,6 +463,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -452,6 +477,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -473,6 +499,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -486,6 +513,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -500,6 +528,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -513,6 +542,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -527,6 +557,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -540,6 +571,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -554,6 +586,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -567,6 +600,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -581,6 +615,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -594,6 +629,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -608,6 +644,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -621,6 +658,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -639,6 +677,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -652,6 +691,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -672,6 +712,7 @@ describe("UnifiedSearchBar", () => {
           onChange={handleChange}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           onSelectMember={handleSelectMember}
           showAutocomplete={true}
         />,
@@ -686,6 +727,7 @@ describe("UnifiedSearchBar", () => {
           onChange={handleChange}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           onSelectMember={handleSelectMember}
           showAutocomplete={true}
         />,
@@ -707,6 +749,7 @@ describe("UnifiedSearchBar", () => {
           onChange={handleChange}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           onSelectResponsibility={handleSelectResponsibility}
           showAutocomplete={true}
         />,
@@ -721,6 +764,7 @@ describe("UnifiedSearchBar", () => {
           onChange={handleChange}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           onSelectResponsibility={handleSelectResponsibility}
           showAutocomplete={true}
         />,
@@ -744,6 +788,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
           maxResults={1}
         />,
@@ -758,6 +803,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
           maxResults={1}
         />,
@@ -777,6 +823,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -790,6 +837,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -804,6 +852,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={[]}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -817,6 +866,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={[]}
           responsibilityPaths={mockResponsibilityPaths}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -832,6 +882,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={[]}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );
@@ -845,6 +896,7 @@ describe("UnifiedSearchBar", () => {
           onChange={vi.fn()}
           members={mockMembers}
           responsibilityPaths={[]}
+          debounceMs={0}
           showAutocomplete={true}
         />,
       );

@@ -44,6 +44,9 @@ export interface UnifiedSearchBarProps {
   /** Max autocomplete results per category */
   maxResults?: number;
 
+  /** Debounce delay in milliseconds (default: 200, set to 0 to disable) */
+  debounceMs?: number;
+
   /** Select handler for member */
   onSelectMember?: (member: OrgChartNode) => void;
 
@@ -229,20 +232,42 @@ export function UnifiedSearchBar({
   placeholder = "Zoek een persoon of hulpvraag...",
   showAutocomplete = true,
   maxResults = 5,
+  debounceMs = 200,
   onSelectMember,
   onSelectResponsibility,
   className = "",
 }: UnifiedSearchBarProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [debouncedValue, setDebouncedValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Debounce search value for performance with larger datasets
+  useEffect(() => {
+    if (debounceMs === 0) {
+      return; // No debouncing needed
+    }
+
+    const timeoutId = setTimeout(() => {
+      setDebouncedValue(value);
+    }, debounceMs);
+
+    return () => clearTimeout(timeoutId);
+  }, [value, debounceMs]);
+
+  // Use immediate value when debouncing is disabled, otherwise use debounced value
+  const effectiveSearchValue = debounceMs === 0 ? value : debouncedValue;
+
   // Search both members and responsibilities
   const searchResults = useMemo(() => {
-    const memberResults = searchMembers(value, members, maxResults);
+    const memberResults = searchMembers(
+      effectiveSearchValue,
+      members,
+      maxResults,
+    );
     const responsibilityResults = searchResponsibilities(
-      value,
+      effectiveSearchValue,
       responsibilityPaths,
       maxResults,
     );
@@ -264,7 +289,7 @@ export function UnifiedSearchBar({
     }
 
     return combined;
-  }, [value, members, responsibilityPaths, maxResults]);
+  }, [effectiveSearchValue, members, responsibilityPaths, maxResults]);
 
   const showResults = showAutocomplete && isFocused && value.trim().length > 0;
 
@@ -373,6 +398,11 @@ export function UnifiedSearchBar({
           aria-label="Zoeken"
           aria-autocomplete="list"
           aria-controls="search-results"
+          aria-activedescendant={
+            selectedIndex >= 0 && selectedIndex < searchResults.length
+              ? `search-result-${selectedIndex}`
+              : undefined
+          }
         />
         {value && (
           <button
@@ -407,6 +437,7 @@ export function UnifiedSearchBar({
               return (
                 <button
                   key={`member-${member.id}`}
+                  id={`search-result-${index}`}
                   onClick={() => handleSelect(result)}
                   onMouseEnter={() => setSelectedIndex(index)}
                   role="option"
@@ -466,6 +497,7 @@ export function UnifiedSearchBar({
               return (
                 <button
                   key={`responsibility-${path.id}`}
+                  id={`search-result-${index}`}
                   onClick={() => handleSelect(result)}
                   onMouseEnter={() => setSelectedIndex(index)}
                   role="option"

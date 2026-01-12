@@ -259,12 +259,7 @@ export function UnifiedOrganogramClient({
     <div className={`space-y-6 ${className}`}>
       {/* Unified Search */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        <h3
-          className="text-lg font-bold text-kcvv-gray-blue mb-3"
-          style={{
-            fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-          }}
-        >
+        <h3 className="text-lg font-bold text-kcvv-gray-blue mb-3">
           Zoek een persoon of hulpvraag
         </h3>
         <UnifiedSearchBar
