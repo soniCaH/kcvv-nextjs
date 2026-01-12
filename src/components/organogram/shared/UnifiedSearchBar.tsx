@@ -71,7 +71,16 @@ interface ResponsibilityResult {
 type SearchResult = MemberResult | ResponsibilityResult;
 
 /**
- * Search members with fuzzy matching
+ * Finds and ranks members that match a search query across common member fields.
+ *
+ * Performs case-insensitive substring matching against member `name` (highest priority), `title`,
+ * `positionShort`, `email`, and `department`. For each matching member it builds a relevance
+ * score and a list of human-readable matched field labels, then returns the top matches.
+ *
+ * @param query - The search string to match against member fields
+ * @param members - The list of members to search
+ * @param maxResults - Maximum number of results to return
+ * @returns An array of `MemberResult` objects containing the matched member, a relevance `score` (higher is better), and `matchedFields` labels, sorted by descending score and limited to `maxResults`
  */
 function searchMembers(
   query: string,
@@ -126,7 +135,18 @@ function searchMembers(
 }
 
 /**
- * Search responsibility paths with keyword matching
+ * Finds and ranks responsibility paths that match a search query.
+ *
+ * Matches against the path's question, summary, and keywords, and also scores
+ * individual query words (skipping words shorter than 3 characters). Results
+ * include which path fields matched and are ordered by descending relevance.
+ *
+ * @param query - The search text to match against responsibility paths.
+ * @param paths - The list of responsibility paths to search.
+ * @param maxResults - Maximum number of results to return.
+ * @returns An array of responsibility results sorted by descending score; each
+ * result contains the matched `path`, a numeric `score`, and `matchedFields`
+ * describing which path fields contributed to the match.
  */
 function searchResponsibilities(
   query: string,
@@ -185,7 +205,21 @@ function searchResponsibilities(
 }
 
 /**
- * UnifiedSearchBar - Search across members and responsibility paths
+ * Search input component that queries both organization members and responsibility paths and displays an interleaved autocomplete list.
+ *
+ * Renders a text input with optional clear button and a dropdown of mixed member and responsibility results, supports keyboard navigation, mouse selection, and outside-click dismissal.
+ *
+ * @param value - Current search string displayed in the input
+ * @param onChange - Callback invoked with the new search string when the input changes
+ * @param members - Array of organization members to search
+ * @param responsibilityPaths - Array of responsibility paths to search
+ * @param placeholder - Placeholder text shown in the input when empty
+ * @param showAutocomplete - Whether to show the autocomplete dropdown when the input is focused and non-empty
+ * @param maxResults - Maximum number of results to fetch per category (members and responsibilities) before interleaving
+ * @param onSelectMember - Optional callback invoked with the selected member when a member result is chosen
+ * @param onSelectResponsibility - Optional callback invoked with the selected responsibility path when a responsibility result is chosen
+ * @param className - Optional additional CSS class applied to the root container
+ * @returns The component's rendered JSX element
  */
 export function UnifiedSearchBar({
   value,
