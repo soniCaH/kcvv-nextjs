@@ -28,6 +28,10 @@ interface ResponsibilityFinderProps {
   onResultSelect?: (path: ResponsibilityPath) => void;
   onMemberSelect?: (memberId: string) => void;
   compact?: boolean;
+  /** Responsibility path ID to pre-select and display */
+  initialPathId?: string;
+  /** Responsibility path object to pre-select and display */
+  initialPath?: ResponsibilityPath;
 }
 
 // Category color palette - professional and subtle
@@ -73,12 +77,16 @@ const categoryColors = {
  * @param onResultSelect - Optional callback invoked with the selected `ResponsibilityPath` when the user picks a suggestion.
  * @param onMemberSelect - Optional callback invoked with a member ID when clicking a contact person link with a memberId.
  * @param compact - When true, use a more compact layout and typography.
+ * @param initialPathId - Optional responsibility path ID to pre-select and display on mount.
+ * @param initialPath - Optional responsibility path object to pre-select and display on mount. Takes precedence over initialPathId.
  * @returns A React element that renders the ResponsibilityFinder UI (role selection, question input, suggestions, and result display).
  */
 export function ResponsibilityFinder({
   onResultSelect,
   onMemberSelect,
   compact = false,
+  initialPathId,
+  initialPath,
 }: ResponsibilityFinderProps) {
   const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
   const [questionText, setQuestionText] = useState("");
@@ -207,6 +215,36 @@ export function ResponsibilityFinder({
       }
     };
   }, []);
+
+  // Handle initial path selection (for deep linking / pre-filling)
+  useEffect(() => {
+    // initialPath takes precedence over initialPathId
+    if (initialPath) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional one-time initialization from props on mount
+      setSelectedResult(initialPath);
+      setQuestionText(initialPath.question);
+      // Set role if it matches one of the path's roles
+      if (initialPath.role.length > 0) {
+        setSelectedRole(initialPath.role[0]);
+      }
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Fallback to initialPathId
+    if (initialPathId) {
+      const path = responsibilityPaths.find((p) => p.id === initialPathId);
+      if (path) {
+        setSelectedResult(path);
+        setQuestionText(path.question);
+        // Set role if it matches one of the path's roles
+        if (path.role.length > 0) {
+          setSelectedRole(path.role[0]);
+        }
+        setShowSuggestions(false);
+      }
+    }
+  }, [initialPath, initialPathId]);
 
   return (
     <div className={`responsibility-finder ${compact ? "compact" : ""}`}>

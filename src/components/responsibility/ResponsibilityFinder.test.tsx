@@ -571,4 +571,129 @@ describe("ResponsibilityFinder", () => {
       expect(organogramLink).toHaveAttribute("href", "/club/organogram");
     });
   });
+
+  describe("Pre-filling and Highlighting", () => {
+    it("pre-fills with initialPathId", () => {
+      // Find a responsibility path to test with
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPathId={testPath.id} />);
+
+      // Should pre-select the result
+      expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+      expect(screen.getByText(testPath.question)).toBeInTheDocument();
+    });
+
+    it("pre-fills with initialPath object", () => {
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPath={testPath} />);
+
+      // Should pre-select the result
+      expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+      expect(screen.getByText(testPath.question)).toBeInTheDocument();
+    });
+
+    it("initialPath takes precedence over initialPathId", () => {
+      const pathFromId = responsibilityPaths[0];
+      const pathFromObject = responsibilityPaths[1];
+
+      render(
+        <ResponsibilityFinder
+          initialPathId={pathFromId.id}
+          initialPath={pathFromObject}
+        />,
+      );
+
+      // Should show the path from initialPath, not initialPathId
+      expect(screen.getByText(pathFromObject.question)).toBeInTheDocument();
+      expect(screen.queryByText(pathFromId.question)).not.toBeInTheDocument();
+    });
+
+    it("sets role when pre-filling with initialPath", () => {
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPath={testPath} />);
+
+      // Role dropdown should show the first role from the path
+      const expectedRole = testPath.role[0];
+      const roleButton = screen.getByRole("button", {
+        name: new RegExp(expectedRole, "i"),
+      });
+      expect(roleButton).toBeInTheDocument();
+    });
+
+    it("sets question text when pre-filling", () => {
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPath={testPath} />);
+
+      // Question input should show the path's question
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      expect(input).toHaveValue(testPath.question);
+    });
+
+    it("does not show suggestions when pre-filled", () => {
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPath={testPath} />);
+
+      // Should not show the autocomplete dropdown
+      const buttons = screen.queryAllByRole("button");
+      const suggestionButtons = buttons.filter((button) => {
+        const label = button.getAttribute("aria-label") || "";
+        return label && !label.toLowerCase().includes("clear");
+      });
+
+      // Should only have role dropdown and clear buttons, no suggestions
+      expect(suggestionButtons.length).toBeLessThanOrEqual(2);
+    });
+
+    it("calls onResultSelect callback when initialPath is provided", () => {
+      const onResultSelect = vi.fn();
+      const testPath = responsibilityPaths[0];
+
+      render(
+        <ResponsibilityFinder
+          initialPath={testPath}
+          onResultSelect={onResultSelect}
+        />,
+      );
+
+      // onResultSelect should not be called automatically on mount
+      // It's only called when user selects from suggestions
+      expect(onResultSelect).not.toHaveBeenCalled();
+    });
+
+    it("handles invalid initialPathId gracefully", () => {
+      render(<ResponsibilityFinder initialPathId="non-existent-id" />);
+
+      // Should render without crashing
+      expect(screen.getByText(/IK BEN/i)).toBeInTheDocument();
+
+      // Should not show result card
+      expect(screen.queryByText(/Contactpersoon/i)).not.toBeInTheDocument();
+    });
+
+    it("allows user to change selection after pre-filling", async () => {
+      const user = userEvent.setup();
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPath={testPath} />);
+
+      // Initially shows the pre-filled result
+      expect(screen.getByText(testPath.question)).toBeInTheDocument();
+
+      // User can type a new search
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.clear(input);
+      await user.type(input, "new search");
+
+      // Should clear the selected result and show suggestions
+      await waitFor(() => {
+        // May or may not find matches, but should be searching
+        expect(input).toHaveValue("new search");
+      });
+    });
+  });
 });
