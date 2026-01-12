@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Member Details Modal
@@ -7,15 +7,22 @@
  * in the organizational chart.
  */
 
-import { useEffect, useState, useMemo } from 'react'
-import type { OrgChartNode } from '@/types/organogram'
-import Link from 'next/link'
-import Image from 'next/image'
+import { useEffect, useState, useMemo } from "react";
+import type { OrgChartNode } from "@/types/organogram";
+import type { ResponsibilityPath } from "@/types/responsibility";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  findMemberResponsibilities,
+  getCategoryInfo,
+} from "@/lib/responsibility-utils";
 
 interface MemberDetailsModalProps {
-  member: OrgChartNode | null
-  isOpen: boolean
-  onClose: () => void
+  member: OrgChartNode | null;
+  isOpen: boolean;
+  onClose: () => void;
+  responsibilityPaths?: ResponsibilityPath[];
+  onViewResponsibility?: (responsibilityId: string) => void;
 }
 
 /**
@@ -25,40 +32,52 @@ interface MemberDetailsModalProps {
  *
  * @returns The modal JSX when `isOpen` is true and `member` is provided; otherwise `null`.
  */
-export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsModalProps) {
+export function MemberDetailsModal({
+  member,
+  isOpen,
+  onClose,
+  responsibilityPaths = [],
+  onViewResponsibility,
+}: MemberDetailsModalProps) {
   // Close on Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
+      if (e.key === "Escape") onClose();
+    };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'hidden'
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen, onClose])
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen, onClose]);
 
   // Derive image source directly from props (no useEffect needed)
-  const defaultImage = '/images/logo-flat.png'
+  const defaultImage = "/images/logo-flat.png";
 
   // Track if the member's image failed to load (only state we need)
-  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   // Determine which image to show
   const imageSrc = useMemo(() => {
-    const memberImage = member?.imageUrl
+    const memberImage = member?.imageUrl;
     if (!memberImage || failedImages.has(memberImage)) {
-      return defaultImage
+      return defaultImage;
     }
-    return memberImage
-  }, [member?.imageUrl, failedImages, defaultImage])
+    return memberImage;
+  }, [member?.imageUrl, failedImages, defaultImage]);
 
-  if (!isOpen || !member) return null
+  // Find linked responsibility paths
+  const linkedResponsibilities = useMemo(() => {
+    if (!member || !responsibilityPaths.length) return [];
+    return findMemberResponsibilities(member.id, responsibilityPaths);
+  }, [member, responsibilityPaths]);
+
+  if (!isOpen || !member) return null;
 
   return (
     <div
@@ -89,23 +108,28 @@ export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsMod
               onError={() => {
                 if (member.imageUrl) {
                   setFailedImages((prev) => {
-                    if (prev.has(member.imageUrl!)) return prev
-                    const next = new Set(prev)
-                    next.add(member.imageUrl!)
-                    return next
-                  })
+                    if (prev.has(member.imageUrl!)) return prev;
+                    const next = new Set(prev);
+                    next.add(member.imageUrl!);
+                    return next;
+                  });
                 }
               }}
             />
             <div>
-              <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: 'quasimoda, acumin-pro, Montserrat, sans-serif' }}>
+              <h2
+                className="text-2xl font-bold mb-1"
+                style={{
+                  fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+                }}
+              >
                 {member.name}
               </h2>
               <p className="text-white/90 text-lg">{member.title}</p>
               {member.positionShort && (
                 <span
                   className="inline-block mt-2 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-md text-sm font-semibold tracking-wide"
-                  style={{ fontFamily: 'ibm-plex-mono, monospace' }}
+                  style={{ fontFamily: "ibm-plex-mono, monospace" }}
                 >
                   {member.positionShort}
                 </span>
@@ -119,14 +143,29 @@ export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsMod
           {/* Contact Information */}
           {(member.email || member.phone) && (
             <div>
-              <h3 className="text-lg font-bold text-gray-blue mb-3" style={{ fontFamily: 'quasimoda, acumin-pro, Montserrat, sans-serif' }}>
+              <h3
+                className="text-lg font-bold text-gray-blue mb-3"
+                style={{
+                  fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+                }}
+              >
                 Contactgegevens
               </h3>
               <div className="space-y-2">
                 {member.email && (
                   <div className="flex items-center gap-3">
-                    <svg className="w-5 h-5 text-green-main flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <svg
+                      className="w-5 h-5 text-green-main flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      />
                     </svg>
                     <a
                       href={`mailto:${member.email}`}
@@ -138,8 +177,18 @@ export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsMod
                 )}
                 {member.phone && (
                   <div className="flex items-center gap-3">
-                    <svg className="w-5 h-5 text-green-main flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    <svg
+                      className="w-5 h-5 text-green-main flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                      />
                     </svg>
                     <a
                       href={`tel:${member.phone}`}
@@ -156,22 +205,81 @@ export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsMod
           {/* Responsibilities */}
           {member.responsibilities && (
             <div>
-              <h3 className="text-lg font-bold text-gray-blue mb-3" style={{ fontFamily: 'quasimoda, acumin-pro, Montserrat, sans-serif' }}>
+              <h3
+                className="text-lg font-bold text-gray-blue mb-3"
+                style={{
+                  fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+                }}
+              >
                 Verantwoordelijkheden
               </h3>
-              <p className="text-gray-dark leading-relaxed">{member.responsibilities}</p>
+              <p className="text-gray-dark leading-relaxed">
+                {member.responsibilities}
+              </p>
             </div>
           )}
 
           {/* Department Badge */}
-          {member.department && member.department !== 'general' && (
+          {member.department && member.department !== "general" && (
             <div>
-              <h3 className="text-lg font-bold text-gray-blue mb-3" style={{ fontFamily: 'quasimoda, acumin-pro, Montserrat, sans-serif' }}>
+              <h3
+                className="text-lg font-bold text-gray-blue mb-3"
+                style={{
+                  fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+                }}
+              >
                 Afdeling
               </h3>
               <span className="inline-block px-4 py-2 bg-green-main/10 text-green-main rounded-lg font-medium">
-                {member.department === 'hoofdbestuur' ? 'Hoofdbestuur' : 'Jeugdbestuur'}
+                {member.department === "hoofdbestuur"
+                  ? "Hoofdbestuur"
+                  : "Jeugdbestuur"}
               </span>
+            </div>
+          )}
+
+          {/* Linked Responsibility Paths */}
+          {linkedResponsibilities.length > 0 && (
+            <div>
+              <h3
+                className="text-lg font-bold text-gray-blue mb-3"
+                style={{
+                  fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+                }}
+              >
+                Hulpvragen ({linkedResponsibilities.length})
+              </h3>
+              <p className="text-sm text-gray-dark mb-3">
+                Je kan deze persoon contacteren voor:
+              </p>
+              <div className="space-y-2">
+                {linkedResponsibilities.map((path) => {
+                  const categoryInfo = getCategoryInfo(path.category);
+                  return (
+                    <button
+                      key={path.id}
+                      onClick={() => onViewResponsibility?.(path.id)}
+                      className={`w-full text-left p-3 rounded-lg border-2 transition-all hover:shadow-md ${categoryInfo.bgClass}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={`text-sm font-semibold ${categoryInfo.colorClass} shrink-0`}
+                        >
+                          {categoryInfo.label}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-blue">
+                            {path.question}
+                          </p>
+                          <p className="text-xs text-gray-dark mt-1 line-clamp-2">
+                            {path.summary}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -183,8 +291,18 @@ export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsMod
                 className="inline-flex items-center gap-2 text-green-main hover:text-green-hover font-semibold transition-colors"
               >
                 <span>Bekijk volledig profiel</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </Link>
             </div>
@@ -202,5 +320,5 @@ export function MemberDetailsModal({ member, isOpen, onClose }: MemberDetailsMod
         </div>
       </div>
     </div>
-  )
+  );
 }

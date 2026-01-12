@@ -18,7 +18,9 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "@/lib/icons";
 import { ContactCard } from "../shared/ContactCard";
+import { findMemberResponsibilities } from "@/lib/responsibility-utils";
 import type { OrgChartNode } from "@/types/organogram";
+import type { ResponsibilityPath } from "@/types/responsibility";
 
 export interface ExpandableCardProps {
   member: OrgChartNode;
@@ -32,6 +34,7 @@ export interface ExpandableCardProps {
     depth: number,
   ) => React.ReactNode;
   className?: string;
+  responsibilityPaths?: ResponsibilityPath[];
 }
 
 /**
@@ -58,12 +61,19 @@ export function ExpandableCard({
   onMemberClick,
   renderChildren,
   className = "",
+  responsibilityPaths = [],
 }: ExpandableCardProps) {
   const [internalExpanded, setInternalExpanded] = useState(false);
 
   // Use controlled or uncontrolled state
   const expanded = onToggle !== undefined ? isExpanded : internalExpanded;
   const hasChildren = directReports.length > 0;
+
+  // Calculate responsibility count
+  const responsibilityCount =
+    responsibilityPaths.length > 0
+      ? findMemberResponsibilities(member.id, responsibilityPaths).length
+      : 0;
 
   // Handle toggle
   const handleToggle = () => {
@@ -146,6 +156,7 @@ export function ExpandableCard({
               isExpanded={expanded}
               onClick={onMemberClick}
               testId={`expandable-card-${member.id}`}
+              responsibilityCount={responsibilityCount}
             />
           </div>
         </div>

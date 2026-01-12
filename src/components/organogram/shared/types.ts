@@ -43,6 +43,9 @@ export interface ContactCardProps {
 
   /** Optional test ID */
   testId?: string;
+
+  /** Number of responsibility paths this member is responsible for */
+  responsibilityCount?: number;
 }
 
 /**

@@ -34,6 +34,7 @@ import { SearchBar } from "../shared/SearchBar";
 import { DepartmentFilter } from "../shared/DepartmentFilter";
 import { HierarchyLevel } from "./HierarchyLevel";
 import { renderNode, type NodeData } from "../chart/NodeRenderer";
+import { responsibilityPaths } from "@/data/responsibility-paths";
 import type { OrgChartNode } from "@/types/organogram";
 
 export interface CardHierarchyProps {
@@ -447,6 +448,7 @@ export function CardHierarchy({
             expandedIds={effectiveExpandedIds}
             onToggle={handleToggle}
             onMemberClick={onMemberClick}
+            responsibilityPaths={responsibilityPaths}
           />
         )}
       </div>
