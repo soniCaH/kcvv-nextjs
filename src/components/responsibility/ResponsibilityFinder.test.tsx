@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ResponsibilityFinder } from "./ResponsibilityFinder";
 import { responsibilityPaths } from "@/data/responsibility-paths";
@@ -250,17 +250,20 @@ describe("ResponsibilityFinder", () => {
         expect(suggestionButtons.length).toBeGreaterThan(0);
       });
 
-      // Click outside - use a real DOM element for reliable clicks in CI
+      // Click outside using fireEvent for better compatibility with native click listener
       const outsideElement = screen.getByTestId("outside-element");
-      await user.click(outsideElement);
+      fireEvent.click(outsideElement);
 
-      // Wait for suggestions to disappear (more reliable than waitForElementToBeRemoved)
-      await waitFor(() => {
-        const suggestionButtons = screen.queryAllByRole("button", {
-          name: /ongeval/i,
-        });
-        expect(suggestionButtons).toHaveLength(0);
-      });
+      // Wait for suggestions to disappear
+      await waitFor(
+        () => {
+          const suggestionButtons = screen.queryAllByRole("button", {
+            name: /ongeval/i,
+          });
+          expect(suggestionButtons).toHaveLength(0);
+        },
+        { timeout: 3000 },
+      );
     });
   });
 

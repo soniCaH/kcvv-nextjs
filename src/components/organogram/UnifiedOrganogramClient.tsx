@@ -27,12 +27,15 @@ import { EnhancedOrgChart } from "./chart/EnhancedOrgChart";
 import { ResponsibilityFinder } from "../responsibility/ResponsibilityFinder";
 import { MemberDetailsModal } from "./MemberDetailsModal";
 import { FilterTabs } from "../design-system/FilterTabs";
+import { UnifiedSearchBar } from "./shared/UnifiedSearchBar";
 import {
   findMemberById,
   buildOrganogramUrl,
   parseOrganogramParams,
 } from "@/lib/organogram-utils";
+import { responsibilityPaths } from "@/data/responsibility-paths";
 import type { OrgChartNode } from "@/types/organogram";
+import type { ResponsibilityPath } from "@/types/responsibility";
 import type { FilterTab } from "../design-system/FilterTabs/FilterTabs";
 
 type ViewType = "cards" | "chart" | "responsibilities";
@@ -59,10 +62,16 @@ function getInitialView(urlView: string | null): ViewType {
 }
 
 /**
- * UnifiedOrganogramClient - Unified organogram and responsibility system
+ * Render a unified organogram UI that lets users switch between cards, chart,
+ * and responsibilities views, search members or responsibilities, and inspect member details.
  *
- * @param members - All organization members
- * @param className - Additional CSS classes
+ * The component synchronizes the active view and selected member with the URL,
+ * persists the user's view preference to localStorage, and supports deep links
+ * that open the member details modal.
+ *
+ * @param members - All organization members used to populate the views and search
+ * @param className - Optional additional CSS classes to apply to the root container
+ * @returns The rendered unified organogram React element
  */
 export function UnifiedOrganogramClient({
   members,
@@ -87,6 +96,7 @@ export function UnifiedOrganogramClient({
     () => urlMember,
   );
   const [isModalOpen, setIsModalOpen] = useState(() => !!urlMember);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Track whether initial localStorage sync has occurred
   const hasInitializedRef = useRef(false);
@@ -199,6 +209,35 @@ export function UnifiedOrganogramClient({
     }
   };
 
+  // Handle navigation to responsibility view from member details modal
+  const handleViewResponsibility = (_responsibilityId: string) => {
+    // Close modal and switch to responsibilities view
+    setIsModalOpen(false);
+    setSelectedMember(null);
+    setActiveView("responsibilities");
+    updateUrl({ view: "responsibilities", memberId: null });
+
+    // TODO: Once ResponsibilityFinder supports highlighting specific paths,
+    // we can pass _responsibilityId to auto-select/highlight it
+  };
+
+  // Handle unified search - member selection
+  const handleSearchMemberSelect = (member: OrgChartNode) => {
+    handleMemberClick(member);
+  };
+
+  // Handle unified search - responsibility selection
+  const handleSearchResponsibilitySelect = (_path: ResponsibilityPath) => {
+    // Switch to responsibilities view
+    setActiveView("responsibilities");
+    updateUrl({ view: "responsibilities", memberId: null });
+    // Clear search query as it no longer relates to the current view
+    setSearchQuery("");
+
+    // TODO: Once ResponsibilityFinder supports pre-filling,
+    // we can pass _path to auto-select/highlight it
+  };
+
   // View tabs configuration
   const viewTabs: FilterTab[] = [
     {
@@ -220,6 +259,22 @@ export function UnifiedOrganogramClient({
 
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* Unified Search */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <h3 className="text-lg font-bold text-kcvv-gray-blue mb-3">
+          Zoek een persoon of hulpvraag
+        </h3>
+        <UnifiedSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          members={members}
+          responsibilityPaths={responsibilityPaths}
+          onSelectMember={handleSearchMemberSelect}
+          onSelectResponsibility={handleSearchResponsibilitySelect}
+          placeholder="Zoek op naam, functie, of hulpvraag..."
+        />
+      </div>
+
       {/* View Toggle */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <FilterTabs
@@ -289,6 +344,8 @@ export function UnifiedOrganogramClient({
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           member={selectedMember}
+          responsibilityPaths={responsibilityPaths}
+          onViewResponsibility={handleViewResponsibility}
         />
       )}
     </div>

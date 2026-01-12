@@ -18,7 +18,9 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "@/lib/icons";
 import { ContactCard } from "../shared/ContactCard";
+import { findMemberResponsibilities } from "@/lib/responsibility-utils";
 import type { OrgChartNode } from "@/types/organogram";
+import type { ResponsibilityPath } from "@/types/responsibility";
 
 export interface ExpandableCardProps {
   member: OrgChartNode;
@@ -32,21 +34,21 @@ export interface ExpandableCardProps {
     depth: number,
   ) => React.ReactNode;
   className?: string;
+  responsibilityPaths?: ResponsibilityPath[];
 }
 
 /**
- * Render a member card that can expand or collapse to show its direct reports.
+ * Render a depth-indented member card with an optional expand/collapse control and nested direct reports.
  *
- * Renders a depth-indented ContactCard for `member` with an optional expand/collapse control when `directReports` are present; expansion can be controlled via `onToggle`/`isExpanded` or managed internally. When expanded, nested children are rendered either by `renderChildren` or as a fallback list of names.
- *
- * @param member - The OrgChartNode to display in the card
- * @param directReports - Array of direct report nodes for this member
- * @param depth - Nesting depth where 0 is the root (affects indentation and background)
+ * @param member - The OrgChartNode to display
+ * @param directReports - Direct report nodes to render when expanded
+ * @param depth - Nesting level (0 = root) that affects indentation and background
  * @param isExpanded - Controlled expanded state (used when `onToggle` is provided)
- * @param onToggle - Optional handler invoked with `(memberId, newState)` when expansion is toggled; presence of this prop enables controlled mode
- * @param onMemberClick - Optional click handler forwarded to the ContactCard
- * @param renderChildren - Optional function `(children, nextDepth) => ReactNode` to custom-render nested direct reports
- * @param className - Optional additional CSS classes applied to the root container
+ * @param onToggle - Handler invoked as `(memberId, newState)` when expansion is toggled; presence of this prop enables controlled mode
+ * @param onMemberClick - Click handler forwarded to the ContactCard
+ * @param renderChildren - Optional custom renderer `(children, nextDepth) => ReactNode` for nested direct reports
+ * @param className - Optional CSS classes applied to the root container
+ * @param responsibilityPaths - Optional responsibility paths used to compute a responsibility count shown on the ContactCard
  * @returns A JSX element containing the member card and its optionally rendered nested children
  */
 export function ExpandableCard({
@@ -58,12 +60,19 @@ export function ExpandableCard({
   onMemberClick,
   renderChildren,
   className = "",
+  responsibilityPaths = [],
 }: ExpandableCardProps) {
   const [internalExpanded, setInternalExpanded] = useState(false);
 
   // Use controlled or uncontrolled state
   const expanded = onToggle !== undefined ? isExpanded : internalExpanded;
   const hasChildren = directReports.length > 0;
+
+  // Calculate responsibility count
+  const responsibilityCount =
+    responsibilityPaths.length > 0
+      ? findMemberResponsibilities(member.id, responsibilityPaths).length
+      : 0;
 
   // Handle toggle
   const handleToggle = () => {
@@ -146,6 +155,7 @@ export function ExpandableCard({
               isExpanded={expanded}
               onClick={onMemberClick}
               testId={`expandable-card-${member.id}`}
+              responsibilityCount={responsibilityCount}
             />
           </div>
         </div>
