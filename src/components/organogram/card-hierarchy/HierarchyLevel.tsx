@@ -16,6 +16,7 @@
 
 import { ExpandableCard } from "./ExpandableCard";
 import type { OrgChartNode } from "@/types/organogram";
+import type { ResponsibilityPath } from "@/types/responsibility";
 
 export interface HierarchyLevelProps {
   members: OrgChartNode[];
@@ -26,6 +27,7 @@ export interface HierarchyLevelProps {
   onToggle?: (memberId: string, isExpanded: boolean) => void;
   onMemberClick?: (member: OrgChartNode) => void;
   className?: string;
+  responsibilityPaths?: ResponsibilityPath[];
 }
 
 /**
@@ -52,6 +54,7 @@ export function HierarchyLevel({
   onToggle,
   onMemberClick,
   className = "",
+  responsibilityPaths = [],
 }: HierarchyLevelProps) {
   // Stop recursion at max depth
   if (depth >= maxDepth) {
@@ -77,6 +80,7 @@ export function HierarchyLevel({
         expandedIds={expandedIds}
         onToggle={onToggle}
         onMemberClick={onMemberClick}
+        responsibilityPaths={responsibilityPaths}
       />
     );
   };
@@ -97,6 +101,7 @@ export function HierarchyLevel({
             onToggle={onToggle}
             onMemberClick={onMemberClick}
             renderChildren={renderDirectReports}
+            responsibilityPaths={responsibilityPaths}
           />
         );
       })}
