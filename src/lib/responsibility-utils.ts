@@ -5,7 +5,6 @@
  */
 
 import type { ResponsibilityPath } from "@/types/responsibility";
-import type { OrgChartNode } from "@/types/organogram";
 
 /**
  * Finds responsibility paths for which the given member is the primary contact.
@@ -44,7 +43,6 @@ export function findMemberStepResponsibilities(
  * @returns An array of member IDs referenced as primary or step contacts in `paths`
  */
 export function getMembersWithResponsibilities(
-  members: OrgChartNode[],
   paths: ResponsibilityPath[],
 ): string[] {
   const memberIds = new Set<string>();

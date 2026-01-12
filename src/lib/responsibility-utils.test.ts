@@ -7,7 +7,6 @@ import {
   buildResponsibilityUrl,
 } from "./responsibility-utils";
 import type { ResponsibilityPath } from "@/types/responsibility";
-import type { OrgChartNode } from "@/types/organogram";
 
 describe("responsibility-utils", () => {
   const mockPaths: ResponsibilityPath[] = [
@@ -61,19 +60,6 @@ describe("responsibility-utils", () => {
     },
   ];
 
-  const mockMembers: OrgChartNode[] = [
-    {
-      id: "member-1",
-      name: "John Doe",
-      title: "Test Title",
-    },
-    {
-      id: "member-2",
-      name: "Jane Smith",
-      title: "Test Title",
-    },
-  ];
-
   describe("findMemberResponsibilities", () => {
     it("should find all paths where member is primary contact", () => {
       const result = findMemberResponsibilities("member-1", mockPaths);
@@ -112,21 +98,19 @@ describe("responsibility-utils", () => {
 
   describe("getMembersWithResponsibilities", () => {
     it("should return all unique member IDs with responsibilities", () => {
-      const result = getMembersWithResponsibilities(mockMembers, mockPaths);
+      const result = getMembersWithResponsibilities(mockPaths);
       expect(result).toHaveLength(2);
       expect(result).toContain("member-1");
       expect(result).toContain("member-2");
     });
 
     it("should return empty array when no responsibilities", () => {
-      const result = getMembersWithResponsibilities(mockMembers, []);
+      const result = getMembersWithResponsibilities([]);
       expect(result).toHaveLength(0);
     });
 
     it("should handle paths with no member IDs", () => {
-      const result = getMembersWithResponsibilities(mockMembers, [
-        mockPaths[2],
-      ]);
+      const result = getMembersWithResponsibilities([mockPaths[2]]);
       expect(result).toHaveLength(0);
     });
   });

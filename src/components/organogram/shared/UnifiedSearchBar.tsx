@@ -284,12 +284,6 @@ export function UnifiedSearchBar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Reset selected index when results change (derived from searchResults)
-  const effectiveSelectedIndex = useMemo(() => {
-    // Reset to -1 when search results change
-    return selectedIndex >= searchResults.length ? -1 : selectedIndex;
-  }, [searchResults, selectedIndex]);
-
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!showResults) return;
@@ -297,25 +291,26 @@ export function UnifiedSearchBar({
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev < searchResults.length - 1 ? prev + 1 : 0,
-        );
+        setSelectedIndex((prev) => {
+          // Clamp to valid range if prev is out of bounds
+          const clamped = prev >= searchResults.length ? -1 : prev;
+          return clamped < searchResults.length - 1 ? clamped + 1 : 0;
+        });
         break;
 
       case "ArrowUp":
         e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev > 0 ? prev - 1 : searchResults.length - 1,
-        );
+        setSelectedIndex((prev) => {
+          // Clamp to valid range if prev is out of bounds
+          const clamped = prev >= searchResults.length ? -1 : prev;
+          return clamped > 0 ? clamped - 1 : searchResults.length - 1;
+        });
         break;
 
       case "Enter":
         e.preventDefault();
-        if (
-          effectiveSelectedIndex >= 0 &&
-          effectiveSelectedIndex < searchResults.length
-        ) {
-          handleSelect(searchResults[effectiveSelectedIndex]);
+        if (selectedIndex >= 0 && selectedIndex < searchResults.length) {
+          handleSelect(searchResults[selectedIndex]);
         }
         break;
 
@@ -340,9 +335,16 @@ export function UnifiedSearchBar({
     inputRef.current?.blur();
   };
 
+  // Handle input change and reset selection
+  const handleInputChange = (newValue: string) => {
+    onChange(newValue);
+    setSelectedIndex(-1); // Reset selection when search changes
+  };
+
   // Clear search
   const handleClear = () => {
     onChange("");
+    setSelectedIndex(-1);
     inputRef.current?.focus();
   };
 
@@ -357,7 +359,7 @@ export function UnifiedSearchBar({
           ref={inputRef}
           type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => handleInputChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
@@ -396,7 +398,7 @@ export function UnifiedSearchBar({
           "
         >
           {searchResults.map((result, index) => {
-            const isSelected = index === effectiveSelectedIndex;
+            const isSelected = index === selectedIndex;
 
             if (result.type === "member") {
               const { member, matchedFields } = result;
