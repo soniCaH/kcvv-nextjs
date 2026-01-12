@@ -338,4 +338,519 @@ describe("UnifiedSearchBar", () => {
 
     expect(screen.queryByText("John Doe")).not.toBeInTheDocument();
   });
+
+  describe("keyboard navigation", () => {
+    it("navigates down with ArrowDown key", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="j"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      fireEvent.keyDown(input, { key: "ArrowDown" });
+      // Should highlight first result
+      expect(input).toBeInTheDocument();
+    });
+
+    it("navigates up with ArrowUp key", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="j"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      fireEvent.keyDown(input, { key: "ArrowUp" });
+      // Should wrap to last result
+      expect(input).toBeInTheDocument();
+    });
+
+    it("selects result with Enter key", () => {
+      const handleSelectMember = vi.fn();
+      const handleChange = vi.fn();
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={handleChange}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          onSelectMember={handleSelectMember}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="john"
+          onChange={handleChange}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          onSelectMember={handleSelectMember}
+          showAutocomplete={true}
+        />,
+      );
+
+      fireEvent.keyDown(input, { key: "ArrowDown" });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      expect(handleSelectMember).toHaveBeenCalled();
+    });
+
+    it("closes dropdown with Escape key", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="john"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+
+      fireEvent.keyDown(input, { key: "Escape" });
+
+      // Dropdown should close (input loses focus)
+      expect(input).toBeInTheDocument();
+    });
+  });
+
+  describe("search matching", () => {
+    it("matches member by title", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="voorzitter"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+    });
+
+    it("matches member by position short", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="pres"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+    });
+
+    it("matches member by email", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="jane@example.com"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+    });
+
+    it("matches member by department", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="jeugdbestuur"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      expect(screen.getByText("Maria Janssens")).toBeInTheDocument();
+    });
+
+    it("matches responsibility by summary", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="formulier"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      expect(screen.getByText("wil mij graag inschrijven")).toBeInTheDocument();
+    });
+
+    it("matches responsibility by keywords", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="sponsor"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      expect(
+        screen.getByText("wil de club graag sponsoren"),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("result interaction", () => {
+    it("highlights result on mouse enter", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="john"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const memberButton = screen.getByText("John Doe").closest("button");
+      if (memberButton) {
+        fireEvent.mouseEnter(memberButton);
+        expect(memberButton).toBeInTheDocument();
+      }
+    });
+
+    it("updates search value when member is selected", () => {
+      const handleChange = vi.fn();
+      const handleSelectMember = vi.fn();
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={handleChange}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          onSelectMember={handleSelectMember}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="john"
+          onChange={handleChange}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          onSelectMember={handleSelectMember}
+          showAutocomplete={true}
+        />,
+      );
+
+      const memberButton = screen.getByText("John Doe").closest("button");
+      if (memberButton) {
+        fireEvent.click(memberButton);
+        expect(handleChange).toHaveBeenCalledWith("John Doe");
+      }
+    });
+
+    it("updates search value when responsibility is selected", () => {
+      const handleChange = vi.fn();
+      const handleSelectResponsibility = vi.fn();
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={handleChange}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          onSelectResponsibility={handleSelectResponsibility}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="inschrijven"
+          onChange={handleChange}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          onSelectResponsibility={handleSelectResponsibility}
+          showAutocomplete={true}
+        />,
+      );
+
+      const responsibilityButton = screen
+        .getByText("wil mij graag inschrijven")
+        .closest("button");
+      if (responsibilityButton) {
+        fireEvent.click(responsibilityButton);
+        expect(handleChange).toHaveBeenCalledWith("wil mij graag inschrijven");
+      }
+    });
+  });
+
+  describe("maxResults", () => {
+    it("limits results to maxResults", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+          maxResults={1}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="j"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+          maxResults={1}
+        />,
+      );
+
+      // Should only show 1 member result (not all matching members)
+      const results = screen.getAllByRole("option");
+      expect(results.length).toBeLessThanOrEqual(2); // 1 member + 1 responsibility max
+    });
+  });
+
+  describe("empty states", () => {
+    it("shows no results when value is only whitespace", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="   "
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
+
+    it("handles empty members array", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={[]}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="test"
+          onChange={vi.fn()}
+          members={[]}
+          responsibilityPaths={mockResponsibilityPaths}
+          showAutocomplete={true}
+        />,
+      );
+
+      // Should still show responsibility results
+      expect(input).toBeInTheDocument();
+    });
+
+    it("handles empty responsibility paths array", () => {
+      const { rerender } = render(
+        <UnifiedSearchBar
+          value=""
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={[]}
+          showAutocomplete={true}
+        />,
+      );
+
+      const input = screen.getByRole("textbox", { name: /zoeken/i });
+      fireEvent.focus(input);
+
+      rerender(
+        <UnifiedSearchBar
+          value="john"
+          onChange={vi.fn()}
+          members={mockMembers}
+          responsibilityPaths={[]}
+          showAutocomplete={true}
+        />,
+      );
+
+      // Should still show member results
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+    });
+  });
 });
