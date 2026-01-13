@@ -18,7 +18,7 @@
  * - Clear visual hierarchy
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { X, CircleHelp } from "@/lib/icons";
 
 export interface KeyboardShortcutsProps {
@@ -65,6 +65,8 @@ const shortcutGroups: ShortcutGroup[] = [
  */
 export function KeyboardShortcuts({ className = "" }: KeyboardShortcutsProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -96,14 +98,56 @@ export function KeyboardShortcuts({ className = "" }: KeyboardShortcutsProps) {
   // Focus trap and lock body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
+      // Store the previously focused element
+      previouslyFocusedElement.current = document.activeElement as HTMLElement;
+
+      // Lock body scroll
       document.body.style.overflow = "hidden";
+
+      // Move focus to the modal
+      if (modalRef.current) {
+        modalRef.current.focus();
+      }
+
+      // Trap focus within the modal
+      const handleTabKey = (e: KeyboardEvent) => {
+        if (e.key !== "Tab" || !modalRef.current) return;
+
+        const focusableElements =
+          modalRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          );
+        const firstFocusable = focusableElements[0];
+        const lastFocusable = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          // Shift+Tab: moving backwards
+          if (document.activeElement === firstFocusable) {
+            e.preventDefault();
+            lastFocusable?.focus();
+          }
+        } else {
+          // Tab: moving forwards
+          if (document.activeElement === lastFocusable) {
+            e.preventDefault();
+            firstFocusable?.focus();
+          }
+        }
+      };
+
+      document.addEventListener("keydown", handleTabKey);
+
+      return () => {
+        document.removeEventListener("keydown", handleTabKey);
+        document.body.style.overflow = "";
+      };
     } else {
+      // Return focus to the previously focused element
+      if (previouslyFocusedElement.current) {
+        previouslyFocusedElement.current.focus();
+      }
       document.body.style.overflow = "";
     }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
   }, [isOpen]);
 
   if (!isOpen) {
@@ -121,12 +165,15 @@ export function KeyboardShortcuts({ className = "" }: KeyboardShortcutsProps) {
 
       {/* Modal */}
       <div
+        ref={modalRef}
+        tabIndex={-1}
         className={`
           fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
           z-50
           bg-white rounded-xl shadow-2xl
           max-w-2xl w-full mx-4
           max-h-[90vh] overflow-y-auto
+          focus:outline-none
           ${className}
         `}
         role="dialog"
