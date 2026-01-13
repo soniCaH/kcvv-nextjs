@@ -21,6 +21,11 @@ const meta = {
   component: UnifiedOrganogramClient,
   parameters: {
     layout: "fullscreen",
+    nextjs: {
+      navigation: {
+        pathname: "/club/organogram",
+      },
+    },
     docs: {
       description: {
         component:
