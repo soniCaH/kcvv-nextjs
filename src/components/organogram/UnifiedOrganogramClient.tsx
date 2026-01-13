@@ -17,17 +17,18 @@
  * - Seamless integration with responsibility finder
  * - URL state management for shareable links
  * - Deep linking to specific members
+ * - Mobile optimizations: Bottom nav, swipe gestures, lazy loading (Phase 4)
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutGrid, Network, CircleHelp } from "@/lib/icons";
 import { CardHierarchy } from "./card-hierarchy/CardHierarchy";
-import { EnhancedOrgChart } from "./chart/EnhancedOrgChart";
-import { ResponsibilityFinder } from "../responsibility/ResponsibilityFinder";
 import { MemberDetailsModal } from "./MemberDetailsModal";
 import { FilterTabs } from "../design-system/FilterTabs";
 import { UnifiedSearchBar } from "./shared/UnifiedSearchBar";
+import { MobileBottomNav } from "./shared/MobileBottomNav";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import {
   findMemberById,
   buildOrganogramUrl,
@@ -37,6 +38,18 @@ import { responsibilityPaths } from "@/data/responsibility-paths";
 import type { OrgChartNode } from "@/types/organogram";
 import type { ResponsibilityPath } from "@/types/responsibility";
 import type { FilterTab } from "../design-system/FilterTabs/FilterTabs";
+
+// Lazy load heavy components for better performance (Phase 4)
+const EnhancedOrgChart = lazy(() =>
+  import("./chart/EnhancedOrgChart").then((mod) => ({
+    default: mod.EnhancedOrgChart,
+  })),
+);
+const ResponsibilityFinder = lazy(() =>
+  import("../responsibility/ResponsibilityFinder").then((mod) => ({
+    default: mod.ResponsibilityFinder,
+  })),
+);
 
 type ViewType = "cards" | "chart" | "responsibilities";
 
@@ -270,8 +283,35 @@ export function UnifiedOrganogramClient({
     },
   ];
 
+  // Swipe gesture handlers for mobile view switching (Phase 4)
+  const handleSwipeLeft = () => {
+    // Swipe left → go to next view
+    const viewOrder: ViewType[] = ["cards", "chart", "responsibilities"];
+    const currentIndex = viewOrder.indexOf(activeView);
+    if (currentIndex < viewOrder.length - 1) {
+      const nextView = viewOrder[currentIndex + 1];
+      handleViewChange(nextView);
+    }
+  };
+
+  const handleSwipeRight = () => {
+    // Swipe right → go to previous view
+    const viewOrder: ViewType[] = ["cards", "chart", "responsibilities"];
+    const currentIndex = viewOrder.indexOf(activeView);
+    if (currentIndex > 0) {
+      const prevView = viewOrder[currentIndex - 1];
+      handleViewChange(prevView);
+    }
+  };
+
+  const swipeHandlers = useSwipeGesture(
+    handleSwipeLeft,
+    handleSwipeRight,
+    75, // threshold in pixels
+  );
+
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-6 pb-20 lg:pb-6 ${className}`}>
       {/* Unified Search */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <h3 className="text-lg font-bold text-kcvv-gray-blue mb-3">
@@ -288,8 +328,8 @@ export function UnifiedOrganogramClient({
         />
       </div>
 
-      {/* View Toggle */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+      {/* View Toggle - Desktop Only (Mobile uses bottom nav) */}
+      <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <FilterTabs
           tabs={viewTabs}
           activeTab={activeView}
@@ -319,13 +359,14 @@ export function UnifiedOrganogramClient({
         </div>
       </div>
 
-      {/* Active View */}
+      {/* Active View - With swipe gestures on mobile (Phase 4) */}
       <div
         className={`bg-white rounded-xl shadow-sm border border-gray-200 ${
           activeView === "responsibilities"
             ? "overflow-visible"
             : "overflow-hidden"
         }`}
+        {...swipeHandlers}
       >
         {activeView === "cards" && (
           <CardHierarchy
@@ -336,24 +377,48 @@ export function UnifiedOrganogramClient({
         )}
 
         {activeView === "chart" && (
-          <EnhancedOrgChart
-            members={members}
-            onMemberClick={handleMemberClick}
-          />
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-24">
+                <div className="text-center">
+                  <div className="inline-block w-8 h-8 border-4 border-kcvv-green border-t-transparent rounded-full animate-spin mb-3" />
+                  <p className="text-sm text-kcvv-gray">Diagram laden...</p>
+                </div>
+              </div>
+            }
+          >
+            <EnhancedOrgChart
+              members={members}
+              onMemberClick={handleMemberClick}
+            />
+          </Suspense>
         )}
 
         {activeView === "responsibilities" && (
           <div className="p-6">
-            <ResponsibilityFinder
-              onMemberSelect={handleResponsibilityMemberSelect}
-              initialPathId={selectedResponsibilityId ?? undefined}
-              initialPath={selectedResponsibilityPath ?? undefined}
-              onResultSelect={() => {
-                // Clear pre-selected responsibility once user interacts
-                setSelectedResponsibilityId(null);
-                setSelectedResponsibilityPath(null);
-              }}
-            />
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center py-24">
+                  <div className="text-center">
+                    <div className="inline-block w-8 h-8 border-4 border-kcvv-green border-t-transparent rounded-full animate-spin mb-3" />
+                    <p className="text-sm text-kcvv-gray">
+                      Hulpsysteem laden...
+                    </p>
+                  </div>
+                </div>
+              }
+            >
+              <ResponsibilityFinder
+                onMemberSelect={handleResponsibilityMemberSelect}
+                initialPathId={selectedResponsibilityId ?? undefined}
+                initialPath={selectedResponsibilityPath ?? undefined}
+                onResultSelect={() => {
+                  // Clear pre-selected responsibility once user interacts
+                  setSelectedResponsibilityId(null);
+                  setSelectedResponsibilityPath(null);
+                }}
+              />
+            </Suspense>
           </div>
         )}
       </div>
@@ -368,6 +433,13 @@ export function UnifiedOrganogramClient({
           onViewResponsibility={handleViewResponsibility}
         />
       )}
+
+      {/* Mobile Bottom Navigation (Phase 4) */}
+      <MobileBottomNav
+        tabs={viewTabs}
+        activeTab={activeView}
+        onChange={handleViewChange}
+      />
     </div>
   );
 }
