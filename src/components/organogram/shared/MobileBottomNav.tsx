@@ -3,7 +3,7 @@
 /**
  * MobileBottomNav Component
  *
- * Bottom navigation bar for mobile devices showing view tabs.
+ * Bottom navigation bar for mobile devices showing view navigation.
  * Positioned at the bottom of the screen for better thumb accessibility.
  *
  * Features:
@@ -18,7 +18,8 @@
  * - WCAG 2.1 Level AA compliant
  * - Minimum 44x44px touch targets
  * - Clear visual indicators
- * - Proper ARIA labels
+ * - Uses navigation semantics (not tab semantics)
+ * - Proper ARIA labels and aria-current for active state
  */
 
 import type { LucideIcon } from "@/lib/icons";
@@ -88,9 +89,8 @@ export function MobileBottomNav({
                     : "text-kcvv-gray hover:text-kcvv-green-bright hover:bg-gray-50"
                 }
               `}
-              role="tab"
-              aria-selected={isActive}
               aria-current={isActive ? "page" : undefined}
+              aria-label={`${tab.label}${isActive ? " (huidige weergave)" : ""}`}
               type="button"
             >
               {/* Icon - 24x24px with padding for 48x48 touch target */}
