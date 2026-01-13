@@ -78,7 +78,7 @@ export function KeyboardShortcuts({ className = "" }: KeyboardShortcutsProps) {
         return;
       }
 
-      if (e.key === "?" && !e.shiftKey) {
+      if (e.key === "?") {
         e.preventDefault();
         setIsOpen(true);
       } else if (e.key === "Escape" && isOpen) {

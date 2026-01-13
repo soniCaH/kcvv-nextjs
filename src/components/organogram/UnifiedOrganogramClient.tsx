@@ -348,6 +348,16 @@ export function UnifiedOrganogramClient({
 
   return (
     <div className={`space-y-6 pb-20 lg:pb-6 ${className}`}>
+      {/* Phase 5: Accessibility Components */}
+      {/* Skip Link for keyboard users - must be first focusable element */}
+      <SkipLink targetId="organogram-main-content" />
+
+      {/* Keyboard Shortcuts Help Modal */}
+      <KeyboardShortcuts />
+
+      {/* Screen Reader Announcements */}
+      <ScreenReaderAnnouncer message={announcement} />
+
       {/* Unified Search */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <h3 className="text-lg font-bold text-kcvv-gray-blue mb-3">
@@ -479,16 +489,6 @@ export function UnifiedOrganogramClient({
         activeTab={activeView}
         onChange={handleViewChange}
       />
-
-      {/* Phase 5: Accessibility Components */}
-      {/* Skip Link for keyboard users */}
-      <SkipLink targetId="organogram-main-content" />
-
-      {/* Keyboard Shortcuts Help Modal */}
-      <KeyboardShortcuts />
-
-      {/* Screen Reader Announcements */}
-      <ScreenReaderAnnouncer message={announcement} />
     </div>
   );
 }

@@ -28,7 +28,7 @@
  * ```
  */
 
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 
 export interface ScreenReaderAnnouncerProps {
   message: string;
@@ -118,6 +118,3 @@ export function useScreenReaderAnnouncement(): [
 
   return [announcement, announce];
 }
-
-// Import React for the hook
-import React from "react";
