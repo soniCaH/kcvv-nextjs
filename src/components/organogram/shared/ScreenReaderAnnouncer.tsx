@@ -85,26 +85,9 @@ export function ScreenReaderAnnouncer({
 }
 
 /**
- * Custom hook for managing screen reader announcements
+ * Provides state and an updater for delivering messages to a screen reader live region.
  *
- * @returns Tuple of [message, announce function]
- *
- * @example
- * ```tsx
- * const [announcement, announce] = useScreenReaderAnnouncement();
- *
- * const handleViewChange = (view) => {
- *   setView(view);
- *   announce(`Weergave gewijzigd naar ${viewLabels[view]}`);
- * };
- *
- * return (
- *   <>
- *     <button onClick={() => handleViewChange('chart')}>Diagram</button>
- *     <ScreenReaderAnnouncer message={announcement} />
- *   </>
- * );
- * ```
+ * @returns A tuple where the first element is the current announcement string and the second is a function that sets a new announcement message.
  */
 export function useScreenReaderAnnouncement(): [
   string,
