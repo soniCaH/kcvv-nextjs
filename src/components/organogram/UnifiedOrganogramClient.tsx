@@ -18,6 +18,7 @@
  * - URL state management for shareable links
  * - Deep linking to specific members
  * - Mobile optimizations: Bottom nav, swipe gestures, lazy loading (Phase 4)
+ * - Accessibility: Keyboard navigation, screen reader support (Phase 5)
  */
 
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
@@ -28,7 +29,9 @@ import { MemberDetailsModal } from "./MemberDetailsModal";
 import { FilterTabs } from "../design-system/FilterTabs";
 import { UnifiedSearchBar } from "./shared/UnifiedSearchBar";
 import { MobileBottomNav } from "./shared/MobileBottomNav";
+import { KeyboardShortcuts, SkipLink, ScreenReaderAnnouncer } from "./shared";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import {
   findMemberById,
   buildOrganogramUrl,
@@ -119,6 +122,9 @@ export function UnifiedOrganogramClient({
   // Track whether initial localStorage sync has occurred
   const hasInitializedRef = useRef(false);
 
+  // Phase 5: Accessibility - Screen reader announcements
+  const [announcement, setAnnouncement] = useState("");
+
   // Sync localStorage preference after mount (avoids hydration mismatch)
   useEffect(() => {
     // Only run once on initial mount
@@ -199,6 +205,16 @@ export function UnifiedOrganogramClient({
       setSelectedResponsibilityId(null);
       setSelectedResponsibilityPath(null);
     }
+
+    // Phase 5: Announce view change to screen readers
+    const viewLabels = {
+      cards: "Overzicht",
+      chart: "Diagram",
+      responsibilities: "Hulp",
+    };
+    setAnnouncement(
+      `Weergave gewijzigd naar ${viewLabels[newView as ViewType]}`,
+    );
   };
 
   // Handle member click from any view
@@ -310,6 +326,26 @@ export function UnifiedOrganogramClient({
     75, // threshold in pixels
   );
 
+  // Phase 5: Keyboard navigation (Arrow keys, numbers, /, Esc)
+  useKeyboardNavigation(
+    handleViewChange,
+    () => {
+      // Focus search input when '/' is pressed
+      const searchInput = document.querySelector<HTMLInputElement>(
+        'input[placeholder*="Zoek"]',
+      );
+      searchInput?.focus();
+    },
+    () => {
+      // Close modal when Escape is pressed
+      if (isModalOpen) {
+        handleCloseModal();
+      }
+    },
+    activeView,
+    true, // enabled
+  );
+
   return (
     <div className={`space-y-6 pb-20 lg:pb-6 ${className}`}>
       {/* Unified Search */}
@@ -361,12 +397,15 @@ export function UnifiedOrganogramClient({
 
       {/* Active View - With swipe gestures on mobile (Phase 4) */}
       <div
-        className={`bg-white rounded-xl shadow-sm border border-gray-200 ${
+        id="organogram-main-content"
+        tabIndex={-1}
+        className={`bg-white rounded-xl shadow-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-kcvv-green focus:ring-offset-2 ${
           activeView === "responsibilities"
             ? "overflow-visible"
             : "overflow-hidden"
         }`}
         {...swipeHandlers}
+        aria-label="Organogram hoofdinhoud"
       >
         {activeView === "cards" && (
           <CardHierarchy
@@ -440,6 +479,16 @@ export function UnifiedOrganogramClient({
         activeTab={activeView}
         onChange={handleViewChange}
       />
+
+      {/* Phase 5: Accessibility Components */}
+      {/* Skip Link for keyboard users */}
+      <SkipLink targetId="organogram-main-content" />
+
+      {/* Keyboard Shortcuts Help Modal */}
+      <KeyboardShortcuts />
+
+      {/* Screen Reader Announcements */}
+      <ScreenReaderAnnouncer message={announcement} />
     </div>
   );
 }
