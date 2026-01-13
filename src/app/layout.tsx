@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -9,8 +9,18 @@ export const metadata: Metadata = {
     template: "%s | KCVV Elewijt",
     default: "KCVV Elewijt - Officiële Website",
   },
-  description: "KCVV Elewijt voetbalclub met stamnummer 55 - Er is maar één plezante compagnie",
+  description:
+    "KCVV Elewijt voetbalclub met stamnummer 55 - Er is maar één plezante compagnie",
   keywords: ["KCVV Elewijt", "voetbal", "football", "Elewijt", "voetbalclub"],
+};
+
+// Phase 4: Mobile viewport configuration with safe area support
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover", // Enable safe area insets for modern mobile devices
 };
 
 /**
@@ -24,7 +34,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const typekitId = process.env.NEXT_PUBLIC_TYPEKIT_ID
+  const typekitId = process.env.NEXT_PUBLIC_TYPEKIT_ID;
 
   return (
     <html lang="nl" suppressHydrationWarning>
