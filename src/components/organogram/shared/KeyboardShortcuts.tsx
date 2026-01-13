@@ -215,8 +215,15 @@ export function KeyboardShortcuts({ className = "" }: KeyboardShortcutsProps) {
           {/* Info */}
           <p className="text-sm text-kcvv-gray">
             Gebruik deze sneltoetsen om sneller te navigeren door het
-            organogram. Druk op <kbd className="kbd">?</kbd> om dit venster te
-            openen, of <kbd className="kbd">Esc</kbd> om te sluiten.
+            organogram. Druk op{" "}
+            <kbd className="inline-flex items-center justify-center min-w-6 h-6 px-1.5 font-mono text-xs font-semibold text-kcvv-gray-dark bg-white border-2 border-kcvv-gray-light rounded shadow-sm">
+              ?
+            </kbd>{" "}
+            om dit venster te openen, of{" "}
+            <kbd className="inline-flex items-center justify-center min-w-6 h-6 px-1.5 font-mono text-xs font-semibold text-kcvv-gray-dark bg-white border-2 border-kcvv-gray-light rounded shadow-sm">
+              Esc
+            </kbd>{" "}
+            om te sluiten.
           </p>
 
           {/* Shortcut Groups */}
