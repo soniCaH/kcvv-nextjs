@@ -12,7 +12,7 @@ const preview: Preview = {
     nextjs: {
       appDirectory: true,
       navigation: {
-        pathname: "/club/organogram",
+        pathname: "/",
         query: {},
         segments: [],
       },
