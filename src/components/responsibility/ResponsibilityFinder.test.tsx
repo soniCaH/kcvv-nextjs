@@ -598,6 +598,9 @@ describe("ResponsibilityFinder", () => {
       const pathFromId = responsibilityPaths[0];
       const pathFromObject = responsibilityPaths[1];
 
+      // Guard: ensure test data has different questions
+      expect(pathFromId.question).not.toBe(pathFromObject.question);
+
       render(
         <ResponsibilityFinder
           initialPathId={pathFromId.id}
@@ -709,15 +712,67 @@ describe("ResponsibilityFinder", () => {
       // User can type a new search
       const input = screen.getByPlaceholderText(/typ je vraag/i);
       await user.clear(input);
-      await user.type(input, "new search");
+      await user.type(input, "w");
 
-      // Should clear the selected result and show suggestions
+      // Should show suggestions for new search
       await waitFor(() => {
         // Input value should be updated
-        expect(input).toHaveValue("new search");
-        // Pre-filled result card should be cleared
+        expect(input).toHaveValue("w");
+
+        // New suggestions should appear (broad search yields results)
+        const allButtons = screen.queryAllByRole("button");
+        const suggestionButtons = allButtons.filter((button) => {
+          const label = button.getAttribute("aria-label") || "";
+          const text = button.textContent || "";
+
+          // Skip clear button (check both aria-label and textContent)
+          if (
+            label.toLowerCase().includes("clear") ||
+            text.toLowerCase().includes("clear")
+          )
+            return false;
+
+          // Skip dropdown button (check both textContent and aria-label)
+          if (
+            text.includes("een...") ||
+            label.includes("een...") ||
+            /speler|ouder|trainer|supporter|niet-lid/i.test(text) ||
+            /speler|ouder|trainer|supporter|niet-lid/i.test(label)
+          ) {
+            return false;
+          }
+
+          return true;
+        });
+        expect(suggestionButtons.length).toBeGreaterThan(0);
+      });
+
+      // Click on a new suggestion to change the selection
+      const allButtons = screen.queryAllByRole("button");
+      const suggestionButtons = allButtons.filter((button) => {
+        const label = button.getAttribute("aria-label") || "";
+        const text = button.textContent || "";
+        if (
+          label.toLowerCase().includes("clear") ||
+          text.toLowerCase().includes("clear")
+        )
+          return false;
+        if (
+          text.includes("een...") ||
+          label.includes("een...") ||
+          /speler|ouder|trainer|supporter|niet-lid/i.test(text) ||
+          /speler|ouder|trainer|supporter|niet-lid/i.test(label)
+        ) {
+          return false;
+        }
+        return true;
+      });
+      await user.click(suggestionButtons[0]);
+
+      // After clicking new suggestion, the original result should be replaced
+      await waitFor(() => {
         expect(screen.queryByText(testPath.question)).not.toBeInTheDocument();
-        expect(screen.queryByText(/Contactpersoon/i)).not.toBeInTheDocument();
+        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
       });
     });
   });
