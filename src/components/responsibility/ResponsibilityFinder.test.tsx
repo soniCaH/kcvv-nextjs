@@ -646,13 +646,19 @@ describe("ResponsibilityFinder", () => {
         const label = button.getAttribute("aria-label") || "";
         const text = button.textContent || "";
 
-        // Skip clear button (has "clear" in aria-label)
-        if (label.toLowerCase().includes("clear")) return false;
+        // Skip clear button (check both aria-label and textContent)
+        if (
+          label.toLowerCase().includes("clear") ||
+          text.toLowerCase().includes("clear")
+        )
+          return false;
 
-        // Skip dropdown button (contains "een..." or a role name)
+        // Skip dropdown button (check both textContent and aria-label)
         if (
           text.includes("een...") ||
-          /speler|ouder|trainer|supporter|niet-lid/i.test(text)
+          label.includes("een...") ||
+          /speler|ouder|trainer|supporter|niet-lid/i.test(text) ||
+          /speler|ouder|trainer|supporter|niet-lid/i.test(label)
         ) {
           return false;
         }
