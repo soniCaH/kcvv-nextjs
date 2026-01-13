@@ -97,6 +97,11 @@ export function UnifiedOrganogramClient({
   );
   const [isModalOpen, setIsModalOpen] = useState(() => !!urlMember);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedResponsibilityId, setSelectedResponsibilityId] = useState<
+    string | null
+  >(null);
+  const [selectedResponsibilityPath, setSelectedResponsibilityPath] =
+    useState<ResponsibilityPath | null>(null);
 
   // Track whether initial localStorage sync has occurred
   const hasInitializedRef = useRef(false);
@@ -175,6 +180,12 @@ export function UnifiedOrganogramClient({
     setActiveView(newView);
     localStorage.setItem(VIEW_PREFERENCE_KEY, newView);
     updateUrl({ view: newView });
+
+    // Clear selected responsibility when switching away from responsibilities view
+    if (newView !== "responsibilities") {
+      setSelectedResponsibilityId(null);
+      setSelectedResponsibilityPath(null);
+    }
   };
 
   // Handle member click from any view
@@ -210,15 +221,16 @@ export function UnifiedOrganogramClient({
   };
 
   // Handle navigation to responsibility view from member details modal
-  const handleViewResponsibility = (_responsibilityId: string) => {
+  const handleViewResponsibility = (responsibilityId: string) => {
     // Close modal and switch to responsibilities view
     setIsModalOpen(false);
     setSelectedMember(null);
     setActiveView("responsibilities");
     updateUrl({ view: "responsibilities", memberId: null });
 
-    // TODO: Once ResponsibilityFinder supports highlighting specific paths,
-    // we can pass _responsibilityId to auto-select/highlight it
+    // Set the responsibility to highlight
+    setSelectedResponsibilityId(responsibilityId);
+    setSelectedResponsibilityPath(null); // Clear path when using ID
   };
 
   // Handle unified search - member selection
@@ -227,15 +239,16 @@ export function UnifiedOrganogramClient({
   };
 
   // Handle unified search - responsibility selection
-  const handleSearchResponsibilitySelect = (_path: ResponsibilityPath) => {
+  const handleSearchResponsibilitySelect = (path: ResponsibilityPath) => {
     // Switch to responsibilities view
     setActiveView("responsibilities");
     updateUrl({ view: "responsibilities", memberId: null });
     // Clear search query as it no longer relates to the current view
     setSearchQuery("");
 
-    // TODO: Once ResponsibilityFinder supports pre-filling,
-    // we can pass _path to auto-select/highlight it
+    // Set the responsibility path to pre-fill
+    setSelectedResponsibilityPath(path);
+    setSelectedResponsibilityId(null); // Clear ID when using path object
   };
 
   // View tabs configuration
@@ -333,6 +346,13 @@ export function UnifiedOrganogramClient({
           <div className="p-6">
             <ResponsibilityFinder
               onMemberSelect={handleResponsibilityMemberSelect}
+              initialPathId={selectedResponsibilityId ?? undefined}
+              initialPath={selectedResponsibilityPath ?? undefined}
+              onResultSelect={() => {
+                // Clear pre-selected responsibility once user interacts
+                setSelectedResponsibilityId(null);
+                setSelectedResponsibilityPath(null);
+              }}
             />
           </div>
         )}

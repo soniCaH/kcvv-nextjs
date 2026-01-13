@@ -571,4 +571,209 @@ describe("ResponsibilityFinder", () => {
       expect(organogramLink).toHaveAttribute("href", "/club/organogram");
     });
   });
+
+  describe("Pre-filling and Highlighting", () => {
+    it("pre-fills with initialPathId", () => {
+      // Find a responsibility path to test with
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPathId={testPath.id} />);
+
+      // Should pre-select the result
+      expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+      expect(screen.getByText(testPath.question)).toBeInTheDocument();
+    });
+
+    it("pre-fills with initialPath object", () => {
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPath={testPath} />);
+
+      // Should pre-select the result
+      expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+      expect(screen.getByText(testPath.question)).toBeInTheDocument();
+    });
+
+    it("initialPath takes precedence over initialPathId", () => {
+      const pathFromId = responsibilityPaths[0];
+      const pathFromObject = responsibilityPaths[1];
+
+      // Guard: ensure test data has different questions
+      expect(pathFromId.question).not.toBe(pathFromObject.question);
+
+      render(
+        <ResponsibilityFinder
+          initialPathId={pathFromId.id}
+          initialPath={pathFromObject}
+        />,
+      );
+
+      // Should show the path from initialPath, not initialPathId
+      expect(screen.getByText(pathFromObject.question)).toBeInTheDocument();
+      expect(screen.queryByText(pathFromId.question)).not.toBeInTheDocument();
+    });
+
+    it("sets role when pre-filling with initialPath", () => {
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPath={testPath} />);
+
+      // Role dropdown should show the first role from the path
+      const expectedRole = Array.isArray(testPath.role)
+        ? testPath.role[0]
+        : testPath.role;
+      const roleButton = screen.getByRole("button", {
+        name: new RegExp(expectedRole, "i"),
+      });
+      expect(roleButton).toBeInTheDocument();
+    });
+
+    it("sets question text when pre-filling", () => {
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPath={testPath} />);
+
+      // Question input should show the path's question
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      expect(input).toHaveValue(testPath.question);
+    });
+
+    it("does not show suggestions when pre-filled", () => {
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPath={testPath} />);
+
+      // Should not show the autocomplete dropdown
+      const buttons = screen.queryAllByRole("button");
+      const suggestionButtons = buttons.filter((button) => {
+        const label = button.getAttribute("aria-label") || "";
+        const text = button.textContent || "";
+
+        // Skip clear button (check both aria-label and textContent)
+        if (
+          label.toLowerCase().includes("clear") ||
+          text.toLowerCase().includes("clear")
+        )
+          return false;
+
+        // Skip dropdown button (check both textContent and aria-label)
+        if (
+          text.includes("een...") ||
+          label.includes("een...") ||
+          /speler|ouder|trainer|supporter|niet-lid/i.test(text) ||
+          /speler|ouder|trainer|supporter|niet-lid/i.test(label)
+        ) {
+          return false;
+        }
+
+        return true;
+      });
+
+      // Should only have role dropdown and clear buttons, no suggestions
+      expect(suggestionButtons.length).toBe(0);
+    });
+
+    it("does not call onResultSelect on mount when initialPath is provided", () => {
+      const onResultSelect = vi.fn();
+      const testPath = responsibilityPaths[0];
+
+      render(
+        <ResponsibilityFinder
+          initialPath={testPath}
+          onResultSelect={onResultSelect}
+        />,
+      );
+
+      // onResultSelect should not be called automatically on mount
+      // It's only called when user selects from suggestions
+      expect(onResultSelect).not.toHaveBeenCalled();
+    });
+
+    it("handles invalid initialPathId gracefully", () => {
+      render(<ResponsibilityFinder initialPathId="non-existent-id" />);
+
+      // Should render without crashing
+      expect(screen.getByText(/IK BEN/i)).toBeInTheDocument();
+
+      // Should not show result card
+      expect(screen.queryByText(/Contactpersoon/i)).not.toBeInTheDocument();
+    });
+
+    it("allows user to change selection after pre-filling", async () => {
+      const user = userEvent.setup();
+      const testPath = responsibilityPaths[0];
+
+      render(<ResponsibilityFinder initialPath={testPath} />);
+
+      // Initially shows the pre-filled result
+      expect(screen.getByText(testPath.question)).toBeInTheDocument();
+      expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+
+      // User can type a new search
+      const input = screen.getByPlaceholderText(/typ je vraag/i);
+      await user.clear(input);
+      await user.type(input, "w");
+
+      // Should show suggestions for new search
+      await waitFor(() => {
+        // Input value should be updated
+        expect(input).toHaveValue("w");
+
+        // New suggestions should appear (broad search yields results)
+        const allButtons = screen.queryAllByRole("button");
+        const suggestionButtons = allButtons.filter((button) => {
+          const label = button.getAttribute("aria-label") || "";
+          const text = button.textContent || "";
+
+          // Skip clear button (check both aria-label and textContent)
+          if (
+            label.toLowerCase().includes("clear") ||
+            text.toLowerCase().includes("clear")
+          )
+            return false;
+
+          // Skip dropdown button (check both textContent and aria-label)
+          if (
+            text.includes("een...") ||
+            label.includes("een...") ||
+            /speler|ouder|trainer|supporter|niet-lid/i.test(text) ||
+            /speler|ouder|trainer|supporter|niet-lid/i.test(label)
+          ) {
+            return false;
+          }
+
+          return true;
+        });
+        expect(suggestionButtons.length).toBeGreaterThan(0);
+      });
+
+      // Click on a new suggestion to change the selection
+      const allButtons = screen.queryAllByRole("button");
+      const suggestionButtons = allButtons.filter((button) => {
+        const label = button.getAttribute("aria-label") || "";
+        const text = button.textContent || "";
+        if (
+          label.toLowerCase().includes("clear") ||
+          text.toLowerCase().includes("clear")
+        )
+          return false;
+        if (
+          text.includes("een...") ||
+          label.includes("een...") ||
+          /speler|ouder|trainer|supporter|niet-lid/i.test(text) ||
+          /speler|ouder|trainer|supporter|niet-lid/i.test(label)
+        ) {
+          return false;
+        }
+        return true;
+      });
+      await user.click(suggestionButtons[0]);
+
+      // After clicking new suggestion, the original result should be replaced
+      await waitFor(() => {
+        expect(screen.queryByText(testPath.question)).not.toBeInTheDocument();
+        expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
+      });
+    });
+  });
 });
