@@ -59,9 +59,12 @@ const shortcutGroups: ShortcutGroup[] = [
 ];
 
 /**
- * Render a keyboard shortcuts help modal that shows when user presses '?'
+ * Render a modal listing keyboard shortcuts and how to use them.
  *
- * @param className - Additional CSS classes
+ * When opened (press `?` outside of inputs), the dialog traps focus, locks body scroll,
+ * and can be dismissed with `Escape`, the backdrop, or the close button.
+ *
+ * @param className - Additional CSS classes to apply to the modal container
  */
 export function KeyboardShortcuts({ className = "" }: KeyboardShortcutsProps) {
   const [isOpen, setIsOpen] = useState(false);
