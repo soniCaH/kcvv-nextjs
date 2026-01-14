@@ -157,6 +157,441 @@ describe("DrupalService", () => {
         expect.anything(),
       );
     });
+
+    it("should resolve article images from included media and file entities", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "article-1",
+            type: "node--article",
+            attributes: {
+              title: "Article with Image",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/news/article-with-image" },
+            },
+            relationships: {
+              field_media_article_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-123",
+                },
+              },
+              field_tags: { data: [] },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "media-123",
+            type: "media--image",
+            attributes: {
+              name: "Article Hero Image",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  id: "file-456",
+                  type: "file--file",
+                  meta: {
+                    alt: "Hero image alt text",
+                    width: 1200,
+                    height: 800,
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: "file-456",
+            type: "file--file",
+            attributes: {
+              filename: "hero.jpg",
+              uri: {
+                url: "https://api.example.com/files/hero.jpg",
+              },
+              filemime: "image/jpeg",
+            },
+          },
+        ],
+        links: {
+          self: { href: "/jsonapi/node/article" },
+        },
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getArticles({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.articles).toHaveLength(1);
+      const imageData =
+        result.articles[0].relationships.field_media_article_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "uri" in imageData) {
+        expect(imageData.uri.url).toBe(
+          "https://api.example.com/files/hero.jpg",
+        );
+        expect(imageData.alt).toBe("Hero image alt text");
+      }
+    });
+
+    it("should keep original reference when media has no file reference", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "article-1",
+            type: "node--article",
+            attributes: {
+              title: "Article with missing file ref",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/news/missing-file-ref" },
+            },
+            relationships: {
+              field_media_article_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-no-file",
+                },
+              },
+              field_tags: { data: [] },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "media-no-file",
+            type: "media--image",
+            attributes: {
+              name: "Media Without File",
+            },
+            relationships: {},
+          },
+        ],
+        links: {
+          self: { href: "/jsonapi/node/article" },
+        },
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getArticles({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.articles).toHaveLength(1);
+      const imageData =
+        result.articles[0].relationships.field_media_article_image?.data;
+      expect(imageData).toBeDefined();
+    });
+
+    it("should keep original reference when file not found in included", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "article-1",
+            type: "node--article",
+            attributes: {
+              title: "Article with missing file",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/news/missing-file" },
+            },
+            relationships: {
+              field_media_article_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-with-missing-file",
+                },
+              },
+              field_tags: { data: [] },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "media-with-missing-file",
+            type: "media--image",
+            attributes: {
+              name: "Media With Missing File",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  id: "file-nonexistent",
+                  type: "file--file",
+                },
+              },
+            },
+          },
+        ],
+        links: {
+          self: { href: "/jsonapi/node/article" },
+        },
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getArticles({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.articles).toHaveLength(1);
+      const imageData =
+        result.articles[0].relationships.field_media_article_image?.data;
+      expect(imageData).toBeDefined();
+    });
+
+    it("should resolve tags from included taxonomy terms", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "article-1",
+            type: "node--article",
+            attributes: {
+              title: "Article with Tags",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/news/article-with-tags" },
+            },
+            relationships: {
+              field_media_article_image: {},
+              field_tags: {
+                data: [
+                  { id: "tag-1", type: "taxonomy_term--category" },
+                  { id: "tag-2", type: "taxonomy_term--category" },
+                ],
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "tag-1",
+            type: "taxonomy_term--category",
+            attributes: {
+              name: "Sports",
+              drupal_internal__tid: 1,
+            },
+          },
+          {
+            id: "tag-2",
+            type: "taxonomy_term--category",
+            attributes: {
+              name: "News",
+              drupal_internal__tid: 2,
+            },
+          },
+        ],
+        links: {
+          self: { href: "/jsonapi/node/article" },
+        },
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getArticles({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.articles).toHaveLength(1);
+      const tagsData = result.articles[0].relationships.field_tags?.data;
+      expect(tagsData).toHaveLength(2);
+    });
+
+    it("should handle already resolved tags (with attributes)", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "article-1",
+            type: "node--article",
+            attributes: {
+              title: "Article with Pre-resolved Tags",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/news/pre-resolved-tags" },
+            },
+            relationships: {
+              field_media_article_image: {},
+              field_tags: {
+                data: [
+                  {
+                    id: "tag-1",
+                    type: "taxonomy_term--category",
+                    attributes: {
+                      name: "Already Resolved",
+                      drupal_internal__tid: 1,
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        links: {
+          self: { href: "/jsonapi/node/article" },
+        },
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getArticles({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.articles).toHaveLength(1);
+      const tagsData = result.articles[0].relationships.field_tags?.data;
+      expect(tagsData).toHaveLength(1);
+    });
+
+    it("should keep original reference when media not found in included", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "article-1",
+            type: "node--article",
+            attributes: {
+              title: "Article with missing media",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/news/missing-media" },
+            },
+            relationships: {
+              field_media_article_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-nonexistent",
+                },
+              },
+              field_tags: { data: [] },
+            },
+          },
+        ],
+        included: [],
+        links: {
+          self: { href: "/jsonapi/node/article" },
+        },
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getArticles({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.articles).toHaveLength(1);
+      const imageData =
+        result.articles[0].relationships.field_media_article_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "type" in imageData && "id" in imageData) {
+        expect(imageData.type).toBe("media--image");
+        expect(imageData.id).toBe("media-nonexistent");
+      }
+    });
+
+    it("should keep tag reference when not found in included", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "article-1",
+            type: "node--article",
+            attributes: {
+              title: "Article with Unresolvable Tag",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/news/unresolvable-tag" },
+            },
+            relationships: {
+              field_media_article_image: {},
+              field_tags: {
+                data: [
+                  { id: "tag-nonexistent", type: "taxonomy_term--category" },
+                ],
+              },
+            },
+          },
+        ],
+        included: [],
+        links: {
+          self: { href: "/jsonapi/node/article" },
+        },
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getArticles({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.articles).toHaveLength(1);
+      const tagsData = result.articles[0].relationships.field_tags?.data;
+      expect(tagsData).toHaveLength(1);
+    });
   });
 
   describe("getArticleById", () => {
@@ -1024,6 +1459,386 @@ describe("DrupalService", () => {
         expect.stringContaining("sort=title"),
         expect.anything(),
       );
+    });
+
+    it("should resolve sponsor logos from included media and file entities", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "sponsor-1",
+            type: "node--sponsor",
+            attributes: {
+              title: "Main Sponsor",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/sponsor/main" },
+              field_type: "crossing",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-123",
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "media-123",
+            type: "media--image",
+            attributes: {
+              name: "Sponsor Logo",
+              status: true,
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  id: "file-456",
+                  type: "file--file",
+                  meta: {
+                    alt: "Main Sponsor Logo",
+                    width: 200,
+                    height: 100,
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: "file-456",
+            type: "file--file",
+            attributes: {
+              filename: "sponsor-logo.png",
+              uri: {
+                url: "https://api.example.com/files/sponsor-logo.png",
+              },
+              filemime: "image/png",
+              filesize: 10240,
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getSponsors({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].attributes.title).toBe("Main Sponsor");
+      // The logo should be resolved to the file URL
+      const imageData = result[0].relationships.field_media_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "uri" in imageData) {
+        expect(imageData.uri.url).toBe(
+          "https://api.example.com/files/sponsor-logo.png",
+        );
+        expect(imageData.alt).toBe("Main Sponsor Logo");
+        expect(imageData.width).toBe(200);
+        expect(imageData.height).toBe(100);
+      }
+    });
+
+    it("should handle relative file URLs by making them absolute", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "sponsor-1",
+            type: "node--sponsor",
+            attributes: {
+              title: "Local Sponsor",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/sponsor/local" },
+              field_type: "green",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-789",
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "media-789",
+            type: "media--image",
+            attributes: {
+              name: "Local Logo",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  id: "file-101",
+                  type: "file--file",
+                  meta: {
+                    alt: "Local Sponsor Logo",
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: "file-101",
+            type: "file--file",
+            attributes: {
+              filename: "local-logo.jpg",
+              uri: {
+                url: "/sites/default/files/local-logo.jpg",
+              },
+              filemime: "image/jpeg",
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getSponsors({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result).toHaveLength(1);
+      const imageData = result[0].relationships.field_media_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "uri" in imageData) {
+        // Relative URL should be made absolute with the base URL
+        expect(imageData.uri.url).toContain(
+          "/sites/default/files/local-logo.jpg",
+        );
+      }
+    });
+
+    it("should keep original reference when media not found in included", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "sponsor-1",
+            type: "node--sponsor",
+            attributes: {
+              title: "Missing Media Sponsor",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/sponsor/missing" },
+              field_type: "white",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-nonexistent",
+                },
+              },
+            },
+          },
+        ],
+        included: [],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getSponsors({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result).toHaveLength(1);
+      // Original reference should be kept when media not found
+      const imageData = result[0].relationships.field_media_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "type" in imageData && "id" in imageData) {
+        expect(imageData.type).toBe("media--image");
+        expect(imageData.id).toBe("media-nonexistent");
+      }
+    });
+
+    it("should keep original reference when file not found in included", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "sponsor-1",
+            type: "node--sponsor",
+            attributes: {
+              title: "Missing File Sponsor",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/sponsor/missing-file" },
+              field_type: "panel",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-with-missing-file",
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "media-with-missing-file",
+            type: "media--image",
+            attributes: {
+              name: "Media With Missing File",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  id: "file-nonexistent",
+                  type: "file--file",
+                },
+              },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getSponsors({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result).toHaveLength(1);
+      // Original reference should be kept when file not found
+      const imageData = result[0].relationships.field_media_image?.data;
+      expect(imageData).toBeDefined();
+    });
+
+    it("should keep original when media has no file reference", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "sponsor-1",
+            type: "node--sponsor",
+            attributes: {
+              title: "No File Ref Sponsor",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/sponsor/no-file-ref" },
+              field_type: "other",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-no-file",
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "media-no-file",
+            type: "media--image",
+            attributes: {
+              name: "Media Without File Reference",
+            },
+            relationships: {},
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getSponsors({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result).toHaveLength(1);
+      // Original reference should be kept when media has no file reference
+      const imageData = result[0].relationships.field_media_image?.data;
+      expect(imageData).toBeDefined();
+    });
+
+    it("should handle sponsor without media reference", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "sponsor-1",
+            type: "node--sponsor",
+            attributes: {
+              title: "No Image Sponsor",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/sponsor/no-image" },
+              field_type: "crossing",
+            },
+            relationships: {},
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getSponsors({});
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].attributes.title).toBe("No Image Sponsor");
+      expect(result[0].relationships.field_media_image).toBeUndefined();
     });
   });
 
