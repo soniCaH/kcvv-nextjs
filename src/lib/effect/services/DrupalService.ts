@@ -3,8 +3,8 @@
  * Effect-based service for fetching content from Drupal CMS
  */
 
-import { Context, Effect, Layer, Schedule } from 'effect'
-import { Schema as S } from 'effect'
+import { Context, Effect, Layer, Schedule } from "effect";
+import { Schema as S } from "effect";
 import {
   Article,
   ArticlesResponse,
@@ -50,11 +50,11 @@ export class DrupalService extends Context.Tag("DrupalService")<
     >;
 
     readonly getArticleBySlug: (
-      slug: string
+      slug: string,
     ) => Effect.Effect<Article, DrupalError | NotFoundError | ValidationError>;
 
     readonly getArticleById: (
-      id: string
+      id: string,
     ) => Effect.Effect<Article, DrupalError | NotFoundError | ValidationError>;
 
     // Teams
@@ -64,11 +64,11 @@ export class DrupalService extends Context.Tag("DrupalService")<
     >;
 
     readonly getTeamBySlug: (
-      slug: string
+      slug: string,
     ) => Effect.Effect<Team, DrupalError | NotFoundError | ValidationError>;
 
     readonly getTeamById: (
-      id: string
+      id: string,
     ) => Effect.Effect<Team, DrupalError | NotFoundError | ValidationError>;
 
     // Players
@@ -78,11 +78,11 @@ export class DrupalService extends Context.Tag("DrupalService")<
     }) => Effect.Effect<readonly Player[], DrupalError | ValidationError>;
 
     readonly getPlayerBySlug: (
-      slug: string
+      slug: string,
     ) => Effect.Effect<Player, DrupalError | NotFoundError | ValidationError>;
 
     readonly getPlayerById: (
-      id: string
+      id: string,
     ) => Effect.Effect<Player, DrupalError | NotFoundError | ValidationError>;
 
     // Events
@@ -92,7 +92,7 @@ export class DrupalService extends Context.Tag("DrupalService")<
     }) => Effect.Effect<readonly Event[], DrupalError | ValidationError>;
 
     readonly getEventBySlug: (
-      slug: string
+      slug: string,
     ) => Effect.Effect<Event, DrupalError | NotFoundError | ValidationError>;
 
     // Sponsors
@@ -126,7 +126,7 @@ export const DrupalServiceLive = Layer.effect(
      */
     const buildUrl = (
       path: string,
-      params?: Record<string, string | number | boolean>
+      params?: Record<string, string | number | boolean>,
     ): string => {
       const url = new URL(`${jsonApiBase}/${path}`);
 
@@ -144,70 +144,62 @@ export const DrupalServiceLive = Layer.effect(
      */
     const fetchJson = <A, I>(url: string, schema: S.Schema<A, I>) =>
       Effect.gen(function* () {
-        const response =
-          yield *
-          Effect.tryPromise({
-            try: () =>
-              fetch(url, {
-                headers: {
-                  Accept: "application/vnd.api+json",
-                  "Content-Type": "application/vnd.api+json",
-                },
-              }),
-            catch: (error) =>
-              new DrupalError({
-                message: `Failed to fetch from ${url}`,
-                cause: error,
-              }),
-          });
+        const response = yield* Effect.tryPromise({
+          try: () =>
+            fetch(url, {
+              headers: {
+                Accept: "application/vnd.api+json",
+                "Content-Type": "application/vnd.api+json",
+              },
+            }),
+          catch: (error) =>
+            new DrupalError({
+              message: `Failed to fetch from ${url}`,
+              cause: error,
+            }),
+        });
 
         if (!response.ok) {
-          return (
-            yield *
-            Effect.fail(
-              new DrupalError({
-                message: `HTTP ${response.status}: ${response.statusText}`,
-                status: response.status,
-              })
-            )
+          return yield* Effect.fail(
+            new DrupalError({
+              message: `HTTP ${response.status}: ${response.statusText}`,
+              status: response.status,
+            }),
           );
         }
 
-        const json =
-          yield *
-          Effect.tryPromise({
-            try: () => response.json(),
-            catch: (error) =>
-              new DrupalError({
-                message: "Failed to parse JSON response",
-                cause: error,
-              }),
-          });
+        const json = yield* Effect.tryPromise({
+          try: () => response.json(),
+          catch: (error) =>
+            new DrupalError({
+              message: "Failed to parse JSON response",
+              cause: error,
+            }),
+        });
 
-        const decoded =
-          yield *
-          S.decodeUnknown(schema)(json).pipe(
-            Effect.mapError(
-              (error) => {
-                console.error('[DrupalService] Schema validation failed:');
-                console.error("[DrupalService] Error details:", { error });
-                console.error('[DrupalService] Response URL:', url);
-                console.error('[DrupalService] Response data sample:', JSON.stringify(json, null, 2).substring(0, 1000));
+        const decoded = yield* S.decodeUnknown(schema)(json).pipe(
+          Effect.mapError((error) => {
+            console.error("[DrupalService] Schema validation failed:");
+            console.error("[DrupalService] Error details:", { error });
+            console.error("[DrupalService] Response URL:", url);
+            console.error(
+              "[DrupalService] Response data sample:",
+              JSON.stringify(json, null, 2).substring(0, 1000),
+            );
 
-                return new ValidationError({
-                  message: "Schema validation failed",
-                  errors: error,
-                });
-              }
-            )
-          );
+            return new ValidationError({
+              message: "Schema validation failed",
+              errors: error,
+            });
+          }),
+        );
 
         return decoded;
       }).pipe(
         Effect.retry(
           Schedule.exponential("1 second").pipe(
-            Schedule.intersect(Schedule.recurs(3))
-          )
+            Schedule.intersect(Schedule.recurs(3)),
+          ),
         ),
         Effect.timeout("30 seconds"),
         Effect.mapError((error) => {
@@ -218,7 +210,7 @@ export const DrupalServiceLive = Layer.effect(
             });
           }
           return error;
-        })
+        }),
       );
 
     /**
@@ -241,11 +233,12 @@ export const DrupalServiceLive = Layer.effect(
      */
     const mapIncluded = (
       data: readonly Article[],
-      included: readonly S.Schema.Type<typeof ArticleIncludedResource>[] = []
+      included: readonly S.Schema.Type<typeof ArticleIncludedResource>[] = [],
     ): readonly Article[] => {
-      const includedMap = new Map<string, S.Schema.Type<typeof ArticleIncludedResource>>(
-        included.map((item) => [`${item.type}:${item.id}`, item])
-      );
+      const includedMap = new Map<
+        string,
+        S.Schema.Type<typeof ArticleIncludedResource>
+      >(included.map((item) => [`${item.type}:${item.id}`, item]));
 
       return data.map((article) => {
         // Resolve featured image: media--image -> file--file -> URL
@@ -275,7 +268,9 @@ export const DrupalServiceLive = Layer.effect(
           // Decode file to ensure it's a valid File
           const decodedFile = S.decodeUnknownSync(File)(file);
           const fileUrl = decodedFile.attributes.uri.url;
-          const absoluteUrl = fileUrl.startsWith("http") ? fileUrl : `${baseUrl}${fileUrl}`;
+          const absoluteUrl = fileUrl.startsWith("http")
+            ? fileUrl
+            : `${baseUrl}${fileUrl}`;
 
           return {
             data: {
@@ -283,7 +278,7 @@ export const DrupalServiceLive = Layer.effect(
               alt: fileRef.meta?.alt || "",
               width: fileRef.meta?.width,
               height: fileRef.meta?.height,
-            }
+            },
           };
         })();
 
@@ -302,10 +297,15 @@ export const DrupalServiceLive = Layer.effect(
 
             // Otherwise, resolve from included
             if ("id" in tagRef && "type" in tagRef) {
-              const resolvedTag = includedMap.get(`${tagRef.type}:${tagRef.id}`);
+              const resolvedTag = includedMap.get(
+                `${tagRef.type}:${tagRef.id}`,
+              );
 
               // Decode and verify this is a valid TaxonomyTerm
-              if (resolvedTag && resolvedTag.type.startsWith("taxonomy_term--")) {
+              if (
+                resolvedTag &&
+                resolvedTag.type.startsWith("taxonomy_term--")
+              ) {
                 // Use Schema decoding to validate the taxonomy term - returns validated TaxonomyTerm
                 return S.decodeUnknownSync(TaxonomyTerm)(resolvedTag);
               }
@@ -356,11 +356,12 @@ export const DrupalServiceLive = Layer.effect(
         }
 
         if (params?.categoryId) {
-          queryParams["filter[field_tags.drupal_internal__tid]"] = params.categoryId;
+          queryParams["filter[field_tags.drupal_internal__tid]"] =
+            params.categoryId;
         }
 
         const url = buildUrl("node/article", queryParams);
-        const response = yield * fetchJson(url, ArticlesResponse);
+        const response = yield* fetchJson(url, ArticlesResponse);
 
         return {
           articles: mapIncluded(response.data, response.included),
@@ -381,23 +382,12 @@ export const DrupalServiceLive = Layer.effect(
         // Workaround: API crashes on filter[path.alias], so we fetch all articles and filter in memory
         // We paginate until we find it or run out of articles
         while (!foundArticle) {
-          const { articles, links } = yield * getArticles({ page, limit });
-
-          console.log(
-            `[getArticleBySlug] Page ${page}: Fetched ${articles.length} articles`
-          );
-          if (articles.length > 0) {
-            console.log(
-              `[getArticleBySlug] Sample slugs:`,
-              articles.slice(0, 3).map((a) => a.attributes.path.alias)
-            );
-            console.log(`[getArticleBySlug] Searching for: ${normalizedSlug}`);
-          }
+          const { articles, links } = yield* getArticles({ page, limit });
 
           if (articles.length === 0) break;
 
           foundArticle = articles.find(
-            (a) => a.attributes.path.alias === normalizedSlug
+            (a) => a.attributes.path.alias === normalizedSlug,
           );
 
           if (foundArticle) break;
@@ -409,15 +399,12 @@ export const DrupalServiceLive = Layer.effect(
         }
 
         if (!foundArticle) {
-          return (
-            yield *
-            Effect.fail(
-              new NotFoundError({
-                resource: "article",
-                identifier: slug,
-                message: `Article with slug "${slug}" not found`,
-              })
-            )
+          return yield* Effect.fail(
+            new NotFoundError({
+              resource: "article",
+              identifier: slug,
+              message: `Article with slug "${slug}" not found`,
+            }),
           );
         }
 
@@ -461,18 +448,15 @@ export const DrupalServiceLive = Layer.effect(
           "filter[path.alias]": normalizedSlug,
           include: "field_image",
         });
-        const response = yield * fetchJson(url, TeamsResponse);
+        const response = yield* fetchJson(url, TeamsResponse);
 
         if (!response.data || response.data.length === 0) {
-          return (
-            yield *
-            Effect.fail(
-              new NotFoundError({
-                resource: "team",
-                identifier: slug,
-                message: `Team with slug "${slug}" not found`,
-              })
-            )
+          return yield* Effect.fail(
+            new NotFoundError({
+              resource: "team",
+              identifier: slug,
+              message: `Team with slug "${slug}" not found`,
+            }),
           );
         }
 
@@ -510,7 +494,7 @@ export const DrupalServiceLive = Layer.effect(
         }
 
         const url = buildUrl("node/player", queryParams);
-        const response = yield * fetchJson(url, PlayersResponse);
+        const response = yield* fetchJson(url, PlayersResponse);
 
         return response.data;
       });
@@ -526,18 +510,15 @@ export const DrupalServiceLive = Layer.effect(
           "filter[path.alias]": normalizedSlug,
           include: "field_image,field_team",
         });
-        const response = yield * fetchJson(url, PlayersResponse);
+        const response = yield* fetchJson(url, PlayersResponse);
 
         if (!response.data || response.data.length === 0) {
-          return (
-            yield *
-            Effect.fail(
-              new NotFoundError({
-                resource: "player",
-                identifier: slug,
-                message: `Player with slug "${slug}" not found`,
-              })
-            )
+          return yield* Effect.fail(
+            new NotFoundError({
+              resource: "player",
+              identifier: slug,
+              message: `Player with slug "${slug}" not found`,
+            }),
           );
         }
 
@@ -579,7 +560,7 @@ export const DrupalServiceLive = Layer.effect(
         }
 
         const url = buildUrl("node/event", queryParams);
-        const response = yield * fetchJson(url, EventsResponse);
+        const response = yield* fetchJson(url, EventsResponse);
 
         return response.data;
       });
@@ -595,18 +576,15 @@ export const DrupalServiceLive = Layer.effect(
           "filter[path.alias]": normalizedSlug,
           include: "field_image",
         });
-        const response = yield * fetchJson(url, EventsResponse);
+        const response = yield* fetchJson(url, EventsResponse);
 
         if (!response.data || response.data.length === 0) {
-          return (
-            yield *
-            Effect.fail(
-              new NotFoundError({
-                resource: "event",
-                identifier: slug,
-                message: `Event with slug "${slug}" not found`,
-              })
-            )
+          return yield* Effect.fail(
+            new NotFoundError({
+              resource: "event",
+              identifier: slug,
+              message: `Event with slug "${slug}" not found`,
+            }),
           );
         }
 
@@ -616,7 +594,12 @@ export const DrupalServiceLive = Layer.effect(
     /**
      * Get sponsors with optional filtering
      */
-    const getSponsors = (params?: { type?: string | string[]; promoted?: boolean; limit?: number; sort?: string }) =>
+    const getSponsors = (params?: {
+      type?: string | string[];
+      promoted?: boolean;
+      limit?: number;
+      sort?: string;
+    }) =>
       Effect.gen(function* () {
         const queryParams: Record<string, string | number> = {
           include: "field_media_image.field_media_image",
@@ -662,11 +645,12 @@ export const DrupalServiceLive = Layer.effect(
      */
     const mapSponsorIncluded = (
       data: readonly Sponsor[],
-      included: readonly S.Schema.Type<typeof SponsorIncludedResource>[] = []
+      included: readonly S.Schema.Type<typeof SponsorIncludedResource>[] = [],
     ): readonly Sponsor[] => {
-      const includedMap = new Map<string, S.Schema.Type<typeof SponsorIncludedResource>>(
-        included.map((item) => [`${item.type}:${item.id}`, item])
-      );
+      const includedMap = new Map<
+        string,
+        S.Schema.Type<typeof SponsorIncludedResource>
+      >(included.map((item) => [`${item.type}:${item.id}`, item]));
 
       return data.map((sponsor) => {
         // Resolve sponsor logo: media--image -> file--file -> URL
@@ -696,7 +680,9 @@ export const DrupalServiceLive = Layer.effect(
           // Decode file to ensure it's a valid File
           const decodedFile = S.decodeUnknownSync(File)(file);
           const fileUrl = decodedFile.attributes.uri.url;
-          const absoluteUrl = fileUrl.startsWith("http") ? fileUrl : `${baseUrl}${fileUrl}`;
+          const absoluteUrl = fileUrl.startsWith("http")
+            ? fileUrl
+            : `${baseUrl}${fileUrl}`;
 
           return {
             data: {
@@ -704,7 +690,7 @@ export const DrupalServiceLive = Layer.effect(
               alt: fileRef.meta?.alt || sponsor.attributes.title,
               width: fileRef.meta?.width,
               height: fileRef.meta?.height,
-            }
+            },
           };
         })();
 
@@ -735,9 +721,7 @@ export const DrupalServiceLive = Layer.effect(
 
         const url = buildUrl(`taxonomy_term/${vocabulary}`, queryParams);
 
-        console.log('[getTags] Fetching from URL:', url);
         const response = yield* fetchJson(url, TaxonomyTermsResponse);
-        console.log('[getTags] Response received, data length:', response.data.length);
 
         return response.data;
       });
@@ -757,5 +741,5 @@ export const DrupalServiceLive = Layer.effect(
       getSponsors,
       getTags,
     };
-  })
+  }),
 );

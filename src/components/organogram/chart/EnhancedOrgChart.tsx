@@ -290,15 +290,11 @@ export function EnhancedOrgChart({
   // Export as Image (PNG)
   const handleExportImage = () => {
     if (chartRef.current) {
-      console.log("Starting export with scale: 6 (2x default)");
       chartRef.current.exportImg({
         full: true,
         save: true,
         scale: 6, // Higher quality: 6x scale (default is 3)
         backgroundColor: "#ffffff",
-        onLoad: () => {
-          console.log("Export completed");
-        },
       });
     }
   };
