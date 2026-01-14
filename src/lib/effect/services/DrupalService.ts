@@ -179,14 +179,6 @@ export const DrupalServiceLive = Layer.effect(
 
         const decoded = yield* S.decodeUnknown(schema)(json).pipe(
           Effect.mapError((error) => {
-            console.error("[DrupalService] Schema validation failed:");
-            console.error("[DrupalService] Error details:", { error });
-            console.error("[DrupalService] Response URL:", url);
-            console.error(
-              "[DrupalService] Response data sample:",
-              JSON.stringify(json, null, 2).substring(0, 1000),
-            );
-
             return new ValidationError({
               message: "Schema validation failed",
               errors: error,
