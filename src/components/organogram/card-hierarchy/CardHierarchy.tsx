@@ -285,8 +285,6 @@ export function CardHierarchy({
   // Export as Image (PNG) - exports the d3 org chart visualization
   const handleExportImage = () => {
     if (exportChartRef.current) {
-      console.log("Exporting d3 org chart with scale: 6");
-
       // Expand all nodes before export
       exportChartRef.current.expandAll();
 
@@ -298,9 +296,6 @@ export function CardHierarchy({
             save: true,
             scale: 6,
             backgroundColor: "#ffffff",
-            onLoad: () => {
-              console.log("Export completed");
-            },
           });
         }
       }, 500);
