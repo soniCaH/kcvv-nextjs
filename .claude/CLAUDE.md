@@ -107,6 +107,8 @@ Before pushing, verify:
 
 ### Component Development
 
+Before doing any UI, frontend or React development, ALWAYS call the storybook MCP server to get further instructions.
+
 - ✅ **Design System FIRST** - Review DESIGN_SYSTEM.md before creating components
 - ✅ **Storybook SECOND** - Create stories BEFORE implementation (see STORYBOOK.md)
 - ✅ **Visual Source of Truth** - Storybook is the definitive component documentation
@@ -193,7 +195,7 @@ npm run migration:create       # Create migration tracking
 /
 ├── .claude/                      # Claude Code configuration
 │   ├── skills/                   # Reusable skills (Drupal API, migrations)
-│   ├── CLAUDE.local.md          # THIS FILE - Project instructions
+│   ├── CLAUDE.md                # THIS FILE - Project instructions
 │   ├── WORKFLOW.md              # Git workflow
 │   └── SETUP_VERIFICATION.md    # Setup reference
 ├── src/
@@ -389,7 +391,7 @@ These are enforced by pre-commit hooks and CI/CD.
 ### Claude Code Configuration
 
 - **`.claude/WORKFLOW.md`** - Git workflow and branch strategy
-- **`.claude/CLAUDE.local.md`** - THIS FILE - Primary instructions
+- **`.claude/CLAUDE.md`** - THIS FILE - Primary instructions
 - **`.claude/SETUP_VERIFICATION.md`** - Setup reference (historical)
 - **`.claude/skills/`** - Drupal API and migration skills
 
