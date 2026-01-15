@@ -1,4 +1,5 @@
 # KCVV Elewijt Website Migration: Gatsby → Next.js 15
+
 ## Complete Migration Planning Document
 
 **Version:** 1.0
@@ -11,6 +12,7 @@
 ## Executive Summary
 
 ### Migration Goals
+
 - ✅ Migrate from Gatsby 5 to Next.js 15 (App Router)
 - ✅ **100% Visual Parity**: Pixel-perfect recreation (zero regressions)
 - ✅ Implement ISR (Incremental Static Regeneration) for automatic content updates
@@ -22,6 +24,7 @@
 - ✅ Maintain all existing features and functionality
 
 ### Key Metrics
+
 - **Pages to Migrate:** ~120-150 routes
 - **Components:** 49 components
 - **Content Types:** 8 Drupal content types
@@ -30,6 +33,7 @@
 - **Test Coverage Target:** >80%
 
 ### Core Principles
+
 1. **100% Visual Parity**: Pixel-perfect recreation of existing design
 2. **Component-Driven**: Reusable, typed components with Storybook documentation
 3. **Full Type Safety**: TypeScript strict mode + Effect Schema validation
@@ -44,6 +48,7 @@
 ### Stack Overview
 
 #### Frontend
+
 - **Framework:** Next.js 15.3.3 (App Router)
 - **Runtime:** React 19
 - **Language:** TypeScript 5.8+ (strict mode)
@@ -54,6 +59,7 @@
 - **Animation:** Framer Motion (`motion` package)
 
 #### Data Layer
+
 - **CMS:** Drupal JSON:API (https://api.kcvvelewijt.be)
 - **External API:** Footbalisto (match data, rankings)
 - **Schema Validation:** Effect Schema (`import { Schema as S } from 'effect'`)
@@ -61,6 +67,7 @@
 - **Caching Strategy:** ISR with Next.js revalidation
 
 #### Hosting & Deployment
+
 - **Platform:** Vercel (free tier) or Cloudflare Pages
 - **Build Strategy:** ISR with on-demand revalidation
 - **Image Optimization:** next/image with Drupal CDN
@@ -238,7 +245,7 @@ kcvv-nextjs/
 │   └── visual/                       # Visual regression tests
 │       ├── pages.spec.ts
 │       └── components.spec.ts
-├── .env.local
+├── .env
 ├── .env.example
 ├── next.config.ts
 ├── tailwind.config.ts
@@ -255,12 +262,14 @@ kcvv-nextjs/
 ## Phase 0: Design System Extraction (Week 1) ✅ COMPLETED
 
 ### Goals
+
 - ✅ Extract and document current design system from Gatsby site
 - ✅ Create comprehensive visual inventory
 - ✅ Configure Tailwind with exact brand tokens
 - ✅ Set up visual regression testing baseline
 
 ### Status: COMPLETED
+
 - DESIGN_SYSTEM.md created with full visual inventory
 - Tailwind CSS v4 configured with KCVV brand tokens
 - Adobe Typekit fonts loaded (quasimoda, acumin-pro, etc.)
@@ -272,6 +281,7 @@ kcvv-nextjs/
 #### 0.1: Audit Current Design System
 
 **Extract from Gatsby site:**
+
 - All SCSS variables from `src/styles/_variables.scss`
 - Foundation settings from `src/styles/_settings.scss`
 - Color palette (primary green: #4B9B48, etc.)
@@ -282,6 +292,7 @@ kcvv-nextjs/
 - Breakpoints
 
 **Document:**
+
 - Component inventory (all 49 components)
 - Layout patterns
 - Animation patterns
@@ -290,44 +301,54 @@ kcvv-nextjs/
 #### 0.2: Create DESIGN_SYSTEM.md
 
 **Content:**
+
 ```markdown
 # KCVV Elewijt Design System
 
 ## Colors
 
 ### Brand Colors
+
 - Primary Green: #4B9B48
 - (extract all other colors)
 
 ### Text Colors
+
 - (extract from SCSS)
 
 ### Background Colors
+
 - (extract from SCSS)
 
 ## Typography
 
 ### Font Families
+
 - Primary: (Adobe Typekit font)
 - Monospace: (extract)
 
 ### Font Sizes
+
 - (map all sizes)
 
 ### Line Heights
+
 - (map all line-heights)
 
 ### Font Weights
+
 - (map all weights)
 
 ## Spacing
 
 ### Spacing Scale
+
 - (map Foundation rem values to Tailwind)
 
 ## Components
 
 ### Button
+
 - Variants: primary, secondary, ghost, link
 - Sizes: sm, md, lg
 - States: default, hover, active, disabled
@@ -340,30 +361,30 @@ kcvv-nextjs/
 **File:** `tailwind.config.ts`
 
 ```typescript
-import type { Config } from 'tailwindcss'
+import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
         // KCVV Brand Colors (extracted from SCSS)
-        'kcvv-green': {
-          DEFAULT: '#4B9B48',
-          50: '#E8F5E7',
-          100: '#D1EBD0',
-          200: '#A3D7A1',
-          300: '#75C372',
-          400: '#4B9B48',
-          500: '#3C7C3A',
-          600: '#2D5D2B',
-          700: '#1E3E1D',
-          800: '#0F1F0E',
-          900: '#000000',
+        "kcvv-green": {
+          DEFAULT: "#4B9B48",
+          50: "#E8F5E7",
+          100: "#D1EBD0",
+          200: "#A3D7A1",
+          300: "#75C372",
+          400: "#4B9B48",
+          500: "#3C7C3A",
+          600: "#2D5D2B",
+          700: "#1E3E1D",
+          800: "#0F1F0E",
+          900: "#000000",
         },
         // Extract all other colors from _variables.scss
       },
@@ -384,22 +405,23 @@ const config: Config = {
       },
       screens: {
         // Foundation breakpoints
-        'sm': '640px',
-        'md': '1024px',   // Foundation medium
-        'lg': '1280px',   // Foundation large
-        'xl': '1440px',
+        sm: "640px",
+        md: "1024px", // Foundation medium
+        lg: "1280px", // Foundation large
+        xl: "1440px",
       },
     },
   },
   plugins: [],
-}
+};
 
-export default config
+export default config;
 ```
 
 #### 0.4: Set Up Testing Infrastructure
 
 **Install dependencies:**
+
 ```bash
 npm install -D vitest @testing-library/react @testing-library/jest-dom \
   @playwright/test @storybook/react @storybook/nextjs happy-dom
@@ -408,126 +430,119 @@ npm install -D vitest @testing-library/react @testing-library/jest-dom \
 **File:** `vitest.config.ts`
 
 ```typescript
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'happy-dom',
-    setupFiles: ['./tests/setup.ts'],
+    environment: "happy-dom",
+    setupFiles: ["./tests/setup.ts"],
     coverage: {
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'tests/',
-        '*.config.ts',
-      ],
+      reporter: ["text", "json", "html"],
+      exclude: ["node_modules/", "tests/", "*.config.ts"],
     },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
-})
+});
 ```
 
 **File:** `tests/setup.ts`
 
 ```typescript
-import '@testing-library/jest-dom'
-import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
+import { afterEach } from "vitest";
 
 afterEach(() => {
-  cleanup()
-})
+  cleanup();
+});
 ```
 
 **File:** `playwright.config.ts`
 
 ```typescript
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: './tests',
+  testDir: "./tests",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  reporter: "html",
   use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
+    baseURL: "http://localhost:3000",
+    trace: "on-first-retry",
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
     {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      name: "Mobile Chrome",
+      use: { ...devices["Pixel 5"] },
     },
     {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
+      name: "Mobile Safari",
+      use: { ...devices["iPhone 12"] },
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: "npm run dev",
+    url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
   },
-})
+});
 ```
 
 **File:** `.storybook/main.ts`
 
 ```typescript
-import type { StorybookConfig } from '@storybook/nextjs-vite'
+import type { StorybookConfig } from "@storybook/nextjs-vite";
 
 const config: StorybookConfig = {
-  stories: [
-    '../src/**/*.mdx',
-    '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
-  ],
+  stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
   addons: [
-    '@chromatic-com/storybook',
-    '@storybook/addon-docs',
-    '@storybook/addon-onboarding',
-    '@storybook/addon-a11y',
-    '@storybook/addon-vitest',
+    "@chromatic-com/storybook",
+    "@storybook/addon-docs",
+    "@storybook/addon-onboarding",
+    "@storybook/addon-a11y",
+    "@storybook/addon-vitest",
   ],
   framework: {
-    name: '@storybook/nextjs-vite',
+    name: "@storybook/nextjs-vite",
     options: {},
   },
-  staticDirs: ['../public'],
-}
+  staticDirs: ["../public"],
+};
 
-export default config
+export default config;
 ```
 
 **File:** `.storybook/preview.ts`
 
 ```typescript
-import type { Preview } from '@storybook/react'
-import '../src/app/globals.css'
+import type { Preview } from "@storybook/react";
+import "../src/app/globals.css";
 
 const preview: Preview = {
   parameters: {
-    actions: { argTypesRegex: '^on[A-Z].*' },
+    actions: { argTypesRegex: "^on[A-Z].*" },
     controls: {
       matchers: {
         color: /(background|color)$/i,
@@ -535,9 +550,9 @@ const preview: Preview = {
       },
     },
   },
-}
+};
 
-export default preview
+export default preview;
 ```
 
 #### 0.5: Create Visual Regression Baseline
@@ -545,24 +560,25 @@ export default preview
 **File:** `tests/visual/baseline.spec.ts`
 
 ```typescript
-import { test, expect } from '@playwright/test'
+import { test, expect } from "@playwright/test";
 
-test.describe('Visual Regression Baseline', () => {
-  test('homepage', async ({ page }) => {
-    await page.goto('/')
-    await expect(page).toHaveScreenshot('homepage.png')
-  })
+test.describe("Visual Regression Baseline", () => {
+  test("homepage", async ({ page }) => {
+    await page.goto("/");
+    await expect(page).toHaveScreenshot("homepage.png");
+  });
 
-  test('article page', async ({ page }) => {
-    await page.goto('/news/example-article')
-    await expect(page).toHaveScreenshot('article-page.png')
-  })
+  test("article page", async ({ page }) => {
+    await page.goto("/news/example-article");
+    await expect(page).toHaveScreenshot("article-page.png");
+  });
 
   // Add baselines for all key pages
-})
+});
 ```
 
 ### Deliverables
+
 - ✅ `DESIGN_SYSTEM.md` with complete visual inventory
 - ✅ `tailwind.config.ts` with exact brand tokens
 - ✅ Testing infrastructure configured (Vitest, Playwright, Storybook)
@@ -574,6 +590,7 @@ test.describe('Visual Regression Baseline', () => {
 ## Phase 1: Foundation + Component Library (Weeks 2-3) ✅ COMPLETED
 
 ### Goals
+
 - ✅ Build core Effect services for data fetching
 - ✅ Create base UI component library with tests
 - ✅ Build layout components (Header, Footer, Navigation)
@@ -582,6 +599,7 @@ test.describe('Visual Regression Baseline', () => {
 ### Status: COMPLETED (3 sub-phases)
 
 #### Phase 1A: Effect Services ✅
+
 - Complete Effect schemas for all Drupal content types
 - DrupalService with JSON:API integration (articles, teams, players, events)
 - FootbalistoService with 5-minute caching
@@ -590,6 +608,7 @@ test.describe('Visual Regression Baseline', () => {
 - Git commit: b20ccc1
 
 #### Phase 1B: Base UI Components ✅
+
 - Button component: 4 variants (primary, secondary, ghost, link), 26 tests
 - Card component: 4 variants with sub-components, 30 tests
 - Icon component: Wrapper for react-icons, 20 tests
@@ -601,6 +620,7 @@ test.describe('Visual Regression Baseline', () => {
 #### Phase 1C: Layout Components ✅ COMPLETED WITH VISUAL PARITY
 
 **Initial Implementation:**
+
 - PageHeader: Sticky header with logo and navigation, 10 tests
 - Navigation: Desktop menu with hover dropdowns
 - MobileMenu: Off-canvas slide-in (#1E2024 dark theme)
@@ -674,6 +694,7 @@ styling discrepancies. All components rebuilt to match pixel-perfect:
    - Implementation: `isNearEnd = index >= menuItems.length - 2`
 
 **Visual Parity Checklist (All ✅):**
+
 - ✅ Green background (#4acf52) with pattern image
 - ✅ White text throughout navigation
 - ✅ Correct logo sizes (mobile/desktop)
@@ -700,6 +721,7 @@ styling discrepancies. All components rebuilt to match pixel-perfect:
    - 3 component stories + 7 element stories + 5 SocialLinks stories
 
 **Test Coverage Summary:**
+
 ```
 Total Tests: 164/164 passing ✅
 
@@ -720,10 +742,12 @@ Effect Services (25 tests):
 ```
 
 **Components Created: 10 (5 UI + 5 Layout)**
+
 - UI: Button, Card, Icon, Spinner, SocialLinks
 - Layout: PageHeader, Navigation, MobileMenu, PageFooter, (Container)
 
 **Storybook Stories: 46 stories**
+
 - 27 component stories
 - 19 element stories (12 PageHeader + 7 PageFooter)
 
@@ -737,118 +761,134 @@ Effect Services (25 tests):
 **File:** `src/lib/effect/schemas/article.schema.ts`
 
 ```typescript
-import { Schema as S } from 'effect'
+import { Schema as S } from "effect";
 
 // Drupal Image Schema
 export const DrupalImageSchema = S.Struct({
   uri: S.Struct({
-    url: S.String
+    url: S.String,
   }),
   alt: S.optional(S.String),
   title: S.optional(S.String),
   width: S.optional(S.Number),
-  height: S.optional(S.Number)
-})
+  height: S.optional(S.Number),
+});
 
-export type DrupalImage = S.Schema.Type<typeof DrupalImageSchema>
+export type DrupalImage = S.Schema.Type<typeof DrupalImageSchema>;
 
 // Drupal Article Schema
 export const ArticleSchema = S.Struct({
   id: S.String,
-  type: S.Literal('node--article'),
+  type: S.Literal("node--article"),
   attributes: S.Struct({
     title: S.String,
     created: S.String.pipe(S.DateFromString),
     changed: S.optional(S.String.pipe(S.DateFromString)),
-    body: S.optional(S.Struct({
-      value: S.String,
-      format: S.String,
-      processed: S.String
-    })),
+    body: S.optional(
+      S.Struct({
+        value: S.String,
+        format: S.String,
+        processed: S.String,
+      }),
+    ),
     path: S.Struct({
-      alias: S.String
-    })
+      alias: S.String,
+    }),
   }),
   relationships: S.Struct({
-    field_image: S.optional(S.Struct({
-      data: S.optional(DrupalImageSchema)
-    })),
-    field_category: S.optional(S.Struct({
-      data: S.Array(S.Struct({
-        id: S.String,
-        type: S.Literal('taxonomy_term--category')
-      }))
-    }))
-  })
-})
+    field_image: S.optional(
+      S.Struct({
+        data: S.optional(DrupalImageSchema),
+      }),
+    ),
+    field_category: S.optional(
+      S.Struct({
+        data: S.Array(
+          S.Struct({
+            id: S.String,
+            type: S.Literal("taxonomy_term--category"),
+          }),
+        ),
+      }),
+    ),
+  }),
+});
 
-export type Article = S.Schema.Type<typeof ArticleSchema>
+export type Article = S.Schema.Type<typeof ArticleSchema>;
 ```
 
 **File:** `src/lib/effect/schemas/team.schema.ts`
 
 ```typescript
-import { Schema as S } from 'effect'
+import { Schema as S } from "effect";
 
 export const TeamSchema = S.Struct({
   id: S.String,
-  type: S.Literal('node--team'),
+  type: S.Literal("node--team"),
   attributes: S.Struct({
     title: S.String,
     field_team_id: S.Number,
     field_league_id: S.optional(S.Number),
     field_league: S.optional(S.String),
     path: S.Struct({
-      alias: S.String
-    })
-  })
-})
+      alias: S.String,
+    }),
+  }),
+});
 
-export type Team = S.Schema.Type<typeof TeamSchema>
+export type Team = S.Schema.Type<typeof TeamSchema>;
 ```
 
 **File:** `src/lib/effect/schemas/player.schema.ts`
 
 ```typescript
-import { Schema as S } from 'effect'
-import { DrupalImageSchema } from './article.schema'
+import { Schema as S } from "effect";
+import { DrupalImageSchema } from "./article.schema";
 
 export const PlayerSchema = S.Struct({
   id: S.String,
-  type: S.Literal('node--player'),
+  type: S.Literal("node--player"),
   attributes: S.Struct({
     title: S.String,
     field_position: S.optional(S.String),
     field_number: S.optional(S.Number),
     field_birth_date: S.optional(S.String.pipe(S.DateFromString)),
-    body: S.optional(S.Struct({
-      value: S.String,
-      processed: S.String
-    })),
+    body: S.optional(
+      S.Struct({
+        value: S.String,
+        processed: S.String,
+      }),
+    ),
     path: S.Struct({
-      alias: S.String
-    })
+      alias: S.String,
+    }),
   }),
   relationships: S.Struct({
-    field_image: S.optional(S.Struct({
-      data: S.optional(DrupalImageSchema)
-    })),
-    field_team: S.optional(S.Struct({
-      data: S.optional(S.Struct({
-        id: S.String,
-        type: S.Literal('node--team')
-      }))
-    }))
-  })
-})
+    field_image: S.optional(
+      S.Struct({
+        data: S.optional(DrupalImageSchema),
+      }),
+    ),
+    field_team: S.optional(
+      S.Struct({
+        data: S.optional(
+          S.Struct({
+            id: S.String,
+            type: S.Literal("node--team"),
+          }),
+        ),
+      }),
+    ),
+  }),
+});
 
-export type Player = S.Schema.Type<typeof PlayerSchema>
+export type Player = S.Schema.Type<typeof PlayerSchema>;
 ```
 
 **File:** `src/lib/effect/schemas/match.schema.ts`
 
 ```typescript
-import { Schema as S } from 'effect'
+import { Schema as S } from "effect";
 
 // Footbalisto Match Schema
 export const MatchSchema = S.Struct({
@@ -857,22 +897,24 @@ export const MatchSchema = S.Struct({
   home_team: S.Struct({
     id: S.Number,
     name: S.String,
-    logo: S.optional(S.String)
+    logo: S.optional(S.String),
   }),
   away_team: S.Struct({
     id: S.Number,
     name: S.String,
-    logo: S.optional(S.String)
+    logo: S.optional(S.String),
   }),
-  score: S.optional(S.Struct({
-    home: S.Number,
-    away: S.Number
-  })),
-  status: S.Literal('scheduled', 'live', 'finished'),
-  venue: S.optional(S.String)
-})
+  score: S.optional(
+    S.Struct({
+      home: S.Number,
+      away: S.Number,
+    }),
+  ),
+  status: S.Literal("scheduled", "live", "finished"),
+  venue: S.optional(S.String),
+});
 
-export type Match = S.Schema.Type<typeof MatchSchema>
+export type Match = S.Schema.Type<typeof MatchSchema>;
 
 // Ranking Entry Schema
 export const RankingEntrySchema = S.Struct({
@@ -886,19 +928,19 @@ export const RankingEntrySchema = S.Struct({
   goals_for: S.Number,
   goals_against: S.Number,
   goal_difference: S.Number,
-  points: S.Number
-})
+  points: S.Number,
+});
 
-export type RankingEntry = S.Schema.Type<typeof RankingEntrySchema>
+export type RankingEntry = S.Schema.Type<typeof RankingEntrySchema>;
 ```
 
 **File:** `src/lib/effect/schemas/index.ts`
 
 ```typescript
-export * from './article.schema'
-export * from './team.schema'
-export * from './player.schema'
-export * from './match.schema'
+export * from "./article.schema";
+export * from "./team.schema";
+export * from "./player.schema";
+export * from "./match.schema";
 ```
 
 #### 1.2: Drupal Service with Effect
@@ -906,48 +948,53 @@ export * from './match.schema'
 **File:** `src/lib/effect/services/DrupalService.ts`
 
 ```typescript
-import { Effect, Context, Layer, HttpClient, Schedule } from 'effect'
-import { Schema as S } from 'effect'
-import { ArticleSchema, type Article } from '../schemas/article.schema'
-import { TeamSchema, type Team } from '../schemas/team.schema'
-import { PlayerSchema, type Player } from '../schemas/player.schema'
+import { Effect, Context, Layer, HttpClient, Schedule } from "effect";
+import { Schema as S } from "effect";
+import { ArticleSchema, type Article } from "../schemas/article.schema";
+import { TeamSchema, type Team } from "../schemas/team.schema";
+import { PlayerSchema, type Player } from "../schemas/player.schema";
 
 // Custom Error Types
-export class DrupalError extends S.TaggedError<DrupalError>()(
-  'DrupalError',
-  {
-    message: S.String,
-    cause: S.optional(S.Unknown)
-  }
-) {}
+export class DrupalError extends S.TaggedError<DrupalError>()("DrupalError", {
+  message: S.String,
+  cause: S.optional(S.Unknown),
+}) {}
 
 export class NotFoundError extends S.TaggedError<NotFoundError>()(
-  'NotFoundError',
+  "NotFoundError",
   {
     resource: S.String,
-    slug: S.String
-  }
+    slug: S.String,
+  },
 ) {}
 
 // Service Interface
-export class DrupalService extends Context.Tag('DrupalService')<
+export class DrupalService extends Context.Tag("DrupalService")<
   DrupalService,
   {
     readonly getArticles: (params?: {
-      page?: number
-      limit?: number
-      category?: string
-    }) => Effect.Effect<Array<Article>, DrupalError>
+      page?: number;
+      limit?: number;
+      category?: string;
+    }) => Effect.Effect<Array<Article>, DrupalError>;
 
-    readonly getArticleBySlug: (slug: string) => Effect.Effect<Article, DrupalError | NotFoundError>
+    readonly getArticleBySlug: (
+      slug: string,
+    ) => Effect.Effect<Article, DrupalError | NotFoundError>;
 
-    readonly getTeams: () => Effect.Effect<Array<Team>, DrupalError>
+    readonly getTeams: () => Effect.Effect<Array<Team>, DrupalError>;
 
-    readonly getTeamBySlug: (slug: string) => Effect.Effect<Team, DrupalError | NotFoundError>
+    readonly getTeamBySlug: (
+      slug: string,
+    ) => Effect.Effect<Team, DrupalError | NotFoundError>;
 
-    readonly getPlayers: (teamId?: string) => Effect.Effect<Array<Player>, DrupalError>
+    readonly getPlayers: (
+      teamId?: string,
+    ) => Effect.Effect<Array<Player>, DrupalError>;
 
-    readonly getPlayerBySlug: (slug: string) => Effect.Effect<Player, DrupalError | NotFoundError>
+    readonly getPlayerBySlug: (
+      slug: string,
+    ) => Effect.Effect<Player, DrupalError | NotFoundError>;
   }
 >() {}
 
@@ -955,168 +1002,232 @@ export class DrupalService extends Context.Tag('DrupalService')<
 export const DrupalServiceLive = Layer.effect(
   DrupalService,
   Effect.gen(function* () {
-    const httpClient = yield* HttpClient.HttpClient
+    const httpClient = yield* HttpClient.HttpClient;
 
-    const baseUrl = process.env.DRUPAL_API_URL || 'https://api.kcvvelewijt.be'
+    const baseUrl = process.env.DRUPAL_API_URL || "https://api.kcvvelewijt.be";
 
     const client = httpClient.pipe(
       HttpClient.filterStatusOk,
       HttpClient.mapRequest(
-        HttpClient.setHeader('Accept', 'application/vnd.api+json')
-      )
-    )
+        HttpClient.setHeader("Accept", "application/vnd.api+json"),
+      ),
+    );
 
     const getArticles = (params?: {
-      page?: number
-      limit?: number
-      category?: string
+      page?: number;
+      limit?: number;
+      category?: string;
     }) =>
       Effect.gen(function* () {
-        const url = new URL(`${baseUrl}/jsonapi/node/article`)
+        const url = new URL(`${baseUrl}/jsonapi/node/article`);
 
         // Add query params
-        url.searchParams.set('include', 'field_image,field_category')
-        url.searchParams.set('sort', '-created')
+        url.searchParams.set("include", "field_image,field_category");
+        url.searchParams.set("sort", "-created");
 
-        const limit = params?.limit || 18
-        url.searchParams.set('page[limit]', limit.toString())
+        const limit = params?.limit || 18;
+        url.searchParams.set("page[limit]", limit.toString());
 
         if (params?.page) {
-          url.searchParams.set('page[offset]', ((params.page - 1) * limit).toString())
+          url.searchParams.set(
+            "page[offset]",
+            ((params.page - 1) * limit).toString(),
+          );
         }
 
         if (params?.category) {
-          url.searchParams.set('filter[field_category.name]', params.category)
+          url.searchParams.set("filter[field_category.name]", params.category);
         }
 
-        const response = yield* client.get(url.toString())
-        const json = yield* response.json
+        const response = yield* client.get(url.toString());
+        const json = yield* response.json;
 
         // Decode using Effect Schema
-        const articles = yield* S.decodeUnknown(S.Array(ArticleSchema))(json.data)
+        const articles = yield* S.decodeUnknown(S.Array(ArticleSchema))(
+          json.data,
+        );
 
-        return articles
+        return articles;
       }).pipe(
-        Effect.retry(Schedule.exponential('1 second', 2.0).pipe(Schedule.upTo('10 seconds'))),
-        Effect.timeout('30 seconds'),
+        Effect.retry(
+          Schedule.exponential("1 second", 2.0).pipe(
+            Schedule.upTo("10 seconds"),
+          ),
+        ),
+        Effect.timeout("30 seconds"),
         Effect.catchAll((error) =>
-          Effect.fail(new DrupalError({ message: 'Failed to fetch articles', cause: error }))
-        )
-      )
+          Effect.fail(
+            new DrupalError({
+              message: "Failed to fetch articles",
+              cause: error,
+            }),
+          ),
+        ),
+      );
 
     const getArticleBySlug = (slug: string) =>
       Effect.gen(function* () {
-        const normalizedSlug = slug.startsWith('/') ? slug : `/news/${slug}`
-        const url = `${baseUrl}/jsonapi/node/article?filter[path.alias]=${normalizedSlug}&include=field_image,field_category`
+        const normalizedSlug = slug.startsWith("/") ? slug : `/news/${slug}`;
+        const url = `${baseUrl}/jsonapi/node/article?filter[path.alias]=${normalizedSlug}&include=field_image,field_category`;
 
-        const response = yield* client.get(url)
-        const json = yield* response.json
+        const response = yield* client.get(url);
+        const json = yield* response.json;
 
         if (!json.data || json.data.length === 0) {
-          return yield* Effect.fail(new NotFoundError({ resource: 'article', slug }))
+          return yield* Effect.fail(
+            new NotFoundError({ resource: "article", slug }),
+          );
         }
 
-        const article = yield* S.decodeUnknown(ArticleSchema)(json.data[0])
+        const article = yield* S.decodeUnknown(ArticleSchema)(json.data[0]);
 
-        return article
+        return article;
       }).pipe(
-        Effect.retry(Schedule.exponential('1 second', 2.0).pipe(Schedule.upTo('10 seconds'))),
-        Effect.timeout('30 seconds'),
-        Effect.catchTag('NotFoundError', (e) => Effect.fail(e)),
+        Effect.retry(
+          Schedule.exponential("1 second", 2.0).pipe(
+            Schedule.upTo("10 seconds"),
+          ),
+        ),
+        Effect.timeout("30 seconds"),
+        Effect.catchTag("NotFoundError", (e) => Effect.fail(e)),
         Effect.catchAll((error) =>
-          Effect.fail(new DrupalError({ message: `Failed to fetch article: ${slug}`, cause: error }))
-        )
-      )
+          Effect.fail(
+            new DrupalError({
+              message: `Failed to fetch article: ${slug}`,
+              cause: error,
+            }),
+          ),
+        ),
+      );
 
     const getTeams = () =>
       Effect.gen(function* () {
-        const url = `${baseUrl}/jsonapi/node/team?sort=title`
+        const url = `${baseUrl}/jsonapi/node/team?sort=title`;
 
-        const response = yield* client.get(url)
-        const json = yield* response.json
+        const response = yield* client.get(url);
+        const json = yield* response.json;
 
-        const teams = yield* S.decodeUnknown(S.Array(TeamSchema))(json.data)
+        const teams = yield* S.decodeUnknown(S.Array(TeamSchema))(json.data);
 
-        return teams
+        return teams;
       }).pipe(
-        Effect.retry(Schedule.exponential('1 second', 2.0).pipe(Schedule.upTo('10 seconds'))),
-        Effect.timeout('30 seconds'),
+        Effect.retry(
+          Schedule.exponential("1 second", 2.0).pipe(
+            Schedule.upTo("10 seconds"),
+          ),
+        ),
+        Effect.timeout("30 seconds"),
         Effect.catchAll((error) =>
-          Effect.fail(new DrupalError({ message: 'Failed to fetch teams', cause: error }))
-        )
-      )
+          Effect.fail(
+            new DrupalError({ message: "Failed to fetch teams", cause: error }),
+          ),
+        ),
+      );
 
     const getTeamBySlug = (slug: string) =>
       Effect.gen(function* () {
-        const normalizedSlug = slug.startsWith('/') ? slug : `/team/${slug}`
-        const url = `${baseUrl}/jsonapi/node/team?filter[path.alias]=${normalizedSlug}`
+        const normalizedSlug = slug.startsWith("/") ? slug : `/team/${slug}`;
+        const url = `${baseUrl}/jsonapi/node/team?filter[path.alias]=${normalizedSlug}`;
 
-        const response = yield* client.get(url)
-        const json = yield* response.json
+        const response = yield* client.get(url);
+        const json = yield* response.json;
 
         if (!json.data || json.data.length === 0) {
-          return yield* Effect.fail(new NotFoundError({ resource: 'team', slug }))
+          return yield* Effect.fail(
+            new NotFoundError({ resource: "team", slug }),
+          );
         }
 
-        const team = yield* S.decodeUnknown(TeamSchema)(json.data[0])
+        const team = yield* S.decodeUnknown(TeamSchema)(json.data[0]);
 
-        return team
+        return team;
       }).pipe(
-        Effect.retry(Schedule.exponential('1 second', 2.0).pipe(Schedule.upTo('10 seconds'))),
-        Effect.timeout('30 seconds'),
-        Effect.catchTag('NotFoundError', (e) => Effect.fail(e)),
+        Effect.retry(
+          Schedule.exponential("1 second", 2.0).pipe(
+            Schedule.upTo("10 seconds"),
+          ),
+        ),
+        Effect.timeout("30 seconds"),
+        Effect.catchTag("NotFoundError", (e) => Effect.fail(e)),
         Effect.catchAll((error) =>
-          Effect.fail(new DrupalError({ message: `Failed to fetch team: ${slug}`, cause: error }))
-        )
-      )
+          Effect.fail(
+            new DrupalError({
+              message: `Failed to fetch team: ${slug}`,
+              cause: error,
+            }),
+          ),
+        ),
+      );
 
     const getPlayers = (teamId?: string) =>
       Effect.gen(function* () {
-        const url = new URL(`${baseUrl}/jsonapi/node/player`)
-        url.searchParams.set('include', 'field_image,field_team')
-        url.searchParams.set('sort', 'field_number')
+        const url = new URL(`${baseUrl}/jsonapi/node/player`);
+        url.searchParams.set("include", "field_image,field_team");
+        url.searchParams.set("sort", "field_number");
 
         if (teamId) {
-          url.searchParams.set('filter[field_team.id]', teamId)
+          url.searchParams.set("filter[field_team.id]", teamId);
         }
 
-        const response = yield* client.get(url.toString())
-        const json = yield* response.json
+        const response = yield* client.get(url.toString());
+        const json = yield* response.json;
 
-        const players = yield* S.decodeUnknown(S.Array(PlayerSchema))(json.data)
+        const players = yield* S.decodeUnknown(S.Array(PlayerSchema))(
+          json.data,
+        );
 
-        return players
+        return players;
       }).pipe(
-        Effect.retry(Schedule.exponential('1 second', 2.0).pipe(Schedule.upTo('10 seconds'))),
-        Effect.timeout('30 seconds'),
+        Effect.retry(
+          Schedule.exponential("1 second", 2.0).pipe(
+            Schedule.upTo("10 seconds"),
+          ),
+        ),
+        Effect.timeout("30 seconds"),
         Effect.catchAll((error) =>
-          Effect.fail(new DrupalError({ message: 'Failed to fetch players', cause: error }))
-        )
-      )
+          Effect.fail(
+            new DrupalError({
+              message: "Failed to fetch players",
+              cause: error,
+            }),
+          ),
+        ),
+      );
 
     const getPlayerBySlug = (slug: string) =>
       Effect.gen(function* () {
-        const normalizedSlug = slug.startsWith('/') ? slug : `/player/${slug}`
-        const url = `${baseUrl}/jsonapi/node/player?filter[path.alias]=${normalizedSlug}&include=field_image,field_team`
+        const normalizedSlug = slug.startsWith("/") ? slug : `/player/${slug}`;
+        const url = `${baseUrl}/jsonapi/node/player?filter[path.alias]=${normalizedSlug}&include=field_image,field_team`;
 
-        const response = yield* client.get(url)
-        const json = yield* response.json
+        const response = yield* client.get(url);
+        const json = yield* response.json;
 
         if (!json.data || json.data.length === 0) {
-          return yield* Effect.fail(new NotFoundError({ resource: 'player', slug }))
+          return yield* Effect.fail(
+            new NotFoundError({ resource: "player", slug }),
+          );
         }
 
-        const player = yield* S.decodeUnknown(PlayerSchema)(json.data[0])
+        const player = yield* S.decodeUnknown(PlayerSchema)(json.data[0]);
 
-        return player
+        return player;
       }).pipe(
-        Effect.retry(Schedule.exponential('1 second', 2.0).pipe(Schedule.upTo('10 seconds'))),
-        Effect.timeout('30 seconds'),
-        Effect.catchTag('NotFoundError', (e) => Effect.fail(e)),
+        Effect.retry(
+          Schedule.exponential("1 second", 2.0).pipe(
+            Schedule.upTo("10 seconds"),
+          ),
+        ),
+        Effect.timeout("30 seconds"),
+        Effect.catchTag("NotFoundError", (e) => Effect.fail(e)),
         Effect.catchAll((error) =>
-          Effect.fail(new DrupalError({ message: `Failed to fetch player: ${slug}`, cause: error }))
-        )
-      )
+          Effect.fail(
+            new DrupalError({
+              message: `Failed to fetch player: ${slug}`,
+              cause: error,
+            }),
+          ),
+        ),
+      );
 
     return {
       getArticles,
@@ -1124,10 +1235,10 @@ export const DrupalServiceLive = Layer.effect(
       getTeams,
       getTeamBySlug,
       getPlayers,
-      getPlayerBySlug
-    }
-  })
-)
+      getPlayerBySlug,
+    };
+  }),
+);
 ```
 
 #### 1.3: Footbalisto Service
@@ -1135,27 +1246,40 @@ export const DrupalServiceLive = Layer.effect(
 **File:** `src/lib/effect/services/FootbalistoService.ts`
 
 ```typescript
-import { Effect, Context, Layer, HttpClient, Cache, Schedule } from 'effect'
-import { Schema as S } from 'effect'
-import { MatchSchema, type Match, RankingEntrySchema, type RankingEntry } from '../schemas/match.schema'
+import { Effect, Context, Layer, HttpClient, Cache, Schedule } from "effect";
+import { Schema as S } from "effect";
+import {
+  MatchSchema,
+  type Match,
+  RankingEntrySchema,
+  type RankingEntry,
+} from "../schemas/match.schema";
 
 // Custom Error Type
 export class FootbalistoError extends S.TaggedError<FootbalistoError>()(
-  'FootbalistoError',
+  "FootbalistoError",
   {
     message: S.String,
-    cause: S.optional(S.Unknown)
-  }
+    cause: S.optional(S.Unknown),
+  },
 ) {}
 
 // Service Interface
-export class FootbalistoService extends Context.Tag('FootbalistoService')<
+export class FootbalistoService extends Context.Tag("FootbalistoService")<
   FootbalistoService,
   {
-    readonly getMatches: (teamId: number) => Effect.Effect<Array<Match>, FootbalistoError>
-    readonly getMatchById: (matchId: number) => Effect.Effect<Match, FootbalistoError>
-    readonly getRanking: (leagueId: number) => Effect.Effect<Array<RankingEntry>, FootbalistoError>
-    readonly getTeamStats: (teamId: number) => Effect.Effect<unknown, FootbalistoError>
+    readonly getMatches: (
+      teamId: number,
+    ) => Effect.Effect<Array<Match>, FootbalistoError>;
+    readonly getMatchById: (
+      matchId: number,
+    ) => Effect.Effect<Match, FootbalistoError>;
+    readonly getRanking: (
+      leagueId: number,
+    ) => Effect.Effect<Array<RankingEntry>, FootbalistoError>;
+    readonly getTeamStats: (
+      teamId: number,
+    ) => Effect.Effect<unknown, FootbalistoError>;
   }
 >() {}
 
@@ -1163,93 +1287,129 @@ export class FootbalistoService extends Context.Tag('FootbalistoService')<
 export const FootbalistoServiceLive = Layer.effect(
   FootbalistoService,
   Effect.gen(function* () {
-    const httpClient = yield* HttpClient.HttpClient
-    const baseUrl = process.env.FOOTBALISTO_API_URL || 'https://footbalisto.be'
+    const httpClient = yield* HttpClient.HttpClient;
+    const baseUrl = process.env.FOOTBALISTO_API_URL || "https://footbalisto.be";
 
-    const client = httpClient.pipe(
-      HttpClient.filterStatusOk
-    )
+    const client = httpClient.pipe(HttpClient.filterStatusOk);
 
     // Create cache for API responses (5 minute TTL)
     const matchCache = yield* Cache.make({
       capacity: 100,
-      timeToLive: '5 minutes',
+      timeToLive: "5 minutes",
       lookup: (teamId: number) =>
         Effect.gen(function* () {
-          const response = yield* client.get(`${baseUrl}/matches/${teamId}`)
-          const json = yield* response.json
-          const matches = yield* S.decodeUnknown(S.Array(MatchSchema))(json)
-          return matches
+          const response = yield* client.get(`${baseUrl}/matches/${teamId}`);
+          const json = yield* response.json;
+          const matches = yield* S.decodeUnknown(S.Array(MatchSchema))(json);
+          return matches;
         }).pipe(
-          Effect.retry(Schedule.exponential('1 second', 2.0).pipe(Schedule.upTo('10 seconds'))),
-          Effect.timeout('30 seconds')
-        )
-    })
+          Effect.retry(
+            Schedule.exponential("1 second", 2.0).pipe(
+              Schedule.upTo("10 seconds"),
+            ),
+          ),
+          Effect.timeout("30 seconds"),
+        ),
+    });
 
     const rankingCache = yield* Cache.make({
       capacity: 50,
-      timeToLive: '5 minutes',
+      timeToLive: "5 minutes",
       lookup: (leagueId: number) =>
         Effect.gen(function* () {
-          const response = yield* client.get(`${baseUrl}/ranking/${leagueId}`)
-          const json = yield* response.json
-          const ranking = yield* S.decodeUnknown(S.Array(RankingEntrySchema))(json)
-          return ranking
+          const response = yield* client.get(`${baseUrl}/ranking/${leagueId}`);
+          const json = yield* response.json;
+          const ranking = yield* S.decodeUnknown(S.Array(RankingEntrySchema))(
+            json,
+          );
+          return ranking;
         }).pipe(
-          Effect.retry(Schedule.exponential('1 second', 2.0).pipe(Schedule.upTo('10 seconds'))),
-          Effect.timeout('30 seconds')
-        )
-    })
+          Effect.retry(
+            Schedule.exponential("1 second", 2.0).pipe(
+              Schedule.upTo("10 seconds"),
+            ),
+          ),
+          Effect.timeout("30 seconds"),
+        ),
+    });
 
     const getMatches = (teamId: number) =>
       Cache.get(matchCache, teamId).pipe(
         Effect.catchAll((error) =>
-          Effect.fail(new FootbalistoError({ message: 'Failed to fetch matches', cause: error }))
-        )
-      )
+          Effect.fail(
+            new FootbalistoError({
+              message: "Failed to fetch matches",
+              cause: error,
+            }),
+          ),
+        ),
+      );
 
     const getMatchById = (matchId: number) =>
       Effect.gen(function* () {
-        const response = yield* client.get(`${baseUrl}/match/${matchId}`)
-        const json = yield* response.json
-        const match = yield* S.decodeUnknown(MatchSchema)(json)
-        return match
+        const response = yield* client.get(`${baseUrl}/match/${matchId}`);
+        const json = yield* response.json;
+        const match = yield* S.decodeUnknown(MatchSchema)(json);
+        return match;
       }).pipe(
-        Effect.retry(Schedule.exponential('1 second', 2.0).pipe(Schedule.upTo('10 seconds'))),
-        Effect.timeout('30 seconds'),
+        Effect.retry(
+          Schedule.exponential("1 second", 2.0).pipe(
+            Schedule.upTo("10 seconds"),
+          ),
+        ),
+        Effect.timeout("30 seconds"),
         Effect.catchAll((error) =>
-          Effect.fail(new FootbalistoError({ message: `Failed to fetch match: ${matchId}`, cause: error }))
-        )
-      )
+          Effect.fail(
+            new FootbalistoError({
+              message: `Failed to fetch match: ${matchId}`,
+              cause: error,
+            }),
+          ),
+        ),
+      );
 
     const getRanking = (leagueId: number) =>
       Cache.get(rankingCache, leagueId).pipe(
         Effect.catchAll((error) =>
-          Effect.fail(new FootbalistoError({ message: 'Failed to fetch ranking', cause: error }))
-        )
-      )
+          Effect.fail(
+            new FootbalistoError({
+              message: "Failed to fetch ranking",
+              cause: error,
+            }),
+          ),
+        ),
+      );
 
     const getTeamStats = (teamId: number) =>
       Effect.gen(function* () {
-        const response = yield* client.get(`${baseUrl}/stats/team/${teamId}`)
-        const json = yield* response.json
-        return json
+        const response = yield* client.get(`${baseUrl}/stats/team/${teamId}`);
+        const json = yield* response.json;
+        return json;
       }).pipe(
-        Effect.retry(Schedule.exponential('1 second', 2.0).pipe(Schedule.upTo('10 seconds'))),
-        Effect.timeout('30 seconds'),
+        Effect.retry(
+          Schedule.exponential("1 second", 2.0).pipe(
+            Schedule.upTo("10 seconds"),
+          ),
+        ),
+        Effect.timeout("30 seconds"),
         Effect.catchAll((error) =>
-          Effect.fail(new FootbalistoError({ message: 'Failed to fetch team stats', cause: error }))
-        )
-      )
+          Effect.fail(
+            new FootbalistoError({
+              message: "Failed to fetch team stats",
+              cause: error,
+            }),
+          ),
+        ),
+      );
 
     return {
       getMatches,
       getMatchById,
       getRanking,
-      getTeamStats
-    }
-  })
-)
+      getTeamStats,
+    };
+  }),
+);
 ```
 
 #### 1.4: Effect Runtime Configuration
@@ -1257,39 +1417,40 @@ export const FootbalistoServiceLive = Layer.effect(
 **File:** `src/lib/effect/runtime.ts`
 
 ```typescript
-import { Effect, Layer, ManagedRuntime } from 'effect'
-import { DrupalService, DrupalServiceLive } from './services/DrupalService'
-import { FootbalistoService, FootbalistoServiceLive } from './services/FootbalistoService'
+import { Effect, Layer, ManagedRuntime } from "effect";
+import { DrupalService, DrupalServiceLive } from "./services/DrupalService";
+import {
+  FootbalistoService,
+  FootbalistoServiceLive,
+} from "./services/FootbalistoService";
 
 // Combine all service layers
-const AppLayer = Layer.mergeAll(
-  DrupalServiceLive,
-  FootbalistoServiceLive
-)
+const AppLayer = Layer.mergeAll(DrupalServiceLive, FootbalistoServiceLive);
 
 // Create managed runtime
-export const runtime = ManagedRuntime.make(AppLayer)
+export const runtime = ManagedRuntime.make(AppLayer);
 
 // Helper to run effects in Next.js server components
 export const runPromise = <A, E>(effect: Effect.Effect<A, E>) =>
-  runtime.runPromise(effect)
+  runtime.runPromise(effect);
 
 // Helper with error handling for Next.js
 export const runPromiseOrThrow = <A, E>(effect: Effect.Effect<A, E>) =>
   runtime.runPromise(effect).catch((error) => {
-    console.error('Effect runtime error:', error)
-    throw error
-  })
+    console.error("Effect runtime error:", error);
+    throw error;
+  });
 
 // Provide services to an effect
 export const provideServices = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  Effect.provide(effect, AppLayer)
+  Effect.provide(effect, AppLayer);
 ```
 
 #### 1.5: Base UI Components
 
 **Component Structure:**
 Each component follows this pattern:
+
 ```
 src/components/ui/Button/
 ├── Button.tsx          # Component implementation
@@ -1433,96 +1594,96 @@ describe('Button', () => {
 **File:** `src/components/ui/Button/Button.stories.tsx`
 
 ```typescript
-import type { Meta, StoryObj } from '@storybook/react'
-import { Button } from './Button'
+import type { Meta, StoryObj } from "@storybook/react";
+import { Button } from "./Button";
 
 const meta: Meta<typeof Button> = {
-  title: 'UI/Button',
+  title: "UI/Button",
   component: Button,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     variant: {
-      control: 'select',
-      options: ['primary', 'secondary', 'ghost', 'link'],
+      control: "select",
+      options: ["primary", "secondary", "ghost", "link"],
     },
     size: {
-      control: 'select',
-      options: ['sm', 'md', 'lg'],
+      control: "select",
+      options: ["sm", "md", "lg"],
     },
     isLoading: {
-      control: 'boolean',
+      control: "boolean",
     },
     disabled: {
-      control: 'boolean',
+      control: "boolean",
     },
   },
-}
+};
 
-export default meta
-type Story = StoryObj<typeof Button>
+export default meta;
+type Story = StoryObj<typeof Button>;
 
 export const Primary: Story = {
   args: {
-    variant: 'primary',
-    children: 'Primary Button',
+    variant: "primary",
+    children: "Primary Button",
   },
-}
+};
 
 export const Secondary: Story = {
   args: {
-    variant: 'secondary',
-    children: 'Secondary Button',
+    variant: "secondary",
+    children: "Secondary Button",
   },
-}
+};
 
 export const Ghost: Story = {
   args: {
-    variant: 'ghost',
-    children: 'Ghost Button',
+    variant: "ghost",
+    children: "Ghost Button",
   },
-}
+};
 
 export const Link: Story = {
   args: {
-    variant: 'link',
-    children: 'Link Button',
+    variant: "link",
+    children: "Link Button",
   },
-}
+};
 
 export const Small: Story = {
   args: {
-    size: 'sm',
-    children: 'Small Button',
+    size: "sm",
+    children: "Small Button",
   },
-}
+};
 
 export const Large: Story = {
   args: {
-    size: 'lg',
-    children: 'Large Button',
+    size: "lg",
+    children: "Large Button",
   },
-}
+};
 
 export const Loading: Story = {
   args: {
     isLoading: true,
-    children: 'Loading Button',
+    children: "Loading Button",
   },
-}
+};
 
 export const Disabled: Story = {
   args: {
     disabled: true,
-    children: 'Disabled Button',
+    children: "Disabled Button",
   },
-}
+};
 ```
 
 **File:** `src/components/ui/Button/index.ts`
 
 ```typescript
-export { Button } from './Button'
-export type { ButtonProps } from './Button'
+export { Button } from "./Button";
+export type { ButtonProps } from "./Button";
 ```
 
 #### 1.6: Utility Functions
@@ -1530,39 +1691,51 @@ export type { ButtonProps } from './Button'
 **File:** `src/lib/utils/cn.ts`
 
 ```typescript
-import { type ClassValue, clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 /**
  * Combines class names with proper Tailwind CSS merging
  */
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 ```
 
 **File:** `src/lib/utils/dates.ts`
 
 ```typescript
-import { DateTime } from 'luxon'
+import { DateTime } from "luxon";
 
 /**
  * Format date using Luxon (replacing moment/date-fns)
  */
-export const formatDate = (date: Date | string, format: string = 'dd/MM/yyyy'): string => {
-  const dt = typeof date === 'string' ? DateTime.fromISO(date) : DateTime.fromJSDate(date)
-  return dt.setLocale('nl').toFormat(format)
-}
+export const formatDate = (
+  date: Date | string,
+  format: string = "dd/MM/yyyy",
+): string => {
+  const dt =
+    typeof date === "string"
+      ? DateTime.fromISO(date)
+      : DateTime.fromJSDate(date);
+  return dt.setLocale("nl").toFormat(format);
+};
 
 export const formatDateTime = (date: Date | string): string => {
-  const dt = typeof date === 'string' ? DateTime.fromISO(date) : DateTime.fromJSDate(date)
-  return dt.setLocale('nl').toFormat('dd/MM/yyyy HH:mm')
-}
+  const dt =
+    typeof date === "string"
+      ? DateTime.fromISO(date)
+      : DateTime.fromJSDate(date);
+  return dt.setLocale("nl").toFormat("dd/MM/yyyy HH:mm");
+};
 
 export const formatRelative = (date: Date | string): string => {
-  const dt = typeof date === 'string' ? DateTime.fromISO(date) : DateTime.fromJSDate(date)
-  return dt.setLocale('nl').toRelative() || ''
-}
+  const dt =
+    typeof date === "string"
+      ? DateTime.fromISO(date)
+      : DateTime.fromJSDate(date);
+  return dt.setLocale("nl").toRelative() || "";
+};
 ```
 
 **File:** `src/lib/utils/image.ts`
@@ -1572,9 +1745,10 @@ export const formatRelative = (date: Date | string): string => {
  * Construct Drupal image URL
  */
 export const getDrupalImageUrl = (uri: string): string => {
-  const baseUrl = process.env.NEXT_PUBLIC_DRUPAL_API_URL || 'https://api.kcvvelewijt.be'
-  return uri.startsWith('http') ? uri : `${baseUrl}${uri}`
-}
+  const baseUrl =
+    process.env.NEXT_PUBLIC_DRUPAL_API_URL || "https://api.kcvvelewijt.be";
+  return uri.startsWith("http") ? uri : `${baseUrl}${uri}`;
+};
 
 /**
  * Get image dimensions for next/image
@@ -1583,11 +1757,12 @@ export const getImageDimensions = (width?: number, height?: number) => {
   return {
     width: width || 1200,
     height: height || 800,
-  }
-}
+  };
+};
 ```
 
 ### Deliverables
+
 - ✅ Complete Effect service layer (Drupal, Footbalisto)
 - ✅ Effect schemas for all content types
 - ✅ Base UI components with tests and stories
@@ -1599,6 +1774,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ## Phase 2: Content Pages (Weeks 4-5) ✅ IN PROGRESS
 
 ### Goals
+
 - ✅ Build article detail pages with Drupal content
 - ✅ Create news overview with pagination and filtering
 - ⏳ Implement homepage with latest news
@@ -1608,6 +1784,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ### Status: MOSTLY COMPLETE (Updated 2025-12-29)
 
 **Completed:**
+
 - ✅ Layout components (PageHeader, Navigation, MobileMenu, PageFooter) 100% complete
 - ✅ Effect services for Drupal and Footbalisto working
 - ✅ Base UI components (Button, Card, Icon, Spinner, SocialLinks) tested
@@ -1625,6 +1802,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ✅ Visual parity with Gatsby achieved
 
 **Still To Do:**
+
 - ⏳ Search functionality (/search page)
 - ⏳ Privacy page (/privacy)
 
@@ -1633,6 +1811,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 #### 2.1: Article Components ✅ COMPLETE
 
 **Created Components:**
+
 - `ArticleCard` - Grid card for news listings (with image, title, date, tags)
 - `ArticleHeader` - Article hero section
 - `ArticleMetadata` - Date, author, category badges
@@ -1641,6 +1820,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - `CategoryFilters` - Horizontal scrollable category filters with arrows
 
 **File:** `src/app/(main)/news/[slug]/page.tsx` ✅
+
 - Article detail rendering with full content
 - Hero image with Next.js Image optimization
 - Category badges and metadata
@@ -1649,6 +1829,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ISR with 1-hour revalidation
 
 **Features:**
+
 - ✅ Effect Schema validation for all article data
 - ✅ Image optimization with next/image
 - ✅ Drupal HTML content rendering
@@ -1662,6 +1843,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 **File:** `src/app/(main)/news/page.tsx` ✅
 
 **Implementation:**
+
 ```typescript
 // Query parameter structure:
 // /news - all articles
@@ -1680,6 +1862,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ```
 
 **CategoryFilters Component Features:**
+
 - ✅ Horizontal scrollable filter buttons
 - ✅ Circular scroll arrows (left/right) on all screen sizes
 - ✅ Native CSS smooth scroll behavior
@@ -1689,17 +1872,20 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ✅ MacOS scrollbar hiding handled
 
 **Grid Layout:**
+
 - Desktop: 3-column grid (`lg:grid-cols-3`)
 - Mobile: Single column stack
 - Cards: Image (16:10 mobile, 4:3 desktop), title, date, tags
 - Hover effects: Image zoom, card lift
 
 **Pagination:**
+
 - "Alles" filter shows all categories
 - Clean URLs: `/news?category=ploeg&page=2`
 - Prev/Next navigation with disabled states
 
 **Data Flow:**
+
 1. Fetch taxonomy terms to get category slugs
 2. Match URL slug to taxonomy term ID
 3. Filter articles by `field_tags.drupal_internal__tid`
@@ -1710,6 +1896,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 **File:** `src/app/(main)/page.tsx`
 
 **Requirements:**
+
 - Latest news section
 - Upcoming matches
 - Team standings
@@ -1718,6 +1905,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 #### 2.4: Search Functionality ⏳ NOT STARTED
 
 **Future Implementation:**
+
 - Global search across articles, teams, players
 - Search page: `/search?q=goalkeeper`
 - Combined filters: `/news?category=jeugd&search=goalkeeper&page=2`
@@ -1726,24 +1914,28 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ### Technical Achievements
 
 **Effect Schema Validation:**
+
 - All Drupal responses validated with Effect Schema
 - Type-safe article, taxonomy, and media data
 - Automatic error handling and retry logic
 - Schema transformations (e.g., DateFromString)
 
 **Performance:**
+
 - ISR with 1-hour revalidation
 - Parallel data fetching (articles + tags)
 - Next.js Image optimization
 - Smooth scroll with native CSS
 
 **UX Improvements:**
+
 - Scroll arrows for category filters (all screen sizes)
 - Dynamic padding based on arrow visibility
 - Proper vertical alignment of arrows with buttons
 - Complete rows in grid (9 items = 3×3)
 
 ### Deliverables
+
 - ✅ PageHeader with tests and visual parity
 - ✅ Navigation with dropdown support
 - ✅ MobileMenu with animations
@@ -1761,6 +1953,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ## Phase 3: Team & Player Features (Weeks 6-7) ⏳ NOT STARTED
 
 ### Goals
+
 - Build player profile pages with dynamic routes
 - Create youth team overview pages
 - Implement team detail pages with rosters and schedules
@@ -1768,10 +1961,13 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Build player card sharing feature (QR codes)
 
 ### Routes to Implement
+
 **From Gatsby sitemap: 500+ player pages, 15+ team pages**
 
 #### 3.1: Player Profile Pages ⏳
+
 **Route:** `/player/[slug]`
+
 - Player biographical info (name, position, number, birth date)
 - Player photo with next/image optimization
 - Team affiliation and history
@@ -1780,10 +1976,12 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Social media links
 
 **Schema:**
+
 - Use existing `PlayerSchema` from `src/lib/effect/schemas/player.schema.ts`
 - Add stats schema if available from Drupal
 
 **Components to Create:**
+
 - `PlayerProfile` - Main profile container
 - `PlayerCard` - Visual player card (photo, number, name, position)
 - `PlayerStats` - Statistics table
@@ -1792,13 +1990,16 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - `PlayerTeamHistory` - Team affiliation timeline
 
 **Features:**
+
 - ISR with 1-hour revalidation
 - Dynamic OG images for social sharing
 - Print-friendly player cards
 - generateStaticParams for all 500+ players
 
 #### 3.2: Youth Team Pages ⏳
+
 **Routes:**
+
 - `/jeugd` - Youth main overview
 - `/jeugd/u6`, `/jeugd/u7`, `/jeugd/u8`, `/jeugd/u9`
 - `/jeugd/u10` through `/jeugd/u17`
@@ -1806,6 +2007,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - `/jeugd/u8-wit` (special white team)
 
 **Components to Create:**
+
 - `TeamOverview` - List all youth teams
 - `TeamCard` - Team teaser card (age group, coach, photo)
 - `TeamDetail` - Full team page (roster, schedule, standings)
@@ -1815,6 +2017,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - `CoachProfile` - Coach info component
 
 **Features:**
+
 - Team roster with player links
 - Match schedule integration with Footbalisto
 - Team photos and group shots
@@ -1822,9 +2025,11 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Training schedule
 
 #### 3.3: Match Detail Pages ⏳
+
 **Route:** `/game/[matchId]`
 
 **Components to Create:**
+
 - `MatchDetail` - Full match page container
 - `MatchHeader` - Match hero (teams, score, date, venue)
 - `MatchLineup` - Starting XI and substitutes
@@ -1834,11 +2039,13 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - `MatchGallery` - Photo gallery from match
 
 **Footbalisto Integration:**
+
 - Use existing `FootbalistoService`
 - Add `getMatchById` method (already exists)
 - Real-time score updates with ISR (5-minute revalidation during match day)
 
 ### Deliverables
+
 - ⏳ 500+ player profile pages with ISR
 - ⏳ 15+ youth team pages
 - ⏳ Match detail pages with live scores
@@ -1851,24 +2058,29 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ## Phase 4: Calendar & Events (Week 8) ⏳ NOT STARTED
 
 ### Goals
+
 - Build calendar views for matches and events
 - Create event detail pages
 - Implement "Scheurkalender" (tear-off calendar) feature
 - Add internal club calendar
 
 ### Routes to Implement
+
 **From Gatsby sitemap: 4 calendar/event pages**
 
 #### 4.1: Main Calendar Page ⏳
+
 **Route:** `/calendar`
 
 **Components to Create:**
+
 - `Calendar` - Main calendar component with month/week/day views
 - `CalendarEvent` - Event card/item
 - `CalendarFilters` - Filter by team, event type, etc.
 - `CalendarLegend` - Color-coded legend (matches, events, training)
 
 **Features:**
+
 - Month, week, and day views
 - Filter by team (A, B, youth teams)
 - Filter by event type (match, training, event, meeting)
@@ -1876,43 +2088,52 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Responsive mobile view
 
 **Data Sources:**
+
 - Footbalisto matches
 - Drupal events (node--event content type)
 
 #### 4.2: Events Page ⏳
+
 **Route:** `/events`
 
 **Components to Create:**
+
 - `EventsList` - Event listing with filters
 - `EventCard` - Event teaser card
 - `EventDetail` - Full event page (if not inline)
 - `EventRegistration` - Registration form (if applicable)
 
 **Event Types:**
+
 - Club events (BBQ, celebrations, fundraisers)
 - Youth activities
 - General meetings
 - Volunteer opportunities
 
 #### 4.3: Scheurkalender ⏳
+
 **Route:** `/scheurkalender`
 
 **Special Feature:**
+
 - Digital tear-off calendar showing upcoming matches
 - Daily view with match details
 - Print-friendly format
 - Could be displayed on clubhouse screen/kiosk
 
 #### 4.4: Internal Club Calendar ⏳
+
 **Route:** `/internal/clubcalendar`
 
 **Features:**
+
 - Full club schedule (all teams, all events)
 - Printable format
 - Facility booking overview (if available)
 - Administrative view
 
 ### Deliverables
+
 - ⏳ Calendar views (month/week/day)
 - ⏳ Event listing and detail pages
 - ⏳ Scheurkalender feature
@@ -1924,6 +2145,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ## Phase 5: Club Information Pages (Week 8-9) ⏳ NOT STARTED
 
 ### Goals
+
 - Migrate all club info pages
 - Create contact forms
 - Build downloads/documents section
@@ -1931,47 +2153,57 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Create registration forms
 
 ### Routes to Implement
+
 **From Gatsby sitemap: 10+ club pages**
 
 #### 5.1: Contact Page ⏳
+
 **Route:** `/club/contact`
 
 **Components to Create:**
+
 - `ContactForm` - Contact form with validation
 - `ContactInfo` - Club address, phone, email
 - `ContactMap` - Embedded map to club location
 - `BoardMembers` - Board member directory with photos
 
 **Features:**
+
 - Form validation with Effect Schema
 - Email delivery (serverless function)
 - CAPTCHA/spam protection
 - Multiple contact categories (general, youth, sponsorship)
 
 #### 5.2: Club History ⏳
+
 **Route:** `/club/history`
 
 **Components to Create:**
+
 - `HistoryTimeline` - Interactive timeline
 - `HistoryMilestone` - Milestone card (founding, championships, mergers)
 - `HistoryGallery` - Historical photos
 - `HistoryStats` - Club statistics over time
 
 **Features:**
+
 - Interactive timeline (1980, 1982, 2025)
 - Historical photos and documents
 - Championship history
 - Notable players/coaches
 
 #### 5.3: Downloads Page ⏳
+
 **Route:** `/club/downloads`
 
 **Components to Create:**
+
 - `DownloadsList` - File listing with categories
 - `DownloadCard` - File card (name, size, date, category)
 - `DownloadFilters` - Filter by category
 
 **File Categories:**
+
 - Club documents (statutes, regulations)
 - Training schedules
 - Forms (registration, medical, photo consent)
@@ -1979,46 +2211,56 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Sponsorship packages
 
 #### 5.4: Registration Page ⏳
+
 **Route:** `/club/register`
 
 **Components to Create:**
+
 - `RegistrationForm` - Multi-step registration form
 - `RegistrationSteps` - Step indicator
 - `RegistrationConfirmation` - Success page
 
 **Features:**
+
 - Multi-step form (personal info, medical, payment)
 - Age-based team assignment
 - File upload (medical certificate, photo)
 - Payment integration (if applicable)
 
 #### 5.5: Board Pages ⏳
+
 **Routes:** `/club/bestuur`, `/club/jeugdbestuur`
 
 **Components to Create:**
+
 - `BoardMembers` - Board member grid
 - `BoardMember` - Member card (photo, role, contact)
 - `BoardStructure` - Organizational chart (reuse from `/club/organogram`)
 
 **Features:**
+
 - Main board (`/club/bestuur`)
 - Youth board (`/club/jeugdbestuur`)
 - Contact information per role
 - Photos and bios
 
 #### 5.6: Special Club Pages ⏳
+
 **Routes:**
+
 - `/club/angels` - Club Angels program
 - `/club/cashless` - Cashless payment info
 - `/club/ultras` - Supporters group
 
 **Components:**
+
 - Page-specific content components
 - Info sections with images
 - Call-to-action buttons
 - Contact forms where applicable
 
 ### Deliverables
+
 - ⏳ Contact page with working form
 - ⏳ Club history timeline
 - ⏳ Downloads section with file management
@@ -2031,6 +2273,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ## Phase 6: Search & Utility Pages (Week 9) ⏳ NOT STARTED
 
 ### Goals
+
 - Implement global search functionality
 - Build search results page
 - Create privacy policy page
@@ -2039,9 +2282,11 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ### Routes to Implement
 
 #### 6.1: Search Page ⏳
+
 **Route:** `/search?q={query}`
 
 **Components to Create:**
+
 - `SearchForm` - Search input with autocomplete
 - `SearchResults` - Results listing with filters
 - `SearchResult` - Individual result card
@@ -2051,24 +2296,28 @@ export const getImageDimensions = (width?: number, height?: number) => {
 **Search Implementation Options:**
 
 **Option A: Client-Side Search (Simple)**
+
 - Fetch all content on page load
 - Use Fuse.js for fuzzy search
 - Fast for small datasets (<1000 items)
 - Works with static export
 
 **Option B: API Route Search (Recommended)**
+
 - Create `/api/search` route
 - Search Drupal JSON:API with filters
 - Paginated results
 - Better for large datasets
 
 **Option C: Algolia/MeiliSearch (Advanced)**
+
 - External search service
 - Real-time indexing
 - Instant search with autocomplete
 - Costs money (Algolia) or self-hosted (MeiliSearch)
 
 **Search Scope:**
+
 - Articles (title, body, tags)
 - Players (name, position, team)
 - Teams (name, age group)
@@ -2076,6 +2325,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Club pages (title, content)
 
 **Features:**
+
 - Autocomplete suggestions
 - Recent searches
 - Search filters (content type, date range)
@@ -2083,9 +2333,11 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Empty state with suggestions
 
 #### 6.2: Privacy Policy ⏳
+
 **Route:** `/privacy`
 
 **Simple page with:**
+
 - Privacy policy content from Drupal
 - GDPR compliance information
 - Cookie policy
@@ -2093,14 +2345,17 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Contact for privacy questions
 
 #### 6.3: Share Page ⏳
+
 **Route:** `/share` (purpose unclear - check Gatsby)
 
 **Possible implementations:**
+
 - Generic social sharing page
 - Player card sharing interface
 - Match result sharing tool
 
 ### Deliverables
+
 - ⏳ Global search functionality
 - ⏳ Search results page with filters
 - ⏳ Privacy policy page
@@ -2111,16 +2366,20 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ## Phase 7: Kiosk Mode (Week 9) ⏳ NOT STARTED
 
 ### Goals
+
 - Build fullscreen kiosk displays for clubhouse
 - Auto-rotating content
 - Match schedules and results
 - Team standings
 
 ### Routes to Implement
+
 **From Gatsby sitemap: 6 kiosk pages**
 
 #### 7.1: Kiosk Pages ⏳
+
 **Routes:**
+
 - `/kiosk/a` - A-team display
 - `/kiosk/b` - B-team display
 - `/kiosk/previous` - Recent results
@@ -2130,6 +2389,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - `/kiosk/ranking/u21` - U21 standings
 
 **Kiosk Features:**
+
 - Fullscreen layout (no header/footer)
 - Auto-refresh every 5 minutes
 - Auto-rotate between screens
@@ -2138,6 +2398,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - No user interaction required
 
 **Components to Create:**
+
 - `KioskLayout` - Fullscreen container
 - `KioskMatches` - Large match display
 - `KioskRanking` - Large standings table
@@ -2145,17 +2406,20 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - `KioskNews` - Latest news ticker
 
 **Technical Requirements:**
+
 - ISR with 5-minute revalidation
 - Prevent screen sleep (meta tags)
 - Auto-rotation JavaScript
 - Error recovery (auto-reload on failure)
 
 ### Use Cases
+
 - TV display in clubhouse
 - Digital signage at matches
 - Lobby information screen
 
 ### Deliverables
+
 - ⏳ 6 kiosk display pages
 - ⏳ Auto-rotation functionality
 - ⏳ Fullscreen layouts
@@ -2166,6 +2430,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ## Phase 8: QA, Testing & Deployment (Week 10) ⏳ NOT STARTED
 
 ### Goals
+
 - Comprehensive testing across all pages
 - Visual regression testing
 - Performance optimization
@@ -2175,6 +2440,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ### Tasks
 
 #### 8.1: Testing ⏳
+
 - ✅ Unit tests (564 passing)
 - ⏳ E2E tests for critical flows
 - ⏳ Visual regression tests for all pages
@@ -2184,6 +2450,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ⏳ Performance testing (Lighthouse)
 
 #### 8.2: Performance Optimization ⏳
+
 - ⏳ Analyze bundle size
 - ⏳ Optimize images (already using next/image)
 - ⏳ Implement route prefetching
@@ -2192,6 +2459,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ⏳ Configure CDN caching headers
 
 #### 8.3: SEO & Metadata ⏳
+
 - ⏳ Generate sitemap.xml
 - ⏳ Configure robots.txt
 - ⏳ Add structured data (JSON-LD)
@@ -2200,13 +2468,16 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ⏳ Submit to Google Search Console
 
 #### 8.4: Deployment ⏳
+
 **Staging:**
+
 - ⏳ Deploy to Vercel preview
 - ⏳ Run full test suite
 - ⏳ UAT with stakeholders
 - ⏳ Performance testing
 
 **Production:**
+
 - ⏳ Configure environment variables
 - ⏳ Set up Drupal webhooks for on-demand revalidation
 - ⏳ Configure analytics (Google Tag Manager)
@@ -2217,6 +2488,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ⏳ Decommission Gatsby site
 
 ### Deliverables
+
 - ⏳ All tests passing
 - ⏳ Performance: Lighthouse score >90
 - ⏳ Zero accessibility violations
@@ -2228,6 +2500,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ## Testing Strategy
 
 ### Unit Tests (Vitest + React Testing Library)
+
 - Test component rendering
 - Test prop variations
 - Test user interactions
@@ -2235,23 +2508,27 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Target: >80% coverage
 
 ### Integration Tests
+
 - Test Effect services
 - Test API integrations
 - Test data transformations
 
 ### E2E Tests (Playwright)
+
 - Critical user flows (browse articles, view team pages)
 - Form submissions
 - Navigation patterns
 - Search functionality
 
 ### Visual Regression Tests (Playwright)
+
 - Capture screenshots of all pages
 - Compare against baseline
 - Test at multiple viewports
 - Strict tolerance (<100px difference)
 
 ### Accessibility Tests
+
 - WCAG 2.1 AA compliance
 - Keyboard navigation
 - Screen reader compatibility
@@ -2262,12 +2539,14 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ## Deployment Strategy
 
 ### Staging Environment
+
 1. Deploy to Vercel staging
 2. Run full test suite
 3. Visual regression comparison
 4. UAT with stakeholders
 
 ### Production Deployment
+
 1. Configure environment variables
 2. Set up Drupal webhooks
 3. Configure redirects (Gatsby → Next.js URLs)
@@ -2281,6 +2560,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ## Success Criteria
 
 ### Pre-Launch Checklist
+
 - [ ] All pages migrated
 - [ ] 100% visual parity confirmed
 - [ ] All features working
@@ -2293,6 +2573,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - [ ] Cross-browser tested
 
 ### Post-Launch Metrics
+
 - Zero critical bugs
 - Hosting cost: $0/month (Vercel free tier)
 - Build time: <5 minutes (ISR)
@@ -2319,7 +2600,9 @@ export const getImageDimensions = (width?: number, height?: number) => {
 ### Dependency Status & Recommendations (Updated 2025-01-24)
 
 #### QR Code Generation
+
 **Status:** Not yet installed (will be added during Gatsby migration)
+
 - **Recommended:** `qrcode.react@^4.2.0` ✅
 - **Actively maintained:** Last update December 2024
 - **TypeScript:** Built-in types included (no @types package needed)
@@ -2328,11 +2611,13 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - **Planned usage:** Player card sharing feature during migration
 
 **Installation when needed:**
+
 ```bash
 npm install qrcode.react
 ```
 
 **Example usage with built-in types:**
+
 ```typescript
 import { QRCodeSVG } from 'qrcode.react'
 
@@ -2340,14 +2625,18 @@ import { QRCodeSVG } from 'qrcode.react'
 ```
 
 #### Class Name Utilities
+
 **Current:** `clsx@^2.1.1` (✅ Keep)
+
 - **Status:** Stable and mature (last update: April 2024)
 - **Note:** Not abandoned - this is a complete, stable package that doesn't need frequent updates
 - **Usage:** Combined with `tailwind-merge` via the `cn()` utility function (src/lib/utils/cn.ts:1)
 - **Why keep:** Industry-standard utility with 80M+ downloads/month, highly performant
 
 #### Organization Chart
+
 **Current:** `d3-org-chart@^3.1.1` (⚠️ Old but working)
+
 - **Status:** Last updated September 2023 (2+ years old)
 - **Current usage:** Heavily used in organogram component (src/components/organogram/OrgChart.tsx:16)
 - **Recommendation:** Keep for now - works with React 19 and Next.js 16
@@ -2382,7 +2671,7 @@ import { QRCodeSVG } from 'qrcode.react'
     // Note: qrcode.react will be installed when needed for player card sharing during migration
     "react-share": "^5.2.x",
     "motion": "^12.18.x",
-    "d3-org-chart": "^3.1.x"           // ⚠️ Old but stable
+    "d3-org-chart": "^3.1.x" // ⚠️ Old but stable
   },
   "devDependencies": {
     "@types/node": "^22.x",
@@ -2390,7 +2679,7 @@ import { QRCodeSVG } from 'qrcode.react'
     "@types/react-dom": "^19.x",
     "@types/luxon": "^3.x",
     // Note: @types/qrcode.react is DEPRECATED - not needed with qrcode.react@^4.x
-    "@types/d3-org-chart": "^3.x",     // ⚠️ Needed for d3-org-chart
+    "@types/d3-org-chart": "^3.x", // ⚠️ Needed for d3-org-chart
     "typescript": "^5.8.x",
     "vitest": "^3.x",
     "@vitest/ui": "^3.x",
@@ -2415,6 +2704,7 @@ import { QRCodeSVG } from 'qrcode.react'
 ## Resources & Documentation
 
 ### Official Docs
+
 - **Next.js:** https://nextjs.org/docs
 - **Effect:** https://effect.website/docs
 - **Tailwind CSS:** https://tailwindcss.com/docs
@@ -2422,6 +2712,7 @@ import { QRCodeSVG } from 'qrcode.react'
 - **Drupal JSON:API:** https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module
 
 ### Tools
+
 - **Vercel:** https://vercel.com
 - **Storybook:** https://storybook.js.org
 - **Playwright:** https://playwright.dev
@@ -2436,7 +2727,9 @@ import { QRCodeSVG } from 'qrcode.react'
 These are suggestions for new features that could significantly enhance the KCVV website beyond the current Gatsby implementation:
 
 #### 9.1: Real-Time Match Updates ⚡
+
 **New Feature**
+
 - Live score updates during matches (WebSockets or polling)
 - Live match commentary
 - Push notifications for goals (with user opt-in)
@@ -2444,12 +2737,14 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Match statistics updating in real-time
 
 **Technical Implementation:**
+
 - Server-Sent Events (SSE) for real-time updates
 - React Query for automatic refetching
 - Optimistic UI updates
 - PWA notifications
 
 **User Benefits:**
+
 - Fans can follow matches in real-time
 - No need to refresh page manually
 - Better engagement during match days
@@ -2457,7 +2752,9 @@ These are suggestions for new features that could significantly enhance the KCVV
 ---
 
 #### 9.2: Progressive Web App (PWA) 📱
+
 **New Feature**
+
 - Install website as app on mobile/desktop
 - Offline support for reading cached news
 - Push notifications for important updates
@@ -2465,6 +2762,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - App-like navigation experience
 
 **Technical Implementation:**
+
 - Next.js PWA plugin
 - Service Worker for offline caching
 - Web App Manifest
@@ -2472,6 +2770,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Background sync
 
 **User Benefits:**
+
 - Access news offline
 - Faster load times on repeat visits
 - Native app-like experience
@@ -2480,7 +2779,9 @@ These are suggestions for new features that could significantly enhance the KCVV
 ---
 
 #### 9.3: Dark Mode 🌙
+
 **New Feature**
+
 - System preference detection
 - Manual toggle switch
 - Persistent user preference (localStorage)
@@ -2488,6 +2789,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Optimized for OLED screens
 
 **Technical Implementation:**
+
 - next-themes package
 - CSS variables for theming
 - Tailwind dark: prefix
@@ -2495,6 +2797,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Respect system preferences
 
 **User Benefits:**
+
 - Better readability at night
 - Battery saving on OLED
 - Modern user expectation
@@ -2503,7 +2806,9 @@ These are suggestions for new features that could significantly enhance the KCVV
 ---
 
 #### 9.4: Advanced Match Statistics & Visualizations 📊
+
 **New Feature**
+
 - Interactive charts for team performance
 - Player heat maps
 - Shot maps and xG (expected goals)
@@ -2512,6 +2817,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Season progress visualization
 
 **Technical Implementation:**
+
 - Chart.js or Recharts for visualizations
 - D3.js for advanced graphics
 - Footbalisto API extended data
@@ -2519,6 +2825,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Interactive tooltips
 
 **User Benefits:**
+
 - Deeper insights into team performance
 - Visual engagement with statistics
 - Better understanding of tactics
@@ -2527,7 +2834,9 @@ These are suggestions for new features that could significantly enhance the KCVV
 ---
 
 #### 9.5: Fan Engagement Features 🎉
+
 **New Feature**
+
 - Man of the Match voting (fan polls)
 - Match prediction game
 - Photo upload for fans at matches
@@ -2536,6 +2845,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Fan of the month spotlight
 
 **Technical Implementation:**
+
 - Voting system with duplicate prevention
 - Cloudinary or Uploadcare for image uploads
 - Moderation queue for submitted content
@@ -2543,6 +2853,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Social sharing integration
 
 **User Benefits:**
+
 - Increased fan engagement
 - Community building
 - User-generated content
@@ -2551,7 +2862,9 @@ These are suggestions for new features that could significantly enhance the KCVV
 ---
 
 #### 9.6: Enhanced Media Gallery 📸
+
 **New Feature**
+
 - Photo albums by match/event
 - Lightbox with keyboard navigation
 - Facial recognition tagging (AI)
@@ -2560,6 +2873,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Instagram feed integration
 
 **Technical Implementation:**
+
 - Drupal Media Library integration
 - Next.js Image Gallery component
 - Cloudinary transformations
@@ -2567,6 +2881,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Instagram API integration
 
 **User Benefits:**
+
 - Better photo browsing experience
 - Easy photo downloads
 - Find photos of specific players
@@ -2575,7 +2890,9 @@ These are suggestions for new features that could significantly enhance the KCVV
 ---
 
 #### 9.7: Personalization & User Accounts 👤
+
 **New Feature**
+
 - User registration and login
 - Favorite players/teams
 - Personalized news feed
@@ -2585,6 +2902,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Custom match notifications
 
 **Technical Implementation:**
+
 - NextAuth.js for authentication
 - User profile database (Supabase/PostgreSQL)
 - JWT tokens
@@ -2593,6 +2911,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Subscription preferences
 
 **User Benefits:**
+
 - Tailored content experience
 - Stay updated on favorite players
 - Engage with community
@@ -2601,7 +2920,9 @@ These are suggestions for new features that could significantly enhance the KCVV
 ---
 
 #### 9.8: Interactive Seating/Ticketing Info 🎫
+
 **New Feature**
+
 - Stadium seating map (if applicable)
 - Ticket availability checker
 - Match day information
@@ -2610,6 +2931,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Public transport information
 
 **Technical Implementation:**
+
 - SVG interactive seating map
 - Integration with ticket provider API
 - Google Maps integration
@@ -2617,6 +2939,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Public transport API
 
 **User Benefits:**
+
 - Easy ticket planning
 - Match day logistics info
 - Weather-appropriate clothing
@@ -2625,7 +2948,9 @@ These are suggestions for new features that could significantly enhance the KCVV
 ---
 
 #### 9.9: Youth Player Development Tracking 📈
+
 **New Feature**
+
 - Training attendance tracking
 - Skill progression visualization
 - Coach feedback system
@@ -2634,6 +2959,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Achievement badges
 
 **Technical Implementation:**
+
 - Secure parent login portal
 - Dashboard with visualizations
 - Drupal custom content type
@@ -2641,6 +2967,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - PDF report generation
 
 **User Benefits:**
+
 - Parents see child's progress
 - Coaches track development
 - Motivational for young players
@@ -2649,7 +2976,9 @@ These are suggestions for new features that could significantly enhance the KCVV
 ---
 
 #### 9.10: Sponsor Showcase & ROI Dashboard 💼
+
 **New Feature**
+
 - Enhanced sponsor profiles
 - Sponsor news/blogs
 - Click tracking and analytics
@@ -2659,6 +2988,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Downloadable sponsorship packages
 
 **Technical Implementation:**
+
 - Sponsor admin dashboard
 - Analytics tracking (Plausible/Umami)
 - Automated PDF generation
@@ -2666,12 +2996,14 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Lead capture forms
 
 **User Benefits (Club):**
+
 - Better sponsor relationships
 - Show value to sponsors
 - Attract new sponsors
 - Professional presentation
 
 **User Benefits (Fans):**
+
 - Learn about club supporters
 - Support local businesses
 - Exclusive sponsor offers
@@ -2679,7 +3011,9 @@ These are suggestions for new features that could significantly enhance the KCVV
 ---
 
 #### 9.11: Mobile-First Match Day Experience 📱⚽
+
 **New Feature**
+
 - Dedicated match day page
 - Live lineup updates
 - Goal celebrations (confetti animation)
@@ -2689,6 +3023,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Post-match player ratings
 
 **Technical Implementation:**
+
 - Real-time database (Firebase/Supabase)
 - Optimistic UI updates
 - Celebration animations (Framer Motion)
@@ -2696,6 +3031,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Rating aggregation
 
 **User Benefits:**
+
 - Engaging second-screen experience
 - Community connection during matches
 - Easy sharing of celebrations
@@ -2704,7 +3040,9 @@ These are suggestions for new features that could significantly enhance the KCVV
 ---
 
 #### 9.12: Content Recommendations 🎯
+
 **New Feature**
+
 - "Read next" suggestions on articles
 - Related players on team pages
 - Similar matches in history
@@ -2713,6 +3051,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Popular this week section
 
 **Technical Implementation:**
+
 - Content similarity algorithm
 - View tracking (privacy-friendly)
 - Collaborative filtering
@@ -2720,6 +3059,7 @@ These are suggestions for new features that could significantly enhance the KCVV
 - Time-decay for trending
 
 **User Benefits:**
+
 - Discover relevant content
 - Longer session duration
 - Better content exploration
@@ -2730,18 +3070,21 @@ These are suggestions for new features that could significantly enhance the KCVV
 ### Priority Recommendations
 
 **High Priority (Implement Soon):**
+
 1. ✅ PWA functionality - Modern expectation, big impact
 2. ✅ Dark mode - Easy win, high user demand
 3. ✅ Enhanced media gallery - Lots of photos to showcase
 4. ✅ Real-time match updates - Core football club need
 
 **Medium Priority (Consider After Launch):**
+
 1. Fan engagement features - Build community
 2. Advanced statistics - Differentiate from other clubs
 3. User accounts & personalization - Sticky features
 4. Mobile match day experience - Event-driven engagement
 
 **Lower Priority (Future Enhancements):**
+
 1. Youth development tracking - Nice-to-have
 2. Sponsor dashboard - Internal tool
 3. Ticketing integration - Depends on infrastructure
@@ -2800,16 +3143,19 @@ These are suggestions for new features that could significantly enhance the KCVV
 ### Immediate Actions (Updated 2025-12-29):
 
 **Phase 2 Remaining Work:**
+
 1. ⏳ Implement search functionality (/search page)
 2. ⏳ Add privacy policy page (/privacy)
 3. ⏳ Fix category page title metadata issue
 
 **Begin Phase 3:**
+
 1. ⏳ Start player profile pages migration (500+ pages)
 2. ⏳ Implement youth team pages
 3. ⏳ Build match detail pages
 
 **New Features (After Migration Complete):**
+
 1. Evaluate PWA implementation
 2. Plan dark mode rollout
 3. Design real-time match updates architecture
