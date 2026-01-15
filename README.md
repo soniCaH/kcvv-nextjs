@@ -51,7 +51,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Environment Variables
 
-Create `.env.local`:
+Create `.env`:
 
 ```env
 # Drupal API

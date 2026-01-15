@@ -6,10 +6,7 @@
     },
     "vercel": {
       "command": "npx",
-      "args": ["-y", "@vercel/mcp"],
-      "env": {
-        "VERCEL_API_TOKEN": "${VERCEL_API_TOKEN}"
-      }
+      "args": ["-y", "mcp-remote", "https://mcp.vercel.com"]
     }
   }
 }
