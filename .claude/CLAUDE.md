@@ -202,7 +202,7 @@ npm run migration:create       # Create migration tracking
 │   ├── app/                     # Next.js 15 app directory
 │   ├── components/              # React components
 │   │   ├── ui/                 # shadcn/ui base components
-│   │   ├── organogram/         # Organogram feature
+│   │   ├── organigram/         # Organigram feature
 │   │   ├── responsibility/     # Responsibility finder
 │   │   └── ...                 # Feature-specific components
 │   ├── lib/
@@ -212,14 +212,14 @@ npm run migration:create       # Create migration tracking
 │   │   ├── mappers/            # JSON:API mappers
 │   │   └── utils/              # Utility functions
 │   ├── data/                    # Static data
-│   │   ├── club-structure.ts   # Organogram data
+│   │   ├── club-structure.ts   # Organigram data
 │   │   └── responsibility-paths.ts  # Help system Q&A
 │   └── styles/                  # Global styles
 ├── DESIGN_SYSTEM.md             # ⭐ AUTHORITATIVE design reference
 ├── SCHEMA_GUIDE.md              # ⭐ Effect Schema guide
 ├── STORYBOOK.md                 # ⭐ Storybook component guide
 ├── RESPONSIBILITY.md            # Responsibility finder docs
-├── ORGANOGRAM.md                # Organogram docs (feature has issues)
+├── ORGANOGRAM.md                # Organigram docs (feature has issues)
 ├── SECURITY.md                  # Security policies
 ├── MIGRATION_PLAN.md            # Migration tracking
 ├── README.md                    # Project overview
@@ -385,7 +385,7 @@ These are enforced by pre-commit hooks and CI/CD.
 ### Feature Documentation
 
 - **RESPONSIBILITY.md** - Responsibility finder feature (active, needs expansion)
-- **ORGANOGRAM.md** - Organogram feature (⚠️ has critical usability issues)
+- **ORGANOGRAM.md** - Organigram feature (⚠️ has critical usability issues)
 - **SECURITY.md** - Security policies (file upload, image handling)
 
 ### Claude Code Configuration

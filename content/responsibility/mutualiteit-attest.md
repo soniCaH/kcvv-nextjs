@@ -16,7 +16,7 @@ primaryContact:
   role: Secretaris
   email: secretaris@kcvvelewijt.be
   department: hoofdbestuur
-  orgLink: /club/organogram
+  orgLink: /club/organigram
 ---
 
 # Summary

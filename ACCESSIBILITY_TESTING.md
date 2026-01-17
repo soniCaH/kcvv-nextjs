@@ -1,6 +1,6 @@
 # Accessibility Testing Guide
 
-Complete guide for testing the KCVV Organogram's accessibility features.
+Complete guide for testing the KCVV Organigram's accessibility features.
 Ensures compliance with WCAG 2.1 Level AA standards and usability for all users (ages 6-99).
 
 ## Table of Contents
@@ -88,7 +88,7 @@ Test with the following screen readers:
 
 #### 1. Page Structure
 
-- [ ] Page title is announced: "Organogram & Hulp | KCVV Elewijt"
+- [ ] Page title is announced: "Organigram & Hulp | KCVV Elewijt"
 - [ ] Main heading is announced: "Clubstructuur & Hulp"
 - [ ] Landmarks are properly labeled (navigation, main, etc.)
 
@@ -259,7 +259,7 @@ Verify:
 
    ```bash
    # Install Chrome/Firefox extension
-   # Run automated scan on /club/organogram
+   # Run automated scan on /club/organigram
    # Fix all critical and serious issues
    ```
 
@@ -274,7 +274,7 @@ Verify:
 3. **WAVE** (Web Accessibility Evaluation Tool)
    ```bash
    # Install browser extension
-   # Scan organogram page
+   # Scan organigram page
    # Verify no errors, minimal alerts
    ```
 
@@ -299,22 +299,22 @@ npm run build
 Example test cases:
 
 ```typescript
-describe('Organogram Accessibility', () => {
+describe('Organigram Accessibility', () => {
   it('has no accessibility violations', async () => {
-    const { container } = render(<UnifiedOrganogramClient />);
+    const { container } = render(<UnifiedOrganigramClient />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
 
   it('skip link is first focusable element', () => {
-    render(<UnifiedOrganogramClient />);
-    const skipLink = document.querySelector('a[href="#organogram-main-content"]');
+    render(<UnifiedOrganigramClient />);
+    const skipLink = document.querySelector('a[href="#organigram-main-content"]');
     userEvent.tab();
     expect(skipLink).toHaveFocus();
   });
 
   it('announces view changes', () => {
-    render(<UnifiedOrganogramClient />);
+    render(<UnifiedOrganigramClient />);
     const announcer = screen.getByRole('status');
     // Change view
     expect(announcer).toHaveTextContent('Weergave gewijzigd naar');
@@ -457,4 +457,4 @@ When reporting accessibility issues, include:
 ---
 
 _Last Updated: 2026-01-13 (Phase 5)_
-_Part of Issue #467: Unified Organogram & Responsibility Finder System_
+_Part of Issue #467: Unified Organigram & Responsibility Finder System_

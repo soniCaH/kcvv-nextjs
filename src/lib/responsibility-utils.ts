@@ -1,7 +1,7 @@
 /**
  * Responsibility Utilities
  *
- * Helper functions for linking organogram members with responsibility paths
+ * Helper functions for linking organigram members with responsibility paths
  */
 
 import type { ResponsibilityPath } from "@/types/responsibility";
@@ -117,7 +117,7 @@ export function getCategoryInfo(category: ResponsibilityPath["category"]): {
 /**
  * Build URL to responsibility finder with optional filters
  *
- * @param basePath - Base path (e.g., "/club/organogram")
+ * @param basePath - Base path (e.g., "/club/organigram")
  * @param options - Optional filters
  * @returns URL string with query parameters
  */

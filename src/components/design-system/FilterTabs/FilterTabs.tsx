@@ -4,7 +4,7 @@
  * FilterTabs Component
  *
  * Unified filter/tab component for consistent filtering UI across the app.
- * Used in: Organogram, News Categories, Sponsors, Responsibility Finder, etc.
+ * Used in: Organigram, News Categories, Sponsors, Responsibility Finder, etc.
  *
  * Features:
  * - Horizontal scrolling on mobile with navigation arrows

@@ -161,26 +161,26 @@ describe("responsibility-utils", () => {
 
   describe("buildResponsibilityUrl", () => {
     it("should build URL without parameters", () => {
-      const result = buildResponsibilityUrl("/club/organogram");
-      expect(result).toBe("/club/organogram");
+      const result = buildResponsibilityUrl("/club/organigram");
+      expect(result).toBe("/club/organigram");
     });
 
     it("should build URL with view parameter", () => {
-      const result = buildResponsibilityUrl("/club/organogram", {
+      const result = buildResponsibilityUrl("/club/organigram", {
         view: "responsibilities",
       });
-      expect(result).toBe("/club/organogram?view=responsibilities");
+      expect(result).toBe("/club/organigram?view=responsibilities");
     });
 
     it("should build URL with responsibility parameter", () => {
-      const result = buildResponsibilityUrl("/club/organogram", {
+      const result = buildResponsibilityUrl("/club/organigram", {
         responsibilityId: "path-1",
       });
-      expect(result).toBe("/club/organogram?responsibility=path-1");
+      expect(result).toBe("/club/organigram?responsibility=path-1");
     });
 
     it("should build URL with multiple parameters", () => {
-      const result = buildResponsibilityUrl("/club/organogram", {
+      const result = buildResponsibilityUrl("/club/organigram", {
         view: "responsibilities",
         responsibilityId: "path-1",
       });

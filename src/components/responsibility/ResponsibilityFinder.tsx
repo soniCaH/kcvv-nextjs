@@ -483,7 +483,7 @@ export function ResponsibilityFinder({
 /**
  * Render a card that displays a responsibility path including its header, primary contact, and ordered steps.
  *
- * Shows the path icon, question, and summary; a primary contact panel with role, name, email, phone and optional organogram link; and an ordered list of actionable steps with optional links and contact information.
+ * Shows the path icon, question, and summary; a primary contact panel with role, name, email, phone and optional organigram link; and an ordered list of actionable steps with optional links and contact information.
  *
  * @param path - The ResponsibilityPath to render in the result card
  * @param onMemberSelect - Optional callback for member selection (deep linking)
@@ -621,7 +621,7 @@ function ResultCard({
                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                       />
                     </svg>
-                    Bekijk in organogram
+                    Bekijk in organigram
                   </button>
                 ) : path.primaryContact.orgLink ? (
                   <a
@@ -641,7 +641,7 @@ function ResultCard({
                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                       />
                     </svg>
-                    Bekijk in organogram
+                    Bekijk in organigram
                   </a>
                 ) : null}
               </div>

@@ -84,7 +84,7 @@ const menuItems: MenuItem[] = [
     href: "/club",
     children: [
       { label: "Geschiedenis", href: "/club/history" },
-      { label: "Organogram", href: "/club/organogram" },
+      { label: "Organigram", href: "/club/organigram" },
       { label: "KCVV Angels", href: "/club/angels" },
       { label: "KCVV Ultras", href: "/club/ultras" },
       { label: "Contact", href: "/club/contact" },

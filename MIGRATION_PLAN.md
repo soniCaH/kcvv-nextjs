@@ -1795,7 +1795,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ✅ CategoryFilters component with scroll arrows
 - ✅ Homepage with FeaturedArticles carousel, LatestNews, UpcomingMatches
 - ✅ Sponsors page fully implemented
-- ✅ Club organogram page
+- ✅ Club organigram page
 - ✅ Help page (/hulp)
 - ✅ Storybook configured and working
 - ✅ 564 tests passing (up from 164)
@@ -2235,7 +2235,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 - `BoardMembers` - Board member grid
 - `BoardMember` - Member card (photo, role, contact)
-- `BoardStructure` - Organizational chart (reuse from `/club/organogram`)
+- `BoardStructure` - Organizational chart (reuse from `/club/organigram`)
 
 **Features:**
 
@@ -2638,14 +2638,14 @@ import { QRCodeSVG } from 'qrcode.react'
 **Current:** `d3-org-chart@^3.1.1` (⚠️ Old but working)
 
 - **Status:** Last updated September 2023 (2+ years old)
-- **Current usage:** Heavily used in organogram component (src/components/organogram/OrgChart.tsx:16)
+- **Current usage:** Heavily used in organigram component (src/components/organigram/OrgChart.tsx:16)
 - **Recommendation:** Keep for now - works with React 19 and Next.js 16
 - **Alternatives if migration needed:**
   - `react-organizational-chart` - Pure React hierarchy tree
   - `@unicef/react-org-chart` - Feature-rich with zoom/download
   - `react-orgchart` (dabeng) - Simple and direct
   - `PrimeReact OrganizationChart` - Part of PrimeReact UI library
-- **Migration effort:** High (requires complete rewrite of organogram component)
+- **Migration effort:** High (requires complete rewrite of organigram component)
 - **Risk:** Low (library is stable, no reported compatibility issues)
 
 ### Production Dependencies

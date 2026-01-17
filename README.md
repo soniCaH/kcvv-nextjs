@@ -19,7 +19,7 @@ This is the Next.js-based website for **KCVV Elewijt**, a Belgian football club.
 - ✅ **Effect Schema Validation** - Runtime type safety for all API data
 - ✅ **Storybook Component Library** - Visual component development and testing
 - ✅ **Responsibility Finder** - Interactive help system (`/hulp`)
-- ✅ **Organogram** - Interactive club organization chart
+- ✅ **Organigram** - Interactive club organization chart
 - ✅ **Design System** - Comprehensive KCVV brand guidelines
 - ⚠️ **ISR (Incremental Static Regeneration)** - Fast, up-to-date content
 - 🚧 **Migration in Progress** - Gatsby → Next.js 15
@@ -116,7 +116,7 @@ kcvv-nextjs/
 │   │   └── page.tsx            # Homepage
 │   ├── components/              # React components
 │   │   ├── ui/                 # Base UI components (shadcn)
-│   │   ├── organogram/         # Organogram feature
+│   │   ├── organigram/         # Organigram feature
 │   │   ├── responsibility/     # Responsibility finder
 │   │   └── ...                 # Feature-specific components
 │   ├── lib/
@@ -126,7 +126,7 @@ kcvv-nextjs/
 │   │   ├── mappers/            # JSON:API data mappers
 │   │   └── utils/              # Utility functions
 │   ├── data/                    # Static data
-│   │   ├── club-structure.ts   # Organogram data
+│   │   ├── club-structure.ts   # Organigram data
 │   │   └── responsibility-paths.ts  # Help system Q&A
 │   ├── types/                   # TypeScript types
 │   └── styles/                  # Global styles
@@ -135,7 +135,7 @@ kcvv-nextjs/
 ├── SCHEMA_GUIDE.md              # ⭐ Effect Schema guide
 ├── STORYBOOK.md                 # ⭐ Storybook guide
 ├── RESPONSIBILITY.md            # Responsibility finder docs
-├── ORGANOGRAM.md                # Organogram docs (⚠️ feature has issues)
+├── ORGANOGRAM.md                # Organigram docs (⚠️ feature has issues)
 ├── SECURITY.md                  # Security policy
 ├── MIGRATION_PLAN.md            # Migration progress tracking
 └── package.json
@@ -233,7 +233,7 @@ Interactive help system where visitors find the right contact person.
 **Docs:** `RESPONSIBILITY.md`
 **Issues:** #429-436
 
-### 2. Organogram (`/club/organogram`)
+### 2. Organigram (`/club/organigram`)
 
 Interactive organizational chart showing club structure.
 
@@ -401,7 +401,7 @@ Set in Vercel dashboard:
 - **SCHEMA_GUIDE.md** - Effect Schema patterns
 - **STORYBOOK.md** - Component development
 - **RESPONSIBILITY.md** - Responsibility finder feature
-- **ORGANOGRAM.md** - Organogram feature (⚠️ has issues)
+- **ORGANOGRAM.md** - Organigram feature (⚠️ has issues)
 - **SECURITY.md** - Security policies
 - **MIGRATION_PLAN.md** - Migration tracking
 
@@ -424,7 +424,7 @@ Set in Vercel dashboard:
 
 ### Critical
 
-- **Organogram unusable** (#437-440) - Readability, navigation, UX problems
+- **Organigram unusable** (#437-440) - Readability, navigation, UX problems
 
 ### High Priority
 

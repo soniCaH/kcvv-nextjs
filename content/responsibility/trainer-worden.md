@@ -16,7 +16,7 @@ primaryContact:
   role: Technisch Coördinator
   email: technisch@kcvvelewijt.be
   department: hoofdbestuur
-  orgLink: /club/organogram
+  orgLink: /club/organigram
 ---
 
 # Summary

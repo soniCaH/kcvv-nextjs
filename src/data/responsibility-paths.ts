@@ -34,7 +34,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       role: "Verantwoordelijke Sponsoring",
       email: "sponsoring@kcvvelewijt.be",
       department: "hoofdbestuur",
-      orgLink: "/club/organogram",
+      orgLink: "/club/organigram",
       memberId: "sponsoring-manager",
     },
     steps: [
@@ -121,7 +121,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       role: "Jeugdsecretaris",
       email: "jeugd@kcvvelewijt.be",
       department: "jeugdbestuur",
-      orgLink: "/club/organogram",
+      orgLink: "/club/organigram",
       memberId: "youth-coordinator",
     },
     steps: [
@@ -174,7 +174,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       role: "Evenementencoördinator",
       email: "evenementen@kcvvelewijt.be",
       department: "hoofdbestuur",
-      orgLink: "/club/organogram",
+      orgLink: "/club/organigram",
     },
     steps: [
       {
@@ -221,7 +221,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       role: "Secretaris",
       email: "secretaris@kcvvelewijt.be",
       department: "hoofdbestuur",
-      orgLink: "/club/organogram",
+      orgLink: "/club/organigram",
     },
     steps: [
       {
@@ -265,7 +265,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       role: "Voorzitter",
       email: "voorzitter@kcvvelewijt.be",
       department: "hoofdbestuur",
-      orgLink: "/club/organogram",
+      orgLink: "/club/organigram",
     },
     steps: [
       {
@@ -314,7 +314,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       role: "Verzekeringverantwoordelijke",
       email: "verzekering@kcvvelewijt.be",
       department: "algemeen",
-      orgLink: "/club/organogram",
+      orgLink: "/club/organigram",
     },
     steps: [
       {
@@ -363,7 +363,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       role: "Technisch Coördinator",
       email: "technisch@kcvvelewijt.be",
       department: "hoofdbestuur",
-      orgLink: "/club/organogram",
+      orgLink: "/club/organigram",
     },
     steps: [
       {
@@ -401,21 +401,21 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       "leeftijdscategorie",
       "ploeg",
     ],
-    summary: "Check het organogram of neem contact op met de jeugdcoördinator.",
+    summary: "Check het organigram of neem contact op met de jeugdcoördinator.",
     category: "sportief",
     icon: "user",
     primaryContact: {
       role: "Jeugdcoördinator",
       email: "jeugd@kcvvelewijt.be",
       department: "jeugdbestuur",
-      orgLink: "/club/organogram",
+      orgLink: "/club/organigram",
     },
     steps: [
       {
         order: 1,
         description:
-          "Bekijk het organogram voor een overzicht van alle verantwoordelijken",
-        link: "/club/organogram",
+          "Bekijk het organigram voor een overzicht van alle verantwoordelijken",
+        link: "/club/organigram",
       },
       {
         order: 2,
@@ -453,7 +453,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       role: "Technisch Coördinator",
       email: "technisch@kcvvelewijt.be",
       department: "hoofdbestuur",
-      orgLink: "/club/organogram",
+      orgLink: "/club/organigram",
     },
     steps: [
       {

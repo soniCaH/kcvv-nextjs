@@ -3,7 +3,7 @@ import { useEffect } from "react";
 /**
  * useKeyboardNavigation Hook
  *
- * Provides keyboard shortcuts for navigating the organogram interface.
+ * Provides keyboard shortcuts for navigating the organigram interface.
  * Enhances accessibility by allowing keyboard-only navigation.
  *
  * Keyboard Shortcuts:

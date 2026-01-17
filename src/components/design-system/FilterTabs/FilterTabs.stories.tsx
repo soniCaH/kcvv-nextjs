@@ -7,7 +7,7 @@ import { FilterTabs, type FilterTab, type FilterTabsProps } from "./FilterTabs";
  *
  * A consistent, reusable filter component used across the application for:
  * - News category filtering
- * - Organogram department filtering
+ * - Organigram department filtering
  * - Sponsor tier filtering
  * - Responsibility finder role filtering
  *

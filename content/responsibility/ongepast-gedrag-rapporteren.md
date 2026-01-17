@@ -19,7 +19,7 @@ primaryContact:
   role: Voorzitter
   email: voorzitter@kcvvelewijt.be
   department: hoofdbestuur
-  orgLink: /club/organogram
+  orgLink: /club/organigram
 ---
 
 # Summary

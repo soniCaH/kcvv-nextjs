@@ -17,7 +17,7 @@ primaryContact:
   role: Evenementencoördinator
   email: evenementen@kcvvelewijt.be
   department: hoofdbestuur
-  orgLink: /club/organogram
+  orgLink: /club/organigram
 ---
 
 # Summary

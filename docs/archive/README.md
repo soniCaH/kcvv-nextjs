@@ -4,13 +4,13 @@ Historical documentation and deprecated code that has been replaced in productio
 
 ## Contents
 
-### [organogram-prototypes/](./organogram-prototypes/)
+### [organigram-prototypes/](./organigram-prototypes/)
 
-Historical prototype comparison and decision-making documentation from the organogram redesign project (Issue #437).
+Historical prototype comparison and decision-making documentation from the organigram redesign project (Issue #437).
 
 **Status:** ✅ Complete - Option A (Card Hierarchy) implemented in production
 **Date Archived:** 2026-01-14
-**Production Implementation:** `/src/components/organogram/UnifiedOrganogramClient.tsx`
+**Production Implementation:** `/src/components/organigram/UnifiedOrganigramClient.tsx`
 
 Contains:
 
@@ -19,7 +19,7 @@ Contains:
 - Storybook comparison stories
 - Decision rationale documentation
 
-**Winner:** Option A - Card Hierarchy (4.3/5) - Implemented as `UnifiedOrganogramClient`
+**Winner:** Option A - Card Hierarchy (4.3/5) - Implemented as `UnifiedOrganigramClient`
 
 ---
 

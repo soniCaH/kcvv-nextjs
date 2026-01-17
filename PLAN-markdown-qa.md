@@ -47,7 +47,7 @@ primaryContact:
   role: Verzekeringverantwoordelijke
   email: verzekering@kcvvelewijt.be
   department: algemeen
-  orgLink: /club/organogram
+  orgLink: /club/organigram
 ---
 
 # Summary
