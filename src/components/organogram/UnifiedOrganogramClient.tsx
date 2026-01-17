@@ -119,6 +119,9 @@ export function UnifiedOrganogramClient({
   const [selectedResponsibilityPath, setSelectedResponsibilityPath] =
     useState<ResponsibilityPath | null>(null);
 
+  // Track member to center chart on (when navigating from Responsibility Finder)
+  const [centeredMemberId, setCenteredMemberId] = useState<string | null>(null);
+
   // Track whether initial localStorage sync has occurred
   const hasInitializedRef = useRef(false);
 
@@ -175,7 +178,7 @@ export function UnifiedOrganogramClient({
     }
   }, [searchParams, members, activeView, selectedMember]);
 
-  // Update URL when view or member changes
+  // Update URL when view or member changes (triggers re-render via router)
   const updateUrl = (options: {
     view?: ViewType;
     memberId?: string | null;
@@ -191,6 +194,17 @@ export function UnifiedOrganogramClient({
       memberId: memberIdToUse,
     });
     router.push(newUrl, { scroll: false });
+  };
+
+  // Update URL silently without triggering React re-renders
+  // Uses replaceState to update browser URL for sharing/bookmarking
+  // without causing Next.js navigation that would reset chart state
+  const updateUrlSilently = (options: { memberId?: string | null }) => {
+    const newUrl = buildOrganogramUrl("/club/organogram", {
+      view: activeView,
+      memberId: options.memberId ?? null,
+    });
+    window.history.replaceState(null, "", newUrl);
   };
 
   // Handle view change
@@ -218,18 +232,20 @@ export function UnifiedOrganogramClient({
   };
 
   // Handle member click from any view
+  // Uses silent URL update to preserve chart state while enabling URL sharing
   const handleMemberClick = (member: OrgChartNode) => {
     setSelectedMember(member);
     setIsModalOpen(true);
-    updateUrl({ memberId: member.id });
+    updateUrlSilently({ memberId: member.id });
   };
 
   // Handle close modal
+  // Uses silent URL update to preserve chart state
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedMember(null);
-    // Clear member from URL
-    updateUrl({ memberId: null });
+    setCenteredMemberId(null); // Clear centering after modal closes
+    updateUrlSilently({ memberId: null });
   };
 
   // Handle deep linking from Responsibility Finder
@@ -241,7 +257,17 @@ export function UnifiedOrganogramClient({
       setActiveView(bestView);
       setSelectedMember(member);
       setIsModalOpen(true);
-      updateUrl({ view: bestView, memberId: member.id });
+
+      // Set the member to center on in the chart
+      setCenteredMemberId(member.id);
+
+      // Use replaceState to update URL without triggering re-renders
+      // The chart will mount fresh when switching views, so no state to preserve
+      const newUrl = buildOrganogramUrl("/club/organogram", {
+        view: bestView,
+        memberId: member.id,
+      });
+      window.history.replaceState(null, "", newUrl);
 
       // NOTE: Intentionally NOT updating localStorage here
       // Deep-link navigation temporarily shows chart view for better visualization,
@@ -255,7 +281,13 @@ export function UnifiedOrganogramClient({
     setIsModalOpen(false);
     setSelectedMember(null);
     setActiveView("responsibilities");
-    updateUrl({ view: "responsibilities", memberId: null });
+
+    // Use replaceState to update URL without triggering re-renders
+    const newUrl = buildOrganogramUrl("/club/organogram", {
+      view: "responsibilities",
+      memberId: null,
+    });
+    window.history.replaceState(null, "", newUrl);
 
     // Set the responsibility to highlight
     setSelectedResponsibilityId(responsibilityId);
@@ -439,6 +471,7 @@ export function UnifiedOrganogramClient({
             <EnhancedOrgChart
               members={members}
               onMemberClick={handleMemberClick}
+              centeredMemberId={centeredMemberId}
             />
           </Suspense>
         )}

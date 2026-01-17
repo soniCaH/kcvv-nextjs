@@ -122,7 +122,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       email: "jeugd@kcvvelewijt.be",
       department: "jeugdbestuur",
       orgLink: "/club/organogram",
-      memberId: "jeugdcoordinator", // Example: Links to Jeugdcoördinator in organogram
+      memberId: "youth-coordinator", // Links to Jeugdcoördinator in organogram
     },
     steps: [
       {
