@@ -22,7 +22,6 @@ Features:
 - Birth date and age calculation
 - Club membership period (join/leave dates)
 - Biography text
-- Social media links
         `,
       },
     },
@@ -64,9 +63,6 @@ export const Default: Story = {
     joinDate: "2020-07-01",
     biography:
       "Een ervaren middenvelder met uitstekende passing en visie. Na succesvolle periodes bij andere clubs kwam hij in 2020 naar KCVV Elewijt waar hij al snel een vaste waarde werd in het team.",
-    socialLinks: [
-      { platform: "instagram", url: "https://instagram.com/player" },
-    ],
   },
 };
 
@@ -91,22 +87,6 @@ export const FormerPlayer: Story = {
     leaveDate: "2022-06-30",
     biography:
       "Speelde zeven seizoenen bij KCVV en was jarenlang aanvoerder. Vertrok in 2022 naar een andere club.",
-  },
-};
-
-/**
- * With social media links
- * Shows social media icons
- */
-export const WithSocialLinks: Story = {
-  args: {
-    birthDate: "1999-10-03",
-    joinDate: "2021-01-15",
-    socialLinks: [
-      { platform: "instagram", url: "https://instagram.com/player" },
-      { platform: "twitter", url: "https://twitter.com/player" },
-      { platform: "facebook", url: "https://facebook.com/player" },
-    ],
   },
 };
 
@@ -167,9 +147,6 @@ export const MobileView: Story = {
     birthDate: "1995-04-12",
     joinDate: "2019-07-01",
     biography: "Een dynamische middenvelder met goede technische vaardigheden.",
-    socialLinks: [
-      { platform: "instagram", url: "https://instagram.com/player" },
-    ],
   },
   parameters: {
     viewport: {

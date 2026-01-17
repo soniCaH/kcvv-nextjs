@@ -38,19 +38,6 @@ describe("PlayerBio", () => {
         screen.queryByText("Geen biografie beschikbaar."),
       ).not.toBeInTheDocument();
     });
-
-    it("should not show empty state when socialLinks are provided", () => {
-      render(
-        <PlayerBio
-          socialLinks={[
-            { platform: "instagram", url: "https://instagram.com/player" },
-          ]}
-        />,
-      );
-      expect(
-        screen.queryByText("Geen biografie beschikbaar."),
-      ).not.toBeInTheDocument();
-    });
   });
 
   describe("Birth Date", () => {
@@ -122,88 +109,6 @@ Tweede paragraaf.`;
     });
   });
 
-  describe("Social Links", () => {
-    it("should display social links section when provided", () => {
-      render(
-        <PlayerBio
-          socialLinks={[
-            { platform: "instagram", url: "https://instagram.com/player" },
-          ]}
-        />,
-      );
-      expect(screen.getByText("Volg op:")).toBeInTheDocument();
-    });
-
-    it("should render instagram link", () => {
-      render(
-        <PlayerBio
-          socialLinks={[
-            { platform: "instagram", url: "https://instagram.com/player" },
-          ]}
-        />,
-      );
-      const link = screen.getByLabelText("Volg op instagram");
-      expect(link).toHaveAttribute("href", "https://instagram.com/player");
-    });
-
-    it("should render twitter link", () => {
-      render(
-        <PlayerBio
-          socialLinks={[
-            { platform: "twitter", url: "https://twitter.com/player" },
-          ]}
-        />,
-      );
-      const link = screen.getByLabelText("Volg op twitter");
-      expect(link).toHaveAttribute("href", "https://twitter.com/player");
-    });
-
-    it("should render facebook link", () => {
-      render(
-        <PlayerBio
-          socialLinks={[
-            { platform: "facebook", url: "https://facebook.com/player" },
-          ]}
-        />,
-      );
-      const link = screen.getByLabelText("Volg op facebook");
-      expect(link).toHaveAttribute("href", "https://facebook.com/player");
-    });
-
-    it("should render multiple social links", () => {
-      render(
-        <PlayerBio
-          socialLinks={[
-            { platform: "instagram", url: "https://instagram.com/player" },
-            { platform: "twitter", url: "https://twitter.com/player" },
-            { platform: "facebook", url: "https://facebook.com/player" },
-          ]}
-        />,
-      );
-      expect(screen.getByLabelText("Volg op instagram")).toBeInTheDocument();
-      expect(screen.getByLabelText("Volg op twitter")).toBeInTheDocument();
-      expect(screen.getByLabelText("Volg op facebook")).toBeInTheDocument();
-    });
-
-    it("should open links in new tab", () => {
-      render(
-        <PlayerBio
-          socialLinks={[
-            { platform: "instagram", url: "https://instagram.com/player" },
-          ]}
-        />,
-      );
-      const link = screen.getByLabelText("Volg op instagram");
-      expect(link).toHaveAttribute("target", "_blank");
-      expect(link).toHaveAttribute("rel", "noopener noreferrer");
-    });
-
-    it("should not display social links section when empty array", () => {
-      render(<PlayerBio socialLinks={[]} birthDate="1991-06-28" />);
-      expect(screen.queryByText("Volg op:")).not.toBeInTheDocument();
-    });
-  });
-
   describe("Complete Profile", () => {
     it("should render all sections together", () => {
       render(
@@ -211,16 +116,12 @@ Tweede paragraaf.`;
           birthDate="1991-06-28"
           joinDate="2020-07-01"
           biography="Een ervaren speler."
-          socialLinks={[
-            { platform: "instagram", url: "https://instagram.com/player" },
-          ]}
         />,
       );
 
       expect(screen.getByText("Geboortedatum")).toBeInTheDocument();
       expect(screen.getByText("Bij KCVV sinds")).toBeInTheDocument();
       expect(screen.getByText("Over de speler")).toBeInTheDocument();
-      expect(screen.getByText("Volg op:")).toBeInTheDocument();
     });
   });
 
