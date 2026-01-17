@@ -1,114 +1,96 @@
 # KCVV Organigram Feature
 
-**Status:** ⚠️ Implemented but UNUSABLE - major UX issues
-**Last Updated:** December 2025
-
----
-
-## ⚠️ CRITICAL ISSUES
-
-This feature **exists but is not usable** in its current state. See GitHub issues:
-
-- #437 - Major usability issues (CRITICAL)
-- #438 - Readability problems
-- #439 - Navigation problems
-- #440 - UX redesign needed
-
-**Do NOT promote this feature until these issues are resolved.**
-
----
-
-## 📖 Table of Contents
-
-1. [Overview](#overview)
-2. [Current Features](#current-features)
-3. [Known Problems](#known-problems)
-4. [File Structure](#file-structure)
-5. [How to Customize the Organigram](#how-to-customize-the-organigram)
-6. [Known Accessibility Improvements (v2)](#known-accessibility-improvements-v2)
-7. [Future Enhancements](#future-enhancements)
+**Status:** ✅ Implemented - Multi-view unified system
+**Last Updated:** January 2026
 
 ---
 
 ## Overview
 
-An interactive organizational chart (organigram) that displays the complete club structure including Hoofdbestuur and Jeugdbestuur. Built with d3-org-chart library.
+An interactive organizational chart (organigram) that displays the complete club structure including Hoofdbestuur and Jeugdbestuur. The system offers multiple views to accommodate different user preferences and devices.
 
-### Concept
+### Key Features
 
-Good concept - visual representation of club hierarchy to help people find the right contact person.
-
-### Reality
-
-Currently not usable due to:
-
-- Readability issues
-- Navigation problems
-- Unclear UX
-- Can't return to overview
+- **Multi-view system**: Cards, Chart, and Responsibilities views
+- **Unified search**: Search across members and responsibilities
+- **Mobile-first**: Responsive design with touch optimizations
+- **Accessibility**: Keyboard navigation, screen reader support
+- **Deep linking**: Shareable URLs to specific members
+- **Integration**: Seamless connection with Responsibility Finder
 
 ---
 
-## Current Features
+## Table of Contents
 
-### Implemented (But Problematic)
+1. [Views](#views)
+2. [Features](#features)
+3. [File Structure](#file-structure)
+4. [How to Customize](#how-to-customize)
+5. [Configuration Options](#configuration-options)
+6. [Navigation](#navigation)
+7. [Future Enhancements](#future-enhancements)
 
-- ✅ Interactive visualization (expand/collapse)
-- ✅ Zoom and pan controls
-- ✅ Search functionality
-- ✅ Member detail modal
+---
+
+## Views
+
+### 1. Card Hierarchy View (Default on Mobile)
+
+A collapsible card-based view similar to a file explorer:
+
+- Expand/collapse departments
+- Clear visual hierarchy
+- Touch-friendly on mobile
+- Shows member details on click
+
+### 2. Interactive Chart View (Default on Desktop)
+
+A D3-based visual organizational diagram:
+
+- Zoom and pan controls
+- Expand/collapse nodes
+- Visual representation of reporting structure
+- Fullscreen mode available
+
+### 3. Responsibilities View
+
+Integration with the Responsibility Finder:
+
+- Find the right contact for your question
+- Decision tree navigation
+- Direct links to organigram members
+- Search by topic or keyword
+
+---
+
+## Features
+
+### Implemented
+
+- ✅ Multi-view toggle (Cards / Chart / Responsibilities)
+- ✅ Responsive defaults (Mobile → Cards, Desktop → Chart)
+- ✅ View preference saved to localStorage
+- ✅ Unified search across members and responsibilities
+- ✅ Member detail modal with contact info
 - ✅ Department filters (Hoofdbestuur/Jeugdbestuur)
-- ✅ Mobile responsive (theoretically)
-- ✅ KCVV branding
-- ✅ Drupal integration ready
+- ✅ Deep linking via URL parameters
+- ✅ Keyboard navigation (arrow keys, Enter, Escape)
+- ✅ Screen reader announcements
+- ✅ Skip links for accessibility
+- ✅ Swipe gestures on mobile (switch views)
+- ✅ Bottom navigation on mobile
+- ✅ Lazy loading for performance
+- ✅ KCVV branding and colors
 
-### Accessibility Features (v2)
+### Accessibility Features
 
-Attempted improvements for elder users:
-
-- Whole card is clickable (not just tiny button)
-- Large +/− zoom buttons
-- Visual hints ("Klik om uit te klappen")
-- 3 levels expanded by default
-- Clear instructions
-- No scroll-to-zoom confusion
-- 32px expand indicators
-
-**Note:** These improvements may not be working as intended - needs verification.
-
----
-
-## Known Problems
-
-### 1. Not Readable
-
-- Text too small or poor contrast
-- Overlapping nodes
-- Cards too cramped
-- Doesn't adapt well to screen size
-- Initial zoom level wrong
-
-### 2. Navigation Broken
-
-- Expand/collapse doesn't work reliably
-- Can't return to overview
-- No breadcrumb trail
-- Lost in deep hierarchy
-- Search doesn't highlight results
-- Reset button not visible/working
-
-### 3. Generally Unclear
-
-- UX is confusing
-- Not intuitive
-- Instructions don't help enough
-- Too complex for simple task (finding a contact)
-
-### 4. Mobile Issues
-
-- Likely worse on mobile
-- Touch controls may not work well
-- Layout problems on small screens
+- Entire card is clickable (not just tiny buttons)
+- Large zoom controls (+/−)
+- Keyboard shortcuts (? to show help)
+- Focus management
+- ARIA labels and live regions
+- High contrast support
+- Minimum 44x44px touch targets
 
 ---
 
@@ -119,23 +101,35 @@ src/
 ├── app/(main)/club/organigram/
 │   └── page.tsx                     # Main organigram page
 ├── components/organigram/
-│   ├── OrgChart.tsx                 # Interactive chart component
-│   ├── OrganigramClient.tsx         # Client-side wrapper with filters
+│   ├── UnifiedOrganigramClient.tsx  # Main client component with view toggle
 │   ├── MemberDetailsModal.tsx       # Member detail popup
-│   └── index.ts                     # Component exports
+│   ├── index.ts                     # Component exports
+│   ├── card-hierarchy/
+│   │   ├── CardHierarchy.tsx        # Card-based view
+│   │   ├── HierarchyLevel.tsx       # Recursive level component
+│   │   └── ExpandableCard.tsx       # Individual member card
+│   ├── chart/
+│   │   ├── EnhancedOrgChart.tsx     # D3 chart component
+│   │   ├── NodeRenderer.tsx         # Chart node rendering
+│   │   ├── ContactOverlay.tsx       # Contact quick actions
+│   │   └── MobileNavigationDrawer.tsx
+│   └── shared/
+│       ├── UnifiedSearchBar.tsx     # Search component
+│       ├── ContactCard.tsx          # Reusable contact display
+│       ├── DepartmentFilter.tsx     # Filter by department
+│       ├── KeyboardShortcuts.tsx    # Keyboard help modal
+│       └── types.ts                 # Shared TypeScript types
 ├── data/
 │   └── club-structure.ts            # ⭐ EDIT THIS: Club org data
 ├── types/
 │   └── organigram.ts                # TypeScript interfaces
-└── lib/effect/schemas/
-    └── staff.schema.ts              # Drupal staff content type schema
+└── lib/
+    └── organigram-utils.ts          # Utility functions
 ```
 
 ---
 
-## How to Customize the Organigram
-
-**⚠️ WARNING:** Before customizing, fix the usability issues first! Otherwise you're just adding data to a broken feature.
+## How to Customize
 
 ### 1. Update Board Member Data
 
@@ -189,38 +183,34 @@ If the person has a Drupal staff profile:
 profileUrl: "/staff/firstname-lastname"; // This links to Drupal
 ```
 
-The staff content type is already configured in `/src/lib/effect/schemas/staff.schema.ts`.
-
 ---
 
 ## Configuration Options
 
 ### Change Colors
 
-Edit `/src/components/organigram/OrgChart.tsx`:
+Edit `/src/components/organigram/chart/EnhancedOrgChart.tsx`:
 
 ```typescript
-// Line ~52: Change border/accent colors
+// Change border/accent colors
 border: 2px solid #4acf52;  // ← Your club color
 
-// Line ~57-60: Change gradient bar
+// Change gradient bar
 background: linear-gradient(90deg, #4acf52 0%, #41b147 100%);
 ```
 
 ### Adjust Initial View
 
-Edit `/src/app/(main)/club/organigram/page.tsx`:
+The view defaults are:
 
-```typescript
-const chartConfig: OrgChartConfig = {
-  initialZoom: 0.7, // ← 0.5 = zoomed out, 1.0 = normal
-  expandToDepth: 2, // ← How many levels to expand initially
-};
-```
+- **Mobile**: Cards view (better for touch)
+- **Desktop**: Chart view (better for overview)
 
-### Change Node Size
+Users can switch views and their preference is saved.
 
-Edit `/src/components/organigram/OrgChart.tsx`:
+### Change Node Size (Chart View)
+
+Edit `/src/components/organigram/chart/EnhancedOrgChart.tsx`:
 
 ```typescript
 .nodeWidth(() => 280)    // ← Card width in pixels
@@ -237,13 +227,21 @@ The organigram is accessible via:
 - **Navigation**: De club → Organigram
 - **Mobile Menu**: De club → Organigram
 
-Both desktop and mobile navigation have been updated.
+### URL Parameters
+
+Deep linking is supported:
+
+- `/club/organigram?view=cards` - Open in cards view
+- `/club/organigram?view=chart` - Open in chart view
+- `/club/organigram?view=responsibilities` - Open responsibilities
+- `/club/organigram?member=president` - Open with member selected
+- `/club/organigram?view=chart&member=youth-coordinator` - Combined
 
 ---
 
 ## Current Structure
 
-Your current structure hierarchy (45 positions defined with placeholder names):
+The club hierarchy (45 positions defined):
 
 ```text
 KCVV Elewijt
@@ -287,14 +285,11 @@ KCVV Elewijt
 2. ✅ All data is statically defined (fast performance)
 3. ✅ No external API calls required
 4. ✅ Works offline after initial load
+5. ✅ Lazy loading for chart component
 
 ---
 
 ## Future Enhancements
-
-### Critical (Must Fix First)
-
-See GitHub issues #437-440
 
 ### Option 1: Fetch from Drupal (Dynamic)
 
@@ -314,20 +309,18 @@ Advantages:
 - ✅ No CMS complexity
 - ✅ Version controlled
 
-### Option 3: Alternative Visualization
+### Planned Improvements
 
-Instead of d3-org-chart, consider:
-
-- **Card-based hierarchy** - Collapsible sections like file explorer
-- **Tab-based** - Tabs for departments, cards for people
-- **Simple list** - Searchable/filterable list
-- **Multi-view** - Offer different views for different needs
+- Analytics tracking for usage patterns
+- A/B testing different default views
+- Performance monitoring
+- User feedback collection
 
 ---
 
 ## Testing Checklist
 
-**⚠️ DO NOT USE** these until usability issues are fixed:
+Before going live with real data:
 
 - [ ] Verify all names are correct
 - [ ] Check all email addresses work
@@ -336,8 +329,8 @@ Instead of d3-org-chart, consider:
 - [ ] Test on mobile device
 - [ ] Test on tablet
 - [ ] Test search functionality
-- [ ] Test expand/collapse
-- [ ] Test fullscreen mode
+- [ ] Test view switching
+- [ ] Test keyboard navigation
 - [ ] Test department filters
 
 ---
@@ -348,100 +341,13 @@ Instead of d3-org-chart, consider:
 
 - Check code comments in each file
 - The [d3-org-chart library docs](https://github.com/bumbeishvili/org-chart)
-- TypeScript interfaces in `/src/types/organigram.ts` show all available fields
+- TypeScript interfaces in `/src/types/organigram.ts`
 
-### For Issues
+### Related Documentation
 
-- See GitHub issues #437-440
-- Component files in `src/components/organigram/`
-- Data file: `src/data/club-structure.ts`
-
----
-
-## Known Accessibility Improvements (v2)
-
-The following improvements were **attempted** but need verification:
-
-### 1. Entire Card is Clickable
-
-**Before:** Tiny 24px button at bottom of card to expand/collapse
-**After:** The whole 280x140px card should be clickable
-**Status:** ⚠️ Needs verification - is this working?
-
-### 2. Large, Clear Zoom Controls
-
-**Before:** Scroll wheel zooms (confusing)
-**After:** Large +/− buttons
-**Status:** ⚠️ Are these visible and working?
-
-### 3. Visual Hints on Cards
-
-**Added:**
-
-- 32px green circular indicator
-- Text: "Klik om uit te klappen" / "Klik om in te klappen"
-- Hover effects
-  **Status:** ⚠️ Are these showing up?
-
-### 4. More Context on Load
-
-**Changed:** 3 levels expanded (was 2)
-**Status:** ⚠️ Is this too much? Too cluttered?
-
-### 5. Improved Instructions
-
-**Added:** 3 info cards at top explaining usage
-**Status:** ⚠️ Are these actually helpful or just clutter?
-
-### 6. Better Visual Feedback
-
-**Enhancements:**
-
-- Card lifts 4px on hover
-- Green shadow
-- Pointer cursor
-- Smooth transitions
-  **Status:** ⚠️ Working or broken?
+- `RESPONSIBILITY.md` - Responsibility finder integration
+- `ACCESSIBILITY_TESTING.md` - Accessibility testing guide
 
 ---
 
-## What Needs to Happen
-
-### Immediate (Before Any Other Work)
-
-1. **User testing** - Watch real people try to use it
-2. **Document specific issues** - What exactly breaks? When?
-3. **Fix critical bugs** - Make basic navigation work
-4. **Test on mobile** - Likely worse than desktop
-
-### Short Term
-
-1. Fix readability (issue #438)
-2. Fix navigation (issue #439)
-3. Add prominent back/reset button
-4. Simplify initial view
-
-### Long Term
-
-1. User research - what do people actually need?
-2. Consider alternative visualizations
-3. Complete UX redesign (issue #440)
-4. Comprehensive testing before launch
-
----
-
-## Success Criteria
-
-Before promoting this feature, it must:
-
-- [ ] Be easily readable on mobile and desktop
-- [ ] Have working navigation (expand/collapse/return)
-- [ ] Be usable without instructions
-- [ ] Actually help users find contacts faster than searching Google
-- [ ] Pass user testing with 90%+ task completion
-- [ ] Get positive feedback from non-technical users
-
----
-
-**Status:** 🚧 DO NOT USE until issues #437-440 are resolved
-**Last Updated:** December 2025
+**Last Updated:** January 2026
