@@ -29,7 +29,7 @@ function generateTextShadow(precision: number, size: number): string {
 
   for (let i = 0; i <= length; i++) {
     offset += precision;
-    shadows.push(`${-offset}px ${offset}px var(--color-green--dark)`);
+    shadows.push(`${-offset}px ${offset}px #4B9B48`);
   }
 
   return shadows.join(", ");
@@ -120,33 +120,38 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
           title={`${position} - ${fullName}`}
           aria-label={`Bekijk profiel van ${fullName}, ${position}${number ? `, nummer ${number}` : ""}`}
         >
-          {/* Bottom gradient overlay (30% height from bottom) */}
+          {/* Bottom gradient overlay (30% height from bottom) - z-index 10 */}
           <div
-            className="absolute bottom-0 left-0 z-10 w-full h-[30%] pointer-events-none"
+            className="absolute bottom-0 left-0 w-full h-[30%] pointer-events-none"
             style={{
-              background:
-                "linear-gradient(0deg, var(--color-green--bright) 10%, transparent 80%)",
+              zIndex: 10,
+              background: "linear-gradient(0deg, #4acf52 10%, transparent 80%)",
             }}
             aria-hidden="true"
           />
 
-          {/* Background (gray area behind player) */}
+          {/* Background (gray area behind player) - z-index -10 */}
           <div
-            className="absolute top-[54px] lg:top-[90px] right-0 bottom-0 left-0 -z-10 bg-foundation-gray-light"
+            className={cn(
+              "absolute right-0 bottom-0 left-0 -z-10 bg-[#edeff4]",
+              isCompact ? "top-[40px]" : "top-[54px] lg:top-[90px]",
+            )}
             aria-hidden="true"
           />
 
-          {/* Player image */}
+          {/* Player image - positioned absolutely */}
           <div className="absolute inset-0">
             <div
               className={cn(
-                "absolute right-[-34px] bottom-0 z-0",
-                "w-full max-w-[232px] lg:max-w-[299px] lg:left-[74px]",
-                "h-full lg:h-[calc(100%-15px)]",
-                "ml-[10px]",
+                "absolute bottom-0 right-[-34px] ml-[10px]",
+                "w-full h-full",
+                isCompact
+                  ? "max-w-[180px]"
+                  : "max-w-[232px] lg:left-[74px] lg:max-w-[299px] lg:h-[calc(100%-15px)]",
                 "transition-all duration-300 ease-out",
                 "lg:group-hover:-translate-x-[50px] lg:group-hover:-translate-y-[10px]",
               )}
+              style={{ zIndex: 0 }}
             >
               {imageUrl ? (
                 <Image
@@ -155,13 +160,13 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                   fill
                   className="object-cover object-top"
                   sizes={
-                    isCompact ? "200px" : "(max-width: 960px) 232px, 299px"
+                    isCompact ? "180px" : "(max-width: 960px) 232px, 299px"
                   }
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <svg
-                    className="w-1/2 h-1/2 text-foundation-gray"
+                    className="w-1/2 h-1/2 text-[#cacaca]"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
@@ -173,23 +178,25 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
             </div>
           </div>
 
-          {/* Jersey number - large decorative text (stenciletta font with 3D shadow) */}
+          {/* Jersey number - large decorative text with 3D shadow */}
           {number && (
             <span
               className={cn(
-                "max-w-[10px] mt-[10px] lg:mt-[5px] -z-[1]",
+                "block max-w-[10px] transition-all duration-300 ease-out",
                 "leading-[0.71] tracking-[-6px]",
-                isCompact ? "text-[8rem]" : "text-[11.25rem] lg:text-[14rem]",
+                isCompact
+                  ? "mt-2 text-[8rem]"
+                  : "mt-[10px] text-[11.25rem] lg:mt-[5px] lg:text-[14rem]",
                 "lg:group-hover:text-[25rem]",
-                "transition-all duration-300 ease-out",
               )}
               style={{
-                fontFamily: "var(--font-family-alt)",
-                color: "white",
-                WebkitTextStroke: "4px var(--color-green--dark)",
+                fontFamily:
+                  "stenciletta, -apple-system, system-ui, BlinkMacSystemFont, sans-serif",
+                textShadow: generateTextShadow(0.25, 8),
+                zIndex: -1,
+                WebkitTextStroke: "4px #4B9B48",
                 WebkitTextFillColor: "white",
                 mixBlendMode: "darken",
-                textShadow: generateTextShadow(0.25, 8),
               }}
               aria-hidden="true"
             >
@@ -200,8 +207,8 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
           {/* Spacer when no number */}
           {!number && <div className="flex-1" />}
 
-          {/* Name section */}
-          <div className="font-normal text-white z-10">
+          {/* Name section - must be above gradient with z-index 10 */}
+          <div className="font-normal text-white" style={{ zIndex: 10 }}>
             {/* Captain badge */}
             {isCaptain && (
               <span
@@ -228,18 +235,24 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
               </span>
             )}
 
-            {/* First name - semibold */}
+            {/* First name - semibold (font-weight 600) */}
             <div
               className="text-[2rem] uppercase leading-[0.91] font-semibold"
-              style={{ fontFamily: "var(--font-family-title)" }}
+              style={{
+                fontFamily:
+                  "quasimoda, acumin-pro, Montserrat, Verdana, sans-serif",
+              }}
             >
               {firstName}
             </div>
 
-            {/* Last name - thin */}
+            {/* Last name - thin (font-weight 100), larger on desktop */}
             <div
               className="text-[2rem] lg:text-[2.25rem] uppercase leading-[0.91] font-thin"
-              style={{ fontFamily: "var(--font-family-title)" }}
+              style={{
+                fontFamily:
+                  "quasimoda, acumin-pro, Montserrat, Verdana, sans-serif",
+              }}
             >
               {lastName}
             </div>

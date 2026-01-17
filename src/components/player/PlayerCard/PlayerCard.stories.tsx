@@ -2,13 +2,7 @@
  * PlayerCard Component Stories
  *
  * Visual player card for team rosters and player listings.
- * Features the distinctive KCVV green gradient and position indicator.
- *
- * Design based on Gatsby PlayerTeaser with improvements:
- * - Cleaner typography hierarchy
- * - Better mobile responsiveness
- * - Enhanced accessibility
- * - Skeleton loading state
+ * Exact match of the Gatsby PlayerTeaser design.
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
@@ -22,14 +16,15 @@ const meta = {
     docs: {
       description: {
         component: `
-Visual player card component featuring the distinctive KCVV design with:
-- Large, dramatic jersey number with 3D shadow effect (matching live site)
-- Green gradient overlay at bottom
-- Position badge in top-left corner
-- Player photo with hover effect
-- First name / Last name typography hierarchy
+Visual player card matching the Gatsby PlayerTeaser design exactly:
+- Large jersey number with stenciletta font and 3D shadow effect
+- Green gradient overlay at bottom (30% height)
+- Player photo with hover shift effect (-50px X, -10px Y on desktop)
+- First name (semibold) / Last name (thin) typography using quasimoda font
+- Captain badge support
+- Card dimensions: 285px mobile, 446px desktop
 
-Used in team rosters, player listings, and search results.
+Used in team rosters and player listings.
         `,
       },
     },
