@@ -219,7 +219,7 @@ npm run migration:create       # Create migration tracking
 ├── SCHEMA_GUIDE.md              # ⭐ Effect Schema guide
 ├── STORYBOOK.md                 # ⭐ Storybook component guide
 ├── RESPONSIBILITY.md            # Responsibility finder docs
-├── ORGANOGRAM.md                # Organigram docs (feature has issues)
+├── ORGANIGRAM.md                # Organigram docs (multi-view system)
 ├── SECURITY.md                  # Security policies
 ├── MIGRATION_PLAN.md            # Migration tracking
 ├── README.md                    # Project overview
@@ -385,7 +385,7 @@ These are enforced by pre-commit hooks and CI/CD.
 ### Feature Documentation
 
 - **RESPONSIBILITY.md** - Responsibility finder feature (active, needs expansion)
-- **ORGANOGRAM.md** - Organigram feature (⚠️ has critical usability issues)
+- **ORGANIGRAM.md** - Organigram feature (multi-view unified system)
 - **SECURITY.md** - Security policies (file upload, image handling)
 
 ### Claude Code Configuration
