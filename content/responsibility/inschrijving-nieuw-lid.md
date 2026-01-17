@@ -18,6 +18,7 @@ primaryContact:
   email: jeugd@kcvvelewijt.be
   department: jeugdbestuur
   orgLink: /club/organogram
+  memberId: youth-coordinator
 ---
 
 # Summary

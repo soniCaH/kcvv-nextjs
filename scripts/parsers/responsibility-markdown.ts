@@ -33,6 +33,7 @@ interface Frontmatter {
     phone?: string;
     department?: string;
     orgLink?: string;
+    memberId?: string;
   };
 }
 
@@ -74,6 +75,7 @@ export interface ParsedResponsibilityPath {
     phone?: string;
     department?: string;
     orgLink?: string;
+    memberId?: string;
   };
   steps: ParsedStep[];
 }

@@ -17,6 +17,7 @@ primaryContact:
   email: sponsoring@kcvvelewijt.be
   department: hoofdbestuur
   orgLink: /club/organogram
+  memberId: sponsoring-manager
 ---
 
 # Summary
