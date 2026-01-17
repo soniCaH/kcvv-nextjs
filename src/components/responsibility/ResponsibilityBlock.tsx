@@ -53,7 +53,7 @@ export function ResponsibilityBlock() {
         {/* Quick Links */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
-            href="/club/organogram"
+            href="/club/organigram"
             className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow group"
           >
             <div className="flex items-center gap-3">
@@ -62,7 +62,7 @@ export function ResponsibilityBlock() {
               </div>
               <div>
                 <div className="font-semibold text-gray-blue group-hover:text-green-main">
-                  Organogram
+                  Organigram
                 </div>
                 <div className="text-xs text-gray-medium">
                   Alle bestuursleden

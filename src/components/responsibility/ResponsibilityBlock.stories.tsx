@@ -5,14 +5,14 @@
  * Designed for homepage integration with quick links
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { ResponsibilityBlock } from './ResponsibilityBlock'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { ResponsibilityBlock } from "./ResponsibilityBlock";
 
 const meta = {
-  title: 'Features/ResponsibilityBlock',
+  title: "Features/ResponsibilityBlock",
   component: ResponsibilityBlock,
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
     docs: {
       description: {
         component: `
@@ -21,7 +21,7 @@ The **ResponsibilityBlock** is a compact version designed for homepage integrati
 ### Features
 - 🏠 Optimized for homepage sections
 - 📱 Fully responsive with mobile-first design
-- 🔗 Quick links to popular pages (organogram, contact, registration)
+- 🔗 Quick links to popular pages (organigram, contact, registration)
 - 🎨 Branded with green gradient background
 - ↗️ Link to full /hulp page
 
@@ -31,11 +31,11 @@ Perfect for homepage "How can we help?" sections that provide quick access to th
       },
     },
   },
-  tags: ['autodocs'],
-} satisfies Meta<typeof ResponsibilityBlock>
+  tags: ["autodocs"],
+} satisfies Meta<typeof ResponsibilityBlock>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * Default homepage block
@@ -44,11 +44,12 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Default appearance as it would appear on the homepage with gradient background and quick links.',
+        story:
+          "Default appearance as it would appear on the homepage with gradient background and quick links.",
       },
     },
   },
-}
+};
 
 /**
  * Mobile viewport
@@ -56,15 +57,16 @@ export const Default: Story = {
 export const Mobile: Story = {
   parameters: {
     viewport: {
-      defaultViewport: 'mobile1',
+      defaultViewport: "mobile1",
     },
     docs: {
       description: {
-        story: 'Mobile-optimized view showing stacked quick links and touch-friendly interface.',
+        story:
+          "Mobile-optimized view showing stacked quick links and touch-friendly interface.",
       },
     },
   },
-}
+};
 
 /**
  * Tablet viewport
@@ -72,15 +74,15 @@ export const Mobile: Story = {
 export const Tablet: Story = {
   parameters: {
     viewport: {
-      defaultViewport: 'tablet',
+      defaultViewport: "tablet",
     },
     docs: {
       description: {
-        story: 'Tablet view showing responsive grid layout for quick links.',
+        story: "Tablet view showing responsive grid layout for quick links.",
       },
     },
   },
-}
+};
 
 /**
  * Interactive test
@@ -90,11 +92,12 @@ export const WithInteraction: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Verify all essential elements: heading "Hoe kunnen we je helpen?", three quick links (Organogram, Contact, Inschrijven), and the link to /hulp page.',
+        story:
+          'Verify all essential elements: heading "Hoe kunnen we je helpen?", three quick links (Organigram, Contact, Inschrijven), and the link to /hulp page.',
       },
     },
   },
-}
+};
 
 /**
  * Interactive role selection
@@ -104,11 +107,12 @@ export const WithRoleSelection: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Test the compact ResponsibilityFinder interaction: click a role button (e.g., "Speler") and verify it highlights with green background and the question input appears.',
+        story:
+          'Test the compact ResponsibilityFinder interaction: click a role button (e.g., "Speler") and verify it highlights with green background and the question input appears.',
       },
     },
   },
-}
+};
 
 /**
  * Quick links interaction
@@ -118,11 +122,12 @@ export const QuickLinksInteraction: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Hover over quick link cards (Organogram, Contact, Inschrijven) to see the hover effects (shadow and scale). Links should be visually responsive.',
+        story:
+          "Hover over quick link cards (Organigram, Contact, Inschrijven) to see the hover effects (shadow and scale). Links should be visually responsive.",
       },
     },
   },
-}
+};
 
 /**
  * Integration with page layout
@@ -157,14 +162,15 @@ export const WithPageContext: Story = {
     </div>
   ),
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
     docs: {
       description: {
-        story: 'Shows how the ResponsibilityBlock integrates into a complete page layout.',
+        story:
+          "Shows how the ResponsibilityBlock integrates into a complete page layout.",
       },
     },
   },
-}
+};
 
 /**
  * Accessibility test
@@ -172,15 +178,15 @@ export const WithPageContext: Story = {
 export const AccessibilityTest: Story = {
   parameters: {
     a11y: {
-      context: '#storybook-root',
+      context: "#storybook-root",
       config: {
         rules: [
           {
-            id: 'color-contrast',
+            id: "color-contrast",
             enabled: true,
           },
           {
-            id: 'landmark-one-main',
+            id: "landmark-one-main",
             enabled: false, // Section doesn't need main landmark
           },
         ],
@@ -188,11 +194,11 @@ export const AccessibilityTest: Story = {
     },
     docs: {
       description: {
-        story: 'Accessibility compliance test with axe-core.',
+        story: "Accessibility compliance test with axe-core.",
       },
     },
   },
-}
+};
 
 /**
  * Visual comparison: Before/After states
@@ -206,7 +212,9 @@ export const VisualStates: Story = {
       </div>
 
       <div className="border-t-4 border-gray-200 pt-8">
-        <h3 className="text-xl font-bold mb-4 px-4">With Different Backgrounds</h3>
+        <h3 className="text-xl font-bold mb-4 px-4">
+          With Different Backgrounds
+        </h3>
         <div className="space-y-4">
           <div className="bg-white p-8">
             <ResponsibilityBlock />
@@ -219,14 +227,15 @@ export const VisualStates: Story = {
     </div>
   ),
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
     docs: {
       description: {
-        story: 'Visual comparison showing how the component looks on different backgrounds.',
+        story:
+          "Visual comparison showing how the component looks on different backgrounds.",
       },
     },
   },
-}
+};
 
 /**
  * Performance test
@@ -236,8 +245,9 @@ export const PerformanceTest: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Performance benchmark: rapidly click through all role buttons (Speler → Ouder → Trainer → Supporter → Niet-lid → Andere) to verify smooth, responsive interactions without lag.',
+        story:
+          "Performance benchmark: rapidly click through all role buttons (Speler → Ouder → Trainer → Supporter → Niet-lid → Andere) to verify smooth, responsive interactions without lag.",
       },
     },
   },
-}
+};

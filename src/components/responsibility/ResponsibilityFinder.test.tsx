@@ -477,8 +477,8 @@ describe("ResponsibilityFinder", () => {
     });
   });
 
-  describe("Deep Linking to Organogram", () => {
-    it("calls onMemberSelect when clicking organogram link", async () => {
+  describe("Deep Linking to Organigram", () => {
+    it("calls onMemberSelect when clicking organigram link", async () => {
       const onMemberSelect = vi.fn();
       const user = userEvent.setup();
       render(<ResponsibilityFinder onMemberSelect={onMemberSelect} />);
@@ -510,11 +510,11 @@ describe("ResponsibilityFinder", () => {
         expect(screen.getByText(/Contactpersoon/i)).toBeInTheDocument();
       });
 
-      // Find and click the "Bekijk in organogram" button
-      const organogramButton = screen.getByRole("button", {
-        name: /bekijk in organogram/i,
+      // Find and click the "Bekijk in organigram" button
+      const organigramButton = screen.getByRole("button", {
+        name: /bekijk in organigram/i,
       });
-      await user.click(organogramButton);
+      await user.click(organigramButton);
 
       // Verify callback was called with the actual memberId from data
       expect(onMemberSelect).toHaveBeenCalledWith(
@@ -522,7 +522,7 @@ describe("ResponsibilityFinder", () => {
       );
     });
 
-    it("shows organogram button for results with memberId", async () => {
+    it("shows organigram button for results with memberId", async () => {
       const onMemberSelect = vi.fn();
       const user = userEvent.setup();
       render(<ResponsibilityFinder onMemberSelect={onMemberSelect} />);
@@ -539,14 +539,14 @@ describe("ResponsibilityFinder", () => {
       });
       await user.click(suggestions[0]);
 
-      // Verify organogram button is rendered (findByRole waits for it to appear)
-      const organogramButton = await screen.findByRole("button", {
-        name: /bekijk in organogram/i,
+      // Verify organigram button is rendered (findByRole waits for it to appear)
+      const organigramButton = await screen.findByRole("button", {
+        name: /bekijk in organigram/i,
       });
-      expect(organogramButton).toBeInTheDocument();
+      expect(organigramButton).toBeInTheDocument();
     });
 
-    it("shows organogram link when onMemberSelect not provided", async () => {
+    it("shows organigram link when onMemberSelect not provided", async () => {
       const user = userEvent.setup();
       // Render WITHOUT onMemberSelect callback
       render(<ResponsibilityFinder />);
@@ -564,11 +564,11 @@ describe("ResponsibilityFinder", () => {
       await user.click(suggestions[0]);
 
       // Should show link instead of button (findByRole waits for it to appear)
-      const organogramLink = await screen.findByRole("link", {
-        name: /bekijk in organogram/i,
+      const organigramLink = await screen.findByRole("link", {
+        name: /bekijk in organigram/i,
       });
-      expect(organogramLink).toBeInTheDocument();
-      expect(organogramLink).toHaveAttribute("href", "/club/organogram");
+      expect(organigramLink).toBeInTheDocument();
+      expect(organigramLink).toHaveAttribute("href", "/club/organigram");
     });
   });
 

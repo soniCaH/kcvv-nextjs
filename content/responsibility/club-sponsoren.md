@@ -16,7 +16,7 @@ primaryContact:
   role: Verantwoordelijke Sponsoring
   email: sponsoring@kcvvelewijt.be
   department: hoofdbestuur
-  orgLink: /club/organogram
+  orgLink: /club/organigram
   memberId: sponsoring-manager
 ---
 

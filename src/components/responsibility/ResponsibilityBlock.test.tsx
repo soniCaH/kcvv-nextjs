@@ -33,16 +33,16 @@ describe("ResponsibilityBlock", () => {
     it("renders all three quick links", () => {
       render(<ResponsibilityBlock />);
 
-      expect(screen.getByText("Organogram")).toBeInTheDocument();
+      expect(screen.getByText("Organigram")).toBeInTheDocument();
       expect(screen.getByText("Contact")).toBeInTheDocument();
       expect(screen.getByText("Inschrijven")).toBeInTheDocument();
     });
 
-    it("organogram link points to correct URL", () => {
+    it("organigram link points to correct URL", () => {
       render(<ResponsibilityBlock />);
 
-      const organogramLink = screen.getByText("Organogram").closest("a");
-      expect(organogramLink).toHaveAttribute("href", "/club/organogram");
+      const organigramLink = screen.getByText("Organigram").closest("a");
+      expect(organigramLink).toHaveAttribute("href", "/club/organigram");
     });
 
     it("contact link points to correct URL", () => {

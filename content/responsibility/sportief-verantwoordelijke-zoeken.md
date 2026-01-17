@@ -16,18 +16,18 @@ primaryContact:
   role: Jeugdcoördinator
   email: jeugd@kcvvelewijt.be
   department: jeugdbestuur
-  orgLink: /club/organogram
+  orgLink: /club/organigram
 ---
 
 # Summary
 
-Check het organogram of neem contact op met de jeugdcoördinator.
+Check het organigram of neem contact op met de jeugdcoördinator.
 
 ## Steps
 
-### 1. Bekijk het organogram voor een overzicht van alle verantwoordelijken
+### 1. Bekijk het organigram voor een overzicht van alle verantwoordelijken
 
-**Link:** /club/organogram
+**Link:** /club/organigram
 
 ### 2. Filter op "Jeugdbestuur" om de leeftijdscoördinatoren te zien
 

@@ -8,31 +8,31 @@
  * User role type
  */
 export type UserRole =
-  | 'speler'
-  | 'ouder'
-  | 'trainer'
-  | 'supporter'
-  | 'niet-lid'
-  | 'andere'
+  | "speler"
+  | "ouder"
+  | "trainer"
+  | "supporter"
+  | "niet-lid"
+  | "andere";
 
 /**
  * Contact information for who to reach out to
  */
 export interface Contact {
   /** Role/title of the contact person */
-  role: string
+  role: string;
   /** Name if known (can be placeholder) */
-  name?: string
+  name?: string;
   /** Email address */
-  email?: string
+  email?: string;
   /** Phone number */
-  phone?: string
+  phone?: string;
   /** Link to org chart or profile */
-  orgLink?: string
+  orgLink?: string;
   /** Department */
-  department?: 'hoofdbestuur' | 'jeugdbestuur' | 'algemeen'
-  /** Member ID for deep linking to organogram (e.g., 'president', 'jeugdcoordinator') */
-  memberId?: string
+  department?: "hoofdbestuur" | "jeugdbestuur" | "algemeen";
+  /** Member ID for deep linking to organigram (e.g., 'president', 'jeugdcoordinator') */
+  memberId?: string;
 }
 
 /**
@@ -40,13 +40,13 @@ export interface Contact {
  */
 export interface SolutionStep {
   /** Order of the step */
-  order: number
+  order: number;
   /** Description of what to do */
-  description: string
+  description: string;
   /** Optional link to more info */
-  link?: string
+  link?: string;
   /** Who to contact for this step */
-  contact?: Contact
+  contact?: Contact;
 }
 
 /**
@@ -54,23 +54,29 @@ export interface SolutionStep {
  */
 export interface ResponsibilityPath {
   /** Unique identifier */
-  id: string
+  id: string;
   /** User role (who is asking) */
-  role: UserRole[]
+  role: UserRole[];
   /** The question/scenario */
-  question: string
+  question: string;
   /** Keywords for search matching */
-  keywords: string[]
+  keywords: string[];
   /** Short answer/summary */
-  summary: string
+  summary: string;
   /** Detailed solution steps */
-  steps: SolutionStep[]
+  steps: SolutionStep[];
   /** Primary contact person */
-  primaryContact: Contact
+  primaryContact: Contact;
   /** Category for grouping */
-  category: 'medisch' | 'sportief' | 'administratief' | 'gedrag' | 'algemeen' | 'commercieel'
+  category:
+    | "medisch"
+    | "sportief"
+    | "administratief"
+    | "gedrag"
+    | "algemeen"
+    | "commercieel";
   /** Icon for visual representation */
-  icon?: string
+  icon?: string;
 }
 
 /**
@@ -78,7 +84,7 @@ export interface ResponsibilityPath {
  */
 export interface AutocompleteSuggestion {
   /** Path item */
-  path: ResponsibilityPath
+  path: ResponsibilityPath;
   /** Match score (0-100) */
-  score: number
+  score: number;
 }

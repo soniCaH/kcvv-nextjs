@@ -4,24 +4,32 @@
  * "Ik ben ... en ik ..." question builder to find the right contact person
  */
 
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import { ResponsibilityFinder } from '@/components/responsibility'
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ResponsibilityFinder } from "@/components/responsibility";
 
 export const metadata: Metadata = {
-  title: 'Hulp & Contact | KCVV Elewijt',
-  description: 'Vind snel de juiste contactpersoon voor jouw vraag. Wie ben je en wat wil je weten?',
-  keywords: ['hulp', 'contact', 'vraag', 'verantwoordelijke', 'wie contacteren', 'KCVV Elewijt'],
+  title: "Hulp & Contact | KCVV Elewijt",
+  description:
+    "Vind snel de juiste contactpersoon voor jouw vraag. Wie ben je en wat wil je weten?",
+  keywords: [
+    "hulp",
+    "contact",
+    "vraag",
+    "verantwoordelijke",
+    "wie contacteren",
+    "KCVV Elewijt",
+  ],
   openGraph: {
-    title: 'Hulp & Contact - KCVV Elewijt',
-    description: 'Vind snel de juiste contactpersoon voor jouw vraag',
-    type: 'website',
+    title: "Hulp & Contact - KCVV Elewijt",
+    description: "Vind snel de juiste contactpersoon voor jouw vraag",
+    type: "website",
   },
-}
+};
 
 /**
  * Renders the Help / Responsibility Finder page containing a hero banner, the ResponsibilityFinder component,
- * informational cards (organogram and general contact), and a three-step "How it works" FAQ section.
+ * informational cards (organigram and general contact), and a three-step "How it works" FAQ section.
  *
  * @returns The React element for the help page layout including interactive and informational sections.
  */
@@ -33,12 +41,15 @@ export default function HelpPage() {
         <div className="max-w-5xl mx-auto">
           <h1
             className="text-4xl md:text-6xl font-bold mb-4"
-            style={{ fontFamily: 'quasimoda, acumin-pro, Montserrat, sans-serif' }}
+            style={{
+              fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+            }}
           >
             Hoe kunnen we je helpen?
           </h1>
           <p className="text-xl md:text-2xl text-white/90 max-w-3xl">
-            Vertel ons wie je bent en wat je nodig hebt. We wijzen je de weg naar de juiste persoon.
+            Vertel ons wie je bent en wat je nodig hebt. We wijzen je de weg
+            naar de juiste persoon.
           </p>
         </div>
       </div>
@@ -51,29 +62,60 @@ export default function HelpPage() {
         <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-main">
             <h3 className="font-bold text-gray-blue mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="w-5 h-5 text-green-main"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
-              Bekijk organogram
+              Bekijk organigram
             </h3>
             <p className="text-gray-dark text-sm mb-3">
-              Wil je een overzicht van alle bestuursleden en hun verantwoordelijkheden?
+              Wil je een overzicht van alle bestuursleden en hun
+              verantwoordelijkheden?
             </p>
             <Link
-              href="/club/organogram"
+              href="/club/organigram"
               className="text-green-main hover:text-green-hover font-semibold inline-flex items-center gap-1"
             >
-              Ga naar organogram
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              Ga naar organigram
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </Link>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-main">
             <h3 className="font-bold text-gray-blue mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              <svg
+                className="w-5 h-5 text-green-main"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
               </svg>
               Algemeen contact
             </h3>
@@ -93,7 +135,9 @@ export default function HelpPage() {
         <div className="mt-12 bg-white rounded-xl shadow-sm p-8">
           <h2
             className="text-2xl font-bold text-gray-blue mb-6"
-            style={{ fontFamily: 'quasimoda, acumin-pro, Montserrat, sans-serif' }}
+            style={{
+              fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+            }}
           >
             Hoe werkt het?
           </h2>
@@ -125,7 +169,9 @@ export default function HelpPage() {
                 3
               </div>
               <div>
-                <h4 className="font-semibold text-gray-blue">Vind je antwoord</h4>
+                <h4 className="font-semibold text-gray-blue">
+                  Vind je antwoord
+                </h4>
                 <p className="text-gray-dark text-sm">
                   Zie direct wie je moet contacteren en wat je moet doen
                 </p>
@@ -135,5 +181,5 @@ export default function HelpPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

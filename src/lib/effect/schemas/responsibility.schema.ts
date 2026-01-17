@@ -99,13 +99,13 @@ export class ContactSchema extends S.Class<ContactSchema>("ContactSchema")({
   department: S.optional(DepartmentSchema),
 
   /**
-   * Link to organogram or profile (optional)
-   * @example "/club/organogram"
+   * Link to organigram or profile (optional)
+   * @example "/club/organigram"
    */
   orgLink: S.optional(S.String),
 
   /**
-   * Member ID linking to organogram member (optional)
+   * Member ID linking to organigram member (optional)
    * @example "youth-coordinator"
    */
   memberId: S.optional(S.String),

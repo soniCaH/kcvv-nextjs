@@ -24,7 +24,7 @@ primaryContact:
   role: Contact Person Title
   email: email@kcvvelewijt.be
   department: jeugdbestuur
-  orgLink: /club/organogram
+  orgLink: /club/organigram
 ---
 
 # Summary
@@ -72,7 +72,7 @@ Short answer summary goes here.
   - `phone`: Phone number (optional)
   - `name`: Person name (optional)
   - `department`: One of: `hoofdbestuur`, `jeugdbestuur`, `algemeen`
-  - `orgLink`: Link to organogram (optional)
+  - `orgLink`: Link to organigram (optional)
 
 ### Content Sections
 
@@ -156,7 +156,7 @@ primaryContact:
   role: Verzekeringverantwoordelijke
   email: verzekering@kcvvelewijt.be
   department: algemeen
-  orgLink: /club/organogram
+  orgLink: /club/organigram
 ---
 
 # Summary

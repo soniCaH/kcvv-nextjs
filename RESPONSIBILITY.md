@@ -74,7 +74,7 @@ Similar to smart chatbots, but simpler, faster, and fully client-side!
 3. **Start typing** → Smart suggestions appear
 4. **Click suggestion** → See full answer card
 5. **View steps** → Follow instructions
-6. **Contact person** → Email/phone/organogram link
+6. **Contact person** → Email/phone/organigram link
 7. **Problem solved!** ✅
 
 ### Smart Matching Algorithm
@@ -178,7 +178,7 @@ src/data/responsibility-paths.ts
     role: 'Jeugdsecretaris',
     email: 'jeugd@kcvvelewijt.be',
     department: 'jeugdbestuur',
-    orgLink: '/club/organogram',
+    orgLink: '/club/organigram',
   },
   steps: [                            // Stappen om te volgen
     {
@@ -221,7 +221,7 @@ primaryContact: {
   email: 'jan@kcvv.be',          // Optioneel maar aanbevolen
   phone: '+32 123 456 789',      // Optioneel
   department: 'hoofdbestuur',     // Optioneel: hoofdbestuur/jeugdbestuur/algemeen
-  orgLink: '/club/organogram',    // Optioneel: link naar organogram
+  orgLink: '/club/organigram',    // Optioneel: link naar organigram
 }
 ```
 
@@ -356,7 +356,7 @@ Maak de stappen concreet en actionable:
 
 Je kan linken naar:
 
-1. **Interne pagina's**: `/club/organogram`, `/events`, `/team/a-ploeg`
+1. **Interne pagina's**: `/club/organigram`, `/events`, `/team/a-ploeg`
 2. **Downloads**: `/club/downloads`
 3. **Externe links**: `https://www.prosoccerdata.com`
 4. **Email**: Wordt automatisch klikbaar: `info@kcvvelewijt.be`
