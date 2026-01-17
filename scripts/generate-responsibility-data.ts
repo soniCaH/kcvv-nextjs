@@ -188,6 +188,11 @@ function generateTypeScriptFile(data: readonly ResponsibilityPath[]): string {
         `      orgLink: '${escapeString(item.primaryContact.orgLink)}',`,
       );
     }
+    if (item.primaryContact.memberId) {
+      lines.push(
+        `      memberId: '${escapeString(item.primaryContact.memberId)}',`,
+      );
+    }
     lines.push("    },");
 
     // Steps

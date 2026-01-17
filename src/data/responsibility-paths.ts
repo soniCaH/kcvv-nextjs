@@ -35,7 +35,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       email: "sponsoring@kcvvelewijt.be",
       department: "hoofdbestuur",
       orgLink: "/club/organogram",
-      memberId: "treasurer", // Example: Links to Penningmeester in organogram
+      memberId: "sponsoring-manager",
     },
     steps: [
       {
@@ -122,7 +122,7 @@ export const responsibilityPaths: ResponsibilityPath[] = [
       email: "jeugd@kcvvelewijt.be",
       department: "jeugdbestuur",
       orgLink: "/club/organogram",
-      memberId: "youth-coordinator", // Links to Jeugdcoördinator in organogram
+      memberId: "youth-coordinator",
     },
     steps: [
       {

@@ -60,7 +60,7 @@
 
 #### Data Layer
 
-- **CMS:** Drupal JSON:API (https://api.kcvvelewijt.be)
+- **CMS:** Drupal JSON:API (<https://api.kcvvelewijt.be>)
 - **External API:** Footbalisto (match data, rankings)
 - **Schema Validation:** Effect Schema (`import { Schema as S } from 'effect'`)
 - **Data Fetching:** Effect HTTP Client
@@ -2705,18 +2705,18 @@ import { QRCodeSVG } from 'qrcode.react'
 
 ### Official Docs
 
-- **Next.js:** https://nextjs.org/docs
-- **Effect:** https://effect.website/docs
-- **Tailwind CSS:** https://tailwindcss.com/docs
-- **Radix UI:** https://www.radix-ui.com/primitives
-- **Drupal JSON:API:** https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module
+- **Next.js:** <https://nextjs.org/docs>
+- **Effect:** <https://effect.website/docs>
+- **Tailwind CSS:** <https://tailwindcss.com/docs>
+- **Radix UI:** <https://www.radix-ui.com/primitives>
+- **Drupal JSON:API:** <https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module>
 
 ### Tools
 
-- **Vercel:** https://vercel.com
-- **Storybook:** https://storybook.js.org
-- **Playwright:** https://playwright.dev
-- **Vitest:** https://vitest.dev
+- **Vercel:** <https://vercel.com>
+- **Storybook:** <https://storybook.js.org>
+- **Playwright:** <https://playwright.dev>
+- **Vitest:** <https://vitest.dev>
 
 ---
 
