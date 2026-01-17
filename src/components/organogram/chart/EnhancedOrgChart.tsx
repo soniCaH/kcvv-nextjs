@@ -240,16 +240,27 @@ export function EnhancedOrgChart({
 
   // Update chart data when chartData changes, and center on member if specified
   useEffect(() => {
-    if (!chartRef.current || chartData.length === 0) return;
+    // Reset the hash when chartData becomes empty to force re-render when data returns
+    if (chartData.length === 0) {
+      prevChartDataIdsRef.current = "";
+      return;
+    }
 
-    // Create a simple hash of current data IDs to detect actual changes
-    const currentDataIds = chartData
-      .map((d) => d.id)
-      .sort()
+    if (!chartRef.current) return;
+
+    // Create a deterministic hash including relevant fields to detect actual changes
+    // Sort by id for consistency, then serialize id + key fields
+    const currentDataHash = chartData
+      .slice()
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map(
+        (d) =>
+          `${d.id}|${d.name}|${d.title}|${d.department}|${d.parentId ?? ""}`,
+      )
       .join(",");
 
     // Skip re-render if data hasn't actually changed
-    if (currentDataIds === prevChartDataIdsRef.current) {
+    if (currentDataHash === prevChartDataIdsRef.current) {
       // But still center if we have a new centeredMemberId
       if (centeredMemberId && centeredMemberId !== lastCenteredIdRef.current) {
         lastCenteredIdRef.current = centeredMemberId;
@@ -257,7 +268,7 @@ export function EnhancedOrgChart({
       }
       return;
     }
-    prevChartDataIdsRef.current = currentDataIds;
+    prevChartDataIdsRef.current = currentDataHash;
 
     // Update data and re-render
     chartRef.current.data(chartData).render();
