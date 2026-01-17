@@ -49,6 +49,8 @@ export interface EnhancedOrgChartProps {
   onMemberClick?: (member: OrgChartNode) => void;
   isLoading?: boolean;
   className?: string;
+  /** Member ID to center the chart on (e.g., when navigating from Responsibility Finder) */
+  centeredMemberId?: string | null;
 }
 
 /**
@@ -65,9 +67,17 @@ export function EnhancedOrgChart({
   onMemberClick,
   isLoading = false,
   className = "",
+  centeredMemberId,
 }: EnhancedOrgChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<OrgChart<NodeData> | null>(null);
+  // Store callback in ref to avoid re-initializing chart when callback changes
+  const onMemberClickRef = useRef(onMemberClick);
+
+  // Keep ref updated with latest callback (must be in useEffect per React rules)
+  useEffect(() => {
+    onMemberClickRef.current = onMemberClick;
+  }, [onMemberClick]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeDepartment, setActiveDepartment] = useState<
@@ -202,8 +212,8 @@ export function EnhancedOrgChart({
       .onNodeClick((node: unknown) => {
         const hierarchyNode = node as { data: NodeData };
         const member = members.find((m) => m.id === hierarchyNode.data.id);
-        if (member && onMemberClick) {
-          onMemberClick(member);
+        if (member && onMemberClickRef.current) {
+          onMemberClickRef.current(member);
         }
       });
 
@@ -219,15 +229,57 @@ export function EnhancedOrgChart({
       }
       chartRef.current = null;
     };
-  }, [members, onMemberClick, isMobile]);
+    // Note: onMemberClick is stored in a ref to avoid re-initializing the chart when callback changes
+  }, [members, isMobile]);
 
-  // Update chart data when chartData changes
+  // Track previous chart data IDs to avoid unnecessary re-renders
+  const prevChartDataIdsRef = useRef<string>("");
+
+  // Track which member ID we've already centered on to avoid re-centering
+  const lastCenteredIdRef = useRef<string | null>(null);
+
+  // Update chart data when chartData changes, and center on member if specified
   useEffect(() => {
     if (!chartRef.current || chartData.length === 0) return;
 
+    // Create a simple hash of current data IDs to detect actual changes
+    const currentDataIds = chartData
+      .map((d) => d.id)
+      .sort()
+      .join(",");
+
+    // Skip re-render if data hasn't actually changed
+    if (currentDataIds === prevChartDataIdsRef.current) {
+      // But still center if we have a new centeredMemberId
+      if (centeredMemberId && centeredMemberId !== lastCenteredIdRef.current) {
+        lastCenteredIdRef.current = centeredMemberId;
+        chartRef.current.setCentered(centeredMemberId).render();
+      }
+      return;
+    }
+    prevChartDataIdsRef.current = currentDataIds;
+
     // Update data and re-render
     chartRef.current.data(chartData).render();
-  }, [chartData]);
+
+    // Center on specified member after data is rendered
+    // Use timeout to ensure D3 has finished its render
+    if (centeredMemberId && centeredMemberId !== lastCenteredIdRef.current) {
+      lastCenteredIdRef.current = centeredMemberId;
+      setTimeout(() => {
+        if (chartRef.current && centeredMemberId) {
+          chartRef.current.setCentered(centeredMemberId).render();
+        }
+      }, 150);
+    }
+  }, [chartData, centeredMemberId]);
+
+  // Reset lastCenteredIdRef when centeredMemberId is cleared
+  useEffect(() => {
+    if (!centeredMemberId) {
+      lastCenteredIdRef.current = null;
+    }
+  }, [centeredMemberId]);
 
   // Handle search selection - zoom to member
   const handleSearchSelect = (member: OrgChartNode) => {
@@ -265,13 +317,13 @@ export function EnhancedOrgChart({
 
   // Expand/collapse all
   const handleExpandAll = () => {
-    if (chartRef.current) {
+    if (chartRef.current && chartData.length > 0) {
       chartRef.current.expandAll();
     }
   };
 
   const handleCollapseAll = () => {
-    if (chartRef.current) {
+    if (chartRef.current && chartData.length > 0) {
       chartRef.current.collapseAll();
     }
   };
