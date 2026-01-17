@@ -296,7 +296,10 @@ async function formatWithPrettier(filePath: string): Promise<void> {
 }
 
 /**
- * Main function
+ * Orchestrates the build process: reads and parses Markdown files, validates the parsed data,
+ * generates a TypeScript module, writes it to disk, formats the output with Prettier, and logs progress.
+ *
+ * On any error during the process, logs the failure and exits the process with code 1.
  */
 async function main() {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
