@@ -43,33 +43,6 @@ describe("PlayerCard", () => {
     });
   });
 
-  describe("Position Badge", () => {
-    it("should display position code K for Keeper", () => {
-      render(<PlayerCard {...defaultProps} position="Keeper" />);
-      expect(screen.getByLabelText("Keeper")).toHaveTextContent("K");
-    });
-
-    it("should display position code V for Verdediger", () => {
-      render(<PlayerCard {...defaultProps} position="Verdediger" />);
-      expect(screen.getByLabelText("Verdediger")).toHaveTextContent("V");
-    });
-
-    it("should display position code M for Middenvelder", () => {
-      render(<PlayerCard {...defaultProps} position="Middenvelder" />);
-      expect(screen.getByLabelText("Middenvelder")).toHaveTextContent("M");
-    });
-
-    it("should display position code A for Aanvaller", () => {
-      render(<PlayerCard {...defaultProps} position="Aanvaller" />);
-      expect(screen.getByLabelText("Aanvaller")).toHaveTextContent("A");
-    });
-
-    it("should use first letter for unknown positions", () => {
-      render(<PlayerCard {...defaultProps} position="Coach" />);
-      expect(screen.getByLabelText("Coach")).toHaveTextContent("C");
-    });
-  });
-
   describe("Jersey Number", () => {
     it("should display large jersey number when provided", () => {
       const { container } = render(
@@ -133,17 +106,15 @@ describe("PlayerCard", () => {
 
   describe("Variants", () => {
     it("should render default variant with full height", () => {
-      const { container } = render(<PlayerCard {...defaultProps} />);
-      const article = container.querySelector("article");
-      expect(article).not.toHaveClass("max-w-[200px]");
+      render(<PlayerCard {...defaultProps} />);
+      const link = screen.getByRole("link");
+      expect(link).toHaveClass("h-[285px]");
     });
 
-    it("should render compact variant with smaller dimensions", () => {
-      const { container } = render(
-        <PlayerCard {...defaultProps} variant="compact" />,
-      );
-      const article = container.querySelector("article");
-      expect(article).toHaveClass("max-w-[200px]");
+    it("should render compact variant with smaller height", () => {
+      render(<PlayerCard {...defaultProps} variant="compact" />);
+      const link = screen.getByRole("link");
+      expect(link).toHaveClass("h-[220px]");
     });
   });
 
