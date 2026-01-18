@@ -8,6 +8,18 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { PlayerCard } from "./PlayerCard";
 
+// Real player images from KCVV API (with transparent backgrounds)
+const REAL_PLAYER_IMAGES = {
+  chiel:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/chiel.png",
+  jarne:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/jarne-front.png",
+  louie:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/louie-front.png",
+  yoran:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/yoran-front.png",
+};
+
 const meta = {
   title: "Components/Player/PlayerCard",
   component: PlayerCard,
@@ -75,17 +87,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Default player card with photo
- * Standard size for team roster grids
+ * Default player card with real KCVV player photo
+ * Uses transparent background image from the live site
  */
 export const Default: Story = {
   args: {
-    firstName: "Kevin",
-    lastName: "De Bruyne",
+    firstName: "Jarne",
+    lastName: "Feron",
     position: "Middenvelder",
     number: 7,
-    imageUrl: "https://picsum.photos/300/400?random=1",
-    href: "/player/kevin-de-bruyne",
+    imageUrl: REAL_PLAYER_IMAGES.jarne,
+    href: "/player/jarne-feron",
   },
 };
 
@@ -95,34 +107,33 @@ export const Default: Story = {
  */
 export const Captain: Story = {
   args: {
-    firstName: "Jan",
-    lastName: "Vertonghen",
+    firstName: "Chiel",
+    lastName: "Bertens",
     position: "Verdediger",
     number: 5,
-    imageUrl: "https://picsum.photos/300/400?random=2",
-    href: "/player/jan-vertonghen",
+    imageUrl: REAL_PLAYER_IMAGES.chiel,
+    href: "/player/chiel-bertens",
     isCaptain: true,
   },
 };
 
 /**
  * Goalkeeper with specific styling
- * Position text shows "K" for Keeper
  */
 export const Goalkeeper: Story = {
   args: {
-    firstName: "Thibaut",
-    lastName: "Courtois",
+    firstName: "Louie",
+    lastName: "Speler",
     position: "Keeper",
     number: 1,
-    imageUrl: "https://picsum.photos/300/400?random=3",
-    href: "/player/thibaut-courtois",
+    imageUrl: REAL_PLAYER_IMAGES.louie,
+    href: "/player/louie-speler",
   },
 };
 
 /**
  * Without photo
- * Shows KCVV placeholder silhouette
+ * Shows placeholder silhouette
  */
 export const WithoutPhoto: Story = {
   args: {
@@ -136,21 +147,21 @@ export const WithoutPhoto: Story = {
 
 /**
  * Without jersey number
- * Large decorative number and visual effect are hidden
+ * Large decorative number is hidden
  */
 export const WithoutNumber: Story = {
   args: {
-    firstName: "Youri",
-    lastName: "Tielemans",
+    firstName: "Yoran",
+    lastName: "Speler",
     position: "Middenvelder",
-    imageUrl: "https://picsum.photos/300/400?random=4",
-    href: "/player/youri-tielemans",
+    imageUrl: REAL_PLAYER_IMAGES.yoran,
+    href: "/player/yoran-speler",
   },
 };
 
 /**
  * Long name handling
- * Shows how text truncates for very long names
+ * Shows how text handles very long names
  */
 export const LongName: Story = {
   args: {
@@ -158,7 +169,7 @@ export const LongName: Story = {
     lastName: "Van Der Meersberghen",
     position: "Verdediger",
     number: 23,
-    imageUrl: "https://picsum.photos/300/400?random=5",
+    imageUrl: REAL_PLAYER_IMAGES.chiel,
     href: "/player/jean-baptiste",
   },
 };
@@ -169,12 +180,12 @@ export const LongName: Story = {
  */
 export const Compact: Story = {
   args: {
-    firstName: "Romelu",
-    lastName: "Lukaku",
+    firstName: "Jarne",
+    lastName: "Feron",
     position: "Aanvaller",
     number: 9,
-    imageUrl: "https://picsum.photos/300/400?random=6",
-    href: "/player/romelu-lukaku",
+    imageUrl: REAL_PLAYER_IMAGES.jarne,
+    href: "/player/jarne-feron",
     variant: "compact",
   },
 };
@@ -195,7 +206,7 @@ export const Loading: Story = {
 
 /**
  * Grid layout
- * Multiple cards in a responsive grid
+ * Multiple cards in a responsive grid with real player images
  */
 export const GridLayout: Story = {
   args: {
@@ -207,53 +218,37 @@ export const GridLayout: Story = {
   render: () => (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl">
       <PlayerCard
-        firstName="Thibaut"
-        lastName="Courtois"
+        firstName="Louie"
+        lastName="Keeper"
         position="Keeper"
         number={1}
-        imageUrl="https://picsum.photos/300/400?random=10"
-        href="/player/thibaut-courtois"
+        imageUrl={REAL_PLAYER_IMAGES.louie}
+        href="/player/louie"
       />
       <PlayerCard
-        firstName="Jan"
-        lastName="Vertonghen"
+        firstName="Chiel"
+        lastName="Bertens"
         position="Verdediger"
         number={5}
-        imageUrl="https://picsum.photos/300/400?random=11"
-        href="/player/jan-vertonghen"
+        imageUrl={REAL_PLAYER_IMAGES.chiel}
+        href="/player/chiel-bertens"
         isCaptain
       />
       <PlayerCard
-        firstName="Kevin"
-        lastName="De Bruyne"
+        firstName="Jarne"
+        lastName="Feron"
         position="Middenvelder"
         number={7}
-        imageUrl="https://picsum.photos/300/400?random=12"
-        href="/player/kevin-de-bruyne"
+        imageUrl={REAL_PLAYER_IMAGES.jarne}
+        href="/player/jarne-feron"
       />
       <PlayerCard
-        firstName="Romelu"
-        lastName="Lukaku"
+        firstName="Yoran"
+        lastName="Aanvaller"
         position="Aanvaller"
         number={9}
-        imageUrl="https://picsum.photos/300/400?random=13"
-        href="/player/romelu-lukaku"
-      />
-      <PlayerCard
-        firstName="Axel"
-        lastName="Witsel"
-        position="Middenvelder"
-        number={6}
-        imageUrl="https://picsum.photos/300/400?random=14"
-        href="/player/axel-witsel"
-      />
-      <PlayerCard
-        firstName="Yannick"
-        lastName="Carrasco"
-        position="Aanvaller"
-        number={11}
-        imageUrl="https://picsum.photos/300/400?random=15"
-        href="/player/yannick-carrasco"
+        imageUrl={REAL_PLAYER_IMAGES.yoran}
+        href="/player/yoran"
       />
       <PlayerCard
         firstName="Nieuwe"
@@ -273,12 +268,12 @@ export const GridLayout: Story = {
  */
 export const MobileView: Story = {
   args: {
-    firstName: "Leandro",
-    lastName: "Trossard",
+    firstName: "Jarne",
+    lastName: "Feron",
     position: "Aanvaller",
     number: 19,
-    imageUrl: "https://picsum.photos/300/400?random=7",
-    href: "/player/leandro-trossard",
+    imageUrl: REAL_PLAYER_IMAGES.jarne,
+    href: "/player/jarne-feron",
   },
   parameters: {
     viewport: {
@@ -293,18 +288,18 @@ export const MobileView: Story = {
  */
 export const HoverDemo: Story = {
   args: {
-    firstName: "Dries",
-    lastName: "Mertens",
+    firstName: "Chiel",
+    lastName: "Bertens",
     position: "Aanvaller",
     number: 14,
-    imageUrl: "https://picsum.photos/300/400?random=8",
-    href: "/player/dries-mertens",
+    imageUrl: REAL_PLAYER_IMAGES.chiel,
+    href: "/player/chiel-bertens",
   },
   parameters: {
     docs: {
       description: {
         story:
-          "Hover over the card to see the image shift effect (desktop only). The large jersey number creates a striking visual anchor.",
+          "Hover over the card to see the image shift effect (desktop only). The large jersey number grows and creates a striking visual anchor.",
       },
     },
   },
