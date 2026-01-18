@@ -114,9 +114,8 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
           href={href}
           className={cn(
             "relative block overflow-hidden isolate",
-            "w-full no-underline",
+            "w-full max-w-[340px] no-underline",
             isCompact ? "h-[220px]" : "h-[285px] lg:h-[446px]",
-            "lg:max-w-[340px]",
           )}
           title={`${position} - ${fullName}`}
           aria-label={`Bekijk profiel van ${fullName}, ${position}${number ? `, nummer ${number}` : ""}`}
