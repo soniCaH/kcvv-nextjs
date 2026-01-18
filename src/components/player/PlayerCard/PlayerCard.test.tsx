@@ -48,19 +48,19 @@ describe("PlayerCard", () => {
       const { container } = render(
         <PlayerCard {...defaultProps} number={10} />,
       );
-      // The large number span is aria-hidden
-      const hiddenSpan = container.querySelector("span[aria-hidden='true']");
-      expect(hiddenSpan).toHaveTextContent("10");
+      // The large number div has the position class and is aria-hidden
+      const numberEl = container.querySelector(".player__teaser__position");
+      expect(numberEl).toHaveTextContent("10");
+      expect(numberEl).toHaveAttribute("aria-hidden", "true");
     });
 
     it("should not display jersey number when not provided", () => {
       const { container } = render(
         <PlayerCard {...defaultProps} number={undefined} />,
       );
-      // Check there's no large number span (which would have aria-hidden)
-      const hiddenSpan = container.querySelector("span[aria-hidden='true']");
-      // Should be null since no number means no span
-      expect(hiddenSpan).toBeNull();
+      // Check there's no number element
+      const numberEl = container.querySelector(".player__teaser__position");
+      expect(numberEl).toBeNull();
     });
 
     it("should not include number in accessible label when not provided", () => {

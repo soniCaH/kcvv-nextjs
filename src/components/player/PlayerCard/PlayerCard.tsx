@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils/cn";
 
 /**
  * Generate text-shadow CSS for the 3D effect
- * Matches the Gatsby SCSS textShadow function
+ * Matches the Gatsby SCSS textShadow function exactly
  */
 function generateTextShadow(precision: number, size: number): string {
   const shadows: string[] = [];
@@ -34,6 +34,9 @@ function generateTextShadow(precision: number, size: number): string {
 
   return shadows.join(", ");
 }
+
+// Pre-calculate the text shadow for performance
+const JERSEY_NUMBER_SHADOW = generateTextShadow(0.25, 8);
 
 export interface PlayerCardProps extends Omit<
   HTMLAttributes<HTMLElement>,
@@ -110,49 +113,53 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
         <Link
           href={href}
           className={cn(
-            "relative overflow-hidden flex flex-col justify-between",
+            "player__teaser__link",
+            "relative block overflow-hidden",
             "w-full no-underline",
-            isCompact
-              ? "h-[220px] pb-[17px] pl-[15px]"
-              : "h-[285px] lg:h-[446px] pb-[17px] pl-[15px] lg:px-[15px]",
+            isCompact ? "h-[220px]" : "h-[285px] lg:h-[446px]",
             "lg:max-w-[340px]",
           )}
           title={`${position} - ${fullName}`}
           aria-label={`Bekijk profiel van ${fullName}, ${position}${number ? `, nummer ${number}` : ""}`}
         >
-          {/* Bottom gradient overlay (30% height from bottom) - z-index 10 */}
-          <div
-            className="absolute bottom-0 left-0 w-full h-[30%] pointer-events-none"
-            style={{
-              zIndex: 10,
-              background: "linear-gradient(0deg, #4acf52 10%, transparent 80%)",
-            }}
-            aria-hidden="true"
-          />
-
-          {/* Background (gray area behind player) - z-index -10 */}
+          {/* Gray background area - starts below the number */}
           <div
             className={cn(
-              "absolute right-0 bottom-0 left-0 -z-10 bg-[#edeff4]",
+              "player__teaser__bg absolute right-0 bottom-0 left-0",
+              "bg-[#edeff4]",
               isCompact ? "top-[40px]" : "top-[54px] lg:top-[90px]",
             )}
+            style={{ zIndex: -10 }}
             aria-hidden="true"
           />
 
-          {/* Player image - positioned absolutely */}
-          <div className="absolute inset-0">
+          {/* Player image container */}
+          <div className="player__teaser__image absolute inset-0">
             <div
               className={cn(
-                "absolute bottom-0 right-[-34px] ml-[10px]",
-                "w-full h-full",
-                isCompact
-                  ? "max-w-[180px]"
-                  : "max-w-[232px] lg:left-[74px] lg:max-w-[299px] lg:h-[calc(100%-15px)]",
+                "absolute bottom-0",
                 "transition-all duration-300 ease-out",
                 "lg:group-hover:-translate-x-[50px] lg:group-hover:-translate-y-[10px]",
               )}
-              style={{ zIndex: 0 }}
+              style={{
+                right: "-34px",
+                width: "100%",
+                maxWidth: isCompact ? "180px" : "232px",
+                height: "100%",
+                marginLeft: "10px",
+                zIndex: 0,
+              }}
             >
+              {/* Desktop styles applied via media query */}
+              <style>{`
+                @media screen and (min-width: 960px) {
+                  .player__teaser__image > div {
+                    left: 74px !important;
+                    max-width: 299px !important;
+                    height: calc(100% - 15px) !important;
+                  }
+                }
+              `}</style>
               {imageUrl ? (
                 <Image
                   src={imageUrl}
@@ -178,43 +185,56 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
             </div>
           </div>
 
-          {/* Jersey number - large decorative text with 3D shadow */}
+          {/* Jersey number - large decorative text behind player */}
           {number && (
-            <span
+            <div
               className={cn(
-                "block max-w-[10px] transition-all duration-300 ease-out",
-                "leading-[0.71] tracking-[-6px]",
+                "player__teaser__position",
+                "absolute transition-all duration-300 ease-out",
                 isCompact
-                  ? "mt-2 text-[8rem]"
-                  : "mt-[10px] text-[11.25rem] lg:mt-[5px] lg:text-[14rem]",
+                  ? "top-[8px] left-[15px] text-[8rem]"
+                  : "top-[10px] left-[15px] text-[11.25rem] lg:top-[5px] lg:text-[14rem]",
                 "lg:group-hover:text-[25rem]",
               )}
               style={{
-                fontFamily:
-                  "stenciletta, -apple-system, system-ui, BlinkMacSystemFont, sans-serif",
-                textShadow: generateTextShadow(0.25, 8),
-                zIndex: -1,
+                maxWidth: "10px",
+                fontFamily: "stenciletta, sans-serif",
+                lineHeight: 0.71,
+                letterSpacing: "-6px",
+                color: "white",
                 WebkitTextStroke: "4px #4B9B48",
                 WebkitTextFillColor: "white",
+                textShadow: JERSEY_NUMBER_SHADOW,
                 mixBlendMode: "darken",
+                zIndex: -1,
               }}
               aria-hidden="true"
             >
               {number}
-            </span>
+            </div>
           )}
 
-          {/* Spacer when no number */}
-          {!number && <div className="flex-1" />}
+          {/* Bottom gradient overlay for name visibility */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-[30%] pointer-events-none"
+            style={{
+              background: "linear-gradient(0deg, #4acf52 10%, transparent 80%)",
+              zIndex: 10,
+            }}
+            aria-hidden="true"
+          />
 
-          {/* Name section - must be above gradient with z-index 10 */}
-          <div className="font-normal text-white" style={{ zIndex: 10 }}>
+          {/* Name section - positioned at bottom */}
+          <div
+            className="player_teaser__name__wrapper absolute bottom-[17px] left-[15px] lg:left-[15px] lg:right-[15px]"
+            style={{ zIndex: 10 }}
+          >
             {/* Captain badge */}
             {isCaptain && (
               <span
                 className={cn(
                   "inline-flex items-center gap-1 mb-1",
-                  "text-xs font-medium uppercase tracking-wide",
+                  "text-xs font-medium uppercase tracking-wide text-white",
                   "bg-white/20 backdrop-blur-sm rounded px-2 py-0.5",
                 )}
                 aria-label="Aanvoerder"
@@ -235,27 +255,42 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
               </span>
             )}
 
-            {/* First name - semibold (font-weight 600) */}
+            {/* First name - semibold */}
             <div
-              className="text-[2rem] uppercase leading-[0.91] font-semibold"
+              className="player_teaser__name--first text-white"
               style={{
-                fontFamily:
-                  "quasimoda, acumin-pro, Montserrat, Verdana, sans-serif",
+                fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+                fontSize: "2rem",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                lineHeight: 0.91,
               }}
             >
               {firstName}
             </div>
 
-            {/* Last name - thin (font-weight 100), larger on desktop */}
+            {/* Last name - thin */}
             <div
-              className="text-[2rem] lg:text-[2.25rem] uppercase leading-[0.91] font-thin"
+              className="player_teaser__name--last text-white"
               style={{
-                fontFamily:
-                  "quasimoda, acumin-pro, Montserrat, Verdana, sans-serif",
+                fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+                fontSize: "2rem",
+                fontWeight: 100,
+                textTransform: "uppercase",
+                lineHeight: 0.91,
               }}
             >
               {lastName}
             </div>
+
+            {/* Desktop: larger last name */}
+            <style>{`
+              @media screen and (min-width: 960px) {
+                .player_teaser__name--last {
+                  font-size: 2.25rem !important;
+                }
+              }
+            `}</style>
           </div>
         </Link>
       </article>
