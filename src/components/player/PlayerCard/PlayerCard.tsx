@@ -89,9 +89,8 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
       return (
         <div
           className={cn(
-            "relative overflow-hidden bg-gray-200 animate-pulse",
+            "relative overflow-hidden bg-gray-200 animate-pulse w-[340px]",
             isCompact ? "h-[220px]" : "h-[285px] lg:h-[446px]",
-            "w-full max-w-[340px]",
             className,
           )}
           aria-label="Laden..."
@@ -107,14 +106,14 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
     return (
       <article
         ref={ref}
-        className={cn("player__teaser group w-full", className)}
+        className={cn("player__teaser group w-[340px]", className)}
         {...props}
       >
         <Link
           href={href}
           className={cn(
-            "relative block overflow-hidden isolate",
-            "w-full max-w-[340px] no-underline",
+            "relative block overflow-hidden isolate w-full",
+            "no-underline",
             isCompact ? "h-[220px]" : "h-[285px] lg:h-[446px]",
           )}
           title={`${position} - ${fullName}`}
