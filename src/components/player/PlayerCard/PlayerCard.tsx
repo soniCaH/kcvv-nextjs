@@ -138,7 +138,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                 isCompact
                   ? "top-[8px] left-[15px] text-[8rem]"
                   : "top-[10px] left-[15px] text-[11.25rem] lg:top-[5px] lg:text-[14rem]",
-                "lg:group-hover:text-[25rem]",
+                "group-hover:text-[25rem]",
               )}
               style={{
                 maxWidth: "10px",
@@ -167,7 +167,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                   ? "max-w-[180px]"
                   : "max-w-[232px] lg:left-[74px] lg:max-w-[299px] lg:h-[calc(100%-15px)]",
                 "transition-all duration-300 ease-in-out",
-                "lg:group-hover:-translate-x-[50px] lg:group-hover:-translate-y-[10px]",
+                "group-hover:-translate-x-[50px] group-hover:-translate-y-[10px]",
               )}
             >
               {imageUrl ? (
