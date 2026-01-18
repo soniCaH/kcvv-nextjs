@@ -134,7 +134,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
             <div
               className={cn(
                 "player__teaser__position",
-                "absolute z-[1] transition-all duration-300 ease-out",
+                "absolute z-[1] transition-all duration-300 ease-in-out",
                 isCompact
                   ? "top-[8px] left-[15px] text-[8rem]"
                   : "top-[10px] left-[15px] text-[11.25rem] lg:top-[5px] lg:text-[14rem]",
@@ -166,7 +166,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                 isCompact
                   ? "max-w-[180px]"
                   : "max-w-[232px] lg:left-[74px] lg:max-w-[299px] lg:h-[calc(100%-15px)]",
-                "transition-all duration-300 ease-out",
+                "transition-all duration-300 ease-in-out",
                 "lg:group-hover:-translate-x-[50px] lg:group-hover:-translate-y-[10px]",
               )}
             >
