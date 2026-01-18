@@ -113,8 +113,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
         <Link
           href={href}
           className={cn(
-            "player__teaser__link",
-            "relative block overflow-hidden",
+            "relative block overflow-hidden isolate",
             "w-full no-underline",
             isCompact ? "h-[220px]" : "h-[285px] lg:h-[446px]",
             "lg:max-w-[340px]",
@@ -125,41 +124,54 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
           {/* Gray background area - starts below the number */}
           <div
             className={cn(
-              "player__teaser__bg absolute right-0 bottom-0 left-0",
+              "absolute right-0 bottom-0 left-0 z-0",
               "bg-[#edeff4]",
               isCompact ? "top-[40px]" : "top-[54px] lg:top-[90px]",
             )}
-            style={{ zIndex: -10 }}
             aria-hidden="true"
           />
 
-          {/* Player image container */}
-          <div className="player__teaser__image absolute inset-0">
+          {/* Jersey number - large decorative text behind player */}
+          {number && (
             <div
               className={cn(
-                "absolute bottom-0",
+                "player__teaser__position",
+                "absolute z-[1] transition-all duration-300 ease-out",
+                isCompact
+                  ? "top-[8px] left-[15px] text-[8rem]"
+                  : "top-[10px] left-[15px] text-[11.25rem] lg:top-[5px] lg:text-[14rem]",
+                "lg:group-hover:text-[25rem]",
+              )}
+              style={{
+                maxWidth: "10px",
+                fontFamily: "stenciletta, sans-serif",
+                lineHeight: 0.71,
+                letterSpacing: "-6px",
+                color: "#4B9B48",
+                WebkitTextStroke: "4px #4B9B48",
+                WebkitTextFillColor: "white",
+                textShadow: JERSEY_NUMBER_SHADOW,
+                mixBlendMode: "darken",
+              }}
+              aria-hidden="true"
+            >
+              {number}
+            </div>
+          )}
+
+          {/* Player image container */}
+          <div className="absolute inset-0 z-[2]">
+            <div
+              className={cn(
+                "absolute bottom-0 right-[-34px] ml-[10px]",
+                "w-full h-full",
+                isCompact
+                  ? "max-w-[180px]"
+                  : "max-w-[232px] lg:left-[74px] lg:max-w-[299px] lg:h-[calc(100%-15px)]",
                 "transition-all duration-300 ease-out",
                 "lg:group-hover:-translate-x-[50px] lg:group-hover:-translate-y-[10px]",
               )}
-              style={{
-                right: "-34px",
-                width: "100%",
-                maxWidth: isCompact ? "180px" : "232px",
-                height: "100%",
-                marginLeft: "10px",
-                zIndex: 0,
-              }}
             >
-              {/* Desktop styles applied via media query */}
-              <style>{`
-                @media screen and (min-width: 960px) {
-                  .player__teaser__image > div {
-                    left: 74px !important;
-                    max-width: 299px !important;
-                    height: calc(100% - 15px) !important;
-                  }
-                }
-              `}</style>
               {imageUrl ? (
                 <Image
                   src={imageUrl}
@@ -185,50 +197,17 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
             </div>
           </div>
 
-          {/* Jersey number - large decorative text behind player */}
-          {number && (
-            <div
-              className={cn(
-                "player__teaser__position",
-                "absolute transition-all duration-300 ease-out",
-                isCompact
-                  ? "top-[8px] left-[15px] text-[8rem]"
-                  : "top-[10px] left-[15px] text-[11.25rem] lg:top-[5px] lg:text-[14rem]",
-                "lg:group-hover:text-[25rem]",
-              )}
-              style={{
-                maxWidth: "10px",
-                fontFamily: "stenciletta, sans-serif",
-                lineHeight: 0.71,
-                letterSpacing: "-6px",
-                color: "white",
-                WebkitTextStroke: "4px #4B9B48",
-                WebkitTextFillColor: "white",
-                textShadow: JERSEY_NUMBER_SHADOW,
-                mixBlendMode: "darken",
-                zIndex: -1,
-              }}
-              aria-hidden="true"
-            >
-              {number}
-            </div>
-          )}
-
           {/* Bottom gradient overlay for name visibility */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-[30%] pointer-events-none"
+            className="absolute bottom-0 left-0 right-0 h-[30%] z-[3] pointer-events-none"
             style={{
               background: "linear-gradient(0deg, #4acf52 10%, transparent 80%)",
-              zIndex: 10,
             }}
             aria-hidden="true"
           />
 
           {/* Name section - positioned at bottom */}
-          <div
-            className="player_teaser__name__wrapper absolute bottom-[17px] left-[15px] lg:left-[15px] lg:right-[15px]"
-            style={{ zIndex: 10 }}
-          >
+          <div className="absolute bottom-[17px] left-[15px] right-[15px] z-[4]">
             {/* Captain badge */}
             {isCaptain && (
               <span
@@ -257,12 +236,9 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
 
             {/* First name - semibold */}
             <div
-              className="player_teaser__name--first text-white"
+              className="text-white text-[2rem] uppercase font-semibold"
               style={{
                 fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-                fontSize: "2rem",
-                fontWeight: 600,
-                textTransform: "uppercase",
                 lineHeight: 0.91,
               }}
             >
@@ -271,26 +247,14 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
 
             {/* Last name - thin */}
             <div
-              className="player_teaser__name--last text-white"
+              className="text-white text-[2rem] lg:text-[2.25rem] uppercase font-thin"
               style={{
                 fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-                fontSize: "2rem",
-                fontWeight: 100,
-                textTransform: "uppercase",
                 lineHeight: 0.91,
               }}
             >
               {lastName}
             </div>
-
-            {/* Desktop: larger last name */}
-            <style>{`
-              @media screen and (min-width: 960px) {
-                .player_teaser__name--last {
-                  font-size: 2.25rem !important;
-                }
-              }
-            `}</style>
           </div>
         </Link>
       </article>
