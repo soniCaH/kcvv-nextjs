@@ -49,6 +49,10 @@ import {
   GraduationCap,
   UserSearch,
 
+  // Location & Measurement
+  MapPin,
+  Ruler,
+
   // Sports & Activities
   Trophy,
   Activity,
@@ -118,6 +122,10 @@ export const icons = {
   "user-plus": UserPlus,
   "graduation-cap": GraduationCap,
   "user-search": UserSearch,
+
+  // Location & Measurement
+  "map-pin": MapPin,
+  ruler: Ruler,
 
   // Sports & Activities
   trophy: Trophy,
@@ -235,6 +243,10 @@ export {
   UserPlus,
   GraduationCap,
   UserSearch,
+
+  // Location & Measurement
+  MapPin,
+  Ruler,
 
   // Sports & Activities
   Trophy,
