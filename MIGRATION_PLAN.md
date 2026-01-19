@@ -2007,9 +2007,15 @@ export const getImageDimensions = (width?: number, height?: number) => {
   - Multiple variants (default, compact, printable)
   - 5 Storybook stories, 27 tests
 
+- `PlayerStats` ✅ - Statistics table (GitHub Issue #522)
+  - Position-specific stats (outfield vs goalkeeper)
+  - Multi-season historical view, minutes formatting
+  - Waiting for Footbalisto API integration
+  - 6 Storybook stories, 29 tests
+
 **Components to Create:**
 
-- `PlayerStats` - Statistics table (data from Footbalisto API)
+- (None - all player components complete!)
 
 **Features:**
 

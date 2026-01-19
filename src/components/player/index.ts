@@ -21,3 +21,11 @@ export type {
 
 export { PlayerShare } from "./PlayerShare";
 export type { PlayerShareProps } from "./PlayerShare";
+
+export { PlayerStats } from "./PlayerStats";
+export type {
+  PlayerStatsProps,
+  PlayerStatsData,
+  OutfieldStats,
+  GoalkeeperStats,
+} from "./PlayerStats";
