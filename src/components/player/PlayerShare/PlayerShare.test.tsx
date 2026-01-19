@@ -2,7 +2,13 @@
  * PlayerShare Component Tests
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { PlayerShare } from "./PlayerShare";
 
@@ -360,6 +366,183 @@ describe("PlayerShare", () => {
       );
 
       expect(container.firstChild).toHaveClass("custom-class");
+    });
+  });
+
+  describe("error handling", () => {
+    it("handles clipboard write errors gracefully", async () => {
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      mockWriteText.mockRejectedValueOnce(new Error("Clipboard not available"));
+
+      render(<PlayerShare {...defaultProps} />);
+
+      const copyButton = screen.getByRole("button", { name: /kopieer/i });
+      fireEvent.click(copyButton);
+
+      await waitFor(() => {
+        expect(consoleError).toHaveBeenCalledWith(
+          "Failed to copy:",
+          expect.any(Error),
+        );
+      });
+
+      consoleError.mockRestore();
+    });
+  });
+
+  describe("copy timeout behavior", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("clears existing timeout on rapid copy clicks", async () => {
+      render(<PlayerShare {...defaultProps} />);
+
+      const copyButton = screen.getByRole("button", { name: /kopieer/i });
+
+      // First click
+      await act(async () => {
+        fireEvent.click(copyButton);
+      });
+
+      // Verify copied state is shown
+      expect(screen.getByText(/gekopieerd/i)).toBeInTheDocument();
+
+      // Second click before timeout expires (should clear first timeout)
+      await act(async () => {
+        fireEvent.click(copyButton);
+      });
+
+      // Still showing copied
+      expect(screen.getByText(/gekopieerd/i)).toBeInTheDocument();
+
+      // Advance time to trigger the timeout
+      await act(async () => {
+        vi.advanceTimersByTime(2000);
+      });
+
+      // After timeout, copied state should be cleared
+      expect(screen.queryByText(/gekopieerd/i)).not.toBeInTheDocument();
+    });
+
+    it("cleans up timeout on unmount", async () => {
+      const { unmount } = render(<PlayerShare {...defaultProps} />);
+
+      const copyButton = screen.getByRole("button", { name: /kopieer/i });
+
+      // Trigger copy to set up timeout
+      await act(async () => {
+        fireEvent.click(copyButton);
+      });
+
+      // Unmount before timeout completes - should not throw
+      unmount();
+
+      // Advance timers - should not cause any errors
+      await act(async () => {
+        vi.advanceTimersByTime(3000);
+      });
+    });
+  });
+
+  describe("QR code download", () => {
+    it("handles download when QR ref is available", () => {
+      const mockClick = vi.fn();
+      const mockToDataURL = vi
+        .fn()
+        .mockReturnValue("data:image/png;base64,abc");
+      const mockDrawImage = vi.fn();
+      const mockGetContext = vi.fn().mockReturnValue({
+        drawImage: mockDrawImage,
+      });
+
+      // Mock createElement to return controlled elements
+      const originalCreateElement = document.createElement.bind(document);
+      const createElementSpy = vi
+        .spyOn(document, "createElement")
+        .mockImplementation((tagName) => {
+          if (tagName === "canvas") {
+            const canvas = originalCreateElement("canvas");
+            canvas.getContext = mockGetContext;
+            canvas.toDataURL = mockToDataURL;
+            return canvas;
+          }
+          if (tagName === "a") {
+            const link = originalCreateElement("a");
+            link.click = mockClick;
+            return link;
+          }
+          return originalCreateElement(tagName);
+        });
+
+      // Mock XMLSerializer as a proper class
+      const mockSerializeToString = vi.fn().mockReturnValue("<svg></svg>");
+      const OriginalXMLSerializer = window.XMLSerializer;
+      window.XMLSerializer = class MockXMLSerializer {
+        serializeToString = mockSerializeToString;
+      } as unknown as typeof XMLSerializer;
+
+      // Mock Image to capture onload and trigger it
+      const OriginalImage = window.Image;
+      const capturedCallbacks: { onload: (() => void) | null } = {
+        onload: null,
+      };
+      window.Image = class MockImage {
+        width = 128;
+        height = 128;
+        src = "";
+        onload: (() => void) | null = null;
+
+        constructor() {
+          // Capture onload when set
+          Object.defineProperty(this, "onload", {
+            set: (fn: () => void) => {
+              capturedCallbacks.onload = fn;
+            },
+            get: () => capturedCallbacks.onload,
+          });
+        }
+      } as unknown as typeof Image;
+
+      render(<PlayerShare {...defaultProps} showQR />);
+
+      const downloadButton = screen.getByRole("button", {
+        name: /download qr/i,
+      });
+      fireEvent.click(downloadButton);
+
+      // Verify XMLSerializer was called
+      expect(mockSerializeToString).toHaveBeenCalled();
+
+      // Trigger the image onload
+      if (capturedCallbacks.onload) {
+        capturedCallbacks.onload();
+      }
+
+      // Verify canvas operations and download link click
+      expect(mockGetContext).toHaveBeenCalledWith("2d");
+      expect(mockDrawImage).toHaveBeenCalled();
+      expect(mockToDataURL).toHaveBeenCalledWith("image/png");
+      expect(mockClick).toHaveBeenCalled();
+
+      // Restore mocks
+      window.XMLSerializer = OriginalXMLSerializer;
+      window.Image = OriginalImage;
+      createElementSpy.mockRestore();
+    });
+
+    it("does nothing when showQR is false (no download button)", () => {
+      render(<PlayerShare {...defaultProps} showQR={false} />);
+
+      expect(
+        screen.queryByRole("button", { name: /download qr/i }),
+      ).not.toBeInTheDocument();
     });
   });
 });
