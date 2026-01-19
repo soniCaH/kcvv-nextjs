@@ -12,3 +12,9 @@ export type { PlayerBioProps } from "./PlayerBio";
 
 export { PlayerProfile } from "./PlayerProfile";
 export type { PlayerProfileProps } from "./PlayerProfile";
+
+export { PlayerTeamHistory } from "./PlayerTeamHistory";
+export type {
+  PlayerTeamHistoryProps,
+  TeamHistoryEntry,
+} from "./PlayerTeamHistory";
