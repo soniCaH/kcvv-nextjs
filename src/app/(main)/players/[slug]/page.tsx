@@ -9,30 +9,63 @@ import type { Metadata } from "next";
 import { runPromise } from "@/lib/effect/runtime";
 import { DrupalService } from "@/lib/effect/services/DrupalService";
 import { PlayerProfile, PlayerShare } from "@/components/player";
-import type { Team } from "@/lib/effect/schemas";
+import type { Team, Player } from "@/lib/effect/schemas";
 
 interface PlayerPageProps {
   params: Promise<{ slug: string }>;
 }
 
 /**
+ * Extract team name from player's resolved team relationship
+ */
+function getTeamName(player: Player): string {
+  const teamData = player.relationships.field_team?.data;
+  if (teamData && "attributes" in teamData) {
+    return (teamData as Team).attributes.title;
+  }
+  return "KCVV Elewijt";
+}
+
+/**
  * Generate route parameters for player pages from Drupal players.
  *
- * Fetches up to 100 players and derives each route `slug` by removing
- * the "/player/" prefix from the player path alias.
+ * Paginates through all players in the Drupal API and derives each route
+ * `slug` by removing the "/player/" prefix from the player path alias.
  *
  * @returns An array of route parameter objects, each with a `slug` property
  */
 export async function generateStaticParams() {
   try {
-    const players = await runPromise(
-      Effect.gen(function* () {
-        const drupal = yield* DrupalService;
-        return yield* drupal.getPlayers({ limit: 100 });
-      }),
-    );
+    const allPlayers: Player[] = [];
+    const limit = 50;
+    let page = 1;
+    let hasMore = true;
 
-    return players.map((player) => ({
+    // Paginate through all players
+    while (hasMore) {
+      const { players, links } = await runPromise(
+        Effect.gen(function* () {
+          const drupal = yield* DrupalService;
+          return yield* drupal.getPlayers({ limit, page });
+        }),
+      );
+
+      allPlayers.push(...players);
+
+      // Check if there are more pages
+      hasMore = !!links?.next;
+      page++;
+
+      // Safety limit to prevent infinite loops
+      if (page > 20) {
+        console.warn("Reached maximum page limit (20) for player generation");
+        break;
+      }
+    }
+
+    console.log(`Generated static params for ${allPlayers.length} players`);
+
+    return allPlayers.map((player) => ({
       slug: player.attributes.path.alias.replace("/player/", ""),
     }));
   } catch (error) {
@@ -69,13 +102,7 @@ export async function generateMetadata({
     const fullName =
       `${firstName} ${lastName}`.trim() || player.attributes.title;
     const position = player.attributes.field_position || "";
-
-    // Get team name from resolved relationship
-    const teamData = player.relationships.field_team?.data;
-    const teamName =
-      teamData && "attributes" in teamData
-        ? (teamData as Team).attributes.title
-        : "KCVV Elewijt";
+    const teamName = getTeamName(player);
 
     const description = player.attributes.body?.summary
       ? player.attributes.body.summary
@@ -146,12 +173,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
     ? player.attributes.field_birth_date.toISOString().split("T")[0]
     : undefined;
 
-  // Get team name from resolved relationship
-  const teamData = player.relationships.field_team?.data;
-  const teamName =
-    teamData && "attributes" in teamData
-      ? (teamData as Team).attributes.title
-      : "KCVV Elewijt";
+  const teamName = getTeamName(player);
 
   // Get image URL if available
   const imageData = player.relationships.field_image?.data;

@@ -75,7 +75,11 @@ export class DrupalService extends Context.Tag("DrupalService")<
     readonly getPlayers: (params?: {
       teamId?: string;
       limit?: number;
-    }) => Effect.Effect<readonly Player[], DrupalError | ValidationError>;
+      page?: number;
+    }) => Effect.Effect<
+      { players: readonly Player[]; links: JsonApiLinks | undefined },
+      DrupalError | ValidationError
+    >;
 
     readonly getPlayerBySlug: (
       slug: string,
@@ -468,9 +472,13 @@ export const DrupalServiceLive = Layer.effect(
       });
 
     /**
-     * Get players with optional filtering
+     * Get players with optional filtering and pagination
      */
-    const getPlayers = (params?: { teamId?: string; limit?: number }) =>
+    const getPlayers = (params?: {
+      teamId?: string;
+      limit?: number;
+      page?: number;
+    }) =>
       Effect.gen(function* () {
         const queryParams: Record<string, string | number> = {
           include: "field_image,field_team",
@@ -485,10 +493,17 @@ export const DrupalServiceLive = Layer.effect(
           queryParams["page[limit]"] = params.limit;
         }
 
+        if (params?.page && params?.limit) {
+          queryParams["page[offset]"] = (params.page - 1) * params.limit;
+        }
+
         const url = buildUrl("node/player", queryParams);
         const response = yield* fetchJson(url, PlayersResponse);
 
-        return response.data;
+        return {
+          players: response.data,
+          links: response.links,
+        };
       });
 
     /**
