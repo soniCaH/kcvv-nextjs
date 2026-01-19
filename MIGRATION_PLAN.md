@@ -1950,7 +1950,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 ---
 
-## Phase 3: Team & Player Features (Weeks 6-7) ⏳ NOT STARTED
+## Phase 3: Team & Player Features (Weeks 6-7) 🚧 IN PROGRESS
 
 ### Goals
 
@@ -1964,7 +1964,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 **From Gatsby sitemap: 500+ player pages, 15+ team pages**
 
-#### 3.1: Player Profile Pages ⏳
+#### 3.1: Player Profile Pages 🚧 IN PROGRESS
 
 **Route:** `/player/[slug]`
 
@@ -1980,12 +1980,22 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Use existing `PlayerSchema` from `src/lib/effect/schemas/player.schema.ts`
 - Add stats schema if available from Drupal
 
+**Components Created:** ✅
+
+- `PlayerCard` ✅ - Visual player card (photo, number, name, position)
+  - 3D shadow effect on jersey numbers (stenciletta font)
+  - Green gradient overlay, hover animation (-50px X, -10px Y)
+  - Full Storybook coverage (10 stories)
+  - GitHub Issue #521
+- `PlayerBio` ✅ - Biography and personal info
+  - Birth date with automatic age calculation
+  - Membership period display (nl-BE locale)
+  - GitHub Issue #521
+
 **Components to Create:**
 
-- `PlayerProfile` - Main profile container
-- `PlayerCard` - Visual player card (photo, number, name, position)
-- `PlayerStats` - Statistics table
-- `PlayerBio` - Biography and personal info
+- `PlayerProfile` - Main profile container (GitHub Issue #522)
+- `PlayerStats` - Statistics table (data from Footbalisto API)
 - `PlayerShare` - Share card with QR code (use `qrcode.react`)
 - `PlayerTeamHistory` - Team affiliation timeline
 

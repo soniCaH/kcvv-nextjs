@@ -146,14 +146,19 @@ function parseMigrationPlan() {
   for (const line of lines) {
     // Match phase headers: ## Phase X: Name (Status) STATUS
     const phaseMatch = line.match(
-      /^##\s+Phase\s+(\d+):\s+(.+?)\s+(.+?)\s+(✅|⏳|❌)/,
+      /^##\s+Phase\s+(\d+):\s+(.+?)\s+(.+?)\s+(✅|⏳|❌|🚧)/,
     );
     if (phaseMatch) {
       const [, number, name, status, emoji] = phaseMatch;
 
       let state = "not-started";
-      if (line.includes("✅ COMPLETED")) state = "completed";
-      else if (line.includes("✅ IN PROGRESS")) state = "in-progress";
+      if (line.includes("✅ COMPLETED") || line.includes("✅ COMPLETE"))
+        state = "completed";
+      else if (
+        line.includes("🚧 IN PROGRESS") ||
+        line.includes("✅ IN PROGRESS")
+      )
+        state = "in-progress";
       else if (line.includes("⏳ NOT STARTED")) state = "not-started";
 
       phases.push({
