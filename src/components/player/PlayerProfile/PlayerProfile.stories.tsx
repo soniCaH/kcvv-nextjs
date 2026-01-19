@@ -186,7 +186,7 @@ export const Loading: Story = {
 /**
  * Error state with retry option
  */
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     firstName: "",
     lastName: "",

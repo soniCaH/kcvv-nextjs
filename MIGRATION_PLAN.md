@@ -1991,13 +1991,25 @@ export const getImageDimensions = (width?: number, height?: number) => {
   - Birth date with automatic age calculation
   - Membership period display (nl-BE locale)
   - GitHub Issue #521
+- `PlayerProfile` ✅ - Main profile container (GitHub Issue #522)
+  - Hero section with large jersey number (3D text shadow)
+  - Player photo with next/image optimization
+  - Name styling (semibold first, thin last)
+  - Captain badge support, loading/error states
+  - 8 Storybook stories, 26 tests
+- `PlayerTeamHistory` ✅ - Team affiliation timeline (GitHub Issue #522)
+  - Vertical timeline with chronological team entries
+  - Current team highlighting, Dutch date formatting
+  - 6 Storybook stories, 23 tests
+- `PlayerShare` ✅ - Share card with QR code (GitHub Issue #522)
+  - QR code generation using `qrcode.react`
+  - Social sharing (Facebook, X), copy link, download QR
+  - Multiple variants (default, compact, printable)
+  - 5 Storybook stories, 27 tests
 
 **Components to Create:**
 
-- `PlayerProfile` - Main profile container (GitHub Issue #522)
 - `PlayerStats` - Statistics table (data from Footbalisto API)
-- `PlayerShare` - Share card with QR code (use `qrcode.react`)
-- `PlayerTeamHistory` - Team affiliation timeline
 
 **Features:**
 

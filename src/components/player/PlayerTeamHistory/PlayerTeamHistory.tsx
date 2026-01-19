@@ -39,9 +39,12 @@ export interface PlayerTeamHistoryProps extends HTMLAttributes<HTMLDivElement> {
 
 /**
  * Format a date string to Dutch locale
+ * Parses YYYY-MM-DD manually to avoid timezone-induced off-by-one errors
  */
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
+  const [year, month, day] = dateString.split("-").map(Number);
+  // Create date using local timezone (month is 0-indexed)
+  const date = new Date(year, month - 1, day);
   return date.toLocaleDateString("nl-BE", {
     year: "numeric",
     month: "short",
