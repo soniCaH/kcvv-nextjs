@@ -92,7 +92,10 @@ export const PlayerStats = forwardRef<HTMLDivElement, PlayerStatsProps>(
           <div className="overflow-x-auto">
             <div className="min-w-[500px]">
               {/* Header skeleton */}
-              <div className="flex gap-4 py-2 border-b border-gray-200">
+              <div
+                className="flex gap-4 py-2 border-b border-gray-200"
+                data-testid="stats-skeleton-header"
+              >
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div key={i} className="h-4 w-16 bg-gray-300 rounded" />
                 ))}
@@ -102,6 +105,7 @@ export const PlayerStats = forwardRef<HTMLDivElement, PlayerStatsProps>(
                 <div
                   key={i}
                   className="flex gap-4 py-3 border-b border-gray-100"
+                  data-testid="stats-skeleton-row"
                 >
                   {[1, 2, 3, 4, 5, 6].map((j) => (
                     <div key={j} className="h-4 w-16 bg-gray-200 rounded" />
@@ -239,6 +243,12 @@ export const PlayerStats = forwardRef<HTMLDivElement, PlayerStatsProps>(
                     aria-label="Gele kaarten"
                   />
                 </th>
+                <th className="py-2 px-2 font-medium text-kcvv-gray-dark text-center">
+                  <span
+                    className="inline-block w-3 h-3 bg-red-500 rounded-sm"
+                    aria-label="Rode kaarten"
+                  />
+                </th>
                 <th className="py-2 pl-2 font-medium text-kcvv-gray-dark text-right">
                   Speeltijd
                 </th>
@@ -269,6 +279,9 @@ export const PlayerStats = forwardRef<HTMLDivElement, PlayerStatsProps>(
                     </td>
                     <td className="py-3 px-2 text-center text-kcvv-gray-DEFAULT">
                       {stat.yellowCards}
+                    </td>
+                    <td className="py-3 px-2 text-center text-kcvv-gray-DEFAULT">
+                      {stat.redCards}
                     </td>
                     <td className="py-3 pl-2 text-right text-kcvv-gray-DEFAULT">
                       {formatMinutes(stat.minutesPlayed)}

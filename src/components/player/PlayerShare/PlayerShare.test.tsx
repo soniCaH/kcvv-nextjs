@@ -3,7 +3,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { PlayerShare } from "./PlayerShare";
 
 // Mock clipboard API using Object.defineProperty
@@ -11,6 +11,10 @@ const mockWriteText = vi.fn().mockResolvedValue(undefined);
 
 // Mock window.open
 const mockWindowOpen = vi.fn();
+
+// Store original globals for restoration
+const originalClipboard = navigator.clipboard;
+const originalWindowOpen = window.open;
 
 describe("PlayerShare", () => {
   const defaultProps = {
@@ -29,6 +33,16 @@ describe("PlayerShare", () => {
     });
     // Mock window.open
     window.open = mockWindowOpen;
+  });
+
+  afterEach(() => {
+    // Restore original globals
+    Object.defineProperty(navigator, "clipboard", {
+      value: originalClipboard,
+      writable: true,
+      configurable: true,
+    });
+    window.open = originalWindowOpen;
   });
 
   describe("default variant", () => {
@@ -142,7 +156,7 @@ describe("PlayerShare", () => {
       expect(mockWindowOpen).toHaveBeenCalledWith(
         expect.stringContaining("facebook.com/sharer"),
         "_blank",
-        "width=600,height=400",
+        "noopener,noreferrer,width=600,height=400",
       );
     });
 
@@ -155,7 +169,7 @@ describe("PlayerShare", () => {
       expect(mockWindowOpen).toHaveBeenCalledWith(
         expect.stringContaining("twitter.com/intent/tweet"),
         "_blank",
-        "width=600,height=400",
+        "noopener,noreferrer,width=600,height=400",
       );
     });
 
@@ -168,7 +182,7 @@ describe("PlayerShare", () => {
       expect(mockWindowOpen).toHaveBeenCalledWith(
         expect.stringContaining("Chiel%20Bertens"),
         "_blank",
-        "width=600,height=400",
+        "noopener,noreferrer,width=600,height=400",
       );
     });
   });
@@ -190,6 +204,58 @@ describe("PlayerShare", () => {
       expect(
         screen.getByRole("button", { name: /facebook/i }),
       ).toBeInTheDocument();
+    });
+
+    it("shows copied confirmation in compact variant", async () => {
+      render(<PlayerShare {...defaultProps} variant="compact" />);
+
+      const copyButton = screen.getByRole("button", { name: /kopieer/i });
+      fireEvent.click(copyButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/gekopieerd/i)).toBeInTheDocument();
+      });
+    });
+
+    it("copies link to clipboard in compact variant", async () => {
+      render(<PlayerShare {...defaultProps} variant="compact" />);
+
+      const copyButton = screen.getByRole("button", { name: /kopieer/i });
+      fireEvent.click(copyButton);
+
+      await waitFor(() => {
+        expect(mockWriteText).toHaveBeenCalledWith(
+          "https://www.kcvvelewijt.be/player/chiel-bertens",
+        );
+      });
+    });
+
+    it("opens Facebook share dialog in compact variant", () => {
+      render(<PlayerShare {...defaultProps} variant="compact" />);
+
+      const facebookButton = screen.getByRole("button", {
+        name: /facebook/i,
+      });
+      fireEvent.click(facebookButton);
+
+      expect(mockWindowOpen).toHaveBeenCalledWith(
+        expect.stringContaining("facebook.com/sharer"),
+        "_blank",
+        "noopener,noreferrer,width=600,height=400",
+      );
+    });
+
+    it("opens Twitter share dialog in compact variant", () => {
+      render(<PlayerShare {...defaultProps} variant="compact" />);
+
+      const twitterButton = screen.getByRole("button", { name: /x/i });
+      fireEvent.click(twitterButton);
+
+      expect(mockWindowOpen).toHaveBeenCalledWith(
+        expect.stringContaining("twitter.com/intent/tweet"),
+        "_blank",
+        "noopener,noreferrer,width=600,height=400",
+      );
     });
   });
 

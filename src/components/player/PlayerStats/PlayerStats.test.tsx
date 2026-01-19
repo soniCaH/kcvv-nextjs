@@ -182,14 +182,10 @@ describe("PlayerStats", () => {
     });
 
     it("shows skeleton placeholders", () => {
-      const { container } = render(
-        <PlayerStats position="outfield" stats={[]} isLoading />,
-      );
+      render(<PlayerStats position="outfield" stats={[]} isLoading />);
 
-      const skeletons = container.querySelectorAll(
-        ".bg-gray-300, .bg-gray-200",
-      );
-      expect(skeletons.length).toBeGreaterThan(0);
+      expect(screen.getByTestId("stats-skeleton-header")).toBeInTheDocument();
+      expect(screen.getAllByTestId("stats-skeleton-row")).toHaveLength(3);
     });
   });
 

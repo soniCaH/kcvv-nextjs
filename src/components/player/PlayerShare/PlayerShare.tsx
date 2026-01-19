@@ -16,6 +16,7 @@
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useRef,
   useState,
   type HTMLAttributes,
@@ -57,14 +58,28 @@ export const PlayerShare = forwardRef<HTMLDivElement, PlayerShareProps>(
   ) => {
     const [copied, setCopied] = useState(false);
     const qrRef = useRef<HTMLDivElement>(null);
+    const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const profileUrl = `${baseUrl}/player/${playerSlug}`;
+
+    // Clean up timeout on unmount
+    useEffect(() => {
+      return () => {
+        if (copyTimeoutRef.current) {
+          clearTimeout(copyTimeoutRef.current);
+        }
+      };
+    }, []);
 
     const handleCopyLink = useCallback(async () => {
       try {
         await navigator.clipboard.writeText(profileUrl);
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        // Clear any existing timeout
+        if (copyTimeoutRef.current) {
+          clearTimeout(copyTimeoutRef.current);
+        }
+        copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
       } catch (err) {
         console.error("Failed to copy:", err);
       }
@@ -72,13 +87,13 @@ export const PlayerShare = forwardRef<HTMLDivElement, PlayerShareProps>(
 
     const handleShareFacebook = useCallback(() => {
       const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(profileUrl)}`;
-      window.open(url, "_blank", "width=600,height=400");
+      window.open(url, "_blank", "noopener,noreferrer,width=600,height=400");
     }, [profileUrl]);
 
     const handleShareTwitter = useCallback(() => {
       const text = `Bekijk het spelersprofiel van ${playerName} bij ${teamName}`;
       const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(profileUrl)}`;
-      window.open(url, "_blank", "width=600,height=400");
+      window.open(url, "_blank", "noopener,noreferrer,width=600,height=400");
     }, [profileUrl, playerName, teamName]);
 
     const handleDownloadQR = useCallback(() => {
