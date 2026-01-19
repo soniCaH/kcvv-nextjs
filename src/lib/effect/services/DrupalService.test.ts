@@ -1115,6 +1115,30 @@ describe("DrupalService", () => {
         expect.anything(),
       );
     });
+
+    it("should apply pagination offset when page and limit are provided", async () => {
+      const mockResponse = { data: [] };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers({ limit: 50, page: 3 });
+      });
+
+      await Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive)));
+
+      // Page 3 with limit 50 should have offset 100 ((3-1) * 50)
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("page%5Boffset%5D=100"),
+        expect.anything(),
+      );
+    });
   });
 
   describe("getPlayerBySlug", () => {
