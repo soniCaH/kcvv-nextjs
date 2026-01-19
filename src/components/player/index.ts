@@ -18,3 +18,6 @@ export type {
   PlayerTeamHistoryProps,
   TeamHistoryEntry,
 } from "./PlayerTeamHistory";
+
+export { PlayerShare } from "./PlayerShare";
+export type { PlayerShareProps } from "./PlayerShare";
