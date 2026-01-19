@@ -129,7 +129,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
           />
 
           {/* Jersey number - large decorative text behind player */}
-          {number && (
+          {number !== undefined && (
             <div
               className={cn(
                 "player__teaser__position",
