@@ -1950,7 +1950,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 ---
 
-## Phase 3: Team & Player Features (Weeks 6-7) ⏳ NOT STARTED
+## Phase 3: Team & Player Features (Weeks 6-7) 🚧 IN PROGRESS
 
 ### Goals
 
@@ -1964,7 +1964,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 **From Gatsby sitemap: 500+ player pages, 15+ team pages**
 
-#### 3.1: Player Profile Pages ⏳
+#### 3.1: Player Profile Pages 🚧 IN PROGRESS
 
 **Route:** `/player/[slug]`
 
@@ -1980,14 +1980,42 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - Use existing `PlayerSchema` from `src/lib/effect/schemas/player.schema.ts`
 - Add stats schema if available from Drupal
 
+**Components Created:** ✅
+
+- `PlayerCard` ✅ - Visual player card (photo, number, name, position)
+  - 3D shadow effect on jersey numbers (stenciletta font)
+  - Green gradient overlay, hover animation (-50px X, -10px Y)
+  - Full Storybook coverage (10 stories)
+  - GitHub Issue #521
+- `PlayerBio` ✅ - Biography and personal info
+  - Birth date with automatic age calculation
+  - Membership period display (nl-BE locale)
+  - GitHub Issue #521
+- `PlayerProfile` ✅ - Main profile container (GitHub Issue #522)
+  - Hero section with large jersey number (3D text shadow)
+  - Player photo with next/image optimization
+  - Name styling (semibold first, thin last)
+  - Captain badge support, loading/error states
+  - 8 Storybook stories, 26 tests
+- `PlayerTeamHistory` ✅ - Team affiliation timeline (GitHub Issue #522)
+  - Vertical timeline with chronological team entries
+  - Current team highlighting, Dutch date formatting
+  - 6 Storybook stories, 23 tests
+- `PlayerShare` ✅ - Share card with QR code (GitHub Issue #522)
+  - QR code generation using `qrcode.react`
+  - Social sharing (Facebook, X), copy link, download QR
+  - Multiple variants (default, compact, printable)
+  - 5 Storybook stories, 27 tests
+
+- `PlayerStats` ✅ - Statistics table (GitHub Issue #522)
+  - Position-specific stats (outfield vs goalkeeper)
+  - Multi-season historical view, minutes formatting
+  - Waiting for Footbalisto API integration
+  - 6 Storybook stories, 29 tests
+
 **Components to Create:**
 
-- `PlayerProfile` - Main profile container
-- `PlayerCard` - Visual player card (photo, number, name, position)
-- `PlayerStats` - Statistics table
-- `PlayerBio` - Biography and personal info
-- `PlayerShare` - Share card with QR code (use `qrcode.react`)
-- `PlayerTeamHistory` - Team affiliation timeline
+- (None - all player components complete!)
 
 **Features:**
 

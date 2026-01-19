@@ -9,3 +9,23 @@ export type { PlayerCardProps } from "./PlayerCard";
 
 export { PlayerBio } from "./PlayerBio";
 export type { PlayerBioProps } from "./PlayerBio";
+
+export { PlayerProfile } from "./PlayerProfile";
+export type { PlayerProfileProps } from "./PlayerProfile";
+
+export { PlayerTeamHistory } from "./PlayerTeamHistory";
+export type {
+  PlayerTeamHistoryProps,
+  TeamHistoryEntry,
+} from "./PlayerTeamHistory";
+
+export { PlayerShare } from "./PlayerShare";
+export type { PlayerShareProps } from "./PlayerShare";
+
+export { PlayerStats } from "./PlayerStats";
+export type {
+  PlayerStatsProps,
+  PlayerStatsData,
+  OutfieldStats,
+  GoalkeeperStats,
+} from "./PlayerStats";
