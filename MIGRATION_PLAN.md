@@ -105,11 +105,11 @@ kcvv-nextjs/
 │   │   │   ├── team/
 │   │   │   │   └── [slug]/
 │   │   │   │       └── page.tsx      # Team page
-│   │   │   ├── player/
+│   │   │   ├── players/
 │   │   │   │   └── [slug]/
-│   │   │   │       ├── page.tsx      # Player profile
-│   │   │   │       └── share/
-│   │   │   │           └── page.tsx  # Player share
+│   │   │   │       ├── page.tsx           # Player profile ✅
+│   │   │   │       ├── opengraph-image.tsx # Dynamic OG image ✅
+│   │   │   │       └── not-found.tsx      # Custom 404 ✅
 │   │   │   ├── game/
 │   │   │   │   └── [matchId]/
 │   │   │   │       └── page.tsx      # Match detail
@@ -1964,9 +1964,9 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 **From Gatsby sitemap: 500+ player pages, 15+ team pages**
 
-#### 3.1: Player Profile Pages 🚧 IN PROGRESS
+#### 3.1: Player Profile Pages ✅ COMPLETED
 
-**Route:** `/player/[slug]`
+**Route:** `/players/[slug]`
 
 - Player biographical info (name, position, number, birth date)
 - Player photo with next/image optimization
@@ -1979,6 +1979,24 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 - Use existing `PlayerSchema` from `src/lib/effect/schemas/player.schema.ts`
 - Add stats schema if available from Drupal
+
+**Page Implementation:** ✅
+
+- `src/app/(main)/players/[slug]/page.tsx` - Main player detail page
+  - ISR with 1-hour revalidation
+  - `generateStaticParams` for static generation
+  - `generateMetadata` for SEO with OpenGraph profile type
+  - Uses `PlayerProfile` and `PlayerShare` components
+  - Data fetched via `DrupalService.getPlayerBySlug()`
+- `src/app/(main)/players/[slug]/opengraph-image.tsx` - Dynamic OG images
+  - 1200x630px with KCVV branding
+  - Gradient background (#edeff4 → white)
+  - Large jersey number as watermark (15% opacity)
+  - Player name, position, team display
+  - Green accent bar at bottom
+- `src/app/(main)/players/[slug]/not-found.tsx` - Custom 404 page
+  - Dutch text: "Speler niet gevonden"
+  - Links back to teams and home
 
 **Components Created:** ✅
 
@@ -2006,23 +2024,19 @@ export const getImageDimensions = (width?: number, height?: number) => {
   - Social sharing (Facebook, X), copy link, download QR
   - Multiple variants (default, compact, printable)
   - 5 Storybook stories, 27 tests
-
 - `PlayerStats` ✅ - Statistics table (GitHub Issue #522)
   - Position-specific stats (outfield vs goalkeeper)
   - Multi-season historical view, minutes formatting
   - Waiting for Footbalisto API integration
   - 6 Storybook stories, 29 tests
 
-**Components to Create:**
+**Features Implemented:** ✅
 
-- (None - all player components complete!)
-
-**Features:**
-
-- ISR with 1-hour revalidation
-- Dynamic OG images for social sharing
-- Print-friendly player cards
-- generateStaticParams for all 500+ players
+- ISR with 1-hour revalidation ✅
+- Dynamic OG images for social sharing ✅
+- Print-friendly player cards (via PlayerShare printable variant) ✅
+- generateStaticParams for all 500+ players ✅
+- Custom 404 page with Dutch text ✅
 
 #### 3.2: Youth Team Pages ⏳
 
