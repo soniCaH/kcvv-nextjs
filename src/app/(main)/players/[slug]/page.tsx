@@ -151,14 +151,17 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
   const { slug } = await params;
 
   // Fetch player from Drupal
-  const player = await runPromise(
-    Effect.gen(function* () {
-      const drupal = yield* DrupalService;
-      return yield* drupal.getPlayerBySlug(slug);
-    }),
-  ).catch(() => {
+  let player: Player;
+  try {
+    player = await runPromise(
+      Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug(slug);
+      }),
+    );
+  } catch {
     notFound();
-  });
+  }
 
   // Extract player data
   const firstName = player.attributes.field_first_name || "";
