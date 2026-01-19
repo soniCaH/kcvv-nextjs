@@ -13,7 +13,7 @@
  * - Loading skeleton state
  */
 
-import { forwardRef, type HTMLAttributes } from "react";
+import { forwardRef, type HTMLAttributes, type Ref } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
@@ -56,8 +56,6 @@ export interface PlayerCardProps extends Omit<
   imageUrl?: string;
   /** Is team captain */
   isCaptain?: boolean;
-  /** Team name/slug for context */
-  teamSlug?: string;
   /** Card size variant */
   variant?: "default" | "compact";
   /** Loading state */
@@ -88,6 +86,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
     if (isLoading) {
       return (
         <div
+          ref={ref as Ref<HTMLDivElement>}
           className={cn(
             "relative overflow-hidden bg-gray-200 animate-pulse w-[340px]",
             isCompact ? "h-[220px]" : "h-[285px] lg:h-[446px]",

@@ -31,7 +31,7 @@ const meta = {
 Visual player card matching the Gatsby PlayerTeaser design exactly:
 - Large jersey number with stenciletta font and 3D shadow effect
 - Green gradient overlay at bottom (30% height)
-- Player photo with hover shift effect (-50px X, -10px Y on desktop)
+- Player photo with hover shift effect (-50px X, -10px Y)
 - First name (semibold) / Last name (thin) typography using quasimoda font
 - Captain badge support
 - Card dimensions: 285px mobile, 446px desktop
@@ -299,7 +299,7 @@ export const HoverDemo: Story = {
     docs: {
       description: {
         story:
-          "Hover over the card to see the image shift effect (desktop only). The large jersey number grows and creates a striking visual anchor.",
+          "Hover over the card to see the image shift effect. The large jersey number grows and creates a striking visual anchor.",
       },
     },
   },

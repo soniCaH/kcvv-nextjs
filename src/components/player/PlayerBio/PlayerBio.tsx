@@ -126,6 +126,8 @@ export const PlayerBio = forwardRef<HTMLDivElement, PlayerBioProps>(
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                     strokeWidth={2}
+                    aria-hidden="true"
+                    focusable="false"
                   >
                     <path
                       strokeLinecap="round"
