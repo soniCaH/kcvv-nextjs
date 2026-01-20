@@ -1142,34 +1142,57 @@ describe("DrupalService", () => {
   });
 
   describe("getPlayerBySlug", () => {
-    it("should fetch player by slug", async () => {
-      const mockResponse = {
-        data: [
-          {
-            id: "1",
-            type: "node--player",
-            attributes: {
-              title: "John Doe",
-              field_shirtnumber: 10,
-              created: "2025-01-01T00:00:00Z",
-              path: {
-                alias: "/player/john-doe",
-              },
-            },
-            relationships: {
-              field_image: {},
-              field_team: {},
-            },
-          },
-        ],
+    it("should fetch player by slug using decoupled router", async () => {
+      // Mock router response
+      const mockRouterResponse = {
+        resolved: "http://api.kcvvelewijt.be/player/john-doe",
+        isHomePath: false,
+        entity: {
+          canonical: "http://api.kcvvelewijt.be/player/john-doe",
+          type: "node",
+          bundle: "player",
+          id: "1",
+          uuid: "abc-123-uuid",
+        },
+        label: "John Doe",
+        jsonapi: {
+          individual:
+            "http://api.kcvvelewijt.be/jsonapi/node/player/abc-123-uuid",
+          resourceName: "node--player",
+          basePath: "/jsonapi",
+          entryPoint: "http://api.kcvvelewijt.be/jsonapi",
+        },
       };
 
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      // Mock player response
+      const mockPlayerResponse = {
+        data: {
+          id: "abc-123-uuid",
+          type: "node--player",
+          attributes: {
+            title: "John Doe",
+            field_shirtnumber: 10,
+            created: "2025-01-01T00:00:00Z",
+            path: {
+              alias: "/player/john-doe",
+            },
+          },
+          relationships: {
+            field_image: {},
+          },
+        },
+      };
+
+      (global.fetch as unknown as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockPlayerResponse,
+        });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1181,21 +1204,60 @@ describe("DrupalService", () => {
       );
 
       expect(result.attributes.title).toBe("John Doe");
+      expect(result.id).toBe("abc-123-uuid");
     });
 
-    it("should throw NotFoundError when player not found", async () => {
-      const mockResponse = { data: [] };
-
+    it("should throw NotFoundError when path not found", async () => {
       (
         global.fetch as unknown as ReturnType<typeof vi.fn>
       ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
+        ok: false,
+        status: 404,
       });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
         return yield* drupal.getPlayerBySlug("non-existent");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    });
+
+    it("should throw NotFoundError when path is not a player", async () => {
+      // Mock router response for non-player entity
+      const mockRouterResponse = {
+        resolved: "http://api.kcvvelewijt.be/news/some-article",
+        isHomePath: false,
+        entity: {
+          canonical: "http://api.kcvvelewijt.be/news/some-article",
+          type: "node",
+          bundle: "article",
+          id: "1",
+          uuid: "article-uuid",
+        },
+        label: "Some Article",
+        jsonapi: {
+          individual:
+            "http://api.kcvvelewijt.be/jsonapi/node/article/article-uuid",
+          resourceName: "node--article",
+          basePath: "/jsonapi",
+          entryPoint: "http://api.kcvvelewijt.be/jsonapi",
+        },
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockRouterResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("some-article");
       });
 
       await expect(

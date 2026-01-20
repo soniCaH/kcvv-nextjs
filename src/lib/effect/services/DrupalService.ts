@@ -481,7 +481,7 @@ export const DrupalServiceLive = Layer.effect(
     }) =>
       Effect.gen(function* () {
         const queryParams: Record<string, string | number> = {
-          include: "field_image,field_team",
+          include: "field_image",
           sort: "field_shirtnumber",
         };
 
@@ -507,56 +507,139 @@ export const DrupalServiceLive = Layer.effect(
       });
 
     /**
-     * Get player by path alias
-     *
-     * Workaround: API crashes on filter[path.alias], so we fetch all players
-     * and filter in memory. We paginate until we find it or run out of players.
+     * Schema for Decoupled Router response
      */
-    const getPlayerBySlug = (slug: string) =>
+    const RouterResponse = S.Struct({
+      resolved: S.String,
+      isHomePath: S.Boolean,
+      entity: S.Struct({
+        canonical: S.String,
+        type: S.String,
+        bundle: S.String,
+        id: S.String,
+        uuid: S.String,
+      }),
+      label: S.String,
+      jsonapi: S.Struct({
+        individual: S.String,
+        resourceName: S.String,
+        pathPrefix: S.optional(S.String),
+        basePath: S.String,
+        entryPoint: S.String,
+      }),
+    });
+
+    /**
+     * Resolve a path alias to entity info using Decoupled Router
+     */
+    const resolvePathAlias = (path: string) =>
       Effect.gen(function* () {
-        const normalizedSlug = slug.startsWith("/") ? slug : `/player/${slug}`;
-        const limit = 50;
-        let page = 1;
-        let foundPlayer: Player | undefined;
+        const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+        const url = `${baseUrl}/router/translate-path?path=${encodeURIComponent(normalizedPath)}&_format=json`;
 
-        while (!foundPlayer) {
-          const { players, links } = yield* getPlayers({ page, limit });
+        const response = yield* Effect.tryPromise({
+          try: () =>
+            fetch(url, {
+              headers: { Accept: "application/json" },
+              next: { revalidate: 3600 },
+            }),
+          catch: (error) =>
+            new DrupalError({
+              status: 0,
+              message: `Network error fetching ${url}: ${error instanceof Error ? error.message : "Unknown error"}`,
+            }),
+        });
 
-          if (players.length === 0) break;
-
-          foundPlayer = players.find(
-            (p) => p.attributes.path.alias === normalizedSlug,
-          );
-
-          if (foundPlayer) break;
-
-          if (!links?.next) break;
-          page++;
-
-          // Safety limit
-          if (page > 20) break;
-        }
-
-        if (!foundPlayer) {
+        if (response.status === 404) {
           return yield* Effect.fail(
             new NotFoundError({
-              resource: "player",
-              identifier: slug,
-              message: `Player with slug "${slug}" not found`,
+              resource: "path",
+              identifier: path,
+              message: `Path "${path}" not found`,
             }),
           );
         }
 
-        return foundPlayer;
+        if (!response.ok) {
+          return yield* Effect.fail(
+            new DrupalError({
+              status: response.status,
+              message: `HTTP ${response.status} fetching ${url}`,
+            }),
+          );
+        }
+
+        const json = yield* Effect.tryPromise({
+          try: () => response.json(),
+          catch: () =>
+            new DrupalError({
+              status: response.status,
+              message: `Failed to parse JSON response from ${url}`,
+            }),
+        });
+
+        return yield* S.decodeUnknown(RouterResponse)(json).pipe(
+          Effect.mapError(
+            (error) =>
+              new ValidationError({
+                message: `Router response validation failed: ${error.message}`,
+                errors: [],
+              }),
+          ),
+        );
       });
 
     /**
-     * Get player by ID
+     * Get player by path alias
+     *
+     * Uses Decoupled Router to resolve slug to UUID, then fetches by ID.
+     * This is a 2-request approach but much more efficient than paginating
+     * through all players.
+     */
+    const getPlayerBySlug = (slug: string) =>
+      Effect.gen(function* () {
+        const path = slug.startsWith("/") ? slug : `/player/${slug}`;
+
+        // Step 1: Resolve path to entity UUID via Decoupled Router
+        const routerResult = yield* resolvePathAlias(path).pipe(
+          Effect.mapError((error) => {
+            if (error instanceof NotFoundError) {
+              return new NotFoundError({
+                resource: "player",
+                identifier: slug,
+                message: `Player with slug "${slug}" not found`,
+              });
+            }
+            return error;
+          }),
+        );
+
+        // Verify it's a player
+        if (
+          routerResult.entity.type !== "node" ||
+          routerResult.entity.bundle !== "player"
+        ) {
+          return yield* Effect.fail(
+            new NotFoundError({
+              resource: "player",
+              identifier: slug,
+              message: `Path "${slug}" is not a player`,
+            }),
+          );
+        }
+
+        // Step 2: Fetch full player data by UUID
+        const player = yield* getPlayerById(routerResult.entity.uuid);
+        return player;
+      });
+
+    /**
+     * Get player by ID (UUID)
      */
     const getPlayerById = (id: string) =>
       Effect.gen(function* () {
         const url = buildUrl(`node/player/${id}`, {
-          include: "field_image,field_team",
+          include: "field_image",
         });
         const response = yield* fetchJson(url, PlayerResponse);
         return response.data;
