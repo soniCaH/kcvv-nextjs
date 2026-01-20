@@ -1264,6 +1264,86 @@ describe("DrupalService", () => {
         Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
       ).rejects.toThrow();
     });
+
+    it("should handle network errors from router", async () => {
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockRejectedValueOnce(new Error("Network error"));
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    });
+
+    it("should handle non-404 HTTP errors from router", async () => {
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    });
+
+    it("should handle JSON parse errors from router", async () => {
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => {
+          throw new Error("Invalid JSON");
+        },
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    });
+
+    it("should handle invalid router response schema", async () => {
+      // Return an invalid router response (missing required fields)
+      const invalidRouterResponse = {
+        resolved: "http://api.kcvvelewijt.be/player/john-doe",
+        // Missing entity, label, jsonapi, etc.
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => invalidRouterResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    });
   });
 
   describe("getPlayerById", () => {

@@ -9,21 +9,11 @@ import type { Metadata } from "next";
 import { runPromise } from "@/lib/effect/runtime";
 import { DrupalService } from "@/lib/effect/services/DrupalService";
 import { PlayerProfile, PlayerShare } from "@/components/player";
-import type { Team, Player } from "@/lib/effect/schemas";
+import type { Player } from "@/lib/effect/schemas";
+import { getTeamName } from "./utils";
 
 interface PlayerPageProps {
   params: Promise<{ slug: string }>;
-}
-
-/**
- * Extract team name from player's resolved team relationship
- */
-function getTeamName(player: Player): string {
-  const teamData = player.relationships.field_team?.data;
-  if (teamData && "attributes" in teamData) {
-    return (teamData as Team).attributes.title;
-  }
-  return "KCVV Elewijt";
 }
 
 /**
@@ -140,6 +130,23 @@ export async function generateMetadata({
 }
 
 /**
+ * Fetch player by slug, triggering notFound() on failure.
+ * Uses an async helper to ensure TypeScript correctly narrows the return type.
+ */
+async function fetchPlayerOrNotFound(slug: string): Promise<Player> {
+  try {
+    return await runPromise(
+      Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug(slug);
+      }),
+    );
+  } catch {
+    notFound();
+  }
+}
+
+/**
  * Render the player detail page for the given slug.
  *
  * Triggers a 404 route if the player cannot be loaded.
@@ -150,18 +157,8 @@ export async function generateMetadata({
 export default async function PlayerPage({ params }: PlayerPageProps) {
   const { slug } = await params;
 
-  // Fetch player from Drupal
-  let player: Player;
-  try {
-    player = await runPromise(
-      Effect.gen(function* () {
-        const drupal = yield* DrupalService;
-        return yield* drupal.getPlayerBySlug(slug);
-      }),
-    );
-  } catch {
-    notFound();
-  }
+  // Fetch player from Drupal (notFound() throws if not found)
+  const player = await fetchPlayerOrNotFound(slug);
 
   // Extract player data
   const firstName = player.attributes.field_firstname || "";

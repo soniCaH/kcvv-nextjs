@@ -13,7 +13,7 @@ import { ImageResponse } from "next/og";
 import { Effect } from "effect";
 import { runPromise } from "@/lib/effect/runtime";
 import { DrupalService } from "@/lib/effect/services/DrupalService";
-import type { Team } from "@/lib/effect/schemas";
+import { getTeamName } from "./utils";
 
 export const runtime = "edge";
 
@@ -50,13 +50,7 @@ export default async function Image({ params }: ImageProps) {
     lastName = player.attributes.field_lastname || "";
     position = player.attributes.field_position || "";
     number = player.attributes.field_shirtnumber ?? undefined;
-
-    // Get team name from resolved relationship
-    const teamData = player.relationships.field_team?.data;
-    teamName =
-      teamData && "attributes" in teamData
-        ? (teamData as Team).attributes.title
-        : "KCVV Elewijt";
+    teamName = getTeamName(player);
   } catch {
     // Use fallback values if player not found
     firstName = "KCVV";
