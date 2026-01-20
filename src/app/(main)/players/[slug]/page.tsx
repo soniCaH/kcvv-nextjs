@@ -97,8 +97,8 @@ export async function generateMetadata({
       }),
     );
 
-    const firstName = player.attributes.field_first_name || "";
-    const lastName = player.attributes.field_last_name || "";
+    const firstName = player.attributes.field_firstname || "";
+    const lastName = player.attributes.field_lastname || "";
     const fullName =
       `${firstName} ${lastName}`.trim() || player.attributes.title;
     const position = player.attributes.field_position || "";
@@ -164,11 +164,11 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
   }
 
   // Extract player data
-  const firstName = player.attributes.field_first_name || "";
-  const lastName = player.attributes.field_last_name || "";
+  const firstName = player.attributes.field_firstname || "";
+  const lastName = player.attributes.field_lastname || "";
   const fullName = `${firstName} ${lastName}`.trim() || player.attributes.title;
   const position = player.attributes.field_position || "";
-  const number = player.attributes.field_number;
+  const number = player.attributes.field_shirtnumber;
   const biography = player.attributes.body?.processed;
 
   // Format birth date if available

@@ -482,7 +482,7 @@ export const DrupalServiceLive = Layer.effect(
       Effect.gen(function* () {
         const queryParams: Record<string, string | number> = {
           include: "field_image,field_team",
-          sort: "field_number",
+          sort: "field_shirtnumber",
         };
 
         if (params?.teamId) {
@@ -508,18 +508,36 @@ export const DrupalServiceLive = Layer.effect(
 
     /**
      * Get player by path alias
+     *
+     * Workaround: API crashes on filter[path.alias], so we fetch all players
+     * and filter in memory. We paginate until we find it or run out of players.
      */
     const getPlayerBySlug = (slug: string) =>
       Effect.gen(function* () {
         const normalizedSlug = slug.startsWith("/") ? slug : `/player/${slug}`;
+        const limit = 50;
+        let page = 1;
+        let foundPlayer: Player | undefined;
 
-        const url = buildUrl("node/player", {
-          "filter[path.alias]": normalizedSlug,
-          include: "field_image,field_team",
-        });
-        const response = yield* fetchJson(url, PlayersResponse);
+        while (!foundPlayer) {
+          const { players, links } = yield* getPlayers({ page, limit });
 
-        if (!response.data || response.data.length === 0) {
+          if (players.length === 0) break;
+
+          foundPlayer = players.find(
+            (p) => p.attributes.path.alias === normalizedSlug,
+          );
+
+          if (foundPlayer) break;
+
+          if (!links?.next) break;
+          page++;
+
+          // Safety limit
+          if (page > 20) break;
+        }
+
+        if (!foundPlayer) {
           return yield* Effect.fail(
             new NotFoundError({
               resource: "player",
@@ -529,7 +547,7 @@ export const DrupalServiceLive = Layer.effect(
           );
         }
 
-        return response.data[0];
+        return foundPlayer;
       });
 
     /**

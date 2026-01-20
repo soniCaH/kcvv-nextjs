@@ -46,10 +46,10 @@ export default async function Image({ params }: ImageProps) {
       }),
     );
 
-    firstName = player.attributes.field_first_name || "";
-    lastName = player.attributes.field_last_name || "";
+    firstName = player.attributes.field_firstname || "";
+    lastName = player.attributes.field_lastname || "";
     position = player.attributes.field_position || "";
-    number = player.attributes.field_number;
+    number = player.attributes.field_shirtnumber;
 
     // Get team name from resolved relationship
     const teamData = player.relationships.field_team?.data;

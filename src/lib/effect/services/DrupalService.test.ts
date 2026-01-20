@@ -1150,7 +1150,7 @@ describe("DrupalService", () => {
             type: "node--player",
             attributes: {
               title: "John Doe",
-              field_number: 10,
+              field_shirtnumber: 10,
               created: "2025-01-01T00:00:00Z",
               path: {
                 alias: "/player/john-doe",
@@ -1212,7 +1212,7 @@ describe("DrupalService", () => {
           type: "node--player",
           attributes: {
             title: "John Doe",
-            field_number: 10,
+            field_shirtnumber: 10,
             created: "2025-01-01T00:00:00Z",
             path: {
               alias: "/player/john-doe",

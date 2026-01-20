@@ -13,7 +13,7 @@
  * appear in the "included" array and can be resolved to get full data.
  */
 
-import { Schema as S } from 'effect'
+import { Schema as S } from "effect";
 import {
   BaseDrupalNodeAttributes,
   DateFromStringOrDate,
@@ -23,20 +23,22 @@ import {
   JsonApiVersion,
   JsonApiLinks,
   DrupalResource,
-} from './common.schema'
-import { MediaImage } from './media.schema'
-import { File } from './file.schema'
-import { Team } from './team.schema'
+} from "./common.schema";
+import { MediaImage } from "./media.schema";
+import { File } from "./file.schema";
+import { Team } from "./team.schema";
 
 /**
  * Player node attributes
  */
-export class PlayerAttributes extends S.Class<PlayerAttributes>('PlayerAttributes')({
+export class PlayerAttributes extends S.Class<PlayerAttributes>(
+  "PlayerAttributes",
+)({
   ...BaseDrupalNodeAttributes,
-  field_first_name: S.optional(S.String),
-  field_last_name: S.optional(S.String),
+  field_firstname: S.optional(S.String),
+  field_lastname: S.optional(S.String),
   field_position: S.optional(S.String),
-  field_number: S.optional(S.Number),
+  field_shirtnumber: S.optional(S.Number),
   field_birth_date: S.optional(DateFromStringOrDate),
   field_nationality: S.optional(S.String),
   field_height: S.optional(S.Number),
@@ -51,7 +53,9 @@ export class PlayerAttributes extends S.Class<PlayerAttributes>('PlayerAttribute
  * - field_image: Player profile photo (can be resolved DrupalImage or reference)
  * - field_team: Team association
  */
-export class PlayerRelationships extends S.Class<PlayerRelationships>('PlayerRelationships')({
+export class PlayerRelationships extends S.Class<PlayerRelationships>(
+  "PlayerRelationships",
+)({
   /**
    * Player profile image
    * Can be either:
@@ -64,12 +68,12 @@ export class PlayerRelationships extends S.Class<PlayerRelationships>('PlayerRel
         S.Union(
           DrupalImage,
           S.Struct({
-            type: S.Literal('media--image'),
+            type: S.Literal("media--image"),
             id: S.String,
-          })
-        )
+          }),
+        ),
       ),
-    })
+    }),
   ),
 
   /**
@@ -80,22 +84,17 @@ export class PlayerRelationships extends S.Class<PlayerRelationships>('PlayerRel
    */
   field_team: S.optional(
     S.Struct({
-      data: S.optional(
-        S.Union(
-          Team,
-          DrupalNodeReference
-        )
-      ),
-    })
+      data: S.optional(S.Union(Team, DrupalNodeReference)),
+    }),
   ),
 }) {}
 
 /**
  * Complete Player node
  */
-export class Player extends S.Class<Player>('Player')({
+export class Player extends S.Class<Player>("Player")({
   id: S.String,
-  type: S.Literal('node--player'),
+  type: S.Literal("node--player"),
   attributes: PlayerAttributes,
   relationships: PlayerRelationships,
 }) {}
@@ -103,7 +102,7 @@ export class Player extends S.Class<Player>('Player')({
 /**
  * Array of players
  */
-export const PlayersArray = S.Array(Player)
+export const PlayersArray = S.Array(Player);
 
 /**
  * Discriminated union of all possible included resource types for players
@@ -139,8 +138,8 @@ export const PlayerIncludedResource = S.Union(
   MediaImage,
   File,
   Team,
-  DrupalResource // Fallback for unknown types
-)
+  DrupalResource, // Fallback for unknown types
+);
 
 /**
  * Drupal JSON:API response for player collections
@@ -159,7 +158,9 @@ export const PlayerIncludedResource = S.Union(
  * const links = response.links  // JsonApiLinks
  * ```
  */
-export class PlayersResponse extends S.Class<PlayersResponse>('PlayersResponse')({
+export class PlayersResponse extends S.Class<PlayersResponse>(
+  "PlayersResponse",
+)({
   data: PlayersArray,
   included: S.optional(S.Array(PlayerIncludedResource)),
   jsonapi: S.optional(JsonApiVersion),
@@ -167,7 +168,7 @@ export class PlayersResponse extends S.Class<PlayersResponse>('PlayersResponse')
   meta: S.optional(
     S.Struct({
       count: S.optional(S.NumberFromString),
-    })
+    }),
   ),
 }) {}
 
@@ -183,7 +184,7 @@ export class PlayersResponse extends S.Class<PlayersResponse>('PlayersResponse')
  * const player = response.data  // Player (not array)
  * ```
  */
-export class PlayerResponse extends S.Class<PlayerResponse>('PlayerResponse')({
+export class PlayerResponse extends S.Class<PlayerResponse>("PlayerResponse")({
   data: Player,
   included: S.optional(S.Array(PlayerIncludedResource)),
   jsonapi: S.optional(JsonApiVersion),
