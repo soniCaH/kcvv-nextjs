@@ -17,12 +17,11 @@ interface PlayerPageProps {
 }
 
 /**
- * Generate route parameters for player pages from Drupal players.
+ * Generates route parameters for player pages by listing players from Drupal.
  *
- * Paginates through all players in the Drupal API and derives each route
- * `slug` by removing the "/player/" prefix from the player path alias.
+ * Paginates the Drupal players endpoint, derives each `slug` by removing the "/player/" prefix from the player's path alias, and stops after at most 20 pages as a safety limit.
  *
- * @returns An array of route parameter objects, each with a `slug` property
+ * @returns An array of route parameter objects, each with a `slug` property for a player
  */
 export async function generateStaticParams() {
   try {
@@ -65,14 +64,14 @@ export async function generateStaticParams() {
 }
 
 /**
- * Build SEO and Open Graph metadata for the player identified by `params.slug`.
+ * Create SEO and Open Graph metadata for the player identified by `params.slug`.
  *
- * Fetches the player by slug and returns a metadata object containing `title`,
- * optional `description`, and an `openGraph` block with `title`, `description`,
- * `type`, `firstName`, `lastName`, and optional `images`.
+ * Builds a metadata object containing a page `title`, a `description` derived
+ * from the player's summary or position/team fallback, and an `openGraph` block
+ * with profile fields and an optional image.
  *
- * @param params - A promise-resolved object containing the route `slug`
- * @returns A metadata object for the player
+ * @param params - An awaited route parameter object containing the `slug` of the player
+ * @returns A Metadata object with `title`, `description`, and an `openGraph` section (including `title`, `description`, `type`, `firstName`, `lastName`, and `images` when available)
  */
 export async function generateMetadata({
   params,
@@ -130,8 +129,11 @@ export async function generateMetadata({
 }
 
 /**
- * Fetch player by slug, triggering notFound() on failure.
- * Uses an async helper to ensure TypeScript correctly narrows the return type.
+ * Retrieve a player by slug and trigger a 404 response if the player cannot be found.
+ *
+ * Calls the framework's notFound behavior on failure, causing the route to render a 404.
+ *
+ * @returns The requested `Player` object
  */
 async function fetchPlayerOrNotFound(slug: string): Promise<Player> {
   try {

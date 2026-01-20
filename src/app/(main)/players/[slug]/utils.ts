@@ -5,11 +5,10 @@
 import type { Player, Team } from "@/lib/effect/schemas";
 
 /**
- * Extract team name from player's resolved team relationship.
- * Returns "KCVV Elewijt" as fallback if team data is not available or not resolved.
+ * Get the player's team title from the resolved team relationship.
  *
- * @param player - The player entity with relationships
- * @returns The team name string
+ * @param player - Player entity containing relationships
+ * @returns The team's title if available, otherwise "KCVV Elewijt"
  */
 export function getTeamName(player: Player): string {
   const teamData = player.relationships.field_team?.data;
