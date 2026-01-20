@@ -49,7 +49,7 @@ export default async function Image({ params }: ImageProps) {
     firstName = player.attributes.field_firstname || "";
     lastName = player.attributes.field_lastname || "";
     position = player.attributes.field_position || "";
-    number = player.attributes.field_shirtnumber;
+    number = player.attributes.field_shirtnumber ?? undefined;
 
     // Get team name from resolved relationship
     const teamData = player.relationships.field_team?.data;

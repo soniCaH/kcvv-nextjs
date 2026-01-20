@@ -168,7 +168,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
   const lastName = player.attributes.field_lastname || "";
   const fullName = `${firstName} ${lastName}`.trim() || player.attributes.title;
   const position = player.attributes.field_position || "";
-  const number = player.attributes.field_shirtnumber;
+  const number = player.attributes.field_shirtnumber ?? undefined;
   const biography = player.attributes.body?.processed;
 
   // Format birth date if available

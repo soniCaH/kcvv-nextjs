@@ -35,15 +35,24 @@ export class PlayerAttributes extends S.Class<PlayerAttributes>(
   "PlayerAttributes",
 )({
   ...BaseDrupalNodeAttributes,
-  field_firstname: S.optional(S.String),
-  field_lastname: S.optional(S.String),
-  field_position: S.optional(S.String),
-  field_shirtnumber: S.optional(S.Number),
-  field_birth_date: S.optional(DateFromStringOrDate),
-  field_nationality: S.optional(S.String),
-  field_height: S.optional(S.Number),
-  field_weight: S.optional(S.Number),
-  body: S.optional(DrupalBody),
+  field_firstname: S.optional(S.NullOr(S.String)),
+  field_lastname: S.optional(S.NullOr(S.String)),
+  field_position: S.optional(S.NullOr(S.String)),
+  field_shirtnumber: S.optional(S.NullOr(S.Number)),
+  field_birth_date: S.optional(S.NullOr(DateFromStringOrDate)),
+  field_nationality: S.optional(S.NullOr(S.String)),
+  field_height: S.optional(S.NullOr(S.Number)),
+  field_weight: S.optional(S.NullOr(S.Number)),
+  body: S.optional(S.NullOr(DrupalBody)),
+  // Additional Drupal fields
+  field_date_leave: S.optional(S.NullOr(DateFromStringOrDate)),
+  field_join_date: S.optional(S.NullOr(DateFromStringOrDate)),
+  field_vv_id: S.optional(S.NullOr(S.String)),
+  publish_on: S.optional(S.NullOr(DateFromStringOrDate)),
+  unpublish_on: S.optional(S.NullOr(DateFromStringOrDate)),
+  revision_log: S.optional(S.NullOr(S.String)),
+  revision_translation_affected: S.optional(S.NullOr(S.Boolean)),
+  default_langcode: S.optional(S.Boolean),
 }) {}
 
 /**
@@ -61,18 +70,33 @@ export class PlayerRelationships extends S.Class<PlayerRelationships>(
    * Can be either:
    * - DrupalImage: Fully resolved with uri.url (after mapIncluded processing)
    * - Reference: Just type/id that needs to be resolved from included
+   * - null: No image set
    */
   field_image: S.optional(
     S.Struct({
-      data: S.optional(
+      data: S.NullOr(
         S.Union(
           DrupalImage,
           S.Struct({
             type: S.Literal("media--image"),
             id: S.String,
           }),
+          // Some players have file--file references directly
+          S.Struct({
+            type: S.Literal("file--file"),
+            id: S.String,
+            meta: S.optional(
+              S.Struct({
+                alt: S.optional(S.String),
+                title: S.optional(S.String),
+                width: S.optional(S.Number),
+                height: S.optional(S.Number),
+              }),
+            ),
+          }),
         ),
       ),
+      links: S.optional(S.Unknown), // Drupal includes links even when data is null
     }),
   ),
 
@@ -81,10 +105,88 @@ export class PlayerRelationships extends S.Class<PlayerRelationships>(
    * Can be either:
    * - Team: Fully resolved team entity
    * - Reference: Just type/id that needs to be resolved from included
+   * - null: No team set
    */
   field_team: S.optional(
     S.Struct({
-      data: S.optional(S.Union(Team, DrupalNodeReference)),
+      data: S.NullOr(S.Union(Team, DrupalNodeReference)),
+      links: S.optional(S.Unknown), // Drupal includes links even when data is null
+    }),
+  ),
+
+  /**
+   * Celebration image (optional second image)
+   */
+  field_image_celebrate: S.optional(
+    S.Struct({
+      data: S.NullOr(
+        S.Union(
+          DrupalImage,
+          S.Struct({
+            type: S.Literal("media--image"),
+            id: S.String,
+          }),
+          // Some players have file--file references directly
+          S.Struct({
+            type: S.Literal("file--file"),
+            id: S.String,
+            meta: S.optional(
+              S.Struct({
+                alt: S.optional(S.String),
+                title: S.optional(S.String),
+                width: S.optional(S.Number),
+                height: S.optional(S.Number),
+              }),
+            ),
+          }),
+        ),
+      ),
+      links: S.optional(S.Unknown),
+    }),
+  ),
+
+  /**
+   * Player author (user entity)
+   */
+  uid: S.optional(
+    S.Struct({
+      data: S.NullOr(
+        S.Struct({
+          id: S.String,
+          type: S.Literal("user--user"),
+        }),
+      ),
+      links: S.optional(S.Unknown),
+    }),
+  ),
+
+  /**
+   * Drupal internal node type reference
+   */
+  node_type: S.optional(
+    S.Struct({
+      data: S.NullOr(
+        S.Struct({
+          id: S.String,
+          type: S.Literal("node_type--node_type"),
+        }),
+      ),
+      links: S.optional(S.Unknown),
+    }),
+  ),
+
+  /**
+   * User who created this revision
+   */
+  revision_uid: S.optional(
+    S.Struct({
+      data: S.NullOr(
+        S.Struct({
+          id: S.String,
+          type: S.Literal("user--user"),
+        }),
+      ),
+      links: S.optional(S.Unknown),
     }),
   ),
 }) {}

@@ -1178,7 +1178,7 @@ describe("DrupalService", () => {
             },
           },
           relationships: {
-            field_image: {},
+            field_image: { data: null },
           },
         },
       };
@@ -1281,8 +1281,8 @@ describe("DrupalService", () => {
             },
           },
           relationships: {
-            field_image: {},
-            field_team: {},
+            field_image: { data: null },
+            field_team: { data: null },
           },
         },
       };
