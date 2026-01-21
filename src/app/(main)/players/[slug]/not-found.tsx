@@ -5,6 +5,14 @@
 
 import Link from "next/link";
 
+/**
+ * Render a custom "player not found" page for player routes.
+ *
+ * Displays an illustrative icon, a Dutch heading and description, and two action
+ * links: one to the teams listing and one to the home page.
+ *
+ * @returns The JSX element for the player not found page
+ */
 export default function PlayerNotFound() {
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 py-16">
