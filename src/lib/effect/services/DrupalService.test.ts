@@ -1492,9 +1492,13 @@ describe("DrupalService", () => {
     });
 
     it("should handle network errors from router", async () => {
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockRejectedValueOnce(new Error("Network error"));
+      // Mock all retry attempts (initial + 3 retries = 4 total)
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockRejectedValueOnce(new Error("Network error"));
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1504,16 +1508,21 @@ describe("DrupalService", () => {
       await expect(
         Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
       ).rejects.toThrow();
-    });
+    }, 15000);
 
     it("should handle non-404 HTTP errors from router", async () => {
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
+      // Mock all retry attempts (initial + 3 retries = 4 total)
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      const errorResponse = {
         ok: false,
         status: 500,
         statusText: "Internal Server Error",
-      });
+      };
+      mockFetch
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValueOnce(errorResponse);
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1523,18 +1532,23 @@ describe("DrupalService", () => {
       await expect(
         Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
       ).rejects.toThrow();
-    });
+    }, 15000);
 
     it("should handle JSON parse errors from router", async () => {
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
+      // Mock all retry attempts (initial + 3 retries = 4 total)
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      const parseErrorResponse = {
         ok: true,
         status: 200,
         json: async () => {
           throw new Error("Invalid JSON");
         },
-      });
+      };
+      mockFetch
+        .mockResolvedValueOnce(parseErrorResponse)
+        .mockResolvedValueOnce(parseErrorResponse)
+        .mockResolvedValueOnce(parseErrorResponse)
+        .mockResolvedValueOnce(parseErrorResponse);
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1544,7 +1558,7 @@ describe("DrupalService", () => {
       await expect(
         Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
       ).rejects.toThrow();
-    });
+    }, 15000);
 
     it("should handle invalid router response schema", async () => {
       // Return an invalid router response (missing required fields)
@@ -1569,6 +1583,87 @@ describe("DrupalService", () => {
       await expect(
         Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
       ).rejects.toThrow();
+    });
+
+    it("should timeout router requests after 30 seconds", async () => {
+      // Mock a slow response that never resolves
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        () => new Promise(() => {}), // Never resolves
+      );
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    }, 35000);
+
+    it("should retry router on network error then succeed", async () => {
+      // Mock first call fails, second succeeds
+      const mockRouterResponse = {
+        resolved: "http://api.kcvvelewijt.be/player/john-doe",
+        isHomePath: false,
+        entity: {
+          canonical: "http://api.kcvvelewijt.be/player/john-doe",
+          type: "node",
+          bundle: "player",
+          id: "1",
+          uuid: "retry-uuid",
+        },
+        label: "John Doe",
+        jsonapi: {
+          individual:
+            "http://api.kcvvelewijt.be/jsonapi/node/player/retry-uuid",
+          resourceName: "node--player",
+          basePath: "/jsonapi",
+          entryPoint: "http://api.kcvvelewijt.be/jsonapi",
+        },
+      };
+
+      const mockPlayerResponse = {
+        data: {
+          id: "retry-uuid",
+          type: "node--player",
+          attributes: {
+            title: "John Doe",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/player/john-doe" },
+          },
+          relationships: {
+            field_image: { data: null },
+          },
+        },
+      };
+
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockRejectedValueOnce(new Error("Network error")) // First router call fails
+        .mockResolvedValueOnce({
+          // Second router call succeeds
+          ok: true,
+          status: 200,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          // Player fetch succeeds
+          ok: true,
+          json: async () => mockPlayerResponse,
+        });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.attributes.title).toBe("John Doe");
+      expect(mockFetch).toHaveBeenCalledTimes(3); // 1 failed router + 1 retry router + 1 player fetch
     });
   });
 

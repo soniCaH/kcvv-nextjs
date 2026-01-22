@@ -631,12 +631,15 @@ export const DrupalServiceLive = Layer.effect(
 
     /**
      * Resolve a path alias to entity info using Decoupled Router
+     *
+     * Uses the same retry and timeout pattern as fetchJson for resilience.
+     * Returns NotFoundError for 404 responses (non-retryable).
      */
-    const resolvePathAlias = (path: string) =>
-      Effect.gen(function* () {
-        const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-        const url = `${baseUrl}/router/translate-path?path=${encodeURIComponent(normalizedPath)}&_format=json`;
+    const resolvePathAlias = (path: string) => {
+      const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+      const url = `${baseUrl}/router/translate-path?path=${encodeURIComponent(normalizedPath)}&_format=json`;
 
+      return Effect.gen(function* () {
         const response = yield* Effect.tryPromise({
           try: () =>
             fetch(url, {
@@ -650,6 +653,7 @@ export const DrupalServiceLive = Layer.effect(
             }),
         });
 
+        // Handle 404 specially - this is not retryable
         if (response.status === 404) {
           return yield* Effect.fail(
             new NotFoundError({
@@ -687,7 +691,26 @@ export const DrupalServiceLive = Layer.effect(
               }),
           ),
         );
-      });
+      }).pipe(
+        // Retry on DrupalError (network/HTTP errors), but not on NotFoundError or ValidationError
+        Effect.retry({
+          schedule: Schedule.exponential("1 second").pipe(
+            Schedule.intersect(Schedule.recurs(3)),
+          ),
+          while: (error) => error instanceof DrupalError,
+        }),
+        Effect.timeout("30 seconds"),
+        Effect.mapError((error) => {
+          if (error._tag === "TimeoutException") {
+            return new DrupalError({
+              message: `Router request timed out after 30 seconds for path "${path}"`,
+              cause: error,
+            });
+          }
+          return error;
+        }),
+      );
+    };
 
     /**
      * Get player by path alias
