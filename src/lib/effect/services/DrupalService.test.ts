@@ -1139,6 +1139,232 @@ describe("DrupalService", () => {
         expect.anything(),
       );
     });
+
+    it("should map file--file references to image URLs", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              field_shirtnumber: 10,
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "file--file",
+                  id: "file-123",
+                  meta: { alt: "John Doe", width: 800, height: 800 },
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            type: "file--file",
+            id: "file-123",
+            attributes: {
+              filename: "john-doe.jpg",
+              uri: {
+                value: "public://player-picture/john-doe.jpg",
+                url: "/sites/default/files/player-picture/john-doe.jpg",
+              },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      expect(imageData).toHaveProperty("uri");
+      expect((imageData as { uri: { url: string } }).uri.url).toBe(
+        "https://api.kcvvelewijt.be/sites/default/files/player-picture/john-doe.jpg",
+      );
+    });
+
+    it("should handle players without images", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "Jane Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/jane-doe" },
+            },
+            relationships: {
+              field_image: { data: null },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      expect(result.players[0].relationships.field_image?.data).toBeNull();
+    });
+
+    it("should handle missing file in included array", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "file--file",
+                  id: "file-missing",
+                  meta: { alt: "John Doe" },
+                },
+              },
+            },
+          },
+        ],
+        included: [], // File not in included array
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      // Should keep original reference when file not found
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toHaveProperty("type", "file--file");
+      expect(imageData).toHaveProperty("id", "file-missing");
+    });
+
+    it("should map media--image references through to file URLs", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-123",
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            type: "media--image",
+            id: "media-123",
+            attributes: {
+              name: "Player Photo",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  type: "file--file",
+                  id: "file-456",
+                  meta: { alt: "John Doe", width: 1000, height: 1000 },
+                },
+              },
+            },
+          },
+          {
+            type: "file--file",
+            id: "file-456",
+            attributes: {
+              filename: "john-doe-media.jpg",
+              uri: {
+                value: "public://player-picture/john-doe-media.jpg",
+                url: "/sites/default/files/player-picture/john-doe-media.jpg",
+              },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      expect(imageData).toHaveProperty("uri");
+      expect((imageData as { uri: { url: string } }).uri.url).toBe(
+        "https://api.kcvvelewijt.be/sites/default/files/player-picture/john-doe-media.jpg",
+      );
+    });
   });
 
   describe("getPlayerBySlug", () => {
@@ -1387,6 +1613,67 @@ describe("DrupalService", () => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("/jsonapi/node/player/1"),
         expect.anything(),
+      );
+    });
+
+    it("should map included file to image URL", async () => {
+      const mockResponse = {
+        data: {
+          id: "player-uuid",
+          type: "node--player",
+          attributes: {
+            title: "Max Player",
+            field_shirtnumber: 7,
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/player/max-player" },
+          },
+          relationships: {
+            field_image: {
+              data: {
+                type: "file--file",
+                id: "file-uuid",
+                meta: { alt: "Max Player", width: 1250, height: 1250 },
+              },
+            },
+          },
+        },
+        included: [
+          {
+            type: "file--file",
+            id: "file-uuid",
+            attributes: {
+              filename: "max-player.png",
+              uri: {
+                value: "public://player-picture/max-player.png",
+                url: "/sites/default/files/player-picture/max-player.png",
+              },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerById("player-uuid");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.attributes.title).toBe("Max Player");
+      const imageData = result.relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      expect(imageData).toHaveProperty("uri");
+      expect((imageData as { uri: { url: string } }).uri.url).toBe(
+        "https://api.kcvvelewijt.be/sites/default/files/player-picture/max-player.png",
       );
     });
   });
