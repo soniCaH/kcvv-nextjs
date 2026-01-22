@@ -16,6 +16,7 @@ import {
   Player,
   PlayersResponse,
   PlayerResponse,
+  PlayerIncludedResource,
   Event,
   EventsResponse,
   Sponsor,
@@ -472,6 +473,105 @@ export const DrupalServiceLive = Layer.effect(
       });
 
     /**
+     * Map included data for players
+     *
+     * Resolves file--file references in player relationships to their actual URLs.
+     * Players have direct file references (not media entities like articles).
+     *
+     * @param data - Array of player entities
+     * @param included - Array of related entities from JSON:API included section
+     * @returns Players with resolved image URLs
+     */
+    const mapPlayerIncluded = (
+      data: readonly Player[],
+      included: readonly S.Schema.Type<typeof PlayerIncludedResource>[] = [],
+    ): readonly Player[] => {
+      const includedMap = new Map<
+        string,
+        S.Schema.Type<typeof PlayerIncludedResource>
+      >(included.map((item) => [`${item.type}:${item.id}`, item]));
+
+      return data.map((player) => {
+        // Resolve player image: file--file -> URL
+        const fileRef = player.relationships.field_image?.data;
+        const resolvedImage = (() => {
+          if (!fileRef || !("id" in fileRef) || !("type" in fileRef)) {
+            return player.relationships.field_image;
+          }
+
+          // Handle file--file references
+          if (fileRef.type === "file--file") {
+            const file = includedMap.get(`file--file:${fileRef.id}`);
+            if (!file || file.type !== "file--file") {
+              return player.relationships.field_image;
+            }
+
+            // Decode file to ensure it's valid
+            const decodedFile = S.decodeUnknownSync(File)(file);
+            const fileUrl = decodedFile.attributes.uri.url;
+            const absoluteUrl = fileUrl.startsWith("http")
+              ? fileUrl
+              : `${baseUrl}${fileUrl}`;
+
+            return {
+              data: {
+                uri: { url: absoluteUrl },
+                alt: fileRef.meta?.alt || "",
+                width: fileRef.meta?.width,
+                height: fileRef.meta?.height,
+              },
+            };
+          }
+
+          // Handle media--image references (if any)
+          if (fileRef.type === "media--image") {
+            const media = includedMap.get(`media--image:${fileRef.id}`);
+            if (!media || media.type !== "media--image") {
+              return player.relationships.field_image;
+            }
+
+            const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
+            const mediaFileRef =
+              decodedMedia.relationships?.field_media_image?.data;
+            if (!mediaFileRef) {
+              return player.relationships.field_image;
+            }
+
+            const file = includedMap.get(`file--file:${mediaFileRef.id}`);
+            if (!file || file.type !== "file--file") {
+              return player.relationships.field_image;
+            }
+
+            const decodedFile = S.decodeUnknownSync(File)(file);
+            const fileUrl = decodedFile.attributes.uri.url;
+            const absoluteUrl = fileUrl.startsWith("http")
+              ? fileUrl
+              : `${baseUrl}${fileUrl}`;
+
+            return {
+              data: {
+                uri: { url: absoluteUrl },
+                alt: mediaFileRef.meta?.alt || "",
+                width: mediaFileRef.meta?.width,
+                height: mediaFileRef.meta?.height,
+              },
+            };
+          }
+
+          return player.relationships.field_image;
+        })();
+
+        return {
+          ...player,
+          relationships: {
+            ...player.relationships,
+            field_image: resolvedImage,
+          },
+        };
+      });
+    };
+
+    /**
      * Get players with optional filtering and pagination
      */
     const getPlayers = (params?: {
@@ -501,7 +601,7 @@ export const DrupalServiceLive = Layer.effect(
         const response = yield* fetchJson(url, PlayersResponse);
 
         return {
-          players: response.data,
+          players: mapPlayerIncluded(response.data, response.included),
           links: response.links,
         };
       });
@@ -642,7 +742,8 @@ export const DrupalServiceLive = Layer.effect(
           include: "field_image",
         });
         const response = yield* fetchJson(url, PlayerResponse);
-        return response.data;
+        const mapped = mapPlayerIncluded([response.data], response.included);
+        return mapped[0];
       });
 
     /**
