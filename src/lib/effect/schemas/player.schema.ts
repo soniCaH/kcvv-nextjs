@@ -52,7 +52,7 @@ export class PlayerAttributes extends S.Class<PlayerAttributes>(
   unpublish_on: S.optional(S.NullOr(DateFromStringOrDate)),
   revision_log: S.optional(S.NullOr(S.String)),
   revision_translation_affected: S.optional(S.NullOr(S.Boolean)),
-  default_langcode: S.optional(S.Boolean),
+  default_langcode: S.optional(S.NullOr(S.Boolean)),
 }) {}
 
 /**
