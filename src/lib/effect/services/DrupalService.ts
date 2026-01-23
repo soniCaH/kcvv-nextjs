@@ -581,7 +581,7 @@ export const DrupalServiceLive = Layer.effect(
     }) =>
       Effect.gen(function* () {
         const queryParams: Record<string, string | number> = {
-          include: "field_image.field_media_image",
+          include: "field_image",
           sort: "field_shirtnumber",
         };
 
@@ -762,7 +762,7 @@ export const DrupalServiceLive = Layer.effect(
     const getPlayerById = (id: string) =>
       Effect.gen(function* () {
         const url = buildUrl(`node/player/${id}`, {
-          include: "field_image.field_media_image",
+          include: "field_image",
         });
         const response = yield* fetchJson(url, PlayerResponse);
         const mapped = mapPlayerIncluded([response.data], response.included);
