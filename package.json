@@ -62,8 +62,8 @@
     "@types/react": "19.2.9",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.1.2",
-    "@vitest/coverage-v8": "4.0.17",
-    "@vitest/ui": "4.0.17",
+    "@vitest/coverage-v8": "4.0.18",
+    "@vitest/ui": "4.0.18",
     "eslint": "9.39.2",
     "eslint-config-next": "16.1.4",
     "eslint-plugin-storybook": "10.2.0",
@@ -80,7 +80,7 @@
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "unist-util-visit": "5.0.0",
-    "vitest": "4.0.17"
+    "vitest": "4.0.18"
   },
   "overrides": {
     "@types/react": "19.2.9",
