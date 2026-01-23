@@ -1365,6 +1365,185 @@ describe("DrupalService", () => {
         "https://api.kcvvelewijt.be/sites/default/files/player-picture/john-doe-media.jpg",
       );
     });
+
+    it("should keep original reference when media--image has no file reference", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-no-file-ref",
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            type: "media--image",
+            id: "media-no-file-ref",
+            attributes: {
+              name: "Media Without File Reference",
+            },
+            relationships: {
+              // No field_media_image relationship
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      // Should keep original reference when media has no file reference
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "type" in imageData && "id" in imageData) {
+        expect(imageData.type).toBe("media--image");
+        expect(imageData.id).toBe("media-no-file-ref");
+      }
+    });
+
+    it("should keep original reference when media--image file not found in included", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-with-missing-file",
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            type: "media--image",
+            id: "media-with-missing-file",
+            attributes: {
+              name: "Media With Missing File",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  type: "file--file",
+                  id: "file-nonexistent",
+                  meta: { alt: "Missing file" },
+                },
+              },
+            },
+          },
+          // file-nonexistent is NOT in included array
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      // Should keep original reference when file not found
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "type" in imageData && "id" in imageData) {
+        expect(imageData.type).toBe("media--image");
+        expect(imageData.id).toBe("media-with-missing-file");
+      }
+    });
+
+    it("should keep original reference when media--image not found in included", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-nonexistent",
+                },
+              },
+            },
+          },
+        ],
+        included: [], // media--image is NOT in included array
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      // Should keep original reference when media not found
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "type" in imageData && "id" in imageData) {
+        expect(imageData.type).toBe("media--image");
+        expect(imageData.id).toBe("media-nonexistent");
+      }
+    });
   });
 
   describe("getPlayerBySlug", () => {

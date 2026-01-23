@@ -523,42 +523,39 @@ export const DrupalServiceLive = Layer.effect(
             };
           }
 
-          // Handle media--image references (if any)
-          if (fileRef.type === "media--image") {
-            const media = includedMap.get(`media--image:${fileRef.id}`);
-            if (!media || media.type !== "media--image") {
-              return player.relationships.field_image;
-            }
-
-            const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
-            const mediaFileRef =
-              decodedMedia.relationships?.field_media_image?.data;
-            if (!mediaFileRef) {
-              return player.relationships.field_image;
-            }
-
-            const file = includedMap.get(`file--file:${mediaFileRef.id}`);
-            if (!file || file.type !== "file--file") {
-              return player.relationships.field_image;
-            }
-
-            const decodedFile = S.decodeUnknownSync(File)(file);
-            const fileUrl = decodedFile.attributes.uri.url;
-            const absoluteUrl = fileUrl.startsWith("http")
-              ? fileUrl
-              : `${baseUrl}${fileUrl}`;
-
-            return {
-              data: {
-                uri: { url: absoluteUrl },
-                alt: mediaFileRef.meta?.alt || "",
-                width: mediaFileRef.meta?.width,
-                height: mediaFileRef.meta?.height,
-              },
-            };
+          // Handle media--image references
+          // Schema validation ensures fileRef.type is "media--image" here
+          const media = includedMap.get(`media--image:${fileRef.id}`);
+          if (!media || media.type !== "media--image") {
+            return player.relationships.field_image;
           }
 
-          return player.relationships.field_image;
+          const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
+          const mediaFileRef =
+            decodedMedia.relationships?.field_media_image?.data;
+          if (!mediaFileRef) {
+            return player.relationships.field_image;
+          }
+
+          const file = includedMap.get(`file--file:${mediaFileRef.id}`);
+          if (!file || file.type !== "file--file") {
+            return player.relationships.field_image;
+          }
+
+          const decodedFile = S.decodeUnknownSync(File)(file);
+          const fileUrl = decodedFile.attributes.uri.url;
+          const absoluteUrl = fileUrl.startsWith("http")
+            ? fileUrl
+            : `${baseUrl}${fileUrl}`;
+
+          return {
+            data: {
+              uri: { url: absoluteUrl },
+              alt: mediaFileRef.meta?.alt || "",
+              width: mediaFileRef.meta?.width,
+              height: mediaFileRef.meta?.height,
+            },
+          };
         })();
 
         return {
