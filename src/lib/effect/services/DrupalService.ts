@@ -475,8 +475,11 @@ export const DrupalServiceLive = Layer.effect(
     /**
      * Map included data for players
      *
-     * Resolves file--file references in player relationships to their actual URLs.
-     * Players have direct file references (not media entities like articles).
+     * Resolves image references in player relationships to their actual URLs.
+     * Handles both reference types:
+     * - file--file: Direct file references resolved via includedMap lookup
+     * - media--image: Media entities resolved by following the nested
+     *   field_media_image relationship to the underlying file--file
      *
      * @param data - Array of player entities
      * @param included - Array of related entities from JSON:API included section
@@ -492,7 +495,7 @@ export const DrupalServiceLive = Layer.effect(
       >(included.map((item) => [`${item.type}:${item.id}`, item]));
 
       return data.map((player) => {
-        // Resolve player image: file--file -> URL
+        // Resolve player image reference (file--file or media--image) to URL
         const fileRef = player.relationships.field_image?.data;
         const resolvedImage = (() => {
           if (!fileRef || !("id" in fileRef) || !("type" in fileRef)) {
