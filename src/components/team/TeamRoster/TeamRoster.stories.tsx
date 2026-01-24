@@ -10,7 +10,19 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamRoster } from "./TeamRoster";
 
-// Mock player data matching Drupal API structure
+// Real player images from KCVV API (with transparent backgrounds)
+const REAL_PLAYER_IMAGES = {
+  chiel:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/chiel.png",
+  jarne:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/jarne-front.png",
+  louie:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/louie-front.png",
+  yoran:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/yoran-front.png",
+};
+
+// Mock player data matching Drupal API structure with real player images
 const MOCK_PLAYERS = {
   goalkeepers: [
     {
@@ -20,15 +32,16 @@ const MOCK_PLAYERS = {
       position: "Keeper",
       number: 1,
       href: "/speler/kevin-van-ransbeeck",
-      imageUrl: "https://picsum.photos/seed/gk1/300/400",
+      imageUrl: REAL_PLAYER_IMAGES.louie,
     },
     {
       id: "gk-2",
-      firstName: "Bram",
-      lastName: "Willems",
+      firstName: "Jean-Baptiste",
+      lastName: "Van Der Meersberghen",
       position: "Keeper",
       number: 16,
       href: "/speler/bram-willems",
+      // No image - tests placeholder
     },
   ],
   defenders: [
@@ -39,7 +52,7 @@ const MOCK_PLAYERS = {
       position: "Verdediger",
       number: 2,
       href: "/speler/jan-peeters",
-      imageUrl: "https://picsum.photos/seed/def1/300/400",
+      imageUrl: REAL_PLAYER_IMAGES.chiel,
     },
     {
       id: "def-2",
@@ -48,7 +61,7 @@ const MOCK_PLAYERS = {
       position: "Verdediger",
       number: 3,
       href: "/speler/pieter-janssens",
-      imageUrl: "https://picsum.photos/seed/def2/300/400",
+      imageUrl: REAL_PLAYER_IMAGES.yoran,
     },
     {
       id: "def-3",
@@ -58,7 +71,7 @@ const MOCK_PLAYERS = {
       number: 4,
       href: "/speler/thomas-maes",
       isCaptain: true,
-      imageUrl: "https://picsum.photos/seed/def3/300/400",
+      imageUrl: REAL_PLAYER_IMAGES.jarne,
     },
     {
       id: "def-4",
@@ -67,7 +80,7 @@ const MOCK_PLAYERS = {
       position: "Verdediger",
       number: 5,
       href: "/speler/jef-de-smedt",
-      imageUrl: "https://picsum.photos/seed/def4/300/400",
+      imageUrl: REAL_PLAYER_IMAGES.chiel,
     },
   ],
   midfielders: [
@@ -78,7 +91,7 @@ const MOCK_PLAYERS = {
       position: "Middenvelder",
       number: 6,
       href: "/speler/wouter-vermeersch",
-      imageUrl: "https://picsum.photos/seed/mid1/300/400",
+      imageUrl: REAL_PLAYER_IMAGES.yoran,
     },
     {
       id: "mid-2",
@@ -87,7 +100,7 @@ const MOCK_PLAYERS = {
       position: "Middenvelder",
       number: 8,
       href: "/speler/stijn-claes",
-      imageUrl: "https://picsum.photos/seed/mid2/300/400",
+      imageUrl: REAL_PLAYER_IMAGES.jarne,
     },
     {
       id: "mid-3",
@@ -96,7 +109,7 @@ const MOCK_PLAYERS = {
       position: "Middenvelder",
       number: 10,
       href: "/speler/raf-wouters",
-      imageUrl: "https://picsum.photos/seed/mid3/300/400",
+      imageUrl: REAL_PLAYER_IMAGES.louie,
     },
     {
       id: "mid-4",
@@ -105,6 +118,7 @@ const MOCK_PLAYERS = {
       position: "Middenvelder",
       number: 14,
       href: "/speler/koen-van-damme",
+      // No image - tests placeholder
     },
   ],
   forwards: [
@@ -115,7 +129,7 @@ const MOCK_PLAYERS = {
       position: "Aanvaller",
       number: 7,
       href: "/speler/michiel-hendrickx",
-      imageUrl: "https://picsum.photos/seed/fwd1/300/400",
+      imageUrl: REAL_PLAYER_IMAGES.chiel,
     },
     {
       id: "fwd-2",
@@ -124,7 +138,7 @@ const MOCK_PLAYERS = {
       position: "Aanvaller",
       number: 9,
       href: "/speler/bert-goossens",
-      imageUrl: "https://picsum.photos/seed/fwd2/300/400",
+      imageUrl: REAL_PLAYER_IMAGES.jarne,
     },
     {
       id: "fwd-3",
@@ -133,7 +147,7 @@ const MOCK_PLAYERS = {
       position: "Aanvaller",
       number: 11,
       href: "/speler/lars-mertens",
-      imageUrl: "https://picsum.photos/seed/fwd3/300/400",
+      imageUrl: REAL_PLAYER_IMAGES.yoran,
     },
   ],
 };
@@ -144,20 +158,21 @@ const MOCK_STAFF = [
     firstName: "Marc",
     lastName: "Van den Berg",
     role: "Hoofdtrainer",
-    imageUrl: "https://picsum.photos/seed/staff1/300/400",
+    imageUrl: REAL_PLAYER_IMAGES.chiel,
   },
   {
     id: "staff-2",
     firstName: "Dirk",
     lastName: "Hermans",
     role: "Assistent-trainer",
-    imageUrl: "https://picsum.photos/seed/staff2/300/400",
+    imageUrl: REAL_PLAYER_IMAGES.jarne,
   },
   {
     id: "staff-3",
     firstName: "Peter",
     lastName: "Jacobs",
     role: "Keeperstrainer",
+    // No image - tests placeholder
   },
 ];
 

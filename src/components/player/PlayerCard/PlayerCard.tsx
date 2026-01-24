@@ -128,16 +128,15 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
             aria-hidden="true"
           />
 
-          {/* Jersey number - large decorative text behind player */}
+          {/* Jersey number - large decorative text ON TOP of player image */}
           {number !== undefined && (
             <div
               className={cn(
                 "player__teaser__position",
-                "absolute z-[1] transition-all duration-300 ease-in-out",
+                "absolute z-[5] transition-all duration-300 ease-in-out pointer-events-none",
                 isCompact
                   ? "top-[8px] left-[15px] text-[8rem]"
                   : "top-[10px] left-[15px] text-[11.25rem] lg:top-[5px] lg:text-[14rem]",
-                "group-hover:text-[25rem]",
               )}
               style={{
                 maxWidth: "10px",
@@ -148,7 +147,6 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                 WebkitTextStroke: "4px #4B9B48",
                 WebkitTextFillColor: "white",
                 textShadow: JERSEY_NUMBER_SHADOW,
-                mixBlendMode: "darken",
               }}
               aria-hidden="true"
             >
@@ -174,20 +172,27 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                   src={imageUrl}
                   alt={fullName}
                   fill
-                  className="object-cover object-top"
+                  className="object-contain object-bottom"
                   sizes={
                     isCompact ? "180px" : "(max-width: 960px) 232px, 299px"
                   }
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
+                /* Placeholder silhouette - aligned to bottom like real player cutouts */
+                <div className="absolute inset-0 flex items-end justify-center">
                   <svg
-                    className="w-1/2 h-1/2 text-[#cacaca]"
+                    className={cn(
+                      "text-[#cacaca]",
+                      isCompact
+                        ? "w-[140px] h-[180px]"
+                        : "w-[200px] h-[280px] lg:w-[240px] lg:h-[340px]",
+                    )}
                     fill="currentColor"
-                    viewBox="0 0 24 24"
+                    viewBox="0 0 24 32"
                     aria-hidden="true"
                   >
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                    {/* Player silhouette shape */}
+                    <path d="M12 0C8.7 0 6 2.7 6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6zm0 14c-6.6 0-12 3.4-12 8v10h24V22c0-4.6-5.4-8-12-8z" />
                   </svg>
                 </div>
               )}
@@ -203,8 +208,8 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
             aria-hidden="true"
           />
 
-          {/* Name section - positioned at bottom */}
-          <div className="absolute bottom-[17px] left-[15px] right-[15px] z-[4]">
+          {/* Name section - positioned at bottom with overflow handling */}
+          <div className="absolute bottom-[17px] left-[15px] right-[15px] z-[4] overflow-hidden">
             {/* Captain badge */}
             {isCaptain && (
               <span
@@ -231,23 +236,29 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
               </span>
             )}
 
-            {/* First name - semibold */}
+            {/* First name - semibold, truncated for long names */}
             <div
-              className="text-white text-[2rem] uppercase font-semibold"
+              className={cn(
+                "text-white uppercase font-semibold truncate",
+                isCompact ? "text-[1.5rem]" : "text-[1.75rem] lg:text-[2rem]",
+              )}
               style={{
                 fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-                lineHeight: 0.91,
+                lineHeight: 1,
               }}
             >
               {firstName}
             </div>
 
-            {/* Last name - thin */}
+            {/* Last name - thin, truncated for long names */}
             <div
-              className="text-white text-[2rem] lg:text-[2.25rem] uppercase font-thin"
+              className={cn(
+                "text-white uppercase font-thin truncate",
+                isCompact ? "text-[1.5rem]" : "text-[1.75rem] lg:text-[2rem]",
+              )}
               style={{
                 fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-                lineHeight: 0.91,
+                lineHeight: 1,
               }}
             >
               {lastName}
