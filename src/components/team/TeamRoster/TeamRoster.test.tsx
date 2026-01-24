@@ -187,7 +187,9 @@ describe("TeamRoster", () => {
     it("should render staff when showStaff is true", () => {
       render(<TeamRoster players={mockPlayers} staff={mockStaff} showStaff />);
       expect(screen.getByText("Technische Staf")).toBeInTheDocument();
-      expect(screen.getByText("Marc Van den Berg")).toBeInTheDocument();
+      // Staff names are now displayed separately (first name, last name)
+      expect(screen.getByText("Marc")).toBeInTheDocument();
+      expect(screen.getByText("Van den Berg")).toBeInTheDocument();
       expect(screen.getByText("Hoofdtrainer")).toBeInTheDocument();
     });
 

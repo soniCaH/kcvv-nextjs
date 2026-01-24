@@ -198,52 +198,141 @@ export function TeamRoster({
       : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
   );
 
-  // Staff section content (rendered inline to avoid component-in-render issue)
+  // Staff section content - uses similar card style as players but without number
   const staffSection =
     showStaff && staff.length > 0 ? (
       <section className="mt-12">
         <h3
-          className="text-xl font-bold text-gray-900 mb-6"
+          className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2"
           style={{
             fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
           }}
         >
           Technische Staf
+          <span className="text-sm font-normal text-gray-500">
+            ({staff.length})
+          </span>
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className={gridClasses}>
           {staff.map((member) => (
-            <div
+            <article
               key={member.id || `${member.firstName}-${member.lastName}`}
-              className="flex flex-col items-center text-center"
+              className="group w-full max-w-[340px]"
             >
-              <div className="relative w-24 h-24 mb-3 rounded-full overflow-hidden bg-gray-100">
-                {member.imageUrl ? (
-                  <Image
-                    src={member.imageUrl}
-                    alt={`${member.firstName} ${member.lastName}`}
-                    fill
-                    className="object-cover"
-                    sizes="96px"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <User
-                      className="w-12 h-12 text-gray-300"
-                      aria-hidden="true"
-                    />
-                  </div>
+              <div
+                className={cn(
+                  "relative block overflow-hidden isolate w-full",
+                  isCompact ? "h-[220px]" : "h-[285px] lg:h-[446px]",
                 )}
-              </div>
-              <p
-                className="font-semibold text-gray-900"
-                style={{
-                  fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-                }}
               >
-                {member.firstName} {member.lastName}
-              </p>
-              <p className="text-sm text-gray-600">{member.role}</p>
-            </div>
+                {/* Gray background area */}
+                <div
+                  className={cn(
+                    "absolute right-0 bottom-0 left-0 z-0",
+                    "bg-[#edeff4]",
+                    isCompact ? "top-[40px]" : "top-[54px] lg:top-[90px]",
+                  )}
+                  aria-hidden="true"
+                />
+
+                {/* Staff image container */}
+                <div className="absolute inset-0 z-[2]">
+                  <div
+                    className={cn(
+                      "absolute bottom-0 right-[-34px] ml-[10px]",
+                      "w-full h-full",
+                      isCompact
+                        ? "max-w-[180px]"
+                        : "max-w-[232px] lg:left-[74px] lg:max-w-[299px] lg:h-[calc(100%-15px)]",
+                    )}
+                  >
+                    {member.imageUrl ? (
+                      <Image
+                        src={member.imageUrl}
+                        alt={`${member.firstName} ${member.lastName}`}
+                        fill
+                        className="object-contain object-bottom"
+                        sizes={
+                          isCompact
+                            ? "180px"
+                            : "(max-width: 960px) 232px, 299px"
+                        }
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-end justify-center">
+                        <User
+                          className={cn(
+                            "text-[#cacaca]",
+                            isCompact
+                              ? "w-[140px] h-[180px]"
+                              : "w-[200px] h-[280px] lg:w-[240px] lg:h-[340px]",
+                          )}
+                          aria-hidden="true"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bottom gradient overlay */}
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-[30%] z-[3] pointer-events-none"
+                  style={{
+                    background:
+                      "linear-gradient(0deg, #4acf52 10%, transparent 80%)",
+                  }}
+                  aria-hidden="true"
+                />
+
+                {/* Name and role section */}
+                <div className="absolute bottom-[17px] left-[15px] right-[15px] z-[4] overflow-hidden">
+                  {/* Role badge */}
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 mb-1",
+                      "text-xs font-medium uppercase tracking-wide text-white",
+                      "bg-white/20 backdrop-blur-sm rounded px-2 py-0.5",
+                    )}
+                  >
+                    {member.role}
+                  </span>
+
+                  {/* First name */}
+                  <div
+                    className={cn(
+                      "text-white uppercase font-semibold truncate",
+                      isCompact
+                        ? "text-[1.5rem]"
+                        : "text-[1.75rem] lg:text-[2rem]",
+                    )}
+                    style={{
+                      fontFamily:
+                        "quasimoda, acumin-pro, Montserrat, sans-serif",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {member.firstName}
+                  </div>
+
+                  {/* Last name */}
+                  <div
+                    className={cn(
+                      "text-white uppercase font-thin truncate",
+                      isCompact
+                        ? "text-[1.5rem]"
+                        : "text-[1.75rem] lg:text-[2rem]",
+                    )}
+                    style={{
+                      fontFamily:
+                        "quasimoda, acumin-pro, Montserrat, sans-serif",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {member.lastName}
+                  </div>
+                </div>
+              </div>
+            </article>
           ))}
         </div>
       </section>
