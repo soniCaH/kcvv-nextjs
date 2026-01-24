@@ -17,7 +17,6 @@ import { useMemo } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
 import { PlayerCard, type PlayerCardProps } from "../../player/PlayerCard";
-import { User } from "lucide-react";
 
 export interface RosterPlayer extends Omit<
   PlayerCardProps,
@@ -308,16 +307,27 @@ export function TeamRoster({
                         }
                       />
                     ) : (
+                      /* Staff placeholder - same alignment as player silhouette */
                       <div className="absolute inset-0 flex items-end justify-center">
-                        <User
+                        <svg
                           className={cn(
                             "text-[#cacaca]",
                             isCompact
                               ? "w-[140px] h-[180px]"
                               : "w-[200px] h-[280px] lg:w-[240px] lg:h-[340px]",
                           )}
+                          fill="currentColor"
+                          viewBox="0 0 24 32"
                           aria-hidden="true"
-                        />
+                        >
+                          {/* Staff silhouette - similar to player but with tie/collar detail */}
+                          <path d="M12 0C8.7 0 6 2.7 6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6zm0 14c-6.6 0-12 3.4-12 8v10h24V22c0-4.6-5.4-8-12-8z" />
+                          {/* Tie detail to differentiate from players */}
+                          <path
+                            d="M12 14l-1.5 4 1.5 8 1.5-8-1.5-4z"
+                            fill="#b0b0b0"
+                          />
+                        </svg>
                       </div>
                     )}
                   </div>
