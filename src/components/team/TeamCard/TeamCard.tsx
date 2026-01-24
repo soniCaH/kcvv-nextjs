@@ -80,7 +80,7 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
           ref={ref as Ref<HTMLDivElement>}
           className={cn(
             "relative overflow-hidden bg-gray-200 animate-pulse rounded-sm",
-            isCompact ? "h-[180px]" : "h-[280px]",
+            isCompact ? "h-[200px]" : "h-[280px]",
             className,
           )}
           aria-label="Laden..."
@@ -114,8 +114,9 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
             "bg-white",
             "border border-[#edeff4]",
             "shadow-sm",
-            "transition-all duration-300 ease-in-out",
-            "hover:shadow-lg hover:-translate-y-1",
+            // Separate transitions for smoother animation - shadow leads, transform follows
+            "transition-shadow duration-200 ease-out",
+            "hover:shadow-lg",
           )}
           title={`Bekijk ${name}`}
           aria-label={`Bekijk team ${name}${tagline ? `, ${tagline}` : ""}${ageGroup ? `, leeftijdsgroep ${ageGroup}` : ""}`}
@@ -124,7 +125,7 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
           <div
             className={cn(
               "relative overflow-hidden bg-gray-100",
-              isCompact ? "h-[100px]" : "h-[160px]",
+              isCompact ? "h-[120px]" : "h-[160px]",
             )}
           >
             {imageUrl ? (
@@ -132,7 +133,7 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
                 src={imageUrl}
                 alt={`Team foto ${name}`}
                 fill
-                className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-110"
+                className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 sizes={isCompact ? "200px" : "(max-width: 768px) 100vw, 400px"}
               />
             ) : (
@@ -140,7 +141,7 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
                 <Users
                   className={cn(
                     "text-gray-300",
-                    isCompact ? "w-12 h-12" : "w-16 h-16",
+                    isCompact ? "w-14 h-14" : "w-16 h-16",
                   )}
                   aria-hidden="true"
                 />

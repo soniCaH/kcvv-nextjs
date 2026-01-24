@@ -10,14 +10,12 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamCard } from "./TeamCard";
 
-// Sample team images from KCVV API
+// Placeholder images for stories (actual team images loaded from Drupal API at runtime)
+// Using picsum.photos for reliable placeholder images in Storybook
 const TEAM_IMAGES = {
-  aTeam:
-    "https://api.kcvvelewijt.be/sites/default/files/styles/medium/public/2023-08/A-ploeg-2023-2024.jpg",
-  youth:
-    "https://api.kcvvelewijt.be/sites/default/files/styles/medium/public/2023-08/U15-2023-2024.jpg",
-  angels:
-    "https://api.kcvvelewijt.be/sites/default/files/styles/medium/public/2022-09/angels.jpg",
+  aTeam: "https://picsum.photos/seed/ateam/400/300",
+  youth: "https://picsum.photos/seed/youth/400/300",
+  angels: "https://picsum.photos/seed/angels/400/300",
 };
 
 const meta = {

@@ -33,8 +33,7 @@ const MOCK_TEAMS = {
       name: "A-Ploeg",
       slug: "a-ploeg",
       tagline: "The A-Team",
-      imageUrl:
-        "https://api.kcvvelewijt.be/sites/default/files/styles/medium/public/2023-08/A-ploeg-2023-2024.jpg",
+      imageUrl: "https://picsum.photos/seed/ateam/400/300",
     },
     { name: "B-Ploeg", slug: "b-ploeg", tagline: "The B-Team" },
     { name: "Veteranen", slug: "veteranen", tagline: "Vets" },
