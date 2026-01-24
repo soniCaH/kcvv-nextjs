@@ -1115,26 +1115,64 @@ describe("DrupalService", () => {
         expect.anything(),
       );
     });
-  });
 
-  describe("getPlayerBySlug", () => {
-    it("should fetch player by slug", async () => {
+    it("should apply pagination offset when page and limit are provided", async () => {
+      const mockResponse = { data: [] };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers({ limit: 50, page: 3 });
+      });
+
+      await Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive)));
+
+      // Page 3 with limit 50 should have offset 100 ((3-1) * 50)
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("page%5Boffset%5D=100"),
+        expect.anything(),
+      );
+    });
+
+    it("should map file--file references to image URLs", async () => {
       const mockResponse = {
         data: [
           {
-            id: "1",
+            id: "player-1",
             type: "node--player",
             attributes: {
               title: "John Doe",
-              field_number: 10,
+              field_shirtnumber: 10,
               created: "2025-01-01T00:00:00Z",
-              path: {
-                alias: "/player/john-doe",
-              },
+              path: { alias: "/player/john-doe" },
             },
             relationships: {
-              field_image: {},
-              field_team: {},
+              field_image: {
+                data: {
+                  type: "file--file",
+                  id: "file-123",
+                  meta: { alt: "John Doe", width: 800, height: 800 },
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            type: "file--file",
+            id: "file-123",
+            attributes: {
+              filename: "john-doe.jpg",
+              uri: {
+                value: "public://player-picture/john-doe.jpg",
+                url: "/sites/default/files/player-picture/john-doe.jpg",
+              },
             },
           },
         ],
@@ -1149,6 +1187,420 @@ describe("DrupalService", () => {
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      expect(imageData).toHaveProperty("uri");
+      expect((imageData as { uri: { url: string } }).uri.url).toBe(
+        "https://api.kcvvelewijt.be/sites/default/files/player-picture/john-doe.jpg",
+      );
+    });
+
+    it("should handle players without images", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "Jane Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/jane-doe" },
+            },
+            relationships: {
+              field_image: { data: null },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      expect(result.players[0].relationships.field_image?.data).toBeNull();
+    });
+
+    it("should handle missing file in included array", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "file--file",
+                  id: "file-missing",
+                  meta: { alt: "John Doe" },
+                },
+              },
+            },
+          },
+        ],
+        included: [], // File not in included array
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      // Should keep original reference when file not found
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toHaveProperty("type", "file--file");
+      expect(imageData).toHaveProperty("id", "file-missing");
+    });
+
+    it("should map media--image references through to file URLs", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-123",
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            type: "media--image",
+            id: "media-123",
+            attributes: {
+              name: "Player Photo",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  type: "file--file",
+                  id: "file-456",
+                  meta: { alt: "John Doe", width: 1000, height: 1000 },
+                },
+              },
+            },
+          },
+          {
+            type: "file--file",
+            id: "file-456",
+            attributes: {
+              filename: "john-doe-media.jpg",
+              uri: {
+                value: "public://player-picture/john-doe-media.jpg",
+                url: "/sites/default/files/player-picture/john-doe-media.jpg",
+              },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      expect(imageData).toHaveProperty("uri");
+      expect((imageData as { uri: { url: string } }).uri.url).toBe(
+        "https://api.kcvvelewijt.be/sites/default/files/player-picture/john-doe-media.jpg",
+      );
+    });
+
+    it("should keep original reference when media--image has no file reference", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-no-file-ref",
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            type: "media--image",
+            id: "media-no-file-ref",
+            attributes: {
+              name: "Media Without File Reference",
+            },
+            relationships: {
+              // No field_media_image relationship
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      // Should keep original reference when media has no file reference
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "type" in imageData && "id" in imageData) {
+        expect(imageData.type).toBe("media--image");
+        expect(imageData.id).toBe("media-no-file-ref");
+      }
+    });
+
+    it("should keep original reference when media--image file not found in included", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-with-missing-file",
+                },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            type: "media--image",
+            id: "media-with-missing-file",
+            attributes: {
+              name: "Media With Missing File",
+            },
+            relationships: {
+              field_media_image: {
+                data: {
+                  type: "file--file",
+                  id: "file-nonexistent",
+                  meta: { alt: "Missing file" },
+                },
+              },
+            },
+          },
+          // file-nonexistent is NOT in included array
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      // Should keep original reference when file not found
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "type" in imageData && "id" in imageData) {
+        expect(imageData.type).toBe("media--image");
+        expect(imageData.id).toBe("media-with-missing-file");
+      }
+    });
+
+    it("should keep original reference when media--image not found in included", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "media--image",
+                  id: "media-nonexistent",
+                },
+              },
+            },
+          },
+        ],
+        included: [], // media--image is NOT in included array
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayers();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      // Should keep original reference when media not found
+      const imageData = result.players[0].relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "type" in imageData && "id" in imageData) {
+        expect(imageData.type).toBe("media--image");
+        expect(imageData.id).toBe("media-nonexistent");
+      }
+    });
+  });
+
+  describe("getPlayerBySlug", () => {
+    it("should fetch player by slug using decoupled router", async () => {
+      // Mock router response
+      const mockRouterResponse = {
+        resolved: "http://api.kcvvelewijt.be/player/john-doe",
+        isHomePath: false,
+        entity: {
+          canonical: "http://api.kcvvelewijt.be/player/john-doe",
+          type: "node",
+          bundle: "player",
+          id: "1",
+          uuid: "abc-123-uuid",
+        },
+        label: "John Doe",
+        jsonapi: {
+          individual:
+            "http://api.kcvvelewijt.be/jsonapi/node/player/abc-123-uuid",
+          resourceName: "node--player",
+          basePath: "/jsonapi",
+          entryPoint: "http://api.kcvvelewijt.be/jsonapi",
+        },
+      };
+
+      // Mock player response
+      const mockPlayerResponse = {
+        data: {
+          id: "abc-123-uuid",
+          type: "node--player",
+          attributes: {
+            title: "John Doe",
+            field_shirtnumber: 10,
+            created: "2025-01-01T00:00:00Z",
+            path: {
+              alias: "/player/john-doe",
+            },
+          },
+          relationships: {
+            field_image: { data: null },
+          },
+        },
+      };
+
+      (global.fetch as unknown as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockPlayerResponse,
+        });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
         return yield* drupal.getPlayerBySlug("john-doe");
       });
 
@@ -1157,16 +1609,15 @@ describe("DrupalService", () => {
       );
 
       expect(result.attributes.title).toBe("John Doe");
+      expect(result.id).toBe("abc-123-uuid");
     });
 
-    it("should throw NotFoundError when player not found", async () => {
-      const mockResponse = { data: [] };
-
+    it("should throw NotFoundError when path not found", async () => {
       (
         global.fetch as unknown as ReturnType<typeof vi.fn>
       ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
+        ok: false,
+        status: 404,
       });
 
       const program = Effect.gen(function* () {
@@ -1178,6 +1629,221 @@ describe("DrupalService", () => {
         Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
       ).rejects.toThrow();
     });
+
+    it("should throw NotFoundError when path is not a player", async () => {
+      // Mock router response for non-player entity
+      const mockRouterResponse = {
+        resolved: "http://api.kcvvelewijt.be/news/some-article",
+        isHomePath: false,
+        entity: {
+          canonical: "http://api.kcvvelewijt.be/news/some-article",
+          type: "node",
+          bundle: "article",
+          id: "1",
+          uuid: "article-uuid",
+        },
+        label: "Some Article",
+        jsonapi: {
+          individual:
+            "http://api.kcvvelewijt.be/jsonapi/node/article/article-uuid",
+          resourceName: "node--article",
+          basePath: "/jsonapi",
+          entryPoint: "http://api.kcvvelewijt.be/jsonapi",
+        },
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockRouterResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("some-article");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    });
+
+    it("should handle network errors from router", async () => {
+      // Mock all retry attempts (initial + 3 retries = 4 total)
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockRejectedValueOnce(new Error("Network error"));
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    }, 15000);
+
+    it("should handle non-404 HTTP errors from router", async () => {
+      // Mock all retry attempts (initial + 3 retries = 4 total)
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      const errorResponse = {
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+      };
+      mockFetch
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValueOnce(errorResponse);
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    }, 15000);
+
+    it("should handle JSON parse errors from router", async () => {
+      // Mock all retry attempts (initial + 3 retries = 4 total)
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      const parseErrorResponse = {
+        ok: true,
+        status: 200,
+        json: async () => {
+          throw new Error("Invalid JSON");
+        },
+      };
+      mockFetch
+        .mockResolvedValueOnce(parseErrorResponse)
+        .mockResolvedValueOnce(parseErrorResponse)
+        .mockResolvedValueOnce(parseErrorResponse)
+        .mockResolvedValueOnce(parseErrorResponse);
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    }, 15000);
+
+    it("should handle invalid router response schema", async () => {
+      // Return an invalid router response (missing required fields)
+      const invalidRouterResponse = {
+        resolved: "http://api.kcvvelewijt.be/player/john-doe",
+        // Missing entity, label, jsonapi, etc.
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => invalidRouterResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    });
+
+    it("should timeout router requests after 30 seconds", async () => {
+      // Mock a slow response that never resolves
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        () => new Promise(() => {}), // Never resolves
+      );
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    }, 35000);
+
+    it("should retry router on network error then succeed", async () => {
+      // Mock first call fails, second succeeds
+      const mockRouterResponse = {
+        resolved: "http://api.kcvvelewijt.be/player/john-doe",
+        isHomePath: false,
+        entity: {
+          canonical: "http://api.kcvvelewijt.be/player/john-doe",
+          type: "node",
+          bundle: "player",
+          id: "1",
+          uuid: "retry-uuid",
+        },
+        label: "John Doe",
+        jsonapi: {
+          individual:
+            "http://api.kcvvelewijt.be/jsonapi/node/player/retry-uuid",
+          resourceName: "node--player",
+          basePath: "/jsonapi",
+          entryPoint: "http://api.kcvvelewijt.be/jsonapi",
+        },
+      };
+
+      const mockPlayerResponse = {
+        data: {
+          id: "retry-uuid",
+          type: "node--player",
+          attributes: {
+            title: "John Doe",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/player/john-doe" },
+          },
+          relationships: {
+            field_image: { data: null },
+          },
+        },
+      };
+
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockRejectedValueOnce(new Error("Network error")) // First router call fails
+        .mockResolvedValueOnce({
+          // Second router call succeeds
+          ok: true,
+          status: 200,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          // Player fetch succeeds
+          ok: true,
+          json: async () => mockPlayerResponse,
+        });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerBySlug("john-doe");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.attributes.title).toBe("John Doe");
+      expect(mockFetch).toHaveBeenCalledTimes(3); // 1 failed router + 1 retry router + 1 player fetch
+    });
   });
 
   describe("getPlayerById", () => {
@@ -1188,15 +1854,15 @@ describe("DrupalService", () => {
           type: "node--player",
           attributes: {
             title: "John Doe",
-            field_number: 10,
+            field_shirtnumber: 10,
             created: "2025-01-01T00:00:00Z",
             path: {
               alias: "/player/john-doe",
             },
           },
           relationships: {
-            field_image: {},
-            field_team: {},
+            field_image: { data: null },
+            field_team: { data: null },
           },
         },
       };
@@ -1221,6 +1887,67 @@ describe("DrupalService", () => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("/jsonapi/node/player/1"),
         expect.anything(),
+      );
+    });
+
+    it("should map included file to image URL", async () => {
+      const mockResponse = {
+        data: {
+          id: "player-uuid",
+          type: "node--player",
+          attributes: {
+            title: "Max Player",
+            field_shirtnumber: 7,
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/player/max-player" },
+          },
+          relationships: {
+            field_image: {
+              data: {
+                type: "file--file",
+                id: "file-uuid",
+                meta: { alt: "Max Player", width: 1250, height: 1250 },
+              },
+            },
+          },
+        },
+        included: [
+          {
+            type: "file--file",
+            id: "file-uuid",
+            attributes: {
+              filename: "max-player.png",
+              uri: {
+                value: "public://player-picture/max-player.png",
+                url: "/sites/default/files/player-picture/max-player.png",
+              },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getPlayerById("player-uuid");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.attributes.title).toBe("Max Player");
+      const imageData = result.relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      expect(imageData).toHaveProperty("uri");
+      expect((imageData as { uri: { url: string } }).uri.url).toBe(
+        "https://api.kcvvelewijt.be/sites/default/files/player-picture/max-player.png",
       );
     });
   });

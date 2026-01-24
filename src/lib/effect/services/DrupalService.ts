@@ -16,6 +16,7 @@ import {
   Player,
   PlayersResponse,
   PlayerResponse,
+  PlayerIncludedResource,
   Event,
   EventsResponse,
   Sponsor,
@@ -75,7 +76,11 @@ export class DrupalService extends Context.Tag("DrupalService")<
     readonly getPlayers: (params?: {
       teamId?: string;
       limit?: number;
-    }) => Effect.Effect<readonly Player[], DrupalError | ValidationError>;
+      page?: number;
+    }) => Effect.Effect<
+      { players: readonly Player[]; links: JsonApiLinks | undefined },
+      DrupalError | ValidationError
+    >;
 
     readonly getPlayerBySlug: (
       slug: string,
@@ -468,13 +473,116 @@ export const DrupalServiceLive = Layer.effect(
       });
 
     /**
-     * Get players with optional filtering
+     * Map included data for players
+     *
+     * Resolves image references in player relationships to their actual URLs.
+     * Handles both reference types:
+     * - file--file: Direct file references resolved via includedMap lookup
+     * - media--image: Media entities resolved by following the nested
+     *   field_media_image relationship to the underlying file--file
+     *
+     * @param data - Array of player entities
+     * @param included - Array of related entities from JSON:API included section
+     * @returns Players with resolved image URLs
      */
-    const getPlayers = (params?: { teamId?: string; limit?: number }) =>
+    const mapPlayerIncluded = (
+      data: readonly Player[],
+      included: readonly S.Schema.Type<typeof PlayerIncludedResource>[] = [],
+    ): readonly Player[] => {
+      const includedMap = new Map<
+        string,
+        S.Schema.Type<typeof PlayerIncludedResource>
+      >(included.map((item) => [`${item.type}:${item.id}`, item]));
+
+      return data.map((player) => {
+        // Resolve player image reference (file--file or media--image) to URL
+        const fileRef = player.relationships.field_image?.data;
+        const resolvedImage = (() => {
+          if (!fileRef || !("id" in fileRef) || !("type" in fileRef)) {
+            return player.relationships.field_image;
+          }
+
+          // Handle file--file references
+          if (fileRef.type === "file--file") {
+            const file = includedMap.get(`file--file:${fileRef.id}`);
+            if (!file || file.type !== "file--file") {
+              return player.relationships.field_image;
+            }
+
+            // Decode file to ensure it's valid
+            const decodedFile = S.decodeUnknownSync(File)(file);
+            const fileUrl = decodedFile.attributes.uri.url;
+            const absoluteUrl = fileUrl.startsWith("http")
+              ? fileUrl
+              : `${baseUrl}${fileUrl}`;
+
+            return {
+              data: {
+                uri: { url: absoluteUrl },
+                alt: fileRef.meta?.alt || "",
+                width: fileRef.meta?.width,
+                height: fileRef.meta?.height,
+              },
+            };
+          }
+
+          // Handle media--image references
+          // Schema validation ensures fileRef.type is "media--image" here
+          const media = includedMap.get(`media--image:${fileRef.id}`);
+          if (!media || media.type !== "media--image") {
+            return player.relationships.field_image;
+          }
+
+          const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
+          const mediaFileRef =
+            decodedMedia.relationships?.field_media_image?.data;
+          if (!mediaFileRef) {
+            return player.relationships.field_image;
+          }
+
+          const file = includedMap.get(`file--file:${mediaFileRef.id}`);
+          if (!file || file.type !== "file--file") {
+            return player.relationships.field_image;
+          }
+
+          const decodedFile = S.decodeUnknownSync(File)(file);
+          const fileUrl = decodedFile.attributes.uri.url;
+          const absoluteUrl = fileUrl.startsWith("http")
+            ? fileUrl
+            : `${baseUrl}${fileUrl}`;
+
+          return {
+            data: {
+              uri: { url: absoluteUrl },
+              alt: mediaFileRef.meta?.alt || "",
+              width: mediaFileRef.meta?.width,
+              height: mediaFileRef.meta?.height,
+            },
+          };
+        })();
+
+        return {
+          ...player,
+          relationships: {
+            ...player.relationships,
+            field_image: resolvedImage,
+          },
+        };
+      });
+    };
+
+    /**
+     * Get players with optional filtering and pagination
+     */
+    const getPlayers = (params?: {
+      teamId?: string;
+      limit?: number;
+      page?: number;
+    }) =>
       Effect.gen(function* () {
         const queryParams: Record<string, string | number> = {
-          include: "field_image,field_team",
-          sort: "field_number",
+          include: "field_image",
+          sort: "field_shirtnumber",
         };
 
         if (params?.teamId) {
@@ -485,48 +593,180 @@ export const DrupalServiceLive = Layer.effect(
           queryParams["page[limit]"] = params.limit;
         }
 
+        if (params?.page && params?.limit) {
+          queryParams["page[offset]"] = (params.page - 1) * params.limit;
+        }
+
         const url = buildUrl("node/player", queryParams);
         const response = yield* fetchJson(url, PlayersResponse);
 
-        return response.data;
+        return {
+          players: mapPlayerIncluded(response.data, response.included),
+          links: response.links,
+        };
       });
 
     /**
-     * Get player by path alias
+     * Schema for Decoupled Router response
      */
-    const getPlayerBySlug = (slug: string) =>
-      Effect.gen(function* () {
-        const normalizedSlug = slug.startsWith("/") ? slug : `/player/${slug}`;
+    const RouterResponse = S.Struct({
+      resolved: S.String,
+      isHomePath: S.Boolean,
+      entity: S.Struct({
+        canonical: S.String,
+        type: S.String,
+        bundle: S.String,
+        id: S.String,
+        uuid: S.String,
+      }),
+      label: S.String,
+      jsonapi: S.Struct({
+        individual: S.String,
+        resourceName: S.String,
+        pathPrefix: S.optional(S.String),
+        basePath: S.String,
+        entryPoint: S.String,
+      }),
+    });
 
-        const url = buildUrl("node/player", {
-          "filter[path.alias]": normalizedSlug,
-          include: "field_image,field_team",
+    /**
+     * Resolve a path alias to entity info using Decoupled Router
+     *
+     * Uses the same retry and timeout pattern as fetchJson for resilience.
+     * Returns NotFoundError for 404 responses (non-retryable).
+     */
+    const resolvePathAlias = (path: string) => {
+      const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+      const url = `${baseUrl}/router/translate-path?path=${encodeURIComponent(normalizedPath)}&_format=json`;
+
+      return Effect.gen(function* () {
+        const response = yield* Effect.tryPromise({
+          try: () =>
+            fetch(url, {
+              headers: { Accept: "application/json" },
+              next: { revalidate: 3600 },
+            }),
+          catch: (error) =>
+            new DrupalError({
+              status: 0,
+              message: `Network error fetching ${url}: ${error instanceof Error ? error.message : "Unknown error"}`,
+            }),
         });
-        const response = yield* fetchJson(url, PlayersResponse);
 
-        if (!response.data || response.data.length === 0) {
+        // Handle 404 specially - this is not retryable
+        if (response.status === 404) {
           return yield* Effect.fail(
             new NotFoundError({
-              resource: "player",
-              identifier: slug,
-              message: `Player with slug "${slug}" not found`,
+              resource: "path",
+              identifier: path,
+              message: `Path "${path}" not found`,
             }),
           );
         }
 
-        return response.data[0];
+        if (!response.ok) {
+          return yield* Effect.fail(
+            new DrupalError({
+              status: response.status,
+              message: `HTTP ${response.status} fetching ${url}`,
+            }),
+          );
+        }
+
+        const json = yield* Effect.tryPromise({
+          try: () => response.json(),
+          catch: () =>
+            new DrupalError({
+              status: response.status,
+              message: `Failed to parse JSON response from ${url}`,
+            }),
+        });
+
+        return yield* S.decodeUnknown(RouterResponse)(json).pipe(
+          Effect.mapError(
+            (error) =>
+              new ValidationError({
+                message: `Router response validation failed: ${error.message}`,
+                errors: [],
+              }),
+          ),
+        );
+      }).pipe(
+        // Retry on DrupalError (network/HTTP errors), but not on NotFoundError or ValidationError
+        Effect.retry({
+          schedule: Schedule.exponential("1 second").pipe(
+            Schedule.intersect(Schedule.recurs(3)),
+          ),
+          while: (error) => error instanceof DrupalError,
+        }),
+        Effect.timeout("30 seconds"),
+        Effect.mapError((error) => {
+          if (error._tag === "TimeoutException") {
+            return new DrupalError({
+              message: `Router request timed out after 30 seconds for path "${path}"`,
+              cause: error,
+            });
+          }
+          return error;
+        }),
+      );
+    };
+
+    /**
+     * Get player by path alias
+     *
+     * Uses Decoupled Router to resolve slug to UUID, then fetches by ID.
+     * This is a 2-request approach but much more efficient than paginating
+     * through all players.
+     */
+    const getPlayerBySlug = (slug: string) =>
+      Effect.gen(function* () {
+        const path = slug.startsWith("/") ? slug : `/player/${slug}`;
+
+        // Step 1: Resolve path to entity UUID via Decoupled Router
+        const routerResult = yield* resolvePathAlias(path).pipe(
+          Effect.mapError((error) => {
+            if (error instanceof NotFoundError) {
+              return new NotFoundError({
+                resource: "player",
+                identifier: slug,
+                message: `Player with slug "${slug}" not found`,
+              });
+            }
+            return error;
+          }),
+        );
+
+        // Verify it's a player
+        if (
+          routerResult.entity.type !== "node" ||
+          routerResult.entity.bundle !== "player"
+        ) {
+          return yield* Effect.fail(
+            new NotFoundError({
+              resource: "player",
+              identifier: slug,
+              message: `Path "${slug}" is not a player`,
+            }),
+          );
+        }
+
+        // Step 2: Fetch full player data by UUID
+        const player = yield* getPlayerById(routerResult.entity.uuid);
+        return player;
       });
 
     /**
-     * Get player by ID
+     * Get player by ID (UUID)
      */
     const getPlayerById = (id: string) =>
       Effect.gen(function* () {
         const url = buildUrl(`node/player/${id}`, {
-          include: "field_image,field_team",
+          include: "field_image",
         });
         const response = yield* fetchJson(url, PlayerResponse);
-        return response.data;
+        const mapped = mapPlayerIncluded([response.data], response.included);
+        return mapped[0];
       });
 
     /**
