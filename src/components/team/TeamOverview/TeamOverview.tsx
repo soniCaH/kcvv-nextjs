@@ -1,0 +1,240 @@
+/**
+ * TeamOverview Component
+ *
+ * Grid/list of teams for overview pages like /jeugd.
+ * Displays multiple TeamCard components in a responsive grid.
+ *
+ * Features:
+ * - Responsive grid layout (1-4 columns depending on viewport)
+ * - Filter by team type (senior, youth, club)
+ * - Group by age for youth teams
+ * - Loading skeleton grid
+ * - Empty state handling
+ */
+
+import { useMemo, useState } from "react";
+import { cn } from "@/lib/utils/cn";
+import { TeamCard, type TeamCardProps } from "../TeamCard";
+
+export interface TeamData extends Omit<TeamCardProps, "variant" | "isLoading"> {
+  /** Unique identifier */
+  id?: string;
+}
+
+export interface TeamOverviewProps {
+  /** Array of team data */
+  teams: TeamData[];
+  /** Filter by team type */
+  teamType?: "all" | "senior" | "youth" | "club";
+  /** Group youth teams by age category */
+  groupByAge?: boolean;
+  /** Layout variant */
+  variant?: "grid" | "compact";
+  /** Loading state */
+  isLoading?: boolean;
+  /** Message when no teams found */
+  emptyMessage?: string;
+  /** Show filter buttons */
+  showFilters?: boolean;
+  /** Additional CSS classes */
+  className?: string;
+}
+
+/**
+ * Extract age number from age group string (e.g., "U15" -> 15)
+ */
+function parseAgeGroup(ageGroup: string | undefined): number {
+  if (!ageGroup) return 999;
+  const match = ageGroup.match(/U?(\d+)/i);
+  return match ? parseInt(match[1], 10) : 999;
+}
+
+/**
+ * Group teams by age category (Kleuters, Duiveltjes, Preminiemen, etc.)
+ */
+function getAgeCategory(ageGroup: string | undefined): string {
+  const age = parseAgeGroup(ageGroup);
+  if (age <= 7) return "Kleuters (U6-U7)";
+  if (age <= 9) return "Duiveltjes (U8-U9)";
+  if (age <= 11) return "Preminiemen (U10-U11)";
+  if (age <= 13) return "Miniemen (U12-U13)";
+  if (age <= 15) return "Kadetten (U14-U15)";
+  if (age <= 17) return "Scholieren (U16-U17)";
+  if (age <= 21) return "Beloften (U21)";
+  return "Overig";
+}
+
+export function TeamOverview({
+  teams,
+  teamType = "all",
+  groupByAge = false,
+  variant = "grid",
+  isLoading = false,
+  emptyMessage = "Geen teams gevonden",
+  showFilters = false,
+  className,
+}: TeamOverviewProps) {
+  const [activeFilter, setActiveFilter] = useState<
+    "all" | "senior" | "youth" | "club"
+  >(teamType);
+
+  // Filter teams by type
+  const filteredTeams = useMemo(() => {
+    if (activeFilter === "all") return teams;
+    return teams.filter((t) => t.teamType === activeFilter);
+  }, [teams, activeFilter]);
+
+  // Sort youth teams by age
+  const sortedTeams = useMemo(() => {
+    return [...filteredTeams].sort((a, b) => {
+      // Youth teams sorted by age
+      if (a.teamType === "youth" && b.teamType === "youth") {
+        return parseAgeGroup(a.ageGroup) - parseAgeGroup(b.ageGroup);
+      }
+      // Non-youth teams sorted alphabetically
+      return a.name.localeCompare(b.name);
+    });
+  }, [filteredTeams]);
+
+  // Group teams by age category if enabled
+  const groupedTeams = useMemo(() => {
+    if (!groupByAge) return null;
+
+    const groups: Record<string, TeamData[]> = {};
+    sortedTeams.forEach((team) => {
+      if (team.teamType === "youth") {
+        const category = getAgeCategory(team.ageGroup);
+        if (!groups[category]) groups[category] = [];
+        groups[category].push(team);
+      }
+    });
+    return groups;
+  }, [sortedTeams, groupByAge]);
+
+  const isCompact = variant === "compact";
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div
+        className={cn(
+          "grid gap-4",
+          isCompact
+            ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+          className,
+        )}
+        aria-label="Teams laden..."
+      >
+        {Array.from({ length: 6 }).map((_, i) => (
+          <TeamCard
+            key={i}
+            name=""
+            href=""
+            isLoading
+            variant={isCompact ? "compact" : "default"}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // Empty state
+  if (sortedTeams.length === 0) {
+    return (
+      <div
+        className={cn(
+          "flex items-center justify-center py-12",
+          "text-gray-500 text-center",
+          className,
+        )}
+      >
+        <p>{emptyMessage}</p>
+      </div>
+    );
+  }
+
+  const filterButtons = showFilters && (
+    <div className="flex flex-wrap gap-2 mb-6">
+      {(["all", "senior", "youth", "club"] as const).map((filter) => (
+        <button
+          key={filter}
+          onClick={() => setActiveFilter(filter)}
+          className={cn(
+            "px-4 py-2 rounded-sm text-sm font-medium transition-colors",
+            activeFilter === filter
+              ? "bg-kcvv-green-bright text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+          )}
+        >
+          {filter === "all" && "Alle teams"}
+          {filter === "senior" && "Senioren"}
+          {filter === "youth" && "Jeugd"}
+          {filter === "club" && "Club"}
+        </button>
+      ))}
+    </div>
+  );
+
+  // Grouped display for youth teams
+  if (groupedTeams && Object.keys(groupedTeams).length > 0) {
+    return (
+      <div className={className}>
+        {filterButtons}
+        <div className="space-y-8">
+          {Object.entries(groupedTeams).map(([category, categoryTeams]) => (
+            <section key={category}>
+              <h3
+                className="text-lg font-bold text-gray-900 mb-4"
+                style={{
+                  fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+                }}
+              >
+                {category}
+              </h3>
+              <div
+                className={cn(
+                  "grid gap-4",
+                  isCompact
+                    ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                    : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+                )}
+              >
+                {categoryTeams.map((team) => (
+                  <TeamCard
+                    key={team.id || team.href}
+                    {...team}
+                    variant={isCompact ? "compact" : "default"}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Standard grid display
+  return (
+    <div className={className}>
+      {filterButtons}
+      <div
+        className={cn(
+          "grid gap-4",
+          isCompact
+            ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+        )}
+      >
+        {sortedTeams.map((team) => (
+          <TeamCard
+            key={team.id || team.href}
+            {...team}
+            variant={isCompact ? "compact" : "default"}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
