@@ -36,9 +36,30 @@ export interface StaffMember {
   lastName: string;
   /** Role (e.g., Hoofdtrainer, Assistent-trainer) */
   role: string;
+  /** Short role code displayed like jersey number (e.g., T1, T2, TK, TVJO, PDG) */
+  roleCode?: string;
   /** Photo URL */
   imageUrl?: string;
 }
+
+/**
+ * Generate text-shadow CSS for staff role code (amber/gold variant)
+ */
+function generateStaffTextShadow(precision: number, size: number): string {
+  const shadows: string[] = [];
+  let offset = 0;
+  const length = Math.floor(size * (1 / precision)) - 1;
+
+  for (let i = 0; i <= length; i++) {
+    offset += precision;
+    shadows.push(`${-offset}px ${offset}px #b45309`); // amber-700
+  }
+
+  return shadows.join(", ");
+}
+
+// Pre-calculate the staff text shadow for performance
+const STAFF_ROLE_SHADOW = generateStaffTextShadow(0.25, 8);
 
 export interface TeamRosterProps {
   /** Array of player data */
@@ -198,7 +219,7 @@ export function TeamRoster({
       : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
   );
 
-  // Staff section content - uses similar card style as players but without number
+  // Staff section content - uses PlayerCard style but with amber colors for role code
   const staffSection =
     showStaff && staff.length > 0 ? (
       <section className="mt-12">
@@ -234,6 +255,31 @@ export function TeamRoster({
                   )}
                   aria-hidden="true"
                 />
+
+                {/* Role code - displayed like jersey number but in amber/gold */}
+                {member.roleCode && (
+                  <div
+                    className={cn(
+                      "absolute z-[5] transition-all duration-300 ease-in-out pointer-events-none",
+                      isCompact
+                        ? "top-[8px] left-[15px] text-[5rem]"
+                        : "top-[10px] left-[15px] text-[7rem] lg:top-[5px] lg:text-[9rem]",
+                      "group-hover:scale-110 group-hover:origin-top-left",
+                    )}
+                    style={{
+                      fontFamily: "stenciletta, sans-serif",
+                      lineHeight: 0.71,
+                      letterSpacing: "-4px",
+                      color: "#d97706", // amber-600
+                      WebkitTextStroke: "3px #d97706",
+                      WebkitTextFillColor: "white",
+                      textShadow: STAFF_ROLE_SHADOW,
+                    }}
+                    aria-hidden="true"
+                  >
+                    {member.roleCode}
+                  </div>
+                )}
 
                 {/* Staff image container */}
                 <div className="absolute inset-0 z-[2]">
@@ -274,19 +320,19 @@ export function TeamRoster({
                   </div>
                 </div>
 
-                {/* Bottom gradient overlay */}
+                {/* Bottom gradient overlay - amber for staff */}
                 <div
                   className="absolute bottom-0 left-0 right-0 h-[30%] z-[3] pointer-events-none"
                   style={{
                     background:
-                      "linear-gradient(0deg, #4acf52 10%, transparent 80%)",
+                      "linear-gradient(0deg, #d97706 10%, transparent 80%)",
                   }}
                   aria-hidden="true"
                 />
 
                 {/* Name and role section */}
                 <div className="absolute bottom-[17px] left-[15px] right-[15px] z-[4] overflow-hidden">
-                  {/* Role badge */}
+                  {/* Role title badge */}
                   <span
                     className={cn(
                       "inline-flex items-center gap-1 mb-1",
