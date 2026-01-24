@@ -188,9 +188,9 @@ describe("TeamRoster", () => {
       render(<TeamRoster players={mockPlayers} staff={mockStaff} showStaff />);
       expect(screen.getByText("Technische Staf")).toBeInTheDocument();
       // Staff names are now displayed separately (first name, last name)
+      // Role label was removed per design - only role code shows
       expect(screen.getByText("Marc")).toBeInTheDocument();
       expect(screen.getByText("Van den Berg")).toBeInTheDocument();
-      expect(screen.getByText("Hoofdtrainer")).toBeInTheDocument();
     });
 
     it("should not render staff when showStaff is false", () => {
