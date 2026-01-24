@@ -35,6 +35,14 @@ See **TeamOverview** component for actual usage patterns with grids and grouping
       default: "light",
     },
   },
+  // Give cards a representative width in Storybook (they fill their container in real usage)
+  decorators: [
+    (Story) => (
+      <div className="w-[320px]">
+        <Story />
+      </div>
+    ),
+  ],
   tags: ["autodocs"],
   argTypes: {
     name: { control: "text" },
@@ -105,7 +113,7 @@ export const Loading: Story = {
 };
 
 /**
- * Compact variant
+ * Compact variant (smaller width for dense layouts)
  */
 export const Compact: Story = {
   args: {
@@ -115,4 +123,11 @@ export const Compact: Story = {
     teamType: "youth",
     variant: "compact",
   },
+  decorators: [
+    (Story) => (
+      <div className="w-[200px]">
+        <Story />
+      </div>
+    ),
+  ],
 };
