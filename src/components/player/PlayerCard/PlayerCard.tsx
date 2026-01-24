@@ -88,7 +88,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
         <div
           ref={ref as Ref<HTMLDivElement>}
           className={cn(
-            "relative overflow-hidden bg-gray-200 animate-pulse w-[340px]",
+            "relative overflow-hidden bg-gray-200 animate-pulse w-full max-w-[340px]",
             isCompact ? "h-[220px]" : "h-[285px] lg:h-[446px]",
             className,
           )}
@@ -105,7 +105,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
     return (
       <article
         ref={ref}
-        className={cn("player__teaser group w-[340px]", className)}
+        className={cn("player__teaser group w-full max-w-[340px]", className)}
         {...props}
       >
         <Link
@@ -128,7 +128,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
             aria-hidden="true"
           />
 
-          {/* Jersey number - large decorative text ON TOP of player image */}
+          {/* Jersey number - large decorative text ON TOP of player image with hover animation */}
           {number !== undefined && (
             <div
               className={cn(
@@ -137,6 +137,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                 isCompact
                   ? "top-[8px] left-[15px] text-[8rem]"
                   : "top-[10px] left-[15px] text-[11.25rem] lg:top-[5px] lg:text-[14rem]",
+                "group-hover:scale-110 group-hover:origin-top-left",
               )}
               style={{
                 maxWidth: "10px",
