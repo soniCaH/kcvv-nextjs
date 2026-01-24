@@ -103,13 +103,13 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
     return (
       <article
         ref={ref}
-        className={cn("team-card group", className)}
+        className={cn("team-card group h-full", className)}
         {...props}
       >
         <Link
           href={href}
           className={cn(
-            "relative block overflow-hidden rounded-sm",
+            "relative flex flex-col overflow-hidden rounded-sm h-full",
             "no-underline text-inherit",
             "bg-white",
             "border border-[#edeff4]",
@@ -121,10 +121,10 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
           title={`Bekijk ${name}`}
           aria-label={`Bekijk team ${name}${tagline ? `, ${tagline}` : ""}${ageGroup ? `, leeftijdsgroep ${ageGroup}` : ""}`}
         >
-          {/* Image Section */}
+          {/* Image Section - fixed height */}
           <div
             className={cn(
-              "relative overflow-hidden bg-gray-100",
+              "relative overflow-hidden bg-gray-100 flex-shrink-0",
               isCompact ? "h-[120px]" : "h-[160px]",
             )}
           >
@@ -177,8 +177,8 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
             )}
           </div>
 
-          {/* Content Section */}
-          <div className={cn("p-4", isCompact && "p-3")}>
+          {/* Content Section - grows to fill remaining space */}
+          <div className={cn("p-4 flex-1 flex flex-col", isCompact && "p-3")}>
             {/* Team Name */}
             <h3
               className={cn(

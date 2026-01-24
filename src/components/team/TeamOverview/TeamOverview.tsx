@@ -118,7 +118,7 @@ export function TeamOverview({
     return (
       <div
         className={cn(
-          "grid gap-4",
+          "grid gap-4 auto-rows-fr",
           isCompact
             ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
             : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
@@ -194,7 +194,7 @@ export function TeamOverview({
               </h3>
               <div
                 className={cn(
-                  "grid gap-4",
+                  "grid gap-4 auto-rows-fr",
                   isCompact
                     ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
@@ -221,7 +221,7 @@ export function TeamOverview({
       {filterButtons}
       <div
         className={cn(
-          "grid gap-4",
+          "grid gap-4 auto-rows-fr",
           isCompact
             ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
             : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
