@@ -42,7 +42,11 @@ export interface StaffMember {
 }
 
 /**
- * Generate text-shadow CSS for staff role code (navy blue variant)
+ * Generate a multi-layer navy-blue `text-shadow` CSS value to emulate a thick, offset shadow effect.
+ *
+ * @param precision - Pixel increment between successive shadow offsets (controls spacing between layers)
+ * @param size - Reference size used to determine how many shadow layers are generated; larger values produce more layers
+ * @returns A comma-separated `text-shadow` string (e.g., `"-2px 2px #1e3a5f, -4px 4px #1e3a5f, ..."`)
  */
 function generateStaffTextShadow(precision: number, size: number): string {
   const shadows: string[] = [];
@@ -99,14 +103,21 @@ const POSITION_CONFIG: Record<
 };
 
 /**
- * Get position order for sorting
+ * Get the numeric sort order for a position key.
+ *
+ * @param position - Position key (one of the keys defined in POSITION_CONFIG)
+ * @returns The order index for `position`; `99` if the position is not recognized
  */
 function getPositionOrder(position: string): number {
   return POSITION_CONFIG[position]?.order ?? 99;
 }
 
 /**
- * Get position label (singular or plural)
+ * Get the singular or plural display label for a roster position.
+ *
+ * @param position - Position key as defined in POSITION_CONFIG
+ * @param count - Number of items for the position; determines singular vs plural
+ * @returns The position label: the singular label if `count` is 1, otherwise the plural label. If the position key is not found, returns the original `position` string.
  */
 function getPositionLabel(position: string, count: number): string {
   const config = POSITION_CONFIG[position];
@@ -114,6 +125,20 @@ function getPositionLabel(position: string, count: number): string {
   return count === 1 ? config.label : config.labelPlural;
 }
 
+/**
+ * Render a team roster of players, optionally grouped by position, with support for loading skeletons, an empty state, and an optional staff section.
+ *
+ * @param players - Array of player entries to render in the roster
+ * @param staff - Optional array of staff members to render in a separate "Technische Staf" section
+ * @param teamName - Accessible name used in ARIA labels for the roster and loading regions
+ * @param groupByPosition - If true, players are grouped into position sections with headers; otherwise rendered as a flat grid
+ * @param showStaff - If true and `staff` contains items, show the staff section below the players
+ * @param variant - Layout variant: `"grid"` for the default card grid or `"compact"` for a denser layout
+ * @param isLoading - If true, render skeleton placeholders instead of player content
+ * @param emptyMessage - Message displayed when there are no players (and no staff to show)
+ * @param className - Additional CSS classes to apply to the root container
+ * @returns A React element containing the rendered roster (groups or flat grid), staff section if applicable, or loading/empty states
+ */
 export function TeamRoster({
   players,
   staff = [],

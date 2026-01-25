@@ -41,7 +41,10 @@ export interface TeamOverviewProps {
 }
 
 /**
- * Extract age number from age group string (e.g., "U15" -> 15)
+ * Convert an age-group label (e.g., "U15") to its numeric age.
+ *
+ * @param ageGroup - A string like `"U15"` or a number-only string; may be undefined
+ * @returns The parsed age as a number, or `999` if `ageGroup` is undefined or cannot be parsed
  */
 function parseAgeGroup(ageGroup: string | undefined): number {
   if (!ageGroup) return 999;
@@ -50,7 +53,12 @@ function parseAgeGroup(ageGroup: string | undefined): number {
 }
 
 /**
- * Group teams by age category (Kleuters, Duiveltjes, Preminiemen, etc.)
+ * Map an age-group identifier to its human-readable age category label.
+ *
+ * @param ageGroup - Age group string such as `"U15"`, or `undefined` when not available.
+ * @returns One of: `"Kleuters (U6-U7)"`, `"Duiveltjes (U8-U9)"`, `"Preminiemen (U10-U11)"`,
+ * `"Miniemen (U12-U13)"`, `"Kadetten (U14-U15)"`, `"Scholieren (U16-U17)"`,
+ * `"Beloften (U21)"`, or `"Overig"` depending on the parsed age.
  */
 function getAgeCategory(ageGroup: string | undefined): string {
   const age = parseAgeGroup(ageGroup);
@@ -64,6 +72,19 @@ function getAgeCategory(ageGroup: string | undefined): string {
   return "Overig";
 }
 
+/**
+ * Render a responsive overview of teams with optional filtering, optional grouping of youth teams by age category, and built-in loading and empty states.
+ *
+ * @param teams - Array of team objects to display.
+ * @param teamType - Initial active filter: "all", "senior", "youth", or "club".
+ * @param groupByAge - When true, group youth teams into age-category sections.
+ * @param variant - Layout variant: "grid" for full cards or "compact" for a denser grid.
+ * @param isLoading - When true, show a skeleton grid instead of team data.
+ * @param emptyMessage - Message displayed when no teams match the current filter.
+ * @param showFilters - When true, render filter buttons to switch between team types.
+ * @param className - Optional className applied to the outer container.
+ * @returns A JSX element representing the team overview layout.
+ */
 export function TeamOverview({
   teams,
   teamType = "all",
