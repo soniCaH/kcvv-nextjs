@@ -80,6 +80,7 @@ const nextConfig: NextConfig = {
         hostname: "dfaozfi7c7f3s.cloudfront.net",
         pathname: "/**",
       },
+      { protocol: "https", hostname: "picsum.photos", pathname: "/**" },
     ],
     // SVG Security Configuration
     // Current analysis (2025-01-05):
