@@ -205,8 +205,22 @@ describe("TeamRoster", () => {
   });
 
   describe("Loading State", () => {
-    it("should render loading skeletons when isLoading is true", () => {
+    it("should render grouped loading skeletons when isLoading is true", () => {
       render(<TeamRoster players={[]} isLoading teamName="A-Ploeg" />);
+      expect(
+        screen.getByLabelText("A-Ploeg selectie laden..."),
+      ).toBeInTheDocument();
+    });
+
+    it("should render flat loading skeleton when groupByPosition is false", () => {
+      render(
+        <TeamRoster
+          players={[]}
+          isLoading
+          groupByPosition={false}
+          teamName="A-Ploeg"
+        />,
+      );
       expect(
         screen.getByLabelText("A-Ploeg selectie laden..."),
       ).toBeInTheDocument();

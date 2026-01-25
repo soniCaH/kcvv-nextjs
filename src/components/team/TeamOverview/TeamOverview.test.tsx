@@ -141,6 +141,21 @@ describe("TeamOverview", () => {
       expect(screen.getByText("Scholieren (U16-U17)")).toBeInTheDocument();
     });
 
+    it("should group U21 teams in Beloften category", () => {
+      const teamsWithU21: TeamData[] = [
+        ...mockYouthTeams,
+        { name: "U21", href: "/jeugd/u21", ageGroup: "U21", teamType: "youth" },
+      ];
+      render(<TeamOverview teams={teamsWithU21} groupByAge teamType="youth" />);
+      expect(screen.getByText("Beloften (U21)")).toBeInTheDocument();
+    });
+
+    it("should group non-youth teams in Overig category when groupByAge is true", () => {
+      const mixedTeams: TeamData[] = [...mockYouthTeams, ...mockSeniorTeams];
+      render(<TeamOverview teams={mixedTeams} groupByAge />);
+      expect(screen.getByText("Overig")).toBeInTheDocument();
+    });
+
     it("should not group when groupByAge is false", () => {
       render(<TeamOverview teams={mockYouthTeams} teamType="youth" />);
       expect(screen.queryByText("Kleuters (U6-U7)")).not.toBeInTheDocument();
@@ -204,26 +219,17 @@ describe("TeamOverview", () => {
 
   describe("Team Type Styling", () => {
     it("should render senior teams without age badges", () => {
-      const { container } = render(
-        <TeamOverview teams={mockSeniorTeams} teamType="senior" />,
-      );
-      // Senior teams shouldn't have the age badge (absolute positioned div)
-      const articles = container.querySelectorAll("article");
-      articles.forEach((article) => {
-        const badge = article.querySelector(".absolute.top-3.left-3");
-        expect(badge).toBeNull();
-      });
+      render(<TeamOverview teams={mockSeniorTeams} teamType="senior" />);
+      // Senior teams shouldn't have badges
+      const badges = screen.queryAllByTestId("team-badge");
+      expect(badges).toHaveLength(0);
     });
 
     it("should render youth teams with age badges", () => {
-      const { container } = render(
-        <TeamOverview teams={mockYouthTeams} teamType="youth" />,
-      );
-      const articles = container.querySelectorAll("article");
-      articles.forEach((article) => {
-        const badge = article.querySelector(".absolute.top-3.left-3");
-        expect(badge).toBeInTheDocument();
-      });
+      render(<TeamOverview teams={mockYouthTeams} teamType="youth" />);
+      // Each youth team should have a badge
+      const badges = screen.getAllByTestId("team-badge");
+      expect(badges).toHaveLength(mockYouthTeams.length);
     });
   });
 });

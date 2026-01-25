@@ -151,6 +151,7 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
             {/* Age group badge for youth teams */}
             {ageGroup && (
               <div
+                data-testid="team-badge"
                 className={cn(
                   "absolute top-3 left-3",
                   "px-3 py-1 rounded-sm",
@@ -162,17 +163,18 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
               </div>
             )}
 
-            {/* Team type indicator for non-youth */}
-            {!ageGroup && teamType !== "senior" && (
+            {/* Team type indicator for club teams without age group */}
+            {!ageGroup && teamType === "club" && (
               <div
+                data-testid="team-badge"
                 className={cn(
                   "absolute top-3 left-3",
                   "px-3 py-1 rounded-sm",
                   "text-xs font-medium uppercase tracking-wide",
-                  badgeColors[teamType],
+                  badgeColors.club,
                 )}
               >
-                {teamType === "club" ? "Club" : "Senior"}
+                Club
               </div>
             )}
           </div>

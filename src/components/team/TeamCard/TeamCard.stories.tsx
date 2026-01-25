@@ -59,6 +59,8 @@ See **TeamOverview** component for actual usage patterns with grids and grouping
       options: ["default", "compact"],
     },
     isLoading: { control: "boolean" },
+    coach: { control: "object" },
+    record: { control: "object" },
   },
 } satisfies Meta<typeof TeamCard>;
 
@@ -98,6 +100,34 @@ export const Club: Story = {
     href: "/club/jeugdbestuur",
     tagline: "De begeleiding van de toekomst",
     teamType: "club",
+  },
+};
+
+/**
+ * Team card with coach info
+ */
+export const WithCoach: Story = {
+  args: {
+    name: "A-Ploeg",
+    href: "/team/a-ploeg",
+    tagline: "De hoofdploeg",
+    teamType: "senior",
+    coach: {
+      name: "Jan Peeters",
+      imageUrl: "https://picsum.photos/seed/coach/100/100",
+    },
+  },
+};
+
+/**
+ * Team card with W/D/L record
+ */
+export const WithRecord: Story = {
+  args: {
+    name: "A-Ploeg",
+    href: "/team/a-ploeg",
+    teamType: "senior",
+    record: { wins: 12, draws: 5, losses: 3 },
   },
 };
 

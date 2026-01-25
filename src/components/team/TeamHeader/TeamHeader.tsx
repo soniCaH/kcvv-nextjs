@@ -225,11 +225,7 @@ export const TeamHeader = forwardRef<HTMLElement, TeamHeaderProps>(
                       <p className="text-2xl md:text-3xl font-bold text-gray-900">
                         {stats.position}
                         <span className="text-sm font-normal text-gray-500">
-                          {stats.position === 1
-                            ? "ste"
-                            : stats.position === 2 || stats.position === 3
-                              ? "de"
-                              : "de"}
+                          {stats.position === 1 ? "ste" : "de"}
                         </span>
                       </p>
                       <p className="text-xs text-gray-500 uppercase tracking-wide">

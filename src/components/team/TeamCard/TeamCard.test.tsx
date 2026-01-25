@@ -75,7 +75,7 @@ describe("TeamCard", () => {
 
   describe("Age Group Badge", () => {
     it("should display age group badge for youth teams", () => {
-      const { container } = render(
+      render(
         <TeamCard
           name="U15"
           href="/jeugd/u15"
@@ -83,19 +83,14 @@ describe("TeamCard", () => {
           teamType="youth"
         />,
       );
-      // Badge has specific positioning classes
-      const badge = container.querySelector(".absolute.top-3.left-3");
+      const badge = screen.getByTestId("team-badge");
       expect(badge).toBeInTheDocument();
       expect(badge).toHaveTextContent("U15");
     });
 
     it("should not display age group badge when not provided", () => {
-      const { container } = render(
-        <TeamCard {...defaultProps} teamType="senior" />,
-      );
-      // Should not have the badge element
-      const badge = container.querySelector(".absolute.top-3.left-3");
-      expect(badge).toBeNull();
+      render(<TeamCard {...defaultProps} teamType="senior" />);
+      expect(screen.queryByTestId("team-badge")).not.toBeInTheDocument();
     });
   });
 
@@ -176,18 +171,24 @@ describe("TeamCard", () => {
   });
 
   describe("Variants", () => {
-    it("should render default variant by default", () => {
+    it("should render default variant with taller image section", () => {
       const { container } = render(<TeamCard {...defaultProps} />);
       const article = container.querySelector("article");
       expect(article).toBeInTheDocument();
+      // Default variant has h-[160px] image container
+      const imageContainer = container.querySelector(".h-\\[160px\\]");
+      expect(imageContainer).toBeInTheDocument();
     });
 
-    it("should render compact variant when specified", () => {
+    it("should render compact variant with shorter image section", () => {
       const { container } = render(
         <TeamCard {...defaultProps} variant="compact" />,
       );
       const article = container.querySelector("article");
       expect(article).toBeInTheDocument();
+      // Compact variant has h-[120px] image container
+      const imageContainer = container.querySelector(".h-\\[120px\\]");
+      expect(imageContainer).toBeInTheDocument();
     });
   });
 

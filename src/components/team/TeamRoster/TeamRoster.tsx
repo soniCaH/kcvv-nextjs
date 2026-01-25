@@ -157,6 +157,38 @@ export function TeamRoster({
 
   // Loading skeleton
   if (isLoading) {
+    // Flat grid skeleton when not grouping by position
+    if (!groupByPosition) {
+      return (
+        <div
+          className={cn("space-y-8", className)}
+          aria-label={`${teamName} selectie laden...`}
+        >
+          <div
+            className={cn(
+              "grid gap-4",
+              isCompact
+                ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+            )}
+          >
+            {Array.from({ length: 8 }).map((_, j) => (
+              <PlayerCard
+                key={j}
+                firstName=""
+                lastName=""
+                position=""
+                href=""
+                isLoading
+                variant={isCompact ? "compact" : "default"}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Grouped skeleton when grouping by position
     return (
       <div
         className={cn("space-y-8", className)}

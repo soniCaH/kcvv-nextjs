@@ -84,14 +84,25 @@ export function TeamOverview({
     return teams.filter((t) => t.teamType === activeFilter);
   }, [teams, activeFilter]);
 
-  // Sort youth teams by age
+  // Sort teams: youth first (by age), then senior (alphabetically), then club (alphabetically)
   const sortedTeams = useMemo(() => {
+    const typeOrder: Record<string, number> = { youth: 0, senior: 1, club: 2 };
+
     return [...filteredTeams].sort((a, b) => {
-      // Youth teams sorted by age
-      if (a.teamType === "youth" && b.teamType === "youth") {
+      const aType = a.teamType || "senior";
+      const bType = b.teamType || "senior";
+
+      // First sort by team type (youth < senior < club)
+      if (aType !== bType) {
+        return (typeOrder[aType] ?? 3) - (typeOrder[bType] ?? 3);
+      }
+
+      // Within youth teams, sort by age (youngest first)
+      if (aType === "youth") {
         return parseAgeGroup(a.ageGroup) - parseAgeGroup(b.ageGroup);
       }
-      // Non-youth teams sorted alphabetically
+
+      // Within other team types, sort alphabetically
       return a.name.localeCompare(b.name);
     });
   }, [filteredTeams]);
@@ -104,6 +115,11 @@ export function TeamOverview({
     sortedTeams.forEach((team) => {
       if (team.teamType === "youth") {
         const category = getAgeCategory(team.ageGroup);
+        if (!groups[category]) groups[category] = [];
+        groups[category].push(team);
+      } else {
+        // Non-youth teams go into "Overig" category
+        const category = "Overig";
         if (!groups[category]) groups[category] = [];
         groups[category].push(team);
       }

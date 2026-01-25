@@ -123,6 +123,28 @@ describe("TeamHeader", () => {
       expect(screen.getByText("Positie")).toBeInTheDocument();
     });
 
+    it("should render 1ste for first position", () => {
+      render(
+        <TeamHeader
+          name="A-Ploeg"
+          stats={{ wins: 12, draws: 5, losses: 3, position: 1 }}
+        />,
+      );
+      expect(screen.getByText("1")).toBeInTheDocument();
+      expect(screen.getByText("ste")).toBeInTheDocument();
+    });
+
+    it("should render de suffix for non-first positions", () => {
+      render(
+        <TeamHeader
+          name="A-Ploeg"
+          stats={{ wins: 12, draws: 5, losses: 2, position: 4 }}
+        />,
+      );
+      expect(screen.getByText("4")).toBeInTheDocument();
+      expect(screen.getByText("de")).toBeInTheDocument();
+    });
+
     it("should render goals for and against when provided", () => {
       render(
         <TeamHeader
