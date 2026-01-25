@@ -291,4 +291,79 @@ describe("TeamRoster", () => {
       expect(screen.getByLabelText("Aanvoerder")).toBeInTheDocument();
     });
   });
+
+  describe("Staff with Images", () => {
+    it("should render staff member with image", () => {
+      const staffWithImage: StaffMember[] = [
+        {
+          id: "staff-img",
+          firstName: "John",
+          lastName: "Doe",
+          role: "Trainer",
+          roleCode: "T1",
+          imageUrl: "/images/staff/john-doe.jpg",
+        },
+      ];
+      render(
+        <TeamRoster players={mockPlayers} staff={staffWithImage} showStaff />,
+      );
+      const image = screen.getByAltText("John Doe");
+      expect(image).toBeInTheDocument();
+      expect(image).toHaveAttribute("src");
+    });
+
+    it("should render staff member without roleCode", () => {
+      const staffWithoutCode: StaffMember[] = [
+        {
+          id: "staff-no-code",
+          firstName: "Jane",
+          lastName: "Smith",
+          role: "Verzorger",
+        },
+      ];
+      render(
+        <TeamRoster players={mockPlayers} staff={staffWithoutCode} showStaff />,
+      );
+      expect(screen.getByText("Jane")).toBeInTheDocument();
+      expect(screen.getByText("Smith")).toBeInTheDocument();
+    });
+  });
+
+  describe("Unknown Position Handling", () => {
+    it("should handle players with unknown positions", () => {
+      const playersWithUnknown: RosterPlayer[] = [
+        ...mockPlayers,
+        {
+          id: "7",
+          firstName: "Unknown",
+          lastName: "Player",
+          position: "UnknownPosition",
+          number: 99,
+          href: "/speler/unknown",
+        },
+      ];
+      render(<TeamRoster players={playersWithUnknown} groupByPosition />);
+      // Should still render all players
+      const articles = screen.getAllByRole("article");
+      expect(articles.length).toBe(playersWithUnknown.length);
+    });
+
+    it("should sort unknown positions last", () => {
+      const playersWithUnknown: RosterPlayer[] = [
+        {
+          id: "unknown",
+          firstName: "Unknown",
+          lastName: "Position",
+          position: "Mystery",
+          number: 1,
+          href: "/unknown",
+        },
+        mockPlayers[0], // Keeper
+      ];
+      render(<TeamRoster players={playersWithUnknown} groupByPosition />);
+      const headings = screen.getAllByRole("heading", { level: 3 });
+      // Keeper should come first, unknown position last
+      expect(headings[0].textContent).toContain("Keeper");
+    });
+  });
 });

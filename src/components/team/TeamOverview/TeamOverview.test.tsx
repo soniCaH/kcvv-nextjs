@@ -232,4 +232,65 @@ describe("TeamOverview", () => {
       expect(badges).toHaveLength(mockYouthTeams.length);
     });
   });
+
+  describe("Age Group Parsing", () => {
+    it("should handle teams without age groups", () => {
+      const teamsWithoutAge: TeamData[] = [
+        { name: "No Age", href: "/team/no-age", teamType: "youth" },
+      ];
+      render(<TeamOverview teams={teamsWithoutAge} groupByAge />);
+      // Should render in "Overig" category
+      expect(screen.getByText("Overig")).toBeInTheDocument();
+    });
+
+    it("should handle malformed age group strings", () => {
+      const teamsWithMalformedAge: TeamData[] = [
+        {
+          name: "Weird Team",
+          href: "/team/weird",
+          ageGroup: "ABC",
+          teamType: "youth",
+        },
+      ];
+      render(<TeamOverview teams={teamsWithMalformedAge} groupByAge />);
+      // Should still render the team
+      expect(screen.getByText("Weird Team")).toBeInTheDocument();
+    });
+  });
+
+  describe("Mixed Team Type Sorting", () => {
+    it("should sort mixed team types correctly (youth, senior, club)", () => {
+      const mixedTeams: TeamData[] = [
+        ...mockSeniorTeams,
+        ...mockYouthTeams,
+        ..._mockClubTeams,
+      ];
+      render(<TeamOverview teams={mixedTeams} teamType="all" />);
+      const articles = screen.getAllByRole("article");
+      const names = articles.map(
+        (a) => within(a).getByRole("heading").textContent,
+      );
+      // Youth teams should come first (sorted by age)
+      expect(names[0]).toBe("U6");
+      expect(names[1]).toBe("U10");
+      expect(names[2]).toBe("U15");
+      expect(names[3]).toBe("U17");
+      // Then senior teams (alphabetically)
+      expect(names[4]).toBe("A-Ploeg");
+      expect(names[5]).toBe("B-Ploeg");
+      // Then club teams
+      expect(names[6]).toBe("Bestuur");
+    });
+
+    it("should filter club teams correctly", () => {
+      const mixedTeams: TeamData[] = [
+        ...mockSeniorTeams,
+        ...mockYouthTeams,
+        ..._mockClubTeams,
+      ];
+      render(<TeamOverview teams={mixedTeams} teamType="club" />);
+      const articles = screen.getAllByRole("article");
+      expect(articles.length).toBe(_mockClubTeams.length);
+    });
+  });
 });
