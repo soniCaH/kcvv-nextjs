@@ -188,10 +188,11 @@ export function TeamRoster({
         <div
           className={cn("space-y-8", className)}
           aria-label={`${teamName} selectie laden...`}
+          role="status"
         >
           <div
             className={cn(
-              "grid gap-4",
+              "grid gap-6",
               isCompact
                 ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                 : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
@@ -218,6 +219,7 @@ export function TeamRoster({
       <div
         className={cn("space-y-8", className)}
         aria-label={`${teamName} selectie laden...`}
+        role="status"
       >
         {/* Position section skeletons */}
         {[1, 2, 3, 4].map((i) => (
@@ -227,7 +229,7 @@ export function TeamRoster({
             {/* Player cards skeleton */}
             <div
               className={cn(
-                "grid gap-4",
+                "grid gap-6",
                 isCompact
                   ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                   : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
@@ -279,21 +281,16 @@ export function TeamRoster({
   const staffSection =
     showStaff && staff.length > 0 ? (
       <section className="mt-12">
-        <h3
-          className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2"
-          style={{
-            fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-          }}
-        >
+        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2 font-title">
           Technische Staf
           <span className="text-sm font-normal text-gray-500">
             ({staff.length})
           </span>
         </h3>
         <div className={gridClasses}>
-          {staff.map((member) => (
+          {staff.map((member, idx) => (
             <article
-              key={member.id || `${member.firstName}-${member.lastName}`}
+              key={member.id ?? `${member.firstName}-${member.lastName}-${idx}`}
               className="group w-full max-w-[340px]"
             >
               <div
@@ -316,7 +313,7 @@ export function TeamRoster({
                 {member.roleCode && (
                   <div
                     className={cn(
-                      "absolute z-[5] transition-all duration-300 ease-in-out pointer-events-none",
+                      "absolute z-[5] transition-all duration-300 ease-in-out pointer-events-none font-alt",
                       isCompact
                         ? "top-[8px] left-[12px] text-[5rem]"
                         : "top-[10px] left-[12px] text-[7rem] lg:top-[5px] lg:text-[9rem]",
@@ -324,7 +321,6 @@ export function TeamRoster({
                     )}
                     style={{
                       maxWidth: "10px",
-                      fontFamily: "stenciletta, sans-serif",
                       lineHeight: 0.71,
                       letterSpacing: "-4px",
                       color: "#1e3a5f",
@@ -405,14 +401,12 @@ export function TeamRoster({
                   {/* First name */}
                   <div
                     className={cn(
-                      "text-white uppercase font-semibold truncate",
+                      "text-white uppercase font-semibold truncate font-title",
                       isCompact
                         ? "text-[1.5rem]"
                         : "text-[1.75rem] lg:text-[2rem]",
                     )}
                     style={{
-                      fontFamily:
-                        "quasimoda, acumin-pro, Montserrat, sans-serif",
                       lineHeight: 1,
                     }}
                   >
@@ -422,14 +416,12 @@ export function TeamRoster({
                   {/* Last name */}
                   <div
                     className={cn(
-                      "text-white uppercase font-thin truncate",
+                      "text-white uppercase font-thin truncate font-title",
                       isCompact
                         ? "text-[1.5rem]"
                         : "text-[1.75rem] lg:text-[2rem]",
                     )}
                     style={{
-                      fontFamily:
-                        "quasimoda, acumin-pro, Montserrat, sans-serif",
                       lineHeight: 1,
                     }}
                   >
@@ -454,21 +446,20 @@ export function TeamRoster({
         <div className="space-y-10">
           {groupedPlayers.map(([position, positionPlayers]) => (
             <section key={position}>
-              <h3
-                className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2"
-                style={{
-                  fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-                }}
-              >
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2 font-title">
                 {getPositionLabel(position, positionPlayers.length)}
                 <span className="text-sm font-normal text-gray-500">
                   ({positionPlayers.length})
                 </span>
               </h3>
               <div className={gridClasses}>
-                {positionPlayers.map((player) => (
+                {positionPlayers.map((player, idx) => (
                   <PlayerCard
-                    key={player.id || player.href}
+                    key={
+                      player.id ??
+                      player.href ??
+                      `${player.firstName}-${player.lastName}-${idx}`
+                    }
                     {...player}
                     variant={isCompact ? "compact" : "default"}
                   />
@@ -490,9 +481,13 @@ export function TeamRoster({
       aria-label={`${teamName} selectie`}
     >
       <div className={gridClasses}>
-        {sortedPlayers.map((player) => (
+        {sortedPlayers.map((player, idx) => (
           <PlayerCard
-            key={player.id || player.href}
+            key={
+              player.id ??
+              player.href ??
+              `${player.firstName}-${player.lastName}-${idx}`
+            }
             {...player}
             variant={isCompact ? "compact" : "default"}
           />

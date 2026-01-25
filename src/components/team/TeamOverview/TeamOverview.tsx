@@ -12,7 +12,7 @@
  * - Empty state handling
  */
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { cn } from "@/lib/utils/cn";
 import { TeamCard, type TeamCardProps } from "../TeamCard";
 
@@ -98,6 +98,11 @@ export function TeamOverview({
   const [activeFilter, setActiveFilter] = useState<
     "all" | "senior" | "youth" | "club"
   >(teamType);
+
+  // Sync activeFilter when teamType prop changes
+  useEffect(() => {
+    setActiveFilter(teamType);
+  }, [teamType]);
 
   // Filter teams by type
   const filteredTeams = useMemo(() => {
@@ -197,6 +202,7 @@ export function TeamOverview({
         <button
           key={filter}
           onClick={() => setActiveFilter(filter)}
+          aria-pressed={activeFilter === filter}
           className={cn(
             "px-4 py-2 rounded-sm text-sm font-medium transition-colors",
             activeFilter === filter
@@ -221,12 +227,7 @@ export function TeamOverview({
         <div className="space-y-8">
           {Object.entries(groupedTeams).map(([category, categoryTeams]) => (
             <section key={category}>
-              <h3
-                className="text-lg font-bold text-gray-900 mb-4"
-                style={{
-                  fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-                }}
-              >
+              <h3 className="text-lg font-bold text-gray-900 mb-4 font-title">
                 {category}
               </h3>
               <div
