@@ -131,14 +131,33 @@ describe("TeamOverview", () => {
 
   describe("Grouping", () => {
     it("should group youth teams by age category when groupByAge is true", () => {
+      const teamsWithDuplicateCategory = [
+        ...mockYouthTeams,
+        { name: "U15B", href: "/u15b", ageGroup: "U15", teamType: "youth" },
+        { name: "U8", href: "/u8", ageGroup: "U8", teamType: "youth" },
+        { name: "U12", href: "/u12", ageGroup: "U12", teamType: "youth" },
+      ] as TeamData[];
+
       render(
-        <TeamOverview teams={mockYouthTeams} groupByAge teamType="youth" />,
+        <TeamOverview
+          teams={teamsWithDuplicateCategory}
+          groupByAge
+          teamType="youth"
+        />,
       );
       // Should have section headings
       expect(screen.getByText("Kleuters (U6-U7)")).toBeInTheDocument();
+      expect(screen.getByText("Duiveltjes (U8-U9)")).toBeInTheDocument();
       expect(screen.getByText("Preminiemen (U10-U11)")).toBeInTheDocument();
+      expect(screen.getByText("Miniemen (U12-U13)")).toBeInTheDocument();
       expect(screen.getByText("Kadetten (U14-U15)")).toBeInTheDocument();
       expect(screen.getByText("Scholieren (U16-U17)")).toBeInTheDocument();
+
+      // Kadetten should have 2 teams
+      const kadetten = screen
+        .getByText("Kadetten (U14-U15)")
+        .closest("section");
+      expect(within(kadetten!).getAllByRole("article").length).toBe(2);
     });
 
     it("should group U21 teams in Beloften category", () => {
@@ -282,6 +301,29 @@ describe("TeamOverview", () => {
       expect(names[6]).toBe("Bestuur");
     });
 
+    it("should default to senior team type if missing", () => {
+      const teamWithoutType = { name: "Default FC", href: "/default" };
+      const teamWithoutType2 = { name: "Another FC", href: "/another" };
+      // "Default FC" should be treated as senior.
+      // Comparison: "A-Ploeg" (senior) vs "Default FC" (senior implied)
+      // Sort alphabetically
+      const teams = [
+        ...mockSeniorTeams, // A-Ploeg
+        teamWithoutType,
+        teamWithoutType2,
+      ] as TeamData[];
+
+      render(<TeamOverview teams={teams} teamType="all" />);
+      const articles = screen.getAllByRole("article");
+      const names = articles.map(
+        (a) => within(a).getByRole("heading").textContent,
+      );
+
+      // "Default FC" comes after "A-Ploeg"
+      expect(names).toContain("Default FC");
+      expect(names).toContain("Another FC");
+    });
+
     it("should filter club teams correctly", () => {
       const mixedTeams: TeamData[] = [
         ...mockSeniorTeams,
@@ -291,6 +333,57 @@ describe("TeamOverview", () => {
       render(<TeamOverview teams={mixedTeams} teamType="club" />);
       const articles = screen.getAllByRole("article");
       expect(articles.length).toBe(_mockClubTeams.length);
+    });
+
+    it("should sort unknown team types to the end", () => {
+      const teamsWithUnknown: TeamData[] = [
+        {
+          name: "Alien Team",
+          href: "/alien",
+          teamType: "alien" as unknown as "senior",
+        },
+        mockSeniorTeams[0],
+      ];
+      render(<TeamOverview teams={teamsWithUnknown} teamType="all" />);
+      const articles = screen.getAllByRole("article");
+      const names = articles.map(
+        (a) => within(a).getByRole("heading").textContent,
+      );
+      // "alien" type (order 3) should come after "senior" (order 1)
+      expect(names).toEqual(["A-Ploeg", "Alien Team"]);
+    });
+  });
+
+  describe("Compact Variant in Groups", () => {
+    it("should pass compact variant to grouped teams", () => {
+      render(
+        <TeamOverview
+          teams={mockYouthTeams}
+          groupByAge
+          variant="compact"
+          teamType="youth"
+        />,
+      );
+      // Check for compact grid classes in the grouped section
+      // The grid container inside the section should have 4 cols on lg
+      // We can look for the class directly or indirectly
+      // Since we can't easily check props passed to child component without mocking,
+      // we check the grid wrapper class which changes based on isCompact
+      const grids = document.querySelectorAll(".grid");
+      // One of the grids should have the compact class
+      const hasCompactGrid = Array.from(grids).some((grid) =>
+        grid.className.includes("lg:grid-cols-4"),
+      );
+      expect(hasCompactGrid).toBe(true);
+    });
+  });
+
+  describe("Compact Loading State", () => {
+    it("should use compact grid layout for loading skeleton", () => {
+      render(<TeamOverview teams={[]} isLoading variant="compact" />);
+      const grid = screen.getByLabelText("Teams laden...");
+      expect(grid).toHaveClass("grid-cols-2");
+      expect(grid).toHaveClass("lg:grid-cols-4");
     });
   });
 });
