@@ -2052,6 +2052,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 - ✅ `TeamOverview` - List all youth teams (70 tests)
 - ✅ `TeamCard` - Team teaser card (age group, coach, photo)
+- ✅ `TeamHeader` - Hero section for team detail pages (21 tests)
 - ⏳ `TeamDetail` - Full team page (roster, schedule, standings)
 - ✅ `TeamRoster` - Player grid with photos and positions (21 tests)
 - ⏳ `TeamSchedule` - Match schedule calendar
