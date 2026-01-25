@@ -47,17 +47,14 @@ npm run test:coverage
 
 ## 📦 How Caching Works
 
-Vitest automatically caches test results in `node_modules/.vitest/`. When you run tests:
+Vitest 4.x uses Vite's `cacheDir` option to determine where to store cache files, rather than a fixed `node_modules/.vitest` path.
 
-1. **First run**: All tests execute normally
-2. **Subsequent runs**: Only tests affected by code changes re-run
-3. **Unchanged files**: Results are loaded from cache (instant!)
+Dependency caching is handled within this configurable directory. Note that `results.json` is **not** the internal cache format; it is produced only when using the JSON reporter (via `--reporter=json` and `--outputFile`) and is separate from the execution cache.
 
 ### Cache Location
 
-```
-node_modules/.vitest/
-├── results.json      # Test results cache
+```text
+<cacheDir>/
 └── deps/            # Dependency graph
 ```
 
