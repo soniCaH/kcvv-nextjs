@@ -8,8 +8,8 @@ npx lint-staged
 echo "📝 Type checking..."
 npm run type-check
 
-# Run tests related to changed files
-echo "🧪 Running tests..."
-npm test -- --run --silent --reporter=dot
+# Run tests only for changed files (much faster!)
+echo "🧪 Running tests for changed files..."
+npm run test:changed -- --silent --reporter=dot
 
 echo "✅ Pre-commit checks passed!"
