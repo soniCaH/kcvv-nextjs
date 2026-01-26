@@ -2,13 +2,13 @@
  * PlayerCard Component
  *
  * Visual player card for team rosters and player listings.
- * Matches the Gatsby PlayerTeaser design exactly.
+ * Features unified card design matching TeamCard styling.
  *
  * Features:
- * - Large jersey number with 3D shadow effect (stenciletta font)
- * - Green gradient overlay at bottom
- * - Player photo with hover shift effect
- * - First name (semibold) / Last name (thin) typography
+ * - White card container with border and shadow
+ * - 3D jersey number badge (using NumberBadge component)
+ * - Player photo with hover shift effect (contained)
+ * - Separate content section for names and position
  * - Captain badge support
  * - Loading skeleton state
  */
@@ -17,26 +17,8 @@ import { forwardRef, type HTMLAttributes, type Ref } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
-
-/**
- * Generate text-shadow CSS for the 3D effect
- * Matches the Gatsby SCSS textShadow function exactly
- */
-function generateTextShadow(precision: number, size: number): string {
-  const shadows: string[] = [];
-  let offset = 0;
-  const length = Math.floor(size * (1 / precision)) - 1;
-
-  for (let i = 0; i <= length; i++) {
-    offset += precision;
-    shadows.push(`${-offset}px ${offset}px #4B9B48`);
-  }
-
-  return shadows.join(", ");
-}
-
-// Pre-calculate the text shadow for performance
-const JERSEY_NUMBER_SHADOW = generateTextShadow(0.25, 8);
+import { NumberBadge } from "@/components/shared/NumberBadge";
+import { CARD_COLORS } from "@/lib/utils/card-tokens";
 
 export interface PlayerCardProps extends Omit<
   HTMLAttributes<HTMLElement>,
@@ -88,15 +70,24 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
         <div
           ref={ref as Ref<HTMLDivElement>}
           className={cn(
-            "relative overflow-hidden bg-gray-200 animate-pulse w-full max-w-[340px]",
-            isCompact ? "h-[220px]" : "h-[285px] lg:h-[446px]",
+            "relative overflow-hidden bg-white rounded-sm border border-[#edeff4] shadow-sm animate-pulse",
+            isCompact ? "h-[280px]" : "h-[340px] lg:h-[480px]",
             className,
           )}
           aria-label="Laden..."
         >
-          <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
-            <div className="h-8 bg-gray-300 rounded w-3/4" />
-            <div className="h-8 bg-gray-300 rounded w-1/2" />
+          {/* Image skeleton */}
+          <div
+            className={cn(
+              "bg-gray-200",
+              isCompact ? "h-[200px]" : "h-[200px] lg:h-[320px]",
+            )}
+          />
+          {/* Content skeleton */}
+          <div className="p-4 space-y-2">
+            <div className="h-6 bg-gray-200 rounded w-3/4" />
+            <div className="h-6 bg-gray-200 rounded w-1/2" />
+            <div className="h-4 bg-gray-200 rounded w-1/3" />
           </div>
         </div>
       );
@@ -105,67 +96,46 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
     return (
       <article
         ref={ref}
-        className={cn("player__teaser group w-full max-w-[340px]", className)}
+        className={cn("player-card group h-full", className)}
         {...props}
       >
         <Link
           href={href}
           className={cn(
-            "relative block overflow-hidden isolate w-full",
-            "no-underline",
-            isCompact ? "h-[220px]" : "h-[285px] lg:h-[446px]",
+            "relative flex flex-col overflow-hidden rounded-sm h-full",
+            "no-underline text-inherit",
+            "bg-white",
+            "border border-[#edeff4]",
+            "shadow-sm",
+            "transition-shadow duration-200 ease-out",
+            "hover:shadow-lg",
           )}
           title={`${position} - ${fullName}`}
           aria-label={`Bekijk profiel van ${fullName}, ${position}${number ? `, nummer ${number}` : ""}`}
         >
-          {/* Gray background area - starts below the number */}
+          {/* Image Section - fixed height with contained image */}
           <div
             className={cn(
-              "absolute right-0 bottom-0 left-0 z-0",
+              "relative overflow-hidden flex-shrink-0",
               "bg-[#edeff4]",
-              isCompact ? "top-[40px]" : "top-[54px] lg:top-[90px]",
+              isCompact ? "h-[200px]" : "h-[200px] lg:h-[320px]",
             )}
-            aria-hidden="true"
-          />
+          >
+            {/* 3D Jersey number badge */}
+            {number !== undefined && (
+              <NumberBadge
+                value={number}
+                color="green"
+                size={isCompact ? "sm" : "lg"}
+              />
+            )}
 
-          {/* Jersey number - large decorative text ON TOP of player image with hover animation */}
-          {number !== undefined && (
+            {/* Player image container with hover shift */}
             <div
               className={cn(
-                "player__teaser__position",
-                "absolute z-[5] transition-all duration-300 ease-in-out pointer-events-none",
-                isCompact
-                  ? "top-[8px] left-[15px] text-[8rem]"
-                  : "top-[10px] left-[15px] text-[11.25rem] lg:top-[5px] lg:text-[14rem]",
-                "group-hover:scale-110 group-hover:origin-top-left",
-              )}
-              style={{
-                maxWidth: "10px",
-                fontFamily: "stenciletta, sans-serif",
-                lineHeight: 0.71,
-                letterSpacing: "-6px",
-                color: "#4B9B48",
-                WebkitTextStroke: "4px #4B9B48",
-                WebkitTextFillColor: "white",
-                textShadow: JERSEY_NUMBER_SHADOW,
-              }}
-              aria-hidden="true"
-            >
-              {number}
-            </div>
-          )}
-
-          {/* Player image container */}
-          <div className="absolute inset-0 z-[2]">
-            <div
-              className={cn(
-                "absolute bottom-0 right-[-34px] ml-[10px]",
-                "w-full h-full",
-                isCompact
-                  ? "max-w-[180px]"
-                  : "max-w-[232px] lg:left-[74px] lg:max-w-[299px] lg:h-[calc(100%-15px)]",
-                "transition-all duration-300 ease-in-out",
-                "group-hover:-translate-x-[50px] group-hover:-translate-y-[10px]",
+                "absolute inset-0",
+                "transition-transform duration-300 ease-in-out",
+                "group-hover:-translate-x-[30px] group-hover:-translate-y-[8px]",
               )}
             >
               {imageUrl ? (
@@ -179,45 +149,44 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                   }
                 />
               ) : (
-                /* Placeholder silhouette - aligned to bottom like real player cutouts */
+                /* Placeholder silhouette */
                 <div className="absolute inset-0 flex items-end justify-center">
                   <svg
                     className={cn(
                       "text-[#cacaca]",
                       isCompact
                         ? "w-[140px] h-[180px]"
-                        : "w-[200px] h-[280px] lg:w-[240px] lg:h-[340px]",
+                        : "w-[180px] h-[180px] lg:w-[240px] lg:h-[280px]",
                     )}
                     fill="currentColor"
                     viewBox="0 0 24 32"
                     aria-hidden="true"
                   >
-                    {/* Player silhouette shape */}
                     <path d="M12 0C8.7 0 6 2.7 6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6zm0 14c-6.6 0-12 3.4-12 8v10h24V22c0-4.6-5.4-8-12-8z" />
                   </svg>
                 </div>
               )}
             </div>
+
+            {/* Subtle gradient overlay at bottom of image */}
+            <div
+              className="absolute bottom-0 left-0 right-0 h-[40%] z-[3] pointer-events-none"
+              style={{
+                background: `linear-gradient(0deg, ${CARD_COLORS.gradient.green}40 0%, transparent 100%)`,
+              }}
+              aria-hidden="true"
+            />
           </div>
 
-          {/* Bottom gradient overlay for name visibility */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-[30%] z-[3] pointer-events-none"
-            style={{
-              background: "linear-gradient(0deg, #4acf52 10%, transparent 80%)",
-            }}
-            aria-hidden="true"
-          />
-
-          {/* Name section - positioned at bottom with overflow handling */}
-          <div className="absolute bottom-[17px] left-[15px] right-[15px] z-[4] overflow-hidden">
+          {/* Content Section */}
+          <div className="p-4 flex-1 flex flex-col">
             {/* Captain badge */}
             {isCaptain && (
               <span
                 className={cn(
-                  "inline-flex items-center gap-1 mb-1",
-                  "text-xs font-medium uppercase tracking-wide text-white",
-                  "bg-white/20 backdrop-blur-sm rounded px-2 py-0.5",
+                  "inline-flex items-center gap-1 mb-2 self-start",
+                  "text-xs font-medium uppercase tracking-wide",
+                  "bg-kcvv-green-bright/10 text-kcvv-green-bright rounded px-2 py-0.5",
                 )}
                 aria-label="Aanvoerder"
               >
@@ -233,36 +202,46 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                     clipRule="evenodd"
                   />
                 </svg>
-                C
+                Aanvoerder
               </span>
             )}
 
-            {/* First name - semibold, truncated for long names */}
+            {/* First name - semibold */}
             <div
               className={cn(
-                "text-white uppercase font-semibold truncate",
-                isCompact ? "text-[1.5rem]" : "text-[1.75rem] lg:text-[2rem]",
+                "text-gray-900 uppercase font-semibold truncate",
+                isCompact ? "text-lg" : "text-xl lg:text-2xl",
               )}
               style={{
                 fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-                lineHeight: 1,
+                lineHeight: 1.2,
               }}
             >
               {firstName}
             </div>
 
-            {/* Last name - thin, truncated for long names */}
+            {/* Last name - thin */}
             <div
               className={cn(
-                "text-white uppercase font-thin truncate",
-                isCompact ? "text-[1.5rem]" : "text-[1.75rem] lg:text-[2rem]",
+                "text-gray-900 uppercase font-thin truncate",
+                isCompact ? "text-lg" : "text-xl lg:text-2xl",
               )}
               style={{
                 fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-                lineHeight: 1,
+                lineHeight: 1.2,
               }}
             >
               {lastName}
+            </div>
+
+            {/* Position */}
+            <div
+              className={cn(
+                "text-gray-500 mt-1",
+                isCompact ? "text-xs" : "text-sm",
+              )}
+            >
+              {position}
             </div>
           </div>
         </Link>

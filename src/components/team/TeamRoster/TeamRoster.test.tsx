@@ -411,15 +411,13 @@ describe("TeamRoster", () => {
           variant="compact"
         />,
       );
-      // Compact staff card has height 220px (vs 285px default)
-      // We can check if the class is applied to the image wrapper or similar
+      // Staff card now uses unified card design with image section having the height
       const staffRegion = screen
         .getByText("Technische Staf")
         .closest("section");
       // Find the article inside
       const article = within(staffRegion!).getByRole("article");
-      const link = article.querySelector("div.relative"); // The wrapper
-      expect(link).toHaveClass("h-[220px]");
+      expect(article).toHaveClass("staff-card");
       // Check for compact image size
       const image = screen.getByAltText("S M");
       expect(image).toHaveAttribute("sizes", "180px");

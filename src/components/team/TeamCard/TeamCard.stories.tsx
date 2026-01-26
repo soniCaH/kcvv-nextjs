@@ -2,7 +2,7 @@
  * TeamCard Component Stories
  *
  * Team teaser card used within TeamOverview component.
- * Individual TeamCard is not used standalone - see TeamOverview for usage.
+ * Unified card design matching PlayerCard styling.
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
@@ -18,16 +18,19 @@ const meta = {
         component: `
 Team teaser card component. **Used within TeamOverview** - not typically used standalone.
 
-See **TeamOverview** component for actual usage patterns with grids and grouping.
-
 **Features:**
 - Team photo with hover zoom effect
 - Team name and optional tagline
-- Age group badge for youth teams
+- Age group badge (flat or 3D style)
 - Coach info display (optional)
 - Win/Draw/Loss record (optional)
 - Loading skeleton state
 - Compact variant for dense layouts
+
+**Unified with PlayerCard styling:**
+- Same white card container with border and shadow
+- Same hover shadow behavior
+- Consistent content section layout
         `,
       },
     },
@@ -35,7 +38,7 @@ See **TeamOverview** component for actual usage patterns with grids and grouping
       default: "light",
     },
   },
-  // Give cards a representative width in Storybook (they fill their container in real usage)
+  // Give cards a representative width in Storybook
   decorators: [
     (Story) => (
       <div className="w-[320px]">
@@ -53,6 +56,10 @@ See **TeamOverview** component for actual usage patterns with grids and grouping
     teamType: {
       control: "select",
       options: ["senior", "youth", "club"],
+    },
+    use3DBadge: {
+      control: "boolean",
+      description: "Use 3D NumberBadge instead of flat badge",
     },
     variant: {
       control: "radio",
@@ -80,7 +87,7 @@ export const Default: Story = {
 };
 
 /**
- * Youth team with age badge
+ * Youth team with flat badge
  */
 export const Youth: Story = {
   args: {
@@ -88,6 +95,19 @@ export const Youth: Story = {
     href: "/jeugd/u15",
     ageGroup: "U15",
     teamType: "youth",
+  },
+};
+
+/**
+ * Youth team with 3D badge
+ */
+export const YouthWith3DBadge: Story = {
+  args: {
+    name: "U21",
+    href: "/jeugd/u21",
+    ageGroup: "U21",
+    teamType: "youth",
+    use3DBadge: true,
   },
 };
 
@@ -143,7 +163,7 @@ export const Loading: Story = {
 };
 
 /**
- * Compact variant (smaller width for dense layouts)
+ * Compact variant
  */
 export const Compact: Story = {
   args: {
@@ -160,4 +180,38 @@ export const Compact: Story = {
       </div>
     ),
   ],
+};
+
+/**
+ * Badge comparison (flat vs 3D)
+ */
+export const BadgeComparison: Story = {
+  args: {
+    name: "",
+    href: "",
+  },
+  decorators: [], // Remove default decorator
+  render: () => (
+    <div className="flex gap-8">
+      <div className="w-[280px]">
+        <h4 className="text-sm font-medium text-gray-600 mb-2">Flat Badge</h4>
+        <TeamCard
+          name="U15"
+          href="/jeugd/u15"
+          ageGroup="U15"
+          teamType="youth"
+        />
+      </div>
+      <div className="w-[280px]">
+        <h4 className="text-sm font-medium text-gray-600 mb-2">3D Badge</h4>
+        <TeamCard
+          name="U15"
+          href="/jeugd/u15"
+          ageGroup="U15"
+          teamType="youth"
+          use3DBadge
+        />
+      </div>
+    </div>
+  ),
 };
