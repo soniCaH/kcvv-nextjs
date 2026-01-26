@@ -120,7 +120,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
             "hover:shadow-lg",
           )}
           title={`${position} - ${fullName}`}
-          aria-label={`Bekijk profiel van ${fullName}, ${position}${number ? `, nummer ${number}` : ""}`}
+          aria-label={`Bekijk profiel van ${fullName}, ${position}${number !== undefined ? `, nummer ${number}` : ""}`}
         >
           {/* Image Section - fixed height with contained image */}
           <div

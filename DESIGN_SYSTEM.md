@@ -467,8 +467,8 @@ Used by **PlayerCard**, **TeamCard**, and **TeamRoster staff cards** for visual 
 - **Height**: `h-[200px]` (mobile), `h-[200px] lg:h-[320px]` (desktop)
 - **Background**: `#edeff4` (placeholder color)
 - **Overflow**: `hidden` (contains hover shift)
-- **Hover Effect**: Image shifts `-translate-x-[30px] -translate-y-[8px]`
-- **Transition**: `transition-transform duration-300 ease-in-out`
+- **Hover Effect**: Image shifts `-translate-x-[30px]`
+- **Transition**: `transition-all duration-300 ease-in-out`
 
 **Content Section:**
 
