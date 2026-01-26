@@ -453,12 +453,12 @@ Used by **PlayerCard**, **TeamCard**, and **TeamRoster staff cards** for visual 
 └─────────────────────────────────────┘
 ```
 
-**Container Styling:**
+**Container Styling:** _(Overrides Base Card defaults)_
 
-- **Background**: `#ffffff` (white)
+- **Background**: `#ffffff` (white) — _overrides Base Card `#fefefe`_
 - **Border**: `1px solid #edeff4`
-- **Border Radius**: `rounded-sm` (2px)
-- **Shadow (default)**: `shadow-sm`
+- **Border Radius**: `rounded-sm` (2px) — _overrides Base Card 4px_
+- **Shadow (default)**: `shadow-sm` — _overrides Base Card `none`_
 - **Shadow (hover)**: `shadow-lg`
 - **Transition**: `transition-shadow duration-200 ease-out`
 
@@ -468,7 +468,7 @@ Used by **PlayerCard**, **TeamCard**, and **TeamRoster staff cards** for visual 
 - **Background**: `#edeff4` (placeholder color)
 - **Overflow**: `hidden` (contains hover shift)
 - **Hover Effect**: Image shifts `-translate-x-[30px]`
-- **Transition**: `transition-all duration-300 ease-in-out`
+- **Transition**: `transition-transform duration-300 ease-in-out`
 
 **Content Section:**
 

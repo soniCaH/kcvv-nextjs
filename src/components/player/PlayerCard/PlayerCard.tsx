@@ -113,12 +113,11 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
           className={cn(
             "relative flex flex-col overflow-hidden rounded-sm h-full",
             "no-underline text-inherit",
-            "bg-white",
-            "border border-[#edeff4]",
-            "shadow-sm",
+            "bg-white border shadow-sm",
             "transition-shadow duration-200 ease-out",
             "hover:shadow-lg",
           )}
+          style={{ borderColor: CARD_COLORS.border.default }}
           title={`${position} - ${fullName}`}
           aria-label={`Bekijk profiel van ${fullName}, ${position}${number !== undefined ? `, nummer ${number}` : ""}`}
         >
@@ -126,9 +125,9 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
           <div
             className={cn(
               "relative overflow-hidden flex-shrink-0",
-              "bg-[#edeff4]",
               isCompact ? "h-[200px]" : "h-[200px] lg:h-[320px]",
             )}
+            style={{ backgroundColor: CARD_COLORS.background.placeholder }}
           >
             {/* 3D Jersey number badge */}
             {number !== undefined && (
@@ -143,7 +142,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
             <div
               className={cn(
                 "absolute inset-0 z-[3]",
-                "transition-all duration-300 ease-in-out",
+                "transition-transform duration-300 ease-in-out",
                 "group-hover:-translate-x-[30px] group-hover:z-[10]",
               )}
             >
@@ -162,11 +161,11 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                 <div className="absolute inset-0 flex items-end justify-center">
                   <svg
                     className={cn(
-                      "text-[#cacaca]",
                       isCompact
                         ? "w-[140px] h-[180px]"
                         : "w-[180px] h-[180px] lg:w-[240px] lg:h-[280px]",
                     )}
+                    style={{ color: CARD_COLORS.background.icon }}
                     fill="currentColor"
                     viewBox="0 0 24 32"
                     aria-hidden="true"

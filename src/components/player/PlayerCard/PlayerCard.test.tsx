@@ -129,7 +129,9 @@ describe("PlayerCard", () => {
         <PlayerCard {...defaultProps} variant="compact" />,
       );
       // Compact variant should have h-[200px] image section
-      const imageSection = container.querySelector(".bg-\\[\\#edeff4\\]");
+      const imageSection = container.querySelector(
+        ".overflow-hidden.flex-shrink-0",
+      );
       expect(imageSection).toHaveClass("h-[200px]");
     });
   });
@@ -189,8 +191,10 @@ describe("PlayerCard", () => {
 
     it("should have image section with background color", () => {
       const { container } = render(<PlayerCard {...defaultProps} />);
-      const imageSection = container.querySelector(".bg-\\[\\#edeff4\\]");
-      expect(imageSection).toBeInTheDocument();
+      const imageSection = container.querySelector(
+        ".overflow-hidden.flex-shrink-0",
+      );
+      expect(imageSection).toHaveStyle({ backgroundColor: "#edeff4" });
     });
   });
 });
