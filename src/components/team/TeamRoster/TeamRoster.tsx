@@ -105,18 +105,15 @@ function getPositionLabel(position: string, count: number): string {
 }
 
 /**
- * Render a team's roster of players with optional grouping by position, loading skeletons, an empty state, and an optional staff section.
+ * Render a team's roster with optional grouping by position, loading skeletons, an empty state, and an optional staff section.
  *
- * @param players - Array of player entries to display in the roster.
- * @param staff - Optional array of staff members to render in a separate "Technische Staf" section.
- * @param teamName - Accessible label prefix used for loading and region ARIA labels.
  * @param groupByPosition - When true, players are grouped and rendered by position order; when false, players render in a single grid.
- * @param showStaff - When true and `staff` is non-empty, render the staff section below the roster.
+ * @param showStaff - When true and `staff` is non-empty, render a "Technische Staf" section below the roster.
  * @param variant - Layout variant: `"compact"` uses smaller, denser cards; other values use the default card size.
- * @param isLoading - When true, render skeleton placeholders instead of player/staff content.
+ * @param isLoading - When true, render skeleton placeholders instead of player and staff content.
  * @param emptyMessage - Message shown when there are no players to display (and staff is not shown).
  * @param className - Additional CSS classes applied to the outer container.
- * @returns The rendered roster as a React element.
+ * @returns A React element containing the roster layout.
  */
 export function TeamRoster({
   players,
