@@ -82,14 +82,21 @@ const POSITION_CONFIG: Record<
 };
 
 /**
- * Get the numeric sort order for a position key.
+ * Return the numeric sort order associated with a position key.
+ *
+ * @param position - Internal position key (e.g., a value from POSITION_CONFIG)
+ * @returns The numeric order for `position`, or `99` when the position is not configured
  */
 function getPositionOrder(position: string): number {
   return POSITION_CONFIG[position]?.order ?? 99;
 }
 
 /**
- * Get the singular or plural display label for a roster position.
+ * Get the display label for a roster position, choosing singular or plural form.
+ *
+ * @param position - The position key used to look up configured labels
+ * @param count - The number of players in that position; determines singular vs plural form
+ * @returns The singular label when `count` is 1, the plural label otherwise, or the original `position` if no configuration exists
  */
 function getPositionLabel(position: string, count: number): string {
   const config = POSITION_CONFIG[position];
@@ -98,8 +105,18 @@ function getPositionLabel(position: string, count: number): string {
 }
 
 /**
- * Render a team roster of players, optionally grouped by position,
- * with support for loading skeletons, an empty state, and an optional staff section.
+ * Render a team's roster of players with optional grouping by position, loading skeletons, an empty state, and an optional staff section.
+ *
+ * @param players - Array of player entries to display in the roster.
+ * @param staff - Optional array of staff members to render in a separate "Technische Staf" section.
+ * @param teamName - Accessible label prefix used for loading and region ARIA labels.
+ * @param groupByPosition - When true, players are grouped and rendered by position order; when false, players render in a single grid.
+ * @param showStaff - When true and `staff` is non-empty, render the staff section below the roster.
+ * @param variant - Layout variant: `"compact"` uses smaller, denser cards; other values use the default card size.
+ * @param isLoading - When true, render skeleton placeholders instead of player/staff content.
+ * @param emptyMessage - Message shown when there are no players to display (and staff is not shown).
+ * @param className - Additional CSS classes applied to the outer container.
+ * @returns The rendered roster as a React element.
  */
 export function TeamRoster({
   players,

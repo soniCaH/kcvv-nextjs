@@ -39,11 +39,11 @@ export function generateTextShadow(
 }
 
 /**
- * Get pre-calculated text shadow for a badge color variant.
+ * Retrieve the precomputed text-shadow CSS string for a badge color and size preset.
  *
  * @param color - The badge color variant
  * @param size - Size preset: "sm" (6), "md" (7), "lg" (8)
- * @returns Pre-calculated text-shadow CSS string
+ * @returns The text-shadow CSS value for the specified badge color and size
  */
 export function getBadgeTextShadow(
   color: BadgeColor,
