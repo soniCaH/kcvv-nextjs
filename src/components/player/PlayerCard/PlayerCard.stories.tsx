@@ -2,7 +2,7 @@
  * PlayerCard Component Stories
  *
  * Visual player card for team rosters and player listings.
- * Exact match of the Gatsby PlayerTeaser design.
+ * Unified card design matching TeamCard styling.
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
@@ -28,15 +28,17 @@ const meta = {
     docs: {
       description: {
         component: `
-Visual player card matching the Gatsby PlayerTeaser design exactly:
-- Large jersey number with stenciletta font and 3D shadow effect
-- Green gradient overlay at bottom (30% height)
-- Player photo with hover shift effect (-50px X, -10px Y)
-- First name (semibold) / Last name (thin) typography using quasimoda font
+Visual player card with unified card design:
+- White card container with border and shadow
+- 3D jersey number badge with stenciletta font
+- Player photo with hover shift effect (contained within card)
+- Separate content section for names and position
 - Captain badge support
-- Card dimensions: 285px mobile, 446px desktop
 
-Used in team rosters and player listings.
+**Unified with TeamCard styling:**
+- Same border and shadow treatment
+- Same content section layout
+- Consistent hover behavior
         `,
       },
     },
@@ -44,6 +46,14 @@ Used in team rosters and player listings.
       default: "light",
     },
   },
+  // Give cards a representative width in Storybook
+  decorators: [
+    (Story) => (
+      <div className="w-[300px]">
+        <Story />
+      </div>
+    ),
+  ],
   tags: ["autodocs"],
   argTypes: {
     firstName: {
@@ -88,7 +98,6 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Default player card with real KCVV player photo
- * Uses transparent background image from the live site
  */
 export const Default: Story = {
   args: {
@@ -103,7 +112,6 @@ export const Default: Story = {
 
 /**
  * Player card with captain badge
- * Shows armband icon next to name
  */
 export const Captain: Story = {
   args: {
@@ -132,8 +140,7 @@ export const Goalkeeper: Story = {
 };
 
 /**
- * Without photo
- * Shows placeholder silhouette
+ * Without photo - shows placeholder silhouette
  */
 export const WithoutPhoto: Story = {
   args: {
@@ -147,7 +154,6 @@ export const WithoutPhoto: Story = {
 
 /**
  * Without jersey number
- * Large decorative number is hidden
  */
 export const WithoutNumber: Story = {
   args: {
@@ -161,7 +167,6 @@ export const WithoutNumber: Story = {
 
 /**
  * Long name handling
- * Shows how text handles very long names
  */
 export const LongName: Story = {
   args: {
@@ -175,8 +180,7 @@ export const LongName: Story = {
 };
 
 /**
- * Compact variant
- * Smaller card for dense layouts and mobile
+ * Compact variant for dense layouts
  */
 export const Compact: Story = {
   args: {
@@ -188,11 +192,17 @@ export const Compact: Story = {
     href: "/player/jarne-feron",
     variant: "compact",
   },
+  decorators: [
+    (Story) => (
+      <div className="w-[240px]">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 /**
- * Loading state
- * Skeleton placeholder while data loads
+ * Loading skeleton state
  */
 export const Loading: Story = {
   args: {
@@ -205,8 +215,7 @@ export const Loading: Story = {
 };
 
 /**
- * Grid layout
- * Multiple cards in a responsive grid with real player images
+ * Grid layout with multiple cards
  */
 export const GridLayout: Story = {
   args: {
@@ -215,6 +224,7 @@ export const GridLayout: Story = {
     position: "",
     href: "",
   },
+  decorators: [], // Remove default decorator
   render: () => (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl">
       <PlayerCard
@@ -264,7 +274,6 @@ export const GridLayout: Story = {
 
 /**
  * Mobile view
- * Shows card at mobile viewport width
  */
 export const MobileView: Story = {
   args: {
@@ -283,8 +292,7 @@ export const MobileView: Story = {
 };
 
 /**
- * Hover interaction
- * Demonstrates the hover state with image shift
+ * Hover interaction demo
  */
 export const HoverDemo: Story = {
   args: {
@@ -299,7 +307,7 @@ export const HoverDemo: Story = {
     docs: {
       description: {
         story:
-          "Hover over the card to see the image shift effect. The large jersey number grows and creates a striking visual anchor.",
+          "Hover over the card to see the contained image shift effect and shadow change. The jersey number badge also scales up.",
       },
     },
   },

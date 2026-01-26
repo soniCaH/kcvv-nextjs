@@ -243,4 +243,58 @@ describe("TeamCard", () => {
       expect(article).toHaveClass("custom-class");
     });
   });
+
+  describe("3D Badge (use3DBadge)", () => {
+    it("should render NumberBadge with green color for senior teams", () => {
+      const { container } = render(
+        <TeamCard
+          {...defaultProps}
+          ageGroup="A"
+          teamType="senior"
+          use3DBadge
+        />,
+      );
+      const badge = container.querySelector(".number-badge");
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveStyle({ color: "#4B9B48" });
+    });
+
+    it("should render NumberBadge with blue color for youth teams", () => {
+      const { container } = render(
+        <TeamCard
+          name="U15"
+          href="/jeugd/u15"
+          ageGroup="U15"
+          teamType="youth"
+          use3DBadge
+        />,
+      );
+      const badge = container.querySelector(".number-badge");
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveStyle({ color: "#3b82f6" });
+    });
+
+    it("should render NumberBadge with navy color for club teams", () => {
+      const { container } = render(
+        <TeamCard
+          name="Angels"
+          href="/club/angels"
+          ageGroup="Club"
+          teamType="club"
+          use3DBadge
+        />,
+      );
+      const badge = container.querySelector(".number-badge");
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveStyle({ color: "#1e3a5f" });
+    });
+
+    it("should not render NumberBadge when use3DBadge is false", () => {
+      const { container } = render(
+        <TeamCard {...defaultProps} ageGroup="A" use3DBadge={false} />,
+      );
+      const badge = container.querySelector(".number-badge");
+      expect(badge).not.toBeInTheDocument();
+    });
+  });
 });

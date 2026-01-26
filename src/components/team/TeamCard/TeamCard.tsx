@@ -7,7 +7,7 @@
  * Features:
  * - Team photo with hover zoom effect
  * - Team name and tagline
- * - Age group badge for youth teams
+ * - Optional 3D age group badge (using NumberBadge)
  * - Coach info display (optional)
  * - Win/Draw/Loss record (optional)
  * - Loading skeleton state
@@ -19,6 +19,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Users, Trophy, User } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { NumberBadge } from "@/components/shared/NumberBadge";
+import type { BadgeColor } from "@/lib/utils/card-tokens";
 
 export interface TeamCardProps extends Omit<
   HTMLAttributes<HTMLElement>,
@@ -36,6 +38,8 @@ export interface TeamCardProps extends Omit<
   ageGroup?: string;
   /** Type of team for visual styling */
   teamType?: "senior" | "youth" | "club";
+  /** Use 3D NumberBadge for age group instead of flat badge */
+  use3DBadge?: boolean;
   /** Coach information */
   coach?: {
     name: string;
@@ -62,6 +66,7 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
       tagline,
       ageGroup,
       teamType = "senior",
+      use3DBadge = false,
       coach,
       record,
       variant = "default",
@@ -79,22 +84,37 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
         <div
           ref={ref as Ref<HTMLDivElement>}
           className={cn(
-            "relative overflow-hidden bg-gray-200 animate-pulse rounded-sm",
+            "relative overflow-hidden bg-white rounded-sm border border-[#edeff4] shadow-sm animate-pulse",
             isCompact ? "h-[200px]" : "h-[280px]",
             className,
           )}
           aria-label="Laden..."
         >
-          <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
-            <div className="h-6 bg-gray-300 rounded w-3/4" />
-            <div className="h-4 bg-gray-300 rounded w-1/2" />
+          <div
+            className={cn("bg-gray-200", isCompact ? "h-[120px]" : "h-[160px]")}
+          />
+          <div className="p-4 space-y-2">
+            <div className="h-6 bg-gray-200 rounded w-3/4" />
+            <div className="h-4 bg-gray-200 rounded w-1/2" />
           </div>
         </div>
       );
     }
 
-    // Team type badge colors
-    const badgeColors = {
+    // Badge color based on team type
+    const getBadgeColor = (): BadgeColor => {
+      switch (teamType) {
+        case "youth":
+          return "blue";
+        case "club":
+          return "navy";
+        default:
+          return "green";
+      }
+    };
+
+    // Flat badge colors (when not using 3D badge)
+    const flatBadgeColors = {
       senior: "bg-kcvv-green-bright text-white",
       youth: "bg-blue-500 text-white",
       club: "bg-amber-500 text-white",
@@ -114,7 +134,6 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
             "bg-white",
             "border border-[#edeff4]",
             "shadow-sm",
-            // Separate transitions for smoother animation - shadow leads, transform follows
             "transition-shadow duration-200 ease-out",
             "hover:shadow-lg",
           )}
@@ -148,20 +167,27 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
               </div>
             )}
 
-            {/* Age group badge for youth teams */}
-            {ageGroup && (
-              <div
-                data-testid="team-badge"
-                className={cn(
-                  "absolute top-3 left-3",
-                  "px-3 py-1 rounded-sm",
-                  "text-sm font-bold uppercase tracking-wide",
-                  badgeColors[teamType],
-                )}
-              >
-                {ageGroup}
-              </div>
-            )}
+            {/* Age group badge - 3D or flat */}
+            {ageGroup &&
+              (use3DBadge ? (
+                <NumberBadge
+                  value={ageGroup}
+                  color={getBadgeColor()}
+                  size={isCompact ? "sm" : "md"}
+                />
+              ) : (
+                <div
+                  data-testid="team-badge"
+                  className={cn(
+                    "absolute top-3 left-3",
+                    "px-3 py-1 rounded-sm",
+                    "text-sm font-bold uppercase tracking-wide",
+                    flatBadgeColors[teamType],
+                  )}
+                >
+                  {ageGroup}
+                </div>
+              ))}
 
             {/* Team type indicator for club teams without age group */}
             {!ageGroup && teamType === "club" && (
@@ -171,7 +197,7 @@ export const TeamCard = forwardRef<HTMLElement, TeamCardProps>(
                   "absolute top-3 left-3",
                   "px-3 py-1 rounded-sm",
                   "text-xs font-medium uppercase tracking-wide",
-                  badgeColors.club,
+                  flatBadgeColors.club,
                 )}
               >
                 Club

@@ -1686,6 +1686,21 @@ export { Button } from "./Button";
 export type { ButtonProps } from "./Button";
 ```
 
+**Shared Component: NumberBadge** ✅ (GitHub Issue #555)
+
+```text
+src/components/shared/NumberBadge/
+├── NumberBadge.tsx          # 3D decorative badge for jersey numbers/role codes
+├── NumberBadge.test.tsx     # 23 unit tests
+├── NumberBadge.stories.tsx  # Storybook stories (all variants)
+└── index.ts                 # Exports
+```
+
+- Color variants: green (players), navy (staff), blue (youth)
+- Size variants: sm, md, lg
+- Stenciletta font with 3D text-shadow effect
+- Used by: PlayerCard, TeamRoster (staff cards)
+
 #### 1.6: Utility Functions
 
 **File:** `src/lib/utils/cn.ts`
@@ -1760,6 +1775,20 @@ export const getImageDimensions = (width?: number, height?: number) => {
   };
 };
 ```
+
+**File:** `src/lib/utils/text-shadow.ts` ✅ (GitHub Issue #555)
+
+- Generates 3D text-shadow CSS for decorative badge numbers
+- Pre-calculated shadows for performance (`BADGE_SHADOWS`)
+- Color variants: green, navy, blue
+- Size variants: sm, md, lg
+
+**File:** `src/lib/utils/card-tokens.ts` ✅ (GitHub Issue #555)
+
+- Shared design tokens for card components
+- Badge colors: green (#4B9B48), navy (#1e3a5f), blue (#3b82f6)
+- Gradient colors for overlays
+- Shadow/border definitions
 
 ### Deliverables
 
@@ -2001,10 +2030,11 @@ export const getImageDimensions = (width?: number, height?: number) => {
 **Components Created:** ✅
 
 - `PlayerCard` ✅ - Visual player card (photo, number, name, position)
-  - 3D shadow effect on jersey numbers (stenciletta font)
-  - Green gradient overlay, hover animation (-50px X, -10px Y)
+  - Unified card design with white container, border, and shadow
+  - Uses `NumberBadge` component for 3D jersey numbers (stenciletta font)
+  - Hover: image slides left in front of number, card shadow deepens
   - Full Storybook coverage (10 stories)
-  - GitHub Issue #521
+  - GitHub Issue #521, unified styling #555
 - `PlayerBio` ✅ - Biography and personal info
   - Birth date with automatic age calculation
   - Membership period display (nl-BE locale)
@@ -2052,9 +2082,11 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 - ✅ `TeamOverview` - List all youth teams (70 tests)
 - ✅ `TeamCard` - Team teaser card (age group, coach, photo)
+  - Unified card design matching PlayerCard (GitHub Issue #555)
 - ✅ `TeamHeader` - Hero section for team detail pages (21 tests)
 - ⏳ `TeamDetail` - Full team page (roster, schedule, standings)
-- ✅ `TeamRoster` - Player grid with photos and positions (21 tests)
+- ✅ `TeamRoster` - Player grid with photos and positions (34 tests)
+  - Staff cards use `NumberBadge` with navy color (GitHub Issue #555)
 - ⏳ `TeamSchedule` - Match schedule calendar
 - ⏳ `TeamStandings` - League standings table (if applicable)
 - ⏳ `CoachProfile` - Coach info component

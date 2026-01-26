@@ -435,6 +435,99 @@ boxShadow: {
 - Hover effects on cards
 - Content padding varies by component
 
+### Unified Card Design
+
+Used by **PlayerCard**, **TeamCard**, and **TeamRoster staff cards** for visual consistency.
+
+**Structure:**
+
+```text
+┌─────────────────────────────────────┐
+│  ┌───┐                              │  <- White card with border + shadow
+│  │ 7 │      [Player/Team Image]     │  <- 3D NumberBadge (top-left)
+│  └───┘                              │  <- Image with hover shift (contained)
+├─────────────────────────────────────┤
+│  FIRSTNAME                          │  <- Clean content section
+│  Lastname                           │  <- Typography: semibold/thin
+│  Position                           │  <- Role/position as subtle text
+└─────────────────────────────────────┘
+```
+
+**Container Styling:** _(Overrides Base Card defaults)_
+
+- **Background**: `#ffffff` (white) — _overrides Base Card `#fefefe`_
+- **Border**: `1px solid #edeff4`
+- **Border Radius**: `rounded-sm` (2px) — _overrides Base Card 4px_
+- **Shadow (default)**: `shadow-sm` — _overrides Base Card `none`_
+- **Shadow (hover)**: `shadow-lg`
+- **Transition**: `transition-shadow duration-200 ease-out`
+
+**Image Section:**
+
+- **Height**: `h-[200px]` (mobile), `h-[200px] lg:h-[320px]` (desktop)
+- **Background**: `#edeff4` (placeholder color)
+- **Overflow**: `hidden` (contains hover shift)
+- **Hover Effect**: Image shifts `-translate-x-[30px]`
+- **Transition**: `transition-transform duration-300 ease-in-out`
+
+**Content Section:**
+
+- **Padding**: `p-4`
+- **Layout**: `flex-1 flex flex-col`
+- **Name Font**: `quasimoda, acumin-pro, Montserrat, sans-serif`
+- **First Name**: `uppercase font-semibold text-xl lg:text-2xl`
+- **Last Name**: `uppercase font-thin text-xl lg:text-2xl`
+- **Position/Role**: `text-gray-500 text-sm`
+
+**Compact Variant:**
+
+- **Image Height**: `h-[200px]` (fixed, no desktop expansion)
+- **Name Size**: `text-lg`
+- **Role Size**: `text-xs`
+- **Content Padding**: `p-3`
+
+### NumberBadge
+
+**3D decorative badge** displaying jersey numbers or role codes.
+
+**Location:** `src/components/shared/NumberBadge`
+
+**Variants:**
+
+| Color   | Usage                               | Hex Value |
+| ------- | ----------------------------------- | --------- |
+| `green` | Player jersey numbers               | `#4B9B48` |
+| `navy`  | Staff role codes (T1, T2, TK, TVJO) | `#1e3a5f` |
+| `blue`  | Youth team age groups (U15, U21)    | `#3b82f6` |
+
+**Sizes:**
+
+| Size | Mobile Font | Desktop Font       | Use Case              |
+| ---- | ----------- | ------------------ | --------------------- |
+| `sm` | `5rem`      | `7rem`             | Compact cards         |
+| `md` | `7rem`      | `9rem`             | Staff cards, TeamCard |
+| `lg` | `8rem`      | `11.25rem → 14rem` | PlayerCard default    |
+
+**Styling:**
+
+- **Font**: `stenciletta` for both numbers and text codes
+- **Effect**: 3D layered text-shadow + webkit text stroke
+- **Position**: `absolute top-[15px] left-[15px]` (lg)
+- **Hover Animation**: `scale(1.1)` on parent `.group` hover
+
+**Example Usage:**
+
+```tsx
+// Player jersey number
+<NumberBadge value={7} color="green" size="lg" />
+
+// Staff role code
+<NumberBadge value="T1" color="navy" size="md" />
+
+// Youth team age group
+<NumberBadge value="U15" color="blue" size="md" />
+```
+
 ### Page Header
 
 **Wrapper** (`.page_header__wrapper`)
