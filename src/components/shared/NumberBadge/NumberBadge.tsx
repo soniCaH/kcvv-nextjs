@@ -85,10 +85,10 @@ export const NumberBadge = forwardRef<HTMLDivElement, NumberBadgeProps>(
           className,
         )}
         style={{
-          maxWidth: "10px",
           fontFamily: "stenciletta, sans-serif",
           lineHeight: 0.71,
           letterSpacing: isText ? "-2px" : "-6px",
+          whiteSpace: "nowrap",
           color: badgeColor,
           WebkitTextStroke: `${isText ? "2px" : "4px"} ${badgeColor}`,
           WebkitTextFillColor: "white",

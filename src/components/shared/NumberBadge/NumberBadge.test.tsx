@@ -165,7 +165,7 @@ describe("NumberBadge", () => {
       const badge = container.querySelector(".number-badge");
       // Check core styles are applied (webkit properties don't serialize in jsdom)
       expect(badge).toHaveStyle({ color: "#4B9B48" });
-      expect(badge).toHaveStyle({ maxWidth: "10px" });
+      expect(badge).toHaveStyle({ whiteSpace: "nowrap" });
       expect(badge).toHaveStyle({ lineHeight: "0.71" });
     });
   });

@@ -1688,7 +1688,7 @@ export type { ButtonProps } from "./Button";
 
 **Shared Component: NumberBadge** ✅ (GitHub Issue #555)
 
-```
+```text
 src/components/shared/NumberBadge/
 ├── NumberBadge.tsx          # 3D decorative badge for jersey numbers/role codes
 ├── NumberBadge.test.tsx     # 23 unit tests

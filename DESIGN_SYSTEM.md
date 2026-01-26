@@ -441,7 +441,7 @@ Used by **PlayerCard**, **TeamCard**, and **TeamRoster staff cards** for visual 
 
 **Structure:**
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  ┌───┐                              │  <- White card with border + shadow
 │  │ 7 │      [Player/Team Image]     │  <- 3D NumberBadge (top-left)
