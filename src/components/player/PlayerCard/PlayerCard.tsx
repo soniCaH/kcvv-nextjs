@@ -71,11 +71,11 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
         <div
           ref={ref as Ref<HTMLDivElement>}
           className={cn(
-            "relative overflow-hidden bg-white rounded-sm shadow-sm animate-pulse",
+            "relative overflow-hidden bg-white rounded-sm shadow-sm animate-pulse border",
             isCompact ? "h-[280px]" : "h-[340px] lg:h-[480px]",
             className,
           )}
-          style={{ borderColor: CARD_COLORS.border.default, borderWidth: 1 }}
+          style={{ borderColor: CARD_COLORS.border.default }}
           aria-label="Laden..."
         >
           {/* Image skeleton */}

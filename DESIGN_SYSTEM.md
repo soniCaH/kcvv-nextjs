@@ -510,9 +510,9 @@ Used by **PlayerCard**, **TeamCard**, and **TeamRoster staff cards** for visual 
 
 **Styling:**
 
-- **Font**: `stenciletta` for numbers, `inherit` for text codes
+- **Font**: `stenciletta` for both numbers and text codes
 - **Effect**: 3D layered text-shadow + webkit text stroke
-- **Position**: `absolute top-[10px] left-[15px]` (lg)
+- **Position**: `absolute top-[15px] left-[15px]` (lg)
 - **Hover Animation**: `scale(1.1)` on parent `.group` hover
 
 **Example Usage:**

@@ -155,8 +155,8 @@ describe("PlayerCard", () => {
       const { container } = render(<PlayerCard {...defaultProps} isLoading />);
       expect(container.firstChild).toHaveClass("bg-white");
       expect(container.firstChild).toHaveClass("rounded-sm");
-      // Border is applied via style for token consistency
-      expect(container.firstChild).toHaveStyle({ borderWidth: "1px" });
+      // Border is applied via Tailwind class with color from tokens
+      expect(container.firstChild).toHaveClass("border");
     });
   });
 

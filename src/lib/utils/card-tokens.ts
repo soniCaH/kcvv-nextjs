@@ -97,7 +97,7 @@ export const BADGE_SIZES = {
     },
     /** Top position offset */
     top: {
-      mobile: "10px",
+      mobile: "15px",
       desktop: "5px",
     },
     /** Left position offset */
