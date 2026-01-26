@@ -154,8 +154,9 @@ describe("PlayerCard", () => {
     it("should have card styling when loading", () => {
       const { container } = render(<PlayerCard {...defaultProps} isLoading />);
       expect(container.firstChild).toHaveClass("bg-white");
-      expect(container.firstChild).toHaveClass("border");
       expect(container.firstChild).toHaveClass("rounded-sm");
+      // Border is applied via style for token consistency
+      expect(container.firstChild).toHaveStyle({ borderWidth: "1px" });
     });
   });
 

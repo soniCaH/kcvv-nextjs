@@ -66,28 +66,37 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
 
     // Loading skeleton
     if (isLoading) {
+      const skeletonBg = CARD_COLORS.background.skeleton;
       return (
         <div
           ref={ref as Ref<HTMLDivElement>}
           className={cn(
-            "relative overflow-hidden bg-white rounded-sm border border-[#edeff4] shadow-sm animate-pulse",
+            "relative overflow-hidden bg-white rounded-sm shadow-sm animate-pulse",
             isCompact ? "h-[280px]" : "h-[340px] lg:h-[480px]",
             className,
           )}
+          style={{ borderColor: CARD_COLORS.border.default, borderWidth: 1 }}
           aria-label="Laden..."
         >
           {/* Image skeleton */}
           <div
-            className={cn(
-              "bg-gray-200",
-              isCompact ? "h-[200px]" : "h-[200px] lg:h-[320px]",
-            )}
+            className={cn(isCompact ? "h-[200px]" : "h-[200px] lg:h-[320px]")}
+            style={{ backgroundColor: skeletonBg }}
           />
           {/* Content skeleton */}
           <div className="p-4 space-y-2">
-            <div className="h-6 bg-gray-200 rounded w-3/4" />
-            <div className="h-6 bg-gray-200 rounded w-1/2" />
-            <div className="h-4 bg-gray-200 rounded w-1/3" />
+            <div
+              className="h-6 rounded w-3/4"
+              style={{ backgroundColor: skeletonBg }}
+            />
+            <div
+              className="h-6 rounded w-1/2"
+              style={{ backgroundColor: skeletonBg }}
+            />
+            <div
+              className="h-4 rounded w-1/3"
+              style={{ backgroundColor: skeletonBg }}
+            />
           </div>
         </div>
       );

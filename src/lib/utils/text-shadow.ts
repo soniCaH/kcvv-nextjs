@@ -49,8 +49,7 @@ export function getBadgeTextShadow(
   color: BadgeColor,
   size: "sm" | "md" | "lg" = "lg",
 ): string {
-  const sizeValues = { sm: 6, md: 7, lg: 8 };
-  return generateTextShadow(0.25, sizeValues[size], CARD_COLORS.badge[color]);
+  return BADGE_SHADOWS[color][size];
 }
 
 // Pre-calculated shadows for performance (most common use cases)

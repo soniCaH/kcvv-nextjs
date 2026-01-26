@@ -34,6 +34,8 @@ export const CARD_COLORS = {
     card: "#ffffff",
     /** Image placeholder background */
     placeholder: "#edeff4",
+    /** Skeleton loading background (matches placeholder for consistency) */
+    skeleton: "#edeff4",
     /** Placeholder icon color */
     icon: "#cacaca",
   },
