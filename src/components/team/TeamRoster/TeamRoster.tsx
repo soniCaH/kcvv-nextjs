@@ -282,12 +282,12 @@ export function TeamRoster({
                     />
                   )}
 
-                  {/* Staff image container with hover shift */}
+                  {/* Staff image container with hover shift - z-10 on hover to slide in front of number */}
                   <div
                     className={cn(
-                      "absolute inset-0",
-                      "transition-transform duration-300 ease-in-out",
-                      "group-hover:-translate-x-[30px] group-hover:-translate-y-[8px]",
+                      "absolute inset-0 z-[3]",
+                      "transition-all duration-300 ease-in-out",
+                      "group-hover:-translate-x-[30px] group-hover:z-[10]",
                     )}
                   >
                     {member.imageUrl ? (

@@ -53,6 +53,21 @@ export const NumberBadge = forwardRef<HTMLDivElement, NumberBadgeProps>(
     // Determine if value is short text (like role codes) vs number
     const isText = typeof value === "string" && isNaN(Number(value));
 
+    // Text codes (like TVJO) need smaller sizes to fit 4 characters
+    const fontSizeClasses = isText
+      ? // Text codes: smaller sizes for 4 character codes
+        {
+          sm: "text-[3rem] lg:text-[4rem]",
+          md: "text-[4rem] lg:text-[5rem]",
+          lg: "text-[5rem] lg:text-[6rem] xl:text-[7rem]",
+        }
+      : // Numbers: original larger sizes
+        {
+          sm: "text-[5rem] lg:text-[7rem]",
+          md: "text-[7rem] lg:text-[9rem]",
+          lg: "text-[8rem] lg:text-[11.25rem] xl:text-[14rem]",
+        };
+
     return (
       <div
         ref={ref}
@@ -61,28 +76,21 @@ export const NumberBadge = forwardRef<HTMLDivElement, NumberBadgeProps>(
           "absolute z-[5] pointer-events-none",
           "transition-all duration-300 ease-in-out",
           animated && "group-hover:scale-110 group-hover:origin-top-left",
-          // Size-specific positioning and font size
-          size === "sm" && [
-            "top-[8px] left-[12px]",
-            "text-[5rem] lg:text-[7rem]",
-          ],
-          size === "md" && [
-            "top-[10px] left-[12px]",
-            "text-[7rem] lg:text-[9rem]",
-          ],
-          size === "lg" && [
-            "top-[10px] left-[15px]",
-            "text-[8rem] lg:top-[5px] lg:text-[11.25rem] xl:text-[14rem]",
-          ],
+          // Size-specific positioning (lg matches left/top margins for player cards)
+          size === "sm" && "top-[8px] left-[12px]",
+          size === "md" && "top-[10px] left-[12px]",
+          size === "lg" && "top-[15px] left-[15px]",
+          // Font size (different for text vs numbers)
+          fontSizeClasses[size],
           className,
         )}
         style={{
           maxWidth: "10px",
-          fontFamily: isText ? "inherit" : "stenciletta, sans-serif",
+          fontFamily: "stenciletta, sans-serif",
           lineHeight: 0.71,
-          letterSpacing: isText ? "-4px" : "-6px",
+          letterSpacing: isText ? "-2px" : "-6px",
           color: badgeColor,
-          WebkitTextStroke: `${isText ? "3px" : "4px"} ${badgeColor}`,
+          WebkitTextStroke: `${isText ? "2px" : "4px"} ${badgeColor}`,
           WebkitTextFillColor: "white",
           textShadow,
         }}

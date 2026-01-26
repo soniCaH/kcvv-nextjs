@@ -56,8 +56,8 @@ describe("NumberBadge", () => {
     it("should apply large size by default", () => {
       const { container } = render(<NumberBadge value={7} />);
       const badge = container.querySelector(".number-badge");
-      // Large size has top-[10px] and left-[15px]
-      expect(badge).toHaveClass("top-[10px]");
+      // Large size has top-[15px] and left-[15px] (matching margins)
+      expect(badge).toHaveClass("top-[15px]");
       expect(badge).toHaveClass("left-[15px]");
     });
 
@@ -97,22 +97,36 @@ describe("NumberBadge", () => {
       expect(badge).toHaveStyle({ fontFamily: "stenciletta, sans-serif" });
     });
 
-    it("should use inherit font for text codes", () => {
+    it("should use stenciletta font for text codes", () => {
       const { container } = render(<NumberBadge value="T1" />);
       const badge = container.querySelector(".number-badge");
-      expect(badge).toHaveStyle({ fontFamily: "inherit" });
+      expect(badge).toHaveStyle({ fontFamily: "stenciletta, sans-serif" });
     });
 
-    it("should use tighter letter spacing for text", () => {
+    it("should use tighter letter spacing for text codes", () => {
       const { container } = render(<NumberBadge value="TVJO" />);
       const badge = container.querySelector(".number-badge");
-      expect(badge).toHaveStyle({ letterSpacing: "-4px" });
+      expect(badge).toHaveStyle({ letterSpacing: "-2px" });
     });
 
     it("should use wider letter spacing for numbers", () => {
       const { container } = render(<NumberBadge value={7} />);
       const badge = container.querySelector(".number-badge");
       expect(badge).toHaveStyle({ letterSpacing: "-6px" });
+    });
+
+    it("should use smaller font size for text codes", () => {
+      const { container } = render(<NumberBadge value="TVJO" size="lg" />);
+      const badge = container.querySelector(".number-badge");
+      // Text codes use smaller sizes (5rem mobile vs 8rem for numbers)
+      expect(badge).toHaveClass("text-[5rem]");
+    });
+
+    it("should use larger font size for numbers", () => {
+      const { container } = render(<NumberBadge value={7} size="lg" />);
+      const badge = container.querySelector(".number-badge");
+      // Numbers use larger sizes
+      expect(badge).toHaveClass("text-[8rem]");
     });
   });
 
