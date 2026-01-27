@@ -130,6 +130,87 @@ describe("MatchLineup", () => {
       render(<MatchLineup {...defaultProps} />);
       expect(screen.getByText("75'")).toBeInTheDocument();
     });
+
+    it("shows down arrow icon for substituted players", () => {
+      render(<MatchLineup {...defaultProps} />);
+      expect(screen.getByLabelText("Gewisseld")).toBeInTheDocument();
+    });
+  });
+
+  describe("subbed_in players", () => {
+    it("shows up arrow icon for players who came on", () => {
+      const lineupWithSubbedIn: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Starter",
+          number: 1,
+          isCaptain: false,
+          status: "starter",
+        },
+        {
+          id: 2,
+          name: "Came On",
+          number: 12,
+          minutesPlayed: 30,
+          isCaptain: false,
+          status: "subbed_in",
+        },
+      ];
+      render(<MatchLineup {...defaultProps} homeLineup={lineupWithSubbedIn} />);
+      expect(screen.getByLabelText("Ingevallen")).toBeInTheDocument();
+    });
+
+    it("shows minutes played for players who came on", () => {
+      const lineupWithSubbedIn: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Starter",
+          number: 1,
+          isCaptain: false,
+          status: "starter",
+        },
+        {
+          id: 2,
+          name: "Came On",
+          number: 12,
+          minutesPlayed: 30,
+          isCaptain: false,
+          status: "subbed_in",
+        },
+      ];
+      render(<MatchLineup {...defaultProps} homeLineup={lineupWithSubbedIn} />);
+      expect(screen.getByText("30'")).toBeInTheDocument();
+    });
+
+    it("groups subbed_in players in substitutes section", () => {
+      const lineupWithSubbedIn: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Starter",
+          number: 1,
+          isCaptain: false,
+          status: "starter",
+        },
+        {
+          id: 2,
+          name: "Came On",
+          number: 12,
+          isCaptain: false,
+          status: "subbed_in",
+        },
+        {
+          id: 3,
+          name: "Unused Sub",
+          number: 13,
+          isCaptain: false,
+          status: "substitute",
+        },
+      ];
+      render(<MatchLineup {...defaultProps} homeLineup={lineupWithSubbedIn} />);
+      // Should have 1 starter and 2 substitutes (subbed_in + substitute)
+      expect(screen.getByText("Basiself (1)")).toBeInTheDocument();
+      expect(screen.getByText("Invallers (2)")).toBeInTheDocument();
+    });
   });
 
   describe("empty lineups", () => {

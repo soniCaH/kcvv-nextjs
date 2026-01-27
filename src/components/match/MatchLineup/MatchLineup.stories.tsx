@@ -104,6 +104,13 @@ const mockHomeLineup = [
     number: 12,
     minutesPlayed: 15,
     isCaptain: false,
+    status: "subbed_in" as const,
+  },
+  {
+    id: 13,
+    name: "Verstraeten Joren",
+    number: 16,
+    isCaptain: false,
     status: "substitute" as const,
   },
 ];
@@ -203,7 +210,7 @@ const mockAwayLineup = [
     number: 16,
     minutesPlayed: 25,
     isCaptain: false,
-    status: "substitute" as const,
+    status: "subbed_in" as const,
   },
 ];
 
@@ -220,6 +227,7 @@ Displays starting XI and substitutes for both teams in a match.
 **Features:**
 - Two-column layout (home vs away)
 - Groups players by status (starters, substitutes)
+- Substitution status icons (red down arrow = subbed out, green up arrow = came on)
 - Captain indicator
 - Jersey number display
 - Minutes played (if available)
@@ -268,7 +276,7 @@ export const StartersOnly: Story = {
 };
 
 /**
- * With multiple substitutions
+ * With multiple substitutions - shows both in/out icons
  */
 export const WithSubstitutions: Story = {
   args: {
@@ -276,27 +284,49 @@ export const WithSubstitutions: Story = {
     awayTeamName: "KFC Turnhout",
     homeLineup: [
       ...mockHomeLineup.slice(0, 8),
-      { ...mockHomeLineup[8], status: "substituted" as const },
-      { ...mockHomeLineup[9], status: "substituted" as const },
-      { ...mockHomeLineup[10], status: "substituted" as const },
       {
-        id: 13,
-        name: "Sub One",
-        number: 7,
-        status: "substitute" as const,
-        isCaptain: false,
+        ...mockHomeLineup[8],
+        minutesPlayed: 60,
+        status: "substituted" as const,
+      },
+      {
+        ...mockHomeLineup[9],
+        minutesPlayed: 70,
+        status: "substituted" as const,
+      },
+      {
+        ...mockHomeLineup[10],
+        minutesPlayed: 80,
+        status: "substituted" as const,
       },
       {
         id: 14,
-        name: "Sub Two",
-        number: 19,
-        status: "substitute" as const,
+        name: "Sub One (came on)",
+        number: 7,
+        minutesPlayed: 30,
+        status: "subbed_in" as const,
         isCaptain: false,
       },
       {
         id: 15,
-        name: "Sub Three",
+        name: "Sub Two (came on)",
+        number: 19,
+        minutesPlayed: 20,
+        status: "subbed_in" as const,
+        isCaptain: false,
+      },
+      {
+        id: 16,
+        name: "Sub Three (came on)",
         number: 23,
+        minutesPlayed: 10,
+        status: "subbed_in" as const,
+        isCaptain: false,
+      },
+      {
+        id: 17,
+        name: "Unused Sub",
+        number: 30,
         status: "substitute" as const,
         isCaptain: false,
       },

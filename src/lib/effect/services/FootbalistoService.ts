@@ -84,12 +84,24 @@ function transformFootbalistoMatch(fbMatch: FootbalistoMatch): Match {
 
 /**
  * Transform lineup player status from Footbalisto format to normalized format
+ *
+ * Status mapping:
+ * - "basis" (starter) + changed: false → "starter" (played full match)
+ * - "basis" (starter) + changed: true → "substituted" (was subbed out)
+ * - "invaller" (sub) + changed: true → "subbed_in" (came on as sub)
+ * - "invaller" (sub) + changed: false → "substitute" (unused sub)
+ * - "wissel" → "substituted" (legacy: player who was subbed out)
  */
 function transformLineupStatus(
   status?: string,
-): "starter" | "substitute" | "substituted" | "unknown" {
-  if (status === "basis") return "starter";
-  if (status === "invaller") return "substitute";
+  changed?: boolean,
+): "starter" | "substitute" | "substituted" | "subbed_in" | "unknown" {
+  if (status === "basis") {
+    return changed ? "substituted" : "starter";
+  }
+  if (status === "invaller") {
+    return changed ? "subbed_in" : "substitute";
+  }
   if (status === "wissel") return "substituted";
   return "unknown";
 }
@@ -106,7 +118,7 @@ function transformLineupPlayer(
     number: player.number ?? undefined,
     minutesPlayed: player.minutesPlayed ?? undefined,
     isCaptain: player.captain ?? false,
-    status: transformLineupStatus(player.status),
+    status: transformLineupStatus(player.status, player.changed),
   };
 }
 

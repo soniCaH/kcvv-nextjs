@@ -9,9 +9,11 @@
  * - Groups players by status (starters, substitutes)
  * - Captain indicator
  * - Jersey number display
+ * - Substitution status icons (in/out arrows)
  */
 
 import { cn } from "@/lib/utils/cn";
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 export interface LineupPlayer {
   /** Player ID (optional) */
@@ -25,7 +27,7 @@ export interface LineupPlayer {
   /** Is team captain */
   isCaptain: boolean;
   /** Player status in match */
-  status: "starter" | "substitute" | "substituted" | "unknown";
+  status: "starter" | "substitute" | "substituted" | "subbed_in" | "unknown";
 }
 
 export interface MatchLineupProps {
@@ -107,10 +109,14 @@ function TeamLineup({
   side: "home" | "away";
 }) {
   // Group players by status
+  // Starters section: players who started (including those who were subbed out)
   const starters = players.filter(
     (p) => p.status === "starter" || p.status === "substituted",
   );
-  const substitutes = players.filter((p) => p.status === "substitute");
+  // Substitutes section: bench players (both used and unused subs)
+  const substitutes = players.filter(
+    (p) => p.status === "substitute" || p.status === "subbed_in",
+  );
 
   const bgColor = side === "home" ? "bg-kcvv-green-bright/5" : "bg-gray-50";
   const borderColor =
@@ -183,8 +189,31 @@ function PlayerRow({
       ? "bg-kcvv-green-bright text-white"
       : "bg-gray-700 text-white";
 
+  // Determine if player has a substitution status to show
+  const wasSubbedOut = player.status === "substituted";
+  const cameOn = player.status === "subbed_in";
+  const hasSubStatus = wasSubbedOut || cameOn;
+
   return (
     <div className="flex items-center gap-3 py-1.5">
+      {/* Substitution status icon */}
+      <span className="w-4 flex items-center justify-center">
+        {wasSubbedOut && (
+          <ArrowDown
+            className="text-red-500"
+            size={14}
+            aria-label="Gewisseld"
+          />
+        )}
+        {cameOn && (
+          <ArrowUp
+            className="text-green-500"
+            size={14}
+            aria-label="Ingevallen"
+          />
+        )}
+      </span>
+
       {/* Jersey number */}
       {player.number !== undefined && (
         <span
@@ -207,13 +236,12 @@ function PlayerRow({
         )}
       </span>
 
-      {/* Status indicator for substituted players */}
-      {player.status === "substituted" &&
-        player.minutesPlayed !== undefined && (
-          <span className="text-xs text-gray-500">
-            {player.minutesPlayed}&apos;
-          </span>
-        )}
+      {/* Minutes played for players with substitution status */}
+      {hasSubStatus && player.minutesPlayed !== undefined && (
+        <span className="text-xs text-gray-500">
+          {player.minutesPlayed}&apos;
+        </span>
+      )}
     </div>
   );
 }

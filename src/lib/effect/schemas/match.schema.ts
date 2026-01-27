@@ -238,7 +238,14 @@ export class MatchLineupPlayer extends S.Class<MatchLineupPlayer>(
   number: S.optional(S.Number),
   minutesPlayed: S.optional(S.Number),
   isCaptain: S.Boolean,
-  status: S.Literal("starter", "substitute", "substituted", "unknown"),
+  /** Player status: starter, substitute (unused), substituted (out), subbed_in (came on) */
+  status: S.Literal(
+    "starter",
+    "substitute",
+    "substituted",
+    "subbed_in",
+    "unknown",
+  ),
 }) {}
 
 /**
