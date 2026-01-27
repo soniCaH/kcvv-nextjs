@@ -2108,34 +2108,42 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ⏳ Training schedule (future enhancement)
 - Training schedule
 
-#### 3.3: Match Detail Pages ⏳
+#### 3.3: Match Detail Pages 🔄 IN PROGRESS
 
 **Route:** `/game/[matchId]`
 
-**Components to Create:**
+**Components Created:**
 
-- `MatchDetail` - Full match page container
-- `MatchHeader` - Match hero (teams, score, date, venue)
-- `MatchLineup` - Starting XI and substitutes
-- `MatchStats` - Match statistics (possession, shots, cards)
-- `MatchEvents` - Timeline (goals, cards, substitutions)
-- `MatchReport` - Written match report (if available)
-- `MatchGallery` - Photo gallery from match
+- ✅ `MatchHeader` - Match hero (teams, score, date, venue, status indicators)
+- ✅ `MatchLineup` - Starting XI and substitutes for both teams
+- ✅ `MatchDetailView` - Composite component combining header and lineup
+- ✅ Match detail page with ISR (5-minute revalidation)
+- ✅ Not-found page for invalid match IDs
+- ✅ Utility functions for data transformation and SEO
+- ✅ Tests for all components (67 new tests)
+
+**Components Pending:**
+
+- ⏳ `MatchStats` - Match statistics (possession, shots, cards)
+- ⏳ `MatchEvents` - Timeline (goals, cards, substitutions)
+- ⏳ `MatchReport` - Written match report (if available)
+- ⏳ `MatchGallery` - Photo gallery from match
+- ⏳ OG image generation for match pages
 
 **Footbalisto Integration:**
 
-- Use existing `FootbalistoService`
-- Add `getMatchById` method (already exists)
-- Real-time score updates with ISR (5-minute revalidation during match day)
+- ✅ Use existing `FootbalistoService`
+- ✅ Added `getMatchDetail` method with schema validation
+- ✅ ISR with 5-minute revalidation for match data
 
 ### Deliverables
 
-- ⏳ 500+ player profile pages with ISR
-- ⏳ 15+ youth team pages
-- ⏳ Match detail pages with live scores
+- ✅ 500+ player profile pages with ISR
+- ✅ 15+ youth team pages with rosters
+- 🔄 Match detail pages (core functionality complete, enhancements pending)
 - ⏳ Player sharing feature with QR codes
-- ⏳ Team rosters and schedules
-- ⏳ Full test coverage for all components
+- ✅ Team rosters and schedules
+- ✅ Test coverage >80% for all components
 
 ---
 
