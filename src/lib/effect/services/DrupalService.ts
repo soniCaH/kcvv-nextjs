@@ -13,6 +13,7 @@ import {
   Team,
   TeamsResponse,
   TeamResponse,
+  TeamIncludedResource,
   Player,
   PlayersResponse,
   PlayerResponse,
@@ -31,6 +32,16 @@ import {
   MediaImage,
   File,
 } from "../schemas";
+
+/**
+ * Extended team data including resolved staff and players
+ */
+export interface TeamWithRoster {
+  team: Team;
+  staff: readonly Player[];
+  players: readonly Player[];
+  teamImageUrl?: string;
+}
 
 /**
  * Drupal Service Interface
@@ -71,6 +82,13 @@ export class DrupalService extends Context.Tag("DrupalService")<
     readonly getTeamById: (
       id: string,
     ) => Effect.Effect<Team, DrupalError | NotFoundError | ValidationError>;
+
+    readonly getTeamWithRoster: (
+      slug: string,
+    ) => Effect.Effect<
+      TeamWithRoster,
+      DrupalError | NotFoundError | ValidationError
+    >;
 
     // Players
     readonly getPlayers: (params?: {
@@ -470,6 +488,146 @@ export const DrupalServiceLive = Layer.effect(
         });
         const response = yield* fetchJson(url, TeamResponse);
         return response.data;
+      });
+
+    /**
+     * Map included data for teams
+     *
+     * Resolves team image from included media/file resources.
+     *
+     * @param team - Team entity
+     * @param included - Array of related entities from JSON:API included section
+     * @returns Object with resolved team image URL
+     */
+    const mapTeamIncluded = (
+      team: Team,
+      included: readonly S.Schema.Type<typeof TeamIncludedResource>[] = [],
+    ): { teamImageUrl?: string } => {
+      const includedMap = new Map<
+        string,
+        S.Schema.Type<typeof TeamIncludedResource>
+      >(included.map((item) => [`${item.type}:${item.id}`, item]));
+
+      // Resolve team image: media--image -> file--file -> URL
+      const mediaRef = team.relationships.field_image?.data;
+      if (!mediaRef || !("id" in mediaRef) || !("type" in mediaRef)) {
+        return {};
+      }
+
+      const media = includedMap.get(`media--image:${mediaRef.id}`);
+      if (!media || media.type !== "media--image") {
+        return {};
+      }
+
+      const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
+      const fileRef = decodedMedia.relationships?.field_media_image?.data;
+      if (!fileRef) {
+        return {};
+      }
+
+      const file = includedMap.get(`file--file:${fileRef.id}`);
+      if (!file || file.type !== "file--file") {
+        return {};
+      }
+
+      const decodedFile = S.decodeUnknownSync(File)(file);
+      const fileUrl = decodedFile.attributes.uri.url;
+      const absoluteUrl = fileUrl.startsWith("http")
+        ? fileUrl
+        : `${baseUrl}${fileUrl}`;
+
+      return { teamImageUrl: absoluteUrl };
+    };
+
+    /**
+     * Extract and decode players from included resources
+     *
+     * Filters included resources for player nodes and decodes them.
+     * Also resolves player images from the included array.
+     *
+     * @param playerIds - Array of player IDs to extract
+     * @param included - Array of related entities from JSON:API included section
+     * @returns Array of decoded Player entities with resolved images
+     */
+    const extractPlayersFromIncluded = (
+      playerIds: readonly string[],
+      included: readonly S.Schema.Type<typeof TeamIncludedResource>[] = [],
+    ): readonly Player[] => {
+      const idSet = new Set(playerIds);
+      const players: Player[] = [];
+
+      // First, find and decode all matching players
+      for (const item of included) {
+        if (item.type === "node--player" && idSet.has(item.id)) {
+          try {
+            const decoded = S.decodeUnknownSync(Player)(item);
+            players.push(decoded);
+          } catch {
+            // Skip invalid player data
+          }
+        }
+      }
+
+      // Then resolve their images using mapPlayerIncluded
+      // Convert TeamIncludedResource to PlayerIncludedResource (they're compatible)
+      const playerIncluded = included.map(
+        (item) =>
+          item as unknown as S.Schema.Type<typeof PlayerIncludedResource>,
+      );
+      return mapPlayerIncluded(players, playerIncluded);
+    };
+
+    /**
+     * Get team with full roster (staff + players)
+     *
+     * Fetches a team by slug and resolves all related data:
+     * - Team image
+     * - Staff members with their images
+     * - Players with their images
+     */
+    const getTeamWithRoster = (slug: string) =>
+      Effect.gen(function* () {
+        const normalizedSlug = slug.startsWith("/") ? slug : `/team/${slug}`;
+
+        const url = buildUrl("node/team", {
+          "filter[path.alias]": normalizedSlug,
+          include:
+            "field_image.field_media_image,field_staff.field_image,field_players.field_image",
+        });
+        const response = yield* fetchJson(url, TeamsResponse);
+
+        if (!response.data || response.data.length === 0) {
+          return yield* Effect.fail(
+            new NotFoundError({
+              resource: "team",
+              identifier: slug,
+              message: `Team with slug "${slug}" not found`,
+            }),
+          );
+        }
+
+        const team = response.data[0];
+        const included = response.included || [];
+
+        // Resolve team image
+        const { teamImageUrl } = mapTeamIncluded(team, included);
+
+        // Extract staff member IDs
+        const staffIds =
+          team.relationships.field_staff?.data?.map((ref) => ref.id) || [];
+        const staff = extractPlayersFromIncluded(staffIds, included);
+
+        // Extract player IDs
+        const playerIds =
+          team.relationships.field_players?.data?.map((ref) => ref.id) || [];
+        const players = extractPlayersFromIncluded(playerIds, included);
+
+        return {
+          team,
+          staff,
+          players,
+          teamImageUrl,
+        };
       });
 
     /**
@@ -965,6 +1123,7 @@ export const DrupalServiceLive = Layer.effect(
       getTeams,
       getTeamBySlug,
       getTeamById,
+      getTeamWithRoster,
       getPlayers,
       getPlayerBySlug,
       getPlayerById,
