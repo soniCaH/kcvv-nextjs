@@ -548,15 +548,15 @@ describe("TeamRoster", () => {
         />,
       );
       // Placeholder SVG should have compact classes
-      // Class: w-[140px] h-[180px]
+      // Class: w-[120px] h-[155px]
       const staffRegion = screen
         .getByText("Technische Staf")
         .closest("section");
       const svgs = staffRegion!.getElementsByTagName("svg");
       // First svg is the placeholder (staff silhouette)
       // Check its class
-      expect(svgs[0].getAttribute("class")).toContain("w-[140px]");
-      expect(svgs[0].getAttribute("class")).toContain("h-[180px]");
+      expect(svgs[0].getAttribute("class")).toContain("w-[120px]");
+      expect(svgs[0].getAttribute("class")).toContain("h-[155px]");
     });
   });
 });

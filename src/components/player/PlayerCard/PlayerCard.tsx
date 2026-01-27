@@ -157,13 +157,13 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                   }
                 />
               ) : (
-                /* Placeholder silhouette */
+                /* Placeholder silhouette - sized to match real player photos */
                 <div className="absolute inset-0 flex items-end justify-center">
                   <svg
                     className={cn(
                       isCompact
-                        ? "w-[140px] h-[180px]"
-                        : "w-[180px] h-[180px] lg:w-[240px] lg:h-[280px]",
+                        ? "w-[120px] h-[155px]"
+                        : "w-[160px] h-[160px] lg:w-[210px] lg:h-[240px]",
                     )}
                     style={{ color: CARD_COLORS.background.icon }}
                     fill="currentColor"
