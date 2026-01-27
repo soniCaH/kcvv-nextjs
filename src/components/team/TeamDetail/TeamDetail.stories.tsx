@@ -3,14 +3,14 @@ import { TeamDetail } from "./TeamDetail";
 import type { RosterPlayer, StaffMember } from "../TeamRoster";
 
 const meta = {
-  title: "Team/TeamDetail",
+  title: "Pages/TeamDetail",
   component: TeamDetail,
   parameters: {
     layout: "fullscreen",
     docs: {
       description: {
         component:
-          "Composite component for team detail pages. Combines TeamHeader with tabbed content showing team info and lineup.",
+          "Page-level composite for team detail pages. Combines TeamHeader with tabbed content showing team info and lineup.",
       },
     },
   },
