@@ -2,6 +2,18 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamDetail } from "./TeamDetail";
 import type { RosterPlayer, StaffMember } from "../TeamRoster";
 
+// Real player images from KCVV API (with transparent backgrounds)
+const REAL_PLAYER_IMAGES = {
+  chiel:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/chiel.png",
+  jarne:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/jarne-front.png",
+  louie:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/louie-front.png",
+  yoran:
+    "https://api.kcvvelewijt.be/sites/default/files/player-picture/yoran-front.png",
+};
+
 const meta = {
   title: "Pages/TeamDetail",
   component: TeamDetail,
@@ -28,8 +40,7 @@ const sampleStaff: StaffMember[] = [
     lastName: "Janssen",
     role: "Hoofdtrainer",
     roleCode: "T1",
-    imageUrl:
-      "https://api.kcvvelewijt.be/sites/default/files/styles/player_teaser/public/2024-07/WhatsApp%20Image%202024-07-01%20at%2022.14.47.jpeg",
+    imageUrl: REAL_PLAYER_IMAGES.chiel,
   },
   {
     id: "staff-2",
@@ -37,6 +48,7 @@ const sampleStaff: StaffMember[] = [
     lastName: "Peeters",
     role: "Assistent-trainer",
     roleCode: "T2",
+    imageUrl: REAL_PLAYER_IMAGES.jarne,
   },
   {
     id: "staff-3",
@@ -56,8 +68,7 @@ const samplePlayers: RosterPlayer[] = [
     position: "Keeper",
     number: 1,
     href: "/players/thomas-vermeersch",
-    imageUrl:
-      "https://api.kcvvelewijt.be/sites/default/files/styles/player_teaser/public/2024-07/WhatsApp%20Image%202024-07-01%20at%2022.14.47.jpeg",
+    imageUrl: REAL_PLAYER_IMAGES.louie,
   },
   {
     id: "player-2",
@@ -74,6 +85,7 @@ const samplePlayers: RosterPlayer[] = [
     position: "Verdediger",
     number: 5,
     href: "/players/arne-claes",
+    imageUrl: REAL_PLAYER_IMAGES.chiel,
   },
   {
     id: "player-4",
@@ -82,8 +94,7 @@ const samplePlayers: RosterPlayer[] = [
     position: "Middenvelder",
     number: 8,
     href: "/players/lucas-mertens",
-    imageUrl:
-      "https://api.kcvvelewijt.be/sites/default/files/styles/player_teaser/public/2024-07/WhatsApp%20Image%202024-07-01%20at%2022.14.47.jpeg",
+    imageUrl: REAL_PLAYER_IMAGES.yoran,
   },
   {
     id: "player-5",
@@ -100,6 +111,7 @@ const samplePlayers: RosterPlayer[] = [
     position: "Aanvaller",
     number: 9,
     href: "/players/stef-van-den-berg",
+    imageUrl: REAL_PLAYER_IMAGES.jarne,
   },
   {
     id: "player-7",
@@ -133,8 +145,7 @@ export const Default: Story = {
       tagline: "GEWESTELIJKE U15 K",
       ageGroup: "U15",
       teamType: "youth",
-      imageUrl:
-        "https://api.kcvvelewijt.be/sites/default/files/styles/max_1200/public/2024-07/kcvv-jeugd-team.jpg",
+      imageUrl: "https://picsum.photos/seed/team-u15/1200/400",
     },
     contactInfo: sampleContactInfo,
     bodyContent: sampleBodyContent,
@@ -153,8 +164,7 @@ export const WithTeamPhoto: Story = {
       tagline: "PROVINCIALE U17",
       ageGroup: "U17",
       teamType: "youth",
-      imageUrl:
-        "https://api.kcvvelewijt.be/sites/default/files/styles/max_1200/public/2024-07/kcvv-jeugd-team.jpg",
+      imageUrl: "https://picsum.photos/seed/team-u17/1200/400",
     },
     contactInfo: sampleContactInfo,
     staff: sampleStaff,
@@ -248,8 +258,7 @@ export const SeniorTeam: Story = {
       name: "Eerste Ploeg",
       tagline: "3de Nationale",
       teamType: "senior",
-      imageUrl:
-        "https://api.kcvvelewijt.be/sites/default/files/styles/max_1200/public/2024-07/kcvv-eerste-ploeg.jpg",
+      imageUrl: "https://picsum.photos/seed/team-senior/1200/400",
       stats: {
         wins: 12,
         draws: 5,
@@ -279,8 +288,7 @@ export const WithCoachInfo: Story = {
       coach: {
         name: "Marc Janssen",
         role: "Hoofdtrainer",
-        imageUrl:
-          "https://api.kcvvelewijt.be/sites/default/files/styles/player_teaser/public/2024-07/WhatsApp%20Image%202024-07-01%20at%2022.14.47.jpeg",
+        imageUrl: REAL_PLAYER_IMAGES.chiel,
       },
     },
     contactInfo: sampleContactInfo,
