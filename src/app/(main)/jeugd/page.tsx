@@ -9,6 +9,7 @@ import { runPromise } from "@/lib/effect/runtime";
 import { DrupalService } from "@/lib/effect/services/DrupalService";
 import { TeamOverview, type TeamData } from "@/components/team/TeamOverview";
 import type { Team } from "@/lib/effect/schemas";
+import { parseAgeGroup } from "./[slug]/utils";
 
 export const metadata: Metadata = {
   title: "Jeugdploegen | KCVV Elewijt",
@@ -21,18 +22,6 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
-
-/**
- * Parse age group from team title
- */
-function parseAgeGroup(team: Team): string | undefined {
-  const title = team.attributes.title;
-  const match = title.match(/\bU\d{1,2}\b/i);
-  if (match) {
-    return match[0].toUpperCase();
-  }
-  return undefined;
-}
 
 /**
  * Transform Drupal Team to TeamData for TeamOverview component

@@ -150,7 +150,7 @@ export function transformStaffToMember(player: Player): StaffMember {
  * @param team - Team entity
  * @returns "youth" for youth teams (with age group), "senior" otherwise
  */
-export function getTeamType(team: Team): "youth" | "senior" | "club" {
+export function getTeamType(team: Team): "youth" | "senior" {
   const ageGroup = parseAgeGroup(team);
   if (ageGroup) return "youth";
 

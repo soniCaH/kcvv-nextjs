@@ -19,6 +19,10 @@ import { TeamHeader, type TeamHeaderProps } from "../TeamHeader";
 import { TeamRoster, type RosterPlayer, type StaffMember } from "../TeamRoster";
 import { cn } from "@/lib/utils/cn";
 
+/** Shared tab trigger styles */
+const TAB_TRIGGER_CLASSES =
+  "px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent data-[state=active]:border-kcvv-green-bright data-[state=active]:text-kcvv-green-bright transition-colors";
+
 export interface TeamDetailProps {
   /** Team header props */
   header: TeamHeaderProps;
@@ -79,17 +83,11 @@ export function TeamDetail({
           className="flex border-b border-gray-200 mb-6"
           aria-label="Team informatie"
         >
-          <Tabs.Trigger
-            value="info"
-            className="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent data-[state=active]:border-kcvv-green-bright data-[state=active]:text-kcvv-green-bright transition-colors"
-          >
+          <Tabs.Trigger value="info" className={TAB_TRIGGER_CLASSES}>
             Info
           </Tabs.Trigger>
           {(hasPlayers || hasStaff) && (
-            <Tabs.Trigger
-              value="lineup"
-              className="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent data-[state=active]:border-kcvv-green-bright data-[state=active]:text-kcvv-green-bright transition-colors"
-            >
+            <Tabs.Trigger value="lineup" className={TAB_TRIGGER_CLASSES}>
               Lineup
             </Tabs.Trigger>
           )}

@@ -591,8 +591,14 @@ export const DrupalServiceLive = Layer.effect(
 
         const url = buildUrl("node/team", {
           "filter[path.alias]": normalizedSlug,
-          include:
-            "field_image.field_media_image,field_staff.field_image,field_players.field_image",
+          include: [
+            // Team image: media -> file
+            "field_image.field_media_image",
+            // Staff images: player -> file (direct) or player -> media -> file
+            "field_staff.field_image",
+            // Player images: player -> file (direct) or player -> media -> file
+            "field_players.field_image",
+          ].join(","),
         });
         const response = yield* fetchJson(url, TeamsResponse);
 
