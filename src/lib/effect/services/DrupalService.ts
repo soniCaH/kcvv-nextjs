@@ -553,12 +553,22 @@ export const DrupalServiceLive = Layer.effect(
       playerIds: readonly string[],
       included: readonly S.Schema.Type<typeof TeamIncludedResource>[] = [],
     ): readonly Player[] => {
-      const idSet = new Set(playerIds);
-      const players: Player[] = [];
-
-      // First, find and decode all matching players
+      // Build a map of player ID -> included item for quick lookup
+      const playerMap = new Map<
+        string,
+        S.Schema.Type<typeof TeamIncludedResource>
+      >();
       for (const item of included) {
-        if (item.type === "node--player" && idSet.has(item.id)) {
+        if (item.type === "node--player") {
+          playerMap.set(item.id, item);
+        }
+      }
+
+      // Extract players in the order specified by playerIds (preserves relationship order)
+      const players: Player[] = [];
+      for (const id of playerIds) {
+        const item = playerMap.get(id);
+        if (item) {
           try {
             const decoded = S.decodeUnknownSync(Player)(item);
             players.push(decoded);

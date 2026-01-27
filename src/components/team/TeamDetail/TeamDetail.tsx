@@ -56,8 +56,9 @@ export function TeamDetail({
 }: TeamDetailProps) {
   const hasPlayers = players.length > 0;
   const hasStaff = staff.length > 0;
-  const hasContactInfo = !!contactInfo;
-  const hasBodyContent = !!bodyContent;
+  // Trim content to avoid rendering empty/whitespace-only sections
+  const hasContactInfo = !!contactInfo?.trim();
+  const hasBodyContent = !!bodyContent?.trim();
 
   // Sanitize HTML content to prevent XSS attacks
   // Even though Drupal should sanitize, this provides defense-in-depth
@@ -99,7 +100,7 @@ export function TeamDetail({
           <Tabs.Trigger value="info" className={TAB_TRIGGER_CLASSES}>
             Info
           </Tabs.Trigger>
-          {(hasPlayers || hasStaff) && (
+          {hasPlayers && (
             <Tabs.Trigger value="lineup" className={TAB_TRIGGER_CLASSES}>
               Lineup
             </Tabs.Trigger>
@@ -155,8 +156,8 @@ export function TeamDetail({
           </div>
         </Tabs.Content>
 
-        {/* Lineup Tab */}
-        {(hasPlayers || hasStaff) && (
+        {/* Lineup Tab - only shown when there are players */}
+        {hasPlayers && (
           <Tabs.Content value="lineup" className="focus:outline-none">
             <TeamRoster
               players={players}

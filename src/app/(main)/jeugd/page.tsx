@@ -32,7 +32,9 @@ function transformTeamToData(team: Team): TeamData | null {
   // Only include youth teams (those with age groups)
   if (!ageGroup) return null;
 
-  const slug = team.attributes.path?.alias?.replace("/team/", "") || "";
+  // Extract final path segment from alias (e.g., "/team/u15a" -> "u15a")
+  const pathAlias = team.attributes.path?.alias || "";
+  const slug = pathAlias.split("/").filter(Boolean).pop() || team.id;
 
   return {
     id: team.id,
@@ -81,12 +83,7 @@ export default async function JeugdPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Page Header */}
       <header className="mb-8">
-        <h1
-          className="text-4xl md:text-5xl font-bold text-gray-900 mb-4"
-          style={{
-            fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-          }}
-        >
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-title">
           Jeugdploegen
         </h1>
         <p className="text-lg text-gray-600 max-w-3xl">
