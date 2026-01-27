@@ -594,10 +594,14 @@ export const DrupalServiceLive = Layer.effect(
           include: [
             // Team image: media -> file
             "field_image.field_media_image",
-            // Staff images: player -> file (direct) or player -> media -> file
+            // Staff images: direct file reference
             "field_staff.field_image",
-            // Player images: player -> file (direct) or player -> media -> file
+            // Staff images: nested media -> file (when field_image is media--image)
+            "field_staff.field_image.field_media_image",
+            // Player images: direct file reference
             "field_players.field_image",
+            // Player images: nested media -> file (when field_image is media--image)
+            "field_players.field_image.field_media_image",
           ].join(","),
         });
         const response = yield* fetchJson(url, TeamsResponse);
