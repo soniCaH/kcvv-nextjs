@@ -14,6 +14,8 @@
  * - Loading state support
  */
 
+import { useMemo } from "react";
+import DOMPurify from "isomorphic-dompurify";
 import * as Tabs from "@radix-ui/react-tabs";
 import { TeamHeader, type TeamHeaderProps } from "../TeamHeader";
 import { TeamRoster, type RosterPlayer, type StaffMember } from "../TeamRoster";
@@ -56,6 +58,17 @@ export function TeamDetail({
   const hasStaff = staff.length > 0;
   const hasContactInfo = !!contactInfo;
   const hasBodyContent = !!bodyContent;
+
+  // Sanitize HTML content to prevent XSS attacks
+  // Even though Drupal should sanitize, this provides defense-in-depth
+  const sanitizedContactInfo = useMemo(
+    () => (contactInfo ? DOMPurify.sanitize(contactInfo) : ""),
+    [contactInfo],
+  );
+  const sanitizedBodyContent = useMemo(
+    () => (bodyContent ? DOMPurify.sanitize(bodyContent) : ""),
+    [bodyContent],
+  );
 
   // Loading state
   if (isLoading) {
@@ -102,7 +115,7 @@ export function TeamDetail({
                 <h2 className="text-2xl font-bold mb-4">Contactinformatie</h2>
                 <div
                   dangerouslySetInnerHTML={{
-                    __html: contactInfo!,
+                    __html: sanitizedContactInfo,
                   }}
                 />
               </section>
@@ -127,7 +140,7 @@ export function TeamDetail({
               <section className="prose prose-gray max-w-none">
                 <div
                   dangerouslySetInnerHTML={{
-                    __html: bodyContent!,
+                    __html: sanitizedBodyContent,
                   }}
                 />
               </section>
