@@ -38,6 +38,8 @@ export class PlayerAttributes extends S.Class<PlayerAttributes>(
   field_firstname: S.optional(S.NullOr(S.String)),
   field_lastname: S.optional(S.NullOr(S.String)),
   field_position: S.optional(S.NullOr(S.String)),
+  /** Short position code for staff roles (e.g., T1, T2, TK, TVJO, PDG) */
+  field_position_short: S.optional(S.NullOr(S.String)),
   field_shirtnumber: S.optional(S.NullOr(S.Number)),
   field_birth_date: S.optional(S.NullOr(DateFromStringOrDate)),
   field_nationality: S.optional(S.NullOr(S.String)),

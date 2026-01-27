@@ -1069,6 +1069,470 @@ describe("DrupalService", () => {
     });
   });
 
+  describe("getTeamWithRoster", () => {
+    it("should fetch team with full roster (staff and players)", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "team-1",
+            type: "node--team",
+            attributes: {
+              title: "U15A",
+              field_team_id: 123,
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/team/u15a" },
+            },
+            relationships: {
+              field_image: {
+                data: { type: "media--image", id: "media-1" },
+              },
+              field_staff: {
+                data: [{ type: "node--player", id: "staff-1" }],
+              },
+              field_players: {
+                data: [
+                  { type: "node--player", id: "player-1" },
+                  { type: "node--player", id: "player-2" },
+                ],
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "media-1",
+            type: "media--image",
+            attributes: { name: "Team Photo" },
+            relationships: {
+              field_media_image: {
+                data: { type: "file--file", id: "file-1" },
+              },
+            },
+          },
+          {
+            id: "file-1",
+            type: "file--file",
+            attributes: {
+              filename: "team-photo.jpg",
+              uri: { url: "/sites/default/files/team-photo.jpg" },
+            },
+          },
+          {
+            id: "staff-1",
+            type: "node--player",
+            attributes: {
+              title: "Coach Smith",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/coach-smith" },
+              field_position_short: "T1",
+            },
+            relationships: {
+              field_image: { data: null },
+            },
+          },
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              field_shirtnumber: 10,
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: { data: null },
+            },
+          },
+          {
+            id: "player-2",
+            type: "node--player",
+            attributes: {
+              title: "Jane Smith",
+              field_shirtnumber: 7,
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/jane-smith" },
+            },
+            relationships: {
+              field_image: { data: null },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("u15a");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.team.attributes.title).toBe("U15A");
+      expect(result.staff).toHaveLength(1);
+      expect(result.staff[0].attributes.title).toBe("Coach Smith");
+      expect(result.players).toHaveLength(2);
+      expect(result.teamImageUrl).toContain(
+        "/sites/default/files/team-photo.jpg",
+      );
+    });
+
+    it("should throw NotFoundError when team not found", async () => {
+      const mockResponse = { data: [] };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("non-existent");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    });
+
+    it("should handle team without image", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "team-1",
+            type: "node--team",
+            attributes: {
+              title: "U13B",
+              field_team_id: 456,
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/team/u13b" },
+            },
+            relationships: {
+              field_image: { data: null },
+              field_staff: { data: [] },
+              field_players: { data: [] },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("u13b");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.team.attributes.title).toBe("U13B");
+      expect(result.teamImageUrl).toBeUndefined();
+      expect(result.staff).toHaveLength(0);
+      expect(result.players).toHaveLength(0);
+    });
+
+    it("should handle missing media in included array", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "team-1",
+            type: "node--team",
+            attributes: {
+              title: "U17",
+              field_team_id: 789,
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/team/u17" },
+            },
+            relationships: {
+              field_image: {
+                data: { type: "media--image", id: "media-missing" },
+              },
+              field_staff: { data: [] },
+              field_players: { data: [] },
+            },
+          },
+        ],
+        included: [], // Media not in included
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("u17");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.team.attributes.title).toBe("U17");
+      expect(result.teamImageUrl).toBeUndefined();
+    });
+
+    it("should handle missing file in included array", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "team-1",
+            type: "node--team",
+            attributes: {
+              title: "U19",
+              field_team_id: 101,
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/team/u19" },
+            },
+            relationships: {
+              field_image: {
+                data: { type: "media--image", id: "media-1" },
+              },
+              field_staff: { data: [] },
+              field_players: { data: [] },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "media-1",
+            type: "media--image",
+            attributes: { name: "Team Photo" },
+            relationships: {
+              field_media_image: {
+                data: { type: "file--file", id: "file-missing" },
+              },
+            },
+          },
+          // File not in included
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("u19");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.team.attributes.title).toBe("U19");
+      expect(result.teamImageUrl).toBeUndefined();
+    });
+
+    it("should skip invalid player data in included array", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "team-1",
+            type: "node--team",
+            attributes: {
+              title: "U21",
+              field_team_id: 202,
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/team/u21" },
+            },
+            relationships: {
+              field_image: { data: null },
+              field_staff: { data: [] },
+              field_players: {
+                data: [
+                  { type: "node--player", id: "valid-player" },
+                  { type: "node--player", id: "invalid-player" },
+                ],
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "valid-player",
+            type: "node--player",
+            attributes: {
+              title: "Valid Player",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/valid" },
+            },
+            relationships: {
+              field_image: { data: null },
+            },
+          },
+          {
+            id: "invalid-player",
+            type: "node--player",
+            // Missing required attributes - should be skipped
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("u21");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.team.attributes.title).toBe("U21");
+      // Only valid player should be included
+      expect(result.players).toHaveLength(1);
+      expect(result.players[0].attributes.title).toBe("Valid Player");
+    });
+
+    it("should normalize slug with leading slash", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "team-1",
+            type: "node--team",
+            attributes: {
+              title: "First Team",
+              field_team_id: 1,
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/team/first-team" },
+            },
+            relationships: {
+              field_image: { data: null },
+              field_staff: { data: [] },
+              field_players: { data: [] },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("/team/first-team");
+      });
+
+      await Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive)));
+
+      // Should use the slug as-is when it starts with /
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("filter%5Bpath.alias%5D=%2Fteam%2Ffirst-team"),
+        expect.anything(),
+      );
+    });
+
+    it("should resolve player images from included", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "team-1",
+            type: "node--team",
+            attributes: {
+              title: "U15A",
+              field_team_id: 123,
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/team/u15a" },
+            },
+            relationships: {
+              field_image: { data: null },
+              field_staff: { data: [] },
+              field_players: {
+                data: [{ type: "node--player", id: "player-1" }],
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "player-1",
+            type: "node--player",
+            attributes: {
+              title: "John Doe",
+              field_shirtnumber: 10,
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/john-doe" },
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "file--file",
+                  id: "file-player-1",
+                  meta: { alt: "John Doe" },
+                },
+              },
+            },
+          },
+          {
+            id: "file-player-1",
+            type: "file--file",
+            attributes: {
+              filename: "john-doe.jpg",
+              uri: { url: "/sites/default/files/player-picture/john-doe.jpg" },
+            },
+          },
+        ],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("u15a");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.players).toHaveLength(1);
+      const playerImage = result.players[0].relationships.field_image?.data;
+      expect(playerImage).toBeDefined();
+      if (playerImage && "uri" in playerImage) {
+        expect(playerImage.uri.url).toContain("/player-picture/john-doe.jpg");
+      }
+    });
+  });
+
   describe("getPlayers", () => {
     it("should fetch players with team filter", async () => {
       const mockResponse = { data: [] };

@@ -11,7 +11,7 @@
  * appear in the "included" array and can be resolved to get full data.
  */
 
-import { Schema as S } from 'effect'
+import { Schema as S } from "effect";
 import {
   BaseDrupalNodeAttributes,
   DrupalBody,
@@ -19,14 +19,14 @@ import {
   JsonApiVersion,
   JsonApiLinks,
   DrupalResource,
-} from './common.schema'
-import { MediaImage } from './media.schema'
-import { File } from './file.schema'
+} from "./common.schema";
+import { MediaImage } from "./media.schema";
+import { File } from "./file.schema";
 
 /**
  * Team node attributes
  */
-export class TeamAttributes extends S.Class<TeamAttributes>('TeamAttributes')({
+export class TeamAttributes extends S.Class<TeamAttributes>("TeamAttributes")({
   ...BaseDrupalNodeAttributes,
   field_team_id: S.Number,
   field_league_id: S.optional(S.Number),
@@ -34,6 +34,16 @@ export class TeamAttributes extends S.Class<TeamAttributes>('TeamAttributes')({
   field_division: S.optional(S.String),
   field_season: S.optional(S.String),
   body: S.optional(DrupalBody),
+  /** Footbalisto team ID (displayed as watermark) */
+  field_fb_id: S.optional(S.NullOr(S.Number)),
+  /** VoetbalVlaanderen ID (used for matches/rankings API) */
+  field_vv_id: S.optional(S.NullOr(S.Number)),
+  /** Full division name (e.g., "GEWESTELIJKE U13 K") */
+  field_division_full: S.optional(S.NullOr(S.String)),
+  /** Team tagline or motto */
+  field_tagline: S.optional(S.NullOr(S.String)),
+  /** Contact info HTML content */
+  field_contact_info: S.optional(S.NullOr(DrupalBody)),
 }) {}
 
 /**
@@ -42,8 +52,11 @@ export class TeamAttributes extends S.Class<TeamAttributes>('TeamAttributes')({
  * Defines relationships to other entities:
  * - field_image: Team photo (can be resolved DrupalImage or reference)
  * - field_players: Player roster references
+ * - field_staff: Staff member references (coaches, trainers)
  */
-export class TeamRelationships extends S.Class<TeamRelationships>('TeamRelationships')({
+export class TeamRelationships extends S.Class<TeamRelationships>(
+  "TeamRelationships",
+)({
   /**
    * Team image
    * Can be either:
@@ -53,15 +66,17 @@ export class TeamRelationships extends S.Class<TeamRelationships>('TeamRelations
   field_image: S.optional(
     S.Struct({
       data: S.optional(
-        S.Union(
-          DrupalImage,
-          S.Struct({
-            type: S.Literal('media--image'),
-            id: S.String,
-          })
-        )
+        S.NullOr(
+          S.Union(
+            DrupalImage,
+            S.Struct({
+              type: S.Literal("media--image"),
+              id: S.String,
+            }),
+          ),
+        ),
       ),
-    })
+    }),
   ),
 
   /**
@@ -73,19 +88,34 @@ export class TeamRelationships extends S.Class<TeamRelationships>('TeamRelations
       data: S.Array(
         S.Struct({
           id: S.String,
-          type: S.Literal('node--player'),
-        })
+          type: S.Literal("node--player"),
+        }),
       ),
-    })
+    }),
+  ),
+
+  /**
+   * Staff members (coaches, trainers)
+   * Array of player references with staff roles
+   */
+  field_staff: S.optional(
+    S.Struct({
+      data: S.Array(
+        S.Struct({
+          id: S.String,
+          type: S.Literal("node--player"),
+        }),
+      ),
+    }),
   ),
 }) {}
 
 /**
  * Complete Team node
  */
-export class Team extends S.Class<Team>('Team')({
+export class Team extends S.Class<Team>("Team")({
   id: S.String,
-  type: S.Literal('node--team'),
+  type: S.Literal("node--team"),
   attributes: TeamAttributes,
   relationships: TeamRelationships,
 }) {}
@@ -93,18 +123,19 @@ export class Team extends S.Class<Team>('Team')({
 /**
  * Array of teams
  */
-export const TeamsArray = S.Array(Team)
+export const TeamsArray = S.Array(Team);
 
 /**
  * Discriminated union of all possible included resource types for teams
  *
- * When fetching teams with ?include=field_image.field_media_image
- * the response includes various entity types in the "included" array:
+ * When fetching teams with include parameters, the response includes
+ * various entity types in the "included" array:
  * - MediaImage: Media entity wrapping the team image
  * - File: The actual image file with URL
- * - DrupalResource: Fallback for unknown/future types
+ * - DrupalResource: Fallback for players, staff, and other types
  *
- * This union provides full type safety and runtime validation for included entities.
+ * Note: Players and staff (node--player) are handled via DrupalResource fallback
+ * to avoid circular dependencies, then decoded separately when needed.
  *
  * @example
  * ```typescript
@@ -112,11 +143,11 @@ export const TeamsArray = S.Array(Team)
  *
  * included.forEach(resource => {
  *   if (resource.type === 'media--image') {
- *     // TypeScript knows this is MediaImage
  *     console.log(resource.attributes.name)
  *   } else if (resource.type === 'file--file') {
- *     // TypeScript knows this is File
  *     console.log(resource.attributes.uri.url)
+ *   } else if (resource.type === 'node--player') {
+ *     // Decode as Player separately
  *   }
  * })
  * ```
@@ -124,8 +155,8 @@ export const TeamsArray = S.Array(Team)
 export const TeamIncludedResource = S.Union(
   MediaImage,
   File,
-  DrupalResource // Fallback for unknown types
-)
+  DrupalResource, // Fallback for players, staff, and other types
+);
 
 /**
  * Drupal JSON:API response for team collections
@@ -144,7 +175,7 @@ export const TeamIncludedResource = S.Union(
  * const links = response.links  // JsonApiLinks
  * ```
  */
-export class TeamsResponse extends S.Class<TeamsResponse>('TeamsResponse')({
+export class TeamsResponse extends S.Class<TeamsResponse>("TeamsResponse")({
   data: TeamsArray,
   included: S.optional(S.Array(TeamIncludedResource)),
   jsonapi: S.optional(JsonApiVersion),
@@ -152,7 +183,7 @@ export class TeamsResponse extends S.Class<TeamsResponse>('TeamsResponse')({
   meta: S.optional(
     S.Struct({
       count: S.optional(S.NumberFromString),
-    })
+    }),
   ),
 }) {}
 
@@ -168,7 +199,7 @@ export class TeamsResponse extends S.Class<TeamsResponse>('TeamsResponse')({
  * const team = response.data  // Team (not array)
  * ```
  */
-export class TeamResponse extends S.Class<TeamResponse>('TeamResponse')({
+export class TeamResponse extends S.Class<TeamResponse>("TeamResponse")({
   data: Team,
   included: S.optional(S.Array(TeamIncludedResource)),
   jsonapi: S.optional(JsonApiVersion),

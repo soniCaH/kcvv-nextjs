@@ -138,12 +138,12 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
               />
             )}
 
-            {/* Player image container with hover shift - z-10 on hover to slide in front of number */}
+            {/* Player image container - z-6 to be above badge (z-5), slides left on hover */}
             <div
               className={cn(
-                "absolute inset-0 z-[3]",
+                "absolute inset-0 z-[6]",
                 "transition-transform duration-300 ease-in-out",
-                "group-hover:-translate-x-[30px] group-hover:z-[10]",
+                "group-hover:-translate-x-[30px]",
               )}
             >
               {imageUrl ? (
@@ -157,13 +157,13 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                   }
                 />
               ) : (
-                /* Placeholder silhouette */
+                /* Placeholder silhouette - sized to match real player photos */
                 <div className="absolute inset-0 flex items-end justify-center">
                   <svg
                     className={cn(
                       isCompact
-                        ? "w-[140px] h-[180px]"
-                        : "w-[180px] h-[180px] lg:w-[240px] lg:h-[280px]",
+                        ? "w-[120px] h-[155px]"
+                        : "w-[160px] h-[160px] lg:w-[210px] lg:h-[240px]",
                     )}
                     style={{ color: CARD_COLORS.background.icon }}
                     fill="currentColor"

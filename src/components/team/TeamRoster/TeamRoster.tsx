@@ -296,12 +296,12 @@ export function TeamRoster({
                     />
                   )}
 
-                  {/* Staff image container with hover shift - z-10 on hover to slide in front of number */}
+                  {/* Staff image container - z-6 to be above badge (z-5), slides left on hover */}
                   <div
                     className={cn(
-                      "absolute inset-0 z-[3]",
-                      "transition-all duration-300 ease-in-out",
-                      "group-hover:-translate-x-[30px] group-hover:z-[10]",
+                      "absolute inset-0 z-[6]",
+                      "transition-transform duration-300 ease-in-out",
+                      "group-hover:-translate-x-[30px]",
                     )}
                   >
                     {member.imageUrl ? (
@@ -317,14 +317,14 @@ export function TeamRoster({
                         }
                       />
                     ) : (
-                      /* Staff placeholder silhouette */
+                      /* Staff placeholder silhouette - sized to match real photos */
                       <div className="absolute inset-0 flex items-end justify-center">
                         <svg
                           className={cn(
                             "text-[#cacaca]",
                             isCompact
-                              ? "w-[140px] h-[180px]"
-                              : "w-[180px] h-[180px] lg:w-[240px] lg:h-[280px]",
+                              ? "w-[120px] h-[155px]"
+                              : "w-[160px] h-[160px] lg:w-[210px] lg:h-[240px]",
                           )}
                           fill="currentColor"
                           viewBox="0 0 24 32"
