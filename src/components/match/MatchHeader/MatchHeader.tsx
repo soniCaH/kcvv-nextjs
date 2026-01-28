@@ -45,7 +45,22 @@ export interface MatchHeaderProps {
 }
 
 /**
- * Hero section for match detail pages
+ * Render a hero header for a match, showing competition, teams, score, status badges, and date/time.
+ *
+ * Displays a loading skeleton when `isLoading` is true. Shows a live indicator when `status` is "live",
+ * displays numeric scores when `status` is "live" or "finished", and shows localized badges for
+ * "postponed" ("Uitgesteld") and "cancelled" ("Afgelast"). Date and time are hidden when the match is
+ * postponed or cancelled. `className` is merged into the outer container.
+ *
+ * @param homeTeam - Home team data (name, optional `logo`, optional `score`)
+ * @param awayTeam - Away team data (name, optional `logo`, optional `score`)
+ * @param date - Match date
+ * @param time - Optional time string (e.g., "HH:MM")
+ * @param status - Match status; one of `"scheduled" | "live" | "finished" | "postponed" | "cancelled"`
+ * @param competition - Optional competition name displayed as a badge
+ * @param isLoading - If `true`, render a placeholder skeleton instead of match content
+ * @param className - Optional additional CSS classes applied to the root element
+ * @returns The rendered match header element
  */
 export function MatchHeader({
   homeTeam,
@@ -190,7 +205,10 @@ export function MatchHeader({
 }
 
 /**
- * Team display with logo and name
+ * Renders a team block showing the team's logo (or a placeholder) and name, aligned according to side.
+ *
+ * @param team - Team data including `name`, optional `logo`, and optional `score`
+ * @param side - Layout side for alignment; `"home"` aligns content to the right on large screens, `"away"` aligns to the left
  */
 function TeamDisplay({
   team,

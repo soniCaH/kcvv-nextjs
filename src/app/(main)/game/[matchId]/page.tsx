@@ -24,7 +24,14 @@ interface MatchPageProps {
 }
 
 /**
- * Generate SEO metadata for the match page
+ * Build SEO metadata for a match page using the route `matchId`.
+ *
+ * Fetches match details for the given `params.matchId` and produces a metadata
+ * object containing a page `title`; when match data is available, also adds
+ * `description` and `openGraph` fields populated from the match.
+ *
+ * @param params - Object containing the route params. `params.matchId` is the match identifier from the URL.
+ * @returns Metadata with a page `title`. If match details are found, the metadata also includes `description` and `openGraph` (`title`, `description`, `type`). If the `matchId` is invalid or the match cannot be fetched, the returned metadata contains a "not found" title.
  */
 export async function generateMetadata({
   params,
@@ -66,7 +73,11 @@ export async function generateMetadata({
 }
 
 /**
- * Fetch match details or trigger 404
+ * Retrieve match details for the given match ID or trigger a 404 response if unavailable.
+ *
+ * If the match cannot be fetched, this function calls `notFound()` to produce a 404 page.
+ *
+ * @returns The match detail for the specified `matchId`.
  */
 async function fetchMatchOrNotFound(matchId: number): Promise<MatchDetail> {
   try {
@@ -82,7 +93,14 @@ async function fetchMatchOrNotFound(matchId: number): Promise<MatchDetail> {
 }
 
 /**
- * Render the match detail page
+ * Render the match detail page for a given route `matchId`.
+ *
+ * Parses `matchId` from route params, fetches match details, transforms teams and lineup data,
+ * and returns the populated match detail view. If `matchId` is invalid or the match cannot be
+ * retrieved, the route responds with a 404.
+ *
+ * @param params - Route params object containing the string `matchId`
+ * @returns The MatchDetailView populated with teams, date, time, status, competition, lineups, and report flag
  */
 export default async function MatchPage({ params }: MatchPageProps) {
   const { matchId } = await params;

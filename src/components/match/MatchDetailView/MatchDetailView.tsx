@@ -41,7 +41,11 @@ export interface MatchDetailViewProps {
 }
 
 /**
- * Render a complete match detail view with header and lineup sections.
+ * Displays a detailed match view including the header and lineup sections.
+ *
+ * When `isLoading` is true, renders a skeleton placeholder layout. Otherwise renders the MatchHeader and, if lineup data exists, the MatchLineup; if no lineup data is available, shows a centered message indicating no lineup.
+ *
+ * @returns The React element for the match detail view.
  */
 export function MatchDetailView({
   homeTeam,

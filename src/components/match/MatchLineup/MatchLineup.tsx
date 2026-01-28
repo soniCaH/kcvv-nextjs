@@ -46,7 +46,19 @@ export interface MatchLineupProps {
 }
 
 /**
- * Display match lineups for both teams
+ * Render the match lineups for the home and away teams, including loading and empty states.
+ *
+ * Renders two team lineup panels side-by-side on large screens (stacked on small screens). If
+ * `isLoading` is true, two skeleton cards are rendered. If both `homeLineup` and `awayLineup`
+ * are empty, a centered Dutch message indicating no lineups is shown.
+ *
+ * @param homeTeamName - Display name of the home team
+ * @param awayTeamName - Display name of the away team
+ * @param homeLineup - Array of `LineupPlayer` entries for the home team
+ * @param awayLineup - Array of `LineupPlayer` entries for the away team
+ * @param isLoading - If true, render loading skeletons instead of lineup data
+ * @param className - Additional CSS class names to apply to the root container
+ * @returns The rendered lineup UI (team panels, loading skeletons, or empty-state message)
  */
 export function MatchLineup({
   homeTeamName,
@@ -97,7 +109,12 @@ export function MatchLineup({
 }
 
 /**
- * Single team lineup display
+ * Render a team's lineup card grouped into starters and substitutes with side-specific styling.
+ *
+ * @param teamName - The displayed name of the team
+ * @param players - The list of players to display; players are grouped into starters (status "starter" or "substituted") and substitutes (status "substitute", "subbed_in", or "unknown")
+ * @param side - Either `"home"` or `"away"`, which controls visual styling for the card and badges
+ * @returns The JSX element containing the team's lineup sections and players
  */
 function TeamLineup({
   teamName,
@@ -178,7 +195,11 @@ function TeamLineup({
 }
 
 /**
- * Single player row
+ * Renders a single lineup player row with substitution icon, jersey number badge, player name (with captain indicator), and minutes played when applicable.
+ *
+ * @param player - Player data to display (name, number, captain flag, status, and optional minutesPlayed).
+ * @param side - "home" or "away"; controls color styling for the jersey number badge and row accents.
+ * @returns A JSX element representing the formatted player row for a lineup.
  */
 function PlayerRow({
   player,
