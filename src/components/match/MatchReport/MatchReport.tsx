@@ -12,6 +12,7 @@
  */
 
 import Image from "next/image";
+import DOMPurify from "isomorphic-dompurify";
 import { cn } from "@/lib/utils/cn";
 import { User, Calendar } from "lucide-react";
 
@@ -42,11 +43,15 @@ export interface MatchReportProps {
 }
 
 /**
- * Format date for display
+ * Format date for display with validation
  */
 function formatDate(dateStr: string): string {
   try {
     const date = new Date(dateStr);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return dateStr;
+    }
     return date.toLocaleDateString("nl-BE", {
       day: "numeric",
       month: "long",
@@ -141,7 +146,7 @@ export function MatchReport({
         </div>
       )}
 
-      {/* Content */}
+      {/* Content - sanitized with DOMPurify to prevent XSS */}
       <div
         className={cn(
           "prose prose-gray max-w-none",
@@ -151,7 +156,7 @@ export function MatchReport({
           // Style paragraphs
           "prose-p:text-gray-700 prose-p:leading-relaxed",
         )}
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
       />
 
       {/* Photo gallery */}

@@ -76,19 +76,19 @@ export const WithPhotos: Story = {
     publishedAt: "2024-02-15T18:30:00",
     photos: [
       {
-        url: "/images/placeholder-match-1.jpg",
+        url: "https://picsum.photos/seed/match1/400/400",
         alt: "Doelpunt van Jonas Vermeersch",
       },
       {
-        url: "/images/placeholder-match-2.jpg",
+        url: "https://picsum.photos/seed/match2/400/400",
         alt: "Vreugde na de winnende goal",
       },
       {
-        url: "/images/placeholder-match-3.jpg",
+        url: "https://picsum.photos/seed/match3/400/400",
         alt: "Kevin Mertens scoort de penalty",
       },
       {
-        url: "/images/placeholder-match-4.jpg",
+        url: "https://picsum.photos/seed/match4/400/400",
         alt: "De ploeg viert de overwinning",
       },
     ],

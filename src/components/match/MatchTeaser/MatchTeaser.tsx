@@ -14,6 +14,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { DateTime } from "luxon";
 import { cn } from "@/lib/utils/cn";
 
 export interface MatchTeaserTeam {
@@ -51,17 +52,17 @@ export interface MatchTeaserProps {
 }
 
 /**
- * Format date for display
+ * Format date for display using Luxon (timezone-safe)
  */
 function formatDate(dateStr: string): string {
   if (!dateStr) return "";
   try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("nl-BE", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
+    const dt = DateTime.fromISO(dateStr);
+    if (!dt.isValid) {
+      return dateStr;
+    }
+    // Format: "do 15 feb" (short weekday, numeric day, short month)
+    return dt.setLocale("nl").toFormat("ccc d MMM");
   } catch {
     return dateStr;
   }
