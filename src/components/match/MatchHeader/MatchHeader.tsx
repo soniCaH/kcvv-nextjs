@@ -76,7 +76,10 @@ export function MatchHeader({
   const isFinished = status === "finished";
   const isPostponed = status === "postponed";
   const isCancelled = status === "cancelled";
-  const hasScore = isLive || isFinished;
+  // Only show score block if match is live/finished AND at least one score is present
+  const hasScore =
+    (isLive || isFinished) &&
+    (typeof homeTeam.score === "number" || typeof awayTeam.score === "number");
 
   // Loading skeleton
   if (isLoading) {
@@ -161,11 +164,11 @@ export function MatchHeader({
               {hasScore ? (
                 <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-3">
                   <span className="text-4xl lg:text-5xl font-bold text-white font-mono">
-                    {homeTeam.score ?? 0}
+                    {typeof homeTeam.score === "number" ? homeTeam.score : "–"}
                   </span>
                   <span className="text-2xl text-white/60">-</span>
                   <span className="text-4xl lg:text-5xl font-bold text-white font-mono">
-                    {awayTeam.score ?? 0}
+                    {typeof awayTeam.score === "number" ? awayTeam.score : "–"}
                   </span>
                 </div>
               ) : (
@@ -244,6 +247,8 @@ function TeamDisplay({
               className="w-8 h-8 lg:w-12 lg:h-12 text-white/40"
               fill="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
             >
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
             </svg>

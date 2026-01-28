@@ -98,8 +98,9 @@ describe("MatchDetailView", () => {
       render(
         <MatchDetailView {...defaultProps} homeLineup={[]} awayLineup={[]} />,
       );
+      // MatchLineup handles the empty state with its own message
       expect(
-        screen.getByText("Geen opstelling beschikbaar voor deze wedstrijd."),
+        screen.getByText("Geen opstellingen beschikbaar voor deze wedstrijd."),
       ).toBeInTheDocument();
     });
 

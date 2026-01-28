@@ -59,8 +59,6 @@ export function MatchDetailView({
   isLoading = false,
   className,
 }: MatchDetailViewProps) {
-  const hasLineup = homeLineup.length > 0 || awayLineup.length > 0;
-
   // Loading state
   if (isLoading) {
     return (
@@ -101,8 +99,7 @@ export function MatchDetailView({
 
       {/* Match Content */}
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Match Report Indicator */}
-        {/* TODO: Link to actual match report when report pages are implemented */}
+        {/* Match Report Indicator - see issue #575 for link implementation */}
         {hasReport && status === "finished" && (
           <div className="flex items-center justify-center">
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-kcvv-green-bright/10 text-kcvv-green-dark rounded-full text-sm font-medium">
@@ -111,6 +108,8 @@ export function MatchDetailView({
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
+                aria-hidden="true"
+                focusable="false"
               >
                 <path
                   strokeLinecap="round"
@@ -124,21 +123,13 @@ export function MatchDetailView({
           </div>
         )}
 
-        {/* Lineup Section */}
-        {hasLineup ? (
-          <MatchLineup
-            homeTeamName={homeTeam.name}
-            awayTeamName={awayTeam.name}
-            homeLineup={homeLineup}
-            awayLineup={awayLineup}
-          />
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500">
-              Geen opstelling beschikbaar voor deze wedstrijd.
-            </p>
-          </div>
-        )}
+        {/* Lineup Section - MatchLineup handles empty state internally */}
+        <MatchLineup
+          homeTeamName={homeTeam.name}
+          awayTeamName={awayTeam.name}
+          homeLineup={homeLineup}
+          awayLineup={awayLineup}
+        />
       </div>
     </div>
   );
