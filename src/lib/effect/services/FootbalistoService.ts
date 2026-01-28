@@ -21,31 +21,57 @@ import {
   ValidationError,
 } from "../schemas";
 
+// =============================================================================
+// Shared Helpers
+// =============================================================================
+
+/** Match status type */
+type MatchStatusType =
+  | "scheduled"
+  | "live"
+  | "finished"
+  | "postponed"
+  | "cancelled";
+
+/** Numeric status to string status mapping */
+const STATUS_MAP: Record<number, MatchStatusType> = {
+  0: "scheduled",
+  1: "finished",
+  2: "live",
+  3: "postponed",
+  4: "cancelled",
+};
+
+/**
+ * Parse Footbalisto date string "2025-12-06 09:00" to Date and time string
+ */
+function parseDateString(dateStr: string): { date: Date; time: string } {
+  const [datePart, timePart = "00:00"] = dateStr.split(" ");
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+  return {
+    date: new Date(year, month - 1, day, hour, minute),
+    time: timePart,
+  };
+}
+
+/**
+ * Map numeric status code to status string
+ */
+function mapNumericStatus(status: number): MatchStatusType {
+  return STATUS_MAP[status] || "scheduled";
+}
+
+// =============================================================================
+// Transform Functions
+// =============================================================================
+
 /**
  * Transform Footbalisto API match to normalized Match format
  */
 function transformFootbalistoMatch(fbMatch: FootbalistoMatch): Match {
-  // Parse date string "2025-12-06 09:00" to Date
-  // Manual parsing for reliability across all JavaScript environments
-  const [datePart, timePart = "00:00"] = fbMatch.date.split(" ");
-  const [year, month, day] = datePart.split("-").map(Number);
-  const [hour, minute] = timePart.split(":").map(Number);
-
-  // Construct Date object manually (month is 0-indexed)
-  const matchDate = new Date(year, month - 1, day, hour, minute);
-
-  // Map numeric status to string status
-  const statusMap: Record<
-    number,
-    "scheduled" | "live" | "finished" | "postponed" | "cancelled"
-  > = {
-    0: "scheduled",
-    1: "finished",
-    2: "live",
-    3: "postponed",
-    4: "cancelled",
-  };
-  const status = statusMap[fbMatch.status] || "scheduled";
+  const { date: matchDate, time: timePart } = parseDateString(fbMatch.date);
+  const status = mapNumericStatus(fbMatch.status);
 
   // Determine round label based on teamId and age
   let roundLabel: string | undefined = fbMatch.age
@@ -129,25 +155,8 @@ function transformFootbalistoMatchDetail(
   response: FootbalistoMatchDetailResponse,
 ): MatchDetail {
   const general = response.general;
-
-  // Parse date string "2025-12-06 09:00" to Date
-  const [datePart, timePart = "00:00"] = general.date.split(" ");
-  const [year, month, day] = datePart.split("-").map(Number);
-  const [hour, minute] = timePart.split(":").map(Number);
-  const matchDate = new Date(year, month - 1, day, hour, minute);
-
-  // Map numeric status to string status
-  const statusMap: Record<
-    number,
-    "scheduled" | "live" | "finished" | "postponed" | "cancelled"
-  > = {
-    0: "scheduled",
-    1: "finished",
-    2: "live",
-    3: "postponed",
-    4: "cancelled",
-  };
-  const status = statusMap[general.status] || "scheduled";
+  const { date: matchDate, time: timePart } = parseDateString(general.date);
+  const status = mapNumericStatus(general.status);
 
   // Transform lineup if available
   const lineup = response.lineup
@@ -178,6 +187,24 @@ function transformFootbalistoMatchDetail(
     competition: general.competitionType,
     lineup,
     hasReport: general.viewGameReport,
+  };
+}
+
+/**
+ * Convert MatchDetail to Match (strips lineup data)
+ * Used by getMatchById which only needs the basic match info
+ */
+function convertDetailToMatch(detail: MatchDetail): Match {
+  return {
+    id: detail.id,
+    date: detail.date,
+    time: detail.time,
+    venue: detail.venue,
+    home_team: detail.home_team,
+    away_team: detail.away_team,
+    status: detail.status,
+    round: detail.round,
+    competition: detail.competition,
   };
 }
 
@@ -388,12 +415,14 @@ export const FootbalistoServiceLive = Layer.effect(
 
     /**
      * Get single match by ID (not cached - for live updates)
+     * Uses the same endpoint as getMatchDetail but returns only basic match info
      */
     const getMatchById = (matchId: number) =>
       Effect.gen(function* () {
         const url = `${baseUrl}/match/${matchId}`;
-        const response = yield* fetchJson(url, Match);
-        return response;
+        const response = yield* fetchJson(url, FootbalistoMatchDetailResponse);
+        const detail = transformFootbalistoMatchDetail(response);
+        return convertDetailToMatch(detail);
       });
 
     /**
