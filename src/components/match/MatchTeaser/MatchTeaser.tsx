@@ -18,6 +18,8 @@ import { DateTime } from "luxon";
 import { cn } from "@/lib/utils/cn";
 
 export interface MatchTeaserTeam {
+  /** Team ID for identification and highlighting */
+  id?: string | number;
   /** Team name */
   name: string;
   /** Team logo URL */
@@ -41,8 +43,8 @@ export interface MatchTeaserProps {
   status: "upcoming" | "live" | "finished" | "postponed" | "cancelled";
   /** Link to match detail page */
   href?: string;
-  /** Team ID to highlight */
-  highlightTeamId?: string;
+  /** Team ID to highlight (must match team.id) */
+  highlightTeamId?: string | number;
   /** Display variant */
   variant?: "default" | "compact";
   /** Loading state */
@@ -103,15 +105,15 @@ export function MatchTeaser({
   const isLive = status === "live";
   const hasScore = score && (status === "live" || status === "finished");
 
-  // Check if either team should be highlighted
-  const isHomeHighlighted = Boolean(
-    highlightTeamId &&
-    homeTeam.name.toLowerCase().includes(highlightTeamId.toLowerCase()),
-  );
-  const isAwayHighlighted = Boolean(
-    highlightTeamId &&
-    awayTeam.name.toLowerCase().includes(highlightTeamId.toLowerCase()),
-  );
+  // Check if either team should be highlighted (strict ID equality)
+  const isHomeHighlighted =
+    highlightTeamId !== undefined &&
+    homeTeam.id !== undefined &&
+    String(highlightTeamId) === String(homeTeam.id);
+  const isAwayHighlighted =
+    highlightTeamId !== undefined &&
+    awayTeam.id !== undefined &&
+    String(highlightTeamId) === String(awayTeam.id);
 
   // Loading skeleton
   if (isLoading) {

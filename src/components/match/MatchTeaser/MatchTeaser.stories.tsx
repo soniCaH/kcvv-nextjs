@@ -28,11 +28,13 @@ type Story = StoryObj<typeof meta>;
 
 // KCVV team data
 const kcvv = {
+  id: 1235,
   name: "KCVV Elewijt",
   logo: "/images/logo.png",
 };
 
 const opponent = {
+  id: 59,
   name: "KFC Turnhout",
   logo: "/images/placeholder-team.png",
 };
@@ -122,7 +124,7 @@ export const Home: Story = {
     venue: "Sportpark Elewijt",
     status: "upcoming",
     href: "/game/123",
-    highlightTeamId: "kcvv",
+    highlightTeamId: 1235,
   },
 };
 
@@ -138,7 +140,7 @@ export const Away: Story = {
     venue: "De Stadsblokken",
     status: "upcoming",
     href: "/game/123",
-    highlightTeamId: "kcvv",
+    highlightTeamId: 1235,
   },
 };
 

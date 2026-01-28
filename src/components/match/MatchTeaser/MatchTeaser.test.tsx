@@ -32,8 +32,8 @@ vi.mock("next/link", () => ({
 
 describe("MatchTeaser", () => {
   const defaultProps = {
-    homeTeam: { name: "KCVV Elewijt", logo: "/logo1.png" },
-    awayTeam: { name: "KFC Turnhout", logo: "/logo2.png" },
+    homeTeam: { id: 1235, name: "KCVV Elewijt", logo: "/logo1.png" },
+    awayTeam: { id: 59, name: "KFC Turnhout", logo: "/logo2.png" },
     date: "2024-02-15",
     time: "15:00",
     status: "upcoming" as const,
@@ -197,24 +197,52 @@ describe("MatchTeaser", () => {
   });
 
   describe("highlighting", () => {
-    it("highlights home team when highlightTeamId matches", () => {
-      render(<MatchTeaser {...defaultProps} highlightTeamId="kcvv" />);
+    it("highlights home team when highlightTeamId matches team ID", () => {
+      render(<MatchTeaser {...defaultProps} highlightTeamId={1235} />);
       const homeTeamText = screen.getByText("KCVV Elewijt");
       expect(homeTeamText).toHaveClass("font-semibold");
     });
 
-    it("highlights away team when highlightTeamId matches", () => {
+    it("highlights away team when highlightTeamId matches team ID", () => {
       render(
         <MatchTeaser
-          homeTeam={{ name: "KFC Turnhout" }}
-          awayTeam={{ name: "KCVV Elewijt" }}
+          homeTeam={{ id: 59, name: "KFC Turnhout" }}
+          awayTeam={{ id: 1235, name: "KCVV Elewijt" }}
           date="2024-02-15"
           status="upcoming"
-          highlightTeamId="kcvv"
+          highlightTeamId={1235}
         />,
       );
       const awayTeamText = screen.getByText("KCVV Elewijt");
       expect(awayTeamText).toHaveClass("font-semibold");
+    });
+
+    it("does not highlight when team has no ID", () => {
+      render(
+        <MatchTeaser
+          homeTeam={{ name: "KCVV Elewijt" }}
+          awayTeam={{ name: "KFC Turnhout" }}
+          date="2024-02-15"
+          status="upcoming"
+          highlightTeamId={1235}
+        />,
+      );
+      const homeTeamText = screen.getByText("KCVV Elewijt");
+      expect(homeTeamText).not.toHaveClass("font-semibold");
+    });
+
+    it("supports string team IDs", () => {
+      render(
+        <MatchTeaser
+          homeTeam={{ id: "team-1235", name: "KCVV Elewijt" }}
+          awayTeam={{ id: "team-59", name: "KFC Turnhout" }}
+          date="2024-02-15"
+          status="upcoming"
+          highlightTeamId="team-1235"
+        />,
+      );
+      const homeTeamText = screen.getByText("KCVV Elewijt");
+      expect(homeTeamText).toHaveClass("font-semibold");
     });
   });
 
