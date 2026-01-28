@@ -200,45 +200,37 @@ export const Loading: Story = {
 /**
  * Multiple match teasers in a list
  */
-export const List: Story = {
-  decorators: [
-    () => (
-      <div className="space-y-3 w-full max-w-md">
-        <MatchTeaser
-          homeTeam={kcvv}
-          awayTeam={{
-            name: "KFC Turnhout",
-            logo: "/images/placeholder-team.png",
-          }}
-          date="2024-02-15"
-          time="15:00"
-          score={{ home: 3, away: 1 }}
-          status="finished"
-          href="/game/121"
-        />
-        <MatchTeaser
-          homeTeam={{ name: "SK Londerzeel" }}
-          awayTeam={kcvv}
-          date="2024-02-22"
-          time="15:00"
-          status="upcoming"
-          href="/game/122"
-        />
-        <MatchTeaser
-          homeTeam={kcvv}
-          awayTeam={{ name: "FC Diest" }}
-          date="2024-02-29"
-          time="14:30"
-          status="postponed"
-          href="/game/123"
-        />
-      </div>
-    ),
-  ],
-  args: {
-    homeTeam: kcvv,
-    awayTeam: opponent,
-    date: "2024-02-15",
-    status: "upcoming",
-  },
+export const List: StoryObj<typeof MatchTeaser> = {
+  render: () => (
+    <div className="space-y-3 w-full max-w-md">
+      <MatchTeaser
+        homeTeam={kcvv}
+        awayTeam={{
+          name: "KFC Turnhout",
+          logo: "/images/placeholder-team.png",
+        }}
+        date="2024-02-15"
+        time="15:00"
+        score={{ home: 3, away: 1 }}
+        status="finished"
+        href="/game/121"
+      />
+      <MatchTeaser
+        homeTeam={{ name: "SK Londerzeel" }}
+        awayTeam={kcvv}
+        date="2024-02-22"
+        time="15:00"
+        status="upcoming"
+        href="/game/122"
+      />
+      <MatchTeaser
+        homeTeam={kcvv}
+        awayTeam={{ name: "FC Diest" }}
+        date="2024-02-29"
+        time="14:30"
+        status="postponed"
+        href="/game/123"
+      />
+    </div>
+  ),
 };

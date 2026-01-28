@@ -14,6 +14,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
+import { formatDate } from "@/lib/utils/dates";
 
 export interface MatchResultTeam {
   /** Team ID */
@@ -48,19 +49,12 @@ export interface MatchResultProps {
 }
 
 /**
- * Format date for display
+ * Format date for display using shared utility
  */
-function formatDate(dateStr: string): string {
+function formatResultDate(dateStr: string): string {
   if (!dateStr) return "";
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("nl-BE", {
-      day: "numeric",
-      month: "short",
-    });
-  } catch {
-    return dateStr;
-  }
+  // Use d MMM format: "15 feb"
+  return formatDate(dateStr, "d MMM");
 }
 
 /**
@@ -249,7 +243,7 @@ export function MatchResult({
 
         {/* Date and competition row */}
         <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-          <span>{formatDate(date)}</span>
+          <span>{formatResultDate(date)}</span>
           {competition && (
             <>
               <span>•</span>

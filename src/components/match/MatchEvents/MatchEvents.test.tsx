@@ -245,11 +245,21 @@ describe("MatchEvents", () => {
         { id: 3, type: "goal", minute: 45, team: "home", player: "Player B" },
       ];
       render(<MatchEvents {...defaultProps} events={unsortedEvents} />);
-      // Get all minute elements and verify order
-      const minutes = screen.getAllByText(/'$/);
-      expect(minutes[0]).toHaveTextContent("12'");
-      expect(minutes[1]).toHaveTextContent("45'");
-      expect(minutes[2]).toHaveTextContent("67'");
+      // Get minute elements by their specific text content
+      const minute12 = screen.getByText("12'");
+      const minute45 = screen.getByText("45'");
+      const minute67 = screen.getByText("67'");
+
+      // Verify all minutes are present (order verified by DOM position)
+      expect(minute12).toBeInTheDocument();
+      expect(minute45).toBeInTheDocument();
+      expect(minute67).toBeInTheDocument();
+
+      // Verify order by checking that 12' comes before 45' which comes before 67'
+      const allMinuteElements = screen.getAllByText(/^\d+'$/);
+      expect(allMinuteElements[0]).toHaveTextContent("12'");
+      expect(allMinuteElements[1]).toHaveTextContent("45'");
+      expect(allMinuteElements[2]).toHaveTextContent("67'");
     });
   });
 });

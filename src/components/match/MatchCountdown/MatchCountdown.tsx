@@ -16,6 +16,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
+import { formatMatchDate as formatMatchDateUtil } from "@/lib/utils/dates";
 
 export interface MatchCountdownProps {
   /** Match date and time */
@@ -67,16 +68,16 @@ function calculateTimeLeft(matchDate: Date): TimeLeft {
 }
 
 /**
- * Format the match date for display
+ * Format the match date for display with time
  */
-function formatMatchDate(date: Date): string {
-  return date.toLocaleDateString("nl-BE", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
+function formatMatchDateWithTime(date: Date): string {
+  // Use existing utility for date part and add time
+  const datePart = formatMatchDateUtil(date);
+  const timePart = date.toLocaleTimeString("nl-BE", {
     hour: "2-digit",
     minute: "2-digit",
   });
+  return `${datePart} - ${timePart}`;
 }
 
 /**
@@ -108,14 +109,26 @@ export function MatchCountdown({
     calculateTimeLeft(matchDate),
   );
 
-  // Update countdown every second
+  // Update countdown every second (only when countdown is active)
   useEffect(() => {
+    // Don't run interval if match is live or already finished
+    const currentTimeLeft = calculateTimeLeft(matchDate);
+    if (isLive || currentTimeLeft.total < 0) {
+      return;
+    }
+
     const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft(matchDate));
+      const newTimeLeft = calculateTimeLeft(matchDate);
+      setTimeLeft(newTimeLeft);
+
+      // Stop interval when countdown finishes
+      if (newTimeLeft.total <= 0) {
+        clearInterval(timer);
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [matchDate]);
+  }, [matchDate, isLive]);
 
   const isCompact = variant === "compact";
   const isPast = timeLeft.total < 0 && !isLive;
@@ -159,13 +172,13 @@ export function MatchCountdown({
       {/* Teams */}
       <div
         className={cn(
-          "text-center font-semibold text-white",
+          "flex items-center justify-center font-semibold text-white overflow-hidden",
           isCompact ? "text-sm mb-3" : "text-lg mb-4",
         )}
       >
-        <span className="truncate">{homeTeam}</span>
-        <span className="mx-2 text-white/70">vs</span>
-        <span className="truncate">{awayTeam}</span>
+        <span className="truncate flex-1 text-right min-w-0">{homeTeam}</span>
+        <span className="mx-2 text-white/70 flex-shrink-0">vs</span>
+        <span className="truncate flex-1 text-left min-w-0">{awayTeam}</span>
       </div>
 
       {/* Live indicator */}
@@ -236,7 +249,7 @@ export function MatchCountdown({
               {/* Match date */}
               {!isCompact && (
                 <div className="text-center mt-4 text-white/70 text-sm">
-                  {formatMatchDate(matchDate)}
+                  {formatMatchDateWithTime(matchDate)}
                 </div>
               )}
             </>

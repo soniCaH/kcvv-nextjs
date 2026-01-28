@@ -131,13 +131,25 @@ export function MatchStats({
     );
   }
 
-  // Get stats to display based on variant
+  // Predefined stat order for consistent UI rendering
+  const allStatsOrder: (keyof MatchStatsData)[] = [
+    "possession",
+    "shots",
+    "shotsOnTarget",
+    "corners",
+    "fouls",
+    "yellowCards",
+    "redCards",
+    "offsides",
+    "passes",
+    "passAccuracy",
+  ];
+
+  // Get stats to display based on variant, using deterministic order
   const statsToShow =
     variant === "minimal"
       ? minimalStats.filter((key) => stats[key] !== undefined)
-      : (Object.keys(stats) as (keyof MatchStatsData)[]).filter(
-          (key) => stats[key] !== undefined,
-        );
+      : allStatsOrder.filter((key) => stats[key] !== undefined);
 
   // Empty state
   if (statsToShow.length === 0) {

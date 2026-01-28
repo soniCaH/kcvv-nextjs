@@ -51,11 +51,12 @@ describe("MatchResult", () => {
     });
 
     it("renders score", () => {
-      render(<MatchResult {...defaultProps} />);
-      expect(screen.getByText("3")).toBeInTheDocument();
-      // "1" might appear in date too, use getAllByText
-      const ones = screen.getAllByText("1");
-      expect(ones.length).toBeGreaterThanOrEqual(1);
+      const { container } = render(<MatchResult {...defaultProps} />);
+      // Find the score container with font-mono class for precise matching
+      const scoreContainer = container.querySelector(".font-mono.font-bold");
+      expect(scoreContainer).toBeInTheDocument();
+      expect(scoreContainer?.textContent).toContain("3");
+      expect(scoreContainer?.textContent).toContain("1");
     });
 
     it("renders date in Dutch format", () => {
