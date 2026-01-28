@@ -43,7 +43,10 @@ const STATUS_MAP: Record<number, MatchStatusType> = {
 };
 
 /**
- * Parse Footbalisto date string "2025-12-06 09:00" to Date and time string
+ * Convert a Footbalisto datetime string into a Date object and the original time string.
+ *
+ * @param dateStr - Datetime in the format "YYYY-MM-DD HH:MM" or "YYYY-MM-DD" (time defaults to "00:00")
+ * @returns An object with `date` set to the parsed Date and `time` set to the "HH:MM" portion of the input
  */
 function parseDateString(dateStr: string): { date: Date; time: string } {
   const [datePart, timePart = "00:00"] = dateStr.split(" ");
@@ -56,7 +59,10 @@ function parseDateString(dateStr: string): { date: Date; time: string } {
 }
 
 /**
- * Map numeric status code to status string
+ * Convert a numeric Footbalisto status code to a human-readable match status.
+ *
+ * @param status - Numeric status code from the Footbalisto API
+ * @returns The mapped `MatchStatusType`; `scheduled` if the code is not recognized
  */
 function mapNumericStatus(status: number): MatchStatusType {
   return STATUS_MAP[status] || "scheduled";
@@ -67,7 +73,10 @@ function mapNumericStatus(status: number): MatchStatusType {
 // =============================================================================
 
 /**
- * Transform Footbalisto API match to normalized Match format
+ * Convert a Footbalisto API match object into the library's normalized Match structure.
+ *
+ * @param fbMatch - Match object returned by the Footbalisto API
+ * @returns The normalized Match with parsed `date` and `time`, mapped `status`, `home_team` and `away_team` (including optional `logo` and `score`), `round` label when available, and `competition`
  */
 function transformFootbalistoMatch(fbMatch: FootbalistoMatch): Match {
   const { date: matchDate, time: timePart } = parseDateString(fbMatch.date);
@@ -109,14 +118,11 @@ function transformFootbalistoMatch(fbMatch: FootbalistoMatch): Match {
 }
 
 /**
- * Transform lineup player status from Footbalisto format to normalized format
+ * Normalize a Footbalisto lineup status into one of the canonical status labels.
  *
- * Status mapping:
- * - "basis" (starter) + changed: false → "starter" (played full match)
- * - "basis" (starter) + changed: true → "substituted" (was subbed out)
- * - "invaller" (sub) + changed: true → "subbed_in" (came on as sub)
- * - "invaller" (sub) + changed: false → "substitute" (unused sub)
- * - "wissel" → "substituted" (legacy: player who was subbed out)
+ * @param status - Original Footbalisto status value (for example `"basis"`, `"invaller"`, or `"wissel"`).
+ * @param changed - Whether the player's status indicates a change (e.g., was substituted).
+ * @returns `starter` if started and not substituted, `substituted` if started and later taken off or legacy `"wissel"`, `subbed_in` if entered as a substitute, `substitute` if listed as a substitute but did not play, `unknown` if the input is unrecognized.
  */
 function transformLineupStatus(
   status?: string,
@@ -133,7 +139,10 @@ function transformLineupStatus(
 }
 
 /**
- * Transform lineup player from Footbalisto format to normalized format
+ * Normalize a Footbalisto lineup player into the internal MatchLineupPlayer representation.
+ *
+ * @param player - Footbalisto lineup player to convert
+ * @returns The normalized lineup player with mapped id, name, number, minutesPlayed, captain flag, and computed status
  */
 function transformLineupPlayer(
   player: FootbalistoLineupPlayer,
@@ -149,7 +158,10 @@ function transformLineupPlayer(
 }
 
 /**
- * Transform Footbalisto match detail response to normalized MatchDetail format
+ * Normalize a Footbalisto match detail response into the internal MatchDetail shape.
+ *
+ * @param response - The Footbalisto API match detail response to convert
+ * @returns The normalized MatchDetail containing match id, date, time, teams (with optional scores and logos), status, competition, optional lineup, and `hasReport`
  */
 function transformFootbalistoMatchDetail(
   response: FootbalistoMatchDetailResponse,
@@ -191,8 +203,10 @@ function transformFootbalistoMatchDetail(
 }
 
 /**
- * Convert MatchDetail to Match (strips lineup data)
- * Used by getMatchById which only needs the basic match info
+ * Create a Match object from a MatchDetail by removing lineup information.
+ *
+ * @param detail - The detailed match object to convert
+ * @returns A Match containing id, date, time, venue, teams, status, round, and competition (lineup removed)
  */
 function convertDetailToMatch(detail: MatchDetail): Match {
   return {

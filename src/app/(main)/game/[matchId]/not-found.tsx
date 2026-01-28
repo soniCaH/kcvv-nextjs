@@ -5,6 +5,13 @@
 
 import Link from "next/link";
 
+/**
+ * Renders a centered "match not found" view for when the requested match cannot be located.
+ *
+ * Displays a Dutch heading ("Wedstrijd niet gevonden"), an explanatory paragraph, and a control to navigate back to the home page.
+ *
+ * @returns A JSX element containing the "match not found" UI with a link to the home page.
+ */
 export default function MatchNotFound() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
