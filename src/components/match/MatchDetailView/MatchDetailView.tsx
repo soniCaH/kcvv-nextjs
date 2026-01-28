@@ -13,7 +13,6 @@
 
 import { MatchHeader, type MatchTeamProps } from "../MatchHeader";
 import { MatchLineup, type LineupPlayer } from "../MatchLineup";
-import { cn } from "@/lib/utils/cn";
 
 export interface MatchDetailViewProps {
   /** Home team info */
@@ -56,6 +55,7 @@ export function MatchDetailView({
   competition,
   homeLineup,
   awayLineup,
+  hasReport = false,
   isLoading = false,
   className,
 }: MatchDetailViewProps) {
@@ -64,7 +64,7 @@ export function MatchDetailView({
   // Loading state
   if (isLoading) {
     return (
-      <div className={cn("min-h-screen", className)}>
+      <div className={className}>
         <MatchHeader
           homeTeam={homeTeam}
           awayTeam={awayTeam}
@@ -100,7 +100,30 @@ export function MatchDetailView({
       />
 
       {/* Match Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Match Report Indicator */}
+        {/* TODO: Link to actual match report when report pages are implemented */}
+        {hasReport && status === "finished" && (
+          <div className="flex items-center justify-center">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-kcvv-green-bright/10 text-kcvv-green-dark rounded-full text-sm font-medium">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Wedstrijdverslag beschikbaar
+            </span>
+          </div>
+        )}
+
         {/* Lineup Section */}
         {hasLineup ? (
           <MatchLineup

@@ -23,13 +23,6 @@ export default function MatchNotFound() {
           De wedstrijd die je zoekt bestaat niet of is niet meer beschikbaar.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          {/* TODO: Enable when /calendar route is implemented */}
-          {/* <Link
-            href="/calendar"
-            className="inline-flex items-center justify-center px-6 py-3 bg-kcvv-green-bright text-white font-semibold rounded-lg hover:bg-kcvv-green-dark transition-colors"
-          >
-            Bekijk kalender
-          </Link> */}
           <Link
             href="/"
             className="inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-gray-400 transition-colors"
