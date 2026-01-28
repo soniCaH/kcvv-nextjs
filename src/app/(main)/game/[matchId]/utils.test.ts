@@ -211,6 +211,26 @@ describe("formatMatchTitle", () => {
     });
     expect(formatMatchTitle(match)).toBe("KCVV Elewijt 7 - 0 Opponent FC");
   });
+
+  it("falls back to VS format when away score is undefined", () => {
+    const match = createMatchDetail({
+      status: "finished",
+      home_team: { id: 1, name: "KCVV Elewijt", score: 3 },
+      away_team: { id: 2, name: "KFC Turnhout", score: undefined },
+    });
+    // Should not include "undefined" in title
+    expect(formatMatchTitle(match)).toBe("KCVV Elewijt vs KFC Turnhout");
+  });
+
+  it("falls back to VS format when home score is undefined", () => {
+    const match = createMatchDetail({
+      status: "finished",
+      home_team: { id: 1, name: "KCVV Elewijt", score: undefined },
+      away_team: { id: 2, name: "KFC Turnhout", score: 1 },
+    });
+    // Should not include "undefined" in title
+    expect(formatMatchTitle(match)).toBe("KCVV Elewijt vs KFC Turnhout");
+  });
 });
 
 describe("formatMatchDescription", () => {

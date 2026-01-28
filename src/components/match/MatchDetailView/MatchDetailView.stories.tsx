@@ -236,9 +236,20 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
+ * Render wrapper to normalize date from Storybook controls
+ * Storybook date control emits numeric timestamp, but component expects Date
+ */
+const render: Story["render"] = (args) => {
+  const normalizedDate =
+    typeof args.date === "number" ? new Date(args.date) : args.date;
+  return <MatchDetailView {...args} date={normalizedDate} />;
+};
+
+/**
  * Default - Finished match with full lineups
  */
 export const Default: Story = {
+  render,
   args: {
     homeTeam: {
       name: "KCVV Elewijt",
@@ -264,6 +275,7 @@ export const Default: Story = {
  * Scheduled match - no score or lineup yet
  */
 export const Scheduled: Story = {
+  render,
   args: {
     homeTeam: {
       name: "KCVV Elewijt",
@@ -286,6 +298,7 @@ export const Scheduled: Story = {
  * Live match with current score and lineups
  */
 export const Live: Story = {
+  render,
   args: {
     homeTeam: {
       name: "KCVV Elewijt",
@@ -310,6 +323,7 @@ export const Live: Story = {
  * Postponed match
  */
 export const Postponed: Story = {
+  render,
   args: {
     homeTeam: {
       name: "KCVV Elewijt",
@@ -332,6 +346,7 @@ export const Postponed: Story = {
  * Cancelled match
  */
 export const Cancelled: Story = {
+  render,
   args: {
     homeTeam: {
       name: "KCVV Elewijt",
@@ -354,6 +369,7 @@ export const Cancelled: Story = {
  * Loading skeleton
  */
 export const Loading: Story = {
+  render,
   args: {
     homeTeam: { name: "" },
     awayTeam: { name: "" },
@@ -369,6 +385,7 @@ export const Loading: Story = {
  * Without logos
  */
 export const WithoutLogos: Story = {
+  render,
   args: {
     homeTeam: {
       name: "KCVV Elewijt",
@@ -392,6 +409,7 @@ export const WithoutLogos: Story = {
  * Mobile viewport
  */
 export const MobileView: Story = {
+  render,
   args: {
     homeTeam: {
       name: "KCVV Elewijt",

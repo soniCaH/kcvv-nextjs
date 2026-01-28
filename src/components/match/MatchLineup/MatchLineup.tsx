@@ -113,9 +113,12 @@ function TeamLineup({
   const starters = players.filter(
     (p) => p.status === "starter" || p.status === "substituted",
   );
-  // Substitutes section: bench players (both used and unused subs)
+  // Substitutes section: bench players (used, unused, and unknown status)
   const substitutes = players.filter(
-    (p) => p.status === "substitute" || p.status === "subbed_in",
+    (p) =>
+      p.status === "substitute" ||
+      p.status === "subbed_in" ||
+      p.status === "unknown",
   );
 
   const bgColor = side === "home" ? "bg-kcvv-green-bright/5" : "bg-gray-50";

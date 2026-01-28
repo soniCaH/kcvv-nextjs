@@ -213,6 +213,32 @@ describe("MatchLineup", () => {
     });
   });
 
+  describe("unknown status players", () => {
+    it("groups unknown status players in substitutes section", () => {
+      const lineupWithUnknown: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Starter",
+          number: 1,
+          isCaptain: false,
+          status: "starter",
+        },
+        {
+          id: 2,
+          name: "Unknown Player",
+          number: 99,
+          isCaptain: false,
+          status: "unknown",
+        },
+      ];
+      render(<MatchLineup {...defaultProps} homeLineup={lineupWithUnknown} />);
+      // Should have 1 starter and 1 substitute (unknown)
+      expect(screen.getByText("Basiself (1)")).toBeInTheDocument();
+      expect(screen.getByText("Invallers (1)")).toBeInTheDocument();
+      expect(screen.getByText("Unknown Player")).toBeInTheDocument();
+    });
+  });
+
   describe("empty lineups", () => {
     it("shows message when both lineups are empty", () => {
       render(<MatchLineup {...defaultProps} homeLineup={[]} awayLineup={[]} />);

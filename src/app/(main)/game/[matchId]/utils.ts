@@ -73,7 +73,12 @@ export function formatMatchTitle(match: MatchDetail): string {
   const homeTeam = match.home_team.name;
   const awayTeam = match.away_team.name;
 
-  if (match.status === "finished" && match.home_team.score !== undefined) {
+  // Only show score if match is finished AND both scores are defined
+  if (
+    match.status === "finished" &&
+    match.home_team.score !== undefined &&
+    match.away_team.score !== undefined
+  ) {
     return `${homeTeam} ${match.home_team.score} - ${match.away_team.score} ${awayTeam}`;
   }
 
