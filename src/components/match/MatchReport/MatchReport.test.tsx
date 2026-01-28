@@ -182,4 +182,14 @@ describe("MatchReport", () => {
       expect(icons.length).toBeGreaterThan(0);
     });
   });
+
+  describe("date formatting edge cases", () => {
+    it("handles invalid date gracefully", () => {
+      render(
+        <MatchReport {...defaultProps} publishedAt="invalid-date-string" />,
+      );
+      // Should show the original string when date is invalid
+      expect(screen.getByText("invalid-date-string")).toBeInTheDocument();
+    });
+  });
 });

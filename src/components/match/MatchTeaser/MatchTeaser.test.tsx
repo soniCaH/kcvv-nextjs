@@ -253,4 +253,18 @@ describe("MatchTeaser", () => {
       expect(container.firstChild).toHaveClass("border-red-300");
     });
   });
+
+  describe("date formatting edge cases", () => {
+    it("handles invalid date gracefully", () => {
+      render(<MatchTeaser {...defaultProps} date="invalid-date" />);
+      // Should show the original string when date is invalid
+      expect(screen.getByText("invalid-date")).toBeInTheDocument();
+    });
+
+    it("handles empty date string", () => {
+      render(<MatchTeaser {...defaultProps} date="" />);
+      // Should not crash with empty date
+      expect(screen.getByText("KCVV Elewijt")).toBeInTheDocument();
+    });
+  });
 });

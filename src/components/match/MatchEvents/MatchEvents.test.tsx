@@ -237,6 +237,45 @@ describe("MatchEvents", () => {
     });
   });
 
+  describe("edge cases", () => {
+    it("handles unknown event type gracefully", () => {
+      const unknownEvents: MatchEvent[] = [
+        {
+          id: 1,
+          type: "unknown_type" as MatchEvent["type"],
+          minute: 30,
+          team: "home",
+          player: "Test Player",
+        },
+      ];
+      render(<MatchEvents {...defaultProps} events={unknownEvents} />);
+      // Should render without crashing, showing the minute
+      expect(screen.getByText("30'")).toBeInTheDocument();
+    });
+
+    it("shows no events message for team with no events in team grouping", () => {
+      // Only home team events, away team should show empty message
+      const homeOnlyEvents: MatchEvent[] = [
+        {
+          id: 1,
+          type: "goal",
+          minute: 12,
+          team: "home",
+          player: "Home Player",
+        },
+      ];
+      render(
+        <MatchEvents
+          {...defaultProps}
+          events={homeOnlyEvents}
+          groupBy="team"
+        />,
+      );
+      // Away team column should show "Geen gebeurtenissen"
+      expect(screen.getByText("Geen gebeurtenissen")).toBeInTheDocument();
+    });
+  });
+
   describe("sorting", () => {
     it("sorts events by minute", () => {
       const unsortedEvents: MatchEvent[] = [

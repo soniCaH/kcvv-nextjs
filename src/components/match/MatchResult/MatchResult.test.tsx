@@ -244,4 +244,12 @@ describe("MatchResult", () => {
       expect(greenScores.length).toBeGreaterThan(0);
     });
   });
+
+  describe("date formatting edge cases", () => {
+    it("handles empty date string", () => {
+      render(<MatchResult {...defaultProps} date="" />);
+      // Should not crash with empty date
+      expect(screen.getByText("KCVV Elewijt")).toBeInTheDocument();
+    });
+  });
 });
