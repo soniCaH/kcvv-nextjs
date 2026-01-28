@@ -2095,8 +2095,20 @@ export const getImageDimensions = (width?: number, height?: number) => {
   - Storybook stories in Pages/TeamDetail
 - ✅ `TeamRoster` - Player grid with photos and positions (34 tests)
   - Staff cards use `NumberBadge` with navy color (GitHub Issue #555)
-- ⏳ `TeamSchedule` - Match schedule calendar (future enhancement)
-- ⏳ `TeamStandings` - League standings table (future enhancement)
+- ✅ `TeamSchedule` - Match schedule calendar (25 tests, PR #576)
+  - Upcoming and past matches display
+  - Result color coding (green/yellow/red borders)
+  - Next match highlighting
+  - Status badges (Live, Postponed, Cancelled)
+- ✅ `TeamStandings` - League standings table (19 tests, PR #576)
+  - Form display (WWDLW badges)
+  - Team highlighting
+  - Goal difference formatting
+  - Compact variant with limit prop
+- ✅ `CoachProfile` - Coach/staff profile card (18 tests, PR #576)
+  - Card and inline variants
+  - Contact info (email, phone links)
+  - Photo with placeholder fallback
 
 **Features Implemented:**
 
@@ -2104,7 +2116,8 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ✅ Team photos and staff display
 - ✅ ISR with 1-hour revalidation
 - ✅ Dynamic OG images for social sharing
-- ⏳ Match schedule integration with Footbalisto (Phase 3.3)
+- ✅ Match components: MatchTeaser, MatchResult, MatchCountdown, MatchStats, MatchEvents, MatchReport (PR #577)
+- ✅ Team components: TeamSchedule, TeamStandings, CoachProfile (PR #576)
 - ⏳ Training schedule (future enhancement)
 - Training schedule
 
@@ -2122,11 +2135,30 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ✅ Utility functions for data transformation and SEO
 - ✅ Tests for all components (67 new tests)
 
-**Components Pending:**
+**Additional Match Components Created:** ✅ (PR #577)
 
-- ⏳ `MatchStats` - Match statistics (possession, shots, cards)
-- ⏳ `MatchEvents` - Timeline (goals, cards, substitutions)
-- ⏳ `MatchReport` - Written match report (if available)
+- ✅ `MatchTeaser` - Compact match preview for lists (24 tests)
+  - Team names/logos, date/time, score display
+  - Status badges (Live, Postponed, Cancelled)
+  - Compact variant for tight spaces
+- ✅ `MatchResult` - Result card with win/draw/loss styling (21 tests)
+  - Color-coded indicator (green/yellow/red)
+  - Team highlighting, competition info
+- ✅ `MatchCountdown` - Countdown timer to next match (22 tests)
+  - Days/hours/minutes display
+  - Live indicator, compact variant
+- ✅ `MatchStats` - Match statistics comparison (15 tests)
+  - Visual comparison bars
+  - Possession, shots, corners, fouls, cards
+  - Minimal variant for key stats only
+- ✅ `MatchEvents` - Timeline of match events (21 tests)
+  - Goals, cards, substitutions
+  - Chronological or team-grouped view
+  - Penalty and own goal indicators
+- ✅ `MatchReport` - Written match report (18 tests)
+  - Rich HTML content
+  - Author and date display
+  - Photo gallery, summary variant
 - ⏳ `MatchGallery` - Photo gallery from match
 - ⏳ OG image generation for match pages
 
