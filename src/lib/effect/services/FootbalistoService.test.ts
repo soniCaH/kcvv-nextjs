@@ -561,6 +561,266 @@ describe("FootbalistoService", () => {
     });
   });
 
+  describe("getNextMatches", () => {
+    // Mock Footbalisto API raw match format
+    const createMockFootbalistoMatch = (
+      overrides: Record<string, unknown> = {},
+    ) => ({
+      id: 1,
+      teamId: 1,
+      teamName: "KCVV Elewijt A",
+      timestamp: 1737388800,
+      age: "Seniors",
+      date: "2025-01-20 15:00",
+      time: "1970-01-01 01:00",
+      homeClub: { id: 123, name: "KCVV Elewijt" },
+      awayClub: { id: 456, name: "Opponent FC" },
+      goalsHomeTeam: null,
+      goalsAwayTeam: null,
+      homeTeamId: 1,
+      awayTeamId: 2,
+      status: 0,
+      competitionType: "3de Nationale",
+      viewGameReport: false,
+      ...overrides,
+    });
+
+    it("should fetch and transform next matches", async () => {
+      const mockResponse = [createMockFootbalistoMatch()];
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        yield* footbalisto.clearCache();
+        return yield* footbalisto.getNextMatches();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].home_team.name).toBe("KCVV Elewijt");
+      expect(result[0].status).toBe("scheduled");
+    });
+
+    it("should filter out Weitse Gans matches (teamId 23)", async () => {
+      const mockResponse = [
+        createMockFootbalistoMatch({ id: 1, teamId: 1 }),
+        createMockFootbalistoMatch({ id: 2, teamId: 23 }), // Weitse Gans - should be filtered
+        createMockFootbalistoMatch({ id: 3, teamId: 5 }),
+      ];
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        yield* footbalisto.clearCache();
+        return yield* footbalisto.getNextMatches();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result.map((m) => m.id)).toEqual([1, 3]);
+    });
+
+    it('should set round to "A-ploeg" for teamId 1', async () => {
+      const mockResponse = [createMockFootbalistoMatch({ teamId: 1 })];
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        yield* footbalisto.clearCache();
+        return yield* footbalisto.getNextMatches();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result[0].round).toBe("A-ploeg");
+    });
+
+    it('should set round to "B-ploeg" for teamId 2', async () => {
+      const mockResponse = [createMockFootbalistoMatch({ teamId: 2 })];
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        yield* footbalisto.clearCache();
+        return yield* footbalisto.getNextMatches();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result[0].round).toBe("B-ploeg");
+    });
+
+    it("should use age as round label for youth teams", async () => {
+      const mockResponse = [
+        createMockFootbalistoMatch({ teamId: 5, age: "U15" }),
+      ];
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        yield* footbalisto.clearCache();
+        return yield* footbalisto.getNextMatches();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result[0].round).toBe("U15");
+    });
+
+    it("should cache next matches results", async () => {
+      const mockResponse = [createMockFootbalistoMatch()];
+
+      // Use mockResolvedValueOnce to avoid polluting later tests
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        yield* footbalisto.clearCache();
+        yield* footbalisto.getNextMatches();
+        yield* footbalisto.getNextMatches();
+      });
+
+      await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(global.fetch).toHaveBeenCalledTimes(1); // Cached
+    });
+
+    it("should handle errors gracefully", async () => {
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        yield* footbalisto.clearCache();
+        return yield* footbalisto.getNextMatches();
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(FootbalistoServiceLive))),
+      ).rejects.toThrow();
+    }, 15000);
+
+    it("should transform match with scores", async () => {
+      const mockResponse = [
+        createMockFootbalistoMatch({
+          goalsHomeTeam: 3,
+          goalsAwayTeam: 1,
+          status: 1, // finished
+        }),
+      ];
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        yield* footbalisto.clearCache();
+        return yield* footbalisto.getNextMatches();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result[0].home_team.score).toBe(3);
+      expect(result[0].away_team.score).toBe(1);
+      expect(result[0].status).toBe("finished");
+    });
+
+    it("should map all status codes correctly", async () => {
+      const mockResponse = [
+        createMockFootbalistoMatch({ id: 1, teamId: 3, status: 0 }), // scheduled
+        createMockFootbalistoMatch({ id: 2, teamId: 4, status: 1 }), // finished
+        createMockFootbalistoMatch({ id: 3, teamId: 5, status: 2 }), // live
+        createMockFootbalistoMatch({ id: 4, teamId: 6, status: 3 }), // postponed
+        createMockFootbalistoMatch({ id: 5, teamId: 7, status: 4 }), // cancelled
+        createMockFootbalistoMatch({ id: 6, teamId: 8, status: 99 }), // unknown → defaults to scheduled
+      ];
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        yield* footbalisto.clearCache();
+        return yield* footbalisto.getNextMatches();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result[0].status).toBe("scheduled");
+      expect(result[1].status).toBe("finished");
+      expect(result[2].status).toBe("live");
+      expect(result[3].status).toBe("postponed");
+      expect(result[4].status).toBe("cancelled");
+      expect(result[5].status).toBe("scheduled"); // default for unknown
+    });
+  });
+
   describe("getRanking", () => {
     it("should fetch league ranking", async () => {
       const mockResponse = {
