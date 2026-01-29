@@ -42,16 +42,16 @@ export async function generateStaticParams() {
       }),
     );
 
-    // Filter youth teams (path starts with /team/u)
+    // Filter youth teams (path starts with /jeugd/u)
     const youthTeams = teams.filter((team) => {
       const alias = team.attributes.path?.alias || "";
-      return alias.match(/^\/team\/u\d/i);
+      return alias.match(/^\/jeugd\/u\d/i);
     });
 
     console.log(`Generated static params for ${youthTeams.length} youth teams`);
 
     return youthTeams.map((team) => ({
-      slug: team.attributes.path.alias.replace("/team/", ""),
+      slug: team.attributes.path.alias.replace("/jeugd/", ""),
     }));
   } catch (error) {
     console.error("Failed to generate static params for teams:", error);
@@ -74,7 +74,7 @@ export async function generateMetadata({
     const { team, teamImageUrl } = await runPromise(
       Effect.gen(function* () {
         const drupal = yield* DrupalService;
-        return yield* drupal.getTeamWithRoster(slug);
+        return yield* drupal.getTeamWithRoster(`/jeugd/${slug}`);
       }),
     );
 
@@ -111,13 +111,14 @@ export async function generateMetadata({
 
 /**
  * Fetch team with roster and trigger 404 if not found
+ * @param pathAlias - Full path alias (e.g., "/jeugd/u15")
  */
-async function fetchTeamOrNotFound(slug: string): Promise<TeamWithRoster> {
+async function fetchTeamOrNotFound(pathAlias: string): Promise<TeamWithRoster> {
   try {
     return await runPromise(
       Effect.gen(function* () {
         const drupal = yield* DrupalService;
-        return yield* drupal.getTeamWithRoster(slug);
+        return yield* drupal.getTeamWithRoster(pathAlias);
       }),
     );
   } catch {
@@ -134,9 +135,10 @@ async function fetchTeamOrNotFound(slug: string): Promise<TeamWithRoster> {
 export default async function TeamPage({ params }: TeamPageProps) {
   const { slug } = await params;
 
-  // Fetch team with roster from Drupal
-  const { team, staff, players, teamImageUrl } =
-    await fetchTeamOrNotFound(slug);
+  // Fetch team with roster from Drupal using full path alias
+  const { team, staff, players, teamImageUrl } = await fetchTeamOrNotFound(
+    `/jeugd/${slug}`,
+  );
 
   // Transform data for display
   const ageGroup = parseAgeGroup(team);
