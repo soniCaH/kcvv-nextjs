@@ -50,6 +50,14 @@ export async function generateStaticParams() {
 
     console.log(`Generated static params for ${youthTeams.length} youth teams`);
 
+    // Log the exact slugs generated for static params
+    try {
+      const slugs = youthTeams.map((team) =>
+        (team.attributes.path?.alias || "").replace("/team/", ""),
+      );
+      console.info(`[jeugd] Static slugs: ${slugs.join(", ")}`);
+    } catch {}
+
     return youthTeams.map((team) => ({
       slug: team.attributes.path.alias.replace("/team/", ""),
     }));
@@ -134,9 +142,21 @@ async function fetchTeamOrNotFound(slug: string): Promise<TeamWithRoster> {
 export default async function TeamPage({ params }: TeamPageProps) {
   const { slug } = await params;
 
+  // Log the requested slug (server-side)
+  try {
+    console.info(`[jeugd] Requested team slug: ${slug}`);
+  } catch {}
+
   // Fetch team with roster from Drupal
   const { team, staff, players, teamImageUrl } =
     await fetchTeamOrNotFound(slug);
+
+  // Log resolved team alias/id after fetch
+  try {
+    console.info(
+      `[jeugd] Resolved team -> id: ${team.id}, alias: ${team.attributes.path?.alias}`,
+    );
+  } catch {}
 
   // Transform data for display
   const ageGroup = parseAgeGroup(team);
