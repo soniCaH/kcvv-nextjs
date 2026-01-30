@@ -64,7 +64,7 @@
     "@types/d3-org-chart": "3.1.2",
     "@types/luxon": "3.7.1",
     "@types/node": "24.10.9",
-    "@types/react": "19.2.9",
+    "@types/react": "19.2.10",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.1.2",
     "@vitest/coverage-v8": "4.0.18",
@@ -88,7 +88,7 @@
     "vitest": "4.0.18"
   },
   "overrides": {
-    "@types/react": "19.2.9",
+    "@types/react": "19.2.10",
     "@types/react-dom": "19.2.3",
     "typescript": "5.9.3"
   },
