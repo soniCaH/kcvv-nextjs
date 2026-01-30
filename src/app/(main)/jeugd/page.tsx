@@ -36,6 +36,13 @@ function transformTeamToData(team: Team): TeamData | null {
   const pathAlias = team.attributes.path?.alias || "";
   const slug = pathAlias.split("/").filter(Boolean).pop() || team.id;
 
+  // Log the generated slug (server-side). Useful to verify links from Drupal.
+  try {
+    console.info(
+      `[jeugd] Overview link -> slug: ${slug} (alias: ${pathAlias || team.id})`,
+    );
+  } catch {}
+
   return {
     id: team.id,
     name: team.attributes.title,
