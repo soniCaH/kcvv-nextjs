@@ -71,6 +71,19 @@ if (process.env.NODE_ENV === "development" && !responsibilityWatcher) {
 
 const nextConfig: NextConfig = {
   /* config options here */
+
+  // Redirects for old /jeugd/* URLs to /team/*
+  // This ensures SEO preservation for any indexed youth team pages
+  async redirects() {
+    return [
+      {
+        source: "/jeugd/:slug",
+        destination: "/team/:slug",
+        permanent: true, // 308 redirect for SEO
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "placehold.co", pathname: "/**" },
