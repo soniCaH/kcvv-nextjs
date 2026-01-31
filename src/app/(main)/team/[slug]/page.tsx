@@ -1,6 +1,6 @@
 /**
  * Team Detail Page
- * Displays individual team pages for youth teams
+ * Displays individual team pages for all teams (senior and youth)
  */
 
 import { Effect } from "effect";
@@ -27,9 +27,7 @@ interface TeamPageProps {
 }
 
 /**
- * Generates route parameters for youth team pages by listing all teams from Drupal.
- *
- * Filters teams with path aliases starting with /team/u (youth teams).
+ * Generates route parameters for all team pages by listing all teams from Drupal.
  *
  * @returns An array of route parameter objects, each with a `slug` property
  */
@@ -42,25 +40,20 @@ export async function generateStaticParams() {
       }),
     );
 
-    // Filter youth teams (path starts with /team/u)
-    const youthTeams = teams.filter((team) => {
-      const alias = team.attributes.path?.alias || "";
-      return alias.match(/^\/team\/u\d/i);
-    });
+    console.log(`Generated static params for ${teams.length} teams`);
 
-    console.log(`Generated static params for ${youthTeams.length} youth teams`);
+    // Extract slug from path alias (e.g., "/team/u15" -> "u15", "/team/a-ploeg" -> "a-ploeg")
+    const slugs = teams
+      .map((team) => {
+        const alias = team.attributes.path?.alias || "";
+        const slug = alias.replace("/team/", "");
+        return slug;
+      })
+      .filter(Boolean);
 
-    // Log the exact slugs generated for static params
-    try {
-      const slugs = youthTeams.map((team) =>
-        (team.attributes.path?.alias || "").replace("/team/", ""),
-      );
-      console.info(`[jeugd] Static slugs: ${slugs.join(", ")}`);
-    } catch {}
+    console.info(`[team] Static slugs: ${slugs.join(", ")}`);
 
-    return youthTeams.map((team) => ({
-      slug: team.attributes.path.alias.replace("/team/", ""),
-    }));
+    return slugs.map((slug) => ({ slug }));
   } catch (error) {
     console.error("Failed to generate static params for teams:", error);
     return [];
@@ -88,13 +81,15 @@ export async function generateMetadata({
 
     const tagline = getTeamTagline(team);
     const title = team.attributes.title;
+    const teamType = getTeamType(team);
 
+    const typeLabel = teamType === "youth" ? "Jeugdploeg" : "Ploeg";
     const description = tagline
       ? `${title} - ${tagline}`
-      : `${title} - KCVV Elewijt jeugdploeg`;
+      : `${title} - KCVV Elewijt ${typeLabel}`;
 
     return {
-      title: `${title} | Jeugd | KCVV Elewijt`,
+      title: `${title} | KCVV Elewijt`,
       description,
       openGraph: {
         title,
@@ -143,20 +138,16 @@ export default async function TeamPage({ params }: TeamPageProps) {
   const { slug } = await params;
 
   // Log the requested slug (server-side)
-  try {
-    console.info(`[jeugd] Requested team slug: ${slug}`);
-  } catch {}
+  console.info(`[team] Requested team slug: ${slug}`);
 
   // Fetch team with roster from Drupal
   const { team, staff, players, teamImageUrl } =
     await fetchTeamOrNotFound(slug);
 
   // Log resolved team alias/id after fetch
-  try {
-    console.info(
-      `[jeugd] Resolved team -> id: ${team.id}, alias: ${team.attributes.path?.alias}`,
-    );
-  } catch {}
+  console.info(
+    `[team] Resolved team -> id: ${team.id}, alias: ${team.attributes.path?.alias}`,
+  );
 
   // Transform data for display
   const ageGroup = parseAgeGroup(team);

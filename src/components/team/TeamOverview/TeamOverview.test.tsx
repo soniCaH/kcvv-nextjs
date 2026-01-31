@@ -8,10 +8,10 @@ import userEvent from "@testing-library/user-event";
 import { TeamOverview, type TeamData } from "./TeamOverview";
 
 const mockYouthTeams: TeamData[] = [
-  { name: "U15", href: "/jeugd/u15", ageGroup: "U15", teamType: "youth" },
-  { name: "U10", href: "/jeugd/u10", ageGroup: "U10", teamType: "youth" },
-  { name: "U17", href: "/jeugd/u17", ageGroup: "U17", teamType: "youth" },
-  { name: "U6", href: "/jeugd/u6", ageGroup: "U6", teamType: "youth" },
+  { name: "U15", href: "/team/u15", ageGroup: "U15", teamType: "youth" },
+  { name: "U10", href: "/team/u10", ageGroup: "U10", teamType: "youth" },
+  { name: "U17", href: "/team/u17", ageGroup: "U17", teamType: "youth" },
+  { name: "U6", href: "/team/u6", ageGroup: "U6", teamType: "youth" },
 ];
 
 const mockSeniorTeams: TeamData[] = [
@@ -163,7 +163,7 @@ describe("TeamOverview", () => {
     it("should group U21 teams in Beloften category", () => {
       const teamsWithU21: TeamData[] = [
         ...mockYouthTeams,
-        { name: "U21", href: "/jeugd/u21", ageGroup: "U21", teamType: "youth" },
+        { name: "U21", href: "/team/u21", ageGroup: "U21", teamType: "youth" },
       ];
       render(<TeamOverview teams={teamsWithU21} groupByAge teamType="youth" />);
       expect(screen.getByText("Beloften (U21)")).toBeInTheDocument();

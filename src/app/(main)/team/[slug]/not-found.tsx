@@ -43,7 +43,7 @@ export default function TeamNotFound() {
         {/* Description */}
         <p className="text-kcvv-gray-DEFAULT mb-8">
           Het team dat je zoekt bestaat niet of is niet langer beschikbaar.
-          Bekijk onze jeugdploegen om andere teams te ontdekken.
+          Bekijk onze ploegen om andere teams te ontdekken.
         </p>
 
         {/* Action buttons */}

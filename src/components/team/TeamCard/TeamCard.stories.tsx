@@ -88,7 +88,7 @@ export const Default: Story = {
 export const Youth: Story = {
   args: {
     name: "U15",
-    href: "/jeugd/u15",
+    href: "/team/u15",
     ageGroup: "U15",
     teamType: "youth",
   },
@@ -151,7 +151,7 @@ export const Loading: Story = {
 export const Compact: Story = {
   args: {
     name: "U10",
-    href: "/jeugd/u10",
+    href: "/team/u10",
     ageGroup: "U10",
     teamType: "youth",
     variant: "compact",
