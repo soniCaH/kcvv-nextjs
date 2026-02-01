@@ -561,7 +561,8 @@ export const DrupalServiceLive = Layer.effect(
     const getTeamById = (id: string) =>
       Effect.gen(function* () {
         const url = buildUrl(`node/team/${id}`, {
-          include: "field_image",
+          // Teams use field_media_article_image (media->file), not field_image
+          include: "field_media_article_image.field_media_image",
         });
         const response = yield* fetchJson(url, TeamResponse);
         return response.data;
@@ -683,14 +684,10 @@ export const DrupalServiceLive = Layer.effect(
           include: [
             // Team image: media -> file
             "field_media_article_image.field_media_image",
-            // Staff images: direct file reference
+            // Staff images: direct file reference (staff uses file--file, not media)
             "field_staff.field_image",
-            // Staff images: nested media -> file (when field_image is media--image)
-            "field_staff.field_image.field_media_image",
-            // Player images: direct file reference
+            // Player images: direct file reference (players use file--file, not media)
             "field_players.field_image",
-            // Player images: nested media -> file (when field_image is media--image)
-            "field_players.field_image.field_media_image",
           ].join(","),
         });
         const response = yield* fetchJson(url, TeamResponse);
