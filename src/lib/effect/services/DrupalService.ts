@@ -31,6 +31,7 @@ import {
   JsonApiLinks,
   MediaImage,
   File,
+  RouterResponse,
 } from "../schemas";
 
 /**
@@ -513,19 +514,18 @@ export const DrupalServiceLive = Layer.effect(
       });
 
     /**
-     * Get team by path alias
+     * Resolve a team slug to its UUID.
      *
-     * Uses Decoupled Router to resolve slug to UUID, then fetches by ID.
-     * This is a 2-request approach but much faster than filter[path.alias]
-     * which can cause timeouts with complex includes.
+     * Shared helper that:
+     * 1. Resolves the slug via Decoupled Router (tries /team/, /jeugd/, /club/)
+     * 2. Verifies the resolved entity is actually a team
      *
-     * Tries multiple path prefixes (/team/, /jeugd/, /club/) to handle
-     * Drupal's inconsistent path aliases.
+     * @param slug - Team slug (e.g., "u15", "a-ploeg")
+     * @returns The team's UUID
      */
-    const getTeamBySlug = (slug: string) =>
+    const resolveTeamSlugToUuid = (slug: string) =>
       Effect.gen(function* () {
-        // Step 1: Resolve path to entity UUID via Decoupled Router
-        // Tries /team/, /jeugd/, /club/ prefixes
+        // Resolve path to entity UUID via Decoupled Router
         const routerResult = yield* resolveTeamPath(slug);
 
         // Verify it's a team
@@ -542,9 +542,23 @@ export const DrupalServiceLive = Layer.effect(
           );
         }
 
-        // Step 2: Fetch full team data by UUID
-        const team = yield* getTeamById(routerResult.entity.uuid);
-        return team;
+        return routerResult.entity.uuid;
+      });
+
+    /**
+     * Get team by path alias
+     *
+     * Uses Decoupled Router to resolve slug to UUID, then fetches by ID.
+     * This is a 2-request approach but much faster than filter[path.alias]
+     * which can cause timeouts with complex includes.
+     *
+     * Tries multiple path prefixes (/team/, /jeugd/, /club/) to handle
+     * Drupal's inconsistent path aliases.
+     */
+    const getTeamBySlug = (slug: string) =>
+      Effect.gen(function* () {
+        const uuid = yield* resolveTeamSlugToUuid(slug);
+        return yield* getTeamById(uuid);
       });
 
     /**
@@ -723,26 +737,8 @@ export const DrupalServiceLive = Layer.effect(
      */
     const getTeamWithRoster = (slug: string) =>
       Effect.gen(function* () {
-        // Step 1: Resolve path to entity UUID via Decoupled Router
-        // Tries /team/, /jeugd/, /club/ prefixes
-        const routerResult = yield* resolveTeamPath(slug);
-
-        // Verify it's a team
-        if (
-          routerResult.entity.type !== "node" ||
-          routerResult.entity.bundle !== "team"
-        ) {
-          return yield* Effect.fail(
-            new NotFoundError({
-              resource: "team",
-              identifier: slug,
-              message: `Path "${slug}" is not a team`,
-            }),
-          );
-        }
-
-        // Step 2: Fetch full team data with roster by UUID
-        return yield* getTeamWithRosterById(routerResult.entity.uuid);
+        const uuid = yield* resolveTeamSlugToUuid(slug);
+        return yield* getTeamWithRosterById(uuid);
       });
 
     /**
@@ -878,43 +874,6 @@ export const DrupalServiceLive = Layer.effect(
           links: response.links,
         };
       });
-
-    /**
-     * Schema for Decoupled Router response
-     *
-     * The router always returns entity info when the path resolves to content.
-     * It may also include a `redirect` array if the queried path differs from
-     * the canonical path (e.g., /team/u7 -> /jeugd/u7).
-     */
-    const RouterResponse = S.Struct({
-      resolved: S.String,
-      isHomePath: S.Boolean,
-      entity: S.Struct({
-        canonical: S.String,
-        type: S.String,
-        bundle: S.String,
-        id: S.String,
-        uuid: S.String,
-      }),
-      label: S.String,
-      jsonapi: S.Struct({
-        individual: S.String,
-        resourceName: S.String,
-        pathPrefix: S.optional(S.String),
-        basePath: S.String,
-        entryPoint: S.String,
-      }),
-      // Optional redirect info - present when queried path differs from canonical
-      redirect: S.optional(
-        S.Array(
-          S.Struct({
-            from: S.String,
-            to: S.String,
-            status: S.String,
-          }),
-        ),
-      ),
-    });
 
     /**
      * Resolve a path alias to entity info using Decoupled Router

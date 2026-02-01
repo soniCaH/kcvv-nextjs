@@ -52,9 +52,22 @@ export async function generateStaticParams() {
     console.log(`Generated static params for ${teams.length} teams`);
 
     // Extract slug from path alias - handles /team/*, /jeugd/*, /club/*
+    const validPrefixes = ["/team/", "/jeugd/", "/club/"];
     const slugs = teams
       .map((team) => {
         const alias = team.attributes.path?.alias || "";
+
+        // Validate that the alias starts with an expected prefix
+        const hasValidPrefix = validPrefixes.some((prefix) =>
+          alias.startsWith(prefix),
+        );
+        if (!hasValidPrefix) {
+          console.warn(
+            `[team] Unexpected path alias "${alias}" for team ${team.id} (${team.attributes.title}). Expected prefix: ${validPrefixes.join(", ")}`,
+          );
+          return "";
+        }
+
         // Extract last path segment as slug (e.g., "/jeugd/u15" -> "u15")
         const parts = alias.split("/").filter(Boolean);
         return parts[parts.length - 1] || "";
