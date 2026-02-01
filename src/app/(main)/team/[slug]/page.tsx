@@ -52,28 +52,33 @@ export async function generateStaticParams() {
     console.log(`Generated static params for ${teams.length} teams`);
 
     // Extract slug from path alias - handles /team/*, /jeugd/*, /club/*
+    // Use Set to deduplicate slugs (in case multiple teams share the same last segment)
     const validPrefixes = ["/team/", "/jeugd/", "/club/"];
-    const slugs = teams
-      .map((team) => {
-        const alias = team.attributes.path?.alias || "";
+    const slugSet = new Set<string>();
 
-        // Validate that the alias starts with an expected prefix
-        const hasValidPrefix = validPrefixes.some((prefix) =>
-          alias.startsWith(prefix),
+    for (const team of teams) {
+      const alias = team.attributes.path?.alias || "";
+
+      // Validate that the alias starts with an expected prefix
+      const hasValidPrefix = validPrefixes.some((prefix) =>
+        alias.startsWith(prefix),
+      );
+      if (!hasValidPrefix) {
+        console.warn(
+          `[team] Unexpected path alias "${alias}" for team ${team.id} (${team.attributes.title}). Expected prefix: ${validPrefixes.join(", ")}`,
         );
-        if (!hasValidPrefix) {
-          console.warn(
-            `[team] Unexpected path alias "${alias}" for team ${team.id} (${team.attributes.title}). Expected prefix: ${validPrefixes.join(", ")}`,
-          );
-          return "";
-        }
+        continue;
+      }
 
-        // Extract last path segment as slug (e.g., "/jeugd/u15" -> "u15")
-        const parts = alias.split("/").filter(Boolean);
-        return parts[parts.length - 1] || "";
-      })
-      .filter(Boolean);
+      // Extract last path segment as slug (e.g., "/jeugd/u15" -> "u15")
+      const parts = alias.split("/").filter(Boolean);
+      const slug = parts[parts.length - 1] || "";
+      if (slug) {
+        slugSet.add(slug);
+      }
+    }
 
+    const slugs = Array.from(slugSet);
     console.info(`[team] Static slugs: ${slugs.join(", ")}`);
 
     return slugs.map((slug) => ({ slug }));

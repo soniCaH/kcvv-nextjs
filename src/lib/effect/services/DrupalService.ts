@@ -468,6 +468,8 @@ export const DrupalServiceLive = Layer.effect(
      * - Club teams: /club/bestuur
      *
      * This helper tries /team/, then /jeugd/, then /club/ to find the team.
+     * Only NotFoundError triggers fallback to next prefix; other errors
+     * (network, validation) are propagated immediately.
      */
     const resolveTeamPath = (slug: string) =>
       Effect.gen(function* () {
@@ -476,34 +478,26 @@ export const DrupalServiceLive = Layer.effect(
           return yield* resolvePathAlias(slug);
         }
 
-        // Try /team/ first (handles senior teams and some youth teams)
-        const teamResult = yield* resolvePathAlias(`/team/${slug}`).pipe(
-          Effect.either,
-        );
+        const prefixes = ["/team/", "/jeugd/", "/club/"];
 
-        if (teamResult._tag === "Right") {
-          return teamResult.right;
+        for (const prefix of prefixes) {
+          const result = yield* resolvePathAlias(`${prefix}${slug}`).pipe(
+            Effect.either,
+          );
+
+          if (result._tag === "Right") {
+            return result.right;
+          }
+
+          // Only continue to next prefix if this was a NotFoundError
+          // For other errors (network, validation), propagate immediately
+          const error = result.left;
+          if (!(error instanceof NotFoundError)) {
+            return yield* Effect.fail(error);
+          }
         }
 
-        // Try /jeugd/ for youth teams
-        const jeugdResult = yield* resolvePathAlias(`/jeugd/${slug}`).pipe(
-          Effect.either,
-        );
-
-        if (jeugdResult._tag === "Right") {
-          return jeugdResult.right;
-        }
-
-        // Try /club/ for club teams
-        const clubResult = yield* resolvePathAlias(`/club/${slug}`).pipe(
-          Effect.either,
-        );
-
-        if (clubResult._tag === "Right") {
-          return clubResult.right;
-        }
-
-        // All paths failed - return the first error
+        // All paths returned NotFoundError
         return yield* Effect.fail(
           new NotFoundError({
             resource: "team",

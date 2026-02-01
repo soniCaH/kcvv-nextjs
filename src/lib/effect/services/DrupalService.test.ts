@@ -1083,6 +1083,65 @@ describe("DrupalService", () => {
       ).rejects.toThrow();
     });
 
+    it("should propagate network errors immediately without trying other prefixes", async () => {
+      // Mock network error on ALL attempts (retry logic will retry the same path)
+      // After retries are exhausted, it should NOT try /jeugd/ or /club/
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error("Network error"),
+      );
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamBySlug("some-team");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+
+      // Verify it only tried /team/ path (with retries), never /jeugd/ or /club/
+      const calls = (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mock.calls.map((call) => call[0]);
+      const routerCalls = calls.filter(
+        (url: string) =>
+          url.includes("/router/translate-path") ||
+          url.includes("/jsonapi/node/team"),
+      );
+
+      // All calls should be for /team/ prefix only
+      const hasJeugdCall = routerCalls.some(
+        (url: string) =>
+          url.includes("path=%2Fjeugd") || url.includes("path=/jeugd"),
+      );
+      const hasClubCall = routerCalls.some(
+        (url: string) =>
+          url.includes("path=%2Fclub") || url.includes("path=/club"),
+      );
+
+      expect(hasJeugdCall).toBe(false);
+      expect(hasClubCall).toBe(false);
+    }, 60000);
+
+    it("should propagate validation errors immediately without trying other prefixes", async () => {
+      // Mock invalid JSON response that will fail schema validation
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ invalid: "response" }), // Invalid router response
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamBySlug("some-team");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    });
+
     it("should throw NotFoundError when path is not a team", async () => {
       // Mock router response for non-team entity
       const mockRouterResponse = {
