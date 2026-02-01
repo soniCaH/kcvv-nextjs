@@ -453,10 +453,63 @@ export const DrupalServiceLive = Layer.effect(
       Effect.gen(function* () {
         const url = buildUrl("node/team", {
           sort: "title",
-          include: "field_image",
         });
         const response = yield* fetchJson(url, TeamsResponse);
         return response.data;
+      });
+
+    /**
+     * Try to resolve a team slug using multiple path prefixes.
+     *
+     * Drupal has inconsistent path aliases for teams:
+     * - Senior teams: /team/a-ploeg
+     * - Youth teams: /jeugd/u15 (some also respond to /team/u15, but not all)
+     * - Club teams: /club/bestuur
+     *
+     * This helper tries /team/, then /jeugd/, then /club/ to find the team.
+     */
+    const resolveTeamPath = (slug: string) =>
+      Effect.gen(function* () {
+        // If slug already has a path prefix, use it directly
+        if (slug.startsWith("/")) {
+          return yield* resolvePathAlias(slug);
+        }
+
+        // Try /team/ first (handles senior teams and some youth teams)
+        const teamResult = yield* resolvePathAlias(`/team/${slug}`).pipe(
+          Effect.either,
+        );
+
+        if (teamResult._tag === "Right") {
+          return teamResult.right;
+        }
+
+        // Try /jeugd/ for youth teams
+        const jeugdResult = yield* resolvePathAlias(`/jeugd/${slug}`).pipe(
+          Effect.either,
+        );
+
+        if (jeugdResult._tag === "Right") {
+          return jeugdResult.right;
+        }
+
+        // Try /club/ for club teams
+        const clubResult = yield* resolvePathAlias(`/club/${slug}`).pipe(
+          Effect.either,
+        );
+
+        if (clubResult._tag === "Right") {
+          return clubResult.right;
+        }
+
+        // All paths failed - return the first error
+        return yield* Effect.fail(
+          new NotFoundError({
+            resource: "team",
+            identifier: slug,
+            message: `Team with slug "${slug}" not found (tried /team/, /jeugd/, /club/)`,
+          }),
+        );
       });
 
     /**
@@ -465,24 +518,15 @@ export const DrupalServiceLive = Layer.effect(
      * Uses Decoupled Router to resolve slug to UUID, then fetches by ID.
      * This is a 2-request approach but much faster than filter[path.alias]
      * which can cause timeouts with complex includes.
+     *
+     * Tries multiple path prefixes (/team/, /jeugd/, /club/) to handle
+     * Drupal's inconsistent path aliases.
      */
     const getTeamBySlug = (slug: string) =>
       Effect.gen(function* () {
-        const path = slug.startsWith("/") ? slug : `/team/${slug}`;
-
         // Step 1: Resolve path to entity UUID via Decoupled Router
-        const routerResult = yield* resolvePathAlias(path).pipe(
-          Effect.mapError((error) => {
-            if (error instanceof NotFoundError) {
-              return new NotFoundError({
-                resource: "team",
-                identifier: slug,
-                message: `Team with slug "${slug}" not found`,
-              });
-            }
-            return error;
-          }),
-        );
+        // Tries /team/, /jeugd/, /club/ prefixes
+        const routerResult = yield* resolveTeamPath(slug);
 
         // Verify it's a team
         if (
@@ -534,7 +578,10 @@ export const DrupalServiceLive = Layer.effect(
       >(included.map((item) => [`${item.type}:${item.id}`, item]));
 
       // Resolve team image: media--image -> file--file -> URL
-      const mediaRef = team.relationships.field_image?.data;
+      // Try field_media_article_image first, then fall back to field_image
+      const mediaRef =
+        team.relationships.field_media_article_image?.data ||
+        team.relationships.field_image?.data;
       if (!mediaRef || !("id" in mediaRef) || !("type" in mediaRef)) {
         return {};
       }
@@ -627,7 +674,7 @@ export const DrupalServiceLive = Layer.effect(
         const url = buildUrl(`node/team/${id}`, {
           include: [
             // Team image: media -> file
-            "field_image.field_media_image",
+            "field_media_article_image.field_media_image",
             // Staff images: direct file reference
             "field_staff.field_image",
             // Staff images: nested media -> file (when field_image is media--image)
@@ -670,24 +717,15 @@ export const DrupalServiceLive = Layer.effect(
      * Uses Decoupled Router to resolve slug to UUID, then fetches by ID.
      * This 2-step approach is much faster than filter[path.alias] which
      * can cause timeouts with complex includes.
+     *
+     * Tries multiple path prefixes (/team/, /jeugd/, /club/) to handle
+     * Drupal's inconsistent path aliases.
      */
     const getTeamWithRoster = (slug: string) =>
       Effect.gen(function* () {
-        const path = slug.startsWith("/") ? slug : `/team/${slug}`;
-
         // Step 1: Resolve path to entity UUID via Decoupled Router
-        const routerResult = yield* resolvePathAlias(path).pipe(
-          Effect.mapError((error) => {
-            if (error instanceof NotFoundError) {
-              return new NotFoundError({
-                resource: "team",
-                identifier: slug,
-                message: `Team with slug "${slug}" not found`,
-              });
-            }
-            return error;
-          }),
-        );
+        // Tries /team/, /jeugd/, /club/ prefixes
+        const routerResult = yield* resolveTeamPath(slug);
 
         // Verify it's a team
         if (
@@ -843,6 +881,10 @@ export const DrupalServiceLive = Layer.effect(
 
     /**
      * Schema for Decoupled Router response
+     *
+     * The router always returns entity info when the path resolves to content.
+     * It may also include a `redirect` array if the queried path differs from
+     * the canonical path (e.g., /team/u7 -> /jeugd/u7).
      */
     const RouterResponse = S.Struct({
       resolved: S.String,
@@ -862,6 +904,16 @@ export const DrupalServiceLive = Layer.effect(
         basePath: S.String,
         entryPoint: S.String,
       }),
+      // Optional redirect info - present when queried path differs from canonical
+      redirect: S.optional(
+        S.Array(
+          S.Struct({
+            from: S.String,
+            to: S.String,
+            status: S.String,
+          }),
+        ),
+      ),
     });
 
     /**
@@ -869,6 +921,9 @@ export const DrupalServiceLive = Layer.effect(
      *
      * Uses the same retry and timeout pattern as fetchJson for resilience.
      * Returns NotFoundError for 404 responses (non-retryable).
+     *
+     * Note: The router returns entity info even for paths that differ from
+     * the canonical path (e.g., /team/u7 resolves to the same entity as /jeugd/u7).
      */
     const resolvePathAlias = (path: string) => {
       const normalizedPath = path.startsWith("/") ? path : `/${path}`;

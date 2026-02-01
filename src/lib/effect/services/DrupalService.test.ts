@@ -904,7 +904,6 @@ describe("DrupalService", () => {
             type: "node--team",
             attributes: {
               title: "First Team",
-              field_team_id: 123,
               created: "2025-01-01T00:00:00Z",
               path: {
                 alias: "/team/first-team",
@@ -934,7 +933,7 @@ describe("DrupalService", () => {
       );
 
       expect(result).toHaveLength(1);
-      expect(result[0].attributes.field_team_id).toBe(123);
+      expect(result[0].attributes.title).toBe("First Team");
     });
   });
 
@@ -968,7 +967,6 @@ describe("DrupalService", () => {
           type: "node--team",
           attributes: {
             title: "First Team",
-            field_team_id: 123,
             created: "2025-01-01T00:00:00Z",
             path: { alias: "/team/first-team" },
           },
@@ -1031,7 +1029,6 @@ describe("DrupalService", () => {
           type: "node--team",
           attributes: {
             title: "First Team",
-            field_team_id: 123,
             created: "2025-01-01T00:00:00Z",
             path: { alias: "/team/first-team" },
           },
@@ -1070,12 +1067,11 @@ describe("DrupalService", () => {
     });
 
     it("should throw NotFoundError when team not found", async () => {
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-      });
+      // Mock 404 for all three path attempts: /team/, /jeugd/, /club/
+      (global.fetch as unknown as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({ ok: false, status: 404 }) // /team/non-existent
+        .mockResolvedValueOnce({ ok: false, status: 404 }) // /jeugd/non-existent
+        .mockResolvedValueOnce({ ok: false, status: 404 }); // /club/non-existent
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1135,7 +1131,6 @@ describe("DrupalService", () => {
           type: "node--team",
           attributes: {
             title: "First Team",
-            field_team_id: 123,
             created: "2025-01-01T00:00:00Z",
             path: {
               alias: "/team/first-team",
@@ -1205,7 +1200,6 @@ describe("DrupalService", () => {
           type: "node--team",
           attributes: {
             title: "U15A",
-            field_team_id: 123,
             created: "2025-01-01T00:00:00Z",
             path: { alias: "/team/u15a" },
           },
@@ -1315,12 +1309,11 @@ describe("DrupalService", () => {
     });
 
     it("should throw NotFoundError when team not found", async () => {
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-      });
+      // Mock 404 for all three path attempts: /team/, /jeugd/, /club/
+      (global.fetch as unknown as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({ ok: false, status: 404 }) // /team/non-existent
+        .mockResolvedValueOnce({ ok: false, status: 404 }) // /jeugd/non-existent
+        .mockResolvedValueOnce({ ok: false, status: 404 }); // /club/non-existent
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1341,7 +1334,6 @@ describe("DrupalService", () => {
           type: "node--team",
           attributes: {
             title: "U13B",
-            field_team_id: 456,
             created: "2025-01-01T00:00:00Z",
             path: { alias: "/team/u13b" },
           },
@@ -1388,7 +1380,6 @@ describe("DrupalService", () => {
           type: "node--team",
           attributes: {
             title: "U17",
-            field_team_id: 789,
             created: "2025-01-01T00:00:00Z",
             path: { alias: "/team/u17" },
           },
@@ -1436,7 +1427,6 @@ describe("DrupalService", () => {
           type: "node--team",
           attributes: {
             title: "U19",
-            field_team_id: 101,
             created: "2025-01-01T00:00:00Z",
             path: { alias: "/team/u19" },
           },
@@ -1496,7 +1486,6 @@ describe("DrupalService", () => {
           type: "node--team",
           attributes: {
             title: "U21",
-            field_team_id: 202,
             created: "2025-01-01T00:00:00Z",
             path: { alias: "/team/u21" },
           },
@@ -1571,7 +1560,6 @@ describe("DrupalService", () => {
           type: "node--team",
           attributes: {
             title: "First Team",
-            field_team_id: 1,
             created: "2025-01-01T00:00:00Z",
             path: { alias: "/team/first-team" },
           },
@@ -1617,7 +1605,6 @@ describe("DrupalService", () => {
           type: "node--team",
           attributes: {
             title: "U15A",
-            field_team_id: 123,
             created: "2025-01-01T00:00:00Z",
             path: { alias: "/team/u15a" },
           },

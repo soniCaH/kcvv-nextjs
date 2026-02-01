@@ -29,6 +29,15 @@ interface TeamPageProps {
 /**
  * Generates route parameters for all team pages by listing all teams from Drupal.
  *
+ * Drupal stores teams with different path prefixes:
+ * - Senior teams: /team/a-ploeg
+ * - Youth teams: /jeugd/u15
+ * - Club teams: /club/bestuur
+ *
+ * We extract the slug (last segment) to create unified /team/[slug] routes.
+ * The DrupalService uses Decoupled Router which can resolve both
+ * /team/u15 and /jeugd/u15 to the same entity.
+ *
  * @returns An array of route parameter objects, each with a `slug` property
  */
 export async function generateStaticParams() {
@@ -42,12 +51,13 @@ export async function generateStaticParams() {
 
     console.log(`Generated static params for ${teams.length} teams`);
 
-    // Extract slug from path alias (e.g., "/team/u15" -> "u15", "/team/a-ploeg" -> "a-ploeg")
+    // Extract slug from path alias - handles /team/*, /jeugd/*, /club/*
     const slugs = teams
       .map((team) => {
         const alias = team.attributes.path?.alias || "";
-        const slug = alias.replace("/team/", "");
-        return slug;
+        // Extract last path segment as slug (e.g., "/jeugd/u15" -> "u15")
+        const parts = alias.split("/").filter(Boolean);
+        return parts[parts.length - 1] || "";
       })
       .filter(Boolean);
 
