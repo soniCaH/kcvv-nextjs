@@ -196,8 +196,9 @@ export function TeamSchedule({
       {filteredMatches.map((match, index) => {
         const isHome = match.homeTeam.id === teamId;
         const isNext = index === nextMatchIndex;
+        // Show scores if they exist, regardless of status
+        // (Footbalisto API sometimes returns status=0 for matches with scores)
         const hasScore =
-          match.status === "finished" &&
           typeof match.homeScore === "number" &&
           typeof match.awayScore === "number";
 
