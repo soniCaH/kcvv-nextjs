@@ -100,13 +100,15 @@ function transformFootbalistoMatch(fbMatch: FootbalistoMatch): Match {
     time: timePart,
     venue: undefined, // Not provided by API
     home_team: {
-      id: fbMatch.homeClub.id,
+      // Use VV team ID (homeTeamId) for matching with teamId prop, fall back to club ID
+      id: fbMatch.homeTeamId ?? fbMatch.homeClub.id,
       name: fbMatch.homeClub.name,
       logo: fbMatch.homeClub.logo ?? undefined,
       score: fbMatch.goalsHomeTeam ?? undefined,
     },
     away_team: {
-      id: fbMatch.awayClub.id,
+      // Use VV team ID (awayTeamId) for matching with teamId prop, fall back to club ID
+      id: fbMatch.awayTeamId ?? fbMatch.awayClub.id,
       name: fbMatch.awayClub.name,
       logo: fbMatch.awayClub.logo ?? undefined,
       score: fbMatch.goalsAwayTeam ?? undefined,
