@@ -19,27 +19,29 @@ describe("FootbalistoService", () => {
   });
 
   describe("getMatches", () => {
+    // Mock Footbalisto API raw match format for /matches/{teamId}
+    const createMockRawMatch = (overrides: Record<string, unknown> = {}) => ({
+      id: 1,
+      teamId: 1,
+      teamName: "KCVV Elewijt A",
+      timestamp: 1737388800,
+      age: "Seniors",
+      date: "2025-01-15 15:00",
+      time: "1970-01-01 01:00",
+      homeClub: { id: 123, name: "KCVV Elewijt" },
+      awayClub: { id: 456, name: "Opponent FC" },
+      goalsHomeTeam: 3,
+      goalsAwayTeam: 1,
+      homeTeamId: 1,
+      awayTeamId: 2,
+      status: 1, // finished
+      competitionType: "3de Nationale",
+      viewGameReport: true,
+      ...overrides,
+    });
+
     it("should fetch matches for a team", async () => {
-      const mockResponse = {
-        matches: [
-          {
-            id: 1,
-            date: "2025-01-15T00:00:00Z",
-            home_team: {
-              id: 123,
-              name: "KCVV Elewijt",
-              score: 3,
-            },
-            away_team: {
-              id: 456,
-              name: "Opponent FC",
-              score: 1,
-            },
-            status: "finished",
-          },
-        ],
-        total: 1,
-      };
+      const mockResponse = [createMockRawMatch()];
 
       (
         global.fetch as unknown as ReturnType<typeof vi.fn>
@@ -63,17 +65,7 @@ describe("FootbalistoService", () => {
     });
 
     it("should cache match results", async () => {
-      const mockResponse = {
-        matches: [
-          {
-            id: 1,
-            date: "2025-01-15T00:00:00Z",
-            home_team: { id: 123, name: "Team A", score: 2 },
-            away_team: { id: 456, name: "Team B", score: 1 },
-            status: "finished",
-          },
-        ],
-      };
+      const mockResponse = [createMockRawMatch()];
 
       (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
@@ -822,27 +814,63 @@ describe("FootbalistoService", () => {
   });
 
   describe("getRanking", () => {
-    it("should fetch league ranking", async () => {
-      const mockResponse = {
-        ranking: [
-          {
-            position: 1,
-            team_id: 123,
-            team_name: "KCVV Elewijt",
-            played: 15,
-            won: 12,
-            drawn: 2,
-            lost: 1,
-            goals_for: 40,
-            goals_against: 10,
-            goal_difference: 30,
-            points: 38,
-            form: "WWDWW",
+    // Mock Footbalisto API raw ranking format: array of competitions with teams
+    const createMockRankingResponse = (
+      teams: Array<{
+        rank: number;
+        teamId: number;
+        clubId: number;
+        clubName: string;
+        matchesPlayed: number;
+        wins: number;
+        draws: number;
+        losses: number;
+        goalsScored: number;
+        goalsConceded: number;
+        points: number;
+      }> = [],
+    ) => [
+      {
+        name: "Voetbal : Voetbal Vlaanderen - 3de Afdeling Voetb Vl B",
+        type: "LEAGUE",
+        teams: teams.map((t) => ({
+          id: t.teamId * 1000,
+          rank: t.rank,
+          matchesPlayed: t.matchesPlayed,
+          wins: t.wins,
+          draws: t.draws,
+          losses: t.losses,
+          goalsScored: t.goalsScored,
+          goalsConceded: t.goalsConceded,
+          points: t.points,
+          team: {
+            id: t.teamId,
+            club: {
+              id: t.clubId,
+              localName: t.clubName,
+              name: null,
+            },
           },
-        ],
-        season: "2024-2025",
-        competition: "Provincial League",
-      };
+        })),
+      },
+    ];
+
+    it("should fetch league ranking", async () => {
+      const mockResponse = createMockRankingResponse([
+        {
+          rank: 1,
+          teamId: 1001,
+          clubId: 123,
+          clubName: "KCVV Elewijt",
+          matchesPlayed: 15,
+          wins: 12,
+          draws: 2,
+          losses: 1,
+          goalsScored: 40,
+          goalsConceded: 10,
+          points: 38,
+        },
+      ]);
 
       (
         global.fetch as unknown as ReturnType<typeof vi.fn>
@@ -863,27 +891,26 @@ describe("FootbalistoService", () => {
       expect(result).toHaveLength(1);
       expect(result[0].position).toBe(1);
       expect(result[0].points).toBe(38);
-      expect(result[0].form).toBe("WWDWW");
+      expect(result[0].team_name).toBe("KCVV Elewijt");
+      expect(result[0].goal_difference).toBe(30); // 40 - 10
     });
 
     it("should cache ranking results", async () => {
-      const mockResponse = {
-        ranking: [
-          {
-            position: 1,
-            team_id: 123,
-            team_name: "Team A",
-            played: 10,
-            won: 8,
-            drawn: 1,
-            lost: 1,
-            goals_for: 25,
-            goals_against: 10,
-            goal_difference: 15,
-            points: 25,
-          },
-        ],
-      };
+      const mockResponse = createMockRankingResponse([
+        {
+          rank: 1,
+          teamId: 1001,
+          clubId: 123,
+          clubName: "Team A",
+          matchesPlayed: 10,
+          wins: 8,
+          draws: 1,
+          losses: 1,
+          goalsScored: 25,
+          goalsConceded: 10,
+          points: 25,
+        },
+      ]);
 
       (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
@@ -901,6 +928,97 @@ describe("FootbalistoService", () => {
       );
 
       expect(global.fetch).toHaveBeenCalledTimes(1); // Cached
+    });
+
+    it("should return empty array when no competitions have teams", async () => {
+      const mockResponse = [
+        { name: "Cup", type: "CUP", teams: [] },
+        { name: "Friendly", type: "FRIENDLY", teams: [] },
+      ];
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getRanking(1);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result).toHaveLength(0);
+    });
+
+    it("should prefer league competitions over cup/friendly", async () => {
+      const mockResponse = [
+        {
+          name: "Cup",
+          type: "CUP",
+          teams: [
+            {
+              id: 1,
+              rank: 1,
+              matchesPlayed: 5,
+              wins: 3,
+              draws: 1,
+              losses: 1,
+              goalsScored: 10,
+              goalsConceded: 5,
+              points: 10,
+              team: {
+                id: 100,
+                club: { id: 1, localName: "Cup Team", name: null },
+              },
+            },
+          ],
+        },
+        {
+          name: "League",
+          type: "LEAGUE",
+          teams: [
+            {
+              id: 2,
+              rank: 1,
+              matchesPlayed: 15,
+              wins: 12,
+              draws: 2,
+              losses: 1,
+              goalsScored: 40,
+              goalsConceded: 10,
+              points: 38,
+              team: {
+                id: 200,
+                club: { id: 2, localName: "League Team", name: null },
+              },
+            },
+          ],
+        },
+      ];
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getRanking(1);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].team_name).toBe("League Team");
     });
   });
 
@@ -953,17 +1071,27 @@ describe("FootbalistoService", () => {
 
   describe("clearCache", () => {
     it("should clear all caches", async () => {
-      const mockResponse = {
-        matches: [
-          {
-            id: 1,
-            date: "2025-01-15T00:00:00Z",
-            home_team: { id: 123, name: "Team A", score: 1 },
-            away_team: { id: 456, name: "Team B", score: 0 },
-            status: "finished",
-          },
-        ],
-      };
+      // Use raw Footbalisto match format (array of matches)
+      const mockResponse = [
+        {
+          id: 1,
+          teamId: 1,
+          teamName: "Team A",
+          timestamp: 1737388800,
+          age: "Seniors",
+          date: "2025-01-15 15:00",
+          time: "1970-01-01 01:00",
+          homeClub: { id: 123, name: "Team A" },
+          awayClub: { id: 456, name: "Team B" },
+          goalsHomeTeam: 1,
+          goalsAwayTeam: 0,
+          homeTeamId: 1,
+          awayTeamId: 2,
+          status: 1,
+          competitionType: "3de Nationale",
+          viewGameReport: true,
+        },
+      ];
 
       (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
@@ -1018,7 +1146,7 @@ describe("FootbalistoService", () => {
         .mockRejectedValueOnce(new Error("Network error"))
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ matches: [] }),
+          json: async () => [], // Raw array format (empty matches)
         });
 
       const program = Effect.gen(function* () {

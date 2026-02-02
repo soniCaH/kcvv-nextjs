@@ -13,9 +13,9 @@ import {
   FootbalistoMatchesArray,
   FootbalistoMatchDetailResponse,
   FootbalistoLineupPlayer,
-  MatchesResponse,
   RankingEntry,
-  RankingResponse,
+  FootbalistoRankingArray,
+  FootbalistoRankingEntry,
   TeamStats,
   FootbalistoError,
   ValidationError,
@@ -223,6 +223,35 @@ function convertDetailToMatch(detail: MatchDetail): Match {
 }
 
 /**
+ * Transform a raw Footbalisto ranking entry to normalized RankingEntry format.
+ *
+ * @param entry - Raw ranking entry from Footbalisto API
+ * @returns Normalized RankingEntry for UI consumption
+ */
+function transformFootbalistoRankingEntry(
+  entry: FootbalistoRankingEntry,
+): RankingEntry {
+  const teamName =
+    entry.team.club.localName || entry.team.club.name || "Unknown Team";
+
+  return {
+    position: entry.rank,
+    team_id: entry.team.club.id,
+    team_name: teamName,
+    team_logo: undefined, // Logo not provided in ranking API
+    played: entry.matchesPlayed,
+    won: entry.wins,
+    drawn: entry.draws,
+    lost: entry.losses,
+    goals_for: entry.goalsScored,
+    goals_against: entry.goalsConceded,
+    goal_difference: entry.goalsScored - entry.goalsConceded,
+    points: entry.points,
+    form: undefined, // Form not provided in ranking API
+  };
+}
+
+/**
  * Footbalisto Service Interface
  */
 export class FootbalistoService extends Context.Tag("FootbalistoService")<
@@ -337,6 +366,7 @@ export const FootbalistoServiceLive = Layer.effect(
 
     /**
      * Create cache for matches (5 minute TTL)
+     * The API returns a raw array of FootbalistoMatch objects, not wrapped in { matches: [...] }
      */
     const matchesCache = yield* Cache.make({
       capacity: 100,
@@ -344,8 +374,10 @@ export const FootbalistoServiceLive = Layer.effect(
       lookup: (teamId: number) =>
         Effect.gen(function* () {
           const url = `${baseUrl}/matches/${teamId}`;
-          const response = yield* fetchJson(url, MatchesResponse);
-          return response.matches;
+          // API returns raw array of FootbalistoMatch
+          const rawMatches = yield* fetchJson(url, FootbalistoMatchesArray);
+          // Transform to normalized Match format
+          return rawMatches.map(transformFootbalistoMatch);
         }),
     });
 
@@ -372,14 +404,38 @@ export const FootbalistoServiceLive = Layer.effect(
     /**
      * Create cache for rankings (5 minute TTL)
      */
+    /**
+     * Create cache for rankings (5 minute TTL)
+     * The API returns an array of competitions, each with teams.
+     * We find the first competition with teams (preferring league over cup/friendly).
+     */
     const rankingCache = yield* Cache.make({
       capacity: 50,
       timeToLive: Duration.minutes(5),
-      lookup: (leagueId: number) =>
+      lookup: (teamId: number) =>
         Effect.gen(function* () {
-          const url = `${baseUrl}/ranking/${leagueId}`;
-          const response = yield* fetchJson(url, RankingResponse);
-          return response.ranking;
+          const url = `${baseUrl}/ranking/${teamId}`;
+          const competitions = yield* fetchJson(url, FootbalistoRankingArray);
+
+          // Find the first competition with teams, preferring league competitions
+          // Priority: 1) Non-CUP/FRIENDLY with teams, 2) Any with teams
+          const competitionWithTeams =
+            competitions.find(
+              (c) =>
+                c.teams.length > 0 && c.type !== "CUP" && c.type !== "FRIENDLY",
+            ) || competitions.find((c) => c.teams.length > 0);
+
+          if (
+            !competitionWithTeams ||
+            competitionWithTeams.teams.length === 0
+          ) {
+            return [] as readonly RankingEntry[];
+          }
+
+          // Transform to normalized RankingEntry format
+          return competitionWithTeams.teams.map(
+            transformFootbalistoRankingEntry,
+          );
         }),
     });
 
