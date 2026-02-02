@@ -179,21 +179,24 @@ interface FootbalistoData {
 }
 
 /**
- * Fetch matches and standings from Footbalisto if team has a Footbalisto ID
+ * Fetch matches and standings from Footbalisto if team has a VoetbalVlaanderen ID
  *
- * Returns null if team doesn't have a Footbalisto ID or if fetching fails.
+ * Uses field_vv_id which contains the numeric team ID for Footbalisto API.
+ * (field_fb_id contains division codes like "3B", not team IDs)
+ *
+ * Returns null if team doesn't have a VV ID or if fetching fails.
  * Failures are logged but don't break the page - the tabs just won't show.
  */
 async function fetchFootbalistoData(
-  footbalistoId: string | null | undefined,
+  vvId: string | null | undefined,
 ): Promise<FootbalistoData | null> {
-  if (!footbalistoId) {
+  if (!vvId) {
     return null;
   }
 
-  const teamId = parseInt(footbalistoId, 10);
+  const teamId = parseInt(vvId, 10);
   if (isNaN(teamId)) {
-    console.warn(`[team] Invalid Footbalisto ID: ${footbalistoId}`);
+    console.warn(`[team] Invalid VoetbalVlaanderen ID: ${vvId}`);
     return null;
   }
 
@@ -249,9 +252,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
     `[team] Resolved team -> id: ${team.id}, alias: ${team.attributes.path?.alias}`,
   );
 
-  // Fetch Footbalisto data if team has a Footbalisto ID
+  // Fetch Footbalisto data if team has a VoetbalVlaanderen ID
   const footbalistoData = await fetchFootbalistoData(
-    team.attributes.field_fb_id,
+    team.attributes.field_vv_id,
   );
 
   // Transform data for display
