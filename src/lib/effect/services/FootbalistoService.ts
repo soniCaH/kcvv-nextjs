@@ -236,7 +236,7 @@ function transformFootbalistoRankingEntry(
 
   return {
     position: entry.rank,
-    team_id: entry.team.club.id,
+    team_id: entry.team.id, // Use team.id, not club.id, to preserve unique team identity
     team_name: teamName,
     team_logo: undefined, // Logo not provided in ranking API
     played: entry.matchesPlayed,
