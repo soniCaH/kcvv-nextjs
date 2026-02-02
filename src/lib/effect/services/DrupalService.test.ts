@@ -1263,7 +1263,7 @@ describe("DrupalService", () => {
             path: { alias: "/team/u15a" },
           },
           relationships: {
-            field_image: {
+            field_media_article_image: {
               data: { type: "media--image", id: "media-1" },
             },
             field_staff: {

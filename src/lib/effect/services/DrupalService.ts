@@ -34,6 +34,9 @@ import {
   RouterResponse,
 } from "../schemas";
 
+// Re-export error types for consumers
+export { NotFoundError, DrupalError, ValidationError };
+
 /**
  * Extended team data including resolved staff and players
  */
@@ -587,10 +590,8 @@ export const DrupalServiceLive = Layer.effect(
       >(included.map((item) => [`${item.type}:${item.id}`, item]));
 
       // Resolve team image: media--image -> file--file -> URL
-      // Try field_media_article_image first, then fall back to field_image
-      const mediaRef =
-        team.relationships.field_media_article_image?.data ||
-        team.relationships.field_image?.data;
+      // Teams use field_media_article_image (not field_image)
+      const mediaRef = team.relationships.field_media_article_image?.data;
       if (!mediaRef || !("id" in mediaRef) || !("type" in mediaRef)) {
         return {};
       }

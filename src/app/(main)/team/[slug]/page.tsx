@@ -11,6 +11,7 @@ import { runPromise } from "@/lib/effect/runtime";
 import {
   DrupalService,
   type TeamWithRoster,
+  NotFoundError,
 } from "@/lib/effect/services/DrupalService";
 import { TeamHeader } from "@/components/team/TeamHeader";
 import { TeamRoster } from "@/components/team/TeamRoster";
@@ -142,6 +143,9 @@ export async function generateMetadata({
 
 /**
  * Fetch team with roster and trigger 404 if not found
+ *
+ * Only catches NotFoundError to show 404 page. Network and validation
+ * errors propagate to the error boundary.
  */
 async function fetchTeamOrNotFound(slug: string): Promise<TeamWithRoster> {
   try {
@@ -151,8 +155,11 @@ async function fetchTeamOrNotFound(slug: string): Promise<TeamWithRoster> {
         return yield* drupal.getTeamWithRoster(slug);
       }),
     );
-  } catch {
-    notFound();
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      notFound();
+    }
+    throw error;
   }
 }
 
