@@ -181,14 +181,15 @@ interface FootbalistoData {
 /**
  * Fetch matches and standings from Footbalisto if team has a VoetbalVlaanderen ID
  *
- * Uses field_vv_id which contains the numeric team ID for Footbalisto API.
- * (field_fb_id contains division codes like "3B", not team IDs)
+ * Uses field_vv_id (with field_vv_id_2 as fallback) for team ID.
+ * Uses field_league_id for the ranking/standings API.
  *
  * Returns null if team doesn't have a VV ID or if fetching fails.
  * Failures are logged but don't break the page - the tabs just won't show.
  */
 async function fetchFootbalistoData(
   vvId: string | null | undefined,
+  leagueId: number | null | undefined,
 ): Promise<FootbalistoData | null> {
   if (!vvId) {
     return null;
@@ -200,25 +201,32 @@ async function fetchFootbalistoData(
     return null;
   }
 
+  // Use league ID if provided, otherwise fall back to team ID
+  const rankingId = leagueId ?? teamId;
+
   try {
     const [matches, standings] = await runPromise(
       Effect.gen(function* () {
         const footbalisto = yield* FootbalistoService;
 
-        // Fetch matches and standings in parallel
-        const matchesResult = yield* footbalisto
-          .getMatches(teamId)
-          .pipe(Effect.catchAll(() => Effect.succeed([] as readonly Match[])));
-
-        // For standings, we need the league ID which might be different
-        // For now, use teamId as a proxy - this may need adjustment
-        const standingsResult = yield* footbalisto
-          .getRanking(teamId)
-          .pipe(
-            Effect.catchAll(() =>
-              Effect.succeed([] as readonly RankingEntry[]),
-            ),
-          );
+        // Fetch matches and standings in parallel using Effect.all
+        const [matchesResult, standingsResult] = yield* Effect.all(
+          [
+            footbalisto
+              .getMatches(teamId)
+              .pipe(
+                Effect.catchAll(() => Effect.succeed([] as readonly Match[])),
+              ),
+            footbalisto
+              .getRanking(rankingId)
+              .pipe(
+                Effect.catchAll(() =>
+                  Effect.succeed([] as readonly RankingEntry[]),
+                ),
+              ),
+          ],
+          { concurrency: "unbounded" },
+        );
 
         return [matchesResult, standingsResult] as const;
       }),
@@ -252,10 +260,13 @@ export default async function TeamPage({ params }: TeamPageProps) {
     `[team] Resolved team -> id: ${team.id}, alias: ${team.attributes.path?.alias}`,
   );
 
+  // Compute Footbalisto ID with fallback (field_vv_id_2 for teams in multiple leagues)
+  const vvId = team.attributes.field_vv_id || team.attributes.field_vv_id_2;
+
   // Fetch Footbalisto data if team has a VoetbalVlaanderen ID
-  const footbalistoData = await fetchFootbalistoData(
-    team.attributes.field_vv_id,
-  );
+  const footbalistoData = vvId
+    ? await fetchFootbalistoData(vvId, team.attributes.field_league_id)
+    : null;
 
   // Transform data for display
   const ageGroup = parseAgeGroup(team);
