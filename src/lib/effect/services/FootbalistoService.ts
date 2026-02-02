@@ -224,6 +224,19 @@ function convertDetailToMatch(detail: MatchDetail): Match {
   };
 }
 
+/** Footbalisto CDN base URL for team logos */
+const FOOTBALISTO_LOGO_CDN = "https://dfaozfi7c7f3s.cloudfront.net/logos";
+
+/**
+ * Construct a team logo URL from a club ID
+ *
+ * @param clubId - The club ID from Footbalisto API
+ * @returns Full URL to the team logo
+ */
+function getTeamLogoUrl(clubId: number): string {
+  return `${FOOTBALISTO_LOGO_CDN}/extra_groot/${clubId}.png?v=1`;
+}
+
 /**
  * Transform a raw Footbalisto ranking entry to normalized RankingEntry format.
  *
@@ -240,7 +253,7 @@ function transformFootbalistoRankingEntry(
     position: entry.rank,
     team_id: entry.team.id, // Use team.id, not club.id, to preserve unique team identity
     team_name: teamName,
-    team_logo: undefined, // Logo not provided in ranking API
+    team_logo: getTeamLogoUrl(entry.team.club.id),
     played: entry.matchesPlayed,
     won: entry.wins,
     drawn: entry.draws,
@@ -249,7 +262,7 @@ function transformFootbalistoRankingEntry(
     goals_against: entry.goalsConceded,
     goal_difference: entry.goalsScored - entry.goalsConceded,
     points: entry.points,
-    form: undefined, // Form not provided in ranking API
+    form: undefined, // Form not provided in ranking API - would need to calculate from recent matches
   };
 }
 
