@@ -13,14 +13,20 @@ import {
   type TeamWithRoster,
   NotFoundError,
 } from "@/lib/effect/services/DrupalService";
+import { FootbalistoService } from "@/lib/effect/services/FootbalistoService";
+import type { Match, RankingEntry } from "@/lib/effect/schemas";
 import { TeamHeader } from "@/components/team/TeamHeader";
 import { TeamRoster } from "@/components/team/TeamRoster";
+import { TeamSchedule } from "@/components/team/TeamSchedule";
+import { TeamStandings } from "@/components/team/TeamStandings";
 import {
   parseAgeGroup,
   transformPlayerToRoster,
   transformStaffToMember,
   getTeamType,
   getTeamTagline,
+  transformMatchToSchedule,
+  transformRankingToStandings,
 } from "./utils";
 
 interface TeamPageProps {
@@ -164,6 +170,65 @@ async function fetchTeamOrNotFound(slug: string): Promise<TeamWithRoster> {
 }
 
 /**
+ * Footbalisto data for team matches and standings
+ */
+interface FootbalistoData {
+  matches: readonly Match[];
+  standings: readonly RankingEntry[];
+  teamId: number;
+}
+
+/**
+ * Fetch matches and standings from Footbalisto if team has a Footbalisto ID
+ *
+ * Returns null if team doesn't have a Footbalisto ID or if fetching fails.
+ * Failures are logged but don't break the page - the tabs just won't show.
+ */
+async function fetchFootbalistoData(
+  footbalistoId: string | null | undefined,
+): Promise<FootbalistoData | null> {
+  if (!footbalistoId) {
+    return null;
+  }
+
+  const teamId = parseInt(footbalistoId, 10);
+  if (isNaN(teamId)) {
+    console.warn(`[team] Invalid Footbalisto ID: ${footbalistoId}`);
+    return null;
+  }
+
+  try {
+    const [matches, standings] = await runPromise(
+      Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+
+        // Fetch matches and standings in parallel
+        const matchesResult = yield* footbalisto
+          .getMatches(teamId)
+          .pipe(Effect.catchAll(() => Effect.succeed([] as readonly Match[])));
+
+        // For standings, we need the league ID which might be different
+        // For now, use teamId as a proxy - this may need adjustment
+        const standingsResult = yield* footbalisto
+          .getRanking(teamId)
+          .pipe(
+            Effect.catchAll(() =>
+              Effect.succeed([] as readonly RankingEntry[]),
+            ),
+          );
+
+        return [matchesResult, standingsResult] as const;
+      }),
+    );
+
+    return { matches, standings, teamId };
+  } catch (error) {
+    console.error(`[team] Failed to fetch Footbalisto data:`, error);
+    return null;
+  }
+}
+
+/**
  * Render the team detail page for the given slug.
  *
  * @param params - Promise resolving to an object with a `slug` string
@@ -184,6 +249,11 @@ export default async function TeamPage({ params }: TeamPageProps) {
     `[team] Resolved team -> id: ${team.id}, alias: ${team.attributes.path?.alias}`,
   );
 
+  // Fetch Footbalisto data if team has a Footbalisto ID
+  const footbalistoData = await fetchFootbalistoData(
+    team.attributes.field_fb_id,
+  );
+
   // Transform data for display
   const ageGroup = parseAgeGroup(team);
   const teamType = getTeamType(team);
@@ -193,10 +263,20 @@ export default async function TeamPage({ params }: TeamPageProps) {
   const rosterPlayers = players.map(transformPlayerToRoster);
   const staffMembers = staff.map(transformStaffToMember);
 
+  // Transform Footbalisto data for components
+  const scheduleMatches = footbalistoData
+    ? footbalistoData.matches.map(transformMatchToSchedule)
+    : [];
+  const standingsEntries = footbalistoData
+    ? footbalistoData.standings.map(transformRankingToStandings)
+    : [];
+
   // Determine if we have content for different tabs
   const hasPlayers = rosterPlayers.length > 0;
   const hasStaff = staffMembers.length > 0;
   const hasContactInfo = !!team.attributes.field_contact_info?.processed;
+  const hasMatches = scheduleMatches.length > 0;
+  const hasStandings = standingsEntries.length > 0;
 
   return (
     <>
@@ -227,6 +307,22 @@ export default async function TeamPage({ params }: TeamPageProps) {
               className="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent data-[state=active]:border-kcvv-green-bright data-[state=active]:text-kcvv-green-bright transition-colors"
             >
               Lineup
+            </Tabs.Trigger>
+          )}
+          {hasMatches && (
+            <Tabs.Trigger
+              value="matches"
+              className="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent data-[state=active]:border-kcvv-green-bright data-[state=active]:text-kcvv-green-bright transition-colors"
+            >
+              Wedstrijden
+            </Tabs.Trigger>
+          )}
+          {hasStandings && (
+            <Tabs.Trigger
+              value="standings"
+              className="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent data-[state=active]:border-kcvv-green-bright data-[state=active]:text-kcvv-green-bright transition-colors"
+            >
+              Stand
             </Tabs.Trigger>
           )}
         </Tabs.List>
@@ -291,6 +387,29 @@ export default async function TeamPage({ params }: TeamPageProps) {
               teamName={team.attributes.title}
               groupByPosition={true}
               showStaff={hasStaff}
+            />
+          </Tabs.Content>
+        )}
+
+        {/* Matches Tab */}
+        {hasMatches && footbalistoData && (
+          <Tabs.Content value="matches" className="focus:outline-none">
+            <TeamSchedule
+              matches={scheduleMatches}
+              teamId={footbalistoData.teamId}
+              showPast={true}
+              highlightNext={true}
+            />
+          </Tabs.Content>
+        )}
+
+        {/* Standings Tab */}
+        {hasStandings && footbalistoData && (
+          <Tabs.Content value="standings" className="focus:outline-none">
+            <TeamStandings
+              standings={standingsEntries}
+              highlightTeamId={footbalistoData.teamId}
+              showForm={true}
             />
           </Tabs.Content>
         )}

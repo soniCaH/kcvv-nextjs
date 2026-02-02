@@ -2,7 +2,12 @@
  * Shared utilities for team detail pages
  */
 
-import type { Player, Team } from "@/lib/effect/schemas";
+import type { Player, Team, Match, RankingEntry } from "@/lib/effect/schemas";
+import type {
+  ScheduleMatch,
+  ScheduleTeam,
+} from "@/components/team/TeamSchedule";
+import type { StandingsEntry } from "@/components/team/TeamStandings";
 import type { RosterPlayer, StaffMember } from "@/components/team/TeamRoster";
 
 /**
@@ -184,4 +189,56 @@ export function getTeamTagline(team: Team): string | undefined {
     return team.attributes.field_division;
   }
   return undefined;
+}
+
+/**
+ * Transform Footbalisto Match to ScheduleMatch for TeamSchedule component
+ *
+ * @param match - Match from Footbalisto API
+ * @returns ScheduleMatch object for display
+ */
+export function transformMatchToSchedule(match: Match): ScheduleMatch {
+  const transformTeam = (team: Match["home_team"]): ScheduleTeam => ({
+    id: team.id,
+    name: team.name,
+    logo: team.logo,
+  });
+
+  return {
+    id: match.id,
+    date: match.date,
+    time: match.time,
+    homeTeam: transformTeam(match.home_team),
+    awayTeam: transformTeam(match.away_team),
+    homeScore: match.home_team.score,
+    awayScore: match.away_team.score,
+    status: match.status,
+    competition: match.competition,
+  };
+}
+
+/**
+ * Transform Footbalisto RankingEntry to StandingsEntry for TeamStandings component
+ *
+ * @param entry - Ranking entry from Footbalisto API
+ * @returns StandingsEntry object for display
+ */
+export function transformRankingToStandings(
+  entry: RankingEntry,
+): StandingsEntry {
+  return {
+    position: entry.position,
+    teamId: entry.team_id,
+    teamName: entry.team_name,
+    teamLogo: entry.team_logo,
+    played: entry.played,
+    won: entry.won,
+    drawn: entry.drawn,
+    lost: entry.lost,
+    goalsFor: entry.goals_for,
+    goalsAgainst: entry.goals_against,
+    goalDifference: entry.goal_difference,
+    points: entry.points,
+    form: entry.form,
+  };
 }
