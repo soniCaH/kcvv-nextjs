@@ -37,7 +37,6 @@ function createMockTeam(
         alias: overrides.pathAlias ?? "/team/test-team",
         langcode: "nl",
       },
-      field_team_id: 1,
       field_division_full: overrides.field_division_full,
       field_tagline: overrides.field_tagline,
       field_division: overrides.field_division,

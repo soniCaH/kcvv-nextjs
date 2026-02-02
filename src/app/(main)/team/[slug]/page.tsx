@@ -1,6 +1,6 @@
 /**
  * Team Detail Page
- * Displays individual team pages for youth teams
+ * Displays individual team pages for all teams (senior and youth)
  */
 
 import { Effect } from "effect";
@@ -11,6 +11,7 @@ import { runPromise } from "@/lib/effect/runtime";
 import {
   DrupalService,
   type TeamWithRoster,
+  NotFoundError,
 } from "@/lib/effect/services/DrupalService";
 import { TeamHeader } from "@/components/team/TeamHeader";
 import { TeamRoster } from "@/components/team/TeamRoster";
@@ -27,9 +28,16 @@ interface TeamPageProps {
 }
 
 /**
- * Generates route parameters for youth team pages by listing all teams from Drupal.
+ * Generates route parameters for all team pages by listing all teams from Drupal.
  *
- * Filters teams with path aliases starting with /team/u (youth teams).
+ * Drupal stores teams with different path prefixes:
+ * - Senior teams: /team/a-ploeg
+ * - Youth teams: /jeugd/u15
+ * - Club teams: /club/bestuur
+ *
+ * We extract the slug (last segment) to create unified /team/[slug] routes.
+ * The DrupalService uses Decoupled Router which can resolve both
+ * /team/u15 and /jeugd/u15 to the same entity.
  *
  * @returns An array of route parameter objects, each with a `slug` property
  */
@@ -42,25 +50,39 @@ export async function generateStaticParams() {
       }),
     );
 
-    // Filter youth teams (path starts with /team/u)
-    const youthTeams = teams.filter((team) => {
+    console.log(`Generated static params for ${teams.length} teams`);
+
+    // Extract slug from path alias - handles /team/*, /jeugd/*, /club/*
+    // Use Set to deduplicate slugs (in case multiple teams share the same last segment)
+    const validPrefixes = ["/team/", "/jeugd/", "/club/"];
+    const slugSet = new Set<string>();
+
+    for (const team of teams) {
       const alias = team.attributes.path?.alias || "";
-      return alias.match(/^\/team\/u\d/i);
-    });
 
-    console.log(`Generated static params for ${youthTeams.length} youth teams`);
-
-    // Log the exact slugs generated for static params
-    try {
-      const slugs = youthTeams.map((team) =>
-        (team.attributes.path?.alias || "").replace("/team/", ""),
+      // Validate that the alias starts with an expected prefix
+      const hasValidPrefix = validPrefixes.some((prefix) =>
+        alias.startsWith(prefix),
       );
-      console.info(`[jeugd] Static slugs: ${slugs.join(", ")}`);
-    } catch {}
+      if (!hasValidPrefix) {
+        console.warn(
+          `[team] Unexpected path alias "${alias}" for team ${team.id} (${team.attributes.title}). Expected prefix: ${validPrefixes.join(", ")}`,
+        );
+        continue;
+      }
 
-    return youthTeams.map((team) => ({
-      slug: team.attributes.path.alias.replace("/team/", ""),
-    }));
+      // Extract last path segment as slug (e.g., "/jeugd/u15" -> "u15")
+      const parts = alias.split("/").filter(Boolean);
+      const slug = parts[parts.length - 1] || "";
+      if (slug) {
+        slugSet.add(slug);
+      }
+    }
+
+    const slugs = Array.from(slugSet);
+    console.info(`[team] Static slugs: ${slugs.join(", ")}`);
+
+    return slugs.map((slug) => ({ slug }));
   } catch (error) {
     console.error("Failed to generate static params for teams:", error);
     return [];
@@ -88,13 +110,15 @@ export async function generateMetadata({
 
     const tagline = getTeamTagline(team);
     const title = team.attributes.title;
+    const teamType = getTeamType(team);
 
+    const typeLabel = teamType === "youth" ? "Jeugdploeg" : "Ploeg";
     const description = tagline
       ? `${title} - ${tagline}`
-      : `${title} - KCVV Elewijt jeugdploeg`;
+      : `${title} - KCVV Elewijt ${typeLabel}`;
 
     return {
-      title: `${title} | Jeugd | KCVV Elewijt`,
+      title: `${title} | KCVV Elewijt`,
       description,
       openGraph: {
         title,
@@ -119,6 +143,9 @@ export async function generateMetadata({
 
 /**
  * Fetch team with roster and trigger 404 if not found
+ *
+ * Only catches NotFoundError to show 404 page. Network and validation
+ * errors propagate to the error boundary.
  */
 async function fetchTeamOrNotFound(slug: string): Promise<TeamWithRoster> {
   try {
@@ -128,8 +155,11 @@ async function fetchTeamOrNotFound(slug: string): Promise<TeamWithRoster> {
         return yield* drupal.getTeamWithRoster(slug);
       }),
     );
-  } catch {
-    notFound();
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      notFound();
+    }
+    throw error;
   }
 }
 
@@ -143,20 +173,16 @@ export default async function TeamPage({ params }: TeamPageProps) {
   const { slug } = await params;
 
   // Log the requested slug (server-side)
-  try {
-    console.info(`[jeugd] Requested team slug: ${slug}`);
-  } catch {}
+  console.info(`[team] Requested team slug: ${slug}`);
 
   // Fetch team with roster from Drupal
   const { team, staff, players, teamImageUrl } =
     await fetchTeamOrNotFound(slug);
 
   // Log resolved team alias/id after fetch
-  try {
-    console.info(
-      `[jeugd] Resolved team -> id: ${team.id}, alias: ${team.attributes.path?.alias}`,
-    );
-  } catch {}
+  console.info(
+    `[team] Resolved team -> id: ${team.id}, alias: ${team.attributes.path?.alias}`,
+  );
 
   // Transform data for display
   const ageGroup = parseAgeGroup(team);

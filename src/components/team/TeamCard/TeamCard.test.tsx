@@ -48,7 +48,7 @@ describe("TeamCard", () => {
       render(
         <TeamCard
           name="U15"
-          href="/jeugd/u15"
+          href="/team/u15"
           ageGroup="U15"
           teamType="youth"
         />,
@@ -78,7 +78,7 @@ describe("TeamCard", () => {
       render(
         <TeamCard
           name="U15"
-          href="/jeugd/u15"
+          href="/team/u15"
           ageGroup="U15"
           teamType="youth"
         />,
@@ -203,7 +203,7 @@ describe("TeamCard", () => {
       const { container } = render(
         <TeamCard
           name="U15"
-          href="/jeugd/u15"
+          href="/team/u15"
           teamType="youth"
           ageGroup="U15"
         />,
@@ -263,7 +263,7 @@ describe("TeamCard", () => {
       const { container } = render(
         <TeamCard
           name="U15"
-          href="/jeugd/u15"
+          href="/team/u15"
           ageGroup="U15"
           teamType="youth"
           use3DBadge

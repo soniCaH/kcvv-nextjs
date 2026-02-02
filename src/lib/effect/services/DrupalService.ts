@@ -31,7 +31,11 @@ import {
   JsonApiLinks,
   MediaImage,
   File,
+  RouterResponse,
 } from "../schemas";
+
+// Re-export error types for consumers
+export { NotFoundError, DrupalError, ValidationError };
 
 /**
  * Extended team data including resolved staff and players
@@ -85,6 +89,13 @@ export class DrupalService extends Context.Tag("DrupalService")<
 
     readonly getTeamWithRoster: (
       slug: string,
+    ) => Effect.Effect<
+      TeamWithRoster,
+      DrupalError | NotFoundError | ValidationError
+    >;
+
+    readonly getTeamWithRosterById: (
+      id: string,
     ) => Effect.Effect<
       TeamWithRoster,
       DrupalError | NotFoundError | ValidationError
@@ -446,36 +457,105 @@ export const DrupalServiceLive = Layer.effect(
       Effect.gen(function* () {
         const url = buildUrl("node/team", {
           sort: "title",
-          include: "field_image",
         });
         const response = yield* fetchJson(url, TeamsResponse);
         return response.data;
       });
 
     /**
-     * Get team by path alias
+     * Try to resolve a team slug using multiple path prefixes.
+     *
+     * Drupal has inconsistent path aliases for teams:
+     * - Senior teams: /team/a-ploeg
+     * - Youth teams: /jeugd/u15 (some also respond to /team/u15, but not all)
+     * - Club teams: /club/bestuur
+     *
+     * This helper tries /team/, then /jeugd/, then /club/ to find the team.
+     * Only NotFoundError triggers fallback to next prefix; other errors
+     * (network, validation) are propagated immediately.
      */
-    const getTeamBySlug = (slug: string) =>
+    const resolveTeamPath = (slug: string) =>
       Effect.gen(function* () {
-        const normalizedSlug = slug.startsWith("/") ? slug : `/team/${slug}`;
+        // If slug already has a path prefix, use it directly
+        if (slug.startsWith("/")) {
+          return yield* resolvePathAlias(slug);
+        }
 
-        const url = buildUrl("node/team", {
-          "filter[path.alias]": normalizedSlug,
-          include: "field_image",
-        });
-        const response = yield* fetchJson(url, TeamsResponse);
+        const prefixes = ["/team/", "/jeugd/", "/club/"];
 
-        if (!response.data || response.data.length === 0) {
+        for (const prefix of prefixes) {
+          const result = yield* resolvePathAlias(`${prefix}${slug}`).pipe(
+            Effect.either,
+          );
+
+          if (result._tag === "Right") {
+            return result.right;
+          }
+
+          // Only continue to next prefix if this was a NotFoundError
+          // For other errors (network, validation), propagate immediately
+          const error = result.left;
+          if (!(error instanceof NotFoundError)) {
+            return yield* Effect.fail(error);
+          }
+        }
+
+        // All paths returned NotFoundError
+        return yield* Effect.fail(
+          new NotFoundError({
+            resource: "team",
+            identifier: slug,
+            message: `Team with slug "${slug}" not found (tried /team/, /jeugd/, /club/)`,
+          }),
+        );
+      });
+
+    /**
+     * Resolve a team slug to its UUID.
+     *
+     * Shared helper that:
+     * 1. Resolves the slug via Decoupled Router (tries /team/, /jeugd/, /club/)
+     * 2. Verifies the resolved entity is actually a team
+     *
+     * @param slug - Team slug (e.g., "u15", "a-ploeg")
+     * @returns The team's UUID
+     */
+    const resolveTeamSlugToUuid = (slug: string) =>
+      Effect.gen(function* () {
+        // Resolve path to entity UUID via Decoupled Router
+        const routerResult = yield* resolveTeamPath(slug);
+
+        // Verify it's a team
+        if (
+          routerResult.entity.type !== "node" ||
+          routerResult.entity.bundle !== "team"
+        ) {
           return yield* Effect.fail(
             new NotFoundError({
               resource: "team",
               identifier: slug,
-              message: `Team with slug "${slug}" not found`,
+              message: `Path "${slug}" is not a team`,
             }),
           );
         }
 
-        return response.data[0];
+        return routerResult.entity.uuid;
+      });
+
+    /**
+     * Get team by path alias
+     *
+     * Uses Decoupled Router to resolve slug to UUID, then fetches by ID.
+     * This is a 2-request approach but much faster than filter[path.alias]
+     * which can cause timeouts with complex includes.
+     *
+     * Tries multiple path prefixes (/team/, /jeugd/, /club/) to handle
+     * Drupal's inconsistent path aliases.
+     */
+    const getTeamBySlug = (slug: string) =>
+      Effect.gen(function* () {
+        const uuid = yield* resolveTeamSlugToUuid(slug);
+        return yield* getTeamById(uuid);
       });
 
     /**
@@ -484,7 +564,8 @@ export const DrupalServiceLive = Layer.effect(
     const getTeamById = (id: string) =>
       Effect.gen(function* () {
         const url = buildUrl(`node/team/${id}`, {
-          include: "field_image",
+          // Teams use field_media_article_image (media->file), not field_image
+          include: "field_media_article_image.field_media_image",
         });
         const response = yield* fetchJson(url, TeamResponse);
         return response.data;
@@ -509,7 +590,8 @@ export const DrupalServiceLive = Layer.effect(
       >(included.map((item) => [`${item.type}:${item.id}`, item]));
 
       // Resolve team image: media--image -> file--file -> URL
-      const mediaRef = team.relationships.field_image?.data;
+      // Teams use field_media_article_image (not field_image)
+      const mediaRef = team.relationships.field_media_article_image?.data;
       if (!mediaRef || !("id" in mediaRef) || !("type" in mediaRef)) {
         return {};
       }
@@ -588,45 +670,30 @@ export const DrupalServiceLive = Layer.effect(
     };
 
     /**
-     * Get team with full roster (staff + players)
+     * Get team with full roster by ID (UUID)
      *
-     * Fetches a team by slug and resolves all related data:
+     * Fetches a team by UUID and resolves all related data:
      * - Team image
      * - Staff members with their images
      * - Players with their images
+     *
+     * This is the core method used by getTeamWithRoster after resolving the slug.
      */
-    const getTeamWithRoster = (slug: string) =>
+    const getTeamWithRosterById = (id: string) =>
       Effect.gen(function* () {
-        const normalizedSlug = slug.startsWith("/") ? slug : `/team/${slug}`;
-
-        const url = buildUrl("node/team", {
-          "filter[path.alias]": normalizedSlug,
+        const url = buildUrl(`node/team/${id}`, {
           include: [
             // Team image: media -> file
-            "field_image.field_media_image",
-            // Staff images: direct file reference
+            "field_media_article_image.field_media_image",
+            // Staff images: direct file reference (staff uses file--file, not media)
             "field_staff.field_image",
-            // Staff images: nested media -> file (when field_image is media--image)
-            "field_staff.field_image.field_media_image",
-            // Player images: direct file reference
+            // Player images: direct file reference (players use file--file, not media)
             "field_players.field_image",
-            // Player images: nested media -> file (when field_image is media--image)
-            "field_players.field_image.field_media_image",
           ].join(","),
         });
-        const response = yield* fetchJson(url, TeamsResponse);
+        const response = yield* fetchJson(url, TeamResponse);
 
-        if (!response.data || response.data.length === 0) {
-          return yield* Effect.fail(
-            new NotFoundError({
-              resource: "team",
-              identifier: slug,
-              message: `Team with slug "${slug}" not found`,
-            }),
-          );
-        }
-
-        const team = response.data[0];
+        const team = response.data;
         const included = response.included || [];
 
         // Resolve team image
@@ -648,6 +715,22 @@ export const DrupalServiceLive = Layer.effect(
           players,
           teamImageUrl,
         };
+      });
+
+    /**
+     * Get team with full roster (staff + players) by slug
+     *
+     * Uses Decoupled Router to resolve slug to UUID, then fetches by ID.
+     * This 2-step approach is much faster than filter[path.alias] which
+     * can cause timeouts with complex includes.
+     *
+     * Tries multiple path prefixes (/team/, /jeugd/, /club/) to handle
+     * Drupal's inconsistent path aliases.
+     */
+    const getTeamWithRoster = (slug: string) =>
+      Effect.gen(function* () {
+        const uuid = yield* resolveTeamSlugToUuid(slug);
+        return yield* getTeamWithRosterById(uuid);
       });
 
     /**
@@ -785,33 +868,13 @@ export const DrupalServiceLive = Layer.effect(
       });
 
     /**
-     * Schema for Decoupled Router response
-     */
-    const RouterResponse = S.Struct({
-      resolved: S.String,
-      isHomePath: S.Boolean,
-      entity: S.Struct({
-        canonical: S.String,
-        type: S.String,
-        bundle: S.String,
-        id: S.String,
-        uuid: S.String,
-      }),
-      label: S.String,
-      jsonapi: S.Struct({
-        individual: S.String,
-        resourceName: S.String,
-        pathPrefix: S.optional(S.String),
-        basePath: S.String,
-        entryPoint: S.String,
-      }),
-    });
-
-    /**
      * Resolve a path alias to entity info using Decoupled Router
      *
      * Uses the same retry and timeout pattern as fetchJson for resilience.
      * Returns NotFoundError for 404 responses (non-retryable).
+     *
+     * Note: The router returns entity info even for paths that differ from
+     * the canonical path (e.g., /team/u7 resolves to the same entity as /jeugd/u7).
      */
     const resolvePathAlias = (path: string) => {
       const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -1144,6 +1207,7 @@ export const DrupalServiceLive = Layer.effect(
       getTeamBySlug,
       getTeamById,
       getTeamWithRoster,
+      getTeamWithRosterById,
       getPlayers,
       getPlayerBySlug,
       getPlayerById,

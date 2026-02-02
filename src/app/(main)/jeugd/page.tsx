@@ -9,7 +9,7 @@ import { runPromise } from "@/lib/effect/runtime";
 import { DrupalService } from "@/lib/effect/services/DrupalService";
 import { TeamOverview, type TeamData } from "@/components/team/TeamOverview";
 import type { Team } from "@/lib/effect/schemas";
-import { parseAgeGroup } from "./[slug]/utils";
+import { parseAgeGroup } from "@/app/(main)/team/[slug]/utils";
 
 export const metadata: Metadata = {
   title: "Jeugdploegen | KCVV Elewijt",
@@ -37,16 +37,14 @@ function transformTeamToData(team: Team): TeamData | null {
   const slug = pathAlias.split("/").filter(Boolean).pop() || team.id;
 
   // Log the generated slug (server-side). Useful to verify links from Drupal.
-  try {
-    console.info(
-      `[jeugd] Overview link -> slug: ${slug} (alias: ${pathAlias || team.id})`,
-    );
-  } catch {}
+  console.info(
+    `[jeugd] Overview link -> /team/${slug} (alias: ${pathAlias || team.id})`,
+  );
 
   return {
     id: team.id,
     name: team.attributes.title,
-    href: `/jeugd/${slug}`,
+    href: `/team/${slug}`,
     ageGroup,
     teamType: "youth",
     tagline:

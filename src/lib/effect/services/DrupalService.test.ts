@@ -904,7 +904,6 @@ describe("DrupalService", () => {
             type: "node--team",
             attributes: {
               title: "First Team",
-              field_team_id: 123,
               created: "2025-01-01T00:00:00Z",
               path: {
                 alias: "/team/first-team",
@@ -934,38 +933,59 @@ describe("DrupalService", () => {
       );
 
       expect(result).toHaveLength(1);
-      expect(result[0].attributes.field_team_id).toBe(123);
+      expect(result[0].attributes.title).toBe("First Team");
     });
   });
 
   describe("getTeamBySlug", () => {
-    it("should fetch team by slug", async () => {
-      const mockResponse = {
-        data: [
-          {
-            id: "1",
-            type: "node--team",
-            attributes: {
-              title: "First Team",
-              field_team_id: 123,
-              created: "2025-01-01T00:00:00Z",
-              path: {
-                alias: "/team/first-team",
-              },
-            },
-            relationships: {
-              field_image: {},
-            },
-          },
-        ],
+    it("should fetch team by slug using decoupled router", async () => {
+      // Mock router response
+      const mockRouterResponse = {
+        resolved: "http://api.kcvvelewijt.be/team/first-team",
+        isHomePath: false,
+        entity: {
+          canonical: "http://api.kcvvelewijt.be/team/first-team",
+          type: "node",
+          bundle: "team",
+          id: "1",
+          uuid: "team-abc-123",
+        },
+        label: "First Team",
+        jsonapi: {
+          individual:
+            "http://api.kcvvelewijt.be/jsonapi/node/team/team-abc-123",
+          resourceName: "node--team",
+          basePath: "/jsonapi",
+          entryPoint: "http://api.kcvvelewijt.be/jsonapi",
+        },
       };
 
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      // Mock team response
+      const mockTeamResponse = {
+        data: {
+          id: "team-abc-123",
+          type: "node--team",
+          attributes: {
+            title: "First Team",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/team/first-team" },
+          },
+          relationships: {
+            field_image: {},
+          },
+        },
+      };
+
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -977,46 +997,183 @@ describe("DrupalService", () => {
       );
 
       expect(result.attributes.title).toBe("First Team");
+      expect(result.id).toBe("team-abc-123");
     });
 
     it("should normalize slug with leading slash", async () => {
-      const mockResponse = { data: [] };
+      // Mock router response
+      const mockRouterResponse = {
+        resolved: "http://api.kcvvelewijt.be/team/first-team",
+        isHomePath: false,
+        entity: {
+          canonical: "http://api.kcvvelewijt.be/team/first-team",
+          type: "node",
+          bundle: "team",
+          id: "1",
+          uuid: "team-abc-123",
+        },
+        label: "First Team",
+        jsonapi: {
+          individual:
+            "http://api.kcvvelewijt.be/jsonapi/node/team/team-abc-123",
+          resourceName: "node--team",
+          basePath: "/jsonapi",
+          entryPoint: "http://api.kcvvelewijt.be/jsonapi",
+        },
+      };
 
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      // Mock team response
+      const mockTeamResponse = {
+        data: {
+          id: "team-abc-123",
+          type: "node--team",
+          attributes: {
+            title: "First Team",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/team/first-team" },
+          },
+          relationships: {
+            field_image: {},
+          },
+        },
+      };
+
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
         return yield* drupal.getTeamBySlug("/team/first-team");
       });
 
-      await expect(
-        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
-      ).rejects.toThrow();
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
 
+      expect(result.attributes.title).toBe("First Team");
+      // Should call router with the full path
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("filter%5Bpath.alias%5D=%2Fteam%2Ffirst-team"),
+        expect.stringContaining("router/translate-path"),
         expect.anything(),
       );
     });
 
     it("should throw NotFoundError when team not found", async () => {
-      const mockResponse = { data: [] };
+      // Mock 404 for all three path attempts: /team/, /jeugd/, /club/
+      (global.fetch as unknown as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({ ok: false, status: 404 }) // /team/non-existent
+        .mockResolvedValueOnce({ ok: false, status: 404 }) // /jeugd/non-existent
+        .mockResolvedValueOnce({ ok: false, status: 404 }); // /club/non-existent
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamBySlug("non-existent");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    });
+
+    it("should propagate network errors immediately without trying other prefixes", async () => {
+      // Mock network error on ALL attempts (retry logic will retry the same path)
+      // After retries are exhausted, it should NOT try /jeugd/ or /club/
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error("Network error"),
+      );
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamBySlug("some-team");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+
+      // Verify it only tried /team/ path (with retries), never /jeugd/ or /club/
+      const calls = (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mock.calls.map((call) => call[0]);
+      const routerCalls = calls.filter(
+        (url: string) =>
+          url.includes("/router/translate-path") ||
+          url.includes("/jsonapi/node/team"),
+      );
+
+      // All calls should be for /team/ prefix only
+      const hasJeugdCall = routerCalls.some(
+        (url: string) =>
+          url.includes("path=%2Fjeugd") || url.includes("path=/jeugd"),
+      );
+      const hasClubCall = routerCalls.some(
+        (url: string) =>
+          url.includes("path=%2Fclub") || url.includes("path=/club"),
+      );
+
+      expect(hasJeugdCall).toBe(false);
+      expect(hasClubCall).toBe(false);
+    }, 60000);
+
+    it("should propagate validation errors immediately without trying other prefixes", async () => {
+      // Mock invalid JSON response that will fail schema validation
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ invalid: "response" }), // Invalid router response
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamBySlug("some-team");
+      });
+
+      await expect(
+        Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive))),
+      ).rejects.toThrow();
+    });
+
+    it("should throw NotFoundError when path is not a team", async () => {
+      // Mock router response for non-team entity
+      const mockRouterResponse = {
+        resolved: "http://api.kcvvelewijt.be/news/some-article",
+        isHomePath: false,
+        entity: {
+          canonical: "http://api.kcvvelewijt.be/news/some-article",
+          type: "node",
+          bundle: "article",
+          id: "1",
+          uuid: "article-uuid",
+        },
+        label: "Some Article",
+        jsonapi: {
+          individual:
+            "http://api.kcvvelewijt.be/jsonapi/node/article/article-uuid",
+          resourceName: "node--article",
+          basePath: "/jsonapi",
+          entryPoint: "http://api.kcvvelewijt.be/jsonapi",
+        },
+      };
 
       (
         global.fetch as unknown as ReturnType<typeof vi.fn>
       ).mockResolvedValueOnce({
         ok: true,
-        json: async () => mockResponse,
+        json: async () => mockRouterResponse,
       });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
-        return yield* drupal.getTeamBySlug("non-existent");
+        return yield* drupal.getTeamBySlug("some-article");
       });
 
       await expect(
@@ -1033,7 +1190,6 @@ describe("DrupalService", () => {
           type: "node--team",
           attributes: {
             title: "First Team",
-            field_team_id: 123,
             created: "2025-01-01T00:00:00Z",
             path: {
               alias: "/team/first-team",
@@ -1070,34 +1226,57 @@ describe("DrupalService", () => {
   });
 
   describe("getTeamWithRoster", () => {
+    // Helper to create mock router response for teams
+    const createRouterResponse = (
+      slug: string,
+      uuid: string,
+      title: string,
+    ) => ({
+      resolved: `http://api.kcvvelewijt.be/team/${slug}`,
+      isHomePath: false,
+      entity: {
+        canonical: `http://api.kcvvelewijt.be/team/${slug}`,
+        type: "node",
+        bundle: "team",
+        id: "1",
+        uuid,
+      },
+      label: title,
+      jsonapi: {
+        individual: `http://api.kcvvelewijt.be/jsonapi/node/team/${uuid}`,
+        resourceName: "node--team",
+        basePath: "/jsonapi",
+        entryPoint: "http://api.kcvvelewijt.be/jsonapi",
+      },
+    });
+
     it("should fetch team with full roster (staff and players)", async () => {
-      const mockResponse = {
-        data: [
-          {
-            id: "team-1",
-            type: "node--team",
-            attributes: {
-              title: "U15A",
-              field_team_id: 123,
-              created: "2025-01-01T00:00:00Z",
-              path: { alias: "/team/u15a" },
+      const mockRouterResponse = createRouterResponse("u15a", "team-1", "U15A");
+
+      const mockTeamResponse = {
+        data: {
+          id: "team-1",
+          type: "node--team",
+          attributes: {
+            title: "U15A",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/team/u15a" },
+          },
+          relationships: {
+            field_media_article_image: {
+              data: { type: "media--image", id: "media-1" },
             },
-            relationships: {
-              field_image: {
-                data: { type: "media--image", id: "media-1" },
-              },
-              field_staff: {
-                data: [{ type: "node--player", id: "staff-1" }],
-              },
-              field_players: {
-                data: [
-                  { type: "node--player", id: "player-1" },
-                  { type: "node--player", id: "player-2" },
-                ],
-              },
+            field_staff: {
+              data: [{ type: "node--player", id: "staff-1" }],
+            },
+            field_players: {
+              data: [
+                { type: "node--player", id: "player-1" },
+                { type: "node--player", id: "player-2" },
+              ],
             },
           },
-        ],
+        },
         included: [
           {
             id: "media-1",
@@ -1159,12 +1338,16 @@ describe("DrupalService", () => {
         ],
       };
 
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1185,14 +1368,11 @@ describe("DrupalService", () => {
     });
 
     it("should throw NotFoundError when team not found", async () => {
-      const mockResponse = { data: [] };
-
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      // Mock 404 for all three path attempts: /team/, /jeugd/, /club/
+      (global.fetch as unknown as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({ ok: false, status: 404 }) // /team/non-existent
+        .mockResolvedValueOnce({ ok: false, status: 404 }) // /jeugd/non-existent
+        .mockResolvedValueOnce({ ok: false, status: 404 }); // /club/non-existent
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1205,32 +1385,35 @@ describe("DrupalService", () => {
     });
 
     it("should handle team without image", async () => {
-      const mockResponse = {
-        data: [
-          {
-            id: "team-1",
-            type: "node--team",
-            attributes: {
-              title: "U13B",
-              field_team_id: 456,
-              created: "2025-01-01T00:00:00Z",
-              path: { alias: "/team/u13b" },
-            },
-            relationships: {
-              field_image: { data: null },
-              field_staff: { data: [] },
-              field_players: { data: [] },
-            },
+      const mockRouterResponse = createRouterResponse("u13b", "team-1", "U13B");
+
+      const mockTeamResponse = {
+        data: {
+          id: "team-1",
+          type: "node--team",
+          attributes: {
+            title: "U13B",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/team/u13b" },
           },
-        ],
+          relationships: {
+            field_image: { data: null },
+            field_staff: { data: [] },
+            field_players: { data: [] },
+          },
+        },
       };
 
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1248,35 +1431,38 @@ describe("DrupalService", () => {
     });
 
     it("should handle missing media in included array", async () => {
-      const mockResponse = {
-        data: [
-          {
-            id: "team-1",
-            type: "node--team",
-            attributes: {
-              title: "U17",
-              field_team_id: 789,
-              created: "2025-01-01T00:00:00Z",
-              path: { alias: "/team/u17" },
-            },
-            relationships: {
-              field_image: {
-                data: { type: "media--image", id: "media-missing" },
-              },
-              field_staff: { data: [] },
-              field_players: { data: [] },
-            },
+      const mockRouterResponse = createRouterResponse("u17", "team-1", "U17");
+
+      const mockTeamResponse = {
+        data: {
+          id: "team-1",
+          type: "node--team",
+          attributes: {
+            title: "U17",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/team/u17" },
           },
-        ],
+          relationships: {
+            field_image: {
+              data: { type: "media--image", id: "media-missing" },
+            },
+            field_staff: { data: [] },
+            field_players: { data: [] },
+          },
+        },
         included: [], // Media not in included
       };
 
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1292,26 +1478,25 @@ describe("DrupalService", () => {
     });
 
     it("should handle missing file in included array", async () => {
-      const mockResponse = {
-        data: [
-          {
-            id: "team-1",
-            type: "node--team",
-            attributes: {
-              title: "U19",
-              field_team_id: 101,
-              created: "2025-01-01T00:00:00Z",
-              path: { alias: "/team/u19" },
-            },
-            relationships: {
-              field_image: {
-                data: { type: "media--image", id: "media-1" },
-              },
-              field_staff: { data: [] },
-              field_players: { data: [] },
-            },
+      const mockRouterResponse = createRouterResponse("u19", "team-1", "U19");
+
+      const mockTeamResponse = {
+        data: {
+          id: "team-1",
+          type: "node--team",
+          attributes: {
+            title: "U19",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/team/u19" },
           },
-        ],
+          relationships: {
+            field_image: {
+              data: { type: "media--image", id: "media-1" },
+            },
+            field_staff: { data: [] },
+            field_players: { data: [] },
+          },
+        },
         included: [
           {
             id: "media-1",
@@ -1327,12 +1512,16 @@ describe("DrupalService", () => {
         ],
       };
 
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1348,29 +1537,28 @@ describe("DrupalService", () => {
     });
 
     it("should skip invalid player data in included array", async () => {
-      const mockResponse = {
-        data: [
-          {
-            id: "team-1",
-            type: "node--team",
-            attributes: {
-              title: "U21",
-              field_team_id: 202,
-              created: "2025-01-01T00:00:00Z",
-              path: { alias: "/team/u21" },
-            },
-            relationships: {
-              field_image: { data: null },
-              field_staff: { data: [] },
-              field_players: {
-                data: [
-                  { type: "node--player", id: "valid-player" },
-                  { type: "node--player", id: "invalid-player" },
-                ],
-              },
+      const mockRouterResponse = createRouterResponse("u21", "team-1", "U21");
+
+      const mockTeamResponse = {
+        data: {
+          id: "team-1",
+          type: "node--team",
+          attributes: {
+            title: "U21",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/team/u21" },
+          },
+          relationships: {
+            field_image: { data: null },
+            field_staff: { data: [] },
+            field_players: {
+              data: [
+                { type: "node--player", id: "valid-player" },
+                { type: "node--player", id: "invalid-player" },
+              ],
             },
           },
-        ],
+        },
         included: [
           {
             id: "valid-player",
@@ -1392,12 +1580,16 @@ describe("DrupalService", () => {
         ],
       };
 
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1415,32 +1607,39 @@ describe("DrupalService", () => {
     });
 
     it("should normalize slug with leading slash", async () => {
-      const mockResponse = {
-        data: [
-          {
-            id: "team-1",
-            type: "node--team",
-            attributes: {
-              title: "First Team",
-              field_team_id: 1,
-              created: "2025-01-01T00:00:00Z",
-              path: { alias: "/team/first-team" },
-            },
-            relationships: {
-              field_image: { data: null },
-              field_staff: { data: [] },
-              field_players: { data: [] },
-            },
+      const mockRouterResponse = createRouterResponse(
+        "first-team",
+        "team-1",
+        "First Team",
+      );
+
+      const mockTeamResponse = {
+        data: {
+          id: "team-1",
+          type: "node--team",
+          attributes: {
+            title: "First Team",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/team/first-team" },
           },
-        ],
+          relationships: {
+            field_image: { data: null },
+            field_staff: { data: [] },
+            field_players: { data: [] },
+          },
+        },
       };
 
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;
@@ -1449,34 +1648,33 @@ describe("DrupalService", () => {
 
       await Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive)));
 
-      // Should use the slug as-is when it starts with /
+      // Should call router with the full path
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("filter%5Bpath.alias%5D=%2Fteam%2Ffirst-team"),
+        expect.stringContaining("router/translate-path"),
         expect.anything(),
       );
     });
 
     it("should resolve player images from included", async () => {
-      const mockResponse = {
-        data: [
-          {
-            id: "team-1",
-            type: "node--team",
-            attributes: {
-              title: "U15A",
-              field_team_id: 123,
-              created: "2025-01-01T00:00:00Z",
-              path: { alias: "/team/u15a" },
-            },
-            relationships: {
-              field_image: { data: null },
-              field_staff: { data: [] },
-              field_players: {
-                data: [{ type: "node--player", id: "player-1" }],
-              },
+      const mockRouterResponse = createRouterResponse("u15a", "team-1", "U15A");
+
+      const mockTeamResponse = {
+        data: {
+          id: "team-1",
+          type: "node--team",
+          attributes: {
+            title: "U15A",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/team/u15a" },
+          },
+          relationships: {
+            field_image: { data: null },
+            field_staff: { data: [] },
+            field_players: {
+              data: [{ type: "node--player", id: "player-1" }],
             },
           },
-        ],
+        },
         included: [
           {
             id: "player-1",
@@ -1508,12 +1706,16 @@ describe("DrupalService", () => {
         ],
       };
 
-      (
-        global.fetch as unknown as ReturnType<typeof vi.fn>
-      ).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
 
       const program = Effect.gen(function* () {
         const drupal = yield* DrupalService;

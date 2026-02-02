@@ -72,7 +72,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
           ref={ref as Ref<HTMLDivElement>}
           className={cn(
             "relative overflow-hidden bg-white rounded-sm shadow-sm animate-pulse border",
-            isCompact ? "h-[280px]" : "h-[340px] lg:h-[480px]",
+            isCompact ? "h-[280px]" : "",
             className,
           )}
           style={{ borderColor: CARD_COLORS.border.default }}
@@ -80,7 +80,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
         >
           {/* Image skeleton */}
           <div
-            className={cn(isCompact ? "h-[200px]" : "h-[200px] lg:h-[320px]")}
+            className={cn(isCompact ? "h-[200px]" : "aspect-[3/4]")}
             style={{ backgroundColor: skeletonBg }}
           />
           {/* Content skeleton */}
@@ -125,7 +125,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
           <div
             className={cn(
               "relative overflow-hidden flex-shrink-0",
-              isCompact ? "h-[200px]" : "h-[200px] lg:h-[320px]",
+              isCompact ? "h-[200px]" : "aspect-[3/4]",
             )}
             style={{ backgroundColor: CARD_COLORS.background.placeholder }}
           >
@@ -151,7 +151,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                   src={imageUrl}
                   alt={fullName}
                   fill
-                  className="object-contain object-bottom"
+                  className="object-cover object-top"
                   sizes={
                     isCompact ? "180px" : "(max-width: 960px) 232px, 299px"
                   }
