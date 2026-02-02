@@ -151,7 +151,7 @@ export const PlayerCard = forwardRef<HTMLElement, PlayerCardProps>(
                   src={imageUrl}
                   alt={fullName}
                   fill
-                  className="object-contain object-bottom"
+                  className="object-cover object-top"
                   sizes={
                     isCompact ? "180px" : "(max-width: 960px) 232px, 299px"
                   }
