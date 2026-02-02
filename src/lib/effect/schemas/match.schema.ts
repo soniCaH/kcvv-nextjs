@@ -21,16 +21,20 @@ export class FootbalistoClub extends S.Class<FootbalistoClub>(
 }) {}
 
 /**
- * Raw match data from Footbalisto API /matches/next endpoint
+ * Raw match data from Footbalisto API
+ *
+ * Used by both /matches/next and /matches/{teamId} endpoints.
+ * Note: /matches/{teamId} doesn't include teamId and age fields,
+ * so they are optional.
  */
 export class FootbalistoMatch extends S.Class<FootbalistoMatch>(
   "FootbalistoMatch",
 )({
   id: S.Number,
-  teamId: S.Number,
-  teamName: S.String,
+  teamId: S.optional(S.Number), // Only in /matches/next
+  teamName: S.optional(S.String), // Only in /matches/next
   timestamp: S.Number,
-  age: S.String,
+  age: S.optional(S.String), // Only in /matches/next
   date: S.String, // Format: "2025-12-06 09:00"
   time: S.String, // Format: "1970-01-01 01:00" (legacy field)
   homeClub: FootbalistoClub,
