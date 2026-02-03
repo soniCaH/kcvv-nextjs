@@ -435,14 +435,6 @@ describe("transformRankingToStandings", () => {
     expect(result.goalsAgainst).toBe(12);
     expect(result.goalDifference).toBe(23);
     expect(result.points).toBe(33);
-    expect(result.form).toBe("WWDWL");
-  });
-
-  it("handles entry without form", () => {
-    const entry = createMockRankingEntry({ form: undefined });
-    const result = transformRankingToStandings(entry);
-
-    expect(result.form).toBeUndefined();
   });
 
   it("handles entry without logo", () => {
