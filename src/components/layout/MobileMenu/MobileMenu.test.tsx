@@ -202,10 +202,9 @@ describe("MobileMenu", () => {
 
       // Click the backdrop (first fixed div with bg-black/50)
       const backdrop = container.querySelector(".bg-black\\/50");
-      if (backdrop) {
-        await user.click(backdrop);
-        expect(onClose).toHaveBeenCalled();
-      }
+      expect(backdrop).not.toBeNull();
+      await user.click(backdrop!);
+      expect(onClose).toHaveBeenCalled();
     });
   });
 

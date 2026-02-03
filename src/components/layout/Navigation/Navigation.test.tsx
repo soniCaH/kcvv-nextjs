@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { Navigation } from "./Navigation";
 
 // Mock variables to control test behavior
@@ -60,37 +60,62 @@ describe("Navigation", () => {
       expect(newsLink).toHaveClass("active");
     });
 
-    it("should not mark base path as active when tab param exists", () => {
-      mockPathname = "/team/a-ploeg";
-      mockSearchParams = new URLSearchParams("tab=lineup");
-      render(<Navigation />);
-      // A-Ploeg is a dropdown trigger, not a nav-link, so check for dropdown items
-      // The parent link should not be marked as active when on a tab
-    });
-  });
-
-  describe("Query parameter active state", () => {
-    it("should mark dropdown item as active when pathname and tab param match", () => {
+    it("should not mark base path as active when tab param exists", async () => {
       mockPathname = "/team/a-ploeg";
       mockSearchParams = new URLSearchParams("tab=lineup");
       const { container } = render(<Navigation />);
 
-      // Hover over the A-Ploeg dropdown to open it
-      const aPloegLink = screen.getByText("A-Ploeg").closest("li");
-      if (aPloegLink) {
-        // Trigger mouseenter to open dropdown
-        aPloegLink.dispatchEvent(
-          new MouseEvent("mouseenter", { bubbles: true }),
+      // A-Ploeg is a dropdown trigger - it should NOT have the "active" class
+      const aPloegTrigger = screen.getByText("A-Ploeg").closest("a");
+      expect(aPloegTrigger).toBeInTheDocument();
+      expect(aPloegTrigger).toHaveClass("dropdown-trigger");
+      expect(aPloegTrigger).not.toHaveClass("active");
+
+      // Hover to open dropdown using fireEvent
+      const aPloegListItem = screen.getByText("A-Ploeg").closest("li");
+      expect(aPloegListItem).toBeInTheDocument();
+      fireEvent.mouseEnter(aPloegListItem!);
+
+      // Wait for dropdown to render
+      await waitFor(() => {
+        const lineupLink = container.querySelector(
+          'a[href="/team/a-ploeg?tab=lineup"]',
         );
-      }
+        expect(lineupLink).toBeInTheDocument();
+      });
+
+      // The "Spelers & Staff" link (tab=lineup) should be active
+      const lineupLink = container.querySelector(
+        'a[href="/team/a-ploeg?tab=lineup"]',
+      );
+      expect(lineupLink).toHaveClass("text-kcvv-green-bright");
+    });
+  });
+
+  describe("Query parameter active state", () => {
+    it("should mark dropdown item as active when pathname and tab param match", async () => {
+      mockPathname = "/team/a-ploeg";
+      mockSearchParams = new URLSearchParams("tab=lineup");
+      const { container } = render(<Navigation />);
+
+      // Hover over the A-Ploeg dropdown to open it using fireEvent
+      const aPloegListItem = screen.getByText("A-Ploeg").closest("li");
+      expect(aPloegListItem).toBeInTheDocument();
+      fireEvent.mouseEnter(aPloegListItem!);
+
+      // Wait for dropdown to render
+      await waitFor(() => {
+        const spelersLink = container.querySelector(
+          'a[href="/team/a-ploeg?tab=lineup"]',
+        );
+        expect(spelersLink).toBeInTheDocument();
+      });
 
       // The "Spelers & Staff" link should be active (has ?tab=lineup)
       const spelersLink = container.querySelector(
         'a[href="/team/a-ploeg?tab=lineup"]',
       );
-      if (spelersLink) {
-        expect(spelersLink).toHaveClass("text-kcvv-green-bright");
-      }
+      expect(spelersLink).toHaveClass("text-kcvv-green-bright");
     });
 
     it("should mark Info as active when on team page without tab param", async () => {
@@ -98,53 +123,68 @@ describe("Navigation", () => {
       mockSearchParams = new URLSearchParams();
       const { container } = render(<Navigation />);
 
-      // Hover over the A-Ploeg dropdown to open it
-      const aPloegLink = screen.getByText("A-Ploeg").closest("li");
-      if (aPloegLink) {
-        aPloegLink.dispatchEvent(
-          new MouseEvent("mouseenter", { bubbles: true }),
-        );
-      }
+      // Hover over the A-Ploeg dropdown to open it using fireEvent
+      const aPloegListItem = screen.getByText("A-Ploeg").closest("li");
+      expect(aPloegListItem).toBeInTheDocument();
+      fireEvent.mouseEnter(aPloegListItem!);
 
-      // Wait for dropdown to render
-      await new Promise((r) => setTimeout(r, 10));
+      // Wait for dropdown to render with multiple info links
+      await waitFor(() => {
+        const infoLinks = container.querySelectorAll('a[href="/team/a-ploeg"]');
+        expect(infoLinks.length).toBeGreaterThan(1);
+      });
 
       // The "Info" link in the dropdown should be active (no tab param)
       // It's the second link with this href (first is the dropdown trigger)
       const infoLinks = container.querySelectorAll('a[href="/team/a-ploeg"]');
       // The dropdown child link (second one) should be green
       const dropdownInfoLink = infoLinks[1];
-      if (dropdownInfoLink) {
-        expect(dropdownInfoLink).toHaveClass("text-kcvv-green-bright");
-      }
+      expect(dropdownInfoLink).toHaveClass("text-kcvv-green-bright");
     });
 
-    it("should not mark Info as active when tab param exists", () => {
+    it("should not mark Info as active when tab param exists", async () => {
       mockPathname = "/team/a-ploeg";
       mockSearchParams = new URLSearchParams("tab=matches");
       const { container } = render(<Navigation />);
 
-      // Hover over the A-Ploeg dropdown to open it
-      const aPloegLink = screen.getByText("A-Ploeg").closest("li");
-      if (aPloegLink) {
-        aPloegLink.dispatchEvent(
-          new MouseEvent("mouseenter", { bubbles: true }),
-        );
-      }
+      // Hover over the A-Ploeg dropdown to open it using fireEvent
+      const aPloegListItem = screen.getByText("A-Ploeg").closest("li");
+      expect(aPloegListItem).toBeInTheDocument();
+      fireEvent.mouseEnter(aPloegListItem!);
 
-      // The "Info" link should NOT be active when we're on ?tab=matches
-      const infoLink = container.querySelector('a[href="/team/a-ploeg"]');
-      if (infoLink) {
-        expect(infoLink).not.toHaveClass("text-kcvv-green-bright");
-      }
+      // Wait for dropdown to render
+      await waitFor(() => {
+        const infoLinks = container.querySelectorAll('a[href="/team/a-ploeg"]');
+        expect(infoLinks.length).toBeGreaterThan(1);
+      });
+
+      // The dropdown "Info" link should NOT be active when we're on ?tab=matches
+      // Get all links with this href - [0] is trigger, [1] is dropdown item
+      const infoLinks = container.querySelectorAll('a[href="/team/a-ploeg"]');
+      const dropdownInfoLink = infoLinks[1];
+      expect(dropdownInfoLink).not.toHaveClass("text-kcvv-green-bright");
     });
   });
 
   describe("Nested routes", () => {
-    it("should mark parent as active for nested routes", () => {
+    it("should mark parent as active for nested routes", async () => {
       mockPathname = "/club/history";
-      render(<Navigation />);
-      // "De club" parent should be considered active due to nested route
+      const { container } = render(<Navigation />);
+
+      // "De club" is a dropdown trigger - hover to open it
+      const deClubListItem = screen.getByText("De club").closest("li");
+      expect(deClubListItem).toBeInTheDocument();
+      fireEvent.mouseEnter(deClubListItem!);
+
+      // Wait for dropdown to render
+      await waitFor(() => {
+        const historyLink = container.querySelector('a[href="/club/history"]');
+        expect(historyLink).toBeInTheDocument();
+      });
+
+      // The "Geschiedenis" link (/club/history) should be active due to exact match
+      const historyLink = container.querySelector('a[href="/club/history"]');
+      expect(historyLink).toHaveClass("text-kcvv-green-bright");
     });
   });
 
