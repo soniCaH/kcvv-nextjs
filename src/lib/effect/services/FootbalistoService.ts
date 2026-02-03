@@ -224,8 +224,10 @@ function convertDetailToMatch(detail: MatchDetail): Match {
   };
 }
 
-/** Footbalisto CDN base URL for team logos */
-const FOOTBALISTO_LOGO_CDN = "https://dfaozfi7c7f3s.cloudfront.net/logos";
+/** Footbalisto CDN base URL for team logos (configurable via env) */
+const FOOTBALISTO_LOGO_CDN =
+  process.env.FOOTBALISTO_LOGO_CDN_URL ||
+  "https://dfaozfi7c7f3s.cloudfront.net/logos";
 
 /**
  * Construct a team logo URL from a club ID
@@ -234,7 +236,7 @@ const FOOTBALISTO_LOGO_CDN = "https://dfaozfi7c7f3s.cloudfront.net/logos";
  * @returns Full URL to the team logo
  */
 function getTeamLogoUrl(clubId: number): string {
-  return `${FOOTBALISTO_LOGO_CDN}/extra_groot/${clubId}.png?v=1`;
+  return `${FOOTBALISTO_LOGO_CDN}/extra_groot/${clubId}.png`;
 }
 
 /**
@@ -286,7 +288,7 @@ export class FootbalistoService extends Context.Tag("FootbalistoService")<
     ) => Effect.Effect<Match, FootbalistoError | ValidationError>;
 
     readonly getRanking: (
-      leagueId: number,
+      teamId: number,
     ) => Effect.Effect<
       readonly RankingEntry[],
       FootbalistoError | ValidationError
@@ -418,9 +420,6 @@ export const FootbalistoServiceLive = Layer.effect(
 
     /**
      * Create cache for rankings (5 minute TTL)
-     */
-    /**
-     * Create cache for rankings (5 minute TTL)
      * The API returns an array of competitions, each with teams.
      * We find the first competition with teams (preferring league over cup/friendly).
      */
@@ -523,12 +522,12 @@ export const FootbalistoServiceLive = Layer.effect(
     /**
      * Get league ranking (cached)
      */
-    const getRanking = (leagueId: number) =>
-      rankingCache.get(leagueId).pipe(
+    const getRanking = (teamId: number) =>
+      rankingCache.get(teamId).pipe(
         Effect.catchAll((error) =>
           Effect.fail(
             new FootbalistoError({
-              message: `Failed to fetch ranking for league ${leagueId}`,
+              message: `Failed to fetch ranking for team ${teamId}`,
               cause: error,
             }),
           ),
