@@ -5,7 +5,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { UrlTabs, Tabs } from "./url-tabs";
+import * as Tabs from "@radix-ui/react-tabs";
+import { UrlTabs } from "./url-tabs";
 
 // Mock Next.js navigation hooks
 const mockReplace = vi.fn();

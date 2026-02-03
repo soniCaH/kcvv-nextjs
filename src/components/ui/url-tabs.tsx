@@ -106,5 +106,5 @@ export function UrlTabs({
   );
 }
 
-// Re-export Radix primitives for convenience
-export { Tabs };
+// Note: Import Tabs directly from @radix-ui/react-tabs in your components
+// Re-exporting doesn't work well across server/client boundaries

@@ -6,8 +6,9 @@
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import * as Tabs from "@radix-ui/react-tabs";
 import { runPromise } from "@/lib/effect/runtime";
-import { UrlTabs, Tabs } from "@/components/ui/url-tabs";
+import { UrlTabs } from "@/components/ui/url-tabs";
 import {
   DrupalService,
   type TeamWithRoster,
