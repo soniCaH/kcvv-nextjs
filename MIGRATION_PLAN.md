@@ -1979,7 +1979,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
 
 ---
 
-## Phase 3: Team & Player Features (Weeks 6-7) 🚧 IN PROGRESS
+## Phase 3: Team & Player Features (Weeks 6-7) ✅ COMPLETED
 
 ### Goals
 
@@ -2076,13 +2076,13 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - `/jeugd/[slug]` - Dynamic youth team detail pages ✅
 - All youth teams (U6-U21) accessible via dynamic routing
 
-**Page Implementation:** ✅ (PR #567)
+**Page Implementation:** ✅ (PR #567, PR #595)
 
 - `src/app/(main)/jeugd/page.tsx` - Youth overview with TeamOverview component
-- `src/app/(main)/jeugd/[slug]/page.tsx` - Team detail with tabs (Info/Lineup)
-- `src/app/(main)/jeugd/[slug]/not-found.tsx` - Custom 404 page
-- `src/app/(main)/jeugd/[slug]/opengraph-image.tsx` - Dynamic OG images
-- `src/app/(main)/jeugd/[slug]/utils.ts` - Team transformation utilities (22 tests)
+- `src/app/(main)/team/[slug]/page.tsx` - Unified team detail page (senior + youth) with tabs (Info/Lineup/Wedstrijden/Stand)
+- `src/app/(main)/team/[slug]/not-found.tsx` - Custom 404 page
+- `src/app/(main)/team/[slug]/opengraph-image.tsx` - Dynamic OG images
+- `src/app/(main)/team/[slug]/utils.ts` - Team transformation utilities (27 tests)
 
 **Components Created:**
 
@@ -2101,8 +2101,7 @@ export const getImageDimensions = (width?: number, height?: number) => {
   - Next match highlighting
   - Status badges (Live, Postponed, Cancelled)
 - ✅ `TeamStandings` - League standings table (19 tests, PR #576)
-  - Form display (WWDLW badges)
-  - Team highlighting
+  - Team highlighting with club logos
   - Goal difference formatting
   - Compact variant with limit prop
 - ✅ `CoachProfile` - Coach/staff profile card (18 tests, PR #576)
@@ -2118,8 +2117,13 @@ export const getImageDimensions = (width?: number, height?: number) => {
 - ✅ Dynamic OG images for social sharing
 - ✅ Match components: MatchTeaser, MatchResult, MatchCountdown, MatchStats, MatchEvents, MatchReport (PR #577)
 - ✅ Team components: TeamSchedule, TeamStandings, CoachProfile (PR #576)
+- ✅ Footbalisto API integration for matches and standings tabs (PR #595)
+  - Matches tab with scores and result color coding (win/draw/loss)
+  - Standings tab with team logos from CDN
+  - Parallel data fetching with Effect.all
+  - VV ID fallback (field_vv_id → field_vv_id_2)
+  - League ID support for rankings
 - ⏳ Training schedule (future enhancement)
-- Training schedule
 
 #### 3.3: Match Detail Pages ✅ COMPLETED
 
@@ -3264,19 +3268,27 @@ These are suggestions for new features that could significantly enhance the KCVV
 
 ## Next Steps
 
-### Immediate Actions (Updated 2025-12-29):
+### Immediate Actions (Updated 2026-02-03):
 
 **Phase 2 Remaining Work:**
 
-1. ⏳ Implement search functionality (/search page)
-2. ⏳ Add privacy policy page (/privacy)
-3. ⏳ Fix category page title metadata issue
+1. ⏳ Implement homepage (/)
+2. ⏳ Implement search functionality (/search page)
+3. ⏳ Add privacy policy page (/privacy)
 
-**Begin Phase 3:**
+**Phase 3 Status: ✅ COMPLETED**
 
-1. ⏳ Start player profile pages migration (500+ pages)
-2. ⏳ Implement youth team pages
-3. ⏳ Build match detail pages
+- ✅ Player profile pages (500+ pages) - PR #522
+- ✅ Youth team pages - PR #567
+- ✅ Match detail pages - PR #577
+- ✅ Footbalisto integration (matches/standings tabs) - PR #595
+
+**Begin Phase 4: Calendar & Events**
+
+1. ⏳ Main calendar page (/calendar)
+2. ⏳ Events listing page (/events)
+3. ⏳ Scheurkalender feature
+4. ⏳ iCal export functionality
 
 **New Features (After Migration Complete):**
 
