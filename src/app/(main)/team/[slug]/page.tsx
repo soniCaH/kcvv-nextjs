@@ -8,6 +8,7 @@ import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import * as Tabs from "@radix-ui/react-tabs";
+import DOMPurify from "isomorphic-dompurify";
 import { runPromise } from "@/lib/effect/runtime";
 import { UrlTabs } from "@/components/ui/url-tabs";
 import {
@@ -245,7 +246,6 @@ async function fetchFootbalistoData(
  * Render the team detail page for the given slug.
  *
  * @param params - Promise resolving to an object with a `slug` string
- * @param searchParams - Promise resolving to query parameters (e.g., ?tab=lineup)
  * @returns The team detail page element
  */
 export default async function TeamPage({ params }: TeamPageProps) {
@@ -370,7 +370,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
                   <h2 className="text-2xl font-bold mb-4">Contactinformatie</h2>
                   <div
                     dangerouslySetInnerHTML={{
-                      __html: team.attributes.field_contact_info!.processed!,
+                      __html: DOMPurify.sanitize(
+                        team.attributes.field_contact_info!.processed!,
+                      ),
                     }}
                   />
                 </section>
@@ -395,7 +397,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
                 <section className="prose prose-gray max-w-none">
                   <div
                     dangerouslySetInnerHTML={{
-                      __html: team.attributes.body.processed,
+                      __html: DOMPurify.sanitize(
+                        team.attributes.body.processed,
+                      ),
                     }}
                   />
                 </section>

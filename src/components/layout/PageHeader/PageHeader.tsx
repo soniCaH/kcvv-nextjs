@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
@@ -105,8 +105,10 @@ export const PageHeader = ({ className }: PageHeaderProps) => {
               />
             </Link>
 
-            {/* Desktop Navigation */}
-            <Navigation />
+            {/* Desktop Navigation - Suspense boundary for useSearchParams */}
+            <Suspense fallback={<div className="flex-grow" />}>
+              <Navigation />
+            </Suspense>
           </div>
         </nav>
 
@@ -114,8 +116,10 @@ export const PageHeader = ({ className }: PageHeaderProps) => {
         <div className="h-20 lg:h-[7.5rem]" aria-hidden="true" />
       </header>
 
-      {/* Mobile Menu Overlay */}
-      <MobileMenu isOpen={isMobileMenuOpen} onClose={handleClose} />
+      {/* Mobile Menu Overlay - Suspense boundary for useSearchParams */}
+      <Suspense fallback={null}>
+        <MobileMenu isOpen={isMobileMenuOpen} onClose={handleClose} />
+      </Suspense>
     </>
   );
 };
