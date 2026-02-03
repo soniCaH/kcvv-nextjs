@@ -39,6 +39,8 @@ export class TeamAttributes extends S.Class<TeamAttributes>("TeamAttributes")({
   field_fb_id_2: S.optional(S.NullOr(S.String)),
   /** VoetbalVlaanderen ID (used for matches/rankings API) - string like "1" */
   field_vv_id: S.optional(S.NullOr(S.String)),
+  /** Secondary VoetbalVlaanderen ID (for teams in multiple leagues) */
+  field_vv_id_2: S.optional(S.NullOr(S.String)),
   /** Full division name (e.g., "3de Afdeling VV B") */
   field_division_full: S.optional(S.NullOr(S.String)),
   /** Team tagline or motto */

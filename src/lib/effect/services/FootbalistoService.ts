@@ -13,9 +13,9 @@ import {
   FootbalistoMatchesArray,
   FootbalistoMatchDetailResponse,
   FootbalistoLineupPlayer,
-  MatchesResponse,
   RankingEntry,
-  RankingResponse,
+  FootbalistoRankingArray,
+  FootbalistoRankingEntry,
   TeamStats,
   FootbalistoError,
   ValidationError,
@@ -100,13 +100,15 @@ function transformFootbalistoMatch(fbMatch: FootbalistoMatch): Match {
     time: timePart,
     venue: undefined, // Not provided by API
     home_team: {
-      id: fbMatch.homeClub.id,
+      // Use VV team ID (homeTeamId) for matching with teamId prop, fall back to club ID
+      id: fbMatch.homeTeamId ?? fbMatch.homeClub.id,
       name: fbMatch.homeClub.name,
       logo: fbMatch.homeClub.logo ?? undefined,
       score: fbMatch.goalsHomeTeam ?? undefined,
     },
     away_team: {
-      id: fbMatch.awayClub.id,
+      // Use VV team ID (awayTeamId) for matching with teamId prop, fall back to club ID
+      id: fbMatch.awayTeamId ?? fbMatch.awayClub.id,
       name: fbMatch.awayClub.name,
       logo: fbMatch.awayClub.logo ?? undefined,
       score: fbMatch.goalsAwayTeam ?? undefined,
@@ -222,6 +224,50 @@ function convertDetailToMatch(detail: MatchDetail): Match {
   };
 }
 
+/** Footbalisto CDN base URL for team logos (configurable via env) */
+const FOOTBALISTO_LOGO_CDN =
+  process.env.FOOTBALISTO_LOGO_CDN_URL ||
+  "https://dfaozfi7c7f3s.cloudfront.net/logos";
+
+/**
+ * Construct a team logo URL from a club ID
+ *
+ * @param clubId - The club ID from Footbalisto API
+ * @returns Full URL to the team logo
+ */
+function getTeamLogoUrl(clubId: number): string {
+  return `${FOOTBALISTO_LOGO_CDN}/extra_groot/${clubId}.png`;
+}
+
+/**
+ * Transform a raw Footbalisto ranking entry to normalized RankingEntry format.
+ *
+ * @param entry - Raw ranking entry from Footbalisto API
+ * @returns Normalized RankingEntry for UI consumption
+ */
+function transformFootbalistoRankingEntry(
+  entry: FootbalistoRankingEntry,
+): RankingEntry {
+  const teamName =
+    entry.team.club.localName || entry.team.club.name || "Unknown Team";
+
+  return {
+    position: entry.rank,
+    team_id: entry.team.id, // Use team.id, not club.id, to preserve unique team identity
+    team_name: teamName,
+    team_logo: getTeamLogoUrl(entry.team.club.id),
+    played: entry.matchesPlayed,
+    won: entry.wins,
+    drawn: entry.draws,
+    lost: entry.losses,
+    goals_for: entry.goalsScored,
+    goals_against: entry.goalsConceded,
+    goal_difference: entry.goalsScored - entry.goalsConceded,
+    points: entry.points,
+    form: undefined, // Form not provided in ranking API - would need to calculate from recent matches
+  };
+}
+
 /**
  * Footbalisto Service Interface
  */
@@ -242,7 +288,7 @@ export class FootbalistoService extends Context.Tag("FootbalistoService")<
     ) => Effect.Effect<Match, FootbalistoError | ValidationError>;
 
     readonly getRanking: (
-      leagueId: number,
+      teamId: number,
     ) => Effect.Effect<
       readonly RankingEntry[],
       FootbalistoError | ValidationError
@@ -337,6 +383,7 @@ export const FootbalistoServiceLive = Layer.effect(
 
     /**
      * Create cache for matches (5 minute TTL)
+     * The API returns a raw array of FootbalistoMatch objects, not wrapped in { matches: [...] }
      */
     const matchesCache = yield* Cache.make({
       capacity: 100,
@@ -344,8 +391,10 @@ export const FootbalistoServiceLive = Layer.effect(
       lookup: (teamId: number) =>
         Effect.gen(function* () {
           const url = `${baseUrl}/matches/${teamId}`;
-          const response = yield* fetchJson(url, MatchesResponse);
-          return response.matches;
+          // API returns raw array of FootbalistoMatch
+          const rawMatches = yield* fetchJson(url, FootbalistoMatchesArray);
+          // Transform to normalized Match format
+          return rawMatches.map(transformFootbalistoMatch);
         }),
     });
 
@@ -371,15 +420,36 @@ export const FootbalistoServiceLive = Layer.effect(
 
     /**
      * Create cache for rankings (5 minute TTL)
+     * The API returns an array of competitions, each with teams.
+     * We find the first competition with teams (preferring league over cup/friendly).
      */
     const rankingCache = yield* Cache.make({
       capacity: 50,
       timeToLive: Duration.minutes(5),
-      lookup: (leagueId: number) =>
+      lookup: (teamId: number) =>
         Effect.gen(function* () {
-          const url = `${baseUrl}/ranking/${leagueId}`;
-          const response = yield* fetchJson(url, RankingResponse);
-          return response.ranking;
+          const url = `${baseUrl}/ranking/${teamId}`;
+          const competitions = yield* fetchJson(url, FootbalistoRankingArray);
+
+          // Find the first competition with teams, preferring league competitions
+          // Priority: 1) Non-CUP/FRIENDLY with teams, 2) Any with teams
+          const competitionWithTeams =
+            competitions.find(
+              (c) =>
+                c.teams.length > 0 && c.type !== "CUP" && c.type !== "FRIENDLY",
+            ) || competitions.find((c) => c.teams.length > 0);
+
+          if (
+            !competitionWithTeams ||
+            competitionWithTeams.teams.length === 0
+          ) {
+            return [] as readonly RankingEntry[];
+          }
+
+          // Transform to normalized RankingEntry format
+          return competitionWithTeams.teams.map(
+            transformFootbalistoRankingEntry,
+          );
         }),
     });
 
@@ -452,12 +522,12 @@ export const FootbalistoServiceLive = Layer.effect(
     /**
      * Get league ranking (cached)
      */
-    const getRanking = (leagueId: number) =>
-      rankingCache.get(leagueId).pipe(
+    const getRanking = (teamId: number) =>
+      rankingCache.get(teamId).pipe(
         Effect.catchAll((error) =>
           Effect.fail(
             new FootbalistoError({
-              message: `Failed to fetch ranking for league ${leagueId}`,
+              message: `Failed to fetch ranking for team ${teamId}`,
               cause: error,
             }),
           ),

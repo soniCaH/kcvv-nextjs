@@ -21,16 +21,20 @@ export class FootbalistoClub extends S.Class<FootbalistoClub>(
 }) {}
 
 /**
- * Raw match data from Footbalisto API /matches/next endpoint
+ * Raw match data from Footbalisto API
+ *
+ * Used by both /matches/next and /matches/{teamId} endpoints.
+ * Note: /matches/{teamId} doesn't include teamId and age fields,
+ * so they are optional.
  */
 export class FootbalistoMatch extends S.Class<FootbalistoMatch>(
   "FootbalistoMatch",
 )({
   id: S.Number,
-  teamId: S.Number,
-  teamName: S.String,
+  teamId: S.optional(S.Number), // Only in /matches/next
+  teamName: S.optional(S.String), // Only in /matches/next
   timestamp: S.Number,
-  age: S.String,
+  age: S.optional(S.String), // Only in /matches/next
   date: S.String, // Format: "2025-12-06 09:00"
   time: S.String, // Format: "1970-01-01 01:00" (legacy field)
   homeClub: FootbalistoClub,
@@ -125,7 +129,7 @@ export class RankingEntry extends S.Class<RankingEntry>("RankingEntry")({
 export const RankingArray = S.Array(RankingEntry);
 
 /**
- * Ranking response from Footbalisto
+ * Ranking response from Footbalisto (normalized)
  */
 export class RankingResponse extends S.Class<RankingResponse>(
   "RankingResponse",
@@ -135,6 +139,65 @@ export class RankingResponse extends S.Class<RankingResponse>(
   competition: S.optional(S.String),
   last_updated: S.optional(DateFromStringOrDate),
 }) {}
+
+// ============================================================================
+// Raw Footbalisto Ranking API Schemas
+// ============================================================================
+
+/**
+ * Club info in Footbalisto ranking team
+ */
+export class FootbalistoRankingClub extends S.Class<FootbalistoRankingClub>(
+  "FootbalistoRankingClub",
+)({
+  id: S.Number,
+  localName: S.NullOr(S.String),
+  name: S.NullOr(S.String),
+}) {}
+
+/**
+ * Team info in Footbalisto ranking entry
+ */
+export class FootbalistoRankingTeam extends S.Class<FootbalistoRankingTeam>(
+  "FootbalistoRankingTeam",
+)({
+  id: S.Number,
+  club: FootbalistoRankingClub,
+}) {}
+
+/**
+ * Raw team entry in Footbalisto ranking response
+ */
+export class FootbalistoRankingEntry extends S.Class<FootbalistoRankingEntry>(
+  "FootbalistoRankingEntry",
+)({
+  id: S.Number,
+  rank: S.Number,
+  matchesPlayed: S.Number,
+  wins: S.Number,
+  draws: S.Number,
+  losses: S.Number,
+  goalsScored: S.Number,
+  goalsConceded: S.Number,
+  points: S.Number,
+  team: FootbalistoRankingTeam,
+}) {}
+
+/**
+ * Competition entry in raw Footbalisto ranking response
+ */
+export class FootbalistoRankingCompetition extends S.Class<FootbalistoRankingCompetition>(
+  "FootbalistoRankingCompetition",
+)({
+  name: S.String,
+  type: S.String,
+  teams: S.Array(FootbalistoRankingEntry),
+}) {}
+
+/**
+ * Raw array of competitions from Footbalisto ranking endpoint
+ */
+export const FootbalistoRankingArray = S.Array(FootbalistoRankingCompetition);
 
 /**
  * Player statistics
