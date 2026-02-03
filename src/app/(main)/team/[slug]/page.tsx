@@ -33,7 +33,6 @@ import {
 
 interface TeamPageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ tab?: string }>;
 }
 
 /**
@@ -249,13 +248,8 @@ async function fetchFootbalistoData(
  * @param searchParams - Promise resolving to query parameters (e.g., ?tab=lineup)
  * @returns The team detail page element
  */
-export default async function TeamPage({
-  params,
-  searchParams: _searchParams,
-}: TeamPageProps) {
+export default async function TeamPage({ params }: TeamPageProps) {
   const { slug } = await params;
-  // searchParams is used by UrlTabs client component via useSearchParams hook
-  void _searchParams;
 
   // Log the requested slug (server-side)
   console.info(`[team] Requested team slug: ${slug}`);

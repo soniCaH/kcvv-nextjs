@@ -8,7 +8,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { Icon, SocialLinks } from "@/components/design-system";
 import { X, ChevronDown, Search } from "@/lib/icons";
@@ -113,6 +113,7 @@ const menuItems: MenuItem[] = [
  */
 export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
   // Lock body scroll when menu is open
@@ -133,11 +134,39 @@ export const MobileMenu = ({ isOpen, onClose, className }: MobileMenuProps) => {
     onClose();
   }, [pathname, onClose]);
 
+  /**
+   * Check if a menu item is active, handling both pathname and query params
+   */
   const isActive = (href: string) => {
-    if (href === "/") {
-      return pathname === "/";
+    // Parse the href to separate pathname and query params
+    const [itemPath, itemQuery] = href.split("?");
+
+    if (itemPath === "/") {
+      return pathname === "/" && !itemQuery;
     }
-    return pathname?.startsWith(href);
+
+    // If href has query params, check both pathname and query param match
+    if (itemQuery) {
+      const itemParams = new URLSearchParams(itemQuery);
+      const itemTab = itemParams.get("tab");
+
+      // Must match pathname exactly and have the same tab param
+      return pathname === itemPath && searchParams.get("tab") === itemTab;
+    }
+
+    // For items without query params, check if it's a base path match
+    // but NOT if we're on a tab (e.g., /team/a-ploeg should not be active when on ?tab=lineup)
+    if (pathname === itemPath) {
+      // Only active if there's no tab param in the URL
+      return !searchParams.get("tab");
+    }
+
+    // Check for nested routes (but not for team pages with tabs)
+    if (pathname?.startsWith(itemPath + "/")) {
+      return true;
+    }
+
+    return false;
   };
 
   const toggleSubmenu = (href: string) => {

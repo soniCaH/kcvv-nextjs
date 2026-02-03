@@ -2,100 +2,103 @@
  * PageHeader Component Tests
  */
 
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import type { ImageProps } from 'next/image'
-import { PageHeader } from './PageHeader'
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { ImageProps } from "next/image";
+import { PageHeader } from "./PageHeader";
 
 // Mock Next.js modules
-vi.mock('next/navigation', () => ({
-  usePathname: () => '/',
-}))
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
-vi.mock('next/image', () => ({
+vi.mock("next/image", () => ({
   default: ({ alt, src, ...props }: ImageProps) => {
     // Using img in tests is acceptable as we're mocking Next.js Image
-    const imgProps = { alt, src: typeof src === 'string' ? src : '', ...props }
-    return <img {...imgProps} />
+    const imgProps = { alt, src: typeof src === "string" ? src : "", ...props };
+    return <img {...imgProps} />;
   },
-}))
+}));
 
-describe('PageHeader', () => {
-  describe('Rendering', () => {
-    it('should render header', () => {
-      const { container } = render(<PageHeader />)
-      expect(container.querySelector('header')).toBeInTheDocument()
-    })
+describe("PageHeader", () => {
+  describe("Rendering", () => {
+    it("should render header", () => {
+      const { container } = render(<PageHeader />);
+      expect(container.querySelector("header")).toBeInTheDocument();
+    });
 
-    it('should render logo', () => {
-      render(<PageHeader />)
-      const logos = screen.getAllByAltText('KCVV ELEWIJT')
-      expect(logos.length).toBeGreaterThan(0)
-    })
+    it("should render logo", () => {
+      render(<PageHeader />);
+      const logos = screen.getAllByAltText("KCVV ELEWIJT");
+      expect(logos.length).toBeGreaterThan(0);
+    });
 
-    it('should have fixed navigation', () => {
-      const { container } = render(<PageHeader />)
-      const nav = container.querySelector('nav')
-      expect(nav).toHaveClass('fixed', 'top-0')
-    })
-  })
+    it("should have fixed navigation", () => {
+      const { container } = render(<PageHeader />);
+      const nav = container.querySelector("nav");
+      expect(nav).toHaveClass("fixed", "top-0");
+    });
+  });
 
-  describe('Mobile View', () => {
-    it('should render mobile hamburger button', () => {
-      render(<PageHeader />)
-      const menuButton = screen.getByLabelText(/toggle navigation menu/i)
-      expect(menuButton).toBeInTheDocument()
-    })
+  describe("Mobile View", () => {
+    it("should render mobile hamburger button", () => {
+      render(<PageHeader />);
+      const menuButton = screen.getByLabelText(/toggle navigation menu/i);
+      expect(menuButton).toBeInTheDocument();
+    });
 
-    it('should render mobile search link', () => {
-      render(<PageHeader />)
-      const searchLinks = screen.getAllByLabelText(/search/i)
-      expect(searchLinks.length).toBeGreaterThan(0)
-    })
+    it("should render mobile search link", () => {
+      render(<PageHeader />);
+      const searchLinks = screen.getAllByLabelText(/search/i);
+      expect(searchLinks.length).toBeGreaterThan(0);
+    });
 
-    it('should open mobile menu when hamburger clicked', async () => {
-      const user = userEvent.setup()
-      render(<PageHeader />)
+    it("should open mobile menu when hamburger clicked", async () => {
+      const user = userEvent.setup();
+      render(<PageHeader />);
 
-      const menuButton = screen.getByLabelText(/toggle navigation menu/i)
-      await user.click(menuButton)
+      const menuButton = screen.getByLabelText(/toggle navigation menu/i);
+      await user.click(menuButton);
 
       // Menu should be visible (check for close button)
-      const closeButton = screen.getByLabelText(/close menu/i)
-      expect(closeButton).toBeInTheDocument()
-    })
-  })
+      const closeButton = screen.getByLabelText(/close menu/i);
+      expect(closeButton).toBeInTheDocument();
+    });
+  });
 
-  describe('Desktop View', () => {
-    it('should render navigation', () => {
-      const { container } = render(<PageHeader />)
-      const nav = container.querySelector('nav')
-      expect(nav).toBeInTheDocument()
-    })
-  })
+  describe("Desktop View", () => {
+    it("should render navigation", () => {
+      const { container } = render(<PageHeader />);
+      const nav = container.querySelector("nav");
+      expect(nav).toBeInTheDocument();
+    });
+  });
 
-  describe('Accessibility', () => {
-    it('should have proper ARIA labels', () => {
-      render(<PageHeader />)
-      expect(screen.getByLabelText(/toggle navigation menu/i)).toBeInTheDocument()
-    })
+  describe("Accessibility", () => {
+    it("should have proper ARIA labels", () => {
+      render(<PageHeader />);
+      expect(
+        screen.getByLabelText(/toggle navigation menu/i),
+      ).toBeInTheDocument();
+    });
 
-    it('should be keyboard navigable', async () => {
-      const user = userEvent.setup()
-      render(<PageHeader />)
+    it("should be keyboard navigable", async () => {
+      const user = userEvent.setup();
+      render(<PageHeader />);
 
       // Tab to hamburger button
-      await user.tab()
-      expect(screen.getByLabelText(/toggle navigation menu/i)).toHaveFocus()
-    })
-  })
+      await user.tab();
+      expect(screen.getByLabelText(/toggle navigation menu/i)).toHaveFocus();
+    });
+  });
 
-  describe('Custom Props', () => {
-    it('should accept custom className', () => {
-      const { container } = render(<PageHeader className="custom-class" />)
-      const header = container.querySelector('header')
-      expect(header).toHaveClass('custom-class')
-    })
-  })
-})
+  describe("Custom Props", () => {
+    it("should accept custom className", () => {
+      const { container } = render(<PageHeader className="custom-class" />);
+      const header = container.querySelector("header");
+      expect(header).toHaveClass("custom-class");
+    });
+  });
+});

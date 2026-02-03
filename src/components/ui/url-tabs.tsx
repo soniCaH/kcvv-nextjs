@@ -3,14 +3,15 @@
 /**
  * URL-synced Tabs Component
  *
- * A wrapper around Radix UI Tabs that syncs the active tab with the URL.
- * Supports both query parameters (?tab=value) and hash fragments (#value).
+ * A wrapper around Radix UI Tabs that syncs the active tab with the URL
+ * using query parameters (?tab=value).
  *
  * Features:
- * - Initial tab from URL on page load
+ * - Initial tab from URL query parameter on page load
  * - URL updates when tab changes (without page reload)
  * - Fallback to default tab if URL tab is invalid
  * - Browser back/forward navigation support
+ * - Removes query param when returning to default tab (cleaner URLs)
  */
 
 import * as React from "react";
