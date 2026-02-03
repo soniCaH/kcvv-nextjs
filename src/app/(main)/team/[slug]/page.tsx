@@ -6,8 +6,8 @@
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import * as Tabs from "@radix-ui/react-tabs";
 import { runPromise } from "@/lib/effect/runtime";
+import { UrlTabs, Tabs } from "@/components/ui/url-tabs";
 import {
   DrupalService,
   type TeamWithRoster,
@@ -31,6 +31,7 @@ import {
 
 interface TeamPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
 
 /**
@@ -243,10 +244,16 @@ async function fetchFootbalistoData(
  * Render the team detail page for the given slug.
  *
  * @param params - Promise resolving to an object with a `slug` string
+ * @param searchParams - Promise resolving to query parameters (e.g., ?tab=lineup)
  * @returns The team detail page element
  */
-export default async function TeamPage({ params }: TeamPageProps) {
+export default async function TeamPage({
+  params,
+  searchParams: _searchParams,
+}: TeamPageProps) {
   const { slug } = await params;
+  // searchParams is used by UrlTabs client component via useSearchParams hook
+  void _searchParams;
 
   // Log the requested slug (server-side)
   console.info(`[team] Requested team slug: ${slug}`);
@@ -293,6 +300,14 @@ export default async function TeamPage({ params }: TeamPageProps) {
   const hasMatches = scheduleMatches.length > 0;
   const hasStandings = standingsEntries.length > 0;
 
+  // Build list of valid tabs based on available content
+  const validTabs = [
+    "info",
+    ...(hasPlayers || hasStaff ? ["lineup"] : []),
+    ...(hasMatches ? ["matches"] : []),
+    ...(hasStandings ? ["standings"] : []),
+  ];
+
   return (
     <>
       {/* Team Header */}
@@ -304,8 +319,12 @@ export default async function TeamPage({ params }: TeamPageProps) {
         tagline={tagline}
       />
 
-      {/* Tab Navigation */}
-      <Tabs.Root defaultValue="info" className="container mx-auto px-4 py-8">
+      {/* Tab Navigation - URL synced for direct linking */}
+      <UrlTabs
+        defaultValue="info"
+        validTabs={validTabs}
+        className="container mx-auto px-4 py-8"
+      >
         <Tabs.List
           className="flex border-b border-gray-200 mb-6"
           aria-label="Team informatie"
@@ -427,7 +446,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
             />
           </Tabs.Content>
         )}
-      </Tabs.Root>
+      </UrlTabs>
     </>
   );
 }

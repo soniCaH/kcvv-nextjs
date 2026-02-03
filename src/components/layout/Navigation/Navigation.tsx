@@ -33,20 +33,20 @@ const menuItems: MenuItem[] = [
     label: "A-Ploeg",
     href: "/team/a-ploeg",
     children: [
-      { label: "Info", href: "/team/a-ploeg#team-info" },
-      { label: "Spelers & Staff", href: "/team/a-ploeg#team-lineup" },
-      { label: "Wedstrijden", href: "/team/a-ploeg#team-matches" },
-      { label: "Stand", href: "/team/a-ploeg#team-ranking" },
+      { label: "Info", href: "/team/a-ploeg" },
+      { label: "Spelers & Staff", href: "/team/a-ploeg?tab=lineup" },
+      { label: "Wedstrijden", href: "/team/a-ploeg?tab=matches" },
+      { label: "Stand", href: "/team/a-ploeg?tab=standings" },
     ],
   },
   {
     label: "B-Ploeg",
     href: "/team/b-ploeg",
     children: [
-      { label: "Info", href: "/team/b-ploeg#team-info" },
-      { label: "Spelers & Staff", href: "/team/b-ploeg#team-lineup" },
-      { label: "Wedstrijden", href: "/team/b-ploeg#team-matches" },
-      { label: "Stand", href: "/team/b-ploeg#team-ranking" },
+      { label: "Info", href: "/team/b-ploeg" },
+      { label: "Spelers & Staff", href: "/team/b-ploeg?tab=lineup" },
+      { label: "Wedstrijden", href: "/team/b-ploeg?tab=matches" },
+      { label: "Stand", href: "/team/b-ploeg?tab=standings" },
     ],
   },
   {
