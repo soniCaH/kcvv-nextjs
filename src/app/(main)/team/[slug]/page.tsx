@@ -27,6 +27,8 @@ import {
   getTeamTagline,
   transformMatchToSchedule,
   transformRankingToStandings,
+  calculateFormFromMatches,
+  injectFormIntoStandings,
 } from "./utils";
 
 interface TeamPageProps {
@@ -281,8 +283,18 @@ export default async function TeamPage({ params }: TeamPageProps) {
   const scheduleMatches = footbalistoData
     ? footbalistoData.matches.map(transformMatchToSchedule)
     : [];
+
+  // Calculate form from matches and inject into standings for current team
+  const teamForm = footbalistoData
+    ? calculateFormFromMatches(footbalistoData.matches, footbalistoData.teamId)
+    : undefined;
+
   const standingsEntries = footbalistoData
-    ? footbalistoData.standings.map(transformRankingToStandings)
+    ? injectFormIntoStandings(
+        footbalistoData.standings.map(transformRankingToStandings),
+        footbalistoData.teamId,
+        teamForm,
+      )
     : [];
 
   // Determine if we have content for different tabs
