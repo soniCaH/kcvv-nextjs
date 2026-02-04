@@ -10,10 +10,119 @@
  * - Captain indicator
  * - Jersey number display
  * - Substitution status icons (in/out arrows)
+ * - Card icons (yellow, red, yellow-red)
  */
 
 import { cn } from "@/lib/utils/cn";
 import { ArrowUp, ArrowDown } from "lucide-react";
+
+/**
+ * Yellow card icon component
+ */
+function YellowCardIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 12 16"
+      className={cn("w-3 h-4", className)}
+      aria-label="Gele kaart"
+      role="img"
+    >
+      <rect
+        x="1"
+        y="1"
+        width="10"
+        height="14"
+        rx="1"
+        fill="#facc15"
+        stroke="#ca8a04"
+        strokeWidth="1"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Red card icon component
+ */
+function RedCardIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 12 16"
+      className={cn("w-3 h-4", className)}
+      aria-label="Rode kaart"
+      role="img"
+    >
+      <rect
+        x="1"
+        y="1"
+        width="10"
+        height="14"
+        rx="1"
+        fill="#ef4444"
+        stroke="#b91c1c"
+        strokeWidth="1"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Double yellow (yellow-red) card icon component
+ */
+function DoubleYellowCardIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 18 16"
+      className={cn("w-4.5 h-4", className)}
+      aria-label="Tweede gele kaart"
+      role="img"
+    >
+      {/* Yellow card (back) */}
+      <rect
+        x="1"
+        y="1"
+        width="10"
+        height="14"
+        rx="1"
+        fill="#facc15"
+        stroke="#ca8a04"
+        strokeWidth="1"
+      />
+      {/* Red card (front, offset) */}
+      <rect
+        x="6"
+        y="1"
+        width="10"
+        height="14"
+        rx="1"
+        fill="#ef4444"
+        stroke="#b91c1c"
+        strokeWidth="1"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Renders the appropriate card icon based on card type
+ */
+function CardIcon({
+  cardType,
+}: {
+  cardType: "yellow" | "red" | "double_yellow";
+}) {
+  switch (cardType) {
+    case "yellow":
+      return <YellowCardIcon />;
+    case "red":
+      return <RedCardIcon />;
+    case "double_yellow":
+      return <DoubleYellowCardIcon />;
+  }
+}
+
+/** Card type received by player */
+export type LineupCardType = "yellow" | "red" | "double_yellow";
 
 export interface LineupPlayer {
   /** Player ID (optional) */
@@ -28,6 +137,8 @@ export interface LineupPlayer {
   isCaptain: boolean;
   /** Player status in match */
   status: "starter" | "substitute" | "substituted" | "subbed_in" | "unknown";
+  /** Card received by player (if any) */
+  card?: LineupCardType;
 }
 
 export interface MatchLineupProps {
@@ -251,13 +362,17 @@ function PlayerRow({
       )}
 
       {/* Player name */}
-      <span className="flex-1 text-sm text-gray-900">
-        {player.name}
-        {player.isCaptain && (
-          <span className="ml-1.5 text-xs font-semibold text-kcvv-green-bright">
-            (C)
-          </span>
-        )}
+      <span className="flex-1 text-sm text-gray-900 flex items-center gap-1.5">
+        <span>
+          {player.name}
+          {player.isCaptain && (
+            <span className="ml-1.5 text-xs font-semibold text-kcvv-green-bright">
+              (C)
+            </span>
+          )}
+        </span>
+        {/* Card icon */}
+        {player.card && <CardIcon cardType={player.card} />}
       </span>
 
       {/* Minutes played for players with substitution status */}

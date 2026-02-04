@@ -13,6 +13,8 @@ import {
   FootbalistoMatchesArray,
   FootbalistoMatchDetailResponse,
   FootbalistoLineupPlayer,
+  FootbalistoMatchEvent,
+  CardType,
   RankingEntry,
   FootbalistoRankingArray,
   FootbalistoRankingEntry,
@@ -122,7 +124,7 @@ function transformFootbalistoMatch(fbMatch: FootbalistoMatch): Match {
 /**
  * Normalize a Footbalisto lineup status into one of the canonical status labels.
  *
- * @param status - Original Footbalisto status value (for example `"basis"`, `"invaller"`, or `"wissel"`).
+ * @param status - Original Footbalisto status value (for example `"basis"`, `"invaller"`, `"bank"`, or `"wissel"`).
  * @param changed - Whether the player's status indicates a change (e.g., was substituted).
  * @returns `starter` if started and not substituted, `substituted` if started and later taken off or legacy `"wissel"`, `subbed_in` if entered as a substitute, `substitute` if listed as a substitute but did not play, `unknown` if the input is unrecognized.
  */
@@ -133,7 +135,8 @@ function transformLineupStatus(
   if (status === "basis") {
     return changed ? "substituted" : "starter";
   }
-  if (status === "invaller") {
+  // "invaller" and "bank" both indicate bench/substitute players
+  if (status === "invaller" || status === "bank") {
     return changed ? "subbed_in" : "substitute";
   }
   if (status === "wissel") return "substituted";
@@ -160,6 +163,75 @@ function transformLineupPlayer(
 }
 
 /**
+ * Parse card type from a Footbalisto match event.
+ *
+ * Uses the action object's type and subtype fields.
+ *
+ * @param event - The Footbalisto match event to parse
+ * @returns The card type if this is a card event, undefined otherwise
+ */
+function parseCardType(event: FootbalistoMatchEvent): CardType | undefined {
+  const type = event.action.type.toUpperCase();
+  const subtype = event.action.subtype?.toUpperCase();
+
+  // Structured format: type = "CARD", subtype = "YELLOW" | "RED" | "DOUBLE_YELLOW"
+  if (type === "CARD") {
+    if (subtype === "YELLOW") return "yellow";
+    if (subtype === "RED") return "red";
+    if (subtype === "DOUBLE_YELLOW" || subtype === "YELLOWRED") {
+      return "double_yellow";
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Build a map of player IDs to their card types from match events.
+ *
+ * @param events - Array of match events from the API
+ * @returns Map where key is playerId and value is the card type
+ */
+function buildPlayerCardMap(
+  events: readonly FootbalistoMatchEvent[],
+): Map<number, CardType> {
+  const cardMap = new Map<number, CardType>();
+
+  for (const event of events) {
+    const cardType = parseCardType(event);
+    const playerId = event.playerId;
+
+    if (cardType && playerId) {
+      // If player already has a yellow and gets another, it becomes double_yellow
+      const existingCard = cardMap.get(playerId);
+      if (existingCard === "yellow" && cardType === "yellow") {
+        cardMap.set(playerId, "double_yellow");
+      } else if (cardType === "red" || cardType === "double_yellow") {
+        // Red or double_yellow always takes precedence
+        cardMap.set(playerId, cardType);
+      } else if (!existingCard) {
+        cardMap.set(playerId, cardType);
+      }
+    }
+  }
+
+  return cardMap;
+}
+
+/**
+ * Transform a player and add card info from the card map.
+ */
+function transformPlayerWithCard(
+  player: FootbalistoLineupPlayer,
+  cardMap: Map<number, CardType> | null,
+): MatchLineupPlayer {
+  const basePlayer = transformLineupPlayer(player);
+  const card =
+    cardMap && basePlayer.id ? cardMap.get(basePlayer.id) : undefined;
+  return card ? { ...basePlayer, card } : basePlayer;
+}
+
+/**
  * Normalize a Footbalisto match detail response into the internal MatchDetail shape.
  *
  * @param response - The Footbalisto API match detail response to convert
@@ -172,13 +244,32 @@ function transformFootbalistoMatchDetail(
   const { date: matchDate, time: timePart } = parseDateString(general.date);
   const status = mapNumericStatus(general.status);
 
-  // Transform lineup if available
-  const lineup = response.lineup
-    ? {
-        home: response.lineup.home.map(transformLineupPlayer),
-        away: response.lineup.away.map(transformLineupPlayer),
-      }
-    : undefined;
+  // Build card map from events
+  const cardMap = response.events ? buildPlayerCardMap(response.events) : null;
+
+  // Transform lineup if available, adding card info from events
+  // Merge starters (lineup) with substitutes (substitutes)
+  let lineup:
+    | { home: MatchLineupPlayer[]; away: MatchLineupPlayer[] }
+    | undefined;
+
+  if (response.lineup || response.substitutes) {
+    const homeStarters = response.lineup?.home ?? [];
+    const awayStarters = response.lineup?.away ?? [];
+    const homeSubs = response.substitutes?.home ?? [];
+    const awaySubs = response.substitutes?.away ?? [];
+
+    lineup = {
+      home: [
+        ...homeStarters.map((p) => transformPlayerWithCard(p, cardMap)),
+        ...homeSubs.map((p) => transformPlayerWithCard(p, cardMap)),
+      ],
+      away: [
+        ...awayStarters.map((p) => transformPlayerWithCard(p, cardMap)),
+        ...awaySubs.map((p) => transformPlayerWithCard(p, cardMap)),
+      ],
+    };
+  }
 
   return {
     id: general.id,

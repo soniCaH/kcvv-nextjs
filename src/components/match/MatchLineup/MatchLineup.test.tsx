@@ -309,4 +309,153 @@ describe("MatchLineup", () => {
       expect(container.querySelector(".bg-gray-50")).toBeInTheDocument();
     });
   });
+
+  describe("card indicators", () => {
+    it("shows yellow card icon for players with yellow card", () => {
+      const lineupWithYellowCard: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Yellow Card Player",
+          number: 5,
+          isCaptain: false,
+          status: "starter",
+          card: "yellow",
+        },
+      ];
+      render(
+        <MatchLineup {...defaultProps} homeLineup={lineupWithYellowCard} />,
+      );
+      expect(screen.getByLabelText("Gele kaart")).toBeInTheDocument();
+    });
+
+    it("shows red card icon for players with red card", () => {
+      const lineupWithRedCard: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Red Card Player",
+          number: 8,
+          isCaptain: false,
+          status: "starter",
+          card: "red",
+        },
+      ];
+      render(<MatchLineup {...defaultProps} homeLineup={lineupWithRedCard} />);
+      expect(screen.getByLabelText("Rode kaart")).toBeInTheDocument();
+    });
+
+    it("shows double yellow (yellow-red) card icon for players with second yellow", () => {
+      const lineupWithDoubleYellow: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Double Yellow Player",
+          number: 3,
+          isCaptain: false,
+          status: "starter",
+          card: "double_yellow",
+        },
+      ];
+      render(
+        <MatchLineup {...defaultProps} homeLineup={lineupWithDoubleYellow} />,
+      );
+      expect(screen.getByLabelText("Tweede gele kaart")).toBeInTheDocument();
+    });
+
+    it("shows card icon alongside captain indicator", () => {
+      const lineupWithCardAndCaptain: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Captain Yellow",
+          number: 10,
+          isCaptain: true,
+          status: "starter",
+          card: "yellow",
+        },
+      ];
+      render(
+        <MatchLineup
+          {...defaultProps}
+          homeLineup={lineupWithCardAndCaptain}
+          awayLineup={[]}
+        />,
+      );
+      expect(screen.getByText("(C)")).toBeInTheDocument();
+      expect(screen.getByLabelText("Gele kaart")).toBeInTheDocument();
+    });
+
+    it("shows card icon for substituted players", () => {
+      const lineupWithSubstitutedCard: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Carded Sub",
+          number: 9,
+          minutesPlayed: 60,
+          isCaptain: false,
+          status: "substituted",
+          card: "yellow",
+        },
+      ];
+      render(
+        <MatchLineup
+          {...defaultProps}
+          homeLineup={lineupWithSubstitutedCard}
+        />,
+      );
+      expect(screen.getByLabelText("Gewisseld")).toBeInTheDocument();
+      expect(screen.getByLabelText("Gele kaart")).toBeInTheDocument();
+      expect(screen.getByText("60'")).toBeInTheDocument();
+    });
+
+    it("does not show card icon when player has no card", () => {
+      const lineupWithoutCard: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "No Card Player",
+          number: 11,
+          isCaptain: false,
+          status: "starter",
+        },
+      ];
+      render(<MatchLineup {...defaultProps} homeLineup={lineupWithoutCard} />);
+      expect(screen.queryByLabelText("Gele kaart")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Rode kaart")).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText("Tweede gele kaart"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows multiple different card types in same lineup", () => {
+      const lineupWithMultipleCards: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Yellow Player",
+          number: 5,
+          isCaptain: false,
+          status: "starter",
+          card: "yellow",
+        },
+        {
+          id: 2,
+          name: "Red Player",
+          number: 8,
+          isCaptain: false,
+          status: "starter",
+          card: "red",
+        },
+        {
+          id: 3,
+          name: "Double Yellow Player",
+          number: 3,
+          isCaptain: false,
+          status: "starter",
+          card: "double_yellow",
+        },
+      ];
+      render(
+        <MatchLineup {...defaultProps} homeLineup={lineupWithMultipleCards} />,
+      );
+      expect(screen.getByLabelText("Gele kaart")).toBeInTheDocument();
+      expect(screen.getByLabelText("Rode kaart")).toBeInTheDocument();
+      expect(screen.getByLabelText("Tweede gele kaart")).toBeInTheDocument();
+    });
+  });
 });

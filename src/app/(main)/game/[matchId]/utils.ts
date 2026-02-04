@@ -40,7 +40,7 @@ export function transformAwayTeam(match: MatchDetail): MatchTeamProps {
  * Converts a MatchLineupPlayer into a LineupPlayer used by the MatchLineup component.
  *
  * @param player - The source player data to convert
- * @returns A LineupPlayer containing `id`, `name`, `number`, `minutesPlayed`, `isCaptain`, and `status` from `player`
+ * @returns A LineupPlayer containing `id`, `name`, `number`, `minutesPlayed`, `isCaptain`, `status`, and `card` from `player`
  */
 export function transformLineupPlayer(player: MatchLineupPlayer): LineupPlayer {
   return {
@@ -50,6 +50,7 @@ export function transformLineupPlayer(player: MatchLineupPlayer): LineupPlayer {
     minutesPlayed: player.minutesPlayed,
     isCaptain: player.isCaptain,
     status: player.status,
+    card: player.card,
   };
 }
 
