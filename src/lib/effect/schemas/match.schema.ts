@@ -231,6 +231,76 @@ export class TeamStats extends S.Class<TeamStats>("TeamStats")({
 }) {}
 
 // ============================================================================
+// Match Event Schemas (for /match/{id} endpoint)
+// ============================================================================
+
+/**
+ * Card type for match events
+ */
+export const CardType = S.Literal("yellow", "red", "double_yellow");
+export type CardType = S.Schema.Type<typeof CardType>;
+
+/**
+ * Action object within a Footbalisto match event
+ */
+export class FootbalistoEventAction extends S.Class<FootbalistoEventAction>(
+  "FootbalistoEventAction",
+)({
+  /** Action type (e.g., "CARD", "GOAL") */
+  type: S.String,
+  /** Action subtype for cards (e.g., "YELLOW", "RED", "DOUBLE_YELLOW") */
+  subtype: S.optional(S.NullOr(S.String)),
+  /** Sort order for display */
+  sortOrder: S.optional(S.Number),
+  /** Icon URL */
+  icon: S.optional(S.NullOr(S.String)),
+  /** Action ID */
+  id: S.optional(S.Number),
+}) {}
+
+/**
+ * Raw match event from Footbalisto API
+ *
+ * Events contain an action object with type/subtype for structured event data.
+ */
+export class FootbalistoMatchEvent extends S.Class<FootbalistoMatchEvent>(
+  "FootbalistoMatchEvent",
+)({
+  /** Action details containing type and subtype */
+  action: FootbalistoEventAction,
+  /** Minute when the event occurred */
+  minute: S.optional(S.NullOr(S.Number)),
+  /** Player ID associated with the event */
+  playerId: S.optional(S.NullOr(S.Number)),
+  /** Player name */
+  playerName: S.optional(S.NullOr(S.String)),
+  /** Club ID (to determine home/away) */
+  clubId: S.optional(S.NullOr(S.Number)),
+  /** Goals by home team at this point (for goal events) */
+  goalsHome: S.optional(S.NullOr(S.Number)),
+  /** Goals by away team at this point (for goal events) */
+  goalsAway: S.optional(S.NullOr(S.Number)),
+}) {}
+
+/**
+ * Normalized match event for UI consumption
+ */
+export class MatchEvent extends S.Class<MatchEvent>("MatchEvent")({
+  /** Event type: "card", "goal", "substitution" */
+  type: S.Literal("card", "goal", "substitution"),
+  /** Card type (only for card events) */
+  cardType: S.optional(CardType),
+  /** Minute when the event occurred */
+  minute: S.optional(S.Number),
+  /** Player ID */
+  playerId: S.optional(S.Number),
+  /** Player name */
+  playerName: S.optional(S.String),
+  /** Team side: "home" or "away" */
+  team: S.optional(S.Literal("home", "away")),
+}) {}
+
+// ============================================================================
 // Match Detail Schemas (for /match/{id} endpoint)
 // ============================================================================
 
@@ -287,7 +357,8 @@ export class FootbalistoMatchDetailResponse extends S.Class<FootbalistoMatchDeta
 )({
   general: FootbalistoMatchDetailGeneral,
   lineup: S.optional(FootbalistoLineup),
-  events: S.optional(S.Array(S.Unknown)), // Future: model match events if needed
+  substitutes: S.optional(FootbalistoLineup),
+  events: S.optional(S.Array(FootbalistoMatchEvent)),
 }) {}
 
 /**
@@ -309,6 +380,8 @@ export class MatchLineupPlayer extends S.Class<MatchLineupPlayer>(
     "subbed_in",
     "unknown",
   ),
+  /** Card received by player (if any) */
+  card: S.optional(CardType),
 }) {}
 
 /**
