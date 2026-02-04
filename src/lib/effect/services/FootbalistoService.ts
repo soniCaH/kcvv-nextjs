@@ -166,24 +166,37 @@ function transformLineupPlayer(
  * Parse card type from a Footbalisto match event.
  *
  * Uses the action object's type and subtype fields.
+ * Supports both structured format (type: "CARD", subtype: "YELLOW") and
+ * legacy Dutch values (subtype: "geel", "rood", "tweedegeel").
  *
  * @param event - The Footbalisto match event to parse
  * @returns The card type if this is a card event, undefined otherwise
  */
 function parseCardType(event: FootbalistoMatchEvent): CardType | undefined {
   const type = event.action.type.toUpperCase();
-  const subtype = event.action.subtype?.toUpperCase();
+  const subtype = event.action.subtype?.toLowerCase();
 
-  // Structured format: type = "CARD", subtype = "YELLOW" | "RED" | "DOUBLE_YELLOW"
-  if (type === "CARD") {
-    if (subtype === "YELLOW") return "yellow";
-    if (subtype === "RED") return "red";
-    if (subtype === "DOUBLE_YELLOW" || subtype === "YELLOWRED") {
-      return "double_yellow";
-    }
+  // Only process CARD type events
+  if (type !== "CARD") {
+    return undefined;
   }
 
-  return undefined;
+  // Map subtype to card type (supports both structured and legacy Dutch values)
+  switch (subtype) {
+    case "yellow":
+    case "geel":
+      return "yellow";
+    case "red":
+    case "rood":
+      return "red";
+    case "double_yellow":
+    case "yellowred":
+    case "tweedegeel":
+    case "tweede_geel":
+      return "double_yellow";
+    default:
+      return undefined;
+  }
 }
 
 /**

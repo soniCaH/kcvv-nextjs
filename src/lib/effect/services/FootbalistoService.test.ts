@@ -1189,4 +1189,509 @@ describe("FootbalistoService", () => {
       ).rejects.toThrow();
     }, 15000);
   });
+
+  describe("card events transformation", () => {
+    const createMatchResponseWithEvents = (
+      events: unknown[],
+      homeLineup: unknown[] = [],
+    ) => ({
+      general: {
+        id: 3000,
+        date: "2025-01-20 15:00",
+        homeClub: { id: 1, name: "Home" },
+        awayClub: { id: 2, name: "Away" },
+        goalsHomeTeam: 1,
+        goalsAwayTeam: 1,
+        status: 1,
+        competitionType: "League",
+        viewGameReport: true,
+      },
+      lineup: { home: homeLineup, away: [] },
+      events,
+    });
+
+    const createCardEvent = (
+      playerId: number,
+      subtype: string,
+      type = "CARD",
+    ) => ({
+      action: { type, subtype, sortOrder: 2, id: 2 },
+      minute: 45,
+      playerId,
+      playerName: `Player ${playerId}`,
+      clubId: 1,
+    });
+
+    it("should map yellow card to player", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [createCardEvent(100, "YELLOW")],
+        [
+          {
+            playerName: "Player 100",
+            number: 5,
+            playerId: 100,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3000);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBe("yellow");
+    });
+
+    it("should map red card to player", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [createCardEvent(101, "RED")],
+        [
+          {
+            playerName: "Player 101",
+            number: 8,
+            playerId: 101,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3001);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBe("red");
+    });
+
+    it("should map double yellow card to player", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [createCardEvent(102, "DOUBLE_YELLOW")],
+        [
+          {
+            playerName: "Player 102",
+            number: 3,
+            playerId: 102,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3002);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBe("double_yellow");
+    });
+
+    it("should handle legacy Dutch 'geel' subtype", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [createCardEvent(103, "geel")],
+        [
+          {
+            playerName: "Player 103",
+            number: 6,
+            playerId: 103,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3003);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBe("yellow");
+    });
+
+    it("should handle legacy Dutch 'rood' subtype", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [createCardEvent(104, "rood")],
+        [
+          {
+            playerName: "Player 104",
+            number: 9,
+            playerId: 104,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3004);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBe("red");
+    });
+
+    it("should handle legacy Dutch 'tweedegeel' subtype", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [createCardEvent(105, "tweedegeel")],
+        [
+          {
+            playerName: "Player 105",
+            number: 4,
+            playerId: 105,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3005);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBe("double_yellow");
+    });
+
+    it("should convert two yellow cards to double_yellow", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [
+          createCardEvent(106, "YELLOW"),
+          createCardEvent(106, "YELLOW"), // Second yellow
+        ],
+        [
+          {
+            playerName: "Player 106",
+            number: 7,
+            playerId: 106,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3006);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBe("double_yellow");
+    });
+
+    it("should ignore non-CARD events", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [
+          {
+            action: { type: "GOAL", subtype: null },
+            minute: 30,
+            playerId: 107,
+          },
+        ],
+        [
+          {
+            playerName: "Player 107",
+            number: 11,
+            playerId: 107,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3007);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBeUndefined();
+    });
+
+    it("should not add card for player without playerId", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [
+          {
+            action: { type: "CARD", subtype: "YELLOW" },
+            minute: 30,
+            playerId: null,
+          },
+        ],
+        [
+          {
+            playerName: "No ID Player",
+            number: 99,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3008);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBeUndefined();
+    });
+  });
+
+  describe("substitutes merging", () => {
+    it("should merge lineup with substitutes", async () => {
+      const mockResponse = {
+        general: {
+          id: 4000,
+          date: "2025-01-20 15:00",
+          homeClub: { id: 1, name: "Home" },
+          awayClub: { id: 2, name: "Away" },
+          goalsHomeTeam: 2,
+          goalsAwayTeam: 0,
+          status: 1,
+          competitionType: "League",
+          viewGameReport: true,
+        },
+        lineup: {
+          home: [
+            {
+              playerName: "Starter",
+              number: 1,
+              playerId: 1,
+              status: "basis",
+              changed: false,
+            },
+          ],
+          away: [],
+        },
+        substitutes: {
+          home: [
+            {
+              playerName: "Sub",
+              number: 12,
+              playerId: 12,
+              status: "bank",
+              changed: false,
+            },
+          ],
+          away: [],
+        },
+        events: [],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(4000);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home).toHaveLength(2);
+      expect(result.lineup?.home[0].name).toBe("Starter");
+      expect(result.lineup?.home[1].name).toBe("Sub");
+    });
+
+    it('should transform "bank" status to "substitute"', async () => {
+      const mockResponse = {
+        general: {
+          id: 4001,
+          date: "2025-01-20 15:00",
+          homeClub: { id: 1, name: "Home" },
+          awayClub: { id: 2, name: "Away" },
+          goalsHomeTeam: 1,
+          goalsAwayTeam: 1,
+          status: 1,
+          competitionType: "League",
+          viewGameReport: true,
+        },
+        lineup: { home: [], away: [] },
+        substitutes: {
+          home: [
+            {
+              playerName: "Bench Player",
+              number: 15,
+              playerId: 15,
+              status: "bank",
+              changed: false,
+            },
+          ],
+          away: [],
+        },
+        events: [],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(4001);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].status).toBe("substitute");
+    });
+
+    it('should transform "bank" with changed=true to "subbed_in"', async () => {
+      const mockResponse = {
+        general: {
+          id: 4002,
+          date: "2025-01-20 15:00",
+          homeClub: { id: 1, name: "Home" },
+          awayClub: { id: 2, name: "Away" },
+          goalsHomeTeam: 3,
+          goalsAwayTeam: 2,
+          status: 1,
+          competitionType: "League",
+          viewGameReport: true,
+        },
+        lineup: { home: [], away: [] },
+        substitutes: {
+          home: [
+            {
+              playerName: "Used Sub",
+              number: 18,
+              playerId: 18,
+              status: "bank",
+              changed: true,
+              minutesPlayed: 30,
+            },
+          ],
+          away: [],
+        },
+        events: [],
+      };
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(4002);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].status).toBe("subbed_in");
+      expect(result.lineup?.home[0].minutesPlayed).toBe(30);
+    });
+  });
 });
