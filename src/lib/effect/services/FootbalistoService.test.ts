@@ -1532,6 +1532,117 @@ describe("FootbalistoService", () => {
 
       expect(result.lineup?.home[0].card).toBeUndefined();
     });
+
+    it("should ignore CARD events with unknown subtype", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [
+          {
+            action: { type: "CARD", subtype: "UNKNOWN_TYPE" },
+            minute: 30,
+            playerId: 108,
+          },
+        ],
+        [
+          {
+            playerName: "Player 108",
+            number: 2,
+            playerId: 108,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3009);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBeUndefined();
+    });
+
+    it("should let red card override existing yellow card", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [
+          createCardEvent(109, "YELLOW"),
+          createCardEvent(109, "RED"), // Red after yellow
+        ],
+        [
+          {
+            playerName: "Player 109",
+            number: 6,
+            playerId: 109,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3010);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBe("red");
+    });
+
+    it("should let double_yellow override existing yellow card", async () => {
+      const mockResponse = createMatchResponseWithEvents(
+        [
+          createCardEvent(110, "YELLOW"),
+          createCardEvent(110, "DOUBLE_YELLOW"), // Explicit double yellow after first yellow
+        ],
+        [
+          {
+            playerName: "Player 110",
+            number: 14,
+            playerId: 110,
+            status: "basis",
+            changed: false,
+          },
+        ],
+      );
+
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const footbalisto = yield* FootbalistoService;
+        return yield* footbalisto.getMatchDetail(3011);
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FootbalistoServiceLive)),
+      );
+
+      expect(result.lineup?.home[0].card).toBe("double_yellow");
+    });
   });
 
   describe("substitutes merging", () => {
