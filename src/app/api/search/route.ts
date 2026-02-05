@@ -93,8 +93,11 @@ const searchArticles = (query: string, limit = 50) =>
 /**
  * Search across staff members by name
  * Staff are stored as node--staff in Drupal (separate from players)
+ *
+ * NOTE: Currently disabled because staff detail pages don't exist yet.
+ * Prefixed with _ to indicate intentionally unused until staff pages are implemented.
  */
-const searchStaff = (query: string, limit = 200) =>
+const _searchStaff = (query: string, limit = 200) =>
   Effect.gen(function* () {
     const baseUrl = process.env.DRUPAL_API_URL || "https://api.kcvvelewijt.be";
     const url = `${baseUrl}/jsonapi/node/staff?page[limit]=${limit}`;
@@ -190,8 +193,14 @@ const searchPlayers = (query: string) =>
     const drupal = yield* DrupalService;
 
     // Fetch ALL players by paginating through all pages
-    // Drupal may have a max limit per page, so we need to fetch multiple pages
-    const playerMap = new Map(); // Use Map to deduplicate by ID
+    // Drupal API has a max limit per page (~50), so we need to fetch multiple pages
+    //
+    // NOTE: We use a Map to deduplicate because DrupalService sorts by field_shirtnumber,
+    // and many players have null shirt numbers. When sorting by NULL values, the order
+    // is non-deterministic, causing the same players to appear on multiple pages.
+    // This should be fixed in DrupalService by using a stable sort (e.g., by ID or title),
+    // but for now deduplication handles it.
+    const playerMap = new Map();
     let page = 1;
     let hasMore = true;
 
@@ -200,7 +209,7 @@ const searchPlayers = (query: string) =>
     while (hasMore && page <= 20) {
       // Safety limit of 20 pages
       const { players, links } = yield* drupal.getPlayers({
-        limit: 50, // Use smaller page size
+        limit: 50,
         page,
       });
 
@@ -208,7 +217,7 @@ const searchPlayers = (query: string) =>
         `[Search API] Page ${page}: fetched ${players.length} players`,
       );
 
-      // Add to map to deduplicate
+      // Deduplicate by ID
       for (const player of players) {
         playerMap.set(player.id, player);
       }
@@ -384,17 +393,19 @@ export async function GET(request: NextRequest) {
         results.push(...articles);
       }
 
-      // Search players and staff
+      // Search players
       if (!type || type === "player") {
         console.log("[Search API] Searching players...");
         const players = yield* searchPlayers(query);
         console.log(`[Search API] Found ${players.length} players`);
         results.push(...players);
 
-        console.log("[Search API] Searching staff...");
-        const staff = yield* searchStaff(query);
-        console.log(`[Search API] Found ${staff.length} staff`);
-        results.push(...staff);
+        // TODO: Add staff search once staff detail pages are implemented
+        // Staff pages don't exist yet, so we're excluding them from search
+        // console.log("[Search API] Searching staff...");
+        // const staff = yield* searchStaff(query);
+        // console.log(`[Search API] Found ${staff.length} staff`);
+        // results.push(...staff);
       }
 
       // Search teams
