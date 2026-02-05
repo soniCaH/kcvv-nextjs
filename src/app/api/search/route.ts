@@ -194,13 +194,7 @@ const searchPlayers = (query: string) =>
 
     // Fetch ALL players by paginating through all pages
     // Drupal API has a max limit per page (~50), so we need to fetch multiple pages
-    //
-    // NOTE: We use a Map to deduplicate because DrupalService sorts by field_shirtnumber,
-    // and many players have null shirt numbers. When sorting by NULL values, the order
-    // is non-deterministic, causing the same players to appear on multiple pages.
-    // This should be fixed in DrupalService by using a stable sort (e.g., by ID or title),
-    // but for now deduplication handles it.
-    const playerMap = new Map();
+    const allPlayers = [];
     let page = 1;
     let hasMore = true;
 
@@ -217,16 +211,11 @@ const searchPlayers = (query: string) =>
         `[Search API] Page ${page}: fetched ${players.length} players`,
       );
 
-      // Deduplicate by ID
-      for (const player of players) {
-        playerMap.set(player.id, player);
-      }
+      allPlayers.push(...players);
 
       hasMore = !!links?.next;
       page++;
     }
-
-    const allPlayers = Array.from(playerMap.values());
 
     console.log(`\n[Search API] ========== PLAYER SEARCH ==========`);
     console.log(`[Search API] Query: "${query}"`);
