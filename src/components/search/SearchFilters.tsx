@@ -7,6 +7,8 @@
 
 import { SearchResultType } from "./SearchInterface";
 import { cn } from "@/lib/utils/cn";
+import { Icon } from "@/components/design-system";
+import { Search, Newspaper, User, Users, type LucideIcon } from "lucide-react";
 
 export interface SearchFiltersProps {
   /**
@@ -31,12 +33,12 @@ export interface SearchFiltersProps {
 const filters: Array<{
   type: SearchResultType | "all";
   label: string;
-  icon: string;
+  icon: LucideIcon;
 }> = [
-  { type: "all", label: "Alles", icon: "🔍" },
-  { type: "article", label: "Nieuws", icon: "📰" },
-  { type: "player", label: "Spelers", icon: "⚽" },
-  { type: "team", label: "Teams", icon: "🏆" },
+  { type: "all", label: "Alles", icon: Search },
+  { type: "article", label: "Nieuws", icon: Newspaper },
+  { type: "player", label: "Spelers", icon: User },
+  { type: "team", label: "Teams", icon: Users },
 ];
 
 /**
@@ -65,7 +67,7 @@ export const SearchFilters = ({
                 : "bg-white text-gray-700 border border-gray-200 hover:border-green-main hover:bg-green-50",
             )}
           >
-            <span>{filter.icon}</span>
+            <Icon icon={filter.icon} size="sm" />
             <span>{filter.label}</span>
             <span
               className={cn(
