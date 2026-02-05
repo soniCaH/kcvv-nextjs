@@ -299,12 +299,17 @@ const searchPlayers = (query: string) =>
         player.attributes.field_position_short ||
         undefined;
 
+      // Transform Drupal path from /player/slug to /players/slug (app uses plural)
+      const slug =
+        player.attributes.path.alias.replace("/player/", "") || player.id;
+      const url = `/players/${slug}`;
+
       return {
         id: player.id,
         type: "player",
         title: fullName,
         description,
-        url: player.attributes.path.alias,
+        url,
         imageUrl,
       };
     });
