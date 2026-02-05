@@ -5,7 +5,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { Effect } from "effect";
+import { Schema as S } from "effect";
 import { DrupalService, DrupalServiceLive } from "@/lib/effect/services";
+import { StaffResponse } from "@/lib/effect/schemas";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -89,19 +91,112 @@ const searchArticles = (query: string, limit = 50) =>
   });
 
 /**
- * Search across players and staff by name
- * Note: Staff members are stored as node--player in Drupal
+ * Search across staff members by name
+ * Staff are stored as node--staff in Drupal (separate from players)
+ */
+const searchStaff = (query: string, limit = 200) =>
+  Effect.gen(function* () {
+    const baseUrl = process.env.DRUPAL_API_URL || "https://api.kcvvelewijt.be";
+    const url = `${baseUrl}/jsonapi/node/staff?page[limit]=${limit}`;
+
+    console.log(`[Search API] Fetching staff from: ${url}`);
+
+    const response = yield* Effect.tryPromise({
+      try: () =>
+        fetch(url, {
+          headers: {
+            Accept: "application/vnd.api+json",
+            "Content-Type": "application/vnd.api+json",
+          },
+        }),
+      catch: (error) => new Error(`Failed to fetch staff: ${error}`),
+    });
+
+    if (!response.ok) {
+      console.error(
+        `[Search API] Staff fetch failed: ${response.status} ${response.statusText}`,
+      );
+      return [];
+    }
+
+    const json = yield* Effect.tryPromise({
+      try: () => response.json(),
+      catch: () => new Error("Failed to parse staff JSON"),
+    });
+
+    const staffResponse = yield* S.decodeUnknown(StaffResponse)(json).pipe(
+      Effect.mapError(
+        (error) => new Error(`Staff validation failed: ${error}`),
+      ),
+    );
+
+    console.log(
+      `[Search API] Total staff fetched: ${staffResponse.data.length}`,
+    );
+
+    const queryLower = query.toLowerCase();
+
+    // Filter and transform staff to SearchResult format
+    const results: SearchResult[] = [];
+    for (const staff of staffResponse.data) {
+      const firstName = staff.attributes.field_firstname || "";
+      const lastName = staff.attributes.field_lastname || "";
+      const fullName = `${firstName} ${lastName}`.toLowerCase().trim();
+      const title = staff.attributes.title.toLowerCase();
+
+      // Search in name fields or title
+      const nameMatch =
+        fullName.includes(queryLower) || title.includes(queryLower);
+
+      // Search in position fields
+      const positionStaff = staff.attributes.field_position_staff || "";
+      const positionShort = staff.attributes.field_position_short || "";
+      const positionMatch =
+        positionStaff.toLowerCase().includes(queryLower) ||
+        positionShort.toLowerCase().includes(queryLower);
+
+      if (nameMatch || positionMatch) {
+        const displayName = `${firstName} ${lastName}`.trim() || title;
+
+        // Get image URL if available
+        const imageData = staff.relationships.field_image?.data;
+        const imageUrl =
+          imageData && "uri" in imageData ? imageData.uri.url : undefined;
+
+        results.push({
+          id: staff.id,
+          type: "player", // Use "player" type for consistency in UI
+          title: displayName,
+          description: positionStaff || positionShort || "Staff",
+          url: staff.attributes.path.alias,
+          imageUrl,
+        });
+
+        console.log(
+          `[Search API] Staff match: "${displayName}" (${staff.attributes.path.alias})`,
+        );
+      }
+    }
+
+    return results;
+  });
+
+/**
+ * Search across players by name
+ * Note: Players are stored as node--player in Drupal
  */
 const searchPlayers = (query: string, limit = 500) =>
   Effect.gen(function* () {
     const drupal = yield* DrupalService;
     // Fetch more players to include staff members (who are also stored as players)
     // Staff typically don't have shirt numbers so they appear at the end when sorted
-    const { players } = yield* drupal.getPlayers({ limit });
+    console.log(`[Search API] Requesting ${limit} players from Drupal...`);
+    const { players, links } = yield* drupal.getPlayers({ limit });
 
     console.log(`\n[Search API] ========== PLAYER SEARCH ==========`);
     console.log(`[Search API] Query: "${query}"`);
     console.log(`[Search API] Total players fetched: ${players.length}`);
+    console.log(`[Search API] Has next page: ${!!links?.next}`);
 
     // Log first few and last few players to see the data structure
     if (players.length > 0) {
@@ -262,12 +357,17 @@ export async function GET(request: NextRequest) {
         results.push(...articles);
       }
 
-      // Search players
+      // Search players and staff
       if (!type || type === "player") {
         console.log("[Search API] Searching players...");
         const players = yield* searchPlayers(query);
         console.log(`[Search API] Found ${players.length} players`);
         results.push(...players);
+
+        console.log("[Search API] Searching staff...");
+        const staff = yield* searchStaff(query);
+        console.log(`[Search API] Found ${staff.length} staff`);
+        results.push(...staff);
       }
 
       // Search teams
