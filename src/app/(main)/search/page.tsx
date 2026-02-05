@@ -4,7 +4,9 @@
  */
 
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SearchInterface } from "@/components/search";
+import { Spinner } from "@/components/design-system";
 
 export const metadata: Metadata = {
   title: "Zoeken | KCVV Elewijt",
@@ -43,7 +45,15 @@ export default function SearchPage() {
 
       {/* Search Interface */}
       <div className="max-w-5xl mx-auto px-4 py-12">
-        <SearchInterface />
+        <Suspense
+          fallback={
+            <div className="flex justify-center py-12">
+              <Spinner size="lg" />
+            </div>
+          }
+        >
+          <SearchInterface />
+        </Suspense>
       </div>
     </div>
   );
