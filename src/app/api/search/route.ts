@@ -185,23 +185,44 @@ const searchStaff = (query: string, limit = 200) =>
  * Search across players by name
  * Note: Players are stored as node--player in Drupal
  */
-const searchPlayers = (query: string, limit = 500) =>
+const searchPlayers = (query: string) =>
   Effect.gen(function* () {
     const drupal = yield* DrupalService;
-    // Fetch more players to include staff members (who are also stored as players)
-    // Staff typically don't have shirt numbers so they appear at the end when sorted
-    console.log(`[Search API] Requesting ${limit} players from Drupal...`);
-    const { players, links } = yield* drupal.getPlayers({ limit });
+
+    // Fetch ALL players by paginating through all pages
+    // Drupal may have a max limit per page, so we need to fetch multiple pages
+    const allPlayers = [];
+    let page = 1;
+    let hasMore = true;
+
+    console.log(`[Search API] Fetching all players (paginated)...`);
+
+    while (hasMore && page <= 20) {
+      // Safety limit of 20 pages
+      const { players, links } = yield* drupal.getPlayers({
+        limit: 50, // Use smaller page size
+        page,
+      });
+
+      console.log(
+        `[Search API] Page ${page}: fetched ${players.length} players`,
+      );
+      allPlayers.push(...players);
+
+      hasMore = !!links?.next;
+      page++;
+    }
 
     console.log(`\n[Search API] ========== PLAYER SEARCH ==========`);
     console.log(`[Search API] Query: "${query}"`);
-    console.log(`[Search API] Total players fetched: ${players.length}`);
-    console.log(`[Search API] Has next page: ${!!links?.next}`);
+    console.log(
+      `[Search API] Total players fetched: ${allPlayers.length} (across ${page - 1} pages)`,
+    );
 
     // Log first few and last few players to see the data structure
-    if (players.length > 0) {
+    if (allPlayers.length > 0) {
       console.log(`\n[Search API] First 3 players:`);
-      players.slice(0, 3).forEach((p, i) => {
+      allPlayers.slice(0, 3).forEach((p, i) => {
         console.log(`  ${i + 1}. "${p.attributes.title}"`);
         console.log(`     firstName: "${p.attributes.field_firstname}"`);
         console.log(`     lastName: "${p.attributes.field_lastname}"`);
@@ -212,9 +233,9 @@ const searchPlayers = (query: string, limit = 500) =>
         console.log(`     shirt: ${p.attributes.field_shirtnumber}`);
       });
 
-      console.log(`\n[Search API] Last 3 players (likely staff):`);
-      players.slice(-3).forEach((p, i) => {
-        console.log(`  ${players.length - 2 + i}. "${p.attributes.title}"`);
+      console.log(`\n[Search API] Last 3 players:`);
+      allPlayers.slice(-3).forEach((p, i) => {
+        console.log(`  ${allPlayers.length - 2 + i}. "${p.attributes.title}"`);
         console.log(`     firstName: "${p.attributes.field_firstname}"`);
         console.log(`     lastName: "${p.attributes.field_lastname}"`);
         console.log(`     position: "${p.attributes.field_position}"`);
@@ -227,7 +248,7 @@ const searchPlayers = (query: string, limit = 500) =>
 
     const queryLower = query.toLowerCase();
 
-    const filtered = players.filter((player) => {
+    const filtered = allPlayers.filter((player) => {
       const firstName = player.attributes.field_firstname || "";
       const lastName = player.attributes.field_lastname || "";
       const fullName = `${firstName} ${lastName}`.toLowerCase().trim();
