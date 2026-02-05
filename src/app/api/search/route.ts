@@ -191,7 +191,7 @@ const searchPlayers = (query: string) =>
 
     // Fetch ALL players by paginating through all pages
     // Drupal may have a max limit per page, so we need to fetch multiple pages
-    const allPlayers = [];
+    const playerMap = new Map(); // Use Map to deduplicate by ID
     let page = 1;
     let hasMore = true;
 
@@ -207,11 +207,17 @@ const searchPlayers = (query: string) =>
       console.log(
         `[Search API] Page ${page}: fetched ${players.length} players`,
       );
-      allPlayers.push(...players);
+
+      // Add to map to deduplicate
+      for (const player of players) {
+        playerMap.set(player.id, player);
+      }
 
       hasMore = !!links?.next;
       page++;
     }
+
+    const allPlayers = Array.from(playerMap.values());
 
     console.log(`\n[Search API] ========== PLAYER SEARCH ==========`);
     console.log(`[Search API] Query: "${query}"`);
