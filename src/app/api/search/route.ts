@@ -96,45 +96,59 @@ const searchPlayers = (query: string, limit = 100) =>
     const drupal = yield* DrupalService;
     const { players } = yield* drupal.getPlayers({ limit });
 
+    console.log(`[Search API] Total players fetched: ${players.length}`);
+    if (players.length > 0) {
+      console.log(`[Search API] Sample player: ${players[0].attributes.title}`);
+    }
+
     const queryLower = query.toLowerCase();
 
-    return players
-      .filter((player) => {
-        const firstName = player.attributes.field_firstname || "";
-        const lastName = player.attributes.field_lastname || "";
-        const fullName = `${firstName} ${lastName}`.toLowerCase().trim();
-        const title = player.attributes.title.toLowerCase();
+    const filtered = players.filter((player) => {
+      const firstName = player.attributes.field_firstname || "";
+      const lastName = player.attributes.field_lastname || "";
+      const fullName = `${firstName} ${lastName}`.toLowerCase().trim();
+      const title = player.attributes.title.toLowerCase();
 
-        // Search in name fields or title
-        const nameMatch =
-          fullName.includes(queryLower) || title.includes(queryLower);
+      // Search in name fields or title
+      const nameMatch =
+        fullName.includes(queryLower) || title.includes(queryLower);
 
-        const positionMatch =
-          player.attributes.field_position
-            ?.toLowerCase()
-            .includes(queryLower) || false;
+      const positionMatch =
+        player.attributes.field_position?.toLowerCase().includes(queryLower) ||
+        false;
 
-        return nameMatch || positionMatch;
-      })
-      .map((player): SearchResult => {
-        const firstName = player.attributes.field_firstname || "";
-        const lastName = player.attributes.field_lastname || "";
-        const fullName =
-          `${firstName} ${lastName}`.trim() || player.attributes.title;
+      const matches = nameMatch || positionMatch;
 
-        const imageData = player.relationships.field_image?.data;
-        const imageUrl =
-          imageData && "uri" in imageData ? imageData.uri.url : undefined;
+      if (matches) {
+        console.log(
+          `[Search API] Player match: "${title}" (firstName: "${firstName}", lastName: "${lastName}")`,
+        );
+      }
 
-        return {
-          id: player.id,
-          type: "player",
-          title: fullName,
-          description: player.attributes.field_position || undefined,
-          url: player.attributes.path.alias,
-          imageUrl,
-        };
-      });
+      return matches;
+    });
+
+    console.log(`[Search API] Filtered players: ${filtered.length}`);
+
+    return filtered.map((player): SearchResult => {
+      const firstName = player.attributes.field_firstname || "";
+      const lastName = player.attributes.field_lastname || "";
+      const fullName =
+        `${firstName} ${lastName}`.trim() || player.attributes.title;
+
+      const imageData = player.relationships.field_image?.data;
+      const imageUrl =
+        imageData && "uri" in imageData ? imageData.uri.url : undefined;
+
+      return {
+        id: player.id,
+        type: "player",
+        title: fullName,
+        description: player.attributes.field_position || undefined,
+        url: player.attributes.path.alias,
+        imageUrl,
+      };
+    });
   });
 
 /**
