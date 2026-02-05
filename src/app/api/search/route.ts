@@ -78,10 +78,10 @@ const searchArticles = (query: string, limit = 50) =>
 /**
  * Search across players by name
  */
-const searchPlayers = (query: string) =>
+const searchPlayers = (query: string, limit = 100) =>
   Effect.gen(function* () {
     const drupal = yield* DrupalService;
-    const { players } = yield* drupal.getPlayers();
+    const { players } = yield* drupal.getPlayers({ limit });
 
     const queryLower = query.toLowerCase();
 
@@ -89,12 +89,18 @@ const searchPlayers = (query: string) =>
       .filter((player) => {
         const firstName = player.attributes.field_firstname || "";
         const lastName = player.attributes.field_lastname || "";
-        const fullName = `${firstName} ${lastName}`.toLowerCase();
-        const nameMatch = fullName.includes(queryLower);
+        const fullName = `${firstName} ${lastName}`.toLowerCase().trim();
+        const title = player.attributes.title.toLowerCase();
+
+        // Search in name fields or title
+        const nameMatch =
+          fullName.includes(queryLower) || title.includes(queryLower);
+
         const positionMatch =
           player.attributes.field_position
             ?.toLowerCase()
             .includes(queryLower) || false;
+
         return nameMatch || positionMatch;
       })
       .map((player): SearchResult => {
