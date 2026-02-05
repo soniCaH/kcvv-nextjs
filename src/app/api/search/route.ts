@@ -89,16 +89,25 @@ const searchArticles = (query: string, limit = 50) =>
   });
 
 /**
- * Search across players by name
+ * Search across players and staff by name
+ * Note: Staff members are stored as node--player in Drupal
  */
-const searchPlayers = (query: string, limit = 100) =>
+const searchPlayers = (query: string, limit = 500) =>
   Effect.gen(function* () {
     const drupal = yield* DrupalService;
+    // Fetch more players to include staff members (who are also stored as players)
+    // Staff typically don't have shirt numbers so they appear at the end when sorted
     const { players } = yield* drupal.getPlayers({ limit });
 
     console.log(`[Search API] Total players fetched: ${players.length}`);
     if (players.length > 0) {
       console.log(`[Search API] Sample player: ${players[0].attributes.title}`);
+      console.log(
+        `[Search API] First name: "${players[0].attributes.field_firstname}"`,
+      );
+      console.log(
+        `[Search API] Last name: "${players[0].attributes.field_lastname}"`,
+      );
     }
 
     const queryLower = query.toLowerCase();
@@ -113,15 +122,18 @@ const searchPlayers = (query: string, limit = 100) =>
       const nameMatch =
         fullName.includes(queryLower) || title.includes(queryLower);
 
+      // Search in position (for players) and position_short (for staff like T1, T2)
+      const position = player.attributes.field_position || "";
+      const positionShort = player.attributes.field_position_short || "";
       const positionMatch =
-        player.attributes.field_position?.toLowerCase().includes(queryLower) ||
-        false;
+        position.toLowerCase().includes(queryLower) ||
+        positionShort.toLowerCase().includes(queryLower);
 
       const matches = nameMatch || positionMatch;
 
       if (matches) {
         console.log(
-          `[Search API] Player match: "${title}" (firstName: "${firstName}", lastName: "${lastName}")`,
+          `[Search API] Player match: "${title}" (firstName: "${firstName}", lastName: "${lastName}", position: "${position}", positionShort: "${positionShort}")`,
         );
       }
 
@@ -140,11 +152,17 @@ const searchPlayers = (query: string, limit = 100) =>
       const imageUrl =
         imageData && "uri" in imageData ? imageData.uri.url : undefined;
 
+      // Use field_position for players, field_position_short for staff (e.g., T1, T2)
+      const description =
+        player.attributes.field_position ||
+        player.attributes.field_position_short ||
+        undefined;
+
       return {
         id: player.id,
         type: "player",
         title: fullName,
-        description: player.attributes.field_position || undefined,
+        description,
         url: player.attributes.path.alias,
         imageUrl,
       };
