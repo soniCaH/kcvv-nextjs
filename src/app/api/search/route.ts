@@ -99,15 +99,35 @@ const searchPlayers = (query: string, limit = 500) =>
     // Staff typically don't have shirt numbers so they appear at the end when sorted
     const { players } = yield* drupal.getPlayers({ limit });
 
+    console.log(`\n[Search API] ========== PLAYER SEARCH ==========`);
+    console.log(`[Search API] Query: "${query}"`);
     console.log(`[Search API] Total players fetched: ${players.length}`);
+
+    // Log first few and last few players to see the data structure
     if (players.length > 0) {
-      console.log(`[Search API] Sample player: ${players[0].attributes.title}`);
-      console.log(
-        `[Search API] First name: "${players[0].attributes.field_firstname}"`,
-      );
-      console.log(
-        `[Search API] Last name: "${players[0].attributes.field_lastname}"`,
-      );
+      console.log(`\n[Search API] First 3 players:`);
+      players.slice(0, 3).forEach((p, i) => {
+        console.log(`  ${i + 1}. "${p.attributes.title}"`);
+        console.log(`     firstName: "${p.attributes.field_firstname}"`);
+        console.log(`     lastName: "${p.attributes.field_lastname}"`);
+        console.log(`     position: "${p.attributes.field_position}"`);
+        console.log(
+          `     position_short: "${p.attributes.field_position_short}"`,
+        );
+        console.log(`     shirt: ${p.attributes.field_shirtnumber}`);
+      });
+
+      console.log(`\n[Search API] Last 3 players (likely staff):`);
+      players.slice(-3).forEach((p, i) => {
+        console.log(`  ${players.length - 2 + i}. "${p.attributes.title}"`);
+        console.log(`     firstName: "${p.attributes.field_firstname}"`);
+        console.log(`     lastName: "${p.attributes.field_lastname}"`);
+        console.log(`     position: "${p.attributes.field_position}"`);
+        console.log(
+          `     position_short: "${p.attributes.field_position_short}"`,
+        );
+        console.log(`     shirt: ${p.attributes.field_shirtnumber}`);
+      });
     }
 
     const queryLower = query.toLowerCase();
@@ -131,16 +151,17 @@ const searchPlayers = (query: string, limit = 500) =>
 
       const matches = nameMatch || positionMatch;
 
-      if (matches) {
-        console.log(
-          `[Search API] Player match: "${title}" (firstName: "${firstName}", lastName: "${lastName}", position: "${position}", positionShort: "${positionShort}")`,
-        );
-      }
-
       return matches;
     });
 
-    console.log(`[Search API] Filtered players: ${filtered.length}`);
+    console.log(`\n[Search API] Matches found: ${filtered.length}`);
+    if (filtered.length > 0) {
+      console.log(`[Search API] Matched players:`);
+      filtered.forEach((p) => {
+        console.log(`  - "${p.attributes.title}" (${p.attributes.path.alias})`);
+      });
+    }
+    console.log(`[Search API] ========================================\n`);
 
     return filtered.map((player): SearchResult => {
       const firstName = player.attributes.field_firstname || "";
