@@ -62,11 +62,24 @@ const searchArticles = (query: string, limit = 50) =>
             )
             .filter((tag): tag is string => tag !== null) || [];
 
+        // Use summary if available, otherwise strip HTML from body
+        let description: string | undefined;
+        if (article.attributes.body?.summary) {
+          description = article.attributes.body.summary.substring(0, 150);
+        } else if (article.attributes.body?.value) {
+          // Strip HTML tags and get first 150 chars
+          description = article.attributes.body.value
+            .replace(/<[^>]*>/g, "")
+            .replace(/\s+/g, " ")
+            .trim()
+            .substring(0, 150);
+        }
+
         return {
           id: article.id,
           type: "article",
           title: article.attributes.title,
-          description: article.attributes.body?.value?.substring(0, 150),
+          description,
           url: article.attributes.path.alias,
           imageUrl,
           tags,
