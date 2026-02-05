@@ -1,5 +1,6 @@
 /**
  * SearchFilters Storybook Stories
+ * Demonstrates filter states with Lucide icons
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
