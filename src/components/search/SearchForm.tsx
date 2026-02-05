@@ -60,8 +60,8 @@ export const SearchForm = ({
     <form onSubmit={handleSubmit} className="w-full">
       <div className="relative">
         {/* Search Icon */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-          <Icon icon={Search} size="sm" />
+        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+          <Icon icon={Search} size="md" />
         </div>
 
         {/* Input */}
@@ -70,7 +70,7 @@ export const SearchForm = ({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder={placeholder}
-          className="w-full pl-12 pr-24 py-4 text-lg border-2 border-gray-200 rounded-lg focus:border-green-main focus:outline-none focus:ring-2 focus:ring-green-main/20 transition-colors"
+          className="w-full pl-14 pr-28 py-5 text-xl border-2 border-gray-200 rounded-lg focus:border-green-main focus:outline-none focus:ring-2 focus:ring-green-main/20 transition-colors"
           disabled={isLoading}
           autoFocus
         />
@@ -80,10 +80,10 @@ export const SearchForm = ({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-20 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-24 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Wis zoekopdracht"
           >
-            <Icon icon={X} size="sm" />
+            <Icon icon={X} size="md" />
           </button>
         )}
 
@@ -91,7 +91,7 @@ export const SearchForm = ({
         <button
           type="submit"
           disabled={isLoading || value.trim().length < 2}
-          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-green-main text-white rounded-md hover:bg-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
+          className="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-3 bg-green-main text-white rounded-md hover:bg-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-base"
         >
           Zoek
         </button>
