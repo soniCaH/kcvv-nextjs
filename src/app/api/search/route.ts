@@ -176,28 +176,37 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    console.log(`[Search API] Query: "${query}", Type: ${type || "all"}`);
+
     // Search across content types based on filter
     const searchProgram = Effect.gen(function* () {
       const results: SearchResult[] = [];
 
       // Search articles
       if (!type || type === "article") {
+        console.log("[Search API] Searching articles...");
         const articles = yield* searchArticles(query);
+        console.log(`[Search API] Found ${articles.length} articles`);
         results.push(...articles);
       }
 
       // Search players
       if (!type || type === "player") {
+        console.log("[Search API] Searching players...");
         const players = yield* searchPlayers(query);
+        console.log(`[Search API] Found ${players.length} players`);
         results.push(...players);
       }
 
       // Search teams
       if (!type || type === "team") {
+        console.log("[Search API] Searching teams...");
         const teams = yield* searchTeams(query);
+        console.log(`[Search API] Found ${teams.length} teams`);
         results.push(...teams);
       }
 
+      console.log(`[Search API] Total results: ${results.length}`);
       return results;
     });
 
@@ -226,15 +235,20 @@ export async function GET(request: NextRequest) {
       return aTitle.localeCompare(bTitle);
     });
 
+    console.log(`[Search API] Returning ${sorted.length} sorted results`);
+
     return NextResponse.json({
       query,
       count: sorted.length,
       results: sorted,
     });
   } catch (error) {
-    console.error("Search error:", error);
+    console.error("[Search API] Error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }
