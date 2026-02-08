@@ -843,7 +843,9 @@ export const DrupalServiceLive = Layer.effect(
       Effect.gen(function* () {
         const queryParams: Record<string, string | number> = {
           include: "field_image",
-          sort: "field_shirtnumber",
+          // Sort by shirt number first, then by ID for stable pagination
+          // Many players have null shirt numbers, so ID provides a consistent tiebreaker
+          sort: "field_shirtnumber,id",
         };
 
         if (params?.teamId) {
