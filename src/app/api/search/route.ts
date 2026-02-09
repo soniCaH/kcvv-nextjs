@@ -69,14 +69,23 @@ const searchArticles = (query: string, limit = 50) =>
         if (article.attributes.body?.summary) {
           description = article.attributes.body.summary.substring(0, 150);
         } else if (article.attributes.body?.value) {
-          // Strip HTML tags securely - repeat until no tags remain
+          // Strip HTML tags securely - multi-pass to handle incomplete/nested tags
           let sanitized = article.attributes.body.value;
+
+          // First pass: explicitly remove script tags and their content
+          sanitized = sanitized.replace(
+            /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+            "",
+          );
+          sanitized = sanitized.replace(/<script[^>]*>/gi, "");
+
+          // Second pass: iteratively remove all remaining HTML tags
           let previousLength = 0;
-          // Repeat until no more tags are removed (handles nested/incomplete tags)
           while (sanitized.length !== previousLength) {
             previousLength = sanitized.length;
             sanitized = sanitized.replace(/<[^>]*>/g, "");
           }
+
           description = sanitized.replace(/\s+/g, " ").trim().substring(0, 150);
         }
 
