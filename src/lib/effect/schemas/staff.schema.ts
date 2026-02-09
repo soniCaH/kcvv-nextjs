@@ -11,7 +11,7 @@
  * appear in the "included" array and can be resolved to get full data.
  */
 
-import { Schema as S } from 'effect'
+import { Schema as S } from "effect";
 import {
   BaseDrupalNodeAttributes,
   DateFromStringOrDate,
@@ -20,23 +20,25 @@ import {
   JsonApiVersion,
   JsonApiLinks,
   DrupalResource,
-} from './common.schema'
-import { MediaImage } from './media.schema'
-import { File } from './file.schema'
+} from "./common.schema";
+import { MediaImage } from "./media.schema";
+import { File } from "./file.schema";
 
 /**
  * Staff node attributes
  */
-export class StaffAttributes extends S.Class<StaffAttributes>('StaffAttributes')({
+export class StaffAttributes extends S.Class<StaffAttributes>(
+  "StaffAttributes",
+)({
   ...BaseDrupalNodeAttributes,
-  field_firstname: S.optional(S.String),
-  field_lastname: S.optional(S.String),
-  field_position_staff: S.optional(S.String),
-  field_position_short: S.optional(S.String),
-  field_birth_date: S.optional(DateFromStringOrDate),
-  field_join_date: S.optional(DateFromStringOrDate),
-  field_vv_id: S.optional(S.String),
-  body: S.optional(DrupalBody),
+  field_firstname: S.optional(S.NullOr(S.String)),
+  field_lastname: S.optional(S.NullOr(S.String)),
+  field_position_staff: S.optional(S.NullOr(S.String)),
+  field_position_short: S.optional(S.NullOr(S.String)),
+  field_birth_date: S.optional(S.NullOr(DateFromStringOrDate)),
+  field_join_date: S.optional(S.NullOr(DateFromStringOrDate)),
+  field_vv_id: S.optional(S.NullOr(S.String)),
+  body: S.optional(S.NullOr(DrupalBody)),
 }) {}
 
 /**
@@ -45,34 +47,50 @@ export class StaffAttributes extends S.Class<StaffAttributes>('StaffAttributes')
  * Defines relationships to other entities:
  * - field_image: Staff profile photo (can be resolved DrupalImage or reference)
  */
-export class StaffRelationships extends S.Class<StaffRelationships>('StaffRelationships')({
+export class StaffRelationships extends S.Class<StaffRelationships>(
+  "StaffRelationships",
+)({
   /**
    * Staff profile image
    * Can be either:
    * - DrupalImage: Fully resolved with uri.url (after mapIncluded processing)
    * - Reference: Just type/id that needs to be resolved from included
+   * - null: No image set
    */
   field_image: S.optional(
     S.Struct({
-      data: S.optional(
+      data: S.NullOr(
         S.Union(
           DrupalImage,
           S.Struct({
-            type: S.Literal('media--image'),
+            type: S.Literal("media--image"),
             id: S.String,
-          })
-        )
+          }),
+          S.Struct({
+            type: S.Literal("file--file"),
+            id: S.String,
+            meta: S.optional(
+              S.Struct({
+                alt: S.optional(S.String),
+                title: S.optional(S.String),
+                width: S.optional(S.Number),
+                height: S.optional(S.Number),
+              }),
+            ),
+          }),
+        ),
       ),
-    })
+      links: S.optional(S.Unknown),
+    }),
   ),
 }) {}
 
 /**
  * Complete Staff node
  */
-export class Staff extends S.Class<Staff>('Staff')({
+export class Staff extends S.Class<Staff>("Staff")({
   id: S.String,
-  type: S.Literal('node--staff'),
+  type: S.Literal("node--staff"),
   attributes: StaffAttributes,
   relationships: StaffRelationships,
 }) {}
@@ -80,7 +98,7 @@ export class Staff extends S.Class<Staff>('Staff')({
 /**
  * Array of staff members
  */
-export const StaffArray = S.Array(Staff)
+export const StaffArray = S.Array(Staff);
 
 /**
  * Discriminated union of all possible included resource types for staff
@@ -96,8 +114,8 @@ export const StaffArray = S.Array(Staff)
 export const StaffIncludedResource = S.Union(
   MediaImage,
   File,
-  DrupalResource // Fallback for unknown types
-)
+  DrupalResource, // Fallback for unknown types
+);
 
 /**
  * Drupal JSON:API response for staff collections
@@ -109,7 +127,7 @@ export const StaffIncludedResource = S.Union(
  * - meta: Response metadata (count, etc.)
  * - jsonapi: JSON:API version info
  */
-export class StaffResponse extends S.Class<StaffResponse>('StaffResponse')({
+export class StaffResponse extends S.Class<StaffResponse>("StaffResponse")({
   data: StaffArray,
   included: S.optional(S.Array(StaffIncludedResource)),
   jsonapi: S.optional(JsonApiVersion),
@@ -117,7 +135,7 @@ export class StaffResponse extends S.Class<StaffResponse>('StaffResponse')({
   meta: S.optional(
     S.Struct({
       count: S.optional(S.NumberFromString),
-    })
+    }),
   ),
 }) {}
 
@@ -127,7 +145,9 @@ export class StaffResponse extends S.Class<StaffResponse>('StaffResponse')({
  * Similar to StaffResponse but data is a single Staff instead of array.
  * Used when fetching by slug/ID.
  */
-export class SingleStaffResponse extends S.Class<SingleStaffResponse>('SingleStaffResponse')({
+export class SingleStaffResponse extends S.Class<SingleStaffResponse>(
+  "SingleStaffResponse",
+)({
   data: Staff,
   included: S.optional(S.Array(StaffIncludedResource)),
   jsonapi: S.optional(JsonApiVersion),
