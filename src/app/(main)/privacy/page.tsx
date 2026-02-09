@@ -80,6 +80,7 @@ export default function PrivacyPage() {
                 >
                   info@kcvvelewijt.be
                 </a>
+                .
               </p>
               <p className="text-gray-dark">
                 <strong>E-mail (webmaster):</strong>{" "}
@@ -89,6 +90,7 @@ export default function PrivacyPage() {
                 >
                   kevin@kcvvelewijt.be
                 </a>
+                .
               </p>
             </div>
           </section>
