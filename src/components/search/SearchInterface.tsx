@@ -74,6 +74,8 @@ export const SearchInterface = ({
       if (!searchQuery || searchQuery.trim().length < 2) {
         setResults([]);
         setTotalCount(0);
+        setError(null);
+        setIsLoading(false);
         return;
       }
 

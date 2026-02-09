@@ -69,12 +69,15 @@ const searchArticles = (query: string, limit = 50) =>
         if (article.attributes.body?.summary) {
           description = article.attributes.body.summary.substring(0, 150);
         } else if (article.attributes.body?.value) {
-          // Strip HTML tags and get first 150 chars
-          description = article.attributes.body.value
-            .replace(/<[^>]*>/g, "")
-            .replace(/\s+/g, " ")
-            .trim()
-            .substring(0, 150);
+          // Strip HTML tags securely - repeat until no tags remain
+          let sanitized = article.attributes.body.value;
+          let previousLength = 0;
+          // Repeat until no more tags are removed (handles nested/incomplete tags)
+          while (sanitized.length !== previousLength) {
+            previousLength = sanitized.length;
+            sanitized = sanitized.replace(/<[^>]*>/g, "");
+          }
+          description = sanitized.replace(/\s+/g, " ").trim().substring(0, 150);
         }
 
         return {
@@ -354,23 +357,35 @@ const searchTeams = (query: string) =>
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const query = searchParams.get("q");
-  const type = searchParams.get("type"); // Filter by content type
+  const rawQuery = searchParams.get("q");
+  const rawType = searchParams.get("type"); // Filter by content type
 
-  // Validate query
-  if (!query || query.trim().length === 0) {
+  // Normalize and validate query
+  const q = rawQuery?.trim();
+  if (!q || q.length === 0) {
     return NextResponse.json(
       { error: "Search query is required" },
       { status: 400 },
     );
   }
 
-  if (query.length < 2) {
+  if (q.length < 2) {
     return NextResponse.json(
       { error: "Search query must be at least 2 characters" },
       { status: 400 },
     );
   }
+
+  // Normalize and validate type against whitelist
+  const allowedTypes = ["article", "player", "team"];
+  const t = rawType?.toLowerCase().trim();
+  if (t && !allowedTypes.includes(t)) {
+    return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+  }
+
+  // Use normalized values
+  const query = q;
+  const type = t;
 
   try {
     console.log(`[Search API] Query: "${query}", Type: ${type || "all"}`);

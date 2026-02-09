@@ -68,7 +68,11 @@ export const SearchResults = ({
       {/* Results List */}
       <div className="space-y-4">
         {filteredResults.map((result) => (
-          <SearchResult key={result.id} result={result} query={query} />
+          <SearchResult
+            key={`${result.type}:${result.id}`}
+            result={result}
+            query={query}
+          />
         ))}
       </div>
     </div>
