@@ -345,6 +345,10 @@ describe("SearchInterface", () => {
       const input = screen.getByRole("textbox");
       await user.type(input, "a");
 
+      // Try to submit - button should be disabled
+      const submitButton = screen.getByRole("button", { name: /^zoek$/i });
+      expect(submitButton).toBeDisabled();
+
       // Should not call fetch
       expect(fetchMock).not.toHaveBeenCalled();
     });
@@ -570,17 +574,19 @@ describe("SearchInterface", () => {
   });
 
   describe("URL Synchronization", () => {
-    it("should sync state when URL params change (back/forward)", async () => {
+    it("should initialize state from URL params on mount", async () => {
       mockSearchParams.set("q", "initial");
+      mockSearchParams.set("type", "article");
 
-      const mockResponse1 = createMockSearchResponse("initial");
+      const mockResponse = createMockSearchResponse("initial");
       fetchMock.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockResponse1,
+        json: async () => mockResponse,
       });
 
-      const { rerender } = render(<SearchInterface />);
+      render(<SearchInterface />);
 
+      // Should initialize input with URL query
       await waitFor(
         () => {
           expect(screen.getByRole("textbox")).toHaveValue("initial");
@@ -588,23 +594,19 @@ describe("SearchInterface", () => {
         { timeout: 3000 },
       );
 
-      // Simulate URL change (back/forward)
-      mockSearchParams.set("q", "changed");
-      const mockResponse2 = createMockSearchResponse("changed");
-      fetchMock.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse2,
+      // Should perform search with URL query
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("q=initial"),
+        expect.any(Object),
+      );
+
+      // Should initialize filter with URL type
+      await waitFor(() => {
+        expect(screen.getByRole("tablist")).toBeInTheDocument();
       });
 
-      // Force rerender by changing a key prop (simulating navigation)
-      rerender(<SearchInterface key="changed" />);
-
-      await waitFor(
-        () => {
-          expect(screen.getByRole("textbox")).toHaveValue("changed");
-        },
-        { timeout: 3000 },
-      );
+      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
+      expect(articleTab).toHaveAttribute("aria-selected", "true");
     });
 
     it("should validate type param from URL", async () => {

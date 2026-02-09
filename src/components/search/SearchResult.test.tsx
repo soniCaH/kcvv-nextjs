@@ -329,6 +329,7 @@ describe("SearchResult", () => {
         '[class*="group-hover:translate-x-1"]',
       );
       expect(arrowIcon).toBeInTheDocument();
+      expect(arrowIcon).toHaveAttribute("aria-hidden", "true");
     });
   });
 

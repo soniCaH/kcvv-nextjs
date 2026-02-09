@@ -317,17 +317,24 @@ describe("SearchForm", () => {
     it("should prevent default form submission", async () => {
       const user = userEvent.setup();
       const handleSearch = vi.fn();
-      const handleSubmit = vi.fn((e) => e.preventDefault());
 
       const { container } = render(<SearchForm onSearch={handleSearch} />);
       const form = container.querySelector("form");
-      form?.addEventListener("submit", handleSubmit);
+
+      // Capture the submit event to verify preventDefault was called
+      let submitEvent: Event | null = null;
+      form?.addEventListener("submit", (e) => {
+        submitEvent = e;
+      });
 
       const input = screen.getByRole("textbox");
       await user.type(input, "test");
       await user.keyboard("{Enter}");
 
-      expect(handleSubmit).toHaveBeenCalled();
+      // Verify the form's onSubmit handler prevented default browser behavior
+      expect(submitEvent).not.toBeNull();
+      expect(submitEvent!.defaultPrevented).toBe(true);
+      expect(handleSearch).toHaveBeenCalledWith("test");
     });
   });
 

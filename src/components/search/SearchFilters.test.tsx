@@ -384,8 +384,7 @@ describe("SearchFilters", () => {
       expect(screen.getByRole("tablist")).toBeInTheDocument();
     });
 
-    it("should allow keyboard navigation between tabs", async () => {
-      const user = userEvent.setup();
+    it("should render tabs with roving tabindex (active tab focusable)", () => {
       render(
         <SearchFilters
           activeType="all"
@@ -394,17 +393,15 @@ describe("SearchFilters", () => {
         />,
       );
 
-      // FilterTabs uses roving tabindex - only active tab is initially focusable
-      const firstTab = screen.getByRole("tab", { name: /alles/i });
-      firstTab.focus();
-      expect(firstTab).toHaveFocus();
+      // FilterTabs uses roving tabindex - only active tab is focusable
+      const activeTab = screen.getByRole("tab", { name: /alles/i });
+      const inactiveTab = screen.getByRole("tab", { name: /nieuws/i });
 
-      // Tab key moves to next focusable tab
-      await user.tab();
-      const secondTab = screen.getByRole("tab", { name: /nieuws/i });
-      // In current FilterTabs implementation, inactive tabs have tabindex="-1"
-      // so we test that tabs are in tab order when active
-      expect(secondTab).toBeInTheDocument();
+      // Active tab should have tabindex="0"
+      expect(activeTab).toHaveAttribute("tabindex", "0");
+
+      // Inactive tabs should have tabindex="-1"
+      expect(inactiveTab).toHaveAttribute("tabindex", "-1");
     });
 
     it("should support Enter key activation", async () => {
