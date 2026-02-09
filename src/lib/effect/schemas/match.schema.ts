@@ -282,24 +282,6 @@ export class FootbalistoMatchEvent extends S.Class<FootbalistoMatchEvent>(
   goalsAway: S.optional(S.NullOr(S.Number)),
 }) {}
 
-/**
- * Normalized match event for UI consumption
- */
-export class MatchEvent extends S.Class<MatchEvent>("MatchEvent")({
-  /** Event type: "card", "goal", "substitution" */
-  type: S.Literal("card", "goal", "substitution"),
-  /** Card type (only for card events) */
-  cardType: S.optional(CardType),
-  /** Minute when the event occurred */
-  minute: S.optional(S.Number),
-  /** Player ID */
-  playerId: S.optional(S.Number),
-  /** Player name */
-  playerName: S.optional(S.String),
-  /** Team side: "home" or "away" */
-  team: S.optional(S.Literal("home", "away")),
-}) {}
-
 // ============================================================================
 // Match Detail Schemas (for /match/{id} endpoint)
 // ============================================================================

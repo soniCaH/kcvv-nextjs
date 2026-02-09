@@ -3,7 +3,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { MatchLineup, type LineupPlayer } from "./MatchLineup";
 
 describe("MatchLineup", () => {
@@ -456,6 +456,44 @@ describe("MatchLineup", () => {
       expect(screen.getByLabelText("Gele kaart")).toBeInTheDocument();
       expect(screen.getByLabelText("Rode kaart")).toBeInTheDocument();
       expect(screen.getByLabelText("Tweede gele kaart")).toBeInTheDocument();
+    });
+
+    it("handles invalid card type gracefully and logs warning in development", () => {
+      // Mock console.warn to verify it's called
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
+      // Set to development mode to trigger warning
+      vi.stubEnv("NODE_ENV", "development");
+
+      // Test the exhaustiveness check in CardIcon by using type assertion
+      // This tests the defensive default case that should never be reached in normal usage
+      const lineupWithInvalidCard: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Invalid Card Player",
+          number: 7,
+          isCaptain: false,
+          status: "starter",
+          // @ts-expect-error - Intentionally testing invalid card type for exhaustiveness check
+          card: "invalid",
+        },
+      ];
+
+      // Component should render without crashing even with invalid card type
+      render(
+        <MatchLineup {...defaultProps} homeLineup={lineupWithInvalidCard} />,
+      );
+      expect(screen.getByText("Invalid Card Player")).toBeInTheDocument();
+
+      // Verify warning was logged
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Unexpected card type received: invalid",
+      );
+
+      // Restore original state
+      consoleWarnSpy.mockRestore();
+      vi.unstubAllEnvs();
     });
   });
 });

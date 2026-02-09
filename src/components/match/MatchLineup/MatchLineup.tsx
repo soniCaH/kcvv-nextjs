@@ -15,6 +15,7 @@
 
 import { cn } from "@/lib/utils/cn";
 import { ArrowUp, ArrowDown } from "lucide-react";
+import type { CardType } from "@/lib/effect/schemas/match.schema";
 
 /**
  * Yellow card icon component
@@ -106,11 +107,7 @@ function DoubleYellowCardIcon({ className }: { className?: string }) {
 /**
  * Renders the appropriate card icon based on card type
  */
-function CardIcon({
-  cardType,
-}: {
-  cardType: "yellow" | "red" | "double_yellow";
-}) {
+function CardIcon({ cardType }: { cardType: CardType }) {
   switch (cardType) {
     case "yellow":
       return <YellowCardIcon />;
@@ -118,11 +115,17 @@ function CardIcon({
       return <RedCardIcon />;
     case "double_yellow":
       return <DoubleYellowCardIcon />;
+    default: {
+      // Exhaustiveness check - if a new card type is added, TypeScript will error here
+      const _exhaustive: never = cardType;
+      // Runtime warning for unexpected card types from API
+      if (process.env.NODE_ENV === "development") {
+        console.warn(`Unexpected card type received: ${String(cardType)}`);
+      }
+      return null;
+    }
   }
 }
-
-/** Card type received by player */
-export type LineupCardType = "yellow" | "red" | "double_yellow";
 
 export interface LineupPlayer {
   /** Player ID (optional) */
@@ -138,7 +141,7 @@ export interface LineupPlayer {
   /** Player status in match */
   status: "starter" | "substitute" | "substituted" | "subbed_in" | "unknown";
   /** Card received by player (if any) */
-  card?: LineupCardType;
+  card?: CardType;
 }
 
 export interface MatchLineupProps {
