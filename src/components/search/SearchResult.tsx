@@ -95,9 +95,9 @@ export const SearchResult = ({ result }: SearchResultProps) => {
             result.tags &&
             result.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
-                {result.tags.slice(0, 3).map((tag) => (
+                {result.tags.slice(0, 3).map((tag, index) => (
                   <span
-                    key={tag}
+                    key={`${tag}-${index}`}
                     className="px-2 py-1 rounded-md bg-green-50 text-green-700 text-xs font-medium"
                   >
                     {tag}

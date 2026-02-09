@@ -5,7 +5,7 @@
  * Main search interface with form, filters, and results
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SearchForm } from "./SearchForm";
 import { SearchFilters } from "./SearchFilters";
@@ -52,9 +52,14 @@ export const SearchInterface = ({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Get initial values from URL
+  // Validate and get initial values from URL
   const urlQuery = searchParams.get("q") || initialQuery;
-  const urlType = (searchParams.get("type") as SearchResultType) || initialType;
+  const rawUrlType = searchParams.get("type");
+  const allowedTypes: SearchResultType[] = ["article", "player", "team"];
+  const urlType =
+    rawUrlType && allowedTypes.includes(rawUrlType as SearchResultType)
+      ? (rawUrlType as SearchResultType)
+      : initialType;
 
   // State
   const [query, setQuery] = useState(urlQuery);
@@ -66,11 +71,15 @@ export const SearchInterface = ({
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
 
+  // AbortController ref for cancelling in-flight requests
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   /**
    * Perform search
+   * Note: Always fetches unfiltered results for accurate counts across all types
    */
   const performSearch = useCallback(
-    async (searchQuery: string, type: SearchResultType | "all" = "all") => {
+    async (searchQuery: string, _type: SearchResultType | "all" = "all") => {
       if (!searchQuery || searchQuery.trim().length < 2) {
         setResults([]);
         setTotalCount(0);
@@ -79,31 +88,52 @@ export const SearchInterface = ({
         return;
       }
 
+      // Abort any in-flight request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Create new AbortController for this request
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       setIsLoading(true);
       setError(null);
 
       try {
-        // Build URL with query params
+        // Always fetch unfiltered results (no type param)
+        // Client-side filtering will be done in SearchResults
         const params = new URLSearchParams({ q: searchQuery.trim() });
-        if (type && type !== "all") {
-          params.append("type", type);
-        }
 
-        const response = await fetch(`/api/search?${params.toString()}`);
+        const response = await fetch(`/api/search?${params.toString()}`, {
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           throw new Error("Search failed");
         }
 
         const data: SearchResponse = await response.json();
-        setResults(data.results);
-        setTotalCount(data.count);
-      } catch {
+
+        // Only update state if this request wasn't aborted
+        if (!controller.signal.aborted) {
+          setResults(data.results);
+          setTotalCount(data.count);
+        }
+      } catch (error) {
+        // Don't update state if request was aborted
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
+
         setError("Er is een fout opgetreden bij het zoeken. Probeer opnieuw.");
         setResults([]);
         setTotalCount(0);
       } finally {
-        setIsLoading(false);
+        // Only clear loading if this request wasn't aborted
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     },
     [],
@@ -168,6 +198,17 @@ export const SearchInterface = ({
     }
     // Only run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * Cleanup: abort any in-flight requests on unmount
+   */
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   return (

@@ -28,13 +28,15 @@ export interface SearchResultsProps {
 
 /**
  * Search results list
+ * Note: Results are always unfiltered from API.
+ * Client-side filtering is applied here based on activeType.
  */
 export const SearchResults = ({
   results,
   query,
   activeType,
 }: SearchResultsProps) => {
-  // Filter results by active type
+  // Filter results by active type (client-side)
   const filteredResults =
     activeType === "all"
       ? results
