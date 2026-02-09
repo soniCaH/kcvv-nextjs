@@ -13,6 +13,18 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
+ * Debug logging helper - only logs in development or when DEBUG_SEARCH is enabled
+ */
+const debugLog = (...args: unknown[]) => {
+  if (
+    process.env.DEBUG_SEARCH === "true" ||
+    process.env.NODE_ENV === "development"
+  ) {
+    console.log(...args);
+  }
+};
+
+/**
  * Search across articles by title, tags, and body
  */
 const searchArticles = (query: string) =>
@@ -37,7 +49,7 @@ const searchArticles = (query: string) =>
       page++;
     }
 
-    console.log(
+    debugLog(
       `[Search API] Total articles fetched: ${allArticles.length} (across ${page} pages)`,
     );
 
@@ -143,7 +155,7 @@ const getAllPlayers = unstable_cache(
         page++;
       }
 
-      console.log(
+      debugLog(
         `[Search API] Fetched ${allPlayers.length} players (across ${page - 1} pages)`,
       );
 
@@ -194,7 +206,7 @@ const searchPlayers = (query: string) =>
       return matches;
     });
 
-    console.log(`[Search API] Found ${filtered.length} player matches`);
+    debugLog(`[Search API] Found ${filtered.length} player matches`);
 
     return filtered.map((player): SearchResult => {
       const firstName = player.attributes.field_firstname || "";
@@ -294,7 +306,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log(`[Search API] Query: "${query}", Type: ${type || "all"}`);
+    debugLog(`[Search API] Query: "${query}", Type: ${type || "all"}`);
 
     // Search across content types based on filter
     const searchProgram = Effect.gen(function* () {
@@ -302,17 +314,17 @@ export async function GET(request: NextRequest) {
 
       // Search articles
       if (!type || type === "article") {
-        console.log("[Search API] Searching articles...");
+        debugLog("[Search API] Searching articles...");
         const articles = yield* searchArticles(query);
-        console.log(`[Search API] Found ${articles.length} articles`);
+        debugLog(`[Search API] Found ${articles.length} articles`);
         results.push(...articles);
       }
 
       // Search players
       if (!type || type === "player") {
-        console.log("[Search API] Searching players...");
+        debugLog("[Search API] Searching players...");
         const players = yield* searchPlayers(query);
-        console.log(`[Search API] Found ${players.length} players`);
+        debugLog(`[Search API] Found ${players.length} players`);
         results.push(...players);
 
         // TODO: Add staff search once staff detail pages are implemented
@@ -325,13 +337,13 @@ export async function GET(request: NextRequest) {
 
       // Search teams
       if (!type || type === "team") {
-        console.log("[Search API] Searching teams...");
+        debugLog("[Search API] Searching teams...");
         const teams = yield* searchTeams(query);
-        console.log(`[Search API] Found ${teams.length} teams`);
+        debugLog(`[Search API] Found ${teams.length} teams`);
         results.push(...teams);
       }
 
-      console.log(`[Search API] Total results: ${results.length}`);
+      debugLog(`[Search API] Total results: ${results.length}`);
       return results;
     });
 
@@ -360,7 +372,7 @@ export async function GET(request: NextRequest) {
       return aTitle.localeCompare(bTitle);
     });
 
-    console.log(`[Search API] Returning ${sorted.length} sorted results`);
+    debugLog(`[Search API] Returning ${sorted.length} sorted results`);
 
     return NextResponse.json({
       query,
