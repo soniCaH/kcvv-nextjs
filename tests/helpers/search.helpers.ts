@@ -95,6 +95,12 @@ export function createMockSearchResponse(
 }
 
 /**
+ * Counter for generating deterministic IDs in tests
+ * Ensures test failures are reproducible and snapshots are stable
+ */
+let idCounter = 0;
+
+/**
  * Factory function to create mock article results
  */
 export function createMockArticle(
@@ -102,7 +108,7 @@ export function createMockArticle(
 ): SearchResult {
   return {
     type: "article",
-    id: `article-${Math.random()}`,
+    id: `article-${++idCounter}`,
     title: "Test Article",
     description: "Test article description",
     url: "/news/test-article",
@@ -121,7 +127,7 @@ export function createMockPlayer(
 ): SearchResult {
   return {
     type: "player",
-    id: `player-${Math.random()}`,
+    id: `player-${++idCounter}`,
     title: "Test Player",
     description: "Middenvelder - Test Team",
     url: "/players/test-player",
@@ -138,7 +144,7 @@ export function createMockTeam(
 ): SearchResult {
   return {
     type: "team",
-    id: `team-${Math.random()}`,
+    id: `team-${++idCounter}`,
     title: "Test Team",
     description: "Test team description",
     url: "/teams/test-team",

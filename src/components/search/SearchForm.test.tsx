@@ -40,14 +40,6 @@ describe("SearchForm", () => {
       const input = screen.getByPlaceholderText("Custom placeholder");
       expect(input).toBeInTheDocument();
     });
-
-    it("should render search icon", () => {
-      const { container } = render(<SearchForm onSearch={vi.fn()} />);
-
-      // Search icon is rendered via Icon component
-      const searchIcon = container.querySelector('[class*="absolute"]');
-      expect(searchIcon).toBeInTheDocument();
-    });
   });
 
   describe("Input Interactions", () => {

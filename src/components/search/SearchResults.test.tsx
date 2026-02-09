@@ -12,7 +12,8 @@ import {
   createMockTeam,
 } from "@/../tests/helpers/search.helpers";
 
-// Mock Next.js modules used by SearchResult
+// Mock Next.js modules
+// Note: Kept in each file due to Vitest hoisting requirements
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -390,7 +391,7 @@ describe("SearchResults", () => {
 
   describe("Accessibility", () => {
     it("should use semantic HTML structure", () => {
-      const { container } = render(
+      render(
         <SearchResults
           results={mockSearchResults}
           query="test"
@@ -398,9 +399,14 @@ describe("SearchResults", () => {
         />,
       );
 
-      // Results should be wrapped in container with proper spacing
-      const resultsContainer = container.querySelector(".space-y-4");
-      expect(resultsContainer).toBeInTheDocument();
+      // Each result should be accessible as a link
+      const links = screen.getAllByRole("link");
+      expect(links.length).toBeGreaterThan(0);
+
+      // Results should have accessible text content
+      links.forEach((link) => {
+        expect(link).toHaveAccessibleName();
+      });
     });
 
     it("should maintain accessible links in results", () => {

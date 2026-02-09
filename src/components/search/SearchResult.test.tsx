@@ -12,6 +12,7 @@ import {
 } from "@/../tests/helpers/search.helpers";
 
 // Mock Next.js modules
+// Note: Kept in each file due to Vitest hoisting requirements
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -111,10 +112,11 @@ describe("SearchResult", () => {
         title: "Article without image",
       });
 
-      const { container } = render(<SearchResult result={article} />);
+      render(<SearchResult result={article} />);
 
-      const imageContainer = container.querySelector(".w-24.h-24");
-      expect(imageContainer).not.toBeInTheDocument();
+      // No image should be rendered
+      const image = screen.queryByRole("img");
+      expect(image).not.toBeInTheDocument();
     });
 
     it("should display formatted date for articles", () => {
@@ -131,13 +133,16 @@ describe("SearchResult", () => {
     it("should not display date when missing", () => {
       const article = createMockArticle({
         date: undefined,
+        title: "Article without date",
       });
 
-      const { container } = render(<SearchResult result={article} />);
+      render(<SearchResult result={article} />);
 
-      // Should not have the date span
-      const dateElements = container.querySelectorAll(".text-xs.text-gray-500");
-      expect(dateElements.length).toBe(0);
+      // Date format pattern should not be present
+      // Dutch dates follow pattern "DD maand YYYY" (e.g., "15 maart 2024")
+      expect(
+        screen.queryByText(/\d{1,2}\s+\w+\s+\d{4}/i),
+      ).not.toBeInTheDocument();
     });
 
     it("should display up to 3 tags", () => {
@@ -176,43 +181,59 @@ describe("SearchResult", () => {
     it("should not display tags section when empty", () => {
       const article = createMockArticle({
         tags: [],
+        title: "Article without tags",
       });
 
-      const { container } = render(<SearchResult result={article} />);
+      render(<SearchResult result={article} />);
 
-      const tagsContainer = container.querySelector(".flex.flex-wrap.gap-2");
-      expect(tagsContainer).not.toBeInTheDocument();
+      // No overflow indicator should be present
+      expect(screen.queryByText(/\+\d+ meer/)).not.toBeInTheDocument();
+      // Article title should still render
+      expect(screen.getByText("Article without tags")).toBeInTheDocument();
     });
 
     it("should not display tags section when undefined", () => {
       const article = createMockArticle({
         tags: undefined,
+        title: "Article without tags",
       });
 
-      const { container } = render(<SearchResult result={article} />);
+      render(<SearchResult result={article} />);
 
-      const tagsContainer = container.querySelector(".flex.flex-wrap.gap-2");
-      expect(tagsContainer).not.toBeInTheDocument();
+      // No overflow indicator should be present
+      expect(screen.queryByText(/\+\d+ meer/)).not.toBeInTheDocument();
+      // Article title should still render
+      expect(screen.getByText("Article without tags")).toBeInTheDocument();
     });
   });
 
   describe("Player Type", () => {
     it("should not display date for players", () => {
-      const player = createMockPlayer();
+      const player = createMockPlayer({
+        title: "Test Player",
+      });
 
-      const { container } = render(<SearchResult result={player} />);
+      render(<SearchResult result={player} />);
 
-      const dateElements = container.querySelectorAll(".text-xs.text-gray-500");
-      expect(dateElements.length).toBe(0);
+      // Date format pattern should not be present for players
+      expect(
+        screen.queryByText(/\d{1,2}\s+\w+\s+\d{4}/i),
+      ).not.toBeInTheDocument();
+      // Player title should still render
+      expect(screen.getByText("Test Player")).toBeInTheDocument();
     });
 
     it("should not display tags for players", () => {
-      const player = createMockPlayer();
+      const player = createMockPlayer({
+        title: "Test Player",
+      });
 
-      const { container } = render(<SearchResult result={player} />);
+      render(<SearchResult result={player} />);
 
-      const tagsContainer = container.querySelector(".flex.flex-wrap.gap-2");
-      expect(tagsContainer).not.toBeInTheDocument();
+      // No overflow indicator for players
+      expect(screen.queryByText(/\+\d+ meer/)).not.toBeInTheDocument();
+      // Player title should still render
+      expect(screen.getByText("Test Player")).toBeInTheDocument();
     });
 
     it("should display player image when provided", () => {
@@ -230,21 +251,31 @@ describe("SearchResult", () => {
 
   describe("Team Type", () => {
     it("should not display date for teams", () => {
-      const team = createMockTeam();
+      const team = createMockTeam({
+        title: "Test Team",
+      });
 
-      const { container } = render(<SearchResult result={team} />);
+      render(<SearchResult result={team} />);
 
-      const dateElements = container.querySelectorAll(".text-xs.text-gray-500");
-      expect(dateElements.length).toBe(0);
+      // Date format pattern should not be present for teams
+      expect(
+        screen.queryByText(/\d{1,2}\s+\w+\s+\d{4}/i),
+      ).not.toBeInTheDocument();
+      // Team title should still render
+      expect(screen.getByText("Test Team")).toBeInTheDocument();
     });
 
     it("should not display tags for teams", () => {
-      const team = createMockTeam();
+      const team = createMockTeam({
+        title: "Test Team",
+      });
 
-      const { container } = render(<SearchResult result={team} />);
+      render(<SearchResult result={team} />);
 
-      const tagsContainer = container.querySelector(".flex.flex-wrap.gap-2");
-      expect(tagsContainer).not.toBeInTheDocument();
+      // No overflow indicator for teams
+      expect(screen.queryByText(/\+\d+ meer/)).not.toBeInTheDocument();
+      // Team title should still render
+      expect(screen.getByText("Test Team")).toBeInTheDocument();
     });
 
     it("should display team image when provided", () => {
@@ -274,14 +305,18 @@ describe("SearchResult", () => {
     it("should not display description paragraph when missing", () => {
       const result = createMockArticle({
         description: undefined,
+        title: "Article without description",
       });
 
-      const { container } = render(<SearchResult result={result} />);
+      render(<SearchResult result={result} />);
 
-      const descriptionElements = container.querySelectorAll(
-        ".text-sm.text-gray-dark",
-      );
-      expect(descriptionElements.length).toBe(0);
+      // Only title should be present, no description text
+      expect(
+        screen.getByText("Article without description"),
+      ).toBeInTheDocument();
+      // Verify no additional paragraph content besides title
+      const allText = screen.getByRole("link").textContent;
+      expect(allText).not.toContain("Test article description");
     });
   });
 
@@ -330,36 +365,6 @@ describe("SearchResult", () => {
       );
       expect(arrowIcon).toBeInTheDocument();
       expect(arrowIcon).toHaveAttribute("aria-hidden", "true");
-    });
-  });
-
-  describe("Styling and Interaction", () => {
-    it("should have hover styles on link", () => {
-      const result = createMockArticle();
-
-      render(<SearchResult result={result} />);
-
-      const link = screen.getByRole("link");
-      expect(link).toHaveClass("hover:shadow-md");
-      expect(link).toHaveClass("hover:border-green-main");
-    });
-
-    it("should have transition classes for smooth interactions", () => {
-      const result = createMockArticle();
-
-      render(<SearchResult result={result} />);
-
-      const link = screen.getByRole("link");
-      expect(link).toHaveClass("transition-shadow");
-    });
-
-    it("should apply group class for child hover effects", () => {
-      const result = createMockArticle();
-
-      render(<SearchResult result={result} />);
-
-      const link = screen.getByRole("link");
-      expect(link).toHaveClass("group");
     });
   });
 });

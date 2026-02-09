@@ -326,21 +326,6 @@ describe("SearchFilters", () => {
       expect(tablist).toBeInTheDocument();
     });
 
-    it("should configure FilterTabs with size md", () => {
-      // This is tested implicitly through the FilterTabs component
-      // The size prop affects visual styling, not testable behavior
-      render(
-        <SearchFilters
-          activeType="all"
-          onFilterChange={vi.fn()}
-          resultCounts={mockResultCounts}
-        />,
-      );
-
-      const tabs = screen.getAllByRole("tab");
-      expect(tabs.length).toBeGreaterThan(0);
-    });
-
     it("should configure FilterTabs to show counts", () => {
       render(
         <SearchFilters

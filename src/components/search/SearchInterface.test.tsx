@@ -21,6 +21,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 // Mock child components' dependencies
+// Note: Kept in file due to Vitest hoisting requirements
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -43,8 +44,11 @@ describe("SearchInterface", () => {
   beforeEach(() => {
     // Reset mocks
     mockPush.mockClear();
-    mockSearchParams.delete("q");
-    mockSearchParams.delete("type");
+
+    // Clear all params to prevent cross-test leakage
+    Array.from(mockSearchParams.keys()).forEach((key) =>
+      mockSearchParams.delete(key),
+    );
 
     // Setup fetch mock
     fetchMock = vi.fn();
@@ -493,11 +497,31 @@ describe("SearchInterface", () => {
       );
     });
 
-    it("should cleanup abort controller on unmount", () => {
+    it("should abort in-flight request on unmount", async () => {
+      const user = userEvent.setup();
+      let capturedSignal: AbortSignal | undefined;
+
+      fetchMock.mockImplementationOnce(
+        (_url: string, options?: RequestInit) => {
+          capturedSignal = options?.signal as AbortSignal;
+          return new Promise(() => {}); // never resolves
+        },
+      );
+
       const { unmount } = render(<SearchInterface />);
 
-      // Unmount should not throw
-      expect(() => unmount()).not.toThrow();
+      const input = screen.getByRole("textbox");
+      await user.type(input, "test");
+      const submitButton = screen.getByRole("button", { name: /^zoek$/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(capturedSignal).toBeDefined();
+      });
+
+      unmount();
+
+      expect(capturedSignal!.aborted).toBe(true);
     });
   });
 
