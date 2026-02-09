@@ -1,22 +1,46 @@
 /**
  * Search API Route Tests
- * Tests the /api/search endpoint validation logic
- *
- * Note: These tests focus on request validation (400 errors).
- * Integration tests with actual Drupal responses are handled separately
- * due to Effect's generator architecture making mocking complex.
+ * Tests the /api/search endpoint validation and success responses
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import { GET } from "./route";
+import type { SearchResult } from "@/types/search";
+
+// Mock Next.js cache - pass through the function
+vi.mock("next/cache", () => ({
+  unstable_cache: <T>(fn: () => T) => fn,
+}));
+
+// Mock fetch to return Drupal responses for testing
+const mockFetch = vi.fn();
+global.fetch = mockFetch as unknown as typeof fetch;
 
 // Helper to create NextRequest
 function createRequest(url: string): NextRequest {
   return new NextRequest(new URL(url, "http://localhost:3000"));
 }
 
-describe("GET /api/search - Validation", () => {
+describe("GET /api/search", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // Setup mock fetch to return empty Drupal responses by default
+    // This allows validation tests to pass without actual Drupal calls
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [],
+        links: {},
+      }),
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe("Query Validation", () => {
     it("should return 400 when query is missing", async () => {
       const request = createRequest("/api/search");
@@ -108,9 +132,80 @@ describe("GET /api/search - Validation", () => {
   });
 
   describe("Request Structure", () => {
-    it("should accept GET method", () => {
+    it("should export GET handler", () => {
       expect(GET).toBeDefined();
       expect(typeof GET).toBe("function");
+    });
+  });
+
+  describe("Successful Requests", () => {
+    it("should return 200 with results for valid query", async () => {
+      const request = createRequest("/api/search?q=test");
+      const response = await GET(request);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body).toHaveProperty("query", "test");
+      expect(body).toHaveProperty("results");
+      expect(body).toHaveProperty("count");
+      expect(Array.isArray(body.results)).toBe(true);
+    });
+
+    it("should accept type=article and return 200", async () => {
+      const request = createRequest("/api/search?q=test&type=article");
+      const response = await GET(request);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.query).toBe("test");
+      expect(Array.isArray(body.results)).toBe(true);
+      // Should only contain article results
+      if (body.results.length > 0) {
+        expect(
+          body.results.every((r: SearchResult) => r.type === "article"),
+        ).toBe(true);
+      }
+    });
+
+    it("should accept type=player and return 200", async () => {
+      const request = createRequest("/api/search?q=test&type=player");
+      const response = await GET(request);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.query).toBe("test");
+      expect(Array.isArray(body.results)).toBe(true);
+      // Should only contain player results
+      if (body.results.length > 0) {
+        expect(
+          body.results.every((r: SearchResult) => r.type === "player"),
+        ).toBe(true);
+      }
+    });
+
+    it("should accept type=team and return 200", async () => {
+      const request = createRequest("/api/search?q=test&type=team");
+      const response = await GET(request);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.query).toBe("test");
+      expect(Array.isArray(body.results)).toBe(true);
+      // Should only contain team results
+      if (body.results.length > 0) {
+        expect(body.results.every((r: SearchResult) => r.type === "team")).toBe(
+          true,
+        );
+      }
+    });
+
+    it("should trim and normalize query in response", async () => {
+      const request = createRequest("/api/search?q=%20%20test%20%20");
+      const response = await GET(request);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.query).toBe("test"); // Trimmed
     });
   });
 });

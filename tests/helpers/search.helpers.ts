@@ -101,6 +101,14 @@ export function createMockSearchResponse(
 let idCounter = 0;
 
 /**
+ * Reset the ID counter to 0
+ * Call this in beforeEach if tests assert on specific ID values
+ */
+export function resetIdCounter() {
+  idCounter = 0;
+}
+
+/**
  * Factory function to create mock article results
  */
 export function createMockArticle(

@@ -46,9 +46,9 @@ describe("SearchInterface", () => {
     mockPush.mockClear();
 
     // Clear all params to prevent cross-test leakage
-    Array.from(mockSearchParams.keys()).forEach((key) =>
-      mockSearchParams.delete(key),
-    );
+    Array.from(mockSearchParams.keys()).forEach((key) => {
+      mockSearchParams.delete(key);
+    });
 
     // Setup fetch mock
     fetchMock = vi.fn();
@@ -425,16 +425,16 @@ describe("SearchInterface", () => {
       const user = userEvent.setup();
       let firstRequestAborted = false;
 
-      // First request that takes time
-      fetchMock.mockImplementationOnce(async (_url, options) => {
+      // First request that never resolves (manually controlled)
+      const firstRequestPromise = new Promise(() => {
+        // Never resolves - will be aborted
+      });
+
+      fetchMock.mockImplementationOnce((_url, options) => {
         options?.signal?.addEventListener("abort", () => {
           firstRequestAborted = true;
         });
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        return {
-          ok: true,
-          json: async () => createMockSearchResponse("first"),
-        };
+        return firstRequestPromise;
       });
 
       // Second request returns immediately
@@ -466,6 +466,7 @@ describe("SearchInterface", () => {
       await user.type(input, "second");
       await user.click(submitButton);
 
+      // First request should be aborted when second request starts
       await waitFor(() => {
         expect(firstRequestAborted).toBe(true);
       });
