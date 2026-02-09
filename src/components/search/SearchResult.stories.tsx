@@ -33,7 +33,6 @@ export const Article: Story = {
       tags: ["A-ploeg", "Wedstrijdverslag", "Overwinning"],
       date: "2026-01-15T10:00:00Z",
     },
-    query: "wedstrijd",
   },
 };
 
@@ -52,7 +51,6 @@ export const ArticleNoImage: Story = {
       tags: ["Training", "Algemeen"],
       date: "2026-01-10T14:30:00Z",
     },
-    query: "training",
   },
 };
 
@@ -69,7 +67,6 @@ export const Player: Story = {
       url: "/players/john-de-ron",
       imageUrl: "https://placehold.co/200x200/4acf52/ffffff?text=JDR",
     },
-    query: "john",
   },
 };
 
@@ -85,7 +82,6 @@ export const PlayerNoImage: Story = {
       description: "Verdediger",
       url: "/players/kevin-van-ransbeeck",
     },
-    query: "kevin",
   },
 };
 
@@ -102,7 +98,6 @@ export const Team: Story = {
       url: "/team/a-ploeg",
       imageUrl: "https://placehold.co/200x200/4acf52/ffffff?text=A",
     },
-    query: "a-ploeg",
   },
 };
 
@@ -117,6 +112,5 @@ export const TeamNoImage: Story = {
       title: "U15",
       url: "/team/u15",
     },
-    query: "u15",
   },
 };
