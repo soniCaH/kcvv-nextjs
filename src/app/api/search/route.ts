@@ -5,38 +5,45 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { Effect } from "effect";
-import { Schema as S } from "effect";
+import { unstable_cache } from "next/cache";
 import { DrupalService, DrupalServiceLive } from "@/lib/effect/services";
-import { StaffResponse } from "@/lib/effect/schemas";
+import type { SearchResult } from "@/types/search";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Search result type
+ * Search across articles by title, tags, and body
  */
-interface SearchResult {
-  id: string;
-  type: "article" | "player" | "team";
-  title: string;
-  description?: string;
-  url: string;
-  imageUrl?: string;
-  tags?: string[];
-  date?: string;
-}
-
-/**
- * Search across articles by title and tags
- */
-const searchArticles = (query: string, limit = 50) =>
+const searchArticles = (query: string) =>
   Effect.gen(function* () {
     const drupal = yield* DrupalService;
-    const { articles } = yield* drupal.getArticles({ limit });
+
+    // Fetch ALL articles by paginating through all pages
+    // Similar to searchPlayers, we need to paginate to avoid missing matches
+    const allArticles = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore && page <= 20) {
+      // Safety limit of 20 pages
+      const { articles, links } = yield* drupal.getArticles({
+        limit: 50,
+        page,
+      });
+
+      allArticles.push(...articles);
+      hasMore = !!links?.next;
+      page++;
+    }
+
+    console.log(
+      `[Search API] Total articles fetched: ${allArticles.length} (across ${page} pages)`,
+    );
 
     const queryLower = query.toLowerCase();
 
-    return articles
+    return allArticles
       .filter((article) => {
         const titleMatch = article.attributes.title
           .toLowerCase()
@@ -48,7 +55,17 @@ const searchArticles = (query: string, limit = 50) =>
             }
             return false;
           }) || false;
-        return titleMatch || tagMatch;
+
+        // Also search in article body text
+        const bodyText =
+          article.attributes.body?.value ||
+          article.attributes.body?.processed ||
+          "";
+        const bodyMatch = bodyText
+          ? bodyText.toLowerCase().includes(queryLower)
+          : false;
+
+        return titleMatch || tagMatch || bodyMatch;
       })
       .map((article): SearchResult => {
         const imageData = article.relationships.field_media_article_image?.data;
@@ -99,98 +116,50 @@ const searchArticles = (query: string, limit = 50) =>
   });
 
 /**
- * Search across staff members by name
- * Staff are stored as node--staff in Drupal (separate from players)
- *
- * NOTE: Currently disabled because staff detail pages don't exist yet.
- * Prefixed with _ to indicate intentionally unused until staff pages are implemented.
+ * Fetch all players with caching
+ * Cached for 5 minutes since player data changes infrequently
  */
-const _searchStaff = (query: string, limit = 200) =>
-  Effect.gen(function* () {
-    const baseUrl = process.env.DRUPAL_API_URL || "https://api.kcvvelewijt.be";
-    const url = `${baseUrl}/jsonapi/node/staff?page[limit]=${limit}`;
+const getAllPlayers = unstable_cache(
+  async () => {
+    const fetchProgram = Effect.gen(function* () {
+      const drupal = yield* DrupalService;
 
-    console.log(`[Search API] Fetching staff from: ${url}`);
+      // Fetch ALL players by paginating through all pages
+      // Drupal API has a max limit per page (~50), so we need to fetch multiple pages
+      const allPlayers = [];
+      let page = 1;
+      let hasMore = true;
 
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        fetch(url, {
-          headers: {
-            Accept: "application/vnd.api+json",
-            "Content-Type": "application/vnd.api+json",
-          },
-        }),
-      catch: (error) => new Error(`Failed to fetch staff: ${error}`),
-    });
-
-    if (!response.ok) {
-      console.error(
-        `[Search API] Staff fetch failed: ${response.status} ${response.statusText}`,
-      );
-      return [];
-    }
-
-    const json = yield* Effect.tryPromise({
-      try: () => response.json(),
-      catch: () => new Error("Failed to parse staff JSON"),
-    });
-
-    const staffResponse = yield* S.decodeUnknown(StaffResponse)(json).pipe(
-      Effect.mapError(
-        (error) => new Error(`Staff validation failed: ${error}`),
-      ),
-    );
-
-    console.log(
-      `[Search API] Total staff fetched: ${staffResponse.data.length}`,
-    );
-
-    const queryLower = query.toLowerCase();
-
-    // Filter and transform staff to SearchResult format
-    const results: SearchResult[] = [];
-    for (const staff of staffResponse.data) {
-      const firstName = staff.attributes.field_firstname || "";
-      const lastName = staff.attributes.field_lastname || "";
-      const fullName = `${firstName} ${lastName}`.toLowerCase().trim();
-      const title = staff.attributes.title.toLowerCase();
-
-      // Search in name fields or title
-      const nameMatch =
-        fullName.includes(queryLower) || title.includes(queryLower);
-
-      // Search in position fields
-      const positionStaff = staff.attributes.field_position_staff || "";
-      const positionShort = staff.attributes.field_position_short || "";
-      const positionMatch =
-        positionStaff.toLowerCase().includes(queryLower) ||
-        positionShort.toLowerCase().includes(queryLower);
-
-      if (nameMatch || positionMatch) {
-        const displayName = `${firstName} ${lastName}`.trim() || title;
-
-        // Get image URL if available
-        const imageData = staff.relationships.field_image?.data;
-        const imageUrl =
-          imageData && "uri" in imageData ? imageData.uri.url : undefined;
-
-        results.push({
-          id: staff.id,
-          type: "player", // Use "player" type for consistency in UI
-          title: displayName,
-          description: positionStaff || positionShort || "Staff",
-          url: staff.attributes.path.alias,
-          imageUrl,
+      while (hasMore && page <= 20) {
+        // Safety limit of 20 pages
+        const { players, links } = yield* drupal.getPlayers({
+          limit: 50,
+          page,
         });
 
-        console.log(
-          `[Search API] Staff match: "${displayName}" (${staff.attributes.path.alias})`,
-        );
-      }
-    }
+        allPlayers.push(...players);
 
-    return results;
-  });
+        hasMore = !!links?.next;
+        page++;
+      }
+
+      console.log(
+        `[Search API] Fetched ${allPlayers.length} players (across ${page - 1} pages)`,
+      );
+
+      return allPlayers;
+    });
+
+    return await Effect.runPromise(
+      fetchProgram.pipe(Effect.provide(DrupalServiceLive)),
+    );
+  },
+  ["all-players"],
+  {
+    revalidate: 300, // 5 minutes
+    tags: ["players"],
+  },
+);
 
 /**
  * Search across players by name
@@ -198,65 +167,8 @@ const _searchStaff = (query: string, limit = 200) =>
  */
 const searchPlayers = (query: string) =>
   Effect.gen(function* () {
-    const drupal = yield* DrupalService;
-
-    // Fetch ALL players by paginating through all pages
-    // Drupal API has a max limit per page (~50), so we need to fetch multiple pages
-    const allPlayers = [];
-    let page = 1;
-    let hasMore = true;
-
-    console.log(`[Search API] Fetching all players (paginated)...`);
-
-    while (hasMore && page <= 20) {
-      // Safety limit of 20 pages
-      const { players, links } = yield* drupal.getPlayers({
-        limit: 50,
-        page,
-      });
-
-      console.log(
-        `[Search API] Page ${page}: fetched ${players.length} players`,
-      );
-
-      allPlayers.push(...players);
-
-      hasMore = !!links?.next;
-      page++;
-    }
-
-    console.log(`\n[Search API] ========== PLAYER SEARCH ==========`);
-    console.log(`[Search API] Query: "${query}"`);
-    console.log(
-      `[Search API] Total players fetched: ${allPlayers.length} (across ${page - 1} pages)`,
-    );
-
-    // Log first few and last few players to see the data structure
-    if (allPlayers.length > 0) {
-      console.log(`\n[Search API] First 3 players:`);
-      allPlayers.slice(0, 3).forEach((p, i) => {
-        console.log(`  ${i + 1}. "${p.attributes.title}"`);
-        console.log(`     firstName: "${p.attributes.field_firstname}"`);
-        console.log(`     lastName: "${p.attributes.field_lastname}"`);
-        console.log(`     position: "${p.attributes.field_position}"`);
-        console.log(
-          `     position_short: "${p.attributes.field_position_short}"`,
-        );
-        console.log(`     shirt: ${p.attributes.field_shirtnumber}`);
-      });
-
-      console.log(`\n[Search API] Last 3 players:`);
-      allPlayers.slice(-3).forEach((p, i) => {
-        console.log(`  ${allPlayers.length - 2 + i}. "${p.attributes.title}"`);
-        console.log(`     firstName: "${p.attributes.field_firstname}"`);
-        console.log(`     lastName: "${p.attributes.field_lastname}"`);
-        console.log(`     position: "${p.attributes.field_position}"`);
-        console.log(
-          `     position_short: "${p.attributes.field_position_short}"`,
-        );
-        console.log(`     shirt: ${p.attributes.field_shirtnumber}`);
-      });
-    }
+    // Use cached player data to avoid repeated API calls
+    const allPlayers = yield* Effect.promise(() => getAllPlayers());
 
     const queryLower = query.toLowerCase();
 
@@ -282,14 +194,7 @@ const searchPlayers = (query: string) =>
       return matches;
     });
 
-    console.log(`\n[Search API] Matches found: ${filtered.length}`);
-    if (filtered.length > 0) {
-      console.log(`[Search API] Matched players:`);
-      filtered.forEach((p) => {
-        console.log(`  - "${p.attributes.title}" (${p.attributes.path.alias})`);
-      });
-    }
-    console.log(`[Search API] ========================================\n`);
+    console.log(`[Search API] Found ${filtered.length} player matches`);
 
     return filtered.map((player): SearchResult => {
       const firstName = player.attributes.field_firstname || "";
@@ -366,15 +271,15 @@ export async function GET(request: NextRequest) {
   const rawType = searchParams.get("type"); // Filter by content type
 
   // Normalize and validate query
-  const q = rawQuery?.trim();
-  if (!q || q.length === 0) {
+  const query = rawQuery?.trim();
+  if (!query || query.length === 0) {
     return NextResponse.json(
       { error: "Search query is required" },
       { status: 400 },
     );
   }
 
-  if (q.length < 2) {
+  if (query.length < 2) {
     return NextResponse.json(
       { error: "Search query must be at least 2 characters" },
       { status: 400 },
@@ -383,14 +288,10 @@ export async function GET(request: NextRequest) {
 
   // Normalize and validate type against whitelist
   const allowedTypes = ["article", "player", "team"];
-  const t = rawType?.toLowerCase().trim();
-  if (t && !allowedTypes.includes(t)) {
+  const type = rawType?.toLowerCase().trim();
+  if (type && !allowedTypes.includes(type)) {
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   }
-
-  // Use normalized values
-  const query = q;
-  const type = t;
 
   try {
     console.log(`[Search API] Query: "${query}", Type: ${type || "all"}`);
@@ -467,11 +368,12 @@ export async function GET(request: NextRequest) {
       results: sorted,
     });
   } catch (error) {
+    // Log full error server-side for debugging
     console.error("[Search API] Error:", error);
+    // Return only generic error message to client (no internal details)
     return NextResponse.json(
       {
         error: "Internal server error",
-        details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 },
     );

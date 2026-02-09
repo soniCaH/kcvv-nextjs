@@ -11,25 +11,13 @@ import { SearchForm } from "./SearchForm";
 import { SearchFilters } from "./SearchFilters";
 import { SearchResults } from "./SearchResults";
 import { Spinner } from "@/components/design-system";
+import type {
+  SearchResultType,
+  SearchResult,
+  SearchResponse,
+} from "@/types/search";
 
-export type SearchResultType = "article" | "player" | "team";
-
-export interface SearchResult {
-  id: string;
-  type: SearchResultType;
-  title: string;
-  description?: string;
-  url: string;
-  imageUrl?: string;
-  tags?: string[];
-  date?: string;
-}
-
-export interface SearchResponse {
-  query: string;
-  count: number;
-  results: SearchResult[];
-}
+export type { SearchResultType, SearchResult, SearchResponse };
 
 export interface SearchInterfaceProps {
   /**
@@ -78,66 +66,63 @@ export const SearchInterface = ({
    * Perform search
    * Note: Always fetches unfiltered results for accurate counts across all types
    */
-  const performSearch = useCallback(
-    async (searchQuery: string) => {
-      if (!searchQuery || searchQuery.trim().length < 2) {
-        setResults([]);
-        setTotalCount(0);
-        setError(null);
-        setIsLoading(false);
+  const performSearch = useCallback(async (searchQuery: string) => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setResults([]);
+      setTotalCount(0);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
+    // Abort any in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Always fetch unfiltered results (no type param)
+      // Client-side filtering will be done in SearchResults
+      const params = new URLSearchParams({ q: searchQuery.trim() });
+
+      const response = await fetch(`/api/search?${params.toString()}`, {
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error("Search failed");
+      }
+
+      const data: SearchResponse = await response.json();
+
+      // Only update state if this request wasn't aborted
+      if (!controller.signal.aborted) {
+        setResults(data.results);
+        setTotalCount(data.count);
+      }
+    } catch (error) {
+      // Don't update state if request was aborted
+      if (error instanceof Error && error.name === "AbortError") {
         return;
       }
 
-      // Abort any in-flight request
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+      setError("Er is een fout opgetreden bij het zoeken. Probeer opnieuw.");
+      setResults([]);
+      setTotalCount(0);
+    } finally {
+      // Only clear loading if this request wasn't aborted
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
       }
-
-      // Create new AbortController for this request
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        // Always fetch unfiltered results (no type param)
-        // Client-side filtering will be done in SearchResults
-        const params = new URLSearchParams({ q: searchQuery.trim() });
-
-        const response = await fetch(`/api/search?${params.toString()}`, {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error("Search failed");
-        }
-
-        const data: SearchResponse = await response.json();
-
-        // Only update state if this request wasn't aborted
-        if (!controller.signal.aborted) {
-          setResults(data.results);
-          setTotalCount(data.count);
-        }
-      } catch (error) {
-        // Don't update state if request was aborted
-        if (error instanceof Error && error.name === "AbortError") {
-          return;
-        }
-
-        setError("Er is een fout opgetreden bij het zoeken. Probeer opnieuw.");
-        setResults([]);
-        setTotalCount(0);
-      } finally {
-        // Only clear loading if this request wasn't aborted
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    },
-    [],
-  );
+    }
+  }, []);
 
   /**
    * Handle search submit
