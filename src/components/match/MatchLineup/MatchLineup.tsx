@@ -118,6 +118,10 @@ function CardIcon({ cardType }: { cardType: CardType }) {
     default: {
       // Exhaustiveness check - if a new card type is added, TypeScript will error here
       const _exhaustive: never = cardType;
+      // Runtime warning for unexpected card types from API
+      if (process.env.NODE_ENV === "development") {
+        console.warn(`Unexpected card type received: ${String(cardType)}`);
+      }
       return null;
     }
   }

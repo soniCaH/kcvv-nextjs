@@ -7,6 +7,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+/**
+ * Last updated date for the privacy policy.
+ * NOTE: Maintainers must update this constant whenever the privacy policy content changes.
+ */
+const LAST_UPDATED = "februari 2026";
+
 export const metadata: Metadata = {
   title: "Privacyverklaring | KCVV Elewijt",
   description:
@@ -106,7 +112,9 @@ export default function PrivacyPage() {
             </p>
             <ul className="space-y-3 text-gray-dark">
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Leden en spelers:</strong> Naam, adres, geboortedatum,
                   contactgegevens, medische informatie (indien relevant voor
@@ -114,21 +122,27 @@ export default function PrivacyPage() {
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Website bezoekers:</strong> Technische gegevens zoals
                   IP-adres, browsertype, bezochte pagina&apos;s (via cookies)
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Contactformulieren:</strong> Naam, e-mailadres en
                   bericht wanneer je contact opneemt
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Foto&apos;s en video&apos;s:</strong> Beeldmateriaal
                   gemaakt tijdens wedstrijden en evenementen (alleen met
@@ -145,28 +159,38 @@ export default function PrivacyPage() {
             </h2>
             <ul className="space-y-3 text-gray-dark">
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   Administratie van lidmaatschappen en vergunningen bij Voetbal
                   Vlaanderen
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   Communicatie over trainingen, wedstrijden en clubactiviteiten
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>Publicatie van wedstrijdverslagen en nieuwsberichten</div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>Verbetering van onze website en dienstverlening</div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>Voldoen aan wettelijke verplichtingen</div>
               </li>
             </ul>
@@ -182,21 +206,27 @@ export default function PrivacyPage() {
             </p>
             <ul className="mt-3 space-y-2 text-gray-dark">
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Contractuele noodzaak:</strong> Voor de uitvoering van
                   je lidmaatschap
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Toestemming:</strong> Voor foto&apos;s, video&apos;s
                   en nieuwsbrieven
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Gerechtvaardigd belang:</strong> Voor het beheer en de
                   promotie van de club
@@ -215,21 +245,27 @@ export default function PrivacyPage() {
             </p>
             <ul className="space-y-2 text-gray-dark">
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Voetbal Vlaanderen:</strong> Voor vergunningen en
                   wedstrijdadministratie
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Dienstverleners:</strong> Zoals onze website hosting
                   provider (onder strikte afspraken)
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Wettelijke verplichtingen:</strong> Wanneer de wet dit
                   vereist
@@ -245,20 +281,26 @@ export default function PrivacyPage() {
             </h2>
             <ul className="space-y-2 text-gray-dark">
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Leden:</strong> Tot 7 jaar na beëindiging lidmaatschap
                   (wettelijke verplichting)
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Websitebezoekers:</strong> Maximum 2 jaar (cookies)
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Foto&apos;s en video&apos;s:</strong> Zolang
                   toestemming geldig is
@@ -332,14 +374,18 @@ export default function PrivacyPage() {
             </p>
             <ul className="space-y-3 text-gray-dark">
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Noodzakelijke cookies:</strong> Voor
                   basisfunctionaliteit van de website
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-green-main mt-1">•</span>
+                <span className="text-green-main mt-1" aria-hidden="true">
+                  •
+                </span>
                 <div>
                   <strong>Analytische cookies:</strong> Om te begrijpen hoe
                   bezoekers de site gebruiken (geanonimiseerd)
@@ -372,7 +418,7 @@ export default function PrivacyPage() {
             <p className="text-gray-dark">
               We kunnen deze privacyverklaring van tijd tot tijd aanpassen. De
               meest recente versie vind je altijd op deze pagina. Laatst
-              bijgewerkt: februari 2026.
+              bijgewerkt: {LAST_UPDATED}.
             </p>
           </section>
 
