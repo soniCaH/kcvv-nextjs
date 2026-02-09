@@ -73,7 +73,7 @@
     "eslint-config-next": "16.1.6",
     "eslint-plugin-storybook": "10.2.7",
     "gray-matter": "4.0.3",
-    "happy-dom": "20.5.0",
+    "happy-dom": "20.5.3",
     "husky": "9.1.7",
     "lint-staged": "16.2.7",
     "prettier": "3.8.1",
