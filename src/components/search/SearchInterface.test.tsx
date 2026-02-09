@@ -349,11 +349,14 @@ describe("SearchInterface", () => {
       const input = screen.getByRole("textbox");
       await user.type(input, "a");
 
-      // Try to submit - button should be disabled
+      // Submit button should be disabled
       const submitButton = screen.getByRole("button", { name: /^zoek$/i });
       expect(submitButton).toBeDisabled();
 
-      // Should not call fetch
+      // Attempt submission via Enter key (should be prevented by validation)
+      await user.keyboard("{Enter}");
+
+      // Fetch should not have been called due to 2-char minimum validation
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
