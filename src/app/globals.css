@@ -247,6 +247,23 @@ h6 { font-size: var(--font-size-sm); }   /* 14px */
   h6 { font-size: var(--font-size-sm); }   /* 14px */
 }
 
+/* Font Family Utilities */
+.font-title {
+  font-family: var(--font-family-title);
+}
+
+.font-body {
+  font-family: var(--font-family-body);
+}
+
+.font-alt {
+  font-family: var(--font-family-alt);
+}
+
+.font-mono {
+  font-family: var(--font-family-mono);
+}
+
 /* Paragraph Styles */
 p {
   margin-bottom: 1rem;

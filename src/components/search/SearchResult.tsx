@@ -16,10 +16,7 @@ export interface SearchResultProps {
    * Search result data
    */
   result: SearchResultType;
-  /**
-   * Search query for highlighting (future feature)
-   */
-  query?: string;
+  // Note: query prop removed until highlighting feature is implemented (YAGNI)
 }
 
 const typeIcons = {

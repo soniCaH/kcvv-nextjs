@@ -46,8 +46,9 @@ export const SearchForm = ({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (value.trim().length >= 2) {
-      onSearch(value);
+    const trimmedValue = value.trim();
+    if (trimmedValue.length >= 2) {
+      onSearch(trimmedValue);
     }
   };
 

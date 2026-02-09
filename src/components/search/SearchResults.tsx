@@ -5,9 +5,9 @@
  * Display list of search results
  */
 
-import {
-  SearchResult as SearchResultType,
-  SearchResultType as ContentType,
+import type {
+  SearchResult as SearchResultItem,
+  SearchResultType,
 } from "./SearchInterface";
 import { SearchResult } from "./SearchResult";
 
@@ -15,7 +15,7 @@ export interface SearchResultsProps {
   /**
    * Search results to display
    */
-  results: SearchResultType[];
+  results: SearchResultItem[];
   /**
    * Search query for highlighting
    */
@@ -23,7 +23,7 @@ export interface SearchResultsProps {
   /**
    * Active content type filter
    */
-  activeType: ContentType | "all";
+  activeType: SearchResultType | "all";
 }
 
 /**
@@ -73,7 +73,6 @@ export const SearchResults = ({
           <SearchResult
             key={`${result.type}:${result.id}`}
             result={result}
-            query={query}
           />
         ))}
       </div>
