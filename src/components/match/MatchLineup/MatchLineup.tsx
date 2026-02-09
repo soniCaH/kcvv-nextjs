@@ -118,6 +118,11 @@ function CardIcon({
       return <RedCardIcon />;
     case "double_yellow":
       return <DoubleYellowCardIcon />;
+    default: {
+      // Exhaustiveness check - if a new card type is added, TypeScript will error here
+      const _exhaustive: never = cardType;
+      return null;
+    }
   }
 }
 

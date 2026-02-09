@@ -37,12 +37,7 @@ export default function PrivacyPage() {
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-green-main via-green-hover to-green-dark-hover text-white py-16 px-4">
         <div className="max-w-4xl mx-auto">
-          <h1
-            className="text-4xl md:text-6xl font-bold mb-4"
-            style={{
-              fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
-            }}
-          >
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 font-title">
             Privacyverklaring
           </h1>
           <p className="text-xl md:text-2xl text-white/90 max-w-3xl">
@@ -87,7 +82,7 @@ export default function PrivacyPage() {
                 </a>
               </p>
               <p className="text-gray-dark">
-                <strong>Website:</strong>{" "}
+                <strong>E-mail (webmaster):</strong>{" "}
                 <a
                   href="mailto:kevin@kcvvelewijt.be"
                   className="text-green-main hover:text-green-hover hover:underline"
