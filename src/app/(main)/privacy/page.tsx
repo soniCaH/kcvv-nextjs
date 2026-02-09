@@ -315,6 +315,7 @@ export default function PrivacyPage() {
               >
                 info@kcvvelewijt.be
               </a>
+              .
             </p>
           </section>
 
