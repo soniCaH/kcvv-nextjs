@@ -69,23 +69,19 @@ const searchArticles = (query: string, limit = 50) =>
         if (article.attributes.body?.summary) {
           description = article.attributes.body.summary.substring(0, 150);
         } else if (article.attributes.body?.value) {
-          // Strip HTML tags securely - multi-pass to handle incomplete/nested tags
+          // Strip ALL HTML tags uniformly using iterative sanitization
+          // This approach is more robust than targeting specific tags like <script>
+          // because it handles all variations, incomplete tags, and nested structures
           let sanitized = article.attributes.body.value;
-
-          // First pass: explicitly remove script tags and their content
-          sanitized = sanitized.replace(
-            /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-            "",
-          );
-          sanitized = sanitized.replace(/<script[^>]*>/gi, "");
-
-          // Second pass: iteratively remove all remaining HTML tags
           let previousLength = 0;
+
+          // Repeat until no more tags are removed (handles incomplete/nested/malformed tags)
           while (sanitized.length !== previousLength) {
             previousLength = sanitized.length;
             sanitized = sanitized.replace(/<[^>]*>/g, "");
           }
 
+          // Since output is plain text, no HTML preservation needed - universal stripping is safest
           description = sanitized.replace(/\s+/g, " ").trim().substring(0, 150);
         }
 
