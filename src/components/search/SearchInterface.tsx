@@ -79,7 +79,7 @@ export const SearchInterface = ({
    * Note: Always fetches unfiltered results for accurate counts across all types
    */
   const performSearch = useCallback(
-    async (searchQuery: string, _type: SearchResultType | "all" = "all") => {
+    async (searchQuery: string) => {
       if (!searchQuery || searchQuery.trim().length < 2) {
         setResults([]);
         setTotalCount(0);
@@ -158,13 +158,14 @@ export const SearchInterface = ({
       router.push(`/search${params.toString() ? `?${params.toString()}` : ""}`);
 
       // Perform search
-      performSearch(searchQuery, activeType);
+      performSearch(searchQuery);
     },
     [activeType, router, performSearch],
   );
 
   /**
    * Handle filter change
+   * Note: Only updates UI state and URL - no refetch needed since we use client-side filtering
    */
   const handleFilterChange = useCallback(
     (type: SearchResultType | "all") => {
@@ -181,24 +182,45 @@ export const SearchInterface = ({
 
       router.push(`/search${params.toString() ? `?${params.toString()}` : ""}`);
 
-      // Re-perform search with new filter
-      if (query.trim()) {
-        performSearch(query, type);
-      }
+      // No need to re-fetch: SearchResults handles client-side filtering
     },
-    [query, router, performSearch],
+    [query, router],
   );
 
   /**
-   * Initial search on mount if URL has query
+   * Sync state with URL params (handles back/forward navigation)
    */
   useEffect(() => {
-    if (urlQuery && urlQuery.trim().length >= 2) {
-      performSearch(urlQuery, urlType || "all");
+    const currentUrlQuery = searchParams.get("q") || "";
+    const currentRawUrlType = searchParams.get("type");
+    const currentUrlType =
+      currentRawUrlType &&
+      allowedTypes.includes(currentRawUrlType as SearchResultType)
+        ? (currentRawUrlType as SearchResultType)
+        : undefined;
+
+    // Update query state if different
+    if (currentUrlQuery !== query) {
+      setQuery(currentUrlQuery);
     }
-    // Only run on mount
+
+    // Update type state if different
+    const newActiveType = currentUrlType || "all";
+    if (newActiveType !== activeType) {
+      setActiveType(newActiveType);
+    }
+
+    // Perform search if query is valid
+    if (currentUrlQuery && currentUrlQuery.trim().length >= 2) {
+      performSearch(currentUrlQuery);
+    } else if (!currentUrlQuery) {
+      // Clear results if no query
+      setResults([]);
+      setTotalCount(0);
+      setError(null);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
   /**
    * Cleanup: abort any in-flight requests on unmount
@@ -220,8 +242,8 @@ export const SearchInterface = ({
         isLoading={isLoading}
       />
 
-      {/* Show results only if query exists */}
-      {query.trim().length > 0 && (
+      {/* Show results only if query is valid (>= 2 chars) */}
+      {query.trim().length >= 2 && (
         <>
           {/* Filters */}
           <SearchFilters
@@ -260,8 +282,8 @@ export const SearchInterface = ({
         </>
       )}
 
-      {/* Help Text - Show when no query */}
-      {query.trim().length === 0 && (
+      {/* Help Text - Show when query is too short */}
+      {query.trim().length < 2 && (
         <div className="bg-white rounded-xl shadow-sm p-8 text-center">
           <h2 className="text-xl font-bold text-gray-blue mb-4">
             Wat wil je zoeken?

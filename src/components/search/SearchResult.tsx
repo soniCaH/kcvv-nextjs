@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * SearchResult Component
  * Individual search result card
