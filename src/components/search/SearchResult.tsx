@@ -113,6 +113,7 @@ export const SearchResult = ({ result }: SearchResultProps) => {
             icon={ArrowRight}
             size="sm"
             className="text-gray-400 group-hover:text-green-main group-hover:translate-x-1 transition-all"
+            aria-hidden="true"
           />
         </div>
       </div>
