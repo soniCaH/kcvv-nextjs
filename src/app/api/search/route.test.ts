@@ -6,7 +6,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import { GET } from "./route";
-import type { SearchResult } from "@/types/search";
 
 // Mock Next.js cache - pass through the function
 vi.mock("next/cache", () => ({
@@ -15,7 +14,6 @@ vi.mock("next/cache", () => ({
 
 // Mock fetch to return Drupal responses for testing
 const mockFetch = vi.fn();
-global.fetch = mockFetch as unknown as typeof fetch;
 
 // Helper to create NextRequest
 function createRequest(url: string): NextRequest {
@@ -26,8 +24,11 @@ describe("GET /api/search", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    // Use vi.stubGlobal for proper cleanup between tests
+    vi.stubGlobal("fetch", mockFetch);
+
     // Setup mock fetch to return empty Drupal responses by default
-    // This allows validation tests to pass without actual Drupal calls
+    // This allows tests to pass without complex schema-compliant mocks
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -39,6 +40,7 @@ describe("GET /api/search", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe("Query Validation", () => {
@@ -159,12 +161,9 @@ describe("GET /api/search", () => {
       const body = await response.json();
       expect(body.query).toBe("test");
       expect(Array.isArray(body.results)).toBe(true);
-      // Should only contain article results
-      if (body.results.length > 0) {
-        expect(
-          body.results.every((r: SearchResult) => r.type === "article"),
-        ).toBe(true);
-      }
+      // Mock returns empty data, so expect empty results
+      expect(body.results).toEqual([]);
+      expect(body.count).toBe(0);
     });
 
     it("should accept type=player and return 200", async () => {
@@ -175,12 +174,9 @@ describe("GET /api/search", () => {
       const body = await response.json();
       expect(body.query).toBe("test");
       expect(Array.isArray(body.results)).toBe(true);
-      // Should only contain player results
-      if (body.results.length > 0) {
-        expect(
-          body.results.every((r: SearchResult) => r.type === "player"),
-        ).toBe(true);
-      }
+      // Mock returns empty data, so expect empty results
+      expect(body.results).toEqual([]);
+      expect(body.count).toBe(0);
     });
 
     it("should accept type=team and return 200", async () => {
@@ -191,12 +187,9 @@ describe("GET /api/search", () => {
       const body = await response.json();
       expect(body.query).toBe("test");
       expect(Array.isArray(body.results)).toBe(true);
-      // Should only contain team results
-      if (body.results.length > 0) {
-        expect(body.results.every((r: SearchResult) => r.type === "team")).toBe(
-          true,
-        );
-      }
+      // Mock returns empty data, so expect empty results
+      expect(body.results).toEqual([]);
+      expect(body.count).toBe(0);
     });
 
     it("should trim and normalize query in response", async () => {
