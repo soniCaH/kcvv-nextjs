@@ -2,7 +2,7 @@
  * SearchResults Component Tests
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { SearchResults } from "./SearchResults";
 import {
@@ -10,6 +10,7 @@ import {
   createMockArticle,
   createMockPlayer,
   createMockTeam,
+  resetIdCounter,
 } from "@/../tests/helpers/search.helpers";
 
 // Mock Next.js modules
@@ -42,6 +43,10 @@ vi.mock("next/image", () => ({
 }));
 
 describe("SearchResults", () => {
+  beforeEach(() => {
+    // Reset ID counter to ensure deterministic IDs across tests
+    resetIdCounter();
+  });
   describe("Rendering", () => {
     it("should render results list", () => {
       render(
