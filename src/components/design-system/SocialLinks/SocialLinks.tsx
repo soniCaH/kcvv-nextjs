@@ -53,8 +53,8 @@ const socialLinks = [
  * Social media links component with multiple variants
  *
  * Visual specifications (matching Gatsby):
- * - Circle variant: 2rem (32px) circles, 2px gray border, green hover
- * - Icon size: 14px (0.875rem)
+ * - Circle variant: 24/32/40px circles, 2px gray border, green hover
+ * - Icon sizes: 16px (xs) for sm/md circles, 20px (sm) for lg circle
  * - Hover: Border color changes to green bright
  */
 export const SocialLinks = ({
