@@ -32,17 +32,14 @@ describe("search/index exports", () => {
     expect(typeof SearchModule.SearchResult).toBe("function");
   });
 
-  it("should export all expected components", () => {
-    const expectedExports = [
-      "SearchInterface",
-      "SearchForm",
+  it("should only export the expected public surface", () => {
+    const exportedKeys = Object.keys(SearchModule).sort();
+    expect(exportedKeys).toEqual([
       "SearchFilters",
-      "SearchResults",
+      "SearchForm",
+      "SearchInterface",
       "SearchResult",
-    ];
-
-    expectedExports.forEach((exportName) => {
-      expect(SearchModule).toHaveProperty(exportName);
-    });
+      "SearchResults",
+    ]);
   });
 });

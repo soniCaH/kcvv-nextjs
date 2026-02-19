@@ -2,6 +2,7 @@
  * SearchResults Component Tests
  */
 
+import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { SearchResults } from "./SearchResults";
@@ -21,7 +22,7 @@ vi.mock("next/link", () => ({
     href,
     ...props
   }: {
-    children: React.ReactNode;
+    children: ReactNode;
     href: string;
   }) => (
     <a href={href} {...props}>
@@ -34,6 +35,7 @@ vi.mock("next/image", () => ({
   default: ({
     src,
     alt,
+    fill: _fill,
     ...props
   }: {
     src: string;
