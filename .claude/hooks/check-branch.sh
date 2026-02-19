@@ -10,7 +10,7 @@ COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 [ "$TOOL_NAME" != "Bash" ] && exit 0
 
 # Only check git commit commands
-echo "$COMMAND" | grep -q "git commit" || exit 0
+echo "$COMMAND" | grep -qE '(^|[;&|]\s*)git commit\b' || exit 0
 
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 

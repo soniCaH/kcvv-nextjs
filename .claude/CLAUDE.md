@@ -55,7 +55,7 @@
 - Tailwind CSS only, primary green #4acf52
 - ISR with appropriate `revalidate`
 - `next/image` with proper `sizes`, `generateMetadata` for SEO
-- Doc files (DESIGN_SYSTEM.md, SCHEMA_GUIDE.md, STORYBOOK.md) — consult only when explicitly asked or creating a brand new design pattern not yet in the codebase.
+- Doc files (DESIGN_SYSTEM.md, SCHEMA_GUIDE.md, STORYBOOK.md) — do NOT consult unless explicitly asked.
 
 ## Skills
 
