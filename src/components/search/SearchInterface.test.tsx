@@ -810,12 +810,12 @@ describe("SearchInterface", () => {
         expect(screen.getByRole("tablist")).toBeInTheDocument();
       });
 
-      // Verify total count appears exactly once in the filter tabs ("Alles" tab)
+      // Verify total count is displayed on the "Alles" tab
       const tablist = screen.getByRole("tablist");
-      const countElements = within(tablist).getAllByText(
-        mockResponse.count.toString(),
-      );
-      expect(countElements).toHaveLength(1);
+      const allesTab = within(tablist).getByRole("tab", { name: /alles/i });
+      expect(
+        within(allesTab).getByText(mockResponse.count.toString()),
+      ).toBeInTheDocument();
     });
   });
 

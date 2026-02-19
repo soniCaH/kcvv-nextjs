@@ -34,14 +34,12 @@ describe("search/index exports", () => {
 
   it("should only export the expected public surface", () => {
     const exportedKeys = Object.keys(SearchModule).sort();
-    expect(exportedKeys).toEqual(
-      [
-        "SearchFilters",
-        "SearchForm",
-        "SearchInterface",
-        "SearchResult",
-        "SearchResults",
-      ].sort(),
-    );
+    expect(exportedKeys).toEqual([
+      "SearchFilters",
+      "SearchForm",
+      "SearchInterface",
+      "SearchResult",
+      "SearchResults",
+    ]);
   });
 });
