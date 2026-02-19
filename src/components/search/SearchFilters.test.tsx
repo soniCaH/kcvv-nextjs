@@ -313,17 +313,20 @@ describe("SearchFilters", () => {
 
   describe("FilterTabs Integration", () => {
     it("should pass correct props to FilterTabs", () => {
-      const { container } = render(
+      render(
         <SearchFilters
-          activeType="all"
+          activeType="article"
           onFilterChange={vi.fn()}
           resultCounts={mockResultCounts}
         />,
       );
 
-      // FilterTabs should be rendered
-      const tablist = container.querySelector('[role="tablist"]');
-      expect(tablist).toBeInTheDocument();
+      // Verify prop-driven behavior: activeType determines which tab is selected
+      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
+      expect(articleTab).toHaveAttribute("aria-selected", "true");
+
+      // Verify resultCounts are rendered in the tabs
+      expect(screen.getByText("5")).toBeInTheDocument(); // article count
     });
 
     it("should configure FilterTabs to show counts", () => {

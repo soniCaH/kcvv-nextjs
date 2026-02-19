@@ -3,8 +3,9 @@
  * Most complex component - handles state, URL sync, fetch, and coordination
  */
 
+import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SearchInterface } from "./SearchInterface";
 import { createMockSearchResponse } from "@/../tests/helpers/search.helpers";
@@ -23,13 +24,9 @@ vi.mock("next/navigation", () => ({
 // Mock child components' dependencies
 // Note: Kept in file due to Vitest hoisting requirements
 vi.mock("next/link", () => ({
-  default: ({
-    children,
-    href,
-  }: {
-    children: React.ReactNode;
-    href: string;
-  }) => <a href={href}>{children}</a>,
+  default: ({ children, href }: { children: ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
 }));
 
 vi.mock("next/image", () => ({
@@ -42,21 +39,19 @@ describe("SearchInterface", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    // Reset mocks
-    mockPush.mockClear();
-
     // Clear all params to prevent cross-test leakage
     Array.from(mockSearchParams.keys()).forEach((key) => {
       mockSearchParams.delete(key);
     });
 
-    // Setup fetch mock
+    // Setup fetch mock using vi.stubGlobal for proper cleanup
     fetchMock = vi.fn();
-    global.fetch = fetchMock as unknown as typeof fetch;
+    vi.stubGlobal("fetch", fetchMock);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe("Initial Rendering", () => {
@@ -90,14 +85,11 @@ describe("SearchInterface", () => {
   });
 
   describe("Initial Props", () => {
-    it("should initialize with initialQuery prop when no URL params", async () => {
-      // Component uses URL params first, initialQuery as fallback
-      // When URL has no query, initialQuery is not used due to URL sync effect
-      // This is expected behavior - URL state takes precedence
+    it("should ignore initialQuery prop when no URL params are present", async () => {
+      // URL state takes precedence - initialQuery is intentionally not applied
       render(<SearchInterface initialQuery="initial search" />);
 
       const input = screen.getByRole("textbox");
-      // Without URL params, component starts empty
       expect(input).toHaveValue("");
     });
 
@@ -694,10 +686,9 @@ describe("SearchInterface", () => {
 
     it("should show spinner during loading", async () => {
       const user = userEvent.setup();
-      let resolvePromise: (value: unknown) => void;
-      const promise = new Promise((resolve) => {
-        resolvePromise = resolve;
-      });
+      // Promise intentionally left unresolved - AbortController cleanup
+      // on test teardown prevents post-test state update warnings
+      const promise = new Promise(() => {});
 
       fetchMock.mockReturnValueOnce(promise);
 
@@ -711,11 +702,6 @@ describe("SearchInterface", () => {
 
       await waitFor(() => {
         expect(screen.getByRole("status")).toBeInTheDocument();
-      });
-
-      resolvePromise!({
-        ok: true,
-        json: async () => createMockSearchResponse("test"),
       });
     });
 
@@ -824,8 +810,11 @@ describe("SearchInterface", () => {
         expect(screen.getByRole("tablist")).toBeInTheDocument();
       });
 
-      // Verify total count is displayed (will appear multiple times for different filters)
-      const countElements = screen.getAllByText(mockResponse.count.toString());
+      // Verify count is displayed within the filter tabs
+      const tablist = screen.getByRole("tablist");
+      const countElements = within(tablist).getAllByText(
+        mockResponse.count.toString(),
+      );
       expect(countElements.length).toBeGreaterThan(0);
     });
   });
@@ -873,10 +862,9 @@ describe("SearchInterface", () => {
 
     it("should not show results during loading", async () => {
       const user = userEvent.setup();
-      let resolvePromise: (value: unknown) => void;
-      const promise = new Promise((resolve) => {
-        resolvePromise = resolve;
-      });
+      // Promise intentionally left unresolved - AbortController cleanup
+      // on test teardown prevents post-test state update warnings
+      const promise = new Promise(() => {});
 
       fetchMock.mockReturnValueOnce(promise);
 
@@ -893,11 +881,6 @@ describe("SearchInterface", () => {
       });
 
       expect(screen.queryByText(/resultaten voor/i)).not.toBeInTheDocument();
-
-      resolvePromise!({
-        ok: true,
-        json: async () => createMockSearchResponse("test"),
-      });
     });
 
     it("should not show results when error occurs", async () => {

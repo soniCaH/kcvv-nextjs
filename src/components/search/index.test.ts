@@ -31,18 +31,4 @@ describe("search/index exports", () => {
     expect(SearchModule.SearchResult).toBeDefined();
     expect(typeof SearchModule.SearchResult).toBe("function");
   });
-
-  it("should export all expected components", () => {
-    const expectedExports = [
-      "SearchInterface",
-      "SearchForm",
-      "SearchFilters",
-      "SearchResults",
-      "SearchResult",
-    ];
-
-    expectedExports.forEach((exportName) => {
-      expect(SearchModule).toHaveProperty(exportName);
-    });
-  });
 });

@@ -39,7 +39,6 @@ describe("GET /api/search", () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
