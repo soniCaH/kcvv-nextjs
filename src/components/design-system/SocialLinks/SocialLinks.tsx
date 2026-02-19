@@ -53,8 +53,8 @@ const socialLinks = [
  * Social media links component with multiple variants
  *
  * Visual specifications (matching Gatsby):
- * - Circle variant: 2rem (32px) circles, 2px gray border, green hover
- * - Icon size: 14px (0.875rem)
+ * - Circle variant: 24/32/40px circles, 2px gray border, green hover
+ * - Icon sizes: 16px (xs) for sm/md circles, 20px (sm) for lg circle
  * - Hover: Border color changes to green bright
  */
 export const SocialLinks = ({
@@ -68,18 +68,15 @@ export const SocialLinks = ({
     const sizeClasses = {
       sm: {
         container: "w-6 h-6", // 24px circle
-        text: "text-xs", // 12px icon
-        lineHeight: "calc(1.5rem - 4px)", // Adjust for border
+        iconSize: "xs" as const, // 16px icon
       },
       md: {
         container: "w-8 h-8", // 32px circle (default)
-        text: "text-sm", // 14px icon
-        lineHeight: "calc(2rem - 4px)",
+        iconSize: "xs" as const, // 16px icon
       },
       lg: {
         container: "w-10 h-10", // 40px circle
-        text: "text-base", // 16px icon
-        lineHeight: "calc(2.5rem - 4px)",
+        iconSize: "sm" as const, // 20px icon
       },
     };
 
@@ -105,13 +102,9 @@ export const SocialLinks = ({
                 "border-2 border-[#787C80] text-white",
                 "transition-all duration-300 hover:border-kcvv-green-bright",
                 sizeConfig.container,
-                sizeConfig.text,
               )}
-              style={{
-                lineHeight: sizeConfig.lineHeight,
-              }}
             >
-              <Icon icon={link.icon} />
+              <Icon icon={link.icon} size={sizeConfig.iconSize} />
             </a>
           </li>
         ))}
