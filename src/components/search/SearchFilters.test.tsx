@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SearchFilters } from "./SearchFilters";
 
@@ -86,11 +86,16 @@ describe("SearchFilters", () => {
         />,
       );
 
-      // Counts should be displayed
-      expect(screen.getByText("10")).toBeInTheDocument(); // all
-      expect(screen.getByText("5")).toBeInTheDocument(); // article
-      expect(screen.getByText("3")).toBeInTheDocument(); // player
-      expect(screen.getByText("2")).toBeInTheDocument(); // team
+      // Scope count lookups to each tab to avoid false positives
+      const allTab = screen.getByRole("tab", { name: /alles/i });
+      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
+      const playerTab = screen.getByRole("tab", { name: /spelers/i });
+      const teamTab = screen.getByRole("tab", { name: /teams/i });
+
+      expect(within(allTab).getByText("10")).toBeInTheDocument();
+      expect(within(articleTab).getByText("5")).toBeInTheDocument();
+      expect(within(playerTab).getByText("3")).toBeInTheDocument();
+      expect(within(teamTab).getByText("2")).toBeInTheDocument();
     });
 
     it("should handle zero counts", () => {

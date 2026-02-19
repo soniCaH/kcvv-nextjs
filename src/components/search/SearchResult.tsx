@@ -108,7 +108,10 @@ export const SearchResult = ({ result }: SearchResultProps) => {
         </div>
 
         {/* Arrow Icon */}
-        <div className="flex-shrink-0 self-center">
+        <div
+          className="flex-shrink-0 self-center"
+          data-testid="search-result-arrow"
+        >
           <Icon
             icon={ArrowRight}
             size="sm"

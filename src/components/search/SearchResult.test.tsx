@@ -34,6 +34,7 @@ vi.mock("next/image", () => ({
   default: ({
     src,
     alt,
+    fill: _fill,
     ...props
   }: {
     src: string;
@@ -365,10 +366,8 @@ describe("SearchResult", () => {
 
       render(<SearchResult result={result} />);
 
-      // Find the arrow icon via the link's child SVGs - the arrow is the last one
-      const link = screen.getByRole("link");
-      const svgs = link.querySelectorAll("svg");
-      const arrowIcon = svgs[svgs.length - 1];
+      const arrowWrapper = screen.getByTestId("search-result-arrow");
+      const arrowIcon = arrowWrapper.querySelector("svg");
       expect(arrowIcon).toBeInTheDocument();
       expect(arrowIcon).toHaveAttribute("aria-hidden", "true");
     });

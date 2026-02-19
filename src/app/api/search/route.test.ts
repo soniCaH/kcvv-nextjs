@@ -9,7 +9,8 @@ import { GET } from "./route";
 
 // Mock Next.js cache - pass through the function
 vi.mock("next/cache", () => ({
-  unstable_cache: <T>(fn: () => T) => fn,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  unstable_cache: <T extends (...args: any[]) => any>(fn: T) => fn,
 }));
 
 // Mock fetch to return Drupal responses for testing
@@ -81,23 +82,17 @@ describe("GET /api/search", () => {
   });
 
   describe("Type Validation", () => {
-    it("should return 400 for invalid type", async () => {
-      const request = createRequest("/api/search?q=test&type=invalid");
-      const response = await GET(request);
+    it.each(["invalid", "foo", "123"])(
+      "should return 400 for unrecognised type '%s'",
+      async (badType) => {
+        const request = createRequest(`/api/search?q=test&type=${badType}`);
+        const response = await GET(request);
 
-      expect(response.status).toBe(400);
-      const body = await response.json();
-      expect(body.error).toMatch(/invalid type/i);
-    });
-
-    it("should return 400 for unknown type", async () => {
-      const request = createRequest("/api/search?q=test&type=foo");
-      const response = await GET(request);
-
-      expect(response.status).toBe(400);
-      const body = await response.json();
-      expect(body.error).toMatch(/invalid type/i);
-    });
+        expect(response.status).toBe(400);
+        const body = await response.json();
+        expect(body.error).toMatch(/invalid type/i);
+      },
+    );
   });
 
   describe("Combined Validation", () => {
@@ -129,13 +124,6 @@ describe("GET /api/search", () => {
       expect(response.status).toBe(400);
       const body = await response.json();
       expect(body.error).toMatch(/invalid type/i);
-    });
-  });
-
-  describe("Request Structure", () => {
-    it("should export GET handler", () => {
-      expect(GET).toBeDefined();
-      expect(typeof GET).toBe("function");
     });
   });
 
@@ -199,5 +187,32 @@ describe("GET /api/search", () => {
       const body = await response.json();
       expect(body.query).toBe("test"); // Trimmed
     });
+
+    it("should accept uppercase type parameter (case-insensitive)", async () => {
+      const request = createRequest("/api/search?q=test&type=ARTICLE");
+      const response = await GET(request);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.query).toBe("test");
+      expect(Array.isArray(body.results)).toBe(true);
+      expect(body.results).toEqual([]);
+      expect(body.count).toBe(0);
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should return 500 when fetch throws", async () => {
+      mockFetch.mockImplementation(() => {
+        throw new Error("boom");
+      });
+
+      const request = createRequest("/api/search?q=test");
+      const response = await GET(request);
+
+      expect(response.status).toBe(500);
+      const body = await response.json();
+      expect(body.error).toBe("Internal server error");
+    }, 10_000);
   });
 });

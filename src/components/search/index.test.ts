@@ -31,4 +31,17 @@ describe("search/index exports", () => {
     expect(SearchModule.SearchResult).toBeDefined();
     expect(typeof SearchModule.SearchResult).toBe("function");
   });
+
+  it("should only export the expected public surface", () => {
+    const exportedKeys = Object.keys(SearchModule).sort();
+    expect(exportedKeys).toEqual(
+      [
+        "SearchFilters",
+        "SearchForm",
+        "SearchInterface",
+        "SearchResult",
+        "SearchResults",
+      ].sort(),
+    );
+  });
 });
