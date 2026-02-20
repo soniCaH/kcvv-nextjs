@@ -4,8 +4,9 @@ set -euo pipefail
 
 INPUT=$(cat)
 
-# Check if command contains git commit (tool_name filtering done by settings.json matcher)
-echo "$INPUT" | grep -q 'git commit' || exit 0
+# Extract command field and check for git commit
+COMMAND=$(echo "$INPUT" | sed -n 's/.*"command":"\([^"]*\)".*/\1/p')
+echo "$COMMAND" | grep -q 'git commit' || exit 0
 
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 
