@@ -2,6 +2,11 @@
 # Block git commits on main branch
 set -euo pipefail
 
+if ! command -v jq &>/dev/null; then
+  echo "Warning: jq is not installed — check-branch hook skipped" >&2
+  exit 0
+fi
+
 INPUT=$(cat)
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
