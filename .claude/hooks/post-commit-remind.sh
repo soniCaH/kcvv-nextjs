@@ -5,7 +5,7 @@ set -euo pipefail
 INPUT=$(cat)
 
 # Extract command field and check for git commit
-COMMAND=$(echo "$INPUT" | sed -n 's/.*"command":"\([^"]*\)".*/\1/p')
+COMMAND=$(echo "$INPUT" | sed -n 's/.*"command" *: *"\([^"]*\)".*/\1/p')
 echo "$COMMAND" | grep -q 'git commit' || exit 0
 
 # Only remind on feature branches
