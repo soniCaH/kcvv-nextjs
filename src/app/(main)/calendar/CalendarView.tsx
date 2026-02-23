@@ -194,8 +194,7 @@ export function CalendarView({ matches }: { matches: CalendarMatch[] }) {
   const grouped = useMemo(() => {
     const map = new Map<string, CalendarMatch[]>();
     for (const m of filtered) {
-      const d = new Date(m.date);
-      const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const day = new Date(m.date).toLocaleDateString("sv-SE"); // "YYYY-MM-DD" in local time
       if (!map.has(day)) map.set(day, []);
       map.get(day)!.push(m);
     }
@@ -239,7 +238,7 @@ export function CalendarView({ matches }: { matches: CalendarMatch[] }) {
         <div className="space-y-8">
           {grouped.map(([day, dayMatches]) => (
             <div key={day}>
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 capitalize">
+              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
                 {formatDayHeader(day)}
               </h2>
               <div className="space-y-3">
