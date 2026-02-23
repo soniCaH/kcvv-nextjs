@@ -99,9 +99,14 @@ export const FeaturedArticles = ({
     activeIndex >= articles.length && articles.length > 0 ? 0 : activeIndex;
 
   // Auto-rotate through articles.
-  // clampedIndex is included in deps so the timer resets after each slide change
-  // (whether triggered by auto-rotation or manual navigation), giving each slide
-  // the full interval duration and keeping the progress animation accurate.
+  // clampedIndex is intentionally included in the dependency array so that
+  // useEffect re-runs (and clearInterval + setInterval fire) after every slide
+  // change — whether triggered by setActiveIndex via auto-rotation or manual
+  // navigation. This makes setInterval behave like a chained setTimeout: each
+  // slide always receives a full safeInterval before setActiveIndex advances to
+  // the next index, which keeps the carousel-progress-fill animation in sync.
+  // An explicit setTimeout loop would be an equivalent, perhaps clearer,
+  // alternative for future maintainers.
   useEffect(() => {
     if (!autoRotate || articles.length <= 1 || isPaused) return;
 
@@ -317,9 +322,9 @@ export const FeaturedArticles = ({
 
                 {/* Title + date */}
                 <div className="flex flex-col gap-0.5 min-w-0">
-                  <h3 className="text-white! mb-0! text-xs font-semibold line-clamp-3 leading-snug group-hover:text-kcvv-green-bright! transition-colors">
+                  <span className="text-white! text-xs font-semibold line-clamp-3 leading-snug group-hover:text-kcvv-green-bright! transition-colors">
                     {article.title}
-                  </h3>
+                  </span>
                   <time
                     className="text-white/50 text-xs"
                     dateTime={article.dateIso}
