@@ -226,6 +226,7 @@ export const FeaturedArticles = ({
             {/* Pause/Play toggle — WCAG 2.2.2 */}
             {autoRotate && (
               <button
+                type="button"
                 onClick={() => setIsUserPaused((prev) => !prev)}
                 className={cn(
                   "p-1.5 rounded-full transition-colors",
@@ -249,6 +250,7 @@ export const FeaturedArticles = ({
             {articles.map((article, index) => (
               <button
                 key={index}
+                type="button"
                 onClick={() => setActiveIndex(index)}
                 className={cn(
                   "relative overflow-hidden rounded-full transition-all",
@@ -289,6 +291,7 @@ export const FeaturedArticles = ({
             {articles.map((article, index) => (
               <button
                 key={index}
+                type="button"
                 onClick={() => setActiveIndex(index)}
                 className={cn(
                   "frontpage__featured_article group flex items-start gap-3 p-3 rounded-lg transition-all cursor-pointer text-left border backdrop-blur-sm",
