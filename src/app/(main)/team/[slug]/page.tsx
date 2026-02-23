@@ -435,6 +435,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
               <TeamSchedule
                 matches={scheduleMatches}
                 teamId={footbalistoData.teamId}
+                teamSlug={slug}
                 showPast={true}
                 highlightNext={true}
               />

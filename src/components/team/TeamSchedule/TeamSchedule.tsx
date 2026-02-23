@@ -51,6 +51,8 @@ export interface TeamScheduleProps {
   matches: ScheduleMatch[];
   /** Team ID for home/away display */
   teamId: number;
+  /** Team slug for back-navigation context on match detail page */
+  teamSlug?: string;
   /** Show past results */
   showPast?: boolean;
   /** Highlight next match */
@@ -107,6 +109,7 @@ function StatusBadge({ status }: { status: ScheduleMatch["status"] }) {
  *
  * @param matches - Array of matches to display
  * @param teamId - Current team's ID (for home/away determination)
+ * @param teamSlug - Team slug used to build back-navigation URLs on the match detail page
  * @param showPast - If true, includes finished matches
  * @param highlightNext - If true, highlights the next upcoming match
  * @param limit - Optional limit on number of matches shown
@@ -117,6 +120,7 @@ function StatusBadge({ status }: { status: ScheduleMatch["status"] }) {
 export function TeamSchedule({
   matches,
   teamId,
+  teamSlug,
   showPast = true,
   highlightNext = true,
   limit,
@@ -216,10 +220,14 @@ export function TeamSchedule({
           }
         }
 
+        const matchHref = teamSlug
+          ? `/game/${match.id}?from=/team/${encodeURIComponent(teamSlug)}&fromTab=matches`
+          : `/game/${match.id}`;
+
         return (
           <Link
             key={match.id}
-            href={`/game/${match.id}`}
+            href={matchHref}
             className={cn(
               "block bg-white border rounded-lg p-4 transition-shadow hover:shadow-md",
               isNext

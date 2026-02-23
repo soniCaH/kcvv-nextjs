@@ -11,6 +11,7 @@
  * - Responsive layout
  */
 
+import Link from "next/link";
 import { MatchHeader, type MatchTeamProps } from "../MatchHeader";
 import { MatchLineup, type LineupPlayer } from "../MatchLineup";
 
@@ -33,6 +34,8 @@ export interface MatchDetailViewProps {
   awayLineup: LineupPlayer[];
   /** Whether match report is available */
   hasReport?: boolean;
+  /** URL to navigate back to (e.g. team page with tab) */
+  backUrl?: string;
   /** Loading state */
   isLoading?: boolean;
   /** Additional CSS classes */
@@ -56,6 +59,7 @@ export function MatchDetailView({
   homeLineup,
   awayLineup,
   hasReport = false,
+  backUrl,
   isLoading = false,
   className,
 }: MatchDetailViewProps) {
@@ -99,6 +103,14 @@ export function MatchDetailView({
 
       {/* Match Content */}
       <div className="container mx-auto px-4 py-8 space-y-8">
+        {backUrl && (
+          <Link
+            href={backUrl}
+            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-green-main transition-colors"
+          >
+            <span aria-hidden="true">←</span> Terug naar wedstrijden
+          </Link>
+        )}
         {/* Match Report Indicator - see issue #575 for link implementation */}
         {hasReport && status === "finished" && (
           <div className="flex items-center justify-center">

@@ -21,6 +21,7 @@ import {
 
 interface MatchPageProps {
   params: Promise<{ matchId: string }>;
+  searchParams: Promise<{ from?: string; fromTab?: string }>;
 }
 
 /**
@@ -102,8 +103,12 @@ async function fetchMatchOrNotFound(matchId: number): Promise<MatchDetail> {
  * @param params - Route params object containing the string `matchId`
  * @returns The MatchDetailView populated with teams, date, time, status, competition, lineups, and report flag
  */
-export default async function MatchPage({ params }: MatchPageProps) {
+export default async function MatchPage({
+  params,
+  searchParams,
+}: MatchPageProps) {
   const { matchId } = await params;
+  const { from, fromTab } = await searchParams;
   const numericId = parseInt(matchId, 10);
 
   if (isNaN(numericId)) {
@@ -122,6 +127,13 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const homeLineup = match.lineup?.home.map(transformLineupPlayer) ?? [];
   const awayLineup = match.lineup?.away.map(transformLineupPlayer) ?? [];
 
+  // Only allow back-links to internal team paths (prevent open redirect)
+  const validFromTabs = ["info", "lineup", "matches", "standings"];
+  const backUrl =
+    from && /^\/team\/[a-zA-Z0-9_-]+$/.test(from)
+      ? `${from}${fromTab && validFromTabs.includes(fromTab) ? `?tab=${fromTab}` : ""}`
+      : null;
+
   return (
     <MatchDetailView
       homeTeam={homeTeam}
@@ -133,6 +145,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
       homeLineup={homeLineup}
       awayLineup={awayLineup}
       hasReport={match.hasReport}
+      backUrl={backUrl ?? undefined}
     />
   );
 }
