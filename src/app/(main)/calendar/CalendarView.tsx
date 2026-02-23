@@ -9,6 +9,7 @@ import { useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { DateTime } from "luxon";
 import { FilterTabs, type FilterTab } from "@/components/design-system";
 
 export interface CalendarTeam {
@@ -31,16 +32,10 @@ export interface CalendarMatch {
 }
 
 function formatDayHeader(dateStr: string): string {
-  // Parse as local date — new Date("YYYY-MM-DD") is UTC midnight and would
-  // shift to the previous day in timezones ahead of UTC (e.g. Belgium UTC+1/+2)
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  return date.toLocaleDateString("nl-BE", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return DateTime.fromISO(dateStr).toLocaleString(
+    { weekday: "long", day: "numeric", month: "long", year: "numeric" },
+    { locale: "nl-BE" },
+  );
 }
 
 function StatusBadge({ status }: { status: CalendarMatch["status"] }) {
@@ -188,13 +183,13 @@ export function CalendarView({ matches }: { matches: CalendarMatch[] }) {
     [matches, activeTeam],
   );
 
-  // Group by local date (YYYY-MM-DD).
-  // Use local Date accessors instead of slicing the ISO string — slicing would
-  // produce the UTC date which can be one day behind local time in Belgium (UTC+1/+2).
+  // Group by local date (YYYY-MM-DD key via Luxon).
+  // fromISO respects the offset in the string and falls back to local time,
+  // avoiding the UTC-midnight shift that would occur with Date.slice(0, 10).
   const grouped = useMemo(() => {
     const map = new Map<string, CalendarMatch[]>();
     for (const m of filtered) {
-      const day = new Date(m.date).toLocaleDateString("sv-SE"); // "YYYY-MM-DD" in local time
+      const day = DateTime.fromISO(m.date).toISODate()!;
       if (!map.has(day)) map.set(day, []);
       map.get(day)!.push(m);
     }
