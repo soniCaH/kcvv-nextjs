@@ -124,7 +124,10 @@ export default function ContactPage() {
                     Gebruik onze hulpvinder
                   </p>
                 </div>
-                <span className="text-green-main group-hover:translate-x-0.5 transition-transform">
+                <span
+                  className="text-green-main group-hover:translate-x-0.5 transition-transform"
+                  aria-hidden="true"
+                >
                   →
                 </span>
               </Link>
@@ -140,7 +143,10 @@ export default function ContactPage() {
                     Alle bestuursleden en contactgegevens
                   </p>
                 </div>
-                <span className="text-green-main group-hover:translate-x-0.5 transition-transform">
+                <span
+                  className="text-green-main group-hover:translate-x-0.5 transition-transform"
+                  aria-hidden="true"
+                >
                   →
                 </span>
               </Link>
@@ -151,7 +157,7 @@ export default function ContactPage() {
           <div className="rounded-xl overflow-hidden shadow-sm border border-gray-200 min-h-[300px]">
             <iframe
               title="Locatie KCVV Elewijt - Driesstraat 30, 1982 Elewijt"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2497.0!2d4.4850!3d50.9820!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c3e5b4b5b5b5b5%3A0x0!2sDriesstraat+30%2C+1982+Elewijt!5e0!3m2!1snl!2sbe!4v1234567890"
+              src="https://maps.google.com/maps?q=Driesstraat+30%2C+1982+Elewijt%2C+Belgi%C3%AB&hl=nl&output=embed"
               width="100%"
               height="100%"
               style={{ minHeight: "300px", border: 0 }}
@@ -197,5 +203,3 @@ export default function ContactPage() {
     </div>
   );
 }
-
-export const revalidate = 86400; // 24h — static content
