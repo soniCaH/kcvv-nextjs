@@ -9,7 +9,7 @@ import { useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { cn } from "@/lib/utils/cn";
+import { FilterTabs, type FilterTab } from "@/components/design-system";
 
 export interface CalendarTeam {
   id: number;
@@ -216,33 +216,16 @@ export function CalendarView({ matches }: { matches: CalendarMatch[] }) {
     <div className="space-y-8">
       {/* Team filter */}
       {teams.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setTeam("all")}
-            className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium transition-colors",
-              activeTeam === "all"
-                ? "bg-green-main text-white"
-                : "bg-white border border-gray-200 text-gray-700 hover:border-green-main",
-            )}
-          >
-            Alle teams
-          </button>
-          {teams.map((team) => (
-            <button
-              key={team}
-              onClick={() => setTeam(team)}
-              className={cn(
-                "px-4 py-2 rounded-full text-sm font-medium transition-colors",
-                activeTeam === team
-                  ? "bg-green-main text-white"
-                  : "bg-white border border-gray-200 text-gray-700 hover:border-green-main",
-              )}
-            >
-              {team}
-            </button>
-          ))}
-        </div>
+        <FilterTabs
+          tabs={[
+            { value: "all", label: "Alle teams" },
+            ...teams.map((team): FilterTab => ({ value: team, label: team })),
+          ]}
+          activeTab={activeTeam}
+          onChange={setTeam}
+          ariaLabel="Filter op team"
+          showCounts={false}
+        />
       )}
 
       {/* Matches grouped by date */}
