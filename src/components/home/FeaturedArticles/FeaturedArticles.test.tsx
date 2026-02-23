@@ -305,7 +305,7 @@ describe("FeaturedArticles", () => {
     const secondDot = screen.getByRole("button", {
       name: "Artikel 2: Second Featured Article",
     });
-    expect(secondDot).toHaveAttribute("aria-current", "false");
+    expect(secondDot).not.toHaveAttribute("aria-current");
   });
 
   it("supports keyboard navigation with arrow keys", async () => {
@@ -379,6 +379,14 @@ describe("FeaturedArticles", () => {
     });
     expect(
       screen.getByRole("button", { name: "Artikelen pauzeren" }),
+    ).toBeInTheDocument();
+
+    // Advance timer after resume — rotation should actually restart
+    act(() => {
+      vi.advanceTimersByTime(1100);
+    });
+    expect(
+      screen.getByText("This is the second featured article description"),
     ).toBeInTheDocument();
   });
 

@@ -186,17 +186,17 @@ export const FeaturedArticles = ({
             href={activeArticle.href}
             className="group flex flex-col justify-center max-w-lg lg:max-w-xl"
           >
-            <h2 className="frontpage__featured_article__title !text-white text-4xl lg:text-6xl font-bold leading-tight mb-4 group-hover:!text-kcvv-green-bright transition-colors">
+            <h2 className="frontpage__featured_article__title text-white! text-4xl lg:text-6xl font-bold leading-tight mb-4 group-hover:text-kcvv-green-bright! transition-colors">
               {activeArticle.title}
             </h2>
 
             {activeArticle.description && (
-              <p className="frontpage__featured_article__title__description !text-white text-lg lg:text-xl mb-6 line-clamp-3">
+              <p className="frontpage__featured_article__title__description text-white! text-lg lg:text-xl mb-6 line-clamp-3">
                 {activeArticle.description}
               </p>
             )}
 
-            <div className="frontpage__featured_article__meta__wrapper flex items-center gap-4 text-sm !text-white">
+            <div className="frontpage__featured_article__meta__wrapper flex items-center gap-4 text-sm text-white!">
               <time
                 className="frontpage__featured_article__meta"
                 dateTime={activeArticle.dateIso}
@@ -257,7 +257,7 @@ export const FeaturedArticles = ({
                     : "w-3 h-3 bg-white/40 hover:bg-white/65",
                 )}
                 aria-label={`Artikel ${index + 1}: ${article.title}`}
-                aria-current={index === clampedIndex ? "true" : "false"}
+                aria-current={index === clampedIndex ? "true" : undefined}
               >
                 {/* Progress fill — animates via CSS keyframe when autoRotate is on.
                     Span unmounts/remounts on slide change, which resets the animation. */}
@@ -297,7 +297,7 @@ export const FeaturedArticles = ({
                     : "bg-black/65 border-white/10 hover:bg-black/80 hover:border-white/25",
                 )}
                 aria-label={`Ga naar artikel: ${article.title}`}
-                aria-pressed={index === clampedIndex}
+                aria-current={index === clampedIndex ? "true" : undefined}
               >
                 {/* Thumbnail */}
                 {article.imageUrl && (
@@ -314,7 +314,7 @@ export const FeaturedArticles = ({
 
                 {/* Title + date */}
                 <div className="flex flex-col gap-0.5 min-w-0">
-                  <h3 className="!text-white !mb-0 text-xs font-semibold line-clamp-3 leading-snug group-hover:!text-kcvv-green-bright transition-colors">
+                  <h3 className="text-white! mb-0! text-xs font-semibold line-clamp-3 leading-snug group-hover:text-kcvv-green-bright! transition-colors">
                     {article.title}
                   </h3>
                   <time
