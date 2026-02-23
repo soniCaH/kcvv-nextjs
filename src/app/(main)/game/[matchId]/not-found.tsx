@@ -8,9 +8,10 @@ import Link from "next/link";
 /**
  * Renders a centered "match not found" view for when the requested match cannot be located.
  *
- * Displays a Dutch heading ("Wedstrijd niet gevonden"), an explanatory paragraph, and a control to navigate back to the home page.
+ * Displays a Dutch heading ("Wedstrijd niet gevonden"), an explanatory paragraph, and two CTAs:
+ * a link to the match calendar and a link back to the home page.
  *
- * @returns A JSX element containing the "match not found" UI with a link to the home page.
+ * @returns A JSX element containing the "match not found" UI with links to the calendar and home page.
  */
 export default function MatchNotFound() {
   return (

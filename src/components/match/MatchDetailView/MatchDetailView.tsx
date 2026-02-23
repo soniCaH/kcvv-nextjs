@@ -108,7 +108,7 @@ export function MatchDetailView({
             href={backUrl}
             className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-green-main transition-colors"
           >
-            ← Terug naar wedstrijden
+            <span aria-hidden="true">←</span> Terug naar wedstrijden
           </Link>
         )}
         {/* Match Report Indicator - see issue #575 for link implementation */}

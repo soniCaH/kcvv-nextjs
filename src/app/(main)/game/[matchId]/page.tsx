@@ -130,7 +130,7 @@ export default async function MatchPage({
   // Only allow back-links to internal team paths (prevent open redirect)
   const validFromTabs = ["info", "lineup", "matches", "standings"];
   const backUrl =
-    from && /^\/team\/[a-z0-9-]+$/.test(from)
+    from && /^\/team\/[a-zA-Z0-9_-]+$/.test(from)
       ? `${from}${fromTab && validFromTabs.includes(fromTab) ? `?tab=${fromTab}` : ""}`
       : null;
 

@@ -109,6 +109,7 @@ function StatusBadge({ status }: { status: ScheduleMatch["status"] }) {
  *
  * @param matches - Array of matches to display
  * @param teamId - Current team's ID (for home/away determination)
+ * @param teamSlug - Team slug used to build back-navigation URLs on the match detail page
  * @param showPast - If true, includes finished matches
  * @param highlightNext - If true, highlights the next upcoming match
  * @param limit - Optional limit on number of matches shown
@@ -220,7 +221,7 @@ export function TeamSchedule({
         }
 
         const matchHref = teamSlug
-          ? `/game/${match.id}?from=/team/${teamSlug}&fromTab=matches`
+          ? `/game/${match.id}?from=/team/${encodeURIComponent(teamSlug)}&fromTab=matches`
           : `/game/${match.id}`;
 
         return (
