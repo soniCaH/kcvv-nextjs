@@ -4,11 +4,13 @@
  */
 
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Effect } from "effect";
 import { runPromise } from "@/lib/effect/runtime";
 import { FootbalistoService } from "@/lib/effect/services/FootbalistoService";
 import { CalendarView } from "./CalendarView";
 import type { CalendarMatch } from "./CalendarView";
+import { Spinner } from "@/components/design-system";
 
 export const metadata: Metadata = {
   title: "Wedstrijdkalender | KCVV Elewijt",
@@ -83,7 +85,15 @@ export default async function CalendarPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-10">
-        <CalendarView matches={matches} />
+        <Suspense
+          fallback={
+            <div className="flex justify-center py-12">
+              <Spinner size="lg" />
+            </div>
+          }
+        >
+          <CalendarView matches={matches} />
+        </Suspense>
       </div>
     </div>
   );
