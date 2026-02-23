@@ -87,8 +87,9 @@ export const FeaturedArticles = ({
 }: FeaturedArticlesProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHoverPaused, setIsHoverPaused] = useState(false);
+  const [isFocusPaused, setIsFocusPaused] = useState(false);
   const [isUserPaused, setIsUserPaused] = useState(false);
-  const isPaused = isHoverPaused || isUserPaused;
+  const isPaused = isHoverPaused || isFocusPaused || isUserPaused;
 
   // Clamp autoRotateInterval to minimum 1000ms to prevent runaway intervals
   const safeInterval = Math.max(autoRotateInterval, 1000);
@@ -124,18 +125,17 @@ export const FeaturedArticles = ({
     }
   };
 
-  // Handle focus events with relatedTarget checks to prevent brief unpausing during keyboard navigation
+  // Handle focus events with relatedTarget checks to prevent brief unpausing during keyboard navigation.
+  // Uses a separate isFocusPaused state so onMouseLeave cannot clear a keyboard-focus pause.
   const handleFocus = (e: React.FocusEvent) => {
-    // Only pause if focus is coming from outside the carousel
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsHoverPaused(true);
+      setIsFocusPaused(true);
     }
   };
 
   const handleBlur = (e: React.FocusEvent) => {
-    // Only unpause if focus is moving completely outside the carousel
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsHoverPaused(false);
+      setIsFocusPaused(false);
     }
   };
 

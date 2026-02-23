@@ -52,8 +52,8 @@ describe("FeaturedArticles", () => {
     expect(
       screen.getByText("This is the first featured article description"),
     ).toBeInTheDocument();
-    // Date appears in both main content and sidebar panel
-    expect(screen.getAllByText("20 januari 2025").length).toBeGreaterThan(0);
+    // Date appears once in main content and once in the sidebar panel
+    expect(screen.getAllByText("20 januari 2025")).toHaveLength(2);
   });
 
   it("displays article tags", () => {
