@@ -10,6 +10,7 @@ import { FootbalistoService } from "@/lib/effect/services/FootbalistoService";
 import type { Match } from "@/lib/effect/schemas/match.schema";
 import Image from "next/image";
 import Link from "next/link";
+import { PrintButton } from "./PrintButton";
 
 export const metadata: Metadata = {
   title: "Scheurkalender | KCVV Elewijt",
@@ -70,13 +71,7 @@ export default async function ScheurkalenderPage() {
               Printbare versie van de wedstrijdkalender
             </p>
           </div>
-          <button
-            onClick={() => window.print()}
-            className="shrink-0 px-5 py-2.5 bg-white text-green-main font-semibold rounded-lg hover:bg-gray-50 transition-colors print:hidden"
-            suppressHydrationWarning
-          >
-            Afdrukken
-          </button>
+          <PrintButton />
         </div>
       </div>
 
