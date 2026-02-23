@@ -52,7 +52,8 @@ describe("FeaturedArticles", () => {
     expect(
       screen.getByText("This is the first featured article description"),
     ).toBeInTheDocument();
-    expect(screen.getByText("20 januari 2025")).toBeInTheDocument();
+    // Date appears in both main content and sidebar panel
+    expect(screen.getAllByText("20 januari 2025").length).toBeGreaterThan(0);
   });
 
   it("displays article tags", () => {
@@ -293,13 +294,18 @@ describe("FeaturedArticles", () => {
     expect(link).toHaveAttribute("href", "/news/article-1");
   });
 
-  it("applies active styling to current article dot", () => {
+  it("marks the current article dot as active via aria-current", () => {
     render(<FeaturedArticles articles={mockArticles} autoRotate={false} />);
 
     const firstDot = screen.getByRole("button", {
       name: "Artikel 1: First Featured Article",
     });
-    expect(firstDot).toHaveClass("bg-kcvv-green-bright");
+    expect(firstDot).toHaveAttribute("aria-current", "true");
+
+    const secondDot = screen.getByRole("button", {
+      name: "Artikel 2: Second Featured Article",
+    });
+    expect(secondDot).toHaveAttribute("aria-current", "false");
   });
 
   it("supports keyboard navigation with arrow keys", async () => {
