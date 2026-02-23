@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
+import { Pause, Play } from "@/lib/icons";
 
 export interface FeaturedArticle {
   /**
@@ -85,7 +86,9 @@ export const FeaturedArticles = ({
   autoRotate = true,
 }: FeaturedArticlesProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isHoverPaused, setIsHoverPaused] = useState(false);
+  const [isUserPaused, setIsUserPaused] = useState(false);
+  const isPaused = isHoverPaused || isUserPaused;
 
   // Clamp autoRotateInterval to minimum 1000ms to prevent runaway intervals
   const safeInterval = Math.max(autoRotateInterval, 1000);
@@ -126,14 +129,14 @@ export const FeaturedArticles = ({
   const handleFocus = (e: React.FocusEvent) => {
     // Only pause if focus is coming from outside the carousel
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsPaused(true);
+      setIsHoverPaused(true);
     }
   };
 
   const handleBlur = (e: React.FocusEvent) => {
     // Only unpause if focus is moving completely outside the carousel
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsPaused(false);
+      setIsHoverPaused(false);
     }
   };
 
@@ -145,16 +148,21 @@ export const FeaturedArticles = ({
 
   return (
     <section
-      className="frontpage__featured_articles w-full bg-black relative overflow-hidden"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      onMouseEnter={() => setIsHoverPaused(true)}
+      onMouseLeave={() => setIsHoverPaused(false)}
       onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="region"
-      aria-label="Featured articles carousel"
+      aria-roledescription="carousel"
+      aria-label="Uitgelichte artikelen"
+      className="frontpage__featured_articles w-full bg-black relative overflow-hidden focus-visible:outline-2 focus-visible:outline-kcvv-green-bright focus-visible:outline-offset-0"
     >
+      {/* Screen reader live region — announces active article on change */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {activeArticle.title}
+      </div>
       <div className="relative w-full h-[400px] lg:h-[600px]">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0">
@@ -216,10 +224,26 @@ export const FeaturedArticles = ({
           </Link>
         </div>
 
-        {/* Navigation Dots */}
+        {/* Navigation Dots + Pause Button */}
         {articles.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-            {articles.map((_, index) => (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
+            {/* Pause/Play toggle — WCAG 2.2.2 */}
+            {autoRotate && (
+              <button
+                onClick={() => setIsUserPaused((prev) => !prev)}
+                className="p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                aria-label={
+                  isUserPaused ? "Artikelen hervatten" : "Artikelen pauzeren"
+                }
+              >
+                {isUserPaused ? (
+                  <Play className="w-3 h-3" aria-hidden="true" />
+                ) : (
+                  <Pause className="w-3 h-3" aria-hidden="true" />
+                )}
+              </button>
+            )}
+            {articles.map((article, index) => (
               <button
                 key={index}
                 onClick={() => setActiveIndex(index)}
@@ -229,7 +253,7 @@ export const FeaturedArticles = ({
                     ? "bg-kcvv-green-bright w-8"
                     : "bg-white/50 hover:bg-white/75",
                 )}
-                aria-label={`Go to article ${index + 1}`}
+                aria-label={`Artikel ${index + 1}: ${article.title}`}
                 aria-current={index === clampedIndex ? "true" : "false"}
               />
             ))}
@@ -238,7 +262,7 @@ export const FeaturedArticles = ({
 
         {/* Side Thumbnails (Desktop only) */}
         {articles.length > 1 && (
-          <div className="hidden lg:flex absolute right-0 top-0 bottom-0 w-80 flex-col justify-center gap-4 p-6 bg-gradient-to-l from-black/60 z-20">
+          <div className="hidden lg:flex absolute right-0 top-0 bottom-0 w-80 flex-col justify-center gap-4 p-6 bg-gradient-to-l from-black/85 via-black/60 z-20">
             {articles.map((article, index) => (
               <button
                 key={index}
@@ -249,7 +273,7 @@ export const FeaturedArticles = ({
                     ? "frontpage__featured_article--active bg-kcvv-green-bright/20 border border-kcvv-green-bright"
                     : "hover:bg-white/10 border border-transparent hover:border-white/30",
                 )}
-                aria-label={`Go to article: ${article.title}`}
+                aria-label={`Ga naar artikel: ${article.title}`}
                 aria-pressed={index === clampedIndex}
               >
                 {/* Thumbnail */}
@@ -266,7 +290,10 @@ export const FeaturedArticles = ({
                 )}
 
                 {/* Title */}
-                <h3 className="text-white text-sm font-semibold text-left line-clamp-3 group-hover:text-kcvv-green-bright transition-colors">
+                <h3
+                  className="text-white text-sm font-semibold text-left line-clamp-3 group-hover:text-kcvv-green-bright transition-colors"
+                  style={{ textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}
+                >
                   {article.title}
                 </h3>
               </button>

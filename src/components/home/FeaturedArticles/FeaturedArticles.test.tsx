@@ -65,15 +65,19 @@ describe("FeaturedArticles", () => {
   it("renders navigation dots when multiple articles exist", () => {
     render(<FeaturedArticles articles={mockArticles} />);
 
-    // Should have both navigation dots and thumbnails (3 dots + 3 thumbnails = 6 buttons)
-    const dots = screen.getAllByRole("button", { name: /Go to article/i });
+    // 3 dots ("Artikel N: ...") + 3 thumbnails ("Ga naar artikel: ...") = 6 nav buttons
+    const dots = screen.getAllByRole("button", {
+      name: /Artikel \d|Ga naar artikel/i,
+    });
     expect(dots).toHaveLength(6);
   });
 
   it("does not render navigation dots when only one article exists", () => {
     render(<FeaturedArticles articles={[mockArticles[0]]} />);
 
-    const dots = screen.queryAllByRole("button", { name: /Go to article/i });
+    const dots = screen.queryAllByRole("button", {
+      name: /Artikel \d|Ga naar artikel/i,
+    });
     expect(dots).toHaveLength(0);
   });
 
@@ -81,7 +85,9 @@ describe("FeaturedArticles", () => {
     render(<FeaturedArticles articles={mockArticles} autoRotate={false} />);
 
     // Click second dot
-    const secondDot = screen.getByRole("button", { name: "Go to article 2" });
+    const secondDot = screen.getByRole("button", {
+      name: "Artikel 2: Second Featured Article",
+    });
     await act(async () => {
       secondDot.click();
     });
@@ -102,7 +108,7 @@ describe("FeaturedArticles", () => {
 
     // Click second thumbnail (by updated aria-label)
     const secondThumbnail = screen.getByRole("button", {
-      name: "Go to article: Second Featured Article",
+      name: "Ga naar artikel: Second Featured Article",
     });
     await act(async () => {
       secondThumbnail.click();
@@ -189,13 +195,17 @@ describe("FeaturedArticles", () => {
       />,
     );
 
-    expect(screen.getByText("First Featured Article")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "First Featured Article", level: 2 }),
+    ).toBeInTheDocument();
 
     // Advance timer
     vi.advanceTimersByTime(5000);
 
     // Should still show first article (no rotation)
-    expect(screen.getByText("First Featured Article")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "First Featured Article", level: 2 }),
+    ).toBeInTheDocument();
   });
 
   it("renders empty when no articles provided", () => {
@@ -214,7 +224,9 @@ describe("FeaturedArticles", () => {
 
     render(<FeaturedArticles articles={articlesWithoutImages} />);
 
-    expect(screen.getByText("First Featured Article")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "First Featured Article", level: 2 }),
+    ).toBeInTheDocument();
   });
 
   it("handles articles without descriptions gracefully", () => {
@@ -227,7 +239,9 @@ describe("FeaturedArticles", () => {
 
     render(<FeaturedArticles articles={articlesWithoutDescriptions} />);
 
-    expect(screen.getByText("First Featured Article")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "First Featured Article", level: 2 }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByText("This is the first featured article description"),
     ).not.toBeInTheDocument();
@@ -243,7 +257,9 @@ describe("FeaturedArticles", () => {
 
     render(<FeaturedArticles articles={articlesWithoutTags} />);
 
-    expect(screen.getByText("First Featured Article")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "First Featured Article", level: 2 }),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Ploeg")).not.toBeInTheDocument();
   });
 
@@ -280,7 +296,9 @@ describe("FeaturedArticles", () => {
   it("applies active styling to current article dot", () => {
     render(<FeaturedArticles articles={mockArticles} autoRotate={false} />);
 
-    const firstDot = screen.getByRole("button", { name: "Go to article 1" });
+    const firstDot = screen.getByRole("button", {
+      name: "Artikel 1: First Featured Article",
+    });
     expect(firstDot).toHaveClass("bg-kcvv-green-bright");
   });
 
@@ -288,7 +306,7 @@ describe("FeaturedArticles", () => {
     render(<FeaturedArticles articles={mockArticles} autoRotate={false} />);
 
     const carousel = screen.getByRole("region", {
-      name: "Featured articles carousel",
+      name: "Uitgelichte artikelen",
     });
 
     // Navigate right with ArrowRight
@@ -316,6 +334,45 @@ describe("FeaturedArticles", () => {
 
     expect(
       screen.getByRole("heading", { name: "First Featured Article", level: 2 }),
+    ).toBeInTheDocument();
+  });
+
+  it("pause button stops auto-rotation and play resumes it", () => {
+    render(
+      <FeaturedArticles
+        articles={mockArticles}
+        autoRotate={true}
+        autoRotateInterval={1000}
+      />,
+    );
+
+    const pauseBtn = screen.getByRole("button", {
+      name: "Artikelen pauzeren",
+    });
+    act(() => {
+      pauseBtn.click();
+    });
+
+    // Should now show play button
+    expect(
+      screen.getByRole("button", { name: "Artikelen hervatten" }),
+    ).toBeInTheDocument();
+
+    // Advance timer — rotation should be stopped
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(
+      screen.getByText("This is the first featured article description"),
+    ).toBeInTheDocument();
+
+    // Resume
+    const playBtn = screen.getByRole("button", { name: "Artikelen hervatten" });
+    act(() => {
+      playBtn.click();
+    });
+    expect(
+      screen.getByRole("button", { name: "Artikelen pauzeren" }),
     ).toBeInTheDocument();
   });
 
@@ -357,7 +414,9 @@ describe("FeaturedArticles", () => {
     );
 
     // Navigate to third article (index 2)
-    const thirdDot = screen.getByRole("button", { name: "Go to article 3" });
+    const thirdDot = screen.getByRole("button", {
+      name: "Artikel 3: Third Featured Article",
+    });
     act(() => {
       thirdDot.click();
     });
