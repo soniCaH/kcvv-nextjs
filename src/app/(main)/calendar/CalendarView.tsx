@@ -188,11 +188,14 @@ export function CalendarView({ matches }: { matches: CalendarMatch[] }) {
     [matches, activeTeam],
   );
 
-  // Group by date (YYYY-MM-DD)
+  // Group by local date (YYYY-MM-DD).
+  // Use local Date accessors instead of slicing the ISO string — slicing would
+  // produce the UTC date which can be one day behind local time in Belgium (UTC+1/+2).
   const grouped = useMemo(() => {
     const map = new Map<string, CalendarMatch[]>();
     for (const m of filtered) {
-      const day = m.date.slice(0, 10);
+      const d = new Date(m.date);
+      const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       if (!map.has(day)) map.set(day, []);
       map.get(day)!.push(m);
     }
