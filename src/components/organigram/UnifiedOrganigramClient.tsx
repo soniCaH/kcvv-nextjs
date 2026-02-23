@@ -72,9 +72,9 @@ function getInitialView(urlView: string | null): ViewType {
     return urlView as ViewType;
   }
 
-  // Default to chart for consistent SSR/CSR
+  // Default to cards (Option A - evaluation winner 4.3/5) for consistent SSR/CSR
   // localStorage preference will be synced via useEffect after mount
-  return "chart";
+  return "cards";
 }
 
 /**
@@ -147,9 +147,8 @@ export function UnifiedOrganigramClient({
         // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronizing with localStorage after mount
         setActiveView(savedPreference);
       } else {
-        // Apply responsive default on client
-        const isMobile = window.matchMedia("(max-width: 1023px)").matches;
-        const responsiveDefault = isMobile ? "cards" : "chart";
+        // Cards is the default for all devices (Option A - evaluation winner 4.3/5)
+        const responsiveDefault: ViewType = "cards";
         if (responsiveDefault !== activeView) {
           setActiveView(responsiveDefault);
         }
