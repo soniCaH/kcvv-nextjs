@@ -220,7 +220,7 @@ export function TeamSchedule({
         }
 
         const matchHref = teamSlug
-          ? `/game/${match.id}?from=/team/${teamSlug}`
+          ? `/game/${match.id}?from=/team/${teamSlug}&fromTab=matches`
           : `/game/${match.id}`;
 
         return (

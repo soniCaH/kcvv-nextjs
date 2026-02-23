@@ -2,6 +2,7 @@
  * MatchDetailView Component Tests
  */
 
+import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { MatchDetailView } from "./MatchDetailView";
@@ -11,6 +12,22 @@ import type { LineupPlayer } from "../MatchLineup";
 vi.mock("next/image", () => ({
   default: ({ src, alt, ...props }: { src: string; alt: string }) => (
     <img src={src} alt={alt} {...props} />
+  ),
+}));
+
+// Mock next/link
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -185,6 +202,28 @@ describe("MatchDetailView", () => {
         <MatchDetailView {...defaultProps} className="custom-class" />,
       );
       expect(container.firstChild).toHaveClass("custom-class");
+    });
+  });
+
+  describe("back link", () => {
+    it("renders back link when backUrl is provided", () => {
+      render(
+        <MatchDetailView
+          {...defaultProps}
+          backUrl="/team/a-ploeg?tab=matches"
+        />,
+      );
+      const link = screen.getByRole("link", {
+        name: /terug naar wedstrijden/i,
+      });
+      expect(link).toHaveAttribute("href", "/team/a-ploeg?tab=matches");
+    });
+
+    it("does not render back link when backUrl is not provided", () => {
+      render(<MatchDetailView {...defaultProps} />);
+      expect(
+        screen.queryByRole("link", { name: /terug naar wedstrijden/i }),
+      ).not.toBeInTheDocument();
     });
   });
 });

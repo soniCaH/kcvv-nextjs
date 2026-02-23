@@ -9,7 +9,6 @@ import type { Metadata } from "next";
 import { runPromise } from "@/lib/effect/runtime";
 import { FootbalistoService } from "@/lib/effect/services/FootbalistoService";
 import type { MatchDetail } from "@/lib/effect/schemas/match.schema";
-import Link from "next/link";
 import { MatchDetailView } from "@/components/match/MatchDetailView";
 import {
   transformHomeTeam,
@@ -22,7 +21,7 @@ import {
 
 interface MatchPageProps {
   params: Promise<{ matchId: string }>;
-  searchParams: Promise<{ from?: string }>;
+  searchParams: Promise<{ from?: string; fromTab?: string }>;
 }
 
 /**
@@ -109,7 +108,7 @@ export default async function MatchPage({
   searchParams,
 }: MatchPageProps) {
   const { matchId } = await params;
-  const { from } = await searchParams;
+  const { from, fromTab } = await searchParams;
   const numericId = parseInt(matchId, 10);
 
   if (isNaN(numericId)) {
@@ -129,32 +128,25 @@ export default async function MatchPage({
   const awayLineup = match.lineup?.away.map(transformLineupPlayer) ?? [];
 
   // Only allow back-links to internal team paths (prevent open redirect)
-  const backUrl = from && /^\/team\/[a-z0-9-]+$/.test(from) ? from : null;
+  const validFromTabs = ["info", "lineup", "matches", "standings"];
+  const backUrl =
+    from && /^\/team\/[a-z0-9-]+$/.test(from)
+      ? `${from}${fromTab && validFromTabs.includes(fromTab) ? `?tab=${fromTab}` : ""}`
+      : null;
 
   return (
-    <>
-      {backUrl && (
-        <div className="container mx-auto px-4 pt-4">
-          <Link
-            href={backUrl}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-green-main transition-colors"
-          >
-            ← Terug naar team
-          </Link>
-        </div>
-      )}
-      <MatchDetailView
-        homeTeam={homeTeam}
-        awayTeam={awayTeam}
-        date={match.date}
-        time={time}
-        status={match.status}
-        competition={match.competition}
-        homeLineup={homeLineup}
-        awayLineup={awayLineup}
-        hasReport={match.hasReport}
-      />
-    </>
+    <MatchDetailView
+      homeTeam={homeTeam}
+      awayTeam={awayTeam}
+      date={match.date}
+      time={time}
+      status={match.status}
+      competition={match.competition}
+      homeLineup={homeLineup}
+      awayLineup={awayLineup}
+      hasReport={match.hasReport}
+      backUrl={backUrl ?? undefined}
+    />
   );
 }
 
