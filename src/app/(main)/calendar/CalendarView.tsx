@@ -31,17 +31,16 @@ export interface CalendarMatch {
 }
 
 function formatDayHeader(dateStr: string): string {
-  const date = new Date(dateStr);
+  // Parse as local date — new Date("YYYY-MM-DD") is UTC midnight and would
+  // shift to the previous day in timezones ahead of UTC (e.g. Belgium UTC+1/+2)
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
   return date.toLocaleDateString("nl-BE", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-}
-
-function formatTime(time?: string): string | undefined {
-  return time ?? undefined;
 }
 
 function StatusBadge({ status }: { status: CalendarMatch["status"] }) {
@@ -89,7 +88,7 @@ function MatchRow({ match }: { match: CalendarMatch }) {
           )}
           <StatusBadge status={match.status} />
         </div>
-        {match.time && <span>{formatTime(match.time)}</span>}
+        {match.time && <span>{match.time}</span>}
       </div>
 
       {/* Teams + score */}

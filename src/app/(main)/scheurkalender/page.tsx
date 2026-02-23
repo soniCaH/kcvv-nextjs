@@ -11,6 +11,7 @@ import type { Match } from "@/lib/effect/schemas/match.schema";
 import Image from "next/image";
 import Link from "next/link";
 import { PrintButton } from "./PrintButton";
+import { PrintDate } from "./PrintDate";
 
 export const metadata: Metadata = {
   title: "Scheurkalender | KCVV Elewijt",
@@ -37,6 +38,13 @@ async function fetchUpcomingMatches(): Promise<Match[]> {
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
+function toLocalDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 function formatFullDate(date: Date): string {
   return date.toLocaleDateString("nl-BE", {
     weekday: "long",
@@ -52,7 +60,7 @@ export default async function ScheurkalenderPage() {
   // Group by date string
   const grouped = new Map<string, Match[]>();
   for (const match of matches) {
-    const key = match.date.toISOString().slice(0, 10);
+    const key = toLocalDateKey(match.date);
     if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key)!.push(match);
   }
@@ -82,12 +90,7 @@ export default async function ScheurkalenderPage() {
             KCVV Elewijt — Wedstrijdkalender
           </h1>
           <p className="text-sm text-gray-500">
-            Afgedrukt op{" "}
-            {new Date().toLocaleDateString("nl-BE", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
+            Afgedrukt op <PrintDate />
           </p>
         </div>
 
@@ -134,7 +137,7 @@ export default async function ScheurkalenderPage() {
                         {match.home_team.logo && (
                           <Image
                             src={match.home_team.logo}
-                            alt=""
+                            alt={match.home_team.name}
                             width={20}
                             height={20}
                             className="object-contain shrink-0 print:hidden"
@@ -155,7 +158,7 @@ export default async function ScheurkalenderPage() {
                         {match.away_team.logo && (
                           <Image
                             src={match.away_team.logo}
-                            alt=""
+                            alt={match.away_team.name}
                             width={20}
                             height={20}
                             className="object-contain shrink-0 print:hidden"
