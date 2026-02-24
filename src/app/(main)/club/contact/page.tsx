@@ -6,6 +6,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MapPin, Mail, ExternalLink } from "@/lib/icons";
+import { ContactMap } from "./ContactMap";
 
 export const metadata: Metadata = {
   title: "Contact | KCVV Elewijt",
@@ -153,19 +154,8 @@ export default function ContactPage() {
             </div>
           </div>
 
-          {/* Map embed */}
-          <div className="rounded-xl overflow-hidden shadow-sm border border-gray-200 min-h-[300px]">
-            <iframe
-              title="Locatie KCVV Elewijt - Driesstraat 30, 1982 Elewijt"
-              src="https://maps.google.com/maps?q=Driesstraat+30%2C+1982+Elewijt%2C+Belgi%C3%AB&hl=nl&output=embed"
-              width="100%"
-              height="100%"
-              style={{ minHeight: "300px", border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </div>
+          {/* Map embed — consent-gated, see ContactMap.tsx */}
+          <ContactMap />
         </div>
 
         {/* Contact categories */}
