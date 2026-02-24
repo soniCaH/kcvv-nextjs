@@ -91,6 +91,11 @@ export const FeaturedArticles = ({
   const [isUserPaused, setIsUserPaused] = useState(false);
   const isPaused = isHoverPaused || isFocusPaused || isUserPaused;
 
+  // Incremented in each event handler that clears the last pause source so the
+  // progress fill span remounts (resetting the CSS animation to 0) in sync with
+  // the interval restarting in the auto-rotate useEffect below.
+  const [resumeGen, setResumeGen] = useState(0);
+
   // Clamp autoRotateInterval to minimum 1000ms to prevent runaway intervals
   const safeInterval = Math.max(autoRotateInterval, 1000);
 
@@ -141,7 +146,15 @@ export const FeaturedArticles = ({
   const handleBlur = (e: React.FocusEvent) => {
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setIsFocusPaused(false);
+      if (!isHoverPaused && !isUserPaused) setResumeGen((g) => g + 1);
     }
+  };
+
+  const handleUserPauseToggle = () => {
+    const resuming = isUserPaused;
+    setIsUserPaused((prev) => !prev);
+    if (resuming && !isHoverPaused && !isFocusPaused)
+      setResumeGen((g) => g + 1);
   };
 
   if (articles.length === 0) {
@@ -153,7 +166,10 @@ export const FeaturedArticles = ({
   return (
     <section
       onMouseEnter={() => setIsHoverPaused(true)}
-      onMouseLeave={() => setIsHoverPaused(false)}
+      onMouseLeave={() => {
+        setIsHoverPaused(false);
+        if (!isFocusPaused && !isUserPaused) setResumeGen((g) => g + 1);
+      }}
       onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
@@ -232,7 +248,7 @@ export const FeaturedArticles = ({
             {autoRotate && (
               <button
                 type="button"
-                onClick={() => setIsUserPaused((prev) => !prev)}
+                onClick={handleUserPauseToggle}
                 className={cn(
                   "p-1.5 rounded-full transition-colors",
                   isUserPaused
@@ -257,7 +273,7 @@ export const FeaturedArticles = ({
                 key={index}
                 type="button"
                 onClick={() => setActiveIndex(index)}
-                className="p-1.5"
+                className="group p-1.5"
                 aria-label={`Artikel ${index + 1}: ${article.title}`}
                 aria-current={index === clampedIndex ? "true" : undefined}
               >
@@ -267,13 +283,15 @@ export const FeaturedArticles = ({
                     "relative block overflow-hidden rounded-full transition-all",
                     index === clampedIndex
                       ? "w-10 h-3 bg-white/25"
-                      : "w-3 h-3 bg-white/40 hover:bg-white/65",
+                      : "w-3 h-3 bg-white/40 group-hover:bg-white/65",
                   )}
                 >
                   {/* Progress fill — animates via CSS keyframe when autoRotate is on.
-                      Span unmounts/remounts on slide change, which resets the animation. */}
+                      Keyed on pauseGen so the span remounts (resetting the animation)
+                      whenever the carousel resumes, keeping it in sync with the interval. */}
                   {index === clampedIndex && (
                     <span
+                      key={resumeGen}
                       className={cn(
                         "absolute inset-0 rounded-full bg-kcvv-green-bright",
                         autoRotate && "carousel-progress-fill",
