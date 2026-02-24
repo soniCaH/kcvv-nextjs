@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 import { FeaturedArticles, type FeaturedArticle } from "./FeaturedArticles";
 
 describe("FeaturedArticles", () => {
@@ -447,6 +447,78 @@ describe("FeaturedArticles", () => {
     // Should clamp to first article (index 0)
     expect(
       screen.getByRole("heading", { name: "First Featured Article", level: 2 }),
+    ).toBeInTheDocument();
+  });
+
+  it("pauses auto-rotation on mouse hover and resumes on mouse leave", () => {
+    render(
+      <FeaturedArticles
+        articles={mockArticles}
+        autoRotate={true}
+        autoRotateInterval={1000}
+      />,
+    );
+
+    const carousel = screen.getByRole("region", {
+      name: "Uitgelichte artikelen",
+    });
+
+    // Hover pauses rotation
+    act(() => {
+      fireEvent.mouseEnter(carousel);
+    });
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(
+      screen.getByText("This is the first featured article description"),
+    ).toBeInTheDocument();
+
+    // Mouse leave resumes rotation
+    act(() => {
+      fireEvent.mouseLeave(carousel);
+    });
+    act(() => {
+      vi.advanceTimersByTime(1100);
+    });
+    expect(
+      screen.getByText("This is the second featured article description"),
+    ).toBeInTheDocument();
+  });
+
+  it("resumes auto-rotation when focus moves outside the carousel", () => {
+    render(
+      <FeaturedArticles
+        articles={mockArticles}
+        autoRotate={true}
+        autoRotateInterval={1000}
+      />,
+    );
+
+    const carousel = screen.getByRole("region", {
+      name: "Uitgelichte artikelen",
+    });
+
+    // Focus from outside pauses rotation
+    act(() => {
+      fireEvent.focus(carousel, { relatedTarget: null });
+    });
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(
+      screen.getByText("This is the first featured article description"),
+    ).toBeInTheDocument();
+
+    // Blur to outside resumes rotation
+    act(() => {
+      fireEvent.blur(carousel, { relatedTarget: document.body });
+    });
+    act(() => {
+      vi.advanceTimersByTime(1100);
+    });
+    expect(
+      screen.getByText("This is the second featured article description"),
     ).toBeInTheDocument();
   });
 });
