@@ -91,6 +91,15 @@
       "matchPackageNames": ["/^eslint/", "/^@eslint//"]
     },
     {
+      "description": "Group all Storybook packages together (monorepo + eslint plugin) — placed after the eslint group so this rule wins for eslint-plugin-storybook",
+      "groupName": "storybook",
+      "matchPackageNames": [
+        "/^@storybook//",
+        "storybook",
+        "eslint-plugin-storybook"
+      ]
+    },
+    {
       "description": "Group React types together (including overrides)",
       "groupName": "react types",
       "matchPackageNames": ["@types/react", "@types/react-dom"]
