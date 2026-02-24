@@ -257,34 +257,41 @@ export const FeaturedArticles = ({
                 key={index}
                 type="button"
                 onClick={() => setActiveIndex(index)}
-                className={cn(
-                  "relative overflow-hidden rounded-full transition-all",
-                  index === clampedIndex
-                    ? "w-10 h-3 bg-white/25"
-                    : "w-3 h-3 bg-white/40 hover:bg-white/65",
-                )}
+                className="p-1.5"
                 aria-label={`Artikel ${index + 1}: ${article.title}`}
                 aria-current={index === clampedIndex ? "true" : undefined}
               >
-                {/* Progress fill — animates via CSS keyframe when autoRotate is on.
-                    Span unmounts/remounts on slide change, which resets the animation. */}
-                {index === clampedIndex && (
-                  <span
-                    className={cn(
-                      "absolute inset-0 rounded-full bg-kcvv-green-bright",
-                      autoRotate && "carousel-progress-fill",
-                    )}
-                    style={
-                      autoRotate
-                        ? {
-                            animationDuration: `${safeInterval}ms`,
-                            animationPlayState: isPaused ? "paused" : "running",
-                          }
-                        : undefined
-                    }
-                    aria-hidden="true"
-                  />
-                )}
+                {/* Visual dot — overflow-hidden clips the progress fill animation */}
+                <span
+                  className={cn(
+                    "relative block overflow-hidden rounded-full transition-all",
+                    index === clampedIndex
+                      ? "w-10 h-3 bg-white/25"
+                      : "w-3 h-3 bg-white/40 hover:bg-white/65",
+                  )}
+                >
+                  {/* Progress fill — animates via CSS keyframe when autoRotate is on.
+                      Span unmounts/remounts on slide change, which resets the animation. */}
+                  {index === clampedIndex && (
+                    <span
+                      className={cn(
+                        "absolute inset-0 rounded-full bg-kcvv-green-bright",
+                        autoRotate && "carousel-progress-fill",
+                      )}
+                      style={
+                        autoRotate
+                          ? {
+                              animationDuration: `${safeInterval}ms`,
+                              animationPlayState: isPaused
+                                ? "paused"
+                                : "running",
+                            }
+                          : undefined
+                      }
+                      aria-hidden="true"
+                    />
+                  )}
+                </span>
               </button>
             ))}
           </div>
