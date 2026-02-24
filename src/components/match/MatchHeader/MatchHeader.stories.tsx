@@ -16,7 +16,7 @@ const OPPONENT_LOGO =
   "https://dfaozfi7c7f3s.cloudfront.net/logos/extra_groot/59.png?v=1";
 
 const meta = {
-  title: "Components/Match/MatchHeader",
+  title: "Matches/MatchHeader",
   component: MatchHeader,
   parameters: {
     layout: "fullscreen",

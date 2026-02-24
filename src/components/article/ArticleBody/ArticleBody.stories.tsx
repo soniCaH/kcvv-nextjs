@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { ArticleBody } from "./ArticleBody";
 
 const meta = {
-  title: "Components/Article/ArticleBody",
+  title: "Articles/ArticleBody",
   component: ArticleBody,
   parameters: {
     layout: "padded",

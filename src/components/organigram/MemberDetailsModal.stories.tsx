@@ -3,7 +3,7 @@ import { MemberDetailsModal } from "./MemberDetailsModal";
 import type { OrgChartNode } from "@/types/organigram";
 
 const meta: Meta<typeof MemberDetailsModal> = {
-  title: "Components/Organigram/MemberDetailsModal",
+  title: "Organigram/MemberDetailsModal",
   component: MemberDetailsModal,
   parameters: {
     layout: "fullscreen",

@@ -202,7 +202,7 @@ const ALL_PLAYERS = [
 ];
 
 const meta = {
-  title: "Components/Team/TeamRoster",
+  title: "Teams/TeamRoster",
   component: TeamRoster,
   parameters: {
     layout: "padded",

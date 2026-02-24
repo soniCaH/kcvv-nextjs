@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { ArticleMetadata } from "./ArticleMetadata";
 
 const meta = {
-  title: "Components/Article/ArticleMetadata",
+  title: "Articles/ArticleMetadata",
   component: ArticleMetadata,
   parameters: {
     layout: "padded",

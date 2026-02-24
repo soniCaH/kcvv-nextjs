@@ -7,7 +7,7 @@ import { Sponsors } from "./Sponsors";
 import { mockSponsors } from "./Sponsors.mocks";
 
 const meta: Meta<typeof Sponsors> = {
-  title: "Domain/Sponsors/Sponsors",
+  title: "Sponsors/Sponsors",
   component: Sponsors,
   parameters: {
     layout: "padded",

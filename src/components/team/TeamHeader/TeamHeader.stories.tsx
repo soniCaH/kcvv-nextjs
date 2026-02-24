@@ -11,7 +11,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamHeader } from "./TeamHeader";
 
 const meta = {
-  title: "Components/Team/TeamHeader",
+  title: "Teams/TeamHeader",
   component: TeamHeader,
   parameters: {
     layout: "fullscreen",

@@ -9,7 +9,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { NumberBadge } from "./NumberBadge";
 
 const meta = {
-  title: "Components/Shared/NumberBadge",
+  title: "UI/NumberBadge",
   component: NumberBadge,
   parameters: {
     layout: "centered",

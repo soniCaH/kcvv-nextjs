@@ -193,7 +193,7 @@ const mockAwayLineup: LineupPlayer[] = [
 ];
 
 const meta = {
-  title: "Components/Match/MatchDetailView",
+  title: "Matches/MatchDetailView",
   component: MatchDetailView,
   parameters: {
     layout: "fullscreen",

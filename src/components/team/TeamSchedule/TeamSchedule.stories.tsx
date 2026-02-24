@@ -10,7 +10,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamSchedule, type ScheduleMatch } from "./TeamSchedule";
 
 const meta = {
-  title: "Components/Team/TeamSchedule",
+  title: "Teams/TeamSchedule",
   component: TeamSchedule,
   parameters: {
     layout: "padded",

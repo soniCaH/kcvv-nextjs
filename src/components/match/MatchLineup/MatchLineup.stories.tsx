@@ -215,7 +215,7 @@ const mockAwayLineup = [
 ];
 
 const meta = {
-  title: "Components/Match/MatchLineup",
+  title: "Matches/MatchLineup",
   component: MatchLineup,
   parameters: {
     layout: "padded",

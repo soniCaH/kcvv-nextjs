@@ -8,7 +8,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { MatchStats } from "./MatchStats";
 
 const meta = {
-  title: "Match/MatchStats",
+  title: "Matches/MatchStats",
   component: MatchStats,
   parameters: {
     layout: "centered",

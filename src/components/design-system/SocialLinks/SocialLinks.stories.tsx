@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { SocialLinks } from "./SocialLinks";
 
 const meta = {
-  title: "Design System/SocialLinks",
+  title: "UI/SocialLinks",
   component: SocialLinks,
   parameters: {
     layout: "centered",

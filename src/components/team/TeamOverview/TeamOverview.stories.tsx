@@ -54,7 +54,7 @@ const MOCK_TEAMS = {
 };
 
 const meta = {
-  title: "Components/Team/TeamOverview",
+  title: "Teams/TeamOverview",
   component: TeamOverview,
   parameters: {
     layout: "padded",
