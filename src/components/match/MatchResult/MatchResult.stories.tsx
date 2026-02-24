@@ -190,9 +190,18 @@ export const Loading: Story = {
 };
 
 /**
- * Multiple results in a list
+ * Multiple results in a list — illustrative story with three hardcoded instances.
+ * Controls don't affect this story; use Default to interact with individual props.
  */
 export const List: Story = {
+  args: {
+    homeTeam: kcvv,
+    awayTeam: opponent,
+    homeScore: 3,
+    awayScore: 1,
+    date: "2024-02-15",
+    kcvvTeamId: 1235,
+  },
   decorators: [
     () => (
       <div className="space-y-2 w-full max-w-sm">
@@ -226,12 +235,4 @@ export const List: Story = {
       </div>
     ),
   ],
-  args: {
-    homeTeam: kcvv,
-    awayTeam: opponent,
-    homeScore: 3,
-    awayScore: 1,
-    date: "2024-02-15",
-    kcvvTeamId: 1235,
-  },
 };

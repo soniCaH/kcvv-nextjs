@@ -284,17 +284,6 @@ export const Default: Story = {
 };
 
 /**
- * Players grouped by position with section headers
- */
-export const ByPosition: Story = {
-  args: {
-    players: ALL_PLAYERS,
-    teamName: "A-Ploeg",
-    groupByPosition: true,
-  },
-};
-
-/**
  * With staff section (coaches, trainers)
  */
 export const WithStaff: Story = {

@@ -159,15 +159,6 @@ export const Buttons: Story = {
 
 // ==================== WITH/WITHOUT COUNTS ====================
 
-export const WithCounts: Story = {
-  render: DepartmentFilterWithState,
-  args: {
-    members: mockMembers,
-    showCounts: true,
-    variant: "tabs",
-  },
-};
-
 export const WithoutCounts: Story = {
   render: DepartmentFilterWithState,
   args: {
