@@ -9,7 +9,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { ResponsibilityBlock } from "./ResponsibilityBlock";
 
 const meta = {
-  title: "Features/ResponsibilityBlock",
+  title: "Responsibility/ResponsibilityBlock",
   component: ResponsibilityBlock,
   parameters: {
     layout: "fullscreen",

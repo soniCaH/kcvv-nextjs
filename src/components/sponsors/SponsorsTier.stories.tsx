@@ -8,7 +8,7 @@ import { SponsorsTier } from "./SponsorsTier";
 import { mockSponsors } from "./Sponsors.mocks";
 
 const meta = {
-  title: "Domain/Sponsors/SponsorsTier",
+  title: "Sponsors/SponsorsTier",
   component: SponsorsTier,
   parameters: {
     layout: "padded",

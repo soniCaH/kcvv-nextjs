@@ -202,7 +202,7 @@ const ALL_PLAYERS = [
 ];
 
 const meta = {
-  title: "Components/Team/TeamRoster",
+  title: "Teams/TeamRoster",
   component: TeamRoster,
   parameters: {
     layout: "padded",
@@ -276,17 +276,6 @@ type Story = StoryObj<typeof meta>;
  * Default - Full roster grouped by position
  */
 export const Default: Story = {
-  args: {
-    players: ALL_PLAYERS,
-    teamName: "A-Ploeg",
-    groupByPosition: true,
-  },
-};
-
-/**
- * Players grouped by position with section headers
- */
-export const ByPosition: Story = {
   args: {
     players: ALL_PLAYERS,
     teamName: "A-Ploeg",

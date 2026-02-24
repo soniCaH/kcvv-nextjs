@@ -1,0 +1,45 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundation/Overview" />
+
+# KCVV Elewijt — Design Foundation
+
+This section documents the design tokens that drive every component on the KCVV Elewijt website.
+All tokens are defined in [`src/app/globals.css`](../../app/globals.css) inside the `@theme {}` block
+and consumed by both **Tailwind CSS v4** (in production) and **Storybook** (via this documentation).
+
+> **Single source of truth** — edit a value in `globals.css` and it updates everywhere:
+> Tailwind utility classes, component styles, and these documentation pages.
+
+---
+
+## How tokens flow
+
+```
+src/app/globals.css   →   Tailwind CSS v4 (@theme)   →   Component classes (bg-kcvv-green, text-kcvv-gray-blue, …)
+         ↓
+  Storybook preview.ts imports globals.css
+         ↓
+  Foundation MDX reads CSS vars via inline styles
+```
+
+No duplication. No drift.
+
+---
+
+## Token categories
+
+| Section | What's documented |
+|---|---|
+| [Colors](?path=/docs/foundation-colors--docs) | Full color palette — greens, neutrals, semantic, foundation grays |
+| [Typography](?path=/docs/foundation-typography--docs) | Font families, type scale (xs → 6xl), weights, line heights |
+| [Spacing & Icons](?path=/docs/foundation-spacing-icons--docs) | Custom spacing, breakpoints, max widths, shadows, icon catalogue |
+
+---
+
+## Brand identity
+
+- **Primary colour:** `#4acf52` (kcvv-green-bright) — vibrant grass green
+- **Dark accent:** `#4B9B48` (kcvv-green-dark) — used for headings and hover states
+- **Text:** `#31404b` (kcvv-gray-blue) — headings; `#292c31` (kcvv-gray-dark) — body
+- **Fonts:** [Quasimoda](https://fonts.adobe.com/) (headings) · Montserrat (body) via Adobe Typekit

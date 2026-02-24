@@ -1,0 +1,204 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import {
+  Menu, X, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
+  ArrowRight, ExternalLink, Check, CircleHelp,
+  Facebook, Twitter, Instagram,
+  FileText, Clipboard, ClipboardList, Newspaper, Tag, Calendar, CalendarDays, Clock,
+  Mail, Phone, Smartphone, MessageCircle,
+  User, Users, UserPlus, GraduationCap, UserSearch,
+  MapPin, Ruler,
+  Trophy, Activity, Dumbbell,
+  Heart, HeartPulse, Shield, ShieldAlert,
+  Handshake, LayoutGrid, Network,
+  Pause, Play, Plus, Zap,
+} from 'lucide-react';
+
+<Meta title="Foundation/Spacing & Icons" />
+
+export const SpacingRow = ({ token, value, px }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '6px 0', borderBottom: '1px solid #edeff4' }}>
+    <div style={{ width: '120px', flexShrink: 0, fontSize: '12px', fontFamily: 'monospace', color: '#9a9da2' }}>{token}</div>
+    <div style={{ width: '60px', flexShrink: 0, fontSize: '12px', color: '#9a9da2' }}>{value}</div>
+    <div style={{ width: '50px', flexShrink: 0, fontSize: '12px', color: '#9a9da2' }}>{px}</div>
+    <div style={{ height: '16px', background: 'var(--color-kcvv-green-bright)', borderRadius: '2px', width: px, maxWidth: '200px' }} />
+  </div>
+);
+
+export const IconGrid = ({ icons, label }) => (
+  <div style={{ marginBottom: '24px' }}>
+    <div style={{ fontSize: '13px', fontWeight: 600, color: '#9a9da2', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+      {icons.map(({ Icon, name }) => (
+        <div key={name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '10px', background: '#f8f9fb', borderRadius: '8px', minWidth: '72px' }}>
+          <Icon size={20} color="#31404b" />
+          <div style={{ fontSize: '10px', color: '#9a9da2', fontFamily: 'monospace', textAlign: 'center' }}>{name}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+# Spacing & Icons
+
+---
+
+## Custom Spacing Tokens
+
+These extend Tailwind's default spacing scale. All values are defined in `src/app/globals.css`.
+
+<div>
+  <div style={{ display: 'flex', gap: '16px', padding: '4px 0', fontSize: '11px', color: '#9a9da2', fontFamily: 'monospace', borderBottom: '2px solid #cacaca', marginBottom: '4px' }}>
+    <div style={{ width: '120px' }}>Token</div>
+    <div style={{ width: '60px' }}>Value</div>
+    <div style={{ width: '50px' }}>px</div>
+    <div>Visual</div>
+  </div>
+  <SpacingRow token="spacing-0_75" value="0.75rem" px="12px" />
+  <SpacingRow token="spacing-2_5" value="2.5rem" px="40px" />
+  <SpacingRow token="spacing-15" value="3.75rem" px="60px" />
+  <SpacingRow token="spacing-17_5" value="4.375rem" px="70px" />
+  <SpacingRow token="spacing-22_5" value="5.625rem" px="90px" />
+</div>
+
+> `spacing-35` (35rem) is the hero image height — too wide to show inline.
+
+---
+
+## Breakpoints
+
+| Token | Value | Notes |
+|---|---|---|
+| `sm` | 640px | Tailwind default |
+| `md` | 768px | Foundation medium |
+| `desk` | 960px | Gatsby parity breakpoint |
+| `lg` | 1024px | Tailwind default |
+| `xl` | 1280px | Foundation xlarge |
+| `2xl` | 1536px | Tailwind default |
+
+---
+
+## Max Widths
+
+| Token | Value | px | Usage |
+|---|---|---|---|
+| `max-w-inner` | 60rem | 960px | Article content, narrow layouts |
+| `max-w-inner-lg` | 70rem | 1120px | Wide content areas |
+| `max-w-outer` | 90rem | 1440px | Full-bleed container cap |
+
+---
+
+## Shadows
+
+| Token | Usage |
+|---|---|
+| `shadow-sm` | Cards, subtle elevation |
+| `shadow` | Default card shadow |
+| `shadow-md` | Raised elements |
+| `shadow-lg` | Modals, overlays |
+| `shadow-green` | Focus glow (`0 0 6px 1px rgba(74,207,82,0.5)`) |
+| `shadow-input` | Form input inset |
+| `shadow-input-focus` | Form input focus state |
+
+---
+
+## Icon Catalogue
+
+All icons are from [Lucide React](https://lucide.dev) and exported from `src/lib/icons.ts`.
+Use the `<Icon>` component or import directly from `@/lib/icons`.
+
+<IconGrid label="Navigation & UI" icons={[
+  { Icon: Menu, name: 'menu' },
+  { Icon: X, name: 'x' },
+  { Icon: Search, name: 'search' },
+  { Icon: ChevronDown, name: 'chevron-down' },
+  { Icon: ChevronUp, name: 'chevron-up' },
+  { Icon: ChevronLeft, name: 'chevron-left' },
+  { Icon: ChevronRight, name: 'chevron-right' },
+  { Icon: ArrowRight, name: 'arrow-right' },
+  { Icon: ExternalLink, name: 'external-link' },
+  { Icon: Check, name: 'check' },
+  { Icon: CircleHelp, name: 'circle-help' },
+]} />
+
+<IconGrid label="Social" icons={[
+  { Icon: Facebook, name: 'facebook' },
+  { Icon: Twitter, name: 'twitter' },
+  { Icon: Instagram, name: 'instagram' },
+]} />
+
+<IconGrid label="Content & Document" icons={[
+  { Icon: FileText, name: 'file-text' },
+  { Icon: Clipboard, name: 'clipboard' },
+  { Icon: ClipboardList, name: 'clipboard-list' },
+  { Icon: Newspaper, name: 'newspaper' },
+  { Icon: Tag, name: 'tag' },
+  { Icon: Calendar, name: 'calendar' },
+  { Icon: CalendarDays, name: 'calendar-days' },
+  { Icon: Clock, name: 'clock' },
+]} />
+
+<IconGrid label="Communication" icons={[
+  { Icon: Mail, name: 'mail' },
+  { Icon: Phone, name: 'phone' },
+  { Icon: Smartphone, name: 'smartphone' },
+  { Icon: MessageCircle, name: 'message-circle' },
+]} />
+
+<IconGrid label="People & Organization" icons={[
+  { Icon: User, name: 'user' },
+  { Icon: Users, name: 'users' },
+  { Icon: UserPlus, name: 'user-plus' },
+  { Icon: GraduationCap, name: 'graduation-cap' },
+  { Icon: UserSearch, name: 'user-search' },
+]} />
+
+<IconGrid label="Location & Measurement" icons={[
+  { Icon: MapPin, name: 'map-pin' },
+  { Icon: Ruler, name: 'ruler' },
+]} />
+
+<IconGrid label="Sports & Activities" icons={[
+  { Icon: Trophy, name: 'trophy' },
+  { Icon: Activity, name: 'activity' },
+  { Icon: Dumbbell, name: 'dumbbell' },
+]} />
+
+<IconGrid label="Medical & Safety" icons={[
+  { Icon: Heart, name: 'heart' },
+  { Icon: HeartPulse, name: 'heart-pulse' },
+  { Icon: Shield, name: 'shield' },
+  { Icon: ShieldAlert, name: 'shield-alert' },
+]} />
+
+<IconGrid label="Business" icons={[
+  { Icon: Handshake, name: 'handshake' },
+]} />
+
+<IconGrid label="Layout & Views" icons={[
+  { Icon: LayoutGrid, name: 'layout-grid' },
+  { Icon: Network, name: 'network' },
+]} />
+
+<IconGrid label="Media Controls" icons={[
+  { Icon: Pause, name: 'pause' },
+  { Icon: Play, name: 'play' },
+]} />
+
+<IconGrid label="Misc" icons={[
+  { Icon: Plus, name: 'plus' },
+  { Icon: Zap, name: 'zap' },
+]} />
+
+---
+
+## Usage in code
+
+```tsx
+// Named import from @/lib/icons
+import { Trophy, MapPin } from "@/lib/icons";
+<Trophy className="w-5 h-5 text-kcvv-green" />
+
+// Via Icon component (design-system wrapper)
+import { Icon } from "@/components/design-system/Icon";
+<Icon name="trophy" size="md" color="primary" />
+```

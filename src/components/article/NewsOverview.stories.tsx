@@ -9,7 +9,7 @@ import { CategoryFilters } from "./CategoryFilters/CategoryFilters";
 import { ArticleCard } from "./ArticleCard/ArticleCard";
 
 const meta = {
-  title: "Features/Article/NewsOverview",
+  title: "Articles/NewsOverview",
   parameters: {
     layout: "fullscreen",
     docs: {

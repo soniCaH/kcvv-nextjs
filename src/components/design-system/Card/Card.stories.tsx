@@ -8,7 +8,7 @@ import { Card, CardHeader, CardContent, CardFooter, CardImage } from "./Card";
 import { Button } from "../Button";
 
 const meta = {
-  title: "Design System/Card",
+  title: "UI/Card",
   component: Card,
   parameters: {
     layout: "padded",

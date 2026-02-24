@@ -19,7 +19,7 @@ import { FilterTabs, type FilterTab, type FilterTabsProps } from "./FilterTabs";
  * - Consistent KCVV green styling
  */
 const meta: Meta<typeof FilterTabs> = {
-  title: "Design System/FilterTabs",
+  title: "UI/FilterTabs",
   component: FilterTabs,
   parameters: {
     layout: "padded",

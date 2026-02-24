@@ -9,7 +9,7 @@ import { Button } from "../Button";
 import { Card, CardContent } from "../Card";
 
 const meta = {
-  title: "Design System/Spinner",
+  title: "UI/Spinner",
   component: Spinner,
   parameters: {
     layout: "centered",

@@ -6,8 +6,8 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Sponsors } from "./Sponsors";
 import { mockSponsors } from "./Sponsors.mocks";
 
-const meta: Meta<typeof Sponsors> = {
-  title: "Domain/Sponsors/Sponsors",
+const meta = {
+  title: "Sponsors/SponsorsGrid",
   component: Sponsors,
   parameters: {
     layout: "padded",
@@ -19,7 +19,7 @@ const meta: Meta<typeof Sponsors> = {
     },
   },
   tags: ["autodocs"],
-};
+} satisfies Meta<typeof Sponsors>;
 
 export default meta;
 type Story = StoryObj<typeof Sponsors>;

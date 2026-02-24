@@ -10,7 +10,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamStandings, type StandingsEntry } from "./TeamStandings";
 
 const meta = {
-  title: "Components/Team/TeamStandings",
+  title: "Teams/TeamStandings",
   component: TeamStandings,
   parameters: {
     layout: "padded",

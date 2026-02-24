@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 const meta = {
-  title: "Design System/Icon",
+  title: "UI/Icon",
   component: Icon,
   parameters: {
     layout: "centered",

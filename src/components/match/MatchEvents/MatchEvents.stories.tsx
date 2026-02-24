@@ -8,7 +8,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { MatchEvents } from "./MatchEvents";
 
 const meta = {
-  title: "Match/MatchEvents",
+  title: "Matches/MatchEvents",
   component: MatchEvents,
   parameters: {
     layout: "centered",

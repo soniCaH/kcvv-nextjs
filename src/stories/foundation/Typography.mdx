@@ -1,0 +1,100 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundation/Typography" />
+
+export const TypeSample = ({ token, size, px, weight = 400, sample = 'KCVV Elewijt Football Club' }) => (
+  <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', padding: '8px 0', borderBottom: '1px solid #edeff4' }}>
+    <div style={{ width: '96px', flexShrink: 0, fontSize: '11px', color: '#9a9da2', fontFamily: 'monospace' }}>{token}</div>
+    <div style={{ width: '64px', flexShrink: 0, fontSize: '11px', color: '#9a9da2', fontFamily: 'monospace' }}>{size}</div>
+    <div style={{ width: '48px', flexShrink: 0, fontSize: '11px', color: '#9a9da2' }}>{px}</div>
+    <div style={{ fontSize: `var(${token})`, fontWeight: weight, color: '#31404b', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sample}</div>
+  </div>
+);
+
+# Typography
+
+All type tokens are defined in `src/app/globals.css`. The body font is **Montserrat** (loaded via
+Adobe Typekit); the heading font is **Quasimoda**. System-safe fallbacks are specified for all families.
+
+---
+
+## Font Families
+
+| Token | Family | Usage |
+|---|---|---|
+| `font-title` | `quasimoda, acumin-pro, Montserrat, Verdana, sans-serif` | All headings (h1–h6) |
+| `font-body` | `montserrat, -apple-system, system-ui, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif` | Body text (default) |
+| `font-alt` | `stenciletta, …, sans-serif` | Accent / display |
+| `font-mono` | `ibm-plex-mono, Consolas, Liberation Mono, Courier, monospace` | Code |
+
+---
+
+## Type Scale
+
+<div style={{ marginBottom: '16px' }}>
+  <div style={{ display: 'flex', gap: '16px', padding: '4px 0', fontSize: '11px', color: '#9a9da2', fontFamily: 'monospace', borderBottom: '2px solid #cacaca' }}>
+    <div style={{ width: '96px' }}>Token</div>
+    <div style={{ width: '64px' }}>rem</div>
+    <div style={{ width: '48px' }}>px</div>
+    <div>Sample</div>
+  </div>
+  <TypeSample token="--font-size-xs" size="0.75rem" px="12px" sample="Body small / meta / labels" />
+  <TypeSample token="--font-size-sm" size="0.8125rem" px="13px" sample="Captions, helper text" />
+  <TypeSample token="--font-size-base" size="1rem" px="16px" sample="Default body text" />
+  <TypeSample token="--font-size-lg" size="1.125rem" px="18px" sample="Lead paragraph / intro text" />
+  <TypeSample token="--font-size-xl" size="1.25rem" px="20px" sample="Card titles / section labels" />
+  <TypeSample token="--font-size-2xl" size="1.375rem" px="22px" sample="Sub-headings (mobile h2)" />
+  <TypeSample token="--font-size-3xl" size="1.5rem" px="24px" sample="Section headings (desktop h3)" />
+  <TypeSample token="--font-size-4xl" size="1.75rem" px="28px" sample="Page title (mobile h1)" />
+  <TypeSample token="--font-size-5xl" size="2rem" px="32px" sample="Feature headings (desktop h2)" />
+  <TypeSample token="--font-size-stat" size="2.5rem" px="40px" sample="Stats / large numbers" />
+  <TypeSample token="--font-size-6xl" size="3rem" px="48px" sample="Hero title (desktop h1)" />
+</div>
+
+---
+
+## Heading Scale
+
+Headings are set globally in CSS — no per-component overrides needed.
+
+| Heading | Mobile | Desktop (≥768px) |
+|---|---|---|
+| h1 | 28px (`4xl`) | 48px (`6xl`) |
+| h2 | 22px (`2xl`) | 32px (`5xl`) |
+| h3 | 20px (`xl`) | 24px (`3xl`) |
+| h4 | 18px (`lg`) | 22px (`2xl`) |
+| h5 | 16px (`base`) | 16px (`base`) |
+| h6 | 13px (`sm`) | 13px (`sm`) |
+
+---
+
+## Font Weights
+
+| Token | Value | Usage |
+|---|---|---|
+| `font-normal` | 400 | Body text |
+| `font-medium` | 500 | Emphasis, labels |
+| `font-bold` | 700 | Headings, CTAs |
+
+---
+
+## Line Heights
+
+| Token | Value | Usage |
+|---|---|---|
+| `leading-tight` | 1.2 | Headings |
+| `leading-snug` | 1.25 | Subheadings, blockquotes |
+| `leading-normal` | 1.5 | Short body |
+| `leading-relaxed` | 1.6 | Article content |
+| `leading-loose` | 1.75 | Default body (`<body>`) |
+
+---
+
+## Special utilities
+
+```tsx
+<h2 className="font-title font-bold leading-tight">Heading text</h2>
+<p className="font-body leading-loose">Body text</p>
+<span className="font-alt text-4xl">KCVV</span>   {/* stenciletta accent */}
+<code className="font-mono text-sm">const x = 1</code>
+```

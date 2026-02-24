@@ -1,0 +1,110 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundation/Colors" />
+
+export const Swatch = ({ name, variable, hex, textDark = false }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+    <div style={{
+      width: '48px',
+      height: '48px',
+      borderRadius: '8px',
+      background: `var(${variable}, ${hex})`,
+      border: '1px solid rgba(0,0,0,0.08)',
+      flexShrink: 0,
+    }} />
+    <div>
+      <div style={{ fontWeight: 600, fontSize: '14px', color: '#31404b' }}>{name}</div>
+      <div style={{ fontSize: '12px', color: '#62656a', fontFamily: 'monospace' }}>{variable}</div>
+      <div style={{ fontSize: '12px', color: '#62656a', fontFamily: 'monospace' }}>{hex}</div>
+    </div>
+  </div>
+);
+
+export const SwatchRow = ({ items }) => (
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '8px 24px', marginBottom: '24px' }}>
+    {items.map(item => <Swatch key={item.variable} {...item} />)}
+  </div>
+);
+
+# Colors
+
+All color values live in `src/app/globals.css` inside `@theme {}`.
+The swatches below read directly from the live CSS custom properties — no hard-coded duplicates.
+
+---
+
+## Green (Brand Primary)
+
+The KCVV Elewijt brand green. `kcvv-green-bright` is the primary action color used on buttons,
+links, and interactive elements throughout the site.
+
+<SwatchRow items={[
+  { name: 'kcvv-green / kcvv-green-bright', variable: '--color-kcvv-green-bright', hex: '#4acf52' },
+  { name: 'kcvv-green-hover', variable: '--color-kcvv-green-hover', hex: '#41b147' },
+  { name: 'kcvv-green-dark', variable: '--color-kcvv-green-dark', hex: '#4B9B48' },
+  { name: 'kcvv-green-hover-dark', variable: '--color-kcvv-green-hover-dark', hex: '#3f833d' },
+  { name: 'kcvv-green-alt', variable: '--color-kcvv-green-alt', hex: '#BADA55' },
+]} />
+
+### Green alpha variants
+
+Used for backgrounds, overlays, and subtle highlights.
+
+<SwatchRow items={[
+  { name: 'kcvv-green-50 (10%)', variable: '--color-kcvv-green-50', hex: 'rgba(74,207,82,0.1)' },
+  { name: 'kcvv-green-100 (25%)', variable: '--color-kcvv-green-100', hex: 'rgba(74,207,82,0.25)' },
+  { name: 'kcvv-green-200 (50%)', variable: '--color-kcvv-green-200', hex: 'rgba(74,207,82,0.5)' },
+  { name: 'kcvv-green-300 (75%)', variable: '--color-kcvv-green-300', hex: 'rgba(74,207,82,0.75)' },
+]} />
+
+---
+
+## Neutral
+
+The gray palette for text, backgrounds, and borders.
+
+<SwatchRow items={[
+  { name: 'kcvv-black', variable: '--color-kcvv-black', hex: '#1E2024' },
+  { name: 'kcvv-gray-blue', variable: '--color-kcvv-gray-blue', hex: '#31404b' },
+  { name: 'kcvv-gray-dark', variable: '--color-kcvv-gray-dark', hex: '#292c31' },
+  { name: 'kcvv-gray', variable: '--color-kcvv-gray-DEFAULT', hex: '#62656A' },
+  { name: 'kcvv-gray-light', variable: '--color-kcvv-gray-light', hex: '#CCCCCC' },
+  { name: 'kcvv-white', variable: '--color-kcvv-white', hex: '#fefefe' },
+]} />
+
+---
+
+## Foundation Grays
+
+Structural grays for cards, dividers, and input backgrounds.
+
+<SwatchRow items={[
+  { name: 'foundation-gray-light', variable: '--color-foundation-gray-light', hex: '#edeff4' },
+  { name: 'foundation-gray', variable: '--color-foundation-gray-DEFAULT', hex: '#cacaca' },
+  { name: 'foundation-gray-dark', variable: '--color-foundation-gray-dark', hex: '#9a9da2' },
+]} />
+
+---
+
+## Semantic
+
+Status and feedback colors.
+
+<SwatchRow items={[
+  { name: 'kcvv-success', variable: '--color-kcvv-success', hex: '#3adb76' },
+  { name: 'kcvv-warning', variable: '--color-kcvv-warning', hex: '#ffae00' },
+  { name: 'kcvv-alert', variable: '--color-kcvv-alert', hex: '#cc4b37' },
+]} />
+
+---
+
+## Usage in code
+
+```tsx
+// Tailwind utility classes (most common)
+<div className="bg-kcvv-green text-kcvv-gray-blue">…</div>
+<button className="bg-kcvv-green hover:bg-kcvv-green-hover">…</button>
+
+// CSS custom property (when Tailwind class not available)
+<div style={{ color: 'var(--color-kcvv-gray-dark)' }}>…</div>
+```

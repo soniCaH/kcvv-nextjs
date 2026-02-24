@@ -5,7 +5,7 @@ import type { DepartmentFilterProps } from "./types";
 import type { OrgChartNode } from "@/types/organigram";
 
 const meta: Meta<typeof DepartmentFilter> = {
-  title: "Components/Organigram/DepartmentFilter",
+  title: "Organigram/DepartmentFilter",
   component: DepartmentFilter,
   parameters: {
     layout: "padded",
@@ -158,15 +158,6 @@ export const Buttons: Story = {
 };
 
 // ==================== WITH/WITHOUT COUNTS ====================
-
-export const WithCounts: Story = {
-  render: DepartmentFilterWithState,
-  args: {
-    members: mockMembers,
-    showCounts: true,
-    variant: "tabs",
-  },
-};
 
 export const WithoutCounts: Story = {
   render: DepartmentFilterWithState,

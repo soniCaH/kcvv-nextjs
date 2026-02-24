@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { FeaturedArticles } from "./FeaturedArticles";
 
 const meta: Meta<typeof FeaturedArticles> = {
-  title: "Domain/Home/FeaturedArticles",
+  title: "Home/FeaturedArticles",
   component: FeaturedArticles,
   tags: ["autodocs"],
   parameters: {
