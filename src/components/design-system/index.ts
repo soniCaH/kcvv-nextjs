@@ -31,6 +31,10 @@ export type {
   FullPageSpinnerProps,
 } from "./Spinner";
 
+// FilterTabs
+export { FilterTabs } from "./FilterTabs";
+export type { FilterTabsProps, FilterTab } from "./FilterTabs";
+
 // SocialLinks
 export { SocialLinks } from "./SocialLinks";
 export type { SocialLinksProps } from "./SocialLinks";
