@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
+import { Pause, Play } from "@/lib/icons";
 
 export interface FeaturedArticle {
   /**
@@ -67,8 +68,8 @@ export interface FeaturedArticlesProps {
  * Visual specifications (matching Gatsby):
  * - Full-width hero section with overlay text
  * - Active article displayed prominently
- * - Side thumbnails for other articles (desktop)
- * - Auto-rotation with manual controls
+ * - Side panel with article list for desktop navigation
+ * - Auto-rotation with progress indicator and manual controls
  * - Responsive: stacked on mobile, side-by-side on desktop
  *
  * @example
@@ -85,7 +86,15 @@ export const FeaturedArticles = ({
   autoRotate = true,
 }: FeaturedArticlesProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isHoverPaused, setIsHoverPaused] = useState(false);
+  const [isFocusPaused, setIsFocusPaused] = useState(false);
+  const [isUserPaused, setIsUserPaused] = useState(false);
+  const isPaused = isHoverPaused || isFocusPaused || isUserPaused;
+
+  // Incremented in each event handler that clears the last pause source so the
+  // progress fill span remounts (resetting the CSS animation to 0) in sync with
+  // the interval restarting in the auto-rotate useEffect below.
+  const [resumeGen, setResumeGen] = useState(0);
 
   // Clamp autoRotateInterval to minimum 1000ms to prevent runaway intervals
   const safeInterval = Math.max(autoRotateInterval, 1000);
@@ -94,20 +103,24 @@ export const FeaturedArticles = ({
   const clampedIndex =
     activeIndex >= articles.length && articles.length > 0 ? 0 : activeIndex;
 
-  // Auto-rotate through articles (pause when user interacts)
+  // Auto-rotate through articles.
+  // clampedIndex is intentionally included in the dependency array so that
+  // useEffect re-runs (and clearInterval + setInterval fire) after every slide
+  // change — whether triggered by setActiveIndex via auto-rotation or manual
+  // navigation. This makes setInterval behave like a chained setTimeout: each
+  // slide always receives a full safeInterval before setActiveIndex advances to
+  // the next index, which keeps the carousel-progress-fill animation in sync.
+  // An explicit setTimeout loop would be an equivalent, perhaps clearer,
+  // alternative for future maintainers.
   useEffect(() => {
     if (!autoRotate || articles.length <= 1 || isPaused) return;
 
     const timer = setInterval(() => {
-      setActiveIndex((current) => {
-        // Ensure index is always within bounds
-        const nextIndex = (current + 1) % articles.length;
-        return nextIndex;
-      });
+      setActiveIndex((current) => (current + 1) % articles.length);
     }, safeInterval);
 
     return () => clearInterval(timer);
-  }, [autoRotate, safeInterval, articles.length, isPaused]);
+  }, [autoRotate, safeInterval, articles.length, isPaused, clampedIndex]);
 
   // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -122,19 +135,26 @@ export const FeaturedArticles = ({
     }
   };
 
-  // Handle focus events with relatedTarget checks to prevent brief unpausing during keyboard navigation
+  // Handle focus events with relatedTarget checks to prevent brief unpausing during keyboard navigation.
+  // Uses a separate isFocusPaused state so onMouseLeave cannot clear a keyboard-focus pause.
   const handleFocus = (e: React.FocusEvent) => {
-    // Only pause if focus is coming from outside the carousel
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsPaused(true);
+      setIsFocusPaused(true);
     }
   };
 
   const handleBlur = (e: React.FocusEvent) => {
-    // Only unpause if focus is moving completely outside the carousel
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsPaused(false);
+      setIsFocusPaused(false);
+      if (!isHoverPaused && !isUserPaused) setResumeGen((g) => g + 1);
     }
+  };
+
+  const handleUserPauseToggle = () => {
+    const resuming = isUserPaused;
+    setIsUserPaused((prev) => !prev);
+    if (resuming && !isHoverPaused && !isFocusPaused)
+      setResumeGen((g) => g + 1);
   };
 
   if (articles.length === 0) {
@@ -145,16 +165,25 @@ export const FeaturedArticles = ({
 
   return (
     <section
-      className="frontpage__featured_articles w-full bg-black relative overflow-hidden"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      onMouseEnter={() => setIsHoverPaused(true)}
+      onMouseLeave={() => {
+        setIsHoverPaused(false);
+        if (!isFocusPaused && !isUserPaused) setResumeGen((g) => g + 1);
+      }}
       onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="region"
-      aria-label="Featured articles carousel"
+      aria-roledescription="carousel"
+      aria-label="Uitgelichte artikelen"
+      className="frontpage__featured_articles w-full bg-kcvv-black relative overflow-hidden focus-visible:outline-2 focus-visible:outline-kcvv-green-bright focus-visible:outline-offset-0"
     >
+      {/* Screen reader live region — announces active article on change */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {activeArticle.title}
+      </div>
+
       <div className="relative w-full h-[400px] lg:h-[600px]">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0">
@@ -168,30 +197,27 @@ export const FeaturedArticles = ({
               sizes="100vw"
             />
           )}
-          {/* Dark overlay for text readability - stronger gradient on the left where text is */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent" />
+          {/* Dark gradient: strong on left (where text sits), fades right toward sidebar */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-black/20" />
         </div>
 
-        {/* Content Overlay */}
-        <div className="relative z-10 h-full max-w-inner-lg mx-auto px-3 lg:px-0 flex items-center">
+        {/* Content Overlay — padded away from sidebar on desktop */}
+        <div className="relative z-10 h-full flex items-center px-4 lg:px-10">
           <Link
             href={activeArticle.href}
-            className="group flex flex-col justify-center max-w-2xl"
+            className="group flex flex-col justify-center max-w-lg lg:max-w-xl"
           >
-            {/* Title - Force pure white with !important */}
-            <h2 className="frontpage__featured_article__title !text-white text-4xl lg:text-6xl font-bold leading-tight mb-4 group-hover:!text-kcvv-green-bright transition-colors">
+            <h2 className="frontpage__featured_article__title text-white! text-4xl lg:text-6xl font-bold leading-tight mb-4 group-hover:text-kcvv-green-bright! transition-colors">
               {activeArticle.title}
             </h2>
 
-            {/* Description - Pure white */}
             {activeArticle.description && (
-              <p className="frontpage__featured_article__title__description !text-white text-lg lg:text-xl mb-6 line-clamp-3">
+              <p className="frontpage__featured_article__title__description text-white! text-lg lg:text-xl mb-6 line-clamp-3">
                 {activeArticle.description}
               </p>
             )}
 
-            {/* Metadata - Pure white */}
-            <div className="frontpage__featured_article__meta__wrapper flex items-center gap-4 text-sm !text-white">
+            <div className="frontpage__featured_article__meta__wrapper flex items-center gap-4 text-sm text-white!">
               <time
                 className="frontpage__featured_article__meta"
                 dateTime={activeArticle.dateIso}
@@ -199,7 +225,6 @@ export const FeaturedArticles = ({
                 {activeArticle.date}
               </time>
 
-              {/* Tags */}
               {activeArticle.tags && activeArticle.tags.length > 0 && (
                 <div className="frontpage__featured_article__meta__tags flex gap-2">
                   {activeArticle.tags.slice(0, 3).map((tag, i) => (
@@ -216,59 +241,122 @@ export const FeaturedArticles = ({
           </Link>
         </div>
 
-        {/* Navigation Dots */}
+        {/* Navigation Dots + Pause Button */}
         {articles.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-            {articles.map((_, index) => (
+          <div className="absolute bottom-6 left-4 lg:left-10 z-20 flex items-center gap-3">
+            {/* Pause/Play toggle — WCAG 2.2.2 */}
+            {autoRotate && (
+              <button
+                type="button"
+                onClick={handleUserPauseToggle}
+                className={cn(
+                  "p-1.5 rounded-full transition-colors",
+                  isUserPaused
+                    ? "bg-white text-kcvv-black"
+                    : "bg-black/50 text-white hover:bg-black/70",
+                )}
+                aria-label={
+                  isUserPaused ? "Artikelen hervatten" : "Artikelen pauzeren"
+                }
+              >
+                {isUserPaused ? (
+                  <Play className="w-3 h-3" aria-hidden="true" />
+                ) : (
+                  <Pause className="w-3 h-3" aria-hidden="true" />
+                )}
+              </button>
+            )}
+
+            {/* Progress dots — active dot fills with green over the interval duration */}
+            {articles.map((article, index) => (
               <button
                 key={index}
+                type="button"
                 onClick={() => setActiveIndex(index)}
-                className={cn(
-                  "w-3 h-3 rounded-full transition-all",
-                  index === clampedIndex
-                    ? "bg-kcvv-green-bright w-8"
-                    : "bg-white/50 hover:bg-white/75",
-                )}
-                aria-label={`Go to article ${index + 1}`}
-                aria-current={index === clampedIndex ? "true" : "false"}
-              />
+                className="group p-1.5"
+                aria-label={`Artikel ${index + 1}: ${article.title}`}
+                aria-current={index === clampedIndex ? "true" : undefined}
+              >
+                {/* Visual dot — overflow-hidden clips the progress fill animation */}
+                <span
+                  className={cn(
+                    "relative block overflow-hidden rounded-full transition-all",
+                    index === clampedIndex
+                      ? "w-10 h-3 bg-white/25"
+                      : "w-3 h-3 bg-white/40 group-hover:bg-white/65",
+                  )}
+                >
+                  {/* Progress fill — animates via CSS keyframe when autoRotate is on.
+                      Keyed on pauseGen so the span remounts (resetting the animation)
+                      whenever the carousel resumes, keeping it in sync with the interval. */}
+                  {index === clampedIndex && (
+                    <span
+                      key={resumeGen}
+                      className={cn(
+                        "absolute inset-0 rounded-full bg-kcvv-green-bright",
+                        autoRotate && "carousel-progress-fill",
+                      )}
+                      style={
+                        autoRotate
+                          ? {
+                              animationDuration: `${safeInterval}ms`,
+                              animationPlayState: isPaused
+                                ? "paused"
+                                : "running",
+                            }
+                          : undefined
+                      }
+                      aria-hidden="true"
+                    />
+                  )}
+                </span>
+              </button>
             ))}
           </div>
         )}
 
-        {/* Side Thumbnails (Desktop only) */}
+        {/* Side Article Panel (Desktop only) — floating cards over the image */}
         {articles.length > 1 && (
-          <div className="hidden lg:flex absolute right-0 top-0 bottom-0 w-80 flex-col justify-center gap-4 p-6 bg-gradient-to-l from-black/60 z-20">
+          <div className="hidden lg:flex absolute right-4 top-0 bottom-0 w-80 flex-col justify-center gap-3 z-20">
             {articles.map((article, index) => (
               <button
                 key={index}
+                type="button"
                 onClick={() => setActiveIndex(index)}
                 className={cn(
-                  "frontpage__featured_article group flex items-center gap-3 p-2 rounded transition-all cursor-pointer",
+                  "frontpage__featured_article group flex items-start gap-3 p-3 rounded-lg transition-all cursor-pointer text-left border backdrop-blur-sm",
                   index === clampedIndex
-                    ? "frontpage__featured_article--active bg-kcvv-green-bright/20 border border-kcvv-green-bright"
-                    : "hover:bg-white/10 border border-transparent hover:border-white/30",
+                    ? "frontpage__featured_article--active bg-kcvv-black/90 border-kcvv-green-bright"
+                    : "bg-black/65 border-white/10 hover:bg-black/80 hover:border-white/25",
                 )}
-                aria-label={`Go to article: ${article.title}`}
-                aria-pressed={index === clampedIndex}
+                aria-label={`Ga naar artikel: ${article.title}`}
+                aria-current={index === clampedIndex ? "true" : undefined}
               >
                 {/* Thumbnail */}
                 {article.imageUrl && (
-                  <div className="relative w-20 h-20 shrink-0 rounded overflow-hidden">
+                  <div className="relative w-14 h-14 shrink-0 rounded overflow-hidden">
                     <Image
                       src={article.imageUrl}
-                      alt={article.imageAlt}
+                      alt=""
                       fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-110"
-                      sizes="80px"
+                      className="object-cover"
+                      sizes="56px"
                     />
                   </div>
                 )}
 
-                {/* Title */}
-                <h3 className="text-white text-sm font-semibold text-left line-clamp-3 group-hover:text-kcvv-green-bright transition-colors">
-                  {article.title}
-                </h3>
+                {/* Title + date */}
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="text-white! text-xs font-semibold line-clamp-3 leading-snug group-hover:text-kcvv-green-bright! transition-colors">
+                    {article.title}
+                  </span>
+                  <time
+                    className="text-white/50 text-xs"
+                    dateTime={article.dateIso}
+                  >
+                    {article.date}
+                  </time>
+                </div>
               </button>
             ))}
           </div>

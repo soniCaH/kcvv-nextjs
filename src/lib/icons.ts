@@ -71,6 +71,10 @@ import {
   LayoutGrid,
   Network,
 
+  // Media controls
+  Pause,
+  Play,
+
   // Misc
   Plus,
   Zap,
@@ -144,6 +148,10 @@ export const icons = {
   // Layout & Views
   "layout-grid": LayoutGrid,
   network: Network,
+
+  // Media controls
+  pause: Pause,
+  play: Play,
 
   // Misc
   plus: Plus,
@@ -265,6 +273,10 @@ export {
   // Layout & Views
   LayoutGrid,
   Network,
+
+  // Media controls
+  Pause,
+  Play,
 
   // Misc
   Plus,

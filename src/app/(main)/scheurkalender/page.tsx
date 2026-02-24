@@ -137,7 +137,8 @@ export default async function ScheurkalenderPage() {
                         {match.home_team.logo && (
                           <Image
                             src={match.home_team.logo}
-                            alt={match.home_team.name}
+                            alt=""
+                            aria-hidden="true"
                             width={20}
                             height={20}
                             className="object-contain shrink-0 print:hidden"
@@ -158,7 +159,8 @@ export default async function ScheurkalenderPage() {
                         {match.away_team.logo && (
                           <Image
                             src={match.away_team.logo}
-                            alt={match.away_team.name}
+                            alt=""
+                            aria-hidden="true"
                             width={20}
                             height={20}
                             className="object-contain shrink-0 print:hidden"
