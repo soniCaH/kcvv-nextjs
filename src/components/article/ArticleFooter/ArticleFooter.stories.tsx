@@ -8,7 +8,7 @@ import { ArticleFooter } from "./ArticleFooter";
 import type { RelatedContent } from "./ArticleFooter";
 
 const meta = {
-  title: "Articles/ArticleFooter",
+  title: "Features/Articles/ArticleFooter",
   component: ArticleFooter,
   parameters: {
     layout: "fullscreen",

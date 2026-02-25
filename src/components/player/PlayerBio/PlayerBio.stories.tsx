@@ -9,7 +9,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { PlayerBio } from "./PlayerBio";
 
 const meta = {
-  title: "Players/PlayerBio",
+  title: "Features/Players/PlayerBio",
   component: PlayerBio,
   parameters: {
     layout: "padded",

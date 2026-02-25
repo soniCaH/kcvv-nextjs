@@ -53,22 +53,17 @@ import {
   Users,
   UserPlus,
   GraduationCap,
-  UserSearch,
 
   // Location & Measurement
   MapPin,
-  Ruler,
 
   // Sports & Activities
   Trophy,
   Activity,
-  Dumbbell,
 
   // Medical & Safety
   Heart,
-  HeartPulse,
   Shield,
-  ShieldAlert,
 
   // Business
   Handshake,
@@ -137,22 +132,17 @@ export const icons = {
   users: Users,
   "user-plus": UserPlus,
   "graduation-cap": GraduationCap,
-  "user-search": UserSearch,
 
   // Location & Measurement
   "map-pin": MapPin,
-  ruler: Ruler,
 
   // Sports & Activities
   trophy: Trophy,
   activity: Activity,
-  dumbbell: Dumbbell,
 
   // Medical & Safety
   heart: Heart,
-  "heart-pulse": HeartPulse,
   shield: Shield,
-  "shield-alert": ShieldAlert,
 
   // Business
   handshake: Handshake,
@@ -268,22 +258,17 @@ export {
   Users,
   UserPlus,
   GraduationCap,
-  UserSearch,
 
   // Location & Measurement
   MapPin,
-  Ruler,
 
   // Sports & Activities
   Trophy,
   Activity,
-  Dumbbell,
 
   // Medical & Safety
   Heart,
-  HeartPulse,
   Shield,
-  ShieldAlert,
 
   // Business
   Handshake,

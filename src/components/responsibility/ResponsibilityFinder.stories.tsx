@@ -14,7 +14,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { ResponsibilityFinder } from "./ResponsibilityFinder";
 
 const meta = {
-  title: "Responsibility/ResponsibilityFinder",
+  title: "Features/Responsibility/ResponsibilityFinder",
   component: ResponsibilityFinder,
   parameters: {
     layout: "padded",

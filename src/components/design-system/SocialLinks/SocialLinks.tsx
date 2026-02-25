@@ -54,7 +54,7 @@ const socialLinks = [
  *
  * Visual specifications (matching Gatsby):
  * - Circle variant: 24/32/40px circles, 2px gray border, green hover
- * - Icon sizes: 16px (xs) for sm/md circles, 20px (sm) for lg circle
+ * - Icon sizes: 16px (xs) for sm, 20px (sm) for md, 24px (md) for lg
  * - Hover: Border color changes to green bright
  */
 export const SocialLinks = ({
@@ -72,11 +72,11 @@ export const SocialLinks = ({
       },
       md: {
         container: "w-8 h-8", // 32px circle (default)
-        iconSize: "xs" as const, // 16px icon
+        iconSize: "sm" as const, // 20px icon
       },
       lg: {
         container: "w-10 h-10", // 40px circle
-        iconSize: "sm" as const, // 20px icon
+        iconSize: "md" as const, // 24px icon
       },
     };
 

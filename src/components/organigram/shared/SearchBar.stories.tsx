@@ -5,7 +5,7 @@ import type { SearchBarProps } from "./types";
 import type { OrgChartNode } from "@/types/organigram";
 
 const meta: Meta<typeof SearchBar> = {
-  title: "Organigram/SearchBar",
+  title: "Features/Organigram/SearchBar",
   component: SearchBar,
   parameters: {
     layout: "padded",

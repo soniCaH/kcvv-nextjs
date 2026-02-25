@@ -7,7 +7,7 @@ import { Sponsors } from "./Sponsors";
 import { mockSponsors } from "./Sponsors.mocks";
 
 const meta = {
-  title: "Sponsors/SponsorsGrid",
+  title: "Features/Sponsors/SponsorsGrid",
   component: Sponsors,
   parameters: {
     layout: "padded",

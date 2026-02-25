@@ -10,7 +10,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { CoachProfile } from "./CoachProfile";
 
 const meta = {
-  title: "Teams/CoachProfile",
+  title: "Features/Teams/CoachProfile",
   component: CoachProfile,
   parameters: {
     layout: "centered",

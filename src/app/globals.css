@@ -10,7 +10,6 @@
   --color-kcvv-green-bright-hover: #41b147;
   --color-kcvv-green-dark: #4B9B48;
   --color-kcvv-green-dark-hover: #3f833d;
-  --color-kcvv-green-alt: #BADA55;
 
   /* Neutral Colors */
   --color-kcvv-black: #1E2024;
@@ -22,8 +21,6 @@
 
   /* Foundation Grays */
   --color-foundation-gray-light: #edeff4;
-  --color-foundation-gray: #cacaca;
-  --color-foundation-gray-dark: #9a9da2;
 
   /* Semantic Colors */
   --color-kcvv-success: #3adb76;
@@ -104,11 +101,7 @@
   --color-kcvv-green-dark: #4B9B48;
   --color-kcvv-green-hover: #41b147;
   --color-kcvv-green-hover-dark: #3f833d;
-  --color-kcvv-green-50: rgba(74, 207, 82, 0.1);
   --color-kcvv-green-100: rgba(74, 207, 82, 0.25);
-  --color-kcvv-green-200: rgba(74, 207, 82, 0.5);
-  --color-kcvv-green-300: rgba(74, 207, 82, 0.75);
-  --color-kcvv-green-alt: #BADA55;
 
   /* Ring Colors for Focus States */
   --color-ring-kcvv-green: #4acf52;
@@ -123,8 +116,6 @@
 
   /* Foundation Grays */
   --color-foundation-gray-light: #edeff4;
-  --color-foundation-gray-DEFAULT: #cacaca;
-  --color-foundation-gray-dark: #9a9da2;
 
   /* Semantic Colors */
   --color-kcvv-success: #3adb76;
@@ -167,7 +158,6 @@
   /* ===== Spacing ===== */
 
   --spacing-0_75: 0.75rem;    /* 12px - mobile padding */
-  --spacing-2_5: 2.5rem;      /* 40px - desktop padding */
   --spacing-15: 3.75rem;      /* 60px */
   --spacing-17_5: 4.375rem;   /* 70px */
   --spacing-22_5: 5.625rem;   /* 90px */

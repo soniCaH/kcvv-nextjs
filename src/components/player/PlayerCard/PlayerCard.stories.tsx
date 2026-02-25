@@ -21,7 +21,7 @@ const REAL_PLAYER_IMAGES = {
 };
 
 const meta = {
-  title: "Players/PlayerCard",
+  title: "Features/Players/PlayerCard",
   component: PlayerCard,
   parameters: {
     layout: "centered",

@@ -46,7 +46,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const tabTriggerClass =
-  "px-4 py-2 text-sm font-semibold text-kcvv-gray border-b-2 border-transparent data-[state=active]:border-kcvv-green data-[state=active]:text-kcvv-green transition-colors";
+  "px-4 py-2 text-sm font-semibold text-kcvv-gray border-b-2 border-transparent hover:text-kcvv-green-bright hover:border-kcvv-green-bright/30 data-[state=active]:border-kcvv-green-bright data-[state=active]:text-kcvv-green-bright transition-colors";
 
 /**
  * Default three-tab example — Info / Wedstrijden / Standen.
