@@ -21,6 +21,12 @@ import {
   Check,
   CircleHelp,
 
+  // Status & Feedback
+  Info,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+
   // Social
   Facebook,
   Twitter,
@@ -98,6 +104,12 @@ export const icons = {
   "external-link": ExternalLink,
   check: Check,
   "circle-help": CircleHelp,
+
+  // Status & Feedback
+  info: Info,
+  "check-circle": CheckCircle,
+  "alert-triangle": AlertTriangle,
+  "x-circle": XCircle,
 
   // Social
   facebook: Facebook,
@@ -223,6 +235,12 @@ export {
   ExternalLink,
   Check,
   CircleHelp,
+
+  // Status & Feedback
+  Info,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
 
   // Social
   Facebook,
