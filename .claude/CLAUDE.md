@@ -16,7 +16,7 @@
 - For simple feature/fix tasks: read relevant code → implement → test. No planning phase needed.
 - When you learn something new about the Drupal/Footbalisto API (gotcha, edge case, failed approach), append it to the relevant skill file under "## Learnings".
 
-## Current State (updated: 2026-02-19)
+## Current State (updated: 2026-02-25)
 
 ### Implemented Routes
 
@@ -56,6 +56,53 @@
 - ISR with appropriate `revalidate`
 - `next/image` with proper `sizes`, `generateMetadata` for SEO
 - Doc files (DESIGN_SYSTEM.md, SCHEMA_GUIDE.md, STORYBOOK.md) — do NOT consult unless explicitly asked.
+
+## Design System & Storybook (MANDATORY)
+
+### When to update UI stories
+
+- **New design system component** (`src/components/design-system/<Name>/`) → create `<Name>.stories.tsx` alongside with title `UI/<Name>`, add `tags: ["autodocs"]`, write a Playground + all variant stories. Also add to barrel `src/components/design-system/index.ts`.
+- **New icon** added to `src/lib/icons.ts` → add to the `Foundation/Spacing & Icons` icon grid in `src/stories/foundation/SpacingAndIcons.mdx`.
+- **Existing component changed** (new variant, new prop) → update the corresponding story and test files.
+
+### When to update Foundation MDX
+
+- **New color token** in `src/app/globals.css` `@theme {}` → add a swatch to `src/stories/foundation/Colors.mdx`.
+- **New font/type token** → add to `src/stories/foundation/Typography.mdx`.
+- **New spacing / breakpoint / shadow token** → add to `src/stories/foundation/SpacingAndIcons.mdx`.
+
+### MDX table gotcha
+
+MDX 2 (Storybook 10) does **not** parse GFM pipe-table syntax (`| col |`) without `remark-gfm`. Always use native HTML `<table>` elements in `.mdx` files:
+
+```html
+<table>
+  <thead>
+    <tr>
+      <th>Token</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>token-name</code></td>
+      <td>value</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+### Design system locations
+
+| Concern           | Path                                                                          |
+| ----------------- | ----------------------------------------------------------------------------- |
+| Component source  | `src/components/design-system/<Name>/`                                        |
+| Component stories | `src/components/design-system/<Name>/<Name>.stories.tsx` (title: `UI/<Name>`) |
+| Component tests   | `src/components/design-system/<Name>/<Name>.test.tsx`                         |
+| Barrel export     | `src/components/design-system/index.ts`                                       |
+| Icons             | `src/lib/icons.ts`                                                            |
+| Foundation docs   | `src/stories/foundation/`                                                     |
+| Design tokens     | `src/app/globals.css` (`@theme {}`)                                           |
 
 ## Skills
 
