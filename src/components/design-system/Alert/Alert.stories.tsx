@@ -26,6 +26,7 @@ const meta = {
     },
     title: { control: "text" },
     dismissible: { control: "boolean" },
+    onDismiss: { action: "onDismiss" },
   },
 } satisfies Meta<typeof Alert>;
 

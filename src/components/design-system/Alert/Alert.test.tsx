@@ -2,6 +2,7 @@
  * Alert Component Tests
  */
 
+import { createRef } from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -27,10 +28,15 @@ describe("Alert", () => {
 
     it("should not render title element when not provided", () => {
       render(<Alert>Geen titel</Alert>);
-      // No <p> with font-semibold should exist (only the body <div>)
-      const alert = screen.getByRole("alert");
-      const boldPara = alert.querySelector("p.font-semibold");
-      expect(boldPara).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Geen titel", { selector: "p" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should forward ref to root div", () => {
+      const ref = createRef<HTMLDivElement>();
+      render(<Alert ref={ref}>Melding</Alert>);
+      expect(ref.current).toBe(screen.getByRole("alert"));
     });
   });
 
@@ -65,26 +71,15 @@ describe("Alert", () => {
     it("should not show close button by default", () => {
       render(<Alert>Melding</Alert>);
       expect(
-        screen.queryByRole("button", { name: /sluit/i }),
+        screen.queryByRole("button", { name: /sluit melding/i }),
       ).not.toBeInTheDocument();
     });
 
-    it("should show close button when dismissible and onDismiss are provided", () => {
-      render(
-        <Alert dismissible onDismiss={vi.fn()}>
-          Melding
-        </Alert>,
-      );
+    it("should show close button when dismissible is true", () => {
+      render(<Alert dismissible>Melding</Alert>);
       expect(
         screen.getByRole("button", { name: /sluit melding/i }),
       ).toBeInTheDocument();
-    });
-
-    it("should not show close button when dismissible but no onDismiss", () => {
-      render(<Alert dismissible>Melding</Alert>);
-      expect(
-        screen.queryByRole("button", { name: /sluit/i }),
-      ).not.toBeInTheDocument();
     });
 
     it("should call onDismiss when close button is clicked", async () => {
@@ -99,6 +94,14 @@ describe("Alert", () => {
 
       await user.click(screen.getByRole("button", { name: /sluit melding/i }));
       expect(handleDismiss).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not throw when close button clicked without onDismiss", async () => {
+      const user = userEvent.setup();
+      render(<Alert dismissible>Melding</Alert>);
+      await expect(
+        user.click(screen.getByRole("button", { name: /sluit melding/i })),
+      ).resolves.not.toThrow();
     });
   });
 

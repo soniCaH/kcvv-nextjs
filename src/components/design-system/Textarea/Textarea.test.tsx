@@ -2,8 +2,10 @@
  * Textarea Component Tests
  */
 
-import { describe, it, expect } from "vitest";
+import { createRef } from "react";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Textarea } from "./Textarea";
 
 describe("Textarea", () => {
@@ -26,7 +28,7 @@ describe("Textarea", () => {
     });
 
     it("should forward ref", () => {
-      const ref = { current: null };
+      const ref = createRef<HTMLTextAreaElement>();
       render(<Textarea ref={ref} />);
       expect(ref.current).toBeInstanceOf(HTMLTextAreaElement);
     });
@@ -55,9 +57,11 @@ describe("Textarea", () => {
       expect(screen.getByText("Dit veld is verplicht.")).toBeInTheDocument();
     });
 
-    it("should apply error border class", () => {
+    it("should apply error border class and aria-invalid", () => {
       render(<Textarea error="Fout" data-testid="ta" />);
-      expect(screen.getByTestId("ta")).toHaveClass("border-kcvv-alert");
+      const ta = screen.getByTestId("ta");
+      expect(ta).toHaveClass("border-kcvv-alert");
+      expect(ta).toHaveAttribute("aria-invalid", "true");
     });
 
     it("should not show hint when error is present", () => {
@@ -105,6 +109,30 @@ describe("Textarea", () => {
     it("should have focus ring styles", () => {
       render(<Textarea data-testid="ta" />);
       expect(screen.getByTestId("ta")).toHaveClass("focus:ring-2");
+    });
+  });
+
+  describe("Interactions", () => {
+    it("should accept typed input", async () => {
+      const user = userEvent.setup();
+      render(<Textarea />);
+      await user.type(screen.getByRole("textbox"), "Hallo KCVV");
+      expect(screen.getByRole("textbox")).toHaveValue("Hallo KCVV");
+    });
+
+    it("should call onChange when typing", async () => {
+      const user = userEvent.setup();
+      const handleChange = vi.fn();
+      render(<Textarea onChange={handleChange} />);
+      await user.type(screen.getByRole("textbox"), "test");
+      expect(handleChange).toHaveBeenCalled();
+    });
+
+    it("should receive focus on click", async () => {
+      const user = userEvent.setup();
+      render(<Textarea />);
+      await user.click(screen.getByRole("textbox"));
+      expect(screen.getByRole("textbox")).toHaveFocus();
     });
   });
 });

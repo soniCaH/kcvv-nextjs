@@ -5,7 +5,7 @@
  * Contextual feedback messages with KCVV design system styling
  */
 
-import { type ReactNode } from "react";
+import { forwardRef, type ReactNode } from "react";
 import { X, CheckCircle, AlertTriangle, Info, XCircle } from "@/lib/icons";
 import { cn } from "@/lib/utils/cn";
 
@@ -94,18 +94,22 @@ const variantConfig: Record<
  * </Alert>
  * ```
  */
-export function Alert({
-  variant = "info",
-  title,
-  children,
-  dismissible = false,
-  onDismiss,
-  className,
-}: AlertProps) {
+export const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
+  {
+    variant = "info",
+    title,
+    children,
+    dismissible = false,
+    onDismiss,
+    className,
+  },
+  ref,
+) {
   const config = variantConfig[variant];
 
   return (
     <div
+      ref={ref}
       role="alert"
       className={cn(
         "relative flex gap-3 rounded-[0.25em] px-4 py-3",
@@ -130,10 +134,10 @@ export function Alert({
       </div>
 
       {/* Dismiss button */}
-      {dismissible && typeof onDismiss === "function" && (
+      {dismissible && (
         <button
           type="button"
-          onClick={onDismiss}
+          onClick={() => onDismiss?.()}
           aria-label="Sluit melding"
           className={cn(
             "shrink-0 -mt-0.5 -mr-1 p-1 rounded transition-colors",
@@ -146,4 +150,4 @@ export function Alert({
       )}
     </div>
   );
-}
+});

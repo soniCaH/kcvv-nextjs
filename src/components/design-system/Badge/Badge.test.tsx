@@ -14,8 +14,8 @@ describe("Badge", () => {
     });
 
     it("should render as a span element", () => {
-      const { container } = render(<Badge>Tag</Badge>);
-      expect(container.querySelector("span")).toBeInTheDocument();
+      render(<Badge>Tag</Badge>);
+      expect(screen.getByText("Tag").tagName).toBe("SPAN");
     });
   });
 
@@ -78,9 +78,9 @@ describe("Badge", () => {
   describe("Dot indicator", () => {
     it("should not show dot by default", () => {
       const { container } = render(<Badge>Badge</Badge>);
-      const spans = container.querySelectorAll("span");
-      // Only one span (the outer badge itself)
-      expect(spans).toHaveLength(1);
+      expect(
+        container.querySelector("[aria-hidden='true']"),
+      ).not.toBeInTheDocument();
     });
 
     it("should show dot when dot prop is true", () => {

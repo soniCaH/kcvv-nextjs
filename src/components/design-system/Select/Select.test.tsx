@@ -31,10 +31,16 @@ describe("Select", () => {
     });
 
     it("should render placeholder as disabled first option", () => {
-      render(<Select placeholder="Kies een optie" />);
+      render(
+        <Select placeholder="Kies een optie">
+          <option value="a">Optie A</option>
+        </Select>,
+      );
       const option = screen.getByRole("option", { name: "Kies een optie" });
       expect(option).toBeInTheDocument();
       expect(option).toBeDisabled();
+      const allOptions = screen.getAllByRole("option");
+      expect(allOptions[0]).toBe(option);
     });
 
     it("should forward ref", () => {

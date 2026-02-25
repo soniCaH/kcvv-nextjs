@@ -2,8 +2,10 @@
  * Input Component Tests
  */
 
+import { createRef } from "react";
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Input } from "./Input";
 import { Search } from "lucide-react";
 
@@ -25,7 +27,7 @@ describe("Input", () => {
     });
 
     it("should forward ref", () => {
-      const ref = { current: null };
+      const ref = createRef<HTMLInputElement>();
       render(<Input ref={ref} />);
       expect(ref.current).toBeInstanceOf(HTMLInputElement);
     });
@@ -34,8 +36,8 @@ describe("Input", () => {
   describe("Sizes", () => {
     it("should render medium size by default", () => {
       render(<Input data-testid="input" />);
-      const wrapper = screen.getByTestId("input");
-      expect(wrapper).toHaveClass("px-4", "py-2.5", "text-base");
+      const inputEl = screen.getByTestId("input");
+      expect(inputEl).toHaveClass("px-4", "py-2.5", "text-base");
     });
 
     it("should render small size", () => {
@@ -84,28 +86,46 @@ describe("Input", () => {
 
   describe("Icons", () => {
     it("should render leading icon", () => {
-      const { container } = render(
+      render(
         <Input leadingIcon={<Search data-testid="leading-icon" size={16} />} />,
       );
-      expect(
-        container.querySelector("[data-testid='leading-icon']"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("leading-icon")).toBeInTheDocument();
     });
 
     it("should render trailing icon", () => {
-      const { container } = render(
+      render(
         <Input
           trailingIcon={<Search data-testid="trailing-icon" size={16} />}
         />,
       );
-      expect(
-        container.querySelector("[data-testid='trailing-icon']"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("trailing-icon")).toBeInTheDocument();
     });
 
-    it("should add leading padding when leadingIcon is set", () => {
+    it("should add md leading padding when leadingIcon is set", () => {
       render(<Input leadingIcon={<Search size={16} />} data-testid="input" />);
       expect(screen.getByTestId("input")).toHaveClass("pl-10");
+    });
+
+    it("should add sm leading padding when leadingIcon is set", () => {
+      render(
+        <Input
+          size="sm"
+          leadingIcon={<Search size={14} />}
+          data-testid="input"
+        />,
+      );
+      expect(screen.getByTestId("input")).toHaveClass("pl-8");
+    });
+
+    it("should add lg leading padding when leadingIcon is set", () => {
+      render(
+        <Input
+          size="lg"
+          leadingIcon={<Search size={20} />}
+          data-testid="input"
+        />,
+      );
+      expect(screen.getByTestId("input")).toHaveClass("pl-12");
     });
 
     it("should add trailing padding when trailingIcon is set", () => {
@@ -148,6 +168,13 @@ describe("Input", () => {
     it("should have focus ring styles", () => {
       render(<Input data-testid="input" />);
       expect(screen.getByTestId("input")).toHaveClass("focus:ring-2");
+    });
+
+    it("should receive focus on click", async () => {
+      const user = userEvent.setup();
+      render(<Input data-testid="input" />);
+      await user.click(screen.getByTestId("input"));
+      expect(screen.getByTestId("input")).toHaveFocus();
     });
 
     it("should be associated with a label via id", () => {

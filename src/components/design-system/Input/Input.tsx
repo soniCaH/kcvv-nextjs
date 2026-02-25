@@ -119,6 +119,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
           <input
             ref={ref}
+            {...props}
             disabled={disabled}
             aria-invalid={error ? true : undefined}
             aria-describedby={hasHelper ? helperId : undefined}
@@ -127,7 +128,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               "w-full rounded-[0.25em] border bg-white font-body",
               "text-kcvv-gray-dark placeholder:text-foundation-gray-dark",
               "transition-all duration-200",
-              "focus:outline-none focus:ring-2 focus:ring-offset-0",
+              "focus:outline-hidden focus:ring-2 focus:ring-offset-0",
 
               // Default border + focus
               !error &&
@@ -149,7 +150,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
               className,
             )}
-            {...props}
           />
 
           {trailingIcon && (
