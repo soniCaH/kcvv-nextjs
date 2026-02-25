@@ -52,4 +52,12 @@ export const Hidden: Story = {
     isVisible: false,
     position: { x: 100, y: 100 },
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "When `isVisible` is false the component returns null — the canvas is intentionally blank.",
+      },
+    },
+  },
 };

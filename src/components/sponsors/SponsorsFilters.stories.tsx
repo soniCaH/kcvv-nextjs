@@ -31,7 +31,6 @@ export const WithActiveFilter: Story = {
 /** Single result remaining. */
 export const SingleResult: Story = {
   args: {
-    totalCount: 24,
     filteredCount: 1,
   },
 };

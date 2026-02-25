@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { MapEmbed } from "./MapEmbed";
 
 const meta: Meta<typeof MapEmbed> = {
-  title: "Features/Calendar/MapEmbed",
+  title: "Features/Contact/MapEmbed",
   component: MapEmbed,
   parameters: {
     layout: "padded",

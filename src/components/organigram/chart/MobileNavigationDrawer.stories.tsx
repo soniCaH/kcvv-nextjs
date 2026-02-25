@@ -4,7 +4,7 @@ import { clubStructure } from "@/data/club-structure";
 
 const members = clubStructure.filter((n) => n.parentId !== null).slice(0, 12);
 
-const meta: Meta<typeof MobileNavigationDrawer> = {
+const meta = {
   title: "Features/Organigram/MobileNavigationDrawer",
   component: MobileNavigationDrawer,
   parameters: {
@@ -12,14 +12,18 @@ const meta: Meta<typeof MobileNavigationDrawer> = {
     viewport: { defaultViewport: "mobile1" },
   },
   tags: ["autodocs"],
+  args: {
+    onClose: () => {},
+    onMemberSelect: () => {},
+  },
   argTypes: {
     onClose: { action: "closed" },
     onMemberSelect: { action: "member-selected" },
   },
-};
+} satisfies Meta<typeof MobileNavigationDrawer>;
 
 export default meta;
-type Story = StoryObj<typeof MobileNavigationDrawer>;
+type Story = StoryObj<typeof meta>;
 
 /** Drawer open — full member list for mobile navigation. */
 export const Open: Story = {

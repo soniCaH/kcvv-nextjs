@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { LatestNews } from "./LatestNews";
 
-const meta: Meta<typeof LatestNews> = {
+const meta = {
   title: "Features/Home/LatestNews",
   component: LatestNews,
   tags: ["autodocs"],
@@ -22,10 +22,10 @@ const meta: Meta<typeof LatestNews> = {
       description: 'URL for "View All" link',
     },
   },
-};
+} satisfies Meta<typeof LatestNews>;
 
 export default meta;
-type Story = StoryObj<typeof LatestNews>;
+type Story = StoryObj<typeof meta>;
 
 const mockArticles = [
   {

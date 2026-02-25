@@ -170,7 +170,6 @@ export const MultipleCoaches: Story = {
   args: {
     name: "Jan Peeters",
     role: "Hoofdtrainer",
-    imageUrl: SAMPLE_PHOTO,
   },
   decorators: [
     () => (

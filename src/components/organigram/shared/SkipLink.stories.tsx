@@ -43,4 +43,15 @@ export const CustomLabel: Story = {
     targetId: "main-content",
     label: "Sla navigatie over",
   },
+  render: (args) => (
+    <div>
+      <SkipLink {...args} />
+      <div
+        id="main-content"
+        className="mt-4 p-4 bg-foundation-gray-light rounded"
+      >
+        Main content
+      </div>
+    </div>
+  ),
 };

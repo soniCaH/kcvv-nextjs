@@ -81,7 +81,6 @@ const CardHierarchyWithState = (args: Partial<CardHierarchyProps>) => {
         onMemberClick={(member) => {
           setSelectedMember(member);
           args.onMemberClick?.(member);
-          alert(`Clicked: ${member.name} - ${member.title}`);
         }}
       />
 
@@ -122,13 +121,13 @@ export const PartiallyExpanded: Story = {
   render: CardHierarchyWithState,
   args: {
     members: clubStructure,
-    initialExpandedDepth: 2,
+    initialExpandedDepth: 1,
   },
   parameters: {
     docs: {
       description: {
         story:
-          "Progressive disclosure: First 2 levels expanded by default for a balanced view",
+          "Progressive disclosure: Only the first level expanded — click to explore deeper.",
       },
     },
   },

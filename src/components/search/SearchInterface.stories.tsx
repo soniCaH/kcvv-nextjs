@@ -78,11 +78,11 @@ const mockResponse: SearchResponse = {
   query: "KCVV",
 };
 
-const mockEmpty: SearchResponse = { results: [], count: 0, query: "" };
+const mockEmpty: SearchResponse = { results: [], count: 0, query: "xqzptw" };
 
 function mockFetch(response: SearchResponse, delay = 0) {
-  const original = global.fetch;
-  global.fetch = async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => {
     if (delay > 0) await new Promise((r) => setTimeout(r, delay));
     return new Response(JSON.stringify(response), {
       status: 200,
@@ -90,16 +90,16 @@ function mockFetch(response: SearchResponse, delay = 0) {
     });
   };
   return () => {
-    global.fetch = original;
+    globalThis.fetch = original;
   };
 }
 
 function mockFetchError() {
-  const original = global.fetch;
-  global.fetch = async () =>
+  const original = globalThis.fetch;
+  globalThis.fetch = async () =>
     new Response("Internal Server Error", { status: 500 });
   return () => {
-    global.fetch = original;
+    globalThis.fetch = original;
   };
 }
 
@@ -197,10 +197,10 @@ export const Loading: Story = {
   },
   beforeEach() {
     // Never resolves — keeps the loading spinner visible
-    const original = global.fetch;
-    global.fetch = async () => new Promise(() => {});
+    const original = globalThis.fetch;
+    globalThis.fetch = async () => new Promise(() => {});
     return () => {
-      global.fetch = original;
+      globalThis.fetch = original;
     };
   },
 };

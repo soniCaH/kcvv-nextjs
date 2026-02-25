@@ -2,9 +2,11 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { ExpandableCard } from "./ExpandableCard";
 import { clubStructure } from "@/data/club-structure";
 
-const [, president, vicePresident, secretary] = clubStructure;
+const president = clubStructure.find((n) => n.id === "president")!;
+const vicePresident = clubStructure.find((n) => n.id === "vice-president")!;
+const secretary = clubStructure.find((n) => n.id === "secretary")!;
 
-const meta: Meta<typeof ExpandableCard> = {
+const meta = {
   title: "Features/Organigram/ExpandableCard",
   component: ExpandableCard,
   parameters: { layout: "padded" },
@@ -13,10 +15,10 @@ const meta: Meta<typeof ExpandableCard> = {
     onToggle: { action: "toggled" },
     onMemberClick: { action: "member-clicked" },
   },
-};
+} satisfies Meta<typeof ExpandableCard>;
 
 export default meta;
-type Story = StoryObj<typeof ExpandableCard>;
+type Story = StoryObj<typeof meta>;
 
 /** Collapsed card — direct reports count shown but children hidden. */
 export const Collapsed: Story = {

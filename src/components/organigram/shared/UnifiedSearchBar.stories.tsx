@@ -1,7 +1,45 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { UnifiedSearchBar } from "./UnifiedSearchBar";
-import { clubStructure } from "@/data/club-structure";
+import type { OrgChartNode } from "@/types/organigram";
 import type { ResponsibilityPath } from "@/types/responsibility";
+
+const mockMembers: OrgChartNode[] = [
+  {
+    id: "m-1",
+    name: "Jan Janssen",
+    title: "Voorzitter",
+    department: "hoofdbestuur",
+    parentId: null,
+  },
+  {
+    id: "m-2",
+    name: "Els Pieters",
+    title: "Secretaris",
+    department: "hoofdbestuur",
+    parentId: null,
+  },
+  {
+    id: "m-3",
+    name: "Koen De Smedt",
+    title: "Penningmeester",
+    department: "hoofdbestuur",
+    parentId: null,
+  },
+  {
+    id: "m-4",
+    name: "Lien Van Acker",
+    title: "Jeugdcoördinator",
+    department: "jeugdbestuur",
+    parentId: null,
+  },
+  {
+    id: "m-5",
+    name: "Tom Claes",
+    title: "Trainer U15",
+    department: "jeugdbestuur",
+    parentId: "m-4",
+  },
+];
 
 const mockPaths: ResponsibilityPath[] = [
   {
@@ -10,18 +48,51 @@ const mockPaths: ResponsibilityPath[] = [
     question: "Wie contacteer ik bij een blessure?",
     keywords: ["blessure", "medisch", "dokter"],
     summary: "Contacteer de medische verantwoordelijke.",
-    steps: [
-      {
-        order: 1,
-        description: "Meld de blessure aan je trainer.",
-      },
-    ],
+    steps: [{ order: 1, description: "Meld de blessure aan je trainer." }],
     primaryContact: {
       role: "Medische verantwoordelijke",
       email: "medisch@kcvvelewijt.be",
       department: "hoofdbestuur",
     },
     category: "medisch",
+  },
+  {
+    id: "rp-2",
+    role: ["ouder", "speler"],
+    question: "Hoe schrijf ik mijn kind in?",
+    keywords: ["inschrijving", "lidmaatschap", "jeugd"],
+    summary: "Contacteer de jeugdcoördinator voor inschrijvingen.",
+    steps: [
+      {
+        order: 1,
+        description: "Vul het inschrijvingsformulier in op de website.",
+      },
+    ],
+    primaryContact: {
+      role: "Jeugdcoördinator",
+      email: "jeugd@kcvvelewijt.be",
+      department: "jeugdbestuur",
+    },
+    category: "administratief",
+  },
+  {
+    id: "rp-3",
+    role: ["trainer"],
+    question: "Wie beheer ik de spelerslijst?",
+    keywords: ["spelerslijst", "selectie", "technisch"],
+    summary: "Beheer je spelerslijst via het clubportaal.",
+    steps: [
+      {
+        order: 1,
+        description: "Log in op het clubportaal en ga naar je ploeg.",
+      },
+    ],
+    primaryContact: {
+      role: "Technisch coördinator",
+      email: "technisch@kcvvelewijt.be",
+      department: "hoofdbestuur",
+    },
+    category: "sportief",
   },
 ];
 
@@ -44,7 +115,7 @@ type Story = StoryObj<typeof UnifiedSearchBar>;
 export const Default: Story = {
   args: {
     value: "",
-    members: clubStructure,
+    members: mockMembers,
     responsibilityPaths: mockPaths,
     showAutocomplete: true,
   },
@@ -54,7 +125,7 @@ export const Default: Story = {
 export const WithValue: Story = {
   args: {
     value: "voorzitter",
-    members: clubStructure,
+    members: mockMembers,
     responsibilityPaths: mockPaths,
     showAutocomplete: true,
   },
@@ -64,7 +135,7 @@ export const WithValue: Story = {
 export const CustomPlaceholder: Story = {
   args: {
     value: "",
-    members: clubStructure,
+    members: mockMembers,
     responsibilityPaths: mockPaths,
     placeholder: "Zoek een persoon of verantwoordelijkheid...",
     showAutocomplete: true,
@@ -75,7 +146,7 @@ export const CustomPlaceholder: Story = {
 export const NoAutocomplete: Story = {
   args: {
     value: "",
-    members: clubStructure,
+    members: mockMembers,
     responsibilityPaths: [],
     showAutocomplete: false,
   },

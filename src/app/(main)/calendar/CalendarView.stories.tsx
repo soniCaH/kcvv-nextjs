@@ -58,10 +58,10 @@ const mockMatches: CalendarMatch[] = [
     competition: "Nationale 1",
     team: "A-ploeg",
   },
-  // Today — live
+  // Today — live (date computed at runtime so it stays current)
   {
     id: 3,
-    date: "2026-02-25T15:00:00",
+    date: new Date().toISOString().slice(0, 19),
     homeTeam: kcvv,
     awayTeam: opponent2,
     homeScore: 1,

@@ -19,6 +19,8 @@ const meta: Meta<typeof HierarchyLevel> = {
 };
 
 export default meta;
+// expandedIds is Set<string> at runtime but Sets aren't JSON-serialisable.
+// Stories pass arrays in args; each render wrapper converts them to Set.
 type Story = StoryObj<typeof HierarchyLevel>;
 
 /** Top-level nodes at depth 0, all collapsed. */
@@ -27,8 +29,14 @@ export const Default: Story = {
     members: topLevel,
     allMembers: clubStructure,
     depth: 0,
-    expandedIds: new Set(),
+    expandedIds: new Set<string>(),
   },
+  render: (args) => (
+    <HierarchyLevel
+      {...args}
+      expandedIds={new Set((args.expandedIds as unknown as string[]) ?? [])}
+    />
+  ),
 };
 
 /** All nodes expanded (uses full clubStructure). */
@@ -39,14 +47,26 @@ export const AllExpanded: Story = {
     depth: 0,
     expandedIds: new Set(clubStructure.map((n) => n.id)),
   },
+  render: (args) => (
+    <HierarchyLevel
+      {...args}
+      expandedIds={new Set((args.expandedIds as unknown as string[]) ?? [])}
+    />
+  ),
 };
 
 /** Single node at depth 2. */
 export const SingleNode: Story = {
   args: {
-    members: [clubStructure[1]],
+    members: [clubStructure.find((n) => n.id === "president")!],
     allMembers: clubStructure,
     depth: 2,
-    expandedIds: new Set(),
+    expandedIds: new Set<string>(),
   },
+  render: (args) => (
+    <HierarchyLevel
+      {...args}
+      expandedIds={new Set((args.expandedIds as unknown as string[]) ?? [])}
+    />
+  ),
 };
