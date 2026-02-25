@@ -15,6 +15,36 @@ import { cn } from "@/lib/utils/cn";
 
 export type InputSize = "sm" | "md" | "lg";
 
+const sizeClasses: Record<InputSize, string> = {
+  sm: "px-3 py-1.5 text-sm",
+  md: "px-4 py-2.5 text-base",
+  lg: "px-5 py-3 text-lg",
+};
+
+const leadingPadding: Record<InputSize, string> = {
+  sm: "pl-8",
+  md: "pl-10",
+  lg: "pl-12",
+};
+
+const trailingPadding: Record<InputSize, string> = {
+  sm: "pr-8",
+  md: "pr-10",
+  lg: "pr-12",
+};
+
+const iconSize: Record<InputSize, string> = {
+  sm: "left-2.5 [&>*]:w-3.5 [&>*]:h-3.5",
+  md: "left-3 [&>*]:w-4 [&>*]:h-4",
+  lg: "left-4 [&>*]:w-5 [&>*]:h-5",
+};
+
+const trailingIconSize: Record<InputSize, string> = {
+  sm: "right-2.5 [&>*]:w-3.5 [&>*]:h-3.5",
+  md: "right-3 [&>*]:w-4 [&>*]:h-4",
+  lg: "right-4 [&>*]:w-5 [&>*]:h-5",
+};
+
 export interface InputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
   "size"
@@ -72,36 +102,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ) => {
     const helperId = useId();
     const hasHelper = !!(error || hint);
-
-    const sizeClasses: Record<InputSize, string> = {
-      sm: "px-3 py-1.5 text-sm",
-      md: "px-4 py-2.5 text-base",
-      lg: "px-5 py-3 text-lg",
-    };
-
-    const leadingPadding: Record<InputSize, string> = {
-      sm: "pl-8",
-      md: "pl-10",
-      lg: "pl-12",
-    };
-
-    const trailingPadding: Record<InputSize, string> = {
-      sm: "pr-8",
-      md: "pr-10",
-      lg: "pr-12",
-    };
-
-    const iconSize: Record<InputSize, string> = {
-      sm: "left-2.5 [&>*]:w-3.5 [&>*]:h-3.5",
-      md: "left-3 [&>*]:w-4 [&>*]:h-4",
-      lg: "left-4 [&>*]:w-5 [&>*]:h-5",
-    };
-
-    const trailingIconSize: Record<InputSize, string> = {
-      sm: "right-2.5 [&>*]:w-3.5 [&>*]:h-3.5",
-      md: "right-3 [&>*]:w-4 [&>*]:h-4",
-      lg: "right-4 [&>*]:w-5 [&>*]:h-5",
-    };
 
     return (
       <div className="w-full">

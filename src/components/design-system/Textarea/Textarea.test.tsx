@@ -62,6 +62,9 @@ describe("Textarea", () => {
       const ta = screen.getByTestId("ta");
       expect(ta).toHaveClass("border-kcvv-alert");
       expect(ta).toHaveAttribute("aria-invalid", "true");
+      const errorEl = screen.getByText("Fout");
+      expect(ta).toHaveAttribute("aria-describedby", errorEl.id);
+      expect(document.getElementById(errorEl.id)).toHaveTextContent("Fout");
     });
 
     it("should not show hint when error is present", () => {
