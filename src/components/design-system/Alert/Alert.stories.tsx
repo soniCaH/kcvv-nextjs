@@ -2,6 +2,7 @@
  * Alert Component Stories
  */
 
+import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Alert } from "./Alert";
 
@@ -62,7 +63,7 @@ export const Error: Story = {
 
 export const AllVariants: Story = {
   render: () => (
-    <div className="flex flex-col gap-3 w-[500px]">
+    <div className="flex flex-col gap-3 w-125">
       <Alert variant="info">
         Inschrijvingen voor het nieuwe seizoen zijn open.
       </Alert>
@@ -87,7 +88,7 @@ export const WithTitle: Story = {
 
 export const WithTitleAllVariants: Story = {
   render: () => (
-    <div className="flex flex-col gap-3 w-[500px]">
+    <div className="flex flex-col gap-3 w-125">
       <Alert variant="info" title="Info">
         Inschrijvingen voor het nieuwe seizoen zijn open.
       </Alert>
@@ -105,17 +106,30 @@ export const WithTitleAllVariants: Story = {
 };
 
 export const Dismissible: Story = {
-  args: {
-    variant: "info",
-    title: "Nieuw seizoen",
-    children: "Inschrijvingen voor het nieuwe seizoen zijn open.",
-    dismissible: true,
+  render: () => {
+    const [visible, setVisible] = useState(true);
+    return (
+      <div className="w-125">
+        {visible ? (
+          <Alert
+            variant="info"
+            title="Nieuw seizoen"
+            dismissible
+            onDismiss={() => setVisible(false)}
+          >
+            Inschrijvingen voor het nieuwe seizoen zijn open.
+          </Alert>
+        ) : (
+          <p className="text-sm text-foundation-gray-dark">Alert gesloten.</p>
+        )}
+      </div>
+    );
   },
   parameters: {
     docs: {
       description: {
         story:
-          "Dismissible alert with close button. Wire onDismiss to hide the component.",
+          "Dismissible alert — click the × to hide it. Wire onDismiss to control visibility from outside.",
       },
     },
   },
@@ -126,7 +140,7 @@ export const Dismissible: Story = {
  */
 export const FormValidationError: Story = {
   render: () => (
-    <div className="w-[500px]">
+    <div className="w-125">
       <Alert variant="error" title="Formulier onvolledig">
         Vul alle verplichte velden in voor je het formulier verstuurt.
       </Alert>
@@ -146,13 +160,28 @@ export const FormValidationError: Story = {
  * Form success feedback — after contact form submission
  */
 export const FormSuccess: Story = {
-  render: () => (
-    <div className="w-[500px]">
-      <Alert variant="success" title="Bericht verzonden" dismissible>
-        Bedankt voor je bericht! We nemen zo snel mogelijk contact met je op.
-      </Alert>
-    </div>
-  ),
+  render: () => {
+    const [visible, setVisible] = useState(true);
+    return (
+      <div className="w-125">
+        {visible ? (
+          <Alert
+            variant="success"
+            title="Bericht verzonden"
+            dismissible
+            onDismiss={() => setVisible(false)}
+          >
+            Bedankt voor je bericht! We nemen zo snel mogelijk contact met je
+            op.
+          </Alert>
+        ) : (
+          <p className="text-sm text-foundation-gray-dark">
+            Bevestiging gesloten.
+          </p>
+        )}
+      </div>
+    );
+  },
 };
 
 export const Playground: Story = {

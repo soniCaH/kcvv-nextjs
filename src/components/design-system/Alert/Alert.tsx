@@ -115,7 +115,7 @@ export function Alert({
       )}
     >
       {/* Icon */}
-      <div className={cn("flex-shrink-0 mt-0.5", config.titleColor)}>
+      <div className={cn("shrink-0 mt-0.5", config.titleColor)}>
         {config.icon}
       </div>
 
@@ -130,13 +130,13 @@ export function Alert({
       </div>
 
       {/* Dismiss button */}
-      {dismissible && (
+      {dismissible && typeof onDismiss === "function" && (
         <button
           type="button"
           onClick={onDismiss}
           aria-label="Sluit melding"
           className={cn(
-            "flex-shrink-0 -mt-0.5 -mr-1 p-1 rounded transition-colors",
+            "shrink-0 -mt-0.5 -mr-1 p-1 rounded transition-colors",
             "hover:bg-black/10 focus:outline-none focus:ring-2 focus:ring-kcvv-green-bright focus:ring-offset-1",
             config.titleColor,
           )}

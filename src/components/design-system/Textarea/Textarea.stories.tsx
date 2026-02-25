@@ -96,6 +96,7 @@ export const WithLabel: Story = {
         placeholder="Schrijf hier je bericht..."
         hint="Maximaal 500 tekens."
         rows={5}
+        required
       />
     </div>
   ),
@@ -112,6 +113,7 @@ export const WithLabelAndError: Story = {
         placeholder="Schrijf hier je bericht..."
         error="Vul minimaal 20 tekens in."
         rows={5}
+        required
       />
     </div>
   ),

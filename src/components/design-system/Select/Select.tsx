@@ -5,7 +5,7 @@
  * Native select element with KCVV design system styling and custom chevron
  */
 
-import { forwardRef, type SelectHTMLAttributes } from "react";
+import { forwardRef, useId, type SelectHTMLAttributes } from "react";
 import { ChevronDown } from "@/lib/icons";
 import { cn } from "@/lib/utils/cn";
 
@@ -63,6 +63,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     },
     ref,
   ) => {
+    const helperId = useId();
+    const hasHelper = !!(error || hint);
+
     const sizeClasses: Record<SelectSize, string> = {
       sm: "pl-3 pr-8 py-1.5 text-sm",
       md: "pl-4 pr-10 py-2.5 text-base",
@@ -87,6 +90,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <select
             ref={ref}
             disabled={disabled}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={hasHelper ? helperId : undefined}
             className={cn(
               // Base
               "w-full appearance-none rounded-[0.25em] border bg-white font-body",
@@ -130,9 +135,15 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </div>
         </div>
 
-        {error && <p className="mt-1.5 text-sm text-kcvv-alert">{error}</p>}
+        {error && (
+          <p id={helperId} className="mt-1.5 text-sm text-kcvv-alert">
+            {error}
+          </p>
+        )}
         {!error && hint && (
-          <p className="mt-1.5 text-sm text-foundation-gray-dark">{hint}</p>
+          <p id={helperId} className="mt-1.5 text-sm text-foundation-gray-dark">
+            {hint}
+          </p>
         )}
       </div>
     );

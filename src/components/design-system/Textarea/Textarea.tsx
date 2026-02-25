@@ -5,7 +5,7 @@
  * Multi-line text input with KCVV design system styling
  */
 
-import { forwardRef, type TextareaHTMLAttributes } from "react";
+import { forwardRef, useId, type TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/utils/cn";
 
 export type TextareaResize = "none" | "vertical" | "both";
@@ -44,6 +44,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     { error, hint, resize = "vertical", className, disabled, ...props },
     ref,
   ) => {
+    const helperId = useId();
+    const hasHelper = !!(error || hint);
+
     const resizeClass: Record<TextareaResize, string> = {
       none: "resize-none",
       vertical: "resize-y",
@@ -55,6 +58,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           disabled={disabled}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={hasHelper ? helperId : undefined}
           className={cn(
             // Base
             "w-full rounded-[0.25em] border bg-white font-body",
@@ -82,9 +87,15 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
 
-        {error && <p className="mt-1.5 text-sm text-kcvv-alert">{error}</p>}
+        {error && (
+          <p id={helperId} className="mt-1.5 text-sm text-kcvv-alert">
+            {error}
+          </p>
+        )}
         {!error && hint && (
-          <p className="mt-1.5 text-sm text-foundation-gray-dark">{hint}</p>
+          <p id={helperId} className="mt-1.5 text-sm text-foundation-gray-dark">
+            {hint}
+          </p>
         )}
       </div>
     );

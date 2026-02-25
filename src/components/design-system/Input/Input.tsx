@@ -5,7 +5,12 @@
  * Text input field with KCVV design system styling
  */
 
-import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
+import {
+  forwardRef,
+  useId,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from "react";
 import { cn } from "@/lib/utils/cn";
 
 export type InputSize = "sm" | "md" | "lg";
@@ -65,6 +70,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref,
   ) => {
+    const helperId = useId();
+    const hasHelper = !!(error || hint);
+
     const sizeClasses: Record<InputSize, string> = {
       sm: "px-3 py-1.5 text-sm",
       md: "px-4 py-2.5 text-base",
@@ -112,6 +120,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             disabled={disabled}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={hasHelper ? helperId : undefined}
             className={cn(
               // Base
               "w-full rounded-[0.25em] border bg-white font-body",
@@ -154,9 +164,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
-        {error && <p className="mt-1.5 text-sm text-kcvv-alert">{error}</p>}
+        {error && (
+          <p id={helperId} className="mt-1.5 text-sm text-kcvv-alert">
+            {error}
+          </p>
+        )}
         {!error && hint && (
-          <p className="mt-1.5 text-sm text-foundation-gray-dark">{hint}</p>
+          <p id={helperId} className="mt-1.5 text-sm text-foundation-gray-dark">
+            {hint}
+          </p>
         )}
       </div>
     );

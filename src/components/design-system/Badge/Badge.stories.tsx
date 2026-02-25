@@ -131,6 +131,9 @@ export const AllSizes: Story = {
         <Badge size="sm" variant="alert">
           Alert
         </Badge>
+        <Badge size="sm" variant="outline">
+          Outline
+        </Badge>
         <Badge size="sm" variant="live">
           Live
         </Badge>
@@ -151,6 +154,9 @@ export const AllSizes: Story = {
         </Badge>
         <Badge size="md" variant="alert">
           Alert
+        </Badge>
+        <Badge size="md" variant="outline">
+          Outline
         </Badge>
         <Badge size="md" variant="live">
           Live

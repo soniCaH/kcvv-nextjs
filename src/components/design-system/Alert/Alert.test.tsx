@@ -69,11 +69,22 @@ describe("Alert", () => {
       ).not.toBeInTheDocument();
     });
 
-    it("should show close button when dismissible is true", () => {
-      render(<Alert dismissible>Melding</Alert>);
+    it("should show close button when dismissible and onDismiss are provided", () => {
+      render(
+        <Alert dismissible onDismiss={vi.fn()}>
+          Melding
+        </Alert>,
+      );
       expect(
         screen.getByRole("button", { name: /sluit melding/i }),
       ).toBeInTheDocument();
+    });
+
+    it("should not show close button when dismissible but no onDismiss", () => {
+      render(<Alert dismissible>Melding</Alert>);
+      expect(
+        screen.queryByRole("button", { name: /sluit/i }),
+      ).not.toBeInTheDocument();
     });
 
     it("should call onDismiss when close button is clicked", async () => {

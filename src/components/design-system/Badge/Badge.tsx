@@ -112,7 +112,7 @@ export function Badge({
       {showDot && (
         <span
           className={cn(
-            "rounded-full flex-shrink-0",
+            "rounded-full shrink-0",
             dotSize[size],
             dotColorClass,
             variant === "live" && "animate-pulse",
