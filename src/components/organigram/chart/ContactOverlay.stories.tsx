@@ -30,7 +30,7 @@ const meta: Meta<typeof ContactOverlay> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof ContactOverlay>;
+type Story = StoryObj<typeof meta>;
 
 const defaultPosition = { x: 100, y: 100 };
 
