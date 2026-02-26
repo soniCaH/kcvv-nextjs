@@ -90,7 +90,7 @@ export const Default: Story = {
 /** Single related article. */
 export const Single: Story = {
   args: {
-    articles: [mockArticles[0]],
+    articles: [mockArticles[0] ?? { title: "Artikel", href: "/news/artikel" }],
   },
 };
 

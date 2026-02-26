@@ -66,7 +66,7 @@ export const TeamStats = ({
   const goalDifference = goalsFor - goalsAgainst;
 
   return (
-    <div className={className}>
+    <div className={cn("", className)}>
       {/* W / D / L pills */}
       <div className={cn("flex items-center", compact ? "gap-1" : "gap-3")}>
         <StatPill
@@ -88,7 +88,7 @@ export const TeamStats = ({
             <div className="w-px h-8 bg-gray-200 mx-1" />
             {/* Goals row */}
             <div className="flex flex-col items-center">
-              <span className="text-xl font-bold text-kcvv-gray-blue">
+              <span className="text-xl font-bold text-[#31404b]">
                 {goalsFor}–{goalsAgainst}
               </span>
               <span className="text-xs text-gray-500 mt-1 uppercase font-medium">

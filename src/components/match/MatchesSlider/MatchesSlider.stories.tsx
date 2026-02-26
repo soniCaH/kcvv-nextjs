@@ -61,15 +61,11 @@ export const Single: Story = {
 /** Mixed statuses without a heading. */
 export const Mixed: Story = {
   args: {
-    matches: [mockLiveMatch, mockScheduledMatches[0], mockFinishedMatch],
-    highlightTeamId: KCVV_ID,
-  },
-};
-
-/** Empty matches array — component renders nothing (null). */
-export const Empty: Story = {
-  args: {
-    matches: [],
+    matches: [
+      mockLiveMatch,
+      mockScheduledMatches[0] ?? mockFinishedMatch,
+      mockFinishedMatch,
+    ],
     highlightTeamId: KCVV_ID,
   },
 };
