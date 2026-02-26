@@ -70,6 +70,14 @@ export const Mixed: Story = {
   },
 };
 
+/** Empty matches array — component renders nothing (null). */
+export const Empty: Story = {
+  args: {
+    matches: [],
+    highlightTeamId: KCVV_ID,
+  },
+};
+
 /** Mobile viewport — horizontal scroll is most obvious here. */
 export const MobileView: Story = {
   args: {

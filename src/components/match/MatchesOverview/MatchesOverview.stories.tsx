@@ -7,7 +7,6 @@ import { MatchesOverview } from "./MatchesOverview";
 import {
   mockScheduledMatches,
   mockFinishedMatch,
-  mockLiveMatch,
   mockPostponedMatch,
 } from "@/components/home/UpcomingMatches/UpcomingMatches.mocks";
 
@@ -35,7 +34,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     upcomingMatches: mockScheduledMatches,
-    recentResults: [mockFinishedMatch, mockLiveMatch],
+    recentResults: [mockFinishedMatch, mockFinishedMatch],
     highlightTeamId: KCVV_ID,
   },
 };
@@ -44,7 +43,7 @@ export const Default: Story = {
 export const EmptyUpcoming: Story = {
   args: {
     upcomingMatches: [],
-    recentResults: [mockFinishedMatch, mockLiveMatch],
+    recentResults: [mockFinishedMatch, mockFinishedMatch],
     highlightTeamId: KCVV_ID,
   },
 };
@@ -63,6 +62,18 @@ export const AllEmpty: Story = {
   args: {
     upcomingMatches: [],
     recentResults: [],
+  },
+};
+
+/** Mobile viewport — single-column layout. */
+export const MobileViewport: Story = {
+  args: {
+    upcomingMatches: mockScheduledMatches,
+    recentResults: [mockFinishedMatch],
+    highlightTeamId: KCVV_ID,
+  },
+  parameters: {
+    viewport: { defaultViewport: "mobile1" },
   },
 };
 
