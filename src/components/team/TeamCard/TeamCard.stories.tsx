@@ -9,7 +9,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamCard } from "./TeamCard";
 
 const meta = {
-  title: "Teams/TeamCard",
+  title: "Features/Teams/TeamCard",
   component: TeamCard,
   parameters: {
     layout: "centered",

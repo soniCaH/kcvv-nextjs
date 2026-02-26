@@ -8,7 +8,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { MatchCountdown } from "./MatchCountdown";
 
 const meta = {
-  title: "Matches/MatchCountdown",
+  title: "Features/Matches/MatchCountdown",
   component: MatchCountdown,
   parameters: {
     layout: "centered",

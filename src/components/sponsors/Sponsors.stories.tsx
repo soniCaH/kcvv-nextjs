@@ -7,7 +7,7 @@ import { Sponsors } from "./Sponsors";
 import { mockSponsors } from "./Sponsors.mocks";
 
 const meta = {
-  title: "Sponsors/SponsorsGrid",
+  title: "Features/Sponsors/SponsorsGrid",
   component: Sponsors,
   parameters: {
     layout: "padded",
@@ -22,7 +22,7 @@ const meta = {
 } satisfies Meta<typeof Sponsors>;
 
 export default meta;
-type Story = StoryObj<typeof Sponsors>;
+type Story = StoryObj<typeof meta>;
 
 /**
  * Default sponsors grid with 4 columns (light theme)

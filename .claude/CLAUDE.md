@@ -71,6 +71,13 @@
 - **New font/type token** → add to `src/stories/foundation/Typography.mdx`.
 - **New spacing / breakpoint / shadow token** → add to `src/stories/foundation/SpacingAndIcons.mdx`.
 
+### Story authoring rules
+
+- **Handlers:** use `fn()` from `storybook/test` in `meta.args`, never `argTypes: { prop: { action: "..." } }`.
+- **Story type:** `StoryObj<typeof meta>`, not `StoryObj<typeof ComponentName>`.
+- **No non-null assertions** on fixture lookups — use `?? fallback` so the story never crashes at import time.
+- **Non-serialisable props** (e.g. `Set<string>`): define a `StoryArgs` type override with a serialisable equivalent and convert in a named render helper. No `as unknown as` casts in `args`.
+
 ### MDX table gotcha
 
 MDX 2 (Storybook 10) does **not** parse GFM pipe-table syntax (`| col |`) without `remark-gfm`. Always use native HTML `<table>` elements in `.mdx` files:

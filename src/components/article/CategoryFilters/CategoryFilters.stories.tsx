@@ -3,7 +3,7 @@ import { useState } from "react";
 import { CategoryFilters } from "./CategoryFilters";
 
 const meta: Meta<typeof CategoryFilters> = {
-  title: "Articles/CategoryFilters",
+  title: "Features/Articles/CategoryFilters",
   component: CategoryFilters,
   parameters: {
     layout: "padded",

@@ -3,6 +3,11 @@ import "../src/app/globals.css";
 
 const preview: Preview = {
   parameters: {
+    options: {
+      storySort: {
+        order: ["Foundation", "UI", "Features", "Layout", "Pages", "*"],
+      },
+    },
     controls: {
       matchers: {
         color: /(background|color)$/i,

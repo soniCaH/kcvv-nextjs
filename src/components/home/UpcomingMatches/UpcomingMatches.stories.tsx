@@ -10,7 +10,7 @@ import {
 } from "./UpcomingMatches.mocks";
 
 const meta: Meta<typeof UpcomingMatches> = {
-  title: "Home/UpcomingMatches",
+  title: "Features/Home/UpcomingMatches",
   component: UpcomingMatches,
   parameters: {
     layout: "fullscreen",

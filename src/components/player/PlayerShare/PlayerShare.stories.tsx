@@ -9,7 +9,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { PlayerShare } from "./PlayerShare";
 
 const meta = {
-  title: "Players/PlayerShare",
+  title: "Features/Players/PlayerShare",
   component: PlayerShare,
   parameters: {
     layout: "centered",

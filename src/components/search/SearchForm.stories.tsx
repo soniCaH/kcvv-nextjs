@@ -6,7 +6,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { SearchForm } from "./SearchForm";
 
 const meta = {
-  title: "Search/SearchForm",
+  title: "Features/Search/SearchForm",
   component: SearchForm,
   parameters: {
     layout: "padded",

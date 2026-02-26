@@ -17,7 +17,7 @@ const REAL_PLAYER_IMAGES = {
 };
 
 const meta = {
-  title: "Players/PlayerProfile",
+  title: "Features/Players/PlayerProfile",
   component: PlayerProfile,
   parameters: {
     layout: "fullscreen",
