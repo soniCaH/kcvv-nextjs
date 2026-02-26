@@ -112,34 +112,28 @@ const meta: Meta<typeof UnifiedSearchBar> = {
 export default meta;
 type Story = StoryObj<typeof UnifiedSearchBar>;
 
+const baseArgs = {
+  members: mockMembers,
+  responsibilityPaths: mockPaths,
+  showAutocomplete: true,
+};
+
 /** Empty search bar, autocomplete enabled. */
 export const Default: Story = {
-  args: {
-    value: "",
-    members: mockMembers,
-    responsibilityPaths: mockPaths,
-    showAutocomplete: true,
-  },
+  args: { ...baseArgs, value: "" },
 };
 
 /** With a pre-filled search term. */
 export const WithValue: Story = {
-  args: {
-    value: "voorzitter",
-    members: mockMembers,
-    responsibilityPaths: mockPaths,
-    showAutocomplete: true,
-  },
+  args: { ...baseArgs, value: "voorzitter" },
 };
 
 /** Custom placeholder. */
 export const CustomPlaceholder: Story = {
   args: {
+    ...baseArgs,
     value: "",
-    members: mockMembers,
-    responsibilityPaths: mockPaths,
     placeholder: "Zoek een persoon of verantwoordelijkheid...",
-    showAutocomplete: true,
   },
 };
 

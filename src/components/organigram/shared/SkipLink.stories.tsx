@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { SkipLink } from "./SkipLink";
+import type { ComponentProps } from "react";
 
 const meta: Meta<typeof SkipLink> = {
   title: "Features/Organigram/SkipLink",
@@ -19,23 +20,27 @@ const meta: Meta<typeof SkipLink> = {
 export default meta;
 type Story = StoryObj<typeof SkipLink>;
 
+function renderWithTarget(args: ComponentProps<typeof SkipLink>) {
+  return (
+    <div>
+      <SkipLink {...args} />
+      <div
+        id={args.targetId}
+        className="mt-4 p-4 bg-foundation-gray-light rounded"
+      >
+        Organigram content
+      </div>
+    </div>
+  );
+}
+
 /** Tab into the preview canvas to see the link appear. */
 export const Default: Story = {
   args: {
     targetId: "organigram-content",
     label: "Ga naar organogram",
   },
-  render: (args) => (
-    <div>
-      <SkipLink {...args} />
-      <div
-        id="organigram-content"
-        className="mt-4 p-4 bg-foundation-gray-light rounded"
-      >
-        Organigram content
-      </div>
-    </div>
-  ),
+  render: renderWithTarget,
 };
 
 export const CustomLabel: Story = {
@@ -43,15 +48,5 @@ export const CustomLabel: Story = {
     targetId: "main-content",
     label: "Sla navigatie over",
   },
-  render: (args) => (
-    <div>
-      <SkipLink {...args} />
-      <div
-        id="main-content"
-        className="mt-4 p-4 bg-foundation-gray-light rounded"
-      >
-        Main content
-      </div>
-    </div>
-  ),
+  render: renderWithTarget,
 };

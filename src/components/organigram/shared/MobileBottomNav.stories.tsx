@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { fn } from "storybook/test";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { Network, LayoutGrid, Search, Users } from "@/lib/icons";
 
@@ -17,13 +18,13 @@ const meta: Meta<typeof MobileBottomNav> = {
     viewport: { defaultViewport: "mobile1" },
   },
   tags: ["autodocs"],
-  argTypes: {
-    onChange: { action: "tab-changed" },
+  args: {
+    onChange: fn(),
   },
 };
 
 export default meta;
-type Story = StoryObj<typeof MobileBottomNav>;
+type Story = StoryObj<typeof meta>;
 
 export const ChartActive: Story = {
   args: { tabs, activeTab: "chart" },

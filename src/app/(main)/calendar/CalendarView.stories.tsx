@@ -61,7 +61,7 @@ const mockMatches: CalendarMatch[] = [
   // Today — live (date computed at runtime so it stays current)
   {
     id: 3,
-    date: new Date().toISOString().slice(0, 19),
+    date: new Date().toISOString(),
     homeTeam: kcvv,
     awayTeam: opponent2,
     homeScore: 1,

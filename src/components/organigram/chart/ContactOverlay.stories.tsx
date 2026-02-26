@@ -1,8 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { fn } from "storybook/test";
 import { ContactOverlay } from "./ContactOverlay";
 import { clubStructure } from "@/data/club-structure";
 
-const president = clubStructure.find((n) => n.id === "president")!;
+const president = clubStructure.find((n) => n.id === "president") ?? {
+  id: "president",
+  name: "Voorzitter",
+  title: "Voorzitter",
+};
 const minimal = { id: "x", name: "Jan Janssen", title: "Vrijwilliger" };
 
 const meta: Meta<typeof ContactOverlay> = {
@@ -18,9 +23,9 @@ const meta: Meta<typeof ContactOverlay> = {
     },
   },
   tags: ["autodocs"],
-  argTypes: {
-    onClose: { action: "closed" },
-    onViewDetails: { action: "view-details" },
+  args: {
+    onClose: fn(),
+    onViewDetails: fn(),
   },
 };
 

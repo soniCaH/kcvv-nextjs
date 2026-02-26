@@ -1,19 +1,32 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { fn } from "storybook/test";
 import { ExpandableCard } from "./ExpandableCard";
 import { clubStructure } from "@/data/club-structure";
 
-const president = clubStructure.find((n) => n.id === "president")!;
-const vicePresident = clubStructure.find((n) => n.id === "vice-president")!;
-const secretary = clubStructure.find((n) => n.id === "secretary")!;
+const president = clubStructure.find((n) => n.id === "president") ?? {
+  id: "president",
+  name: "Voorzitter",
+  title: "Voorzitter",
+};
+const vicePresident = clubStructure.find((n) => n.id === "vice-president") ?? {
+  id: "vice-president",
+  name: "Ondervoorzitter",
+  title: "Ondervoorzitter",
+};
+const secretary = clubStructure.find((n) => n.id === "secretary") ?? {
+  id: "secretary",
+  name: "Secretaris",
+  title: "Secretaris",
+};
 
 const meta = {
   title: "Features/Organigram/ExpandableCard",
   component: ExpandableCard,
   parameters: { layout: "padded" },
   tags: ["autodocs"],
-  argTypes: {
-    onToggle: { action: "toggled" },
-    onMemberClick: { action: "member-clicked" },
+  args: {
+    onToggle: fn(),
+    onMemberClick: fn(),
   },
 } satisfies Meta<typeof ExpandableCard>;
 
