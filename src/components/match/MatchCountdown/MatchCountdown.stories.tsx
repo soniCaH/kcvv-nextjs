@@ -27,7 +27,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Create dates relative to now for stories
-const now = new Date();
+const now = new Date("2025-11-01T12:00:00Z");
 const inDays = (days: number) =>
   new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 const inHours = (hours: number) =>
@@ -138,7 +138,7 @@ export const LongTeamNames: Story = {
  */
 export const Loading: Story = {
   args: {
-    matchDate: new Date(),
+    matchDate: new Date("2025-11-01T12:00:00Z"),
     homeTeam: "",
     awayTeam: "",
     isLoading: true,

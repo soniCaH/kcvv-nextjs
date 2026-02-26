@@ -310,7 +310,7 @@ export const Live: Story = {
       logo: OPPONENT_LOGO,
       score: 1,
     },
-    date: new Date(),
+    date: new Date("2025-01-15T15:30:00Z"),
     time: "15:30",
     status: "live",
     competition: "3de Nationale",
@@ -373,7 +373,7 @@ export const Loading: Story = {
   args: {
     homeTeam: { name: "" },
     awayTeam: { name: "" },
-    date: new Date(),
+    date: new Date("2025-01-15T15:30:00Z"),
     status: "scheduled",
     homeLineup: [],
     awayLineup: [],

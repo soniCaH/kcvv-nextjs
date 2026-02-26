@@ -49,7 +49,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Create dates relative to now for realistic stories
-const now = new Date();
+const now = new Date("2025-11-01T12:00:00Z");
 const pastDate = (daysAgo: number) => {
   const d = new Date(now);
   d.setDate(d.getDate() - daysAgo);
