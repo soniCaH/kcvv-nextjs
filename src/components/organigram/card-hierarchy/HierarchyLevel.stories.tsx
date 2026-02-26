@@ -3,10 +3,10 @@ import type { StoryObj } from "@storybook/nextjs-vite";
 import { HierarchyLevel } from "./HierarchyLevel";
 import { clubStructure } from "@/data/club-structure";
 
-// Root + first level nodes
-const topLevel = clubStructure.filter(
-  (n) => n.parentId === null || n.parentId === "club",
-);
+// True roots only — nodes with parentId === null.
+// Including parentId === "club" children here causes them to be rendered twice
+// when those children are also shown as expanded sub-nodes.
+const topLevel = clubStructure.filter((n) => n.parentId === null);
 
 // expandedIds is Set<string> in the component but arrays are JSON-serialisable.
 // StoryArgs overrides the prop so Controls can edit/serialize expandedIds.

@@ -111,6 +111,11 @@ function mockFetchPending() {
   };
 }
 
+// Shared Next.js navigation parameters used by stories that simulate ?q=KCVV.
+const SEARCH_NAVIGATION_PARAMS = {
+  nextjs: { navigation: { pathname: "/search", query: { q: "KCVV" } } },
+};
+
 // ---------------------------------------------------------------------------
 // Stories
 // ---------------------------------------------------------------------------
@@ -133,14 +138,7 @@ export const WithResults: Story = {
   args: {
     initialQuery: "KCVV",
   },
-  parameters: {
-    nextjs: {
-      navigation: {
-        pathname: "/search",
-        query: { q: "KCVV" },
-      },
-    },
-  },
+  parameters: SEARCH_NAVIGATION_PARAMS,
   beforeEach() {
     return mockFetch(mockResponse);
   },
@@ -195,14 +193,7 @@ export const Loading: Story = {
   args: {
     initialQuery: "KCVV",
   },
-  parameters: {
-    nextjs: {
-      navigation: {
-        pathname: "/search",
-        query: { q: "KCVV" },
-      },
-    },
-  },
+  parameters: SEARCH_NAVIGATION_PARAMS,
   beforeEach() {
     // Never resolves — keeps the loading spinner visible
     return mockFetchPending();
@@ -216,14 +207,7 @@ export const FetchError: Story = {
   args: {
     initialQuery: "KCVV",
   },
-  parameters: {
-    nextjs: {
-      navigation: {
-        pathname: "/search",
-        query: { q: "KCVV" },
-      },
-    },
-  },
+  parameters: SEARCH_NAVIGATION_PARAMS,
   beforeEach() {
     return mockFetchError();
   },

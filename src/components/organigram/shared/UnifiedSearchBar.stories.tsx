@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { fn } from "storybook/test";
 import { UnifiedSearchBar } from "./UnifiedSearchBar";
 import type { OrgChartNode } from "@/types/organigram";
 import type { ResponsibilityPath } from "@/types/responsibility";
@@ -101,10 +102,10 @@ const meta: Meta<typeof UnifiedSearchBar> = {
   component: UnifiedSearchBar,
   parameters: { layout: "padded" },
   tags: ["autodocs"],
-  argTypes: {
-    onChange: { action: "changed" },
-    onSelectMember: { action: "member-selected" },
-    onSelectResponsibility: { action: "responsibility-selected" },
+  args: {
+    onChange: fn(),
+    onSelectMember: fn(),
+    onSelectResponsibility: fn(),
   },
 };
 
