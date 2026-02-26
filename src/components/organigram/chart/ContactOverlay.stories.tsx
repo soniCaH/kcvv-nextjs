@@ -32,12 +32,14 @@ const meta: Meta<typeof ContactOverlay> = {
 export default meta;
 type Story = StoryObj<typeof ContactOverlay>;
 
+const defaultPosition = { x: 100, y: 100 };
+
 /** Full member data with email, phone, and "View details" link. */
 export const Visible: Story = {
   args: {
     member: president,
     isVisible: true,
-    position: { x: 100, y: 100 },
+    position: defaultPosition,
   },
 };
 
@@ -46,7 +48,7 @@ export const MinimalMember: Story = {
   args: {
     member: minimal,
     isVisible: true,
-    position: { x: 100, y: 100 },
+    position: defaultPosition,
   },
 };
 
@@ -55,7 +57,7 @@ export const Hidden: Story = {
   args: {
     member: president,
     isVisible: false,
-    position: { x: 100, y: 100 },
+    position: defaultPosition,
   },
   parameters: {
     docs: {
