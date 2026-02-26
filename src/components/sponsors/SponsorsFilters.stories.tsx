@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { fn } from "storybook/test";
 import { SponsorsFilters } from "./SponsorsFilters";
 
 const meta = {
@@ -9,7 +10,7 @@ const meta = {
   },
   tags: ["autodocs"],
   args: {
-    onFilterChange: () => {},
+    onFilterChange: fn(),
     totalCount: 24,
     filteredCount: 24,
   },

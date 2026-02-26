@@ -103,6 +103,14 @@ function mockFetchError() {
   };
 }
 
+function mockFetchPending() {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => new Promise(() => {});
+  return () => {
+    globalThis.fetch = original;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Stories
 // ---------------------------------------------------------------------------
@@ -197,18 +205,14 @@ export const Loading: Story = {
   },
   beforeEach() {
     // Never resolves — keeps the loading spinner visible
-    const original = globalThis.fetch;
-    globalThis.fetch = async () => new Promise(() => {});
-    return () => {
-      globalThis.fetch = original;
-    };
+    return mockFetchPending();
   },
 };
 
 /**
  * API returns a 500 — displays the inline error message.
  */
-export const Error: Story = {
+export const FetchError: Story = {
   args: {
     initialQuery: "KCVV",
   },

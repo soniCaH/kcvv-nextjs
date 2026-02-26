@@ -29,7 +29,7 @@ export const Default: Story = {
     members: topLevel,
     allMembers: clubStructure,
     depth: 0,
-    expandedIds: new Set<string>(),
+    expandedIds: [] as unknown as Set<string>,
   },
   render: (args) => (
     <HierarchyLevel
@@ -45,7 +45,7 @@ export const AllExpanded: Story = {
     members: topLevel,
     allMembers: clubStructure,
     depth: 0,
-    expandedIds: new Set(clubStructure.map((n) => n.id)),
+    expandedIds: clubStructure.map((n) => n.id) as unknown as Set<string>,
   },
   render: (args) => (
     <HierarchyLevel
@@ -58,10 +58,10 @@ export const AllExpanded: Story = {
 /** Single node at depth 2. */
 export const SingleNode: Story = {
   args: {
-    members: [clubStructure.find((n) => n.id === "president")!],
+    members: clubStructure.filter((n) => n.id === "president"),
     allMembers: clubStructure,
     depth: 2,
-    expandedIds: new Set<string>(),
+    expandedIds: [] as unknown as Set<string>,
   },
   render: (args) => (
     <HierarchyLevel

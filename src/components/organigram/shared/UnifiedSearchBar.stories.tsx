@@ -78,7 +78,7 @@ const mockPaths: ResponsibilityPath[] = [
   {
     id: "rp-3",
     role: ["trainer"],
-    question: "Wie beheer ik de spelerslijst?",
+    question: "Hoe beheer ik de spelerslijst?",
     keywords: ["spelerslijst", "selectie", "technisch"],
     summary: "Beheer je spelerslijst via het clubportaal.",
     steps: [

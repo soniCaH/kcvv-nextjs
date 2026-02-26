@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { fn } from "storybook/test";
 import { MobileNavigationDrawer } from "./MobileNavigationDrawer";
 import { clubStructure } from "@/data/club-structure";
 
@@ -13,12 +14,8 @@ const meta = {
   },
   tags: ["autodocs"],
   args: {
-    onClose: () => {},
-    onMemberSelect: () => {},
-  },
-  argTypes: {
-    onClose: { action: "closed" },
-    onMemberSelect: { action: "member-selected" },
+    onClose: fn(),
+    onMemberSelect: fn(),
   },
 } satisfies Meta<typeof MobileNavigationDrawer>;
 
