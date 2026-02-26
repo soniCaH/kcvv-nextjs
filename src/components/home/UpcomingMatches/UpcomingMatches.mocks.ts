@@ -63,7 +63,7 @@ export const mockScheduledMatches: UpcomingMatch[] = [
 
 export const mockLiveMatch: UpcomingMatch = {
   id: 10,
-  date: new Date(),
+  date: new Date("2025-01-15T15:30:00"),
   time: "15:30",
   homeTeam: {
     id: 1235,
