@@ -66,3 +66,15 @@ export const Empty: Story = {
     matches: [],
   },
 };
+
+/** Mobile viewport — tabs stack and list is single-column. */
+export const ResponsiveMobile: Story = {
+  args: {
+    matches: mockMatches.mixed,
+    highlightTeamId: KCVV_ID,
+    defaultTab: "upcoming",
+  },
+  parameters: {
+    viewport: { defaultViewport: "mobile1" },
+  },
+};
