@@ -138,7 +138,7 @@ export const LongTeamNames: Story = {
  */
 export const Loading: Story = {
   args: {
-    matchDate: new Date(),
+    matchDate: now,
     homeTeam: "",
     awayTeam: "",
     isLoading: true,

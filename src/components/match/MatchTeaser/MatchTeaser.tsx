@@ -297,7 +297,7 @@ function TeamDisplay({
     <div
       className={cn(
         "flex items-center gap-2 flex-1 min-w-0",
-        side === "away" && "justify-end flex-row-reverse",
+        side === "away" && "flex-row-reverse",
       )}
     >
       {team.logo ? (
@@ -323,6 +323,7 @@ function TeamDisplay({
         </div>
       )}
       <span
+        title={team.name}
         className={cn(
           "truncate",
           compact ? "text-sm" : "text-base",

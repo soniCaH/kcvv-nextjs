@@ -58,10 +58,10 @@ const mockMatches: CalendarMatch[] = [
     competition: "Nationale 1",
     team: "A-ploeg",
   },
-  // Today — live (date computed at runtime so it stays current)
+  // Fixed date fixture — represents a live match (2025-12-07T15:00:00Z)
   {
     id: 3,
-    date: new Date().toISOString(),
+    date: "2025-12-07T15:00:00.000Z",
     homeTeam: kcvv,
     awayTeam: opponent2,
     homeScore: 1,
