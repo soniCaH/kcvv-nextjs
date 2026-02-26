@@ -7,7 +7,7 @@ import type { UpcomingMatch } from "./UpcomingMatches";
 export const mockScheduledMatches: UpcomingMatch[] = [
   {
     id: 1,
-    date: new Date("2025-12-06T09:00:00"),
+    date: new Date("2025-12-06T09:00:00Z"),
     time: "09:00",
     homeTeam: {
       id: 448,
@@ -25,7 +25,7 @@ export const mockScheduledMatches: UpcomingMatch[] = [
   },
   {
     id: 2,
-    date: new Date("2025-12-06T09:30:00"),
+    date: new Date("2025-12-06T09:30:00Z"),
     time: "09:30",
     homeTeam: {
       id: 1235,
@@ -43,7 +43,7 @@ export const mockScheduledMatches: UpcomingMatch[] = [
   },
   {
     id: 3,
-    date: new Date("2025-12-07T15:00:00"),
+    date: new Date("2025-12-07T15:00:00Z"),
     time: "15:00",
     homeTeam: {
       id: 1235,
@@ -63,7 +63,7 @@ export const mockScheduledMatches: UpcomingMatch[] = [
 
 export const mockLiveMatch: UpcomingMatch = {
   id: 10,
-  date: new Date("2025-01-15T15:30:00"),
+  date: new Date("2025-01-15T15:30:00Z"),
   time: "15:30",
   homeTeam: {
     id: 1235,
@@ -84,7 +84,7 @@ export const mockLiveMatch: UpcomingMatch = {
 
 export const mockFinishedMatch: UpcomingMatch = {
   id: 11,
-  date: new Date("2025-12-06T09:30:00"),
+  date: new Date("2025-12-06T09:30:00Z"),
   time: "09:30",
   homeTeam: {
     id: 756,
@@ -105,7 +105,7 @@ export const mockFinishedMatch: UpcomingMatch = {
 
 export const mockPostponedMatch: UpcomingMatch = {
   id: 12,
-  date: new Date("2025-12-15T15:00:00"),
+  date: new Date("2025-12-15T15:00:00Z"),
   homeTeam: {
     id: 1235,
     name: "Kcvv Elewijt",
@@ -123,7 +123,7 @@ export const mockPostponedMatch: UpcomingMatch = {
 
 export const mockCancelledMatch: UpcomingMatch = {
   id: 13,
-  date: new Date("2025-12-22T14:30:00"),
+  date: new Date("2025-12-22T14:30:00Z"),
   homeTeam: {
     id: 230,
     name: "Kcs Machelen",
