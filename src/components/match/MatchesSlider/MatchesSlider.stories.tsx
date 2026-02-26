@@ -61,11 +61,7 @@ export const Single: Story = {
 /** Mixed statuses without a heading. */
 export const Mixed: Story = {
   args: {
-    matches: [
-      mockLiveMatch,
-      mockScheduledMatches[0] ?? mockFinishedMatch,
-      mockFinishedMatch,
-    ],
+    matches: [mockLiveMatch, mockScheduledMatches[0], mockFinishedMatch],
     highlightTeamId: KCVV_ID,
   },
 };
