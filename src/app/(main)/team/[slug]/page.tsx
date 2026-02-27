@@ -3,14 +3,10 @@
  * Displays individual team pages for all teams (senior and youth)
  */
 
-import { Suspense } from "react";
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import * as Tabs from "@radix-ui/react-tabs";
-import DOMPurify from "isomorphic-dompurify";
 import { runPromise } from "@/lib/effect/runtime";
-import { UrlTabs } from "@/components/ui/url-tabs";
 import {
   DrupalService,
   type TeamWithRoster,
@@ -18,10 +14,7 @@ import {
 } from "@/lib/effect/services/DrupalService";
 import { FootbalistoService } from "@/lib/effect/services/FootbalistoService";
 import type { Match, RankingEntry } from "@/lib/effect/schemas";
-import { TeamHeader } from "@/components/team/TeamHeader";
-import { TeamRoster } from "@/components/team/TeamRoster";
-import { TeamSchedule } from "@/components/team/TeamSchedule";
-import { TeamStandings } from "@/components/team/TeamStandings";
+import { TeamDetail } from "@/components/team/TeamDetail";
 import {
   parseAgeGroup,
   transformPlayerToRoster,
@@ -276,184 +269,26 @@ export default async function TeamPage({ params }: TeamPageProps) {
   const teamType = getTeamType(team);
   const tagline = getTeamTagline(team);
 
-  // Transform players and staff for TeamRoster component
-  const rosterPlayers = players.map(transformPlayerToRoster);
-  const staffMembers = staff.map(transformStaffToMember);
-
-  // Transform Footbalisto data for components
-  const scheduleMatches = footbalistoData
-    ? footbalistoData.matches.map(transformMatchToSchedule)
-    : [];
-
-  const standingsEntries = footbalistoData
-    ? footbalistoData.standings.map(transformRankingToStandings)
-    : [];
-
-  // Determine if we have content for different tabs
-  const hasPlayers = rosterPlayers.length > 0;
-  const hasStaff = staffMembers.length > 0;
-  const hasContactInfo = !!team.attributes.field_contact_info?.processed;
-  const hasMatches = scheduleMatches.length > 0;
-  const hasStandings = standingsEntries.length > 0;
-
-  // Build list of valid tabs based on available content
-  const validTabs = [
-    "info",
-    ...(hasPlayers || hasStaff ? ["lineup"] : []),
-    ...(hasMatches ? ["matches"] : []),
-    ...(hasStandings ? ["standings"] : []),
-  ];
-
   return (
-    <>
-      {/* Team Header */}
-      <TeamHeader
-        name={team.attributes.title}
-        imageUrl={teamImageUrl}
-        ageGroup={ageGroup}
-        teamType={teamType}
-        tagline={tagline}
-      />
-
-      {/* Tab Navigation - URL synced for direct linking */}
-      {/* Suspense boundary required for useSearchParams in UrlTabs during static generation */}
-      <Suspense
-        fallback={<div className="container mx-auto px-4 py-8">Loading...</div>}
-      >
-        <UrlTabs
-          defaultValue="info"
-          validTabs={validTabs}
-          className="container mx-auto px-4 py-8"
-        >
-          <Tabs.List
-            className="flex border-b border-gray-200 mb-6"
-            aria-label="Team informatie"
-          >
-            <Tabs.Trigger
-              value="info"
-              className="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent data-[state=active]:border-kcvv-green-bright data-[state=active]:text-kcvv-green-bright transition-colors"
-            >
-              Info
-            </Tabs.Trigger>
-            {(hasPlayers || hasStaff) && (
-              <Tabs.Trigger
-                value="lineup"
-                className="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent data-[state=active]:border-kcvv-green-bright data-[state=active]:text-kcvv-green-bright transition-colors"
-              >
-                Lineup
-              </Tabs.Trigger>
-            )}
-            {hasMatches && (
-              <Tabs.Trigger
-                value="matches"
-                className="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent data-[state=active]:border-kcvv-green-bright data-[state=active]:text-kcvv-green-bright transition-colors"
-              >
-                Wedstrijden
-              </Tabs.Trigger>
-            )}
-            {hasStandings && (
-              <Tabs.Trigger
-                value="standings"
-                className="px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent data-[state=active]:border-kcvv-green-bright data-[state=active]:text-kcvv-green-bright transition-colors"
-              >
-                Stand
-              </Tabs.Trigger>
-            )}
-          </Tabs.List>
-
-          {/* Info Tab */}
-          <Tabs.Content value="info" className="focus:outline-none">
-            <div className="space-y-8">
-              {/* Contact Info */}
-              {hasContactInfo && (
-                <section className="prose prose-gray max-w-none">
-                  <h2 className="text-2xl font-bold mb-4">Contactinformatie</h2>
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(
-                        team.attributes.field_contact_info!.processed!,
-                      ),
-                    }}
-                  />
-                </section>
-              )}
-
-              {/* Staff only (when no players - show staff in info tab) */}
-              {!hasPlayers && hasStaff && (
-                <section>
-                  <h2 className="text-2xl font-bold mb-4">Technische Staf</h2>
-                  <TeamRoster
-                    players={[]}
-                    staff={staffMembers}
-                    teamName={team.attributes.title}
-                    groupByPosition={false}
-                    showStaff={true}
-                  />
-                </section>
-              )}
-
-              {/* Team body content if available */}
-              {team.attributes.body?.processed && (
-                <section className="prose prose-gray max-w-none">
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(
-                        team.attributes.body.processed,
-                      ),
-                    }}
-                  />
-                </section>
-              )}
-
-              {/* No content message */}
-              {!hasContactInfo &&
-                !hasStaff &&
-                !team.attributes.body?.processed && (
-                  <p className="text-gray-500 text-center py-8">
-                    Geen extra informatie beschikbaar voor dit team.
-                  </p>
-                )}
-            </div>
-          </Tabs.Content>
-
-          {/* Lineup Tab */}
-          {(hasPlayers || hasStaff) && (
-            <Tabs.Content value="lineup" className="focus:outline-none">
-              <TeamRoster
-                players={rosterPlayers}
-                staff={staffMembers}
-                teamName={team.attributes.title}
-                groupByPosition={true}
-                showStaff={hasStaff}
-              />
-            </Tabs.Content>
-          )}
-
-          {/* Matches Tab */}
-          {hasMatches && footbalistoData && (
-            <Tabs.Content value="matches" className="focus:outline-none">
-              <TeamSchedule
-                matches={scheduleMatches}
-                teamId={footbalistoData.teamId}
-                teamSlug={slug}
-                showPast={true}
-                highlightNext={true}
-              />
-            </Tabs.Content>
-          )}
-
-          {/* Standings Tab */}
-          {hasStandings && footbalistoData && (
-            <Tabs.Content value="standings" className="focus:outline-none">
-              <TeamStandings
-                standings={standingsEntries}
-                highlightTeamId={footbalistoData.teamId}
-              />
-            </Tabs.Content>
-          )}
-        </UrlTabs>
-      </Suspense>
-    </>
+    <TeamDetail
+      header={{
+        name: team.attributes.title,
+        imageUrl: teamImageUrl,
+        ageGroup,
+        teamType,
+        tagline,
+      }}
+      contactInfo={team.attributes.field_contact_info?.processed ?? undefined}
+      bodyContent={team.attributes.body?.processed ?? undefined}
+      players={players.map(transformPlayerToRoster)}
+      staff={staff.map(transformStaffToMember)}
+      matches={footbalistoData?.matches.map(transformMatchToSchedule) ?? []}
+      standings={
+        footbalistoData?.standings.map(transformRankingToStandings) ?? []
+      }
+      highlightTeamId={footbalistoData?.teamId}
+      teamSlug={slug}
+    />
   );
 }
 

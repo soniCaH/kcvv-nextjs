@@ -1,24 +1,22 @@
-"use client";
-
 /**
  * TeamDetail Component
  *
- * Composite component for team detail pages.
- * Combines TeamHeader with tabbed content (Info/Lineup).
+ * Presentational layout for team detail pages.
+ * Combines TeamHeader with URL-synced tab navigation:
+ * Info · Lineup · Wedstrijden · Stand
  *
- * Features:
- * - Team header with photo, name, and metadata
- * - Tab navigation (Info | Lineup)
- * - Info tab with contact info and body content
- * - Lineup tab with staff and players by position
- * - Loading state support
+ * Tabs are shown conditionally based on available data.
+ * Wraps UrlTabs in Suspense as required for static generation.
  */
 
-import { useMemo } from "react";
+import { Suspense } from "react";
 import DOMPurify from "isomorphic-dompurify";
 import * as Tabs from "@radix-ui/react-tabs";
+import { UrlTabs } from "@/components/ui/url-tabs";
 import { TeamHeader, type TeamHeaderProps } from "../TeamHeader";
 import { TeamRoster, type RosterPlayer, type StaffMember } from "../TeamRoster";
+import { TeamSchedule, type ScheduleMatch } from "../TeamSchedule";
+import { TeamStandings, type StandingsEntry } from "../TeamStandings";
 import { cn } from "@/lib/utils/cn";
 
 /** Shared tab trigger styles */
@@ -36,9 +34,15 @@ export interface TeamDetailProps {
   staff?: StaffMember[];
   /** Player roster */
   players?: RosterPlayer[];
-  /** Loading state */
-  isLoading?: boolean;
-  /** Additional CSS classes */
+  /** Matches for the schedule tab */
+  matches?: ScheduleMatch[];
+  /** Standings entries for the league table tab */
+  standings?: StandingsEntry[];
+  /** Team ID used to highlight the team row in standings and home/away in schedule */
+  highlightTeamId?: number;
+  /** Team slug for back-navigation context on match detail page */
+  teamSlug?: string;
+  /** Additional CSS classes for the root wrapper */
   className?: string;
 }
 
@@ -51,124 +55,152 @@ export function TeamDetail({
   bodyContent,
   staff = [],
   players = [],
-  isLoading = false,
+  matches = [],
+  standings = [],
+  highlightTeamId,
+  teamSlug,
   className,
 }: TeamDetailProps) {
   const hasPlayers = players.length > 0;
   const hasStaff = staff.length > 0;
-  // Trim content to avoid rendering empty/whitespace-only sections
   const hasContactInfo = !!contactInfo?.trim();
   const hasBodyContent = !!bodyContent?.trim();
+  const hasMatches = matches.length > 0;
+  const hasStandings = standings.length > 0;
 
-  // Sanitize HTML content to prevent XSS attacks
-  // Even though Drupal should sanitize, this provides defense-in-depth
-  const sanitizedContactInfo = useMemo(
-    () => (contactInfo ? DOMPurify.sanitize(contactInfo) : ""),
-    [contactInfo],
-  );
-  const sanitizedBodyContent = useMemo(
-    () => (bodyContent ? DOMPurify.sanitize(bodyContent) : ""),
-    [bodyContent],
-  );
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className={cn("min-h-screen", className)}>
-        <TeamHeader {...header} isLoading />
-        <div className="container mx-auto px-4 py-8">
-          <div className="space-y-4">
-            <div className="h-10 bg-gray-200 rounded w-48 animate-pulse" />
-            <div className="h-64 bg-gray-200 rounded animate-pulse" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Build list of valid tabs based on available content
+  const validTabs = [
+    "info",
+    ...(hasPlayers || hasStaff ? ["lineup"] : []),
+    ...(hasMatches ? ["matches"] : []),
+    ...(hasStandings ? ["standings"] : []),
+  ];
 
   return (
-    <div className={className}>
+    <div className={cn(className)}>
       {/* Team Header */}
       <TeamHeader {...header} />
 
-      {/* Tab Navigation */}
-      <Tabs.Root defaultValue="info" className="container mx-auto px-4 py-8">
-        <Tabs.List
-          className="flex border-b border-gray-200 mb-6"
-          aria-label="Team informatie"
+      {/* URL-synced Tab Navigation */}
+      {/* Suspense boundary required for useSearchParams in UrlTabs during static generation */}
+      <Suspense
+        fallback={<div className="container mx-auto px-4 py-8">Loading...</div>}
+      >
+        <UrlTabs
+          defaultValue="info"
+          validTabs={validTabs}
+          className="container mx-auto px-4 py-8"
         >
-          <Tabs.Trigger value="info" className={TAB_TRIGGER_CLASSES}>
-            Info
-          </Tabs.Trigger>
-          {hasPlayers && (
-            <Tabs.Trigger value="lineup" className={TAB_TRIGGER_CLASSES}>
-              Lineup
+          <Tabs.List
+            className="flex border-b border-gray-200 mb-6"
+            aria-label="Team informatie"
+          >
+            <Tabs.Trigger value="info" className={TAB_TRIGGER_CLASSES}>
+              Info
             </Tabs.Trigger>
-          )}
-        </Tabs.List>
-
-        {/* Info Tab */}
-        <Tabs.Content value="info" className="focus:outline-none">
-          <div className="space-y-8">
-            {/* Contact Info */}
-            {hasContactInfo && (
-              <section className="prose prose-gray max-w-none">
-                <h2 className="text-2xl font-bold mb-4">Contactinformatie</h2>
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: sanitizedContactInfo,
-                  }}
-                />
-              </section>
+            {(hasPlayers || hasStaff) && (
+              <Tabs.Trigger value="lineup" className={TAB_TRIGGER_CLASSES}>
+                Lineup
+              </Tabs.Trigger>
             )}
-
-            {/* Staff only (when no players) */}
-            {!hasPlayers && hasStaff && (
-              <section>
-                <h2 className="text-2xl font-bold mb-4">Technische Staf</h2>
-                <TeamRoster
-                  players={[]}
-                  staff={staff}
-                  teamName={header.name}
-                  groupByPosition={false}
-                  showStaff={true}
-                />
-              </section>
+            {hasMatches && (
+              <Tabs.Trigger value="matches" className={TAB_TRIGGER_CLASSES}>
+                Wedstrijden
+              </Tabs.Trigger>
             )}
-
-            {/* Body content */}
-            {hasBodyContent && (
-              <section className="prose prose-gray max-w-none">
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: sanitizedBodyContent,
-                  }}
-                />
-              </section>
+            {hasStandings && (
+              <Tabs.Trigger value="standings" className={TAB_TRIGGER_CLASSES}>
+                Stand
+              </Tabs.Trigger>
             )}
+          </Tabs.List>
 
-            {/* No content message */}
-            {!hasContactInfo && !hasStaff && !hasBodyContent && (
-              <p className="text-gray-500 text-center py-8">
-                Geen extra informatie beschikbaar voor dit team.
-              </p>
-            )}
-          </div>
-        </Tabs.Content>
+          {/* Info Tab */}
+          <Tabs.Content value="info" className="focus:outline-none">
+            <div className="space-y-8">
+              {/* Contact Info */}
+              {hasContactInfo && (
+                <section className="prose prose-gray max-w-none">
+                  <h2 className="text-2xl font-bold mb-4">Contactinformatie</h2>
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(contactInfo!),
+                    }}
+                  />
+                </section>
+              )}
 
-        {/* Lineup Tab - only shown when there are players */}
-        {hasPlayers && (
-          <Tabs.Content value="lineup" className="focus:outline-none">
-            <TeamRoster
-              players={players}
-              staff={staff}
-              teamName={header.name}
-              groupByPosition={true}
-              showStaff={hasStaff}
-            />
+              {/* Staff only (when no players - show staff in info tab) */}
+              {!hasPlayers && hasStaff && (
+                <section>
+                  <h2 className="text-2xl font-bold mb-4">Technische Staf</h2>
+                  <TeamRoster
+                    players={[]}
+                    staff={staff}
+                    teamName={header.name}
+                    groupByPosition={false}
+                    showStaff={true}
+                  />
+                </section>
+              )}
+
+              {/* Team body content */}
+              {hasBodyContent && (
+                <section className="prose prose-gray max-w-none">
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(bodyContent!),
+                    }}
+                  />
+                </section>
+              )}
+
+              {/* No content message */}
+              {!hasContactInfo && !hasStaff && !hasBodyContent && (
+                <p className="text-gray-500 text-center py-8">
+                  Geen extra informatie beschikbaar voor dit team.
+                </p>
+              )}
+            </div>
           </Tabs.Content>
-        )}
-      </Tabs.Root>
+
+          {/* Lineup Tab */}
+          {(hasPlayers || hasStaff) && (
+            <Tabs.Content value="lineup" className="focus:outline-none">
+              <TeamRoster
+                players={players}
+                staff={staff}
+                teamName={header.name}
+                groupByPosition={true}
+                showStaff={hasStaff}
+              />
+            </Tabs.Content>
+          )}
+
+          {/* Matches Tab */}
+          {hasMatches && (
+            <Tabs.Content value="matches" className="focus:outline-none">
+              <TeamSchedule
+                matches={matches}
+                teamId={highlightTeamId ?? 0}
+                teamSlug={teamSlug}
+                showPast={true}
+                highlightNext={true}
+              />
+            </Tabs.Content>
+          )}
+
+          {/* Standings Tab */}
+          {hasStandings && (
+            <Tabs.Content value="standings" className="focus:outline-none">
+              <TeamStandings
+                standings={standings}
+                highlightTeamId={highlightTeamId}
+              />
+            </Tabs.Content>
+          )}
+        </UrlTabs>
+      </Suspense>
     </div>
   );
 }
