@@ -15,5 +15,5 @@ export type { ArticleCardProps } from "./ArticleCard";
 
 export { CategoryFilters } from "./CategoryFilters";
 
-export { RelatedNews } from "./RelatedNews/RelatedNews";
-export type { RelatedNewsProps } from "./RelatedNews/RelatedNews";
+export { RelatedNews } from "./RelatedNews";
+export type { RelatedNewsProps } from "./RelatedNews";

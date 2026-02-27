@@ -29,7 +29,7 @@ export const MatchesOverview = ({
   return (
     <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-8", className)}>
       <section>
-        <h3 className="text-lg font-bold text-[#31404b] mb-4 pb-2 border-b border-gray-200">
+        <h3 className="text-lg font-bold text-kcvv-gray-blue mb-4 pb-2 border-b border-gray-200">
           Volgende wedstrijden
         </h3>
         <MatchList
@@ -40,7 +40,7 @@ export const MatchesOverview = ({
       </section>
 
       <section>
-        <h3 className="text-lg font-bold text-[#31404b] mb-4 pb-2 border-b border-gray-200">
+        <h3 className="text-lg font-bold text-kcvv-gray-blue mb-4 pb-2 border-b border-gray-200">
           Recente resultaten
         </h3>
         <MatchList

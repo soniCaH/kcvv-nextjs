@@ -50,7 +50,7 @@ export const MatchesTabs = ({
   }));
 
   return (
-    <div className={cn("", className)}>
+    <div className={cn(className)}>
       <FilterTabs
         tabs={tabsWithCounts}
         activeTab={activeTab}
