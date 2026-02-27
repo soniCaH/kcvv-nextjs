@@ -294,10 +294,8 @@ export const LongArticle: Story = {
  */
 export const MobileView: Story = {
   ...Default,
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -306,9 +304,7 @@ export const MobileView: Story = {
  */
 export const TabletView: Story = {
   ...Default,
-  parameters: {
-    viewport: {
-      defaultViewport: "tablet",
-    },
+  globals: {
+    viewport: { value: "tablet" },
   },
 };

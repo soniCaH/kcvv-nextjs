@@ -91,10 +91,8 @@ export const LogoMobile: Story = {
       </div>
     </div>
   ),
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -411,10 +409,8 @@ export const HamburgerButton: Story = {
       </div>
     </div>
   ),
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -437,10 +433,8 @@ export const SearchButton: Story = {
       </div>
     </div>
   ),
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -511,10 +505,8 @@ export const MobileMenuItem: Story = {
       </div>
     </>
   ),
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -615,9 +607,7 @@ export const MobileMenuSubmenu: Story = {
       </div>
     </>
   ),
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };

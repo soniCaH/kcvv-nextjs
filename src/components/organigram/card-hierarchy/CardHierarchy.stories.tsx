@@ -302,14 +302,14 @@ export const Mobile: Story = {
     initialExpandedDepth: 2,
   },
   parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
     docs: {
       description: {
         story: "Mobile view - touch-friendly expand/collapse buttons",
       },
     },
+  },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -320,14 +320,14 @@ export const Tablet: Story = {
     initialExpandedDepth: 2,
   },
   parameters: {
-    viewport: {
-      defaultViewport: "tablet",
-    },
     docs: {
       description: {
         story: "Tablet view - good balance of hierarchy visibility",
       },
     },
+  },
+  globals: {
+    viewport: { value: "tablet" },
   },
 };
 

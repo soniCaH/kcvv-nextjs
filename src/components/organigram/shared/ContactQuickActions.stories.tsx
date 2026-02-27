@@ -266,10 +266,8 @@ export const MobileView: Story = {
     name: "Mobile User",
     size: "lg",
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 

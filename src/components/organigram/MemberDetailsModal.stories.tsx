@@ -69,9 +69,7 @@ export const MobileView: Story = {
     isOpen: true,
     member: mockMember,
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };

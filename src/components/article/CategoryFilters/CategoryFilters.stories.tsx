@@ -91,10 +91,8 @@ export const ManyCategories: Story = {
   args: {
     categories: manyCategories,
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 

@@ -1,10 +1,15 @@
 import type { Preview } from "@storybook/nextjs-vite";
+import { MINIMAL_VIEWPORTS } from "storybook/viewport";
 import "../src/app/globals.css";
 
 const preview: Preview = {
+  initialGlobals: {
+    viewport: { value: "responsive" },
+  },
   parameters: {
     viewport: {
       options: {
+        ...MINIMAL_VIEWPORTS,
         kcvvMobile: {
           name: "KCVV Mobile",
           styles: { width: "375px", height: "667px" },

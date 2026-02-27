@@ -195,10 +195,8 @@ export const MobileView: Story = {
       role: "Trainer",
     },
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 

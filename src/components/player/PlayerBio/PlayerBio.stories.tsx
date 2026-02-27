@@ -148,9 +148,7 @@ export const MobileView: Story = {
     joinDate: "2019-07-01",
     biography: "Een dynamische middenvelder met goede technische vaardigheden.",
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };

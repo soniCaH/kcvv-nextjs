@@ -201,9 +201,7 @@ export const Minimal: Story = {
  */
 export const MobileViewport: Story = {
   ...Default,
-  parameters: {
-    viewport: {
-      defaultViewport: "kcvvMobile",
-    },
+  globals: {
+    viewport: { value: "kcvvMobile" },
   },
 };

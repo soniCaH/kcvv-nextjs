@@ -302,9 +302,7 @@ export const WithCoachInfo: Story = {
  */
 export const MobileViewport: Story = {
   ...Default,
-  parameters: {
-    viewport: {
-      defaultViewport: "kcvvMobile",
-    },
+  globals: {
+    viewport: { value: "kcvvMobile" },
   },
 };
