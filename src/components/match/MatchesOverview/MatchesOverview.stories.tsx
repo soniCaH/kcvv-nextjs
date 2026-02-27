@@ -4,7 +4,7 @@
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { MatchesOverview } from "./MatchesOverview";
-import type { UpcomingMatch } from "@/components/home/UpcomingMatches/UpcomingMatches";
+import type { UpcomingMatch } from "@/components/match/types";
 import {
   mockScheduledMatches,
   mockFinishedMatch,

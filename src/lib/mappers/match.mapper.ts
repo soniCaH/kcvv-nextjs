@@ -4,7 +4,7 @@
  */
 
 import type { Match } from "@/lib/effect/schemas/match.schema";
-import type { UpcomingMatch } from "@/components/home/UpcomingMatches/UpcomingMatches";
+import type { UpcomingMatch } from "@/components/match/types";
 
 /**
  * Fix team name capitalization

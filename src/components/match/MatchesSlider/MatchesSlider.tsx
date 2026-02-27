@@ -10,7 +10,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
 import { MatchTeaser } from "../MatchTeaser/MatchTeaser";
-import type { UpcomingMatch } from "@/components/home/UpcomingMatches/UpcomingMatches";
+import type { UpcomingMatch } from "@/components/match/types";
 
 export interface MatchesSliderProps {
   /** Matches to display */

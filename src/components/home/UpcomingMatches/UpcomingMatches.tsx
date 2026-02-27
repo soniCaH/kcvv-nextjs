@@ -12,55 +12,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
 import { formatMatchDate } from "@/lib/utils/dates";
+import type { UpcomingMatch } from "@/components/match/types";
 
-export interface UpcomingMatch {
-  /**
-   * Match ID
-   */
-  id: number;
-  /**
-   * Match date
-   */
-  date: Date;
-  /**
-   * Match time (optional)
-   */
-  time?: string;
-  /**
-   * Venue/location (optional)
-   */
-  venue?: string;
-  /**
-   * Home team
-   */
-  homeTeam: {
-    id: number;
-    name: string;
-    logo?: string;
-    score?: number;
-  };
-  /**
-   * Away team
-   */
-  awayTeam: {
-    id: number;
-    name: string;
-    logo?: string;
-    score?: number;
-  };
-  /**
-   * Match status
-   */
-  status: "scheduled" | "live" | "finished" | "postponed" | "cancelled";
-  /**
-   * Round/matchday (optional)
-   */
-  round?: string;
-  /**
-   * Competition name (optional)
-   */
-  competition?: string;
-}
+export type { UpcomingMatch };
 
 export interface UpcomingMatchesProps {
   /**
