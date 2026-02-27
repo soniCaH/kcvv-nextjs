@@ -4,7 +4,7 @@ import "../src/app/globals.css";
 const preview: Preview = {
   parameters: {
     viewport: {
-      viewports: {
+      options: {
         kcvvMobile: {
           name: "KCVV Mobile",
           styles: { width: "375px", height: "667px" },
