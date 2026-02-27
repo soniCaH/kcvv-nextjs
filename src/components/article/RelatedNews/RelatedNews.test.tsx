@@ -65,6 +65,7 @@ describe("RelatedNews", () => {
     });
 
     it("renders one ArticleCard per article", () => {
+      // ArticleCard renders exactly one <a> per card, so link count === article count
       render(<RelatedNews articles={mockArticles} />);
       expect(screen.getAllByRole("link")).toHaveLength(mockArticles.length);
     });

@@ -4,7 +4,7 @@
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { MobileMenu } from "./MobileMenu";
 
 const meta = {
@@ -32,6 +32,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const rootNavigation = {
+  nextjs: {
+    navigation: {
+      pathname: "/",
+    },
+  },
+};
+
 /**
  * Menu hidden — panel translated off-screen, no backdrop visible
  */
@@ -39,43 +47,28 @@ export const Closed: Story = {
   args: {
     isOpen: false,
   },
-  parameters: {
-    nextjs: {
-      navigation: {
-        pathname: "/",
-      },
-    },
-  },
+  parameters: rootNavigation,
 };
 
 /**
  * Menu fully open — panel visible, no item active
  */
 export const Open: Story = {
-  parameters: {
-    nextjs: {
-      navigation: {
-        pathname: "/",
-      },
-    },
-  },
+  parameters: rootNavigation,
 };
 
 /**
  * A-Ploeg submenu expanded — play clicks the A-Ploeg toggle button
  */
 export const OpenWithAPloegsSubmenu: Story = {
-  parameters: {
-    nextjs: {
-      navigation: {
-        pathname: "/",
-      },
-    },
-  },
+  parameters: rootNavigation,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const toggle = canvas.getByRole("button", { name: /A-Ploeg/i });
     await userEvent.click(toggle);
+    expect(
+      canvas.getByRole("link", { name: /Spelers & Staff/i }),
+    ).toBeInTheDocument();
   },
 };
 
@@ -83,17 +76,12 @@ export const OpenWithAPloegsSubmenu: Story = {
  * Jeugd submenu expanded — play clicks the Jeugd toggle button (13 children)
  */
 export const OpenWithJeugdSubmenu: Story = {
-  parameters: {
-    nextjs: {
-      navigation: {
-        pathname: "/",
-      },
-    },
-  },
+  parameters: rootNavigation,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const toggle = canvas.getByRole("button", { name: /Jeugd/i });
     await userEvent.click(toggle);
+    expect(canvas.getByRole("link", { name: /U21/i })).toBeInTheDocument();
   },
 };
 
@@ -126,5 +114,8 @@ export const OpenWithActiveChildLink: Story = {
     const canvas = within(canvasElement);
     const toggle = canvas.getByRole("button", { name: /A-Ploeg/i });
     await userEvent.click(toggle);
+    expect(
+      canvas.getByRole("link", { name: /Spelers & Staff/i }),
+    ).toBeInTheDocument();
   },
 };

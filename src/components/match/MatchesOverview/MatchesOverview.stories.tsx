@@ -4,6 +4,7 @@
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { MatchesOverview } from "./MatchesOverview";
+import type { UpcomingMatch } from "@/components/home/UpcomingMatches/UpcomingMatches";
 import {
   mockScheduledMatches,
   mockFinishedMatch,
@@ -30,11 +31,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const mockSecondFinishedMatch: UpcomingMatch = {
+  ...mockFinishedMatch,
+  id: 20,
+};
+
 /** Both sections populated with matches. */
 export const Default: Story = {
   args: {
     upcomingMatches: mockScheduledMatches,
-    recentResults: [mockFinishedMatch, mockFinishedMatch],
+    recentResults: [mockFinishedMatch, mockSecondFinishedMatch],
     highlightTeamId: KCVV_ID,
   },
 };
@@ -43,7 +49,7 @@ export const Default: Story = {
 export const EmptyUpcoming: Story = {
   args: {
     upcomingMatches: [],
-    recentResults: [mockFinishedMatch, mockFinishedMatch],
+    recentResults: [mockFinishedMatch, mockSecondFinishedMatch],
     highlightTeamId: KCVV_ID,
   },
 };

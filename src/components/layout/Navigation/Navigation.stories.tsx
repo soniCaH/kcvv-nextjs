@@ -4,7 +4,7 @@
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { userEvent, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import { Navigation } from "./Navigation";
 
 const meta = {
@@ -100,6 +100,9 @@ export const DropdownOpenAPloegs: Story = {
     const canvas = within(canvasElement);
     const trigger = canvas.getByRole("link", { name: /A-Ploeg/i });
     await userEvent.hover(trigger);
+    expect(
+      canvas.getByRole("link", { name: /Spelers & Staff/i }),
+    ).toBeInTheDocument();
   },
 };
 
@@ -118,6 +121,7 @@ export const DropdownOpenJeugd: Story = {
     const canvas = within(canvasElement);
     const trigger = canvas.getByRole("link", { name: /Jeugd/i });
     await userEvent.hover(trigger);
+    expect(canvas.getByRole("link", { name: /U21/i })).toBeInTheDocument();
   },
 };
 
@@ -136,5 +140,8 @@ export const DropdownOpenDeClub: Story = {
     const canvas = within(canvasElement);
     const trigger = canvas.getByRole("link", { name: /De club/i });
     await userEvent.hover(trigger);
+    expect(
+      canvas.getByRole("link", { name: /Organigram/i }),
+    ).toBeInTheDocument();
   },
 };
