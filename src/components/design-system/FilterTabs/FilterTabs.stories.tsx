@@ -213,7 +213,7 @@ export const Mobile: Story = {
     ariaLabel: "Filter by category",
   },
   globals: {
-    viewport: { value: "mobile1" },
+    viewport: { value: "kcvvMobile" },
   },
 };
 

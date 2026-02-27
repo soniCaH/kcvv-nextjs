@@ -309,7 +309,7 @@ export const Mobile: Story = {
     },
   },
   globals: {
-    viewport: { value: "mobile1" },
+    viewport: { value: "kcvvMobile" },
   },
 };
 
