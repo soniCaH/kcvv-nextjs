@@ -98,6 +98,9 @@ export const DropdownOpenAPloegs: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    expect(
+      canvas.queryByRole("link", { name: /Spelers & Staff/i }),
+    ).not.toBeInTheDocument();
     const trigger = canvas.getByRole("link", { name: /A-Ploeg/i });
     await userEvent.hover(trigger);
     expect(
@@ -119,6 +122,9 @@ export const DropdownOpenJeugd: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    expect(
+      canvas.queryByRole("link", { name: /U21/i }),
+    ).not.toBeInTheDocument();
     const trigger = canvas.getByRole("link", { name: /Jeugd/i });
     await userEvent.hover(trigger);
     expect(canvas.getByRole("link", { name: /U21/i })).toBeInTheDocument();
@@ -138,6 +144,9 @@ export const DropdownOpenDeClub: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    expect(
+      canvas.queryByRole("link", { name: /Organigram/i }),
+    ).not.toBeInTheDocument();
     const trigger = canvas.getByRole("link", { name: /De club/i });
     await userEvent.hover(trigger);
     expect(
