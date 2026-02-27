@@ -3,6 +3,14 @@ import "../src/app/globals.css";
 
 const preview: Preview = {
   parameters: {
+    viewport: {
+      viewports: {
+        kcvvMobile: {
+          name: "KCVV Mobile",
+          styles: { width: "375px", height: "667px" },
+        },
+      },
+    },
     options: {
       storySort: {
         order: ["Foundation", "UI", "Features", "Layout", "Pages", "*"],

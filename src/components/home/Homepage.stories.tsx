@@ -203,7 +203,7 @@ export const MobileViewport: Story = {
   ...Default,
   parameters: {
     viewport: {
-      defaultViewport: "mobile1",
+      defaultViewport: "kcvvMobile",
     },
   },
 };
