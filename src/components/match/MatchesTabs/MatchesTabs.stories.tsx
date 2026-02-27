@@ -74,7 +74,7 @@ export const ResponsiveMobile: Story = {
     highlightTeamId: KCVV_ID,
     defaultTab: "upcoming",
   },
-  parameters: {
-    viewport: { defaultViewport: "mobile1" },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };

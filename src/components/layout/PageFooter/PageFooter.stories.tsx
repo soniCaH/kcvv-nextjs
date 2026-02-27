@@ -263,9 +263,7 @@ export const MobileView: Story = {
       <PageFooterStorybook />
     </div>
   ),
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };

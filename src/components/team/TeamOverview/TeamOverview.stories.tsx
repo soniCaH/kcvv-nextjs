@@ -262,10 +262,8 @@ export const MobileView: Story = {
     })),
     teamType: "youth",
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 

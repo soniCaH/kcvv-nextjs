@@ -56,15 +56,15 @@ export const Default: Story = {
  */
 export const Mobile: Story = {
   parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
     docs: {
       description: {
         story:
           "Mobile-optimized view showing stacked quick links and touch-friendly interface.",
       },
     },
+  },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -73,14 +73,14 @@ export const Mobile: Story = {
  */
 export const Tablet: Story = {
   parameters: {
-    viewport: {
-      defaultViewport: "tablet",
-    },
     docs: {
       description: {
         story: "Tablet view showing responsive grid layout for quick links.",
       },
     },
+  },
+  globals: {
+    viewport: { value: "tablet" },
   },
 };
 

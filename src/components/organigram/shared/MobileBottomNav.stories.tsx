@@ -15,7 +15,9 @@ const meta: Meta<typeof MobileBottomNav> = {
   component: MobileBottomNav,
   parameters: {
     layout: "fullscreen",
-    viewport: { defaultViewport: "mobile1" },
+  },
+  globals: {
+    viewport: { value: "mobile1" },
   },
   tags: ["autodocs"],
   args: {

@@ -379,10 +379,8 @@ export const MobileView: Story = {
     teamName: "A-Ploeg",
     groupByPosition: true,
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 

@@ -389,9 +389,7 @@ export const MobileView: Story = {
     homeLineup: mockHomeLineup,
     awayLineup: mockAwayLineup,
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };

@@ -10,7 +10,9 @@ const meta = {
   component: MobileNavigationDrawer,
   parameters: {
     layout: "fullscreen",
-    viewport: { defaultViewport: "mobile1" },
+  },
+  globals: {
+    viewport: { value: "mobile1" },
   },
   tags: ["autodocs"],
   args: {

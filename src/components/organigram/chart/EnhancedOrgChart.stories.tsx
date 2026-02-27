@@ -174,15 +174,15 @@ export const MobileNavigation: Story = {
     );
   },
   parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
     docs: {
       description: {
         story:
           "Mobile-specific navigation drawer provides easy access to member list with search and filters",
       },
     },
+  },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -192,15 +192,15 @@ export const Mobile: Story = {
     members: clubStructure,
   },
   parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
     docs: {
       description: {
         story:
           "Mobile view with compact nodes (200×100px), navigation drawer, and simplified controls",
       },
     },
+  },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -210,14 +210,14 @@ export const Tablet: Story = {
     members: clubStructure,
   },
   parameters: {
-    viewport: {
-      defaultViewport: "tablet",
-    },
     docs: {
       description: {
         story: "Tablet view - balanced between mobile and desktop layouts",
       },
     },
+  },
+  globals: {
+    viewport: { value: "tablet" },
   },
 };
 

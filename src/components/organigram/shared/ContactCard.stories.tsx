@@ -216,10 +216,8 @@ export const CompactMobile: Story = {
     variant: "compact",
     showExpandIndicator: true,
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -230,10 +228,8 @@ export const DetailedMobile: Story = {
     showQuickActions: true,
     showDepartment: true,
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 

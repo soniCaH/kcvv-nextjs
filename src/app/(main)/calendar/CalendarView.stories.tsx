@@ -128,7 +128,7 @@ export const Empty: Story = {
 /** Mobile viewport. */
 export const Mobile: Story = {
   args: { matches: mockMatches },
-  parameters: {
-    viewport: { defaultViewport: "mobile1" },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };

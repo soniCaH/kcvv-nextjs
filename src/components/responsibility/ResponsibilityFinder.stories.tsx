@@ -101,15 +101,15 @@ export const Compact: Story = {
 export const Mobile: Story = {
   args: {},
   parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
     docs: {
       description: {
         story:
           "Mobile-optimized view showing touch-friendly buttons and stacked layout.",
       },
     },
+  },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -119,14 +119,14 @@ export const Mobile: Story = {
 export const Tablet: Story = {
   args: {},
   parameters: {
-    viewport: {
-      defaultViewport: "tablet",
-    },
     docs: {
       description: {
         story: "Tablet view showing responsive layout adaptation.",
       },
     },
+  },
+  globals: {
+    viewport: { value: "tablet" },
   },
 };
 

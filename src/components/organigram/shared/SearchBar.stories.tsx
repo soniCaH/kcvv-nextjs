@@ -337,10 +337,8 @@ export const Mobile: Story = {
     members: mockMembers,
     showAutocomplete: true,
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 

@@ -284,10 +284,8 @@ export const MobileView: Story = {
     imageUrl: REAL_PLAYER_IMAGES.jarne,
     href: "/player/jarne-feron",
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 

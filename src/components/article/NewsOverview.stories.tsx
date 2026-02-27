@@ -220,10 +220,8 @@ export const MobileOverview: Story = {
       </div>
     );
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 

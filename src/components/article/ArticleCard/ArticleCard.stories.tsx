@@ -246,10 +246,8 @@ export const MobileView: Story = {
     date: "9 januari 2025",
     tags: [{ name: "Training" }],
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -265,9 +263,7 @@ export const TabletView: Story = {
     date: "8 januari 2025",
     tags: [{ name: "Club" }],
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "tablet",
-    },
+  globals: {
+    viewport: { value: "tablet" },
   },
 };

@@ -12,15 +12,15 @@ const meta = {
   component: MobileMenu,
   parameters: {
     layout: "fullscreen",
-    viewport: {
-      defaultViewport: "mobile1",
-    },
     docs: {
       description: {
         component:
           "Off-canvas mobile navigation panel (280px wide, dark background). Slides in from the left when open. Supports nested submenus and active state highlighting via pathname/search params.",
       },
     },
+  },
+  globals: {
+    viewport: { value: "mobile1" },
   },
   args: {
     isOpen: true,

@@ -249,10 +249,8 @@ export const Mobile: Story = {
     showCounts: true,
     variant: "tabs",
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -263,10 +261,8 @@ export const MobilePills: Story = {
     showCounts: true,
     variant: "pills",
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
@@ -444,9 +440,7 @@ export const ScrollBehavior: Story = {
       </div>
     );
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };

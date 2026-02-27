@@ -8,32 +8,32 @@
  * mobile hamburger menu at 960px.
  */
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { PageHeader } from './PageHeader'
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { PageHeader } from "./PageHeader";
 
 const meta = {
-  title: 'Layout/PageHeader',
+  title: "Layout/PageHeader",
   component: PageHeader,
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
     docs: {
       description: {
         component:
-          'Main site header with logo and navigation. Matches Gatsby design with green background, white text, and pattern image overlay.',
+          "Main site header with logo and navigation. Matches Gatsby design with green background, white text, and pattern image overlay.",
       },
     },
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     className: {
-      description: 'Additional CSS classes to apply to the header',
-      control: 'text',
+      description: "Additional CSS classes to apply to the header",
+      control: "text",
     },
   },
-} satisfies Meta<typeof PageHeader>
+} satisfies Meta<typeof PageHeader>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * Default header with logo and navigation.
@@ -50,8 +50,9 @@ export const Default: Story = {
       <div className="p-8">
         <h1 className="text-2xl font-bold mb-4">KCVV Elewijt</h1>
         <p className="text-gray-600 mb-4">
-          The header above shows the main navigation with green background and white text.
-          Hover over menu items to see the underline animation effect.
+          The header above shows the main navigation with green background and
+          white text. Hover over menu items to see the underline animation
+          effect.
         </p>
         <div className="space-y-4">
           {Array.from({ length: 20 }).map((_, i) => (
@@ -64,7 +65,7 @@ export const Default: Story = {
       </div>
     </div>
   ),
-}
+};
 
 /**
  * Mobile view (resize viewport to see)
@@ -81,12 +82,10 @@ export const MobileView: Story = {
       </div>
     </div>
   ),
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1',
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
-}
+};
 
 /**
  * Full page example with content
@@ -131,4 +130,4 @@ export const WithContent: Story = {
       </main>
     </div>
   ),
-}
+};

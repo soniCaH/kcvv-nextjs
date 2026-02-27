@@ -296,3 +296,13 @@ export const WithCoachInfo: Story = {
     players: samplePlayers,
   },
 };
+
+/**
+ * Mobile viewport — single-column stacked layout
+ */
+export const MobileViewport: Story = {
+  ...Default,
+  globals: {
+    viewport: { value: "kcvvMobile" },
+  },
+};

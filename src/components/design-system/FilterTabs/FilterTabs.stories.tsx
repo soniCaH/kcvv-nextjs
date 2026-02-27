@@ -212,10 +212,8 @@ export const Mobile: Story = {
     showCounts: true,
     ariaLabel: "Filter by category",
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "kcvvMobile" },
   },
 };
 
@@ -232,10 +230,8 @@ export const Tablet: Story = {
     showCounts: true,
     ariaLabel: "Filter by category",
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "tablet",
-    },
+  globals: {
+    viewport: { value: "tablet" },
   },
 };
 

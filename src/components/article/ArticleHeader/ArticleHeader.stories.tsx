@@ -116,9 +116,7 @@ export const MobileView: Story = {
     imageUrl: "https://picsum.photos/1120/560?random=5",
     imageAlt: "Youth training",
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };

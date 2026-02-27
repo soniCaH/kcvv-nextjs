@@ -78,8 +78,8 @@ export const MobileViewport: Story = {
     recentResults: [mockFinishedMatch],
     highlightTeamId: KCVV_ID,
   },
-  parameters: {
-    viewport: { defaultViewport: "mobile1" },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 

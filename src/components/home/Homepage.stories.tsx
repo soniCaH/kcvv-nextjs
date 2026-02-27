@@ -195,3 +195,13 @@ export const Minimal: Story = {
     </>
   ),
 };
+
+/**
+ * Mobile viewport — single-column layout
+ */
+export const MobileViewport: Story = {
+  ...Default,
+  globals: {
+    viewport: { value: "kcvvMobile" },
+  },
+};

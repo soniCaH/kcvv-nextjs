@@ -81,7 +81,7 @@ export const MobileView: Story = {
     title: "Aankomende wedstrijden",
     highlightTeamId: KCVV_ID,
   },
-  parameters: {
-    viewport: { defaultViewport: "mobile1" },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };

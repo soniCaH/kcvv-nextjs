@@ -258,10 +258,8 @@ export const MobileView: Story = {
     status: "finished",
     competition: "3de Nationale",
   },
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
