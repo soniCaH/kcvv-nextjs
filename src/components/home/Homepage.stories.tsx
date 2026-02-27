@@ -195,3 +195,15 @@ export const Minimal: Story = {
     </>
   ),
 };
+
+/**
+ * Mobile viewport — single-column layout
+ */
+export const MobileViewport: Story = {
+  ...Default,
+  parameters: {
+    viewport: {
+      defaultViewport: "mobile1",
+    },
+  },
+};
