@@ -7,7 +7,7 @@
 
 import { cn } from "@/lib/utils/cn";
 import { MatchList } from "../MatchList/MatchList";
-import type { UpcomingMatch } from "@/components/home/UpcomingMatches/UpcomingMatches";
+import type { UpcomingMatch } from "@/components/match/types";
 
 export interface MatchesOverviewProps {
   /** Upcoming / scheduled matches */

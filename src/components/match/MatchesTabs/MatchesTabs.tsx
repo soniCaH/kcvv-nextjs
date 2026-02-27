@@ -11,7 +11,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { FilterTabs } from "@/components/design-system/FilterTabs/FilterTabs";
 import { MatchList } from "../MatchList/MatchList";
-import type { UpcomingMatch } from "@/components/home/UpcomingMatches/UpcomingMatches";
+import type { UpcomingMatch } from "@/components/match/types";
 
 export interface MatchesTabsProps {
   /** All matches — component splits them by status */

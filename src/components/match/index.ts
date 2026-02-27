@@ -19,3 +19,5 @@ export type { MatchesSliderProps } from "./MatchesSlider/MatchesSlider";
 
 export { MatchesTabs } from "./MatchesTabs/MatchesTabs";
 export type { MatchesTabsProps } from "./MatchesTabs/MatchesTabs";
+
+export type { UpcomingMatch } from "./types";
