@@ -75,7 +75,7 @@ export function ScheurkalenderPage({ days }: ScheurkalenderPageProps) {
             {days.map(({ key, label, matches }) => (
               <div key={key} className="print:break-inside-avoid">
                 {/* Date header */}
-                <div className="bg-green-main text-white px-4 py-2 rounded-lg print:rounded-none print:bg-gray-800 mb-2 capitalize">
+                <div className="bg-green-main text-white px-4 py-2 rounded-lg print:rounded-none print:bg-gray-800 mb-2">
                   <span className="font-bold capitalize">{label}</span>
                 </div>
 

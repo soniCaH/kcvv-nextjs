@@ -42,7 +42,7 @@ export const Default: Story = {
   args: {
     goldSponsors: mockSponsors.slice(0, 3),
     silverSponsors: mockSponsors.slice(3, 7),
-    bronzeSponsors: mockSponsors.slice(0, 10),
+    bronzeSponsors: mockSponsors.slice(7, 10),
   },
 };
 
@@ -75,7 +75,7 @@ export const MobileViewport: Story = {
   args: {
     goldSponsors: mockSponsors.slice(0, 3),
     silverSponsors: mockSponsors.slice(3, 6),
-    bronzeSponsors: mockSponsors.slice(0, 5),
+    bronzeSponsors: mockSponsors.slice(6, 10),
   },
   globals: { viewport: { value: "kcvvMobile" } },
 };

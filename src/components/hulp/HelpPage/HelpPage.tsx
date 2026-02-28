@@ -8,9 +8,9 @@ import { ResponsibilityFinder } from "@/components/responsibility";
 
 export function HelpPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-green-main via-green-hover to-green-dark-hover text-white py-16 px-4">
+      <div className="bg-linear-to-br from-green-main via-green-hover to-green-dark-hover text-white py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <h1
             className="text-4xl md:text-6xl font-bold mb-4"
@@ -32,7 +32,15 @@ export function HelpPage() {
         <ResponsibilityFinder />
 
         {/* Additional Info */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <h2
+          className="mt-16 text-xl font-bold text-gray-blue mb-4"
+          style={{
+            fontFamily: "quasimoda, acumin-pro, Montserrat, sans-serif",
+          }}
+        >
+          Meer informatie
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-main">
             <h3 className="font-bold text-gray-blue mb-3 flex items-center gap-2">
               <svg
@@ -40,6 +48,8 @@ export function HelpPage() {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
               >
                 <path
                   strokeLinecap="round"
@@ -64,6 +74,8 @@ export function HelpPage() {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
               >
                 <path
                   strokeLinecap="round"
@@ -82,6 +94,8 @@ export function HelpPage() {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
               >
                 <path
                   strokeLinecap="round"
@@ -116,7 +130,7 @@ export function HelpPage() {
           </h2>
           <div className="space-y-4">
             <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-green-main text-white rounded-full flex items-center justify-center font-bold">
+              <div className="shrink-0 w-8 h-8 bg-green-main text-white rounded-full flex items-center justify-center font-bold">
                 1
               </div>
               <div>
@@ -127,7 +141,7 @@ export function HelpPage() {
               </div>
             </div>
             <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-green-main text-white rounded-full flex items-center justify-center font-bold">
+              <div className="shrink-0 w-8 h-8 bg-green-main text-white rounded-full flex items-center justify-center font-bold">
                 2
               </div>
               <div>
@@ -138,7 +152,7 @@ export function HelpPage() {
               </div>
             </div>
             <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-green-main text-white rounded-full flex items-center justify-center font-bold">
+              <div className="shrink-0 w-8 h-8 bg-green-main text-white rounded-full flex items-center justify-center font-bold">
                 3
               </div>
               <div>

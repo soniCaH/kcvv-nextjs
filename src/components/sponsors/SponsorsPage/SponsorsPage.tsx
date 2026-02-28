@@ -39,20 +39,20 @@ export function SponsorsPage({
   return (
     <div className="relative">
       {/* Subtle gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-white to-gray-50 pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-b from-gray-50 via-white to-gray-50 pointer-events-none" />
 
       {/* Content */}
       <div className="relative">
         <PageTitle title="Sponsors KCVV Elewijt" />
 
         {/* Stats section with subtle background */}
-        <div className="bg-gradient-to-r from-green-50/30 via-white to-green-50/30">
+        <div className="bg-linear-to-r from-green-50/30 via-white to-green-50/30">
           <SponsorsStats totalSponsors={totalSponsors} />
         </div>
 
         {/* Spotlight section */}
         {featuredSponsors.length > 0 && (
-          <div className="bg-gradient-to-b from-gray-50 to-white">
+          <div className="bg-linear-to-b from-gray-50 to-white">
             <SponsorsSpotlight sponsors={featuredSponsors} />
           </div>
         )}
@@ -81,9 +81,7 @@ export function SponsorsPage({
             sponsors={bronzeSponsors}
           />
 
-          {goldSponsors.length === 0 &&
-            silverSponsors.length === 0 &&
-            bronzeSponsors.length === 0 && <SponsorsEmptyState />}
+          {totalSponsors === 0 && <SponsorsEmptyState />}
 
           <SponsorsCallToAction />
         </div>
