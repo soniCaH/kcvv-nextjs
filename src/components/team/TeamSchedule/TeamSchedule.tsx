@@ -281,7 +281,7 @@ export function TeamSchedule({
                 <span
                   className={cn(
                     "truncate text-sm",
-                    match.homeTeam.id === teamId
+                    teamId !== undefined && match.homeTeam.id === teamId
                       ? "font-semibold"
                       : "text-gray-700",
                   )}
@@ -296,7 +296,8 @@ export function TeamSchedule({
                   <div className="flex items-center gap-2 font-mono font-bold text-lg">
                     <span
                       className={cn(
-                        match.homeTeam.id === teamId &&
+                        teamId !== undefined &&
+                          match.homeTeam.id === teamId &&
                           match.homeScore! > match.awayScore! &&
                           "text-kcvv-green-bright",
                       )}
@@ -306,7 +307,8 @@ export function TeamSchedule({
                     <span className="text-gray-400">-</span>
                     <span
                       className={cn(
-                        match.awayTeam.id === teamId &&
+                        teamId !== undefined &&
+                          match.awayTeam.id === teamId &&
                           match.awayScore! > match.homeScore! &&
                           "text-kcvv-green-bright",
                       )}
@@ -324,7 +326,7 @@ export function TeamSchedule({
                 <span
                   className={cn(
                     "truncate text-sm text-right",
-                    match.awayTeam.id === teamId
+                    teamId !== undefined && match.awayTeam.id === teamId
                       ? "font-semibold"
                       : "text-gray-700",
                   )}

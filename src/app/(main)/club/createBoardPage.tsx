@@ -88,7 +88,10 @@ export function createBoardPage({
         },
       };
     } catch {
-      return { title: `${fallbackTitle} | KCVV Elewijt` };
+      return {
+        title: `${fallbackTitle} | KCVV Elewijt`,
+        description: fallbackDescription,
+      };
     }
   }
 
