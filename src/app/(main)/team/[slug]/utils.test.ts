@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { Player, Team } from "@/lib/effect/schemas";
+import type { Player, Staff, Team } from "@/lib/effect/schemas";
 import {
   parseAgeGroup,
   transformPlayerToRoster,
@@ -225,6 +225,44 @@ describe("transformPlayerToRoster", () => {
   });
 });
 
+// Mock staff node factory (node--staff board members)
+function createMockStaff(
+  overrides: {
+    id?: string;
+    field_firstname?: string | null;
+    field_lastname?: string | null;
+    field_position_staff?: string | null;
+    field_position_short?: string | null;
+    imageUrl?: string;
+  } = {},
+): Staff {
+  const hasImage = !!overrides.imageUrl;
+  return {
+    id: overrides.id ?? "test-staff-id",
+    type: "node--staff",
+    attributes: {
+      title: "Staff Member",
+      created: new Date("2024-01-01"),
+      path: { alias: "/staff/test-member" },
+      field_firstname:
+        overrides.field_firstname !== undefined
+          ? overrides.field_firstname
+          : "Test",
+      field_lastname:
+        overrides.field_lastname !== undefined
+          ? overrides.field_lastname
+          : "Member",
+      field_position_staff: overrides.field_position_staff,
+      field_position_short: overrides.field_position_short,
+    },
+    relationships: {
+      field_image: hasImage
+        ? { data: { uri: { url: overrides.imageUrl! }, alt: "Staff image" } }
+        : undefined,
+    },
+  } as unknown as Staff;
+}
+
 describe("transformStaffToMember", () => {
   it("transforms staff member data", () => {
     const staff = createMockPlayer({
@@ -275,6 +313,46 @@ describe("transformStaffToMember", () => {
     const result = transformStaffToMember(staff);
     expect(result.role).toBe("Staff");
     expect(result.roleCode).toBeUndefined();
+  });
+
+  it("uses field_position_staff for node--staff board members", () => {
+    const member = createMockStaff({
+      field_firstname: "Jan",
+      field_lastname: "Janssen",
+      field_position_staff: "Voorzitter",
+      field_position_short: null,
+    });
+
+    const result = transformStaffToMember(member);
+
+    expect(result).toEqual({
+      id: "test-staff-id",
+      firstName: "Jan",
+      lastName: "Janssen",
+      role: "Voorzitter",
+      roleCode: undefined,
+      imageUrl: undefined,
+    });
+  });
+
+  it("falls back to roleCode map for node--staff without field_position_staff", () => {
+    const member = createMockStaff({
+      field_position_staff: null,
+      field_position_short: "T1",
+    });
+    const result = transformStaffToMember(member);
+    expect(result.role).toBe("Hoofdtrainer");
+  });
+
+  it("resolves image URL for node--staff members", () => {
+    const member = createMockStaff({
+      imageUrl: "https://api.kcvvelewijt.be/files/voorzitter.jpg",
+      field_position_staff: "Voorzitter",
+    });
+    const result = transformStaffToMember(member);
+    expect(result.imageUrl).toBe(
+      "https://api.kcvvelewijt.be/files/voorzitter.jpg",
+    );
   });
 });
 

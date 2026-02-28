@@ -672,6 +672,89 @@ export const DrupalServiceLive = Layer.effect(
     };
 
     /**
+     * Resolve a file or media image reference to an absolute URL.
+     *
+     * Shared by mapPlayerIncluded and extractStaffNodesFromIncluded.
+     * Returns the resolved { data: DrupalImage } shape, or the fallback when
+     * the reference cannot be resolved (unrecognised ref, missing included
+     * entity, etc.).
+     *
+     * @param fileRef - Raw relationship data value (null, DrupalImage, or a ref object)
+     * @param includedMap - Lookup map of "type:id" → included entity
+     * @param fallback - Value to return when resolution is not possible
+     */
+    const resolveImageFromRef = (
+      fileRef: unknown,
+      includedMap: Map<string, unknown>,
+      fallback: unknown,
+    ): unknown => {
+      if (
+        !fileRef ||
+        typeof fileRef !== "object" ||
+        !("id" in fileRef) ||
+        !("type" in fileRef)
+      ) {
+        return fallback;
+      }
+
+      const ref = fileRef as {
+        id: string;
+        type: string;
+        meta?: { alt?: string; width?: number; height?: number };
+      };
+
+      if (ref.type === "file--file") {
+        const file = includedMap.get(`file--file:${ref.id}`);
+        if (!file || (file as { type: string }).type !== "file--file") {
+          return fallback;
+        }
+        const decodedFile = S.decodeUnknownSync(File)(file);
+        const fileUrl = decodedFile.attributes.uri.url;
+        const absoluteUrl = fileUrl.startsWith("http")
+          ? fileUrl
+          : `${baseUrl}${fileUrl}`;
+        return {
+          data: {
+            uri: { url: absoluteUrl },
+            alt: ref.meta?.alt || "",
+            width: ref.meta?.width,
+            height: ref.meta?.height,
+          },
+        };
+      }
+
+      if (ref.type === "media--image") {
+        const media = includedMap.get(`media--image:${ref.id}`);
+        if (!media || (media as { type: string }).type !== "media--image") {
+          return fallback;
+        }
+        const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
+        const mediaFileRef =
+          decodedMedia.relationships?.field_media_image?.data;
+        if (!mediaFileRef) return fallback;
+        const file = includedMap.get(`file--file:${mediaFileRef.id}`);
+        if (!file || (file as { type: string }).type !== "file--file") {
+          return fallback;
+        }
+        const decodedFile = S.decodeUnknownSync(File)(file);
+        const fileUrl = decodedFile.attributes.uri.url;
+        const absoluteUrl = fileUrl.startsWith("http")
+          ? fileUrl
+          : `${baseUrl}${fileUrl}`;
+        return {
+          data: {
+            uri: { url: absoluteUrl },
+            alt: mediaFileRef.meta?.alt || "",
+            width: mediaFileRef.meta?.width,
+            height: mediaFileRef.meta?.height,
+          },
+        };
+      }
+
+      return fallback;
+    };
+
+    /**
      * Extract and decode board members (node--staff) from included resources
      *
      * Board teams (bestuur, jeugdbestuur, angels) store their members as node--staff
@@ -713,61 +796,13 @@ export const DrupalServiceLive = Layer.effect(
         }
       }
 
-      // Resolve images — same pattern as mapPlayerIncluded
+      // Resolve images using the shared helper
       return staffMembers.map((member) => {
-        const fileRef = member.relationships.field_image?.data;
-        const resolvedImage = (() => {
-          if (!fileRef || !("id" in fileRef) || !("type" in fileRef)) {
-            return member.relationships.field_image;
-          }
-
-          if (fileRef.type === "file--file") {
-            const file = includedMap.get(`file--file:${fileRef.id}`);
-            if (!file || file.type !== "file--file") {
-              return member.relationships.field_image;
-            }
-            const decodedFile = S.decodeUnknownSync(File)(file);
-            const fileUrl = decodedFile.attributes.uri.url;
-            const absoluteUrl = fileUrl.startsWith("http")
-              ? fileUrl
-              : `${baseUrl}${fileUrl}`;
-            return {
-              data: {
-                uri: { url: absoluteUrl },
-                alt: fileRef.meta?.alt || "",
-                width: fileRef.meta?.width,
-                height: fileRef.meta?.height,
-              },
-            };
-          }
-
-          // media--image
-          const media = includedMap.get(`media--image:${fileRef.id}`);
-          if (!media || media.type !== "media--image") {
-            return member.relationships.field_image;
-          }
-          const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
-          const mediaFileRef =
-            decodedMedia.relationships?.field_media_image?.data;
-          if (!mediaFileRef) return member.relationships.field_image;
-          const file = includedMap.get(`file--file:${mediaFileRef.id}`);
-          if (!file || file.type !== "file--file") {
-            return member.relationships.field_image;
-          }
-          const decodedFile = S.decodeUnknownSync(File)(file);
-          const fileUrl = decodedFile.attributes.uri.url;
-          const absoluteUrl = fileUrl.startsWith("http")
-            ? fileUrl
-            : `${baseUrl}${fileUrl}`;
-          return {
-            data: {
-              uri: { url: absoluteUrl },
-              alt: mediaFileRef.meta?.alt || "",
-              width: mediaFileRef.meta?.width,
-              height: mediaFileRef.meta?.height,
-            },
-          };
-        })();
+        const resolvedImage = resolveImageFromRef(
+          member.relationships.field_image?.data,
+          includedMap as Map<string, unknown>,
+          member.relationships.field_image,
+        ) as typeof member.relationships.field_image;
 
         return {
           ...member,
@@ -875,71 +910,11 @@ export const DrupalServiceLive = Layer.effect(
       >(included.map((item) => [`${item.type}:${item.id}`, item]));
 
       return data.map((player) => {
-        // Resolve player image reference (file--file or media--image) to URL
-        const fileRef = player.relationships.field_image?.data;
-        const resolvedImage = (() => {
-          if (!fileRef || !("id" in fileRef) || !("type" in fileRef)) {
-            return player.relationships.field_image;
-          }
-
-          // Handle file--file references
-          if (fileRef.type === "file--file") {
-            const file = includedMap.get(`file--file:${fileRef.id}`);
-            if (!file || file.type !== "file--file") {
-              return player.relationships.field_image;
-            }
-
-            // Decode file to ensure it's valid
-            const decodedFile = S.decodeUnknownSync(File)(file);
-            const fileUrl = decodedFile.attributes.uri.url;
-            const absoluteUrl = fileUrl.startsWith("http")
-              ? fileUrl
-              : `${baseUrl}${fileUrl}`;
-
-            return {
-              data: {
-                uri: { url: absoluteUrl },
-                alt: fileRef.meta?.alt || "",
-                width: fileRef.meta?.width,
-                height: fileRef.meta?.height,
-              },
-            };
-          }
-
-          // Handle media--image references
-          // Schema validation ensures fileRef.type is "media--image" here
-          const media = includedMap.get(`media--image:${fileRef.id}`);
-          if (!media || media.type !== "media--image") {
-            return player.relationships.field_image;
-          }
-
-          const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
-          const mediaFileRef =
-            decodedMedia.relationships?.field_media_image?.data;
-          if (!mediaFileRef) {
-            return player.relationships.field_image;
-          }
-
-          const file = includedMap.get(`file--file:${mediaFileRef.id}`);
-          if (!file || file.type !== "file--file") {
-            return player.relationships.field_image;
-          }
-
-          const decodedFile = S.decodeUnknownSync(File)(file);
-          const fileUrl = decodedFile.attributes.uri.url;
-          const absoluteUrl = fileUrl.startsWith("http")
-            ? fileUrl
-            : `${baseUrl}${fileUrl}`;
-
-          return {
-            data: {
-              uri: { url: absoluteUrl },
-              alt: mediaFileRef.meta?.alt || "",
-              width: mediaFileRef.meta?.width,
-              height: mediaFileRef.meta?.height,
-            },
-          };
-        })();
+        const resolvedImage = resolveImageFromRef(
+          player.relationships.field_image?.data,
+          includedMap as Map<string, unknown>,
+          player.relationships.field_image,
+        ) as typeof player.relationships.field_image;
 
         return {
           ...player,
