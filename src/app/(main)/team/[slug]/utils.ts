@@ -2,7 +2,13 @@
  * Shared utilities for team detail pages
  */
 
-import type { Player, Team, Match, RankingEntry } from "@/lib/effect/schemas";
+import type {
+  Player,
+  Staff,
+  Team,
+  Match,
+  RankingEntry,
+} from "@/lib/effect/schemas";
 import type {
   ScheduleMatch,
   ScheduleTeam,
@@ -112,21 +118,24 @@ export function transformPlayerToRoster(player: Player): RosterPlayer {
 }
 
 /**
- * Transform Drupal Player entity (with staff role) to StaffMember for TeamRoster component
+ * Transform Drupal Player or Staff entity to StaffMember for TeamRoster component
  *
- * Staff members are stored as Player entities in Drupal but with field_position_short
- * containing their role code (T1, T2, TK, etc.)
+ * - Player entities acting as staff have their role in field_position_short (T1, T2, TK, …)
+ * - Staff (node--staff) board members have their role in field_position_staff (full name)
  *
- * @param player - Player entity acting as staff member
+ * @param member - Player acting as staff, or a Staff board member
  * @returns StaffMember object for display
  */
-export function transformStaffToMember(player: Player): StaffMember {
-  const firstName = player.attributes.field_firstname || "";
-  const lastName = player.attributes.field_lastname || "";
-  const roleCode = player.attributes.field_position_short || undefined;
-  const imageUrl = getPlayerImageUrl(player);
+export function transformStaffToMember(member: Player | Staff): StaffMember {
+  const firstName = member.attributes.field_firstname || "";
+  const lastName = member.attributes.field_lastname || "";
+  const roleCode = member.attributes.field_position_short || undefined;
+  const imageData = member.relationships.field_image?.data;
+  const imageUrl =
+    imageData && "uri" in imageData ? imageData.uri.url : undefined;
 
-  // Map role codes to full role names
+  // Board members (node--staff) expose a full role name via field_position_staff.
+  // Coaching staff stored as node--player use the roleCode mapping instead.
   const roleMap: Record<string, string> = {
     T1: "Hoofdtrainer",
     T2: "Assistent-trainer",
@@ -137,10 +146,15 @@ export function transformStaffToMember(player: Player): StaffMember {
     CO: "Coach",
   };
 
-  const role = roleCode ? roleMap[roleCode] || roleCode : "Staff";
+  const role =
+    member.type === "node--staff" && member.attributes.field_position_staff
+      ? member.attributes.field_position_staff
+      : roleCode
+        ? roleMap[roleCode] || roleCode
+        : "Staff";
 
   return {
-    id: player.id,
+    id: member.id,
     firstName,
     lastName,
     role,

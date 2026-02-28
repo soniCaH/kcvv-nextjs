@@ -18,6 +18,7 @@ import {
   PlayersResponse,
   PlayerResponse,
   PlayerIncludedResource,
+  Staff,
   Event,
   EventsResponse,
   Sponsor,
@@ -42,7 +43,8 @@ export { NotFoundError, DrupalError, ValidationError };
  */
 export interface TeamWithRoster {
   team: Team;
-  staff: readonly Player[];
+  /** Player entities acting as staff (coaches, trainers) or Staff nodes (board members) */
+  staff: readonly (Player | Staff)[];
   players: readonly Player[];
   teamImageUrl?: string;
 }
@@ -670,6 +672,114 @@ export const DrupalServiceLive = Layer.effect(
     };
 
     /**
+     * Extract and decode board members (node--staff) from included resources
+     *
+     * Board teams (bestuur, jeugdbestuur, angels) store their members as node--staff
+     * entities rather than node--player. This function handles those cases.
+     *
+     * @param staffIds - Array of staff node IDs to extract
+     * @param included - Array of related entities from JSON:API included section
+     * @returns Array of decoded Staff entities with resolved images
+     */
+    const extractStaffNodesFromIncluded = (
+      staffIds: readonly string[],
+      included: readonly S.Schema.Type<typeof TeamIncludedResource>[] = [],
+    ): readonly Staff[] => {
+      const includedMap = new Map<
+        string,
+        S.Schema.Type<typeof TeamIncludedResource>
+      >(included.map((item) => [`${item.type}:${item.id}`, item]));
+
+      const staffNodeMap = new Map<
+        string,
+        S.Schema.Type<typeof TeamIncludedResource>
+      >();
+      for (const item of included) {
+        if (item.type === "node--staff") {
+          staffNodeMap.set(item.id, item);
+        }
+      }
+
+      const staffMembers: Staff[] = [];
+      for (const id of staffIds) {
+        const item = staffNodeMap.get(id);
+        if (item) {
+          try {
+            const decoded = S.decodeUnknownSync(Staff)(item);
+            staffMembers.push(decoded);
+          } catch {
+            // Skip invalid staff node data
+          }
+        }
+      }
+
+      // Resolve images — same pattern as mapPlayerIncluded
+      return staffMembers.map((member) => {
+        const fileRef = member.relationships.field_image?.data;
+        const resolvedImage = (() => {
+          if (!fileRef || !("id" in fileRef) || !("type" in fileRef)) {
+            return member.relationships.field_image;
+          }
+
+          if (fileRef.type === "file--file") {
+            const file = includedMap.get(`file--file:${fileRef.id}`);
+            if (!file || file.type !== "file--file") {
+              return member.relationships.field_image;
+            }
+            const decodedFile = S.decodeUnknownSync(File)(file);
+            const fileUrl = decodedFile.attributes.uri.url;
+            const absoluteUrl = fileUrl.startsWith("http")
+              ? fileUrl
+              : `${baseUrl}${fileUrl}`;
+            return {
+              data: {
+                uri: { url: absoluteUrl },
+                alt: fileRef.meta?.alt || "",
+                width: fileRef.meta?.width,
+                height: fileRef.meta?.height,
+              },
+            };
+          }
+
+          // media--image
+          const media = includedMap.get(`media--image:${fileRef.id}`);
+          if (!media || media.type !== "media--image") {
+            return member.relationships.field_image;
+          }
+          const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
+          const mediaFileRef =
+            decodedMedia.relationships?.field_media_image?.data;
+          if (!mediaFileRef) return member.relationships.field_image;
+          const file = includedMap.get(`file--file:${mediaFileRef.id}`);
+          if (!file || file.type !== "file--file") {
+            return member.relationships.field_image;
+          }
+          const decodedFile = S.decodeUnknownSync(File)(file);
+          const fileUrl = decodedFile.attributes.uri.url;
+          const absoluteUrl = fileUrl.startsWith("http")
+            ? fileUrl
+            : `${baseUrl}${fileUrl}`;
+          return {
+            data: {
+              uri: { url: absoluteUrl },
+              alt: mediaFileRef.meta?.alt || "",
+              width: mediaFileRef.meta?.width,
+              height: mediaFileRef.meta?.height,
+            },
+          };
+        })();
+
+        return {
+          ...member,
+          relationships: {
+            ...member.relationships,
+            field_image: resolvedImage,
+          },
+        };
+      });
+    };
+
+    /**
      * Get team with full roster by ID (UUID)
      *
      * Fetches a team by UUID and resolves all related data:
@@ -699,10 +809,19 @@ export const DrupalServiceLive = Layer.effect(
         // Resolve team image
         const { teamImageUrl } = mapTeamIncluded(team, included);
 
-        // Extract staff member IDs
-        const staffIds =
-          team.relationships.field_staff?.data?.map((ref) => ref.id) || [];
-        const staff = extractPlayersFromIncluded(staffIds, included);
+        // Extract staff — field_staff can reference node--player (coaches/trainers)
+        // or node--staff (board members). Split by type and extract both.
+        const staffData = team.relationships.field_staff?.data || [];
+        const playerStaffIds = staffData
+          .filter((ref) => ref.type === "node--player")
+          .map((ref) => ref.id);
+        const staffNodeIds = staffData
+          .filter((ref) => ref.type === "node--staff")
+          .map((ref) => ref.id);
+        const staff = [
+          ...extractPlayersFromIncluded(playerStaffIds, included),
+          ...extractStaffNodesFromIncluded(staffNodeIds, included),
+        ];
 
         // Extract player IDs
         const playerIds =

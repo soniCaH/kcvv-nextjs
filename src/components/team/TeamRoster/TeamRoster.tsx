@@ -60,6 +60,8 @@ export interface TeamRosterProps {
   isLoading?: boolean;
   /** Message when no players found */
   emptyMessage?: string;
+  /** Label for the staff section heading. Pass null to suppress the heading. Defaults to "Technische Staf". */
+  staffSectionLabel?: string | null;
   /** Additional CSS classes */
   className?: string;
 }
@@ -124,6 +126,7 @@ export function TeamRoster({
   variant = "grid",
   isLoading = false,
   emptyMessage = "Geen spelers gevonden",
+  staffSectionLabel = "Technische Staf",
   className,
 }: TeamRosterProps) {
   const isCompact = variant === "compact";
@@ -257,12 +260,14 @@ export function TeamRoster({
   const staffSection =
     showStaff && staff.length > 0 ? (
       <section className="mt-12">
-        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2 font-title">
-          Technische Staf
-          <span className="text-sm font-normal text-gray-500">
-            ({staff.length})
-          </span>
-        </h3>
+        {staffSectionLabel != null && (
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2 font-title">
+            {staffSectionLabel}
+            <span className="text-sm font-normal text-gray-500">
+              ({staff.length})
+            </span>
+          </h3>
+        )}
         <div className={gridClasses}>
           {staff.map((member, idx) => (
             <article

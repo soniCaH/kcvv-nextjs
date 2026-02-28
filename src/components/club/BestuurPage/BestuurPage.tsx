@@ -65,6 +65,7 @@ export function BestuurPage({
               teamName={header.name}
               groupByPosition={false}
               showStaff={true}
+              staffSectionLabel={null}
             />
           </section>
         )}
