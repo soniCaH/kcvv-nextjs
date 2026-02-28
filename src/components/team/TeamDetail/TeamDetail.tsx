@@ -182,7 +182,7 @@ export function TeamDetail({
             <Tabs.Content value="matches" className="focus:outline-none">
               <TeamSchedule
                 matches={matches}
-                teamId={highlightTeamId ?? 0}
+                teamId={highlightTeamId}
                 teamSlug={teamSlug}
                 showPast={true}
                 highlightNext={true}
