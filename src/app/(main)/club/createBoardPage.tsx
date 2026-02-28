@@ -87,7 +87,11 @@ export function createBoardPage({
             : undefined,
         },
       };
-    } catch {
+    } catch (error) {
+      console.warn(
+        `[createBoardPage] Failed to generate metadata for slug "${slug}":`,
+        error,
+      );
       return {
         title: `${fallbackTitle} | KCVV Elewijt`,
         description: fallbackDescription,
