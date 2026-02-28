@@ -128,43 +128,43 @@ export function HelpPage() {
           >
             Hoe werkt het?
           </h2>
-          <div className="space-y-4">
-            <div className="flex gap-4">
+          <ol className="space-y-4">
+            <li className="flex gap-4">
               <div className="shrink-0 w-8 h-8 bg-green-main text-white rounded-full flex items-center justify-center font-bold">
                 1
               </div>
               <div>
-                <h4 className="font-semibold text-gray-blue">Kies je rol</h4>
+                <h3 className="font-semibold text-gray-blue">Kies je rol</h3>
                 <p className="text-gray-dark text-sm">
                   Ben je speler, ouder, trainer, supporter of iemand anders?
                 </p>
               </div>
-            </div>
-            <div className="flex gap-4">
+            </li>
+            <li className="flex gap-4">
               <div className="shrink-0 w-8 h-8 bg-green-main text-white rounded-full flex items-center justify-center font-bold">
                 2
               </div>
               <div>
-                <h4 className="font-semibold text-gray-blue">Typ je vraag</h4>
+                <h3 className="font-semibold text-gray-blue">Typ je vraag</h3>
                 <p className="text-gray-dark text-sm">
                   Begin met typen en je krijgt slimme suggesties te zien
                 </p>
               </div>
-            </div>
-            <div className="flex gap-4">
+            </li>
+            <li className="flex gap-4">
               <div className="shrink-0 w-8 h-8 bg-green-main text-white rounded-full flex items-center justify-center font-bold">
                 3
               </div>
               <div>
-                <h4 className="font-semibold text-gray-blue">
+                <h3 className="font-semibold text-gray-blue">
                   Vind je antwoord
-                </h4>
+                </h3>
                 <p className="text-gray-dark text-sm">
                   Zie direct wie je moet contacteren en wat je moet doen
                 </p>
               </div>
-            </div>
-          </div>
+            </li>
+          </ol>
         </div>
       </div>
     </div>

@@ -90,9 +90,11 @@ export function createBoardPage({
     } catch (error) {
       // Rethrow Next.js navigation errors (notFound(), redirect(), etc.) so
       // they propagate to the router instead of being silently swallowed.
+      const digest = (error as { digest?: string }).digest;
       if (
         error instanceof Error &&
-        (error as { digest?: string }).digest === "NEXT_NOT_FOUND"
+        typeof digest === "string" &&
+        digest.startsWith("NEXT_")
       ) {
         throw error;
       }
