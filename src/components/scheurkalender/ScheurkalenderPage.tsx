@@ -3,13 +3,12 @@
  *
  * Presentational layout for /scheurkalender.
  * Renders a print-friendly upcoming-matches calendar grouped by date.
- * PrintButton and PrintDate are kept in the page layer (client components).
  */
 
 import Image from "next/image";
 import Link from "next/link";
-import { PrintButton } from "@/app/(main)/scheurkalender/PrintButton";
-import { PrintDate } from "@/app/(main)/scheurkalender/PrintDate";
+import { PrintButton } from "./PrintButton";
+import { PrintDate } from "./PrintDate";
 
 export interface ScheurkalenderMatch {
   id: number;
