@@ -88,6 +88,14 @@ export function createBoardPage({
         },
       };
     } catch (error) {
+      // Rethrow Next.js navigation errors (notFound(), redirect(), etc.) so
+      // they propagate to the router instead of being silently swallowed.
+      if (
+        error instanceof Error &&
+        (error as { digest?: string }).digest === "NEXT_NOT_FOUND"
+      ) {
+        throw error;
+      }
       console.warn(
         `[createBoardPage] Failed to generate metadata for slug "${slug}":`,
         error,
@@ -111,7 +119,7 @@ export function createBoardPage({
           tagline: getTeamTagline(team),
           teamType: "club",
         }}
-        description={team.attributes.body?.processed ?? undefined}
+        description={team.attributes.body?.processed}
         players={players.map(transformPlayerToRoster)}
         staff={staff.map(transformStaffToMember)}
       />
