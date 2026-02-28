@@ -2,7 +2,7 @@
   "claudeCode.environmentVariables": [
     {
       "name": "CLAUDE_CONFIG_DIR",
-      "value": "/Users/kevinvanransbeeck/.claude-personal"
+      "value": "${env:HOME}/.claude-personal"
     }
   ]
 }
