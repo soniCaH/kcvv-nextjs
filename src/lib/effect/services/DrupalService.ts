@@ -708,19 +708,23 @@ export const DrupalServiceLive = Layer.effect(
         if (!file || (file as { type: string }).type !== "file--file") {
           return fallback;
         }
-        const decodedFile = S.decodeUnknownSync(File)(file);
-        const fileUrl = decodedFile.attributes.uri.url;
-        const absoluteUrl = fileUrl.startsWith("http")
-          ? fileUrl
-          : `${baseUrl}${fileUrl}`;
-        return {
-          data: {
-            uri: { url: absoluteUrl },
-            alt: ref.meta?.alt || "",
-            width: ref.meta?.width,
-            height: ref.meta?.height,
-          },
-        };
+        try {
+          const decodedFile = S.decodeUnknownSync(File)(file);
+          const fileUrl = decodedFile.attributes.uri.url;
+          const absoluteUrl = fileUrl.startsWith("http")
+            ? fileUrl
+            : `${baseUrl}${fileUrl}`;
+          return {
+            data: {
+              uri: { url: absoluteUrl },
+              alt: ref.meta?.alt || "",
+              width: ref.meta?.width,
+              height: ref.meta?.height,
+            },
+          };
+        } catch {
+          return fallback;
+        }
       }
 
       if (ref.type === "media--image") {
@@ -728,27 +732,31 @@ export const DrupalServiceLive = Layer.effect(
         if (!media || (media as { type: string }).type !== "media--image") {
           return fallback;
         }
-        const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
-        const mediaFileRef =
-          decodedMedia.relationships?.field_media_image?.data;
-        if (!mediaFileRef) return fallback;
-        const file = includedMap.get(`file--file:${mediaFileRef.id}`);
-        if (!file || (file as { type: string }).type !== "file--file") {
+        try {
+          const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
+          const mediaFileRef =
+            decodedMedia.relationships?.field_media_image?.data;
+          if (!mediaFileRef) return fallback;
+          const file = includedMap.get(`file--file:${mediaFileRef.id}`);
+          if (!file || (file as { type: string }).type !== "file--file") {
+            return fallback;
+          }
+          const decodedFile = S.decodeUnknownSync(File)(file);
+          const fileUrl = decodedFile.attributes.uri.url;
+          const absoluteUrl = fileUrl.startsWith("http")
+            ? fileUrl
+            : `${baseUrl}${fileUrl}`;
+          return {
+            data: {
+              uri: { url: absoluteUrl },
+              alt: mediaFileRef.meta?.alt || "",
+              width: mediaFileRef.meta?.width,
+              height: mediaFileRef.meta?.height,
+            },
+          };
+        } catch {
           return fallback;
         }
-        const decodedFile = S.decodeUnknownSync(File)(file);
-        const fileUrl = decodedFile.attributes.uri.url;
-        const absoluteUrl = fileUrl.startsWith("http")
-          ? fileUrl
-          : `${baseUrl}${fileUrl}`;
-        return {
-          data: {
-            uri: { url: absoluteUrl },
-            alt: mediaFileRef.meta?.alt || "",
-            width: mediaFileRef.meta?.width,
-            height: mediaFileRef.meta?.height,
-          },
-        };
       }
 
       return fallback;
@@ -845,18 +853,19 @@ export const DrupalServiceLive = Layer.effect(
         const { teamImageUrl } = mapTeamIncluded(team, included);
 
         // Extract staff — field_staff can reference node--player (coaches/trainers)
-        // or node--staff (board members). Split by type and extract both.
+        // or node--staff (board members). Iterate in Drupal field order to preserve
+        // the CMS-defined sequence.
         const staffData = team.relationships.field_staff?.data || [];
-        const playerStaffIds = staffData
-          .filter((ref) => ref.type === "node--player")
-          .map((ref) => ref.id);
-        const staffNodeIds = staffData
-          .filter((ref) => ref.type === "node--staff")
-          .map((ref) => ref.id);
-        const staff = [
-          ...extractPlayersFromIncluded(playerStaffIds, included),
-          ...extractStaffNodesFromIncluded(staffNodeIds, included),
-        ];
+        const staff: (Player | Staff)[] = [];
+        for (const ref of staffData) {
+          if (ref.type === "node--player") {
+            const [player] = extractPlayersFromIncluded([ref.id], included);
+            if (player) staff.push(player);
+          } else if (ref.type === "node--staff") {
+            const [member] = extractStaffNodesFromIncluded([ref.id], included);
+            if (member) staff.push(member);
+          }
+        }
 
         // Extract player IDs
         const playerIds =
