@@ -1139,7 +1139,7 @@ export const DrupalServiceLive = Layer.effect(
     const getEvents = (params?: { upcoming?: boolean; limit?: number }) =>
       Effect.gen(function* () {
         const queryParams: Record<string, string | number> = {
-          include: "field_image",
+          include: "field_image.field_media_image",
           sort: params?.upcoming ? "field_event_date" : "-field_event_date",
         };
 
@@ -1158,7 +1158,29 @@ export const DrupalServiceLive = Layer.effect(
         const url = buildUrl("node/event", queryParams);
         const response = yield* fetchJson(url, EventsResponse);
 
-        return response.data;
+        const included = response.included || [];
+        const includedMap = new Map<string, unknown>(
+          included.map((item) => [
+            `${(item as { type: string }).type}:${(item as { id: string }).id}`,
+            item,
+          ]),
+        );
+
+        return response.data.map((event) => {
+          const resolvedImage = resolveImageFromRef(
+            event.relationships.field_image?.data,
+            includedMap,
+            event.relationships.field_image,
+          ) as typeof event.relationships.field_image;
+
+          return {
+            ...event,
+            relationships: {
+              ...event.relationships,
+              field_image: resolvedImage,
+            },
+          };
+        });
       });
 
     /**
