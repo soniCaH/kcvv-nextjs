@@ -853,16 +853,34 @@ export const DrupalServiceLive = Layer.effect(
         const { teamImageUrl } = mapTeamIncluded(team, included);
 
         // Extract staff — field_staff can reference node--player (coaches/trainers)
-        // or node--staff (board members). Iterate in Drupal field order to preserve
-        // the CMS-defined sequence.
+        // or node--staff (board members). Decode each type in a single pass, then
+        // rebuild in Drupal field order to preserve the CMS-defined sequence.
         const staffData = team.relationships.field_staff?.data || [];
+        const playerStaffIds = staffData
+          .filter((ref) => ref.type === "node--player")
+          .map((ref) => ref.id);
+        const staffNodeIds = staffData
+          .filter((ref) => ref.type === "node--staff")
+          .map((ref) => ref.id);
+        const playerMap = new Map(
+          extractPlayersFromIncluded(playerStaffIds, included).map((p) => [
+            p.id,
+            p,
+          ]),
+        );
+        const staffNodeMap = new Map(
+          extractStaffNodesFromIncluded(staffNodeIds, included).map((s) => [
+            s.id,
+            s,
+          ]),
+        );
         const staff: (Player | Staff)[] = [];
         for (const ref of staffData) {
           if (ref.type === "node--player") {
-            const [player] = extractPlayersFromIncluded([ref.id], included);
+            const player = playerMap.get(ref.id);
             if (player) staff.push(player);
           } else if (ref.type === "node--staff") {
-            const [member] = extractStaffNodesFromIncluded([ref.id], included);
+            const member = staffNodeMap.get(ref.id);
             if (member) staff.push(member);
           }
         }
