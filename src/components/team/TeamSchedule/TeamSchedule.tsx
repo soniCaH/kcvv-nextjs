@@ -49,8 +49,8 @@ export interface ScheduleMatch {
 export interface TeamScheduleProps {
   /** Array of matches */
   matches: ScheduleMatch[];
-  /** Team ID for home/away display */
-  teamId: number;
+  /** Team ID for home/away display and result highlighting (optional) */
+  teamId?: number;
   /** Team slug for back-navigation context on match detail page */
   teamSlug?: string;
   /** Show past results */
@@ -198,7 +198,7 @@ export function TeamSchedule({
   return (
     <div className={cn("space-y-3", className)}>
       {filteredMatches.map((match, index) => {
-        const isHome = match.homeTeam.id === teamId;
+        const isHome = teamId !== undefined && match.homeTeam.id === teamId;
         const isNext = index === nextMatchIndex;
         // Show scores if they exist, regardless of status
         // (Footbalisto API sometimes returns status=0 for matches with scores)
@@ -206,9 +206,9 @@ export function TeamSchedule({
           typeof match.homeScore === "number" &&
           typeof match.awayScore === "number";
 
-        // Determine result for KCVV
+        // Determine result for KCVV — only when we know which side is ours
         let resultClass = "";
-        if (hasScore) {
+        if (hasScore && teamId !== undefined) {
           const kcvvScore = isHome ? match.homeScore! : match.awayScore!;
           const oppScore = isHome ? match.awayScore! : match.homeScore!;
           if (kcvvScore > oppScore) {
@@ -281,7 +281,7 @@ export function TeamSchedule({
                 <span
                   className={cn(
                     "truncate text-sm",
-                    match.homeTeam.id === teamId
+                    teamId !== undefined && match.homeTeam.id === teamId
                       ? "font-semibold"
                       : "text-gray-700",
                   )}
@@ -296,7 +296,8 @@ export function TeamSchedule({
                   <div className="flex items-center gap-2 font-mono font-bold text-lg">
                     <span
                       className={cn(
-                        match.homeTeam.id === teamId &&
+                        teamId !== undefined &&
+                          match.homeTeam.id === teamId &&
                           match.homeScore! > match.awayScore! &&
                           "text-kcvv-green-bright",
                       )}
@@ -306,7 +307,8 @@ export function TeamSchedule({
                     <span className="text-gray-400">-</span>
                     <span
                       className={cn(
-                        match.awayTeam.id === teamId &&
+                        teamId !== undefined &&
+                          match.awayTeam.id === teamId &&
                           match.awayScore! > match.homeScore! &&
                           "text-kcvv-green-bright",
                       )}
@@ -324,7 +326,7 @@ export function TeamSchedule({
                 <span
                   className={cn(
                     "truncate text-sm text-right",
-                    match.awayTeam.id === teamId
+                    teamId !== undefined && match.awayTeam.id === teamId
                       ? "font-semibold"
                       : "text-gray-700",
                   )}
@@ -351,7 +353,8 @@ export function TeamSchedule({
 
             {/* Home/Away indicator for mobile */}
             <div className="mt-2 text-xs text-gray-500 sm:hidden">
-              {isHome ? "Thuis" : "Uit"} • {match.competition || "Competitie"}
+              {teamId !== undefined && `${isHome ? "Thuis" : "Uit"} • `}
+              {match.competition || "Competitie"}
             </div>
           </Link>
         );

@@ -46,5 +46,17 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "code-review@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "claude-code-setup@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true,
+    "coderabbit@claude-plugins-official": true,
+    "reflexion@context-engineering-kit": true,
+    "code-review@context-engineering-kit": true,
+    "ddd@context-engineering-kit": true,
+    "superpowers@claude-plugins-official": true
   }
 }

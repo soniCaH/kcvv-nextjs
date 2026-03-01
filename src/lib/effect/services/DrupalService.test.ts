@@ -1733,6 +1733,331 @@ describe("DrupalService", () => {
         expect(playerImage.uri.url).toContain("/player-picture/john-doe.jpg");
       }
     });
+
+    it("should extract node--staff board members from field_staff", async () => {
+      const mockRouterResponse = createRouterResponse(
+        "bestuur",
+        "team-bestuur",
+        "Bestuur",
+      );
+
+      const mockTeamResponse = {
+        data: {
+          id: "team-bestuur",
+          type: "node--team",
+          attributes: {
+            title: "Bestuur",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/club/bestuur" },
+          },
+          relationships: {
+            field_staff: {
+              data: [{ type: "node--staff", id: "board-1" }],
+            },
+            field_players: { data: [] },
+          },
+        },
+        included: [
+          {
+            id: "board-1",
+            type: "node--staff",
+            attributes: {
+              title: "Jan Janssen",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/staff/jan-janssen" },
+              field_firstname: "Jan",
+              field_lastname: "Janssen",
+              field_position_staff: "Voorzitter",
+            },
+            relationships: {
+              field_image: { data: null },
+            },
+          },
+        ],
+      };
+
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("bestuur");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.staff).toHaveLength(1);
+      expect(result.staff[0].type).toBe("node--staff");
+      expect(result.staff[0].attributes.field_firstname).toBe("Jan");
+      expect(result.staff[0].attributes.field_lastname).toBe("Janssen");
+      expect(result.players).toHaveLength(0);
+    });
+
+    it("should resolve file--file image for node--staff board members", async () => {
+      const mockRouterResponse = createRouterResponse(
+        "bestuur",
+        "team-bestuur",
+        "Bestuur",
+      );
+
+      const mockTeamResponse = {
+        data: {
+          id: "team-bestuur",
+          type: "node--team",
+          attributes: {
+            title: "Bestuur",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/club/bestuur" },
+          },
+          relationships: {
+            field_staff: {
+              data: [{ type: "node--staff", id: "board-1" }],
+            },
+            field_players: { data: [] },
+          },
+        },
+        included: [
+          {
+            id: "board-1",
+            type: "node--staff",
+            attributes: {
+              title: "Luc Lemmens",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/staff/luc-lemmens" },
+              field_firstname: "Luc",
+              field_lastname: "Lemmens",
+              field_position_staff: "Penningmeester",
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "file--file",
+                  id: "file-board-1",
+                  meta: { alt: "Luc Lemmens" },
+                },
+              },
+            },
+          },
+          {
+            id: "file-board-1",
+            type: "file--file",
+            attributes: {
+              filename: "luc-lemmens.jpg",
+              uri: { url: "/sites/default/files/luc-lemmens.jpg" },
+            },
+          },
+        ],
+      };
+
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("bestuur");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result.staff).toHaveLength(1);
+      const imageData = result.staff[0].relationships.field_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "uri" in imageData) {
+        expect(imageData.uri.url).toContain("/luc-lemmens.jpg");
+      }
+    });
+
+    it("should return fallback when file--file entity has invalid schema", async () => {
+      const mockRouterResponse = createRouterResponse(
+        "bestuur",
+        "team-bestuur",
+        "Bestuur",
+      );
+
+      const mockTeamResponse = {
+        data: {
+          id: "team-bestuur",
+          type: "node--team",
+          attributes: {
+            title: "Bestuur",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/club/bestuur" },
+          },
+          relationships: {
+            field_staff: {
+              data: [{ type: "node--staff", id: "board-1" }],
+            },
+            field_players: { data: [] },
+          },
+        },
+        included: [
+          {
+            id: "board-1",
+            type: "node--staff",
+            attributes: {
+              title: "Jos Joossens",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/staff/jos-joossens" },
+              field_firstname: "Jos",
+              field_lastname: "Joossens",
+              field_position_staff: "Voorzitter",
+            },
+            relationships: {
+              field_image: {
+                data: {
+                  type: "file--file",
+                  id: "file-invalid",
+                  meta: { alt: "Jos Joossens" },
+                },
+              },
+            },
+          },
+          {
+            // Malformed file--file: missing required attributes.uri
+            id: "file-invalid",
+            type: "file--file",
+            attributes: { filename: "jos.jpg" /* uri missing */ },
+          },
+        ],
+      };
+
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("bestuur");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      // Staff member still decoded despite malformed file; no exception propagated
+      expect(result.staff).toHaveLength(1);
+      expect(result.staff[0].attributes.field_firstname).toBe("Jos");
+      // resolveImageFromRef catches the decode error and returns the fallback
+      // (original relationship) — so data is the raw ref, not a resolved URI
+      const imageData = result.staff[0].relationships.field_image?.data;
+      expect(imageData).not.toHaveProperty("uri");
+    });
+
+    it("should preserve Drupal field_staff order for mixed node--player and node--staff refs", async () => {
+      const mockRouterResponse = createRouterResponse(
+        "bestuur",
+        "team-bestuur",
+        "Bestuur",
+      );
+
+      const mockTeamResponse = {
+        data: {
+          id: "team-bestuur",
+          type: "node--team",
+          attributes: {
+            title: "Bestuur",
+            created: "2025-01-01T00:00:00Z",
+            path: { alias: "/club/bestuur" },
+          },
+          relationships: {
+            // Drupal order: node--staff first, then node--player
+            field_staff: {
+              data: [
+                { type: "node--staff", id: "board-1" },
+                { type: "node--player", id: "coach-1" },
+              ],
+            },
+            field_players: { data: [] },
+          },
+        },
+        included: [
+          {
+            id: "board-1",
+            type: "node--staff",
+            attributes: {
+              title: "Pieter Pieters",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/staff/pieter-pieters" },
+              field_firstname: "Pieter",
+              field_lastname: "Pieters",
+              field_position_staff: "Voorzitter",
+            },
+            relationships: { field_image: { data: null } },
+          },
+          {
+            id: "coach-1",
+            type: "node--player",
+            attributes: {
+              title: "Marc Marcels",
+              created: "2025-01-01T00:00:00Z",
+              path: { alias: "/player/marc-marcels" },
+              field_firstname: "Marc",
+              field_lastname: "Marcels",
+              field_position: null,
+              field_position_short: "T1",
+              field_shirtnumber: null,
+              field_tagline: null,
+              field_active: true,
+            },
+            relationships: { field_image: { data: null } },
+          },
+        ],
+      };
+
+      const mockFetch = global.fetch as unknown as ReturnType<typeof vi.fn>;
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockRouterResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockTeamResponse,
+        });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getTeamWithRoster("bestuur");
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      // Drupal order must be preserved: board member first, then coach
+      expect(result.staff).toHaveLength(2);
+      expect(result.staff[0].type).toBe("node--staff");
+      expect(result.staff[0].attributes.field_firstname).toBe("Pieter");
+      expect(result.staff[1].type).toBe("node--player");
+      expect(result.staff[1].attributes.field_firstname).toBe("Marc");
+    });
   });
 
   describe("getPlayers", () => {

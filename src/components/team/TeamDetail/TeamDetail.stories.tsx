@@ -1,9 +1,22 @@
+/**
+ * TeamDetail Component Stories
+ *
+ * Page-level layout for team detail pages: club header, URL-synced tabs
+ * (Info · Lineup · Wedstrijden · Stand), with each tab shown conditionally
+ * based on available data.
+ */
+
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamDetail } from "./TeamDetail";
 import type { RosterPlayer, StaffMember } from "../TeamRoster";
+import type { ScheduleMatch } from "../TeamSchedule";
+import type { StandingsEntry } from "../TeamStandings";
 
-// Real player images from KCVV API (with transparent backgrounds)
-const REAL_PLAYER_IMAGES = {
+// ---------------------------------------------------------------------------
+// Fixture images
+// ---------------------------------------------------------------------------
+
+const PLAYER_IMAGES = {
   chiel:
     "https://api.kcvvelewijt.be/sites/default/files/player-picture/chiel.png",
   jarne:
@@ -14,33 +27,18 @@ const REAL_PLAYER_IMAGES = {
     "https://api.kcvvelewijt.be/sites/default/files/player-picture/yoran-front.png",
 };
 
-const meta = {
-  title: "Pages/TeamDetail",
-  component: TeamDetail,
-  parameters: {
-    layout: "fullscreen",
-    docs: {
-      description: {
-        component:
-          "Page-level composite for team detail pages. Combines TeamHeader with tabbed content showing team info and lineup.",
-      },
-    },
-  },
-  tags: ["autodocs"],
-} satisfies Meta<typeof TeamDetail>;
+// ---------------------------------------------------------------------------
+// Mock staff
+// ---------------------------------------------------------------------------
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-// Sample staff data
-const sampleStaff: StaffMember[] = [
+const mockStaff: StaffMember[] = [
   {
     id: "staff-1",
     firstName: "Marc",
     lastName: "Janssen",
     role: "Hoofdtrainer",
     roleCode: "T1",
-    imageUrl: REAL_PLAYER_IMAGES.chiel,
+    imageUrl: PLAYER_IMAGES.chiel,
   },
   {
     id: "staff-2",
@@ -48,7 +46,7 @@ const sampleStaff: StaffMember[] = [
     lastName: "Peeters",
     role: "Assistent-trainer",
     roleCode: "T2",
-    imageUrl: REAL_PLAYER_IMAGES.jarne,
+    imageUrl: PLAYER_IMAGES.jarne,
   },
   {
     id: "staff-3",
@@ -59,8 +57,11 @@ const sampleStaff: StaffMember[] = [
   },
 ];
 
-// Sample player data
-const samplePlayers: RosterPlayer[] = [
+// ---------------------------------------------------------------------------
+// Mock players
+// ---------------------------------------------------------------------------
+
+const mockPlayers: RosterPlayer[] = [
   {
     id: "player-1",
     firstName: "Thomas",
@@ -68,7 +69,7 @@ const samplePlayers: RosterPlayer[] = [
     position: "Keeper",
     number: 1,
     href: "/players/thomas-vermeersch",
-    imageUrl: REAL_PLAYER_IMAGES.louie,
+    imageUrl: PLAYER_IMAGES.louie,
   },
   {
     id: "player-2",
@@ -85,7 +86,7 @@ const samplePlayers: RosterPlayer[] = [
     position: "Verdediger",
     number: 5,
     href: "/players/arne-claes",
-    imageUrl: REAL_PLAYER_IMAGES.chiel,
+    imageUrl: PLAYER_IMAGES.chiel,
   },
   {
     id: "player-4",
@@ -94,7 +95,7 @@ const samplePlayers: RosterPlayer[] = [
     position: "Middenvelder",
     number: 8,
     href: "/players/lucas-mertens",
-    imageUrl: REAL_PLAYER_IMAGES.yoran,
+    imageUrl: PLAYER_IMAGES.yoran,
   },
   {
     id: "player-5",
@@ -111,7 +112,7 @@ const samplePlayers: RosterPlayer[] = [
     position: "Aanvaller",
     number: 9,
     href: "/players/stef-van-den-berg",
-    imageUrl: REAL_PLAYER_IMAGES.jarne,
+    imageUrl: PLAYER_IMAGES.jarne,
   },
   {
     id: "player-7",
@@ -123,22 +124,224 @@ const samplePlayers: RosterPlayer[] = [
   },
 ];
 
-const sampleContactInfo = `
+// ---------------------------------------------------------------------------
+// Mock matches
+// ---------------------------------------------------------------------------
+
+const KCVV_TEAM_ID = 12345;
+
+const mockMatches: ScheduleMatch[] = [
+  {
+    id: 1,
+    date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+    time: "15:00",
+    homeTeam: { id: KCVV_TEAM_ID, name: "KCVV Elewijt" },
+    awayTeam: { id: 200, name: "Racing Mechelen" },
+    homeScore: 3,
+    awayScore: 1,
+    status: "finished",
+    competition: "3de Nationale A",
+  },
+  {
+    id: 2,
+    date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    time: "15:00",
+    homeTeam: { id: 201, name: "Diegem Sport" },
+    awayTeam: { id: KCVV_TEAM_ID, name: "KCVV Elewijt" },
+    homeScore: 0,
+    awayScore: 2,
+    status: "finished",
+    competition: "3de Nationale A",
+  },
+  {
+    id: 3,
+    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    time: "15:00",
+    homeTeam: { id: KCVV_TEAM_ID, name: "KCVV Elewijt" },
+    awayTeam: { id: 202, name: "Strombeek" },
+    status: "scheduled",
+    competition: "3de Nationale A",
+  },
+  {
+    id: 4,
+    date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+    time: "15:00",
+    homeTeam: { id: 203, name: "FC Kampenhout" },
+    awayTeam: { id: KCVV_TEAM_ID, name: "KCVV Elewijt" },
+    status: "scheduled",
+    competition: "3de Nationale A",
+  },
+  {
+    id: 5,
+    date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
+    time: "15:00",
+    homeTeam: { id: KCVV_TEAM_ID, name: "KCVV Elewijt" },
+    awayTeam: { id: 204, name: "Jeugd Zemst" },
+    status: "scheduled",
+    competition: "3de Nationale A",
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Mock standings
+// ---------------------------------------------------------------------------
+
+const mockStandings: StandingsEntry[] = [
+  {
+    position: 1,
+    teamId: 205,
+    teamName: "Racing Mechelen",
+    played: 20,
+    won: 15,
+    drawn: 3,
+    lost: 2,
+    goalsFor: 48,
+    goalsAgainst: 18,
+    goalDifference: 30,
+    points: 48,
+  },
+  {
+    position: 2,
+    teamId: KCVV_TEAM_ID,
+    teamName: "KCVV Elewijt",
+    played: 20,
+    won: 12,
+    drawn: 5,
+    lost: 3,
+    goalsFor: 38,
+    goalsAgainst: 18,
+    goalDifference: 20,
+    points: 41,
+  },
+  {
+    position: 3,
+    teamId: 201,
+    teamName: "Diegem Sport",
+    played: 20,
+    won: 11,
+    drawn: 4,
+    lost: 5,
+    goalsFor: 35,
+    goalsAgainst: 22,
+    goalDifference: 13,
+    points: 37,
+  },
+  {
+    position: 4,
+    teamId: 202,
+    teamName: "Strombeek",
+    played: 20,
+    won: 10,
+    drawn: 4,
+    lost: 6,
+    goalsFor: 30,
+    goalsAgainst: 25,
+    goalDifference: 5,
+    points: 34,
+  },
+  {
+    position: 5,
+    teamId: 203,
+    teamName: "FC Kampenhout",
+    played: 20,
+    won: 9,
+    drawn: 3,
+    lost: 8,
+    goalsFor: 28,
+    goalsAgainst: 28,
+    goalDifference: 0,
+    points: 30,
+  },
+  {
+    position: 6,
+    teamId: 204,
+    teamName: "Jeugd Zemst",
+    played: 20,
+    won: 7,
+    drawn: 3,
+    lost: 10,
+    goalsFor: 22,
+    goalsAgainst: 35,
+    goalDifference: -13,
+    points: 24,
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Shared content fixtures
+// ---------------------------------------------------------------------------
+
+const contactInfo = `
 <p><strong>Training:</strong> Dinsdag en donderdag van 18u30 tot 20u00</p>
 <p><strong>Locatie:</strong> Sportcomplex Elewijt, Tervuursesteenweg 252</p>
-<p><strong>Contact:</strong> <a href="mailto:u15@kcvvelewijt.be">u15@kcvvelewijt.be</a></p>
+<p><strong>Contact:</strong> <a href="mailto:info@kcvvelewijt.be">info@kcvvelewijt.be</a></p>
 `;
 
-const sampleBodyContent = `
+const bodyContent = `
 <p>De U15 is een ambitieuze ploeg die zich richt op de verdere ontwikkeling van jonge talenten.
 Met een focus op techniek, tactiek en teamspirit bereiden we onze spelers voor op de volgende stap in hun voetbalcarrière.</p>
 <p>We trainen twee keer per week en nemen deel aan de gewestelijke competitie.</p>
 `;
 
+// ---------------------------------------------------------------------------
+// Meta
+// ---------------------------------------------------------------------------
+
+const meta = {
+  title: "Pages/TeamDetail",
+  component: TeamDetail,
+  parameters: {
+    layout: "fullscreen",
+    docs: {
+      description: {
+        component:
+          "Page-level layout for team detail pages. URL-synced tabs show Info, Lineup, Wedstrijden, and Stand — each tab appears only when data is available.",
+      },
+    },
+  },
+  tags: ["autodocs"],
+} satisfies Meta<typeof TeamDetail>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+// ---------------------------------------------------------------------------
+// Stories
+// ---------------------------------------------------------------------------
+
 /**
- * Default youth team with all content
+ * Senior team with all four tabs: Info, Lineup, Wedstrijden, Stand.
  */
-export const Default: Story = {
+export const SeniorTeam: Story = {
+  args: {
+    header: {
+      name: "Eerste Ploeg",
+      tagline: "3de Nationale A",
+      teamType: "senior",
+      imageUrl: "https://picsum.photos/seed/team-senior/1200/400",
+      stats: {
+        wins: 12,
+        draws: 5,
+        losses: 3,
+        goalsFor: 38,
+        goalsAgainst: 18,
+        position: 2,
+      },
+    },
+    contactInfo,
+    staff: mockStaff,
+    players: mockPlayers,
+    matches: mockMatches,
+    standings: mockStandings,
+    highlightTeamId: KCVV_TEAM_ID,
+    teamSlug: "a-ploeg",
+  },
+};
+
+/**
+ * Youth team with Info and Lineup tabs only (no Footbalisto data).
+ */
+export const YouthTeam: Story = {
   args: {
     header: {
       name: "U15A",
@@ -147,50 +350,15 @@ export const Default: Story = {
       teamType: "youth",
       imageUrl: "https://picsum.photos/seed/team-u15/1200/400",
     },
-    contactInfo: sampleContactInfo,
-    bodyContent: sampleBodyContent,
-    staff: sampleStaff,
-    players: samplePlayers,
+    contactInfo,
+    bodyContent,
+    staff: mockStaff,
+    players: mockPlayers,
   },
 };
 
 /**
- * Youth team with team photo
- */
-export const WithTeamPhoto: Story = {
-  args: {
-    header: {
-      name: "U17 Scholieren",
-      tagline: "PROVINCIALE U17",
-      ageGroup: "U17",
-      teamType: "youth",
-      imageUrl: "https://picsum.photos/seed/team-u17/1200/400",
-    },
-    contactInfo: sampleContactInfo,
-    staff: sampleStaff,
-    players: samplePlayers,
-  },
-};
-
-/**
- * Youth team without team photo
- */
-export const WithoutTeamPhoto: Story = {
-  args: {
-    header: {
-      name: "U13B",
-      tagline: "GEWESTELIJKE U13",
-      ageGroup: "U13",
-      teamType: "youth",
-    },
-    contactInfo: sampleContactInfo,
-    staff: sampleStaff.slice(0, 2),
-    players: samplePlayers.slice(0, 4),
-  },
-};
-
-/**
- * Team with only staff (no players) - typical for very young teams
+ * Staff-only team — no players, so staff shows in Info tab and no Lineup tab.
  */
 export const StaffOnly: Story = {
   args: {
@@ -200,30 +368,16 @@ export const StaffOnly: Story = {
       ageGroup: "U6",
       teamType: "youth",
     },
-    contactInfo: sampleContactInfo,
+    contactInfo,
     bodyContent:
       "<p>Bij de U6 staat plezier centraal. We leren de kleintjes de basis van het voetbal in een speelse omgeving.</p>",
-    staff: sampleStaff.slice(0, 2),
+    staff: mockStaff.slice(0, 2),
     players: [],
   },
 };
 
 /**
- * Team with minimal content
- */
-export const MinimalContent: Story = {
-  args: {
-    header: {
-      name: "U21 Beloften",
-      ageGroup: "U21",
-      teamType: "youth",
-    },
-    players: samplePlayers,
-  },
-};
-
-/**
- * Empty state - no players, no staff, no content
+ * Empty state — no players, no staff, no content, no matches. Info tab only.
  */
 export const EmptyState: Story = {
   args: {
@@ -236,72 +390,27 @@ export const EmptyState: Story = {
 };
 
 /**
- * Loading state
+ * Info + Matches + Stand tabs only (no roster loaded yet).
  */
-export const Loading: Story = {
+export const WithMatchesNoRoster: Story = {
   args: {
     header: {
-      name: "U15A",
-      ageGroup: "U15",
-      teamType: "youth",
-    },
-    isLoading: true,
-  },
-};
-
-/**
- * Senior team variant
- */
-export const SeniorTeam: Story = {
-  args: {
-    header: {
-      name: "Eerste Ploeg",
-      tagline: "3de Nationale",
+      name: "Tweede Ploeg",
+      tagline: "4de Provinciale",
       teamType: "senior",
-      imageUrl: "https://picsum.photos/seed/team-senior/1200/400",
-      stats: {
-        wins: 12,
-        draws: 5,
-        losses: 3,
-        goalsFor: 38,
-        goalsAgainst: 18,
-        position: 2,
-      },
     },
-    contactInfo:
-      "<p><strong>Contact:</strong> <a href='mailto:info@kcvvelewijt.be'>info@kcvvelewijt.be</a></p>",
-    staff: sampleStaff,
-    players: samplePlayers,
+    matches: mockMatches,
+    standings: mockStandings,
+    highlightTeamId: KCVV_TEAM_ID,
+    teamSlug: "tweede-ploeg",
   },
 };
 
 /**
- * Team with coach information in header
- */
-export const WithCoachInfo: Story = {
-  args: {
-    header: {
-      name: "U15A",
-      tagline: "GEWESTELIJKE U15 K",
-      ageGroup: "U15",
-      teamType: "youth",
-      coach: {
-        name: "Marc Janssen",
-        role: "Hoofdtrainer",
-        imageUrl: REAL_PLAYER_IMAGES.chiel,
-      },
-    },
-    contactInfo: sampleContactInfo,
-    staff: sampleStaff,
-    players: samplePlayers,
-  },
-};
-
-/**
- * Mobile viewport — single-column stacked layout
+ * Mobile viewport — single-column stacked layout.
  */
 export const MobileViewport: Story = {
-  ...Default,
+  ...SeniorTeam,
   globals: {
     viewport: { value: "kcvvMobile" },
   },

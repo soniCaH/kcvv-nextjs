@@ -18,6 +18,7 @@ import {
   PlayersResponse,
   PlayerResponse,
   PlayerIncludedResource,
+  Staff,
   Event,
   EventsResponse,
   Sponsor,
@@ -42,7 +43,8 @@ export { NotFoundError, DrupalError, ValidationError };
  */
 export interface TeamWithRoster {
   team: Team;
-  staff: readonly Player[];
+  /** Player entities acting as staff (coaches, trainers) or Staff nodes (board members) */
+  staff: readonly (Player | Staff)[];
   players: readonly Player[];
   teamImageUrl?: string;
 }
@@ -670,6 +672,157 @@ export const DrupalServiceLive = Layer.effect(
     };
 
     /**
+     * Resolve a file or media image reference to an absolute URL.
+     *
+     * Shared by mapPlayerIncluded and extractStaffNodesFromIncluded.
+     * Returns the resolved { data: DrupalImage } shape, or the fallback when
+     * the reference cannot be resolved (unrecognised ref, missing included
+     * entity, etc.).
+     *
+     * @param fileRef - Raw relationship data value (null, DrupalImage, or a ref object)
+     * @param includedMap - Lookup map of "type:id" → included entity
+     * @param fallback - Value to return when resolution is not possible
+     */
+    const resolveImageFromRef = (
+      fileRef: unknown,
+      includedMap: Map<string, unknown>,
+      fallback: unknown,
+    ): unknown => {
+      if (
+        !fileRef ||
+        typeof fileRef !== "object" ||
+        !("id" in fileRef) ||
+        !("type" in fileRef)
+      ) {
+        return fallback;
+      }
+
+      const ref = fileRef as {
+        id: string;
+        type: string;
+        meta?: { alt?: string; width?: number; height?: number };
+      };
+
+      if (ref.type === "file--file") {
+        const file = includedMap.get(`file--file:${ref.id}`);
+        if (!file || (file as { type: string }).type !== "file--file") {
+          return fallback;
+        }
+        try {
+          const decodedFile = S.decodeUnknownSync(File)(file);
+          const fileUrl = decodedFile.attributes.uri.url;
+          const absoluteUrl = fileUrl.startsWith("http")
+            ? fileUrl
+            : `${baseUrl}${fileUrl}`;
+          return {
+            data: {
+              uri: { url: absoluteUrl },
+              alt: ref.meta?.alt || "",
+              width: ref.meta?.width,
+              height: ref.meta?.height,
+            },
+          };
+        } catch {
+          return fallback;
+        }
+      }
+
+      if (ref.type === "media--image") {
+        const media = includedMap.get(`media--image:${ref.id}`);
+        if (!media || (media as { type: string }).type !== "media--image") {
+          return fallback;
+        }
+        try {
+          const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
+          const mediaFileRef =
+            decodedMedia.relationships?.field_media_image?.data;
+          if (!mediaFileRef) return fallback;
+          const file = includedMap.get(`file--file:${mediaFileRef.id}`);
+          if (!file || (file as { type: string }).type !== "file--file") {
+            return fallback;
+          }
+          const decodedFile = S.decodeUnknownSync(File)(file);
+          const fileUrl = decodedFile.attributes.uri.url;
+          const absoluteUrl = fileUrl.startsWith("http")
+            ? fileUrl
+            : `${baseUrl}${fileUrl}`;
+          return {
+            data: {
+              uri: { url: absoluteUrl },
+              alt: mediaFileRef.meta?.alt || "",
+              width: mediaFileRef.meta?.width,
+              height: mediaFileRef.meta?.height,
+            },
+          };
+        } catch {
+          return fallback;
+        }
+      }
+
+      return fallback;
+    };
+
+    /**
+     * Extract and decode board members (node--staff) from included resources
+     *
+     * Board teams (bestuur, jeugdbestuur, angels) store their members as node--staff
+     * entities rather than node--player. This function handles those cases.
+     *
+     * @param staffIds - Array of staff node IDs to extract
+     * @param included - Array of related entities from JSON:API included section
+     * @returns Array of decoded Staff entities with resolved images
+     */
+    const extractStaffNodesFromIncluded = (
+      staffIds: readonly string[],
+      included: readonly S.Schema.Type<typeof TeamIncludedResource>[] = [],
+    ): readonly Staff[] => {
+      const includedMap = new Map<
+        string,
+        S.Schema.Type<typeof TeamIncludedResource>
+      >(included.map((item) => [`${item.type}:${item.id}`, item]));
+
+      const staffNodeMap = new Map<
+        string,
+        S.Schema.Type<typeof TeamIncludedResource>
+      >();
+      for (const item of included) {
+        if (item.type === "node--staff") {
+          staffNodeMap.set(item.id, item);
+        }
+      }
+
+      const staffMembers: Staff[] = [];
+      for (const id of staffIds) {
+        const item = staffNodeMap.get(id);
+        if (item) {
+          try {
+            const decoded = S.decodeUnknownSync(Staff)(item);
+            staffMembers.push(decoded);
+          } catch {
+            // Skip invalid staff node data
+          }
+        }
+      }
+
+      // Resolve images using the shared helper
+      return staffMembers.map((member) => {
+        const resolvedImage = resolveImageFromRef(
+          member.relationships.field_image?.data,
+          includedMap as Map<string, unknown>,
+          member.relationships.field_image,
+        ) as typeof member.relationships.field_image;
+
+        return {
+          ...member,
+          relationships: {
+            ...member.relationships,
+            field_image: resolvedImage,
+          },
+        };
+      });
+    };
+
+    /**
      * Get team with full roster by ID (UUID)
      *
      * Fetches a team by UUID and resolves all related data:
@@ -699,10 +852,38 @@ export const DrupalServiceLive = Layer.effect(
         // Resolve team image
         const { teamImageUrl } = mapTeamIncluded(team, included);
 
-        // Extract staff member IDs
-        const staffIds =
-          team.relationships.field_staff?.data?.map((ref) => ref.id) || [];
-        const staff = extractPlayersFromIncluded(staffIds, included);
+        // Extract staff — field_staff can reference node--player (coaches/trainers)
+        // or node--staff (board members). Decode each type in a single pass, then
+        // rebuild in Drupal field order to preserve the CMS-defined sequence.
+        const staffData = team.relationships.field_staff?.data || [];
+        const playerStaffIds = staffData
+          .filter((ref) => ref.type === "node--player")
+          .map((ref) => ref.id);
+        const staffNodeIds = staffData
+          .filter((ref) => ref.type === "node--staff")
+          .map((ref) => ref.id);
+        const playerMap = new Map(
+          extractPlayersFromIncluded(playerStaffIds, included).map((p) => [
+            p.id,
+            p,
+          ]),
+        );
+        const staffNodeMap = new Map(
+          extractStaffNodesFromIncluded(staffNodeIds, included).map((s) => [
+            s.id,
+            s,
+          ]),
+        );
+        const staff: (Player | Staff)[] = [];
+        for (const ref of staffData) {
+          if (ref.type === "node--player") {
+            const player = playerMap.get(ref.id);
+            if (player) staff.push(player);
+          } else if (ref.type === "node--staff") {
+            const member = staffNodeMap.get(ref.id);
+            if (member) staff.push(member);
+          }
+        }
 
         // Extract player IDs
         const playerIds =
@@ -756,71 +937,11 @@ export const DrupalServiceLive = Layer.effect(
       >(included.map((item) => [`${item.type}:${item.id}`, item]));
 
       return data.map((player) => {
-        // Resolve player image reference (file--file or media--image) to URL
-        const fileRef = player.relationships.field_image?.data;
-        const resolvedImage = (() => {
-          if (!fileRef || !("id" in fileRef) || !("type" in fileRef)) {
-            return player.relationships.field_image;
-          }
-
-          // Handle file--file references
-          if (fileRef.type === "file--file") {
-            const file = includedMap.get(`file--file:${fileRef.id}`);
-            if (!file || file.type !== "file--file") {
-              return player.relationships.field_image;
-            }
-
-            // Decode file to ensure it's valid
-            const decodedFile = S.decodeUnknownSync(File)(file);
-            const fileUrl = decodedFile.attributes.uri.url;
-            const absoluteUrl = fileUrl.startsWith("http")
-              ? fileUrl
-              : `${baseUrl}${fileUrl}`;
-
-            return {
-              data: {
-                uri: { url: absoluteUrl },
-                alt: fileRef.meta?.alt || "",
-                width: fileRef.meta?.width,
-                height: fileRef.meta?.height,
-              },
-            };
-          }
-
-          // Handle media--image references
-          // Schema validation ensures fileRef.type is "media--image" here
-          const media = includedMap.get(`media--image:${fileRef.id}`);
-          if (!media || media.type !== "media--image") {
-            return player.relationships.field_image;
-          }
-
-          const decodedMedia = S.decodeUnknownSync(MediaImage)(media);
-          const mediaFileRef =
-            decodedMedia.relationships?.field_media_image?.data;
-          if (!mediaFileRef) {
-            return player.relationships.field_image;
-          }
-
-          const file = includedMap.get(`file--file:${mediaFileRef.id}`);
-          if (!file || file.type !== "file--file") {
-            return player.relationships.field_image;
-          }
-
-          const decodedFile = S.decodeUnknownSync(File)(file);
-          const fileUrl = decodedFile.attributes.uri.url;
-          const absoluteUrl = fileUrl.startsWith("http")
-            ? fileUrl
-            : `${baseUrl}${fileUrl}`;
-
-          return {
-            data: {
-              uri: { url: absoluteUrl },
-              alt: mediaFileRef.meta?.alt || "",
-              width: mediaFileRef.meta?.width,
-              height: mediaFileRef.meta?.height,
-            },
-          };
-        })();
+        const resolvedImage = resolveImageFromRef(
+          player.relationships.field_image?.data,
+          includedMap as Map<string, unknown>,
+          player.relationships.field_image,
+        ) as typeof player.relationships.field_image;
 
         return {
           ...player,
