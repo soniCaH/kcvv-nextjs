@@ -59,12 +59,14 @@ export class EventRelationships extends S.Class<EventRelationships>(
   field_media_image: S.optional(
     S.Struct({
       data: S.optional(
-        S.Union(
-          DrupalImage,
-          S.Struct({
-            type: S.Literal("media--image"),
-            id: S.String,
-          }),
+        S.NullOr(
+          S.Union(
+            DrupalImage,
+            S.Struct({
+              type: S.Literal("media--image"),
+              id: S.String,
+            }),
+          ),
         ),
       ),
     }),

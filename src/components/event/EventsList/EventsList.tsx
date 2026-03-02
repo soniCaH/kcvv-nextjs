@@ -46,7 +46,12 @@ export function EventsList({
 
   if (events.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-500 text-center">
+      <div
+        className={cn(
+          "flex items-center justify-center py-12 text-gray-500 text-center",
+          className,
+        )}
+      >
         <p>{emptyMessage}</p>
       </div>
     );

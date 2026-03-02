@@ -100,6 +100,18 @@ describe("event.schema", () => {
       expect(result.field_media_image?.data).toBeDefined();
     });
 
+    it("should decode event relationships with null data", () => {
+      const input = {
+        field_media_image: {
+          data: null,
+        },
+      };
+
+      const result = S.decodeUnknownSync(EventRelationships)(input);
+
+      expect(result.field_media_image?.data).toBeNull();
+    });
+
     it("should decode event relationships with empty data", () => {
       const input = {};
 

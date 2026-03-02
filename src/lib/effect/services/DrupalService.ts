@@ -1209,7 +1209,28 @@ export const DrupalServiceLive = Layer.effect(
           );
         }
 
-        return response.data[0];
+        const event = response.data[0];
+        const included = response.included || [];
+        const includedMap = new Map<string, unknown>(
+          included.map((item) => [
+            `${(item as { type: string }).type}:${(item as { id: string }).id}`,
+            item,
+          ]),
+        );
+
+        const resolvedImage = resolveImageFromRef(
+          event.relationships.field_media_image?.data,
+          includedMap,
+          event.relationships.field_media_image,
+        ) as typeof event.relationships.field_media_image;
+
+        return {
+          ...event,
+          relationships: {
+            ...event.relationships,
+            field_media_image: resolvedImage,
+          },
+        };
       });
 
     /**
