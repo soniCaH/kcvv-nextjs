@@ -27,7 +27,9 @@ function TimelineItem({
             className="opacity-0 -translate-x-15 transition-all duration-700 ease-out [&.revealed]:opacity-100 [&.revealed]:translate-x-0 bg-white rounded-lg shadow-md p-6"
           >
             {date && (
-              <p className="text-green-main font-bold text-lg mb-2">{date}</p>
+              <p className="text-kcvv-green-bright font-bold text-lg mb-2">
+                {date}
+              </p>
             )}
             {children}
           </div>
@@ -35,7 +37,7 @@ function TimelineItem({
       </div>
 
       {/* Timeline dot */}
-      <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-green-main border-4 border-white shadow-md z-10 items-center justify-center">
+      <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-kcvv-green-bright border-4 border-white shadow-md z-10 items-center justify-center">
         <div className="w-3 h-3 rounded-full bg-white" />
       </div>
 
@@ -50,7 +52,9 @@ function TimelineItem({
             className="opacity-0 translate-x-15 transition-all duration-700 ease-out [&.revealed]:opacity-100 [&.revealed]:translate-x-0 bg-white rounded-lg shadow-md p-6"
           >
             {date && (
-              <p className="text-green-main font-bold text-lg mb-2">{date}</p>
+              <p className="text-kcvv-green-bright font-bold text-lg mb-2">
+                {date}
+              </p>
             )}
             {children}
           </div>
@@ -91,7 +95,9 @@ function TimelineImage({
 
 function TimelineSection({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative py-4 before:hidden md:before:block before:absolute before:left-1/2 before:-translate-x-[1.5px] before:w-[3px] before:h-full before:bg-green-main">
+    <div className="relative py-4">
+      {/* Vertical green line */}
+      <div className="hidden md:block absolute inset-y-0 left-1/2 w-1 -translate-x-0.5 bg-kcvv-green-bright" />
       {children}
     </div>
   );
@@ -492,7 +498,7 @@ export function HistoryContent() {
 
         {/* Final section */}
         <TimelineSection>
-          <TimelineItem date="2021 - ..." side="right">
+          <TimelineItem date="2021 - 2025" side="right">
             <p>
               Na een onnodig spannend seizoen verzekert KCVV zich pas op de
               allerlaatste speeldag van een tweede plaats — achter ongenaakbaar
@@ -535,9 +541,44 @@ export function HistoryContent() {
           </TimelineItem>
         </TimelineSection>
 
+        {/* TODO: Hier komt later een foto van het kampioenschap 2024-2025 */}
+
+        {/* 2025 - nationaal voetbal */}
+        <TimelineSection>
+          <TimelineItem date="2024 - 2025" side="left">
+            <p>
+              Na drie seizoenen in eerste provinciale groeit KCVV Elewijt
+              gestaag uit tot een vaste waarde in de hoogste provinciale reeks.
+              In het seizoen 2024-2025 pakt de ploeg uit met een ijzersterke
+              campagne: 17 zeges, 7 gelijke spelen en slechts 4 nederlagen
+              leveren 58 punten op — goed voor de titel met maar liefst 8 punten
+              voorsprong op eerste achtervolger OHR Huldenberg.
+            </p>
+            <p className="mt-3">
+              Voor het eerst sinds de gloriedagen van Crossing Schaarbeek in de
+              jaren &apos;70 mag stamnummer 55 aantreden op nationaal niveau.
+              Het is het absolute hoogtepunt in de geschiedenis van KCVV
+              Elewijt: van vierde provinciale in 2012 naar de derde afdeling
+              Voetbal Vlaanderen in 2025 — vier promoties in amper dertien
+              seizoenen.
+            </p>
+          </TimelineItem>
+
+          <TimelineItem date="2025 - ..." side="right">
+            <p>
+              De ploeg wordt in het seizoen 2025/2026 ingedeeld in derde
+              afdeling VV reeks B, een nationaal niveau met ambitieuze clubs als
+              KVC Wilrijk, City Pirates Antwerpen, FC Wezel Sport en KFC De
+              Kempen. Voor het eerst in de moderne clubgeschiedenis speelt KCVV
+              Elewijt op het nationale toneel — een historische mijlpaal voor
+              het kleine dorp aan de Zenne.
+            </p>
+          </TimelineItem>
+        </TimelineSection>
+
         {/* Credits */}
         <div className="mt-12 px-4">
-          <h3 className="text-xl font-bold border-l-4 border-green-main pl-4 mb-4">
+          <h3 className="text-xl font-bold border-l-4 border-kcvv-green-bright pl-4 mb-4">
             Credits
           </h3>
           <p>
