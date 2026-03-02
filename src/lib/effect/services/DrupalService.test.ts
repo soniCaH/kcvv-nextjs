@@ -2962,11 +2962,11 @@ describe("DrupalService", () => {
       await Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive)));
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("filter%5Bfield_event_date%5D"),
+        expect.stringContaining("filter%5Bfield_daterange.value%5D"),
         expect.anything(),
       );
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("sort=field_event_date"),
+        expect.stringContaining("sort=field_daterange.value"),
         expect.anything(),
       );
     });
@@ -2989,7 +2989,7 @@ describe("DrupalService", () => {
       await Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive)));
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("sort=-field_event_date"),
+        expect.stringContaining("sort=-field_daterange.value"),
         expect.anything(),
       );
     });
@@ -3016,6 +3016,155 @@ describe("DrupalService", () => {
         expect.anything(),
       );
     });
+
+    it("should fetch upcoming events with correct data", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "event-1",
+            type: "node--event",
+            attributes: {
+              title: "Club BBQ",
+              created: "2026-03-01T00:00:00Z",
+              path: { alias: "/events/club-bbq" },
+              field_daterange: {
+                value: "2026-06-15T14:00:00+02:00",
+                end_value: "2026-06-15T18:00:00+02:00",
+              },
+            },
+            relationships: {},
+          },
+        ],
+      };
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getEvents({ upcoming: true });
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].attributes.title).toBe("Club BBQ");
+      expect(result[0].attributes.field_daterange?.value).toBe(
+        "2026-06-15T14:00:00+02:00",
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("filter%5Bfield_daterange.value%5D"),
+        expect.any(Object),
+      );
+    });
+
+    it("should resolve media--image to file URL for events", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "event-1",
+            type: "node--event",
+            attributes: {
+              title: "Sponsorfeest",
+              created: "2026-03-01T00:00:00Z",
+              path: { alias: "/events/sponsorfeest" },
+            },
+            relationships: {
+              field_media_image: {
+                data: { type: "media--image", id: "media-1" },
+              },
+            },
+          },
+        ],
+        included: [
+          {
+            id: "media-1",
+            type: "media--image",
+            attributes: { name: "sponsorfeest.jpg" },
+            relationships: {
+              field_media_image: {
+                data: { type: "file--file", id: "file-1" },
+              },
+            },
+          },
+          {
+            id: "file-1",
+            type: "file--file",
+            attributes: {
+              filename: "sponsorfeest.jpg",
+              uri: { url: "/sites/default/files/sponsorfeest.jpg" },
+            },
+          },
+        ],
+      };
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getEvents();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      const imageData = result[0].relationships.field_media_image?.data;
+      expect(imageData).toBeDefined();
+      if (imageData && "uri" in imageData) {
+        expect(imageData.uri.url).toContain("/sponsorfeest.jpg");
+      } else {
+        throw new Error("Expected resolved DrupalImage with uri");
+      }
+    });
+
+    it("should return fallback when event image resolution fails", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "event-1",
+            type: "node--event",
+            attributes: {
+              title: "Test Event",
+              created: "2026-03-01T00:00:00Z",
+              path: { alias: "/events/test" },
+            },
+            relationships: {
+              field_media_image: {
+                data: { type: "media--image", id: "media-missing" },
+              },
+            },
+          },
+        ],
+        included: [],
+      };
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      const program = Effect.gen(function* () {
+        const drupal = yield* DrupalService;
+        return yield* drupal.getEvents();
+      });
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(DrupalServiceLive)),
+      );
+
+      expect(result).toHaveLength(1);
+      const imageData = result[0].relationships.field_media_image?.data;
+      // Fallback: still the unresolved media--image ref (no uri)
+      expect(imageData).not.toHaveProperty("uri");
+    });
   });
 
   describe("getEventBySlug", () => {
@@ -3027,15 +3176,15 @@ describe("DrupalService", () => {
             type: "node--event",
             attributes: {
               title: "Test Event",
-              field_event_date: "2025-12-31T00:00:00Z",
+              field_daterange: {
+                value: "2025-12-31T00:00:00Z",
+              },
               created: "2025-01-01T00:00:00Z",
               path: {
                 alias: "/events/test-event",
               },
             },
-            relationships: {
-              field_image: {},
-            },
+            relationships: {},
           },
         ],
       };
