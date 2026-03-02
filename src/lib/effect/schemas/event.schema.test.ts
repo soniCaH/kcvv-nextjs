@@ -48,6 +48,22 @@ describe("event.schema", () => {
       expect(result.field_event_link?.uri).toBe("https://example.com/tickets");
     });
 
+    it("should decode event attributes with null fields", () => {
+      const input = {
+        title: "Null Fields Event",
+        created: "2024-01-15T10:30:00+00:00",
+        path: { alias: "/events/null-fields" },
+        field_daterange: null,
+        field_event_link: null,
+      };
+
+      const result = S.decodeUnknownSync(EventAttributes)(input);
+
+      expect(result.title).toBe("Null Fields Event");
+      expect(result.field_daterange).toBeNull();
+      expect(result.field_event_link).toBeNull();
+    });
+
     it("should decode event attributes with minimal fields", () => {
       const input = {
         title: "Youth Training",

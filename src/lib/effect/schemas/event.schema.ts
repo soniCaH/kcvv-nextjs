@@ -43,8 +43,8 @@ export class EventAttributes extends S.Class<EventAttributes>(
   "EventAttributes",
 )({
   ...BaseDrupalNodeAttributes,
-  field_daterange: S.optional(EventDateRange),
-  field_event_link: S.optional(EventLink),
+  field_daterange: S.optional(S.NullOr(EventDateRange)),
+  field_event_link: S.optional(S.NullOr(EventLink)),
 }) {}
 
 /**
