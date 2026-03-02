@@ -29,22 +29,20 @@ function transformEvent(event: Event): EventsListItem {
   const slug = alias.startsWith("/events/")
     ? alias.slice("/events/".length)
     : event.id;
-  const imageData = event.relationships.field_image?.data;
+  const imageData = event.relationships.field_media_image?.data;
   const imageUrl =
     imageData && "uri" in imageData ? imageData.uri.url : undefined;
 
   return {
     title: event.attributes.title,
     href: `/events/${slug}`,
-    date: event.attributes.field_event_date
-      ? new Date(event.attributes.field_event_date as unknown as string)
+    date: event.attributes.field_daterange?.value
+      ? new Date(event.attributes.field_daterange.value)
       : undefined,
-    endDate: event.attributes.field_event_end_date
-      ? new Date(event.attributes.field_event_end_date as unknown as string)
+    endDate: event.attributes.field_daterange?.end_value
+      ? new Date(event.attributes.field_daterange.end_value)
       : undefined,
-    location: event.attributes.field_location,
     imageUrl,
-    excerpt: event.attributes.body?.summary || undefined,
   };
 }
 

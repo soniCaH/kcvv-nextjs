@@ -2962,11 +2962,11 @@ describe("DrupalService", () => {
       await Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive)));
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("filter%5Bfield_event_date%5D"),
+        expect.stringContaining("filter%5Bfield_daterange.value%5D"),
         expect.anything(),
       );
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("sort=field_event_date"),
+        expect.stringContaining("sort=field_daterange.value"),
         expect.anything(),
       );
     });
@@ -2989,7 +2989,7 @@ describe("DrupalService", () => {
       await Effect.runPromise(program.pipe(Effect.provide(DrupalServiceLive)));
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("sort=-field_event_date"),
+        expect.stringContaining("sort=-field_daterange.value"),
         expect.anything(),
       );
     });
@@ -3027,15 +3027,15 @@ describe("DrupalService", () => {
             type: "node--event",
             attributes: {
               title: "Test Event",
-              field_event_date: "2025-12-31T00:00:00Z",
+              field_daterange: {
+                value: "2025-12-31T00:00:00Z",
+              },
               created: "2025-01-01T00:00:00Z",
               path: {
                 alias: "/events/test-event",
               },
             },
-            relationships: {
-              field_image: {},
-            },
+            relationships: {},
           },
         ],
       };
@@ -3759,8 +3759,10 @@ describe("DrupalService", () => {
               title: "Club BBQ",
               created: "2026-03-01T00:00:00Z",
               path: { alias: "/events/club-bbq" },
-              field_event_date: "2026-06-15T14:00:00Z",
-              field_location: "Sporthal Elewijt",
+              field_daterange: {
+                value: "2026-06-15T14:00:00+02:00",
+                end_value: "2026-06-15T18:00:00+02:00",
+              },
             },
             relationships: {},
           },
@@ -3783,9 +3785,11 @@ describe("DrupalService", () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].attributes.title).toBe("Club BBQ");
-      expect(result[0].attributes.field_location).toBe("Sporthal Elewijt");
+      expect(result[0].attributes.field_daterange?.value).toBe(
+        "2026-06-15T14:00:00+02:00",
+      );
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("filter%5Bfield_event_date%5D"),
+        expect.stringContaining("filter%5Bfield_daterange.value%5D"),
         expect.any(Object),
       );
     });
@@ -3802,7 +3806,7 @@ describe("DrupalService", () => {
               path: { alias: "/events/sponsorfeest" },
             },
             relationships: {
-              field_image: {
+              field_media_image: {
                 data: { type: "media--image", id: "media-1" },
               },
             },
@@ -3844,7 +3848,7 @@ describe("DrupalService", () => {
         program.pipe(Effect.provide(DrupalServiceLive)),
       );
 
-      const imageData = result[0].relationships.field_image?.data;
+      const imageData = result[0].relationships.field_media_image?.data;
       expect(imageData).toBeDefined();
       if (imageData && "uri" in imageData) {
         expect(imageData.uri.url).toContain("/sponsorfeest.jpg");
@@ -3865,7 +3869,7 @@ describe("DrupalService", () => {
               path: { alias: "/events/test" },
             },
             relationships: {
-              field_image: {
+              field_media_image: {
                 data: { type: "media--image", id: "media-missing" },
               },
             },
@@ -3889,7 +3893,7 @@ describe("DrupalService", () => {
       );
 
       expect(result).toHaveLength(1);
-      const imageData = result[0].relationships.field_image?.data;
+      const imageData = result[0].relationships.field_media_image?.data;
       // Fallback: still the unresolved media--image ref (no uri)
       expect(imageData).not.toHaveProperty("uri");
     });

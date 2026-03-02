@@ -1139,16 +1139,19 @@ export const DrupalServiceLive = Layer.effect(
     const getEvents = (params?: { upcoming?: boolean; limit?: number }) =>
       Effect.gen(function* () {
         const queryParams: Record<string, string | number> = {
-          include: "field_image.field_media_image",
-          sort: params?.upcoming ? "field_event_date" : "-field_event_date",
+          include: "field_media_image.field_media_image",
+          sort: params?.upcoming
+            ? "field_daterange.value"
+            : "-field_daterange.value",
         };
 
         if (params?.upcoming) {
           const now = new Date().toISOString();
-          queryParams["filter[field_event_date][condition][path]"] =
-            "field_event_date";
-          queryParams["filter[field_event_date][condition][operator]"] = ">=";
-          queryParams["filter[field_event_date][condition][value]"] = now;
+          queryParams["filter[field_daterange.value][condition][path]"] =
+            "field_daterange.value";
+          queryParams["filter[field_daterange.value][condition][operator]"] =
+            ">=";
+          queryParams["filter[field_daterange.value][condition][value]"] = now;
         }
 
         if (params?.limit) {
@@ -1168,16 +1171,16 @@ export const DrupalServiceLive = Layer.effect(
 
         return response.data.map((event) => {
           const resolvedImage = resolveImageFromRef(
-            event.relationships.field_image?.data,
+            event.relationships.field_media_image?.data,
             includedMap,
-            event.relationships.field_image,
-          ) as typeof event.relationships.field_image;
+            event.relationships.field_media_image,
+          ) as typeof event.relationships.field_media_image;
 
           return {
             ...event,
             relationships: {
               ...event.relationships,
-              field_image: resolvedImage,
+              field_media_image: resolvedImage,
             },
           };
         });
@@ -1192,7 +1195,7 @@ export const DrupalServiceLive = Layer.effect(
 
         const url = buildUrl("node/event", {
           "filter[path.alias]": normalizedSlug,
-          include: "field_image",
+          include: "field_media_image.field_media_image",
         });
         const response = yield* fetchJson(url, EventsResponse);
 
