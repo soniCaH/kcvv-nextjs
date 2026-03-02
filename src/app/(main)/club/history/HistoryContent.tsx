@@ -187,11 +187,11 @@ export function HistoryContent() {
 
           <TimelineItem date="1935" side="left">
             <p>
-              Na een aantal jaren zonder voetbalclub onstonden er in 1935 twee
-              nieuwe nieuwe clubs, volledig onafhankelijk van mekaar. Het steeds
-              groter wordend aantal spelers – teveel voor één ploeg – lag aan de
-              basis van een onenigheid in de ploeg en leidde in een minimum van
-              tijd tot een onafwendbare scheuring.
+              Na een aantal jaren zonder voetbalclub ontstonden er in 1935 twee
+              nieuwe clubs, volledig onafhankelijk van mekaar. Het steeds groter
+              wordend aantal spelers – teveel voor één ploeg – lag aan de basis
+              van een onenigheid in de ploeg en leidde in een minimum van tijd
+              tot een onafwendbare scheuring.
             </p>
           </TimelineItem>
 

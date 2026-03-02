@@ -33,7 +33,7 @@ src/app/(main)/club/<route>/page.tsx
 
 **Data:** Hardcoded array of timeline entries, each with `period`, `title`, `content` (JSX), and `side` (left/right).
 
-**Animation:** CSS-only IntersectionObserver approach:
+**Animation:** IntersectionObserver (JS) toggles CSS classes; CSS handles the transitions:
 
 - `useScrollReveal` client hook — observes `[data-reveal]` elements, adds `.revealed` class
 - CSS transitions: `opacity 0 → 1`, `translateX(±60px) → 0` over 600ms
