@@ -15,10 +15,10 @@ function TimelineItem({
   side?: "left" | "right";
 }) {
   return (
-    <div className="relative flex justify-between items-start w-full mb-8">
+    <div className="relative md:flex md:justify-between md:items-start w-full mb-8">
       {/* Left content */}
       <div
-        className={`w-full md:w-[45%] ${side === "right" ? "md:invisible" : ""}`}
+        className={`w-full md:w-[45%] ${side === "right" ? "hidden md:block md:invisible" : ""}`}
       >
         {side === "left" && (
           <div
@@ -43,7 +43,7 @@ function TimelineItem({
 
       {/* Right content */}
       <div
-        className={`w-full md:w-[45%] ${side === "left" ? "md:invisible" : ""}`}
+        className={`w-full md:w-[45%] ${side === "left" ? "hidden md:block md:invisible" : ""}`}
       >
         {side === "right" && (
           <div
