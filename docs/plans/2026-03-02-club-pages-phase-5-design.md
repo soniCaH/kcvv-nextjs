@@ -20,7 +20,7 @@ All pages are static (no Drupal/API fetches, no `revalidate`).
 
 Each page follows the existing convention (same as `/privacy`, `/club/contact`):
 
-```
+```text
 src/app/(main)/club/<route>/page.tsx
 ```
 

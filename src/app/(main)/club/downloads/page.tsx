@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { FileText } from "lucide-react";
 import { PageTitle } from "@/components/layout";
 
@@ -29,7 +28,7 @@ interface DownloadCardProps {
 
 function DownloadCard({ title, description, href }: DownloadCardProps) {
   return (
-    <Link
+    <a
       href={href}
       download
       className="flex items-start gap-4 rounded-lg bg-white p-6 shadow-md transition-shadow hover:shadow-lg"
@@ -44,7 +43,7 @@ function DownloadCard({ title, description, href }: DownloadCardProps) {
           Download
         </span>
       </div>
-    </Link>
+    </a>
   );
 }
 

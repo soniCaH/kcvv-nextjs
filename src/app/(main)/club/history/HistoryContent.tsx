@@ -541,7 +541,7 @@ export function HistoryContent() {
           </TimelineItem>
         </TimelineSection>
 
-        {/* TODO: Hier komt later een foto van het kampioenschap 2024-2025 */}
+        {/* TODO(#715): Add 2024-2025 championship photo */}
 
         {/* 2025 - nationaal voetbal */}
         <TimelineSection>

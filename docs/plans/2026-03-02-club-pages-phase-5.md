@@ -4,7 +4,7 @@
 
 **Goal:** Migrate 5 static club pages (history, downloads, register, ultras, cashless) from Gatsby to Next.js.
 
-**Architecture:** All pages are static with hardcoded content (no API fetches). The history page uses a CSS-only IntersectionObserver for fly-in animations. Images and PDFs are copied from the Gatsby source to `public/`.
+**Architecture:** All pages are static with hardcoded content (no API fetches). The history page uses IntersectionObserver (JS) to toggle CSS classes for fly-in animations. Images and PDFs are copied from the Gatsby source to `public/`.
 
 **Tech Stack:** Next.js App Router, Tailwind CSS, `next/image`, IntersectionObserver API
 
