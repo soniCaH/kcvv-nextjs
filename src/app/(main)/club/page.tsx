@@ -38,10 +38,10 @@ function ClubSection({ title, children, href, linkLabel }: ClubSectionProps) {
       <div className="content">{children}</div>
       <Link
         href={href}
-        className="mt-4 inline-flex items-center gap-2 font-semibold text-kcvv-green-bright transition-colors hover:text-kcvv-green-hover"
+        className="group mt-4 inline-flex items-center gap-2 font-semibold text-kcvv-green-bright transition-colors hover:text-kcvv-green-hover"
       >
         {linkLabel}
-        <ArrowRight className="h-4 w-4" />
+        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
       </Link>
     </section>
   );
@@ -57,7 +57,7 @@ export default function ClubPage() {
           href="/club/history"
           linkLabel="Meer over de geschiedenis"
         >
-          <blockquote className="mb-4 border-l-4 border-kcvv-gray-light pl-4 italic text-kcvv-gray">
+          <blockquote>
             <strong>Koninklijk Voetbal Vereniging Crossing Elewijt</strong> is
             aangesloten bij de KBVB met stamnummer 55 en speelt vanaf het
             seizoen 2025/26 in derde afdeling Voetbal Vlaanderen. Met dit
@@ -96,7 +96,7 @@ export default function ClubPage() {
             sinds kort zijn pijlen volop op de bouw van onderuit gericht. Zo
             wordt er dit seizoen niet alleen een kunstgrasveld aangelegd, wat
             zowel de trainings- als de wedstrijdkwaliteit zal verbeteren, maar
-            werd er ook een ambitieuse jeugdcoördinator aangesteld die zowel
+            werd er ook een ambitieuze jeugdcoördinator aangesteld die zowel
             spelers, ouders als trainers van dichtbij zal opvolgen, gestaafd met
             leerrijke opleidingsplannen.
           </p>
@@ -134,7 +134,7 @@ export default function ClubPage() {
           linkLabel="Meer over de supportersclub"
         >
           <p>
-            De naam KCVV Ultras werd enkele jaren geleden op facebook in het
+            De naam KCVV Ultras werd enkele jaren geleden op Facebook in het
             leven geroepen door een bende supporters die elke week trouw op post
             stonden. Het enthousiasme, gekoppeld aan de goede resultaten, werkte
             aanstekelijk en de bende groeide al snel.
