@@ -10,7 +10,7 @@
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
-    "type-check": "tsc --noEmit",
+    "type-check": "npm run type-check -w @kcvv/web",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -21,10 +21,12 @@
     "turbo": "2.8.12"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write",
-      "vitest related --run"
+    "apps/web/**/*.{js,jsx,ts,tsx}": [
+      "eslint --fix --config apps/web/eslint.config.mjs",
+      "prettier --write"
+    ],
+    "apps/web/**/*.{json,md,yml,yaml}": [
+      "prettier --write"
     ],
     "*.{json,md,yml,yaml}": [
       "prettier --write"
