@@ -29,5 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "../../docs/archive"]
+  "exclude": ["node_modules", "../../docs/archive"],
+  "references": [{ "path": "../../packages/api-contract" }]
 }
