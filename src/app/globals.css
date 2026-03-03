@@ -288,7 +288,7 @@ blockquote {
   color: var(--color-kcvv-gray-dark);
   border: 0;
   margin: 2rem 0;
-  padding: 0;
+  padding: 0 0 0 6rem;
   overflow: hidden;
   position: relative;
 }
@@ -300,13 +300,8 @@ blockquote::before {
   line-height: 0.8;
   float: left;
   margin-bottom: -6rem;
-  margin-left: -0.5rem;
+  margin-left: -6.5rem;
   overflow: hidden;
-}
-
-blockquote p {
-  padding-left: 6rem;
-  line-height: var(--line-height-snug);
 }
 
 /* Utility Classes */

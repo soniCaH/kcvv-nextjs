@@ -82,7 +82,7 @@ export default function UltrasPage() {
           <h2 className="mb-4 border-l-4 border-kcvv-green-bright pl-4 text-xl font-bold">
             Wat doen we
           </h2>
-          <blockquote className="mb-4 border-l-4 border-kcvv-gray-light pl-4 italic text-kcvv-gray">
+          <blockquote>
             Positief aanmoedigen van de eigen ploeg; vocaal, met trommels, met
             sfeermateriaal, met bussen enz...
           </blockquote>
