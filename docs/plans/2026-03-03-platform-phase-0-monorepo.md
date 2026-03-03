@@ -4,9 +4,11 @@
 
 **Goal:** Transform the current `kcvv-nextjs` repo into a Turborepo monorepo root with the Next.js app at `apps/web/` and a skeleton `packages/api-contract/` package, without breaking the live Vercel deployment or CI/CD pipeline.
 
-**Architecture:** The repo root becomes a workspace host (Turborepo + npm workspaces). All Next.js source moves into `apps/web/` using `git mv` to preserve history. A minimal `packages/api-contract/` is scaffolded with TypeScript + Effect ready for Phase 1. Root-level tooling (husky, commitlint, `.claude/`, `.github/`) stays at the root.
+**Architecture:** The repo root becomes a workspace host (Turborepo + **pnpm workspaces**). All Next.js source moves into `apps/web/` using `git mv` to preserve history. A minimal `packages/api-contract/` is scaffolded with TypeScript + Effect ready for Phase 1. Root-level tooling (husky, commitlint, `.claude/`, `.github/`) stays at the root.
 
-**Tech Stack:** Turborepo, npm workspaces, TypeScript, Effect (`effect`, `@effect/platform`), existing Next.js stack unchanged.
+**Tech Stack:** Turborepo, **pnpm workspaces**, TypeScript, Effect (`effect`, `@effect/platform`), existing Next.js stack unchanged.
+
+> ⚠️ **Amendment (Tasks 1-3 already completed with npm):** Task 3b below switches the package manager to pnpm before the big file move. All tasks from 4 onwards use pnpm. npm was used to bootstrap — pnpm takes over from here.
 
 ---
 
@@ -14,7 +16,7 @@
 
 - Every commit must pass the existing husky pre-commit (lint-staged + type-check) and commitlint (scope must be one of: `news, matches, teams, players, sponsors, calendar, ranking, api, ui, schema, migration, config, deps`)
 - Use scope `config` for monorepo structure commits, `migration` for content/app moves, `api` for api-contract package
-- Run `npm run check-all` from `apps/web/` before any push
+- Run `pnpm run check-all` from `apps/web/` before any push
 - All work is on branch `feat/platform-phase-0-monorepo` (create it first)
 - Vercel deployment must stay live throughout — never break `main`
 - After every GitHub issue created, run: `gh project item-add 2 --owner soniCaH --url <issue-url>`
@@ -178,6 +180,109 @@ git commit -m "feat(config): scaffold apps/web and packages workspace directorie
 
 ---
 
+## Task 3b: Switch package manager from npm to pnpm
+
+Tasks 1-3 used npm to bootstrap. Switch to pnpm before the big file move so everything from Task 4 onwards uses pnpm correctly.
+
+**Files:**
+
+- Create: `pnpm-workspace.yaml`
+- Modify: `package.json` (root — add `packageManager` field, remove `workspaces` field)
+- Modify: `apps/web/package.json` (update `@kcvv/api-contract` dep to `workspace:*`)
+- Delete: `package-lock.json`
+
+**Step 1: Install pnpm globally (if not already installed)**
+
+```bash
+npm install -g pnpm@latest
+```
+
+Verify: `pnpm --version` (should print 9.x or later)
+
+**Step 2: Create `pnpm-workspace.yaml` at monorepo root**
+
+```yaml
+packages:
+  - "apps/*"
+  - "packages/*"
+```
+
+**Step 3: Update root `package.json`**
+
+Remove the `"workspaces"` field (pnpm uses `pnpm-workspace.yaml` instead) and add `packageManager`:
+
+```json
+{
+  "name": "kcvv",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "<keep existing>",
+    "@commitlint/config-conventional": "<keep existing>",
+    "husky": "<keep existing>",
+    "lint-staged": "<keep existing>",
+    "turbo": "<keep existing>"
+  }
+}
+```
+
+> Use the exact pnpm version from `pnpm --version` for the `packageManager` field.
+
+**Step 4: Update `apps/web/package.json` internal dependency**
+
+Change the `@kcvv/api-contract` dependency to use pnpm's workspace protocol:
+
+```json
+"@kcvv/api-contract": "workspace:*"
+```
+
+**Step 5: Delete `package-lock.json`**
+
+```bash
+rm package-lock.json
+```
+
+**Step 6: Install with pnpm**
+
+```bash
+pnpm install
+```
+
+This generates `pnpm-lock.yaml` and creates `node_modules` via pnpm's content-addressable store.
+
+**Step 7: Update Renovate to recognise pnpm**
+
+In `renovate.json`, add `"pnpm"` to `enabledManagers`:
+
+```json
+"enabledManagers": ["npm", "pnpm", "nvm", "github-actions", "dockerfile"]
+```
+
+**Step 8: Verify basic commands work**
+
+```bash
+pnpm run type-check          # from root (runs tsc at root — still fine at this stage)
+pnpm --filter @kcvv/web run type-check   # targets apps/web
+```
+
+**Step 9: Commit**
+
+```bash
+git rm package-lock.json
+git add pnpm-workspace.yaml pnpm-lock.yaml package.json apps/web/package.json renovate.json
+git commit -m "feat(config): switch package manager from npm to pnpm"
+```
+
+---
+
 ## Task 4: Move Next.js source into `apps/web/` with git history
 
 This is the most critical task. Use `git mv` for everything so git history is preserved.
@@ -326,24 +431,21 @@ git commit -m "feat(config): fix internal path references after monorepo move"
 
 ---
 
-## Task 6: Install dependencies from monorepo root
+## Task 6: Install dependencies with pnpm and verify the move
 
-**Step 1: Remove root `node_modules` and reinstall**
+**Step 1: Clean and reinstall from monorepo root**
 
 ```bash
-# From monorepo root
-rm -rf node_modules package-lock.json apps/web/node_modules
-npm install
+rm -rf node_modules apps/web/node_modules packages/api-contract/node_modules
+pnpm install
 ```
 
-npm workspaces will hoist shared deps to root `node_modules` and create symlinks. This replaces the need for `cd apps/web && npm install`.
+pnpm links workspace packages via its content-addressable store. `@kcvv/api-contract` is automatically symlinked into `apps/web/node_modules/@kcvv/api-contract`.
 
 **Step 2: Verify Next.js dev server starts**
 
 ```bash
-npm run dev -w @kcvv/web
-# or
-cd apps/web && npm run dev
+pnpm --filter @kcvv/web dev
 ```
 
 Expected: Next.js starts on `localhost:3000` with no errors.
@@ -351,7 +453,7 @@ Expected: Next.js starts on `localhost:3000` with no errors.
 **Step 3: Verify tests pass**
 
 ```bash
-cd apps/web && npm run test
+pnpm --filter @kcvv/web test
 ```
 
 Expected: all tests pass (same as before the move).
@@ -359,17 +461,16 @@ Expected: all tests pass (same as before the move).
 **Step 4: Verify Storybook builds**
 
 ```bash
-cd apps/web && npm run build-storybook
+pnpm --filter @kcvv/web build-storybook
 ```
 
 Expected: Storybook builds without errors.
 
-**Step 5: Commit lock file**
+**Step 5: Commit updated lock file**
 
 ```bash
-cd ../..
-git add package-lock.json
-git commit -m "feat(config): update package-lock for workspace install"
+git add pnpm-lock.yaml
+git commit -m "feat(config): update pnpm lock file after workspace install"
 ```
 
 ---
@@ -386,7 +487,7 @@ Create `vercel.json` at the **monorepo root**:
 {
   "buildCommand": "turbo build --filter=@kcvv/web",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "npm install",
+  "installCommand": "pnpm install",
   "framework": "nextjs",
   "rootDirectory": "apps/web"
 }
@@ -469,6 +570,88 @@ CodeQL scans the whole repo — no changes needed. It will still find TypeScript
 ```bash
 git add .github/workflows/ci.yml
 git commit -m "feat(config): update ci workflow for turborepo monorepo structure"
+```
+
+---
+
+## Task 8b: pnpm catch-up (if Tasks 4-8 were completed with npm)
+
+> ⚠️ **Do this task before Task 9 if pnpm was not yet set up.**
+> Skip it entirely if pnpm is already in use (i.e. `pnpm-lock.yaml` exists at root).
+
+**Step 1: Check current state**
+
+```bash
+ls pnpm-lock.yaml 2>/dev/null && echo "pnpm already set up — skip this task" || echo "npm still in use — proceed"
+```
+
+**Step 2: Install pnpm**
+
+```bash
+npm install -g pnpm@latest
+```
+
+**Step 3: Create `pnpm-workspace.yaml`**
+
+```yaml
+packages:
+  - "apps/*"
+  - "packages/*"
+```
+
+**Step 4: Update root `package.json`**
+
+- Remove `"workspaces"` field (pnpm uses `pnpm-workspace.yaml`)
+- Add `"packageManager": "pnpm@<version>"` (use output of `pnpm --version`)
+
+**Step 5: Update `apps/web/package.json`**
+
+Change the internal dep:
+
+```json
+"@kcvv/api-contract": "workspace:*"
+```
+
+**Step 6: Update Renovate**
+
+In `renovate.json`, add `"pnpm"` to `enabledManagers`:
+
+```json
+"enabledManagers": ["npm", "pnpm", "nvm", "github-actions", "dockerfile"]
+```
+
+**Step 7: Update `vercel.json` installCommand**
+
+```json
+"installCommand": "pnpm install"
+```
+
+**Step 8: Update CI — add pnpm setup before install step**
+
+In `.github/workflows/ci.yml`, before every `npm ci` step, add:
+
+```yaml
+- name: Install pnpm
+  uses: pnpm/action-setup@v4
+  with:
+    run_install: false
+```
+
+Then replace `npm ci` → `pnpm install --frozen-lockfile` and `npm run` → `pnpm run` throughout.
+
+**Step 9: Switch to pnpm**
+
+```bash
+rm -rf node_modules apps/web/node_modules package-lock.json
+pnpm install
+```
+
+**Step 10: Commit**
+
+```bash
+git rm package-lock.json
+git add pnpm-workspace.yaml pnpm-lock.yaml package.json apps/web/package.json renovate.json vercel.json .github/workflows/ci.yml
+git commit -m "feat(config): switch package manager to pnpm"
 ```
 
 ---
@@ -699,14 +882,13 @@ Expected: pre-commit runs lint on the changed file, type-check runs, commit eith
 
 ```bash
 rm -rf node_modules apps/web/node_modules packages/api-contract/node_modules
-npm install
+pnpm install
 ```
 
 **Step 2: Run full check suite from `apps/web/`**
 
 ```bash
-cd apps/web
-npm run check-all
+pnpm --filter @kcvv/web check-all
 ```
 
 Expected: lint ✅, type-check ✅, tests ✅, build ✅.
@@ -714,9 +896,8 @@ Expected: lint ✅, type-check ✅, tests ✅, build ✅.
 **Step 3: Verify turbo pipeline works**
 
 ```bash
-cd ../..
-npx turbo build --filter=@kcvv/web
-npx turbo test --filter=@kcvv/web
+pnpm turbo build --filter=@kcvv/web
+pnpm turbo test --filter=@kcvv/web
 ```
 
 **Step 4: Check git log shows history preserved**
@@ -745,20 +926,23 @@ gh pr create \
   --body "$(cat <<'EOF'
 ## Summary
 - Transforms `kcvv-nextjs` into a Turborepo monorepo root
-- Moves Next.js app into `apps/web/` (git history preserved)
+- Switches package manager from npm to **pnpm** (workspaces via `pnpm-workspace.yaml`)
+- Moves Next.js app into `apps/web/` (git history preserved via `git mv`)
 - Adds `packages/api-contract/` skeleton for Phase 1
-- Updates Vercel, CI/CD, husky, CLAUDE.md hierarchy
+- Updates Vercel (`installCommand: pnpm install`), CI/CD (pnpm action), husky/lint-staged, CLAUDE.md hierarchy
 - Zero breaking changes to the live Vercel deployment
 
 ## Part of
 Closes part of #720 (Platform Overhaul — Phase 0)
+Closes #721
 
 ## Test plan
-- [ ] `npm run check-all` passes from `apps/web/`
-- [ ] `npx turbo build --filter=@kcvv/web` succeeds
+- [ ] `pnpm --filter @kcvv/web check-all` passes
+- [ ] `pnpm turbo build --filter=@kcvv/web` succeeds
 - [ ] Vercel preview deployment builds successfully
 - [ ] Git history preserved: `git log --follow apps/web/src/app/page.tsx`
 - [ ] Pre-commit hook runs lint-staged on `apps/web/` files
+- [ ] `pnpm-lock.yaml` committed, `package-lock.json` deleted
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
