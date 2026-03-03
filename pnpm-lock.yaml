@@ -31,6 +31,9 @@ importers:
 
   apps/web:
     dependencies:
+      "@kcvv/api-contract":
+        specifier: workspace:*
+        version: link:../../packages/api-contract
       "@radix-ui/react-accordion":
         specifier: 1.2.12
         version: 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -194,6 +197,16 @@ importers:
       vitest:
         specifier: 4.0.18
         version: 4.0.18(@types/node@24.11.0)(@vitest/ui@4.0.18)(happy-dom@20.8.3)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.31.1)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/api-contract:
+    dependencies:
+      effect:
+        specifier: 3.19.19
+        version: 3.19.19
+    devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
 
 packages:
   "@acemir/cssom@0.9.31":
