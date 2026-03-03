@@ -14,7 +14,14 @@
 import matter from "gray-matter";
 import { remark } from "remark";
 import { visit } from "unist-util-visit";
-import type { Root, Heading, Paragraph, Text, Strong } from "mdast";
+import type {
+  Root,
+  Heading,
+  Paragraph,
+  Text,
+  Strong,
+  PhrasingContent,
+} from "mdast";
 
 /**
  * Parsed frontmatter structure
@@ -181,7 +188,7 @@ function extractText(node: Heading | Paragraph | Text | Strong): string {
 
   if ("children" in node) {
     return node.children
-      .map((child) => {
+      .map((child: PhrasingContent) => {
         if (child.type === "text") return child.value;
         if ("children" in child) {
           // Recursively extract text from any node with children
@@ -214,7 +221,7 @@ function extractStepMetadata(para: Paragraph): {
   const lines: string[] = [];
   let currentLine = "";
 
-  para.children.forEach((child) => {
+  para.children.forEach((child: PhrasingContent) => {
     if (child.type === "strong") {
       // Bold text - likely a label
       currentLine += `**${extractText(child as Strong)}**`;

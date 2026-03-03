@@ -1,11 +1,7 @@
 {
   "name": "kcvv",
   "private": true,
-  "packageManager": "npm@11.9.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@10.30.3",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
@@ -17,8 +13,10 @@
   "devDependencies": {
     "@commitlint/cli": "20.4.3",
     "@commitlint/config-conventional": "20.4.3",
+    "eslint": "9.39.3",
     "husky": "9.1.7",
     "lint-staged": "16.3.1",
+    "prettier": "3.8.1",
     "turbo": "2.8.12"
   },
   "lint-staged": {
