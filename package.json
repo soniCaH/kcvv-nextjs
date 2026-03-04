@@ -22,8 +22,10 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
+      "msgpackr-extract",
       "sharp",
-      "unrs-resolver"
+      "unrs-resolver",
+      "workerd"
     ]
   },
   "lint-staged": {
@@ -32,6 +34,12 @@
       "prettier --write"
     ],
     "apps/web/**/*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ],
+    "apps/api/**/*.{js,ts}": [
+      "prettier --write"
+    ],
+    "apps/api/**/*.{json,md}": [
       "prettier --write"
     ],
     "*.{json,md,yml,yaml}": [
