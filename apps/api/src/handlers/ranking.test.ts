@@ -124,6 +124,24 @@ describe("getRankingHandler", () => {
     expect(result[0]?.points).toBe(48);
   });
 
+  it("falls through to client on schema-invalid cache (valid JSON, wrong shape)", async () => {
+    const result = await Effect.runPromise(
+      getRankingHandler(1, "https://cdn.example.com").pipe(
+        Effect.provide(Layer.succeed(FootbalistoClient, makeClientMock())),
+        Effect.provide(
+          Layer.succeed(KvCacheService, {
+            // Syntactically valid JSON but does not match RankingArray shape
+            get: () => Effect.succeed(JSON.stringify([{ foo: "bar" }])),
+            set: () => Effect.succeed(undefined),
+          }),
+        ),
+      ),
+    );
+
+    expect(result[0]?.position).toBe(1);
+    expect(result[0]?.points).toBe(48);
+  });
+
   it("returns empty array when no competition has teams", async () => {
     const result = await Effect.runPromise(
       getRankingHandler(1, "https://cdn.example.com").pipe(

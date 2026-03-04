@@ -42,7 +42,7 @@ pnpm --filter @kcvv/api dev                        # wrangler dev on :8787
 
 ## Deployment
 
-- **Staging** (on every PR): `wrangler deploy --env staging` → `kcvv-api-staging`
+- **Staging** (on pull requests from this repository): `wrangler deploy --env staging` → `kcvv-api-staging`
 - **Production** (on merge to main): `wrangler deploy` → `kcvv-api`
 
 Staging secrets must be set separately:

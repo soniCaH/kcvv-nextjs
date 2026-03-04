@@ -13,6 +13,8 @@ import {
 } from "../footbalisto/client";
 import { KvCacheService, type KvCacheInterface } from "../cache/kv-cache";
 
+const EXCLUDED_TEAM_ID = 23; // Weitse Gans — uses KCVV pitch but is not KCVV
+
 const rawMatch = {
   id: 1,
   teamId: 1,
@@ -45,7 +47,10 @@ function makeClientMock(): FootbalistoClientInterface {
   return {
     getRawMatches: (_teamId) => Effect.succeed([rawMatch]),
     getRawNextMatches: () =>
-      Effect.succeed([rawMatch, { ...rawMatch, id: 2, teamId: 23 }]), // teamId 23 = Weitse Gans (should be filtered)
+      Effect.succeed([
+        rawMatch,
+        { ...rawMatch, id: 2, teamId: EXCLUDED_TEAM_ID },
+      ]),
     getRawMatchDetail: (_matchId) => Effect.succeed(rawDetail),
     getRawRanking: () => Effect.succeed([]),
     getRawTeamStats: () => Effect.fail(new Error("not needed") as never),
@@ -78,7 +83,7 @@ describe("getMatchesByTeamHandler", () => {
 });
 
 describe("getNextMatchesHandler", () => {
-  it("filters out teamId 23 (Weitse Gans)", async () => {
+  it(`filters out teamId ${EXCLUDED_TEAM_ID} (Weitse Gans)`, async () => {
     const result = await Effect.runPromise(provide(getNextMatchesHandler()));
     expect(result).toHaveLength(1);
     expect(result[0]?.id).toBe(1);
@@ -92,7 +97,7 @@ describe("getMatchDetailHandler", () => {
     expect(result.hasReport).toBe(true);
   });
 
-  it("returns cached MatchDetail without calling client", async () => {
+  it("returns cached MatchDetail without calling client or cache.set", async () => {
     const cachedDetail = {
       id: 99,
       date: "2025-01-15T15:00:00.000Z",
@@ -112,6 +117,8 @@ describe("getMatchDetailHandler", () => {
       getRawTeamStats: () => Effect.fail(new Error("unexpected") as never),
     };
 
+    const kvSetSpy = vi.fn(() => Effect.succeed(undefined));
+
     const result = await Effect.runPromise(
       getMatchDetailHandler(99).pipe(
         Effect.provide(
@@ -120,7 +127,7 @@ describe("getMatchDetailHandler", () => {
         Effect.provide(
           Layer.succeed(KvCacheService, {
             get: () => Effect.succeed(JSON.stringify(cachedDetail)),
-            set: () => Effect.succeed(undefined),
+            set: kvSetSpy,
           }),
         ),
       ),
@@ -128,6 +135,7 @@ describe("getMatchDetailHandler", () => {
 
     expect(result.id).toBe(99);
     expect(result.status).toBe("finished");
+    expect(kvSetSpy).not.toHaveBeenCalled();
   });
 
   it("uses MATCH_DETAIL_PAST TTL for finished matches", async () => {

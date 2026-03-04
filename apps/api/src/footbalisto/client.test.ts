@@ -157,7 +157,8 @@ describe("FootbalistoClient", () => {
 
     expect(result.squadPlayerStatistics[0]?.playerId).toBe(1);
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/statistics/team/123/from/"),
+      // formatPsdDate produces DDMMYYYY (8 digits) — not ISO format
+      expect.stringMatching(/\/statistics\/team\/123\/from\/\d{8}\/to\/\d{8}/),
       expect.objectContaining({
         headers: expect.objectContaining({ "x-api-key": "test-key" }),
       }),

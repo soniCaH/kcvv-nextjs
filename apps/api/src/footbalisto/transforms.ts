@@ -172,7 +172,7 @@ function buildPlayerCardMap(
   for (const event of events) {
     const cardType = parseCardType(event);
     const playerId = event.playerId;
-    if (cardType && playerId) {
+    if (cardType && playerId != null) {
       const existing = cardMap.get(playerId);
       if (existing === "yellow" && cardType === "yellow") {
         cardMap.set(playerId, "double_yellow");
@@ -317,18 +317,18 @@ export function transformPsdTeamStats(
   };
 }
 
-/** logoCdnUrl: e.g. "https://dfaozfi7c7f3s.cloudfront.net/logos" (no trailing slash) */
 export function transformFootbalistoRankingEntry(
   entry: FootbalistoRankingEntry,
   logoCdnUrl: string,
 ): RankingEntry {
+  const cdn = logoCdnUrl.replace(/\/+$/, "");
   const teamName =
     entry.team.club.localName || entry.team.club.name || "Unknown Team";
   return {
     position: entry.rank,
     team_id: entry.team.id,
     team_name: teamName,
-    team_logo: `${logoCdnUrl}/extra_groot/${entry.team.club.id}.png`,
+    team_logo: `${cdn}/extra_groot/${entry.team.club.id}.png`,
     played: entry.matchesPlayed,
     won: entry.wins,
     drawn: entry.draws,
