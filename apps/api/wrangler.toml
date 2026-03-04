@@ -17,6 +17,10 @@ preview_id = "4ee68193dd574f7fa01fba9d53d5d475"
 [env.staging]
 name = "kcvv-api-staging"
 
+[env.staging.vars]
+PSD_API_BASE_URL = "https://clubapi.prosoccerdata.com"
+FOOTBALISTO_LOGO_CDN_URL = "https://dfaozfi7c7f3s.cloudfront.net/logos"
+
 [[env.staging.kv_namespaces]]
 binding = "PSD_CACHE"
 id = "4ee68193dd574f7fa01fba9d53d5d475"
