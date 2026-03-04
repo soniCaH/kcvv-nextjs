@@ -53,6 +53,8 @@ export class MatchLineupPlayer extends S.Class<MatchLineupPlayer>("MatchLineupPl
   number: S.optional(S.Number),
   minutesPlayed: S.optional(S.Number),
   isCaptain: S.Boolean,
+  isKeeper: S.optional(S.Boolean),
+  position: S.optional(S.String),
   status: S.Literal("starter", "substitute", "substituted", "subbed_in", "unknown"),
   card: S.optional(CardType),
 }) {}
