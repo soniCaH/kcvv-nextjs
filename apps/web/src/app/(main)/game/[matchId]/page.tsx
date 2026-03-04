@@ -115,7 +115,7 @@ export default async function MatchPage({
     notFound();
   }
 
-  // Fetch match details from Footbalisto
+  // Fetch match details via BffService
   const match = await fetchMatchOrNotFound(numericId);
 
   // Transform data for display

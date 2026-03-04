@@ -166,16 +166,16 @@ async function fetchTeamOrNotFound(slug: string): Promise<TeamWithRoster> {
 }
 
 /**
- * Footbalisto data for team matches and standings
+ * BFF data for team matches and standings
  */
-interface FootbalistoData {
+interface BffData {
   matches: readonly Match[];
   standings: readonly RankingEntry[];
   teamId: number;
 }
 
 /**
- * Fetch matches and standings from Footbalisto if team has a VoetbalVlaanderen ID
+ * Fetch matches and standings from the BFF if team has a VoetbalVlaanderen ID
  *
  * Uses field_vv_id (with field_vv_id_2 as fallback) for team ID.
  * Uses field_league_id for the ranking/standings API.
@@ -183,10 +183,10 @@ interface FootbalistoData {
  * Returns null if team doesn't have a VV ID or if fetching fails.
  * Failures are logged but don't break the page - the tabs just won't show.
  */
-async function fetchFootbalistoData(
+async function fetchBffData(
   vvId: string | null | undefined,
   leagueId: number | null | undefined,
-): Promise<FootbalistoData | null> {
+): Promise<BffData | null> {
   if (!vvId) {
     return null;
   }
@@ -230,7 +230,7 @@ async function fetchFootbalistoData(
 
     return { matches, standings, teamId };
   } catch (error) {
-    console.error(`[team] Failed to fetch Footbalisto data:`, error);
+    console.error(`[team] Failed to fetch BFF data:`, error);
     return null;
   }
 }
@@ -256,12 +256,12 @@ export default async function TeamPage({ params }: TeamPageProps) {
     `[team] Resolved team -> id: ${team.id}, alias: ${team.attributes.path?.alias}`,
   );
 
-  // Compute Footbalisto ID with fallback (field_vv_id_2 for teams in multiple leagues)
+  // Compute VoetbalVlaanderen ID with fallback (field_vv_id_2 for teams in multiple leagues)
   const vvId = team.attributes.field_vv_id || team.attributes.field_vv_id_2;
 
-  // Fetch Footbalisto data if team has a VoetbalVlaanderen ID
-  const footbalistoData = vvId
-    ? await fetchFootbalistoData(vvId, team.attributes.field_league_id)
+  // Fetch matches and standings from BFF if team has a VoetbalVlaanderen ID
+  const bffData = vvId
+    ? await fetchBffData(vvId, team.attributes.field_league_id)
     : null;
 
   // Transform data for display
@@ -282,11 +282,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
       bodyContent={team.attributes.body?.processed ?? undefined}
       players={players.map(transformPlayerToRoster)}
       staff={staff.map(transformStaffToMember)}
-      matches={footbalistoData?.matches.map(transformMatchToSchedule) ?? []}
-      standings={
-        footbalistoData?.standings.map(transformRankingToStandings) ?? []
-      }
-      highlightTeamId={footbalistoData?.teamId}
+      matches={bffData?.matches.map(transformMatchToSchedule) ?? []}
+      standings={bffData?.standings.map(transformRankingToStandings) ?? []}
+      highlightTeamId={bffData?.teamId}
       teamSlug={slug}
     />
   );
