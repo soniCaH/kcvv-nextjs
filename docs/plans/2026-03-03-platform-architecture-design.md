@@ -44,6 +44,7 @@ The current KCVV platform consists of four separate repositories spanning two la
 kcvv-nextjs/ (becomes monorepo root, kept on same GitHub repo)
 ├── apps/
 │   ├── web/              ← Next.js 16 website (moved from repo root)
+│   ├── api/              ← Cloudflare Worker BFF (new) — wrangler.toml + src/index.ts
 │   └── studio/           ← Sanity Studio v3 (new)
 ├── packages/
 │   └── api-contract/     ← Shared Effect Schema types + HttpApi definition (new)
@@ -52,7 +53,7 @@ kcvv-nextjs/ (becomes monorepo root, kept on same GitHub repo)
 └── CLAUDE.md             ← root-level cross-project context
 ```
 
-> `kcvv-api` (Cloudflare Worker) lives in a **separate repository** because Cloudflare Workers deployment tooling (Wrangler) has different CI requirements from Turborepo-managed apps. It consumes `packages/api-contract` via a published package or workspace reference.
+> `apps/api` (Cloudflare Worker) lives **inside the monorepo**. Wrangler (Cloudflare's deployment CLI) integrates cleanly with Turborepo — `wrangler dev` and `wrangler deploy` run as turbo pipeline tasks alongside the rest of the workspace. It consumes `packages/api-contract` via workspace reference.
 
 ### Data Flow
 
@@ -278,11 +279,11 @@ Only changed packages and their dependents are tested/built on each PR.
 
 ### Deployment Triggers
 
-| App           | Trigger                       | Target                          |
-| ------------- | ----------------------------- | ------------------------------- |
-| `apps/web`    | Merge to main                 | Vercel (automatic, existing)    |
-| `apps/studio` | Merge to main                 | Vercel / sanity.io (automatic)  |
-| `kcvv-api`    | Merge to main (separate repo) | Cloudflare Workers via Wrangler |
+| App           | Trigger       | Target                          |
+| ------------- | ------------- | ------------------------------- |
+| `apps/web`    | Merge to main | Vercel (automatic, existing)    |
+| `apps/studio` | Merge to main | Vercel / sanity.io (automatic)  |
+| `apps/api`    | Merge to main | Cloudflare Workers via Wrangler |
 
 ### Repository Visibility
 
@@ -315,7 +316,7 @@ Each phase keeps the live site fully functional throughout.
 
 ### Phase 2 — Effect BFF on Cloudflare Workers
 
-- Create `kcvv-api` GitHub repository
+- Create `apps/api/` in the monorepo with Wrangler + TypeScript setup
 - Implement `HttpApiBuilder.implement(PsdApi)` with Cloudflare KV caching
 - Migrate endpoint-combining logic from Lambda → Effect `Effect.all`
 - Deploy to Cloudflare Workers, run in parallel with AWS for a short validation window
@@ -360,6 +361,6 @@ Continue existing migration phases with the full typed stack available:
 ## 12. Open Questions / Future Decisions
 
 - **Sanity dataset privacy:** Free tier is public-only. If member-only content is ever needed, gate at Next.js middleware layer (check session before fetching) rather than upgrading Sanity tier.
-- **`kcvv-api` monorepo inclusion:** Kept separate now due to Wrangler tooling. If Turborepo + Wrangler integration matures, `apps/api/` can move into the monorepo without breaking changes.
+- **`apps/api` deployment:** Wrangler integrates cleanly with Turborepo. CD runs `wrangler deploy` via a turbo pipeline task, same as `vercel --prod` for the web app.
 - **Kiosk mode (#520):** If it needs its own deployment unit, add as `apps/kiosk/` in the monorepo.
 - **Admin UI beyond Sanity Studio:** If custom CRUD forms are ever needed (beyond what Sanity handles), Cloudflare Access (free ≤50 users, email OTP) is the preferred auth solution for an `apps/admin/` Next.js app.

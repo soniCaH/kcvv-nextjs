@@ -14,7 +14,7 @@
 | Next.js web   | `apps/web/`              | Vercel             | Club website                    |
 | Sanity Studio | `apps/studio/`           | sanity.io          | CMS admin UI                    |
 | API contract  | `packages/api-contract/` | (library)          | Shared Effect schemas + HttpApi |
-| PSD BFF       | `kcvv-api` repo          | Cloudflare Workers | ProSoccerData proxy + cache     |
+| BFF           | `apps/api/`              | Cloudflare Workers | ProSoccerData proxy + cache     |
 
 **Design doc:** `docs/plans/2026-03-03-platform-architecture-design.md`
 **GitHub Project:** https://github.com/users/soniCaH/projects/2
