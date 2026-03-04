@@ -13,3 +13,10 @@ FOOTBALISTO_LOGO_CDN_URL = "https://dfaozfi7c7f3s.cloudfront.net/logos"
 binding = "PSD_CACHE"
 id = "82533c23954d4ed98871dd53465c5c0e"
 preview_id = "4ee68193dd574f7fa01fba9d53d5d475"
+
+[env.staging]
+name = "kcvv-api-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "PSD_CACHE"
+id = "4ee68193dd574f7fa01fba9d53d5d475"

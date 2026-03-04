@@ -36,8 +36,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-# Wrangler local dev secrets (equivalent of .env for Workers)
+# Wrangler local dev secrets and build cache
 .dev.vars
+apps/api/.wrangler/
 
 # vercel
 .vercel
