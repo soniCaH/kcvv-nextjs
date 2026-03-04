@@ -6,7 +6,7 @@
 import type { Metadata } from "next";
 import { Effect } from "effect";
 import { runPromise } from "@/lib/effect/runtime";
-import { FootbalistoService } from "@/lib/effect/services/FootbalistoService";
+import { BffService } from "@/lib/effect/services/BffService";
 import type { Match } from "@/lib/effect/schemas/match.schema";
 import {
   ScheurkalenderPage,
@@ -22,8 +22,8 @@ export const metadata: Metadata = {
 async function fetchUpcomingMatches(): Promise<Match[]> {
   const matches = await runPromise(
     Effect.gen(function* () {
-      const footbalisto = yield* FootbalistoService;
-      return yield* footbalisto.getNextMatches();
+      const bff = yield* BffService;
+      return yield* bff.getNextMatches();
     }).pipe(
       Effect.catchAll((error) => {
         console.error("[Scheurkalender] Failed to fetch matches:", error);

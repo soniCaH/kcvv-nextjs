@@ -7,8 +7,8 @@ import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { runPromise } from "@/lib/effect/runtime";
-import { FootbalistoService } from "@/lib/effect/services/FootbalistoService";
-import type { MatchDetail } from "@/lib/effect/schemas/match.schema";
+import { BffService } from "@/lib/effect/services/BffService";
+import type { MatchDetail } from "@kcvv/api-contract";
 import { MatchDetailView } from "@/components/match/MatchDetailView";
 import {
   transformHomeTeam,
@@ -49,8 +49,8 @@ export async function generateMetadata({
   try {
     const match = await runPromise(
       Effect.gen(function* () {
-        const footbalisto = yield* FootbalistoService;
-        return yield* footbalisto.getMatchDetail(numericId);
+        const bff = yield* BffService;
+        return yield* bff.getMatchDetail(numericId);
       }),
     );
 
@@ -84,8 +84,8 @@ async function fetchMatchOrNotFound(matchId: number): Promise<MatchDetail> {
   try {
     return await runPromise(
       Effect.gen(function* () {
-        const footbalisto = yield* FootbalistoService;
-        return yield* footbalisto.getMatchDetail(matchId);
+        const bff = yield* BffService;
+        return yield* bff.getMatchDetail(matchId);
       }),
     );
   } catch {

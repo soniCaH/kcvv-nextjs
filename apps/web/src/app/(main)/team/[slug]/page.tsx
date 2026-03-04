@@ -12,8 +12,8 @@ import {
   type TeamWithRoster,
   NotFoundError,
 } from "@/lib/effect/services/DrupalService";
-import { FootbalistoService } from "@/lib/effect/services/FootbalistoService";
-import type { Match, RankingEntry } from "@/lib/effect/schemas";
+import { BffService } from "@/lib/effect/services/BffService";
+import type { Match, RankingEntry } from "@kcvv/api-contract";
 import { TeamDetail } from "@/components/team/TeamDetail";
 import {
   parseAgeGroup,
@@ -203,17 +203,17 @@ async function fetchFootbalistoData(
   try {
     const [matches, standings] = await runPromise(
       Effect.gen(function* () {
-        const footbalisto = yield* FootbalistoService;
+        const bff = yield* BffService;
 
         // Fetch matches and standings in parallel using Effect.all
         const [matchesResult, standingsResult] = yield* Effect.all(
           [
-            footbalisto
+            bff
               .getMatches(teamId)
               .pipe(
                 Effect.catchAll(() => Effect.succeed([] as readonly Match[])),
               ),
-            footbalisto
+            bff
               .getRanking(rankingId)
               .pipe(
                 Effect.catchAll(() =>
