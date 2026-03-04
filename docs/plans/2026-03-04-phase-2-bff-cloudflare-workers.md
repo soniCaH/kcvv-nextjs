@@ -19,6 +19,281 @@
   npx wrangler kv namespace create PSD_CACHE
   npx wrangler kv namespace create PSD_CACHE --preview
   ```
+- Obtain the three ProSoccerData API credentials from the existing Lambda env (`serverless.yml` or AWS Secrets): `PSD_API_KEY`, `PSD_API_CLUB`, `PSD_API_AUTH`. These must be set as Wrangler secrets (see Task 2).
+
+---
+
+## ⚠️ Architecture Amendments (discovered after Lambda investigation)
+
+> These amendments correct issues found by reading `kcvv-api-psd` Lambda code. They OVERRIDE the code in Tasks 2, 6, and 7 below.
+
+### What changed
+
+The plan was originally written assuming `apps/api` would call `https://footbalisto.be` (the old Lambda BFF). Investigation revealed:
+
+1. **`footbalisto.be` IS the Lambda** — it's the custom domain on the existing API Gateway. The new CF Worker REPLACES it.
+2. **`apps/api` must call ProSoccerData directly** at `https://clubapi.prosoccerdata.com`.
+3. **PSD requires auth headers** on every request (from `kcvv-api-psd/api/util.js`):
+   ```
+   x-api-key:       PSD_API_KEY env var
+   x-api-club:      PSD_API_CLUB env var
+   Authorization:   PSD_API_AUTH env var
+   Accept-Language: nl-BE
+   Content-Type:    application/json
+   ```
+4. **Season discovery is required**: PSD match endpoint needs a season ID (`/games/team/{teamId}/seasons/{seasonId}`). The CF Worker must call `GET /seasons` to find the current season (where `start <= now <= end`) and cache it in KV with a 24h TTL.
+5. **PSD API documentation**: `https://kcvv.prosoccerdata.com/api/v2/swagger-ui.html?urls.primaryName=club-api`
+6. **Future enhancement — new lineup endpoint**: A newer PSD endpoint provides player positions in lineups (useful for keeper/position display). Investigate via Swagger UI and add in a follow-up task. Do NOT block Phase 2 on this.
+
+### Scope limit (user instruction)
+
+> Only implement the 5 endpoints currently used by `apps/web`. Do not add `/matches/prev`, `/calendar`, `/events`, or `/share/instagram`.
+
+### PSD endpoint mapping
+
+| CF Worker endpoint         | PSD endpoint                                                                                                      | Notes                                                |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `GET /matches/{teamId}`    | `GET /games/team/{teamId}/seasons/{seasonId}`                                                                     | Needs current season ID from KV/PSD                  |
+| `GET /matches/next`        | PSD queries per team                                                                                              | See below                                            |
+| `GET /match/{matchId}`     | `GET /games/{matchId}/info`                                                                                       | Response: `{ general, lineup, substitutes, events }` |
+| `GET /ranking/{teamId}`    | `GET /teams/{teamId}/ranking`                                                                                     | Response: array of competitions                      |
+| `GET /stats/team/{teamId}` | `GET /statistics/team/{teamId}/from/{from}/to/{to}` + `GET /statistics/club/from/{from}/to/{to}?teamIds={teamId}` | Date range from current season                       |
+
+**Next matches implementation note**: The Lambda served `/matches/next` from DynamoDB (all teams pre-cached). For the CF Worker, implement `/matches/next` as: load all season matches for each team (using the same cached match data from `/matches/{teamId}`), filter to future matches, return the next one per team. The match cache from `getMatchesByTeam` serves double duty. If `include` query params are passed (specific team IDs), only query those teams.
+
+### Corrected `wrangler.toml` (replaces Task 2 Step 3)
+
+```toml
+name = "kcvv-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+PSD_API_BASE_URL = "https://clubapi.prosoccerdata.com"
+FOOTBALISTO_LOGO_CDN_URL = "https://dfaozfi7c7f3s.cloudfront.net/logos"
+# PSD_API_KEY, PSD_API_CLUB, PSD_API_AUTH are secrets — set via wrangler secret put (never in toml)
+
+[[kv_namespaces]]
+binding = "PSD_CACHE"
+id = "PROD_KV_ID"
+preview_id = "PREVIEW_KV_ID"
+```
+
+After deploying for the first time, set secrets:
+
+```bash
+npx wrangler secret put PSD_API_KEY
+npx wrangler secret put PSD_API_CLUB
+npx wrangler secret put PSD_API_AUTH
+```
+
+For GitHub Actions deployment, also add these as GitHub repository secrets: `PSD_API_KEY`, `PSD_API_CLUB`, `PSD_API_AUTH` and expose them in the `deploy-api` CI job.
+
+### Corrected `env.ts` (replaces Task 6 Step 3)
+
+```typescript
+import { Context } from "effect";
+
+export interface WorkerEnv {
+  readonly PSD_API_BASE_URL: string; // https://clubapi.prosoccerdata.com
+  readonly FOOTBALISTO_LOGO_CDN_URL: string;
+  readonly PSD_API_KEY: string; // wrangler secret
+  readonly PSD_API_CLUB: string; // wrangler secret
+  readonly PSD_API_AUTH: string; // wrangler secret (Authorization header value)
+  readonly PSD_CACHE: KVNamespace;
+}
+
+export class WorkerEnvTag extends Context.Tag("WorkerEnv")<
+  WorkerEnvTag,
+  WorkerEnv
+>() {}
+```
+
+Update the `makeEnvLayer` helper in `kv-cache.test.ts` and `client.test.ts` to use `PSD_API_BASE_URL` instead of `FOOTBALISTO_API_URL`, and add `PSD_API_KEY`, `PSD_API_CLUB`, `PSD_API_AUTH` stubs:
+
+```typescript
+function makeEnvLayer(mockKv = {} as KVNamespace) {
+  return Layer.succeed(WorkerEnvTag, {
+    PSD_API_BASE_URL: "https://clubapi.prosoccerdata.com",
+    FOOTBALISTO_LOGO_CDN_URL: "https://cdn.example.com",
+    PSD_API_KEY: "test-key",
+    PSD_API_CLUB: "test-club",
+    PSD_API_AUTH: "test-auth",
+    PSD_CACHE: mockKv as unknown as KVNamespace,
+  });
+}
+```
+
+### Corrected `client.ts` (replaces Task 7 Step 3)
+
+The `fetchJson` helper must:
+
+1. Accept a `headers` parameter for PSD auth
+2. Use `PSD_API_BASE_URL` (not `FOOTBALISTO_API_URL`)
+3. Call PSD endpoints (not footbalisto.be paths)
+
+Key changes in `FootbalistoClientLive`:
+
+```typescript
+export const FootbalistoClientLive = Layer.effect(
+  FootbalistoClient,
+  Effect.gen(function* () {
+    const env = yield* WorkerEnvTag;
+    const base = env.PSD_API_BASE_URL; // https://clubapi.prosoccerdata.com
+    const cache = yield* KvCacheService;
+
+    const psdHeaders = {
+      "x-api-key": env.PSD_API_KEY,
+      "x-api-club": env.PSD_API_CLUB,
+      Authorization: env.PSD_API_AUTH,
+      "Accept-Language": "nl-BE",
+      "Content-Type": "application/json",
+    };
+
+    /** Get current season ID (cached 24h in KV) */
+    const getCurrentSeasonId = (): Effect.Effect<number, FootbalistoError> =>
+      Effect.gen(function* () {
+        const cacheKey = "psd:current-season-id";
+        const cached = yield* cache.get(cacheKey);
+        if (cached) return parseInt(cached, 10);
+
+        const seasons = yield* fetchJson(
+          `${base}/seasons`,
+          PsdSeasonsSchema,
+          psdHeaders,
+        );
+        const now = Date.now();
+        const current = seasons.find(
+          (s) =>
+            new Date(s.start).getTime() <= now &&
+            new Date(s.end).getTime() >= now,
+        );
+        if (!current)
+          return yield* Effect.fail(
+            new FootbalistoError("No active season found"),
+          );
+        yield* cache.set(cacheKey, String(current.id), 60 * 60 * 24);
+        return current.id;
+      });
+
+    return {
+      getRawMatches: (teamId) =>
+        Effect.gen(function* () {
+          const seasonId = yield* getCurrentSeasonId();
+          // PSD returns { content: [...] } — data.content is the match list
+          return yield* fetchJson(
+            `${base}/games/team/${teamId}/seasons/${seasonId}`,
+            PsdMatchListSchema, // wraps S.Array(PsdMatchItem)
+            psdHeaders,
+          );
+        }),
+      getRawNextMatches: () =>
+        // Handled in matches handler using cached per-team data — see handler note below
+        Effect.succeed([]), // placeholder; real impl in handler
+      getRawMatchDetail: (matchId) =>
+        fetchJson(
+          `${base}/games/${matchId}/info`,
+          FootbalistoMatchDetailResponse,
+          psdHeaders,
+        ),
+      getRawRanking: (teamId) =>
+        fetchJson(
+          `${base}/teams/${teamId}/ranking`,
+          FootbalistoRankingArray,
+          psdHeaders,
+        ),
+      getRawTeamStats: (teamId) =>
+        Effect.gen(function* () {
+          const seasonId = yield* getCurrentSeasonId();
+          // Stats need season date range — get from KV-cached season info
+          // Simpler: keep stats as a pass-through until we have season dates in KV
+          // TODO: implement with season date range once season service is complete
+          return yield* fetchJson(
+            `${base}/statistics/team/${teamId}/from/01012025/to/31122025`, // placeholder dates
+            FootbalistoTeamStatsSchema,
+            psdHeaders,
+          );
+        }),
+    };
+  }),
+);
+```
+
+**Add `PsdSeasonsSchema` to `schemas.ts`:**
+
+```typescript
+export class PsdSeason extends S.Class<PsdSeason>("PsdSeason")({
+  id: S.Number,
+  name: S.String,
+  start: S.String, // ISO date string
+  end: S.String, // ISO date string
+}) {}
+export const PsdSeasonsSchema = S.Array(PsdSeason);
+```
+
+**Add `PsdMatchListSchema` for the `/games/team/{teamId}/seasons/{seasonId}` response:**
+
+```typescript
+// NOTE: PSD match list items may differ from the existing FootbalistoMatch schema.
+// Verify against actual PSD response during implementation and adjust fields.
+// The FootbalistoMatch schema (from apps/web) reflects the Lambda-processed format.
+// See Swagger UI: https://kcvv.prosoccerdata.com/api/v2/swagger-ui.html?urls.primaryName=club-api
+export class PsdMatchListItem extends S.Class<PsdMatchListItem>(
+  "PsdMatchListItem",
+)({
+  id: S.Number,
+  // Add remaining fields after verifying against actual PSD response
+}) {}
+export const PsdMatchListSchema = S.Struct({
+  content: S.Array(PsdMatchListItem),
+});
+```
+
+**`getRawNextMatches` implementation in the handler** (replaces the placeholder above):
+Rather than the simple "fetch all teams, N+1 calls" approach, implement next matches in the handler by reusing per-team cached match data:
+
+```typescript
+// In getNextMatchesHandler — use already-cached team match lists
+export const getNextMatchesHandler = (
+  include?: number[],
+  exclude?: number[],
+): Effect.Effect<...> =>
+  Effect.gen(function* () {
+    const cache = yield* KvCacheService;
+    // Team IDs: use include param if provided, otherwise load from KV team list
+    const teamIds = include ?? (yield* getTeamIdsFromCache());
+    const now = Date.now();
+    const nextMatches = yield* Effect.all(
+      teamIds.map((teamId) =>
+        getMatchesByTeamHandler(teamId).pipe(
+          Effect.map((matches) =>
+            matches
+              .filter((m) => new Date(m.date).getTime() > now)
+              .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]
+          )
+        )
+      ),
+      { concurrency: 5 },
+    );
+    return nextMatches.filter(Boolean);
+  });
+```
+
+**Stats date range**: Once season service is built, use `season.start` and `season.end` formatted as `DDMMYYYY` for the stats URL. The Lambda used `moment.tz(currentSeason.start * 1000, 'Europe/Brussels')` since it stored Unix timestamps; PSD `/seasons` returns ISO strings.
+
+### Test mock updates for Task 7
+
+In `client.test.ts`, update the mock URL assertions to use PSD paths:
+
+```typescript
+expect(global.fetch).toHaveBeenCalledWith(
+  expect.stringContaining("/games/"), // not "/matches/"
+  expect.objectContaining({
+    headers: expect.objectContaining({ "x-api-key": "test-key" }),
+  }),
+);
+```
 
 ---
 
