@@ -6,7 +6,7 @@
 
 ## Authentication (required on every request)
 
-```
+```http
 x-api-key:       <PSD_API_KEY>
 x-api-club:      <PSD_API_CLUB>
 Authorization:   <PSD_API_AUTH>

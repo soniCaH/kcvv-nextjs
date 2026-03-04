@@ -34,7 +34,7 @@ The plan was originally written assuming `apps/api` would call `https://footbali
 1. **`footbalisto.be` IS the Lambda** — it's the custom domain on the existing API Gateway. The new CF Worker REPLACES it.
 2. **`apps/api` must call ProSoccerData directly** at `https://clubapi.prosoccerdata.com`.
 3. **PSD requires auth headers** on every request (from `kcvv-api-psd/api/util.js`):
-   ```
+   ```http
    x-api-key:       PSD_API_KEY env var
    x-api-club:      PSD_API_CLUB env var
    Authorization:   PSD_API_AUTH env var
@@ -71,6 +71,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 PSD_API_BASE_URL = "https://clubapi.prosoccerdata.com"
+# FOOTBALISTO_LOGO_CDN_URL: fallback logo source — use RankingVO.clubLogo / Club.logo (direct from PSD) first; fall back to CDN construction when the field is empty
 FOOTBALISTO_LOGO_CDN_URL = "https://dfaozfi7c7f3s.cloudfront.net/logos"
 # PSD_API_KEY, PSD_API_CLUB, PSD_API_AUTH are secrets — set via wrangler secret put (never in toml)
 
@@ -374,23 +375,7 @@ Expected: `Switched to a new branch 'feat/phase-2-bff-cloudflare-workers'`
 
 **Step 3: Create `apps/api/wrangler.toml`**
 
-Replace `PROD_KV_ID` and `PREVIEW_KV_ID` with the IDs from the prerequisite step:
-
-```toml
-name = "kcvv-api"
-main = "src/index.ts"
-compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat"]
-
-[vars]
-FOOTBALISTO_API_URL = "https://footbalisto.be"
-FOOTBALISTO_LOGO_CDN_URL = "https://dfaozfi7c7f3s.cloudfront.net/logos"
-
-[[kv_namespaces]]
-binding = "PSD_CACHE"
-id = "PROD_KV_ID"
-preview_id = "PREVIEW_KV_ID"
-```
+> **Superseded** — see the **Corrected `wrangler.toml`** in the amendments section at the top of this file. Use `PSD_API_BASE_URL` and PSD auth secrets instead of `FOOTBALISTO_API_URL`.
 
 **Step 4: Create `apps/api/vitest.config.ts`**
 
@@ -2440,6 +2425,7 @@ src/
 - Raw Footbalisto schemas stay in `src/footbalisto/schemas.ts` — normalized types come from `@kcvv/api-contract`
 - KV cache is always attempted before hitting Footbalisto API
 - `getNextMatches` filters out teamId 23 (Weitse Gans — not KCVV, plays on KCVV pitch)
+- All schemas use Effect Schema (`import { Schema as S } from "effect"`) — no `S.Unknown`, every field must be explicitly typed (see `packages/api-contract/CLAUDE.md`)
 
 ## Local dev
 
@@ -2551,7 +2537,7 @@ Expected: FAIL — `Cannot find module './BffService'`
 
 Add to `apps/web/.env.local` (create the file if it does not exist):
 
-```
+```env
 BFF_URL=http://localhost:8787
 ```
 
@@ -2672,19 +2658,24 @@ Replace the `FootbalistoServiceLive` import and usage with `BffServiceLive`:
 ```typescript
 import { Effect, Layer, ManagedRuntime } from "effect";
 import { DrupalService, DrupalServiceLive } from "./services/DrupalService";
-import { FootbalistoService } from "./services/FootbalistoService";
-import { BffService, BffServiceLive } from "./services/BffService";
+import {
+  FootbalistoService,
+  FootbalistoServiceLive,
+} from "./services/FootbalistoService";
 
-export const AppLayer = Layer.mergeAll(DrupalServiceLive, BffServiceLive);
+export const AppLayer = Layer.mergeAll(
+  DrupalServiceLive,
+  FootbalistoServiceLive,
+);
 
 export const runtime = ManagedRuntime.make(AppLayer);
 
 export const runPromise = <A, E>(
-  effect: Effect.Effect<A, E, DrupalService | FootbalistoService | BffService>,
+  effect: Effect.Effect<A, E, DrupalService | FootbalistoService>,
 ) => runtime.runPromise(effect);
 
 export const runPromiseWithLogging = <A, E>(
-  effect: Effect.Effect<A, E, DrupalService | FootbalistoService | BffService>,
+  effect: Effect.Effect<A, E, DrupalService | FootbalistoService>,
 ) =>
   runtime.runPromise(
     effect.pipe(
