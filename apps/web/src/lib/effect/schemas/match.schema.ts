@@ -1,10 +1,33 @@
 /**
  * Footbalisto API Match Schema
- * Match data from external API
+ * Raw Footbalisto API types (implementation detail of FootbalistoService).
+ * Normalized types (Match, MatchDetail, RankingEntry, etc.) live in @kcvv/api-contract.
  */
 
 import { Schema as S } from "effect";
 import { DateFromStringOrDate } from "./common.schema";
+
+// Re-export normalized types from api-contract for backward compatibility
+export {
+  CardType,
+  Match,
+  MatchDetail,
+  MatchesArray,
+  MatchesResponse,
+  MatchLineup,
+  MatchLineupPlayer,
+  MatchStatus,
+  MatchTeam,
+  PlayerStats,
+  RankingArray,
+  RankingEntry,
+  RankingResponse,
+  TeamStats,
+} from "@kcvv/api-contract";
+
+// ============================================================================
+// Raw Footbalisto API Schemas (BFF implementation details)
+// ============================================================================
 
 /**
  * Club information in Footbalisto API response
@@ -49,96 +72,9 @@ export class FootbalistoMatch extends S.Class<FootbalistoMatch>(
 }) {}
 
 /**
- * Team information in normalized match format
- */
-export class MatchTeam extends S.Class<MatchTeam>("MatchTeam")({
-  id: S.Number,
-  name: S.String,
-  logo: S.optional(S.String),
-  score: S.optional(S.Number),
-}) {}
-
-/**
- * Match status (normalized)
- */
-export const MatchStatus = S.Literal(
-  "scheduled",
-  "live",
-  "finished",
-  "postponed",
-  "cancelled",
-);
-
-/**
- * Normalized match data for UI consumption
- */
-export class Match extends S.Class<Match>("Match")({
-  id: S.Number,
-  date: DateFromStringOrDate,
-  time: S.optional(S.String),
-  venue: S.optional(S.String),
-  home_team: MatchTeam,
-  away_team: MatchTeam,
-  status: MatchStatus,
-  round: S.optional(S.String),
-  competition: S.optional(S.String),
-}) {}
-
-/**
  * Array of Footbalisto matches (raw API format)
  */
 export const FootbalistoMatchesArray = S.Array(FootbalistoMatch);
-
-/**
- * Array of matches (normalized format)
- */
-export const MatchesArray = S.Array(Match);
-
-/**
- * Matches response from Footbalisto (normalized)
- */
-export class MatchesResponse extends S.Class<MatchesResponse>(
-  "MatchesResponse",
-)({
-  matches: MatchesArray,
-  total: S.optional(S.Number),
-}) {}
-
-/**
- * Ranking entry in league table
- */
-export class RankingEntry extends S.Class<RankingEntry>("RankingEntry")({
-  position: S.Number,
-  team_id: S.Number,
-  team_name: S.String,
-  team_logo: S.optional(S.String),
-  played: S.Number,
-  won: S.Number,
-  drawn: S.Number,
-  lost: S.Number,
-  goals_for: S.Number,
-  goals_against: S.Number,
-  goal_difference: S.Number,
-  points: S.Number,
-  form: S.optional(S.String), // Recent results like "WWDL"
-}) {}
-
-/**
- * Array of ranking entries
- */
-export const RankingArray = S.Array(RankingEntry);
-
-/**
- * Ranking response from Footbalisto (normalized)
- */
-export class RankingResponse extends S.Class<RankingResponse>(
-  "RankingResponse",
-)({
-  ranking: RankingArray,
-  season: S.optional(S.String),
-  competition: S.optional(S.String),
-  last_updated: S.optional(DateFromStringOrDate),
-}) {}
 
 // ============================================================================
 // Raw Footbalisto Ranking API Schemas
@@ -199,46 +135,9 @@ export class FootbalistoRankingCompetition extends S.Class<FootbalistoRankingCom
  */
 export const FootbalistoRankingArray = S.Array(FootbalistoRankingCompetition);
 
-/**
- * Player statistics
- */
-export class PlayerStats extends S.Class<PlayerStats>("PlayerStats")({
-  player_id: S.Number,
-  player_name: S.String,
-  team_id: S.Number,
-  matches_played: S.Number,
-  goals: S.Number,
-  assists: S.optional(S.Number),
-  yellow_cards: S.optional(S.Number),
-  red_cards: S.optional(S.Number),
-  minutes_played: S.optional(S.Number),
-}) {}
-
-/**
- * Team statistics
- */
-export class TeamStats extends S.Class<TeamStats>("TeamStats")({
-  team_id: S.Number,
-  team_name: S.String,
-  total_matches: S.Number,
-  wins: S.Number,
-  draws: S.Number,
-  losses: S.Number,
-  goals_scored: S.Number,
-  goals_conceded: S.Number,
-  clean_sheets: S.optional(S.Number),
-  top_scorers: S.optional(S.Array(PlayerStats)),
-}) {}
-
 // ============================================================================
 // Match Event Schemas (for /match/{id} endpoint)
 // ============================================================================
-
-/**
- * Card type for match events
- */
-export const CardType = S.Literal("yellow", "red", "double_yellow");
-export type CardType = S.Schema.Type<typeof CardType>;
 
 /**
  * Action object within a Footbalisto match event
@@ -246,39 +145,25 @@ export type CardType = S.Schema.Type<typeof CardType>;
 export class FootbalistoEventAction extends S.Class<FootbalistoEventAction>(
   "FootbalistoEventAction",
 )({
-  /** Action type (e.g., "CARD", "GOAL") */
   type: S.String,
-  /** Action subtype for cards (e.g., "YELLOW", "RED", "DOUBLE_YELLOW") */
   subtype: S.optional(S.NullOr(S.String)),
-  /** Sort order for display */
   sortOrder: S.optional(S.Number),
-  /** Icon URL */
   icon: S.optional(S.NullOr(S.String)),
-  /** Action ID */
   id: S.optional(S.Number),
 }) {}
 
 /**
  * Raw match event from Footbalisto API
- *
- * Events contain an action object with type/subtype for structured event data.
  */
 export class FootbalistoMatchEvent extends S.Class<FootbalistoMatchEvent>(
   "FootbalistoMatchEvent",
 )({
-  /** Action details containing type and subtype */
   action: FootbalistoEventAction,
-  /** Minute when the event occurred */
   minute: S.optional(S.NullOr(S.Number)),
-  /** Player ID associated with the event */
   playerId: S.optional(S.NullOr(S.Number)),
-  /** Player name */
   playerName: S.optional(S.NullOr(S.String)),
-  /** Club ID (to determine home/away) */
   clubId: S.optional(S.NullOr(S.Number)),
-  /** Goals by home team at this point (for goal events) */
   goalsHome: S.optional(S.NullOr(S.Number)),
-  /** Goals by away team at this point (for goal events) */
   goalsAway: S.optional(S.NullOr(S.Number)),
 }) {}
 
@@ -297,7 +182,7 @@ export class FootbalistoLineupPlayer extends S.Class<FootbalistoLineupPlayer>(
   minutesPlayed: S.optional(S.NullOr(S.Number)),
   captain: S.optional(S.Boolean),
   playerId: S.optional(S.NullOr(S.Number)),
-  status: S.optional(S.String), // 'basis', 'invaller', 'wissel'
+  status: S.optional(S.String),
   changed: S.optional(S.Boolean),
 }) {}
 
@@ -318,8 +203,8 @@ export class FootbalistoMatchDetailGeneral extends S.Class<FootbalistoMatchDetai
   "FootbalistoMatchDetailGeneral",
 )({
   id: S.Number,
-  date: S.String, // Format: "2025-07-30 19:45"
-  time: S.optional(S.String), // Legacy field
+  date: S.String,
+  time: S.optional(S.String),
   homeClub: FootbalistoClub,
   awayClub: FootbalistoClub,
   goalsHomeTeam: S.NullOr(S.Number),
@@ -328,7 +213,7 @@ export class FootbalistoMatchDetailGeneral extends S.Class<FootbalistoMatchDetai
   awayTeamId: S.optional(S.NullOr(S.Number)),
   competitionType: S.String,
   viewGameReport: S.Boolean,
-  status: S.Number, // 0 = scheduled, 1 = finished, 2 = live, 3 = postponed, 4 = cancelled
+  status: S.Number,
 }) {}
 
 /**
@@ -343,51 +228,5 @@ export class FootbalistoMatchDetailResponse extends S.Class<FootbalistoMatchDeta
   events: S.optional(S.Array(FootbalistoMatchEvent)),
 }) {}
 
-/**
- * Normalized lineup player for UI consumption
- */
-export class MatchLineupPlayer extends S.Class<MatchLineupPlayer>(
-  "MatchLineupPlayer",
-)({
-  id: S.optional(S.Number),
-  name: S.String,
-  number: S.optional(S.Number),
-  minutesPlayed: S.optional(S.Number),
-  isCaptain: S.Boolean,
-  /** Player status: starter, substitute (unused), substituted (out), subbed_in (came on) */
-  status: S.Literal(
-    "starter",
-    "substitute",
-    "substituted",
-    "subbed_in",
-    "unknown",
-  ),
-  /** Card received by player (if any) */
-  card: S.optional(CardType),
-}) {}
-
-/**
- * Normalized match lineup for UI consumption
- */
-export class MatchLineup extends S.Class<MatchLineup>("MatchLineup")({
-  home: S.Array(MatchLineupPlayer),
-  away: S.Array(MatchLineupPlayer),
-}) {}
-
-/**
- * Normalized match detail for UI consumption
- * Extended version of Match with lineup data
- */
-export class MatchDetail extends S.Class<MatchDetail>("MatchDetail")({
-  id: S.Number,
-  date: DateFromStringOrDate,
-  time: S.optional(S.String),
-  venue: S.optional(S.String),
-  home_team: MatchTeam,
-  away_team: MatchTeam,
-  status: MatchStatus,
-  round: S.optional(S.String),
-  competition: S.optional(S.String),
-  lineup: S.optional(MatchLineup),
-  hasReport: S.Boolean,
-}) {}
+// Keep DateFromStringOrDate re-export for any local usages that imported it via match.schema
+export { DateFromStringOrDate };
