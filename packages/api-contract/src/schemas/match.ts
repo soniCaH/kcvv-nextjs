@@ -1,5 +1,5 @@
 import { Schema as S } from "effect";
-import { DateFromStringOrDate } from "./common.js";
+import { DateFromStringOrDate } from "./common";
 
 /** Team info in a normalized match */
 export class MatchTeam extends S.Class<MatchTeam>("MatchTeam")({
@@ -19,8 +19,8 @@ export const MatchStatus = S.Literal(
 );
 export type MatchStatus = S.Schema.Type<typeof MatchStatus>;
 
-/** Normalized match for UI consumption */
-export class Match extends S.Class<Match>("Match")({
+/** Shared fields between Match and MatchDetail */
+const BaseMatchFields = {
   id: S.Number,
   date: DateFromStringOrDate,
   time: S.optional(S.String),
@@ -30,7 +30,10 @@ export class Match extends S.Class<Match>("Match")({
   status: MatchStatus,
   round: S.optional(S.String),
   competition: S.optional(S.String),
-}) {}
+};
+
+/** Normalized match for UI consumption */
+export class Match extends S.Class<Match>("Match")(BaseMatchFields) {}
 
 export const MatchesArray = S.Array(Match);
 
@@ -62,15 +65,7 @@ export class MatchLineup extends S.Class<MatchLineup>("MatchLineup")({
 
 /** Normalized match detail (extended Match with lineup) */
 export class MatchDetail extends S.Class<MatchDetail>("MatchDetail")({
-  id: S.Number,
-  date: DateFromStringOrDate,
-  time: S.optional(S.String),
-  venue: S.optional(S.String),
-  home_team: MatchTeam,
-  away_team: MatchTeam,
-  status: MatchStatus,
-  round: S.optional(S.String),
-  competition: S.optional(S.String),
+  ...BaseMatchFields,
   lineup: S.optional(MatchLineup),
   hasReport: S.Boolean,
 }) {}

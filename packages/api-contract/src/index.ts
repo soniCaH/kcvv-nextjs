@@ -1,5 +1,5 @@
-// Shared schemas — consumed by both apps/web and kcvv-api
-export * from "./schemas/index.js";
+// Shared schemas — consumed by both apps/web and apps/api
+export * from "./schemas/index";
 
-// HttpApi definition — kcvv-api implements this; apps/web consumes via HttpApiClient
-export * from "./api/index.js";
+// HttpApi definition — apps/api implements this; apps/web consumes via HttpApiClient
+export * from "./api/index";

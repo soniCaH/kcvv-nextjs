@@ -1,6 +1,6 @@
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
-import { Match, MatchDetail, MatchesArray } from "../schemas/match.js";
+import { Match, MatchDetail, MatchesArray } from "../schemas/match";
 
 export class MatchesApi extends HttpApiGroup.make("matches")
   .add(

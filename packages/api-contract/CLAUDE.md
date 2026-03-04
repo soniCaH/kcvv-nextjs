@@ -4,7 +4,7 @@ Shared Effect Schema types and HttpApi definition consumed by both `apps/web` an
 
 ## Structure
 
-```
+```text
 src/
 ├── schemas/
 │   ├── common.ts     ← DateFromStringOrDate
@@ -27,5 +27,5 @@ src/
 - Schemas here are the single source of truth — never duplicate in `apps/web/src/lib/effect/schemas/`
 - HttpApi groups live in `src/api/`, schemas in `src/schemas/`
 - Export everything from `src/index.ts`
-- Use `.js` extensions in imports (required for NodeNext module resolution)
+- No `.js` extensions in imports — `moduleResolution: "bundler"` is used (compatible with Next.js/Turbopack and Wrangler/esbuild)
 - After adding/changing schemas, run `pnpm --filter @kcvv/api-contract build` so apps/web picks up updated `.d.ts` files

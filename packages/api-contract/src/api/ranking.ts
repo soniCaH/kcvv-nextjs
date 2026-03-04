@@ -1,6 +1,6 @@
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
-import { RankingArray } from "../schemas/ranking.js";
+import { RankingArray } from "../schemas/ranking";
 
 export class RankingApi extends HttpApiGroup.make("ranking")
   .add(

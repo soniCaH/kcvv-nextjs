@@ -62,7 +62,7 @@ Browser
   └─► Next.js (apps/web, Vercel)
         ├─► Sanity CDN          — articles, sponsors, events, organigram, club pages
         │     (direct @sanity/client, no proxy needed — public CDN)
-        └─► KCVV API (kcvv-api, Cloudflare Workers)
+        └─► KCVV API (apps/api, Cloudflare Workers)
               ├─► Cloudflare KV   — cache for ProSoccerData responses
               └─► ProSoccerData   — matches, players, teams, rankings (on cache miss)
 ```
@@ -72,7 +72,7 @@ Browser
 | Service                               | Provider                  | Cost         |
 | ------------------------------------- | ------------------------- | ------------ |
 | `apps/web` (Next.js)                  | Vercel (existing)         | €0           |
-| `kcvv-api` (Effect BFF)               | Cloudflare Workers        | €0           |
+| `apps/api` (Effect BFF)               | Cloudflare Workers        | €0           |
 | `apps/studio` (Sanity Studio)         | Sanity.io hosted / Vercel | €0           |
 | Sanity content API + assets           | Sanity free tier          | €0           |
 | KV cache (PSD responses)              | Cloudflare KV             | €0           |
@@ -96,7 +96,7 @@ Turborepo is the standard monorepo tool for Next.js-based projects (same Vercel 
 The ProSoccerData BFF is rewritten in TypeScript using Effect's `HttpApiBuilder`. This gives us:
 
 - **`packages/api-contract/`** defines `HttpApi` with Effect Schema — the single source of truth for all PSD endpoint shapes
-- **`kcvv-api/`** implements the contract with `HttpApiBuilder.implement(PsdApi)`
+- **`apps/api/`** implements the contract with `HttpApiBuilder.implement(PsdApi)`
 - **`apps/web/`** consumes it with `HttpApiClient.make(PsdApi)` — fully typed, autocomplete, no manual fetch
 
 Effect's `@effect/platform` HTTP server is compatible with Cloudflare Workers via `HttpApp.toWebHandler`, which converts any Effect HTTP app to a standard Web API `fetch` handler (the native Cloudflare Workers interface).
@@ -109,7 +109,7 @@ export class PsdApi extends HttpApi.make("psd")
   .add(TeamsApi)
   .add(RankingApi) {}
 
-// kcvv-api/src/index.ts — Cloudflare Worker entry
+// apps/api/src/index.ts — Cloudflare Worker entry
 export default {
   fetch: HttpApp.toWebHandler(
     HttpApiBuilder.serve(PsdApi).pipe(
@@ -259,7 +259,7 @@ apps/studio/CLAUDE.md              ← Sanity schema conventions, content type r
 packages/api-contract/CLAUDE.md   ← Schema authoring rules, Effect HttpApi conventions
 ```
 
-The `kcvv-api` repo gets its own `CLAUDE.md` covering Cloudflare Workers conventions, Wrangler config, and KV cache patterns.
+`apps/api/` gets its own `CLAUDE.md` covering Cloudflare Workers conventions, Wrangler config, and KV cache patterns.
 
 ---
 

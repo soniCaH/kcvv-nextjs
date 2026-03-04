@@ -1,5 +1,5 @@
 import { Schema as S } from "effect";
-import { DateFromStringOrDate } from "./common.js";
+import { DateFromStringOrDate } from "./common";
 
 /** Normalized ranking entry for UI consumption */
 export class RankingEntry extends S.Class<RankingEntry>("RankingEntry")({
