@@ -1,14 +1,13 @@
 import { Context, Effect, Layer, Schema as S } from "effect";
-import { TeamStats } from "@kcvv/api-contract";
 import { WorkerEnvTag } from "../env";
 import { KvCacheService } from "../cache/kv-cache";
 import {
-  FootbalistoMatchesArray,
   FootbalistoMatchDetailResponse,
   FootbalistoRankingArray,
   PsdSeasonsSchema,
   PsdMatchListSchema,
-  type FootbalistoMatch,
+  PsdTeamStatsResponse,
+  type PsdGame,
   type FootbalistoMatchDetailResponse as RawDetailResponse,
   type FootbalistoRankingCompetition,
 } from "./schemas";
@@ -43,9 +42,9 @@ export type FootbalistoClientError =
 export interface FootbalistoClientInterface {
   readonly getRawMatches: (
     teamId: number,
-  ) => Effect.Effect<readonly FootbalistoMatch[], FootbalistoClientError>;
+  ) => Effect.Effect<readonly PsdGame[], FootbalistoClientError>;
   readonly getRawNextMatches: () => Effect.Effect<
-    readonly FootbalistoMatch[],
+    readonly PsdGame[],
     FootbalistoClientError
   >;
   readonly getRawMatchDetail: (
@@ -59,7 +58,7 @@ export interface FootbalistoClientInterface {
   >;
   readonly getRawTeamStats: (
     teamId: number,
-  ) => Effect.Effect<typeof TeamStats.Type, FootbalistoClientError>;
+  ) => Effect.Effect<PsdTeamStatsResponse, FootbalistoClientError>;
 }
 
 export class FootbalistoClient extends Context.Tag("FootbalistoClient")<
@@ -156,13 +155,11 @@ export const FootbalistoClientLive = Layer.effect(
             PsdMatchListSchema,
             psdHeaders,
           );
-          // PsdMatchListSchema wraps content array — cast to FootbalistoMatch[]
-          // The actual PSD response shape may differ; validate against real API in Task 10
-          return data.content as unknown as readonly FootbalistoMatch[];
+          return data.content;
         }),
       getRawNextMatches: () =>
-        // Handled in matches handler using cached per-team data — placeholder
-        Effect.succeed([] as readonly FootbalistoMatch[]),
+        // Placeholder — full implementation in follow-up (query per-team cached data)
+        Effect.succeed([] as readonly PsdGame[]),
       getRawMatchDetail: (matchId: number) =>
         fetchJson(
           `${base}/games/${matchId}/info`,
@@ -178,12 +175,10 @@ export const FootbalistoClientLive = Layer.effect(
       getRawTeamStats: (teamId: number) =>
         Effect.gen(function* () {
           const seasonId = yield* getCurrentSeasonId();
-          // TODO: use season date range once season service stores start/end
-          // For now use placeholder dates — update after Task 10 smoke test
           void seasonId;
           return yield* fetchJson(
             `${base}/statistics/team/${teamId}/from/01082024/to/31072025`,
-            TeamStats,
+            PsdTeamStatsResponse,
             psdHeaders,
           );
         }),

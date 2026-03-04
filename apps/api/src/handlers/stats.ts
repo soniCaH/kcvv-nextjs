@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Schema as S } from "effect";
 import { HttpApiBuilder } from "@effect/platform";
 import {
   PsdApi,
@@ -10,6 +10,7 @@ import {
   type FootbalistoClientError,
 } from "../footbalisto/client";
 import { KvCacheService, TTL } from "../cache/kv-cache";
+import { transformPsdTeamStats } from "../footbalisto/transforms";
 
 export const getTeamStatsHandler = (
   teamId: number,
@@ -24,9 +25,13 @@ export const getTeamStatsHandler = (
     const cacheKey = `stats:team:${teamId}`;
 
     const cached = yield* cache.get(cacheKey);
-    if (cached) return JSON.parse(cached) as TeamStatsType;
+    if (cached)
+      return yield* S.decodeUnknown(TeamStats)(JSON.parse(cached)).pipe(
+        Effect.orDie,
+      );
 
-    const stats = yield* client.getRawTeamStats(teamId);
+    const rawStats = yield* client.getRawTeamStats(teamId);
+    const stats = transformPsdTeamStats(teamId, rawStats);
     yield* cache.set(cacheKey, JSON.stringify(stats), TTL.STATS);
     return stats;
   });

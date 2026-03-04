@@ -4,6 +4,7 @@ import type {
   MatchLineupPlayer,
   RankingEntry,
   CardType,
+  TeamStats,
 } from "@kcvv/api-contract";
 import type {
   FootbalistoMatch,
@@ -11,6 +12,8 @@ import type {
   FootbalistoMatchEvent,
   FootbalistoMatchDetailResponse,
   FootbalistoRankingEntry,
+  PsdGame,
+  PsdTeamStatsResponse,
 } from "./schemas";
 
 type MatchStatusType =
@@ -40,6 +43,48 @@ function parseDateString(dateStr: string): { date: Date; time: string } {
 
 function mapNumericStatus(status: number): MatchStatusType {
   return STATUS_MAP[status] ?? "scheduled";
+}
+
+/**
+ * Transform a PSD game object (from /games/team/{teamId}/seasons/{seasonId})
+ * to the normalized Match shape. Handles PSD-specific field differences:
+ * - competitionType is an object; extract .type string
+ * - time is a separate field from date; combine for accurate kickoff time
+ * - homeTeam/awayTeam are ref objects; fall back to homeClub/awayClub ids
+ */
+export function transformPsdGame(game: PsdGame): Match {
+  const datePart = game.date.split(" ")[0]!;
+  const timeStr = game.time ?? game.date.split(" ")[1] ?? "00:00";
+  const { date: matchDate, time: timePart } = parseDateString(
+    `${datePart} ${timeStr}`,
+  );
+  const status = mapNumericStatus(game.status);
+
+  let roundLabel: string | undefined;
+  if (game.teamId === 1) roundLabel = "A-ploeg";
+  else if (game.teamId === 2) roundLabel = "B-ploeg";
+
+  return {
+    id: game.id,
+    date: matchDate,
+    time: timePart,
+    venue: undefined,
+    home_team: {
+      id: game.homeClub.id,
+      name: game.homeClub.name,
+      logo: game.homeClub.logo ?? undefined,
+      score: game.goalsHomeTeam ?? undefined,
+    },
+    away_team: {
+      id: game.awayClub.id,
+      name: game.awayClub.name,
+      logo: game.awayClub.logo ?? undefined,
+      score: game.goalsAwayTeam ?? undefined,
+    },
+    status,
+    round: roundLabel,
+    competition: game.competitionType?.type ?? "UNKNOWN",
+  };
 }
 
 export function transformFootbalistoMatch(fbMatch: FootbalistoMatch): Match {
@@ -218,6 +263,57 @@ export function matchDetailToMatch(detail: MatchDetail): Match {
     status: detail.status,
     round: detail.round,
     competition: detail.competition,
+  };
+}
+
+/**
+ * Transform PSD /statistics/team response to normalized TeamStats.
+ * Team totals (wins/draws/losses) are derived from the player with the most
+ * gamesPlayed — they represent the team's full season record.
+ * goalsScored/goalsAgainst are arrays of goal events; use .length for totals.
+ */
+export function transformPsdTeamStats(
+  teamId: number,
+  response: PsdTeamStatsResponse,
+): typeof TeamStats.Type {
+  const players = response.squadPlayerStatistics;
+
+  const representative =
+    players.length > 0
+      ? players.reduce((best, p) =>
+          p.gamesPlayed > best.gamesPlayed ? p : best,
+        )
+      : undefined;
+
+  const cleanSheets =
+    players.length > 0 ? Math.max(...players.map((p) => p.cleanSheets)) : 0;
+
+  const topScorers = players
+    .filter((p) => p.goals > 0)
+    .sort((a, b) => b.goals - a.goals)
+    .map((p) => ({
+      player_id: p.playerId,
+      player_name: `${p.firstName} ${p.lastName}`,
+      team_id: teamId,
+      matches_played: p.gamesPlayed,
+      goals: p.goals,
+      assists: p.assists ?? undefined,
+      yellow_cards: p.yellowCards,
+      red_cards: p.redCards,
+      minutes_played: p.minutes ?? undefined,
+    }));
+
+  return {
+    team_id: teamId,
+    team_name: representative?.team ?? "KCVV",
+    total_matches: representative?.gamesPlayed ?? 0,
+    wins: representative?.gamesWon ?? 0,
+    draws: representative?.gamesEqual ?? 0,
+    losses: representative?.gamesLost ?? 0,
+    goals_scored: response.goalsScored.length,
+    goals_conceded: response.goalsAgainst.length,
+    clean_sheets: cleanSheets > 0 ? cleanSheets : undefined,
+    top_scorers: topScorers.length > 0 ? topScorers : undefined,
   };
 }
 

@@ -154,13 +154,61 @@ export class PsdSeason extends S.Class<PsdSeason>("PsdSeason")({
 
 export const PsdSeasonsSchema = S.Array(PsdSeason);
 
-export class PsdMatchListItem extends S.Class<PsdMatchListItem>(
-  "PsdMatchListItem",
+export class PsdCompetitionType extends S.Class<PsdCompetitionType>(
+  "PsdCompetitionType",
 )({
   id: S.Number,
-  // Add remaining fields after verifying against actual PSD response
+  name: S.NullOr(S.String),
+  type: S.String, // "LEAGUE", "CUP", "FRIENDLY", etc.
+}) {}
+
+/**
+ * Single game object from PSD `/games/team/{teamId}/seasons/{seasonId}`.
+ * Field names differ from the old Footbalisto API:
+ *  - competitionType is an object (not a string)
+ *  - homeTeam/awayTeam are string team codes ("1", "A") — not used for IDs, use homeClub/awayClub
+ *  - time is a separate field ("HH:MM"); date has "00:00" as its time component
+ *  - no timestamp, no viewGameReport (use reportGeneral)
+ */
+export class PsdGame extends S.Class<PsdGame>("PsdGame")({
+  id: S.Number,
+  status: S.Number,
+  date: S.String, // "YYYY-MM-DD 00:00"
+  time: S.optional(S.NullOr(S.String)), // "HH:MM" actual kickoff time
+  goalsHomeTeam: S.NullOr(S.Number),
+  goalsAwayTeam: S.NullOr(S.Number),
+  homeClub: FootbalistoClub,
+  awayClub: FootbalistoClub,
+  competitionType: S.optional(S.NullOr(PsdCompetitionType)),
+  reportGeneral: S.optional(S.NullOr(S.Boolean)),
+  teamId: S.optional(S.NullOr(S.Number)),
 }) {}
 
 export const PsdMatchListSchema = S.Struct({
-  content: S.Array(PsdMatchListItem),
+  content: S.Array(PsdGame),
 });
+
+export class PsdTeamStatsResponse extends S.Class<PsdTeamStatsResponse>(
+  "PsdTeamStatsResponse",
+)({
+  squadPlayerStatistics: S.Array(
+    S.Struct({
+      playerId: S.Number,
+      firstName: S.String,
+      lastName: S.String,
+      team: S.optional(S.NullOr(S.String)),
+      gamesPlayed: S.Number,
+      gamesWon: S.Number,
+      gamesLost: S.Number,
+      gamesEqual: S.Number,
+      cleanSheets: S.Number,
+      minutes: S.NullOr(S.Number),
+      goals: S.Number,
+      assists: S.NullOr(S.Number),
+      yellowCards: S.Number,
+      redCards: S.Number,
+    }),
+  ),
+  goalsScored: S.Array(S.Struct({ goal: S.Struct({ id: S.Number }) })),
+  goalsAgainst: S.Array(S.Struct({ goal: S.Struct({ id: S.Number }) })),
+}) {}

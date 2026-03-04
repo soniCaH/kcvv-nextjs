@@ -11,5 +11,5 @@ FOOTBALISTO_LOGO_CDN_URL = "https://dfaozfi7c7f3s.cloudfront.net/logos"
 
 [[kv_namespaces]]
 binding = "PSD_CACHE"
-id = "PROD_KV_ID"
-preview_id = "PREVIEW_KV_ID"
+id = "82533c23954d4ed98871dd53465c5c0e"
+preview_id = "4ee68193dd574f7fa01fba9d53d5d475"

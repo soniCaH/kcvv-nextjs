@@ -15,20 +15,15 @@ import { KvCacheService, type KvCacheInterface } from "../cache/kv-cache";
 const rawMatch = {
   id: 1,
   teamId: 1,
-  teamName: "KCVV A",
-  timestamp: 1737388800,
-  age: "Seniors",
-  date: "2025-01-15 15:00",
-  time: "1970-01-01 01:00",
+  date: "2025-01-15 00:00",
+  time: "15:00",
   homeClub: { id: 123, name: "KCVV Elewijt" },
   awayClub: { id: 456, name: "Opponent FC" },
   goalsHomeTeam: 3,
   goalsAwayTeam: 1,
-  homeTeamId: 1,
-  awayTeamId: 2,
   status: 1,
-  competitionType: "3de Nationale",
-  viewGameReport: true,
+  competitionType: { id: 1, name: "3de Nationale", type: "LEAGUE" },
+  reportGeneral: true,
 } as const;
 
 const rawDetail = {

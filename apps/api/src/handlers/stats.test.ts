@@ -8,14 +8,26 @@ import {
 import { KvCacheService, type KvCacheInterface } from "../cache/kv-cache";
 
 const mockStats = {
-  team_id: 1,
-  team_name: "KCVV Elewijt A",
-  total_matches: 25,
-  wins: 18,
-  draws: 4,
-  losses: 3,
-  goals_scored: 55,
-  goals_conceded: 22,
+  squadPlayerStatistics: [
+    {
+      playerId: 1,
+      firstName: "Test",
+      lastName: "Player",
+      team: "KCVV Elewijt A",
+      gamesPlayed: 25,
+      gamesWon: 18,
+      gamesLost: 3,
+      gamesEqual: 4,
+      cleanSheets: 8,
+      minutes: 2250,
+      goals: 2,
+      assists: 1,
+      yellowCards: 1,
+      redCards: 0,
+    },
+  ],
+  goalsScored: [{ goal: { id: 1 } }],
+  goalsAgainst: [],
 };
 
 function makeClientMock(): FootbalistoClientInterface {

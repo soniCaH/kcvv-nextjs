@@ -1,13 +1,18 @@
-import { Effect } from "effect";
+import { Effect, Schema as S } from "effect";
 import { HttpApiBuilder } from "@effect/platform";
-import { PsdApi, type Match, type MatchDetail } from "@kcvv/api-contract";
+import {
+  PsdApi,
+  MatchesArray,
+  MatchDetail,
+  type Match,
+} from "@kcvv/api-contract";
 import {
   FootbalistoClient,
   type FootbalistoClientError,
 } from "../footbalisto/client";
 import { KvCacheService, TTL } from "../cache/kv-cache";
 import {
-  transformFootbalistoMatch,
+  transformPsdGame,
   transformFootbalistoMatchDetail,
   matchDetailToMatch,
 } from "../footbalisto/transforms";
@@ -25,10 +30,13 @@ export const getMatchesByTeamHandler = (
     const cacheKey = `matches:team:${teamId}`;
 
     const cached = yield* cache.get(cacheKey);
-    if (cached) return JSON.parse(cached) as readonly Match[];
+    if (cached)
+      return yield* S.decodeUnknown(MatchesArray)(JSON.parse(cached)).pipe(
+        Effect.orDie,
+      );
 
     const rawMatches = yield* client.getRawMatches(teamId);
-    const matches = rawMatches.map(transformFootbalistoMatch);
+    const matches = rawMatches.map(transformPsdGame);
     yield* cache.set(cacheKey, JSON.stringify(matches), TTL.MATCHES_TEAM);
     return matches;
   });
@@ -44,13 +52,16 @@ export const getNextMatchesHandler = (): Effect.Effect<
     const cacheKey = "matches:next";
 
     const cached = yield* cache.get(cacheKey);
-    if (cached) return JSON.parse(cached) as readonly Match[];
+    if (cached)
+      return yield* S.decodeUnknown(MatchesArray)(JSON.parse(cached)).pipe(
+        Effect.orDie,
+      );
 
     const rawMatches = yield* client.getRawNextMatches();
     // Filter out Weitse Gans (teamId 23) — not KCVV but plays on KCVV pitch
     const matches = rawMatches
       .filter((m) => m.teamId !== 23)
-      .map(transformFootbalistoMatch);
+      .map(transformPsdGame);
     yield* cache.set(cacheKey, JSON.stringify(matches), TTL.NEXT_MATCHES);
     return matches;
   });
@@ -81,7 +92,10 @@ export const getMatchDetailHandler = (
     const cacheKey = `match:detail:${matchId}`;
 
     const cached = yield* cache.get(cacheKey);
-    if (cached) return JSON.parse(cached) as MatchDetail;
+    if (cached)
+      return yield* S.decodeUnknown(MatchDetail)(JSON.parse(cached)).pipe(
+        Effect.orDie,
+      );
 
     const rawDetail = yield* client.getRawMatchDetail(matchId);
     const detail = transformFootbalistoMatchDetail(rawDetail);
