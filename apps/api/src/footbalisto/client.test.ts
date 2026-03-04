@@ -114,6 +114,56 @@ describe("FootbalistoClient", () => {
     expect((error as FootbalistoError).status).toBe(503);
   });
 
+  it("getRawTeamStats fetches stats with dynamic date range from current season", async () => {
+    const rawStats = {
+      squadPlayerStatistics: [
+        {
+          playerId: 1,
+          firstName: "Test",
+          lastName: "Player",
+          team: "KCVV Elewijt A",
+          gamesPlayed: 25,
+          gamesWon: 18,
+          gamesLost: 3,
+          gamesEqual: 4,
+          cleanSheets: 8,
+          minutes: 2250,
+          goals: 2,
+          assists: 1,
+          yellowCards: 1,
+          redCards: 0,
+        },
+      ],
+      goalsScored: [{ goal: { id: 1 } }],
+      goalsAgainst: [],
+    };
+
+    (global.fetch as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ ok: true, json: async () => seasons })
+      .mockResolvedValueOnce({ ok: true, json: async () => rawStats });
+
+    const program = Effect.gen(function* () {
+      const client = yield* FootbalistoClient;
+      return yield* client.getRawTeamStats(123);
+    });
+
+    const result = await Effect.runPromise(
+      program.pipe(
+        Effect.provide(FootbalistoClientLive),
+        Effect.provide(makeEnvLayer()),
+        Effect.provide(Layer.succeed(KvCacheService, cacheMock)),
+      ),
+    );
+
+    expect(result.squadPlayerStatistics[0]?.playerId).toBe(1);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/statistics/team/123/from/"),
+      expect.objectContaining({
+        headers: expect.objectContaining({ "x-api-key": "test-key" }),
+      }),
+    );
+  });
+
   it("getRawMatchDetail fetches /games/:matchId/info with auth headers", async () => {
     const rawDetail = {
       general: {

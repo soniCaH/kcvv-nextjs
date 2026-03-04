@@ -1,4 +1,4 @@
-import { Effect, Schema as S } from "effect";
+import { Effect, Option, Schema as S } from "effect";
 import { HttpApiBuilder } from "@effect/platform";
 import {
   PsdApi,
@@ -25,10 +25,13 @@ export const getTeamStatsHandler = (
     const cacheKey = `stats:team:${teamId}`;
 
     const cached = yield* cache.get(cacheKey);
-    if (cached)
-      return yield* S.decodeUnknown(TeamStats)(JSON.parse(cached)).pipe(
-        Effect.orDie,
-      );
+    if (cached) {
+      const decoded = yield* Effect.try({
+        try: () => JSON.parse(cached),
+        catch: () => null,
+      }).pipe(Effect.flatMap(S.decodeUnknown(TeamStats)), Effect.option);
+      if (Option.isSome(decoded)) return decoded.value;
+    }
 
     const rawStats = yield* client.getRawTeamStats(teamId);
     const stats = transformPsdTeamStats(teamId, rawStats);

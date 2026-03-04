@@ -1,6 +1,6 @@
-import { Effect } from "effect";
+import { Effect, Option, Schema as S } from "effect";
 import { HttpApiBuilder } from "@effect/platform";
-import { PsdApi, type RankingEntry } from "@kcvv/api-contract";
+import { PsdApi, RankingArray, type RankingEntry } from "@kcvv/api-contract";
 import {
   FootbalistoClient,
   type FootbalistoClientError,
@@ -23,13 +23,22 @@ export const getRankingHandler = (
     const cacheKey = `ranking:team:${teamId}`;
 
     const cached = yield* cache.get(cacheKey);
-    if (cached) return JSON.parse(cached) as readonly RankingEntry[];
+    if (cached) {
+      const decoded = yield* Effect.try({
+        try: () => JSON.parse(cached),
+        catch: () => null,
+      }).pipe(Effect.flatMap(S.decodeUnknown(RankingArray)), Effect.option);
+      if (Option.isSome(decoded)) return decoded.value;
+    }
 
     const competitions = yield* client.getRawRanking(teamId);
 
     const competition =
       competitions.find(
-        (c) => c.teams.length > 0 && c.type !== "CUP" && c.type !== "FRIENDLY",
+        (c) =>
+          c.teams.length > 0 &&
+          c.type.toUpperCase() !== "CUP" &&
+          c.type.toUpperCase() !== "FRIENDLY",
       ) ?? competitions.find((c) => c.teams.length > 0);
 
     if (!competition || competition.teams.length === 0) {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { Effect, Layer } from "effect";
 import {
   getMatchesByTeamHandler,
@@ -6,6 +6,7 @@ import {
   getMatchByIdHandler,
   getMatchDetailHandler,
 } from "./matches";
+import { TTL } from "../cache/kv-cache";
 import {
   FootbalistoClient,
   type FootbalistoClientInterface,
@@ -89,6 +90,111 @@ describe("getMatchDetailHandler", () => {
     const result = await Effect.runPromise(provide(getMatchDetailHandler(99)));
     expect(result.id).toBe(99);
     expect(result.hasReport).toBe(true);
+  });
+
+  it("returns cached MatchDetail without calling client", async () => {
+    const cachedDetail = {
+      id: 99,
+      date: "2025-01-15T15:00:00.000Z",
+      time: "15:00",
+      home_team: { id: 123, name: "KCVV Elewijt", score: 2 },
+      away_team: { id: 456, name: "Opponent FC", score: 0 },
+      status: "finished",
+      competition: "3de Nationale",
+      hasReport: true,
+    };
+
+    const clientShouldNotBeCalled: FootbalistoClientInterface = {
+      getRawMatches: () => Effect.fail(new Error("unexpected") as never),
+      getRawNextMatches: () => Effect.fail(new Error("unexpected") as never),
+      getRawMatchDetail: () => Effect.fail(new Error("unexpected") as never),
+      getRawRanking: () => Effect.fail(new Error("unexpected") as never),
+      getRawTeamStats: () => Effect.fail(new Error("unexpected") as never),
+    };
+
+    const result = await Effect.runPromise(
+      getMatchDetailHandler(99).pipe(
+        Effect.provide(
+          Layer.succeed(FootbalistoClient, clientShouldNotBeCalled),
+        ),
+        Effect.provide(
+          Layer.succeed(KvCacheService, {
+            get: () => Effect.succeed(JSON.stringify(cachedDetail)),
+            set: () => Effect.succeed(undefined),
+          }),
+        ),
+      ),
+    );
+
+    expect(result.id).toBe(99);
+    expect(result.status).toBe("finished");
+  });
+
+  it("uses MATCH_DETAIL_PAST TTL for finished matches", async () => {
+    const setCalls: Array<[string, string, number]> = [];
+
+    await Effect.runPromise(
+      getMatchDetailHandler(99).pipe(
+        Effect.provide(Layer.succeed(FootbalistoClient, makeClientMock())),
+        Effect.provide(
+          Layer.succeed(KvCacheService, {
+            get: () => Effect.succeed(null),
+            set: vi.fn((key, value, ttl) => {
+              setCalls.push([key, value, ttl]);
+              return Effect.succeed(undefined);
+            }),
+          }),
+        ),
+      ),
+    );
+
+    const detailCall = setCalls.find(([key]) =>
+      key.startsWith("match:detail:"),
+    );
+    expect(detailCall?.[2]).toBe(TTL.MATCH_DETAIL_PAST);
+  });
+
+  it("uses MATCH_DETAIL_LIVE TTL for scheduled matches", async () => {
+    const scheduledDetail = {
+      general: {
+        id: 100,
+        date: "2025-06-01 15:00",
+        homeClub: { id: 123, name: "KCVV Elewijt" },
+        awayClub: { id: 456, name: "Opponent FC" },
+        goalsHomeTeam: null,
+        goalsAwayTeam: null,
+        competitionType: "3de Nationale",
+        viewGameReport: false,
+        status: 0, // scheduled
+      },
+    } as const;
+
+    const setCalls: Array<[string, string, number]> = [];
+
+    await Effect.runPromise(
+      getMatchDetailHandler(100).pipe(
+        Effect.provide(
+          Layer.succeed(FootbalistoClient, {
+            ...makeClientMock(),
+            getRawMatchDetail: () => Effect.succeed(scheduledDetail),
+          }),
+        ),
+        Effect.provide(
+          Layer.succeed(KvCacheService, {
+            get: () => Effect.succeed(null),
+            set: vi.fn((key, value, ttl) => {
+              setCalls.push([key, value, ttl]);
+              return Effect.succeed(undefined);
+            }),
+          }),
+        ),
+      ),
+    );
+
+    const detailCall = setCalls.find(([key]) =>
+      key.startsWith("match:detail:"),
+    );
+    expect(detailCall?.[2]).toBe(TTL.MATCH_DETAIL_LIVE);
   });
 });
 

@@ -1,9 +1,10 @@
-import { Context, Effect, Layer, Schema as S } from "effect";
+import { Context, Effect, Layer, Option, Schema as S } from "effect";
 import { WorkerEnvTag } from "../env";
 import { KvCacheService } from "../cache/kv-cache";
 import {
   FootbalistoMatchDetailResponse,
   FootbalistoRankingArray,
+  PsdSeason,
   PsdSeasonsSchema,
   PsdMatchListSchema,
   PsdTeamStatsResponse,
@@ -117,15 +118,28 @@ export const FootbalistoClientLive = Layer.effect(
       "Content-Type": "application/json",
     };
 
-    /** Get current season ID (cached 24h in KV) */
-    const getCurrentSeasonId = (): Effect.Effect<
-      number,
+    /** Format an ISO date string as DDMMYYYY for PSD stat endpoint URLs */
+    function formatPsdDate(isoDate: string): string {
+      const datePart = isoDate.split("T")[0]!; // "YYYY-MM-DD"
+      const [year, month, day] = datePart.split("-");
+      return `${day}${month}${year}`; // "DDMMYYYY"
+    }
+
+    /** Get current season (cached 24h in KV). Returns full PsdSeason for date range access. */
+    const getCurrentSeason = (): Effect.Effect<
+      PsdSeason,
       FootbalistoClientError
     > =>
       Effect.gen(function* () {
         const cacheKey = "psd:current-season-id";
         const cached = yield* cache.get(cacheKey);
-        if (cached) return parseInt(cached, 10);
+        if (cached) {
+          const decoded = yield* Effect.try({
+            try: () => JSON.parse(cached),
+            catch: () => null,
+          }).pipe(Effect.flatMap(S.decodeUnknown(PsdSeason)), Effect.option);
+          if (Option.isSome(decoded)) return decoded.value;
+        }
 
         const seasons = yield* fetchJson(
           `${base}/seasons`,
@@ -142,24 +156,25 @@ export const FootbalistoClientLive = Layer.effect(
           return yield* Effect.fail(
             new FootbalistoError("No active season found"),
           );
-        yield* cache.set(cacheKey, String(current.id), 60 * 60 * 24);
-        return current.id;
+        yield* cache.set(cacheKey, JSON.stringify(current), 60 * 60 * 24);
+        return current;
       });
 
     return {
       getRawMatches: (teamId: number) =>
         Effect.gen(function* () {
-          const seasonId = yield* getCurrentSeasonId();
+          const season = yield* getCurrentSeason();
           const data = yield* fetchJson(
-            `${base}/games/team/${teamId}/seasons/${seasonId}`,
+            `${base}/games/team/${teamId}/seasons/${season.id}`,
             PsdMatchListSchema,
             psdHeaders,
           );
           return data.content;
         }),
       getRawNextMatches: () =>
-        // Placeholder — full implementation in follow-up (query per-team cached data)
-        Effect.succeed([] as readonly PsdGame[]),
+        Effect.fail(
+          new FootbalistoError("getRawNextMatches not implemented"),
+        ) as Effect.Effect<readonly PsdGame[], FootbalistoClientError>,
       getRawMatchDetail: (matchId: number) =>
         fetchJson(
           `${base}/games/${matchId}/info`,
@@ -174,10 +189,11 @@ export const FootbalistoClientLive = Layer.effect(
         ),
       getRawTeamStats: (teamId: number) =>
         Effect.gen(function* () {
-          const seasonId = yield* getCurrentSeasonId();
-          void seasonId;
+          const season = yield* getCurrentSeason();
+          const from = formatPsdDate(season.start);
+          const to = formatPsdDate(season.end);
           return yield* fetchJson(
-            `${base}/statistics/team/${teamId}/from/01082024/to/31072025`,
+            `${base}/statistics/team/${teamId}/from/${from}/to/${to}`,
             PsdTeamStatsResponse,
             psdHeaders,
           );

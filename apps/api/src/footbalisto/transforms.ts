@@ -34,9 +34,9 @@ const STATUS_MAP: Record<number, MatchStatusType> = {
 function parseDateString(dateStr: string): { date: Date; time: string } {
   const [datePart, timePart = "00:00"] = dateStr.split(" ");
   const [year, month, day] = datePart!.split("-").map(Number);
-  const [hour, minute] = timePart.split(":").map(Number);
+  const [hour = 0, minute = 0] = timePart.split(":").map(Number);
   return {
-    date: new Date(year!, month! - 1, day!, hour, minute),
+    date: new Date(Date.UTC(year!, month! - 1, day!, hour, minute)),
     time: timePart,
   };
 }
