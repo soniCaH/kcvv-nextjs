@@ -50,4 +50,4 @@ Living document. Tracks what to keep, redesign, add, or remove.
 ## Storybook Coverage Gaps
 
 <!-- Components without stories that need them before redesign -->
-<!-- Run: grep -rL "stories" src/components --include="*.tsx" to find gaps -->
+<!-- Run: grep -rL "stories" apps/web/src/components --include="*.tsx" to find gaps -->

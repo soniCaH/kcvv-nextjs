@@ -38,7 +38,7 @@ This project runs **in parallel with the migration** at the design/planning leve
 
 ## 4. Document Structure
 
-```
+```text
 docs/plans/
   redesign-inspiration.md   ← Links, exports, notes on reference sites and visual assets
   redesign-brief.md         ← Design language: colors, typography, patterns, graphic motifs
