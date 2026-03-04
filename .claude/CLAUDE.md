@@ -28,9 +28,18 @@
 - For simple feature/fix tasks: read relevant code → implement → test. No planning phase needed.
 - When you learn something new about the Drupal/Footbalisto API (gotcha, edge case, failed approach), append it to the relevant skill file under "## Learnings".
 
-## Current State (updated: 2026-03-03)
+## Current State (updated: 2026-03-04)
 
-### Migration Phases
+### Platform Overhaul Phases (api-contract → BFF → CMS)
+
+| Phase | Description                                    | Status      | Issue |
+| ----- | ---------------------------------------------- | ----------- | ----- |
+| 0     | Monorepo Setup                                 | Done        | #721  |
+| 1     | api-contract (schemas + HttpApi)               | Done        | #722  |
+| 2     | Effect BFF in `apps/api/` (Cloudflare Workers) | Not started | #723  |
+| 3     | Sanity CMS (replace Drupal)                    | Not started | —     |
+
+### Migration Phases (Gatsby → Next.js)
 
 | Phase                         | Status      | Issue |
 | ----------------------------- | ----------- | ----- |
@@ -50,6 +59,7 @@
 3. **Quality before commit:** run `pnpm --filter @kcvv/web lint:fix` (minimum) or `pnpm --filter @kcvv/web check-all` (preferred). Husky pre-commit runs lint-staged, type-check — run checks first to avoid failed commits.
 4. **Push:** `git push -u origin <branch-name>`
 5. **Never:** commit to `main`, create PR without asking, push before checks pass
+6. **Worktree limitation:** The `check-branch.sh` hook reads `git branch` from `$CLAUDE_PROJECT_DIR` (always the main repo), not the worktree path — committing inside a worktree always looks like `main` to the hook. Use direct feature branch checkout instead of worktrees for this repo.
 
 ## Development Standards
 
@@ -61,6 +71,14 @@
 - Doc files (DESIGN_SYSTEM.md, SCHEMA_GUIDE.md, STORYBOOK.md) — do NOT consult unless explicitly asked.
 - App-specific rules (Design System, Storybook, routes, test coverage) → see `apps/web/CLAUDE.md`
 - api-contract conventions → see `packages/api-contract/CLAUDE.md`
+
+## api-contract Gotchas
+
+- **moduleResolution is `bundler`** — never add `.js` extensions to imports inside `packages/api-contract/src/`. NodeNext-style extensions break Turbopack.
+- **Build verification before push** — after any change to `packages/api-contract`, run `pnpm turbo build --filter=@kcvv/web` locally. Turbopack resolves package exports differently from tsc project references; type-check passing ≠ build passing.
+- **Barrel duplicate export pitfall** — if schema file A re-exports a type that also comes from schema file B, and the barrel does `export * from A` + `export * from B`, TypeScript silently drops the duplicate. Never re-export a type in a schema file unless it exists only there.
+- **YAGNI for HttpApi** — don't add endpoints or response wrapper types to api-contract until `apps/api` actually needs to return them. `MatchesResponse`/`RankingResponse` are present but unused; remove if they remain unused after Phase 2.
+- **No Players/Teams HttpApiGroup** — player and team data comes from Drupal (DrupalService), not the BFF. Only match, ranking, and stats endpoints belong in PsdApi.
 
 ## Skills
 
