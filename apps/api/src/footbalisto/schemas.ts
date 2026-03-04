@@ -1,0 +1,214 @@
+/**
+ * Raw Footbalisto API schemas — BFF implementation details only.
+ * Normalized types (Match, MatchDetail, etc.) come from @kcvv/api-contract.
+ */
+import { Schema as S } from "effect";
+
+export class FootbalistoClub extends S.Class<FootbalistoClub>(
+  "FootbalistoClub",
+)({
+  id: S.Number,
+  name: S.String,
+  logo: S.optional(S.NullOr(S.String)),
+  abbreviation: S.optional(S.NullOr(S.String)),
+  logoSmall: S.optional(S.NullOr(S.String)),
+  version: S.optional(S.NullOr(S.Number)),
+}) {}
+
+export class FootbalistoMatch extends S.Class<FootbalistoMatch>(
+  "FootbalistoMatch",
+)({
+  id: S.Number,
+  teamId: S.optional(S.Number), // Only in /matches/next
+  teamName: S.optional(S.String), // Only in /matches/next
+  timestamp: S.Number,
+  age: S.optional(S.String), // Only in /matches/next
+  date: S.String, // Format: "YYYY-MM-DD HH:MM"
+  time: S.String, // Legacy field
+  homeClub: FootbalistoClub,
+  awayClub: FootbalistoClub,
+  goalsHomeTeam: S.NullOr(S.Number),
+  goalsAwayTeam: S.NullOr(S.Number),
+  homeTeamId: S.NullOr(S.Number),
+  awayTeamId: S.NullOr(S.Number),
+  status: S.Number, // 0=scheduled, 1=finished, 2=live, 3=postponed, 4=cancelled
+  competitionType: S.String,
+  viewGameReport: S.Boolean,
+}) {}
+
+export const FootbalistoMatchesArray = S.Array(FootbalistoMatch);
+
+export class FootbalistoRankingClub extends S.Class<FootbalistoRankingClub>(
+  "FootbalistoRankingClub",
+)({
+  id: S.Number,
+  localName: S.NullOr(S.String),
+  name: S.NullOr(S.String),
+}) {}
+
+export class FootbalistoRankingTeam extends S.Class<FootbalistoRankingTeam>(
+  "FootbalistoRankingTeam",
+)({
+  id: S.Number,
+  club: FootbalistoRankingClub,
+}) {}
+
+export class FootbalistoRankingEntry extends S.Class<FootbalistoRankingEntry>(
+  "FootbalistoRankingEntry",
+)({
+  id: S.Number,
+  rank: S.Number,
+  matchesPlayed: S.Number,
+  wins: S.Number,
+  draws: S.Number,
+  losses: S.Number,
+  goalsScored: S.Number,
+  goalsConceded: S.Number,
+  points: S.Number,
+  team: FootbalistoRankingTeam,
+}) {}
+
+export class FootbalistoRankingCompetition extends S.Class<FootbalistoRankingCompetition>(
+  "FootbalistoRankingCompetition",
+)({
+  name: S.String,
+  type: S.String,
+  teams: S.Array(FootbalistoRankingEntry),
+}) {}
+
+export const FootbalistoRankingArray = S.Array(FootbalistoRankingCompetition);
+
+export class FootbalistoEventAction extends S.Class<FootbalistoEventAction>(
+  "FootbalistoEventAction",
+)({
+  type: S.String,
+  subtype: S.optional(S.NullOr(S.String)),
+  sortOrder: S.optional(S.Number),
+  icon: S.optional(S.NullOr(S.String)),
+  id: S.optional(S.Number),
+}) {}
+
+export class FootbalistoMatchEvent extends S.Class<FootbalistoMatchEvent>(
+  "FootbalistoMatchEvent",
+)({
+  action: FootbalistoEventAction,
+  minute: S.optional(S.NullOr(S.Number)),
+  playerId: S.optional(S.NullOr(S.Number)),
+  playerName: S.optional(S.NullOr(S.String)),
+  clubId: S.optional(S.NullOr(S.Number)),
+  goalsHome: S.optional(S.NullOr(S.Number)),
+  goalsAway: S.optional(S.NullOr(S.Number)),
+}) {}
+
+export class FootbalistoLineupPlayer extends S.Class<FootbalistoLineupPlayer>(
+  "FootbalistoLineupPlayer",
+)({
+  number: S.optional(S.NullOr(S.Number)),
+  playerName: S.String,
+  minutesPlayed: S.optional(S.NullOr(S.Number)),
+  captain: S.optional(S.Boolean),
+  playerId: S.optional(S.NullOr(S.Number)),
+  status: S.optional(S.String),
+  changed: S.optional(S.Boolean),
+}) {}
+
+export class FootbalistoLineup extends S.Class<FootbalistoLineup>(
+  "FootbalistoLineup",
+)({
+  home: S.Array(FootbalistoLineupPlayer),
+  away: S.Array(FootbalistoLineupPlayer),
+}) {}
+
+export class FootbalistoMatchDetailGeneral extends S.Class<FootbalistoMatchDetailGeneral>(
+  "FootbalistoMatchDetailGeneral",
+)({
+  id: S.Number,
+  date: S.String,
+  time: S.optional(S.String),
+  homeClub: FootbalistoClub,
+  awayClub: FootbalistoClub,
+  goalsHomeTeam: S.NullOr(S.Number),
+  goalsAwayTeam: S.NullOr(S.Number),
+  homeTeamId: S.optional(S.NullOr(S.Number)),
+  awayTeamId: S.optional(S.NullOr(S.Number)),
+  competitionType: S.String,
+  viewGameReport: S.Boolean,
+  status: S.Number,
+}) {}
+
+export class FootbalistoMatchDetailResponse extends S.Class<FootbalistoMatchDetailResponse>(
+  "FootbalistoMatchDetailResponse",
+)({
+  general: FootbalistoMatchDetailGeneral,
+  lineup: S.optional(FootbalistoLineup),
+  substitutes: S.optional(FootbalistoLineup),
+  events: S.optional(S.Array(FootbalistoMatchEvent)),
+}) {}
+
+export class PsdSeason extends S.Class<PsdSeason>("PsdSeason")({
+  id: S.Number,
+  name: S.String,
+  start: S.String, // ISO date string
+  end: S.String, // ISO date string
+}) {}
+
+export const PsdSeasonsSchema = S.Array(PsdSeason);
+
+export class PsdCompetitionType extends S.Class<PsdCompetitionType>(
+  "PsdCompetitionType",
+)({
+  id: S.Number,
+  name: S.NullOr(S.String),
+  type: S.String, // "LEAGUE", "CUP", "FRIENDLY", etc.
+}) {}
+
+/**
+ * Single game object from PSD `/games/team/{teamId}/seasons/{seasonId}`.
+ * Field names differ from the old Footbalisto API:
+ *  - competitionType is an object (not a string)
+ *  - homeTeam/awayTeam are string team codes ("1", "A") — not used for IDs, use homeClub/awayClub
+ *  - time is a separate field ("HH:MM"); date has "00:00" as its time component
+ *  - no timestamp, no viewGameReport (use reportGeneral)
+ */
+export class PsdGame extends S.Class<PsdGame>("PsdGame")({
+  id: S.Number,
+  status: S.Number,
+  date: S.String, // "YYYY-MM-DD 00:00"
+  time: S.optional(S.NullOr(S.String)), // "HH:MM" actual kickoff time
+  goalsHomeTeam: S.NullOr(S.Number),
+  goalsAwayTeam: S.NullOr(S.Number),
+  homeClub: FootbalistoClub,
+  awayClub: FootbalistoClub,
+  competitionType: S.optional(S.NullOr(PsdCompetitionType)),
+  reportGeneral: S.optional(S.NullOr(S.Boolean)),
+  teamId: S.optional(S.NullOr(S.Number)),
+}) {}
+
+export const PsdMatchListSchema = S.Struct({
+  content: S.Array(PsdGame),
+});
+
+export class PsdTeamStatsResponse extends S.Class<PsdTeamStatsResponse>(
+  "PsdTeamStatsResponse",
+)({
+  squadPlayerStatistics: S.Array(
+    S.Struct({
+      playerId: S.Number,
+      firstName: S.String,
+      lastName: S.String,
+      team: S.optional(S.NullOr(S.String)),
+      gamesPlayed: S.Number,
+      gamesWon: S.Number,
+      gamesLost: S.Number,
+      gamesEqual: S.Number,
+      cleanSheets: S.Number,
+      minutes: S.NullOr(S.Number),
+      goals: S.Number,
+      assists: S.NullOr(S.Number),
+      yellowCards: S.Number,
+      redCards: S.Number,
+    }),
+  ),
+  goalsScored: S.Array(S.Struct({ goal: S.Struct({ id: S.Number }) })),
+  goalsAgainst: S.Array(S.Struct({ goal: S.Struct({ id: S.Number }) })),
+}) {}

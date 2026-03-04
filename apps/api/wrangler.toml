@@ -1,0 +1,26 @@
+name = "kcvv-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+PSD_API_BASE_URL = "https://clubapi.prosoccerdata.com"
+# FOOTBALISTO_LOGO_CDN_URL: fallback logo source — use RankingVO.clubLogo / Club.logo (direct from PSD) first; fall back to CDN construction when the field is empty
+FOOTBALISTO_LOGO_CDN_URL = "https://dfaozfi7c7f3s.cloudfront.net/logos"
+# PSD_API_KEY, PSD_API_CLUB, PSD_API_AUTH are secrets — set via wrangler secret put (never in toml)
+
+[[kv_namespaces]]
+binding = "PSD_CACHE"
+id = "82533c23954d4ed98871dd53465c5c0e"
+preview_id = "4ee68193dd574f7fa01fba9d53d5d475"
+
+[env.staging]
+name = "kcvv-api-staging"
+
+[env.staging.vars]
+PSD_API_BASE_URL = "https://clubapi.prosoccerdata.com"
+FOOTBALISTO_LOGO_CDN_URL = "https://dfaozfi7c7f3s.cloudfront.net/logos"
+
+[[env.staging.kv_namespaces]]
+binding = "PSD_CACHE"
+id = "4ee68193dd574f7fa01fba9d53d5d475"

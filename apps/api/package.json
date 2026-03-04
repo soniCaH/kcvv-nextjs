@@ -1,0 +1,28 @@
+{
+  "name": "@kcvv/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@effect/platform": "^0.94.5",
+    "@kcvv/api-contract": "workspace:*",
+    "effect": "3.19.19"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250409.0",
+    "@vitest/coverage-v8": "4.0.18",
+    "typescript": "5.9.3",
+    "vitest": "4.0.18",
+    "wrangler": "^4.0.0"
+  }
+}
