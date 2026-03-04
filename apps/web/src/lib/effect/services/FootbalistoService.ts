@@ -9,19 +9,20 @@ import {
   Match,
   MatchDetail,
   MatchLineupPlayer,
+  CardType,
+  RankingEntry,
+  TeamStats,
+} from "@kcvv/api-contract";
+import {
   FootbalistoMatch,
   FootbalistoMatchesArray,
   FootbalistoMatchDetailResponse,
   FootbalistoLineupPlayer,
   FootbalistoMatchEvent,
-  CardType,
-  RankingEntry,
   FootbalistoRankingArray,
   FootbalistoRankingEntry,
-  TeamStats,
-  FootbalistoError,
-  ValidationError,
-} from "../schemas";
+} from "../schemas/match.schema";
+import { FootbalistoError, ValidationError } from "../schemas";
 
 // =============================================================================
 // Shared Helpers

@@ -44,6 +44,7 @@ The current KCVV platform consists of four separate repositories spanning two la
 kcvv-nextjs/ (becomes monorepo root, kept on same GitHub repo)
 ├── apps/
 │   ├── web/              ← Next.js 16 website (moved from repo root)
+│   ├── api/              ← Cloudflare Worker BFF (new) — wrangler.toml + src/index.ts
 │   └── studio/           ← Sanity Studio v3 (new)
 ├── packages/
 │   └── api-contract/     ← Shared Effect Schema types + HttpApi definition (new)
@@ -52,7 +53,7 @@ kcvv-nextjs/ (becomes monorepo root, kept on same GitHub repo)
 └── CLAUDE.md             ← root-level cross-project context
 ```
 
-> `kcvv-api` (Cloudflare Worker) lives in a **separate repository** because Cloudflare Workers deployment tooling (Wrangler) has different CI requirements from Turborepo-managed apps. It consumes `packages/api-contract` via a published package or workspace reference.
+> `apps/api` (Cloudflare Worker) lives **inside the monorepo**. Wrangler (Cloudflare's deployment CLI) integrates cleanly with Turborepo — `wrangler dev` and `wrangler deploy` run as turbo pipeline tasks alongside the rest of the workspace. It consumes `packages/api-contract` via workspace reference.
 
 ### Data Flow
 
@@ -61,7 +62,7 @@ Browser
   └─► Next.js (apps/web, Vercel)
         ├─► Sanity CDN          — articles, sponsors, events, organigram, club pages
         │     (direct @sanity/client, no proxy needed — public CDN)
-        └─► KCVV API (kcvv-api, Cloudflare Workers)
+        └─► KCVV API (apps/api, Cloudflare Workers)
               ├─► Cloudflare KV   — cache for ProSoccerData responses
               └─► ProSoccerData   — matches, players, teams, rankings (on cache miss)
 ```
@@ -71,7 +72,7 @@ Browser
 | Service                               | Provider                  | Cost         |
 | ------------------------------------- | ------------------------- | ------------ |
 | `apps/web` (Next.js)                  | Vercel (existing)         | €0           |
-| `kcvv-api` (Effect BFF)               | Cloudflare Workers        | €0           |
+| `apps/api` (Effect BFF)               | Cloudflare Workers        | €0           |
 | `apps/studio` (Sanity Studio)         | Sanity.io hosted / Vercel | €0           |
 | Sanity content API + assets           | Sanity free tier          | €0           |
 | KV cache (PSD responses)              | Cloudflare KV             | €0           |
@@ -95,7 +96,7 @@ Turborepo is the standard monorepo tool for Next.js-based projects (same Vercel 
 The ProSoccerData BFF is rewritten in TypeScript using Effect's `HttpApiBuilder`. This gives us:
 
 - **`packages/api-contract/`** defines `HttpApi` with Effect Schema — the single source of truth for all PSD endpoint shapes
-- **`kcvv-api/`** implements the contract with `HttpApiBuilder.implement(PsdApi)`
+- **`apps/api/`** implements the contract with `HttpApiBuilder.implement(PsdApi)`
 - **`apps/web/`** consumes it with `HttpApiClient.make(PsdApi)` — fully typed, autocomplete, no manual fetch
 
 Effect's `@effect/platform` HTTP server is compatible with Cloudflare Workers via `HttpApp.toWebHandler`, which converts any Effect HTTP app to a standard Web API `fetch` handler (the native Cloudflare Workers interface).
@@ -108,7 +109,7 @@ export class PsdApi extends HttpApi.make("psd")
   .add(TeamsApi)
   .add(RankingApi) {}
 
-// kcvv-api/src/index.ts — Cloudflare Worker entry
+// apps/api/src/index.ts — Cloudflare Worker entry
 export default {
   fetch: HttpApp.toWebHandler(
     HttpApiBuilder.serve(PsdApi).pipe(
@@ -258,7 +259,7 @@ apps/studio/CLAUDE.md              ← Sanity schema conventions, content type r
 packages/api-contract/CLAUDE.md   ← Schema authoring rules, Effect HttpApi conventions
 ```
 
-The `kcvv-api` repo gets its own `CLAUDE.md` covering Cloudflare Workers conventions, Wrangler config, and KV cache patterns.
+`apps/api/` gets its own `CLAUDE.md` covering Cloudflare Workers conventions, Wrangler config, and KV cache patterns.
 
 ---
 
@@ -278,11 +279,11 @@ Only changed packages and their dependents are tested/built on each PR.
 
 ### Deployment Triggers
 
-| App           | Trigger                       | Target                          |
-| ------------- | ----------------------------- | ------------------------------- |
-| `apps/web`    | Merge to main                 | Vercel (automatic, existing)    |
-| `apps/studio` | Merge to main                 | Vercel / sanity.io (automatic)  |
-| `kcvv-api`    | Merge to main (separate repo) | Cloudflare Workers via Wrangler |
+| App           | Trigger       | Target                          |
+| ------------- | ------------- | ------------------------------- |
+| `apps/web`    | Merge to main | Vercel (automatic, existing)    |
+| `apps/studio` | Merge to main | Vercel / sanity.io (automatic)  |
+| `apps/api`    | Merge to main | Cloudflare Workers via Wrangler |
 
 ### Repository Visibility
 
@@ -315,7 +316,7 @@ Each phase keeps the live site fully functional throughout.
 
 ### Phase 2 — Effect BFF on Cloudflare Workers
 
-- Create `kcvv-api` GitHub repository
+- Create `apps/api/` in the monorepo with Wrangler + TypeScript setup
 - Implement `HttpApiBuilder.implement(PsdApi)` with Cloudflare KV caching
 - Migrate endpoint-combining logic from Lambda → Effect `Effect.all`
 - Deploy to Cloudflare Workers, run in parallel with AWS for a short validation window
@@ -360,6 +361,6 @@ Continue existing migration phases with the full typed stack available:
 ## 12. Open Questions / Future Decisions
 
 - **Sanity dataset privacy:** Free tier is public-only. If member-only content is ever needed, gate at Next.js middleware layer (check session before fetching) rather than upgrading Sanity tier.
-- **`kcvv-api` monorepo inclusion:** Kept separate now due to Wrangler tooling. If Turborepo + Wrangler integration matures, `apps/api/` can move into the monorepo without breaking changes.
+- **`apps/api` deployment:** Wrangler integrates cleanly with Turborepo. CD runs `wrangler deploy` via a turbo pipeline task, same as `vercel --prod` for the web app.
 - **Kiosk mode (#520):** If it needs its own deployment unit, add as `apps/kiosk/` in the monorepo.
 - **Admin UI beyond Sanity Studio:** If custom CRUD forms are ever needed (beyond what Sanity handles), Cloudflare Access (free ≤50 users, email OTP) is the preferred auth solution for an `apps/admin/` Next.js app.

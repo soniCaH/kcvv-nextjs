@@ -1,6 +1,5 @@
-// Phase 1 will populate this package with:
-// - Shared Effect Schema types (migrated from apps/web/src/lib/schemas/)
-// - HttpApi groups for all ProSoccerData endpoints
-// - PsdApi root export for use with HttpApiClient and HttpApiBuilder
+// Shared schemas — consumed by both apps/web and apps/api
+export * from "./schemas/index";
 
-export {};
+// HttpApi definition — apps/api implements this; apps/web consumes via HttpApiClient
+export * from "./api/index";
