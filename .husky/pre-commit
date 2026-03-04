@@ -6,7 +6,7 @@ npx lint-staged
 
 # Type check
 echo "📝 Type checking..."
-npm run type-check
+pnpm run type-check
 
 
 echo "✅ Pre-commit checks passed!"

@@ -21,5 +21,15 @@ if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
   OUTPUT="$OUTPUT | WARNING: on main — create a feature branch before making changes"
 fi
 
+# Warn when on a feature branch outside a git worktree.
+# git-dir == git-common-dir means we are in the main working tree, not a linked worktree.
+if echo "$BRANCH" | grep -qE '^(feat|fix|migrate|refactor|test|docs)/'; then
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null || echo "")
+  GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null || echo "")
+  if [ -n "$GIT_DIR" ] && [ "$GIT_DIR" = "$GIT_COMMON_DIR" ]; then
+    OUTPUT="$OUTPUT | WARNING: feature branch running in main worktree — invoke superpowers:using-git-worktrees to isolate this branch before making changes"
+  fi
+fi
+
 echo "$OUTPUT"
 exit 0
