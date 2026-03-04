@@ -87,9 +87,11 @@ GameInformation {
 
 **Note:** The Lambda used `{ general, lineup, substitutes, events }` which is the **legacy format** from an older PSD API version. Use the new `GameInformation` format for new development.
 
-#### `GET /games/{id}/gameselections?teamId={teamId}&includeMemberPositions=true`
+#### `GET /games/{id}/gameselections?includeMemberPositions=true`
 
-Get game squad selection with player positions. **This is the solution for keeper/position identification.**
+Get squad selection with player positions for **both teams**. `teamId` is optional — omit it to get home + away lineups in one call, which is what you want for the match detail page.
+
+**This is the solution for keeper/position identification.**
 
 Returns `GameSelectionWithMemberPositionsDTO[]`:
 
