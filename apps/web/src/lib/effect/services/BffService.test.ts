@@ -186,21 +186,26 @@ describe("BffService", () => {
       vi.fn().mockResolvedValue(new Response("", { status: 500 })),
     );
 
-    const result = await Effect.runPromise(
+    const exit = await Effect.runPromiseExit(
       Effect.gen(function* () {
         const bff = yield* BffService;
-        return yield* bff
-          .getMatches(1)
-          .pipe(
-            Effect.catchAll(() =>
-              Effect.succeed(
-                [] as readonly import("@kcvv/api-contract").Match[],
-              ),
-            ),
-          );
+        return yield* bff.getMatches(1);
       }).pipe(Effect.provide(BffServiceLive)),
     );
 
-    expect(result).toEqual([]);
+    expect(exit._tag).toBe("Failure");
+  });
+
+  it("throws when KCVV_API_URL is missing", async () => {
+    vi.unstubAllEnvs();
+
+    const exit = await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const bff = yield* BffService;
+        return yield* bff.getMatches(1);
+      }).pipe(Effect.provide(BffServiceLive)),
+    );
+
+    expect(exit._tag).toBe("Failure");
   });
 });

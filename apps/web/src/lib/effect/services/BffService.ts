@@ -30,10 +30,12 @@ export class BffService extends Context.Tag("BffService")<
   }
 >() {}
 
+const DEFAULT_TIMEOUT = "30 seconds";
+
 export const BffServiceLive = Layer.effect(
   BffService,
   Effect.gen(function* () {
-    const bffUrl = process.env.KCVV_API_URL;
+    const bffUrl = process.env.KCVV_API_URL?.trim();
     if (!bffUrl)
       throw new Error(
         "KCVV_API_URL is not set — add it to .env.local before starting the app",
@@ -43,25 +45,25 @@ export const BffServiceLive = Layer.effect(
       getMatches: (teamId: number) =>
         client.matches
           .getMatchesByTeam({ path: { teamId } })
-          .pipe(Effect.timeout("30 seconds")),
+          .pipe(Effect.timeout(DEFAULT_TIMEOUT)),
       getNextMatches: () =>
-        client.matches.getNextMatches({}).pipe(Effect.timeout("30 seconds")),
+        client.matches.getNextMatches({}).pipe(Effect.timeout(DEFAULT_TIMEOUT)),
       getMatchById: (matchId: number) =>
         client.matches
           .getMatchById({ path: { matchId } })
-          .pipe(Effect.timeout("30 seconds")),
+          .pipe(Effect.timeout(DEFAULT_TIMEOUT)),
       getMatchDetail: (matchId: number) =>
         client.matches
           .getMatchDetail({ path: { matchId } })
-          .pipe(Effect.timeout("30 seconds")),
+          .pipe(Effect.timeout(DEFAULT_TIMEOUT)),
       getRanking: (teamId: number) =>
         client.ranking
           .getRanking({ path: { teamId } })
-          .pipe(Effect.timeout("30 seconds")),
+          .pipe(Effect.timeout(DEFAULT_TIMEOUT)),
       getTeamStats: (teamId: number) =>
         client.stats
           .getTeamStats({ path: { teamId } })
-          .pipe(Effect.timeout("30 seconds")),
+          .pipe(Effect.timeout(DEFAULT_TIMEOUT)),
     };
   }),
 ).pipe(Layer.provide(FetchHttpClient.layer));
