@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Effect } from "effect";
 import { BffService, BffServiceLive } from "./BffService";
 
@@ -50,7 +50,11 @@ function mockFetchWith(data: unknown, status = 200) {
 }
 
 describe("BffService", () => {
-  afterEach(() => vi.unstubAllGlobals());
+  beforeEach(() => vi.stubEnv("KCVV_API_URL", "http://localhost:3001"));
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
 
   it("getMatches calls /matches/:teamId and returns decoded matches", async () => {
     mockFetchWith([sampleMatch]);

@@ -30,14 +30,15 @@ export class BffService extends Context.Tag("BffService")<
   }
 >() {}
 
-const BFF_URL =
-  process.env.KCVV_API_URL ??
-  "https://kcvv-api.kevin-van-ransbeeck.workers.dev";
-
 export const BffServiceLive = Layer.effect(
   BffService,
   Effect.gen(function* () {
-    const client = yield* HttpApiClient.make(PsdApi, { baseUrl: BFF_URL });
+    const bffUrl = process.env.KCVV_API_URL;
+    if (!bffUrl)
+      throw new Error(
+        "KCVV_API_URL is not set — add it to .env.local before starting the app",
+      );
+    const client = yield* HttpApiClient.make(PsdApi, { baseUrl: bffUrl });
     return {
       getMatches: (teamId: number) =>
         client.matches
