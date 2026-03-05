@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Effect } from "effect";
 import { runPromise } from "@/lib/effect/runtime";
-import { FootbalistoService } from "@/lib/effect/services/FootbalistoService";
+import { BffService } from "@/lib/effect/services/BffService";
 import { CalendarView } from "./CalendarView";
 import type { CalendarMatch } from "./CalendarView";
 import { Spinner } from "@/components/design-system";
@@ -35,8 +35,8 @@ export const metadata: Metadata = {
 async function fetchMatches(): Promise<CalendarMatch[]> {
   const matches = await runPromise(
     Effect.gen(function* () {
-      const footbalisto = yield* FootbalistoService;
-      return yield* footbalisto.getNextMatches();
+      const bff = yield* BffService;
+      return yield* bff.getNextMatches();
     }).pipe(
       Effect.catchAll((error) => {
         console.error("[Calendar] Failed to fetch matches:", error);

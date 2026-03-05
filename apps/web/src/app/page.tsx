@@ -6,7 +6,7 @@
 import { Effect } from "effect";
 import { runPromise } from "@/lib/effect/runtime";
 import { DrupalService } from "@/lib/effect/services/DrupalService";
-import { FootbalistoService } from "@/lib/effect/services/FootbalistoService";
+import { BffService } from "@/lib/effect/services/BffService";
 import {
   FeaturedArticles,
   LatestNews,
@@ -61,8 +61,8 @@ export default async function HomePage() {
     ),
     runPromise(
       Effect.gen(function* () {
-        const footbalisto = yield* FootbalistoService;
-        return yield* footbalisto.getNextMatches();
+        const bff = yield* BffService;
+        return yield* bff.getNextMatches();
       }).pipe(
         // Graceful fallback: return empty array on error
         Effect.catchAll((error) => {
