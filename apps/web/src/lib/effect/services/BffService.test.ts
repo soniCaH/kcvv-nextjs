@@ -197,15 +197,15 @@ describe("BffService", () => {
   });
 
   it("throws when KCVV_API_URL is missing", async () => {
-    vi.unstubAllEnvs();
+    vi.stubEnv("KCVV_API_URL", "   ");
 
-    const exit = await Effect.runPromiseExit(
-      Effect.gen(function* () {
-        const bff = yield* BffService;
-        return yield* bff.getMatches(1);
-      }).pipe(Effect.provide(BffServiceLive)),
-    );
-
-    expect(exit._tag).toBe("Failure");
+    await expect(
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const bff = yield* BffService;
+          return yield* bff.getMatches(1);
+        }).pipe(Effect.provide(BffServiceLive)),
+      ),
+    ).rejects.toThrow(/KCVV_API_URL is not set/);
   });
 });
