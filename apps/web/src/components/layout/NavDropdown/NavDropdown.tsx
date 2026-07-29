@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
+import { handleSamePageAnchorClick } from "@/lib/utils/same-page-anchor";
 
 const OPEN_GRACE_MS = 80;
 const CLOSE_GRACE_MS = 200;
@@ -416,7 +417,10 @@ const NavDropdownRow = ({ item, variant, onClick }: NavDropdownRowProps) => (
       href={item.href}
       role="menuitem"
       aria-current={item.active ? "page" : undefined}
-      onClick={onClick}
+      onClick={(e) => {
+        handleSamePageAnchorClick(e, item.href);
+        onClick();
+      }}
       className={cn(
         "group/row flex items-center gap-2.5 font-mono text-[11px] font-semibold tracking-[0.06em] uppercase no-underline transition-colors",
         variant === "narrow" ? "py-2.5 pr-[18px] pl-[14px]" : "px-1 py-2",
