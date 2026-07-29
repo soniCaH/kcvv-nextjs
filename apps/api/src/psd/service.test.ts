@@ -36,7 +36,7 @@ const cacheMock: KvCacheInterface = {
   // /competitions, /teams and season-games requests.
   get: (key: string) =>
     Effect.succeed(
-      key === "psd:competition-labels" || key === "psd:match-team-index"
+      key === "psd:competition-labels" || key === "psd:match-team-index:v2"
         ? "{}"
         : null,
     ),
@@ -1267,6 +1267,137 @@ describe("PsdService.getMatchDetail", () => {
   });
 });
 
+describe("PsdService.getMatchDetail — status/score backfill from season list", () => {
+  // A preview-shaped `/info` payload: match played, but the report hasn't
+  // populated yet — null goals ⇒ status derived as "scheduled".
+  const previewDetailResponse = {
+    general: {
+      id: 99,
+      date: "2025-01-15 15:00",
+      homeClub: { id: 123, name: "KCVV Elewijt" },
+      awayClub: { id: 456, name: "Opponent FC" },
+      goalsHomeTeam: null,
+      goalsAwayTeam: null,
+      competitionType: { id: 1, name: "3de Nationale", type: "LEAGUE" },
+      viewGameReport: false,
+      status: 0,
+    },
+  };
+
+  // KV mock seeding a populated match-team index (12h cache-hit → no fan-out).
+  const indexKvMock = (entry: Record<string, unknown>): KvCacheInterface => ({
+    get: (key: string) =>
+      Effect.succeed(
+        key === "psd:match-team-index:v2"
+          ? JSON.stringify({ "99": entry })
+          : key === "psd:competition-labels"
+            ? "{}"
+            : null,
+      ),
+    set: () => Effect.succeed(undefined),
+    increment: () => Effect.succeed(undefined),
+  });
+
+  it("backfills finished status + score when /info is still preview-shaped", async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => previewDetailResponse,
+    });
+
+    const result = await runService((svc) => svc.getMatchDetail(99), {
+      kvMock: indexKvMock({
+        teamId: 1,
+        competitionType: "league",
+        status: "finished",
+        homeScore: 3,
+        awayScore: 1,
+      }),
+    });
+
+    expect(result._tag).toBe("Right");
+    if (result._tag === "Right") {
+      expect(result.right.status).toBe("finished");
+      expect(result.right.home_team.score).toBe(3);
+      expect(result.right.away_team.score).toBe(1);
+    }
+  });
+
+  it("does not downgrade a result /info already reports (forward-only)", async () => {
+    // /info reports finished 2-0; a stale index still says "scheduled" — keep
+    // the richer /info result rather than reverting to a preview.
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => rawDetailResponse, // finished 2-0
+    });
+
+    const result = await runService((svc) => svc.getMatchDetail(99), {
+      kvMock: indexKvMock({
+        teamId: 1,
+        competitionType: "league",
+        status: "scheduled",
+      }),
+    });
+
+    expect(result._tag).toBe("Right");
+    if (result._tag === "Right") {
+      expect(result.right.status).toBe("finished");
+      expect(result.right.home_team.score).toBe(2);
+      expect(result.right.away_team.score).toBe(0);
+    }
+  });
+
+  it("keeps /info scores when both are settled but the index score is stale", async () => {
+    // /info reports finished 2-0; the index is settled too but with stale
+    // scores (5-5). The forward-only guard (`!detailSettled`) must keep the
+    // richer /info result and not overwrite it with the index's stale scores.
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => rawDetailResponse, // finished 2-0
+    });
+
+    const result = await runService((svc) => svc.getMatchDetail(99), {
+      kvMock: indexKvMock({
+        teamId: 1,
+        competitionType: "league",
+        status: "finished",
+        homeScore: 5,
+        awayScore: 5,
+      }),
+    });
+
+    expect(result._tag).toBe("Right");
+    if (result._tag === "Right") {
+      expect(result.right.status).toBe("finished");
+      expect(result.right.home_team.score).toBe(2);
+      expect(result.right.away_team.score).toBe(0);
+    }
+  });
+
+  it("leaves the preview untouched when the list is not yet settled", async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => previewDetailResponse,
+    });
+
+    const result = await runService((svc) => svc.getMatchDetail(99), {
+      kvMock: indexKvMock({
+        teamId: 1,
+        competitionType: "league",
+        status: "scheduled",
+      }),
+    });
+
+    expect(result._tag).toBe("Right");
+    if (result._tag === "Right") {
+      expect(result.right.status).toBe("scheduled");
+      expect(result.right.home_team.score).toBeUndefined();
+      // Enrichment still applies (team id + competition type).
+      expect(result.right.kcvv_team_id).toBe(1);
+      expect(result.right.competitionType).toBe("league");
+    }
+  });
+});
+
 const rawDetailWithGoal = {
   general: {
     id: 123,
@@ -1761,7 +1892,7 @@ describe("PsdService.getMatchDetail - competition/team enrichment", () => {
     const kvMock: KvCacheInterface = {
       get: (key: string) =>
         Effect.succeed(
-          key === "psd:match-team-index" ? JSON.stringify(idx) : null,
+          key === "psd:match-team-index:v2" ? JSON.stringify(idx) : null,
         ),
       set: () => Effect.succeed(undefined),
       increment: () => Effect.succeed(undefined),

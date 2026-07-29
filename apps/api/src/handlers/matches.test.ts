@@ -277,83 +277,138 @@ describe("matchDetailTtl", () => {
   const at = (offsetMs: number) => new Date(now + offsetMs);
   const H = 60 * 60 * 1000;
 
+  // A match WITH report data exercises the pure proximity ladder — the
+  // report-pending override never fires, so these assert the base tiers.
+  const settled = { hasReportData: true, hasReport: true };
+  // Preview-shaped: past kickoff, no report data. `hasReport` distinguishes
+  // "PSD says a report exists upstream" from "genuinely reportless".
+  const previewFlagged = { hasReportData: false, hasReport: true };
+  const previewReportless = { hasReportData: false, hasReport: false };
+
   it("settled ≥48h ago → 7 days (immutable)", () => {
-    expect(matchDetailTtl(at(-3 * 24 * H), "finished", now)).toBe(
+    expect(matchDetailTtl(at(-3 * 24 * H), "finished", settled, now)).toBe(
       TTL.MATCH_DETAIL_PAST,
     );
-    expect(matchDetailTtl(at(-3 * 24 * H), "forfeited", now)).toBe(
+    expect(matchDetailTtl(at(-3 * 24 * H), "forfeited", settled, now)).toBe(
       TTL.MATCH_DETAIL_PAST,
     );
   });
 
   it("within 3h of kickoff → live (60s), even when just finished", () => {
-    expect(matchDetailTtl(at(0), "in_progress", now)).toBe(
+    expect(matchDetailTtl(at(0), "in_progress", settled, now)).toBe(
       TTL.MATCH_DETAIL_LIVE,
     );
-    expect(matchDetailTtl(at(-1 * H), "finished", now)).toBe(
+    expect(matchDetailTtl(at(-1 * H), "finished", settled, now)).toBe(
       TTL.MATCH_DETAIL_LIVE,
     );
   });
 
   it("3h–24h from kickoff → matchday (300s)", () => {
-    expect(matchDetailTtl(at(10 * H), "scheduled", now)).toBe(
+    expect(matchDetailTtl(at(10 * H), "scheduled", settled, now)).toBe(
       TTL.MATCH_DETAIL_MATCHDAY,
     );
   });
 
   it("1d–7d from kickoff → this week (3600s)", () => {
-    expect(matchDetailTtl(at(3 * 24 * H), "scheduled", now)).toBe(
+    expect(matchDetailTtl(at(3 * 24 * H), "scheduled", settled, now)).toBe(
       TTL.MATCH_DETAIL_WEEK,
     );
   });
 
   it("beyond 7d (past or future) → distant (24h)", () => {
-    expect(matchDetailTtl(at(10 * 24 * H), "scheduled", now)).toBe(
+    expect(matchDetailTtl(at(10 * 24 * H), "scheduled", settled, now)).toBe(
       TTL.MATCH_DETAIL_DEFAULT,
     );
-    expect(matchDetailTtl(at(-10 * 24 * H), "scheduled", now)).toBe(
+    expect(matchDetailTtl(at(-10 * 24 * H), "scheduled", settled, now)).toBe(
       TTL.MATCH_DETAIL_DEFAULT,
     );
   });
 
   // Exact tier cutoffs — guard the < vs >= comparisons against off-by-one.
   it("48h-finished cutoff (>= is PAST)", () => {
-    expect(matchDetailTtl(at(-48 * H), "finished", now)).toBe(
+    expect(matchDetailTtl(at(-48 * H), "finished", settled, now)).toBe(
       TTL.MATCH_DETAIL_PAST, // exactly 48h ago → immutable
     );
-    expect(matchDetailTtl(at(-48 * H - 1), "finished", now)).toBe(
+    expect(matchDetailTtl(at(-48 * H - 1), "finished", settled, now)).toBe(
       TTL.MATCH_DETAIL_PAST, // just over 48h → immutable
     );
-    expect(matchDetailTtl(at(-48 * H + 1), "finished", now)).toBe(
+    expect(matchDetailTtl(at(-48 * H + 1), "finished", settled, now)).toBe(
       TTL.MATCH_DETAIL_WEEK, // just under 48h → not yet immutable, ~48h distance
     );
   });
 
   it("3h cutoff (< is LIVE)", () => {
-    expect(matchDetailTtl(at(3 * H - 1), "scheduled", now)).toBe(
+    expect(matchDetailTtl(at(3 * H - 1), "scheduled", settled, now)).toBe(
       TTL.MATCH_DETAIL_LIVE,
     );
-    expect(matchDetailTtl(at(3 * H), "scheduled", now)).toBe(
+    expect(matchDetailTtl(at(3 * H), "scheduled", settled, now)).toBe(
       TTL.MATCH_DETAIL_MATCHDAY,
     );
   });
 
   it("24h cutoff (< is MATCHDAY)", () => {
-    expect(matchDetailTtl(at(24 * H - 1), "scheduled", now)).toBe(
+    expect(matchDetailTtl(at(24 * H - 1), "scheduled", settled, now)).toBe(
       TTL.MATCH_DETAIL_MATCHDAY,
     );
-    expect(matchDetailTtl(at(24 * H), "scheduled", now)).toBe(
+    expect(matchDetailTtl(at(24 * H), "scheduled", settled, now)).toBe(
       TTL.MATCH_DETAIL_WEEK,
     );
   });
 
   it("7d cutoff (< is WEEK)", () => {
-    expect(matchDetailTtl(at(7 * 24 * H - 1), "scheduled", now)).toBe(
+    expect(matchDetailTtl(at(7 * 24 * H - 1), "scheduled", settled, now)).toBe(
       TTL.MATCH_DETAIL_WEEK,
     );
-    expect(matchDetailTtl(at(7 * 24 * H), "scheduled", now)).toBe(
+    expect(matchDetailTtl(at(7 * 24 * H), "scheduled", settled, now)).toBe(
       TTL.MATCH_DETAIL_DEFAULT,
     );
+  });
+
+  it("defaults to the proximity ladder when report state is omitted", () => {
+    expect(matchDetailTtl(at(-3 * 24 * H), "finished", undefined, now)).toBe(
+      TTL.MATCH_DETAIL_PAST,
+    );
+  });
+
+  // Report-pending override — a past match still missing its report must not be
+  // pinned behind a long TTL (the "finished match shows preview" bug, #2303).
+  describe("report-pending override", () => {
+    it("caps a just-finished match with no report at matchday cadence", () => {
+      // 30h ago, backfilled to finished but /info still preview-shaped: without
+      // the override this would be WEEK (3600s); the grace window shortens it.
+      expect(
+        matchDetailTtl(at(-30 * H), "finished", previewReportless, now),
+      ).toBe(TTL.MATCH_DETAIL_MATCHDAY);
+    });
+
+    it("keeps re-checking a settled-looking match while PSD flags a report exists", () => {
+      // ≥48h ago (would be PAST=7d) but hasReport=true and no report data yet →
+      // our snapshot missed it; keep polling on a matchday cadence.
+      expect(
+        matchDetailTtl(at(-5 * 24 * H), "finished", previewFlagged, now),
+      ).toBe(TTL.MATCH_DETAIL_MATCHDAY);
+    });
+
+    it("does not over-shorten a live match already under matchday (keeps 60s)", () => {
+      // 1h after kickoff, no report yet → still LIVE (min(60s, 300s) = 60s).
+      expect(
+        matchDetailTtl(at(-1 * H), "finished", previewReportless, now),
+      ).toBe(TTL.MATCH_DETAIL_LIVE);
+    });
+
+    it("backs off for a reportless match beyond 48h with no report flag", () => {
+      // 5 days ago, no report, hasReport=false → genuinely reportless, cache
+      // long (PAST=7d) rather than polling forever.
+      expect(
+        matchDetailTtl(at(-5 * 24 * H), "finished", previewReportless, now),
+      ).toBe(TTL.MATCH_DETAIL_PAST);
+    });
+
+    it("does not fire for a future match without report data", () => {
+      expect(
+        matchDetailTtl(at(10 * H), "scheduled", previewReportless, now),
+      ).toBe(TTL.MATCH_DETAIL_MATCHDAY);
+    });
   });
 });
 

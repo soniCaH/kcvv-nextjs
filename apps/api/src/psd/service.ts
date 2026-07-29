@@ -36,6 +36,8 @@ import {
   buildCompetitionLabelMap,
   type CompetitionLabelMap,
   resolveCompetitionType,
+  mapGameStatus,
+  isSettledMatchStatus,
   transformFootbalistoMatchDetail,
   transformFootbalistoRankingEntry,
   extractId,
@@ -296,7 +298,10 @@ export const PsdServiceLive = Layer.effect(
     // (new/rescheduled fixtures), and the index is independent of standings
     // freshness (that's `getRanking`'s concern) — so a long TTL costs nothing in
     // live-site accuracy while keeping us far under quota.
-    const MATCH_TEAM_INDEX_CACHE_KEY = "psd:match-team-index";
+    // v2: entries now carry the season-list status + score for the detail
+    // backfill. Bump the key so pre-deployment (v1-shaped) entries are not read
+    // by the new field-shape logic and a clean index is rebuilt on first use.
+    const MATCH_TEAM_INDEX_CACHE_KEY = "psd:match-team-index:v2";
     const MATCH_TEAM_INDEX_TTL = 60 * 60 * 12; // 12h
     // Negative-cache an empty index briefly so a partial upstream outage (e.g.
     // /info ok but the per-team fetches fail) can't trigger a ~20-fetch rebuild
@@ -306,6 +311,12 @@ export const PsdServiceLive = Layer.effect(
     interface MatchTeamIndexEntry {
       teamId: number;
       competitionType: CompetitionType;
+      // Season-list-derived status + score. The list reflects the final result
+      // before the `/info` match report catches up, so `getMatchDetail` can
+      // backfill a settled result while `/info` is still preview-shaped.
+      status: Match["status"];
+      homeScore?: number;
+      awayScore?: number;
     }
     type MatchTeamIndex = Record<string, MatchTeamIndexEntry>;
 
@@ -346,6 +357,14 @@ export const PsdServiceLive = Layer.effect(
             index[key] = {
               teamId: team.id,
               competitionType: resolveCompetitionType(game.competitionType),
+              status: mapGameStatus(
+                game.status,
+                game.goalsHomeTeam,
+                game.goalsAwayTeam,
+                game.cancelled,
+              ),
+              homeScore: game.goalsHomeTeam ?? undefined,
+              awayScore: game.goalsAwayTeam ?? undefined,
             };
           }
         }
@@ -647,10 +666,42 @@ export const PsdServiceLive = Layer.effect(
               Effect.map((index) => {
                 const entry = index[String(matchId)];
                 if (!entry) return detail;
+                // The season-games list is authoritative for status + score and
+                // reflects the final result before `/info` catches up (PSD fills
+                // goals/lineups a while after full-time). When the list already
+                // has a settled result but `/info` is still preview-shaped (null
+                // goals → "scheduled"), backfill status + score forward so the
+                // page shows MATCHVERSLAG with the score instead of the preview.
+                // Forward-only: never downgrade a result `/info` already reports.
+                //
+                // Best-effort: this reads the match-team index, cached up to 12h
+                // (MATCH_TEAM_INDEX_TTL) since team assignments change weekly. So
+                // the backfill fires only once the index has itself refreshed to
+                // the settled result — the immediate post-full-time window is not
+                // guaranteed. The reliable cure for that window is `/info` itself
+                // settling (a few hours later), which the report-pending TTL in
+                // `matchDetailTtl` keeps re-checking rather than pinning stale.
+                const backfill =
+                  isSettledMatchStatus(entry.status) &&
+                  !isSettledMatchStatus(detail.status);
+
                 return {
                   ...detail,
                   kcvv_team_id: entry.teamId,
                   competitionType: entry.competitionType,
+                  ...(backfill
+                    ? {
+                        status: entry.status,
+                        home_team: {
+                          ...detail.home_team,
+                          score: entry.homeScore ?? detail.home_team.score,
+                        },
+                        away_team: {
+                          ...detail.away_team,
+                          score: entry.awayScore ?? detail.away_team.score,
+                        },
+                      }
+                    : {}),
                 };
               }),
             ),
