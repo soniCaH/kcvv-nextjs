@@ -62,9 +62,9 @@ export function isPlayedMatch(status: MatchStatus): boolean {
 /**
  * Inset underline that tints a finished match's scoreline by KCVV-perspective
  * outcome (win = jersey-deep, loss = alert, draw = none — the cream mix keeps it
- * legible on both cream and jersey-deep cards). Shared by every surface that
- * renders a result with the outcome cue (`<TeamAgendaRow>`, the homepage
- * `<FirstTeamsBlock>`) so the colour can't drift between them.
+ * legible on both cream and jersey-deep cards). Owned by `<TeamAgendaRow>` —
+ * the shared match row used on team pages, `/kalender`, and the homepage
+ * `<FirstTeamsBlock>` (#2301) — so the outcome colour can't drift between them.
  */
 export const OUTCOME_UNDERLINE: Record<
   "win" | "draw" | "loss",

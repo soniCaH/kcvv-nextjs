@@ -2,29 +2,21 @@
  * <FirstTeamsBlock> — homepage "Eerste ploegen" eyecatcher (#2211).
  *
  * Full-bleed jersey-deep-dark matchday-desk band (StripedSeam top + bottom),
- * one full-width row per senior team: [team label] · [last-result card] ·
- * [next-fixture card]. The result + fixture are two independent press-down
- * cards, each deep-linking to its own match detail (`/wedstrijd/{id}`).
+ * one full-width row per senior team: [team label] · [last result] ·
+ * [next fixture]. Both the result and the next fixture render as the shared
+ * unified <TeamAgendaRow> — the same match row used on team pages + /kalender
+ * (#2301, Direction A): the result as a cream row, the next fixture as the
+ * featured jersey-deep card. Each row owns its own press-down <Link> deep to
+ * its match detail (`/wedstrijd/{id}`), so there is no bespoke card style left
+ * to clash and no nested-interactive wrapper on touch.
  *
  * Design lock: docs/design/mockups/eerste-ploegen/eerste-ploegen-locked.md
  * (visual record: docs/design/mockups/eerste-ploegen/04-b3-ia.html).
  */
 import Link from "next/link";
-import { DateTime } from "luxon";
-import {
-  Crest,
-  EditorialHeading,
-  StripedSeam,
-} from "@/components/design-system";
-import { OUTCOME_UNDERLINE } from "@/lib/utils/match-display";
-import { normalizeTeamName } from "@/lib/mappers/match.mapper";
-import { cn } from "@/lib/utils/cn";
-import { FirstTeamCardLink } from "./FirstTeamCardLink";
-import type {
-  FirstTeamVM,
-  FirstTeamResultVM,
-  FirstTeamFixtureVM,
-} from "./first-teams";
+import { EditorialHeading, StripedSeam } from "@/components/design-system";
+import { FirstTeamAgendaRow } from "./FirstTeamAgendaRow";
+import type { FirstTeamVM } from "./first-teams";
 
 export interface FirstTeamsBlockProps {
   teams: FirstTeamVM[];
@@ -35,141 +27,6 @@ export interface FirstTeamsBlockProps {
    * (pre-season). Defaults to "Dit weekend." so stories/tests stay stable.
    */
   heading?: string;
-}
-
-const OUTCOME_WORD: Record<"win" | "draw" | "loss", string> = {
-  win: "Gewonnen",
-  draw: "Gelijkspel",
-  loss: "Verloren",
-};
-
-// Match.date encodes Belgian wall-clock time as UTC (BFF builds it via
-// `Date.UTC(y, m, d, hour, minute)` from the PSD local time), so format in UTC
-// to surface the stored day/kickoff verbatim — and deterministically for VR,
-// independent of the runner's timezone.
-const nl = (date: Date) =>
-  DateTime.fromJSDate(date, { zone: "utc" }).setLocale("nl");
-const fmtWeekday = (date: Date) =>
-  nl(date).toFormat("EEE").replace(/\.$/, "").toLowerCase();
-const fmtMonth = (date: Date) =>
-  nl(date).toFormat("MMM").replace(/\.$/, "").toLowerCase();
-const fmtDay = (date: Date) => nl(date).toFormat("d");
-const fmtResultDate = (date: Date) =>
-  `${fmtWeekday(date)} ${fmtDay(date)} ${fmtMonth(date)}`;
-const fmtKickoff = (date: Date, time?: string) =>
-  time ?? nl(date).toFormat("HH:mm");
-const homeAwayLabel = (isHome?: boolean) =>
-  isHome === true ? "Thuis" : isHome === false ? "Uit" : null;
-
-function ResultCard({
-  slug,
-  result,
-}: {
-  slug: string;
-  result: FirstTeamResultVM;
-}) {
-  const { home, away, homeScore, awayScore, isHome, outcome } = result;
-  const hasScore =
-    typeof homeScore === "number" && typeof awayScore === "number";
-  const underline = outcome ? OUTCOME_UNDERLINE[outcome] : undefined;
-  const homeAway = homeAwayLabel(isHome);
-  const meta = [
-    homeAway,
-    fmtResultDate(result.date),
-    result.competition,
-  ].filter(Boolean);
-
-  return (
-    <FirstTeamCardLink
-      href={`/wedstrijd/${result.matchId}`}
-      teamSlug={slug}
-      matchId={result.matchId}
-      kind="result"
-      ariaLabel={`Uitslag ${normalizeTeamName(home.name)} tegen ${normalizeTeamName(away.name)} — bekijk wedstrijd`}
-      className="border-cream bg-jersey-deep-dark text-cream shadow-[4px_4px_0_0_var(--color-ink-muted)]"
-    >
-      <div className="px-4 py-3">
-        <span className="text-cream/85 font-mono text-[10px] font-bold tracking-wide uppercase">
-          {outcome ? OUTCOME_WORD[outcome] : "Gespeeld"}
-        </span>
-        <div className="mt-1.5 flex items-center gap-2">
-          <Crest name={home.name} logo={home.logo} size={22} />
-          <span
-            className="font-display-big text-cream text-[2rem] leading-none font-bold tabular-nums"
-            style={underline ? { boxShadow: underline } : undefined}
-          >
-            {hasScore ? `${homeScore}–${awayScore}` : "—"}
-          </span>
-          <Crest name={away.name} logo={away.logo} size={22} />
-          <span className="text-cream/85 ml-1 min-w-0 truncate text-xs">
-            <span className={cn(isHome === true && "text-cream font-semibold")}>
-              {normalizeTeamName(home.name)}
-            </span>
-            {" — "}
-            <span
-              className={cn(isHome === false && "text-cream font-semibold")}
-            >
-              {normalizeTeamName(away.name)}
-            </span>
-          </span>
-        </div>
-        <span className="text-cream/65 mt-1.5 block font-mono text-[10px] tracking-wide uppercase">
-          {meta.join(" · ")}
-        </span>
-      </div>
-    </FirstTeamCardLink>
-  );
-}
-
-function FixtureCard({
-  slug,
-  fixture,
-}: {
-  slug: string;
-  fixture: FirstTeamFixtureVM;
-}) {
-  const { opponent, isHome } = fixture;
-  const homeAway = homeAwayLabel(isHome);
-  const sub = [homeAway, fixture.competition].filter(Boolean).join(" · ");
-
-  return (
-    <FirstTeamCardLink
-      href={`/wedstrijd/${fixture.matchId}`}
-      teamSlug={slug}
-      matchId={fixture.matchId}
-      kind="fixture"
-      ariaLabel={`Volgende wedstrijd tegen ${normalizeTeamName(opponent.name)} — bekijk wedstrijd`}
-      className="border-ink bg-cream text-ink flex shadow-[4px_4px_0_0_var(--color-ink)]"
-    >
-      <div className="border-ink/30 flex flex-col items-center justify-center border-r-2 border-dashed px-3.5 py-2">
-        <span className="text-ink-muted font-mono text-[10px] tracking-wide uppercase">
-          {fmtWeekday(fixture.date)}
-        </span>
-        <span className="font-display text-xl leading-none font-bold">
-          {fmtDay(fixture.date)}
-        </span>
-        <span className="text-ink-muted font-mono text-[10px] tracking-wide uppercase">
-          {fmtMonth(fixture.date)}
-        </span>
-      </div>
-      <div className="flex flex-1 items-center gap-2.5 px-3.5 py-2">
-        <Crest name={opponent.name} logo={opponent.logo} size={22} />
-        <div className="min-w-0">
-          <span className="block truncate text-sm font-semibold">
-            {normalizeTeamName(opponent.name)}
-          </span>
-          {sub ? (
-            <span className="text-ink-muted block font-mono text-[10px] tracking-wide uppercase">
-              {sub}
-            </span>
-          ) : null}
-        </div>
-        <span className="font-display ml-auto text-lg font-bold">
-          {fmtKickoff(fixture.date, fixture.time)}
-        </span>
-      </div>
-    </FirstTeamCardLink>
-  );
 }
 
 function SkipCard({ children }: { children: React.ReactNode }) {
@@ -194,12 +51,21 @@ function FirstTeamRow({ team }: { team: FirstTeamVM }) {
         ) : null}
       </div>
       {team.result ? (
-        <ResultCard slug={team.slug} result={team.result} />
+        <FirstTeamAgendaRow
+          match={team.result}
+          teamSlug={team.slug}
+          kind="result"
+        />
       ) : (
         <SkipCard>Nog geen uitslag</SkipCard>
       )}
       {team.fixture ? (
-        <FixtureCard slug={team.slug} fixture={team.fixture} />
+        <FirstTeamAgendaRow
+          match={team.fixture}
+          teamSlug={team.slug}
+          kind="fixture"
+          featured
+        />
       ) : (
         <SkipCard>Geen geplande wedstrijd</SkipCard>
       )}
