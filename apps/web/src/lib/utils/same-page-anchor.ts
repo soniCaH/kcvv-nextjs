@@ -8,8 +8,8 @@ import type { MouseEvent } from "react";
  * route's `canonicalUrl` *with* that hash. A subsequent same-page `<Link>` click
  * then computes `route.canonicalUrl + url.hash`, duplicating the fragment
  * (`/hulp#structuur#structuur…`). Intercepting the click and scrolling natively
- * sidesteps that path entirely. Cross-page links (different pathname) fall
- * through to normal SPA `<Link>` navigation.
+ * sidesteps that path entirely. Links to a different pathname or query string
+ * fall through to normal SPA `<Link>` navigation.
  *
  * Wire it into a `<Link onClick>`: it calls `preventDefault()` only for the
  * same-page case, which cancels Next's navigation (Link skips navigating when
@@ -25,25 +25,40 @@ export function handleSamePageAnchorClick(
   // Modifier / middle clicks: let the browser (new tab, etc.) handle it.
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
-  const hashIndex = href.indexOf("#");
-  if (hashIndex === -1) return;
-  const path = href.slice(0, hashIndex);
-  const id = href.slice(hashIndex + 1);
-  if (!id) return;
+  const target = new URL(href, window.location.href);
+  if (!target.hash || target.hash === "#") return;
 
-  // Cross-page anchor → keep client-side navigation.
-  if (path && path !== window.location.pathname) return;
+  // Intercept only a genuine in-page scroll: same origin, pathname AND query.
+  // A different pathname or query (e.g. `/hulp?tab=teams#spelers` from
+  // `?tab=matches`) is a real navigation — leave it to Next's `<Link>`.
+  if (
+    target.origin !== window.location.origin ||
+    target.pathname !== window.location.pathname ||
+    target.search !== window.location.search
+  ) {
+    return;
+  }
 
+  const id = decodeURIComponent(target.hash.slice(1));
   const el = document.getElementById(id);
   if (!el) return;
 
   event.preventDefault();
-  // Sync (and self-heal any already-duplicated) fragment without a router round
-  // trip. Passing the current history state keeps Next's internal `__NA` marker,
-  // so its patched `replaceState` treats this as an internal write and doesn't
-  // re-process the URL.
-  if (window.location.hash !== `#${id}`) {
-    window.history.replaceState(window.history.state, "", `#${id}`);
+  // Sync the fragment without a router round trip. Passing the current history
+  // state keeps Next's internal `__NA` marker, so its patched push/replaceState
+  // treats this as an internal write and doesn't re-process the URL.
+  if (window.location.hash !== target.hash) {
+    // A duplicated/garbled fragment (`#structuur#structuur`, possibly
+    // `%23`-encoded) is repaired in place; an ordinary section change gets its
+    // own history entry so Back walks through sections like a native anchor.
+    const isRepair =
+      window.location.hash.startsWith(`${target.hash}#`) ||
+      window.location.hash.startsWith(`${target.hash}%23`);
+    if (isRepair) {
+      window.history.replaceState(window.history.state, "", target.hash);
+    } else {
+      window.history.pushState(window.history.state, "", target.hash);
+    }
   }
   el.scrollIntoView({ behavior: "smooth" });
   el.focus({ preventScroll: true });

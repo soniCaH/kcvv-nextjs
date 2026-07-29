@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { MouseEvent } from "react";
 import { handleSamePageAnchorClick } from "./same-page-anchor";
 
@@ -40,6 +40,10 @@ beforeEach(() => {
   setUrl("/hulp");
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("handleSamePageAnchorClick", () => {
   it("intercepts a same-page anchor: scrolls, focuses, keeps a single fragment", () => {
     const el = addSection("structuur");
@@ -55,15 +59,56 @@ describe("handleSamePageAnchorClick", () => {
     expect(window.location.hash).toBe("#structuur");
   });
 
-  it("self-heals an already-duplicated fragment", () => {
+  it("pushes a history entry for an ordinary section change (Back walks sections)", () => {
+    addSection("hulp");
     addSection("structuur");
-    setUrl("/hulp#structuur#structuur");
+    setUrl("/hulp#hulp");
+    const pushState = vi.spyOn(window.history, "pushState");
+    const replaceState = vi.spyOn(window.history, "replaceState");
     const event = clickEvent();
 
     handleSamePageAnchorClick(event, "/hulp#structuur");
 
     expect(event.preventDefault).toHaveBeenCalledOnce();
+    expect(pushState).toHaveBeenCalledOnce();
+    expect(replaceState).not.toHaveBeenCalled();
     expect(window.location.hash).toBe("#structuur");
+  });
+
+  it("self-heals an already-duplicated fragment in place (no history entry)", () => {
+    addSection("structuur");
+    setUrl("/hulp#structuur#structuur");
+    const pushState = vi.spyOn(window.history, "pushState");
+    const replaceState = vi.spyOn(window.history, "replaceState");
+    const event = clickEvent();
+
+    handleSamePageAnchorClick(event, "/hulp#structuur");
+
+    expect(event.preventDefault).toHaveBeenCalledOnce();
+    expect(replaceState).toHaveBeenCalledOnce();
+    expect(pushState).not.toHaveBeenCalled();
+    expect(window.location.hash).toBe("#structuur");
+  });
+
+  it("intercepts a same-query anchor", () => {
+    const el = addSection("spelers");
+    setUrl("/hulp?tab=teams");
+    const event = clickEvent();
+
+    handleSamePageAnchorClick(event, "/hulp?tab=teams#spelers");
+
+    expect(event.preventDefault).toHaveBeenCalledOnce();
+    expect(el.scrollIntoView).toHaveBeenCalledOnce();
+  });
+
+  it("ignores an anchor to a different query string (keeps SPA navigation)", () => {
+    addSection("spelers");
+    setUrl("/hulp?tab=matches");
+    const event = clickEvent();
+
+    handleSamePageAnchorClick(event, "/hulp?tab=teams#spelers");
+
+    expect(event.preventDefault).not.toHaveBeenCalled();
   });
 
   it("ignores a cross-page anchor (keeps SPA navigation)", () => {
