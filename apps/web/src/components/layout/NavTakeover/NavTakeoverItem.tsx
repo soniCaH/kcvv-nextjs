@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
+import { handleSamePageAnchorClick } from "@/lib/utils/same-page-anchor";
 
 export interface NavTakeoverItemProps {
   label: string;
@@ -116,7 +117,10 @@ export function NavTakeoverItem({
   return (
     <Link
       href={href}
-      onClick={onNavigate}
+      onClick={(e) => {
+        handleSamePageAnchorClick(e, href);
+        onNavigate?.();
+      }}
       className={cn(baseRow, tone, "no-underline")}
     >
       {innerContent}
