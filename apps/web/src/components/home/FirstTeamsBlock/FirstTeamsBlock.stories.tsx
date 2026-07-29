@@ -1,7 +1,8 @@
 // apps/web/src/components/home/FirstTeamsBlock/FirstTeamsBlock.stories.tsx
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { FirstTeamsBlock } from "./FirstTeamsBlock";
-import type { FirstTeamVM, FirstTeamResultVM } from "./first-teams";
+import type { FirstTeamVM } from "./first-teams";
+import type { ScheduleMatch } from "@/components/match/types";
 
 const meta = {
   title: "Features/Home/FirstTeamsBlock",
@@ -14,10 +15,12 @@ const meta = {
         component:
           "Homepage 'Eerste ploegen' eyecatcher — a full-bleed jersey-deep-dark " +
           "matchday-desk band (StripedSeam top + bottom) with one full-width row " +
-          "per senior team: [team label] · [last-result card] · [next-fixture " +
-          "card]. The result + fixture are two independent press-down cards, each " +
-          "deep-linking to its own match detail. A missing side drops only its own " +
-          "card; a team with neither is omitted. Spec: " +
+          "per senior team: [team label] · [last result] · [next fixture]. Both " +
+          "the result and the next fixture render as the shared unified " +
+          "<TeamAgendaRow> (same row as team pages + /kalender, #2301) — the " +
+          "result as a cream row, the next fixture as the featured jersey-deep " +
+          "card. Each row deep-links to its own match detail. A missing side " +
+          "drops to a skip placeholder; a team with neither is omitted. Spec: " +
           "docs/design/mockups/eerste-ploegen/eerste-ploegen-locked.md.",
       },
     },
@@ -28,16 +31,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Fixed dates → deterministic VR (the band reads no `now`; it renders the VMs).
+// Both result + fixture are `ScheduleMatch`, fed straight into <TeamAgendaRow>.
 // Hoisted so the Outcomes story can spread it without a non-null assertion.
-const aResult: FirstTeamResultVM = {
-  matchId: 101,
-  home: { name: "KCVV Elewijt" },
-  away: { name: "SK Londerzeel" },
+const aResult: ScheduleMatch = {
+  id: 101,
+  date: new Date("2026-06-21T15:00:00Z"),
+  homeTeam: { id: 1235, name: "KCVV Elewijt" },
+  awayTeam: { id: 42, name: "SK Londerzeel" },
   homeScore: 3,
   awayScore: 1,
   isHome: true,
-  outcome: "win",
-  date: new Date("2026-06-21T15:00:00Z"),
+  status: "finished",
   competition: "3de Nationale",
 };
 
@@ -47,11 +51,14 @@ const aTeam: FirstTeamVM = {
   division: "3de Nationale",
   result: aResult,
   fixture: {
-    matchId: 102,
-    opponent: { name: "Sporting Hasselt" },
-    isHome: false,
+    id: 102,
     date: new Date("2026-06-29T13:00:00Z"),
     time: "15:00",
+    // KCVV plays away → opponent (Sporting Hasselt) is the home side.
+    homeTeam: { id: 77, name: "Sporting Hasselt" },
+    awayTeam: { id: 1235, name: "KCVV Elewijt" },
+    isHome: false,
+    status: "scheduled",
     competition: "3de Nationale",
   },
 };
@@ -61,22 +68,24 @@ const bTeam: FirstTeamVM = {
   slug: "b-ploeg",
   division: "2de Provinciale",
   result: {
-    matchId: 201,
-    home: { name: "Tempo Overijse" },
-    away: { name: "KCVV Elewijt B" },
+    id: 201,
+    date: new Date("2026-06-22T13:30:00Z"),
+    homeTeam: { id: 88, name: "Tempo Overijse" },
+    awayTeam: { id: 1236, name: "KCVV Elewijt B" },
     homeScore: 2,
     awayScore: 0,
     isHome: false,
-    outcome: "loss",
-    date: new Date("2026-06-22T13:30:00Z"),
+    status: "finished",
     competition: "2de Provinciale",
   },
   fixture: {
-    matchId: 202,
-    opponent: { name: "VK Liedekerke" },
-    isHome: true,
+    id: 202,
     date: new Date("2026-06-28T17:30:00Z"),
     time: "19:30",
+    homeTeam: { id: 1236, name: "KCVV Elewijt B" },
+    awayTeam: { id: 99, name: "VK Liedekerke" },
+    isHome: true,
+    status: "scheduled",
     competition: "2de Provinciale",
   },
 };
@@ -85,18 +94,15 @@ export const Default: Story = {
   args: { teams: [aTeam, bTeam] },
 };
 
-// A draw + a win, to exercise the no-underline (draw) vs underlined outcomes.
+// A draw + a loss, to exercise the no-underline (draw) vs the loss underline
+// alongside Default's win. Outcome is recomputed inside <TeamAgendaRow> from
+// scores + isHome + status.
 export const Outcomes: Story = {
   args: {
     teams: [
       {
         ...aTeam,
-        result: {
-          ...aResult,
-          homeScore: 1,
-          awayScore: 1,
-          outcome: "draw",
-        },
+        result: { ...aResult, homeScore: 1, awayScore: 1 },
       },
       bTeam,
     ],
