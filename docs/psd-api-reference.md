@@ -256,6 +256,45 @@ Squad/members for a team.
 
 ---
 
+### Members (club-wide)
+
+#### `GET /members/quicksearch/status/{status}`
+
+Club-wide member search by status — **not team-scoped**. This is the only endpoint that
+returns staff with a general club function who are not attached to any team (e.g. board
+members), which `GET /teams/{id}/staff` never surfaces. Verified live on 2026-07-29:
+141 staff total for KCVV, including team-less members (`team: null`).
+
+**Path param:** `status` — `speler` or `staff` (same values as the `status` field used by
+`partitionMembers` in the sync).
+
+**Query params:** `page` (zero-based), `size`, `q`, `teamid`, `since` (ddMMyyyy), and more —
+see the full spec.
+
+**Response shape differs from the team endpoints.** The paginated wrapper is nested under
+`playerList` instead of top-level:
+
+```typescript
+{
+  id: null,
+  actions: [...],
+  customFieldValues: [...],
+  playerList: {          // ← Spring pageable wrapper
+    content: Member[],   // full Member records (superset of team-endpoint fields,
+                         //   incl. PII: address, medical, bank — project only what's needed)
+    totalElements: number,
+    totalPages: number,
+    number: number,      // current page, zero-based
+    ...
+  }
+}
+```
+
+`PsdMembersPageSchema` (top-level `content`/`totalPages`) does **not** decode this response —
+a nested wrapper schema is required. Member records include `id`, `firstName`, `lastName`,
+`status`, `functionTitle`, `birthDate`, `profilePictureURL`, but **no** `bestPosition`
+(the quicksearch shape has `positions` instead).
+
 ## Key schema: `Game` object
 
 Returned by `/games/team/{teamId}` and `/games/{id}`:

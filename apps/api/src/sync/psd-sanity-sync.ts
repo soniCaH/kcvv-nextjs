@@ -1,5 +1,9 @@
-import { Effect } from "effect";
-import type { PsdMember, PsdTeam } from "../psd/schemas-player-team";
+import { Effect, Either } from "effect";
+import type {
+  PsdClubStaffMember,
+  PsdMember,
+  PsdTeam,
+} from "../psd/schemas-player-team";
 import type {
   SanityPlayerDoc,
   SanityTeamDoc,
@@ -82,8 +86,16 @@ export function transformTeam(
  * Convert a PSD staff member record into a Sanity staffMember document.
  * Only PSD-sourced fields are written — editorial fields (role, department,
  * parentMember, inOrganigram, roleLabel, responsibilities, photo) are never touched.
+ *
+ * Accepts both team-scoped `PsdMember` and club-wide `PsdClubStaffMember` — only
+ * the shared fields below are read.
  */
-export function transformStaff(psd: PsdMember): SanityStaffDoc {
+export function transformStaff(
+  psd: Pick<
+    PsdMember,
+    "id" | "firstName" | "lastName" | "birthDate" | "functionTitle"
+  >,
+): SanityStaffDoc {
   return {
     psdId: String(psd.id),
     firstName: psd.firstName,
@@ -397,20 +409,61 @@ export const runSync = Effect.gen(function* () {
       sanityWriter.archivePlayers(ids),
     );
 
-    const activeStaffInSanity = yield* sanityReader.getActiveStaffPsdIds();
-    const protectedStaffIds = yield* sanityReader.getProtectedStaffPsdIds();
-    for (const id of protectedStaffIds) accumulatedStaffIds.add(id);
-    if (protectedStaffIds.length > 0) {
+    // Club-wide staff (team-less club functions: board members, general roles)
+    // are never returned by /teams/{id}/staff, so without this fetch their IDs
+    // are absent from accumulatedStaffIds and reconciliation would archive them.
+    // Fetched once per cycle, here at cycle end, so their IDs are fresh for the
+    // orphan check. On fetch failure we SKIP staff reconciliation entirely
+    // rather than risk archiving team-less staff on a partial ID set.
+    const reconcileStaffWithClubWide = (
+      clubRaw: readonly PsdClubStaffMember[],
+    ) =>
+      Effect.gen(function* () {
+        // The endpoint returns a system "Admin" account (id 1) with a blank
+        // firstName — skip nameless/non-person rows so no junk staffMember doc
+        // is created. status is always "staff" here but filter defensively.
+        const clubStaff = clubRaw.filter(
+          (m) => m.status === "staff" && m.firstName.trim() !== "",
+        );
+        // Team-attached staff were already upserted during their team's run;
+        // only the genuinely team-less members still need writing.
+        const toUpsert = clubStaff.filter(
+          (m) => !accumulatedStaffIds.has(String(m.id)),
+        );
+        yield* Effect.forEach(
+          toUpsert,
+          (m) => sanityWriter.upsertStaff(transformStaff(m)),
+          { concurrency: 3 },
+        );
+        for (const m of clubStaff) accumulatedStaffIds.add(String(m.id));
+        yield* Effect.log(
+          `reconciliation: club-wide staff fetched — ${toUpsert.length} upserted, ${clubStaff.length} protected from archival`,
+        );
+
+        const activeStaffInSanity = yield* sanityReader.getActiveStaffPsdIds();
+        const protectedStaffIds = yield* sanityReader.getProtectedStaffPsdIds();
+        for (const id of protectedStaffIds) accumulatedStaffIds.add(id);
+        if (protectedStaffIds.length > 0) {
+          yield* Effect.log(
+            `reconciliation: ${protectedStaffIds.length} staff protected by organigram/responsibility refs: ${protectedStaffIds.join(", ")}`,
+          );
+        }
+        yield* reconcileEntity(
+          "staff",
+          activeStaffInSanity,
+          accumulatedStaffIds,
+          (ids) => sanityWriter.archiveStaff(ids),
+        );
+      });
+
+    const clubStaffResult = yield* Effect.either(psd.getRawClubStaff());
+    if (Either.isLeft(clubStaffResult)) {
       yield* Effect.log(
-        `reconciliation: ${protectedStaffIds.length} staff protected by organigram/responsibility refs: ${protectedStaffIds.join(", ")}`,
+        `reconciliation: SKIPPED staff archival — club-wide staff fetch failed: ${String(clubStaffResult.left)}`,
       );
+    } else {
+      yield* reconcileStaffWithClubWide(clubStaffResult.right);
     }
-    yield* reconcileEntity(
-      "staff",
-      activeStaffInSanity,
-      accumulatedStaffIds,
-      (ids) => sanityWriter.archiveStaff(ids),
-    );
 
     const activeTeamsInSanity = yield* sanityReader.getActiveTeamPsdIds();
     yield* reconcileEntity(

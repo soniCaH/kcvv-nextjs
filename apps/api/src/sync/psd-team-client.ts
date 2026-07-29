@@ -2,8 +2,10 @@ import { Context, Effect, Layer, Schema as S } from "effect";
 import { WorkerEnvTag } from "../env";
 import { KvCacheService } from "../cache/kv-cache";
 import {
+  PsdClubStaffMember,
   PsdMember,
   PsdMembersPageSchema,
+  PsdQuicksearchStaffPageSchema,
   PsdTeam,
   PsdTeamsSchema,
 } from "../psd/schemas-player-team";
@@ -46,6 +48,10 @@ export interface PsdTeamClientInterface {
   readonly getRawStaff: (
     teamId: number,
   ) => Effect.Effect<readonly PsdMember[], PsdTeamClientErrors>;
+  readonly getRawClubStaff: () => Effect.Effect<
+    readonly PsdClubStaffMember[],
+    PsdTeamClientErrors
+  >;
 }
 
 export class PsdTeamClient extends Context.Tag("PsdTeamClient")<
@@ -109,23 +115,24 @@ export const PsdTeamClientLive = Layer.effect(
         Effect.ensuring(cache.increment()),
       );
 
-    const fetchPaginatedTeamPeople = (
-      kind: "members" | "staff",
-      teamId: number,
+    // Fetch every page of a Spring-pageable endpoint: read page 0 to learn
+    // totalPages, then fetch the rest at bounded concurrency. `fetchPage` owns
+    // the URL, schema, and any envelope-unwrapping (e.g. `.playerList`).
+    const paginateAll = <T>(
+      fetchPage: (
+        page: number,
+      ) => Effect.Effect<
+        { readonly totalPages: number; readonly content: readonly T[] },
+        PsdTeamClientErrors
+      >,
     ) =>
       Effect.gen(function* () {
-        const firstPage = yield* countedFetch(
-          `${base}/teams/${teamId}/${kind}`,
-          PsdMembersPageSchema,
-        );
+        const firstPage = yield* fetchPage(0);
         if (firstPage.totalPages <= 1) return firstPage.content;
 
         const remainingPages = yield* Effect.all(
           Array.from({ length: firstPage.totalPages - 1 }, (_, i) =>
-            countedFetch(
-              `${base}/teams/${teamId}/${kind}?page=${i + 1}`,
-              PsdMembersPageSchema,
-            ).pipe(Effect.map((page) => page.content)),
+            fetchPage(i + 1).pipe(Effect.map((page) => page.content)),
           ),
           { concurrency: 3 },
         );
@@ -136,9 +143,28 @@ export const PsdTeamClientLive = Layer.effect(
     return {
       getRawTeams: () => countedFetch(`${base}/teams`, PsdTeamsSchema),
       getRawMembers: (teamId: number) =>
-        fetchPaginatedTeamPeople("members", teamId),
+        paginateAll((page) =>
+          countedFetch(
+            `${base}/teams/${teamId}/members?page=${page}`,
+            PsdMembersPageSchema,
+          ),
+        ),
       getRawStaff: (teamId: number) =>
-        fetchPaginatedTeamPeople("staff", teamId),
+        paginateAll((page) =>
+          countedFetch(
+            `${base}/teams/${teamId}/staff?page=${page}`,
+            PsdMembersPageSchema,
+          ),
+        ),
+      // Club-wide staff search — nested `playerList` wrapper. Adds ~2 PSD calls;
+      // called once per sync cycle only.
+      getRawClubStaff: () =>
+        paginateAll((page) =>
+          countedFetch(
+            `${base}/members/quicksearch/status/staff?page=${page}&size=100`,
+            PsdQuicksearchStaffPageSchema,
+          ).pipe(Effect.map((r) => r.playerList)),
+        ),
     };
   }),
 );
