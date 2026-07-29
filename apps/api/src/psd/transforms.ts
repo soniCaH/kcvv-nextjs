@@ -197,6 +197,14 @@ export function isUnknownGameStatus(status: number): boolean {
   return status !== 0 && status !== 1 && status !== 2 && status !== 3;
 }
 
+/**
+ * A settled result — the match has a final outcome (played to completion or
+ * forfeited), as opposed to scheduled / postponed / stopped / cancelled.
+ */
+export function isSettledMatchStatus(status: string): boolean {
+  return status === "finished" || status === "forfeited";
+}
+
 // ─── Date parsing ─────────────────────────────────────────────────────────────
 
 function parseDateString(dateStr: string): { date: Date; time: string } {
