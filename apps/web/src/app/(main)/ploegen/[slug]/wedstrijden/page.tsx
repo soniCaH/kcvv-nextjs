@@ -20,10 +20,6 @@ interface WedstrijdenPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  return [];
-}
-
 export async function generateMetadata({
   params,
 }: WedstrijdenPageProps): Promise<Metadata> {
@@ -217,4 +213,9 @@ export default async function WedstrijdenPage({
   );
 }
 
-export const revalidate = 3600;
+// Render on every request so the "next match" highlight and live scores
+// reflect the current time instead of a stale 1-hour ISR snapshot (this
+// low-traffic route rarely regenerated). PSD rate limits stay protected by
+// the BffService `getMatches` cache + TeamRepository caches underneath.
+// Mirrors `/kalender`, which is force-dynamic for the same reason.
+export const dynamic = "force-dynamic";
