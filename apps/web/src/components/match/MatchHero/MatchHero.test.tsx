@@ -191,6 +191,39 @@ describe("MatchHero", () => {
     });
   });
 
+  describe("stub date layout (#2300)", () => {
+    it("keeps the date wrapper inline on mobile and stacked from md up", () => {
+      render(
+        <MatchHero
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          date={scheduledMatchDate}
+          time="14:30"
+          status="scheduled"
+        />,
+      );
+      // "ZA 14" and "JUN" share a wrapper that is a horizontal baseline-aligned
+      // row on mobile and reverts to the two-line stack at the md breakpoint.
+      const dayLine = screen.getByText(/^ZA 14$/);
+      const wrapper = dayLine.parentElement;
+      expect(wrapper).not.toBeNull();
+      expect(wrapper).toHaveClass(
+        "flex",
+        "flex-row",
+        "items-baseline",
+        "gap-x-2",
+        "md:flex-col",
+        "md:items-start",
+        "md:gap-x-0",
+      );
+      // The month line must not carry an unconditional top margin (which would
+      // push it below the day on the mobile inline row); the margin is md-only.
+      const monthLine = screen.getByText("JUN");
+      expect(monthLine).toHaveClass("md:mt-1");
+      expect(monthLine).not.toHaveClass("mt-1");
+    });
+  });
+
   describe("competition meta line", () => {
     it("composes competition · kcvvTeamLabel · season", () => {
       render(

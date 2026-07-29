@@ -197,11 +197,11 @@ export function MatchHero({
       <div className="grid grid-cols-1 md:grid-cols-[110px_1fr]">
         {/* ── Stub (left zone) ─────────────────────────────────────── */}
         <div className="bg-cream-soft text-ink flex flex-col gap-3 border-b-2 border-dashed border-[var(--color-ink)] p-5 md:border-r-2 md:border-b-0">
-          <div className="leading-none">
+          <div className="flex flex-row items-baseline gap-x-2 leading-none md:flex-col md:items-start md:gap-x-0">
             <div className="font-display-big text-ink text-[20px] leading-none font-black md:text-[24px]">
               {stubDate.weekday} {stubDate.day}
             </div>
-            <div className="font-display-big text-ink mt-1 text-[20px] leading-none font-black md:text-[24px]">
+            <div className="font-display-big text-ink text-[20px] leading-none font-black md:mt-1 md:text-[24px]">
               {stubDate.month}
             </div>
           </div>
