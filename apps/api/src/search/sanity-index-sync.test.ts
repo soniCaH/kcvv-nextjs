@@ -1,8 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { Effect, Layer } from "effect";
+import { Effect, Exit, Layer, Logger } from "effect";
 import { runSanityIndexSync } from "./sanity-index-sync";
-import { EmbeddingService, type EmbeddingServiceInterface } from "./embedding";
 import {
+  EmbeddingError,
+  EmbeddingService,
+  type EmbeddingServiceInterface,
+} from "./embedding";
+import {
+  VectorizeError,
   VectorizeService,
   type VectorizeServiceInterface,
   type VectorRecord,
@@ -58,18 +63,29 @@ function makeEmbeddingMock(): EmbeddingServiceInterface {
   return { embed: () => Effect.succeed(FAKE_VECTOR) };
 }
 
-function makeVectorizeCapture() {
+/**
+ * Records every upsert batch. Each call yields to the macrotask queue so
+ * overlapping calls are observable — `probe.maxInFlight` stays 1 only if the
+ * batches really are upserted one at a time.
+ */
+function makeVectorizeCapture(overrides?: Partial<VectorizeServiceInterface>) {
   const upsertCalls: VectorRecord[][] = [];
+  const probe = { inFlight: 0, maxInFlight: 0 };
   const mock: VectorizeServiceInterface = {
     upsert: (vectors) =>
-      Effect.sync(() => {
+      Effect.promise(async () => {
+        probe.inFlight++;
+        probe.maxInFlight = Math.max(probe.maxInFlight, probe.inFlight);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        probe.inFlight--;
         upsertCalls.push(vectors);
       }),
     query: () => Effect.succeed([]),
     getByIds: () => Effect.succeed([]),
     deleteByIds: () => Effect.succeed(undefined as void),
+    ...overrides,
   };
-  return { upsertCalls, mock };
+  return { upsertCalls, probe, mock };
 }
 
 function noopFetch<T>(data: T[]) {
@@ -293,5 +309,120 @@ describe("runSanityIndexSync", () => {
     const upserted = upsertCalls.flat();
     expect(upserted.find((v) => v.id === "sanity-abc-123")).toBeDefined();
     expect(upserted.find((v) => v.id === "article-001")).toBeDefined();
+  });
+
+  it("batches upserts per doc-type instead of once per document", async () => {
+    const { upsertCalls, mock } = makeVectorizeCapture();
+
+    await Effect.runPromise(
+      runSanityIndexSync({
+        fetchResponsibility: noopFetch([
+          mockDoc,
+          { ...mockDoc, _id: "resp-002" },
+          { ...mockDoc, _id: "resp-003" },
+        ]),
+        fetchArticles: noopFetch([
+          mockArticle,
+          { ...mockArticle, _id: "article-002" },
+        ]),
+        fetchPages: noopFetch([mockPage, { ...mockPage, _id: "page-002" }]),
+      }).pipe(
+        Effect.provide(makeEnvLayer()),
+        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
+        Effect.provide(Layer.succeed(VectorizeService, mock)),
+      ),
+    );
+
+    // 7 documents, one batched upsert per doc-type
+    expect(upsertCalls).toHaveLength(3);
+    expect(upsertCalls.map((batch) => batch.length)).toEqual([3, 2, 2]);
+  });
+
+  it("chunks a batch above the 1000-vector cap and upserts the chunks sequentially", async () => {
+    const { upsertCalls, probe, mock } = makeVectorizeCapture();
+    const manyPages = Array.from({ length: 1001 }, (_, i) => ({
+      ...mockPage,
+      _id: `page-${i}`,
+    }));
+
+    await Effect.runPromise(
+      runSanityIndexSync({
+        fetchResponsibility: noopFetch([]),
+        fetchArticles: noopFetch([]),
+        fetchPages: noopFetch(manyPages),
+      }).pipe(
+        Effect.provide(makeEnvLayer()),
+        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
+        Effect.provide(Layer.succeed(VectorizeService, mock)),
+      ),
+    );
+
+    expect(upsertCalls.map((batch) => batch.length)).toEqual([1000, 1]);
+    expect(probe.maxInFlight).toBe(1);
+  });
+
+  it("omits a document whose embedding fails and still upserts the rest", async () => {
+    const { upsertCalls, mock } = makeVectorizeCapture();
+    const flakyEmbed: EmbeddingServiceInterface = {
+      embed: (text) =>
+        text.includes("derby")
+          ? Effect.fail(new EmbeddingError("Workers AI unavailable"))
+          : Effect.succeed(FAKE_VECTOR),
+    };
+
+    await Effect.runPromise(
+      runSanityIndexSync({
+        fetchResponsibility: noopFetch([]),
+        fetchArticles: noopFetch([
+          mockArticle,
+          {
+            ...mockArticle,
+            _id: "article-002",
+            title: "Gelijkspel",
+            tags: ["verslag"],
+            bodyText: "KCVV Elewijt speelde 1-1 gelijk.",
+          },
+        ]),
+        fetchPages: noopFetch([]),
+      }).pipe(
+        Effect.provide(makeEnvLayer()),
+        Effect.provide(Layer.succeed(EmbeddingService, flakyEmbed)),
+        Effect.provide(Layer.succeed(VectorizeService, mock)),
+      ),
+    );
+
+    const upserted = upsertCalls.flat();
+    expect(upserted.map((v) => v.id)).toEqual(["article-002"]);
+  });
+
+  it("logs the dropped count and completes the run when a batch keeps failing", async () => {
+    const messages: string[] = [];
+    const TestLogger = Logger.make(({ message }) => {
+      messages.push(String(message));
+    });
+    const { mock: failingVectorize } = makeVectorizeCapture({
+      upsert: () => Effect.fail(new VectorizeError("40041 Too Many Requests")),
+    });
+
+    const exit = await Effect.runPromiseExit(
+      runSanityIndexSync({
+        fetchResponsibility: noopFetch([mockDoc]),
+        fetchArticles: noopFetch([]),
+        fetchPages: noopFetch([]),
+      }).pipe(
+        Effect.provide(makeEnvLayer()),
+        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
+        Effect.provide(Layer.succeed(VectorizeService, failingVectorize)),
+        Effect.provide(Logger.replace(Logger.defaultLogger, TestLogger)),
+      ),
+    );
+
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(
+      messages.some((m) => m.includes("dropped 1 of 1") && m.includes("40041")),
+    ).toBe(true);
+    expect(
+      messages.some((m) => m.includes("Indexed 0/1 responsibility paths")),
+    ).toBe(true);
   });
 });

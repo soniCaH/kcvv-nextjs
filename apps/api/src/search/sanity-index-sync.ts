@@ -1,5 +1,5 @@
 import { createClient } from "@sanity/client";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schedule } from "effect";
 import { WorkerEnvTag } from "../env";
 import { sanityClientConfig } from "../sanity/config";
 import { EmbeddingService } from "./embedding";
@@ -9,7 +9,7 @@ import {
   buildPageIndexText,
   buildResponsibilityIndexText,
 } from "./index-text";
-import { VectorizeService } from "./vectorize";
+import { VectorizeService, type VectorRecord } from "./vectorize";
 
 // ─── Types (only fields needed for indexing) ──────────────────────────────────
 
@@ -65,6 +65,20 @@ const PAGE_QUERY = `*[_type == "page"] {
   "bodyText": pt::text(body)
 }`;
 
+// ─── Batching ────────────────────────────────────────────────────────────────
+
+// Vectorize caps a binding upsert at 1000 vectors/request. Its write-ahead log
+// handles one batch at a time and does not queue concurrent writes, so chunks
+// go out sequentially — parallel upserts contend for that slot and surface as
+// 40041 Too Many Requests.
+const MAX_VECTORS_PER_UPSERT = 1000;
+
+// Belt-and-suspenders for a transient limit; batching is what removes the burst.
+const UPSERT_RETRY = Schedule.exponential("100 millis").pipe(
+  Schedule.jittered,
+  Schedule.intersect(Schedule.recurs(3)),
+);
+
 // ─── Options ─────────────────────────────────────────────────────────────────
 
 interface SyncOptions {
@@ -89,22 +103,45 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
         perspective: "published",
       }));
 
-    const indexDoc = (
+    // A failed embedding drops just its own document from the batch.
+    const embedDoc = (
       id: string,
       text: string,
       metadata: Record<string, string>,
     ) =>
       embedding.embed(text).pipe(
-        Effect.flatMap((vector) =>
-          vectorize.upsert([{ id, values: vector, metadata }]),
-        ),
-        Effect.as(true),
+        Effect.map((values): VectorRecord | null => ({ id, values, metadata })),
         Effect.catchAll((e) =>
           Effect.log(`[search-sync] skipped ${id}: ${String(e)}`).pipe(
-            Effect.as(false),
+            Effect.as(null),
           ),
         ),
       );
+
+    /**
+     * Upserts the embedded documents in ≤1000-sized chunks, skipping the ones
+     * that failed to embed. Returns how many vectors landed.
+     */
+    const upsertBatched = (
+      embedded: (VectorRecord | null)[],
+      label: string,
+    ) => {
+      const vectors = embedded.filter((v) => v !== null);
+      return Effect.forEach(
+        Arr.chunksOf(vectors, MAX_VECTORS_PER_UPSERT),
+        (chunk) =>
+          vectorize.upsert(chunk).pipe(
+            Effect.retry(UPSERT_RETRY),
+            Effect.as(chunk.length),
+            Effect.catchAll((e) =>
+              Effect.logError(
+                `[search-sync] Upsert failed after retries — dropped ${chunk.length} of ${vectors.length} ${label}: ${String(e)}`,
+              ).pipe(Effect.as(0)),
+            ),
+          ),
+        { concurrency: 1 },
+      ).pipe(Effect.map((landed) => landed.reduce((total, n) => total + n, 0)));
+    };
 
     // ── Responsibility paths ──────────────────────────────────────────────
 
@@ -122,24 +159,21 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
       `[search-sync] Indexing ${docs.length} responsibility paths`,
     );
 
-    let successCount = 0;
-
-    yield* Effect.forEach(
+    const responsibilityVectors = yield* Effect.forEach(
       docs,
       (doc) =>
-        indexDoc(doc._id, buildResponsibilityIndexText(doc), {
+        embedDoc(doc._id, buildResponsibilityIndexText(doc), {
           slug: doc.slug,
           type: "responsibility",
           title: doc.title,
           excerpt: doc.summary.slice(0, 200),
-        }).pipe(
-          Effect.tap((ok) =>
-            Effect.sync(() => {
-              if (ok) successCount++;
-            }),
-          ),
-        ),
+        }),
       { concurrency: 5 },
+    );
+
+    const successCount = yield* upsertBatched(
+      responsibilityVectors,
+      "responsibility paths",
     );
 
     yield* Effect.log(
@@ -167,26 +201,23 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
       `[search-sync] Indexing ${articleResult.length} articles`,
     );
 
-    let articleSuccessCount = 0;
-
-    yield* Effect.forEach(
+    const articleVectors = yield* Effect.forEach(
       articleResult,
       (doc) =>
-        indexDoc(doc._id, buildArticleIndexText(doc), {
+        embedDoc(doc._id, buildArticleIndexText(doc), {
           slug: doc.slug,
           type: "article",
           title: doc.title,
           excerpt: (doc.bodyText ?? "").slice(0, 200),
           tags: (doc.tags ?? []).join(","),
           ...(doc.imageUrl ? { imageUrl: doc.imageUrl } : {}),
-        }).pipe(
-          Effect.tap((ok) =>
-            Effect.sync(() => {
-              if (ok) articleSuccessCount++;
-            }),
-          ),
-        ),
+        }),
       { concurrency: 3 },
+    );
+
+    const articleSuccessCount = yield* upsertBatched(
+      articleVectors,
+      "articles",
     );
 
     yield* Effect.log(
@@ -212,25 +243,19 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
 
     yield* Effect.log(`[search-sync] Indexing ${pageResult.length} pages`);
 
-    let pageSuccessCount = 0;
-
-    yield* Effect.forEach(
+    const pageVectors = yield* Effect.forEach(
       pageResult,
       (doc) =>
-        indexDoc(doc._id, buildPageIndexText(doc), {
+        embedDoc(doc._id, buildPageIndexText(doc), {
           slug: doc.slug,
           type: "page",
           title: doc.title,
           excerpt: (doc.bodyText ?? "").slice(0, 200),
-        }).pipe(
-          Effect.tap((ok) =>
-            Effect.sync(() => {
-              if (ok) pageSuccessCount++;
-            }),
-          ),
-        ),
+        }),
       { concurrency: 3 },
     );
+
+    const pageSuccessCount = yield* upsertBatched(pageVectors, "pages");
 
     yield* Effect.log(
       `[search-sync] Indexed ${pageSuccessCount}/${pageResult.length} pages`,
