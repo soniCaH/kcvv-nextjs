@@ -134,6 +134,7 @@ export default async function ScheurkalenderPageRoute() {
   return <ScheurkalenderPage matches={matches} season={season} />;
 }
 
-// Season fixtures change rarely — cache long (6h ISR). Never generateStaticParams
-// (PSD rate limits); ISR keeps per-request rendering fast without build fan-out.
-export const revalidate = 21600;
+// 15 min ISR — renders live PSD fixtures, so its cache is aligned to the BFF
+// freshness window. Never generateStaticParams (PSD rate limits); ISR keeps
+// per-request rendering fast without build fan-out.
+export const revalidate = 900;

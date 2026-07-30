@@ -632,4 +632,15 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
 // 24h ISR — article publishes invalidate on demand via /api/revalidate
 // (revalidatePath '/nieuws/<slug>' + revalidateTag 'articles').
+//
+// Cache-freshness audit (#2330): this is a webhook-fresh Sanity surface, so the
+// route keeps its 24h ISR window. Match articles (matchPreview/matchRecap) embed
+// live PSD chrome via getMatchDetail, but they are excluded from
+// generateStaticParams (see its filter) and render on demand via ISR. The route
+// `revalidate` is static, not per-article, so aligning the embedded match to the
+// BFF window would force the whole news corpus to revalidate every 15 min —
+// contradicting "Sanity content is webhook-fresh and unaffected". The chrome is
+// post-hoc enhancement (recap scores are final; any BFF failure degrades to no
+// chrome) and the acute live-match surfaces (homepage, team pages, calendar) are
+// handled separately, so this timer stays.
 export const revalidate = 86400;
