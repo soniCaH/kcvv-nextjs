@@ -392,18 +392,62 @@ pnpm --filter @kcvv/web run vr:check
 # Accept the current rendering as the new baseline (commit the resulting PNGs).
 pnpm --filter @kcvv/web run vr:update
 
-# Surgical baseline update — only stories matching the path pattern.
-# The `--` separator hands the rest to test-storybook, which forwards
-# `--testPathPatterns=<regex>` to Jest. The regex matches the synthetic
-# test file paths the runner generates from story IDs (e.g. `ui-button`,
-# `layout-pagefooter`), NOT the source `.stories.tsx` paths. Use a tight
-# anchor like `ui-button` to scope to one atom (without dragging in
-# `ui-linkbutton`/`ui-downloadbutton`/etc.).
-pnpm --filter @kcvv/web run vr:update:story -- --testPathPatterns=ui-button
+# Surgical run — only stories matching the pattern. Pass the regex as a BARE
+# POSITIONAL argument (see "Scoping a VR run" below); update and compare modes
+# both take it.
+pnpm --filter @kcvv/web run vr:update:story -- ui-button   # update, scoped
+pnpm --filter @kcvv/web run vr:check -- ui-button          # compare, scoped
 
 # Print the diff PNG path(s) for a failed story so the Read tool can inspect them.
 pnpm --filter @kcvv/web run vr:diff layout-pagefooter--standalone
 ```
+
+### Scoping a VR run
+
+A full capture is ~40 min, so always scope. **The pattern is a bare positional
+argument — never a `--testPathPattern(s)=` flag.**
+
+`test-storybook` parses its CLI with commander against a closed option
+allowlist (`--maxWorkers`, `--testTimeout`, `-u`, `--includeTags`,
+`--excludeTags`, `--listTests`, `--ci`, `--shard`, … — see
+`getParsedCliOptions` in `node_modules/@storybook/test-runner/dist/test-storybook.js`).
+Any unrecognised `--flag` prints the help text and exits 1 — including Jest's
+own `--testPathPatterns`, which is **not** passed through. Positional operands
+(`program.args`) _are_ forwarded verbatim to Jest, and Jest treats a bare
+positional as a test-path regex. That is the only scoping channel.
+
+The regex matches the synthetic test files the runner writes to a temp dir, one
+per story **title** (component), named from the story ID:
+`features-share-goalkcvvtemplate.test.js`, `ui-button.test.js`. It does **not**
+match source `.stories.tsx` paths, and it cannot select a single story export
+within a component. Anchor tightly — `ui-button` also matches nothing else, but
+`share` would pull in every `features-share-*` file.
+
+```bash
+# Which files would run? Fast, exits before launching Chromium.
+docker compose -f docker-compose.vr.yml run --rm vr --listTests features-share
+
+# Iterate without the ~2 min Storybook rebuild that the pnpm scripts always do
+# (only valid while apps/web/src is unchanged — otherwise rebuild first).
+docker compose -f docker-compose.vr.yml run --rm vr -u --maxWorkers=1 features-share
+```
+
+Tag-based scoping is the other axis: `--includeTags` / `--excludeTags`, or the
+`STORYBOOK_INCLUDE_TAGS` / `STORYBOOK_EXCLUDE_TAGS` / `STORYBOOK_SKIP_TAGS`
+env vars (comma-separated) for the docker-compose `environment:` block.
+
+### Captures are viewport-clipped, not full-page
+
+The runner screenshots the **viewport**, so anything below the fold of the
+tallest viewport is not in the baseline. This matters for the `Features/Share/*`
+templates: they render a 1080×1920 Instagram Story, and the baselines only cover
+roughly its top third — the crest, kicker, and headline. The crest matchup,
+player name, meta line, and footer are **never captured at any viewport**.
+
+Do not add a `Features/Share/*` story expecting VR to guard something in the
+lower two-thirds of the canvas (a long-name auto-fit, the footer matchup, the
+score meta row) — it cannot. Guard those with a unit test instead; the auto-fit
+regression in #2316 is the worked example.
 
 `vr:check` and `vr:update` rebuild Storybook first, then run the test-runner
 inside Docker. First run pulls the Playwright image (~1.3 GB). Steady-state run
@@ -480,12 +524,12 @@ Phase 2+ atom reskins (Button, Input, Alert, …) intentionally change the visua
 of every story that consumes them. The contract for these PRs:
 
 1. **Update the atom's own baselines surgically.** Run `vr:update:story` with a
-   tight `--testPathPatterns` regex anchored to the atom's story-ID prefix —
-   e.g. `pnpm vr:update:story -- --testPathPatterns=ui-button`. The pattern
-   matches the synthetic test file paths derived from story IDs (e.g.
-   `ui-button.test.js`), not the source `.stories.tsx` paths. The PR's
-   `## VR baselines` section enumerates every changed baseline file with a
-   one-line rationale.
+   tight positional regex anchored to the atom's story-ID prefix — e.g.
+   `pnpm vr:update:story -- ui-button` (see "Scoping a VR run" above; a
+   `--testPathPatterns=` flag is rejected outright). The pattern matches the
+   synthetic test file paths derived from story IDs (e.g. `ui-button.test.js`),
+   not the source `.stories.tsx` paths. The PR's `## VR baselines` section
+   enumerates every changed baseline file with a one-line rationale.
 2. **Defer consumer baselines via `parameters.vr.disable: true`, not `vr-skip`.**
    A consumer story that has the `vr` tag and visually changes because it
    imports the redesigned atom should NOT have its baseline auto-updated in the
