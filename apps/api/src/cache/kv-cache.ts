@@ -2,6 +2,7 @@ import { Context, Effect, Either, Layer, Option, Schema as S } from "effect";
 import { WorkerEnvTag } from "../env";
 import { PsdGateService } from "../psd/gate";
 import { BackgroundRunnerService, type PsdRefreshEnv } from "../psd/background";
+import { buildDriftMessage, postSlack } from "../psd/slack-alert";
 
 /**
  * Per-endpoint soft TTLs in seconds.
@@ -31,6 +32,13 @@ export const TTL = {
  * (KV's minimum expirationTtl is 60 s.) */
 export const NEG_MARKER_TTL = 120; // 2 min
 
+/** Serve-stale age (seconds) past which we escalate logs WARN→ERROR and emit a
+ * slow-drift Slack nudge — the value is creeping toward the hard-expiry cliff. */
+export const DRIFT_NUDGE_THRESHOLD = 60 * 60 * 24; // 24 h (#2329)
+
+/** Dedup window for the slow-drift nudge: at most one Slack ping per day per key. */
+export const NUDGE_MARKER_TTL = 60 * 60 * 24; // 24 h
+
 export interface KvCacheInterface {
   readonly get: (key: string) => Effect.Effect<string | null>;
   readonly set: (
@@ -55,6 +63,13 @@ export const HARD_TTL_DEFAULT = 60 * 60 * 24 * 7;
 export const HARD_TTL_LONG = 60 * 60 * 24 * 365;
 
 const negKey = (key: string): string => `neg:${key}`;
+const nudgeKey = (key: string): string => `nudge:${key}`;
+
+/** Best-effort HTTP status off an upstream error (UpstreamUnavailable carries one). */
+const statusOf = (e: unknown): number | undefined => {
+  const s = (e as { status?: unknown }).status;
+  return typeof s === "number" ? s : undefined;
+};
 
 export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
   const WrapperSchema = S.Struct({
@@ -130,12 +145,71 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
           );
 
         // Keep the stale copy: log why and set the negative marker so subsequent
-        // requests serve stale without re-fanning until it expires.
-        const keepStale = (reason: string) =>
-          Effect.zipRight(
-            Effect.logWarning(`TypedKvCache "${key}": ${reason}`),
-            cache.set(negKey(key), "1", NEG_MARKER_TTL),
-          );
+        // requests serve stale without re-fanning until it expires. Given an
+        // `alert` context, the log escalates WARN→ERROR when an outage is open OR
+        // the value has drifted past the nudge threshold, and a once/day/key
+        // slow-drift Slack nudge fires while drifting (#2329). Called without
+        // `alert` for keeps that carry no stale-age context → plain WARN.
+        const nudge = (staleAgeMs: number, status?: number) =>
+          Effect.gen(function* () {
+            // Once/day/key: skip if we already pinged within the marker window.
+            if ((yield* cache.get(nudgeKey(key))) !== null) return;
+            yield* cache.set(nudgeKey(key), "1", NUDGE_MARKER_TTL);
+            yield* Effect.promise(() =>
+              postSlack(
+                env.SLACK_ALERT_WEBHOOK_URL,
+                buildDriftMessage({
+                  key,
+                  staleAgeMs,
+                  hardTtlMs: effectiveHardTtl * 1000,
+                  status,
+                }),
+              ),
+            );
+          });
+
+        const keepStale = (
+          reason: string,
+          alert?: {
+            readonly staleAgeMs: number;
+            readonly incidentOpen: boolean;
+            readonly status?: number;
+          },
+        ) =>
+          Effect.gen(function* () {
+            const drifting =
+              !!alert && alert.staleAgeMs > DRIFT_NUDGE_THRESHOLD * 1000;
+            const escalate = !!alert && (alert.incidentOpen || drifting);
+            const line = `TypedKvCache "${key}": ${reason}`;
+            yield* escalate ? Effect.logError(line) : Effect.logWarning(line);
+            yield* cache.set(negKey(key), "1", NEG_MARKER_TTL);
+            if (alert && drifting) yield* nudge(alert.staleAgeMs, alert.status);
+          });
+
+        // Report a transient-outage refresh failure to the gate (incident
+        // alerting) and keep the stale copy — escalating the log / nudging via
+        // the returned incident state + drift age. Shared by both refresh paths.
+        const failAndKeepStale = (
+          err: unknown,
+          fetchedAt: number,
+          label: string,
+        ) =>
+          Effect.gen(function* () {
+            const status = statusOf(err);
+            const staleAgeMs = Date.now() - fetchedAt;
+            const { incidentOpen } = yield* gate.reportOutcome({
+              ok: false,
+              key,
+              status,
+              error: String(err),
+              staleAgeMs,
+            });
+            yield* keepStale(`${label} (${String(err)})`, {
+              staleAgeMs,
+              incidentOpen,
+              status,
+            });
+          });
 
         // Store a fresh value (schema-validated) and clear any negative marker.
         const storeFresh = (value: A) =>
@@ -148,18 +222,22 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
         // serve-stale error (setting the negative marker so we stop re-fanning),
         // propagate otherwise. Used by the correctness guard and, when no
         // background runner is wired, as the stale fallback.
-        const blockingRefresh = (staleValue: A) =>
+        const blockingRefresh = (staleValue: A, fetchedAt: number) =>
           Effect.gen(function* () {
             const result = yield* fetch.pipe(Effect.either);
             if (Either.isRight(result)) {
+              yield* gate.reportOutcome({ ok: true, key });
               yield* storeFresh(result.right);
               return result.right;
             }
             if (!shouldServeStale(result.left)) {
+              // Not a transient PSD outage (404 / decode) → don't touch incident.
               return yield* Effect.fail(result.left);
             }
-            yield* keepStale(
-              `refresh failed, serving stale (${String(result.left)})`,
+            yield* failAndKeepStale(
+              result.left,
+              fetchedAt,
+              "refresh failed, serving stale",
             );
             return staleValue;
           });
@@ -167,22 +245,37 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
         // Background (SWR) refresh: single-flight leader fetches and updates KV;
         // any failure (or schema-invalid data) keeps stale + marks. Never throws
         // — it runs detached via the background runner.
-        const backgroundRefresh = Effect.gen(function* () {
-          const leader = yield* gate.beginFlight(key);
-          if (!leader) return; // another isolate/fiber is already refreshing
-          yield* Effect.gen(function* () {
-            const result = yield* fetch.pipe(Effect.either);
-            if (Either.isLeft(result)) {
-              return yield* keepStale(
-                `background refresh failed (${String(result.left)})`,
-              );
-            }
-            const valid = S.decodeUnknownOption(schema)(result.right);
-            yield* Option.isSome(valid)
-              ? persist(result.right)
-              : keepStale("background refresh returned schema-invalid data");
-          }).pipe(Effect.ensuring(gate.endFlight(key)));
-        });
+        const backgroundRefresh = (fetchedAt: number) =>
+          Effect.gen(function* () {
+            const leader = yield* gate.beginFlight(key);
+            if (!leader) return; // another isolate/fiber is already refreshing
+            yield* Effect.gen(function* () {
+              const result = yield* fetch.pipe(Effect.either);
+              if (Either.isLeft(result)) {
+                if (!shouldServeStale(result.left)) {
+                  // Non-outage failure (decode) → keep stale, plain WARN.
+                  return yield* keepStale(
+                    `background refresh failed (${String(result.left)})`,
+                  );
+                }
+                return yield* failAndKeepStale(
+                  result.left,
+                  fetchedAt,
+                  "background refresh failed",
+                );
+              }
+              yield* gate.reportOutcome({ ok: true, key });
+              const valid = S.decodeUnknownOption(schema)(result.right);
+              yield* Option.isSome(valid)
+                ? persist(result.right)
+                : // Not a PSD outage (200 w/ bad shape), but the value still
+                  // drifts toward the cliff — nudge if it's aged past threshold.
+                  keepStale("background refresh returned schema-invalid data", {
+                    staleAgeMs: Date.now() - fetchedAt,
+                    incidentOpen: false,
+                  });
+            }).pipe(Effect.ensuring(gate.endFlight(key)));
+          });
 
         const cached = yield* cache.get(key);
 
@@ -209,7 +302,7 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
             // Correctness guard: a stale value that is now wrong (past-kickoff
             // "next") must not be served — refresh blocking.
             if (options?.mustBlockOnStale?.(value)) {
-              return yield* blockingRefresh(value);
+              return yield* blockingRefresh(value, fetchedAt);
             }
 
             if (Option.isSome(runnerOpt)) {
@@ -217,7 +310,7 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
               // background (single-flight) via the runner — see background-live.ts.
               // Cast is safe: only PSD handlers provide a runner, and its layer
               // covers this refresh's deps (a non-PSD caller has no runner here).
-              const refresh = backgroundRefresh as Effect.Effect<
+              const refresh = backgroundRefresh(fetchedAt) as Effect.Effect<
                 void,
                 unknown,
                 PsdRefreshEnv
@@ -227,7 +320,7 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
             }
 
             // No background runner wired → fall back to a blocking refresh.
-            return yield* blockingRefresh(value);
+            return yield* blockingRefresh(value, fetchedAt);
           }
         }
 
@@ -245,9 +338,23 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
           const isLeader = yield* gate.beginFlight(key);
           if (isLeader) {
             return yield* Effect.gen(function* () {
-              const value = yield* fetch;
-              yield* storeFresh(value);
-              return value;
+              const result = yield* fetch.pipe(Effect.either);
+              if (Either.isRight(result)) {
+                yield* gate.reportOutcome({ ok: true, key });
+                yield* storeFresh(result.right);
+                return result.right;
+              }
+              // Never-cached miss failure: report a transient PSD outage so the
+              // incident alert still fires on a cold start, then surface it.
+              if (shouldServeStale(result.left)) {
+                yield* gate.reportOutcome({
+                  ok: false,
+                  key,
+                  status: statusOf(result.left),
+                  error: String(result.left),
+                });
+              }
+              return yield* Effect.fail(result.left);
             }).pipe(Effect.ensuring(gate.endFlight(key)));
           }
 

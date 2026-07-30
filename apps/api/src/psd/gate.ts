@@ -16,6 +16,14 @@
 import { Context, Effect, Layer } from "effect";
 import { WorkerEnvTag } from "../env";
 import { GateLogic } from "./gate-logic";
+import { IncidentTracker } from "./incident";
+import type { IncidentContext } from "./slack-alert";
+
+/** A PSD refresh outcome reported to the gate for incident alerting (#2329).
+ * Extends the message context so the DO can pass it straight to the builder. */
+export interface PsdOutcome extends IncidentContext {
+  readonly ok: boolean;
+}
 
 export interface PsdGate {
   /** Await a global PSD-call token (≤5/s worldwide). Best-effort: proceeds on gate failure. */
@@ -26,6 +34,14 @@ export interface PsdGate {
   readonly endFlight: (key: string) => Effect.Effect<void>;
   /** Resolve when the current leader for `key` finishes (bounded wait). */
   readonly awaitFlight: (key: string) => Effect.Effect<void>;
+  /**
+   * Report a PSD refresh outcome for global incident alerting. Fires a debounced
+   * Slack ping on outage-start/recovery and returns whether an outage is open
+   * (so the serve-stale path can escalate its log WARN→ERROR). Best-effort.
+   */
+  readonly reportOutcome: (
+    outcome: PsdOutcome,
+  ) => Effect.Effect<{ incidentOpen: boolean }>;
 }
 
 export class PsdGateService extends Context.Tag("PsdGateService")<
@@ -39,6 +55,7 @@ interface PsdGateStub {
   beginFlight(key: string): Promise<boolean>;
   endFlight(key: string): Promise<void>;
   awaitFlight(key: string): Promise<void>;
+  reportOutcome(outcome: PsdOutcome): Promise<{ incidentOpen: boolean }>;
 }
 
 /** Fixed name → one global DO instance for the whole worker. */
@@ -72,6 +89,12 @@ export const PsdGateLive = Layer.effect(
         Effect.tryPromise(() => stub().awaitFlight(key)).pipe(
           Effect.orElseSucceed(() => undefined),
         ),
+      reportOutcome: (outcome) =>
+        Effect.tryPromise(() => stub().reportOutcome(outcome)).pipe(
+          // On gate failure, assume no incident — alerting is best-effort and
+          // must never break or escalate the read path on its own.
+          Effect.orElseSucceed(() => ({ incidentOpen: false })),
+        ),
     };
   }),
 );
@@ -83,12 +106,20 @@ export const PsdGateLive = Layer.effect(
  */
 export const makePsdGateLayer = (
   logic: GateLogic,
+  incident: IncidentTracker = new IncidentTracker(),
 ): Layer.Layer<PsdGateService> =>
   Layer.succeed(PsdGateService, {
     acquireToken: Effect.promise(() => logic.acquireToken()),
     beginFlight: (key) => Effect.sync(() => logic.beginFlight(key)),
     endFlight: (key) => Effect.sync(() => logic.endFlight(key)),
     awaitFlight: (key) => Effect.promise(() => logic.awaitFlight(key)),
+    // No Slack post here (no env) — the in-memory layer only tracks state so
+    // tests can observe incident-driven log escalation. The DO does the POST.
+    reportOutcome: (outcome) =>
+      Effect.sync(() => {
+        incident.report(outcome.ok);
+        return { incidentOpen: incident.isOpen };
+      }),
   });
 
 /** A gate with a very high rate — no throttling, real single-flight. Default test layer. */

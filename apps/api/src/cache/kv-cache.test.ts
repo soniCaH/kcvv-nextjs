@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { Effect, Layer, Schema as S } from "effect";
+import { Effect, Layer, Logger, LogLevel, Schema as S } from "effect";
+import { IncidentTracker } from "../psd/incident";
 import {
   KvCacheService,
   KvCacheLive,
@@ -779,6 +780,108 @@ describe("TypedKvCache — stale-while-revalidate + storm gate (#2328)", () => {
       value: 2,
     });
     expect(mockKv.store.get("neg:test-key")).toBeUndefined();
+  });
+});
+
+describe("TypedKvCache — PSD incident alerting (#2329)", () => {
+  /** Fresh gate with its OWN incident tracker so state can't leak between tests. */
+  const isolatedGate = () =>
+    makePsdGateLayer(
+      new GateLogic({ ratePerSecond: 1e9 }),
+      new IncidentTracker(),
+    );
+
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  it("escalates the serve-stale log WARN→ERROR while an incident is open", async () => {
+    const mockKv = makeMockKv();
+    // 2 h stale (< 24 h drift threshold) — the escalation here is driven purely
+    // by the OPEN incident, not by drift.
+    mockKv.store.set(
+      "test-key",
+      makeWrapper({ name: "stale", value: 1 }, 2 * 60 * 60 * 1000),
+    );
+    const gate = isolatedGate(); // first failure opens the incident
+
+    const entries: { level: string; message: string }[] = [];
+    const capture = Logger.replace(
+      Logger.defaultLogger,
+      Logger.make(({ logLevel, message }) => {
+        entries.push({ level: logLevel.label, message: String(message) });
+      }),
+    );
+
+    // No runner → blocking refresh path (synchronous, easy to assert).
+    const fetchEffect = Effect.fail(new Error("PSD 429") as never);
+    const result = await Effect.runPromise(
+      TypedKvCache(TestSchema)
+        .getOrFetch("test-key", fetchEffect, 60)
+        .pipe(
+          Effect.provide(capture),
+          Effect.provide(Logger.minimumLogLevel(LogLevel.All)),
+          Effect.provide(KvCacheLive),
+          Effect.provide(gate),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+
+    expect(result).toEqual({ name: "stale", value: 1 });
+    expect(
+      entries.some(
+        (e) => e.level === "ERROR" && e.message.includes("refresh failed"),
+      ),
+    ).toBe(true);
+    // Under the 24 h threshold → no slow-drift nudge.
+    expect(mockKv.store.get("nudge:test-key")).toBeUndefined();
+  });
+
+  it("slow-drift nudge: >24h stale on a failed refresh sets the once/day marker", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set(
+      "test-key",
+      makeWrapper({ name: "stale", value: 1 }, 3 * dayMs), // 3 days stale
+    );
+    const fetchEffect = Effect.fail(new Error("PSD 429") as never);
+
+    const result = await Effect.runPromise(
+      TypedKvCache(TestSchema)
+        .getOrFetch("test-key", fetchEffect, 60)
+        .pipe(
+          Effect.provide(KvCacheLive),
+          Effect.provide(isolatedGate()),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+
+    expect(result).toEqual({ name: "stale", value: 1 });
+    expect(mockKv.store.get("nudge:test-key")).toBe("1");
+  });
+
+  it("slow-drift nudge is deduped once/day/key (marker already present)", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set(
+      "test-key",
+      makeWrapper({ name: "stale", value: 1 }, 3 * dayMs),
+    );
+    mockKv.store.set("nudge:test-key", "1"); // already pinged today
+    const fetchEffect = Effect.fail(new Error("PSD 429") as never);
+
+    await Effect.runPromise(
+      TypedKvCache(TestSchema)
+        .getOrFetch("test-key", fetchEffect, 60)
+        .pipe(
+          Effect.provide(KvCacheLive),
+          Effect.provide(isolatedGate()),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+
+    // Marker pre-existed → we must NOT re-write (re-ping) it.
+    expect(mockKv.put).not.toHaveBeenCalledWith(
+      "nudge:test-key",
+      expect.anything(),
+      expect.anything(),
+    );
   });
 });
 
