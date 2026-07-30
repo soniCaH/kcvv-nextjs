@@ -7,6 +7,8 @@ import {
   getMatchDetailHandler,
   getPlayerStatsHandler,
   matchDetailTtl,
+  teamMatchesTtl,
+  nextMatchesTtl,
 } from "./matches";
 import { HARD_TTL_DEFAULT, TTL } from "../cache/kv-cache";
 import { PsdService, type PsdServiceInterface } from "../psd/service";
@@ -409,6 +411,84 @@ describe("matchDetailTtl", () => {
         matchDetailTtl(at(10 * H), "scheduled", previewReportless, now),
       ).toBe(TTL.MATCH_DETAIL_MATCHDAY);
     });
+  });
+});
+
+describe("teamMatchesTtl", () => {
+  const now = new Date("2025-06-01T12:00:00.000Z").getTime();
+  const at = (offsetMs: number) => new Date(now + offsetMs);
+  const H = 60 * 60 * 1000;
+
+  const match = (date: Date, status: MatchType["status"]): MatchType => ({
+    ...baseMatch,
+    date,
+    status,
+  });
+
+  it("caps at matchday cadence while a played match is still 'scheduled' (result pending)", () => {
+    // The "yesterday's match has no score" bug: list snapshot taken pre-match,
+    // read the morning after — must refresh instead of serving the 24h entry.
+    const list = [
+      match(at(-16 * H), "scheduled"),
+      match(at(4 * 24 * H), "scheduled"),
+    ];
+    expect(teamMatchesTtl(list, now)).toBe(TTL.MATCH_DETAIL_MATCHDAY);
+  });
+
+  it("keeps the daily TTL when every past match is settled", () => {
+    const list = [
+      match(at(-16 * H), "finished"),
+      match(at(-5 * 24 * H), "forfeited"),
+      match(at(4 * 24 * H), "scheduled"), // future fixture — not pending
+    ];
+    expect(teamMatchesTtl(list, now)).toBe(TTL.MATCHES_TEAM);
+  });
+
+  it("stops fast-polling after the 48h grace window", () => {
+    // A fixture that never settles (silently dropped) must not churn forever.
+    expect(teamMatchesTtl([match(at(-48 * H), "scheduled")], now)).toBe(
+      TTL.MATCHES_TEAM,
+    );
+    expect(teamMatchesTtl([match(at(-48 * H + 1), "scheduled")], now)).toBe(
+      TTL.MATCH_DETAIL_MATCHDAY,
+    );
+  });
+
+  it("does not fast-poll for past matches whose status already changed", () => {
+    const list = [
+      match(at(-16 * H), "postponed"),
+      match(at(-20 * H), "cancelled"),
+      match(at(-30 * H), "stopped"),
+    ];
+    expect(teamMatchesTtl(list, now)).toBe(TTL.MATCHES_TEAM);
+  });
+
+  it("returns the daily TTL for an empty list", () => {
+    expect(teamMatchesTtl([], now)).toBe(TTL.MATCHES_TEAM);
+  });
+});
+
+describe("nextMatchesTtl", () => {
+  const now = new Date("2025-06-01T12:00:00.000Z").getTime();
+  const at = (offsetMs: number) => new Date(now + offsetMs);
+  const H = 60 * 60 * 1000;
+
+  const match = (date: Date): MatchType => ({ ...baseMatch, date });
+
+  it("caps at matchday cadence once a listed fixture has kicked off", () => {
+    // "Next" is computed at fetch time — a 19:00 snapshot still lists the
+    // 20:00 match at 22:00. Must recompute instead of serving 4h stale.
+    const list = [match(at(-2 * H)), match(at(3 * 24 * H))];
+    expect(nextMatchesTtl(list, now)).toBe(TTL.MATCH_DETAIL_MATCHDAY);
+  });
+
+  it("keeps the 4h TTL while every listed kickoff is in the future", () => {
+    const list = [match(at(4 * H)), match(at(3 * 24 * H))];
+    expect(nextMatchesTtl(list, now)).toBe(TTL.NEXT_MATCHES);
+  });
+
+  it("returns the 4h TTL for an empty list", () => {
+    expect(nextMatchesTtl([], now)).toBe(TTL.NEXT_MATCHES);
   });
 });
 

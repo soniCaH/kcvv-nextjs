@@ -35,7 +35,7 @@ export const getMatchesByTeamHandler = (
   return matchesCache.getOrFetch(
     cacheKey,
     fetchMatches,
-    TTL.MATCHES_TEAM,
+    (matches) => teamMatchesTtl(matches),
     undefined,
     { shouldServeStale },
   );
@@ -55,7 +55,7 @@ export const getNextMatchesHandler = (): Effect.Effect<
   return matchesCache.getOrFetch(
     cacheKey,
     fetchMatches,
-    TTL.NEXT_MATCHES,
+    (matches) => nextMatchesTtl(matches),
     undefined,
     { shouldServeStale },
   );
@@ -82,6 +82,54 @@ export const getMatchesWindowHandler = (): Effect.Effect<
 };
 
 const HOUR_MS = 60 * 60 * 1000;
+
+/**
+ * Soft cache TTL (seconds) for a team's season match list.
+ *
+ * PSD keeps a played match at status "scheduled" (numeric 0, no goals) until
+ * staff enter the score, so a list snapshot taken before full-time stays
+ * score-less. Under the flat 24h TTL that pre-match snapshot pinned every list
+ * consumer (kalender, homepage first-teams block, team agenda/fixtures) for up
+ * to a day after kickoff — while the match-detail page, on its own
+ * proximity-aware TTL, already showed the final score.
+ *
+ * Evaluated against the CACHED list on read: while any match is past kickoff
+ * but still "scheduled" — result pending — refresh at matchday cadence (5 min)
+ * so the score lands minutes after PSD publishes it. The 48h grace window
+ * bounds the churn for matches that never settle (e.g. silently dropped
+ * fixtures). Statuses that already changed (postponed/cancelled/stopped) need
+ * no faster refresh — the list is correct for them.
+ */
+export function teamMatchesTtl(
+  matches: readonly Match[],
+  now: number = Date.now(),
+): number {
+  const resultPending = matches.some((m) => {
+    const kickoff = new Date(m.date).getTime();
+    return (
+      m.status === "scheduled" && now > kickoff && now - kickoff < 48 * HOUR_MS
+    );
+  });
+  return resultPending ? TTL.MATCH_DETAIL_MATCHDAY : TTL.MATCHES_TEAM;
+}
+
+/**
+ * Soft cache TTL (seconds) for the club-wide next-matches list.
+ *
+ * getNextMatches computes "next" per team AT FETCH TIME (kickoff >= now), so
+ * once a cached entry's kickoff passes, the list advertises a match that
+ * already started — the homepage agenda and MatchStrip kept it for up to the
+ * flat 4h window. Cap at matchday cadence while any listed kickoff is in the
+ * past; the refetch recomputes the list to future-only, so the condition
+ * clears itself after one refresh (no grace window needed).
+ */
+export function nextMatchesTtl(
+  matches: readonly Match[],
+  now: number = Date.now(),
+): number {
+  const started = matches.some((m) => new Date(m.date).getTime() < now);
+  return started ? TTL.MATCH_DETAIL_MATCHDAY : TTL.NEXT_MATCHES;
+}
 
 /** True when the detail already carries report data (a non-empty lineup or events). */
 export function hasMatchReportData(detail: MatchDetail): boolean {
