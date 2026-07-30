@@ -40,7 +40,14 @@ function useAutoFit<T extends HTMLElement>(
               ),
             )
           : fontSize;
-      if (!cancelled) setSize(next);
+      if (cancelled) return;
+      // Write the result back imperatively too: `fit()` just probed the DOM AT
+      // THE BASE SIZE, and when `next` equals the current state React bails out
+      // of the re-render — leaving that probe (= base, overflowing) size on
+      // screen. Hits every warm load, where the first fit already measured
+      // against real Freight metrics so the re-fit computes the same number.
+      el.style.fontSize = `${next}px`;
+      setSize(next);
     };
     fit();
     const refit = () => !cancelled && fit();
