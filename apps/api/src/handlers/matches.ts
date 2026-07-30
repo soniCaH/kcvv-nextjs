@@ -55,7 +55,7 @@ export const getNextMatchesHandler = (): Effect.Effect<
   return matchesCache.getOrFetch(
     cacheKey,
     fetchMatches,
-    TTL.NEXT_MATCHES,
+    (matches) => nextMatchesTtl(matches),
     undefined,
     { shouldServeStale },
   );
@@ -111,6 +111,24 @@ export function teamMatchesTtl(
     );
   });
   return resultPending ? TTL.MATCH_DETAIL_MATCHDAY : TTL.MATCHES_TEAM;
+}
+
+/**
+ * Soft cache TTL (seconds) for the club-wide next-matches list.
+ *
+ * getNextMatches computes "next" per team AT FETCH TIME (kickoff >= now), so
+ * once a cached entry's kickoff passes, the list advertises a match that
+ * already started — the homepage agenda and MatchStrip kept it for up to the
+ * flat 4h window. Cap at matchday cadence while any listed kickoff is in the
+ * past; the refetch recomputes the list to future-only, so the condition
+ * clears itself after one refresh (no grace window needed).
+ */
+export function nextMatchesTtl(
+  matches: readonly Match[],
+  now: number = Date.now(),
+): number {
+  const started = matches.some((m) => new Date(m.date).getTime() < now);
+  return started ? TTL.MATCH_DETAIL_MATCHDAY : TTL.NEXT_MATCHES;
 }
 
 /** True when the detail already carries report data (a non-empty lineup or events). */

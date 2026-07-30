@@ -8,6 +8,7 @@ import {
   getPlayerStatsHandler,
   matchDetailTtl,
   teamMatchesTtl,
+  nextMatchesTtl,
 } from "./matches";
 import { HARD_TTL_DEFAULT, TTL } from "../cache/kv-cache";
 import { PsdService, type PsdServiceInterface } from "../psd/service";
@@ -464,6 +465,30 @@ describe("teamMatchesTtl", () => {
 
   it("returns the daily TTL for an empty list", () => {
     expect(teamMatchesTtl([], now)).toBe(TTL.MATCHES_TEAM);
+  });
+});
+
+describe("nextMatchesTtl", () => {
+  const now = new Date("2025-06-01T12:00:00.000Z").getTime();
+  const at = (offsetMs: number) => new Date(now + offsetMs);
+  const H = 60 * 60 * 1000;
+
+  const match = (date: Date): MatchType => ({ ...baseMatch, date });
+
+  it("caps at matchday cadence once a listed fixture has kicked off", () => {
+    // "Next" is computed at fetch time — a 19:00 snapshot still lists the
+    // 20:00 match at 22:00. Must recompute instead of serving 4h stale.
+    const list = [match(at(-2 * H)), match(at(3 * 24 * H))];
+    expect(nextMatchesTtl(list, now)).toBe(TTL.MATCH_DETAIL_MATCHDAY);
+  });
+
+  it("keeps the 4h TTL while every listed kickoff is in the future", () => {
+    const list = [match(at(4 * H)), match(at(3 * 24 * H))];
+    expect(nextMatchesTtl(list, now)).toBe(TTL.NEXT_MATCHES);
+  });
+
+  it("returns the 4h TTL for an empty list", () => {
+    expect(nextMatchesTtl([], now)).toBe(TTL.NEXT_MATCHES);
   });
 });
 
