@@ -6,9 +6,13 @@ import { SanityMutation, SanityMutationError } from "../sanity/mutation";
 import type { SanityProjectionInterface } from "../sanity/projection";
 import { SanityProjection } from "../sanity/projection";
 import type { PsdTeamClientInterface } from "./psd-team-client";
-import { PsdTeamClient } from "./psd-team-client";
+import { PsdTeamClient, PsdTeamClientError } from "./psd-team-client";
 import { WorkerEnvTag } from "../env";
-import type { PsdMember, PsdTeam } from "../psd/schemas-player-team";
+import type {
+  PsdClubStaffMember,
+  PsdMember,
+  PsdTeam,
+} from "../psd/schemas-player-team";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -108,11 +112,13 @@ function makePsdTeamClientMock(
   teams: readonly PsdTeam[],
   members: readonly PsdMember[],
   staff: readonly PsdMember[] = [],
+  clubStaff: readonly PsdClubStaffMember[] = [],
 ) {
   const mock: PsdTeamClientInterface = {
     getRawTeams: () => Effect.succeed(teams),
     getRawMembers: () => Effect.succeed(members),
     getRawStaff: () => Effect.succeed(staff),
+    getRawClubStaff: () => Effect.succeed(clubStaff),
   };
   return mock;
 }
@@ -593,6 +599,7 @@ describe("runSync", () => {
               ],
         ),
       getRawStaff: () => Effect.succeed([]),
+      getRawClubStaff: () => Effect.succeed([]),
     };
 
     // Run 1: processes Team A (cursor 0 → 1)
@@ -660,6 +667,104 @@ describe("runSync", () => {
     // With 1 team, cursor wraps to 0 immediately → reconciliation runs
     expect(archiveStaff).toHaveBeenCalledOnce();
     expect(archiveStaff).toHaveBeenCalledWith(["900"]);
+  });
+
+  it("upserts club-wide (team-less) staff at cycle end and protects them from archival", async () => {
+    const kvStub = makeKvStub();
+
+    // PSD team endpoint returns 1 staff for the single team.
+    const teamStaff: PsdMember[] = [{ ...ONE_STAFF, id: 500 }];
+
+    // Club-wide endpoint returns the team staff PLUS two team-less club
+    // functions (board member 9391) — and a nameless system account (id 1).
+    const clubStaff: PsdClubStaffMember[] = [
+      {
+        id: 500,
+        firstName: "Piet",
+        lastName: "Trainer",
+        birthDate: null,
+        functionTitle: "Coach",
+        status: "staff",
+      },
+      {
+        id: 9391,
+        firstName: "Kim",
+        lastName: "Bautmans",
+        birthDate: null,
+        functionTitle: "Club-API",
+        status: "staff",
+      },
+      {
+        id: 1,
+        firstName: "",
+        lastName: "Admin",
+        birthDate: null,
+        functionTitle: "",
+        status: "staff",
+      },
+    ];
+
+    const {
+      getActiveStaffPsdIds,
+      upsertStaff,
+      archiveStaff,
+      writerMock,
+      readerMock,
+    } = makeSanityMocks();
+
+    // Sanity already has the team-less board member 9391 as active. Without the
+    // club-wide fetch it would be an orphan (never in any team) and archived.
+    getActiveStaffPsdIds.mockReturnValue(Effect.succeed(["500", "9391"]));
+
+    const psdMock = makePsdTeamClientMock(
+      [ONE_TEAM],
+      [ONE_PLAYER],
+      teamStaff,
+      clubStaff,
+    );
+
+    await Effect.runPromise(
+      runSync.pipe(
+        Effect.provide(buildTestLayer(kvStub, writerMock, readerMock, psdMock)),
+      ),
+    );
+
+    // 9391 upserted from the club-wide fetch (resurrects archived board members).
+    expect(upsertStaff).toHaveBeenCalledWith(
+      expect.objectContaining({ psdId: "9391" }),
+    );
+    // Nameless system account (id 1) is skipped — no junk staffMember doc.
+    expect(upsertStaff).not.toHaveBeenCalledWith(
+      expect.objectContaining({ psdId: "1" }),
+    );
+    // Nothing archived: 9391 is now accumulated, so it is not an orphan.
+    expect(archiveStaff).not.toHaveBeenCalled();
+  });
+
+  it("skips staff archival when the club-wide staff fetch fails", async () => {
+    const kvStub = makeKvStub();
+
+    const { getActiveStaffPsdIds, archiveStaff, writerMock, readerMock } =
+      makeSanityMocks();
+    // 9391 would look like an orphan, but the failed club-wide fetch means we
+    // cannot safely tell — so archival is skipped rather than risking deletion.
+    getActiveStaffPsdIds.mockReturnValue(Effect.succeed(["500", "9391"]));
+
+    const psdMock: PsdTeamClientInterface = {
+      getRawTeams: () => Effect.succeed([ONE_TEAM]),
+      getRawMembers: () => Effect.succeed([ONE_PLAYER]),
+      getRawStaff: () => Effect.succeed([{ ...ONE_STAFF, id: 500 }]),
+      getRawClubStaff: () =>
+        Effect.fail(new PsdTeamClientError("club-wide fetch boom")),
+    };
+
+    await Effect.runPromise(
+      runSync.pipe(
+        Effect.provide(buildTestLayer(kvStub, writerMock, readerMock, psdMock)),
+      ),
+    );
+
+    expect(archiveStaff).not.toHaveBeenCalled();
   });
 
   it("archives orphan team when cycle completes (team disappears from PSD)", async () => {
@@ -733,6 +838,7 @@ describe("runSync", () => {
                 { ...ONE_STAFF, id: 700 },
               ],
         ),
+      getRawClubStaff: () => Effect.succeed([]),
     };
 
     // Run 1: processes Team A (cursor 0 → 1)

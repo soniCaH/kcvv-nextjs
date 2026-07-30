@@ -98,3 +98,36 @@ export const PsdMembersPageSchema = S.Struct({
   totalElements: S.Number,
   totalPages: S.Number,
 });
+
+// ─── Club-wide staff (quicksearch) ───────────────────────────────────────────
+//
+// GET /members/quicksearch/status/{status} is a club-wide member search — the
+// only endpoint that returns staff with a general club function (board members,
+// club-level roles) who are attached to no team, which /teams/{id}/staff never
+// surfaces. Its response is PII-heavy (address, medical, bank) and shaped
+// differently from the team endpoints: the pageable wrapper is nested under
+// `playerList`, and records carry `positions` instead of `bestPosition`.
+//
+// Only the fields the staff sync reads are declared — S.Struct strips all
+// unknown keys, so the PII never enters the pipeline. PsdMember can't be reused
+// (it requires keeper/bestPosition/nationality/active, absent or unverified
+// here), so this minimal shape stands alone.
+
+export class PsdClubStaffMember extends S.Class<PsdClubStaffMember>(
+  "PsdClubStaffMember",
+)({
+  id: S.Number,
+  firstName: S.String,
+  lastName: S.String,
+  birthDate: S.NullOr(S.String),
+  functionTitle: S.NullOr(S.String),
+  status: S.String,
+}) {}
+
+export const PsdQuicksearchStaffPageSchema = S.Struct({
+  playerList: S.Struct({
+    content: S.Array(PsdClubStaffMember),
+    totalElements: S.Number,
+    totalPages: S.Number,
+  }),
+});
