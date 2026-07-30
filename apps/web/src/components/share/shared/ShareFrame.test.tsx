@@ -1,14 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { ShareFrame, ShareTop, ShareFoot } from "./ShareFrame";
 import { Headline, Kicker, Scoreline, ShareName } from "./ShareElements";
 
-/** Temporarily fake element width measurement (happy-dom has no layout). */
-function withMeasuredWidths(
-  clientWidth: number,
-  scrollWidth: number,
-  fn: () => void,
-) {
+/** Fake element width measurement (happy-dom has no layout); returns a restore. */
+function fakeMeasuredWidths(clientWidth: number, scrollWidth: number) {
   const proto = HTMLElement.prototype;
   const origClient = Object.getOwnPropertyDescriptor(proto, "clientWidth");
   const origScroll = Object.getOwnPropertyDescriptor(proto, "scrollWidth");
@@ -20,13 +16,25 @@ function withMeasuredWidths(
     configurable: true,
     get: () => scrollWidth,
   });
-  try {
-    fn();
-  } finally {
+  return () => {
     if (origClient) Object.defineProperty(proto, "clientWidth", origClient);
     else delete (proto as unknown as Record<string, unknown>).clientWidth;
     if (origScroll) Object.defineProperty(proto, "scrollWidth", origScroll);
     else delete (proto as unknown as Record<string, unknown>).scrollWidth;
+  };
+}
+
+/** Temporarily fake element width measurement (happy-dom has no layout). */
+function withMeasuredWidths(
+  clientWidth: number,
+  scrollWidth: number,
+  fn: () => void,
+) {
+  const restore = fakeMeasuredWidths(clientWidth, scrollWidth);
+  try {
+    fn();
+  } finally {
+    restore();
   }
 }
 
@@ -54,6 +62,35 @@ describe("ShareName auto-fit", () => {
         fontSize: "85px",
       });
     });
+  });
+
+  it("keeps the fitted size after the webfont re-fit re-measures", async () => {
+    const restoreWidths = fakeMeasuredWidths(920, 2000);
+    const origFonts = Object.getOwnPropertyDescriptor(document, "fonts");
+    Object.defineProperty(document, "fonts", {
+      configurable: true,
+      value: { ready: Promise.resolve(), load: () => Promise.resolve([]) },
+    });
+    try {
+      render(
+        <ShareFrame width={1080} height={1920} register="cream">
+          <ShareName fontSize={185}>Amirgan Bouakhouf</ShareName>
+        </ShareFrame>,
+      );
+      // The re-fit probes the DOM at the base size and computes the SAME 85px,
+      // so React bails out of re-rendering — the probe must not survive.
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(screen.getByText("Amirgan Bouakhouf")).toHaveStyle({
+        fontSize: "85px",
+      });
+    } finally {
+      if (origFonts) Object.defineProperty(document, "fonts", origFonts);
+      else delete (document as unknown as Record<string, unknown>).fonts;
+      restoreWidths();
+    }
   });
 
   it("does not scale a name that already fits", () => {
