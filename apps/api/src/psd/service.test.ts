@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Effect, Layer, Logger, Schema as S } from "effect";
 import { PsdService, PsdServiceLive } from "./service";
+import { PsdGateTest } from "./gate";
 import { Match, MatchDetail, RankingEntry } from "@kcvv/api-contract";
 import { UpstreamUnavailableError, type BffError } from "./errors";
 import { WorkerEnvTag } from "../env";
@@ -21,6 +22,7 @@ function makeEnvLayer() {
     PSD_API_CLUB: "test-club",
     PSD_API_AUTH: "test-auth",
     PSD_CACHE: {} as KVNamespace,
+    PSD_GATE: {} as DurableObjectNamespace,
     SANITY_PROJECT_ID: "test-project",
     SANITY_DATASET: "test",
     SANITY_API_TOKEN: "test-token",
@@ -41,6 +43,7 @@ const cacheMock: KvCacheInterface = {
         : null,
     ),
   set: () => Effect.succeed(undefined),
+  delete: () => Effect.succeed(undefined),
   increment: () => Effect.succeed(undefined),
 };
 
@@ -152,6 +155,7 @@ function runService<A>(
     Effect.either(
       program.pipe(
         Effect.provide(PsdServiceLive),
+        Effect.provide(PsdGateTest),
         Effect.provide(makeEnvLayer()),
         Effect.provide(Layer.succeed(KvCacheService, kv)),
         Effect.provide(Layer.succeed(SanityProjection, sanity)),
@@ -625,6 +629,7 @@ describe("PsdService.getNextMatches", () => {
         }
         return Effect.succeed(undefined);
       },
+      delete: () => Effect.succeed(undefined),
       increment: () => Effect.succeed(undefined),
     };
 
@@ -662,6 +667,7 @@ describe("PsdService.getNextMatches", () => {
           ? Effect.succeed(cachedIds)
           : Effect.succeed(null),
       set: () => Effect.succeed(undefined),
+      delete: () => Effect.succeed(undefined),
       increment: () => Effect.succeed(undefined),
     };
 
@@ -1168,6 +1174,7 @@ describe("PsdService.getRanking", () => {
         return yield* svc.getRanking(1, "https://cdn.example.com");
       }).pipe(
         Effect.provide(PsdServiceLive),
+        Effect.provide(PsdGateTest),
         Effect.provide(makeEnvLayer()),
         Effect.provide(Layer.succeed(KvCacheService, cacheMock)),
         Effect.provide(Layer.succeed(SanityProjection, makeSanityMock())),
@@ -1295,6 +1302,7 @@ describe("PsdService.getMatchDetail — status/score backfill from season list",
             : null,
       ),
     set: () => Effect.succeed(undefined),
+    delete: () => Effect.succeed(undefined),
     increment: () => Effect.succeed(undefined),
   });
 
@@ -1895,6 +1903,7 @@ describe("PsdService.getMatchDetail - competition/team enrichment", () => {
           key === "psd:match-team-index:v2" ? JSON.stringify(idx) : null,
         ),
       set: () => Effect.succeed(undefined),
+      delete: () => Effect.succeed(undefined),
       increment: () => Effect.succeed(undefined),
     };
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
@@ -1954,6 +1963,7 @@ describe("PsdService.getMatchDetail - competition/team enrichment", () => {
               : null, // psd:match-team-index → null → force a build
         ),
       set: () => Effect.succeed(undefined),
+      delete: () => Effect.succeed(undefined),
       increment: () => Effect.succeed(undefined),
     };
     (global.fetch as ReturnType<typeof vi.fn>)

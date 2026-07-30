@@ -5,6 +5,7 @@ import { PsdService } from "../psd/service";
 import { shouldServeStale, type BffError } from "../psd/errors";
 import { KvCacheService, TTL, TypedKvCache } from "../cache/kv-cache";
 import { WorkerEnvTag } from "../env";
+import { PsdGateService } from "../psd/gate";
 import { withErrorMapping } from "./error-mapping";
 
 const opponentHistoryCache = TypedKvCache(OpponentHistory);
@@ -15,7 +16,7 @@ export const getOpponentHistoryHandler = (
 ): Effect.Effect<
   OpponentHistory,
   BffError,
-  PsdService | KvCacheService | WorkerEnvTag
+  PsdService | KvCacheService | WorkerEnvTag | PsdGateService
 > => {
   const cacheKey = `opponent:team:${teamId}:club:${clubId}`;
   const fetchHistory = Effect.gen(function* () {

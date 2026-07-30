@@ -64,6 +64,7 @@ function makeTestLayer() {
       get: vi.fn().mockResolvedValue(null),
       put: vi.fn().mockResolvedValue(undefined),
     } as unknown as KVNamespace,
+    PSD_GATE: {} as DurableObjectNamespace,
     SANITY_PROJECT_ID: "test-project",
     SANITY_DATASET: "test",
     SANITY_API_TOKEN: "test-token",

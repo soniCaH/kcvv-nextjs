@@ -4,6 +4,7 @@ import { getRankingHandler } from "./ranking";
 import { PsdService, type PsdServiceInterface } from "../psd/service";
 import { KvCacheService, type KvCacheInterface } from "../cache/kv-cache";
 import { testEnvLayer } from "../test-helpers/env-layer";
+import { PsdGateTest } from "../psd/gate";
 import { RankingArray, type RankingEntry } from "@kcvv/api-contract";
 import { UpstreamUnavailableError } from "../psd/errors";
 
@@ -44,6 +45,7 @@ function makeServiceMock(
 const cacheMock: KvCacheInterface = {
   get: () => Effect.succeed(null),
   set: () => Effect.succeed(undefined),
+  delete: () => Effect.succeed(undefined),
   increment: () => Effect.succeed(undefined),
 };
 
@@ -53,6 +55,7 @@ describe("getRankingHandler", () => {
       getRankingHandler(1, "https://cdn.example.com").pipe(
         Effect.provide(Layer.succeed(PsdService, makeServiceMock())),
         Effect.provide(Layer.succeed(KvCacheService, cacheMock)),
+        Effect.provide(PsdGateTest),
         Effect.provide(testEnvLayer),
       ),
     );
@@ -75,6 +78,7 @@ describe("getRankingHandler", () => {
             ),
           ),
           Effect.provide(Layer.succeed(KvCacheService, cacheMock)),
+          Effect.provide(PsdGateTest),
           Effect.provide(testEnvLayer),
         ),
       ),
@@ -104,6 +108,7 @@ describe("getRankingHandler", () => {
             ),
           ),
           Effect.provide(Layer.succeed(KvCacheService, cacheMock)),
+          Effect.provide(PsdGateTest),
           Effect.provide(testEnvLayer),
         ),
       ),

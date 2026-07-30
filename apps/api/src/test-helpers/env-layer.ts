@@ -9,6 +9,7 @@ const defaultTestEnv: WorkerEnv = {
   PSD_API_CLUB: "test-club",
   PSD_API_AUTH: "test-auth",
   PSD_CACHE: {} as KVNamespace,
+  PSD_GATE: {} as DurableObjectNamespace,
   SANITY_PROJECT_ID: "test",
   SANITY_DATASET: "test",
   SANITY_API_TOKEN: "test-token",

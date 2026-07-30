@@ -13,6 +13,7 @@ import { isSettledMatchStatus } from "../psd/transforms";
 import { shouldServeStale, type BffError } from "../psd/errors";
 import { KvCacheService, TTL, TypedKvCache } from "../cache/kv-cache";
 import { WorkerEnvTag } from "../env";
+import { PsdGateService } from "../psd/gate";
 import { withErrorMapping } from "./error-mapping";
 
 const matchesCache = TypedKvCache(MatchesArray);
@@ -24,7 +25,7 @@ export const getMatchesByTeamHandler = (
 ): Effect.Effect<
   readonly Match[],
   BffError,
-  PsdService | KvCacheService | WorkerEnvTag
+  PsdService | KvCacheService | WorkerEnvTag | PsdGateService
 > => {
   const cacheKey = `matches:team:${teamId}`;
   const fetchMatches = Effect.gen(function* () {
@@ -44,7 +45,7 @@ export const getMatchesByTeamHandler = (
 export const getNextMatchesHandler = (): Effect.Effect<
   readonly Match[],
   BffError,
-  PsdService | KvCacheService | WorkerEnvTag
+  PsdService | KvCacheService | WorkerEnvTag | PsdGateService
 > => {
   const cacheKey = "matches:next";
   const fetchMatches = Effect.gen(function* () {
@@ -57,14 +58,21 @@ export const getNextMatchesHandler = (): Effect.Effect<
     fetchMatches,
     (matches) => nextMatchesTtl(matches),
     undefined,
-    { shouldServeStale },
+    {
+      shouldServeStale,
+      // Correctness guard: "next" is computed at fetch time, so a stale copy can
+      // advertise a match that has already kicked off. Never serve that — refresh
+      // blocking so the list recomputes to future-only.
+      mustBlockOnStale: (matches) =>
+        matches.some((m) => new Date(m.date).getTime() < Date.now()),
+    },
   );
 };
 
 export const getMatchesWindowHandler = (): Effect.Effect<
   readonly Match[],
   BffError,
-  PsdService | KvCacheService | WorkerEnvTag
+  PsdService | KvCacheService | WorkerEnvTag | PsdGateService
 > => {
   const cacheKey = "matches:window";
   const fetchMatches = Effect.gen(function* () {
@@ -203,7 +211,7 @@ export const getMatchDetailHandler = (
 ): Effect.Effect<
   MatchDetail,
   BffError,
-  PsdService | KvCacheService | WorkerEnvTag
+  PsdService | KvCacheService | WorkerEnvTag | PsdGateService
 > => {
   const cacheKey = `match:detail:${matchId}`;
   const fetchDetail = Effect.gen(function* () {
@@ -229,7 +237,7 @@ export const getPlayerStatsHandler = (
 ): Effect.Effect<
   PlayerSeasonStatsType,
   BffError,
-  PsdService | KvCacheService | WorkerEnvTag
+  PsdService | KvCacheService | WorkerEnvTag | PsdGateService
 > =>
   Effect.gen(function* () {
     const service = yield* PsdService;

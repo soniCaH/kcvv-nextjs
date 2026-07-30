@@ -7,6 +7,7 @@ import {
   type VectorizeServiceInterface,
 } from "../search/vectorize";
 import { testEnvLayer } from "../test-helpers/env-layer";
+import { PsdGateTest } from "../psd/gate";
 
 function makeCacheMock(
   overrides: Partial<KvCacheInterface> = {},
@@ -14,6 +15,7 @@ function makeCacheMock(
   return {
     get: () => Effect.succeed(null),
     set: () => Effect.succeed(undefined),
+    delete: () => Effect.succeed(undefined),
     increment: () => Effect.succeed(undefined),
     ...overrides,
   };
@@ -41,6 +43,7 @@ function runWithProviders(
     effect.pipe(
       Effect.provide(Layer.succeed(KvCacheService, cacheMock)),
       Effect.provide(Layer.succeed(VectorizeService, vectorizeMock)),
+      Effect.provide(PsdGateTest),
       Effect.provide(testEnvLayer),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ) as Effect.Effect<any, never, never>,

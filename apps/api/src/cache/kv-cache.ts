@@ -1,21 +1,35 @@
-import { Context, Effect, Layer, Option, Schema as S } from "effect";
+import { Context, Effect, Either, Layer, Option, Schema as S } from "effect";
 import { WorkerEnvTag } from "../env";
+import { PsdGateService } from "../psd/gate";
+import { BackgroundRunnerService, type PsdRefreshEnv } from "../psd/background";
 
-/** Per-endpoint TTLs in seconds */
+/**
+ * Per-endpoint soft TTLs in seconds.
+ *
+ * Every PSD-backed (match) TTL is ≥15 min: with stale-while-revalidate the soft
+ * TTL only sets the background-refresh cadence — stale is always served
+ * instantly — so a tighter window bought nothing but PSD load (#2321). KCVV has
+ * no live scores, so the old 60 s "live" tier was already moot.
+ */
 export const TTL = {
   MATCHES_TEAM: 60 * 60 * 24, // 24 hours — season schedule rarely changes mid-week
   NEXT_MATCHES: 60 * 60 * 4, // 4 hours — no live scores, schedule is stable for hours
   MATCHES_WINDOW: 60 * 60 * 4, // 4 hours — matchday picker; in-window matches stay listed regardless of refresh
   MATCH_DETAIL_PAST: 60 * 60 * 24 * 7, // 7 days — historical, never changes
   MATCH_DETAIL_DEFAULT: 60 * 60 * 24, // 24 hours — distant (kickoff >7d away)
-  MATCH_DETAIL_LIVE: 60, // <3h from kickoff — live, refresh aggressively
-  MATCH_DETAIL_MATCHDAY: 60 * 5, // <24h from kickoff — matchday
-  MATCH_DETAIL_WEEK: 60 * 60, // <7d from kickoff — this week
+  MATCH_DETAIL_LIVE: 60 * 15, // 15 min — floor: no live scores, SWR serves stale instantly
+  MATCH_DETAIL_MATCHDAY: 60 * 15, // 15 min — matchday / result-pending refresh cadence
+  MATCH_DETAIL_WEEK: 60 * 60, // 1 hour — this week
   RANKING: 60 * 60 * 24, // 24 hours — updates only after a match day
   RELATED: 60 * 60 * 6, // 6 hours — related content changes infrequently
   OPPONENT_HISTORY: 60 * 60 * 24 * 7, // 7 days — historical match data doesn't change
   PLAYER_STATS: 60 * 60 * 6, // 6 hours — player stats update after match days
 } as const;
+
+/** Persisted negative marker TTL (seconds). Suppresses re-storming after a failed
+ * refresh: subsequent requests serve stale without re-fanning until it expires.
+ * (KV's minimum expirationTtl is 60 s.) */
+export const NEG_MARKER_TTL = 120; // 2 min
 
 export interface KvCacheInterface {
   readonly get: (key: string) => Effect.Effect<string | null>;
@@ -24,6 +38,7 @@ export interface KvCacheInterface {
     value: string,
     ttl: number,
   ) => Effect.Effect<void>;
+  readonly delete: (key: string) => Effect.Effect<void>;
   /** Increment today's PSD-call counter by n (default 1). Owns the daily key (psd:calls:YYYY-MM-DD). */
   readonly increment: (by?: number) => Effect.Effect<void>;
 }
@@ -39,11 +54,46 @@ export const HARD_TTL_DEFAULT = 60 * 60 * 24 * 7;
 /** Long hard TTL: 365 days — used on staging to minimize PSD API quota usage */
 export const HARD_TTL_LONG = 60 * 60 * 24 * 365;
 
+const negKey = (key: string): string => `neg:${key}`;
+
 export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
   const WrapperSchema = S.Struct({
     value: schema,
     fetchedAt: S.Number,
   });
+
+  /** Decode a raw KV string into {value, fetchedAt}, tolerating the legacy
+   * pre-wrapper format (raw value, fetchedAt: 0). None on any decode failure. */
+  const decodeEntry = (
+    key: string,
+    cached: string,
+  ): Effect.Effect<Option.Option<{ value: A; fetchedAt: number }>> =>
+    Effect.try({
+      try: () => JSON.parse(cached),
+      catch: (e) => new Error(String(e)),
+    }).pipe(
+      Effect.flatMap((parsed) =>
+        S.decodeUnknown(WrapperSchema)(parsed).pipe(
+          Effect.catchAll(() =>
+            S.decodeUnknown(schema)(parsed).pipe(
+              Effect.map((value) => ({ value, fetchedAt: 0 })),
+              Effect.catchAll((legacyErr) =>
+                Effect.zipRight(
+                  Effect.logWarning(
+                    `TypedKvCache: cache decode failed for key "${key}": ${String(legacyErr)}`,
+                  ),
+                  Effect.fail(legacyErr),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      Effect.option,
+    );
+
+  const wrap = (value: A): string =>
+    JSON.stringify({ value, fetchedAt: Date.now() });
 
   return {
     getOrFetch: <E, R>(
@@ -51,45 +101,88 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
       fetch: Effect.Effect<A, E, R>,
       softTtl: number | ((value: A) => number),
       hardTtl: number = HARD_TTL_DEFAULT,
-      options?: { shouldServeStale?: (error: E) => boolean },
-    ): Effect.Effect<A, E, R | KvCacheService | WorkerEnvTag> =>
+      options?: {
+        shouldServeStale?: (error: E) => boolean;
+        /** Correctness guard: when the STALE value fails this predicate (e.g. a
+         * "next" list whose kickoff has already passed), refresh blocking rather
+         * than serving stale. */
+        mustBlockOnStale?: (value: A) => boolean;
+      },
+    ): Effect.Effect<
+      A,
+      E,
+      R | KvCacheService | WorkerEnvTag | PsdGateService
+    > =>
       Effect.gen(function* () {
         const cache = yield* KvCacheService;
         const env = yield* WorkerEnvTag;
+        const gate = yield* PsdGateService;
+        const runnerOpt = yield* Effect.serviceOption(BackgroundRunnerService);
         const effectiveHardTtl =
           env.CACHE_LONG_TTL === "true" ? HARD_TTL_LONG : hardTtl;
+        const shouldServeStale = options?.shouldServeStale ?? (() => true);
+
+        // Store a fresh value (schema-validated) and clear any negative marker.
+        const storeFresh = (value: A) =>
+          Effect.gen(function* () {
+            yield* S.decodeUnknown(schema)(value).pipe(Effect.orDie);
+            yield* cache.set(key, wrap(value), effectiveHardTtl);
+            yield* cache.delete(negKey(key));
+          });
+
+        // Foreground refresh: fetch, store on success, serve stale on a
+        // serve-stale error (setting the negative marker so we stop re-fanning),
+        // propagate otherwise. Used by the correctness guard and, when no
+        // background runner is wired, as the stale fallback.
+        const blockingRefresh = (staleValue: A) =>
+          Effect.gen(function* () {
+            const result = yield* fetch.pipe(Effect.either);
+            if (Either.isRight(result)) {
+              yield* storeFresh(result.right);
+              return result.right;
+            }
+            if (!shouldServeStale(result.left)) {
+              return yield* Effect.fail(result.left);
+            }
+            yield* Effect.logWarning(
+              `TypedKvCache: refresh failed for key "${key}", serving stale (error: ${String(result.left)})`,
+            );
+            yield* cache.set(negKey(key), "1", NEG_MARKER_TTL);
+            return staleValue;
+          });
+
+        // Background (SWR) refresh: single-flight leader fetches and updates KV;
+        // any failure keeps stale and sets the negative marker. Never throws —
+        // it runs detached via the background runner.
+        const backgroundRefresh = Effect.gen(function* () {
+          const leader = yield* gate.beginFlight(key);
+          if (!leader) return; // another isolate/fiber is already refreshing
+          yield* Effect.gen(function* () {
+            const result = yield* fetch.pipe(Effect.either);
+            if (Either.isRight(result)) {
+              const valid = S.decodeUnknownOption(schema)(result.right);
+              if (Option.isSome(valid)) {
+                yield* cache.set(key, wrap(result.right), effectiveHardTtl);
+                yield* cache.delete(negKey(key));
+              } else {
+                yield* Effect.logWarning(
+                  `TypedKvCache: background refresh for "${key}" returned schema-invalid data; keeping stale`,
+                );
+                yield* cache.set(negKey(key), "1", NEG_MARKER_TTL);
+              }
+            } else {
+              yield* Effect.logWarning(
+                `TypedKvCache: background refresh failed for "${key}", keeping stale (error: ${String(result.left)})`,
+              );
+              yield* cache.set(negKey(key), "1", NEG_MARKER_TTL);
+            }
+          }).pipe(Effect.ensuring(gate.endFlight(key)));
+        });
+
         const cached = yield* cache.get(key);
 
         if (cached !== null) {
-          const decoded = yield* Effect.try({
-            try: () => JSON.parse(cached),
-            catch: (e) => new Error(String(e)),
-          }).pipe(
-            Effect.flatMap((parsed) =>
-              S.decodeUnknown(WrapperSchema)(parsed).pipe(
-                Effect.catchAll(() =>
-                  // Legacy pre-wrapper format: try decoding raw value
-                  S.decodeUnknown(schema)(parsed).pipe(
-                    Effect.tap(() =>
-                      Effect.logDebug(
-                        `TypedKvCache: legacy cache entry for key "${key}" — will migrate on next fetch`,
-                      ),
-                    ),
-                    Effect.map((value) => ({ value, fetchedAt: 0 })),
-                    Effect.catchAll((legacyErr) =>
-                      Effect.zipRight(
-                        Effect.logWarning(
-                          `TypedKvCache: cache decode failed for key "${key}": ${String(legacyErr)}`,
-                        ),
-                        Effect.fail(legacyErr),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Effect.option,
-          );
+          const decoded = yield* decodeEntry(key, cached);
 
           if (Option.isSome(decoded)) {
             const { value, fetchedAt } = decoded.value;
@@ -99,43 +192,63 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
 
             if (isFresh) return value;
 
-            // Stale: attempt refresh, fall back to stale on error
-            const shouldServeStale = options?.shouldServeStale ?? (() => true);
-            const refreshed = yield* fetch.pipe(
-              Effect.map((freshValue) => ({ freshValue, ok: true as const })),
-              Effect.catchAll((err) => {
-                if (!shouldServeStale(err)) {
-                  return Effect.fail(err);
-                }
-                return Effect.gen(function* () {
-                  yield* Effect.logWarning(
-                    `TypedKvCache: refresh failed for key "${key}", serving stale data (age: ${Math.round((Date.now() - fetchedAt) / 1000)}s, error: ${String(err)})`,
-                  );
-                  return { freshValue: value, ok: false as const };
-                });
-              }),
-            );
+            // ── Stale ────────────────────────────────────────────────────────
+            // Negative marker present → a recent refresh failed; serve stale
+            // instantly and do not re-fan. This wins even over the correctness
+            // guard below: during an outage, a bounded ≤2 min of possibly-wrong
+            // "next" beats storming PSD ~19 calls/request while it's down (the
+            // marker self-heals the moment PSD recovers).
+            const marker = yield* cache.get(negKey(key));
+            if (marker !== null) return value;
 
-            if (refreshed.ok) {
-              yield* S.decodeUnknown(schema)(refreshed.freshValue).pipe(
-                Effect.orDie,
-              );
-              const wrapper = JSON.stringify({
-                value: refreshed.freshValue,
-                fetchedAt: Date.now(),
-              });
-              yield* cache.set(key, wrapper, effectiveHardTtl);
+            // Correctness guard: a stale value that is now wrong (past-kickoff
+            // "next") must not be served — refresh blocking.
+            if (options?.mustBlockOnStale?.(value)) {
+              return yield* blockingRefresh(value);
             }
 
-            return refreshed.freshValue;
+            if (Option.isSome(runnerOpt)) {
+              // Stale-while-revalidate: serve stale NOW, refresh in the
+              // background (single-flight, on an env-built layer) — see
+              // background-live.ts. The cast is safe: only PSD read handlers
+              // provide a BackgroundRunnerService, and their layer covers this
+              // refresh's deps (non-PSD callers never reach this branch).
+              const refresh = backgroundRefresh as Effect.Effect<
+                void,
+                unknown,
+                PsdRefreshEnv
+              >;
+              yield* runnerOpt.value.fork(`refresh:${key}`, refresh);
+              return value;
+            }
+
+            // No background runner wired → fall back to a blocking refresh.
+            return yield* blockingRefresh(value);
           }
         }
 
-        // Cache miss: fetch, validate, wrap, store
+        // ── Cache miss (or undecodable) ──────────────────────────────────────
+        // Single-flight: the leader fetches; concurrent callers await it and
+        // re-read KV, so N concurrent misses collapse to one fan-out.
+        const isLeader = yield* gate.beginFlight(key);
+        if (isLeader) {
+          return yield* Effect.gen(function* () {
+            const value = yield* fetch;
+            yield* storeFresh(value);
+            return value;
+          }).pipe(Effect.ensuring(gate.endFlight(key)));
+        }
+
+        yield* gate.awaitFlight(key);
+        const afterWait = yield* cache.get(key);
+        if (afterWait !== null) {
+          const reread = yield* decodeEntry(key, afterWait);
+          if (Option.isSome(reread)) return reread.value.value;
+        }
+        // Leader failed to populate (or timed out) — fetch ourselves. Bounded by
+        // the global token bucket; a true never-cached failure surfaces.
         const value = yield* fetch;
-        yield* S.decodeUnknown(schema)(value).pipe(Effect.orDie);
-        const wrapper = JSON.stringify({ value, fetchedAt: Date.now() });
-        yield* cache.set(key, wrapper, effectiveHardTtl);
+        yield* storeFresh(value);
         return value;
       }),
   };
@@ -154,6 +267,11 @@ export const KvCacheLive = Layer.effect(
       set: (key: string, value: string, ttl: number) =>
         Effect.tryPromise({
           try: () => env.PSD_CACHE.put(key, value, { expirationTtl: ttl }),
+          catch: () => undefined,
+        }).pipe(Effect.orElseSucceed(() => undefined)),
+      delete: (key: string) =>
+        Effect.tryPromise({
+          try: () => env.PSD_CACHE.delete(key),
           catch: () => undefined,
         }).pipe(Effect.orElseSucceed(() => undefined)),
       increment: (by = 1) =>

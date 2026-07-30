@@ -31,6 +31,16 @@ binding = "PSD_CACHE"
 id = "82533c23954d4ed98871dd53465c5c0e"
 preview_id = "4ee68193dd574f7fa01fba9d53d5d475"
 
+# Global PSD gate — one instance hosts the token bucket + single-flight registry
+# shared across all isolates (see src/psd/gate-do.ts, #2328).
+[[durable_objects.bindings]]
+name = "PSD_GATE"
+class_name = "PsdGate"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["PsdGate"]
+
 [ai]
 binding = "AI"
 
@@ -59,6 +69,12 @@ CACHE_LONG_TTL = "true"
 [[env.staging.kv_namespaces]]
 binding = "PSD_CACHE"
 id = "4ee68193dd574f7fa01fba9d53d5d475"
+
+# Named envs don't inherit top-level DO bindings — redeclare for staging.
+# Migrations ([[migrations]]) are defined once at the top level and apply here too.
+[[env.staging.durable_objects.bindings]]
+name = "PSD_GATE"
+class_name = "PsdGate"
 
 [env.staging.ai]
 binding = "AI"
