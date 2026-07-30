@@ -9,7 +9,10 @@ import { generateIcal, normalizeCacheKey } from "@/lib/utils/ical";
 
 export const runtime = "nodejs";
 
-const CACHE_MAX_AGE = 43200; // 12 hours
+// 15 min — this feed is built from live PSD match data (bff.getMatches), so its
+// cache (unstable_cache revalidate + Cache-Control) is aligned to the BFF
+// freshness window rather than holding fixtures for 12h.
+const CACHE_MAX_AGE = 900;
 const MAX_TEAM_IDS = 20;
 const FETCH_CONCURRENCY = 5;
 

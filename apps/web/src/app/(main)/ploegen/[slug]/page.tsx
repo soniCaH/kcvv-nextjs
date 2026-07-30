@@ -332,6 +332,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
   );
 }
 
-// 6h ISR — rosters change rarely; editor publishes invalidate on demand via
-// /api/revalidate (revalidateTag 'teams').
-export const revalidate = 21600;
+// 15 min ISR — the page renders live PSD match data (fixtures + standings), so
+// its cache is aligned to the BFF freshness window. Editor publishes still
+// invalidate rosters on demand via /api/revalidate (revalidateTag 'teams').
+export const revalidate = 900;

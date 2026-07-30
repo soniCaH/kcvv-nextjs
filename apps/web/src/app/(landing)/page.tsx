@@ -561,6 +561,7 @@ export default async function HomePage() {
 }
 
 /**
- * Enable ISR with 1 hour revalidation
+ * Enable ISR with 15 minute revalidation — the homepage renders live PSD
+ * match data (next match), so its cache is aligned to the BFF freshness window.
  */
-export const revalidate = 3600;
+export const revalidate = 900;
