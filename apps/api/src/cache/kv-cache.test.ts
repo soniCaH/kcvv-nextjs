@@ -662,12 +662,50 @@ describe("TypedKvCache — stale-while-revalidate + storm gate (#2328)", () => {
     expect(fanOuts).toBe(1);
   });
 
-  it("sustained outage decouples PSD calls from request volume (~4% collapse)", async () => {
-    // Under a sustained 429, the negative marker suppresses re-fanning: after the
-    // first failed refresh, every subsequent read serves stale WITHOUT fetching
-    // until the marker expires. So PSD load tracks the marker cadence, not the
-    // request rate — the mechanism behind the prototype's 475%→~4% collapse
-    // (#2324). Here: 50 reads during an outage → a single fan-out attempt.
+  it("concurrent misses never run duplicate fan-outs, even when the leader fails", async () => {
+    // AC3 under failure: followers re-enter single-flight instead of all
+    // self-fetching, so at no instant do two fan-outs run for the same key.
+    const mockKv = makeMockKv();
+    const gate = makePsdGateLayer(new GateLogic({ ratePerSecond: 1e9 }));
+
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const fetchEffect = Effect.gen(function* () {
+      inFlight++;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      yield* Effect.sleep("3 millis");
+      inFlight--;
+      return yield* Effect.fail(new Error("PSD 429") as never);
+    });
+
+    const typedCache = TypedKvCache(TestSchema);
+    const run = () =>
+      Effect.runPromiseExit(
+        typedCache
+          .getOrFetch("test-key", fetchEffect, 60)
+          .pipe(
+            Effect.provide(KvCacheLive),
+            Effect.provide(gate),
+            Effect.provide(makeEnvLayer(mockKv)),
+          ),
+      );
+
+    const exits = await Promise.all(Array.from({ length: 10 }, run));
+    // Nothing was ever cached, so every caller surfaces the error (AC7).
+    for (const e of exits) expect(e._tag).toBe("Failure");
+    // Crucially: fan-outs were serialized, never concurrent.
+    expect(maxInFlight).toBe(1);
+  });
+
+  it("sustained outage decouples PSD calls from request volume", async () => {
+    // The storm collapse (#2324) is this decoupling: today every soft-lapsed read
+    // re-fires the fan-out (the 475%-of-budget storm), whereas the negative
+    // marker makes PSD load track the marker cadence, not the request rate —
+    // after the first failed refresh, every subsequent read serves stale WITHOUT
+    // fetching until the marker expires. Here 50 reads during an outage trigger a
+    // SINGLE fan-out attempt; over a day the fan-out count is bounded by
+    // day/NEG_MARKER_TTL windows rather than by traffic, which is what lands the
+    // steady-state figure in the low-single-digit % the prototype measured (~4%).
     const mockKv = makeMockKv();
     mockKv.store.set("test-key", staleWrapper({ name: "stale", value: 1 }));
     const gate = PsdGateTest;

@@ -30,6 +30,19 @@ export interface GateLogicOptions {
   readonly now?: () => number;
   /** Injectable sleep. Default a real `setTimeout` promise. */
   readonly sleep?: (ms: number) => Promise<void>;
+  /**
+   * Max lifetime of a single-flight leadership (ms). If a leader isolate is
+   * killed before `endFlight` (waitUntil budget exceeded, eviction), its entry
+   * would otherwise pin the key forever and defeat single-flight. After the
+   * lease the next `beginFlight` reclaims leadership. Default 15 s — well above a
+   * throttled ~19-call fan-out (~4 s at 5/s), well below permanent. */
+  readonly leaseMs?: number;
+}
+
+interface Flight {
+  readonly promise: Promise<void>;
+  readonly resolve: () => void;
+  readonly startedAt: number;
 }
 
 const realSleep = (ms: number): Promise<void> =>
@@ -39,21 +52,27 @@ export class GateLogic {
   private readonly rate: number;
   private readonly now: () => number;
   private readonly sleep: (ms: number) => Promise<void>;
+  private readonly leaseMs: number;
 
   private tokens: number;
   private lastRefill: number;
 
-  /** key → promise that resolves when the current leader ends its flight. */
-  private readonly inFlight = new Map<string, Promise<void>>();
-  private readonly resolvers = new Map<string, () => void>();
+  /** key → the in-flight leadership record. */
+  private readonly inFlight = new Map<string, Flight>();
 
   constructor(opts: GateLogicOptions = {}) {
     this.rate = opts.ratePerSecond ?? 5;
     this.now = opts.now ?? (() => Date.now());
     this.sleep = opts.sleep ?? realSleep;
+    this.leaseMs = opts.leaseMs ?? 15_000;
     // Start full so a single cold fan-out isn't throttled from the first call.
     this.tokens = this.rate;
     this.lastRefill = this.now();
+  }
+
+  /** A flight whose lease has expired is treated as abandoned (dead leader). */
+  private isLive(flight: Flight | undefined): boolean {
+    return !!flight && this.now() - flight.startedAt < this.leaseMs;
   }
 
   private refill(): void {
@@ -86,30 +105,54 @@ export class GateLogic {
    * Single-flight leadership. Returns `true` to the first caller for `key`
    * (the leader — it must run the work, then call `endFlight(key)`), `false`
    * to every concurrent caller (they should `awaitFlight(key)` or serve stale).
+   * A caller also becomes leader if the previous leader's lease has expired
+   * (dead-leader reclaim), waking anyone waiting on the abandoned flight.
    */
   beginFlight(key: string): boolean {
-    if (this.inFlight.has(key)) return false;
-    this.inFlight.set(
-      key,
-      new Promise<void>((resolve) => this.resolvers.set(key, resolve)),
-    );
+    const existing = this.inFlight.get(key);
+    if (this.isLive(existing)) return false;
+    // No live leader (never claimed, or the previous lease expired) → take it.
+    existing?.resolve(); // wake waiters stuck on the abandoned flight
+    let resolve!: () => void;
+    const promise = new Promise<void>((r) => {
+      resolve = r;
+    });
+    this.inFlight.set(key, { promise, resolve, startedAt: this.now() });
     return true;
   }
 
   /** Release the flight for `key`, waking every `awaitFlight` waiter. */
   endFlight(key: string): void {
-    this.resolvers.get(key)?.();
-    this.resolvers.delete(key);
-    this.inFlight.delete(key);
+    const flight = this.inFlight.get(key);
+    if (flight) {
+      flight.resolve();
+      this.inFlight.delete(key);
+    }
   }
 
-  /** Resolve when the current leader for `key` calls `endFlight`. No-op if idle. */
+  /**
+   * Resolve when the current leader for `key` calls `endFlight`, or after the
+   * lease elapses — a leader isolate killed before `endFlight` must not hang
+   * cross-isolate waiters forever. No-op if idle.
+   */
   async awaitFlight(key: string): Promise<void> {
-    await this.inFlight.get(key);
+    const flight = this.inFlight.get(key);
+    if (!flight) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        flight.promise,
+        new Promise<void>((resolve) => {
+          timer = setTimeout(resolve, this.leaseMs);
+        }),
+      ]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   }
 
-  /** True while a leader holds the flight for `key`. */
+  /** True while a live (unexpired) leader holds the flight for `key`. */
   isInFlight(key: string): boolean {
-    return this.inFlight.has(key);
+    return this.isLive(this.inFlight.get(key));
   }
 }

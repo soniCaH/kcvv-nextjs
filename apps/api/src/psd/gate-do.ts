@@ -11,11 +11,10 @@
 import { DurableObject } from "cloudflare:workers";
 import { GateLogic } from "./gate-logic";
 
-/** Max time a cross-isolate waiter blocks on a leader before giving up (dead-leader guard). */
-const AWAIT_FLIGHT_TIMEOUT_MS = 10_000;
-
 export class PsdGate extends DurableObject {
   // Instance-lifetime state: survives across requests while the DO stays warm.
+  // All coordination logic (including the lease that bounds awaitFlight against
+  // a dead leader) lives in GateLogic so it stays unit-testable.
   private readonly logic = new GateLogic();
 
   acquireToken(): Promise<void> {
@@ -30,17 +29,7 @@ export class PsdGate extends DurableObject {
     this.logic.endFlight(key);
   }
 
-  async awaitFlight(key: string): Promise<void> {
-    // Bound the wait: if the leader isolate died without endFlight, waiters must
-    // not hang. On timeout the caller falls back to serving stale / its own fetch.
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const timeout = new Promise<void>((resolve) => {
-      timer = setTimeout(resolve, AWAIT_FLIGHT_TIMEOUT_MS);
-    });
-    try {
-      await Promise.race([this.logic.awaitFlight(key), timeout]);
-    } finally {
-      if (timer) clearTimeout(timer);
-    }
+  awaitFlight(key: string): Promise<void> {
+    return this.logic.awaitFlight(key);
   }
 }

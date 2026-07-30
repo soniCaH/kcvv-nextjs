@@ -116,6 +116,45 @@ describe("GateLogic — single-flight", () => {
     await expect(gate.awaitFlight("idle")).resolves.toBeUndefined();
   });
 
+  it("awaitFlight gives up after the lease if the leader never ends", async () => {
+    // Dead-leader guard: a leader killed before endFlight must not hang waiters.
+    const gate = new GateLogic({ leaseMs: 20 });
+    gate.beginFlight("k"); // leader never calls endFlight
+    await expect(gate.awaitFlight("k")).resolves.toBeUndefined();
+  });
+
+  it("reclaims leadership after the lease expires (dead-leader guard)", () => {
+    let clock = 0;
+    const gate = new GateLogic({ now: () => clock, leaseMs: 1000 });
+
+    expect(gate.beginFlight("k")).toBe(true);
+    expect(gate.beginFlight("k")).toBe(false); // live leader holds it
+    expect(gate.isInFlight("k")).toBe(true);
+
+    clock += 1500; // leader died without endFlight; lease lapses
+
+    expect(gate.isInFlight("k")).toBe(false);
+    expect(gate.beginFlight("k")).toBe(true); // reclaimed by the next caller
+  });
+
+  it("reclaiming a lapsed flight wakes anyone still awaiting it", async () => {
+    let clock = 0;
+    const gate = new GateLogic({ now: () => clock, leaseMs: 1000 });
+    gate.beginFlight("k");
+
+    let woken = false;
+    const waiter = gate.awaitFlight("k").then(() => {
+      woken = true;
+    });
+    await Promise.resolve();
+    expect(woken).toBe(false);
+
+    clock += 1500;
+    gate.beginFlight("k"); // reclaim → resolves the abandoned flight's promise
+    await waiter;
+    expect(woken).toBe(true);
+  });
+
   it("N concurrent misses coalesce onto ONE fan-out", async () => {
     const gate = new GateLogic();
     let fanOuts = 0;

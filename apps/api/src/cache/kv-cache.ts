@@ -122,13 +122,27 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
           env.CACHE_LONG_TTL === "true" ? HARD_TTL_LONG : hardTtl;
         const shouldServeStale = options?.shouldServeStale ?? (() => true);
 
+        // Persist a fresh value and clear any negative marker.
+        const persist = (value: A) =>
+          Effect.zipRight(
+            cache.set(key, wrap(value), effectiveHardTtl),
+            cache.delete(negKey(key)),
+          );
+
+        // Keep the stale copy: log why and set the negative marker so subsequent
+        // requests serve stale without re-fanning until it expires.
+        const keepStale = (reason: string) =>
+          Effect.zipRight(
+            Effect.logWarning(`TypedKvCache "${key}": ${reason}`),
+            cache.set(negKey(key), "1", NEG_MARKER_TTL),
+          );
+
         // Store a fresh value (schema-validated) and clear any negative marker.
         const storeFresh = (value: A) =>
-          Effect.gen(function* () {
-            yield* S.decodeUnknown(schema)(value).pipe(Effect.orDie);
-            yield* cache.set(key, wrap(value), effectiveHardTtl);
-            yield* cache.delete(negKey(key));
-          });
+          Effect.zipRight(
+            S.decodeUnknown(schema)(value).pipe(Effect.orDie),
+            persist(value),
+          );
 
         // Foreground refresh: fetch, store on success, serve stale on a
         // serve-stale error (setting the negative marker so we stop re-fanning),
@@ -144,38 +158,29 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
             if (!shouldServeStale(result.left)) {
               return yield* Effect.fail(result.left);
             }
-            yield* Effect.logWarning(
-              `TypedKvCache: refresh failed for key "${key}", serving stale (error: ${String(result.left)})`,
+            yield* keepStale(
+              `refresh failed, serving stale (${String(result.left)})`,
             );
-            yield* cache.set(negKey(key), "1", NEG_MARKER_TTL);
             return staleValue;
           });
 
         // Background (SWR) refresh: single-flight leader fetches and updates KV;
-        // any failure keeps stale and sets the negative marker. Never throws —
-        // it runs detached via the background runner.
+        // any failure (or schema-invalid data) keeps stale + marks. Never throws
+        // — it runs detached via the background runner.
         const backgroundRefresh = Effect.gen(function* () {
           const leader = yield* gate.beginFlight(key);
           if (!leader) return; // another isolate/fiber is already refreshing
           yield* Effect.gen(function* () {
             const result = yield* fetch.pipe(Effect.either);
-            if (Either.isRight(result)) {
-              const valid = S.decodeUnknownOption(schema)(result.right);
-              if (Option.isSome(valid)) {
-                yield* cache.set(key, wrap(result.right), effectiveHardTtl);
-                yield* cache.delete(negKey(key));
-              } else {
-                yield* Effect.logWarning(
-                  `TypedKvCache: background refresh for "${key}" returned schema-invalid data; keeping stale`,
-                );
-                yield* cache.set(negKey(key), "1", NEG_MARKER_TTL);
-              }
-            } else {
-              yield* Effect.logWarning(
-                `TypedKvCache: background refresh failed for "${key}", keeping stale (error: ${String(result.left)})`,
+            if (Either.isLeft(result)) {
+              return yield* keepStale(
+                `background refresh failed (${String(result.left)})`,
               );
-              yield* cache.set(negKey(key), "1", NEG_MARKER_TTL);
             }
+            const valid = S.decodeUnknownOption(schema)(result.right);
+            yield* Option.isSome(valid)
+              ? persist(result.right)
+              : keepStale("background refresh returned schema-invalid data");
           }).pipe(Effect.ensuring(gate.endFlight(key)));
         });
 
@@ -209,10 +214,9 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
 
             if (Option.isSome(runnerOpt)) {
               // Stale-while-revalidate: serve stale NOW, refresh in the
-              // background (single-flight, on an env-built layer) — see
-              // background-live.ts. The cast is safe: only PSD read handlers
-              // provide a BackgroundRunnerService, and their layer covers this
-              // refresh's deps (non-PSD callers never reach this branch).
+              // background (single-flight) via the runner — see background-live.ts.
+              // Cast is safe: only PSD handlers provide a runner, and its layer
+              // covers this refresh's deps (a non-PSD caller has no runner here).
               const refresh = backgroundRefresh as Effect.Effect<
                 void,
                 unknown,
@@ -228,28 +232,33 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
         }
 
         // ── Cache miss (or undecodable) ──────────────────────────────────────
-        // Single-flight: the leader fetches; concurrent callers await it and
-        // re-read KV, so N concurrent misses collapse to one fan-out.
-        const isLeader = yield* gate.beginFlight(key);
-        if (isLeader) {
-          return yield* Effect.gen(function* () {
-            const value = yield* fetch;
-            yield* storeFresh(value);
-            return value;
-          }).pipe(Effect.ensuring(gate.endFlight(key)));
-        }
+        // Single-flight loop: ONLY the leader ever fetches, so at no instant do
+        // two fan-outs run for the same key. Concurrent misses collapse to one
+        // fan-out (followers read the leader's cached result). If the leader
+        // finishes without populating (it failed), followers re-enter — one
+        // becomes the next leader while the rest await it, so failed misses
+        // serialize (never a concurrent duplicate fan-out) and each surfaces a
+        // real never-cached error (AC7). Leadership rotation guarantees every
+        // fiber makes progress; the gate's lease reclaims a dead leader, so this
+        // can't spin forever.
+        for (;;) {
+          const isLeader = yield* gate.beginFlight(key);
+          if (isLeader) {
+            return yield* Effect.gen(function* () {
+              const value = yield* fetch;
+              yield* storeFresh(value);
+              return value;
+            }).pipe(Effect.ensuring(gate.endFlight(key)));
+          }
 
-        yield* gate.awaitFlight(key);
-        const afterWait = yield* cache.get(key);
-        if (afterWait !== null) {
-          const reread = yield* decodeEntry(key, afterWait);
-          if (Option.isSome(reread)) return reread.value.value;
+          yield* gate.awaitFlight(key);
+          const afterWait = yield* cache.get(key);
+          if (afterWait !== null) {
+            const reread = yield* decodeEntry(key, afterWait);
+            if (Option.isSome(reread)) return reread.value.value;
+          }
+          // Empty → the leader failed; loop to re-enter the flight.
         }
-        // Leader failed to populate (or timed out) — fetch ourselves. Bounded by
-        // the global token bucket; a true never-cached failure surfaces.
-        const value = yield* fetch;
-        yield* storeFresh(value);
-        return value;
       }),
   };
 };
