@@ -17,6 +17,7 @@ export interface WorkerEnv {
   readonly SANITY_WEBHOOK_SECRET: string; // SVIX signing secret — wrangler secret
   readonly RESEND_API_KEY?: string; // Resend transactional email — wrangler secret (absent locally → email dispatch is a no-op)
   readonly TURNSTILE_SECRET?: string; // Cloudflare Turnstile secret — wrangler secret (absent locally → verification is skipped)
+  readonly SLACK_ALERT_WEBHOOK_URL?: string; // Slack incoming-webhook for PSD incident/drift alerts — wrangler secret (absent locally → alerting is a no-op)
   readonly CACHE_LONG_TTL?: string; // "true" on staging — overrides hardTtl to 365 days
 }
 
