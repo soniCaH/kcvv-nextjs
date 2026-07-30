@@ -15,9 +15,9 @@ import {defineMigration, at, set} from 'sanity/migrate'
  * idempotent no-op safety net — it only touches docs whose `psdId` is still a
  * number, and re-running it changes nothing once all are strings.
  *
- * Run with:
- *   npx sanity@latest migration run stringify-psd-id --project vhb33jaz --dataset production
- *   npx sanity@latest migration run stringify-psd-id --project vhb33jaz --dataset staging
+ * Run with (`sanity migration run` dry-runs by default — `--no-dry-run` applies):
+ *   npx sanity@latest migration run stringify-psd-id --project vhb33jaz --dataset production --no-dry-run
+ *   npx sanity@latest migration run stringify-psd-id --project vhb33jaz --dataset staging --no-dry-run
  */
 export default defineMigration({
   title: 'Coerce numeric psdId → string on player/staffMember/team',
