@@ -20,6 +20,7 @@ function makeEnvLayer(ai: Ai) {
     PSD_API_CLUB: "",
     PSD_API_AUTH: "",
     PSD_CACHE: {} as KVNamespace,
+    PSD_GATE: {} as DurableObjectNamespace,
     SANITY_PROJECT_ID: "",
     SANITY_DATASET: "",
     SANITY_API_TOKEN: "",

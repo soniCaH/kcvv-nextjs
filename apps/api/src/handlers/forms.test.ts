@@ -55,6 +55,7 @@ const projectionMock: SanityProjectionInterface = {
 const cacheMock: KvCacheInterface = {
   get: () => Effect.succeed(null),
   set: () => Effect.succeed(undefined),
+  delete: () => Effect.succeed(undefined),
   increment: () => Effect.succeed(undefined),
 };
 

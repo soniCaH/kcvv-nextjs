@@ -5,7 +5,8 @@
       "ignoreDependencies": ["prettier-plugin-tailwindcss", "playwright"]
     },
     "apps/api": {
-      "ignoreBinaries": ["jq"]
+      "ignoreBinaries": ["jq"],
+      "ignoreDependencies": ["cloudflare"]
     },
     "apps/studio": {
       "entry": ["structure.ts"],

@@ -1,6 +1,7 @@
 import { Context, Effect, Layer, Option, Schema as S } from "effect";
 import { WorkerEnvTag } from "../env";
 import { KvCacheService } from "../cache/kv-cache";
+import { PsdGateService } from "./gate";
 import { SanityProjection } from "../sanity/projection";
 import {
   UpstreamUnavailableError,
@@ -144,6 +145,7 @@ export const PsdServiceLive = Layer.effect(
   Effect.gen(function* () {
     const env = yield* WorkerEnvTag;
     const cache = yield* KvCacheService;
+    const gate = yield* PsdGateService;
     const projection = yield* SanityProjection;
     const base = env.PSD_API_BASE_URL;
 
@@ -155,8 +157,12 @@ export const PsdServiceLive = Layer.effect(
       "Content-Type": "application/json",
     };
 
+    // Every PSD call passes the global gate first: `acquireToken` blocks until a
+    // ≤5/s worldwide token is free (best-effort — proceeds if the gate is down),
+    // capping the fan-out below PSD's rate limit. `increment` records the call.
     const countedFetch = <A, I>(url: string, schema: S.Schema<A, I>) =>
-      fetchJson(url, schema, psdHeaders).pipe(
+      gate.acquireToken.pipe(
+        Effect.zipRight(fetchJson(url, schema, psdHeaders)),
         Effect.ensuring(cache.increment()),
       );
 

@@ -20,6 +20,8 @@ import { PsdApi } from "@kcvv/api-contract";
 import { WorkerEnvTag, type WorkerEnv } from "./env";
 import { PsdTeamClientLive } from "./sync/psd-team-client";
 import { PsdServiceLive } from "./psd/service";
+import { PsdGateLive } from "./psd/gate";
+import { BackgroundRunnerLive } from "./psd/background-live";
 import { KvCacheLive } from "./cache/kv-cache";
 import { MatchesApiLive } from "./handlers/matches";
 import { OpponentApiLive } from "./handlers/opponent";
@@ -36,6 +38,10 @@ import { SanityMutationLive } from "./sanity/mutation";
 import { SanityProjectionLive } from "./sanity/projection";
 import { runSync } from "./sync/psd-sanity-sync";
 import { handleIndexWebhook } from "./webhooks/index-handler";
+
+// The PSD gate Durable Object must be exported from the worker entry (the
+// `main` module) for Cloudflare to bind it — see wrangler.toml [[durable_objects]].
+export { PsdGate } from "./psd/gate-do";
 
 /**
  * Provides DefaultServices (HttpPlatform | Etag.Generator | FileSystem | Path)
@@ -55,7 +61,7 @@ const WorkerPlatformLayer = Layer.mergeAll(
  * @param env - The Worker environment (bindings such as KV namespaces and secrets) to supply to the runtime
  * @returns A Layer supplying the PsdApi implementation composed with live services (matches, ranking, search, embedding, vectorization, HTTP client, KV cache) and required platform services
  */
-function buildAppLayer(env: WorkerEnv) {
+function buildAppLayer(env: WorkerEnv, ctx: ExecutionContext) {
   return HttpApiBuilder.api(PsdApi).pipe(
     Layer.provide(MatchesApiLive),
     Layer.provide(OpponentApiLive),
@@ -68,6 +74,10 @@ function buildAppLayer(env: WorkerEnv) {
     Layer.provide(VectorizeServiceLive),
     Layer.provide(AiAnswerServiceLive),
     Layer.provide(PsdServiceLive),
+    // Global PSD gate (token bucket + single-flight) and the SWR background
+    // runner that keeps the read path fresh without storming PSD (#2328).
+    Layer.provide(PsdGateLive),
+    Layer.provide(BackgroundRunnerLive(env, ctx)),
     Layer.provide(SanityProjectionLive),
     Layer.provide(SanityMutationLive),
     Layer.provide(KvCacheLive),
@@ -77,7 +87,11 @@ function buildAppLayer(env: WorkerEnv) {
 }
 
 export default {
-  async fetch(request: Request, env: WorkerEnv): Promise<Response> {
+  async fetch(
+    request: Request,
+    env: WorkerEnv,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
     // Webhook routes use Effect internally but keep raw Request/Response entry point
     if (
       request.method === "POST" &&
@@ -96,7 +110,7 @@ export default {
     }
 
     const { handler, dispose } = HttpApiBuilder.toWebHandler(
-      buildAppLayer(env),
+      buildAppLayer(env, ctx),
       { middleware: HttpMiddleware.cors() },
     );
     try {

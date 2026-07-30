@@ -6,6 +6,7 @@ import { handleRelated } from "../search/related-handler";
 import { KvCacheService, TTL, TypedKvCache } from "../cache/kv-cache";
 import { VectorizeService } from "../search/vectorize";
 import { WorkerEnvTag } from "../env";
+import { PsdGateService } from "../psd/gate";
 
 const DEFAULT_LIMIT = 3;
 const MAX_LIMIT = 5; // upper bound from S.between(1, 5) in api-contract
@@ -18,7 +19,7 @@ export const getRelatedHandler = (request: {
 }): Effect.Effect<
   readonly (typeof RelatedItem.Type)[],
   never,
-  VectorizeService | KvCacheService | WorkerEnvTag
+  VectorizeService | KvCacheService | WorkerEnvTag | PsdGateService
 > => {
   const cacheKey = `related:${request.id}:max`;
   return relatedCache

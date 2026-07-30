@@ -9,6 +9,9 @@ import {
   HARD_TTL_LONG,
 } from "./kv-cache";
 import { WorkerEnvTag } from "../env";
+import { PsdGateService, PsdGateTest, makePsdGateLayer } from "../psd/gate";
+import { GateLogic } from "../psd/gate-logic";
+import { BackgroundRunnerService } from "../psd/background";
 
 function makeMockKv() {
   const store = new Map<string, string>();
@@ -16,6 +19,9 @@ function makeMockKv() {
     get: vi.fn(async (key: string) => store.get(key) ?? null),
     put: vi.fn(async (key: string, value: string) => {
       store.set(key, value);
+    }),
+    delete: vi.fn(async (key: string) => {
+      store.delete(key);
     }),
     store,
   };
@@ -33,6 +39,7 @@ function makeEnvLayer(
     PSD_API_CLUB: "test-club",
     PSD_API_AUTH: "test-auth",
     PSD_CACHE: mockKv as unknown as KVNamespace,
+    PSD_GATE: {} as DurableObjectNamespace,
     SANITY_PROJECT_ID: "test-project",
     SANITY_DATASET: "test",
     SANITY_API_TOKEN: "test-token",
@@ -63,10 +70,28 @@ describe("TTL constants", () => {
     expect(TTL.RANKING).toBe(60 * 60 * 24);
   });
 
-  it("match-detail proximity tiers (live / matchday / week)", () => {
-    expect(TTL.MATCH_DETAIL_LIVE).toBe(60);
-    expect(TTL.MATCH_DETAIL_MATCHDAY).toBe(60 * 5);
+  it("match-detail proximity tiers: match TTLs floored at 15 min (#2328)", () => {
+    // SWR serves stale instantly, so the soft TTL only sets refresh cadence —
+    // every PSD-backed tier is ≥15 min. (No live scores → old 60 s tier moot.)
+    expect(TTL.MATCH_DETAIL_LIVE).toBe(60 * 15);
+    expect(TTL.MATCH_DETAIL_MATCHDAY).toBe(60 * 15);
     expect(TTL.MATCH_DETAIL_WEEK).toBe(60 * 60);
+  });
+
+  it("every match soft TTL is ≥15 min (#2328)", () => {
+    const MIN = 15 * 60;
+    for (const ttl of [
+      TTL.MATCHES_TEAM,
+      TTL.NEXT_MATCHES,
+      TTL.MATCHES_WINDOW,
+      TTL.MATCH_DETAIL_LIVE,
+      TTL.MATCH_DETAIL_MATCHDAY,
+      TTL.MATCH_DETAIL_WEEK,
+      TTL.MATCH_DETAIL_DEFAULT,
+      TTL.MATCH_DETAIL_PAST,
+    ]) {
+      expect(ttl).toBeGreaterThanOrEqual(MIN);
+    }
   });
 
   it("MATCH_DETAIL_DEFAULT is 24 hours (distant)", () => {
@@ -101,6 +126,7 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, 60)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
@@ -122,6 +148,7 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, 60)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
@@ -156,6 +183,7 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, 60)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
@@ -182,13 +210,22 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, 60)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
 
     expect(result).toEqual({ name: "stale", value: 99 });
-    // Should NOT update cache on error
-    expect(mockKv.put).not.toHaveBeenCalled();
+    // The data key must NOT be overwritten on error; only the negative marker
+    // is written (suppresses re-storming for NEG_MARKER_TTL).
+    expect(mockKv.put).not.toHaveBeenCalledWith(
+      "test-key",
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(mockKv.put).toHaveBeenCalledWith("neg:test-key", "1", {
+      expirationTtl: 120,
+    });
   });
 
   it("cache hit with corrupted JSON: logs warning, falls through to fetch", async () => {
@@ -207,6 +244,7 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, 60)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
@@ -235,6 +273,7 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, 60)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
@@ -258,6 +297,7 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, (v) => v.value * 60)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
@@ -281,6 +321,7 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, 60, customHardTtl)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
@@ -300,6 +341,7 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, 60)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv, { CACHE_LONG_TTL: "true" })),
         ),
     );
@@ -319,6 +361,7 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, 60)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv, { CACHE_LONG_TTL: "false" })),
         ),
     );
@@ -351,6 +394,7 @@ describe("TypedKvCache", () => {
         })
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
@@ -380,6 +424,7 @@ describe("TypedKvCache", () => {
         })
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
@@ -401,6 +446,7 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, 60)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
@@ -427,6 +473,7 @@ describe("TypedKvCache", () => {
         .getOrFetch("test-key", fetchEffect, 60)
         .pipe(
           Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
           Effect.provide(makeEnvLayer(mockKv)),
         ),
     );
@@ -434,6 +481,304 @@ describe("TypedKvCache", () => {
     expect(result._tag).toBe("Failure");
     // Should NOT cache invalid data
     expect(mockKv.put).not.toHaveBeenCalled();
+  });
+});
+
+describe("TypedKvCache — stale-while-revalidate + storm gate (#2328)", () => {
+  /**
+   * A BackgroundRunnerService whose `fork` runs the refresh eagerly on the test
+   * layers and records the promise, so a test can `await settle()` to observe
+   * the background effect's outcome deterministically.
+   */
+  function withRunner(
+    mockKv: ReturnType<typeof makeMockKv>,
+    gateLayer: Layer.Layer<PsdGateService>,
+  ) {
+    const pending: Promise<void>[] = [];
+    const layer = Layer.mergeAll(KvCacheLive, gateLayer).pipe(
+      Layer.provideMerge(makeEnvLayer(mockKv)),
+    );
+    const runnerLayer = Layer.succeed(BackgroundRunnerService, {
+      fork: (_label, effect) =>
+        Effect.sync(() => {
+          // The test fetch is pure, so the refresh never touches PsdService —
+          // `layer` satisfies its real deps (KvCache + gate + env).
+          pending.push(
+            Effect.runPromise(
+              Effect.provide(effect, layer) as unknown as Effect.Effect<void>,
+            ),
+          );
+        }),
+    });
+    return { runnerLayer, settle: () => Promise.all(pending) };
+  }
+
+  const staleWrapper = (value: unknown) =>
+    makeWrapper(value, 2 * 60 * 60 * 1000);
+
+  it("serves stale INSTANTLY, then background-refreshes the cache", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set("test-key", staleWrapper({ name: "old", value: 1 }));
+    const gate = PsdGateTest;
+    const { runnerLayer, settle } = withRunner(mockKv, gate);
+
+    const fetchEffect = Effect.succeed({ name: "fresh", value: 42 });
+    const typedCache = TypedKvCache(TestSchema);
+
+    const result = await Effect.runPromise(
+      typedCache
+        .getOrFetch("test-key", fetchEffect, 60)
+        .pipe(
+          Effect.provide(runnerLayer),
+          Effect.provide(KvCacheLive),
+          Effect.provide(gate),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+
+    // Foreground result is the STALE value (served without waiting).
+    expect(result).toEqual({ name: "old", value: 1 });
+
+    // Background refresh then overwrites KV with the fresh value.
+    await settle();
+    const stored = JSON.parse(mockKv.store.get("test-key")!);
+    expect(stored.value).toEqual({ name: "fresh", value: 42 });
+  });
+
+  it("negative marker present → serves stale WITHOUT fetching", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set("test-key", staleWrapper({ name: "stale", value: 7 }));
+    mockKv.store.set("neg:test-key", "1");
+    const gate = PsdGateTest;
+    const { runnerLayer, settle } = withRunner(mockKv, gate);
+
+    let fetchCalled = false;
+    const fetchEffect = Effect.sync(() => {
+      fetchCalled = true;
+      return { name: "fresh", value: 99 };
+    });
+
+    const result = await Effect.runPromise(
+      TypedKvCache(TestSchema)
+        .getOrFetch("test-key", fetchEffect, 60)
+        .pipe(
+          Effect.provide(runnerLayer),
+          Effect.provide(KvCacheLive),
+          Effect.provide(gate),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+    await settle();
+
+    expect(result).toEqual({ name: "stale", value: 7 });
+    expect(fetchCalled).toBe(false);
+  });
+
+  it("background refresh failure keeps stale and sets the negative marker", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set("test-key", staleWrapper({ name: "stale", value: 5 }));
+    const gate = PsdGateTest;
+    const { runnerLayer, settle } = withRunner(mockKv, gate);
+
+    const fetchEffect = Effect.fail(new Error("PSD 429") as never);
+
+    const result = await Effect.runPromise(
+      TypedKvCache(TestSchema)
+        .getOrFetch("test-key", fetchEffect, 60)
+        .pipe(
+          Effect.provide(runnerLayer),
+          Effect.provide(KvCacheLive),
+          Effect.provide(gate),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+    await settle();
+
+    expect(result).toEqual({ name: "stale", value: 5 });
+    // Data key unchanged; negative marker set.
+    expect(JSON.parse(mockKv.store.get("test-key")!).value).toEqual({
+      name: "stale",
+      value: 5,
+    });
+    expect(mockKv.store.get("neg:test-key")).toBe("1");
+  });
+
+  it("correctness guard: past-kickoff stale forces a BLOCKING refresh", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set("test-key", staleWrapper({ name: "old", value: 1 }));
+    const gate = PsdGateTest;
+    const { runnerLayer } = withRunner(mockKv, gate);
+
+    const fetchEffect = Effect.succeed({ name: "fresh", value: 2 });
+
+    const result = await Effect.runPromise(
+      TypedKvCache(TestSchema)
+        .getOrFetch("test-key", fetchEffect, 60, undefined, {
+          // Treat the stale value as "must not serve" → blocking refresh.
+          mustBlockOnStale: (v) => v.value === 1,
+        })
+        .pipe(
+          Effect.provide(runnerLayer),
+          Effect.provide(KvCacheLive),
+          Effect.provide(gate),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+
+    // Fresh value returned synchronously (blocking), not the stale one.
+    expect(result).toEqual({ name: "fresh", value: 2 });
+  });
+
+  it("N concurrent misses collapse to ONE fan-out (single-flight)", async () => {
+    const mockKv = makeMockKv();
+    // Fresh shared gate so single-flight state is isolated to this test.
+    const gate = makePsdGateLayer(new GateLogic({ ratePerSecond: 1e9 }));
+
+    let fanOuts = 0;
+    const fetchEffect = Effect.gen(function* () {
+      fanOuts++;
+      // Yield so all concurrent callers pass the miss check before the leader
+      // finishes and writes KV.
+      yield* Effect.sleep("5 millis");
+      return { name: "fetched", value: 1 };
+    });
+
+    const typedCache = TypedKvCache(TestSchema);
+    const run = () =>
+      Effect.runPromise(
+        typedCache
+          .getOrFetch("test-key", fetchEffect, 60)
+          .pipe(
+            Effect.provide(KvCacheLive),
+            Effect.provide(gate),
+            Effect.provide(makeEnvLayer(mockKv)),
+          ),
+      );
+
+    const results = await Promise.all(Array.from({ length: 20 }, run));
+
+    // All callers get the value; only the leader fanned out.
+    for (const r of results) expect(r).toEqual({ name: "fetched", value: 1 });
+    expect(fanOuts).toBe(1);
+  });
+
+  it("concurrent misses never run duplicate fan-outs, even when the leader fails", async () => {
+    // AC3 under failure: followers re-enter single-flight instead of all
+    // self-fetching, so at no instant do two fan-outs run for the same key.
+    const mockKv = makeMockKv();
+    const gate = makePsdGateLayer(new GateLogic({ ratePerSecond: 1e9 }));
+
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const fetchEffect = Effect.gen(function* () {
+      inFlight++;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      yield* Effect.sleep("3 millis");
+      inFlight--;
+      return yield* Effect.fail(new Error("PSD 429") as never);
+    });
+
+    const typedCache = TypedKvCache(TestSchema);
+    const run = () =>
+      Effect.runPromiseExit(
+        typedCache
+          .getOrFetch("test-key", fetchEffect, 60)
+          .pipe(
+            Effect.provide(KvCacheLive),
+            Effect.provide(gate),
+            Effect.provide(makeEnvLayer(mockKv)),
+          ),
+      );
+
+    const exits = await Promise.all(Array.from({ length: 10 }, run));
+    // Nothing was ever cached, so every caller surfaces the error (AC7).
+    for (const e of exits) expect(e._tag).toBe("Failure");
+    // Crucially: fan-outs were serialized, never concurrent.
+    expect(maxInFlight).toBe(1);
+  });
+
+  it("sustained outage decouples PSD calls from request volume", async () => {
+    // The storm collapse (#2324) is this decoupling: today every soft-lapsed read
+    // re-fires the fan-out (the 475%-of-budget storm), whereas the negative
+    // marker makes PSD load track the marker cadence, not the request rate —
+    // after the first failed refresh, every subsequent read serves stale WITHOUT
+    // fetching until the marker expires. Here 50 reads during an outage trigger a
+    // SINGLE fan-out attempt; over a day the fan-out count is bounded by
+    // day/NEG_MARKER_TTL windows rather than by traffic, which is what lands the
+    // steady-state figure in the low-single-digit % the prototype measured (~4%).
+    const mockKv = makeMockKv();
+    mockKv.store.set("test-key", staleWrapper({ name: "stale", value: 1 }));
+    const gate = PsdGateTest;
+
+    let fetches = 0;
+    const fetchEffect = Effect.gen(function* () {
+      fetches++;
+      return yield* Effect.fail(new Error("PSD 429") as never);
+    });
+    const typedCache = TypedKvCache(TestSchema);
+
+    for (let i = 0; i < 50; i++) {
+      const { runnerLayer, settle } = withRunner(mockKv, gate);
+      const result = await Effect.runPromise(
+        typedCache
+          .getOrFetch("test-key", fetchEffect, 60)
+          .pipe(
+            Effect.provide(runnerLayer),
+            Effect.provide(KvCacheLive),
+            Effect.provide(gate),
+            Effect.provide(makeEnvLayer(mockKv)),
+          ),
+      );
+      await settle();
+      expect(result).toEqual({ name: "stale", value: 1 }); // always served
+    }
+
+    // 50 requests, but the marker capped PSD calls at the first attempt.
+    expect(fetches).toBe(1);
+  });
+
+  it("self-heals: once PSD recovers, the marker clears and fresh data is served", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set("test-key", staleWrapper({ name: "stale", value: 1 }));
+    mockKv.store.set("neg:test-key", "1"); // outage marker in place
+    const gate = PsdGateTest;
+
+    // Marker present → serve stale, no fetch. Then expire the marker.
+    const typedCache = TypedKvCache(TestSchema);
+    const runOnce = async (
+      fetchEffect: Effect.Effect<{ name: string; value: number }>,
+    ) => {
+      const { runnerLayer, settle } = withRunner(mockKv, gate);
+      const r = await Effect.runPromise(
+        typedCache
+          .getOrFetch("test-key", fetchEffect, 60)
+          .pipe(
+            Effect.provide(runnerLayer),
+            Effect.provide(KvCacheLive),
+            Effect.provide(gate),
+            Effect.provide(makeEnvLayer(mockKv)),
+          ),
+      );
+      await settle();
+      return r;
+    };
+
+    // While marked: stale, no refresh.
+    expect(await runOnce(Effect.succeed({ name: "fresh", value: 2 }))).toEqual({
+      name: "stale",
+      value: 1,
+    });
+
+    // Simulate marker expiry.
+    mockKv.store.delete("neg:test-key");
+
+    // Recovery: serve stale now, background refresh succeeds → KV fresh + marker clear.
+    await runOnce(Effect.succeed({ name: "fresh", value: 2 }));
+    expect(JSON.parse(mockKv.store.get("test-key")!).value).toEqual({
+      name: "fresh",
+      value: 2,
+    });
+    expect(mockKv.store.get("neg:test-key")).toBeUndefined();
   });
 });
 
@@ -447,6 +792,7 @@ describe("KvCacheService", () => {
     const result = await Effect.runPromise(
       program.pipe(
         Effect.provide(KvCacheLive),
+        Effect.provide(PsdGateTest),
         Effect.provide(makeEnvLayer(mockKv)),
       ),
     );
@@ -463,6 +809,7 @@ describe("KvCacheService", () => {
     const result = await Effect.runPromise(
       program.pipe(
         Effect.provide(KvCacheLive),
+        Effect.provide(PsdGateTest),
         Effect.provide(makeEnvLayer(mockKv)),
       ),
     );
@@ -479,6 +826,7 @@ describe("KvCacheService", () => {
         yield* cache.increment(by);
       }).pipe(
         Effect.provide(KvCacheLive),
+        Effect.provide(PsdGateTest),
         Effect.provide(makeEnvLayer(mockKv)),
       ),
     );

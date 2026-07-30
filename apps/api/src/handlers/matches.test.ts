@@ -17,6 +17,7 @@ import { UpstreamUnavailableError, ResourceNotFoundError } from "../psd/errors";
 import { KvCacheService, type KvCacheInterface } from "../cache/kv-cache";
 import { WorkerEnvTag } from "../env";
 import { testEnvLayer } from "../test-helpers/env-layer";
+import { PsdGateService, PsdGateTest } from "../psd/gate";
 import {
   MatchesArray,
   MatchDetail,
@@ -83,6 +84,7 @@ function makeCacheMock(): KvCacheInterface {
   return {
     get: () => Effect.succeed(null),
     set: () => Effect.succeed(undefined),
+    delete: () => Effect.succeed(undefined),
     increment: () => Effect.succeed(undefined),
   };
 }
@@ -91,13 +93,14 @@ function provide<A>(
   effect: Effect.Effect<
     A,
     BffError,
-    PsdService | KvCacheService | WorkerEnvTag
+    PsdService | KvCacheService | WorkerEnvTag | PsdGateService
   >,
   overrides: Partial<PsdServiceInterface> = {},
 ) {
   return effect.pipe(
     Effect.provide(Layer.succeed(PsdService, makeServiceMock(overrides))),
     Effect.provide(Layer.succeed(KvCacheService, makeCacheMock())),
+    Effect.provide(PsdGateTest),
     Effect.provide(testEnvLayer),
   );
 }
@@ -214,6 +217,7 @@ describe("getMatchDetailHandler", () => {
         Effect.provide(
           Layer.succeed(KvCacheService, {
             get: () => Effect.succeed(null),
+            delete: () => Effect.succeed(undefined),
             increment: () => Effect.succeed(undefined),
             set: vi.fn((key, value, ttl) => {
               setCalls.push([key, value, ttl]);
@@ -221,6 +225,7 @@ describe("getMatchDetailHandler", () => {
             }),
           }),
         ),
+        Effect.provide(PsdGateTest),
         Effect.provide(testEnvLayer),
         Effect.orDie,
       ),

@@ -63,6 +63,7 @@ function makeEnv(overrides: Partial<WorkerEnv> = {}): WorkerEnv {
     PSD_API_CLUB: "",
     PSD_API_AUTH: "",
     PSD_CACHE: {} as KVNamespace,
+    PSD_GATE: {} as DurableObjectNamespace,
     SANITY_PROJECT_ID: "test",
     SANITY_DATASET: "test",
     SANITY_API_TOKEN: "test-token",

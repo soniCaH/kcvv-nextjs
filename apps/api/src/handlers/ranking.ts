@@ -9,6 +9,7 @@ import {
 } from "../psd/errors";
 import { KvCacheService, TTL, TypedKvCache } from "../cache/kv-cache";
 import { WorkerEnvTag } from "../env";
+import { PsdGateService } from "../psd/gate";
 import { withErrorMapping } from "./error-mapping";
 
 const rankingCache = TypedKvCache(RankingArray);
@@ -19,7 +20,7 @@ export const getRankingHandler = (
 ): Effect.Effect<
   readonly RankingEntry[],
   BffError,
-  PsdService | KvCacheService | WorkerEnvTag
+  PsdService | KvCacheService | WorkerEnvTag | PsdGateService
 > => {
   const cacheKey = `ranking:team:${teamId}`;
   const fetchRanking = Effect.gen(function* () {

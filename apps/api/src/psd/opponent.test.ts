@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Effect, Layer, Schema as S } from "effect";
 import { PsdService, PsdServiceLive } from "./service";
+import { PsdGateTest } from "./gate";
 import { OpponentHistory } from "@kcvv/api-contract";
 import { UpstreamUnavailableError, type BffError } from "./errors";
 import { WorkerEnvTag } from "../env";
@@ -21,6 +22,7 @@ function makeEnvLayer() {
     PSD_API_CLUB: "test-club",
     PSD_API_AUTH: "test-auth",
     PSD_CACHE: {} as KVNamespace,
+    PSD_GATE: {} as DurableObjectNamespace,
     SANITY_PROJECT_ID: "test-project",
     SANITY_DATASET: "test",
     SANITY_API_TOKEN: "test-token",
@@ -36,6 +38,7 @@ const cacheMock: KvCacheInterface = {
   get: (key: string) =>
     Effect.succeed(key === "psd:competition-labels" ? "{}" : null),
   set: () => Effect.succeed(undefined),
+  delete: () => Effect.succeed(undefined),
   increment: () => Effect.succeed(undefined),
 };
 
@@ -60,6 +63,7 @@ function runService<A>(
     Effect.either(
       program.pipe(
         Effect.provide(PsdServiceLive),
+        Effect.provide(PsdGateTest),
         Effect.provide(makeEnvLayer()),
         Effect.provide(Layer.succeed(KvCacheService, cacheMock)),
         Effect.provide(Layer.succeed(SanityProjection, sanityProjectionMock)),

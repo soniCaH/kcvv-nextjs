@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Effect, Layer } from "effect";
 import { PsdService, PsdServiceLive } from "./service";
+import { PsdGateTest } from "./gate";
 import { WorkerEnvTag } from "../env";
 import { KvCacheService, type KvCacheInterface } from "../cache/kv-cache";
 import { UpstreamUnavailableError } from "./errors";
@@ -20,6 +21,7 @@ function makeEnvLayer() {
     PSD_API_CLUB: "test-club",
     PSD_API_AUTH: "test-auth",
     PSD_CACHE: {} as KVNamespace,
+    PSD_GATE: {} as DurableObjectNamespace,
     SANITY_PROJECT_ID: "test-project",
     SANITY_DATASET: "test",
     SANITY_API_TOKEN: "test-token",
@@ -32,6 +34,7 @@ function makeEnvLayer() {
 const cacheMock: KvCacheInterface = {
   get: () => Effect.succeed(null),
   set: () => Effect.succeed(undefined),
+  delete: () => Effect.succeed(undefined),
   increment: () => Effect.succeed(undefined),
 };
 
@@ -68,6 +71,7 @@ function runGetTeamMatches(teamId: number) {
     Effect.either(
       program.pipe(
         Effect.provide(PsdServiceLive),
+        Effect.provide(PsdGateTest),
         Effect.provide(makeEnvLayer()),
         Effect.provide(Layer.succeed(KvCacheService, cacheMock)),
         Effect.provide(Layer.succeed(SanityProjection, sanityMock)),
