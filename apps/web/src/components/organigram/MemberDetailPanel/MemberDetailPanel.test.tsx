@@ -14,12 +14,24 @@
  *    null holder for a vacant position
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ComponentProps } from "react";
 import { MemberDetailPanel } from "./MemberDetailPanel";
 import type { OrgChartNode } from "@/types/organigram";
 import type { ResponsibilityPath } from "@/types/responsibility";
+
+// Tag anchors that went through next/link so tests can assert the "Helpt met"
+// chip does NOT — Next ≥ 16.2 appends hash fragments instead of replacing them
+// (vercel/next.js#93126), so hash-only navigation must stay a plain <a> (#2312).
+vi.mock("next/link", () => ({
+  default: ({ children, ...rest }: ComponentProps<"a">) => (
+    <a data-next-link="" {...rest}>
+      {children}
+    </a>
+  ),
+}));
 
 const singleNode: OrgChartNode = {
   id: "president",
@@ -83,6 +95,13 @@ const responsibilityPaths: ResponsibilityPath[] = [
 ];
 
 const noop = () => {};
+
+// Chip clicks navigate natively, so the hash leaks across tests in this file
+// (jsdom shares one window.location). Reset unconditionally — inline cleanup
+// after an assertion would be skipped when that assertion fails.
+afterEach(() => {
+  window.history.replaceState(null, "", window.location.pathname);
+});
 
 describe("MemberDetailPanel", () => {
   describe("closed states", () => {
@@ -281,6 +300,45 @@ describe("MemberDetailPanel", () => {
       );
       expect(launcher).not.toHaveFocus();
       document.body.removeChild(launcher);
+    });
+
+    it("renders the chip as a plain <a>, not a next/link (#2312)", () => {
+      render(
+        <MemberDetailPanel
+          node={singleNode}
+          open
+          onClose={noop}
+          responsibilityPaths={responsibilityPaths}
+        />,
+      );
+      expect(
+        screen.getByRole("link", { name: "Lid worden" }),
+      ).not.toHaveAttribute("data-next-link");
+      // Control: the route link still goes through next/link — proves the
+      // tagging mock is active, so the assertion above can't pass vacuously.
+      expect(
+        screen.getByRole("link", { name: /Volledig profiel/ }),
+      ).toHaveAttribute("data-next-link");
+    });
+
+    it("replaces a pre-existing hash with the question slug on chip click (#2312)", async () => {
+      // AC1: from /hulp#structuur the click must land on exactly #lid-worden —
+      // a single hash, not the appended #structuur#lid-worden that routing the
+      // chip through Next ≥ 16.2 produced. Seeding the hash also keeps this
+      // assertion honest: earlier chip-click tests leak #lid-worden into the
+      // shared jsdom location, so without the seed it could pass vacuously.
+      window.location.hash = "#structuur";
+      const user = userEvent.setup();
+      render(
+        <MemberDetailPanel
+          node={singleNode}
+          open
+          onClose={noop}
+          responsibilityPaths={responsibilityPaths}
+        />,
+      );
+      await user.click(screen.getByRole("link", { name: "Lid worden" }));
+      expect(window.location.hash).toBe("#lid-worden");
     });
   });
 

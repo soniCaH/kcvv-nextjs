@@ -355,8 +355,16 @@ export function MemberDetailPanel({
                               effect skips `returnFocusRef.current.focus()`, which
                               would otherwise pull focus/scroll back to the now-
                               off-screen launcher and fight the hash navigation
-                              (matches normal in-page anchor behaviour). */}
-                          <Link
+                              (matches normal in-page anchor behaviour).
+                              Plain <a>, NOT next/link: Next ≥ 16.2 appends hash
+                              fragments instead of replacing them
+                              (vercel/next.js#93126), turning `#structuur` +
+                              `#lid-worden` into a dead nested hash (#2312). The
+                              nav links' workaround for the same bug
+                              (`handleSamePageAnchorClick`) doesn't fit here:
+                              it pushState's without firing the `hashchange`
+                              that HulpFinder's reveal() needs. */}
+                          <a
                             href={`#${path.id}`}
                             onClick={() => {
                               if (returnFocusRef) returnFocusRef.current = null;
@@ -365,7 +373,7 @@ export function MemberDetailPanel({
                             className="border-jersey-deep text-jersey-deep hover:bg-jersey-deep hover:text-cream inline-block border-[1.5px] px-2 py-1 font-mono text-[10px] tracking-[0.02em] uppercase transition-colors"
                           >
                             {path.question}
-                          </Link>
+                          </a>
                         </li>
                       ))}
                     </ul>
