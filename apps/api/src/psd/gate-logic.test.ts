@@ -5,12 +5,18 @@ import { GateLogic } from "./gate-logic";
  * Deterministic fake scheduler: `now()` reads a mutable clock, `sleep(ms)`
  * advances it and resolves on a microtask. Lets us assert the gate's pacing
  * without real timers.
+ *
+ * The yield before advancing matters: time must pass when a sleep COMPLETES,
+ * not when it starts. Advancing at call time would bill each grant for the
+ * cooldown chained behind it, hiding the difference between "granted now" and
+ * "granted one cooldown from now".
  */
 function fakeScheduler() {
   let clock = 0;
   return {
     now: () => clock,
     sleep: async (ms: number) => {
+      await Promise.resolve();
       clock += ms;
     },
     get clock() {
@@ -18,6 +24,23 @@ function fakeScheduler() {
     },
   };
 }
+
+/** Clock reading at the moment each of `n` sequential grants completes. */
+async function grantTimes(
+  gate: GateLogic,
+  clock: () => number,
+  n: number,
+): Promise<number[]> {
+  const at: number[] = [];
+  for (let i = 0; i < n; i++) {
+    await gate.acquireToken();
+    at.push(clock());
+  }
+  return at;
+}
+
+/** 20 grants paced at 5/s: the full index fan-out, first at 0ms, last at 3800ms. */
+const PACED_20 = Array.from({ length: 20 }, (_, i) => i * 200);
 
 describe("GateLogic — call pacing", () => {
   it("throttles sustained demand to rate per second", async () => {
@@ -28,29 +51,26 @@ describe("GateLogic — call pacing", () => {
       sleep: s.sleep,
     });
 
-    // 20 calls spaced 1/5 s apart — the full index fan-out, exactly at PSD's
-    // ceiling. (No burst allowance: even spacing hits the same 5/s throughput.)
-    for (let i = 0; i < 20; i++) await gate.acquireToken();
-
-    expect(s.clock).toBe(20 * 200);
+    // Grant times only. An idle gate owes the first caller nothing, and the
+    // cooldown trailing the last grant is nobody's wait — billing either would
+    // pass a gate that made every call queue behind a cooldown it never needed.
+    // (No burst allowance: even spacing hits the same 5/s throughput.)
+    expect(await grantTimes(gate, () => s.clock, 20)).toEqual(PACED_20);
   });
 
   it("keeps pacing when the clock never advances (Durable Object freezes Date.now)", async () => {
     // A DO advances `Date.now()` only on I/O; while every caller sleeps in
     // acquireToken there is none. A clock-driven bucket starves here — this
-    // whole fan-out must still complete off relative sleeps alone.
-    let slept = 0;
+    // whole fan-out must still complete, and stay evenly paced, off relative
+    // sleeps alone. `now()` is frozen; the scheduler's clock only tracks sleeps.
+    const s = fakeScheduler();
     const gate = new GateLogic({
       ratePerSecond: 5,
       now: () => 0,
-      sleep: async (ms: number) => {
-        slept += ms;
-      },
+      sleep: s.sleep,
     });
 
-    for (let i = 0; i < 20; i++) await gate.acquireToken();
-
-    expect(slept).toBe(20 * 200);
+    expect(await grantTimes(gate, () => s.clock, 20)).toEqual(PACED_20);
   });
 });
 
