@@ -110,6 +110,7 @@ pnpm --filter @kcvv/api cache:clear:staging:key "ranking:team:23"
 - Secrets via `wrangler secret put`, never in `wrangler.toml`
 - `Effect.orDie` in HttpApiGroup handlers — errors become 500s; keep errors typed at handler level
 - After changing `@kcvv/api-contract`, run `pnpm turbo build --filter=@kcvv/api-contract` first
+- **Never rate-limit off `Date.now()` inside the `PsdGate` Durable Object.** A DO advances its clock only on I/O, so while every caller is sleeping inside the gate no time passes: a wall-clock token bucket accrues nothing and starves forever (this pinned every fan-out — `matches:window`, `match:detail:*` — at its Jul 30 snapshot until the 7-day hard TTL). Pace with relative sleeps only (`GateLogic.acquireToken`). The failure is silent: a cancelled `waitUntil` sets no negative marker and reports no outcome, so SWR just keeps serving stale.
 
 ## PSD Schema & Transform Rules
 

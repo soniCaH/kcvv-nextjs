@@ -3,8 +3,8 @@ import { GateLogic } from "./gate-logic";
 
 /**
  * Deterministic fake scheduler: `now()` reads a mutable clock, `sleep(ms)`
- * advances it and resolves on a microtask. Lets us assert the token bucket's
- * pacing without real timers.
+ * advances it and resolves on a microtask. Lets us assert the gate's pacing
+ * without real timers.
  */
 function fakeScheduler() {
   let clock = 0;
@@ -13,17 +13,14 @@ function fakeScheduler() {
     sleep: async (ms: number) => {
       clock += ms;
     },
-    advance: (ms: number) => {
-      clock += ms;
-    },
     get clock() {
       return clock;
     },
   };
 }
 
-describe("GateLogic — token bucket", () => {
-  it("hands out the initial burst (capacity) without waiting", async () => {
+describe("GateLogic — call pacing", () => {
+  it("throttles sustained demand to rate per second", async () => {
     const s = fakeScheduler();
     const gate = new GateLogic({
       ratePerSecond: 5,
@@ -31,42 +28,29 @@ describe("GateLogic — token bucket", () => {
       sleep: s.sleep,
     });
 
-    for (let i = 0; i < 5; i++) await gate.acquireToken();
-
-    // Full burst granted at t=0 — no simulated sleep needed.
-    expect(s.clock).toBe(0);
-  });
-
-  it("throttles sustained demand to ~rate per second", async () => {
-    const s = fakeScheduler();
-    const gate = new GateLogic({
-      ratePerSecond: 5,
-      now: s.now,
-      sleep: s.sleep,
-    });
-
-    // 20 tokens: 5 free (burst) + 15 paced at 5/s → ≥3s of simulated time.
+    // 20 calls spaced 1/5 s apart — the full index fan-out, exactly at PSD's
+    // ceiling. (No burst allowance: even spacing hits the same 5/s throughput.)
     for (let i = 0; i < 20; i++) await gate.acquireToken();
 
-    expect(s.clock).toBeGreaterThanOrEqual(3000);
-    // And not wildly more than the ideal (15 tokens / 5 per s = 3s).
-    expect(s.clock).toBeLessThan(4000);
+    expect(s.clock).toBe(20 * 200);
   });
 
-  it("refills over wall-clock gaps so a later burst isn't throttled", async () => {
-    const s = fakeScheduler();
+  it("keeps pacing when the clock never advances (Durable Object freezes Date.now)", async () => {
+    // A DO advances `Date.now()` only on I/O; while every caller sleeps in
+    // acquireToken there is none. A clock-driven bucket starves here — this
+    // whole fan-out must still complete off relative sleeps alone.
+    let slept = 0;
     const gate = new GateLogic({
       ratePerSecond: 5,
-      now: s.now,
-      sleep: s.sleep,
+      now: () => 0,
+      sleep: async (ms: number) => {
+        slept += ms;
+      },
     });
 
-    for (let i = 0; i < 5; i++) await gate.acquireToken(); // drain
-    s.advance(2000); // 2s idle → bucket refills to capacity (5)
+    for (let i = 0; i < 20; i++) await gate.acquireToken();
 
-    const before = s.clock;
-    for (let i = 0; i < 5; i++) await gate.acquireToken();
-    expect(s.clock).toBe(before); // served from refilled bucket, no wait
+    expect(slept).toBe(20 * 200);
   });
 });
 
