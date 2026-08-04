@@ -78,6 +78,17 @@ wrangler secret put SLACK_ALERT_WEBHOOK_URL --env staging
 
 Values are stored as `{ value, fetchedAt }` wrappers. On deploy, existing cache entries without the wrapper trigger a one-time cold start.
 
+### Drift observability (#2335)
+
+A background (SWR) refresh runs in `waitUntil`, which Cloudflare cancels ~30 s after the invocation ends. A **killed** refresh — unlike a **failed** one — runs none of its handlers: no negative marker, no incident report, no drift nudge. The value then drifts toward the 7-day hard-expiry cliff behind a clean `200` and a clean log. Two guards close that gap:
+
+- **`BG_REFRESH_TIMEOUT_MS` (20 s)** bounds the background refresh fetch so a slow one takes the normal failure path (negative marker + escalating log) instead of being killed. Override per call via `getOrFetch`'s `backgroundTimeoutMs` option (tests use a small value). A timed-out refresh deliberately does **not** call `gate.reportOutcome` — a slow fan-out under load is not proof PSD is down, and reporting it would open spurious outage pings. `blockingRefresh` is not bounded: it runs inside the request's own lifetime, and serving stale there would defeat the `mustBlockOnStale` correctness guard.
+- **A read-path drift check** evaluates stale age on every stale serve, before the negative-marker early-return, so a key whose marker keeps being re-set still surfaces. It is the only signal that does not depend on a refresh path executing at all.
+
+**Drift is measured as time past the soft TTL, not absolute age**: `staleForMs = (now − fetchedAt) − softTtl`, compared against `DRIFT_NUDGE_THRESHOLD` (24 h) — "this key has failed to refresh for a day". An absolute rule would fire the instant a healthy 24 h-softTtl key (`matches:team:{id}`, `ranking:team:{id}`) goes stale on a perfectly normal refresh cycle. The same rule governs `keepStale`'s WARN→ERROR escalation. Slack still reports **absolute** age + time-to-cliff.
+
+While drifting: `ERROR` on every stale serve (the `wrangler tail` trace), Slack nudge once per day per key (`nudge:{key}`, `NUDGE_MARKER_TTL`). The dedup KV read only happens on a genuinely drifting key, so the normal stale path costs no extra I/O.
+
 | Key pattern                          | softTtl                                                                                                                                                                                                                                                                                                                                                   | hardTtl |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `psd:current-season-id`              | 24 h                                                                                                                                                                                                                                                                                                                                                      | 7 days  |
