@@ -10,7 +10,10 @@ services:
     build:
       context: ../..
       dockerfile: apps/web/Dockerfile.vr
-    image: kcvv-vr-runner:1.59.1
+    # Local build-output tag only. Deliberately unversioned — the Playwright
+    # version is owned by Dockerfile.vr's FROM, and a second copy here drifts
+    # (it read 1.59.1 long after the base moved to 1.60.0).
+    image: kcvv-vr-runner:latest
     init: true
     working_dir: /work/apps/web
     volumes:
