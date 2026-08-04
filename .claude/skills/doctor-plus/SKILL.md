@@ -1,6 +1,6 @@
 ---
 name: doctor-plus
-description: Runs Claude Code's built-in /doctor health check, then audits the workspace against the 6 then-and-now context-engineering shifts Anthropic shipped with the Claude 5 models (rules to judgement, examples to interfaces, upfront to progressive disclosure, repeats to tool descriptions, CLAUDE.md memory to auto-memory, simple specs to rich references). Reports findings first, fixes only on approval. Triggers on "/doctor-plus", "doctor plus", "doctor-plus", "extended doctor", "then and now audit", "context checkup".
+description: Runs Claude Code's built-in /doctor health check, then audits the workspace's loaded context against the 6 then-and-now context-engineering shifts. Reports findings first, fixes only on approval. Triggers on "/doctor-plus", "doctor plus", "doctor-plus", "extended doctor", "then and now audit", "context checkup".
 ---
 
 # Doctor Plus
@@ -28,8 +28,8 @@ The standard /doctor checkup, plus a workspace audit for the 6 then & now shifts
 
 ### Part 1 - the standard checkup
 
-1. Run `claude doctor` via Bash with a 60s timeout. If it completes, summarize its findings.
-2. If it hangs or needs an interactive screen, note "run /doctor in your session for the built-in half" and move on. Never block on it.
+1. Run `claude doctor` via Bash with a 60s timeout. Summarize whatever it returns — on a non-zero exit, report the exit status plus its stdout/stderr rather than dropping the output.
+2. If it hangs or needs an interactive screen, note "run /doctor in your session for the built-in half" and move on. Never block on it; part 2 runs either way.
 
 ### Part 2 - the 6 shift checks
 

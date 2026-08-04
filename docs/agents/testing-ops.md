@@ -177,11 +177,11 @@ within a component. Anchor tightly — `ui-button` also matches nothing else, bu
 
 ```bash
 # Which files would run? Fast, exits before launching Chromium.
-docker compose -f docker-compose.vr.yml run --rm vr --listTests features-share
+docker compose -f docker-compose.vr.yml run --build --rm vr --listTests features-share
 
 # Iterate without the ~2 min Storybook rebuild that the pnpm scripts always do
 # (only valid while apps/web/src is unchanged — otherwise rebuild first).
-docker compose -f docker-compose.vr.yml run --rm vr -u --maxWorkers=1 features-share
+docker compose -f docker-compose.vr.yml run --build --rm vr -u --maxWorkers=1 features-share
 ```
 
 Tag-based scoping is the other axis: `--includeTags` / `--excludeTags`, or the
@@ -250,8 +250,10 @@ When `pnpm vr:check` (or the CI `visual-regression` job) reports a diff:
 2. **Cross-reference with the issue's acceptance criteria.**
 3. **If the diff aligns with the issue's stated goal** (e.g. the issue says
    "redesign card shadow" and the diff shows a changed shadow):
-   - Run `pnpm --filter @kcvv/web run vr:update` locally (or post the PR
-     comment `@kcvv-bot update-vr-baselines`).
+   - Run `pnpm --filter @kcvv/web run vr:update` locally. This is the only
+     route for a diff your own change caused — not `@kcvv-bot
+update-vr-baselines`, which is reserved for drift you cannot reproduce
+     locally (see "Baseline-update bot flow").
    - Commit with message `chore(ui): update VR baselines — issue #<N>` plus a
      one-line rationale per changed baseline (`- <story-id>: shadow adjusted
 per AC#3`). **`vr` is not a valid commitlint scope** — use `ui`, or the
@@ -482,6 +484,10 @@ export default {
   title: "UI/SomeComponent",
   component: SomeComponent,
   parameters: {
+    // vr.disable: <one-line reason this story cannot be made deterministic>
+    // Repro: <minimal steps that reproduce the non-determinism>
+    // Approved by: @<github-handle> / <issue-or-PR-link>
+    // Re-evaluate: YYYY-MM-DD
     vr: { disable: true },
   },
 };
@@ -529,6 +535,10 @@ path(s) under `apps/web/test/vr/__diff_output__/`. The `vr-diff-output`
 artifact is still uploaded as a fallback for programmatic access.
 
 ### Baseline-update bot flow
+
+Reserved for drift a developer cannot reproduce locally (cross-platform
+canonicalisation, flaky external asset). Baselines your own change caused are
+captured locally and committed in the same PR — never routed through the bot.
 
 A maintainer can comment `@kcvv-bot update-vr-baselines` on a PR. The
 `vr-baseline-update.yml` workflow re-runs the suite with `-u`, commits the
