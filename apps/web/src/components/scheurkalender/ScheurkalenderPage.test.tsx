@@ -1,176 +1,257 @@
 /**
  * ScheurkalenderPage Component Tests
  *
- * Treatment A (#2137): weekend grouping, inline A/B + bold KCVV side,
- * no-year date, single weekend rule (no boundary doubling), empty state.
+ * Poster layout: calendar-year column split, Freight Big month headings with an
+ * italic jersey-deep year, fixed date tab (weekday · day · kickoff), dotted
+ * weekend seams, club-name re-casing, empty state.
  */
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import {
   ScheurkalenderPage,
+  formatClubName,
   type ScheurkalenderMatch,
 } from "./ScheurkalenderPage";
 
-// Real fixtures (subset of the locked mock). Three weekends (ISO weeks):
-//   wk 35: za 30/08 + zo 31/08   wk 36: zo 07/09   wk 37: za 13/09
+// Fixtures spanning both calendar years of a season, so the column split is
+// exercised. Weekends: 29–30/08, 05–06/09 (2026) | 09–10/01, 16/01 (2027).
 const fixtures: ScheurkalenderMatch[] = [
   {
     id: 1,
-    date: "2025-08-30",
+    date: "2026-08-29",
     time: "20:00",
-    opponent: "Fc Zemst Sportief",
+    opponent: "Fenixx Beigem Humbeek",
     kcvvLabel: "B",
     kcvvIsHome: true,
   },
   {
     id: 2,
-    date: "2025-08-31",
+    date: "2026-08-30",
     time: "15:00",
-    opponent: "Sc City Pirates Antwerpen",
+    opponent: "Ksc Blankenberge",
     kcvvLabel: "A",
     kcvvIsHome: true,
   },
   {
     id: 3,
-    date: "2025-09-07",
-    time: "20:00",
-    opponent: "As Verbroedering Geel",
+    date: "2026-09-05",
+    time: "19:30",
+    opponent: "Ksv Rumbeke",
     kcvvLabel: "A",
     kcvvIsHome: false,
   },
   {
     id: 4,
-    date: "2025-09-13",
-    time: "14:30",
-    opponent: "Peutie Fc",
+    date: "2027-01-09",
+    time: "20:00",
+    opponent: "Kcs Machelen",
+    kcvvLabel: "B",
+    kcvvIsHome: true,
+  },
+  {
+    id: 5,
+    date: "2027-01-16",
+    time: "19:30",
+    opponent: "Erpe-mere United",
     kcvvLabel: "B",
     kcvvIsHome: false,
   },
 ];
 
+const renderPage = (matches = fixtures, season = "26/27") =>
+  render(<ScheurkalenderPage matches={matches} season={season} />);
+
+describe("formatClubName", () => {
+  it("uppercases federation prefixes", () => {
+    expect(formatClubName("Ksc Blankenberge")).toBe("KSC Blankenberge");
+    expect(formatClubName("Kvv St-denijs Sport")).toBe("KVV St-Denijs Sport");
+    expect(formatClubName("Fc Inkad Diegem")).toBe("FC Inkad Diegem");
+    expect(formatClubName("K Sp Amicii Tange")).toBe("K SP Amicii Tange");
+  });
+
+  it("capitalises after a hyphen", () => {
+    expect(formatClubName("Erpe-mere United")).toBe("Erpe-Mere United");
+  });
+
+  it("leaves ordinary words alone", () => {
+    expect(formatClubName("Yellow Red Mechelen")).toBe("Yellow Red Mechelen");
+  });
+});
+
 describe("ScheurkalenderPage", () => {
   describe("masthead", () => {
     it("renders the season + A & B subtitle", () => {
-      render(<ScheurkalenderPage matches={fixtures} season="25/26" />);
+      renderPage();
       expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-        "KCVV Elewijt — Competitie 25/26",
+        "KCVV Elewijt — Competitie 26/27",
       );
       expect(screen.getByText("A & B · Wedstrijdkalender")).toBeInTheDocument();
     });
   });
 
   describe("empty state", () => {
-    it("renders the empty message and no table when there are no fixtures", () => {
-      render(<ScheurkalenderPage matches={[]} season="25/26" />);
+    it("renders the empty message and no month headings", () => {
+      renderPage([]);
       expect(
         screen.getByText("Geen competitiewedstrijden gevonden."),
       ).toBeInTheDocument();
-      expect(screen.queryByRole("table")).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { level: 2 }),
+      ).not.toBeInTheDocument();
     });
   });
 
-  describe("weekend grouping", () => {
-    it("buckets fixtures per weekend (ISO week) into separate <tbody>s", () => {
-      const { container } = render(
-        <ScheurkalenderPage matches={fixtures} season="25/26" />,
-      );
-      const tbodies = container.querySelectorAll("tbody");
-      expect(tbodies).toHaveLength(3);
-      expect(tbodies[0].querySelectorAll("tr")).toHaveLength(2); // 30+31 Aug
-      expect(tbodies[1].querySelectorAll("tr")).toHaveLength(1); // 7 Sep
-      expect(tbodies[2].querySelectorAll("tr")).toHaveLength(1); // 13 Sep
+  describe("calendar-year column split", () => {
+    it("puts the first year left and the second right", () => {
+      const { container } = renderPage();
+      const columns = container.querySelectorAll(".grid-cols-2 > div");
+      expect(columns).toHaveLength(2);
+
+      const left = within(columns[0] as HTMLElement)
+        .getAllByRole("heading", { level: 2 })
+        .map((h) => h.textContent);
+      const right = within(columns[1] as HTMLElement)
+        .getAllByRole("heading", { level: 2 })
+        .map((h) => h.textContent);
+
+      expect(left).toEqual(["Augustus ’26.", "September ’26."]);
+      expect(right).toEqual(["Januari ’27."]);
     });
 
-    it("renders a single 2px rule between weekends with no hairline doubling", () => {
-      const { container } = render(
-        <ScheurkalenderPage matches={fixtures} season="25/26" />,
-      );
-      const tbodies = container.querySelectorAll("tbody");
+    it("renders a single full-width column when the fixtures span one year", () => {
+      const { container } = renderPage(fixtures.slice(0, 3));
+      expect(container.querySelector(".grid-cols-2")).not.toBeInTheDocument();
+      expect(container.querySelector(".grid-cols-1")).toBeInTheDocument();
+    });
 
-      // First weekend's first row has no top rule (no doubling at the very top).
-      const firstWeekendRows = tbodies[0].querySelectorAll("tr");
-      firstWeekendRows[0]
-        .querySelectorAll("td")
-        .forEach((td) => expect(td.className).not.toContain("border-t-2"));
-
-      // Last row of a weekend drops its bottom hairline (no doubling at the seam).
-      firstWeekendRows[firstWeekendRows.length - 1]
-        .querySelectorAll("td")
-        .forEach((td) => expect(td.className).not.toContain("border-b"));
-
-      // Each subsequent weekend opens with the single 2px ink rule.
-      tbodies[1]
-        .querySelectorAll("tr")[0]
-        .querySelectorAll("td")
-        .forEach((td) => expect(td.className).toContain("border-t-2"));
+    it("keeps a Sat/Sun pair in the month of its Saturday", () => {
+      // 31/01/2027 (Sun) belongs to the weekend whose Saturday is 30/01 → Januari.
+      const { container } = renderPage([
+        {
+          id: 9,
+          date: "2027-01-31",
+          time: "15:00",
+          opponent: "Kvk Ieper",
+          kcvvLabel: "A",
+          kcvvIsHome: true,
+        },
+      ]);
+      const headings = container.querySelectorAll("h2");
+      expect(headings).toHaveLength(1);
+      expect(headings[0]).toHaveTextContent("Januari ’27.");
     });
   });
 
-  describe("rows", () => {
-    it("formats dates as Dutch weekday + DD/MM with no year", () => {
-      const { container } = render(
-        <ScheurkalenderPage matches={fixtures} season="25/26" />,
-      );
-      expect(screen.getByText("za 30/08")).toBeInTheDocument();
-      expect(screen.getByText("zo 31/08")).toBeInTheDocument();
-      expect(screen.getByText("zo 07/09")).toBeInTheDocument();
-      expect(screen.getByText("za 13/09")).toBeInTheDocument();
-      // No 4-digit year anywhere in the fixture table.
-      const table = container.querySelector("table");
-      expect(table?.textContent).not.toMatch(/20\d{2}/);
+  describe("month heading", () => {
+    it("renders the year as an italic jersey-deep <em> with a trailing period", () => {
+      renderPage();
+      const heading = screen.getByRole("heading", {
+        level: 2,
+        name: /Augustus/,
+      });
+      expect(heading).toHaveTextContent("Augustus ’26.");
+      const em = heading.querySelector("em");
+      expect(em).toHaveTextContent("’26");
+      expect(em?.className).toContain("text-jersey-deep");
+      expect(em?.className).toContain("italic");
     });
 
-    it("renders kickoff times", () => {
-      render(<ScheurkalenderPage matches={fixtures} season="25/26" />);
-      expect(screen.getAllByText("20:00")).toHaveLength(2); // ids 1 & 3
-      expect(screen.getByText("14:30")).toBeInTheDocument();
+    it("carries no rule beneath it", () => {
+      renderPage();
+      const heading = screen.getByRole("heading", {
+        level: 2,
+        name: /Augustus/,
+      });
+      expect(heading.className).not.toContain("border-b");
+    });
+  });
+
+  describe("fixture rows", () => {
+    it("renders weekday, day-of-month and kickoff in one date tab", () => {
+      renderPage();
+      const tab = screen.getAllByText("za")[0]!.parentElement;
+      expect(tab).toHaveTextContent("za2920:00");
+      // Day-of-month only — the month lives in the heading, so no DD/MM here.
+      expect(tab?.textContent).not.toMatch(/\d{2}\/\d{2}/);
     });
 
-    it("renders the KCVV squad inline (A/B) from the queried team", () => {
-      render(<ScheurkalenderPage matches={fixtures} season="25/26" />);
-      expect(screen.getAllByText("KCVV Elewijt A")).toHaveLength(2);
-      expect(screen.getAllByText("KCVV Elewijt B")).toHaveLength(2);
+    it("renders no year anywhere in a fixture row", () => {
+      const { container } = renderPage();
+      container
+        .querySelectorAll(".grid-cols-2 section > div")
+        .forEach((row) => {
+          expect(row.textContent).not.toMatch(/20\d{2}/);
+        });
+    });
+
+    it("re-cases opponent names", () => {
+      renderPage();
+      expect(screen.getByText(/KSC Blankenberge/)).toBeInTheDocument();
+      expect(screen.getByText(/Erpe-Mere United/)).toBeInTheDocument();
+      expect(screen.queryByText(/Ksc Blankenberge/)).not.toBeInTheDocument();
     });
 
     it("bolds the KCVV side and leaves the opponent unbolded", () => {
-      render(<ScheurkalenderPage matches={fixtures} season="25/26" />);
-      screen
-        .getAllByText(/^KCVV Elewijt [AB]$/)
-        .forEach((cell) => expect(cell.className).toContain("font-extrabold"));
-      expect(screen.getByText("Fc Zemst Sportief").className).not.toContain(
-        "font-extrabold",
-      );
-      expect(screen.getByText("As Verbroedering Geel").className).not.toContain(
+      renderPage();
+      // Row markup is [KCVV span][dash span][opponent span] when KCVV is home.
+      const kcvvHome =
+        screen.getByText(/KSC Blankenberge/).previousElementSibling
+          ?.previousElementSibling;
+      expect(kcvvHome).toHaveTextContent("KCVV Elewijt A");
+      expect(kcvvHome?.className).toContain("font-extrabold");
+      expect(screen.getByText(/KSC Blankenberge/).className).not.toContain(
         "font-extrabold",
       );
     });
 
-    it("places KCVV in the home column when home, away column when away", () => {
-      const { container } = render(
-        <ScheurkalenderPage matches={fixtures} season="25/26" />,
-      );
-      const rows = container.querySelectorAll("tbody tr");
-      // Match 1: KCVV B home → home cell (3rd <td>) is the KCVV cell.
-      expect(rows[0].querySelectorAll("td")[2]).toHaveTextContent(
-        "KCVV Elewijt B",
-      );
-      // Match 3 (weekend 2, first row): KCVV A away → away cell (4th <td>).
-      expect(rows[2].querySelectorAll("td")[3]).toHaveTextContent(
+    it("places KCVV on the away side when playing away", () => {
+      renderPage();
+      // Match 3: KCVV A away at KSV Rumbeke → opponent first, KCVV second.
+      const opponent = screen.getByText(/KSV Rumbeke/);
+      expect(opponent.className).toContain("text-ink-soft");
+      expect(opponent.nextElementSibling?.nextElementSibling).toHaveTextContent(
         "KCVV Elewijt A",
       );
     });
 
-    it("renders no logos, squad pills, or scores", () => {
-      const { container } = render(
-        <ScheurkalenderPage matches={fixtures} season="25/26" />,
-      );
+    it("renders the squad letter in jersey-deep", () => {
+      const { container } = renderPage();
+      const squad = container.querySelector(".text-jersey-deep:not(em)");
+      expect(squad).toHaveTextContent(/^[AB]$/);
+    });
+
+    it("renders no logos or images", () => {
+      const { container } = renderPage();
       expect(container.querySelectorAll("img")).toHaveLength(0);
+    });
+  });
+
+  describe("weekend seams", () => {
+    it("separates weekends within a month with a dotted seam, not the first one", () => {
+      const { container } = renderPage();
+      // Augustus has one weekend, September one → check January's two-weekend month
+      // via a month with two weekends: build one explicitly.
+      const augustus = container.querySelector("section");
+      const weekendBlocks = augustus?.querySelectorAll(":scope > div");
+      expect(weekendBlocks?.[0]?.className).not.toContain("border-t");
+    });
+
+    it("opens each subsequent weekend in a month with a dotted top border", () => {
+      const { container } = renderPage([
+        fixtures[3]!, // 09/01/2027
+        fixtures[4]!, // 16/01/2027 — same month, next weekend
+      ]);
+      const blocks = container.querySelectorAll("section > div");
+      expect(blocks).toHaveLength(2);
+      expect(blocks[0]!.className).not.toContain("border-t");
+      expect(blocks[1]!.className).toContain("border-t");
+      expect(blocks[1]!.className).toContain("border-dotted");
     });
   });
 
   describe("chrome", () => {
     it("renders the print button", () => {
-      render(<ScheurkalenderPage matches={fixtures} season="25/26" />);
+      renderPage();
       expect(
         screen.getByRole("button", { name: "Afdrukken" }),
       ).toBeInTheDocument();

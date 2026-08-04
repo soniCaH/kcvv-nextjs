@@ -1,9 +1,27 @@
 /**
  * Scheurkalender Page — Loading Skeleton
- * Mirrors the Treatment A sheet: masthead bar + weekend fixture rows.
+ * Mirrors the poster sheet: masthead bar + two calendar-year columns, each a
+ * month heading followed by fixture rows opening on the date tab.
  */
 
 import { PageContainer } from "@/components/design-system";
+
+/** One column: a month heading, then rows of date-tab + match. */
+function ColumnSkeleton({ rows }: { rows: number }) {
+  return (
+    <>
+      <div className="bg-ink/10 mt-5 mb-[7px] h-7 w-40 animate-pulse rounded first:mt-0.5" />
+      {Array.from({ length: rows }).map((_, row) => (
+        <div key={row} className="flex items-center gap-3 py-[5px]">
+          <div className="bg-ink/10 h-2.5 w-[17px] animate-pulse rounded" />
+          <div className="bg-ink/10 h-3.5 w-5 animate-pulse rounded" />
+          <div className="bg-ink/10 h-2.5 w-10 animate-pulse rounded" />
+          <div className="bg-ink/10 h-3 flex-1 animate-pulse rounded" />
+        </div>
+      ))}
+    </>
+  );
+}
 
 export default function ScheurkalenderLoading() {
   return (
@@ -15,16 +33,14 @@ export default function ScheurkalenderLoading() {
             <div className="bg-ink/10 h-4 w-56 animate-pulse rounded" />
             <div className="bg-ink/10 h-3 w-32 animate-pulse rounded" />
           </div>
-          {/* Fixture rows */}
-          <div className="divide-ink/10 divide-y">
-            {Array.from({ length: 8 }).map((_, row) => (
-              <div key={row} className="flex items-center gap-4 px-2.5 py-2">
-                <div className="bg-ink/10 h-3 w-16 animate-pulse rounded" />
-                <div className="bg-ink/10 h-3 w-10 animate-pulse rounded" />
-                <div className="bg-ink/10 h-3 flex-1 animate-pulse rounded" />
-                <div className="bg-ink/10 h-3 flex-1 animate-pulse rounded" />
-              </div>
-            ))}
+          {/* Two calendar-year columns */}
+          <div className="grid grid-cols-2 px-5 pt-1.5 pb-[18px]">
+            <div className="border-ink/15 border-r pr-[17px]">
+              <ColumnSkeleton rows={7} />
+            </div>
+            <div className="pl-[17px]">
+              <ColumnSkeleton rows={5} />
+            </div>
           </div>
         </div>
       </PageContainer>
