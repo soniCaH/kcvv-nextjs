@@ -2,7 +2,11 @@ import { Context, Effect, Either, Layer, Option, Schema as S } from "effect";
 import { WorkerEnvTag } from "../env";
 import { PsdGateService } from "../psd/gate";
 import { BackgroundRunnerService, type PsdRefreshEnv } from "../psd/background";
-import { buildDriftMessage, postSlack } from "../psd/slack-alert";
+import {
+  buildDriftMessage,
+  formatDuration,
+  postSlack,
+} from "../psd/slack-alert";
 
 /**
  * Per-endpoint soft TTLs in seconds.
@@ -43,11 +47,20 @@ export const DRIFT_NUDGE_THRESHOLD = 60 * 60 * 24; // 24 h (#2329)
 
 /** Ceiling on a background (SWR) refresh fetch, so a slow one takes the normal
  * failure path (negative marker + escalating log) instead of being silently
- * killed (#2335). Cloudflare cancels `waitUntil` work ~30 s after the invocation
- * ends; 20 s leaves ~10 s of headroom for the failure-path KV write + Slack POST.
- * The gate paces 5 PSD calls/s globally, so a 19-call fan-out is ~3.8 s
- * uncontended — 20 s tolerates roughly 5 concurrent fan-outs. */
-export const BG_REFRESH_TIMEOUT_MS = 20_000;
+ * killed (#2335).
+ *
+ * Two ceilings bound this, and the LOWER one binds: Cloudflare cancels
+ * `waitUntil` work ~30 s after the invocation ends, but `GateLogic.leaseMs`
+ * (15 s, `psd/gate-logic.ts`) reclaims the single-flight lease first. Outrunning
+ * the lease is the worse failure: the next reader becomes leader and forks a
+ * SECOND full fan-out under exactly the load that made the first one slow, and
+ * the original's `endFlight` then releases the new leader's flight. So this must
+ * stay strictly under `leaseMs`, not merely under the `waitUntil` budget.
+ *
+ * 12 s leaves 3 s of lease headroom for the failure-path KV write. The gate
+ * paces 5 PSD calls/s globally, so a 19-call fan-out is ~3.8 s uncontended —
+ * 12 s tolerates roughly 3 concurrent fan-outs before it starts tripping. */
+export const BG_REFRESH_TIMEOUT_MS = 12_000;
 
 /** Dedup window for the slow-drift nudge: at most one Slack ping per day per key. */
 export const NUDGE_MARKER_TTL = 60 * 60 * 24; // 24 h
@@ -155,7 +168,11 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
         const backgroundTimeoutMs =
           options?.backgroundTimeoutMs ?? BG_REFRESH_TIMEOUT_MS;
 
-        /** Drift = time spent past the soft TTL. See DRIFT_NUDGE_THRESHOLD. */
+        /** Time (ms) a value has spent PAST its soft TTL — the drift measure.
+         * The single place this arithmetic lives. See DRIFT_NUDGE_THRESHOLD. */
+        const staleFor = (fetchedAt: number, softTtlSec: number) =>
+          Date.now() - fetchedAt - softTtlSec * 1000;
+
         const isDrifting = (staleForMs: number) =>
           staleForMs > DRIFT_NUDGE_THRESHOLD * 1000;
 
@@ -166,14 +183,8 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
             cache.delete(negKey(key)),
           );
 
-        // Keep the stale copy: log why and set the negative marker so subsequent
-        // requests serve stale without re-fanning until it expires. Given an
-        // `alert` context, the log escalates WARN→ERROR when an outage is open OR
-        // the value has drifted past the nudge threshold, and a once/day/key
-        // slow-drift Slack nudge fires while drifting (#2329). Called without
-        // `alert` for keeps that carry no stale-age context → plain WARN.
-        // Slack keeps reporting ABSOLUTE age + time-to-cliff; only the drift
-        // decision is soft-TTL-relative (#2335).
+        // Slow-drift Slack ping, once per day per key. Reports ABSOLUTE age +
+        // time-to-cliff — only the decision to call this is soft-TTL-relative.
         const nudge = (staleAgeMs: number, status?: number) =>
           Effect.gen(function* () {
             // Once/day/key: skip if we already pinged within the marker window.
@@ -192,24 +203,34 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
             );
           });
 
+        // Keep the stale copy: log why and set the negative marker so subsequent
+        // requests serve stale without re-fanning until it expires. Given an
+        // `alert` context, the log escalates WARN→ERROR when an outage is open OR
+        // the value is drifting (#2329). Called without `alert` for keeps that
+        // carry no stale-age context → plain WARN.
         const keepStale = (
           reason: string,
           alert?: {
-            /** Absolute age of the served value — what Slack reports. */
-            readonly staleAgeMs: number;
-            /** Age past the soft TTL — what decides drift. */
-            readonly staleForMs: number;
+            readonly fetchedAt: number;
+            readonly softTtlSec: number;
             readonly incidentOpen: boolean;
             readonly status?: number;
           },
         ) =>
           Effect.gen(function* () {
-            const drifting = !!alert && isDrifting(alert.staleForMs);
+            const drifting =
+              !!alert &&
+              isDrifting(staleFor(alert.fetchedAt, alert.softTtlSec));
             const escalate = !!alert && (alert.incidentOpen || drifting);
             const line = `TypedKvCache "${key}": ${reason}`;
             yield* escalate ? Effect.logError(line) : Effect.logWarning(line);
             yield* cache.set(negKey(key), "1", NEG_MARKER_TTL);
-            if (alert && drifting) yield* nudge(alert.staleAgeMs, alert.status);
+            // Fallback nudge only: the read-path check fires first on every
+            // stale read and normally claims the once/day marker, so this covers
+            // the case where its KV write did not land. It carries `status`,
+            // which the read path has no access to.
+            if (alert && drifting)
+              yield* nudge(Date.now() - alert.fetchedAt, alert.status);
           });
 
         // Report a transient-outage refresh failure to the gate (incident
@@ -232,8 +253,8 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
               staleAgeMs,
             });
             yield* keepStale(`${label} (${String(err)})`, {
-              staleAgeMs,
-              staleForMs: staleAgeMs - softTtlSec * 1000,
+              fetchedAt,
+              softTtlSec,
               incidentOpen,
               status,
             });
@@ -292,7 +313,6 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
                 Effect.timeoutOption(backgroundTimeoutMs),
               );
               if (Option.isNone(outcome)) {
-                const staleAgeMs = Date.now() - fetchedAt;
                 // Deliberately no `reportOutcome`: a slow fan-out under load is
                 // not proof PSD is down (the global 5/s pacer alone makes ~5
                 // concurrent fan-outs this slow), and reporting it would open
@@ -300,11 +320,7 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
                 // surface through the drift nudge instead.
                 return yield* keepStale(
                   `background refresh timed out after ${backgroundTimeoutMs}ms`,
-                  {
-                    staleAgeMs,
-                    staleForMs: staleAgeMs - softTtlSec * 1000,
-                    incidentOpen: false,
-                  },
+                  { fetchedAt, softTtlSec, incidentOpen: false },
                 );
               }
               const result = outcome.value;
@@ -324,14 +340,13 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
               }
               yield* gate.reportOutcome({ ok: true, key });
               const valid = S.decodeUnknownOption(schema)(result.right);
-              const staleAgeMs = Date.now() - fetchedAt;
               yield* Option.isSome(valid)
                 ? persist(result.right)
                 : // Not a PSD outage (200 w/ bad shape), but the value still
                   // drifts toward the cliff — nudge if it's aged past threshold.
                   keepStale("background refresh returned schema-invalid data", {
-                    staleAgeMs,
-                    staleForMs: staleAgeMs - softTtlSec * 1000,
+                    fetchedAt,
+                    softTtlSec,
                     incidentOpen: false,
                   });
             }).pipe(Effect.ensuring(gate.endFlight(key)));
@@ -346,9 +361,9 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
             const { value, fetchedAt } = decoded.value;
             const resolvedSoftTtl =
               typeof softTtl === "function" ? softTtl(value) : softTtl;
-            const isFresh = (Date.now() - fetchedAt) / 1000 <= resolvedSoftTtl;
+            const staleForMs = staleFor(fetchedAt, resolvedSoftTtl);
 
-            if (isFresh) return value;
+            if (staleForMs <= 0) return value; // fresh
 
             // ── Stale ────────────────────────────────────────────────────────
             // Drift check FIRST (#2335). Every other drift signal hangs off a
@@ -359,13 +374,20 @@ export const TypedKvCache = <A, I>(schema: S.Schema<A, I>) => {
             // marker keeps being re-set still nudges. Pure arithmetic: the
             // once/day dedup read only happens on a genuinely drifting key, so
             // the normal stale path costs no extra KV I/O.
-            const staleAgeMs = Date.now() - fetchedAt;
-            const staleForMs = staleAgeMs - resolvedSoftTtl * 1000;
             if (isDrifting(staleForMs)) {
               yield* Effect.logError(
-                `TypedKvCache "${key}": serving stale ${Math.round(staleForMs / 1000)}s past its soft TTL — refreshes are not landing`,
+                `TypedKvCache "${key}": serving stale ${formatDuration(staleForMs)} past its soft TTL — refreshes are not landing`,
               );
-              yield* nudge(staleAgeMs);
+              // Detached: the nudge does a KV get + set + an unbounded Slack
+              // POST, and this is the serve-stale-INSTANTLY path. Inline only
+              // when no runner is wired (no `waitUntil` to hand it to).
+              const ping = nudge(Date.now() - fetchedAt);
+              yield* Option.isSome(runnerOpt)
+                ? runnerOpt.value.fork(
+                    `drift:${key}`,
+                    ping as Effect.Effect<void, unknown, PsdRefreshEnv>,
+                  )
+                : ping;
             }
 
             // Negative marker present → a recent refresh failed; serve stale
