@@ -125,20 +125,33 @@ describe("ScheurkalenderPage", () => {
     });
 
     it("keeps a Sat/Sun pair in the month of its Saturday", () => {
-      // 31/01/2027 (Sun) belongs to the weekend whose Saturday is 30/01 → Januari.
+      // 31/01/2026 (Sat) and 01/02/2026 (Sun) are the same ISO week but different
+      // months — the pair must stay together under the Saturday's heading rather
+      // than splitting across Januari and Februari.
       const { container } = renderPage([
         {
           id: 9,
-          date: "2027-01-31",
-          time: "15:00",
+          date: "2026-01-31",
+          time: "20:00",
           opponent: "Kvk Ieper",
+          kcvvLabel: "B",
+          kcvvIsHome: true,
+        },
+        {
+          id: 10,
+          date: "2026-02-01",
+          time: "15:00",
+          opponent: "Sk Laar",
           kcvvLabel: "A",
           kcvvIsHome: true,
         },
       ]);
       const headings = container.querySelectorAll("h2");
       expect(headings).toHaveLength(1);
-      expect(headings[0]).toHaveTextContent("Januari ’27.");
+      expect(headings[0]).toHaveTextContent("Januari ’26.");
+      // Both fixtures sit under that single heading.
+      expect(screen.getByText(/KVK Ieper/)).toBeInTheDocument();
+      expect(screen.getByText(/SK Laar/)).toBeInTheDocument();
     });
   });
 
@@ -173,6 +186,24 @@ describe("ScheurkalenderPage", () => {
       expect(tab).toHaveTextContent("za2920:00");
       // Day-of-month only — the month lives in the heading, so no DD/MM here.
       expect(tab?.textContent).not.toMatch(/\d{2}\/\d{2}/);
+    });
+
+    it("keeps the date tab a fixed width when a fixture has no kickoff time", () => {
+      renderPage([
+        {
+          id: 11,
+          date: "2026-08-29",
+          opponent: "Sk Laar",
+          kcvvLabel: "A",
+          kcvvIsHome: true,
+        },
+      ]);
+      const tab = screen.getByText("za").parentElement!;
+      // Third track must stay a fixed width — an `auto` track would collapse
+      // here and shift the club names left, out of line with timed rows.
+      expect(tab.className).toContain("grid-cols-[17px_20px_46px]");
+      expect(tab.children).toHaveLength(3);
+      expect(tab.children[2]).toBeEmptyDOMElement();
     });
 
     it("renders no year anywhere in a fixture row", () => {

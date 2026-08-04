@@ -198,8 +198,11 @@ function FixtureRow({ match }: { match: ScheurkalenderMatch }) {
   return (
     <div className="flex items-baseline gap-3 py-[5px]">
       {/* Fixed tab stops: weekday · day · kickoff. The hairline keeps the display
-          numeral and the mono time from reading as one run of digits. */}
-      <div className="grid shrink-0 grid-cols-[17px_20px_auto] items-baseline gap-x-2">
+          numeral and the mono time from reading as one run of digits. The third
+          track is a fixed width, not `auto` — `time` is optional, and an auto
+          track collapses on a timeless fixture and shunts its club names left
+          out of line with every other row. */}
+      <div className="grid shrink-0 grid-cols-[17px_20px_46px] items-baseline gap-x-2">
         <span className="text-ink-muted font-mono text-[9px] tracking-[0.08em] uppercase">
           {NL_WEEKDAYS[dt.weekday - 1]}
         </span>
