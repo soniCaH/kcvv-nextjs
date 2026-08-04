@@ -13,8 +13,8 @@
  * `PsdGate` Durable Object (see gate.ts) hosts ONE instance of this class, which
  * makes both limiters **global across all worker isolates**:
  *
- *  - **Token bucket** — hands out ≤`ratePerSecond` PSD calls/second worldwide,
- *    so a fan-out can't burst past PSD's 5/s ceiling. In-memory per-isolate was
+ *  - **Call pacer** — hands out ≤`ratePerSecond` PSD calls/second worldwide, so
+ *    a fan-out can't burst past PSD's 5/s ceiling. In-memory per-isolate was
  *    ruled out (#2324): 8 isolates × 5/s = 40/s.
  *  - **Single-flight** — the first caller for a cache key becomes the leader and
  *    runs the fan-out; concurrent callers coalesce (N misses → 1 fan-out).
@@ -24,7 +24,7 @@
  */
 
 export interface GateLogicOptions {
-  /** Token-bucket rate & capacity (PSD calls/second). Default 5 (PSD's limit). */
+  /** Pacing rate (PSD calls/second). Default 5 (PSD's limit). */
   readonly ratePerSecond?: number;
   /** Injectable clock (ms). Default `Date.now`. */
   readonly now?: () => number;
@@ -54,8 +54,20 @@ export class GateLogic {
   private readonly sleep: (ms: number) => Promise<void>;
   private readonly leaseMs: number;
 
-  private tokens: number;
-  private lastRefill: number;
+  /**
+   * Resolves when the next call slot opens. Each grant chains a 1/rate-second
+   * sleep onto it, so grants come out at exactly `rate` per second.
+   *
+   * Deliberately clock-FREE. The previous implementation was a wall-clock token
+   * bucket, which deadlocks inside a Durable Object: `Date.now()` only advances
+   * on I/O, and a DO whose callers are all sleeping in `acquireToken` performs
+   * none — so `refill()` accrued nothing, every waiter span until its request's
+   * `waitUntil` budget expired, and no fan-out larger than the burst capacity
+   * ever completed (silently: a cancelled waitUntil sets no negative marker and
+   * reports no outcome, so SWR served the stale value until the 7-day hard TTL).
+   * Relative sleeps still resolve under a frozen clock, so pacing survives.
+   */
+  private slot: Promise<void> = Promise.resolve();
 
   /** key → the in-flight leadership record. */
   private readonly inFlight = new Map<string, Flight>();
@@ -65,9 +77,6 @@ export class GateLogic {
     this.now = opts.now ?? (() => Date.now());
     this.sleep = opts.sleep ?? realSleep;
     this.leaseMs = opts.leaseMs ?? 15_000;
-    // Start full so a single cold fan-out isn't throttled from the first call.
-    this.tokens = this.rate;
-    this.lastRefill = this.now();
   }
 
   /** A flight whose lease has expired is treated as abandoned (dead leader). */
@@ -75,30 +84,15 @@ export class GateLogic {
     return !!flight && this.now() - flight.startedAt < this.leaseMs;
   }
 
-  private refill(): void {
-    const t = this.now();
-    const elapsed = (t - this.lastRefill) / 1000;
-    if (elapsed <= 0) return;
-    this.tokens = Math.min(this.rate, this.tokens + elapsed * this.rate);
-    this.lastRefill = t;
-  }
-
   /**
-   * Resolve when a PSD-call token is available, consuming it. Global ≤rate/s.
-   * Callers `await` this immediately before every PSD fetch.
+   * Resolve when a PSD-call slot is available, consuming it. Global ≤rate/s.
+   * Callers `await` this immediately before every PSD fetch. An idle gate grants
+   * immediately; sustained demand is spaced 1/rate seconds apart.
    */
-  async acquireToken(): Promise<void> {
-    // Loop rather than sleep-once: the injected clock may not advance by the
-    // full deficit in one step (and refill is capped at capacity).
-    for (;;) {
-      this.refill();
-      if (this.tokens >= 1) {
-        this.tokens -= 1;
-        return;
-      }
-      const deficit = 1 - this.tokens;
-      await this.sleep((deficit / this.rate) * 1000);
-    }
+  acquireToken(): Promise<void> {
+    const mine = this.slot;
+    this.slot = mine.then(() => this.sleep(1000 / this.rate));
+    return mine;
   }
 
   /**
