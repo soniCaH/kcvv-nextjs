@@ -19,12 +19,12 @@
   ],
   "dependencies": {
     "@kcvv/sanity-studio": "workspace:*",
-    "@sanity/icons": "3.7.4",
-    "@sanity/vision": "6.3.0",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
-    "sanity": "6.3.0",
-    "styled-components": "6.4.3"
+    "@sanity/icons": "3.8.0",
+    "@sanity/vision": "6.9.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "sanity": "6.9.0",
+    "styled-components": "6.5.0"
   },
   "devDependencies": {
     "@sanity/eslint-config-studio": "6.0.0",
