@@ -75,7 +75,7 @@ const EVENT_SITEMAP_QUERY = `*[_type == "event" && defined(slug.current) && coal
 const GALLERY_SITEMAP_QUERY = `*[_type == "photoGallery" && defined(slug.current)] | order(publishedAt desc) {
   "slug": slug.current,
   "publishedAt": publishedAt,
-  "image": images[0].image.asset->url + "?w=1200&h=630&fit=crop&fm=webp&q=80"
+  "image": images[0].asset->url + "?w=1200&h=630&fit=crop&fm=webp&q=80"
 }`;
 
 const PLAYER_SITEMAP_QUERY = `*[_type == "player" && archived != true && defined(psdId) && psdId != ""] {

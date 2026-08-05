@@ -23,8 +23,8 @@ export const GALLERIES_QUERY =
   "slug": coalesce(slug.current, ""),
   "publishedAt": coalesce(publishedAt, ""),
   "imageCount": coalesce(count(images), 0),
-  "coverUrl": images[0].image.asset->url,
-  "coverLqip": images[0].image.asset->metadata.lqip,
+  "coverUrl": images[0].asset->url,
+  "coverLqip": images[0].asset->metadata.lqip,
   "coverAlt": coalesce(images[0].caption, title, "")
 }`);
 
@@ -46,8 +46,8 @@ export const GALLERY_BY_SLUG_QUERY =
   "descriptionText": pt::text(description),
   "descriptionRich": description,
   "images": images[]{
-    "url": image.asset->url,
-    "lqip": image.asset->metadata.lqip,
+    "url": asset->url,
+    "lqip": asset->metadata.lqip,
     "alt": coalesce(alt, caption, ""),
     "caption": coalesce(caption, ""),
     "credit": coalesce(credit, ^.defaultCredit, "")
@@ -68,8 +68,8 @@ export const GALLERIES_BY_MATCH_QUERY =
   "slug": coalesce(slug.current, ""),
   "publishedAt": coalesce(publishedAt, ""),
   "imageCount": coalesce(count(images), 0),
-  "coverUrl": images[0].image.asset->url,
-  "coverLqip": images[0].image.asset->metadata.lqip,
+  "coverUrl": images[0].asset->url,
+  "coverLqip": images[0].asset->metadata.lqip,
   "coverAlt": coalesce(images[0].caption, title, "")
 }`);
 
@@ -81,8 +81,8 @@ export const GALLERIES_BY_EVENT_QUERY =
   "slug": coalesce(slug.current, ""),
   "publishedAt": coalesce(publishedAt, ""),
   "imageCount": coalesce(count(images), 0),
-  "coverUrl": images[0].image.asset->url,
-  "coverLqip": images[0].image.asset->metadata.lqip,
+  "coverUrl": images[0].asset->url,
+  "coverLqip": images[0].asset->metadata.lqip,
   "coverAlt": coalesce(images[0].caption, title, "")
 }`);
 

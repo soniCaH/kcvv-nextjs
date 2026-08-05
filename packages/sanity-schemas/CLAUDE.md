@@ -41,6 +41,7 @@ Image fields use semantic prefixes that reflect the content's role — not a gen
 | ------------------ | ------------------------------------------------------------------ | --------------------------------------------- |
 | `coverImage`       | Editorial content image (article, event)                           | `article`, `event`                            |
 | `heroImage`        | Generic page banner                                                | `page`                                        |
+| `galleryImage`     | Gallery photo — array item carrying alt/caption/credit fields      | `photoGallery`                                |
 | `teamImage`        | Team squad photo                                                   | `team`                                        |
 | `logo`             | Brand mark                                                         | `sponsor`                                     |
 | `photo`            | Person portrait                                                    | `staffMember`                                 |
