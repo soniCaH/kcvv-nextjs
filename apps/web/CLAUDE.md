@@ -163,7 +163,15 @@ The legacy tabbed `<TeamDetail>` and its children `<TeamStandings>` / `<TeamSche
 
 ## Design Conventions
 
-**Storybook is the authoritative design system reference.** Check `Foundation/Colors`, `Foundation/Typography`, and `Foundation/Spacing & Icons` stories for all design tokens (colors, spacing, border-radius, typography). Do not hardcode values not defined there.
+Two references, different jobs — read the one that answers your question:
+
+| Source                             | Owns                                                                                                                                                                                                        | Read it when                                                                                         |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `apps/web/DESIGN.md`               | The **rules**: why corners are sharp, which of the four greens carries meaning, why shadows never blur, one emphasis per heading, the three container widths. Thirteen named rules plus a Do's/Don'ts list. | Designing or reviewing anything new. Start here — the rules are not derivable from the token values. |
+| Storybook (`Foundation/*`, `UI/*`) | The **values and components**: every live token, every primitive's variant API, rendered states.                                                                                                            | You need an exact value, or the current shape of a component.                                        |
+| `apps/web/PRODUCT.md`              | Durable product truth: audiences, success criteria, constraints, and the hard list of what this site does **not** do (no tickets, shop, streaming, live scores, accounts, newsletter).                      | Scoping a feature, or tempted to add a surface the product doesn't have.                             |
+
+Storybook stays authoritative for **values** — do not hardcode a colour, spacing, radius or type value that isn't defined there. DESIGN.md is authoritative for **intent**; where a token could be used two ways, its rule decides. `.impeccable/design.json` is the machine-readable sidecar for DESIGN.md — regenerate both together via `/impeccable document`, never by hand.
 
 ### Page layout — `<PageContainer>` and the three body widths
 
