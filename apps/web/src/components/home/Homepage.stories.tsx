@@ -221,7 +221,7 @@ const Homepage = ({
 
   const bannerSlotASection: SectionConfig = {
     key: "banner-a",
-    bg: "gray-100",
+    bg: "transparent",
     content: (
       <BannerSlot
         image={fixtureImage("stadium-hero", 0)}
@@ -237,7 +237,7 @@ const Homepage = ({
     newsArticles.length > 0
       ? {
           key: "latest-news",
-          bg: "gray-100",
+          bg: "transparent",
           content: (
             <NewsGrid
               articles={newsArticles}
@@ -262,7 +262,7 @@ const Homepage = ({
 
   const bannerSlotBSection: SectionConfig = {
     key: "banner-b",
-    bg: "gray-100",
+    bg: "transparent",
     content: (
       <BannerSlot
         image={fixtureImage("stadium-hero", 1)}
@@ -285,7 +285,7 @@ const Homepage = ({
 
   const bannerSlotCSection: SectionConfig = {
     key: "banner-c",
-    bg: "gray-100",
+    bg: "transparent",
     content: (
       <BannerSlot
         image={fixtureImage("crowd-atmosphere", 0)}

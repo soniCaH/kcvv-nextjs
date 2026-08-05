@@ -31,7 +31,7 @@ describe("SectionStack", () => {
     render(
       <SectionStack
         sections={[
-          makeSection("gray-100", "A"),
+          makeSection("transparent", "A"),
           null,
           makeSection("jersey-deep", "B"),
         ]}
@@ -45,7 +45,7 @@ describe("SectionStack", () => {
     render(
       <SectionStack
         sections={[
-          makeSection("gray-100", "A"),
+          makeSection("transparent", "A"),
           false,
           makeSection("jersey-deep", "B"),
         ]}
@@ -59,7 +59,7 @@ describe("SectionStack", () => {
     render(
       <SectionStack
         sections={[
-          makeSection("gray-100", "A"),
+          makeSection("transparent", "A"),
           undefined,
           makeSection("jersey-deep", "B"),
         ]}
@@ -73,11 +73,11 @@ describe("SectionStack", () => {
     render(
       <SectionStack
         sections={[
-          makeSection("gray-100", "A"),
+          makeSection("transparent", "A"),
           null,
           false,
           makeSection("jersey-deep", "B"),
-          makeSection("white", "C"),
+          makeSection("transparent", "C"),
         ]}
       />,
     );
@@ -91,7 +91,7 @@ describe("SectionStack", () => {
       <SectionStack
         sections={[
           makeSection("jersey-deep", "A", seam()),
-          makeSection("gray-100", "B"),
+          makeSection("transparent", "B"),
         ]}
       />,
     );
@@ -105,8 +105,8 @@ describe("SectionStack", () => {
     const { container } = render(
       <SectionStack
         sections={[
-          makeSection("gray-100", "A", seam()),
-          makeSection("gray-100", "B"),
+          makeSection("transparent", "A", seam()),
+          makeSection("transparent", "B"),
         ]}
       />,
     );
@@ -121,7 +121,7 @@ describe("SectionStack", () => {
       <SectionStack
         sections={[
           makeSection("jersey-deep", "A"),
-          makeSection("gray-100", "B"),
+          makeSection("transparent", "B"),
         ]}
       />,
     );
@@ -132,14 +132,14 @@ describe("SectionStack", () => {
   });
 
   it("adapts the seam when a middle section is absent", () => {
-    // A (jersey-deep) → [null] → B (gray-100): transition lives on A, null is
+    // A (jersey-deep) → [null] → B (transparent): transition lives on A, null is
     // filtered, so A fires its seam into B.
     const { container } = render(
       <SectionStack
         sections={[
           makeSection("jersey-deep", "A", seam()),
           null,
-          makeSection("gray-100", "B"),
+          makeSection("transparent", "B"),
         ]}
       />,
     );
@@ -151,7 +151,7 @@ describe("SectionStack", () => {
 
   it("applies default pt-20 pb-20 to section wrappers", () => {
     const { container } = render(
-      <SectionStack sections={[makeSection("gray-100", "A")]} />,
+      <SectionStack sections={[makeSection("transparent", "A")]} />,
     );
     expect(container.querySelector(".pt-20")).not.toBeNull();
     expect(container.querySelector(".pb-20")).not.toBeNull();
@@ -162,7 +162,7 @@ describe("SectionStack", () => {
       <SectionStack
         sections={[
           {
-            ...makeSection("gray-100", "A"),
+            ...makeSection("transparent", "A"),
             paddingTop: "pt-0",
             paddingBottom: "pb-10",
           },
@@ -179,15 +179,14 @@ describe("SectionStack", () => {
       <SectionStack
         sections={[
           makeSection("jersey-deep", "A"),
-          makeSection("gray-100", "B"),
-          makeSection("white", "C"),
+          makeSection("transparent", "B"),
+          makeSection("jersey-deep", "C"),
           makeSection("transparent", "D"),
         ]}
       />,
     );
+    // `SectionBg` is down to two members since #2342 — assert both resolve.
     expect(container.querySelector(".bg-jersey-deep")).not.toBeNull();
-    expect(container.querySelector(".bg-gray-100")).not.toBeNull();
-    expect(container.querySelector(".bg-white")).not.toBeNull();
     expect(container.querySelector(".bg-transparent")).not.toBeNull();
   });
 
@@ -197,7 +196,7 @@ describe("SectionStack", () => {
       const { getByTestId } = render(
         <SectionStack
           sections={[
-            makeSection("gray-100", "A", seam()),
+            makeSection("transparent", "A", seam()),
             {
               ...makeSection("jersey-deep", "B"),
               backdrop: <div data-testid="backdrop-node">BACKDROP</div>,
@@ -213,7 +212,7 @@ describe("SectionStack", () => {
 
     it("does not render a backdrop layer when backdrop is absent", () => {
       const { container } = render(
-        <SectionStack sections={[makeSection("gray-100", "A")]} />,
+        <SectionStack sections={[makeSection("transparent", "A")]} />,
       );
       expect(
         container.querySelectorAll("[data-testid='section-backdrop']"),
@@ -242,7 +241,7 @@ describe("SectionStack", () => {
       const { getByTestId } = render(
         <SectionStack
           sections={[
-            makeSection("gray-100", "A", seam("lg")),
+            makeSection("transparent", "A", seam("lg")),
             {
               ...makeSection("jersey-deep", "B"),
               backdrop: <div data-testid="backdrop-node">BACKDROP</div>,
@@ -264,7 +263,7 @@ describe("SectionStack", () => {
               ...makeSection("jersey-deep", "A"),
               backdrop: <div data-testid="backdrop-node">BACKDROP</div>,
             },
-            makeSection("gray-100", "B"),
+            makeSection("transparent", "B"),
           ]}
         />,
       );
@@ -280,7 +279,7 @@ describe("SectionStack", () => {
               ...makeSection("jersey-deep", "A", seam("xl")),
               backdrop: <div data-testid="backdrop-node">BACKDROP</div>,
             },
-            makeSection("gray-100", "B"),
+            makeSection("transparent", "B"),
           ]}
         />,
       );
@@ -294,7 +293,7 @@ describe("SectionStack", () => {
       const { getByTestId } = render(
         <SectionStack
           sections={[
-            makeSection("gray-100", "A", seam()),
+            makeSection("transparent", "A", seam()),
             {
               ...makeSection("jersey-deep", "B"),
               backdrop: <div data-testid="backdrop-node">BACKDROP</div>,
@@ -328,7 +327,7 @@ describe("SectionStack", () => {
           sections={[
             makeSection("jersey-deep", "A", seam()),
             {
-              ...makeSection("gray-100", "B"),
+              ...makeSection("transparent", "B"),
               backdrop: false,
             },
           ]}
@@ -343,7 +342,7 @@ describe("SectionStack", () => {
           sections={[
             makeSection("jersey-deep", "A", seam()),
             {
-              ...makeSection("gray-100", "B"),
+              ...makeSection("transparent", "B"),
               backdrop: null,
             },
           ]}
