@@ -8,6 +8,7 @@ import {
   TTL,
   HARD_TTL_DEFAULT,
   HARD_TTL_LONG,
+  BG_REFRESH_TIMEOUT_MS,
 } from "./kv-cache";
 import { WorkerEnvTag } from "../env";
 import { PsdGateService, PsdGateTest, makePsdGateLayer } from "../psd/gate";
@@ -58,6 +59,59 @@ function makeWrapper(value: unknown, ageMs: number) {
   return JSON.stringify({ value, fetchedAt: Date.now() - ageMs });
 }
 
+/**
+ * A BackgroundRunnerService whose `fork` runs the refresh eagerly on the test
+ * layers and records the promise, so a test can `await settle()` to observe
+ * the background effect's outcome deterministically.
+ */
+function withRunner(
+  mockKv: ReturnType<typeof makeMockKv>,
+  gateLayer: Layer.Layer<PsdGateService>,
+  /** Extra layers for the DETACHED work. The runner runs it on its own runtime,
+   * so layers provided around `getOrFetch` never reach it — a log capture has
+   * to come in through here. */
+  extra: Layer.Layer<never> = Layer.empty,
+) {
+  const pending: Promise<void>[] = [];
+  const layer = Layer.mergeAll(KvCacheLive, gateLayer, extra).pipe(
+    Layer.provideMerge(makeEnvLayer(mockKv)),
+  );
+  const runnerLayer = Layer.succeed(BackgroundRunnerService, {
+    fork: (_label, effect) =>
+      Effect.sync(() => {
+        // The test fetch is pure, so the refresh never touches PsdService —
+        // `layer` satisfies its real deps (KvCache + gate + env).
+        pending.push(
+          Effect.runPromise(
+            Effect.provide(effect, layer) as unknown as Effect.Effect<void>,
+          ),
+        );
+      }),
+  });
+  return { runnerLayer, settle: () => Promise.all(pending) };
+}
+
+/** Fresh gate with its OWN incident tracker so state can't leak between tests. */
+const isolatedGate = () =>
+  makePsdGateLayer(
+    new GateLogic({ ratePerSecond: 1e9 }),
+    new IncidentTracker(),
+  );
+
+const dayMs = 24 * 60 * 60 * 1000;
+
+/** Collect every log entry emitted while the returned layer is provided. */
+function captureLogs() {
+  const entries: { level: string; message: string }[] = [];
+  const layer = Logger.replace(
+    Logger.defaultLogger,
+    Logger.make(({ logLevel, message }) => {
+      entries.push({ level: logLevel.label, message: String(message) });
+    }),
+  );
+  return { entries, layer };
+}
+
 describe("TTL constants", () => {
   it("NEXT_MATCHES is 4 hours", () => {
     expect(TTL.NEXT_MATCHES).toBe(60 * 60 * 4);
@@ -105,6 +159,15 @@ describe("TTL constants", () => {
 
   it("HARD_TTL_DEFAULT is 7 days", () => {
     expect(HARD_TTL_DEFAULT).toBe(60 * 60 * 24 * 7);
+  });
+
+  it("BG_REFRESH_TIMEOUT_MS stays under the gate's flight lease (#2335)", () => {
+    // Outrunning the lease is worse than outrunning the waitUntil budget: at
+    // t=leaseMs the next reader reclaims leadership and forks a SECOND full
+    // fan-out, and the original's endFlight then releases the new leader's
+    // flight. GateLogic's leaseMs default is 15 s (psd/gate-logic.ts); keep
+    // headroom for the failure-path KV write.
+    expect(BG_REFRESH_TIMEOUT_MS).toBeLessThan(15_000);
   });
 });
 
@@ -486,34 +549,6 @@ describe("TypedKvCache", () => {
 });
 
 describe("TypedKvCache — stale-while-revalidate + storm gate (#2328)", () => {
-  /**
-   * A BackgroundRunnerService whose `fork` runs the refresh eagerly on the test
-   * layers and records the promise, so a test can `await settle()` to observe
-   * the background effect's outcome deterministically.
-   */
-  function withRunner(
-    mockKv: ReturnType<typeof makeMockKv>,
-    gateLayer: Layer.Layer<PsdGateService>,
-  ) {
-    const pending: Promise<void>[] = [];
-    const layer = Layer.mergeAll(KvCacheLive, gateLayer).pipe(
-      Layer.provideMerge(makeEnvLayer(mockKv)),
-    );
-    const runnerLayer = Layer.succeed(BackgroundRunnerService, {
-      fork: (_label, effect) =>
-        Effect.sync(() => {
-          // The test fetch is pure, so the refresh never touches PsdService —
-          // `layer` satisfies its real deps (KvCache + gate + env).
-          pending.push(
-            Effect.runPromise(
-              Effect.provide(effect, layer) as unknown as Effect.Effect<void>,
-            ),
-          );
-        }),
-    });
-    return { runnerLayer, settle: () => Promise.all(pending) };
-  }
-
   const staleWrapper = (value: unknown) =>
     makeWrapper(value, 2 * 60 * 60 * 1000);
 
@@ -784,15 +819,6 @@ describe("TypedKvCache — stale-while-revalidate + storm gate (#2328)", () => {
 });
 
 describe("TypedKvCache — PSD incident alerting (#2329)", () => {
-  /** Fresh gate with its OWN incident tracker so state can't leak between tests. */
-  const isolatedGate = () =>
-    makePsdGateLayer(
-      new GateLogic({ ratePerSecond: 1e9 }),
-      new IncidentTracker(),
-    );
-
-  const dayMs = 24 * 60 * 60 * 1000;
-
   it("escalates the serve-stale log WARN→ERROR while an incident is open", async () => {
     const mockKv = makeMockKv();
     // 2 h stale (< 24 h drift threshold) — the escalation here is driven purely
@@ -803,13 +829,7 @@ describe("TypedKvCache — PSD incident alerting (#2329)", () => {
     );
     const gate = isolatedGate(); // first failure opens the incident
 
-    const entries: { level: string; message: string }[] = [];
-    const capture = Logger.replace(
-      Logger.defaultLogger,
-      Logger.make(({ logLevel, message }) => {
-        entries.push({ level: logLevel.label, message: String(message) });
-      }),
-    );
+    const { entries, layer: capture } = captureLogs();
 
     // No runner → blocking refresh path (synchronous, easy to assert).
     const fetchEffect = Effect.fail(new Error("PSD 429") as never);
@@ -842,11 +862,14 @@ describe("TypedKvCache — PSD incident alerting (#2329)", () => {
       makeWrapper({ name: "stale", value: 1 }, 3 * dayMs), // 3 days stale
     );
     const fetchEffect = Effect.fail(new Error("PSD 429") as never);
+    const { entries, layer: capture } = captureLogs();
 
     const result = await Effect.runPromise(
       TypedKvCache(TestSchema)
         .getOrFetch("test-key", fetchEffect, 60)
         .pipe(
+          Effect.provide(capture),
+          Effect.provide(Logger.minimumLogLevel(LogLevel.All)),
           Effect.provide(KvCacheLive),
           Effect.provide(isolatedGate()),
           Effect.provide(makeEnvLayer(mockKv)),
@@ -855,6 +878,14 @@ describe("TypedKvCache — PSD incident alerting (#2329)", () => {
 
     expect(result).toEqual({ name: "stale", value: 1 });
     expect(mockKv.store.get("nudge:test-key")).toBe("1");
+    // #2335: the read-path drift check also claims that marker, so assert
+    // `keepStale`'s own escalated line too — otherwise this no longer proves
+    // anything about the failed-refresh path.
+    expect(
+      entries.some(
+        (e) => e.level === "ERROR" && e.message.includes("refresh failed"),
+      ),
+    ).toBe(true);
   });
 
   it("slow-drift nudge is deduped once/day/key (marker already present)", async () => {
@@ -882,6 +913,236 @@ describe("TypedKvCache — PSD incident alerting (#2329)", () => {
       expect.anything(),
       expect.anything(),
     );
+  });
+});
+
+describe("TypedKvCache — silent-drift observability (#2335)", () => {
+  /** The real gate with only `reportOutcome` swapped for a spy — a timed-out
+   * refresh must not open an incident, and "never called" is the only way to
+   * prove it. Wrapping `isolatedGate` keeps single-flight behaviour honest and
+   * survives `PsdGate` gaining methods. */
+  function spyGate() {
+    const reportOutcome = vi.fn(() => Effect.succeed({ incidentOpen: false }));
+    const layer = Layer.effect(
+      PsdGateService,
+      Effect.map(PsdGateService, (real) => ({ ...real, reportOutcome })),
+    ).pipe(Layer.provide(isolatedGate()));
+    return { layer, reportOutcome };
+  }
+
+  /** A fetch that never settles — stands in for the slow fan-out that Cloudflare
+   * would kill ~30 s after the invocation ends. */
+  const hangingFetch = Effect.never as Effect.Effect<{
+    name: string;
+    value: number;
+  }>;
+
+  const nudgePuts = (mockKv: ReturnType<typeof makeMockKv>) =>
+    mockKv.put.mock.calls.filter(([k]) => k === "nudge:test-key");
+
+  it("a timed-out background refresh marks stale and does NOT open an incident", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set(
+      "test-key",
+      makeWrapper({ name: "stale", value: 1 }, 2 * 60 * 60 * 1000),
+    );
+    const { layer: gate, reportOutcome } = spyGate();
+    const { runnerLayer, settle } = withRunner(mockKv, gate);
+
+    const result = await Effect.runPromise(
+      TypedKvCache(TestSchema)
+        .getOrFetch("test-key", hangingFetch, 60, HARD_TTL_DEFAULT, {
+          backgroundTimeoutMs: 20,
+        })
+        .pipe(
+          Effect.provide(runnerLayer),
+          Effect.provide(KvCacheLive),
+          Effect.provide(gate),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+    await settle();
+
+    expect(result).toEqual({ name: "stale", value: 1 });
+    // Normal failure path ran: marker set, so we stop re-forking a doomed refresh.
+    expect(mockKv.store.get("neg:test-key")).toBe("1");
+    // A slow fan-out is not proof PSD is down — no spurious outage ping.
+    expect(reportOutcome).not.toHaveBeenCalled();
+  });
+
+  it("a timed-out refresh on a drifting key escalates its own log to ERROR", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set(
+      "test-key",
+      makeWrapper({ name: "stale", value: 1 }, 3 * dayMs),
+    );
+    const { layer: gate, reportOutcome } = spyGate();
+    const { entries, layer: capture } = captureLogs();
+    const { runnerLayer, settle } = withRunner(
+      mockKv,
+      gate,
+      Layer.merge(capture, Logger.minimumLogLevel(LogLevel.All)),
+    );
+
+    await Effect.runPromise(
+      TypedKvCache(TestSchema)
+        .getOrFetch("test-key", hangingFetch, 60, HARD_TTL_DEFAULT, {
+          backgroundTimeoutMs: 20,
+        })
+        .pipe(
+          Effect.provide(capture),
+          Effect.provide(Logger.minimumLogLevel(LogLevel.All)),
+          Effect.provide(runnerLayer),
+          Effect.provide(KvCacheLive),
+          Effect.provide(gate),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+    await settle();
+
+    // `keepStale`'s OWN line — the read-path check emits a different message, so
+    // this pins the timeout path's escalation rather than being satisfied by it.
+    expect(
+      entries.some(
+        (e) =>
+          e.level === "ERROR" && e.message.includes("timed out after 20ms"),
+      ),
+    ).toBe(true);
+    // Escalation is a log decision, not an incident: still no outage reported.
+    expect(reportOutcome).not.toHaveBeenCalled();
+  });
+
+  it("read path nudges a drifting value even when no refresh ever failed", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set(
+      "test-key",
+      makeWrapper({ name: "stale", value: 1 }, 3 * dayMs),
+    );
+    const { runnerLayer, settle } = withRunner(mockKv, PsdGateTest);
+    const { entries, layer: capture } = captureLogs();
+
+    const result = await Effect.runPromise(
+      TypedKvCache(TestSchema)
+        .getOrFetch(
+          "test-key",
+          Effect.succeed({ name: "fresh", value: 42 }),
+          60,
+        )
+        .pipe(
+          Effect.provide(capture),
+          Effect.provide(Logger.minimumLogLevel(LogLevel.All)),
+          Effect.provide(runnerLayer),
+          Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+    await settle();
+
+    expect(result).toEqual({ name: "stale", value: 1 });
+    expect(mockKv.store.get("nudge:test-key")).toBe("1");
+    expect(
+      entries.some(
+        (e) => e.level === "ERROR" && e.message.includes("past its soft TTL"),
+      ),
+    ).toBe(true);
+  });
+
+  it("a drifting key read twice nudges only once (once/day dedup holds)", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set(
+      "test-key",
+      makeWrapper({ name: "stale", value: 1 }, 3 * dayMs),
+    );
+    const { layer: gate } = spyGate();
+    const { runnerLayer, settle } = withRunner(mockKv, gate);
+
+    const read = () =>
+      Effect.runPromise(
+        TypedKvCache(TestSchema)
+          .getOrFetch("test-key", hangingFetch, 60, HARD_TTL_DEFAULT, {
+            backgroundTimeoutMs: 20,
+          })
+          .pipe(
+            Effect.provide(runnerLayer),
+            Effect.provide(KvCacheLive),
+            Effect.provide(gate),
+            Effect.provide(makeEnvLayer(mockKv)),
+          ),
+      );
+
+    await read();
+    await settle();
+    await read();
+    await settle();
+
+    expect(nudgePuts(mockKv)).toHaveLength(1);
+  });
+
+  it("a healthy 24h-softTtl key stale by a minute does not nudge or escalate", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set(
+      "test-key",
+      makeWrapper({ name: "stale", value: 1 }, dayMs + 60_000),
+    );
+    const { runnerLayer, settle } = withRunner(mockKv, PsdGateTest);
+    const { entries, layer: capture } = captureLogs();
+
+    // Schema-invalid refresh: the one keepStale path where drift alone decides
+    // escalation (no incident is opened), so it isolates the rule under test.
+    // Absolute age here is >24 h — the old rule would nudge; the soft-TTL-relative
+    // one sees a single minute of drift.
+    const result = await Effect.runPromise(
+      TypedKvCache(TestSchema)
+        .getOrFetch(
+          "test-key",
+          Effect.succeed({ name: "bad" } as never),
+          TTL.MATCHES_TEAM,
+        )
+        .pipe(
+          Effect.provide(capture),
+          Effect.provide(Logger.minimumLogLevel(LogLevel.All)),
+          Effect.provide(runnerLayer),
+          Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+    await settle();
+
+    expect(result).toEqual({ name: "stale", value: 1 });
+    expect(mockKv.store.get("nudge:test-key")).toBeUndefined();
+    expect(entries.some((e) => e.level === "ERROR")).toBe(false);
+  });
+
+  it("a drifting key with a negative marker present still nudges", async () => {
+    const mockKv = makeMockKv();
+    mockKv.store.set(
+      "test-key",
+      makeWrapper({ name: "stale", value: 1 }, 3 * dayMs),
+    );
+    mockKv.store.set("neg:test-key", "1");
+
+    let fetchCalled = false;
+    const fetchEffect = Effect.sync(() => {
+      fetchCalled = true;
+      return { name: "fresh", value: 9 };
+    });
+
+    const result = await Effect.runPromise(
+      TypedKvCache(TestSchema)
+        .getOrFetch("test-key", fetchEffect, 60)
+        .pipe(
+          Effect.provide(KvCacheLive),
+          Effect.provide(PsdGateTest),
+          Effect.provide(makeEnvLayer(mockKv)),
+        ),
+    );
+
+    expect(result).toEqual({ name: "stale", value: 1 });
+    expect(fetchCalled).toBe(false);
+    // The marker short-circuits the refresh — the nudge must not depend on it.
+    expect(mockKv.store.get("nudge:test-key")).toBe("1");
   });
 });
 

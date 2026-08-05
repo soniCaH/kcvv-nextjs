@@ -10,13 +10,20 @@ src/
 ├── index.ts                  ← Worker entry point (HttpApiBuilder.toWebHandler)
 ├── env.ts                    ← WorkerEnv type + WorkerEnvTag (Effect Context)
 ├── cache/
-│   └── kv-cache.ts           ← KvCacheService (get/set with TTL)
+│   └── kv-cache.ts           ← KvCacheService + TypedKvCache (SWR read path, TTLs, drift alerting)
 ├── psd/
 │   ├── errors.ts             ← BffError discriminated union (typed API errors)
 │   ├── schemas.ts            ← Raw PSD API schemas (internal only)
 │   ├── schemas-player-team.ts ← PSD player/team/staff schemas (used by sync)
 │   ├── service.ts            ← PsdService (fetch + transform + business logic)
-│   └── transforms.ts         ← Pure transform functions (PSD → domain types)
+│   ├── transforms.ts         ← Pure transform functions (PSD → domain types)
+│   ├── gate.ts               ← PsdGateService (Effect facade over the gate)
+│   ├── gate-do.ts            ← PsdGate Durable Object (global pacer + single-flight)
+│   ├── gate-logic.ts         ← GateLogic — token bucket + flight leases (DO-free, testable)
+│   ├── incident.ts           ← IncidentTracker (PSD outage open/close state)
+│   ├── slack-alert.ts        ← Incident + slow-drift Slack payloads (framework-free)
+│   ├── background.ts         ← BackgroundRunnerService (detached SWR refresh port)
+│   └── background-live.ts    ← waitUntil-backed runner implementation
 ├── sanity/
 │   ├── config.ts             ← Sanity client config (project ID, dataset, token)
 │   ├── mutation.ts           ← SanityMutation — write ops (upsert, archive, image upload)
@@ -77,6 +84,19 @@ wrangler secret put SLACK_ALERT_WEBHOOK_URL --env staging
 - **hardTtl** — KV storage TTL (default 7 days). If cached data is older than softTtl but younger than hardTtl, attempt refresh; on failure, serve stale data with a warning log.
 
 Values are stored as `{ value, fetchedAt }` wrappers. On deploy, existing cache entries without the wrapper trigger a one-time cold start.
+
+### Drift observability (#2335)
+
+A background (SWR) refresh runs in `waitUntil`, which Cloudflare cancels ~30 s after the invocation ends. A **killed** refresh — unlike a **failed** one — runs none of its handlers: no negative marker, no incident report, no drift nudge. The value then drifts toward the 7-day hard-expiry cliff behind a clean `200` and a clean log. Two guards close that gap:
+
+- **`BG_REFRESH_TIMEOUT_MS` (12 s)** bounds the background refresh fetch so a slow one takes the normal failure path (negative marker + escalating log) instead of being killed. **The binding ceiling is `GateLogic.leaseMs` (15 s), not the `waitUntil` budget** — a refresh that outruns the lease loses single-flight, so the next reader forks a second full fan-out under exactly the load that made the first one slow, and the original's `endFlight` then releases the new leader's flight. A unit test pins `BG_REFRESH_TIMEOUT_MS < 15 s`; keep them coupled. `getOrFetch`'s `backgroundTimeoutMs` option exists so tests can drive it with a small value — no production caller overrides it. A timed-out refresh deliberately does **not** call `gate.reportOutcome` — a slow fan-out under load is not proof PSD is down, and reporting it would open spurious outage pings. Note the timeout abandons the fan-out but does not cancel it: `fetch` takes no `AbortSignal`, so in-flight PSD calls run to completion.
+- **A read-path drift check** evaluates stale age on every stale serve, before the negative-marker early-return, so a key whose marker keeps being re-set still surfaces. It is the only signal that does not depend on a refresh path executing at all.
+
+`blockingRefresh` is deliberately **not** bounded. It runs inside the request's own lifetime, so nothing kills it out from under its handlers — the failure mode this section exists to fix cannot occur there. (In production it is only reachable via the `mustBlockOnStale` correctness guard, since `index.ts` provides `BackgroundRunnerLive` for the whole API layer.)
+
+**Drift is measured as time past the soft TTL, not absolute age**: `staleForMs = (now − fetchedAt) − softTtl`, compared against `DRIFT_NUDGE_THRESHOLD` (24 h) — "this key has failed to refresh for a day". An absolute rule would fire the instant a healthy 24 h-softTtl key (`matches:team:{id}`, `ranking:team:{id}`) goes stale on a perfectly normal refresh cycle. The same rule governs `keepStale`'s WARN→ERROR escalation. Slack still reports **absolute** age + time-to-cliff.
+
+While drifting: `ERROR` on every stale serve (the `wrangler tail` trace), Slack nudge once per day per key (`nudge:{key}`, `NUDGE_MARKER_TTL`). The drift decision is pure arithmetic, so the normal stale path costs no extra I/O; the nudge's KV dedup read + Slack POST are forked into `waitUntil` rather than run inline, because this is the serve-stale-instantly path. `keepStale` keeps a fallback nudge for the case where the read-path write did not land — it is the only one carrying the failing HTTP status.
 
 | Key pattern                          | softTtl                                                                                                                                                                                                                                                                                                                                                   | hardTtl |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
