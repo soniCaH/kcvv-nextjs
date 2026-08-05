@@ -23,12 +23,14 @@ BRANCH=$(git -C "$TARGET" branch --show-current 2>/dev/null) || exit 0
 
 case "$BRANCH" in
 main | master)
-  echo "" >&2
-  echo "🚫 BLOCKED: that commit would land on '$BRANCH' in $TARGET." >&2
-  echo "" >&2
-  echo "   Use /ralph to create a worktree for an issue first." >&2
-  echo "   If you really meant this one commit: ALLOW_MAIN_COMMIT=1 git commit …" >&2
-  echo "" >&2
+  cat >&2 <<EOF
+
+🚫 BLOCKED: that commit would land on '$BRANCH' in $TARGET.
+
+   Use /ralph to create a worktree for an issue first.
+   If you really meant this one commit: ALLOW_MAIN_COMMIT=1 git commit …
+
+EOF
   exit 1
   ;;
 esac

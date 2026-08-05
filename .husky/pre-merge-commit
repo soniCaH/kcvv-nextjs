@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# `pre-commit` does not fire for merge commits, so without this hook the guard
+# would miss `git merge --no-ff` onto main. This one fires exactly there and
+# nowhere else, so a plain commit still pays for the guard only once.
+# Bypass with ALLOW_MAIN_COMMIT=1; see .husky/branch-guard.sh.
+#
+# `git cherry-pick` and `git revert` run no commit hooks at all. That is a git
+# design choice, not something a hook can close.
+bash .husky/branch-guard.sh || exit 1

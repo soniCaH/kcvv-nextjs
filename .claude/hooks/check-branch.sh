@@ -1,9 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Block a `git commit` that would land on main/master. Worktree-aware.
 #
 # This is the fast, friendly layer: it fails early with a helpful message
 # before the tool call runs. `.husky/branch-guard.sh` is the real backstop —
-# it runs inside git and cannot be routed around at all.
+# it runs inside git and cannot be routed around by a command string at all.
 #
 # Design notes (#2361):
 #   - The tool payload is parsed as JSON, never with sed. A `"` anywhere in the
@@ -18,13 +18,22 @@
 # shell aliases or functions. Closing those needs a real shell parser.
 set -uo pipefail
 
-INPUT=$(cat)
+# Same escape hatch as .husky/branch-guard.sh, for an exported variable. The
+# far more common `ALLOW_MAIN_COMMIT=1 git commit …` prefix form is handled
+# below, where the command itself is parsed.
+[ "${ALLOW_MAIN_COMMIT:-}" = "1" ] && exit 0
 
-# Fast path: the overwhelming majority of Bash calls cannot be a commit.
-case "$INPUT" in
-*commit*) ;;
-*) exit 0 ;;
-esac
+# A builtin read rather than $(cat) — this runs on every Bash tool call, and
+# not forking is ~25% of the fast path.
+IFS= read -r -d '' INPUT
+
+# Fast path: `commit` as the git subcommand is always followed by a separator,
+# so this skips `commitlint`, `uncommitted`, `commits`, `commit-tree` … without
+# paying for an interpreter. Only the trailing boundary is checked: this scans
+# the raw JSON, where `git<TAB>commit` arrives as the six characters `git\tco…`
+# — a leading boundary would read the `t` of `\t` as a word character and wave
+# the command through.
+[[ $INPUT =~ commit([^A-Za-z-]|$) ]] || exit 0
 
 # Without the interpreter we would silently fail OPEN, so fail closed — but
 # only here, where we already know the command mentions `commit`.
@@ -33,8 +42,10 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 0
 fi
 
-PY=$(
-  cat <<'PYEOF'
+# Read the program with the same forkless builtin, then hand it to python3 as
+# an argument so stdin stays free for the payload. Passing the program on
+# stdin instead measured ~60ms slower per call.
+IFS= read -r -d '' PY <<'PYEOF'
 import json, os, re, subprocess, sys
 
 def emit_deny(reason):
@@ -59,13 +70,20 @@ session_cwd = data.get("cwd") or os.getcwd()
 # and `git  commit` normalise to `git commit`.
 norm = re.sub(r"\s+", " ", cmd.replace("\n", " ; ")).strip()
 
+# Unwrap `bash -c "…"` so the inner command is scanned like any other. The
+# splitter below is quote-blind, so without this a `cd` inside the wrapper is
+# shredded along with it and the commit is attributed to the wrong directory.
+norm = re.sub(r"""(?:ba|z)?sh\s+-[a-z]*c\s+(["'])(.*?)\1""", r" ; \2 ; ", norm)
+
 # `git [global flags] commit` at the start of a segment, allowing VAR=x
-# prefixes and the common `bash -c "..."` wrapper.
+# prefixes. Both the VAR= prefix and the global flags are captured: the escape
+# hatch is read from the first, and `-C` from the second. Reading `-C` from the
+# whole segment instead would misfire on `git commit --amend -C HEAD`, where
+# `-C` is commit's own "reuse this commit's message" flag, not a directory.
 GIT_COMMIT = re.compile(
-    r"""^(?:(?:ba|z)?sh\s+-[a-z]*c\s*["']\s*)?      # optional  bash -c "
-         (?:\w+=\S*\s+)*                            # optional  VAR=value
+    r"""^((?:\w+=\S*\s+)*)                          # optional  VAR=value
          git
-         (?:\s+(?:-[cC]\s+\S+|--?[A-Za-z][\w-]*(?:=\S*)?))*   # global flags
+         ((?:\s+(?:-[cC]\s+\S+|--?[A-Za-z][\w-]*(?:=\S*)?))*) # global flags
          \s+commit(?![\w-])""",   # `commit`, not `commit-tree`
     re.VERBOSE,
 )
@@ -94,9 +112,13 @@ for seg in segments:
     if m:
         cur = resolve(m.group(1), cur)
         continue
-    if GIT_COMMIT.search(seg):
+    hit = GIT_COMMIT.search(seg)
+    if hit:
+        env_prefix, global_flags = hit.group(1), hit.group(2)
+        if "ALLOW_MAIN_COMMIT=1" in env_prefix:
+            allow()            # documented escape hatch — see branch-guard.sh
         found = True
-        c = re.search(r"(?:^|\s)-C\s+(\S+)", seg)
+        c = re.search(r"(?:^|\s)-C\s+(\S+)", global_flags)
         target = resolve(c.group(1), cur) if c else cur
         break
 
@@ -124,7 +146,6 @@ if branch in ("main", "master"):
 
 allow()   # feature branch, detached HEAD, or not a repo — git will sort it out
 PYEOF
-)
 
 printf '%s' "$INPUT" | python3 -c "$PY"
 exit 0

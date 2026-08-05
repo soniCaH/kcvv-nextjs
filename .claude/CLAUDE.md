@@ -30,8 +30,8 @@ App-specific rules → `apps/web/CLAUDE.md` | api-contract conventions → `pack
 2. **Conventional commits:** `type(scope): description` — scopes: news, matches, events, teams, players, sponsors, calendar, ranking, search, sync, analytics, studio, api, ui, schema, config, deps, deps-dev
 3. **Quality before commit:** `pnpm --filter @kcvv/web lint:fix` then `pnpm --filter @kcvv/web check-all`
 4. **Never:** commit to main, push before checks pass, create PR without asking
-5. **Branch guards:** two layers refuse a commit that would land on `main`/`master` — `.husky/branch-guard.sh` (called first from `.husky/pre-commit`, runs inside git, so it cannot be routed around) and `.claude/hooks/check-branch.sh` (Claude Code `PreToolUse`, fails early with a friendlier message). Both are worktree-aware, allow a detached HEAD, and accept `cd` anywhere in the command as well as an explicit `git -C <dir>`.
-6. **Deliberate commit on main:** `ALLOW_MAIN_COMMIT=1 git commit …`. Prefer it over `--no-verify`, which also skips commitlint and lint-staged.
+5. **Branch guards:** two layers refuse a commit that would land on `main`/`master`, both worktree-aware and both allowing a detached HEAD. `.husky/branch-guard.sh` is the backstop — called from `.husky/pre-commit` (first, before `lint-staged`) and from `.husky/pre-merge-commit` (merges, which `pre-commit` does not fire for). It reads the branch inside git, so no command-string trick gets past it. `.claude/hooks/check-branch.sh` is the Claude Code `PreToolUse` layer that fails earlier with a friendlier message; it parses the command, so `cd` may appear anywhere in it and an explicit `git -C <dir>` is honoured. **Not covered:** `git cherry-pick` and `git revert` run no commit hooks at all — a git design choice no hook can close.
+6. **`ALLOW_MAIN_COMMIT=1` is a human escape hatch, not an agent one.** If a guard blocks you, the answer is a worktree (`/ralph`), never this variable — do not reach for it to get past a block, and do not suggest it. It exists so a human can make one deliberate commit on `main` without `--no-verify`, which would also skip commitlint and lint-staged.
 
 ## Development Guidelines
 
