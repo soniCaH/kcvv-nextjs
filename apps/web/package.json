@@ -91,7 +91,7 @@
     "happy-dom": "20.10.2",
     "http-server": "14.1.1",
     "jest-image-snapshot": "6.5.2",
-    "postcss": "8.5.18",
+    "postcss": "8.5.23",
     "prettier": "3.8.4",
     "prettier-plugin-tailwindcss": "0.8.0",
     "schema-dts": "2.0.0",
