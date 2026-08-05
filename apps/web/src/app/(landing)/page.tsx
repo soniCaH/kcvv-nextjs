@@ -12,8 +12,8 @@
  *
  * Per-section components own their own backgrounds and editorial
  * chrome, so `<SectionStack>` uses `bg: "transparent"` for those
- * sections. The five `bg: "gray-100"` sections (news grid + the three
- * banner strips) are the exception: `<BannerSlot>` and `<NewsGrid>` are
+ * sections. The four grey sections (news grid + the three banner
+ * strips) are the exception: `<BannerSlot>` and `<NewsGrid>` are
  * both fully redesigned, but the surface they sit on is still the
  * pre-redesign cool grey rather than a cream step. Retiring `gray-100`
  * here is an open homepage design decision, not leftover migration.

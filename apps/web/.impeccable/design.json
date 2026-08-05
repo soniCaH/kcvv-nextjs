@@ -523,7 +523,7 @@
       },
       {
         "name": "The No-Grey-UI Rule",
-        "body": "There is no neutral grey chrome layer. A surface is cream, a step of cream, or ink. One exception survives: `gray-100` (#f3f4f6) is the `<SectionStack>` surface behind five homepage sections — the news grid and the three banner strips. The components on it are fully redesigned; only the surface underneath is pre-redesign. It is the single cool grey in a warm system and must not spread — new section surfaces use a cream step.",
+        "body": "There is no neutral grey chrome layer. A surface is cream, a step of cream, or ink. One exception survives: `gray-100` (#f3f4f6) is the `<SectionStack>` surface behind four homepage sections — the news grid and the three banner strips. The components on it are fully redesigned; only the surface underneath is pre-redesign. It is the single cool grey in a warm system and must not spread — new section surfaces use a cream step.",
         "section": "colors"
       },
       {
@@ -603,7 +603,7 @@
       "Don't pin a Display-size heading's italic accent to a heavy weight — Freight Big Pro has no 900 italic.",
       "Don't add a new typeface. Freight Sans Pro, Freight Display Pro, Freight Big Pro and IBM Plex Mono are the whole set.",
       "Don't build a 16px semibold sans \"section label\" register between display serif and 11px mono.",
-      "Don't spread gray-100 beyond the five homepage sections that already use it; new section surfaces step through cream. (foundation-gray-light and the four table-* tokens have been removed — they had no consumers.)",
+      "Don't spread gray-100 beyond the four homepage sections that already use it; new section surfaces step through cream. (foundation-gray-light and the four table-* tokens have been removed — they had no consumers.)",
       "Don't rely on hover to reveal anything necessary — the primary usage scene is a phone, outdoors.",
       "Don't use emoji as icons."
     ]
