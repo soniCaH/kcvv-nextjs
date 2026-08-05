@@ -267,13 +267,12 @@
 @theme {
   /* ===== Color Palette ===== */
 
-  /* Foundation Gray — the last pre-redesign neutral still in service, as the
-     `<SectionStack bg="gray-100">` surface behind the homepage news grid and
-     banner strips. It is the one cool grey in a warm cream system; retiring it
-     is a homepage design decision, not a cleanup. `--color-foundation-gray-light`
-     and the four `--color-table-*` tokens were removed here — they had no
-     consumers anywhere in the app. */
-  --color-gray-100: #f3f4f6;
+  /* No neutral greys. `--color-gray-100` was the last one and #2342 removed it
+     along with the `white` / `gray-100` options on `SectionBg`; the homepage
+     sections that used it are `transparent` now, so the page cream shows
+     through. `--color-foundation-gray-light` and the four `--color-table-*`
+     tokens went earlier — none of them had a consumer. A section surface is
+     cream, a step of cream, or ink. */
 
   /* ===== Typography ===== */
 

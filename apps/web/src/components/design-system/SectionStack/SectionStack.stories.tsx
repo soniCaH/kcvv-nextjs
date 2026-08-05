@@ -50,19 +50,19 @@ const heroSection: SectionConfig = {
   },
 };
 const matchWidgetSection: SectionConfig = {
-  bg: "gray-100",
-  content: <MockSection label="MatchWidget (gray-100)" />,
+  bg: "transparent",
+  content: <MockSection label="MatchWidget (transparent)" />,
   paddingTop: "pt-12",
   transition: { type: "striped-seam", height: "md", colorPair: "ink-cream" },
 };
 const latestNewsSection: SectionConfig = {
-  bg: "white",
-  content: <MockSection label="LatestNews (white)" />,
+  bg: "transparent",
+  content: <MockSection label="LatestNews (transparent)" />,
   transition: { type: "striped-seam", height: "md", colorPair: "ink-cream" },
 };
 const bannerSlotBSection: SectionConfig = {
-  bg: "white",
-  content: <MockSection label="BannerSlot B (white)" />,
+  bg: "transparent",
+  content: <MockSection label="BannerSlot B (transparent)" />,
   transition: { type: "striped-seam", height: "md", colorPair: "ink-cream" },
 };
 const matchesSliderSection: SectionConfig = {
@@ -76,14 +76,14 @@ const matchesSliderSection: SectionConfig = {
   },
 };
 const youthSection: SectionConfig = {
-  bg: "gray-100",
-  content: <MockSection label="YouthSection (gray-100)" />,
+  bg: "transparent",
+  content: <MockSection label="YouthSection (transparent)" />,
   paddingTop: "pt-10",
   transition: { type: "striped-seam", height: "md", colorPair: "ink-cream" },
 };
 const sponsorsSection: SectionConfig = {
-  bg: "white",
-  content: <MockSection label="SponsorsSection (white)" />,
+  bg: "transparent",
+  content: <MockSection label="SponsorsSection (transparent)" />,
 };
 
 // ─── Stories ─────────────────────────────────────────────────────────────────
@@ -168,7 +168,7 @@ export const BannerSlotBPresent: Story = {
       heroSection,
       matchWidgetSection,
       latestNewsSection,
-      bannerSlotBSection, // same-bg white: skip fires between LatestNews and BannerSlot B
+      bannerSlotBSection, // same-bg transparent: skip fires between LatestNews and BannerSlot B
       matchesSliderSection,
       youthSection,
       sponsorsSection,
@@ -199,10 +199,13 @@ export const StraightEdges: Story = {
         bg: "jersey-deep",
         content: <MockSection label="Section 1 (jersey-deep)" />,
       },
-      { bg: "gray-100", content: <MockSection label="Section 2 (gray-100)" /> },
       {
-        bg: "white",
-        content: <MockSection label="Section 3 (white)" />,
+        bg: "transparent",
+        content: <MockSection label="Section 2 (transparent)" />,
+      },
+      {
+        bg: "jersey-deep",
+        content: <MockSection label="Section 3 (jersey-deep)" />,
       },
     ],
   },
@@ -222,8 +225,8 @@ export const AlternatingColorPairs: Story = {
         },
       },
       {
-        bg: "gray-100",
-        content: <MockSection label="B (gray-100)" />,
+        bg: "transparent",
+        content: <MockSection label="B (transparent)" />,
         transition: {
           type: "striped-seam",
           height: "md",
@@ -231,8 +234,11 @@ export const AlternatingColorPairs: Story = {
         },
       },
       {
-        bg: "white",
-        content: <MockSection label="C (white)" />,
+        // jersey-deep, not transparent: B is already transparent, and two
+        // adjacent same-bg sections fire the skip and swallow this seam —
+        // which is the one thing this story exists to show.
+        bg: "jersey-deep",
+        content: <MockSection label="C (jersey-deep)" />,
         transition: {
           type: "striped-seam",
           height: "md",
@@ -240,8 +246,8 @@ export const AlternatingColorPairs: Story = {
         },
       },
       {
-        bg: "gray-100",
-        content: <MockSection label="D (gray-100)" />,
+        bg: "transparent",
+        content: <MockSection label="D (transparent)" />,
       },
     ],
   },
@@ -258,8 +264,8 @@ export const BackdroppedSection: Story = {
   args: {
     sections: [
       {
-        bg: "gray-100",
-        content: <MockSection label="Plain section (gray-100)" />,
+        bg: "transparent",
+        content: <MockSection label="Plain section (transparent)" />,
         transition: {
           type: "striped-seam",
           height: "lg",
@@ -291,8 +297,8 @@ export const BackdroppedSection: Story = {
         },
       },
       {
-        bg: "gray-100",
-        content: <MockSection label="Plain section (gray-100)" />,
+        bg: "transparent",
+        content: <MockSection label="Plain section (transparent)" />,
       },
     ],
   },

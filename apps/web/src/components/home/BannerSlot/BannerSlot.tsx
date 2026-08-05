@@ -44,9 +44,10 @@ export const BannerSlot = ({
     </div>
   );
 
-  // ponytail: no own background — the banner sits on its SectionStack
-  // wrapper's `gray-100` so it blends into the news grid below rather than
-  // echoing the cream StripedSeam that closes the matches section above.
+  // ponytail: no own background — the banner sits directly on the page cream
+  // (its SectionStack wrapper is `transparent` since #2342) so it blends into
+  // the news grid below rather than echoing the cream StripedSeam that closes
+  // the matches section above.
   if (href) {
     return (
       <PageContainer width="index" className="py-8">

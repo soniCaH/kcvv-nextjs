@@ -13,7 +13,14 @@ import { cn } from "@/lib/utils/cn";
  * / `kcvv-green-dark` SVG-fill palette) were retired in #2154 — every section
  * transition is now a `<StripedSeam>`.
  */
-export type SectionBg = "white" | "gray-100" | "jersey-deep" | "transparent";
+/**
+ * A section surface is the page cream showing through (`transparent`) or an
+ * ink/jersey interlude. The pre-redesign `white` and `gray-100` options were
+ * removed in #2342 — `gray-100` was the last cool grey in a warm system, and
+ * `white` never had a consumer. If a section ever needs to step down from the
+ * page without going dark, add `cream-soft` here rather than reviving a grey.
+ */
+export type SectionBg = "jersey-deep" | "transparent";
 
 export type SectionTransitionConfig = {
   type: "striped-seam";
@@ -26,8 +33,6 @@ export type SectionTransitionConfig = {
 // Tailwind background class for each section surface — shared by `SectionStack`
 // so new `SectionBg` values only need to be added here.
 export const BG_CLASS: Record<SectionBg, string> = {
-  white: "bg-white",
-  "gray-100": "bg-gray-100",
   "jersey-deep": "bg-jersey-deep",
   transparent: "bg-transparent",
 };

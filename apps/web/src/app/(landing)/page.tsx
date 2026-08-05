@@ -11,12 +11,12 @@
  * promoted to sit between Youth and Sponsors.
  *
  * Per-section components own their own backgrounds and editorial
- * chrome, so `<SectionStack>` uses `bg: "transparent"` for those
- * sections. The four grey sections (news grid + the three banner
- * strips) are the exception: `<BannerSlot>` and `<NewsGrid>` are
- * both fully redesigned, but the surface they sit on is still the
- * pre-redesign cool grey rather than a cream step. Retiring `gray-100`
- * here is an open homepage design decision, not leftover migration.
+ * chrome, so every `<SectionStack>` entry uses `bg: "transparent"` and
+ * the page cream shows through. The news grid and the three banner
+ * strips used to sit on `gray-100`, the one cool grey left over from
+ * before the redesign; #2342 retired it in favour of no distinct
+ * surface at all, so the whole spine now reads as one sheet of paper
+ * with the jersey-deep youth band as its only interruption.
  */
 
 import { Effect } from "effect";
@@ -427,7 +427,7 @@ export default async function HomePage() {
   const bannerSlotASection: SectionConfig | null = banners.bannerSlotA
     ? {
         key: "banner-a",
-        bg: "gray-100",
+        bg: "transparent",
         content: (
           <BannerSlot
             image={banners.bannerSlotA.imageUrl}
@@ -444,7 +444,7 @@ export default async function HomePage() {
     newsGridArticles.length > 0
       ? {
           key: "latest-news",
-          bg: "gray-100",
+          bg: "transparent",
           content: (
             <NewsGrid
               articles={newsGridArticles}
@@ -471,7 +471,7 @@ export default async function HomePage() {
   const bannerSlotBSection: SectionConfig | null = banners.bannerSlotB
     ? {
         key: "banner-b",
-        bg: "gray-100",
+        bg: "transparent",
         content: (
           <BannerSlot
             image={banners.bannerSlotB.imageUrl}
@@ -502,7 +502,7 @@ export default async function HomePage() {
   const bannerSlotCSection: SectionConfig | null = banners.bannerSlotC
     ? {
         key: "banner-c",
-        bg: "gray-100",
+        bg: "transparent",
         content: (
           <BannerSlot
             image={banners.bannerSlotC.imageUrl}
