@@ -75,7 +75,7 @@ export const photoGallery = defineType({
       type: 'array',
       group: 'fotos',
       description:
-        'De foto\'s in de galerij. De eerste foto is automatisch de cover (gebruikt op de overzichtskaart en als deelafbeelding). Sleep om de volgorde te wijzigen. Maximaal 80 foto\'s per galerij. Splits grote reeksen op in meerdere galerijen.',
+        'De foto\'s in de galerij. Voeg er veel in één keer toe: klik "Foto\'s uploaden" of sleep een selectie bestanden hierheen (geen mappen; plakken kan ook). De eerste foto is automatisch de cover (gebruikt op de overzichtskaart en als deelafbeelding). Sleep om de volgorde te wijzigen. Maximaal 80 foto\'s per galerij. Splits grote reeksen op in meerdere galerijen.',
       // A flat array of `image` (not objects wrapping an image) so Sanity's
       // native multi-file drop/paste applies — one item per dropped file, in
       // file order. Metadata lives as custom fields on the image itself (#2363).

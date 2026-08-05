@@ -2,11 +2,13 @@ import {schemaTypes as baseSchemaTypes} from '@kcvv/sanity-schemas'
 import {
   AccentDecorator,
   ArticleTagsInput,
+  BulkImageUploadInput,
   PullquoteDecorator,
   QaPairItem,
   QaPairRespondentItem,
   RespondentPicker,
   applyArticleTagsInput,
+  applyBulkImageUploadInput,
   applyDecoratorComponents,
   applyQaBlockInput,
   applyRespondentPicker,
@@ -23,13 +25,17 @@ import {
  * `pullquote` / `accent` Portable Text decorators — the React render lives
  * here, the icon stays in `@kcvv/sanity-schemas`.
  */
-export const schemaTypes = applyDecoratorComponents(
-  applyQaBlockInput(
-    applyRespondentPicker(
-      applyArticleTagsInput(baseSchemaTypes, ArticleTagsInput),
-      RespondentPicker,
+export const schemaTypes = applyBulkImageUploadInput(
+  applyDecoratorComponents(
+    applyQaBlockInput(
+      applyRespondentPicker(
+        applyArticleTagsInput(baseSchemaTypes, ArticleTagsInput),
+        RespondentPicker,
+      ),
+      {QaPairItem, QaPairRespondentItem},
     ),
-    {QaPairItem, QaPairRespondentItem},
+    {pullquote: PullquoteDecorator, accent: AccentDecorator},
   ),
-  {pullquote: PullquoteDecorator, accent: AccentDecorator},
+  BulkImageUploadInput,
+  {typeName: 'photoGallery', fieldName: 'images'},
 )
