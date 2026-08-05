@@ -17,6 +17,7 @@ import {
   FootbalistoMatchEvent,
   type FootbalistoMatchDetailResponse as RawDetailResponse,
   FootbalistoRankingEntry,
+  FootbalistoClub,
 } from "./schemas";
 
 // ─── Competition label helpers ────────────────────────────────────────────────
@@ -156,6 +157,100 @@ export function deriveMatchTeamLabel(
 export function derivePsdTeamLabel(name: string, age: string): string {
   if (age !== "A") return age;
   return name.endsWith(" B") ? "B-Ploeg" : "A-Ploeg";
+}
+
+// ─── Club name casing ────────────────────────────────────────────────────────
+
+/**
+ * Federation prefixes PSD returns title-cased ("Ksc Blankenberge"), losing their
+ * capitals. Matched case-insensitively against every token, so a prefix is
+ * restored wherever it sits ("Yellow Red Kv Mechelen", "Peutie Fc").
+ */
+const CLUB_ABBREVIATIONS = new Set([
+  "AC",
+  "AS",
+  "EWS",
+  "FC",
+  "K",
+  "KA",
+  "KAA",
+  "KC",
+  "KCS",
+  "KCVV",
+  "KFC",
+  "KSC",
+  "KSK",
+  "KSV",
+  "KV",
+  "KVC",
+  "KVE",
+  "KVK",
+  "KVV",
+  "KVW",
+  "KWS",
+  "MVC",
+  "RC",
+  "SC",
+  "SK",
+  "SP",
+  "TSV",
+  "US",
+  "VC",
+  "VK",
+  "VV",
+  "VW",
+]);
+
+/**
+ * Legacy PSD spelling of our own club, letter-spaced ("K c v v Elewijt"). The
+ * token pass cannot reach it — each letter is its own token.
+ */
+const SPACED_KCVV = /\bk\s+c\s+v\s+v\b/gi;
+
+/**
+ * Restore casing PSD flattens: `"Ksc Blankenberge"` → `"KSC Blankenberge"`,
+ * `"Erpe-mere"` → `"Erpe-Mere"`, `"Kcvv Elewijt"` → `"KCVV Elewijt"` (#2336).
+ *
+ * Applied at every club-name emission site rather than at decode time — decoding
+ * would also rewrite player names, competition labels, and any future name-ish
+ * field, for no extra coverage. Idempotent, so an already-correct `localName`
+ * passes through untouched.
+ */
+export function normaliseClubName(name: string): string {
+  return name
+    .replace(SPACED_KCVV, "KCVV")
+    .split(" ")
+    .map((token) => {
+      const upper = token.toUpperCase();
+      if (CLUB_ABBREVIATIONS.has(upper)) return upper;
+      if (token.includes("-")) {
+        return token
+          .split("-")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join("-");
+      }
+      return token;
+    })
+    .join(" ");
+}
+
+/**
+ * Build a match-side team from a PSD club. Every club name that reaches a match
+ * payload passes through here, so casing is normalised **by construction** — a
+ * new match transform cannot forget to call `normaliseClubName` (#2336).
+ */
+function toMatchTeam(
+  club: FootbalistoClub,
+  score: number | null | undefined,
+  teamLabel?: string,
+): Match["home_team"] {
+  return {
+    id: club.id,
+    name: normaliseClubName(club.name),
+    logo: club.logo ?? undefined,
+    score: score ?? undefined,
+    team_label: teamLabel,
+  };
 }
 
 // ─── Game status mapping ──────────────────────────────────────────────────────
@@ -303,20 +398,16 @@ export function transformPsdGame(
     date: matchDate,
     time: timePart,
     venue: undefined,
-    home_team: {
-      id: game.homeClub.id,
-      name: game.homeClub.name,
-      logo: game.homeClub.logo ?? undefined,
-      score: game.goalsHomeTeam ?? undefined,
-      team_label: deriveMatchTeamLabel(game.homeTeam),
-    },
-    away_team: {
-      id: game.awayClub.id,
-      name: game.awayClub.name,
-      logo: game.awayClub.logo ?? undefined,
-      score: game.goalsAwayTeam ?? undefined,
-      team_label: deriveMatchTeamLabel(game.awayTeam),
-    },
+    home_team: toMatchTeam(
+      game.homeClub,
+      game.goalsHomeTeam,
+      deriveMatchTeamLabel(game.homeTeam),
+    ),
+    away_team: toMatchTeam(
+      game.awayClub,
+      game.goalsAwayTeam,
+      deriveMatchTeamLabel(game.awayTeam),
+    ),
     status,
     competition: resolveCompetitionLabel(
       game.competitionType,
@@ -562,18 +653,8 @@ export function transformFootbalistoMatchDetail(
     date: matchDate,
     time: timePart,
     venue: undefined,
-    home_team: {
-      id: general.homeClub.id,
-      name: general.homeClub.name,
-      logo: general.homeClub.logo ?? undefined,
-      score: general.goalsHomeTeam ?? undefined,
-    },
-    away_team: {
-      id: general.awayClub.id,
-      name: general.awayClub.name,
-      logo: general.awayClub.logo ?? undefined,
-      score: general.goalsAwayTeam ?? undefined,
-    },
+    home_team: toMatchTeam(general.homeClub, general.goalsHomeTeam),
+    away_team: toMatchTeam(general.awayClub, general.goalsAwayTeam),
     status,
     competition: resolveCompetitionLabel(general.competitionType),
     lineup,
@@ -589,8 +670,11 @@ export function transformFootbalistoRankingEntry(
   logoCdnUrl: string,
 ): RankingEntry {
   const cdn = logoCdnUrl.replace(/\/+$/, "");
-  const teamName =
-    entry.team.club.localName || entry.team.club.name || "Unknown Team";
+  // Normalise the RESOLVED value — `localName` is usually already correct, but
+  // the `name` fallback carries PSD's flattened casing.
+  const teamName = normaliseClubName(
+    entry.team.club.localName || entry.team.club.name || "Unknown Team",
+  );
   return {
     position: entry.rank,
     team_id: entry.team.id,

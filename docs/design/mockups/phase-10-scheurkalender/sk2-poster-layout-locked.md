@@ -51,9 +51,11 @@ reverse.
   first weekend of a month has none.
 - **KCVV side is bolded**, squad letter (`A`/`B`) inline and in jersey-deep;
   opponent in `text-ink-soft`.
-- **Club names are re-cased** — PSD returns `Ksc Blankenberge` / `Erpe-mere`,
-  which read as typos at poster size. `formatClubName` uppercases known
-  federation prefixes and capitalises after a hyphen.
+- **Club names arrive already re-cased** — PSD returns `Ksc Blankenberge` /
+  `Erpe-mere`, which read as typos at poster size. The BFF's
+  `normaliseClubName` (`apps/api/src/psd/transforms.ts`, #2336) uppercases known
+  federation prefixes and capitalises after a hyphen, so this page renders the
+  name verbatim. It briefly owned a local copy of that rule; the BFF owns it now.
 - **Free weekends are omitted.** They were prototyped as an explicit hatched row
   and rejected by the owner. Consequence, accepted: a gap in the season is
   indistinguishable from a fixture that has not been published yet.

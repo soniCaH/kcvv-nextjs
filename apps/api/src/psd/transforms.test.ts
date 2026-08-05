@@ -9,6 +9,8 @@ import {
   deriveOwnClubId,
   transformPsdGame,
   transformFootbalistoMatchDetail,
+  transformFootbalistoRankingEntry,
+  normaliseClubName,
   psdGameToMs,
 } from "./transforms";
 import type { PsdGame, PsdCompetition } from "./schemas";
@@ -497,5 +499,105 @@ describe("transformPsdGame — competition label + team designation", () => {
     const match = transformPsdGame(makePsdGame());
     expect(match.home_team.team_label).toBeUndefined();
     expect(match.away_team.team_label).toBeUndefined();
+  });
+});
+
+// ─── Club-name casing ────────────────────────────────────────────────────────
+
+describe("normaliseClubName", () => {
+  it("uppercases federation prefixes", () => {
+    expect(normaliseClubName("Ksc Blankenberge")).toBe("KSC Blankenberge");
+    expect(normaliseClubName("Kfc Eppegem")).toBe("KFC Eppegem");
+    expect(normaliseClubName("Kvk Ieper")).toBe("KVK Ieper");
+    expect(normaliseClubName("K Sp Amicii Tange")).toBe("K SP Amicii Tange");
+    expect(normaliseClubName("Kws Club Lauwe")).toBe("KWS Club Lauwe");
+  });
+
+  it("uppercases a prefix wherever it sits in the name", () => {
+    expect(normaliseClubName("Yellow Red Kv Mechelen")).toBe(
+      "Yellow Red KV Mechelen",
+    );
+    expect(normaliseClubName("Peutie Fc")).toBe("Peutie FC");
+  });
+
+  it("capitalises after a hyphen", () => {
+    expect(normaliseClubName("Erpe-mere United")).toBe("Erpe-Mere United");
+    expect(normaliseClubName("Kvv St-denijs Sport")).toBe(
+      "KVV St-Denijs Sport",
+    );
+  });
+
+  it("fixes our own club, including the legacy spaced spelling", () => {
+    expect(normaliseClubName("Kcvv Elewijt")).toBe("KCVV Elewijt");
+    expect(normaliseClubName("K c v v Elewijt")).toBe("KCVV Elewijt");
+  });
+
+  it("leaves ordinary words alone", () => {
+    expect(normaliseClubName("Yellow Red Mechelen")).toBe(
+      "Yellow Red Mechelen",
+    );
+    expect(normaliseClubName("Football Club Gullegem")).toBe(
+      "Football Club Gullegem",
+    );
+  });
+
+  it("is idempotent on already-correct names", () => {
+    expect(normaliseClubName("KCVV Elewijt")).toBe("KCVV Elewijt");
+    expect(normaliseClubName("KSC Blankenberge")).toBe("KSC Blankenberge");
+  });
+});
+
+describe("transformPsdGame / …MatchDetail / …RankingEntry — club-name casing", () => {
+  it("normalises both club names on a game", () => {
+    const match = transformPsdGame(
+      makePsdGame({
+        homeClub: { id: 1235, name: "Kcvv Elewijt" },
+        awayClub: { id: 2, name: "Ksc Blankenberge" },
+      }),
+    );
+    expect(match.home_team.name).toBe("KCVV Elewijt");
+    expect(match.away_team.name).toBe("KSC Blankenberge");
+  });
+
+  it("normalises both club names on a match detail", () => {
+    const detail = transformFootbalistoMatchDetail({
+      general: {
+        id: 200,
+        date: "2026-03-15 15:00",
+        homeClub: { id: 1235, name: "Kcvv Elewijt" },
+        awayClub: { id: 2, name: "Kfc Eppegem" },
+        goalsHomeTeam: 2,
+        goalsAwayTeam: 1,
+        status: 0,
+        viewGameReport: true,
+      },
+    } as never);
+    expect(detail.home_team.name).toBe("KCVV Elewijt");
+    expect(detail.away_team.name).toBe("KFC Eppegem");
+  });
+
+  it("normalises the RESOLVED ranking name, not just one branch", () => {
+    // localName wins over name — the normaliser must see the resolved value.
+    const withLocal = transformFootbalistoRankingEntry(
+      {
+        rank: 1,
+        team: {
+          id: 9,
+          club: { id: 2, localName: "Kvk Ieper", name: "Ignored" },
+        },
+      } as never,
+      "https://cdn.example.com",
+    );
+    expect(withLocal.team_name).toBe("KVK Ieper");
+
+    // …and the `name` fallback is normalised too.
+    const withoutLocal = transformFootbalistoRankingEntry(
+      {
+        rank: 2,
+        team: { id: 10, club: { id: 3, localName: null, name: "Ksv Rumbeke" } },
+      } as never,
+      "https://cdn.example.com",
+    );
+    expect(withoutLocal.team_name).toBe("KSV Rumbeke");
   });
 });

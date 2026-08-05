@@ -7,17 +7,6 @@ import type { Match } from "@/lib/effect/schemas/match.schema";
 import type { UpcomingMatch } from "@/components/match/types";
 
 /**
- * Fix team name capitalization
- * API returns "Kcvv" but should be "KCVV"
- *
- * @param name - Team name from API
- * @returns Team name with proper capitalization
- */
-export function normalizeTeamName(name: string): string {
-  return name.replace(/^Kcvv\b/i, "KCVV");
-}
-
-/**
  * Map Match (domain model) to UpcomingMatch (UI component format)
  *
  * @param match - Match data from domain layer
@@ -31,13 +20,13 @@ export function mapMatchToUpcomingMatch(match: Match): UpcomingMatch {
     venue: match.venue,
     homeTeam: {
       id: match.home_team.id,
-      name: normalizeTeamName(match.home_team.name),
+      name: match.home_team.name,
       logo: match.home_team.logo,
       score: match.home_team.score,
     },
     awayTeam: {
       id: match.away_team.id,
-      name: normalizeTeamName(match.away_team.name),
+      name: match.away_team.name,
       logo: match.away_team.logo,
       score: match.away_team.score,
     },
