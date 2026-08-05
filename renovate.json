@@ -82,11 +82,6 @@
       "automerge": true
     },
     {
-      "description": "Automerge devDependencies",
-      "matchDepTypes": ["devDependencies"],
-      "automerge": true
-    },
-    {
       "description": "Batch all remaining non-major devDependencies into one weekly PR to cut CI runs. Placed before the specific groups below so those (eslint, storybook, typescript, playwright, react types) still win for their packages; everything else (wrangler, prettier, workers-types, etc.) collapses here.",
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
