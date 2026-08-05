@@ -165,6 +165,10 @@ Three independent test layers, each owning a specific concern. Don't blur them �
 
 `Pages/*` Storybook stories exist as design references but are **not** VR-tested — page composition correctness is the e2e suite's job. See `docs/prd/page-level-testing-rework.md` for the rationale.
 
+### Import the module under test at module scope
+
+**Never `await import()` a page, layout, or route module inside an `it()` body** — Vitest charges dynamic imports against `testTimeout`, while top-level imports are paid during the untimed collect phase. A page graph takes ~3 s to resolve, so an in-body import fails deterministically under CI contention (#2362). The same goes for any module the code under test dynamically imports. Hoist it below the `vi.mock` calls (Vitest hoists those above all module-level code). Prefer a static `import`; use `await import()` only when a mock factory closes over a `const` in the file, which a static import would hoist above → TDZ (see `(main)/ploegen/page.test.tsx`).
+
 ### Running the suites
 
 `docs/agents/testing-ops.md` is the operational manual for the bottom two layers — how to run and scope a VR capture, the Docker memory floor, the `vr` / `vr-skip` / `vr.disable` tag contracts, the decision tree on a failing VR job, baseline-update flow, e2e local workflow, and CI path triggers. **Read it before running or debugging either suite**; don't reconstruct the commands from memory.

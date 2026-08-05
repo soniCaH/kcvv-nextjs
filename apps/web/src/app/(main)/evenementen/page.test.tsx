@@ -17,6 +17,10 @@ vi.mock("@/lib/repositories/event.repository", () => ({
 const { runPromise } = await import("@/lib/effect/runtime");
 const mockRunPromise = vi.mocked(runPromise);
 
+// Imported at module scope — see CLAUDE.md "Import the module under test at
+// module scope".
+const { default: EvenementenPage } = await import("./page");
+
 function makeEvent(overrides: Partial<EventListItemVM> = {}): EventListItemVM {
   return {
     id: "event-1",
@@ -39,7 +43,6 @@ describe("/evenementen page", () => {
   it("renders the page heading", async () => {
     mockRunPromise.mockResolvedValue([]);
 
-    const EvenementenPage = (await import("./page")).default;
     render(await EvenementenPage());
 
     expect(
@@ -50,7 +53,6 @@ describe("/evenementen page", () => {
   it("renders an empty-state message when there are no upcoming events", async () => {
     mockRunPromise.mockResolvedValue([]);
 
-    const EvenementenPage = (await import("./page")).default;
     render(await EvenementenPage());
 
     expect(screen.getByText(/Geen evenementen gepland/i)).toBeInTheDocument();
@@ -72,7 +74,6 @@ describe("/evenementen page", () => {
       }),
     ]);
 
-    const EvenementenPage = (await import("./page")).default;
     render(await EvenementenPage());
 
     // Event-doc ticket → detail route; article ticket → the article itself.
