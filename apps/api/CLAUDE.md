@@ -50,16 +50,16 @@ pnpm --filter @kcvv/api dev                        # wrangler dev on :8787
 
 ## Environment variables
 
-| Variable                   | Where set                            | Notes                                                                                                  |
-| -------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `PSD_API_BASE_URL`         | `wrangler.toml [vars]`               | Public, safe to commit                                                                                 |
-| `FOOTBALISTO_LOGO_CDN_URL` | `wrangler.toml [vars]`               | Public, safe to commit                                                                                 |
-| `PSD_API_KEY`              | `wrangler secret put` / CF dashboard | Never in toml                                                                                          |
-| `PSD_API_AUTH`             | `wrangler secret put` / CF dashboard | Never in toml                                                                                          |
-| `CACHE_LONG_TTL`           | `wrangler.toml [env.staging.vars]`   | Overrides hardTtl to 365d                                                                              |
-| `PSD_API_CLUB`             | `wrangler secret put` / CF dashboard | Never in toml                                                                                          |
-| `RESEND_API_KEY`           | `wrangler secret put` / CF dashboard | Never in toml — see `docs/prd/email-delivery.md`                                                       |
-| `SLACK_ALERT_WEBHOOK_URL`  | `wrangler secret put` / CF dashboard | Never in toml — Slack incoming-webhook for PSD incident/drift alerts (#2329); absent → alerting no-ops |
+| Variable                   | Where set                            | Notes                                                                                                                                                                                                               |
+| -------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PSD_API_BASE_URL`         | `wrangler.toml [vars]`               | Public, safe to commit                                                                                                                                                                                              |
+| `FOOTBALISTO_LOGO_CDN_URL` | `wrangler.toml [vars]`               | Public, safe to commit                                                                                                                                                                                              |
+| `PSD_API_KEY`              | `wrangler secret put` / CF dashboard | Never in toml                                                                                                                                                                                                       |
+| `PSD_API_AUTH`             | `wrangler secret put` / CF dashboard | Never in toml                                                                                                                                                                                                       |
+| `CACHE_LONG_TTL`           | `wrangler.toml [env.staging.vars]`   | Overrides hardTtl to 365d                                                                                                                                                                                           |
+| `PSD_API_CLUB`             | `wrangler secret put` / CF dashboard | Never in toml                                                                                                                                                                                                       |
+| `RESEND_API_KEY`           | `wrangler secret put` / CF dashboard | Never in toml — see `docs/prd/email-delivery.md`                                                                                                                                                                    |
+| `SLACK_ALERT_WEBHOOK_URL`  | `wrangler secret put` / CF dashboard | Never in toml — Slack incoming-webhook for PSD incident/drift alerts (#2329). **Production only** — deliberately unset on staging, where `CACHE_LONG_TTL` makes every key drift by design; absent → alerting no-ops |
 
 ## Deployment
 
@@ -73,8 +73,13 @@ wrangler secret put PSD_API_KEY --env staging
 wrangler secret put PSD_API_AUTH --env staging
 wrangler secret put PSD_API_CLUB --env staging
 wrangler secret put RESEND_API_KEY --env staging
-wrangler secret put SLACK_ALERT_WEBHOOK_URL --env staging
 ```
+
+`SLACK_ALERT_WEBHOOK_URL` is intentionally **not** in that list. Staging runs with
+`CACHE_LONG_TTL="true"` (365d hard TTL), so serving months-old cache is its designed
+behaviour — but the drift check reads it as "refreshes are not landing" and nudges once
+per day per key, forever. With the secret absent, `postSlack` no-ops and staging stays
+silent. Don't re-add it.
 
 ## Cache
 
