@@ -94,26 +94,17 @@ in dark gradients.
 
 ---
 
-## Foundation Grays
+## Foundation Gray
 
-Structural grays for cards, dividers, and input backgrounds.
+The last pre-redesign neutral still in service: the `<SectionStack bg="gray-100">`
+surface behind the homepage news grid and banner strips. It is the one cool grey
+in a warm cream system — prefer `cream-soft` for any new section surface.
 
-<SwatchRow items={[
-  { name: 'gray-100', variable: '--color-gray-100', hex: '#f3f4f6' },
-  { name: 'foundation-gray-light', variable: '--color-foundation-gray-light', hex: '#edeff4' },
-]} />
-
----
-
-## Table Colors
-
-Semantic colors for HTML table rendering (used in article body table blocks).
+`foundation-gray-light` and the four `table-*` tokens were removed alongside the
+blurred shadow family; none of them had a consumer anywhere in the app.
 
 <SwatchRow items={[
-  { name: 'table-header-bg', variable: '--color-table-header-bg', hex: '#f3f4f6' },
-  { name: 'table-border', variable: '--color-table-border', hex: '#e5e7eb' },
-  { name: 'table-border-header', variable: '--color-table-border-header', hex: '#d1d5db' },
-  { name: 'table-row-even', variable: '--color-table-row-even', hex: '#f9fafb' },
+  { name: 'gray-100 (homepage news / banner sections)', variable: '--color-gray-100', hex: '#f3f4f6' },
 ]} />
 
 ---
@@ -291,6 +282,18 @@ trio so hover/focus presses stay in lockstep — never inline these values.
       <td>Default paper-card chrome (TapedCard, Alert outer, BrandedTab inactive).</td>
     </tr>
     <tr>
+      <td><code>--shadow-paper-md</code></td>
+      <td><code>6px 6px 0 0 ink</code></td>
+      <td><div style={{ background: 'var(--color-cream)', height: '2.5rem', width: '5rem', border: '2px solid var(--color-ink)', boxShadow: 'var(--shadow-paper-md)' }} /></td>
+      <td>Cards at rest — the most common card weight (TapedCard default).</td>
+    </tr>
+    <tr>
+      <td><code>--shadow-paper-lift</code></td>
+      <td><code>8px 8px 0 0 ink</code></td>
+      <td><div style={{ background: 'var(--color-cream)', height: '2.5rem', width: '5rem', border: '2px solid var(--color-ink)', boxShadow: 'var(--shadow-paper-lift)' }} /></td>
+      <td>Hover target of a tilt-mode card, and emphasis cards.</td>
+    </tr>
+    <tr>
       <td><code>--shadow-paper-sm-soft</code></td>
       <td><code>4px 4px 0 0 ink-muted</code></td>
       <td><div style={{ background: 'var(--color-cream)', height: '2.5rem', width: '5rem', border: '2px solid var(--color-ink)', boxShadow: 'var(--shadow-paper-sm-soft)' }} /></td>
@@ -314,20 +317,16 @@ trio so hover/focus presses stay in lockstep — never inline these values.
       <td><div style={{ background: '#fff', height: '2.5rem', width: '5rem', border: '2px solid var(--color-alert)', boxShadow: 'var(--shadow-paper-sm-alert-hover)', transform: 'translate(1px, 1px)' }} /></td>
       <td>Form-field error hover — same press idiom, alert-soft tint.</td>
     </tr>
-    <tr>
-      <td><code>--shadow-photo-tape</code></td>
-      <td><code>2px 4px 0 0 ink</code></td>
-      <td><div style={{ background: 'var(--color-cream)', height: '2.5rem', width: '5rem', border: '2px solid var(--color-ink)', boxShadow: 'var(--shadow-photo-tape)' }} /></td>
-      <td>Phase 4.5 (R9) — asymmetric photo shadow ("leans forward" feel) used by `&lt;TapedFigure&gt;`.</td>
-    </tr>
-    <tr>
-      <td><code>--shadow-photo-tape-lift</code></td>
-      <td><code>4px 8px 0 0 ink</code></td>
-      <td><div style={{ background: 'var(--color-cream)', height: '2.5rem', width: '5rem', border: '2px solid var(--color-ink)', boxShadow: 'var(--shadow-photo-tape-lift)' }} /></td>
-      <td>Phase 4.5 (R9) — hover-lift companion to `--shadow-photo-tape`.</td>
-    </tr>
   </tbody>
 </table>
+
+The table above is the complete shadow vocabulary. Every entry has a `0` blur
+radius — depth in this system is drawn, not simulated. The pre-redesign blurred
+family (`--shadow-sm`, `--shadow-DEFAULT`, `--shadow-md`, `--shadow-lg`,
+`--shadow-card-hover`, `--shadow-input`, `--shadow-input-focus`, `--shadow-soft`)
+and the asymmetric `--shadow-photo-tape` / `-lift` pair were all removed: none of
+them had a consumer. `<TapedFigure>` declares no shadow of its own — it delegates
+to `<TapedCard>`.
 
 ## Tape colour tokens
 

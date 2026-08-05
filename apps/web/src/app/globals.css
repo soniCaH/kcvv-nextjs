@@ -25,11 +25,6 @@
   size-adjust: 90%;
 }
 
-:root {
-  /* Foundation Grays */
-  --color-foundation-gray-light: #edeff4;
-}
-
 /* ===== Spinner — scarf barber-pole + compact dot pulse (Phase 2.B.1) =====
 
    Visual contract locked at the Track B design checkpoint (2026-04-30).
@@ -272,15 +267,13 @@
 @theme {
   /* ===== Color Palette ===== */
 
-  /* Foundation Grays */
+  /* Foundation Gray — the last pre-redesign neutral still in service, as the
+     `<SectionStack bg="gray-100">` surface behind the homepage news grid and
+     banner strips. It is the one cool grey in a warm cream system; retiring it
+     is a homepage design decision, not a cleanup. `--color-foundation-gray-light`
+     and the four `--color-table-*` tokens were removed here — they had no
+     consumers anywhere in the app. */
   --color-gray-100: #f3f4f6;
-  --color-foundation-gray-light: #edeff4;
-
-  /* Table Colors */
-  --color-table-header-bg: #f3f4f6;
-  --color-table-border: #e5e7eb;
-  --color-table-border-header: #d1d5db;
-  --color-table-row-even: #f9fafb;
 
   /* ===== Typography ===== */
 
@@ -350,20 +343,18 @@
 
   /* ===== Border Radius ===== */
 
-  --radius-DEFAULT: 0.25rem;
-  --radius-card: 4px;
+  /* Intentionally empty. Every rectangle in this system is sharp — the
+     `--radius-DEFAULT` / `--radius-card` tokens were removed because nothing
+     consumed them once the loading skeletons were squared off. Circles use
+     Tailwind's built-in `rounded-full`. */
 
   /* ===== Box Shadows ===== */
 
+  /* Depth is drawn, never blurred — the `--shadow-paper-*` family below is the
+     whole vocabulary. The pre-redesign blurred set (`sm`, `DEFAULT`, `md`,
+     `lg`, `card-hover`, `input`, `input-focus`) was removed here: zero
+     consumers, and reintroducing a blur would break the paper idiom. */
   --shadow-none: none;
-  --shadow-sm: 0 2px 5px 0 rgba(0, 0, 0, 0.16);
-  --shadow-DEFAULT:
-    0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-  --shadow-md: 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 0 10px rgba(0, 0, 0, 0.7);
-  --shadow-card-hover: 0 12px 32px rgba(0, 0, 0, 0.15); /* soft elevated card hover */
-  --shadow-input: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-  --shadow-input-focus: 0 0 5px #cacaca;
 
   /* ===== Redesign / Cream Surface (Phase 0) ===== */
 
@@ -496,15 +487,11 @@
   --shadow-paper-sm: 4px 4px 0 0 var(--color-ink);
   --shadow-paper-md: 6px 6px 0 0 var(--color-ink);
   --shadow-paper-lift: 8px 8px 0 0 var(--color-ink);
-  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.08);
 
-  /* Asymmetric photo shadow — Phase 4.5 (R9). Different cadence from
-     `--shadow-paper-{sm,md,lg}` (symmetric, for cards): tape-shadow offsets
-     2px right + 4px down ("leans forward" feel). Hover-lift moves to
-     `tape-lift` to suggest the photo rising off the page. Used by
-     <TapedFigure>. */
-  --shadow-photo-tape: 2px 4px 0 0 var(--color-ink);
-  --shadow-photo-tape-lift: 4px 8px 0 0 var(--color-ink);
+  /* `--shadow-soft` (blurred) and the asymmetric `--shadow-photo-tape` /
+     `-lift` pair were removed here. The photo-tape pair dates from the Phase
+     4.5 R9 photo treatment, but <TapedFigure> declares no shadow of its own —
+     it delegates to <TapedCard>, so both tokens had been orphaned since. */
 
   --motion-fast: 150ms ease-out;
   --motion-base: 240ms cubic-bezier(0.2, 0.8, 0.2, 1);

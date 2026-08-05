@@ -87,18 +87,12 @@ container convergence (#2155).
 
 ## Shadows
 
-<table>
-  <thead><tr><th>Token</th><th>Usage</th></tr></thead>
-  <tbody>
-    <tr><td><code>shadow-sm</code></td><td>Cards, subtle elevation</td></tr>
-    <tr><td><code>shadow</code></td><td>Default card shadow</td></tr>
-    <tr><td><code>shadow-md</code></td><td>Raised elements</td></tr>
-    <tr><td><code>shadow-lg</code></td><td>Modals, overlays</td></tr>
-    <tr><td><code>shadow-card-hover</code></td><td>Legacy — pre-redesign card hover. Redesign cards use the press-down model (see the Paper shadows section below); not used by current cards.</td></tr>
-    <tr><td><code>shadow-input</code></td><td>Form input inset</td></tr>
-    <tr><td><code>shadow-input-focus</code></td><td>Form input focus state</td></tr>
-  </tbody>
-</table>
+There is one shadow vocabulary: the hard, zero-blur paper offsets documented in
+the Paper shadows section below. The pre-redesign blurred tokens (`shadow-sm`,
+`shadow`, `shadow-md`, `shadow-lg`, `shadow-card-hover`, `shadow-input`,
+`shadow-input-focus`, `shadow-soft`) were removed — none of them had a consumer,
+and a blurred shadow breaks the paper idiom. `shadow-none` remains, as the collapsed half of
+the press-down.
 
 ---
 
@@ -237,9 +231,10 @@ grid. The pool is intentionally narrow so the page never tips into chaos.
 ### Paper shadows
 
 The redesign uses hard-edged offset shadows ("paper shadows") for cards on the
-cream surface — they read like risograph print rather than soft web glows. The
-soft shadow stays available for chrome that should sit subtly above content
-(dropdowns, sticky bars).
+cream surface — they read like risograph print rather than soft web glows. There
+is no soft alternative for chrome that should sit subtly above content: use the
+ink-muted `--shadow-paper-sm-soft` sibling, which keeps the hard offset but
+softens its colour.
 
 <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '24px', padding: '32px 24px', background: 'var(--color-cream)', borderRadius: '8px', border: '1px solid var(--color-paper-edge)' }}>
   <div style={{ textAlign: 'center' }}>
@@ -257,24 +252,9 @@ soft shadow stays available for chrome that should sit subtly above content
     <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#9a9da2', marginTop: '12px' }}>--shadow-paper-lift</div>
     <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#9a9da2' }}>8px offset (hover lift)</div>
   </div>
-  <div style={{ textAlign: 'center' }}>
-    <div style={{ width: '120px', height: '120px', background: 'var(--color-cream-soft)', border: '1px solid var(--color-paper-edge)', boxShadow: 'var(--shadow-soft)' }} />
-    <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#9a9da2', marginTop: '12px' }}>--shadow-soft</div>
-    <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#9a9da2' }}>diffuse, for chrome</div>
-  </div>
-  <div style={{ textAlign: 'center' }}>
-    <div style={{ width: '120px', height: '120px', background: 'var(--color-cream-soft)', border: '1px solid var(--color-ink)', boxShadow: 'var(--shadow-photo-tape)' }} />
-    <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#9a9da2', marginTop: '12px' }}>--shadow-photo-tape</div>
-    <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#9a9da2' }}>2px / 4px asymmetric (R9)</div>
-  </div>
-  <div style={{ textAlign: 'center' }}>
-    <div style={{ width: '120px', height: '120px', background: 'var(--color-cream-soft)', border: '1px solid var(--color-ink)', boxShadow: 'var(--shadow-photo-tape-lift)' }} />
-    <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#9a9da2', marginTop: '12px' }}>--shadow-photo-tape-lift</div>
-    <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#9a9da2' }}>4px / 8px asymmetric hover (R9)</div>
-  </div>
 </div>
 
-The two `--shadow-photo-tape*` tokens use an asymmetric offset (2 / 4 and 4 / 8) different from the symmetric paper shadows. Photos lean forward; cards rest flat. Both vocabularies coexist — see `<TapedFigure>` for the photo idiom.
+Every shadow here has a `0` blur radius: depth is drawn, not simulated. `--shadow-soft` and the asymmetric `--shadow-photo-tape*` pair were removed — both were orphaned (`<TapedFigure>` declares no shadow of its own and delegates to `<TapedCard>`), and a blurred shadow does not belong in the paper idiom.
 
 ### Motion
 

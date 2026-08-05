@@ -1,0 +1,611 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-04T00:00:00Z",
+  "title": "Design System: KCVV Elewijt",
+  "extensions": {
+    "colorMeta": {
+      "cream": {
+        "role": "neutral",
+        "displayName": "Paper Cream",
+        "canonical": "oklch(95.5% 0.018 92)",
+        "tonalRamp": [
+          "oklch(15% 0.018 92)",
+          "oklch(26% 0.018 92)",
+          "oklch(37% 0.018 92)",
+          "oklch(49% 0.018 92)",
+          "oklch(60% 0.018 92)",
+          "oklch(72% 0.018 92)",
+          "oklch(83% 0.018 92)",
+          "oklch(95% 0.018 92)"
+        ]
+      },
+      "cream-soft": {
+        "role": "neutral",
+        "displayName": "Soft Cream",
+        "canonical": "oklch(92.5% 0.021 92)",
+        "tonalRamp": [
+          "oklch(15% 0.021 92)",
+          "oklch(26% 0.021 92)",
+          "oklch(37% 0.021 92)",
+          "oklch(49% 0.021 92)",
+          "oklch(60% 0.021 92)",
+          "oklch(72% 0.021 92)",
+          "oklch(83% 0.021 92)",
+          "oklch(95% 0.021 92)"
+        ]
+      },
+      "cream-deep": {
+        "role": "neutral",
+        "displayName": "Deep Cream",
+        "canonical": "oklch(87.4% 0.037 90)",
+        "tonalRamp": [
+          "oklch(15% 0.037 90)",
+          "oklch(26% 0.037 90)",
+          "oklch(37% 0.037 90)",
+          "oklch(49% 0.037 90)",
+          "oklch(60% 0.037 90)",
+          "oklch(72% 0.037 90)",
+          "oklch(83% 0.037 90)",
+          "oklch(95% 0.037 90)"
+        ]
+      },
+      "paper-edge": {
+        "role": "neutral",
+        "displayName": "Paper Edge",
+        "canonical": "oklch(84.8% 0.031 92)",
+        "tonalRamp": [
+          "oklch(15% 0.031 92)",
+          "oklch(26% 0.031 92)",
+          "oklch(37% 0.031 92)",
+          "oklch(49% 0.031 92)",
+          "oklch(60% 0.031 92)",
+          "oklch(72% 0.031 92)",
+          "oklch(83% 0.031 92)",
+          "oklch(95% 0.031 92)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Press Ink",
+        "canonical": "oklch(14.5% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(83% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "oklch(23.8% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(83% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "oklch(51.6% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(83% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "jersey-deep": {
+        "role": "primary",
+        "displayName": "Jersey Deep",
+        "canonical": "oklch(52.3% 0.128 158)",
+        "tonalRamp": [
+          "oklch(15% 0.128 158)",
+          "oklch(26% 0.128 158)",
+          "oklch(37% 0.128 158)",
+          "oklch(49% 0.128 158)",
+          "oklch(60% 0.128 158)",
+          "oklch(72% 0.128 158)",
+          "oklch(83% 0.128 158)",
+          "oklch(95% 0.128 158)"
+        ]
+      },
+      "jersey-link": {
+        "role": "primary",
+        "displayName": "Jersey Link",
+        "canonical": "oklch(48.7% 0.126 158)",
+        "tonalRamp": [
+          "oklch(15% 0.126 158)",
+          "oklch(26% 0.126 158)",
+          "oklch(37% 0.126 158)",
+          "oklch(49% 0.126 158)",
+          "oklch(60% 0.126 158)",
+          "oklch(72% 0.126 158)",
+          "oklch(83% 0.126 158)",
+          "oklch(95% 0.126 158)"
+        ]
+      },
+      "jersey": {
+        "role": "primary",
+        "displayName": "Terrace Green",
+        "canonical": "oklch(75.5% 0.198 146)",
+        "tonalRamp": [
+          "oklch(15% 0.198 146)",
+          "oklch(26% 0.198 146)",
+          "oklch(37% 0.198 146)",
+          "oklch(49% 0.198 146)",
+          "oklch(60% 0.198 146)",
+          "oklch(72% 0.198 146)",
+          "oklch(83% 0.198 146)",
+          "oklch(95% 0.198 146)"
+        ]
+      },
+      "jersey-bright": {
+        "role": "primary",
+        "displayName": "Bright Jersey",
+        "canonical": "oklch(72.3% 0.192 150)",
+        "tonalRamp": [
+          "oklch(15% 0.192 150)",
+          "oklch(26% 0.192 150)",
+          "oklch(37% 0.192 150)",
+          "oklch(49% 0.192 150)",
+          "oklch(60% 0.192 150)",
+          "oklch(72% 0.192 150)",
+          "oklch(83% 0.192 150)",
+          "oklch(95% 0.192 150)"
+        ]
+      },
+      "jersey-deep-dark": {
+        "role": "primary",
+        "displayName": "Retro Forest",
+        "canonical": "oklch(31.3% 0.061 156)",
+        "tonalRamp": [
+          "oklch(15% 0.061 156)",
+          "oklch(26% 0.061 156)",
+          "oklch(37% 0.061 156)",
+          "oklch(49% 0.061 156)",
+          "oklch(60% 0.061 156)",
+          "oklch(72% 0.061 156)",
+          "oklch(83% 0.061 156)",
+          "oklch(95% 0.061 156)"
+        ]
+      },
+      "warm": {
+        "role": "secondary",
+        "displayName": "Poster Yellow",
+        "canonical": "oklch(82.7% 0.113 82)",
+        "tonalRamp": [
+          "oklch(15% 0.113 82)",
+          "oklch(26% 0.113 82)",
+          "oklch(37% 0.113 82)",
+          "oklch(49% 0.113 82)",
+          "oklch(60% 0.113 82)",
+          "oklch(72% 0.113 82)",
+          "oklch(83% 0.113 82)",
+          "oklch(95% 0.113 82)"
+        ]
+      },
+      "tape-cream": {
+        "role": "secondary",
+        "displayName": "Ghost Tape",
+        "canonical": "rgb(232 224 200 / 0.85)",
+        "tonalRamp": [
+          "oklch(15% 0.028 92)",
+          "oklch(26% 0.028 92)",
+          "oklch(37% 0.028 92)",
+          "oklch(49% 0.028 92)",
+          "oklch(60% 0.028 92)",
+          "oklch(72% 0.028 92)",
+          "oklch(83% 0.028 92)",
+          "oklch(95% 0.028 92)"
+        ]
+      },
+      "alert": {
+        "role": "tertiary",
+        "displayName": "Dusty Brick",
+        "canonical": "oklch(53.5% 0.135 32)",
+        "tonalRamp": [
+          "oklch(15% 0.135 32)",
+          "oklch(26% 0.135 32)",
+          "oklch(37% 0.135 32)",
+          "oklch(49% 0.135 32)",
+          "oklch(60% 0.135 32)",
+          "oklch(72% 0.135 32)",
+          "oklch(83% 0.135 32)",
+          "oklch(95% 0.135 32)"
+        ]
+      },
+      "alert-soft": {
+        "role": "tertiary",
+        "displayName": "Dusty Brick Tint",
+        "canonical": "oklch(87.4% 0.028 32)",
+        "tonalRamp": [
+          "oklch(15% 0.028 32)",
+          "oklch(26% 0.028 32)",
+          "oklch(37% 0.028 32)",
+          "oklch(49% 0.028 32)",
+          "oklch(60% 0.028 32)",
+          "oklch(72% 0.028 32)",
+          "oklch(83% 0.028 32)",
+          "oklch(95% 0.028 32)"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Aged Mustard",
+        "canonical": "oklch(67.3% 0.126 74)",
+        "tonalRamp": [
+          "oklch(15% 0.126 74)",
+          "oklch(26% 0.126 74)",
+          "oklch(37% 0.126 74)",
+          "oklch(49% 0.126 74)",
+          "oklch(60% 0.126 74)",
+          "oklch(72% 0.126 74)",
+          "oklch(83% 0.126 74)",
+          "oklch(95% 0.126 74)"
+        ]
+      },
+      "warning-soft": {
+        "role": "tertiary",
+        "displayName": "Aged Mustard Tint",
+        "canonical": "oklch(89.1% 0.049 88)",
+        "tonalRamp": [
+          "oklch(15% 0.049 88)",
+          "oklch(26% 0.049 88)",
+          "oklch(37% 0.049 88)",
+          "oklch(49% 0.049 88)",
+          "oklch(60% 0.049 88)",
+          "oklch(72% 0.049 88)",
+          "oklch(83% 0.049 88)",
+          "oklch(95% 0.049 88)"
+        ]
+      },
+      "success-soft": {
+        "role": "tertiary",
+        "displayName": "Sage Tint",
+        "canonical": "oklch(90.2% 0.041 140)",
+        "tonalRamp": [
+          "oklch(15% 0.041 140)",
+          "oklch(26% 0.041 140)",
+          "oklch(37% 0.041 140)",
+          "oklch(49% 0.041 140)",
+          "oklch(60% 0.041 140)",
+          "oklch(72% 0.041 140)",
+          "oklch(83% 0.041 140)",
+          "oklch(95% 0.041 140)"
+        ]
+      },
+      "card-red": {
+        "role": "tertiary",
+        "displayName": "Card Red",
+        "canonical": "oklch(55.6% 0.174 38)",
+        "tonalRamp": [
+          "oklch(15% 0.174 38)",
+          "oklch(26% 0.174 38)",
+          "oklch(37% 0.174 38)",
+          "oklch(49% 0.174 38)",
+          "oklch(60% 0.174 38)",
+          "oklch(72% 0.174 38)",
+          "oklch(83% 0.174 38)",
+          "oklch(95% 0.174 38)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Freight Big Pro at 900. Page-defining hero headings, at most one per page. Has no 900 italic — accent emphasis drops to Freight Display Pro italic."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Freight Display Pro at 700. Section-opening editorial headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Freight Display Pro at 700. The default editorial heading size."
+      },
+      "subtitle": {
+        "displayName": "Subtitle",
+        "purpose": "Card headings and sub-sections. A smaller 600-weight step exists below it."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Freight Sans Pro. All prose, capped at a 680px reading column."
+      },
+      "body-lg": {
+        "displayName": "Body Large",
+        "purpose": "Article leads and intro paragraphs."
+      },
+      "body-sm": {
+        "displayName": "Body Small",
+        "purpose": "Captions, hints and secondary copy."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "IBM Plex Mono. Scores, dates, stat values and inline data."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase mono at 11px / 0.08em. Kickers, badges, pills, statuses and navigation. The most-used non-body style in the system."
+      }
+    },
+    "shadows": [
+      {
+        "name": "paper-sm",
+        "value": "4px 4px 0 0 #0a0a0a",
+        "purpose": "The default hard offset. Buttons, badges, stamps, chrome."
+      },
+      {
+        "name": "paper-md",
+        "value": "6px 6px 0 0 #0a0a0a",
+        "purpose": "Cards at rest — the most common card weight."
+      },
+      {
+        "name": "paper-lift",
+        "value": "8px 8px 0 0 #0a0a0a",
+        "purpose": "Hover target of a tilt-mode card, and emphasis cards."
+      },
+      {
+        "name": "paper-sm-soft",
+        "value": "4px 4px 0 0 #6b6b6b",
+        "purpose": "Same offset in ink-muted, for surfaces on ink or dark-green fields where pure ink loses its silhouette. Also the resting shadow of every form field."
+      },
+      {
+        "name": "paper-sm-soft-hover",
+        "value": "3px 3px 0 0 #6b6b6b",
+        "purpose": "The 1px compression a form field makes on hover."
+      },
+      {
+        "name": "paper-sm-alert",
+        "value": "4px 4px 0 0 #e8d5cf",
+        "purpose": "Error-state field shadow, tinted so the offset reads as part of the alert moment."
+      },
+      {
+        "name": "paper-sm-alert-hover",
+        "value": "3px 3px 0 0 #e8d5cf",
+        "purpose": "Hover compression of the error-state field shadow."
+      }
+    ],
+    "motion": [
+      {
+        "name": "motion-fast",
+        "value": "150ms ease-out",
+        "purpose": "Colour-only transitions: nav links, dropdown open, field chrome."
+      },
+      {
+        "name": "motion-base",
+        "value": "240ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Default easing for state transitions and content reveals."
+      },
+      {
+        "name": "motion-tape",
+        "value": "300ms ease-out",
+        "purpose": "Tape and paper movement."
+      },
+      {
+        "name": "press-down",
+        "value": "300ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "The canonical press-down on buttons and cards: translate(1px, 1px) with the shadow collapsing to none. Translate is gated behind motion-safe; the shadow collapse is not."
+      },
+      {
+        "name": "reveal",
+        "value": "500ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Scroll-triggered fade-up for article bodies and timeline items. Fully disabled under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "desk", "value": "960px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "2xl", "value": "1536px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The default call to action. Jersey-deep paper stamp that presses into its own shadow on hover.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Word lid <span class=\"ds-btn-arrow\" aria-hidden=\"true\">→</span></button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-family-body, \"freight-sans-pro\", Arial, sans-serif); font-size: 1rem; font-weight: 500; padding: 12px 32px; border: 2px solid var(--color-ink, #0a0a0a); border-radius: 0; cursor: pointer; transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary { background: var(--color-jersey-deep, #008755); color: var(--color-cream, #f5f1e6); box-shadow: 4px 4px 0 0 var(--color-ink, #0a0a0a); } .ds-btn-primary:hover { filter: brightness(1.1); transform: translate(1px, 1px); box-shadow: none; } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-jersey-deep, #008755); outline-offset: 2px; } .ds-btn-arrow { transition: transform 300ms ease-out; } .ds-btn-primary:hover .ds-btn-arrow { transform: translateX(4px); }"
+    },
+    {
+      "name": "Inverted Button",
+      "kind": "button",
+      "refersTo": "button-inverted",
+      "description": "Cream button for placement on ink or jersey-deep surfaces. Uses the muted-ink shadow so the offset stays visible against a dark field.",
+      "html": "<div class=\"ds-btn-inverted-stage\"><button class=\"ds-btn ds-btn-inverted\">Bekijk kalender</button></div>",
+      "css": ".ds-btn-inverted-stage { background: var(--color-ink, #0a0a0a); padding: 28px; } .ds-btn-inverted { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-family-body, \"freight-sans-pro\", Arial, sans-serif); font-size: 1rem; font-weight: 500; padding: 12px 32px; border: 2px solid var(--color-ink, #0a0a0a); border-radius: 0; cursor: pointer; background: var(--color-cream, #f5f1e6); color: var(--color-ink, #0a0a0a); box-shadow: 4px 4px 0 0 var(--color-ink-muted, #6b6b6b); transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-inverted:hover { background: var(--color-cream-soft, #ede8da); transform: translate(1px, 1px); box-shadow: none; } .ds-btn-inverted:focus-visible { outline: 2px solid var(--color-jersey-deep, #008755); outline-offset: 2px; }"
+    },
+    {
+      "name": "Taped Card",
+      "kind": "card",
+      "refersTo": "card-paper",
+      "description": "The signature surface: cream paper, 2px ink border, hard offset shadow, a tape strip half-over the top edge, and a sub-degree resting rotation.",
+      "html": "<article class=\"ds-card\"><span class=\"ds-card-tape\" aria-hidden=\"true\"></span><p class=\"ds-card-kicker\">Wedstrijdverslag</p><h3 class=\"ds-card-title\">Drie punten in de <em>slotfase</em>.</h3><p class=\"ds-card-body\">Een late kopbal van de tweede paal beslist een taaie namiddag op de Driesstraat.</p></article>",
+      "css": ".ds-card { position: relative; display: block; max-width: 340px; background: var(--color-cream, #f5f1e6); color: var(--color-ink, #0a0a0a); border: 2px solid var(--color-ink, #0a0a0a); border-radius: 0; padding: 20px; box-shadow: 6px 6px 0 0 var(--color-ink, #0a0a0a); transform: rotate(-0.25deg); transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-card:hover { transform: rotate(-0.25deg) translate(1px, 1px); box-shadow: none; } .ds-card-tape { position: absolute; top: 0; left: 12%; width: 96px; height: 20px; background: var(--color-jersey, #4acf52); opacity: 0.9; transform: translateY(-50%) rotate(-0.5deg); pointer-events: none; } .ds-card-kicker { margin: 0 0 10px; font-family: var(--font-family-mono, \"IBM Plex Mono\", monospace); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; line-height: 1; text-transform: uppercase; color: var(--color-ink, #0a0a0a); } .ds-card-title { margin: 0 0 10px; font-family: var(--font-display, \"freight-display-pro\", Georgia, serif); font-size: 1.6rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.025em; } .ds-card-title em { font-style: italic; color: var(--color-jersey-deep, #008755); } .ds-card-body { margin: 0; font-family: var(--font-family-body, \"freight-sans-pro\", Arial, sans-serif); font-size: 1rem; line-height: 1.6; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "One state of the eight-state field machine. Border weight encodes progress (idle / hover / filled / focus); shadow encodes pressure. Focus is the deepest press in the system.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">E-mailadres</span><input class=\"ds-input\" type=\"email\" placeholder=\"jij@voorbeeld.be\" /><span class=\"ds-field-hint\">We gebruiken dit enkel voor je inschrijving.</span></label>",
+      "css": ".ds-field { display: block; max-width: 320px; } .ds-field-label { display: block; margin-bottom: 8px; font-family: var(--font-family-mono, \"IBM Plex Mono\", monospace); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-ink, #0a0a0a); } .ds-input { width: 100%; height: 40px; padding: 0 16px; font-family: var(--font-family-body, \"freight-sans-pro\", Arial, sans-serif); font-size: 1rem; color: var(--color-ink, #0a0a0a); background: #ffffff; border: 2px solid rgba(10, 10, 10, 0.3); border-radius: 0; box-shadow: 4px 4px 0 0 var(--color-ink-muted, #6b6b6b); transition: all 150ms ease-out; } .ds-input::placeholder { color: rgba(10, 10, 10, 0.4); } .ds-input:hover { border-color: rgba(10, 10, 10, 0.4); box-shadow: 3px 3px 0 0 var(--color-ink-muted, #6b6b6b); transform: translate(1px, 1px); } .ds-input:focus { outline: none; border-color: var(--color-ink, #0a0a0a); box-shadow: none; transform: translate(2px, 2px); } .ds-field-hint { display: block; margin-top: 8px; font-family: var(--font-family-body, \"freight-sans-pro\", Arial, sans-serif); font-size: 0.875rem; font-style: italic; color: rgba(10, 10, 10, 0.6); }"
+    },
+    {
+      "name": "Field — Error State",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "The alert branch of the field machine: border and offset shadow both switch to the dusty-brick pair, and the error survives focus.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">E-mailadres</span><input class=\"ds-input-error\" type=\"email\" value=\"jij@\" /><span class=\"ds-field-error\">Vul een geldig e-mailadres in.</span></label>",
+      "css": ".ds-input-error { width: 100%; height: 40px; padding: 0 16px; font-family: var(--font-family-body, \"freight-sans-pro\", Arial, sans-serif); font-size: 1rem; color: var(--color-ink, #0a0a0a); background: #ffffff; border: 2px solid var(--color-alert, #b84a3a); border-radius: 0; box-shadow: 4px 4px 0 0 var(--color-alert-soft, #e8d5cf); transition: all 150ms ease-out; } .ds-input-error:hover { box-shadow: 3px 3px 0 0 var(--color-alert-soft, #e8d5cf); transform: translate(1px, 1px); } .ds-input-error:focus { outline: none; border-color: var(--color-alert, #b84a3a); box-shadow: none; transform: translate(2px, 2px); } .ds-field-error { display: inline-block; margin-top: 8px; padding: 4px 8px; background: var(--color-alert-soft, #e8d5cf); border: 2px solid var(--color-alert, #b84a3a); font-family: var(--font-family-mono, \"IBM Plex Mono\", monospace); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-alert, #b84a3a); }"
+    },
+    {
+      "name": "Mono Label Pill",
+      "kind": "chip",
+      "refersTo": "pill-jersey-deep",
+      "description": "The system's workhorse label. Uppercase mono at 11px / 0.08em, sharp corners. The jersey-deep pill uses pure white text — cream on jersey-deep fails AA.",
+      "html": "<span class=\"ds-pill ds-pill-jersey\">Competitie</span> <span class=\"ds-pill ds-pill-ink\">Uitwedstrijd</span> <span class=\"ds-pill ds-pill-cream\">Jeugd</span>",
+      "css": ".ds-pill { display: inline-block; padding: 4px 8px; font-family: var(--font-family-mono, \"IBM Plex Mono\", monospace); font-size: 11px; font-weight: 500; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 0; } .ds-pill-jersey { background: var(--color-jersey-deep, #008755); color: #ffffff; } .ds-pill-ink { background: var(--color-ink, #0a0a0a); color: var(--color-cream, #f5f1e6); } .ds-pill-cream { background: var(--color-cream-soft, #ede8da); color: var(--color-ink, #0a0a0a); border: 1px solid var(--color-paper-edge, #d9d2bd); }"
+    },
+    {
+      "name": "Stamp Badge",
+      "kind": "custom",
+      "refersTo": "stamp-badge",
+      "description": "A rotated, content-bearing rubber stamp pinned over a card edge. Distinct from a tape strip: the stamp carries text, the tape is purely graphic.",
+      "html": "<div class=\"ds-stamp-host\"><span class=\"ds-stamp\">★ Uitverkocht</span><p class=\"ds-stamp-body\">Seizoensafsluiter — kantine, zaterdag 20u.</p></div>",
+      "css": ".ds-stamp-host { position: relative; max-width: 300px; margin-top: 18px; padding: 20px; background: var(--color-cream, #f5f1e6); border: 2px solid var(--color-ink, #0a0a0a); border-radius: 0; box-shadow: 6px 6px 0 0 var(--color-ink, #0a0a0a); } .ds-stamp { position: absolute; top: -14px; right: 36px; display: inline-block; padding: 6px 14px; background: var(--color-jersey-deep, #008755); color: var(--color-cream, #f5f1e6); border: 1.5px solid var(--color-ink, #0a0a0a); border-radius: 0; box-shadow: 4px 4px 0 0 var(--color-ink, #0a0a0a); font-family: var(--font-family-mono, \"IBM Plex Mono\", monospace); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; transform: rotate(2deg); } .ds-stamp-body { margin: 0; font-family: var(--font-family-body, \"freight-sans-pro\", Arial, sans-serif); font-size: 1rem; line-height: 1.6; color: var(--color-ink, #0a0a0a); }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Uppercase mono nav on cream. Colour-only state change over 150ms; the utility action carries a 1px ink border that recolours on hover.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Hoofdnavigatie\"><a class=\"ds-nav-link ds-nav-link-active\" href=\"#\">Nieuws</a><a class=\"ds-nav-link\" href=\"#\">Ploegen</a><a class=\"ds-nav-link\" href=\"#\">Jeugd</a><a class=\"ds-nav-link\" href=\"#\">Kalender</a><a class=\"ds-nav-action\" href=\"#\">Word lid</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 22px; padding: 16px 20px; background: var(--color-cream, #f5f1e6); } .ds-nav-link { font-family: var(--font-family-mono, \"IBM Plex Mono\", monospace); font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; text-decoration: none; white-space: nowrap; color: var(--color-ink, #0a0a0a); transition: color 150ms ease-out; } .ds-nav-link:hover, .ds-nav-link:focus-visible { color: var(--color-jersey-deep, #008755); } .ds-nav-link-active { color: var(--color-jersey-deep, #008755); } .ds-nav-action { margin-left: auto; padding: 8px 14px; font-family: var(--font-family-mono, \"IBM Plex Mono\", monospace); font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; text-decoration: none; white-space: nowrap; color: var(--color-ink, #0a0a0a); border: 1px solid var(--color-ink, #0a0a0a); border-radius: 0; transition: color 150ms ease-out, border-color 150ms ease-out; } .ds-nav-action:hover, .ds-nav-action:focus-visible { color: var(--color-jersey-deep, #008755); border-color: var(--color-jersey-deep, #008755); }"
+    },
+    {
+      "name": "Editorial Heading",
+      "kind": "custom",
+      "refersTo": "headline",
+      "description": "Serif display type set tight with exactly one emphasis moment — an accent italic word — and an auto-terminated period. The accent em drops to Freight Display Pro because Freight Big Pro has no 900 italic.",
+      "html": "<h2 class=\"ds-heading\">Er is maar één <em>plezante</em> compagnie.</h2>",
+      "css": ".ds-heading { margin: 0; max-width: 12ch; font-family: var(--font-display-big, \"freight-big-pro\", Georgia, serif); font-size: clamp(2.5rem, 1.5rem + 5vw, 4rem); font-weight: 900; line-height: 1; letter-spacing: -0.025em; color: var(--color-ink, #0a0a0a); } .ds-heading em { font-family: var(--font-display, \"freight-display-pro\", Georgia, serif); font-weight: 700; font-style: italic; color: var(--color-jersey-deep, #008755); }"
+    },
+    {
+      "name": "Striped Seam",
+      "kind": "custom",
+      "refersTo": "card-ink",
+      "description": "A full-bleed 45° two-tone stripe band used as a section rule. Four colour pairs; the angle can flip so a top and bottom seam lean toward each other and tape a section shut.",
+      "html": "<div class=\"ds-seam-stack\"><svg class=\"ds-seam\" role=\"presentation\" aria-hidden=\"true\" width=\"100%\" height=\"18\"><defs><pattern id=\"ds-seam-p\" patternUnits=\"userSpaceOnUse\" width=\"16\" height=\"16\" patternTransform=\"rotate(-45)\"><rect x=\"0\" y=\"0\" width=\"8\" height=\"16\" fill=\"#0a0a0a\"/><rect x=\"8\" y=\"0\" width=\"8\" height=\"16\" fill=\"#f5f1e6\"/></pattern></defs><rect width=\"100%\" height=\"100%\" fill=\"url(#ds-seam-p)\"/></svg><p class=\"ds-seam-caption\">Volgende wedstrijd</p></div>",
+      "css": ".ds-seam-stack { background: var(--color-cream, #f5f1e6); } .ds-seam { display: block; } .ds-seam-caption { margin: 16px 0 0; font-family: var(--font-family-mono, \"IBM Plex Mono\", monospace); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-ink, #0a0a0a); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Retro-Terrace Fanzine",
+    "overview": "This is a self-published supporter zine that happens to be a website. Everything is printed on cream paper stock, everything is drawn in hard black ink, and everything that matters is stuck down with tape or hit with a rubber stamp. Nothing glows, nothing blurs, nothing floats. The page has a physical thickness: cards cast a hard offset shadow with no blur, as if a rectangle of paper were laid on the page and lit from a single fixed point. Press one and it slides into its own shadow.\n\nThe register is confident and slightly rough. Headlines are enormous serif display type set tight, with a single italic word pulled out in green or a hand-drawn highlighter stroke swiped across it. Structural labels — kickers, statuses, timestamps, scores — are set in uppercase monospace at 11px, tracked wide, the typeface of a photocopied team sheet. Photographs are warm-tinted like aged newsprint and laid on the page under a barely-visible paper grain. Tape strips sit at sub-degree angles, enough to break the perfect grid without looking seasick.\n\nWhat this deliberately is not: the Sportlink/Twizzit amateur-club house style (stock hero, rounded cards, generic sans, logo on a blue gradient); modern SaaS product UI (soft blurred shadows, gradient fills, glassmorphism, Inter); and big-club broadcast slick (dark glossy panels, neon data viz, motion-heavy hero video). Those three are the anti-references. When a decision could go either way, go toward print and away from all three.",
+    "keyCharacteristics": [
+      "Cream paper surface with near-black ink — never white-on-grey product chrome",
+      "Zero border radius on every rectangle; circles are the only curve",
+      "Hard offset shadows (4px 4px 0 0 ink), never blur",
+      "Press-down interaction: surfaces slide into their shadow instead of lifting",
+      "Serif display type at extreme scale against 11px uppercase mono labels — no middle register",
+      "Tape, stamps, perforations and hand-drawn strokes as the ornament vocabulary",
+      "Green is rare and load-bearing, never a wash"
+    ],
+    "rules": [
+      {
+        "name": "The Rare Green Rule",
+        "body": "Green is an event, not a surface treatment. On any given screen it appears on the primary CTA, the accent word in one heading, and active state — and effectively nowhere else. If a screen reads as green, it is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two-Greens Rule",
+        "body": "`jersey` is decorative and never touches text; `jersey-deep` carries meaning and text. Inline body links use `jersey-link` and nothing else. Picking the wrong green is the single most common colour error in this system.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Grey-UI Rule",
+        "body": "There is no neutral grey chrome layer. A surface is cream, a step of cream, or ink. One exception survives: `gray-100` (#f3f4f6) is the `<SectionStack>` surface behind four homepage sections — the news grid and the three banner strips. The components on it are fully redesigned; only the surface underneath is pre-redesign. It is the single cool grey in a warm system and must not spread — new section surfaces use a cream step.",
+        "section": "colors"
+      },
+      {
+        "name": "The Missing Italic Rule",
+        "body": "Freight Big Pro ships italic at 400 and 700 only — there is no 900 italic. So a Display-size heading with an accent word switches the `<em>` down to Freight Display Pro italic rather than faking a heavy italic. Never pin an accent `<em>` to `font-black`.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Emphasis Rule",
+        "body": "An editorial heading gets exactly one emphasis moment: an accent-coloured italic word or a highlighter stroke, never both, and never two accented words. Emphasis is authored as a Portable Text `accent` decorator, never as a separate \"accent word\" string field.",
+        "section": "typography"
+      },
+      {
+        "name": "The Terminal Period Rule",
+        "body": "Editorial headings are auto-terminated with a period unless they already end in `.`, `?` or `!`. The period is part of the voice — declarative, printed, finished.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Middle Register Rule",
+        "body": "There is display serif and there is 11px mono. Resist inventing a 16px semibold sans \"section label\" — that is product-UI language and it flattens the contrast the system runs on.",
+        "section": "typography"
+      },
+      {
+        "name": "The Three Widths Rule",
+        "body": "A content container may use 680, 1040 or 1280 and no other value. If a layout seems to need 900px, it needs one of the three.",
+        "section": "layout"
+      },
+      {
+        "name": "The Full-Bleed Never Wraps Rule",
+        "body": "Striped seams and coloured bands are viewport-wide by definition. Wrapping one in a max-width container is always a bug.",
+        "section": "layout"
+      },
+      {
+        "name": "The No Blur Rule",
+        "body": "Every shadow in this system has a blur radius of `0`. A blurred shadow is from a different design language and does not belong here — no exceptions, including \"just a subtle one\".",
+        "section": "elevation"
+      },
+      {
+        "name": "The Press-Down Rule",
+        "body": "Interactive paper does not rise on hover; it presses. The surface translates +1px, +1px (buttons and cards) or +1px/+2px (fields) and its shadow collapses to none, so it appears pushed flat against the page. The translate is gated behind `motion-safe:`; the shadow collapse is not, so reduced-motion users keep the affordance.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Complete Vocabulary Rule",
+        "body": "The seven documented tokens are the entire shadow system — there is nothing else to reach for. The pre-redesign blurred family (--shadow-sm, --shadow-DEFAULT, --shadow-md, --shadow-lg, --shadow-card-hover, --shadow-input, --shadow-input-focus, --shadow-soft) and the orphaned asymmetric pair (--shadow-photo-tape, --shadow-photo-tape-lift) were removed from globals.css; all ten had zero consumers. Adding a blurred token back is a change to the design language, not a convenience.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Sharp Corner Rule",
+        "body": "If it is a rectangle, its radius is `0`. Circles are circles. There is nothing in between.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Sub-Degree Rule",
+        "body": "Grid card and tape rotations live in a −0.5° to +0.5° pool. Individual tilt should be barely perceptible; the effect is only that the grid stops being perfect. Steeper angles are reserved for explicitly named polaroid compositions.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do set every rectangle's border radius to 0 and reserve curves for true circles.",
+      "Do use hard offset shadows with 0 blur, in exactly the seven documented tokens.",
+      "Do press interactive surfaces into their shadow on hover (translate(1px, 1px) + shadow-none), gating only the translate behind motion-safe:.",
+      "Do pick the right green: jersey decorative only, jersey-deep for meaning and large text, jersey-link for inline prose links, jersey-bright for green text on ink.",
+      "Do reach for an existing primitive — taped card, ticket stub, mono label, editorial heading, tape strip, stamp badge, striped seam — before writing new markup.",
+      "Do route every page through the three container widths (680 / 1040 / 1280).",
+      "Do keep photographs in colour with the newsprint warm-tint; greyscale-to-colour-on-hover belongs to sponsor logos alone.",
+      "Do author heading emphasis as a Portable Text accent decorator, one emphasis per heading.",
+      "Do use Phosphor Fill icons from the single icon source."
+    ],
+    "donts": [
+      "Don't introduce a blurred shadow, a gradient fill, or a glassmorphic surface — those are the SaaS anti-reference.",
+      "Don't reintroduce a blurred shadow token. The pre-redesign family and the orphaned --shadow-photo-tape* pair were deleted from globals.css; re-adding one changes the design language.",
+      "Don't put a radius on a loading skeleton. A skeleton must match the sharp shape of what it stands in for — 44 stray rounded / rounded-sm classes were removed from eight skeleton files for exactly this reason.",
+      "Don't set jersey (#4acf52) as a text colour, and don't put it on cream.",
+      "Don't wrap a striped seam or a coloured band in a max-width container.",
+      "Don't invent a container width outside 680 / 1040 / 1280 (chrome's 1440 is header and footer only).",
+      "Don't pin a Display-size heading's italic accent to a heavy weight — Freight Big Pro has no 900 italic.",
+      "Don't add a new typeface. Freight Sans Pro, Freight Display Pro, Freight Big Pro and IBM Plex Mono are the whole set.",
+      "Don't build a 16px semibold sans \"section label\" register between display serif and 11px mono.",
+      "Don't spread gray-100 beyond the four homepage sections that already use it; new section surfaces step through cream. (foundation-gray-light and the four table-* tokens have been removed — they had no consumers.)",
+      "Don't rely on hover to reveal anything necessary — the primary usage scene is a phone, outdoors.",
+      "Don't use emoji as icons."
+    ]
+  }
+}

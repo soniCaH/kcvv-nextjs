@@ -25,7 +25,7 @@ export default function ClubLoading() {
 
       {/* Editorial nav hub — header + uniform 3-up grid. */}
       <PageContainer width="index" className="py-12">
-        <div className="bg-ink/10 mb-8 h-10 w-72 max-w-full animate-pulse rounded" />
+        <div className="bg-ink/10 mb-8 h-10 w-72 max-w-full animate-pulse" />
         <div
           data-testid="club-hub-skeleton"
           className="grid animate-pulse grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3"
@@ -37,8 +37,8 @@ export default function ClubLoading() {
             >
               <div className="bg-ink/10 border-ink aspect-[16/9] border-b-2" />
               <div className="flex flex-col gap-2 p-3.5">
-                <div className="bg-ink/10 h-5 w-3/4 rounded" />
-                <div className="bg-ink/10 h-3 w-1/3 rounded" />
+                <div className="bg-ink/10 h-5 w-3/4" />
+                <div className="bg-ink/10 h-3 w-1/3" />
               </div>
             </div>
           ))}

@@ -1,0 +1,95 @@
+# Product
+
+<!-- impeccable:product-schema 1 -->
+
+## Platform
+
+web
+
+## Users
+
+Two primary audiences, weighted equally — when they conflict, neither one automatically wins:
+
+1. **Supporters on matchday.** Fans and Elewijt locals checking results, standings, lineups, goalscorers and the calendar. Mostly on a phone, frequently outdoors at or near the pitch.
+2. **Youth parents.** Parents of U6–U21 players following their kid's team: schedule, squad, practical info, photos.
+
+Secondary, confirmed but not decision-driving: prospective members and volunteers, sponsors and partners, and the club's own board/staff/volunteers.
+
+All visitors are anonymous — there is no registration or login anywhere on the site, and all content is free.
+
+## Product Purpose
+
+The official website of KCVV Elewijt, a Belgian amateur football club (stamnummer 55) in Elewijt, a sub-municipality of Zemst in Vlaams-Brabant. It publishes the club's competitive record and editorial life: news, match results and details, league tables, team squads, player and staff profiles, the club calendar, events, photo galleries, sponsors, and club information.
+
+Success means three things, in the club's own terms:
+
+- **Recruit players and volunteers.** Membership signups, volunteer roles, and youth intake.
+- **Deliver sponsor value.** Visible, credible return for sponsors — a reason to renew, and a reason for new partners to join.
+- **Show the club is serious.** A small amateur club whose site punches well above its division.
+
+Being the club's canonical publishing channel over social media was explicitly _not_ selected as a success criterion. Do not design as if displacing Facebook/Instagram is a goal.
+
+## Positioning
+
+Amateur clubs at this level either run a template site or live entirely on Facebook. KCVV Elewijt runs neither. Two things a neighbouring club could not truthfully copy:
+
+- **Real, synced competitive data across the whole club** — not just the first team. Match results, lineups, goal events, cards, standings and per-player season statistics are synced from ProSoccerData for senior A/B _and_ every youth team U6–U21, and rendered as first-class pages (`/wedstrijd/[matchId]`, `/spelers/[slug]`, `/ploegen/[slug]`).
+- **An authored visual identity, not a theme.** A committed design world with its own typography, primitives and photography rules, maintained as a documented design system in Storybook.
+
+## Operating Context
+
+- **Language:** Dutch throughout the UI (labels, slugs, display values); English in code. The canonical glossary is `docs/ubiquitous-language.md`.
+- **Matchday rhythm.** Traffic and relevance peak around fixtures: before (lineup, opponent, kickoff, location) and immediately after (score, goalscorers, standings movement, report).
+- **Season rhythm.** Squads, teams and standings turn over per season; youth teams are organised as Bovenbouw / Middenbouw / Onderbouw.
+- **Home ground:** Driesstraat 32, 1982 Elewijt, Belgium.
+- **Editorial workflow.** Club editors — volunteers, not professionals — author news, events, pages, galleries and Q&A content in Sanity Studio. Authoring friction is a real product constraint, not a nicety.
+- **Data workflow.** Competitive data flows ProSoccerData → BFF (Cloudflare Workers) → site. The club does not hand-enter results.
+
+## Capabilities and Constraints
+
+**Has:** news and article detail; match calendar and match detail with lineups, events and a match-day standings snapshot; team pages with squad, fixtures and league table; senior and youth team overviews; player and staff profiles with season statistics; opponent pages; club information pages (history, board, youth board, Angels, Ultras, contact, membership); help / who-is-who; events; photo galleries; sponsor overview; site search; membership application form; iCal calendar export; share cards.
+
+**Does not have, and must not be designed as if it did:** ticket sales, an online shop, live match streaming, live in-play scores, betting or odds, paid or gated content, user accounts or login, and a newsletter or email-signup of any kind.
+
+**Technical constraints that shape design:**
+
+- Competitive data comes from a rate-limited upstream (ProSoccerData) via the BFF. Pages that depend on it use ISR or dynamic rendering, never build-time prerendering of every match or player. Match data can legitimately be stale; designs must survive missing or partial data.
+- Fields the upstream does not reliably provide — venue on a match, some competition metadata, `is_home` on match detail — must never be designed into a layout as guaranteed. Audit real data before rendering a field.
+- Editorial content is Portable Text from Sanity; rich-text emphasis is expressed as decorator marks, not as separate accent fields.
+
+**Undecided / open:** none recorded at product level.
+
+## Brand Commitments
+
+- **Name:** KCVV Elewijt. Founded **1909**. Stamnummer **55**.
+- **Motto:** "Er is maar één plezante compagnie" — the club's only tagline. Never "meer dan een club" or any invented variant.
+- **Club colours:** green and white.
+- **Voice:** Dutch, plain, club-insider warmth without corporate polish. Never fabricate club history, honours, quotes, testimonials or magazine/edition chrome.
+- **Typography is fixed:** Freight Sans Pro (body), Freight Display / Freight Big Pro (headings), IBM Plex Mono. No new typefaces.
+- **Icons:** Phosphor Fill, via the single icon source. No emoji in UI.
+- **Sponsor treatment:** three tiers — main, second, regular. Sponsor logos are the only imagery rendered greyscale-to-colour-on-hover; every other photograph stays in colour.
+
+## Evidence on Hand
+
+- **Real competitive data:** live ProSoccerData sync for all senior and youth teams — results, lineups, goal events, cards, standings, per-player statistics.
+- **Real editorial archive:** club news and match reports, an authored club history, events, and photo galleries in Sanity.
+- **Real people:** player, staff and organigram records with photos; a who-is-who of club contacts.
+- **Real sponsors:** a live sponsor roster with tiered logos.
+- **Real photography:** club and matchday photography, plus a panorama of the ground (`docs/design/Untitled_Panorama-1.jpg`).
+- **Socials:** facebook.com/KCVVElewijt, instagram.com/kcvve.
+- **Absent — never fabricate:** testimonials, attendance or engagement figures, honours or trophy claims, press coverage, and any club statistic the ProSoccerData sync does not actually provide.
+
+## Product Principles
+
+1. **The result is the headline.** Whatever the page, a supporter should be able to answer "what happened / what's next" in a single glance on a phone.
+2. **Youth is first-class, not a sub-section.** Every affordance built for the first team — squad, fixtures, profiles, statistics — must hold up for a U9 team and a nine-year-old's profile page, including its privacy constraints.
+3. **Render only what the data actually provides.** Design against real ProSoccerData and Sanity shapes; a layout that needs a field the source may omit is a broken layout.
+4. **Sponsors get real estate, not decoration.** Sponsor presence is a product obligation with commercial consequences, and is designed deliberately rather than tucked into a footer strip.
+5. **Punch above the division.** The bar is not "good for an amateur club" — visible craft is itself one of the three success criteria.
+
+## Accessibility & Inclusion
+
+Two confirmed, product-specific requirements. No formal WCAG conformance level has been adopted as a target.
+
+- **Phone-first, outdoors.** The realistic usage scene is a phone held in daylight on the sideline, possibly on a weak connection. Legibility, contrast in sunlight, and page weight are functional requirements, not polish.
+- **Less-digital visitors.** Older supporters and volunteers are a real part of the audience: plain Dutch, generous tap targets, no jargon, and no interaction that must be discovered (hover-only affordances, hidden gestures, unlabelled icons).
