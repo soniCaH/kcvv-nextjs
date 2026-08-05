@@ -31,7 +31,9 @@ import { readFile, writeFile, mkdir, readdir, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import sharp from "sharp";
+// sharp >= 0.35 ships ESM types as named exports; the old `sharp.Gravity`
+// namespace form is gone, so `Gravity` is imported directly.
+import sharp, { type Gravity } from "sharp";
 
 // -----------------------------------------------------------------------
 // Config
@@ -85,9 +87,7 @@ type GroqShape = {
   // When set, the CDN-downloaded bytes are run through sharp to reach
   // the target geometry (e.g. when source is square but shape needs 3:4).
   postProcess?: {
-    position:
-      | sharp.Gravity
-      | (typeof sharp.strategy)[keyof typeof sharp.strategy];
+    position: Gravity | (typeof sharp.strategy)[keyof typeof sharp.strategy];
   };
 };
 
@@ -98,9 +98,7 @@ type CropShape = {
   height: number;
   aspect: string;
   poolSize: number;
-  position:
-    | sharp.Gravity
-    | (typeof sharp.strategy)[keyof typeof sharp.strategy];
+  position: Gravity | (typeof sharp.strategy)[keyof typeof sharp.strategy];
 };
 
 type ShapeSpec = GroqShape | CropShape;
