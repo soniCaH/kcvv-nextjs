@@ -80,7 +80,7 @@ export default function CalendarLoading() {
               <div className="border-paper-edge mb-1 grid grid-cols-7 border-b border-dashed">
                 {Array.from({ length: 7 }).map((_, i) => (
                   <div key={i} className="flex justify-center py-2">
-                    <div className="bg-cream-soft h-3 w-6 rounded" />
+                    <div className="bg-cream-soft h-3 w-6" />
                   </div>
                 ))}
               </div>
@@ -90,7 +90,7 @@ export default function CalendarLoading() {
                     key={i}
                     className="border-paper-edge min-h-[108px] border-r border-b border-dashed p-1.5 [&:nth-child(7n)]:border-r-0"
                   >
-                    <div className="bg-cream-soft h-3 w-4 rounded" />
+                    <div className="bg-cream-soft h-3 w-4" />
                   </div>
                 ))}
               </div>

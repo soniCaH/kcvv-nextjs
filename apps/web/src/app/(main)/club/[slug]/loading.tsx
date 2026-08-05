@@ -23,13 +23,13 @@ export default function ClubPageLoading() {
           className="mx-auto w-full animate-pulse space-y-4"
           style={{ maxWidth: "var(--container-prose)" }}
         >
-          <div className="bg-cream-soft h-5 w-full rounded" />
-          <div className="bg-cream-soft h-5 w-full rounded" />
-          <div className="bg-cream-soft h-5 w-4/5 rounded" />
-          <div className="bg-cream-soft mt-6 h-48 w-full rounded-sm" />
-          <div className="bg-cream-soft mt-6 h-5 w-full rounded" />
-          <div className="bg-cream-soft h-5 w-full rounded" />
-          <div className="bg-cream-soft h-5 w-2/3 rounded" />
+          <div className="bg-cream-soft h-5 w-full" />
+          <div className="bg-cream-soft h-5 w-full" />
+          <div className="bg-cream-soft h-5 w-4/5" />
+          <div className="bg-cream-soft mt-6 h-48 w-full" />
+          <div className="bg-cream-soft mt-6 h-5 w-full" />
+          <div className="bg-cream-soft h-5 w-full" />
+          <div className="bg-cream-soft h-5 w-2/3" />
         </div>
       </div>
     </div>
