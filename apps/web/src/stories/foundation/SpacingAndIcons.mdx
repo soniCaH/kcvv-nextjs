@@ -90,8 +90,8 @@ container convergence (#2155).
 There is one shadow vocabulary: the hard, zero-blur paper offsets documented in
 the Paper shadows section below. The pre-redesign blurred tokens (`shadow-sm`,
 `shadow`, `shadow-md`, `shadow-lg`, `shadow-card-hover`, `shadow-input`,
-`shadow-input-focus`) were removed — none of them had a consumer, and a blurred
-shadow breaks the paper idiom. `shadow-none` remains, as the collapsed half of
+`shadow-input-focus`, `shadow-soft`) were removed — none of them had a consumer,
+and a blurred shadow breaks the paper idiom. `shadow-none` remains, as the collapsed half of
 the press-down.
 
 ---
@@ -231,9 +231,10 @@ grid. The pool is intentionally narrow so the page never tips into chaos.
 ### Paper shadows
 
 The redesign uses hard-edged offset shadows ("paper shadows") for cards on the
-cream surface — they read like risograph print rather than soft web glows. The
-soft shadow stays available for chrome that should sit subtly above content
-(dropdowns, sticky bars).
+cream surface — they read like risograph print rather than soft web glows. There
+is no soft alternative for chrome that should sit subtly above content: use the
+ink-muted `--shadow-paper-sm-soft` sibling, which keeps the hard offset but
+softens its colour.
 
 <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '24px', padding: '32px 24px', background: 'var(--color-cream)', borderRadius: '8px', border: '1px solid var(--color-paper-edge)' }}>
   <div style={{ textAlign: 'center' }}>

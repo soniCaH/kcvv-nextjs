@@ -568,7 +568,7 @@
       },
       {
         "name": "The Complete Vocabulary Rule",
-        "body": "The six documented weights are the entire shadow system — there is no ninth option to reach for. The pre-redesign blurred family (--shadow-sm, --shadow-DEFAULT, --shadow-md, --shadow-lg, --shadow-card-hover, --shadow-input, --shadow-input-focus, --shadow-soft) and the orphaned asymmetric pair (--shadow-photo-tape, --shadow-photo-tape-lift) were removed from globals.css; all ten had zero consumers. Adding a blurred token back is a change to the design language, not a convenience.",
+        "body": "The seven documented tokens are the entire shadow system — there is nothing else to reach for. The pre-redesign blurred family (--shadow-sm, --shadow-DEFAULT, --shadow-md, --shadow-lg, --shadow-card-hover, --shadow-input, --shadow-input-focus, --shadow-soft) and the orphaned asymmetric pair (--shadow-photo-tape, --shadow-photo-tape-lift) were removed from globals.css; all ten had zero consumers. Adding a blurred token back is a change to the design language, not a convenience.",
         "section": "elevation"
       },
       {
@@ -584,7 +584,7 @@
     ],
     "dos": [
       "Do set every rectangle's border radius to 0 and reserve curves for true circles.",
-      "Do use hard offset shadows with 0 blur, in exactly the six documented weights.",
+      "Do use hard offset shadows with 0 blur, in exactly the seven documented tokens.",
       "Do press interactive surfaces into their shadow on hover (translate(1px, 1px) + shadow-none), gating only the translate behind motion-safe:.",
       "Do pick the right green: jersey decorative only, jersey-deep for meaning and large text, jersey-link for inline prose links, jersey-bright for green text on ink.",
       "Do reach for an existing primitive — taped card, ticket stub, mono label, editorial heading, tape strip, stamp badge, striped seam — before writing new markup.",
@@ -596,7 +596,7 @@
     "donts": [
       "Don't introduce a blurred shadow, a gradient fill, or a glassmorphic surface — those are the SaaS anti-reference.",
       "Don't reintroduce a blurred shadow token. The pre-redesign family and the orphaned --shadow-photo-tape* pair were deleted from globals.css; re-adding one changes the design language.",
-      "Don't put a radius on a loading skeleton. A skeleton must match the sharp shape of what it stands in for — 44 stray rounded / rounded-sm classes were removed from ten skeleton files for exactly this reason.",
+      "Don't put a radius on a loading skeleton. A skeleton must match the sharp shape of what it stands in for — 44 stray rounded / rounded-sm classes were removed from eight skeleton files for exactly this reason.",
       "Don't set jersey (#4acf52) as a text colour, and don't put it on cream.",
       "Don't wrap a striped seam or a coloured band in a max-width container.",
       "Don't invent a container width outside 680 / 1040 / 1280 (chrome's 1440 is header and footer only).",
