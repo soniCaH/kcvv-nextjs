@@ -29,69 +29,13 @@ import { PrintDate } from "./PrintDate";
 // weekday, day-of-month, and ISO-week bucket are stable across server/DST.
 const TZ = "Europe/Brussels";
 
-/**
- * Club-name prefixes PSD returns title-cased ("Ksc Blankenberge"). At poster
- * size a lowercased federation prefix reads as a typo, so restore the caps.
- */
-const CLUB_ABBREVIATIONS = new Set([
-  "AC",
-  "AS",
-  "EWS",
-  "FC",
-  "K",
-  "KA",
-  "KAA",
-  "KC",
-  "KCS",
-  "KCVV",
-  "KFC",
-  "KSC",
-  "KSK",
-  "KSV",
-  "KV",
-  "KVC",
-  "KVE",
-  "KVK",
-  "KVV",
-  "KVW",
-  "MVC",
-  "RC",
-  "SC",
-  "SK",
-  "SP",
-  "TSV",
-  "US",
-  "VC",
-  "VK",
-  "VV",
-  "VW",
-]);
-
-/** "Ksc Blankenberge" → "KSC Blankenberge"; "Erpe-mere" → "Erpe-Mere". */
-export function formatClubName(name: string): string {
-  return name
-    .split(" ")
-    .map((token) => {
-      if (CLUB_ABBREVIATIONS.has(token.toUpperCase()))
-        return token.toUpperCase();
-      if (token.includes("-")) {
-        return token
-          .split("-")
-          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-          .join("-");
-      }
-      return token;
-    })
-    .join(" ");
-}
-
 export interface ScheurkalenderMatch {
   id: number;
   /** ISO calendar date (`YYYY-MM-DD`); kickoff time lives in `time`. */
   date: string;
   /** Kickoff time as `HH:MM`. */
   time?: string;
-  /** Opponent club name, as PSD returns it (re-cased for display). */
+  /** Opponent club name, already casing-normalised by the BFF (#2336). */
   opponent: string;
   /** Which KCVV squad plays — rendered inline ("KCVV Elewijt A" / "… B"). */
   kcvvLabel: "A" | "B";
@@ -191,9 +135,8 @@ function FixtureRow({ match }: { match: ScheurkalenderMatch }) {
       KCVV Elewijt <span className="text-jersey-deep">{match.kcvvLabel}</span>
     </>
   );
-  const opponentName = formatClubName(match.opponent);
-  const home = match.kcvvIsHome ? kcvvName : opponentName;
-  const away = match.kcvvIsHome ? opponentName : kcvvName;
+  const home = match.kcvvIsHome ? kcvvName : match.opponent;
+  const away = match.kcvvIsHome ? match.opponent : kcvvName;
 
   return (
     <div className="flex items-baseline gap-3 py-[5px]">

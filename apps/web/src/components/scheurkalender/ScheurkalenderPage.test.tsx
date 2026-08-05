@@ -3,13 +3,12 @@
  *
  * Poster layout: calendar-year column split, Freight Big month headings with an
  * italic jersey-deep year, fixed date tab (weekday · day · kickoff), dotted
- * weekend seams, club-name re-casing, empty state.
+ * weekend seams, empty state.
  */
 import { describe, it, expect } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import {
   ScheurkalenderPage,
-  formatClubName,
   type ScheurkalenderMatch,
 } from "./ScheurkalenderPage";
 
@@ -28,7 +27,7 @@ const fixtures: ScheurkalenderMatch[] = [
     id: 2,
     date: "2026-08-30",
     time: "15:00",
-    opponent: "Ksc Blankenberge",
+    opponent: "KSC Blankenberge",
     kcvvLabel: "A",
     kcvvIsHome: true,
   },
@@ -36,7 +35,7 @@ const fixtures: ScheurkalenderMatch[] = [
     id: 3,
     date: "2026-09-05",
     time: "19:30",
-    opponent: "Ksv Rumbeke",
+    opponent: "KSV Rumbeke",
     kcvvLabel: "A",
     kcvvIsHome: false,
   },
@@ -44,7 +43,7 @@ const fixtures: ScheurkalenderMatch[] = [
     id: 4,
     date: "2027-01-09",
     time: "20:00",
-    opponent: "Kcs Machelen",
+    opponent: "KCS Machelen",
     kcvvLabel: "B",
     kcvvIsHome: true,
   },
@@ -52,7 +51,7 @@ const fixtures: ScheurkalenderMatch[] = [
     id: 5,
     date: "2027-01-16",
     time: "19:30",
-    opponent: "Erpe-mere United",
+    opponent: "Erpe-Mere United",
     kcvvLabel: "B",
     kcvvIsHome: false,
   },
@@ -60,23 +59,6 @@ const fixtures: ScheurkalenderMatch[] = [
 
 const renderPage = (matches = fixtures, season = "26/27") =>
   render(<ScheurkalenderPage matches={matches} season={season} />);
-
-describe("formatClubName", () => {
-  it("uppercases federation prefixes", () => {
-    expect(formatClubName("Ksc Blankenberge")).toBe("KSC Blankenberge");
-    expect(formatClubName("Kvv St-denijs Sport")).toBe("KVV St-Denijs Sport");
-    expect(formatClubName("Fc Inkad Diegem")).toBe("FC Inkad Diegem");
-    expect(formatClubName("K Sp Amicii Tange")).toBe("K SP Amicii Tange");
-  });
-
-  it("capitalises after a hyphen", () => {
-    expect(formatClubName("Erpe-mere United")).toBe("Erpe-Mere United");
-  });
-
-  it("leaves ordinary words alone", () => {
-    expect(formatClubName("Yellow Red Mechelen")).toBe("Yellow Red Mechelen");
-  });
-});
 
 describe("ScheurkalenderPage", () => {
   describe("masthead", () => {
@@ -133,7 +115,7 @@ describe("ScheurkalenderPage", () => {
           id: 9,
           date: "2026-01-31",
           time: "20:00",
-          opponent: "Kvk Ieper",
+          opponent: "KVK Ieper",
           kcvvLabel: "B",
           kcvvIsHome: true,
         },
@@ -141,7 +123,7 @@ describe("ScheurkalenderPage", () => {
           id: 10,
           date: "2026-02-01",
           time: "15:00",
-          opponent: "Sk Laar",
+          opponent: "SK Laar",
           kcvvLabel: "A",
           kcvvIsHome: true,
         },
@@ -193,7 +175,7 @@ describe("ScheurkalenderPage", () => {
         {
           id: 11,
           date: "2026-08-29",
-          opponent: "Sk Laar",
+          opponent: "SK Laar",
           kcvvLabel: "A",
           kcvvIsHome: true,
         },
@@ -215,11 +197,11 @@ describe("ScheurkalenderPage", () => {
         });
     });
 
-    it("re-cases opponent names", () => {
+    it("renders opponent names verbatim — the BFF owns the casing (#2336)", () => {
       renderPage();
-      expect(screen.getByText(/KSC Blankenberge/)).toBeInTheDocument();
-      expect(screen.getByText(/Erpe-Mere United/)).toBeInTheDocument();
-      expect(screen.queryByText(/Ksc Blankenberge/)).not.toBeInTheDocument();
+      // Fixtures carry the BFF's normalised form; nothing here re-cases them.
+      expect(screen.getByText("KSC Blankenberge")).toBeInTheDocument();
+      expect(screen.getByText("Erpe-Mere United")).toBeInTheDocument();
     });
 
     it("bolds the KCVV side and leaves the opponent unbolded", () => {
