@@ -1,44 +1,24 @@
 /**
  * Default Open Graph Image
  *
- * Generates a fallback OG image (1200x630) for pages that don't define their own.
- * Ink-to-jersey-deep gradient (brand tokens #0a0a0a → #008755) with the club logo
- * centered. Hex values mirror globals.css `--color-ink` / `--color-jersey-deep`
- * (Satori can't read CSS custom properties).
+ * Fallback card for pages that don't define their own. Same sheet as every
+ * other share card — see `@/lib/og/share-card` — so a link to the homepage and
+ * a link to a player page arrive looking like the same club.
  */
 
-import { ImageResponse } from "next/og";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { OG_CONTENT_TYPE, OG_SIZE, renderShareCard } from "@/lib/og/share-card";
 
 export const runtime = "nodejs";
 
-export const size = {
-  width: 1200,
-  height: 630,
-};
+export const size = OG_SIZE;
 
-export const contentType = "image/png";
+export const contentType = OG_CONTENT_TYPE;
 
-export default async function Image() {
-  const logoData = await readFile(
-    join(process.cwd(), "public/images/logos/kcvv-logo.png"),
-  );
-  const logoBase64 = `data:image/png;base64,${logoData.toString("base64")}`;
-
-  return new ImageResponse(
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #0a0a0a 0%, #008755 100%)",
-      }}
-    >
-      <img src={logoBase64} alt="" width={280} height={280} />
-    </div>,
-    { ...size },
-  );
+/**
+ * Generate the site-wide fallback Open Graph PNG.
+ *
+ * @returns A 1200×630 PNG carrying the club crest and wordmark
+ */
+export default function Image() {
+  return renderShareCard({ nameTop: "KCVV", nameBottom: "Elewijt" });
 }
