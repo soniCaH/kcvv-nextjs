@@ -23,7 +23,7 @@ describe("mapMatchToUpcomingMatch", () => {
       },
       away_team: {
         id: 1235,
-        name: "Kcvv Elewijt",
+        name: "KCVV Elewijt",
         logo: "https://example.com/logo2.png",
       },
       status: "scheduled",
@@ -46,7 +46,7 @@ describe("mapMatchToUpcomingMatch", () => {
       },
       awayTeam: {
         id: 1235,
-        name: "KCVV Elewijt", // Note: Kcvv should be capitalized to KCVV
+        name: "KCVV Elewijt",
         logo: "https://example.com/logo2.png",
         score: undefined,
       },
@@ -54,33 +54,6 @@ describe("mapMatchToUpcomingMatch", () => {
       squadLabel: "U9",
       competition: "Competitie",
     });
-  });
-
-  it("should normalize KCVV team name capitalization", () => {
-    const match: Match = {
-      id: 2,
-      date: new Date("2025-12-07T15:00:00"),
-      time: "15:00",
-      venue: undefined,
-      home_team: {
-        id: 1235,
-        name: "Kcvv Elewijt",
-        logo: "https://example.com/logo.png",
-      },
-      away_team: {
-        id: 59,
-        name: "Kfc Turnhout",
-        logo: "https://example.com/logo2.png",
-      },
-      status: "scheduled",
-      squadLabel: "A-ploeg",
-      competition: "Competitie",
-    };
-
-    const result = mapMatchToUpcomingMatch(match);
-
-    expect(result.homeTeam.name).toBe("KCVV Elewijt");
-    expect(result.awayTeam.name).toBe("Kfc Turnhout");
   });
 
   it("should map a forfeited match with scores correctly", () => {
@@ -180,7 +153,7 @@ describe("mapMatchToUpcomingMatch", () => {
       },
       away_team: {
         id: 1235,
-        name: "Kcvv Elewijt",
+        name: "KCVV Elewijt",
         logo: "https://example.com/logo2.png",
       },
       status: "stopped",
@@ -210,7 +183,7 @@ describe("mapMatchesToUpcomingMatches", () => {
         },
         away_team: {
           id: 1235,
-          name: "Kcvv Elewijt",
+          name: "KCVV Elewijt",
           logo: "https://example.com/logo2.png",
         },
         status: "scheduled",
@@ -224,12 +197,12 @@ describe("mapMatchesToUpcomingMatches", () => {
         venue: undefined,
         home_team: {
           id: 1235,
-          name: "Kcvv Elewijt",
+          name: "KCVV Elewijt",
           logo: "https://example.com/logo.png",
         },
         away_team: {
           id: 59,
-          name: "Kfc Turnhout",
+          name: "KFC Turnhout",
           logo: "https://example.com/logo2.png",
         },
         status: "scheduled",

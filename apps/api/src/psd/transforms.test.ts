@@ -547,13 +547,13 @@ describe("normaliseClubName", () => {
   });
 });
 
-describe("club-name casing at the transform sites", () => {
+describe("transformPsdGame / …MatchDetail / …RankingEntry — club-name casing", () => {
   it("normalises both club names on a game", () => {
     const match = transformPsdGame(
       makePsdGame({
         homeClub: { id: 1235, name: "Kcvv Elewijt" },
         awayClub: { id: 2, name: "Ksc Blankenberge" },
-      } as Partial<PsdGame>),
+      }),
     );
     expect(match.home_team.name).toBe("KCVV Elewijt");
     expect(match.away_team.name).toBe("KSC Blankenberge");

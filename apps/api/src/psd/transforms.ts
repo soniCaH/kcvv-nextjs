@@ -17,6 +17,7 @@ import {
   FootbalistoMatchEvent,
   type FootbalistoMatchDetailResponse as RawDetailResponse,
   FootbalistoRankingEntry,
+  FootbalistoClub,
 } from "./schemas";
 
 // ─── Competition label helpers ────────────────────────────────────────────────
@@ -200,8 +201,10 @@ const CLUB_ABBREVIATIONS = new Set([
   "VW",
 ]);
 
-/** Legacy PSD spelling of our own club, letter-spaced ("K c v v Elewijt"). The
- * token pass cannot reach it — each letter is its own token. */
+/**
+ * Legacy PSD spelling of our own club, letter-spaced ("K c v v Elewijt"). The
+ * token pass cannot reach it — each letter is its own token.
+ */
 const SPACED_KCVV = /\bk\s+c\s+v\s+v\b/gi;
 
 /**
@@ -218,8 +221,8 @@ export function normaliseClubName(name: string): string {
     .replace(SPACED_KCVV, "KCVV")
     .split(" ")
     .map((token) => {
-      if (CLUB_ABBREVIATIONS.has(token.toUpperCase()))
-        return token.toUpperCase();
+      const upper = token.toUpperCase();
+      if (CLUB_ABBREVIATIONS.has(upper)) return upper;
       if (token.includes("-")) {
         return token
           .split("-")
@@ -229,6 +232,25 @@ export function normaliseClubName(name: string): string {
       return token;
     })
     .join(" ");
+}
+
+/**
+ * Build a match-side team from a PSD club. Every club name that reaches a match
+ * payload passes through here, so casing is normalised **by construction** — a
+ * new match transform cannot forget to call `normaliseClubName` (#2336).
+ */
+function toMatchTeam(
+  club: FootbalistoClub,
+  score: number | null | undefined,
+  teamLabel?: string,
+): Match["home_team"] {
+  return {
+    id: club.id,
+    name: normaliseClubName(club.name),
+    logo: club.logo ?? undefined,
+    score: score ?? undefined,
+    team_label: teamLabel,
+  };
 }
 
 // ─── Game status mapping ──────────────────────────────────────────────────────
@@ -376,20 +398,16 @@ export function transformPsdGame(
     date: matchDate,
     time: timePart,
     venue: undefined,
-    home_team: {
-      id: game.homeClub.id,
-      name: normaliseClubName(game.homeClub.name),
-      logo: game.homeClub.logo ?? undefined,
-      score: game.goalsHomeTeam ?? undefined,
-      team_label: deriveMatchTeamLabel(game.homeTeam),
-    },
-    away_team: {
-      id: game.awayClub.id,
-      name: normaliseClubName(game.awayClub.name),
-      logo: game.awayClub.logo ?? undefined,
-      score: game.goalsAwayTeam ?? undefined,
-      team_label: deriveMatchTeamLabel(game.awayTeam),
-    },
+    home_team: toMatchTeam(
+      game.homeClub,
+      game.goalsHomeTeam,
+      deriveMatchTeamLabel(game.homeTeam),
+    ),
+    away_team: toMatchTeam(
+      game.awayClub,
+      game.goalsAwayTeam,
+      deriveMatchTeamLabel(game.awayTeam),
+    ),
     status,
     competition: resolveCompetitionLabel(
       game.competitionType,
@@ -635,18 +653,8 @@ export function transformFootbalistoMatchDetail(
     date: matchDate,
     time: timePart,
     venue: undefined,
-    home_team: {
-      id: general.homeClub.id,
-      name: normaliseClubName(general.homeClub.name),
-      logo: general.homeClub.logo ?? undefined,
-      score: general.goalsHomeTeam ?? undefined,
-    },
-    away_team: {
-      id: general.awayClub.id,
-      name: normaliseClubName(general.awayClub.name),
-      logo: general.awayClub.logo ?? undefined,
-      score: general.goalsAwayTeam ?? undefined,
-    },
+    home_team: toMatchTeam(general.homeClub, general.goalsHomeTeam),
+    away_team: toMatchTeam(general.awayClub, general.goalsAwayTeam),
     status,
     competition: resolveCompetitionLabel(general.competitionType),
     lineup,
@@ -663,8 +671,7 @@ export function transformFootbalistoRankingEntry(
 ): RankingEntry {
   const cdn = logoCdnUrl.replace(/\/+$/, "");
   // Normalise the RESOLVED value — `localName` is usually already correct, but
-  // the `name` fallback carries PSD's flattened casing. `normaliseClubName` is
-  // idempotent, so running it over either branch is safe.
+  // the `name` fallback carries PSD's flattened casing.
   const teamName = normaliseClubName(
     entry.team.club.localName || entry.team.club.name || "Unknown Team",
   );

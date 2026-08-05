@@ -197,11 +197,12 @@ describe("ScheurkalenderPage", () => {
         });
     });
 
-    it("renders opponent names verbatim — the BFF owns the casing (#2336)", () => {
-      renderPage();
-      // Fixtures carry the BFF's normalised form; nothing here re-cases them.
-      expect(screen.getByText("KSC Blankenberge")).toBeInTheDocument();
-      expect(screen.getByText("Erpe-Mere United")).toBeInTheDocument();
+    it("renders the opponent name verbatim — the BFF owns the casing (#2336)", () => {
+      // Raw PSD casing must pass straight through. This page owned a local copy
+      // of the re-casing rule for one release; if one creeps back, two layers
+      // own it and they drift.
+      renderPage([{ ...fixtures[0]!, opponent: "Ksc Blankenberge" }]);
+      expect(screen.getByText("Ksc Blankenberge")).toBeInTheDocument();
     });
 
     it("bolds the KCVV side and leaves the opponent unbolded", () => {
