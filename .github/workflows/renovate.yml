@@ -1,0 +1,46 @@
+# Self-hosted Renovate, replacing the Mend-hosted app.
+#
+# Mend's runner was being OOM-killed by `pnpm install --lockfile-only --recursive`
+# on this workspace — the job died ~60s in, on the first branch that needed a
+# lockfile, so no Renovate config knob could avoid it. See issue #13.
+#
+# Behaviour is unchanged: renovate.json is still the single source of truth and is
+# picked up automatically. This only supplies a runner with enough memory.
+name: Renovate
+
+on:
+  # Daily, even though renovate.json gates normal updates to Monday: vulnerability
+  # alerts bypass that schedule, so a daily tick keeps security fixes at <24h
+  # instead of <7d. Runs with nothing to do finish in about a minute.
+  schedule:
+    - cron: "0 20 * * *" # 21:00 CET / 22:00 CEST — inside the Monday window
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: "Renovate log level"
+        type: choice
+        options: [info, debug]
+        default: info
+
+concurrency:
+  group: renovate
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    # Actions minutes are billed on this repo, so cap a hung run rather than let
+    # it drain the job limit. A full run is normally well under 10 minutes.
+    timeout-minutes: 30
+
+    steps:
+      - uses: renovatebot/github-action@316d7cd859606d6039a2182b7d69199e9b036835 # v46.2.1
+        with:
+          token: ${{ secrets.RENOVATE_TOKEN }}
+        env:
+          RENOVATE_PLATFORM: github
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
