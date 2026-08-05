@@ -38,13 +38,16 @@ vi.mock(
   },
 );
 
+// Imported at module scope — see CLAUDE.md "Import the module under test at
+// module scope".
+const { default: JeugdPage } = await import("./page");
+
 describe("/jeugd page — cream tracer composition", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("renders the JeugdHero heading on cream (no SectionStack transitions)", async () => {
-    const JeugdPage = (await import("./page")).default;
     const { container } = render(await JeugdPage());
 
     expect(
@@ -60,7 +63,6 @@ describe("/jeugd page — cream tracer composition", () => {
   });
 
   it("renders the filosofie/visie block with the #visie anchor", async () => {
-    const JeugdPage = (await import("./page")).default;
     const { container } = render(await JeugdPage());
 
     const visie = container.querySelector("section#visie");
@@ -72,7 +74,6 @@ describe("/jeugd page — cream tracer composition", () => {
   });
 
   it("no longer renders the legacy 'Word ook lid' CTA", async () => {
-    const JeugdPage = (await import("./page")).default;
     render(await JeugdPage());
 
     expect(
@@ -81,7 +82,6 @@ describe("/jeugd page — cream tracer composition", () => {
   });
 
   it("renders the closing JeugdCtaBand linking to /club/word-lid", async () => {
-    const JeugdPage = (await import("./page")).default;
     render(await JeugdPage());
 
     const cta = screen.getByRole("region", { name: "Schrijf je in" });
@@ -97,14 +97,12 @@ describe("/jeugd page — cream tracer composition", () => {
   });
 
   it("fires jeugd_view on page view", async () => {
-    const JeugdPage = (await import("./page")).default;
     render(await JeugdPage());
 
     expect(trackEvent).toHaveBeenCalledWith("jeugd_view", undefined);
   });
 
   it("fires jeugd_card_click when a nav-hub card is clicked", async () => {
-    const JeugdPage = (await import("./page")).default;
     render(await JeugdPage());
 
     screen.getByText("Word lid van KCVV").click();
@@ -116,7 +114,6 @@ describe("/jeugd page — cream tracer composition", () => {
   });
 
   it("empty data: drops the divisions section, keeps a nav-only hub + the CTA", async () => {
-    const JeugdPage = (await import("./page")).default;
     const { container } = render(await JeugdPage());
 
     // 0 youth teams → <YouthDirectory> returns null (section dropped).

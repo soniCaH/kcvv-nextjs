@@ -50,20 +50,23 @@ vi.mock("@/lib/repositories/team.repository", () => ({
   TeamRepository: {},
 }));
 
+// Imported at module scope, but dynamically: a static import would hoist above
+// `teams` (line 6) and the `vi.mock` factory closing over it would hit TDZ.
+// See CLAUDE.md "Import the module under test at module scope".
+const { default: TeamsPage } = await import("./page");
+
 describe("/ploegen listing — Phase 6.C composition", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("renders the editorial page header", async () => {
-    const TeamsPage = (await import("./page")).default;
     render(await TeamsPage());
     const h1 = screen.getByRole("heading", { level: 1 });
     expect(h1.textContent).toContain("Onze ploegen");
   });
 
   it("renders A and B flagships", async () => {
-    const TeamsPage = (await import("./page")).default;
     render(await TeamsPage());
     const flagships = screen.getAllByTestId("team-flagship");
     expect(flagships).toHaveLength(2);
@@ -72,7 +75,6 @@ describe("/ploegen listing — Phase 6.C composition", () => {
   });
 
   it("renders the youth directory with the U13 card", async () => {
-    const TeamsPage = (await import("./page")).default;
     render(await TeamsPage());
     expect(screen.getByTestId("youth-directory")).toBeInTheDocument();
     const youthCards = screen.getAllByTestId("youth-team-card");

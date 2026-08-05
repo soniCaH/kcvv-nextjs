@@ -1,18 +1,42 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+// `fetchRecentMatchIds` resolves the Effect runtime unconditionally, so this
+// keeps ~800 ms of module loading out of the timed test body. See CLAUDE.md
+// "Import the module under test at module scope".
+import "@/lib/effect/runtime";
 
 import sitemap from "./sitemap";
 
 const mockFetch = vi.fn();
 
-vi.mock("@/lib/sanity/client", () => ({
-  sanityClient: {
+// Mocked at the SDK boundary rather than at `@/lib/sanity/client`, because
+// `sitemap()` reaches the wrapper through six concurrent `await import()`s and
+// only the first resolved through a module-level mock — the other five escaped
+// to `api.sanity.io` on every test (#2362). Intercepting `createClient` means no
+// real SanityClient is ever constructed, so the escape is impossible however the
+// wrapper is imported.
+vi.mock("@sanity/client", () => ({
+  createClient: () => ({
     fetch: (...args: unknown[]) => mockFetch(...args),
-  },
+  }),
 }));
+
+/** `sitemap()` issues exactly one Sanity query per `fetchFromSanity` call. */
+const SANITY_QUERY_COUNT = 6;
 
 describe("sitemap.ts", () => {
   beforeEach(() => {
     mockFetch.mockReset();
+  });
+
+  // The zero-outbound-request guard: a short count means a query escaped the
+  // mock, which is a real network round-trip. A `fetch` spy cannot do this job —
+  // `@sanity/client` uses the Node http(s) transport via `get-it`, so it reads 0
+  // either way.
+  afterEach(() => {
+    expect(mockFetch, "a Sanity query escaped the mock").toHaveBeenCalledTimes(
+      SANITY_QUERY_COUNT,
+    );
   });
 
   it("returns all static routes with correct metadata", async () => {
