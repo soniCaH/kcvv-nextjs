@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Branch guard first — before lint-staged and a full monorepo type-check, so a
+# commit that was never going to land does not cost a type-check to find out.
+# Bypass with ALLOW_MAIN_COMMIT=1; see .husky/branch-guard.sh.
+bash .husky/branch-guard.sh || exit 1
+
 # Activate Node version from .nvmrc without sourcing full nvm.sh
 # This is fast (~0ms) vs sourcing nvm.sh (~200-500ms)
 if [ -f ".nvmrc" ] && [ -d "${NVM_DIR:-$HOME/.nvm}/versions/node" ]; then

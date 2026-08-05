@@ -1,24 +1,130 @@
-#!/bin/bash
-# Block git commits on main/master. Worktree-aware.
-set -euo pipefail
+#!/usr/bin/env bash
+# Block a `git commit` that would land on main/master. Worktree-aware.
+#
+# This is the fast, friendly layer: it fails early with a helpful message
+# before the tool call runs. `.husky/branch-guard.sh` is the real backstop —
+# it runs inside git and cannot be routed around at all.
+#
+# Design notes (#2361):
+#   - The tool payload is parsed as JSON, never with sed. A `"` anywhere in the
+#     command used to truncate the old parse and silently disarm the guard.
+#   - The command is scanned segment-by-segment (split on && || ; | parens) so
+#     `cd` can appear anywhere, not only first, and the LAST `cd` before the
+#     commit wins. An explicit `git -C <dir>` overrides it.
+#   - Unresolvable targets (`cd $VAR`, missing dir) FAIL CLOSED.
+#
+# Known residual gaps, all covered by .husky/branch-guard.sh: a subshell `cd`
+# that does not persist — `( cd $WT ) && git commit` — `xargs git commit`, and
+# shell aliases or functions. Closing those needs a real shell parser.
+set -uo pipefail
 
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | sed -n 's/.*"command" *: *"\([^"]*\)".*/\1/p')
-echo "$COMMAND" | grep -q 'git commit' || exit 0
 
-# If the command starts with "cd /some/path && ...", resolve the branch there.
-TARGET_DIR=$(echo "$COMMAND" | sed -n 's/^cd \([^ &]*\) &&.*/\1/p')
-if [ -n "$TARGET_DIR" ] && [ -d "$TARGET_DIR" ]; then
-  BRANCH=$(git -C "$TARGET_DIR" branch --show-current 2>/dev/null || echo "unknown")
-else
-  BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
-fi
+# Fast path: the overwhelming majority of Bash calls cannot be a commit.
+case "$INPUT" in
+*commit*) ;;
+*) exit 0 ;;
+esac
 
-if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
-  cat <<EOF
-{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"BLOCKED: You are on the main branch. Use /ralph to create a worktree for an issue first."}}
-EOF
+# Without the interpreter we would silently fail OPEN, so fail closed — but
+# only here, where we already know the command mentions `commit`.
+if ! command -v python3 >/dev/null 2>&1; then
+  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"BLOCKED: the branch guard could not run (python3 not found)."}}'
   exit 0
 fi
 
+PY=$(
+  cat <<'PYEOF'
+import json, os, re, subprocess, sys
+
+def emit_deny(reason):
+    print(json.dumps({"hookSpecificOutput": {
+        "hookEventName": "PreToolUse",
+        "permissionDecision": "deny",
+        "permissionDecisionReason": reason}}))
+    sys.exit(0)
+
+def allow():
+    sys.exit(0)
+
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    allow()  # not a payload we understand — nothing we can assert about it
+
+cmd = (data.get("tool_input") or {}).get("command") or ""
+session_cwd = data.get("cwd") or os.getcwd()
+
+# Newlines are command separators; then collapse whitespace so `git\tcommit`
+# and `git  commit` normalise to `git commit`.
+norm = re.sub(r"\s+", " ", cmd.replace("\n", " ; ")).strip()
+
+# `git [global flags] commit` at the start of a segment, allowing VAR=x
+# prefixes and the common `bash -c "..."` wrapper.
+GIT_COMMIT = re.compile(
+    r"""^(?:(?:ba|z)?sh\s+-[a-z]*c\s*["']\s*)?      # optional  bash -c "
+         (?:\w+=\S*\s+)*                            # optional  VAR=value
+         git
+         (?:\s+(?:-[cC]\s+\S+|--?[A-Za-z][\w-]*(?:=\S*)?))*   # global flags
+         \s+commit(?![\w-])""",   # `commit`, not `commit-tree`
+    re.VERBOSE,
+)
+
+def resolve(raw, base):
+    raw = raw.strip()
+    if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in "\"'":
+        raw = raw[1:-1]
+    if not raw or "$" in raw or "`" in raw:
+        return None            # shell-expanded — we cannot know
+    raw = os.path.expanduser(raw)
+    if not os.path.isabs(raw):
+        if not base:
+            return None
+        raw = os.path.join(base, raw)
+    return os.path.realpath(raw)
+
+segments = re.split(r"\s*(?:&&|\|\||;|\||\(|\))\s*", norm)
+cur, target, found = session_cwd, None, False
+
+for seg in segments:
+    seg = seg.strip()
+    if not seg:
+        continue
+    m = re.match(r"""^cd\s+(?!-)("[^"]*"|'[^']*'|\S+)""", seg)
+    if m:
+        cur = resolve(m.group(1), cur)
+        continue
+    if GIT_COMMIT.search(seg):
+        found = True
+        c = re.search(r"(?:^|\s)-C\s+(\S+)", seg)
+        target = resolve(c.group(1), cur) if c else cur
+        break
+
+if not found:
+    allow()                    # no `git commit` in command position
+if target is None:
+    emit_deny("BLOCKED: the branch guard cannot resolve the directory this "
+              "commit would run in (shell variable or missing path). Use a "
+              "literal absolute path, or run the commit from the worktree.")
+
+if not os.path.isdir(target):
+    emit_deny("BLOCKED: the branch guard cannot resolve the directory this "
+              "commit would run in (%s does not exist)." % target)
+
+try:
+    branch = subprocess.run(["git", "-C", target, "branch", "--show-current"],
+                            capture_output=True, text=True,
+                            timeout=3).stdout.strip()
+except Exception:
+    branch = ""
+
+if branch in ("main", "master"):
+    emit_deny("BLOCKED: that commit would land on %s in %s. Use /ralph to "
+              "create a worktree for an issue first." % (branch, target))
+
+allow()   # feature branch, detached HEAD, or not a repo — git will sort it out
+PYEOF
+)
+
+printf '%s' "$INPUT" | python3 -c "$PY"
 exit 0

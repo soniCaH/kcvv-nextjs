@@ -30,6 +30,8 @@ App-specific rules → `apps/web/CLAUDE.md` | api-contract conventions → `pack
 2. **Conventional commits:** `type(scope): description` — scopes: news, matches, events, teams, players, sponsors, calendar, ranking, search, sync, analytics, studio, api, ui, schema, config, deps, deps-dev
 3. **Quality before commit:** `pnpm --filter @kcvv/web lint:fix` then `pnpm --filter @kcvv/web check-all`
 4. **Never:** commit to main, push before checks pass, create PR without asking
+5. **Branch guards:** two layers refuse a commit that would land on `main`/`master` — `.husky/branch-guard.sh` (called first from `.husky/pre-commit`, runs inside git, so it cannot be routed around) and `.claude/hooks/check-branch.sh` (Claude Code `PreToolUse`, fails early with a friendlier message). Both are worktree-aware, allow a detached HEAD, and accept `cd` anywhere in the command as well as an explicit `git -C <dir>`.
+6. **Deliberate commit on main:** `ALLOW_MAIN_COMMIT=1 git commit …`. Prefer it over `--no-verify`, which also skips commitlint and lint-staged.
 
 ## Development Guidelines
 
