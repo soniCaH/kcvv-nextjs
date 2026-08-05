@@ -1,5 +1,6 @@
 import type {ComponentType} from 'react'
 import type {
+  ArrayOfObjectsInputProps,
   ArrayOfPrimitivesInputProps,
   BlockDecoratorProps,
   SchemaTypeDefinition,
@@ -8,6 +9,7 @@ import type {
 import {schemaTypes as baseSchemaTypes} from '@kcvv/sanity-schemas'
 import {describe, expect, it} from 'vitest'
 import {applyArticleTagsInput} from './inputs/apply-article-tags-input'
+import {applyBulkImageUploadInput} from './inputs/apply-bulk-image-upload-input'
 import {applyDecoratorComponents} from './inputs/apply-decorator-components'
 import {applyRespondentPicker} from './inputs/apply-respondent-picker'
 import {collectBlockDecoratorComponents} from './inputs/collect-block-decorator-components'
@@ -48,6 +50,7 @@ const findField = (
 
 const TagsSentinel: ComponentType<ArrayOfPrimitivesInputProps<string>> = () => null
 const RespondentSentinel: ComponentType<StringInputProps> = () => null
+const BulkUploadSentinel: ComponentType<ArrayOfObjectsInputProps> = () => null
 const PullquoteSentinel: ComponentType<BlockDecoratorProps> = () => null
 const AccentSentinel: ComponentType<BlockDecoratorProps> = () => null
 
@@ -74,6 +77,19 @@ describe('schema-types graft targets resolve against the real schema (#2278)', (
       'respondentKey',
     ) as {components?: {input?: unknown}}
     expect(key.components?.input).toBe(RespondentSentinel)
+  })
+
+  it('applyBulkImageUploadInput lands on the real photoGallery.images field', () => {
+    expect(findField(findType(baseSchemaTypes, 'photoGallery'), 'images')).toBeDefined()
+
+    const grafted = applyBulkImageUploadInput(baseSchemaTypes, BulkUploadSentinel, {
+      typeName: 'photoGallery',
+      fieldName: 'images',
+    })
+    const images = findField(findType(grafted, 'photoGallery'), 'images') as {
+      components?: {input?: unknown}
+    }
+    expect(images.components?.input).toBe(BulkUploadSentinel)
   })
 
   it('applyDecoratorComponents lands on the real pullquote + accent decorators', () => {
