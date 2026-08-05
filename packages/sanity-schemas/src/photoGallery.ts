@@ -1,5 +1,12 @@
 import {defineField, defineType} from 'sanity'
 
+import {
+  galleryImagePreviewSelect,
+  prepareGalleryImagePreview,
+  photoGalleryPreviewSelect,
+  preparePhotoGalleryPreview,
+} from './preview/photoGallery-preview'
+
 export const photoGallery = defineType({
   name: 'photoGallery',
   title: 'Photo gallery',
@@ -109,10 +116,8 @@ export const photoGallery = defineType({
             }),
           ],
           preview: {
-            select: {title: 'caption', subtitle: 'credit', media: 'asset'},
-            prepare({title, subtitle, media}) {
-              return {title: title || 'Foto', subtitle, media}
-            },
+            select: galleryImagePreviewSelect,
+            prepare: prepareGalleryImagePreview,
           },
         }),
       ],
@@ -140,12 +145,7 @@ export const photoGallery = defineType({
     }),
   ],
   preview: {
-    select: {title: 'title', media: 'images.0', publishedAt: 'publishedAt', images: 'images'},
-    prepare({title, media, publishedAt, images}) {
-      const count = Array.isArray(images) ? images.length : 0
-      const date = publishedAt ? new Date(publishedAt).toLocaleDateString('nl-BE') : ''
-      const subtitle = [count ? `${count} foto's` : '', date].filter(Boolean).join(' · ')
-      return {title, subtitle, media}
-    },
+    select: photoGalleryPreviewSelect,
+    prepare: preparePhotoGalleryPreview,
   },
 })

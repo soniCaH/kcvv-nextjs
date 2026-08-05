@@ -10,6 +10,12 @@ export {
   qaPairRespondentPreviewSelect,
   prepareQaPairRespondentPreview,
 } from './preview/qa-pair-respondent-preview'
+export {
+  galleryImagePreviewSelect,
+  prepareGalleryImagePreview,
+  photoGalleryPreviewSelect,
+  preparePhotoGalleryPreview,
+} from './preview/photoGallery-preview'
 export {validateOrganigramMember} from './validation/organigram-members'
 export {validateSubjectsCount} from './validation/subjects-count'
 export type {SubjectsCountContext} from './validation/subjects-count'
