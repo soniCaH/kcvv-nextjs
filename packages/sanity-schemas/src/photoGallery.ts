@@ -68,26 +68,29 @@ export const photoGallery = defineType({
       type: 'array',
       group: 'fotos',
       description:
-        'De foto\'s in de galerij. De eerste foto is automatisch de cover (gebruikt op de overzichtskaart en als deelafbeelding). Sleep om de volgorde te wijzigen.',
+        'De foto\'s in de galerij. De eerste foto is automatisch de cover (gebruikt op de overzichtskaart en als deelafbeelding). Sleep om de volgorde te wijzigen. Maximaal 80 foto\'s per galerij. Splits grote reeksen op in meerdere galerijen.',
+      // A flat array of `image` (not objects wrapping an image) so Sanity's
+      // native multi-file drop/paste applies — one item per dropped file, in
+      // file order. Metadata lives as custom fields on the image itself (#2363).
       of: [
         defineField({
-          name: 'galleryImage',
+          name: 'galleryImage', // keep the name — item `_type` stays "galleryImage"
           title: 'Image',
-          type: 'object',
+          type: 'image',
+          options: {hotspot: true},
+          // `required()` can't gate the asset here: alt/caption/credit live on
+          // this object, so a caption-only item is non-empty yet imageless.
+          validation: (r) =>
+            r.custom((img: {asset?: unknown} | undefined) =>
+              img?.asset ? true : 'Verplicht. Een lege fotoslot wordt niet getoond.',
+            ),
           fields: [
-            defineField({
-              name: 'image',
-              title: 'Image',
-              type: 'image',
-              options: {hotspot: true},
-              validation: (r) => r.required().error('Verplicht. Een lege fotoslot wordt niet getoond.'),
-            }),
             defineField({
               name: 'alt',
               title: 'Alt text',
               type: 'string',
               description:
-                'Beschrijf de foto voor toegankelijkheid (schermlezers) en SEO. Niet hetzelfde als het onderschrift.',
+                'Beschrijf de foto voor toegankelijkheid (schermlezers) en SEO. Niet hetzelfde als het onderschrift. Laat je dit leeg, dan gebruikt de site het onderschrift als alt-tekst.',
               validation: (r) =>
                 r.required().warning('Geef een beschrijvende alt-tekst voor toegankelijkheid.'),
             }),
@@ -106,7 +109,7 @@ export const photoGallery = defineType({
             }),
           ],
           preview: {
-            select: {title: 'caption', subtitle: 'credit', media: 'image'},
+            select: {title: 'caption', subtitle: 'credit', media: 'asset'},
             prepare({title, subtitle, media}) {
               return {title: title || 'Foto', subtitle, media}
             },
@@ -115,7 +118,7 @@ export const photoGallery = defineType({
       ],
       validation: (r) => [
         r.required().min(1).error('Voeg minstens één foto toe — de eerste foto is de cover van de galerij.'),
-        r.max(80).warning("Meer dan 80 foto's kan de galerij traag laden. Splits grote reeksen op in meerdere galerijen."),
+        r.max(80).error("Maximaal 80 foto's per galerij. Verwijder foto's of splits de reeks op in meerdere galerijen."),
       ],
     }),
     defineField({
@@ -137,7 +140,7 @@ export const photoGallery = defineType({
     }),
   ],
   preview: {
-    select: {title: 'title', media: 'images.0.image', publishedAt: 'publishedAt', images: 'images'},
+    select: {title: 'title', media: 'images.0', publishedAt: 'publishedAt', images: 'images'},
     prepare({title, media, publishedAt, images}) {
       const count = Array.isArray(images) ? images.length : 0
       const date = publishedAt ? new Date(publishedAt).toLocaleDateString('nl-BE') : ''

@@ -27,7 +27,6 @@ import { fileURLToPath } from "node:url";
 import {
   assertProductionGuard,
   makeClient,
-  imageRef,
   upsertImageAsset,
   paragraph,
 } from "./seeds/phase-5-shared.mjs";
@@ -40,9 +39,15 @@ const fixturePath = (filename) =>
   fileURLToPath(new URL(`../test/fixtures/images/${filename}`, import.meta.url));
 
 // Upload a fixture image (idempotent by filename) → a gallery-image array item.
+// Flat shape (#2363): `galleryImage` IS an image, so the asset ref sits on the
+// item itself instead of a nested `image` field.
 async function galleryImage(key, filename, { caption, credit } = {}) {
   const assetId = await upsertImageAsset(client, filename, fixturePath(filename));
-  const item = { _key: key, _type: "galleryImage", image: imageRef(assetId) };
+  const item = {
+    _key: key,
+    _type: "galleryImage",
+    asset: { _type: "reference", _ref: assetId },
+  };
   if (caption) item.caption = caption;
   if (credit) item.credit = credit;
   return item;
