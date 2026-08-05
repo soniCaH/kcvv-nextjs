@@ -195,7 +195,6 @@
   "commitMessageAction": "{{semanticCommitType}}({{semanticCommitScope}}): update",
   "commitMessageTopic": "{{depName}}",
   "commitMessageExtra": "to {{#if isPinDigest}}{{{newDigestShort}}}{{else}}{{#if isMajor}}{{prettyNewMajor}}{{else}}{{#if isSingleVersion}}{{prettyNewVersion}}{{else}}{{#if newValue}}{{{newValue}}}{{else}}{{{newDigestShort}}}{{/if}}{{/if}}{{/if}}{{/if}}",
-  "postUpdateOptions": ["pnpmDedupe"],
   "prCreation": "immediate",
   "prConcurrentLimit": 3,
   "schedule": ["before 11pm on monday"],
