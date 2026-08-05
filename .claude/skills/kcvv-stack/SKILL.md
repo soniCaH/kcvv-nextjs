@@ -4,13 +4,13 @@ Consult this when working with Sanity, the BFF, Effect patterns, or the api-cont
 
 ## Stack Quick Reference
 
-| Concern           | Location                     | Pattern                              |
-| ----------------- | ---------------------------- | ------------------------------------ |
-| Sanity queries    | `apps/web/src/lib/sanity/`   | GROQ via `@sanity/client`            |
-| Effect schemas    | `packages/api-contract/src/` | `S.Struct`, never `S.Unknown`        |
-| BFF endpoints     | `apps/api/src/`              | Hono + Cloudflare Workers + wrangler |
-| Web data fetching | `apps/web/src/lib/effect/`   | Effect + HttpClient                  |
-| Studio schemas    | `apps/studio/schemaTypes/`   | Sanity schema definitions            |
+| Concern           | Location                       | Pattern                                            |
+| ----------------- | ------------------------------ | -------------------------------------------------- |
+| Sanity queries    | `apps/web/src/lib/sanity/`     | GROQ via `@sanity/client`                          |
+| Effect schemas    | `packages/api-contract/src/`   | `S.Struct`, never `S.Unknown`                      |
+| BFF endpoints     | `apps/api/src/`                | Hono + Cloudflare Workers + wrangler               |
+| Web data fetching | `apps/web/src/lib/effect/`     | Effect + HttpClient                                |
+| Studio schemas    | `packages/sanity-schemas/src/` | Sanity schema definitions (shared by both studios) |
 
 ## Sanity Patterns
 
