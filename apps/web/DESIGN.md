@@ -209,7 +209,7 @@ Status tones, tuned for print rather than for a dashboard. Each pairs a saturate
 
 **The Two-Greens Rule.** `jersey` is decorative and never touches text; `jersey-deep` carries meaning and text. Inline body links use `jersey-link` and nothing else. Picking the wrong green is the single most common colour error in this system.
 
-**The No-Grey-UI Rule.** There is no neutral grey chrome layer. A surface is cream, a step of cream, or ink. One exception survives: `gray-100` (`#f3f4f6`) is the `<SectionStack>` surface behind four homepage sections — the news grid and the three banner strips. The components on it are fully redesigned; only the surface underneath is pre-redesign. It is the single cool grey in a warm system and must not spread — new section surfaces use a cream step.
+**The No-Grey-UI Rule.** There is no neutral grey chrome layer, and no exceptions. A surface is cream, a step of cream, or ink. `gray-100` (`#f3f4f6`) was the last holdout — the surface under four homepage sections — and #2342 retired it in favour of `transparent`, letting the page cream show through. The token still exists as a `SectionBg` option exercised by the `<SectionStack>` stories, but it has no production consumer and must not gain one.
 
 ## Typography
 
@@ -380,6 +380,6 @@ A full-bleed 45° two-tone stripe band (12 / 18 / 24 / 28px tall) rendered as an
 - **Don't** pin a Display-size heading's italic accent to a heavy weight — Freight Big Pro has no 900 italic.
 - **Don't** add a new typeface. Freight Sans Pro, Freight Display Pro, Freight Big Pro and IBM Plex Mono are the whole set.
 - **Don't** build a 16px semibold sans "section label" register between display serif and 11px mono.
-- **Don't** spread `gray-100` beyond the four homepage sections that already use it; new section surfaces step through cream. (`foundation-gray-light` and the four `table-*` tokens have been removed — they had no consumers.)
+- **Don't** give `gray-100` a production consumer — it has none since #2342, and a section surface is cream, a step of cream, or ink. (`foundation-gray-light` and the four `table-*` tokens were removed outright; they had no consumers at all.)
 - **Don't** rely on hover to reveal anything necessary — the primary usage scene is a phone, outdoors.
 - **Don't** use emoji as icons.

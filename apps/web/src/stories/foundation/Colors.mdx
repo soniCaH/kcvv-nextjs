@@ -96,15 +96,17 @@ in dark gradients.
 
 ## Foundation Gray
 
-The last pre-redesign neutral still in service: the `<SectionStack bg="gray-100">`
-surface behind the homepage news grid and banner strips. It is the one cool grey
-in a warm cream system — prefer `cream-soft` for any new section surface.
+**No production consumer.** #2342 retired this from the homepage section
+surfaces (they are `transparent` now, so the page cream shows through). It
+survives only as a `SectionBg` option exercised by the `<SectionStack>` stories
+and tests — the one cool grey in a warm cream system. Do not reach for it:
+a section surface is cream, a step of cream, or ink.
 
 `foundation-gray-light` and the four `table-*` tokens were removed alongside the
 blurred shadow family; none of them had a consumer anywhere in the app.
 
 <SwatchRow items={[
-  { name: 'gray-100 (homepage news / banner sections)', variable: '--color-gray-100', hex: '#f3f4f6' },
+  { name: 'gray-100 (no production consumer — do not use)', variable: '--color-gray-100', hex: '#f3f4f6' },
 ]} />
 
 ---
