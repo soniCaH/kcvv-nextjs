@@ -14,6 +14,11 @@ services:
     # version is owned by Dockerfile.vr's FROM, and a second copy here drifts
     # (it read 1.59.1 long after the base moved to 1.60.0).
     image: kcvv-vr-runner:latest
+    # CI runs this image on amd64 (ubuntu-latest); unpinned builds on Apple
+    # Silicon resolve arm64, which drifts from the committed baselines on
+    # display-serif stories (#2370). Emulated amd64 renders byte-identical to
+    # CI — scoped runs only; see "The amd64 pin" in docs/agents/testing-ops.md.
+    platform: linux/amd64
     init: true
     working_dir: /work/apps/web
     volumes:

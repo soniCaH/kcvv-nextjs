@@ -118,8 +118,12 @@ committed to the repo. Background and rationale: `docs/prd/visual-regression-tes
 
 Prerequisite: Docker Desktop running with **at least 8 GB of memory allocated**
 to the Docker VM. Local runs use the same pinned `mcr.microsoft.com/playwright`
-image as CI so font rendering matches exactly — the tag is set in
-`apps/web/Dockerfile.vr` (`FROM`), which is the single source of truth for it.
+image tag as CI — set in `apps/web/Dockerfile.vr` (`FROM`), the single source
+of truth for it — but the tag alone does not make font rendering match: CI
+runs the image's amd64 build (`ubuntu-latest`), while an unpinned build on
+Apple Silicon resolves arm64, whose Chromium/FreeType antialiases display
+serif differently. `docker-compose.vr.yml` therefore pins
+`platform: linux/amd64` — see "The amd64 pin — scoped runs only" below (#2370).
 
 **Minimum Docker Desktop memory:** 8 GB (measured against the full Phase 2+3
 story surface). Below this floor, Chromium runs out of memory mid-story and
@@ -144,20 +148,44 @@ pnpm --filter @kcvv/web run vr:check
 # Accept the current rendering as the new baseline (commit the resulting PNGs).
 pnpm --filter @kcvv/web run vr:update
 
-# Surgical run — only stories matching the pattern. Pass the regex as a BARE
-# POSITIONAL argument (see "Scoping a VR run" below); update and compare modes
-# both take it.
+# Surgical run — the pattern only scopes when it FOLLOWS `-u` (see "Scoping
+# a VR run" below), so update mode is the only scoped mode. To check a single
+# story without keeping new baselines: scoped update, inspect `git status`,
+# then restore with `git checkout -- test/vr/__snapshots__/`.
 pnpm --filter @kcvv/web run vr:update:story -- ui-button   # update, scoped
-pnpm --filter @kcvv/web run vr:check -- ui-button          # compare, scoped
 
 # Print the diff PNG path(s) for a failed story so the Read tool can inspect them.
 pnpm --filter @kcvv/web run vr:diff layout-pagefooter--standalone
 ```
 
+### The amd64 pin — scoped runs only (#2370)
+
+`docker-compose.vr.yml` pins the `vr` service to `platform: linux/amd64`.
+Measured on the `features-articles-editorialhero` cluster (57 baselines, 19
+tests), same commit, same image tag:
+
+| Build                    | Changed baselines after a scoped `-u` run | Wall-clock             |
+| ------------------------ | ----------------------------------------- | ---------------------- |
+| arm64 (unpinned)         | 52 / 57                                   | 46 s                   |
+| amd64 (pinned, emulated) | **0 / 57**                                | 179 s cold, 164 s warm |
+
+The 0/57 row means architecture was the sole cause of the drift: pinned local
+renders are **byte-identical to the committed baselines CI passes against**,
+so a scoped local capture is trustworthy on Apple Silicon. Two consequences:
+
+- **Scoped runs only.** Emulation costs ~3.6×: the ~40 min full suite projects
+  to ~2.5 h. Never run an unscoped `vr:check` / `vr:update` locally — the full
+  suite is CI's job.
+- **Never remove the pin to speed a run up.** Unpinned arm64 output fails ~83
+  stories that CI passes, and arm64-rendered baselines must never be committed
+  (see "Anti-patterns" below).
+
 ### Scoping a VR run
 
-A full capture is ~40 min, so always scope. **The pattern is a bare positional
-argument — never a `--testPathPattern(s)=` flag.**
+A full capture is ~40 min — ~2.5 h locally under the amd64 pin — so always
+scope. **The pattern must follow `-u` — never a `--testPathPattern(s)=` flag,
+and never a bare positional on its own.** In check mode (no `-u`) a bare
+positional pattern is silently ignored and the whole suite runs.
 
 `test-storybook` parses its CLI with commander against a closed option
 allowlist (`--maxWorkers`, `--testTimeout`, `-u`, `--includeTags`,
@@ -165,8 +193,8 @@ allowlist (`--maxWorkers`, `--testTimeout`, `-u`, `--includeTags`,
 `getParsedCliOptions` in `node_modules/@storybook/test-runner/dist/test-storybook.js`).
 Any unrecognised `--flag` prints the help text and exits 1 — including Jest's
 own `--testPathPatterns`, which is **not** passed through. Positional operands
-(`program.args`) _are_ forwarded verbatim to Jest, and Jest treats a bare
-positional as a test-path regex. That is the only scoping channel.
+(`program.args`) are forwarded to Jest, but only positionals following `-u`
+scope (see above) — making `-u <prefix>` the only working channel (#2370).
 
 The regex matches the synthetic test files the runner writes to a temp dir, one
 per story **title** (component), named from the story ID:
@@ -203,7 +231,8 @@ regression in #2316 is the worked example.
 
 `vr:check` and `vr:update` rebuild Storybook first, then run the test-runner
 inside Docker. First run pulls the Playwright image (~1.3 GB). Steady-state run
-time on a warm cache is ~30 s for the Phase 1 tracer-bullet set.
+time on a warm cache is ~30 s for the Phase 1 tracer-bullet set (measured
+unpinned; expect ~3.6× that under the amd64 pin).
 
 ### Single-worker fallback
 
@@ -525,10 +554,13 @@ component or library. Document the reason inline (one comment line).
 
 When the CI `visual-regression` job fails on a PR, the `vr-diff-comment` job
 automatically pushes the diff PNGs to the orphan branch `vr-diffs/pr-<N>` and
-posts a sticky comment on the PR. The comment embeds baseline / actual / diff
-images inline via `raw.githubusercontent.com` links — no artifact download
-needed. The orphan branch (and the sticky comment) are cleaned up automatically
-when the PR closes via `vr-diff-cleanup.yml`.
+posts a sticky comment on the PR. Only `diff-*.png` is actually pushed — the
+`actual-*.png` URLs the sticky comment embeds 404. Each
+`vr-diffs/diff-<story-id>--<viewport>-diff.png` is a 3-panel composite laid
+out `baseline | diff-mask | actual`, unscaled, so the right third **is** CI's
+exact render: crop `x >= width * 2/3` to verify — or replace — a locally
+regenerated baseline (#2370). The orphan branch (and the sticky comment) are
+cleaned up automatically when the PR closes via `vr-diff-cleanup.yml`.
 
 Locally, `pnpm --filter @kcvv/web run vr:diff <story-id>` prints the on-disk
 path(s) under `apps/web/test/vr/__diff_output__/`. The `vr-diff-output`
@@ -571,3 +603,8 @@ explicitly. A GitHub App is the cleaner long-term replacement.
 - **Do not remove `NODE_OPTIONS=--max-old-space-size=4096` from `docker-compose.vr.yml`.**
   Node.js defaults to ~1.4 GB heap — the test runner OOMs after ~80 story visits
   regardless of Docker memory allocation.
+- **Do not treat a local `vr:check` failure on an unpinned (arm64) container
+  as a regression** without first checking the story against CI's render
+  (extract it per "Inspecting diffs" above) — Apple Silicon drifts on
+  display-serif stories. With the `platform: linux/amd64` pin a local failure
+  is real (see "The amd64 pin — scoped runs only").
