@@ -16,13 +16,19 @@ if (!STORY_ID) {
   process.exit(2);
 }
 
-const DIFF_DIR = resolve(new URL(".", import.meta.url).pathname, "..", "test/vr/__diff_output__");
+const DIFF_DIR = resolve(
+  new URL(".", import.meta.url).pathname,
+  "..",
+  "test/vr/__diff_output__",
+);
 
 let entries;
 try {
   entries = readdirSync(DIFF_DIR);
 } catch {
-  console.error(`No diff output yet — run \`pnpm vr:check\` first. (looked in ${DIFF_DIR})`);
+  console.error(
+    `No diff output yet — run \`pnpm vr:update:story -- <story-id-prefix>\` first. (looked in ${DIFF_DIR})`,
+  );
   process.exit(1);
 }
 

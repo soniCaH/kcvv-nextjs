@@ -73,8 +73,10 @@ export function decide({ mode, args, fullRun = false }) {
         ),
       };
     }
-    // A pattern is a positional operand; flags never scope.
-    if (!args.some((arg) => !arg.startsWith("-"))) {
+    // A pattern is a non-empty positional operand. pnpm's own `--` separator
+    // arrives in argv too (`vr:update:story -- ui-button` → ["update:story",
+    // "--", "ui-button"]) — it starts with `-`, so it never counts as one.
+    if (!args.some((arg) => arg && !arg.startsWith("-"))) {
       return {
         ok: false,
         message: refusal(
@@ -107,10 +109,7 @@ function main() {
       cwd,
       stdio: "inherit",
     });
-    if (error) {
-      console.error(`Failed to run \`${command}\`: ${error.message}`);
-      process.exit(1);
-    }
+    if (error) throw error;
     if (status !== 0) process.exit(status ?? 1);
   };
 

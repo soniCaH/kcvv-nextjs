@@ -268,8 +268,9 @@ If `vr:update` crashes mid-run with `page.goto: Page crashed` (Chromium OOM
 inside the Docker container), use the single-worker variants:
 
 ```bash
-# Compare — single worker, lower peak memory. Runs outside Docker, so this one
-# is not guarded (and not architecture-pinned — do not commit its baselines).
+# Compare — single worker, lower peak memory. Native, NOT in Docker: use it to
+# triage an OOM, never to judge a diff, and never commit baselines from it
+# (see "Anti-patterns" below).
 pnpm --filter @kcvv/web run vr:run:single
 
 # Update baselines — single worker, lower peak memory. Guarded: needs a pattern.

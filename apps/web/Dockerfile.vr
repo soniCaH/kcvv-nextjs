@@ -56,8 +56,9 @@ WORKDIR /work/apps/web
 #     → ENTRYPOINT becomes: ["sh","-c","...$*","--", <ARGS>]
 #     → `--` is the script's $0, so $* expands to <ARGS> (e.g. "-u" for
 #       --update-snapshots), appended after `--includeTags vr --excludeTags vr-skip`.
-#   `pnpm vr:check`  → no extra args, $* is empty.
-#   `pnpm vr:update` → appends `-u`.
+#   The `vr:*` scripts go through apps/web/scripts/vr-docker.mjs, which owns
+#   that arg list — `vr:update:story -- ui-button` appends `-u -- ui-button`.
+#   It also refuses an unscoped run before this image is built (#2380).
 # `--testTimeout 30000` covers the heavier MDX-backed Foundation reference
 # stories (icon catalogue, type scale) — the default 15s flakes when the
 # runner is under load.

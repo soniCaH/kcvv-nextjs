@@ -178,6 +178,11 @@ Do **not** use GitHub's `[skip ci]` in bot commit messages. It skips our own VR 
 
 ## 10. Ralph integration & decision loop
 
+> **Superseded by #2380 for the commands only.** `vr:check` and unscoped
+> `vr:update` are now refused locally (~2.5 h emulated full suite under the
+> amd64 pin). The live loop — same shape, scoped commands — is "Decision tree on
+> a failing VR job" in `docs/agents/testing-ops.md`. Follow that one.
+
 When Ralph executes an issue whose touched files match the visual-paths glob, the validation step runs `pnpm vr:check`. On failure, Claude applies this decision tree:
 
 1. **Read each diff PNG** via the `Read` tool (vision enabled — Claude sees the actual visual difference).
