@@ -148,4 +148,4 @@ Drill them in order — Q1 first (defines hero identity), Q2 second (composes th
 
 ## 6. Hand-off note
 
-When the next design drill round opens (`/design-an-interface` per [[feedback_design_drill_pattern]]), this brief is the input. Don't re-derive the system locks in §1 — quote them. The drill rounds in `docs/design/mockups/phase-5-article-detail/` are where the variants live; this doc stays the synthesised brief for kickoff.
+When the next design drill round opens (`/prototype`, UI branch, per [[feedback_design_drill_pattern]]), this brief is the input. Don't re-derive the system locks in §1 — quote them. The drill rounds in `docs/design/mockups/phase-5-article-detail/` are where the variants live; this doc stays the synthesised brief for kickoff.
