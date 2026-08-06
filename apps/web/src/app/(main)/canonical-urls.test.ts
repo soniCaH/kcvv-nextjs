@@ -25,12 +25,21 @@ vi.mock("next/navigation", () => ({
 const { runPromise } = await import("@/lib/effect/runtime");
 const mockRunPromise = vi.mocked(runPromise);
 
-// Import all page modules upfront (mocks are already in place)
-const nieuws = await import("./nieuws/[slug]/page");
+// Import all page modules upfront (mocks are already in place). Module scope
+// is deliberate: Vitest charges an import inside an `it()` body against
+// `testTimeout`, while these are paid during the untimed collect phase (#2362).
+const nieuwsDetail = await import("./nieuws/[slug]/page");
 const spelers = await import("./spelers/[slug]/page");
 const staf = await import("./staf/[slug]/page");
 const ploegen = await import("./ploegen/[slug]/page");
 const wedstrijd = await import("./wedstrijd/[matchId]/page");
+const privacy = await import("./privacy/page");
+const clubSlug = await import("./club/[slug]/page");
+const bestuur = await import("./club/bestuur/page");
+const home = await import("../(landing)/page");
+const nieuwsIndex = await import("../(landing)/nieuws/page");
+const tegenstander = await import("./tegenstander/[clubId]/page");
+const share = await import("./share/page");
 
 // ── Fixtures ───────────────────────────────────────────────────────
 
@@ -82,7 +91,7 @@ describe("Canonical URLs on dynamic routes", () => {
 
   it("/nieuws/[slug] includes canonical URL", async () => {
     mockRunPromise.mockResolvedValueOnce(articleFixture);
-    const metadata = await nieuws.generateMetadata({
+    const metadata = await nieuwsDetail.generateMetadata({
       params: Promise.resolve({ slug: "test-article" }),
     });
     expect(metadata).toHaveProperty(
@@ -141,8 +150,8 @@ describe("Canonical URLs backfilled via buildPageMetadata", () => {
     vi.clearAllMocks();
   });
 
-  it("static page (/privacy) includes canonical URL", async () => {
-    const { metadata } = await import("./privacy/page");
+  it("static page (/privacy) includes canonical URL", () => {
+    const { metadata } = privacy;
     expect(metadata).toHaveProperty(
       "alternates.canonical",
       `${SITE_CONFIG.siteUrl}/privacy`,
@@ -157,7 +166,6 @@ describe("Canonical URLs backfilled via buildPageMetadata", () => {
       heroImageUrl: null,
       body: [],
     });
-    const clubSlug = await import("./club/[slug]/page");
     const metadata = await clubSlug.generateMetadata({
       params: Promise.resolve({ slug: "inschrijven" }),
     });
@@ -173,7 +181,6 @@ describe("Canonical URLs backfilled via buildPageMetadata", () => {
       tagline: null,
       teamImageUrl: null,
     });
-    const bestuur = await import("./club/bestuur/page");
     const metadata = await bestuur.generateMetadata();
     expect(metadata).toHaveProperty(
       "alternates.canonical",
@@ -184,7 +191,6 @@ describe("Canonical URLs backfilled via buildPageMetadata", () => {
 
 describe("Static listing canonicals (#2228)", () => {
   it("/ (homepage) canonicalizes to the site root", async () => {
-    const home = await import("../(landing)/page");
     const metadata = await home.generateMetadata();
     expect(metadata).toHaveProperty(
       "alternates.canonical",
@@ -193,15 +199,14 @@ describe("Static listing canonicals (#2228)", () => {
   });
 
   it("/nieuws canonicalizes to /nieuws, including ?categorie views", async () => {
-    const nieuws = await import("../(landing)/nieuws/page");
-    const base = await nieuws.generateMetadata({
+    const base = await nieuwsIndex.generateMetadata({
       searchParams: Promise.resolve({}),
     });
     expect(base).toHaveProperty(
       "alternates.canonical",
       `${SITE_CONFIG.siteUrl}/nieuws`,
     );
-    const filtered = await nieuws.generateMetadata({
+    const filtered = await nieuwsIndex.generateMetadata({
       searchParams: Promise.resolve({ categorie: "Jeugd" }),
     });
     expect(filtered).toHaveProperty(
@@ -212,14 +217,14 @@ describe("Static listing canonicals (#2228)", () => {
 });
 
 describe("Noindex routes do NOT have canonical URLs", () => {
-  it("/tegenstander/[clubId] has robots noindex and no canonical", async () => {
-    const { metadata } = await import("./tegenstander/[clubId]/page");
+  it("/tegenstander/[clubId] has robots noindex and no canonical", () => {
+    const { metadata } = tegenstander;
     expect(metadata.robots).toEqual({ index: false, follow: false });
     expect(metadata).not.toHaveProperty("alternates");
   });
 
-  it("/share has robots noindex and no canonical", async () => {
-    const { metadata } = await import("./share/page");
+  it("/share has robots noindex and no canonical", () => {
+    const { metadata } = share;
     expect(metadata.robots).toEqual({ index: false, follow: false });
     expect(metadata).not.toHaveProperty("alternates");
   });
