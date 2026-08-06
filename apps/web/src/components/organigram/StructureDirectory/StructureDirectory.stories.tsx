@@ -7,8 +7,13 @@ const meta = {
   component: StructureDirectory,
   parameters: { layout: "fullscreen" },
   decorators: [
+    // `lang="nl"` is scoped here, never global: the fixture's
+    // "Communicatieverantwoordelijke" only hyphenates against Dutch patterns,
+    // and the Storybook iframe has no lang of its own (the app sets it in
+    // layout.tsx). Without this the card renders an overflow that production
+    // never shows. Global lang would re-baseline every hyphenating story.
     (Story) => (
-      <div className="bg-cream mx-auto max-w-[64rem] p-6 sm:p-10">
+      <div lang="nl" className="bg-cream mx-auto max-w-[64rem] p-6 sm:p-10">
         <Story />
       </div>
     ),
