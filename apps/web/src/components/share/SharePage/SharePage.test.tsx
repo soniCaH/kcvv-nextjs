@@ -71,14 +71,16 @@ describe("SharePage", () => {
     ).toBeInTheDocument();
   });
 
-  it("calls html-to-image toPng when Generate is clicked", async () => {
+  // Two calls: iOS Safari drops nested images on the first rasterization, so
+  // the capture is warmed up once and only the second result is kept.
+  it("calls html-to-image toPng twice when Generate is clicked", async () => {
     const { toPng } = await import("html-to-image");
     const user = userEvent.setup();
 
     render(<SharePage matches={MATCHES} players={PLAYERS} />);
     await user.click(screen.getByRole("button", { name: /genereer/i }));
 
-    expect(toPng).toHaveBeenCalledTimes(1);
+    expect(toPng).toHaveBeenCalledTimes(2);
   });
 
   it("calls toPng with exactly 1080x1920 dimensions and pixelRatio 1", async () => {
@@ -95,6 +97,22 @@ describe("SharePage", () => {
         height: CAPTURE_HEIGHT,
         pixelRatio: 1,
       }),
+    );
+  });
+
+  // Regression: without this, html-to-image keys its resource cache on the URL
+  // minus the query string, so every `/_next/image?url=…` shares one entry and
+  // later captures reuse the first image fetched (wrong player photo / crest).
+  it("captures with includeQueryParams so per-image cache keys stay distinct", async () => {
+    const { toPng } = await import("html-to-image");
+    const user = userEvent.setup();
+
+    render(<SharePage matches={MATCHES} players={PLAYERS} />);
+    await user.click(screen.getByRole("button", { name: /genereer/i }));
+
+    expect(toPng).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ includeQueryParams: true }),
     );
   });
 
