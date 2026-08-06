@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 
+// Safe despite the env mutation below: `robots()` reads
+// `process.env.VERCEL_ENV` inside its body at call time, so nothing is captured
+// when the module is evaluated and there is nothing to re-evaluate. (The
+// previous in-body `await import()` bought nothing either — no
+// `vi.resetModules()`, so it returned the same cached module every time.)
+import robots from "./robots";
+
 describe("robots.ts", () => {
   let savedVercelEnv: string | undefined;
 
@@ -15,9 +22,8 @@ describe("robots.ts", () => {
     }
   });
 
-  it("allows full crawl in production", async () => {
+  it("allows full crawl in production", () => {
     process.env.VERCEL_ENV = "production";
-    const { default: robots } = await import("./robots");
     const result = robots();
 
     expect(result).toEqual({
@@ -26,9 +32,8 @@ describe("robots.ts", () => {
     });
   });
 
-  it("disallows crawl in non-production environments", async () => {
+  it("disallows crawl in non-production environments", () => {
     process.env.VERCEL_ENV = "preview";
-    const { default: robots } = await import("./robots");
     const result = robots();
 
     expect(result).toEqual({
@@ -37,9 +42,8 @@ describe("robots.ts", () => {
     });
   });
 
-  it("explicitly allows /llms.txt in production", async () => {
+  it("explicitly allows /llms.txt in production", () => {
     process.env.VERCEL_ENV = "production";
-    const { default: robots } = await import("./robots");
     const result = robots();
     const rules = result.rules as { allow: string[] };
 
