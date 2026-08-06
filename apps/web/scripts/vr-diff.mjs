@@ -8,6 +8,7 @@
 // each viewport that regressed.
 import { readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const STORY_ID = process.argv[2];
 if (!STORY_ID) {
@@ -16,13 +17,22 @@ if (!STORY_ID) {
   process.exit(2);
 }
 
-const DIFF_DIR = resolve(new URL(".", import.meta.url).pathname, "..", "test/vr/__diff_output__");
+// fileURLToPath, not `.pathname` — the latter leaves the URL percent-encoded,
+// so any checkout under a path with a space resolves to a directory that
+// doesn't exist ("/Sites/KCVV%20VR/…").
+const DIFF_DIR = resolve(
+  fileURLToPath(new URL(".", import.meta.url)),
+  "..",
+  "test/vr/__diff_output__",
+);
 
 let entries;
 try {
   entries = readdirSync(DIFF_DIR);
 } catch {
-  console.error(`No diff output yet — run \`pnpm vr:check\` first. (looked in ${DIFF_DIR})`);
+  console.error(
+    `No diff output yet — run \`pnpm vr:update:story -- <story-id-prefix>\` first. (looked in ${DIFF_DIR})`,
+  );
   process.exit(1);
 }
 

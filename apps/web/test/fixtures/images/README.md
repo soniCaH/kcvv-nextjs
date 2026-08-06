@@ -6,7 +6,7 @@ services (placehold.co, picsum, unsplash) that produced flaky baselines.
 
 ## Why local fixtures
 
-- **Determinism.** A single 503 from `placehold.co` during `pnpm --filter @kcvv/web vr:update`
+- **Determinism.** A single 503 from `placehold.co` during a VR capture
   was enough to ship a corrupted baseline as truth — the test runner
   captured a broken-image render and committed it as the new ground
   truth. Local files eliminate that flake class.
@@ -109,8 +109,9 @@ off before merge.
 - To replace one fixture, delete its `manifest.json` entry and its
   WebP file, then run `pnpm --filter @kcvv/web fixtures:sync` — the script tops up to
   pool size with the next available candidate.
-- After refreshing the pool, re-baseline VR (`pnpm --filter @kcvv/web vr:update`) in the
-  same PR — see memory `feedback_vr_baseline_in_same_pr.md`.
+- After refreshing the pool, re-baseline VR in the same PR — one scoped
+  `pnpm --filter @kcvv/web vr:update:story -- <story-id-prefix>` per affected
+  component; see memory `feedback_vr_baseline_in_same_pr.md`.
 
 ## Imgbot
 

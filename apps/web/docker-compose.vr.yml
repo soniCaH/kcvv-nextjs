@@ -4,7 +4,8 @@
 # Local prerequisites:
 #   1. Docker Desktop running.
 #   2. `pnpm build-storybook` has produced apps/web/storybook-static/.
-#      (vr:check / vr:update wrap both steps in apps/web/package.json.)
+#      (The vr:* scripts in apps/web/package.json chain both steps via
+#      scripts/vr-docker.mjs, which also refuses an unscoped run — #2380.)
 services:
   vr:
     build:

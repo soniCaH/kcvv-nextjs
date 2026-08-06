@@ -142,17 +142,16 @@ after ~80 story visits regardless of Docker memory allocation (Node.js defaults
 to ~1.4 GB heap on 64-bit systems).
 
 ```bash
-# Compare against committed baselines.
-pnpm --filter @kcvv/web run vr:check
-
-# Accept the current rendering as the new baseline (commit the resulting PNGs).
-pnpm --filter @kcvv/web run vr:update
-
 # Surgical run — the pattern only scopes when it FOLLOWS `-u` (see "Scoping
 # a VR run" below), so update mode is the only scoped mode. To check a single
 # story without keeping new baselines: scoped update, inspect `git status`,
-# then restore with `git checkout -- test/vr/__snapshots__/`.
+# then discard that prefix only (see "The unscoped guard" below — never a
+# blanket checkout of the whole __snapshots__ directory).
 pnpm --filter @kcvv/web run vr:update:story -- ui-button   # update, scoped
+
+# Refused by the guard — unscoped, ~2.5 h emulated. See below.
+pnpm --filter @kcvv/web run vr:check
+pnpm --filter @kcvv/web run vr:update
 
 # Print the diff PNG path(s) for a failed story so the Read tool can inspect them.
 pnpm --filter @kcvv/web run vr:diff layout-pagefooter--standalone
@@ -173,19 +172,56 @@ The 0/57 row means architecture was the sole cause of the drift: pinned local
 renders are **byte-identical to the committed baselines CI passes against**,
 so a scoped local capture is trustworthy on Apple Silicon. Two consequences:
 
-- **Scoped runs only.** Emulation costs ~3.6×: the ~40 min full suite projects
-  to ~2.5 h. Never run an unscoped `vr:check` / `vr:update` locally — the full
-  suite is CI's job.
+- **Scoped runs only — enforced (#2380).** Emulation costs ~3.6×: the ~40 min
+  full suite projects to ~2.5 h. The full suite is CI's job; see "The unscoped
+  guard" below.
 - **Never remove the pin to speed a run up.** Unpinned arm64 output fails ~83
   stories that CI passes, and arm64-rendered baselines must never be committed
   (see "Anti-patterns" below).
+
+### The unscoped guard (#2380)
+
+`vr:check`, `vr:update`, `vr:update:single` and `vr:update:story` all route
+through `apps/web/scripts/vr-docker.mjs`, which refuses an unscoped local run
+**before** the Storybook build and before any Docker image build or pull:
+
+- **`vr:check` is always refused.** Check mode has no scoped form at all — a
+  bare positional is silently dropped (see "Scoping a VR run" below), so every
+  local `vr:check` is the full ~2.5 h suite. To check one component, run a
+  scoped **update** and read `git status test/vr/__snapshots__/`: modified =
+  drift, untracked = new. Discard **by prefix**, never the whole directory —
+  a blanket `git checkout -- test/vr/__snapshots__/` also throws away baselines
+  you legitimately updated earlier on the branch:
+
+  ```bash
+  git checkout -- "test/vr/__snapshots__/<story-id-prefix>--"*   # tracked
+  git clean -f -- "test/vr/__snapshots__/<story-id-prefix>--"*   # newly added
+  ```
+
+- **The update modes are refused without a positional pattern.** Flags do not
+  count; `pnpm vr:update -- --maxWorkers=1` is still unscoped.
+
+`VR_FULL_RUN=1` is the only override, for a deliberate full local run:
+
+```bash
+VR_FULL_RUN=1 pnpm --filter @kcvv/web run vr:update
+```
+
+CI is unaffected — `.github/workflows/ci.yml` and `vr-baseline-update.yml` call
+`vr:ci` / `vr:ci:update`, which run `vr:run*` directly without Docker. The guard
+decision is a pure function covered by `apps/web/test/scripts/vr-docker.test.ts`.
+
+The wrapper exists as a script rather than a prefix on the package.json script
+bodies because pnpm appends `-- <args>` to the **end** of the script string — a
+guard in front of the `&&` chain would never see the scoping pattern.
 
 ### Scoping a VR run
 
 A full capture is ~40 min — ~2.5 h locally under the amd64 pin — so always
 scope. **The pattern must follow `-u` — never a `--testPathPattern(s)=` flag,
 and never a bare positional on its own.** In check mode (no `-u`) a bare
-positional pattern is silently ignored and the whole suite runs.
+positional pattern is silently ignored and the whole suite runs — which is why
+the guard refuses check mode outright (see "The unscoped guard" above).
 
 `test-storybook` parses its CLI with commander against a closed option
 allowlist (`--maxWorkers`, `--testTimeout`, `-u`, `--includeTags`,
@@ -229,10 +265,11 @@ lower two-thirds of the canvas (a long-name auto-fit, the footer matchup, the
 score meta row) — it cannot. Guard those with a unit test instead; the auto-fit
 regression in #2316 is the worked example.
 
-`vr:check` and `vr:update` rebuild Storybook first, then run the test-runner
-inside Docker. First run pulls the Playwright image (~1.3 GB). Steady-state run
-time on a warm cache is ~30 s for the Phase 1 tracer-bullet set (measured
-unpinned; expect ~3.6× that under the amd64 pin).
+The local `vr:*` Docker scripts rebuild Storybook first, then run the
+test-runner inside Docker (after the unscoped guard passes). First run pulls the
+Playwright image (~1.3 GB). Steady-state run time on a warm cache is ~30 s for
+the Phase 1 tracer-bullet set (measured unpinned; expect ~3.6× that under the
+amd64 pin).
 
 ### Single-worker fallback
 
@@ -240,17 +277,19 @@ If `vr:update` crashes mid-run with `page.goto: Page crashed` (Chromium OOM
 inside the Docker container), use the single-worker variants:
 
 ```bash
-# Compare — single worker, lower peak memory.
+# Compare — single worker, lower peak memory. Native, NOT in Docker: use it to
+# triage an OOM, never to judge a diff, and never commit baselines from it
+# (see "Anti-patterns" below).
 pnpm --filter @kcvv/web run vr:run:single
 
-# Update baselines — single worker, lower peak memory.
-pnpm --filter @kcvv/web run vr:update:single
+# Update baselines — single worker, lower peak memory. Guarded: needs a pattern.
+pnpm --filter @kcvv/web run vr:update:single -- ui-button
 ```
 
 These scripts pass `--maxWorkers=1` to `test-storybook`, serialising story
 visits instead of parallelising them. Run time roughly doubles, but peak RSS
-drops significantly, allowing the full suite to complete on hosts below the
-8 GB memory floor.
+drops significantly, allowing a run to complete on hosts below the 8 GB memory
+floor.
 
 ### Path-based triggering
 
@@ -269,7 +308,8 @@ VR. There is no `visual` label and none should be introduced.
 
 ### Decision tree on a failing VR job
 
-When `pnpm vr:check` (or the CI `visual-regression` job) reports a diff:
+When the CI `visual-regression` job (or a scoped local `vr:update:story`)
+reports a diff:
 
 1. **Read each diff PNG** via the `Read` tool (vision-enabled — Claude sees the
    actual visual difference). For CI, check the sticky PR comment — diff images
@@ -279,10 +319,11 @@ When `pnpm vr:check` (or the CI `visual-regression` job) reports a diff:
 2. **Cross-reference with the issue's acceptance criteria.**
 3. **If the diff aligns with the issue's stated goal** (e.g. the issue says
    "redesign card shadow" and the diff shows a changed shadow):
-   - Run `pnpm --filter @kcvv/web run vr:update` locally. This is the only
-     route for a diff your own change caused — not `@kcvv-bot
-update-vr-baselines`, which is reserved for drift you cannot reproduce
-     locally (see "Baseline-update bot flow").
+   - Run `pnpm --filter @kcvv/web run vr:update:story -- <story-id-prefix>`
+     locally, once per affected component. This is the only route for a diff
+     your own change caused — not `@kcvv-bot update-vr-baselines`, which is
+     reserved for drift you cannot reproduce locally (see "Baseline-update bot
+     flow").
    - Commit with message `chore(ui): update VR baselines — issue #<N>` plus a
      one-line rationale per changed baseline (`- <story-id>: shadow adjusted
 per AC#3`). **`vr` is not a valid commitlint scope** — use `ui`, or the
@@ -397,16 +438,16 @@ without paying the throwaway-baseline cost up front.
   `vr` obligation, and the Phase 3 Include list in
   `docs/prd/visual-regression-testing.md` is updated in the same PR to
   reflect the new file names.
-- Confirm Docker Desktop is running locally (required for `pnpm vr:update`).
+- Confirm Docker Desktop is running locally (required for `pnpm vr:update:story`).
 
 **Definition of Done** — before requesting review on the redesign PR:
 
 1. The redesigned story file's meta has `"vr"` in its `tags` array
    (`tags: ["autodocs", "vr"]`, or `"vr"` merged into whatever array
    already exists).
-2. Baselines were captured by running `pnpm vr:update` from `apps/web/`
-   inside the pinned Docker container (never native macOS — see
-   anti-patterns below).
+2. Baselines were captured by running `pnpm vr:update:story -- <story-id-prefix>`
+   from `apps/web/` inside the pinned Docker container (never native macOS —
+   see anti-patterns below).
 3. The new
    `apps/web/test/vr/__snapshots__/features-<area>-<component>--<story>--<viewport>.png`
    files are committed alongside the redesign code.
@@ -588,9 +629,15 @@ explicitly. A GitHub App is the cleaner long-term replacement.
 
 - **No `[skip ci]`** in baseline-update commits. CodeRabbit quota is handled
   separately; GitHub CI must run to verify the new baselines.
-- **No native Playwright** outside Docker on macOS. Local font rendering
-  diverges from Linux CI and produces false-positive diffs. Always use
-  `vr:check` / `vr:update`.
+- **No native Playwright** outside Docker on macOS for capture or judgement.
+  Local font rendering diverges from Linux CI, so a native run can neither
+  produce a committable baseline nor tell you whether a diff is real. The one
+  sanctioned native run is `vr:run:single` as **OOM triage** — to find which
+  story is exhausting Chromium (see "Single-worker fallback"). Everything else
+  goes through the Docker `vr:*` scripts.
+- **`VR_FULL_RUN=1` is not a way past the guard.** If a scoped run does not
+  cover what you need, scope it differently or let CI run the full suite —
+  the override exists for a deliberate ~2.5 h local run, not for convenience.
 - **No baselines committed from macOS or Windows hosts.** Only Docker-local
   (Linux-matched) or the CI bot.
 - **No `visual` label.** Triggering is path-based; never introduce a label gate.
@@ -603,7 +650,7 @@ explicitly. A GitHub App is the cleaner long-term replacement.
 - **Do not remove `NODE_OPTIONS=--max-old-space-size=4096` from `docker-compose.vr.yml`.**
   Node.js defaults to ~1.4 GB heap — the test runner OOMs after ~80 story visits
   regardless of Docker memory allocation.
-- **Do not treat a local `vr:check` failure on an unpinned (arm64) container
+- **Do not treat a local VR failure on an unpinned (arm64) container
   as a regression** without first checking the story against CI's render
   (extract it per "Inspecting diffs" above) — Apple Silicon drifts on
   display-serif stories. With the `platform: linux/amd64` pin a local failure

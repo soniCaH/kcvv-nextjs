@@ -19,5 +19,6 @@ Background and rationale: `docs/prd/visual-regression-testing.md`.
 
 Do **not** commit baselines captured on macOS or Windows. Linux fonts
 render differently, so a macOS-committed baseline guarantees a CI red on
-the next PR. Always run `pnpm vr:update` from inside the pinned Docker
-container.
+the next PR. Always capture from inside the pinned Docker container:
+`pnpm vr:update:story -- <story-id-prefix>` (unscoped runs are refused —
+see "The unscoped guard" in `docs/agents/testing-ops.md`).

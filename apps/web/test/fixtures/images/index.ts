@@ -3,7 +3,7 @@
  *
  * Why this exists: remote placeholder services (placehold.co, picsum,
  * unsplash) produce non-deterministic VR baselines — one network blip
- * during `pnpm vr:update` ships a corrupted snapshot as truth. Local
+ * during a VR capture ships a corrupted snapshot as truth. Local
  * fixtures sourced from the production Sanity dataset eliminate that
  * flake class and surface real layout bugs (long Dutch headlines,
  * portrait-in-landscape-slot, scoreboard chrome, etc.).

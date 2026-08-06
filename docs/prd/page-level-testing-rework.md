@@ -8,14 +8,14 @@
 > **Milestone:** `redesign-retro-terrace-fanzine`
 > **Owner:** @soniCaH
 > **Estimate:** 1–2 weeks (sits between redesign Phase 0 and Phase 1 — call it Phase 0.5)
-> **Blocks:** none directly, but unblocks Phase 1 by removing the Pages/* VR flake
+> **Blocks:** none directly, but unblocks Phase 1 by removing the Pages/\* VR flake
 > **Supersedes:** GitHub issues [#1375](https://github.com/soniCaH/www.kcvvelewijt.be/issues/1375) (close on merge), [#1376](https://github.com/soniCaH/www.kcvvelewijt.be/issues/1376) (rescope to component-only on merge)
 
 ---
 
 ## Context
 
-The redesign is using Storybook + `@storybook/test-runner` for visual regression coverage. Phases 1–3 of the VR rollout (commits `feat(ui): vr phase 1..3`, merged April 2026) shipped the infrastructure (Phase 1 tracer-bullet — pinned Docker image, jest-image-snapshot wiring, baseline conventions; Phase 2 — design-system / Foundation / Layout coverage; Phase 3 — `Features/*` curation as a *staged-adoption contract*). Phase 1's actual tagging covered the tracer set; Phase 2's tagging covered foundation/UI/layout stories; Phase 3 set up the rule that `Features/*` redesign PRs must adopt the `vr` tag and capture baselines as each component gets redesigned, but the bulk of `Features/*` stories are not yet tagged. As of this PRD, ~37 stories carry `tags: ["vr"]` and the committed baseline tree has ~978 PNGs across viewports. The Phase 4 issue (#1375 — "real-page composition coverage") was scoped to extend that coverage to full `Pages/*` compositions; Phase 5 (#1376 — "full Storybook coverage via fixture pinning") was scoped to fixture-pin everything that wasn't yet stable.
+The redesign is using Storybook + `@storybook/test-runner` for visual regression coverage. Phases 1–3 of the VR rollout (commits `feat(ui): vr phase 1..3`, merged April 2026) shipped the infrastructure (Phase 1 tracer-bullet — pinned Docker image, jest-image-snapshot wiring, baseline conventions; Phase 2 — design-system / Foundation / Layout coverage; Phase 3 — `Features/*` curation as a _staged-adoption contract_). Phase 1's actual tagging covered the tracer set; Phase 2's tagging covered foundation/UI/layout stories; Phase 3 set up the rule that `Features/*` redesign PRs must adopt the `vr` tag and capture baselines as each component gets redesigned, but the bulk of `Features/*` stories are not yet tagged. As of this PRD, ~37 stories carry `tags: ["vr"]` and the committed baseline tree has ~978 PNGs across viewports. The Phase 4 issue (#1375 — "real-page composition coverage") was scoped to extend that coverage to full `Pages/*` compositions; Phase 5 (#1376 — "full Storybook coverage via fixture pinning") was scoped to fixture-pin everything that wasn't yet stable.
 
 Practical experience during the redesign Phase 0 work surfaced two structural problems with this direction:
 
@@ -30,11 +30,11 @@ Move page-level testing off Storybook + test-runner and onto Playwright running 
 
 ## Layered testing model after this rework
 
-| Layer | Tool | What it catches | Where it lives |
-| --- | --- | --- | --- |
-| Atoms / molecules / features | Storybook + `@storybook/test-runner` (existing VR) | Visual regressions on individual `UI/*`, `Features/*`, `Layout/*` stories | `apps/web/src/**/*.stories.tsx`, baselines at `apps/web/test/vr/__snapshots__/` |
-| Page composition | **Playwright e2e against `next start`** (new) | Page renders HTTP 200, critical elements present, no console errors, no broken images, layout integrity at viewport | `apps/web/test/e2e/` (new directory) |
-| Functional flows | Playwright integration (existing or new) | User journeys (search → result → click → page) | same `apps/web/test/e2e/` |
+| Layer                        | Tool                                               | What it catches                                                                                                     | Where it lives                                                                  |
+| ---------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Atoms / molecules / features | Storybook + `@storybook/test-runner` (existing VR) | Visual regressions on individual `UI/*`, `Features/*`, `Layout/*` stories                                           | `apps/web/src/**/*.stories.tsx`, baselines at `apps/web/test/vr/__snapshots__/` |
+| Page composition             | **Playwright e2e against `next start`** (new)      | Page renders HTTP 200, critical elements present, no console errors, no broken images, layout integrity at viewport | `apps/web/test/e2e/` (new directory)                                            |
+| Functional flows             | Playwright integration (existing or new)           | User journeys (search → result → click → page)                                                                      | same `apps/web/test/e2e/`                                                       |
 
 ## Non-goals
 
@@ -72,6 +72,7 @@ Move page-level testing off Storybook + test-runner and onto Playwright running 
    - `.github/workflows/e2e.yml` (workflow self-changes)
 
    Notably **excluded** from the e2e trigger (because they're Storybook-only and don't affect this suite): `apps/web/.storybook/**`, the `apps/web/test/vr/**` baseline tree.
+
 6. **Existing GitHub issues — disposition:**
    - **#1375 "VR Phase 4 — real-page composition coverage"**: close with a comment pointing at this PRD as the supersession path. Page-level visual coverage moves to Playwright; the goal of #1375 is achieved via this rework, not via more Storybook stories.
    - **#1376 "VR Phase 5 — full Storybook coverage via fixture pinning"**: scope-narrow to component-level only. The phrase "full Storybook coverage" originally meant including pages; rewrite the issue body so it covers only `UI/*`, `Features/*`, `Layout/*` fixture pinning and explicitly excludes `Pages/*`. Or close and replace with a tighter follow-up.
@@ -89,6 +90,10 @@ Move page-level testing off Storybook + test-runner and onto Playwright running 
 - [ ] No spec / test files generated for the five `vr-skip`-tagged `Pages/*` stories during VR runs. The `--excludeTags vr-skip` flag (already present in `vr:check`) excludes them at **discovery** time, before `setupPage` runs, which is what prevents the page-crash flake. Verify per the snippet below.
 
 ### How to verify
+
+> **Historical (#2380).** This was a one-time check for the PR that landed this
+> PRD. `pnpm vr:check` is now refused locally — the equivalent today is CI's
+> `visual-regression` job, or a scoped `vr:update:story`.
 
 After running `pnpm vr:check` from the repo root:
 

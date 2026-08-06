@@ -5,6 +5,13 @@
 **Issues**: TBD (Phase 1), TBD (Phase 2), TBD (Phase 3), TBD (Phase 4), TBD (Phase 5)
 **Blocked-by**: #1360
 
+> **Commands in this PRD are historical (#2380).** Every `pnpm vr:check` and
+> bare `pnpm vr:update` below is now refused locally — under the amd64 pin an
+> unscoped run is a ~2.5 h emulated full suite. Substitute CI's
+> `visual-regression` job, or a scoped `pnpm vr:update:story -- <prefix>`. The
+> live operational doc is `docs/agents/testing-ops.md`; the design rationale
+> here is unchanged.
+
 ---
 
 ## 1. Problem statement
@@ -177,6 +184,11 @@ Even if the bot's push contains non-PNG metadata files, CodeRabbit skips the com
 Do **not** use GitHub's `[skip ci]` in bot commit messages. It skips our own VR verification job. The two mechanisms above are sufficient — and they don't affect whether GitHub Actions runs.
 
 ## 10. Ralph integration & decision loop
+
+> **Superseded by #2380 for the commands only.** `vr:check` and unscoped
+> `vr:update` are now refused locally (~2.5 h emulated full suite under the
+> amd64 pin). The live loop — same shape, scoped commands — is "Decision tree on
+> a failing VR job" in `docs/agents/testing-ops.md`. Follow that one.
 
 When Ralph executes an issue whose touched files match the visual-paths glob, the validation step runs `pnpm vr:check`. On failure, Claude applies this decision tree:
 
