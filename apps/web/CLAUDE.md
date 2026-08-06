@@ -176,4 +176,5 @@ Three independent test layers, each owning a specific concern. Don't blur them �
 Two rules worth knowing before you get there, because getting them wrong costs a CI round:
 
 - **VR baselines ship in the same PR as the code**, captured locally via Docker. Never open the PR first and capture after, and never reach for `@kcvv-bot update-vr-baselines` for a baseline your own change caused — that bot is for drift you cannot reproduce locally.
-- **Scope every capture** — a full run is ~40 min. Filter by story-ID prefix as a bare positional argument (`vr -u ui-button`), never a `--testPathPatterns=` flag; that flag is rejected outright.
+- **Scope every capture** — a full run is ~40 min. Filter by story-ID prefix with `-u <prefix>` (`vr -u ui-button`) — the pattern only scopes when it follows `-u`. A bare positional in check mode is silently ignored (the full suite runs), and a `--testPathPatterns=` flag is rejected outright.
+- **On an unpinned VR container, do not treat a local `vr:check` failure as a regression** without first checking the story against CI's render — arm64 on Apple Silicon drifts on display-serif stories. With the `platform: linux/amd64` pin (the committed default) a local failure is real. See "The amd64 pin — scoped runs only" in `docs/agents/testing-ops.md` (#2370).
