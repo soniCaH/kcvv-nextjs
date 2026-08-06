@@ -54,6 +54,11 @@ storybook-static
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 
+# impeccable — shared config.json and design.json ARE committed;
+# per-developer consent and the hook's dedup cache are not
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+
 # playwright
 test-results/
 playwright-report/
