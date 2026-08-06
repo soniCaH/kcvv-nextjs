@@ -267,8 +267,12 @@ function DualAvatar({
   );
 }
 
+// `w-full` is load-bearing: the card is `flex-col items-center`, so without it
+// this <p> sizes to max-content and a long role ("Communicatieverantwoordelijke")
+// spills out past the card border instead of wrapping. `hyphens-auto` goes in
+// ALONE — pairing it with `break-words` suppresses the hyphen (see #2269).
 const SUBLABEL =
-  "text-ink-muted mt-1.5 font-mono text-[9px] tracking-[0.06em] uppercase";
+  "text-ink-muted mt-1.5 w-full font-mono text-[11px] tracking-[0.06em] uppercase hyphens-auto";
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -299,7 +303,7 @@ export function OrgPersonCard({
       {node.roleCode && (
         <span
           data-testid="org-person-card-rolepill"
-          className="border-ink bg-jersey-deep absolute top-2 right-2 border-[1.5px] px-1.5 py-px font-mono text-[8px] font-semibold tracking-[0.05em] text-white uppercase"
+          className="border-ink bg-jersey-deep absolute top-2 right-2 border-[1.5px] px-1.5 py-px font-mono text-[11px] font-semibold tracking-[0.05em] text-white uppercase"
         >
           {node.roleCode}
         </span>
@@ -359,14 +363,14 @@ export function OrgPersonCard({
           {/* Interactive cards open the panel (vacant state carries the CTA);
               the inline link is only for the presentational directory. */}
           {interactive ? (
-            <span className="border-ink bg-cream text-ink shadow-paper-sm mt-2.5 border-[1.5px] px-2.5 py-1.5 font-mono text-[9px] font-bold tracking-[0.06em] uppercase">
+            <span className="border-ink bg-cream text-ink shadow-paper-sm mt-2.5 border-[1.5px] px-2.5 py-1.5 font-mono text-[11px] font-bold tracking-[0.06em] uppercase">
               Iets voor jou? →
             </span>
           ) : (
             <Link
               href={vacantCtaHref}
               data-testid="org-person-card-vacant-cta"
-              className="border-ink bg-cream text-ink shadow-paper-sm mt-2.5 border-[1.5px] px-2.5 py-1.5 font-mono text-[9px] font-bold tracking-[0.06em] uppercase transition-all duration-300 hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+              className="border-ink bg-cream text-ink shadow-paper-sm mt-2.5 border-[1.5px] px-2.5 py-1.5 font-mono text-[11px] font-bold tracking-[0.06em] uppercase transition-all duration-300 hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
             >
               Iets voor jou? →
             </Link>

@@ -432,7 +432,7 @@ const NavDropdownRow = ({ item, variant, onClick }: NavDropdownRowProps) => (
         className={cn(
           "w-3 flex-shrink-0 leading-none",
           item.active
-            ? "text-jersey-bright text-[8px]"
+            ? "text-jersey-bright text-[11px]"
             : "text-ink-muted group-hover/row:text-jersey-bright text-[13px]",
         )}
       >

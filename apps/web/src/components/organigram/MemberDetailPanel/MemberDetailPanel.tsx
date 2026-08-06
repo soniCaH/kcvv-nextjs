@@ -272,7 +272,7 @@ export function MemberDetailPanel({
               <X size={14} aria-hidden />
             </button>
 
-            <p className="text-warm font-mono text-[10px] tracking-[0.1em] uppercase">
+            <p className="text-warm font-mono text-[11px] tracking-[0.1em] uppercase">
               {deriveKicker(node)}
             </p>
 
@@ -289,12 +289,12 @@ export function MemberDetailPanel({
                 {(isVacant || node.roleCode) && (
                   <p className="mt-1.5 flex items-center gap-1.5">
                     {isVacant && (
-                      <span className="text-cream/85 font-mono text-[9px] tracking-[0.04em] uppercase">
+                      <span className="text-cream/85 font-mono text-[11px] tracking-[0.04em] uppercase">
                         Vacante functie
                       </span>
                     )}
                     {node.roleCode && (
-                      <span className="border-ink bg-warm text-ink border-[1.5px] px-1.5 py-px font-mono text-[8px] font-semibold tracking-[0.05em] uppercase">
+                      <span className="border-ink bg-warm text-ink border-[1.5px] px-1.5 py-px font-mono text-[11px] font-semibold tracking-[0.05em] uppercase">
                         {node.roleCode}
                       </span>
                     )}
@@ -342,7 +342,7 @@ export function MemberDetailPanel({
 
                 {holderResponsibilities.length > 0 && (
                   <div>
-                    <p className="text-ink-muted mb-2 font-mono text-[10px] tracking-[0.1em] uppercase">
+                    <p className="text-ink-muted mb-2 font-mono text-[11px] tracking-[0.1em] uppercase">
                       Helpt met
                     </p>
                     <ul className="flex flex-wrap gap-1.5">
@@ -370,7 +370,7 @@ export function MemberDetailPanel({
                               if (returnFocusRef) returnFocusRef.current = null;
                               onClose();
                             }}
-                            className="border-jersey-deep text-jersey-deep hover:bg-jersey-deep hover:text-cream inline-block border-[1.5px] px-2 py-1 font-mono text-[10px] tracking-[0.02em] uppercase transition-colors"
+                            className="border-jersey-deep text-jersey-deep hover:bg-jersey-deep hover:text-cream inline-block border-[1.5px] px-2 py-1 font-mono text-[11px] tracking-[0.02em] uppercase transition-colors"
                           >
                             {path.question}
                           </a>
@@ -508,7 +508,7 @@ function HolderSwitcher({
 
   return (
     <div className="bg-cream-deep border-ink border-b-2 px-3 py-2.5">
-      <p className="text-ink-muted mb-2 font-mono text-[9px] tracking-[0.08em] uppercase">
+      <p className="text-ink-muted mb-2 font-mono text-[11px] tracking-[0.08em] uppercase">
         Gedeelde functie · {holders.length} personen — kies wie:
       </p>
       <div
@@ -541,7 +541,7 @@ function HolderSwitcher({
               <span
                 aria-hidden="true"
                 className={cn(
-                  "border-ink font-display-big flex h-[22px] w-[22px] items-center justify-center rounded-full border-[1.5px] text-[10px] font-black",
+                  "border-ink font-display-big flex h-[22px] w-[22px] items-center justify-center rounded-full border-[1.5px] text-[11px] font-black",
                   active
                     ? "bg-cream text-jersey-deep"
                     : "bg-cream-soft text-jersey-deep",

@@ -67,7 +67,7 @@ export function SpotlightNodeCard({
       <span className="font-display text-ink line-clamp-2 text-xs leading-[1.15] font-semibold">
         {node.title}
       </span>
-      <span className="text-ink-muted mt-1 block font-mono text-[8px] tracking-[0.06em] uppercase">
+      <span className="text-ink-muted mt-1 block font-mono text-[11px] tracking-[0.06em] uppercase">
         {sublabel}
       </span>
     </span>
