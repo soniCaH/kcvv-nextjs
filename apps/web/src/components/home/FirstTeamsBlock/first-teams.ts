@@ -43,7 +43,7 @@ export function firstTeamLabel(slug: string, name: string): string {
   return /^[a-z]$/i.test(tail) ? `${tail.toUpperCase()}-ploeg` : name;
 }
 
-function pickLastResult(
+export function pickLastResult(
   matches: readonly Match[],
   now: Date,
 ): Match | undefined {
@@ -52,7 +52,7 @@ function pickLastResult(
     .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
 }
 
-function pickNextFixture(
+export function pickNextFixture(
   matches: readonly Match[],
   now: Date,
 ): Match | undefined {

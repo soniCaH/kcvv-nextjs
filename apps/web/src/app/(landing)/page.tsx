@@ -2,6 +2,10 @@
  * Homepage
  * Main landing page for KCVV Elewijt website
  *
+ * Spine order (#2387): hero → Dit weekend → Uitgelicht → …, so a supporter
+ * reaches the first-team result inside the second screen on a phone instead
+ * of the fourth.
+ *
  * Phase 4.5.C.1 (#1754) — R4.B spine reorder + R1.B static-hero
  * retirement of `<HomepageHeroCarousel>`. The hero is now a single
  * static `<EditorialHero placement="homepage">` rendering the top
@@ -547,8 +551,12 @@ export default async function HomePage() {
       <SectionStack
         sections={[
           heroSection,
-          uitgelichtSection,
+          // #2387: "Dit weekend." sits directly under the hero, ahead of the
+          // editorial rows. The result used to land ~2,200px down on a phone,
+          // behind the hero and three Uitgelicht cards, which contradicted
+          // product principle 1 ("the result is the headline").
           firstTeamsSection,
+          uitgelichtSection,
           featuredEventSection,
           bannerSlotASection,
           latestNewsSection,

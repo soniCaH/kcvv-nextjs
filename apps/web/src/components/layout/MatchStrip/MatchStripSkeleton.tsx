@@ -1,6 +1,6 @@
 /**
  * Cream-paper skeleton matching the upcoming-state strip dimensions.
- * Rendered as the Suspense fallback while `getFirstTeamNextMatch()` resolves.
+ * Rendered as the Suspense fallback while `getFirstTeamStripData()` resolves.
  */
 export function MatchStripSkeleton() {
   return (

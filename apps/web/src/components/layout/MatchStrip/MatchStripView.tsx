@@ -1,81 +1,313 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 import { MonoLabel } from "@/components/design-system/MonoLabel";
 import { getButtonClasses } from "@/components/design-system/Button";
+import { House, Bus } from "@/lib/icons.redesign";
+import { OUTCOME_UNDERLINE } from "@/lib/utils/match-display";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import { formatWidgetDate } from "@/lib/utils/dates";
-import type { UpcomingMatch } from "@/components/match/types";
+import type { MatchStripData } from "@/lib/server/match-data";
+import type { ScheduleMatch, ScheduleTeam } from "@/components/match/types";
 
 const KCVV_LOGO_URL = "/images/logos/kcvv-logo.png";
 
 export interface MatchStripViewProps {
-  match: UpcomingMatch;
+  data: MatchStripData;
 }
 
-export function MatchStripView({ match }: MatchStripViewProps) {
-  const isKcvvHome = match.homeTeam.id === KCVV_CLUB_ID;
-
-  // Convention: render fixture left-to-right as home then away. KCVV's
-  // position (left = home, right = away) is how home/away is signalled —
-  // no "@" glyph, just ordering, the same way scoreboards list fixtures.
-  const homeMark = {
-    name: isKcvvHome ? "KCVV" : match.homeTeam.name,
-    logoUrl: isKcvvHome ? KCVV_LOGO_URL : match.homeTeam.logo,
-  };
-  const awayMark = {
-    name: isKcvvHome ? match.awayTeam.name : "KCVV",
-    logoUrl: isKcvvHome ? match.awayTeam.logo : KCVV_LOGO_URL,
-  };
-
-  const dateStr = formatWidgetDate(match.date);
-  const aftrap = match.time ? `${dateStr} · ${match.time}` : dateStr;
-  const href = `/wedstrijd/${match.id}`;
+/**
+ * The landing-page strip: the first team's last result and next fixture.
+ *
+ * Two layouts, one component (#2387):
+ *
+ * - **Mobile** — both matches as linked ledger rows, visible at once. The row
+ *   itself is the `<Link>`, the same contract `<TeamAgendaRow>` uses, so it is
+ *   one touch target with no nested interactives and the trailing chevron is a
+ *   visible affordance rather than a hover-only reveal.
+ * - **Desktop** — one match at a time behind a two-slide switch, defaulting to
+ *   the result, with the `Wedstrijddetails` CTA. Deliberately not a carousel:
+ *   two slides, no auto-advance, no swipe-only path.
+ *
+ * Scores render in true scoreboard order (home team first). Home/away is drawn
+ * only on mobile, where the row shows the opponent alone — on desktop both
+ * teams appear in order, so a venue glyph would restate the layout.
+ */
+export function MatchStripView({ data }: MatchStripViewProps) {
+  const { result, fixture } = data;
 
   return (
     <aside
-      aria-label="Volgende wedstrijd"
-      className="bg-cream border-t-jersey-deep/35 border-b-ink/15 grid border-t border-b lg:grid-cols-[auto_1fr_auto]"
+      aria-label="Laatste uitslag en volgende wedstrijd"
+      className="bg-cream border-t-jersey-deep/35 border-b-ink/15 border-t border-b"
     >
-      {/* Fixture cluster */}
-      <div className="flex min-w-0 items-center justify-center gap-3 px-4 py-3 lg:justify-start lg:px-6">
-        <TeamMark name={homeMark.name} logoUrl={homeMark.logoUrl} />
-        <TeamName>{homeMark.name}</TeamName>
-        <span className="font-display text-ink/50 text-[14px] leading-none italic">
-          vs.
-        </span>
-        <TeamName>{awayMark.name}</TeamName>
-        <TeamMark name={awayMark.name} logoUrl={awayMark.logoUrl} />
+      <div className="lg:hidden">
+        {result ? (
+          <LedgerLinkRow match={result} kind="result" last={!fixture} />
+        ) : null}
+        {fixture ? <LedgerLinkRow match={fixture} kind="fixture" last /> : null}
+      </div>
+      <DesktopSlider result={result} fixture={fixture} />
+    </aside>
+  );
+}
+
+/* ── shared derivations ──────────────────────────────────────────────────── */
+
+/**
+ * Whether KCVV played at home. `is_home` is not guaranteed by the upstream, so
+ * fall back to the club id rather than letting `undefined` take the falsy
+ * branch and render KCVV as its own opponent.
+ */
+function isKcvvHome(match: ScheduleMatch): boolean {
+  return match.isHome ?? match.homeTeam.id === KCVV_CLUB_ID;
+}
+
+function opponentOf(match: ScheduleMatch): ScheduleTeam {
+  return isKcvvHome(match) ? match.awayTeam : match.homeTeam;
+}
+
+function outcomeOf(match: ScheduleMatch): "win" | "draw" | "loss" | null {
+  const { homeScore, awayScore } = match;
+  if (homeScore === undefined || awayScore === undefined) return null;
+  const home = isKcvvHome(match);
+  const kcvv = home ? homeScore : awayScore;
+  const other = home ? awayScore : homeScore;
+  if (kcvv > other) return "win";
+  if (kcvv < other) return "loss";
+  return "draw";
+}
+
+function scoreboardScore(match: ScheduleMatch): string | null {
+  const { homeScore, awayScore } = match;
+  if (homeScore === undefined || awayScore === undefined) return null;
+  return `${homeScore}–${awayScore}`;
+}
+
+/* ── atoms ───────────────────────────────────────────────────────────────── */
+
+function Crest({ team, big = false }: { team: ScheduleTeam; big?: boolean }) {
+  const size = big ? "h-9 w-9" : "h-7 w-7";
+  // The upstream does not always carry a logo for KCVV's own side; fall back to
+  // the local asset before the initial badge, so the club crest is never an "E".
+  const src =
+    team.logo ?? (team.id === KCVV_CLUB_ID ? KCVV_LOGO_URL : undefined);
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt=""
+        className={cn(size, "shrink-0 object-contain")}
+        loading="lazy"
+      />
+    );
+  }
+  const initial =
+    team.name.trim().split(/\s+/).at(-1)?.[0]?.toUpperCase() ?? "?";
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "border-ink/40 bg-cream-soft text-ink inline-flex shrink-0 items-center justify-center border",
+        "font-display text-mono-sm leading-none font-black italic",
+        size,
+      )}
+    >
+      {initial}
+    </span>
+  );
+}
+
+/** Reuses `<TeamAgendaRow>`'s venue glyph — one home/away vocabulary, not two. */
+function VenueGlyph({ home }: { home: boolean }) {
+  const Icon = home ? House : Bus;
+  return (
+    <Icon
+      aria-label={home ? "Thuiswedstrijd" : "Uitwedstrijd"}
+      className="text-ink-muted h-4 w-4 shrink-0"
+    />
+  );
+}
+
+/**
+ * The canonical outcome marker: a highlighter sweep behind the score, and
+ * nothing at all on a draw. Never a rule underneath it.
+ */
+function Score({
+  match,
+  className,
+}: {
+  match: ScheduleMatch;
+  className?: string;
+}) {
+  const score = scoreboardScore(match);
+  if (score === null) return null;
+  const outcome = outcomeOf(match);
+  const shadow = outcome ? OUTCOME_UNDERLINE[outcome] : undefined;
+  return (
+    <span
+      className={cn("text-ink font-mono font-bold", className)}
+      style={shadow ? { boxShadow: shadow, padding: "0 8px" } : undefined}
+    >
+      {score}
+    </span>
+  );
+}
+
+/**
+ * Unboxed on purpose: a bordered date stub next to the bordered crest reads as
+ * two competing squares. `<TeamAgendaRow>` can afford the box because it sits
+ * inside a ticket-stub card; the strip is a flat band.
+ */
+function StripDate({ date }: { date: Date }) {
+  const day = date.getDate();
+  const month = date.toLocaleDateString("nl-BE", { month: "short" });
+  return (
+    <span className="text-ink text-mono-sm w-12 shrink-0 font-mono font-bold whitespace-nowrap tabular-nums">
+      {day}{" "}
+      <span className="text-ink-muted font-medium uppercase">{month}</span>
+    </span>
+  );
+}
+
+/* ── mobile ──────────────────────────────────────────────────────────────── */
+
+function LedgerLinkRow({
+  match,
+  kind,
+  last = false,
+}: {
+  match: ScheduleMatch;
+  kind: "result" | "fixture";
+  last?: boolean;
+}) {
+  const home = isKcvvHome(match);
+  const opponent = opponentOf(match);
+  const dateLabel = formatWidgetDate(match.date);
+  const label =
+    kind === "result"
+      ? `Uitslag ${dateLabel}: KCVV Elewijt tegen ${opponent.name}`
+      : `Volgende wedstrijd ${dateLabel}${match.time ? ` om ${match.time}` : ""}: KCVV Elewijt tegen ${opponent.name}`;
+
+  return (
+    <Link
+      href={`/wedstrijd/${match.id}`}
+      aria-label={label}
+      className={cn(
+        "hover:bg-cream-soft focus-visible:outline-jersey-deep flex min-w-0 items-center gap-2.5 px-4 py-2.5 no-underline",
+        "focus-visible:outline-2 focus-visible:outline-offset-[-2px]",
+        last ? "" : "border-ink/15 border-b",
+      )}
+    >
+      <StripDate date={match.date} />
+      <Crest team={opponent} />
+      <span className="font-display text-ink min-w-0 flex-1 truncate leading-none font-bold italic">
+        {opponent.name}
+      </span>
+      <VenueGlyph home={home} />
+      <span className="shrink-0">
+        {kind === "result" ? (
+          <Score match={match} className="text-mono-md" />
+        ) : match.time ? (
+          <span className="text-ink text-mono-sm font-mono font-semibold">
+            {match.time}
+          </span>
+        ) : null}
+      </span>
+      <span aria-hidden="true" className="text-ink-muted shrink-0 font-mono">
+        →
+      </span>
+    </Link>
+  );
+}
+
+/* ── desktop ─────────────────────────────────────────────────────────────── */
+
+function DesktopSlider({
+  result,
+  fixture,
+}: {
+  result: ScheduleMatch | null;
+  fixture: ScheduleMatch | null;
+}) {
+  // Default to the result when there is one; otherwise the fixture is the only
+  // slide there is.
+  const [showResult, setShowResult] = useState(result !== null);
+  const showing = showResult && result ? result : (fixture ?? result);
+  if (!showing) return null;
+
+  const bothSides = result !== null && fixture !== null;
+  const isResultSlide = showResult && result !== null;
+
+  return (
+    <div className="hidden lg:grid lg:grid-cols-[auto_1fr_auto]">
+      {bothSides ? (
+        <div className="border-ink/15 flex items-center justify-center gap-2 border-r px-5">
+          <button
+            type="button"
+            onClick={() => setShowResult(true)}
+            disabled={isResultSlide}
+            aria-label="Toon de laatste uitslag"
+            className="border-ink text-ink hover:bg-cream-soft flex h-9 w-9 items-center justify-center border-2 font-mono text-sm disabled:opacity-30"
+          >
+            ←
+          </button>
+          <span className="text-ink-muted w-20 text-center">
+            <MonoLabel size="sm">
+              {isResultSlide ? "Uitslag" : "Volgende"}
+            </MonoLabel>
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowResult(false)}
+            disabled={!isResultSlide}
+            aria-label="Toon de volgende wedstrijd"
+            className="border-ink text-ink hover:bg-cream-soft flex h-9 w-9 items-center justify-center border-2 font-mono text-sm disabled:opacity-30"
+          >
+            →
+          </button>
+        </div>
+      ) : (
+        <div className="border-ink/15 flex items-center border-r px-5">
+          <span className="text-ink-muted">
+            <MonoLabel size="sm">
+              {isResultSlide ? "Uitslag" : "Volgende"}
+            </MonoLabel>
+          </span>
+        </div>
+      )}
+
+      <div aria-live="polite" className="min-w-0 py-3">
+        <div className="flex min-w-0 items-center justify-center gap-3 px-6">
+          <Crest team={showing.homeTeam} big />
+          <DesktopTeamName team={showing.homeTeam} />
+          {isResultSlide ? (
+            <Score match={showing} className="text-mono-md shrink-0" />
+          ) : (
+            // `ink/50` computes to 3.63:1 on cream — below AA. `ink-muted` is
+            // the palette's answer for de-emphasised text and clears at ~4.9:1.
+            <span className="font-display text-ink-muted text-mono-md shrink-0 leading-none italic">
+              vs.
+            </span>
+          )}
+          <DesktopTeamName team={showing.awayTeam} />
+          <Crest team={showing.awayTeam} big />
+        </div>
+        {/* No venue glyph: both teams render in scoreboard order here, so the
+            layout already says who was at home. */}
+        <div className="text-ink text-mono-sm mt-1.5 text-center font-mono font-semibold">
+          {formatWidgetDate(showing.date)}
+          {!isResultSlide && showing.time ? ` · ${showing.time}` : ""}
+          {showing.competition ? ` · ${showing.competition}` : ""}
+        </div>
       </div>
 
-      {/* Meta cluster — desktop has caption/value cells, mobile keeps just the
-          centred Aftrap value. */}
-      <div className="border-ink/15 flex items-center justify-center border-t px-4 py-2 lg:border-0 lg:px-0">
-        <span className="text-ink font-mono text-[13px] font-semibold lg:hidden">
-          {aftrap}
-        </span>
-
-        {/* HP-2: same cells + divider as before — only the text alignment
-            within each cell changes so Aftrap and Competitie hug the divider
-            (Aftrap right-aligned, Competitie left-aligned). */}
-        <dl className="lg:divide-ink/15 hidden lg:flex lg:items-stretch lg:divide-x">
-          <MetaCell caption="Aftrap" value={aftrap} align="right" />
-          {match.competition ? (
-            <MetaCell
-              caption="Competitie"
-              value={match.competition}
-              align="left"
-            />
-          ) : null}
-          {match.venue ? (
-            <MetaCell caption="Terrein" value={match.venue} />
-          ) : null}
-        </dl>
-      </div>
-
-      {/* CTA */}
-      <div className="border-ink/15 flex items-center justify-center border-t px-4 py-3 lg:justify-end lg:border-0 lg:px-6">
+      <div className="flex items-center justify-end px-6">
         <Link
-          href={href}
+          href={`/wedstrijd/${showing.id}`}
           className={getButtonClasses({
             variant: "primary",
             size: "sm",
@@ -86,72 +318,14 @@ export function MatchStripView({ match }: MatchStripViewProps) {
           <span aria-hidden="true">→</span>
         </Link>
       </div>
-    </aside>
-  );
-}
-
-function TeamName({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="font-display text-ink max-w-[40%] min-w-0 truncate text-[15px] leading-none font-bold italic lg:text-[16px]">
-      {children}
-    </span>
-  );
-}
-
-function TeamMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
-  // Real logos from PSD render directly. Fallback to a flat initial badge
-  // when the BFF does not return a logo URL — same dimensions so the
-  // strip layout stays stable.
-  if (logoUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={logoUrl}
-        alt={name}
-        className="h-7 w-7 shrink-0 object-contain lg:h-9 lg:w-9"
-        loading="lazy"
-      />
-    );
-  }
-  const initial = name.trim().split(/\s+/).at(-1)?.[0]?.toUpperCase() ?? "?";
-  return (
-    <span
-      role="img"
-      aria-label={name}
-      className={cn(
-        "border-ink/40 bg-cream-soft text-ink inline-flex h-7 w-7 shrink-0 items-center justify-center border",
-        "font-display text-[13px] leading-none font-black italic lg:h-9 lg:w-9 lg:text-[16px]",
-      )}
-    >
-      {initial}
-    </span>
-  );
-}
-
-function MetaCell({
-  caption,
-  value,
-  align = "center",
-}: {
-  caption: string;
-  value: string;
-  align?: "left" | "center" | "right";
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col justify-center gap-0.5 px-4",
-        align === "right"
-          ? "items-end text-right"
-          : align === "left"
-            ? "items-start text-left"
-            : "items-center",
-      )}
-    >
-      <dt>
-        <MonoLabel size="sm">{caption}</MonoLabel>
-      </dt>
-      <dd className="text-ink font-mono text-[13px] font-semibold">{value}</dd>
     </div>
+  );
+}
+
+function DesktopTeamName({ team }: { team: ScheduleTeam }) {
+  return (
+    <span className="font-display text-ink text-mono-md max-w-[40%] min-w-0 truncate leading-none font-bold italic">
+      {team.id === KCVV_CLUB_ID ? "KCVV" : team.name}
+    </span>
   );
 }

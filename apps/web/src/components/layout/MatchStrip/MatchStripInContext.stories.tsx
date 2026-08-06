@@ -3,7 +3,8 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { MatchStripView } from "./MatchStripView";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import type { TeamNavVM } from "@/lib/repositories/team.repository";
-import type { UpcomingMatch } from "@/components/match/types";
+import type { ScheduleMatch } from "@/components/match/types";
+import type { MatchStripData } from "@/lib/server/match-data";
 
 /**
  * Composition stories that show `<MatchStrip>` in its real context — sticky
@@ -37,32 +38,38 @@ const youthTeams: TeamNavVM[] = [
   makeTeam({ slug: "u13", name: "U13", age: "U13" }),
 ];
 
-const homeMatch: UpcomingMatch = {
+const homeResult: ScheduleMatch = {
   id: 12345,
-  date: new Date("2026-05-10T19:30:00Z"),
-  time: "19:30",
-  venue: "De Schalk",
+  date: new Date("2026-08-03T15:00:00Z"),
   competition: "Tweede Provinciale A",
-  status: "scheduled",
-  homeTeam: { id: KCVV_CLUB_ID, name: "KCVV" },
+  status: "finished",
+  homeTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
   awayTeam: {
     id: 9999,
     name: "RC Mechelen",
     logo: "/images/logos/kcvv-logo.png",
   },
+  homeScore: 3,
+  awayScore: 1,
+  isHome: true,
 };
 
-const awayMatch: UpcomingMatch = {
-  ...homeMatch,
-  homeTeam: { id: 9999, name: "VK De Volharding" },
-  awayTeam: { id: KCVV_CLUB_ID, name: "KCVV" },
+const awayFixture: ScheduleMatch = {
+  id: 12346,
+  date: new Date("2026-08-08T18:00:00Z"),
+  time: "18:00",
+  competition: "Beker van Vlaanderen",
+  status: "scheduled",
+  homeTeam: { id: 8888, name: "VK De Volharding" },
+  awayTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+  isHome: false,
 };
 
-function PageShell({ match }: { match: UpcomingMatch | null }) {
+function PageShell({ data }: { data: MatchStripData | null }) {
   return (
     <div className="bg-cream-soft min-h-screen">
       <SiteHeader seniorTeams={seniorTeams} youthTeams={youthTeams} />
-      {match ? <MatchStripView match={match} /> : null}
+      {data ? <MatchStripView data={data} /> : null}
       <main className="mx-auto max-w-[1200px] px-4 py-12 lg:px-8">
         <div className="border-paper-edge bg-cream rounded-none border p-8">
           <p className="font-display text-ink/60 text-[18px] italic">
@@ -84,14 +91,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const HomeFixture: Story = {
-  args: { match: homeMatch },
+export const ResultAndFixture: Story = {
+  args: { data: { result: homeResult, fixture: awayFixture } },
 };
 
-export const AwayFixture: Story = {
-  args: { match: awayMatch },
+export const FixtureOnly: Story = {
+  args: { data: { result: null, fixture: awayFixture } },
 };
 
-export const NoUpcomingMatch: Story = {
-  args: { match: null },
+export const NoMatchData: Story = {
+  args: { data: null },
 };

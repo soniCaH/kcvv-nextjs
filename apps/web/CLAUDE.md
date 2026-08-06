@@ -179,3 +179,13 @@ Two rules worth knowing before you get there, because getting them wrong costs a
 - **Scope every capture** — a full run is ~40 min. Filter by story-ID prefix with `-u <prefix>` (`vr -u ui-button`) — the pattern only scopes when it follows `-u`. A bare positional in check mode is silently ignored (the full suite runs), and a `--testPathPatterns=` flag is rejected outright.
 - **On an unpinned VR container, do not treat a local VR failure as a regression** without first checking the story against CI's render — arm64 on Apple Silicon drifts on display-serif stories. With the `platform: linux/amd64` pin (the committed default) a local failure is real. See "The amd64 pin — scoped runs only" in `docs/agents/testing-ops.md` (#2370).
 - **Unscoped local VR runs are refused** by `apps/web/scripts/vr-docker.mjs` — `vr:check` always, the update modes without a story-id pattern. Scope with `pnpm vr:update:story -- <story-id-prefix>`; `VR_FULL_RUN=1` is the only override. See "The unscoped guard" in `docs/agents/testing-ops.md` (#2380).
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
