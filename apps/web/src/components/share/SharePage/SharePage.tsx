@@ -489,11 +489,21 @@ export function SharePage({ matches, players }: SharePageProps) {
     setExportError(null);
     clearPreview();
     try {
-      const dataUrl = await toPng(templateRef.current, {
+      const opts = {
         width: captureWidth,
         height: captureHeight,
         pixelRatio: 1,
-      });
+        // html-to-image's resource cache strips the query string from its key
+        // by default, so every `/_next/image?url=…` collapses onto ONE entry —
+        // the first image captured then gets reused for every later one (the
+        // previous scorer's portrait, an opponent crest blown up fullscreen).
+        includeQueryParams: true,
+      };
+      // ponytail: iOS Safari rasterizes the foreignObject before the nested
+      // data-URL images finish decoding, so the first capture drops them (the
+      // crest comes out white). Throw the warm-up away, keep the second.
+      await toPng(templateRef.current, opts);
+      const dataUrl = await toPng(templateRef.current, opts);
       const res = await fetch(dataUrl);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
