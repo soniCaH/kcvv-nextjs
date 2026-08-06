@@ -111,7 +111,7 @@ export function StructureDirectory({
             </MonoLabel>
             <span
               aria-hidden="true"
-              className="text-ink-muted font-mono text-[10px] tracking-[0.06em] uppercase"
+              className="text-ink-muted font-mono text-[11px] tracking-[0.06em] uppercase"
             >
               {group.nodes.length}{" "}
               {group.nodes.length === 1 ? "functie" : "functies"}

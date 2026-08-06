@@ -64,7 +64,7 @@ export function SearchAnswerCard({ answer, sources }: SearchAnswerCardProps) {
           aria-hidden, kept out of the accessible name. */}
       <span
         aria-hidden="true"
-        className="border-alert text-alert absolute top-3 right-3 flex h-[52px] w-[52px] -rotate-[9deg] flex-col items-center justify-center rounded-full border-2 font-mono text-[8px] font-semibold tracking-[0.06em] uppercase opacity-90"
+        className="border-alert text-alert absolute top-3 right-3 flex h-[52px] w-[52px] -rotate-[9deg] flex-col items-center justify-center rounded-full border-2 font-mono text-[11px] font-semibold tracking-[0.06em] uppercase opacity-90"
       >
         <Sparkle size={14} aria-hidden className="mb-0.5" />
         Slim

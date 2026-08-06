@@ -266,7 +266,7 @@ export function TeamAgendaRow({
             </span>
             <span
               className={cn(
-                "font-mono text-[8px] tracking-widest uppercase",
+                "font-mono text-[11px] tracking-widest uppercase",
                 monoClass,
               )}
             >

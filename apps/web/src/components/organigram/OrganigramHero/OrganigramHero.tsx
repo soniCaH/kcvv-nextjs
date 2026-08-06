@@ -119,7 +119,7 @@ export function OrganigramHero({
             }}
             className="w-full max-w-[340px]"
           >
-            <p className="text-ink-muted mb-2 text-center font-mono text-[10px] tracking-[0.1em] uppercase">
+            <p className="text-ink-muted mb-2 text-center font-mono text-[11px] tracking-[0.1em] uppercase">
               De structuur
             </p>
 
@@ -215,7 +215,7 @@ function StructureStat({ value, label }: { value: number; label: string }) {
   // keeps the value visually above the label.
   return (
     <div className="flex flex-col-reverse gap-1 text-center">
-      <dt className="text-ink-muted font-mono text-[8.5px] tracking-[0.06em] uppercase">
+      <dt className="text-ink-muted font-mono text-[11px] tracking-[0.06em] uppercase">
         {label}
       </dt>
       <dd className="font-display text-jersey-deep text-[26px] leading-none font-black">

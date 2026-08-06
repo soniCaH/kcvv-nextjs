@@ -48,6 +48,11 @@ function OrgBranch({
     state === "vacant" ? "bg-warm" : "bg-cream",
     onNodeClick && `cursor-pointer ${PRESS_DOWN_CLASSES}`,
   );
+  // Deliberately below the 11px Label floor: this is a printable node-link
+  // diagram, not page chrome, and the type size is what makes the tree fit.
+  // Measured at 11px: every holder label wraps to two lines, nodes inflate,
+  // and the right-hand branch is pushed off-canvas. Raising these is a layout
+  // change (zoom control or scrollable canvas), not a typography change.
   const content = (
     <>
       <span className="font-display text-ink text-[9px] leading-[1.1] font-semibold">

@@ -188,7 +188,7 @@ function AnswerRow({
         <Question size={20} aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="text-jersey-deep mb-0.5 block font-mono text-[10px] font-semibold tracking-[0.08em] uppercase">
+        <span className="text-jersey-deep mb-0.5 block font-mono text-[11px] font-semibold tracking-[0.08em] uppercase">
           {getCategoryInfo(result.path.category).label}
         </span>
         <span className="text-ink block text-sm font-medium">
@@ -412,7 +412,7 @@ export function HubSearch({
         selectedIndex === 0 ? "bg-jersey-deep/10" : "hover:bg-cream-soft"
       }`}
     >
-      <span className="text-jersey-deep block font-mono text-[10px] font-semibold tracking-[0.08em] uppercase">
+      <span className="text-jersey-deep block font-mono text-[11px] font-semibold tracking-[0.08em] uppercase">
         {getCategoryInfo(answerForward.path.category).label}
       </span>
       <span className="font-display text-ink mt-1 block text-[15px] leading-tight font-semibold italic">
@@ -424,10 +424,10 @@ export function HubSearch({
       <span className="mt-2 flex items-center justify-between gap-2">
         {forwardContactInfo ? (
           <span className="flex min-w-0 items-center gap-2">
-            <span className="border-ink bg-cream-soft text-jersey-deep font-display flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] text-[9px] font-black">
+            <span className="border-ink bg-cream-soft text-jersey-deep font-display flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] text-[11px] font-black">
               {initials(forwardContactInfo.name)}
             </span>
-            <span className="text-ink-muted truncate font-mono text-[9px] tracking-wide uppercase">
+            <span className="text-ink-muted truncate font-mono text-[11px] tracking-wide uppercase">
               {forwardContactInfo.name}
               {forwardContactInfo.sub ? ` · ${forwardContactInfo.sub}` : ""}
             </span>
@@ -435,7 +435,7 @@ export function HubSearch({
         ) : (
           <span />
         )}
-        <span className="text-jersey-deep inline-flex flex-shrink-0 items-center gap-1 font-mono text-[10px] font-semibold tracking-[0.04em] uppercase">
+        <span className="text-jersey-deep inline-flex flex-shrink-0 items-center gap-1 font-mono text-[11px] font-semibold tracking-[0.04em] uppercase">
           Lees volledig antwoord
           <ArrowRight size={12} aria-hidden />
         </span>
@@ -444,7 +444,7 @@ export function HubSearch({
   ) : null;
 
   const smartHint = (label: string) => (
-    <div className="border-paper-edge bg-cream-soft flex items-center gap-1.5 border-b-[1.5px] px-3 py-1.5 font-mono text-[10px] tracking-[0.07em] uppercase">
+    <div className="border-paper-edge bg-cream-soft flex items-center gap-1.5 border-b-[1.5px] px-3 py-1.5 font-mono text-[11px] tracking-[0.07em] uppercase">
       <Sparkle size={12} className="text-jersey-deep" aria-hidden />
       <span className="text-jersey-deep">{label}</span>
     </div>

@@ -204,7 +204,7 @@ export const DownloadButton = ({
         >
           <span className="flex flex-col items-center gap-0.5">
             <span>{fileType.stampLabel}</span>
-            <span className="text-[8px] font-medium tracking-[0.18em] opacity-80">
+            <span className="text-[11px] font-medium tracking-[0.18em] opacity-80">
               BESTAND
             </span>
           </span>

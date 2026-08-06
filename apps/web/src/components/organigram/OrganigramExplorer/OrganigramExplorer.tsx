@@ -295,7 +295,7 @@ export function OrganigramExplorer({
               onClick={() => setScaleStep(step)}
               aria-pressed={scaleStep === step}
               className={cn(
-                "border px-1.5 py-0.5 font-mono text-[10px] leading-none transition-colors",
+                "border px-1.5 py-0.5 font-mono text-[11px] leading-none transition-colors",
                 scaleStep === step
                   ? "border-warm bg-warm text-ink"
                   : "border-cream/40 text-cream hover:border-cream",
@@ -309,7 +309,7 @@ export function OrganigramExplorer({
           type="button"
           onClick={onClose}
           aria-label="Verkenner sluiten"
-          className="border-cream/40 hover:border-cream text-cream flex items-center gap-1 border px-2 py-1 font-mono text-[10px] uppercase"
+          className="border-cream/40 hover:border-cream text-cream flex items-center gap-1 border px-2 py-1 font-mono text-[11px] uppercase"
         >
           <X size={12} aria-hidden /> Esc
         </button>
@@ -318,7 +318,7 @@ export function OrganigramExplorer({
       {/* Breadcrumb — the reporting line */}
       <nav
         aria-label="Rapporteringslijn"
-        className="border-cream/10 text-cream/75 flex items-center gap-1 overflow-x-auto border-b px-4 py-2 font-mono text-[10px]"
+        className="border-cream/10 text-cream/75 flex items-center gap-1 overflow-x-auto border-b px-4 py-2 font-mono text-[11px]"
       >
         {view.trail.map((node, i) => {
           const isLast = i === view.trail.length - 1;
@@ -367,12 +367,12 @@ export function OrganigramExplorer({
                 data-node-id={view.parent.id}
                 onClick={() => navigate(view.parent!.id)}
                 aria-label={`Omhoog naar ${view.parent.title}`}
-                className="border-cream/45 hover:border-cream text-cream/85 flex items-center gap-1.5 border bg-black/15 px-3 py-1.5 font-mono text-[10px] tracking-[0.04em] uppercase"
+                className="border-cream/45 hover:border-cream text-cream/85 flex items-center gap-1.5 border bg-black/15 px-3 py-1.5 font-mono text-[11px] tracking-[0.04em] uppercase"
               >
                 <CaretUp size={11} aria-hidden /> {view.parent.title}
               </button>
             ) : (
-              <span className="text-cream/40 font-mono text-[9px] tracking-[0.06em] uppercase">
+              <span className="text-cream/40 font-mono text-[11px] tracking-[0.06em] uppercase">
                 Hoogste niveau
               </span>
             )}
@@ -422,7 +422,7 @@ export function OrganigramExplorer({
                     type="button"
                     onClick={() => setSiblingsOpen((v) => !v)}
                     aria-expanded={siblingsOpen}
-                    className="text-cream/70 hover:text-cream font-mono text-[10px]"
+                    className="text-cream/70 hover:text-cream font-mono text-[11px]"
                   >
                     {view.focusIndex + 1} / {view.siblings.length} ·{" "}
                     {siblingsOpen ? "verberg" : "alle functies"}
@@ -433,7 +433,7 @@ export function OrganigramExplorer({
                     type="button"
                     onClick={(e) => onOpenMember(view.focus, e.currentTarget)}
                     aria-haspopup="dialog"
-                    className="border-warm bg-warm text-ink hover:bg-cream flex items-center gap-1.5 border-2 px-3 py-1.5 font-mono text-[10px] font-bold tracking-[0.04em] uppercase transition-colors"
+                    className="border-warm bg-warm text-ink hover:bg-cream flex items-center gap-1.5 border-2 px-3 py-1.5 font-mono text-[11px] font-bold tracking-[0.04em] uppercase transition-colors"
                   >
                     <Envelope size={12} aria-hidden />
                     Contactgegevens
@@ -443,7 +443,7 @@ export function OrganigramExplorer({
                     {profileHref && (
                       <Link
                         href={profileHref}
-                        className="text-warm hover:text-cream flex items-center gap-1 font-mono text-[10px] uppercase"
+                        className="text-warm hover:text-cream flex items-center gap-1 font-mono text-[11px] uppercase"
                       >
                         Volledig profiel <ArrowRight size={11} aria-hidden />
                       </Link>
@@ -458,13 +458,13 @@ export function OrganigramExplorer({
                             {member.href ? (
                               <Link
                                 href={member.href}
-                                className="text-warm hover:text-cream flex items-center gap-1 font-mono text-[10px]"
+                                className="text-warm hover:text-cream flex items-center gap-1 font-mono text-[11px]"
                               >
                                 {member.name?.trim() || "—"}{" "}
                                 <ArrowRight size={10} aria-hidden />
                               </Link>
                             ) : (
-                              <span className="text-cream/75 font-mono text-[10px]">
+                              <span className="text-cream/75 font-mono text-[11px]">
                                 {member.name?.trim() || "—"}
                               </span>
                             )}
@@ -498,7 +498,7 @@ export function OrganigramExplorer({
                       onClick={() => navigate(sib.id)}
                       aria-current={sib.id === focusId ? "true" : undefined}
                       className={cn(
-                        "border px-2 py-1 font-mono text-[9px] uppercase",
+                        "border px-2 py-1 font-mono text-[11px] uppercase",
                         sib.id === focusId
                           ? "border-warm bg-warm text-ink"
                           : "border-cream/35 text-cream/80 hover:border-cream",
@@ -535,7 +535,7 @@ export function OrganigramExplorer({
                       className="border-cream/45 hover:border-cream text-cream flex h-16 w-36 flex-col items-center justify-center gap-1 border-2 border-dashed px-2"
                     >
                       <CaretDown size={16} aria-hidden />
-                      <span className="font-mono text-[10px] uppercase">
+                      <span className="font-mono text-[11px] uppercase">
                         +{fan.hidden} meer
                       </span>
                     </button>
