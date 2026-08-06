@@ -9,14 +9,28 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // The `apps/web/CLAUDE.md` rule "Import the module under test at module scope",
 // in a form that fails the build instead of being re-litigated per file.
 //
-// The `it`/`test` ancestor is what makes this precise: module-scope
+// Requiring an `it`/`test` ancestor is what makes this precise: module-scope
 // `await import()` blocks (canonical-urls.test.ts, legacy-redirects.test.ts)
-// must not trip. The three call shapes cover `it(…)`, `it.skip(…)`/`it.only(…)`
-// and `it.each(table)(…)`.
-// Kept on one line: esquery does not parse a selector containing newlines, and
-// it fails *silently* — the rule simply stops matching anything.
-const IN_BODY_ROUTE_IMPORT =
-  ":matches(CallExpression[callee.name=/^(it|test)$/], CallExpression[callee.object.name=/^(it|test)$/], CallExpression[callee.callee.object.name=/^(it|test)$/]) ImportExpression > Literal[value=/\\/(page|layout|route|robots|sitemap|opengraph-image)$/]";
+// must not trip, and neither must hook bodies — those are charged against
+// `hookTimeout`, and CLAUDE.md scopes the convention to `it()` bodies.
+//
+// Vitest composes modifiers into chains (`it.skip`, `test.concurrent.skip`,
+// `it.each(table)(…)`, `test.concurrent.for(table)(…)`), and esquery cannot
+// express an unbounded `.object` walk — so the two call forms are crossed with
+// each chain depth. Three modifiers is past anything Vitest's API composes.
+const TEST_CALL_FORMS = ["callee", "callee.callee"]; // `it(…)` and `it.each(t)(…)`
+const MODIFIER_DEPTHS = ["", ".object", ".object.object", ".object.object.object"];
+
+const TEST_CALLS = TEST_CALL_FORMS.flatMap((form) =>
+  MODIFIER_DEPTHS.map(
+    (depth) => `CallExpression[${form}${depth}.name=/^(it|test)$/]`,
+  ),
+).join(", ");
+
+// Assembled without newlines on purpose: esquery does not parse a selector
+// containing them, and it fails *silently* — the rule keeps loading, `lint`
+// keeps exiting 0, and nothing is checked ever again.
+const IN_BODY_ROUTE_IMPORT = `:matches(${TEST_CALLS}) ImportExpression > Literal[value=/\\/(page|layout|route|robots|sitemap|opengraph-image)$/]`;
 
 const eslintConfig = [
   ...nextCoreWebVitals,
