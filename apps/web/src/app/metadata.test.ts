@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { metadata } from "./layout";
+// Module scope is deliberate: Vitest charges an import inside an `it()` body
+// against `testTimeout`, while this is paid during the untimed collect phase
+// (#2362). There are no `vi.mock` calls here, so a static import is safe.
+import { metadata as privacyMetadata } from "./(main)/privacy/page";
 
 describe("root layout metadata", () => {
   it("SITE_CONFIG.siteUrl is a valid absolute URL for metadataBase", () => {
@@ -23,9 +27,8 @@ describe("root layout metadata", () => {
     expect(title.template).toBe("%s | KCVV Elewijt");
   });
 
-  it("static pages do not hardcode the brand suffix in their title", async () => {
-    const { metadata: privacy } = await import("./(main)/privacy/page");
-    expect(privacy.title).toBe("Privacyverklaring");
-    expect(String(privacy.title)).not.toContain("| KCVV Elewijt");
+  it("static pages do not hardcode the brand suffix in their title", () => {
+    expect(privacyMetadata.title).toBe("Privacyverklaring");
+    expect(String(privacyMetadata.title)).not.toContain("| KCVV Elewijt");
   });
 });
