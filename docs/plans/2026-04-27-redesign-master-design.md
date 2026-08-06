@@ -556,7 +556,7 @@ The redesign rolls out over ~9 phases. Per the rollout decision, each phase is a
 **Visual approval gating** is hybrid by deliberate design (see §8 for the full workflow):
 
 - **Phases 0–2 and 9** ship behind Storybook iteration alone. Tokens and small primitives are abstract enough that a Storybook story is a sufficient visual contract; mockups would not add information.
-- **Phases 3–8** require a _Design checkpoint_ before any implementation work begins. The checkpoint runs `/design-an-interface` to produce 2–3 directional mockup options for the new surfaces, the owner picks one, and only then does PRD-writing → plan-writing → execution proceed for that phase.
+- **Phases 3–8** require a _Design checkpoint_ before any implementation work begins. The checkpoint runs `/prototype` (UI branch) to produce 2–3 directional mockup options for the new surfaces, the owner picks one, and only then does PRD-writing → plan-writing → execution proceed for that phase.
 
 ### Phase summary
 
@@ -645,7 +645,9 @@ Each phase moves from idea to merged code through a fixed sequence. Phases 0–2
 
 ### 8.2 Step 1 — Design checkpoint (Phases 3–8 only)
 
-Run inside the redesign worktree. Invoke `/design-an-interface` with a brief framing the surface(s) the phase covers. The skill produces 2–3 directional mockup options per surface, typically as standalone HTML or PNG files.
+Run inside the redesign worktree. Invoke `/prototype` (UI branch) with a brief framing the surface(s) the phase covers. The skill produces 2–3 directional mockup options per surface, typically as standalone HTML or PNG files.
+
+> **Note:** `/prototype` defaults to mounting variants on a live route behind a `?variant=` search param, rendering against real data. The committed-HTML convention below is this repo's local override, kept so mockups stay reviewable without running the app. Prefer the live-route form when the surface already exists and has real content.
 
 **Inputs the skill needs to do good work:**
 

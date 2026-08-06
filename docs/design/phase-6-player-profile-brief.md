@@ -256,6 +256,6 @@ Per [[feedback_design_data_audit]] — never mock fields PSD/Sanity don't provid
 
 ## 7. Hand-off note
 
-When the Phase 6 design drill rounds open (`/design-an-interface` per [[feedback_design_drill_pattern]]), this brief is the input. The Phase 5 brief locks decisions (especially drill Q2 — avatar vocabulary) that this brief inherits via pull-quote avatars in `<QuotesBlock>` — sequence Phase 5 drills before opening Phase 6 drills.
+When the Phase 6 design drill rounds open (`/prototype`, UI branch, per [[feedback_design_drill_pattern]]), this brief is the input. The Phase 5 brief locks decisions (especially drill Q2 — avatar vocabulary) that this brief inherits via pull-quote avatars in `<QuotesBlock>` — sequence Phase 5 drills before opening Phase 6 drills.
 
 Drill rounds for this phase live in `docs/design/mockups/phase-6-player-profile/` (folder will be created when the first round mocks land). This brief stays the synthesised input doc.
