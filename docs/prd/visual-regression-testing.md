@@ -5,6 +5,13 @@
 **Issues**: TBD (Phase 1), TBD (Phase 2), TBD (Phase 3), TBD (Phase 4), TBD (Phase 5)
 **Blocked-by**: #1360
 
+> **Commands in this PRD are historical (#2380).** Every `pnpm vr:check` and
+> bare `pnpm vr:update` below is now refused locally — under the amd64 pin an
+> unscoped run is a ~2.5 h emulated full suite. Substitute CI's
+> `visual-regression` job, or a scoped `pnpm vr:update:story -- <prefix>`. The
+> live operational doc is `docs/agents/testing-ops.md`; the design rationale
+> here is unchanged.
+
 ---
 
 ## 1. Problem statement

@@ -32,6 +32,31 @@ const MODES = {
   "update:story": ["-u"],
 };
 
+/**
+ * `test-storybook` options that consume the NEXT argv entry as their value. The
+ * value is a bare word, so without this it reads as a story-id pattern and
+ * `pnpm vr:update -- --maxWorkers 1` walks straight past the guard.
+ */
+const VALUE_OPTIONS = new Set([
+  "--url",
+  "--maxWorkers",
+  "--testTimeout",
+  "--includeTags",
+  "--excludeTags",
+  "--shard",
+]);
+
+/**
+ * A scoping pattern is a non-empty positional operand that is not some option's
+ * value. pnpm's own `--` separator arrives in argv too (`vr:update:story --
+ * ui-button` → ["update:story", "--", "ui-button"]) — it starts with `-`, so it
+ * never counts as one.
+ */
+const hasPattern = (args) =>
+  args.some(
+    (arg, i) => arg && !arg.startsWith("-") && !VALUE_OPTIONS.has(args[i - 1]),
+  );
+
 const refusal = (mode, why) => `
 Refusing \`pnpm vr:${mode}\` — ${why}
 
@@ -42,7 +67,11 @@ Under the emulated amd64 pin (docker-compose.vr.yml) a full local suite is
 
 Story IDs live in apps/web/storybook-static/index.json. To use that as a CHECK,
 inspect \`git status test/vr/__snapshots__/\` afterwards — modified means drift,
-untracked means new — then \`git checkout -- test/vr/__snapshots__/\` to discard.
+untracked means new — then discard that prefix only (a blanket checkout of the
+whole directory also throws away baselines you updated earlier on the branch):
+
+  git checkout -- "test/vr/__snapshots__/<story-id-prefix>--"*
+  git clean -f -- "test/vr/__snapshots__/<story-id-prefix>--"*
 
 See "The amd64 pin — scoped runs only" in docs/agents/testing-ops.md.
 
@@ -73,10 +102,7 @@ export function decide({ mode, args, fullRun = false }) {
         ),
       };
     }
-    // A pattern is a non-empty positional operand. pnpm's own `--` separator
-    // arrives in argv too (`vr:update:story -- ui-button` → ["update:story",
-    // "--", "ui-button"]) — it starts with `-`, so it never counts as one.
-    if (!args.some((arg) => arg && !arg.startsWith("-"))) {
+    if (!hasPattern(args)) {
       return {
         ok: false,
         message: refusal(

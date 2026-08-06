@@ -40,9 +40,25 @@ describe("decide", () => {
     },
   );
 
-  it("does not mistake a flag or an empty string for a pattern", () => {
-    expect(decide({ mode: "update", args: ["--maxWorkers=1"] }).ok).toBe(false);
-    expect(decide({ mode: "update", args: ["--", ""] }).ok).toBe(false);
+  it.each([
+    ["a flag", ["--maxWorkers=1"]],
+    ["an empty string", ["--", ""]],
+    ["a space-separated option value", ["--", "--maxWorkers", "1"]],
+    ["a URL option value", ["--", "--url", "http://127.0.0.1:6006"]],
+  ])("does not mistake %s for a pattern", (_label, args) => {
+    expect(decide({ mode: "update", args }).ok).toBe(false);
+  });
+
+  it("still sees the pattern when it follows an option and its value", () => {
+    expect(
+      decide({
+        mode: "update",
+        args: ["--", "--maxWorkers", "1", "ui-button"],
+      }),
+    ).toEqual({
+      ok: true,
+      dockerArgs: ["-u", "--", "--maxWorkers", "1", "ui-button"],
+    });
   });
 
   it("names the cost, the scoped alternative and the override when refusing", () => {

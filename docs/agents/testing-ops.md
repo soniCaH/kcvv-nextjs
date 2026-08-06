@@ -145,7 +145,8 @@ to ~1.4 GB heap on 64-bit systems).
 # Surgical run — the pattern only scopes when it FOLLOWS `-u` (see "Scoping
 # a VR run" below), so update mode is the only scoped mode. To check a single
 # story without keeping new baselines: scoped update, inspect `git status`,
-# then restore with `git checkout -- test/vr/__snapshots__/`.
+# then discard that prefix only (see "The unscoped guard" below — never a
+# blanket checkout of the whole __snapshots__ directory).
 pnpm --filter @kcvv/web run vr:update:story -- ui-button   # update, scoped
 
 # Refused by the guard — unscoped, ~2.5 h emulated. See below.
@@ -187,8 +188,16 @@ through `apps/web/scripts/vr-docker.mjs`, which refuses an unscoped local run
 - **`vr:check` is always refused.** Check mode has no scoped form at all — a
   bare positional is silently dropped (see "Scoping a VR run" below), so every
   local `vr:check` is the full ~2.5 h suite. To check one component, run a
-  scoped **update**, read `git status test/vr/__snapshots__/` (modified = drift,
-  untracked = new), then `git checkout -- test/vr/__snapshots__/` to discard.
+  scoped **update** and read `git status test/vr/__snapshots__/`: modified =
+  drift, untracked = new. Discard **by prefix**, never the whole directory —
+  a blanket `git checkout -- test/vr/__snapshots__/` also throws away baselines
+  you legitimately updated earlier on the branch:
+
+  ```bash
+  git checkout -- "test/vr/__snapshots__/<story-id-prefix>--"*   # tracked
+  git clean -f -- "test/vr/__snapshots__/<story-id-prefix>--"*   # newly added
+  ```
+
 - **The update modes are refused without a positional pattern.** Flags do not
   count; `pnpm vr:update -- --maxWorkers=1` is still unscoped.
 
@@ -620,9 +629,12 @@ explicitly. A GitHub App is the cleaner long-term replacement.
 
 - **No `[skip ci]`** in baseline-update commits. CodeRabbit quota is handled
   separately; GitHub CI must run to verify the new baselines.
-- **No native Playwright** outside Docker on macOS. Local font rendering
-  diverges from Linux CI and produces false-positive diffs. Always use the
-  Docker `vr:*` scripts.
+- **No native Playwright** outside Docker on macOS for capture or judgement.
+  Local font rendering diverges from Linux CI, so a native run can neither
+  produce a committable baseline nor tell you whether a diff is real. The one
+  sanctioned native run is `vr:run:single` as **OOM triage** — to find which
+  story is exhausting Chromium (see "Single-worker fallback"). Everything else
+  goes through the Docker `vr:*` scripts.
 - **`VR_FULL_RUN=1` is not a way past the guard.** If a scoped run does not
   cover what you need, scope it differently or let CI run the full suite —
   the override exists for a deliberate ~2.5 h local run, not for convenience.

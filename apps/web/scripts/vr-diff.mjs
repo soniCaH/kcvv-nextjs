@@ -8,6 +8,7 @@
 // each viewport that regressed.
 import { readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const STORY_ID = process.argv[2];
 if (!STORY_ID) {
@@ -16,8 +17,11 @@ if (!STORY_ID) {
   process.exit(2);
 }
 
+// fileURLToPath, not `.pathname` — the latter leaves the URL percent-encoded,
+// so any checkout under a path with a space resolves to a directory that
+// doesn't exist ("/Sites/KCVV%20VR/…").
 const DIFF_DIR = resolve(
-  new URL(".", import.meta.url).pathname,
+  fileURLToPath(new URL(".", import.meta.url)),
   "..",
   "test/vr/__diff_output__",
 );
