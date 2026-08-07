@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("react", () => ({
   cache: <T extends (...args: never[]) => unknown>(fn: T) => fn,
@@ -18,7 +18,11 @@ vi.mock("@/components/match/transform", () => ({
 }));
 
 import { runPromise } from "@/lib/effect/runtime";
-import { getFirstTeamStripData, RESULT_RECENCY_MS } from "./match-data";
+import {
+  getFirstTeamStripData,
+  pickFirstTeamPsdId,
+  RESULT_RECENCY_MS,
+} from "./match-data";
 
 const runPromiseMock = vi.mocked(runPromise);
 
@@ -43,6 +47,31 @@ beforeEach(() => {
   vi.setSystemTime(NOW);
 });
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe("pickFirstTeamPsdId", () => {
+  it("picks the A side, not the B side or a youth team", () => {
+    expect(pickFirstTeamPsdId(TEAMS)).toBe(111);
+  });
+
+  it("ignores senior teams without a psdId", () => {
+    expect(
+      pickFirstTeamPsdId([
+        { psdId: null, age: null, slug: "eerste-elftallen-a" },
+        { psdId: "112", age: null, slug: "eerste-elftallen-b" },
+      ]),
+    ).toBe(112);
+  });
+
+  it("returns null when only youth teams carry a psdId", () => {
+    expect(
+      pickFirstTeamPsdId([{ psdId: "999", age: "U21", slug: "u21" }]),
+    ).toBe(null);
+  });
+});
+
 describe("getFirstTeamStripData", () => {
   it("returns the last result and the next fixture", async () => {
     mockFetches(TEAMS, [
@@ -56,13 +85,13 @@ describe("getFirstTeamStripData", () => {
     expect(data?.fixture?.id).toBe(2);
   });
 
-  it("reads the A side's feed, not the B side's", async () => {
+  it("runs exactly two fetches: the team list, then that team's feed", async () => {
     mockFetches(TEAMS, [{ id: 2, status: "scheduled", date: hoursAhead(48) }]);
 
     await getFirstTeamStripData();
 
-    // Two Effects run: the team list, then the A side's matches. The psdId the
-    // second one closes over is what matters, and 111 is `eerste-elftallen-a`.
+    // Which psdId is selected is asserted directly against `pickFirstTeamPsdId`
+    // above; `runPromise` is mocked here, so the Effect never reaches the BFF.
     expect(runPromiseMock).toHaveBeenCalledTimes(2);
   });
 

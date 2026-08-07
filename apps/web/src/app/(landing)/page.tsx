@@ -55,6 +55,7 @@ import {
   FirstTeamsBlock,
   deriveFirstTeamVM,
   firstTeamLabel,
+  selectSeniorTeams,
   ClubshopBanner,
   YouthBackdrop,
   YouthSection,
@@ -291,9 +292,7 @@ export default async function HomePage() {
   // out of the generic "Komende wedstrijden" agenda below (#2211). The senior
   // nav set = non-youth teams (age not "U*"); a psdId is required to fetch their
   // matches feed. Sorted by slug so a-ploeg renders before b-ploeg.
-  const seniorTeams = teamsResult
-    .filter((t) => t.psdId && !(t.age ?? "").toUpperCase().startsWith("U"))
-    .sort((a, b) => a.slug.localeCompare(b.slug));
+  const seniorTeams = selectSeniorTeams(teamsResult);
 
   const firstTeamsMatches = await Promise.all(
     seniorTeams.map((team) =>

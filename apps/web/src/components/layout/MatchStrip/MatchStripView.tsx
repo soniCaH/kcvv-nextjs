@@ -8,7 +8,7 @@ import { getButtonClasses } from "@/components/design-system/Button";
 import { House, Bus } from "@/lib/icons.redesign";
 import { OUTCOME_UNDERLINE } from "@/lib/utils/match-display";
 import { KCVV_CLUB_ID } from "@/lib/constants";
-import { formatWidgetDate } from "@/lib/utils/dates";
+import { formatWidgetDate, formatDayMonth } from "@/lib/utils/dates";
 import type { MatchStripData } from "@/lib/server/match-data";
 import type { ScheduleMatch, ScheduleTeam } from "@/components/match/types";
 
@@ -163,8 +163,7 @@ function Score({
  * inside a ticket-stub card; the strip is a flat band.
  */
 function StripDate({ date }: { date: Date }) {
-  const day = date.getDate();
-  const month = date.toLocaleDateString("nl-BE", { month: "short" });
+  const { day, month } = formatDayMonth(date);
   return (
     <span className="text-ink text-mono-sm w-12 shrink-0 font-mono font-bold whitespace-nowrap tabular-nums">
       {day}{" "}
@@ -187,9 +186,22 @@ function LedgerLinkRow({
   const home = isKcvvHome(match);
   const opponent = opponentOf(match);
   const dateLabel = formatWidgetDate(match.date);
+  // The `aria-label` replaces the row's contents as its accessible name, so the
+  // score has to be spelled out here or a screen-reader user never hears it.
+  // Stated KCVV-first and side-by-side with each name, since "3-1" alone does
+  // not say whose goals are whose when KCVV played away.
+  const { homeScore, awayScore } = match;
+  const scored =
+    homeScore !== undefined && awayScore !== undefined
+      ? home
+        ? `${homeScore} - ${opponent.name} ${awayScore}`
+        : `${awayScore} - ${opponent.name} ${homeScore}`
+      : null;
   const label =
     kind === "result"
-      ? `Uitslag ${dateLabel}: KCVV Elewijt tegen ${opponent.name}`
+      ? scored
+        ? `Uitslag ${dateLabel}: KCVV Elewijt ${scored}`
+        : `Uitslag ${dateLabel}: KCVV Elewijt tegen ${opponent.name}`
       : `Volgende wedstrijd ${dateLabel}${match.time ? ` om ${match.time}` : ""}: KCVV Elewijt tegen ${opponent.name}`;
 
   return (
@@ -236,11 +248,25 @@ function DesktopSlider({
   // Default to the result when there is one; otherwise the fixture is the only
   // slide there is.
   const [showResult, setShowResult] = useState(result !== null);
-  const showing = showResult && result ? result : (fixture ?? result);
-  if (!showing) return null;
 
+  // One source of truth for which slide is showing, so the label, the score and
+  // the CTA cannot disagree. Deriving `isResultSlide` from `showResult` alone
+  // was wrong when the switch had been moved to the fixture and a later render
+  // dropped it: the fallback rendered the result while still labelled
+  // "Volgende" and with `vs.` in place of the score.
+  const slide =
+    showResult && result
+      ? { match: result, kind: "result" as const }
+      : fixture
+        ? { match: fixture, kind: "fixture" as const }
+        : result
+          ? { match: result, kind: "result" as const }
+          : null;
+  if (!slide) return null;
+
+  const showing = slide.match;
+  const isResultSlide = slide.kind === "result";
   const bothSides = result !== null && fixture !== null;
-  const isResultSlide = showResult && result !== null;
 
   return (
     <div className="hidden lg:grid lg:grid-cols-[auto_1fr_auto]">

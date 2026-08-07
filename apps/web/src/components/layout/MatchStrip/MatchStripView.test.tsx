@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, fireEvent } from "@testing-library/react";
 import { MatchStripView } from "./MatchStripView";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import type { ScheduleMatch } from "@/components/match/types";
@@ -48,6 +48,30 @@ describe("MatchStripView", () => {
     ).toBeInTheDocument();
   });
 
+  it("spells the score into the result row's accessible name", () => {
+    // The aria-label replaces the row's contents as its accessible name, so a
+    // screen-reader user hears only what is in the label.
+    render(<MatchStripView data={{ result, fixture }} />);
+    expect(
+      screen.getByRole("link", { name: /KCVV Elewijt 3 - RC Mechelen 1/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("states KCVV's goals first in the label even when KCVV played away", () => {
+    const awayLoss: ScheduleMatch = {
+      ...result,
+      homeTeam: OPPONENT,
+      awayTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+      homeScore: 2,
+      awayScore: 0,
+      isHome: false,
+    };
+    render(<MatchStripView data={{ result: awayLoss, fixture: null }} />);
+    expect(
+      screen.getByRole("link", { name: /KCVV Elewijt 0 - RC Mechelen 2/ }),
+    ).toBeInTheDocument();
+  });
+
   it("renders the score in true scoreboard order, home side first", () => {
     render(<MatchStripView data={{ result, fixture }} />);
     // KCVV played at home and won 3-1, so the scoreboard reads 3–1.
@@ -73,8 +97,25 @@ describe("MatchStripView", () => {
     const { isHome: _omitted, ...withoutIsHome } = result;
     render(<MatchStripView data={{ result: withoutIsHome, fixture: null }} />);
     const row = screen.getByRole("link", { name: /^Uitslag/ });
-    expect(row).toHaveAccessibleName(/RC Mechelen/);
-    expect(row).not.toHaveAccessibleName(/KCVV Elewijt tegen KCVV/);
+    // KCVV is the home side by club id, so the opponent must be the away team
+    // and the label must read KCVV 3 - RC Mechelen 1, not KCVV against itself.
+    expect(row).toHaveAccessibleName(/KCVV Elewijt 3 - RC Mechelen 1/);
+  });
+
+  it("labels the result slide correctly when the fixture disappears", () => {
+    // The switch starts on the result. Move it to the fixture, then re-render
+    // without one: the fallback must still render as the result slide rather
+    // than showing the result's teams under a "Volgende" label with `vs.`.
+    const { rerender } = render(<MatchStripView data={{ result, fixture }} />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Toon de volgende wedstrijd" }),
+    );
+    rerender(<MatchStripView data={{ result, fixture: null }} />);
+
+    expect(screen.queryByText("vs.")).toBeNull();
+    expect(
+      screen.getByRole("link", { name: /Wedstrijddetails/i }),
+    ).toHaveAttribute("href", "/wedstrijd/42");
   });
 
   it("marks a home match with the house glyph and an away match with the bus", () => {
@@ -89,13 +130,19 @@ describe("MatchStripView", () => {
     ).toBeInTheDocument();
   });
 
+  // `toHaveStyle` with an asymmetric matcher does not actually compare, so
+  // these read the inline style attribute the component writes.
+  it("marks a win with the outcome sweep", () => {
+    render(<MatchStripView data={{ result, fixture: null }} />);
+    const score = screen.getAllByText("3–1")[0];
+    expect(score?.getAttribute("style") ?? "").toContain("inset");
+  });
+
   it("gives a draw no outcome sweep", () => {
     const draw: ScheduleMatch = { ...result, homeScore: 2, awayScore: 2 };
     render(<MatchStripView data={{ result: draw, fixture: null }} />);
     const score = screen.getAllByText("2–2")[0];
-    expect(score).not.toHaveStyle({
-      boxShadow: expect.stringContaining("inset"),
-    });
+    expect(score?.getAttribute("style") ?? "").not.toContain("inset");
   });
 
   it("renders the fixture alone when there is no result", () => {

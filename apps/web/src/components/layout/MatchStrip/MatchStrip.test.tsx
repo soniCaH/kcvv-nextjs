@@ -6,10 +6,11 @@ vi.mock("@/lib/server/match-data", () => ({
 
 import { getFirstTeamStripData } from "@/lib/server/match-data";
 import { MatchStrip } from "./MatchStrip";
+import type { ScheduleMatch } from "@/components/match/types";
 
-const mocked = getFirstTeamStripData as unknown as ReturnType<typeof vi.fn>;
+const mocked = vi.mocked(getFirstTeamStripData);
 
-const fixture = {
+const fixture: ScheduleMatch = {
   id: 1,
   date: new Date("2026-05-10T19:30:00Z"),
   time: "19:30",

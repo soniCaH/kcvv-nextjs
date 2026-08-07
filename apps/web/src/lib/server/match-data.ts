@@ -7,6 +7,8 @@ import { transformMatchToSchedule } from "@/components/match/transform";
 import {
   pickLastResult,
   pickNextFixture,
+  selectSeniorTeams,
+  type SeniorTeamCandidate,
 } from "@/components/home/FirstTeamsBlock/first-teams";
 import type { ScheduleMatch } from "@/components/match/types";
 
@@ -25,17 +27,14 @@ export interface MatchStripData {
 }
 
 /**
- * The A side drives the strip: senior (non-youth) teams carrying a `psdId`,
- * sorted by slug so `eerste-elftallen-a` precedes `-b`. Mirrors the filter the
- * homepage uses for `<FirstTeamsBlock>` (#2211) — keep the two in step.
+ * The A side drives the strip: the first senior team by slug, so
+ * `eerste-elftallen-a` precedes `-b`. Shares `selectSeniorTeams` with the
+ * homepage's `<FirstTeamsBlock>` wiring so the two cannot drift.
  */
-function pickFirstTeamPsdId(
-  teams: readonly { psdId: string | null; age: string | null; slug: string }[],
+export function pickFirstTeamPsdId(
+  teams: readonly SeniorTeamCandidate[],
 ): number | null {
-  const senior = teams
-    .filter((t) => t.psdId && !(t.age ?? "").toUpperCase().startsWith("U"))
-    .sort((a, b) => a.slug.localeCompare(b.slug));
-  const first = senior[0];
+  const first = selectSeniorTeams(teams)[0];
   return first?.psdId ? Number(first.psdId) : null;
 }
 

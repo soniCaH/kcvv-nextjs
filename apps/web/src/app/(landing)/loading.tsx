@@ -69,7 +69,7 @@ export default function HomeLoading() {
         aria-hidden="true"
         className="bg-jersey-deep-dark motion-safe:animate-pulse"
       >
-        <div className="mx-auto max-w-[var(--container-index)] px-4 py-10 md:px-8 md:py-12">
+        <PageContainer width="index" className="py-10 md:py-12">
           <div className="bg-cream/20 mb-4 h-3 w-32" />
           <div className="bg-cream/25 mb-8 h-9 w-64 max-w-full" />
           {Array.from({ length: 2 }).map((_, i) => (
@@ -82,7 +82,7 @@ export default function HomeLoading() {
               <div className="bg-cream/10 h-16" />
             </div>
           ))}
-        </div>
+        </PageContainer>
       </section>
       <StripedSeam colorPair="cream-jersey-deep" height="md" flip />
 
