@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      #2396 — the type ramp: four systems, and the bespoke one is inert
+    </title>
+    <script>
+      (function (d) {
+        var s = d.createElement("script");
+        s.src = "https://use.typekit.net/cvo5raz.js";
+        s.async = true;
+        s.onload = function () {
+          try {
+            Typekit.load({ async: true });
+          } catch (e) {}
+        };
+        d.head.appendChild(s);
+      })(document);
+    </script>
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --paper-edge: #d9d2bd;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --green: #007c46; /* locked by #2395 */
+        --warm: #f0c264;
+        --display: "freight-big-pro", georgia, serif;
+        --display2: "freight-display-pro", georgia, serif;
+        --body: "freight-sans-pro", -apple-system, system-ui, Arial, sans-serif;
+        --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--body);
+        line-height: 1.75;
+      }
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      header {
+        padding: 48px 0 8px;
+      }
+      h1 {
+        font-family: var(--display);
+        font-size: clamp(2rem, 1.25rem + 3vw, 3rem);
+        line-height: 1.1;
+        margin: 0 0 16px;
+        max-width: 24ch;
+      }
+      .kicker {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        margin: 0 0 12px;
+      }
+      .lede {
+        font-size: 1.0625rem;
+        line-height: 1.6;
+        max-width: 64ch;
+        margin: 0 0 12px;
+      }
+      h2 {
+        font-family: var(--display2);
+        font-size: 1.75rem;
+        margin: 64px 0 8px;
+        line-height: 1.2;
+      }
+      h2 + p {
+        max-width: 66ch;
+        line-height: 1.55;
+        margin: 0 0 24px;
+        font-size: 0.9375rem;
+      }
+      h3 {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin: 0 0 12px;
+        padding-bottom: 6px;
+        border-bottom: 2px solid var(--ink);
+        line-height: 1.3;
+      }
+      code {
+        font-family: var(--mono);
+        font-size: 0.9em;
+      }
+      .note {
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.55;
+        color: var(--ink-muted);
+        margin-top: 10px;
+      }
+      .rule {
+        border: 2px solid var(--ink);
+        padding: 14px 16px;
+        margin: 20px 0;
+        background: var(--cream-soft);
+        max-width: 66ch;
+      }
+      .rule p {
+        margin: 0 0 6px;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+      }
+      .rule p:last-child {
+        margin: 0;
+      }
+      .verdict {
+        border-left: 6px solid var(--green);
+        background: var(--cream-soft);
+        padding: 12px 16px;
+        margin: 18px 0 0;
+        max-width: 66ch;
+      }
+      .verdict p {
+        margin: 0 0 6px;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+      }
+      .verdict p:last-child {
+        margin: 0;
+      }
+
+      /* --- ladders --- */
+      .ladders {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 0;
+        border: 2px solid var(--ink);
+      }
+      .lad {
+        padding: 18px 16px;
+        border-right: 2px solid var(--ink);
+      }
+      .lad:last-child {
+        border-right: 0;
+      }
+      @media (max-width: 1040px) {
+        .lad {
+          border-right: 0;
+          border-bottom: 2px solid var(--ink);
+        }
+        .lad:last-child {
+          border-bottom: 0;
+        }
+      }
+      .lad ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .lad li {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 4px 0;
+        border-bottom: 1px dashed var(--paper-edge);
+      }
+      .lad li:last-child {
+        border-bottom: 0;
+      }
+      .lad .nm {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        color: var(--ink-muted);
+        flex: 0 0 82px;
+        text-transform: uppercase;
+        line-height: 1.3;
+      }
+      .lad .sp {
+        font-family: var(--display2);
+        line-height: 1.05;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .lad .sp.m {
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .lad .sp.b {
+        font-family: var(--body);
+      }
+      .cnt {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--ink-muted);
+        margin-left: auto;
+        flex: 0 0 auto;
+      }
+      .badge {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        margin: 0 0 10px;
+        border: 1.5px solid currentColor;
+      }
+      .badge.ok {
+        color: var(--green);
+      }
+      .badge.no {
+        color: #a33;
+      }
+
+      /* --- before/after panes --- */
+      .pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        border: 2px solid var(--ink);
+      }
+      @media (max-width: 820px) {
+        .pair {
+          grid-template-columns: 1fr;
+        }
+      }
+      .pane {
+        padding: 24px 20px 28px;
+        border-right: 2px solid var(--ink);
+      }
+      .pane:last-child {
+        border-right: 0;
+      }
+      @media (max-width: 820px) {
+        .pane {
+          border-right: 0;
+          border-bottom: 2px solid var(--ink);
+        }
+        .pane:last-child {
+          border-bottom: 0;
+        }
+      }
+      .tag {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        border: 1.5px solid currentColor;
+        padding: 3px 7px;
+        margin: 0 0 18px;
+      }
+      .tag.now {
+        color: var(--ink-muted);
+      }
+      .tag.fix {
+        color: var(--green);
+      }
+      .now-lab {
+        font-family: var(--mono);
+        font-size: 0.6875rem;
+        text-transform: uppercase;
+      }
+      .now-disp {
+        font-family: var(--display);
+        font-size: clamp(2.5rem, 1.5rem + 5vw, 3.6rem);
+      }
+      .now-body {
+        font-family: var(--body);
+        font-size: 1rem;
+      }
+      .fix-lab {
+        font-family: var(--mono);
+        font-size: 0.6875rem;
+        text-transform: uppercase;
+        line-height: 1;
+        letter-spacing: 0.08em;
+      }
+      .fix-disp {
+        font-family: var(--display);
+        font-size: clamp(2.5rem, 1.5rem + 5vw, 3.6rem);
+        line-height: 1;
+      }
+      .fix-body {
+        font-family: var(--body);
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+      .stack > * + * {
+        margin-top: 14px;
+      }
+      .swatch {
+        border: 1.5px dashed var(--paper-edge);
+        padding: 10px 12px;
+        background: var(--cream-soft);
+      }
+
+      /* --- label-size trial --- */
+      .trials {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 0;
+        border: 2px solid var(--ink);
+      }
+      .trial {
+        border-right: 2px solid var(--ink);
+        padding: 0 0 18px;
+      }
+      .trial:last-child {
+        border-right: 0;
+      }
+      @media (max-width: 820px) {
+        .trial {
+          border-right: 0;
+          border-bottom: 2px solid var(--ink);
+        }
+        .trial:last-child {
+          border-bottom: 0;
+        }
+      }
+      .trial > .hd {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        background: var(--ink);
+        color: var(--cream);
+        padding: 6px 12px;
+        margin: 0 0 16px;
+      }
+      .row {
+        padding: 0 14px;
+      }
+      .row + .row {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px dashed var(--paper-edge);
+      }
+      .lbl {
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        line-height: 1;
+        color: var(--ink-muted);
+        display: block;
+        margin: 0 0 6px;
+      }
+      .val {
+        font-family: var(--body);
+        line-height: 1.35;
+        margin: 0;
+      }
+      .val b {
+        font-weight: 600;
+      }
+      .onink {
+        background: var(--green);
+        color: var(--cream);
+        padding: 14px;
+        margin: 16px 14px 0;
+      }
+      .onink .lbl {
+        color: var(--cream);
+        opacity: 0.9;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.875rem;
+        margin: 16px 0 0;
+        max-width: 66ch;
+      }
+      th,
+      td {
+        border: 1px solid var(--ink);
+        padding: 7px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: var(--cream-soft);
+      }
+      td.n {
+        font-family: var(--mono);
+        text-align: right;
+        white-space: nowrap;
+      }
+      .bad {
+        background: #f3ded9;
+      }
+      .good {
+        background: #d8e7d0;
+      }
+      footer {
+        padding: 56px 0 90px;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        max-width: 66ch;
+      }
+      a {
+        color: var(--green);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="wrap">
+      <p class="kicker">
+        #2396 · homepage critique findings map · compare page
+      </p>
+      <h1>
+        The ramp isn’t unenforced. It’s inert — and there are four of them.
+      </h1>
+      <p class="lede">
+        Audit of <code>apps/web/src</code>, stories excluded:
+        <b>273 arbitrary font-size literals across 78 files</b>. The ticket said
+        31. But the literals are a symptom. Below: what the four systems are,
+        why the bespoke one lost, what repairing it looks like, and how small a
+        label actually needs to be.
+      </p>
+    </header>
+
+    <main class="wrap">
+      <h2>1 · Four systems for one job</h2>
+      <p>
+        Two of these are token ramps someone designed, one is Tailwind’s factory
+        default that nobody chose, and one is 273 hand-typed pixels. A developer
+        picking a size has four places to look and no rule saying which.
+      </p>
+
+      <div class="ladders">
+        <div class="lad">
+          <h3>A · --font-size-*</h3>
+          <span class="badge no">unreachable</span>
+          <ul>
+            <li>
+              <span class="nm">xs</span
+              ><span class="sp b" style="font-size: 12px">12</span>
+            </li>
+            <li>
+              <span class="nm">sm</span
+              ><span class="sp b" style="font-size: 13px">13</span>
+            </li>
+            <li>
+              <span class="nm">base</span
+              ><span class="sp b" style="font-size: 16px">16</span>
+            </li>
+            <li>
+              <span class="nm">lg</span
+              ><span class="sp b" style="font-size: 18px">18</span>
+            </li>
+            <li>
+              <span class="nm">xl</span
+              ><span class="sp" style="font-size: 20px">20</span>
+            </li>
+            <li>
+              <span class="nm">2xl</span
+              ><span class="sp" style="font-size: 22px">22</span>
+            </li>
+            <li>
+              <span class="nm">3xl</span
+              ><span class="sp" style="font-size: 24px">24</span>
+            </li>
+            <li>
+              <span class="nm">4xl</span
+              ><span class="sp" style="font-size: 28px">28</span>
+            </li>
+            <li>
+              <span class="nm">5xl</span
+              ><span class="sp" style="font-size: 32px">32</span>
+            </li>
+            <li>
+              <span class="nm">stat</span
+              ><span class="sp" style="font-size: 40px">40</span>
+            </li>
+            <li>
+              <span class="nm">6xl</span
+              ><span class="sp" style="font-size: 48px">48</span>
+            </li>
+          </ul>
+          <p class="note">
+            Generates <b>no utility classes</b>. All 13 references live inside
+            <code>globals.css</code>, styling base <code>h1</code>–<code
+              >h4</code
+            >
+            and <code>body</code>. No component can name a step.
+          </p>
+        </div>
+
+        <div class="lad">
+          <h3>B · --text-* bespoke</h3>
+          <span class="badge no">size only</span>
+          <ul>
+            <li>
+              <span class="nm">label</span
+              ><span class="sp m" style="font-size: 11px">11</span
+              ><span class="cnt">28×</span>
+            </li>
+            <li>
+              <span class="nm">mono-sm</span
+              ><span class="sp m" style="font-size: 12px">12</span
+              ><span class="cnt">13×</span>
+            </li>
+            <li>
+              <span class="nm">mono-md</span
+              ><span class="sp m" style="font-size: 14px">14</span
+              ><span class="cnt">4×</span>
+            </li>
+            <li>
+              <span class="nm">body-sm</span
+              ><span class="sp b" style="font-size: 14px">14</span
+              ><span class="cnt">5×</span>
+            </li>
+            <li>
+              <span class="nm">body-md</span
+              ><span class="sp b" style="font-size: 16px">16</span
+              ><span class="cnt">25×</span>
+            </li>
+            <li>
+              <span class="nm">body-lg</span
+              ><span class="sp b" style="font-size: 18px">18</span
+              ><span class="cnt">7×</span>
+            </li>
+            <li>
+              <span class="nm">disp-sm</span
+              ><span class="sp" style="font-size: 22px">20–24</span
+              ><span class="cnt">25×</span>
+            </li>
+            <li>
+              <span class="nm">disp-md</span
+              ><span class="sp" style="font-size: 28px">24–32</span
+              ><span class="cnt">2×</span>
+            </li>
+            <li>
+              <span class="nm">disp-lg</span
+              ><span class="sp" style="font-size: 36px">32–48</span
+              ><span class="cnt">4×</span>
+            </li>
+            <li>
+              <span class="nm">disp-xl</span
+              ><span class="sp" style="font-size: 44px">44–72</span
+              ><span class="cnt">10×</span>
+            </li>
+            <li>
+              <span class="nm">disp-2xl</span
+              ><span class="sp" style="font-size: 52px">56–96</span
+              ><span class="cnt">9×</span>
+            </li>
+          </ul>
+          <p class="note">
+            The design system’s own ramp — the only fluid one.
+            <b
+              >All 11 steps declare line-height with a suffix Tailwind v4 does
+              not read</b
+            >, so every step emits font-size and nothing else. See §2.
+          </p>
+        </div>
+
+        <div class="lad">
+          <h3>C · Tailwind stock</h3>
+          <span class="badge ok">works correctly</span>
+          <ul>
+            <li>
+              <span class="nm">text-xs</span
+              ><span class="sp b" style="font-size: 12px">12</span
+              ><span class="cnt">36×</span>
+            </li>
+            <li>
+              <span class="nm">text-sm</span
+              ><span class="sp b" style="font-size: 14px">14</span
+              ><span class="cnt">55×</span>
+            </li>
+            <li>
+              <span class="nm">text-base</span
+              ><span class="sp b" style="font-size: 16px">16</span
+              ><span class="cnt">22×</span>
+            </li>
+            <li>
+              <span class="nm">text-lg</span
+              ><span class="sp b" style="font-size: 18px">18</span
+              ><span class="cnt">20×</span>
+            </li>
+            <li>
+              <span class="nm">text-xl</span
+              ><span class="sp" style="font-size: 20px">20</span
+              ><span class="cnt">8×</span>
+            </li>
+            <li>
+              <span class="nm">text-2xl</span
+              ><span class="sp" style="font-size: 24px">24</span
+              ><span class="cnt">8×</span>
+            </li>
+            <li>
+              <span class="nm">text-3xl</span
+              ><span class="sp" style="font-size: 30px">30</span
+              ><span class="cnt">2×</span>
+            </li>
+            <li>
+              <span class="nm">text-4xl</span
+              ><span class="sp" style="font-size: 36px">36</span
+              ><span class="cnt">2×</span>
+            </li>
+            <li>
+              <span class="nm">text-5xl</span
+              ><span class="sp" style="font-size: 48px">48</span
+              ><span class="cnt">—</span>
+            </li>
+            <li>
+              <span class="nm">text-6xl</span
+              ><span class="sp" style="font-size: 60px">60</span
+              ><span class="cnt">1×</span>
+            </li>
+          </ul>
+          <p class="note">
+            <b>154 uses.</b> Nobody in this design system chose these values —
+            they are Tailwind’s factory scale, never overridden. They are also
+            the <b>only</b> steps that carry their own line-height, because they
+            use the suffixes Tailwind actually reads.
+          </p>
+        </div>
+
+        <div class="lad">
+          <h3>D · literals</h3>
+          <span class="badge no">273 sites</span>
+          <ul>
+            <li>
+              <span class="nm">7</span
+              ><span class="sp m" style="font-size: 7px">aa</span
+              ><span class="cnt">1×</span>
+            </li>
+            <li>
+              <span class="nm">9 · 9.5</span
+              ><span class="sp m" style="font-size: 9px">label</span
+              ><span class="cnt">20×</span>
+            </li>
+            <li>
+              <span class="nm">10 · 10.5</span
+              ><span class="sp m" style="font-size: 10px">label</span
+              ><span class="cnt">57×</span>
+            </li>
+            <li>
+              <span class="nm">11 · 11.5</span
+              ><span class="sp m" style="font-size: 11px">label</span
+              ><span class="cnt">99×</span>
+            </li>
+            <li>
+              <span class="nm">12</span
+              ><span class="sp b" style="font-size: 12px">tekst</span
+              ><span class="cnt">13×</span>
+            </li>
+            <li>
+              <span class="nm">13</span
+              ><span class="sp b" style="font-size: 13px">tekst</span
+              ><span class="cnt">13×</span>
+            </li>
+            <li>
+              <span class="nm">14 · 14.5</span
+              ><span class="sp b" style="font-size: 14px">tekst</span
+              ><span class="cnt">14×</span>
+            </li>
+            <li>
+              <span class="nm">15</span
+              ><span class="sp b" style="font-size: 15px">tekst</span
+              ><span class="cnt">15×</span>
+            </li>
+            <li>
+              <span class="nm">16 · 16.5 · 17</span
+              ><span class="sp b" style="font-size: 16px">tekst</span
+              ><span class="cnt">10×</span>
+            </li>
+            <li>
+              <span class="nm">18 · 19</span
+              ><span class="sp b" style="font-size: 18px">tekst</span
+              ><span class="cnt">11×</span>
+            </li>
+            <li>
+              <span class="nm">20–24</span
+              ><span class="sp" style="font-size: 22px">kop</span
+              ><span class="cnt">21×</span>
+            </li>
+            <li>
+              <span class="nm">26–56</span
+              ><span class="sp" style="font-size: 30px">kop</span
+              ><span class="cnt">13×</span>
+            </li>
+          </ul>
+          <p class="note">
+            <b>99 are 11px</b> — the exact value of <code>--text-label</code>,
+            hand-typed. The bare <code>text-label</code> utility is used
+            <b>zero</b> times.
+          </p>
+        </div>
+      </div>
+
+      <div class="rule">
+        <p>
+          <b>13 half-pixel one-offs</b> — 9.5, 10.5, 11.5, 14.5, 16.5 — in
+          <code>SiteFooter</code>, <code>MatchHero</code>,
+          <code>CalendarAgenda</code>, <code>SearchAnswerCard</code>. No system
+          claims them.
+        </p>
+        <p>
+          <b
+            >58 of the 68 sub-11px sites are <code>font-mono</code>; 49 are
+            <code>uppercase</code>.</b
+          >
+          The small band is labels, not text.
+        </p>
+        <p>
+          The sub-floor band is inside <code>design-system/</code> itself —
+          <code>Label</code>, <code>Alert</code>, <code>FilterTabs</code>,
+          <code>EndMark</code>, <code>MonoStar</code>,
+          <code>DownloadButton</code>, <code>QASectionDivider</code>. Not fringe
+          drift: the system’s own vocabulary.
+        </p>
+      </div>
+
+      <h3 style="margin-top: 32px">The trap: six names, two meanings</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>name</th>
+            <th>A · <code>var(--font-size-…)</code></th>
+            <th>C · <code>text-…</code> class</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>xs</td>
+            <td class="n">12px</td>
+            <td class="n">12px</td>
+            <td>same</td>
+          </tr>
+          <tr class="bad">
+            <td>sm</td>
+            <td class="n">13px</td>
+            <td class="n">14px</td>
+            <td>different</td>
+          </tr>
+          <tr>
+            <td>base</td>
+            <td class="n">16px</td>
+            <td class="n">16px</td>
+            <td>same</td>
+          </tr>
+          <tr>
+            <td>lg</td>
+            <td class="n">18px</td>
+            <td class="n">18px</td>
+            <td>same</td>
+          </tr>
+          <tr>
+            <td>xl</td>
+            <td class="n">20px</td>
+            <td class="n">20px</td>
+            <td>same</td>
+          </tr>
+          <tr class="bad">
+            <td>2xl</td>
+            <td class="n">22px</td>
+            <td class="n">24px</td>
+            <td>different</td>
+          </tr>
+          <tr class="bad">
+            <td>3xl</td>
+            <td class="n">24px</td>
+            <td class="n">30px</td>
+            <td>different</td>
+          </tr>
+          <tr class="bad">
+            <td>4xl</td>
+            <td class="n">28px</td>
+            <td class="n">36px</td>
+            <td>different</td>
+          </tr>
+          <tr class="bad">
+            <td>5xl</td>
+            <td class="n">32px</td>
+            <td class="n">48px</td>
+            <td>different</td>
+          </tr>
+          <tr class="bad">
+            <td>6xl</td>
+            <td class="n">48px</td>
+            <td class="n">60px</td>
+            <td>different</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="note">
+        Your <code>h2</code> is 22px. Writing <code>text-2xl</code> to match it
+        gives you 24px.
+      </p>
+
+      <h2>2 · Q1 — what “repair the ramp” means</h2>
+      <p>
+        <code>globals.css</code> writes <code>--text-label--lh</code> and
+        <code>--text-label--tracking</code>. Tailwind v4 reads
+        <code>--line-height</code> and <code>--letter-spacing</code>. I compiled
+        a probe against Tailwind 4.3.0 to be certain: a correctly-spelled step
+        emits three properties, this repo’s steps emit one.
+      </p>
+
+      <div class="rule">
+        <p
+          style="
+            font-family: var(--mono);
+            font-size: 12px;
+            line-height: 1.8;
+            margin: 0;
+          "
+        >
+          .text-probe&nbsp;{ font-size: …; line-height: …; letter-spacing: …;
+          }&nbsp;&nbsp;<span style="color: var(--green)"
+            >← correct suffixes</span
+          ><br />
+          .text-label&nbsp;{ font-size: …; }&nbsp;&nbsp;<span
+            style="color: #a33"
+            >← this repo</span
+          >
+        </p>
+      </div>
+
+      <p>
+        A bespoke token has never carried anything but size. That is why
+        hand-typing <code>text-[11px]</code> costs nothing, and why components
+        carry <b>190 hand-applied <code>leading-*</code></b> and
+        <b>229 <code>tracking-*</code></b> classes putting back what the ramp
+        dropped. Left is what ships today; right is the same markup once the
+        suffixes are correct.
+      </p>
+
+      <div class="pair">
+        <div class="pane">
+          <span class="tag now">Today · leading inherited</span>
+          <div class="stack">
+            <div class="swatch">
+              <span class="now-lab">Wedstrijdkalender</span>
+            </div>
+            <div class="now-disp">Er is maar één plezante compagnie</div>
+            <p class="now-body" style="margin: 0">
+              De ploeg speelt zondag om 15u00 op eigen veld. De kantine is open
+              vanaf 13u30 en de jeugdwerking verzamelt een half uur voor aanvang
+              aan de kleedkamers.
+            </p>
+          </div>
+          <p class="note">
+            Label: no tracking, line-height 1.75 inherited from
+            <code>body</code>. Display: 1.75 where the token says 1. Body: 1.75
+            where the token says 1.6.
+          </p>
+        </div>
+        <div class="pane">
+          <span class="tag fix">Repaired · the token asserts itself</span>
+          <div class="stack">
+            <div class="swatch">
+              <span class="fix-lab">Wedstrijdkalender</span>
+            </div>
+            <div class="fix-disp">Er is maar één plezante compagnie</div>
+            <p class="fix-body" style="margin: 0">
+              De ploeg speelt zondag om 15u00 op eigen veld. De kantine is open
+              vanaf 13u30 en de jeugdwerking verzamelt een half uur voor aanvang
+              aan de kleedkamers.
+            </p>
+          </div>
+          <p class="note">
+            Label tracks at 0.08em and sets solid. Display stacks at 1. Body at
+            1.6. No component asked for any of it.
+          </p>
+        </div>
+      </div>
+
+      <div class="verdict">
+        <p>
+          <b>The cost of repairing:</b> the 190
+          <code>leading-*</code> hand-patches now compete with a token that
+          finally asserts itself. Most will agree; the ones that don’t will
+          move. A full VR run (~40 min) and a real diff, pre-go-live.
+        </p>
+        <p>
+          <b>The cost of ratifying</b> (delete the 11 dead sub-tokens): one
+          commit, zero pixels moved — and “the ramp” permanently means “a list
+          of font sizes”, with leading and tracking hand-carried forever.
+        </p>
+      </div>
+
+      <h2>3 · Q3 — how small does a label need to be?</h2>
+      <p>
+        Your worry: collapsing to 11px flattens the hierarchy, because a 12px
+        value with an 11px label above it is no contrast at all. Two things make
+        that narrower than it looks. Body copy here is 14–16px, not 12px —
+        <code>text-[12px]</code> is 13 sites in the whole app. And the label is
+        <i>mono, uppercase, tracked</i>: the register separates it, not the
+        point size.
+      </p>
+
+      <div class="trials">
+        <div class="trial">
+          <p class="hd">Label 9px · today</p>
+          <div class="row">
+            <span class="lbl" style="font-size: 9px">Zondag 15u00</span>
+            <p class="val" style="font-size: 14px">
+              KCVV Elewijt — <b>SK Londerzeel</b>
+            </p>
+          </div>
+          <div class="row">
+            <span class="lbl" style="font-size: 9px">Beker van Vlaanderen</span>
+            <p class="val" style="font-size: 16px">Uitslag <b>3 – 1</b></p>
+          </div>
+          <div class="onink">
+            <span class="lbl" style="font-size: 9px">Jeugd · U15</span>
+            <p class="val" style="font-size: 14px; margin: 0">
+              Training verplaatst naar dinsdag
+            </p>
+          </div>
+        </div>
+
+        <div class="trial">
+          <p class="hd">Label 10px · the de-facto step</p>
+          <div class="row">
+            <span class="lbl" style="font-size: 10px">Zondag 15u00</span>
+            <p class="val" style="font-size: 14px">
+              KCVV Elewijt — <b>SK Londerzeel</b>
+            </p>
+          </div>
+          <div class="row">
+            <span class="lbl" style="font-size: 10px"
+              >Beker van Vlaanderen</span
+            >
+            <p class="val" style="font-size: 16px">Uitslag <b>3 – 1</b></p>
+          </div>
+          <div class="onink">
+            <span class="lbl" style="font-size: 10px">Jeugd · U15</span>
+            <p class="val" style="font-size: 14px; margin: 0">
+              Training verplaatst naar dinsdag
+            </p>
+          </div>
+        </div>
+
+        <div class="trial">
+          <p class="hd">Label 11px · the floor</p>
+          <div class="row">
+            <span class="lbl" style="font-size: 11px">Zondag 15u00</span>
+            <p class="val" style="font-size: 14px">
+              KCVV Elewijt — <b>SK Londerzeel</b>
+            </p>
+          </div>
+          <div class="row">
+            <span class="lbl" style="font-size: 11px"
+              >Beker van Vlaanderen</span
+            >
+            <p class="val" style="font-size: 16px">Uitslag <b>3 – 1</b></p>
+          </div>
+          <div class="onink">
+            <span class="lbl" style="font-size: 11px">Jeugd · U15</span>
+            <p class="val" style="font-size: 14px; margin: 0">
+              Training verplaatst naar dinsdag
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <p class="note" style="max-width: 66ch">
+        Read these on the phone, outdoors, at arm’s length — DESIGN.md’s own
+        stated usage scene. The question is not which looks tidiest on a desk
+        monitor.
+      </p>
+
+      <h3 style="margin-top: 32px">The arithmetic, if you want it</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Pairing</th>
+            <th>Ratio</th>
+            <th>Reads as</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="bad">
+            <td>label 11 → mono-sm 12</td>
+            <td class="n">1.09×</td>
+            <td>indistinguishable — two names for one register</td>
+          </tr>
+          <tr>
+            <td>label 10 → 12</td>
+            <td class="n">1.20×</td>
+            <td>visible</td>
+          </tr>
+          <tr>
+            <td>label 9 → 14</td>
+            <td class="n">1.56×</td>
+            <td>strong, but 9px fails outdoors</td>
+          </tr>
+          <tr class="good">
+            <td>label 11 → body-sm 14</td>
+            <td class="n">1.27×</td>
+            <td>clean separation</td>
+          </tr>
+          <tr class="good">
+            <td>label 11 → body-md 16</td>
+            <td class="n">1.45×</td>
+            <td>strong separation</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="verdict">
+        <p>
+          The crowding you feared is real, but it sits at <b>11 → 12</b>, not 11
+          → 14. <code>mono-sm</code> has 13 uses. Retire that step and the
+          bottom of the ramp becomes <b>11 → 14 → 16 → 18</b>, which separates
+          on its own without a sub-floor label.
+        </p>
+      </div>
+    </main>
+
+    <footer class="wrap">
+      <p>
+        Compare page for
+        <a href="https://github.com/soniCaH/www.kcvvelewijt.be/issues/2396"
+          >#2396</a
+        >, part of the
+        <a href="https://github.com/soniCaH/www.kcvvelewijt.be/issues/2402"
+          >homepage critique findings map</a
+        >. Green is <code>#007c46</code> per the locked decision in #2395.
+        Counts are from <code>apps/web/src</code> with
+        <code>*.stories.tsx</code> and <code>src/stories/</code> excluded; the
+        Tailwind emission claim is from a compiled probe against Tailwind 4.3.0.
+      </p>
+    </footer>
+  </body>
+</html>
