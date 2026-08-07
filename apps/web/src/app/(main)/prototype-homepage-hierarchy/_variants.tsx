@@ -119,9 +119,9 @@ export const VARIANTS: Record<string, Variant> = {
   },
 
   D: {
-    name: "Geen winnaar — drie nette lagen",
+    name: "Zoals nu — de basislijn",
     claim:
-      "Niets draagt de pagina. Zes inhoudsbanden op één gewicht, de commerciële staart eronder. De vraag: verslaat een consequent gelaagde pagina een gerangschikte, als de personas toch niet te rangschikken zijn?",
+      "Geen voorstel: dit is de pagina van vandaag. Huidige volgorde, alle tien de banden op één gewicht, kleurveld op de jeugdband. Niets rangschikt iets. Dit is waartegen A, B, C en E het moeten winnen — zonder deze variant vergelijk je ze met je herinnering aan de echte pagina, en die staat vol echte inhoud.",
     order: [
       "hero",
       "uitgelicht",
@@ -134,14 +134,20 @@ export const VARIANTS: Record<string, Variant> = {
       "sponsors",
       "clubshop",
     ],
+    // Every band at rank 2 — including the commercial tail. That flatness is
+    // the finding, not an oversight: the critique's "nothing outranks
+    // anything" rendered literally.
     rank: {
       hero: 2,
       uitgelicht: 2,
       firstteams: 2,
+      event: 2,
+      banner: 2,
       news: 2,
       matches: 2,
       youth: 2,
-      ...TAIL,
+      sponsors: 2,
+      clubshop: 2,
     },
     field: "youth",
   },
