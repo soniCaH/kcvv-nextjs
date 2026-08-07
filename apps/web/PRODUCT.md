@@ -79,7 +79,7 @@ Amateur clubs at this level either run a template site or live entirely on Faceb
 - **Real editorial archive:** club news and match reports, an authored club history, events, and photo galleries in Sanity.
 - **Real people:** player, staff and organigram records with photos; a who-is-who of club contacts.
 - **Real sponsors:** a live sponsor roster with tiered logos.
-- **Real photography:** club and matchday photography, plus a panorama of the ground (`docs/design/Untitled_Panorama-1.jpg`).
+- **Real photography, but dated — treat as a constraint, not an asset.** The club and matchday archive predates the ground renovation: both pitches went from grass to synthetic and the surroundings were rebuilt. Any image showing the ground or its surroundings — including the panorama at `docs/design/Untitled_Panorama-1.jpg` — now misrepresents the club and must not be used. People-focused photography (players, coaches, supporters) ages better and remains usable. **No recent photography exists**; commissioning it is tracked in #2411. Do not design a surface that depends on current imagery of the ground.
 - **Socials:** facebook.com/KCVVElewijt, instagram.com/kcvve.
 - **Absent — never fabricate:** testimonials, attendance or engagement figures, honours or trophy claims, press coverage, and any club statistic the ProSoccerData sync does not actually provide.
 
