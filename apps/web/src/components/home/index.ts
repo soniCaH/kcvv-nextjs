@@ -37,6 +37,7 @@ export {
   FirstTeamsBlock,
   deriveFirstTeamVM,
   firstTeamLabel,
+  selectSeniorTeams,
 } from "./FirstTeamsBlock";
 export type { FirstTeamsBlockProps, FirstTeamVM } from "./FirstTeamsBlock";
 

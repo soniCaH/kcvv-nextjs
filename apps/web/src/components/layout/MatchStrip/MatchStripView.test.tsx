@@ -1,93 +1,199 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within, fireEvent } from "@testing-library/react";
 import { MatchStripView } from "./MatchStripView";
 import { KCVV_CLUB_ID } from "@/lib/constants";
-import type { UpcomingMatch } from "@/components/match/types";
+import type { ScheduleMatch } from "@/components/match/types";
 
-const baseMatch: UpcomingMatch = {
+const OPPONENT = { id: 9999, name: "RC Mechelen", logo: "https://psd/rc.png" };
+
+const result: ScheduleMatch = {
   id: 42,
-  date: new Date("2026-05-10T19:30:00Z"),
-  time: "19:30",
-  venue: "De Schalk",
+  date: new Date("2026-08-03T15:00:00Z"),
+  status: "finished",
   competition: "Tweede Provinciale A",
+  homeTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+  awayTeam: OPPONENT,
+  homeScore: 3,
+  awayScore: 1,
+  isHome: true,
+};
+
+const fixture: ScheduleMatch = {
+  id: 43,
+  date: new Date("2026-08-08T18:00:00Z"),
+  time: "18:00",
   status: "scheduled",
-  homeTeam: { id: KCVV_CLUB_ID, name: "KCVV" },
-  awayTeam: { id: 9999, name: "RC Mechelen", logo: "https://psd/rc.png" },
+  competition: "Beker van Vlaanderen",
+  homeTeam: OPPONENT,
+  awayTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+  isHome: false,
 };
 
 describe("MatchStripView", () => {
-  it("renders KCVV first when KCVV is the home side", () => {
-    render(<MatchStripView match={baseMatch} />);
-    const teamNames = screen.getAllByText(/KCVV|RC Mechelen/);
-    // Order should be KCVV (left) → vs → RC Mechelen (right)
-    expect(teamNames[0]).toHaveTextContent("KCVV");
-    expect(teamNames[1]).toHaveTextContent("RC Mechelen");
-    expect(screen.getByText("vs.")).toBeInTheDocument();
+  it("renders both matches as links to their own match-detail route", () => {
+    render(<MatchStripView data={{ result, fixture }} />);
+    expect(screen.getByRole("link", { name: /^Uitslag/ })).toHaveAttribute(
+      "href",
+      "/wedstrijd/42",
+    );
+    expect(
+      screen.getByRole("link", { name: /^Volgende wedstrijd/ }),
+    ).toHaveAttribute("href", "/wedstrijd/43");
   });
 
-  it("renders the opponent first when KCVV is the away side", () => {
-    render(
-      <MatchStripView
-        match={{
-          ...baseMatch,
-          homeTeam: {
-            id: 9999,
-            name: "RC Mechelen",
-            logo: "https://psd/rc.png",
-          },
-          awayTeam: { id: KCVV_CLUB_ID, name: "KCVV" },
-        }}
-      />,
+  it("names the opponent, not KCVV, in each row's accessible name", () => {
+    render(<MatchStripView data={{ result, fixture }} />);
+    expect(
+      screen.getByRole("link", { name: /Uitslag.*RC Mechelen/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("spells the score into the result row's accessible name", () => {
+    // The aria-label replaces the row's contents as its accessible name, so a
+    // screen-reader user hears only what is in the label.
+    render(<MatchStripView data={{ result, fixture }} />);
+    expect(
+      screen.getByRole("link", { name: /KCVV Elewijt 3 - RC Mechelen 1/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("states KCVV's goals first in the label even when KCVV played away", () => {
+    const awayLoss: ScheduleMatch = {
+      ...result,
+      homeTeam: OPPONENT,
+      awayTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+      homeScore: 2,
+      awayScore: 0,
+      isHome: false,
+    };
+    render(<MatchStripView data={{ result: awayLoss, fixture: null }} />);
+    expect(
+      screen.getByRole("link", { name: /KCVV Elewijt 0 - RC Mechelen 2/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the score in true scoreboard order, home side first", () => {
+    render(<MatchStripView data={{ result, fixture }} />);
+    // KCVV played at home and won 3-1, so the scoreboard reads 3–1.
+    expect(screen.getAllByText("3–1").length).toBeGreaterThan(0);
+  });
+
+  it("keeps scoreboard order when KCVV played away", () => {
+    const awayLoss: ScheduleMatch = {
+      ...result,
+      homeTeam: OPPONENT,
+      awayTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+      homeScore: 2,
+      awayScore: 0,
+      isHome: false,
+    };
+    render(<MatchStripView data={{ result: awayLoss, fixture: null }} />);
+    expect(screen.getAllByText("2–0").length).toBeGreaterThan(0);
+  });
+
+  it("derives the KCVV side from the club id when isHome is absent", () => {
+    // Regression: `isHome ?? undefined` used to take the falsy branch and
+    // render KCVV as its own opponent.
+    const { isHome: _omitted, ...withoutIsHome } = result;
+    render(<MatchStripView data={{ result: withoutIsHome, fixture: null }} />);
+    const row = screen.getByRole("link", { name: /^Uitslag/ });
+    // KCVV is the home side by club id, so the opponent must be the away team
+    // and the label must read KCVV 3 - RC Mechelen 1, not KCVV against itself.
+    expect(row).toHaveAccessibleName(/KCVV Elewijt 3 - RC Mechelen 1/);
+  });
+
+  it("labels the result slide correctly when the fixture disappears", () => {
+    // The switch starts on the result. Move it to the fixture, then re-render
+    // without one: the fallback must still render as the result slide rather
+    // than showing the result's teams under a "Volgende" label with `vs.`.
+    const { rerender } = render(<MatchStripView data={{ result, fixture }} />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Toon de volgende wedstrijd" }),
     );
-    const teamNames = screen.getAllByText(/KCVV|RC Mechelen/);
-    expect(teamNames[0]).toHaveTextContent("RC Mechelen");
-    expect(teamNames[1]).toHaveTextContent("KCVV");
-    expect(screen.queryByText("@")).toBeNull();
+    rerender(<MatchStripView data={{ result, fixture: null }} />);
+
+    expect(screen.queryByText("vs.")).toBeNull();
+    expect(
+      screen.getByRole("link", { name: /Wedstrijddetails/i }),
+    ).toHaveAttribute("href", "/wedstrijd/42");
+  });
+
+  it("marks a home match with the house glyph and an away match with the bus", () => {
+    render(<MatchStripView data={{ result, fixture }} />);
+    const resultRow = screen.getByRole("link", { name: /^Uitslag/ });
+    const fixtureRow = screen.getByRole("link", { name: /^Volgende/ });
+    expect(
+      within(resultRow).getByLabelText("Thuiswedstrijd"),
+    ).toBeInTheDocument();
+    expect(
+      within(fixtureRow).getByLabelText("Uitwedstrijd"),
+    ).toBeInTheDocument();
+  });
+
+  // `toHaveStyle` with an asymmetric matcher does not actually compare, so
+  // these read the inline style attribute the component writes.
+  it("marks a win with the outcome sweep", () => {
+    render(<MatchStripView data={{ result, fixture: null }} />);
+    const score = screen.getAllByText("3–1")[0];
+    expect(score?.getAttribute("style") ?? "").toContain("inset");
+  });
+
+  it("gives a draw no outcome sweep", () => {
+    const draw: ScheduleMatch = { ...result, homeScore: 2, awayScore: 2 };
+    render(<MatchStripView data={{ result: draw, fixture: null }} />);
+    const score = screen.getAllByText("2–2")[0];
+    expect(score?.getAttribute("style") ?? "").not.toContain("inset");
+  });
+
+  it("renders the fixture alone when there is no result", () => {
+    render(<MatchStripView data={{ result: null, fixture }} />);
+    expect(screen.queryByRole("link", { name: /^Uitslag/ })).toBeNull();
+    expect(
+      screen.getByRole("link", { name: /^Volgende wedstrijd/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the result alone when there is no fixture", () => {
+    render(<MatchStripView data={{ result, fixture: null }} />);
+    expect(screen.getByRole("link", { name: /^Uitslag/ })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^Volgende/ })).toBeNull();
   });
 
   it("renders real PSD logos when provided", () => {
-    const { container } = render(<MatchStripView match={baseMatch} />);
-    const imgs = container.querySelectorAll("img");
-    const srcs = Array.from(imgs).map((i) => i.getAttribute("src"));
-    expect(srcs).toContain("/images/logos/kcvv-logo.png");
+    const { container } = render(
+      <MatchStripView data={{ result, fixture: null }} />,
+    );
+    const srcs = Array.from(container.querySelectorAll("img")).map((i) =>
+      i.getAttribute("src"),
+    );
     expect(srcs).toContain("https://psd/rc.png");
   });
 
-  it("falls back to an initial badge when an opponent has no logo", () => {
-    render(
-      <MatchStripView
-        match={{
-          ...baseMatch,
-          awayTeam: { id: 9999, name: "VK De Volharding" },
-        }}
-      />,
-    );
-    const fallback = screen.getByRole("img", { name: "VK De Volharding" });
-    expect(fallback).toHaveTextContent("V");
+  it("falls back to an initial badge when the opponent has no logo", () => {
+    const noLogo: ScheduleMatch = {
+      ...result,
+      awayTeam: { id: 9999, name: "VK De Volharding" },
+    };
+    render(<MatchStripView data={{ result: noLogo, fixture: null }} />);
+    expect(screen.getAllByText("V").length).toBeGreaterThan(0);
   });
 
-  it("links the CTA to the match-detail route", () => {
-    render(<MatchStripView match={baseMatch} />);
-    const cta = screen.getByRole("link", { name: /Wedstrijddetails/i });
-    expect(cta).toHaveAttribute("href", "/wedstrijd/42");
+  it("exposes the desktop CTA to the match currently on the slide", () => {
+    render(<MatchStripView data={{ result, fixture }} />);
+    expect(
+      screen.getByRole("link", { name: /Wedstrijddetails/i }),
+    ).toHaveAttribute("href", "/wedstrijd/42");
   });
 
-  it("renders all three meta cells when competition + venue are present", () => {
-    render(<MatchStripView match={baseMatch} />);
-    expect(screen.getByText("Competitie")).toBeInTheDocument();
-    expect(screen.getByText("Aftrap")).toBeInTheDocument();
-    expect(screen.getByText("Terrein")).toBeInTheDocument();
-    expect(screen.getByText("De Schalk")).toBeInTheDocument();
-  });
+  it("offers the desktop switch only when both sides exist", () => {
+    const { rerender } = render(<MatchStripView data={{ result, fixture }} />);
+    expect(
+      screen.getByRole("button", { name: "Toon de volgende wedstrijd" }),
+    ).toBeInTheDocument();
 
-  it("hides Competitie + Terrein cells when those fields are absent", () => {
-    render(
-      <MatchStripView
-        match={{ ...baseMatch, competition: undefined, venue: undefined }}
-      />,
-    );
-    expect(screen.queryByText("Competitie")).toBeNull();
-    expect(screen.queryByText("Terrein")).toBeNull();
-    expect(screen.getByText("Aftrap")).toBeInTheDocument();
+    rerender(<MatchStripView data={{ result, fixture: null }} />);
+    expect(
+      screen.queryByRole("button", { name: "Toon de volgende wedstrijd" }),
+    ).toBeNull();
   });
 });

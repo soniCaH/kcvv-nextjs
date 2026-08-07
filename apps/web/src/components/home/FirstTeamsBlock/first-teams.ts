@@ -43,7 +43,28 @@ export function firstTeamLabel(slug: string, name: string): string {
   return /^[a-z]$/i.test(tail) ? `${tail.toUpperCase()}-ploeg` : name;
 }
 
-function pickLastResult(
+/** The fields senior-team selection reads — structural, so both call sites fit. */
+export interface SeniorTeamCandidate {
+  psdId: string | null;
+  age: string | null;
+  slug: string;
+}
+
+/**
+ * Senior (non-youth) teams that carry a `psdId`, sorted by slug so
+ * `eerste-elftallen-a` precedes `-b`. Shared by the homepage's
+ * `<FirstTeamsBlock>` wiring and the landing strip's first-team lookup — the
+ * two used to hold identical copies of this filter and could drift apart.
+ */
+export function selectSeniorTeams<T extends SeniorTeamCandidate>(
+  teams: readonly T[],
+): T[] {
+  return teams
+    .filter((t) => t.psdId && !(t.age ?? "").toUpperCase().startsWith("U"))
+    .sort((a, b) => a.slug.localeCompare(b.slug));
+}
+
+export function pickLastResult(
   matches: readonly Match[],
   now: Date,
 ): Match | undefined {
@@ -52,7 +73,7 @@ function pickLastResult(
     .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
 }
 
-function pickNextFixture(
+export function pickNextFixture(
   matches: readonly Match[],
   now: Date,
 ): Match | undefined {

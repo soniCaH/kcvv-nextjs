@@ -2,6 +2,10 @@
  * Homepage
  * Main landing page for KCVV Elewijt website
  *
+ * Spine order (#2387): hero → Dit weekend → Uitgelicht → …, so a supporter
+ * reaches the first-team result inside the second screen on a phone instead
+ * of the fourth.
+ *
  * Phase 4.5.C.1 (#1754) — R4.B spine reorder + R1.B static-hero
  * retirement of `<HomepageHeroCarousel>`. The hero is now a single
  * static `<EditorialHero placement="homepage">` rendering the top
@@ -51,6 +55,7 @@ import {
   FirstTeamsBlock,
   deriveFirstTeamVM,
   firstTeamLabel,
+  selectSeniorTeams,
   ClubshopBanner,
   YouthBackdrop,
   YouthSection,
@@ -287,9 +292,7 @@ export default async function HomePage() {
   // out of the generic "Komende wedstrijden" agenda below (#2211). The senior
   // nav set = non-youth teams (age not "U*"); a psdId is required to fetch their
   // matches feed. Sorted by slug so a-ploeg renders before b-ploeg.
-  const seniorTeams = teamsResult
-    .filter((t) => t.psdId && !(t.age ?? "").toUpperCase().startsWith("U"))
-    .sort((a, b) => a.slug.localeCompare(b.slug));
+  const seniorTeams = selectSeniorTeams(teamsResult);
 
   const firstTeamsMatches = await Promise.all(
     seniorTeams.map((team) =>
@@ -547,8 +550,12 @@ export default async function HomePage() {
       <SectionStack
         sections={[
           heroSection,
-          uitgelichtSection,
+          // #2387: "Dit weekend." sits directly under the hero, ahead of the
+          // editorial rows. The result used to land ~2,200px down on a phone,
+          // behind the hero and three Uitgelicht cards, which contradicted
+          // product principle 1 ("the result is the headline").
           firstTeamsSection,
+          uitgelichtSection,
           featuredEventSection,
           bannerSlotASection,
           latestNewsSection,
