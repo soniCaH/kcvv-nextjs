@@ -85,7 +85,7 @@ Amateur clubs at this level either run a template site or live entirely on Faceb
 
 ## Product Principles
 
-1. **The result is the headline.** Whatever the page, a supporter should be able to answer "what happened / what's next" in a single glance on a phone.
+1. **Match data must read at a glance.** Wherever a result or fixture appears, a supporter answers "what happened / what's next" without effort, on a phone, outdoors. This is a **legibility** requirement, not a ranking one. During a season the result is the most _current_ thing on the site — it is not the headline for every visitor, and this principle must never be cited to argue that it outranks the rest of a page (see principle 6).
 2. **Youth is first-class, not a sub-section.** Every affordance built for the first team — squad, fixtures, profiles, statistics — must hold up for a U9 team and a nine-year-old's profile page, including its privacy constraints.
 3. **Render only what the data actually provides.** Design against real ProSoccerData and Sanity shapes; a layout that needs a field the source may omit is a broken layout.
 4. **Sponsors get real estate, not decoration.** Sponsor presence is a product obligation with commercial consequences, and is designed deliberately rather than tucked into a footer strip.
