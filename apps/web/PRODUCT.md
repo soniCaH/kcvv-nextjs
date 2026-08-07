@@ -10,10 +10,14 @@ web
 
 Two primary audiences, weighted equally — when they conflict, neither one automatically wins:
 
-1. **Supporters on matchday.** Fans and Elewijt locals checking results, standings, lineups, goalscorers and the calendar. Mostly on a phone, frequently outdoors at or near the pitch.
+1. **Supporters on matchday.** Fans and Elewijt locals checking results, standings, lineups, goalscorers and the calendar. Mostly on a phone, frequently outdoors at or near the pitch. This includes **opposition supporters** travelling to a national-league fixture, whose need is narrow and sharp — kickoff time, venue, result — and who do not scroll.
 2. **Youth parents.** Parents of U6–U21 players following their kid's team: schedule, squad, practical info, photos.
 
 Secondary, confirmed but not decision-driving: prospective members and volunteers, sponsors and partners, and the club's own board/staff/volunteers.
+
+**Recruitment is a goal, not a standing audience.** "Recruit players and volunteers" is the first success criterion below, which reads as a contradiction with prospective members sitting in the secondary list. It is not one: a recruit visits, converts, and thereafter _is_ a youth parent or a supporter. Design for the conversion, but do not weight prospective members as a third audience that can veto a decision (#2408).
+
+**Sponsors are a commercial obligation, not a persona.** Current sponsors are owed visible value; potential sponsors are an audience of a different kind. Neither is a visitor whose needs rank the page. Do not reach for "but sponsors need visibility" as an argument about hierarchy (#2408).
 
 All visitors are anonymous — there is no registration or login anywhere on the site, and all content is free.
 
@@ -86,6 +90,7 @@ Amateur clubs at this level either run a template site or live entirely on Faceb
 3. **Render only what the data actually provides.** Design against real ProSoccerData and Sanity shapes; a layout that needs a field the source may omit is a broken layout.
 4. **Sponsors get real estate, not decoration.** Sponsor presence is a product obligation with commercial consequences, and is designed deliberately rather than tucked into a footer strip.
 5. **Punch above the division.** The bar is not "good for an amateur club" — visible craft is itself one of the three success criteria.
+6. **The homepage does not declare a primary section.** Its bands sit at one weight by deliberate choice, not by neglect. With two co-equal primary audiences, any fixed ranking permanently demotes one of them on every visit. Five ranked and routed alternatives were built and rejected in favour of the flat baseline (#2408). A usability review will read this as a failed "single focus" heuristic; that outcome is understood and accepted. The jersey-deep youth band is the sheet's one deliberate visual break, not a rank.
 
 ## Accessibility & Inclusion
 
