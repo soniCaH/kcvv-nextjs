@@ -139,6 +139,27 @@ describe("getFirstTeamStripData", () => {
     expect(data?.fixture).toBeNull();
   });
 
+  it("headlines a forfeit settled before its kickoff (#2423)", async () => {
+    // The strip shares `pickLastResult` with <FirstTeamsBlock>; a forfeit
+    // awarded hours ahead of kickoff is inside the recency window by
+    // definition, so it must reach the strip rather than fall through it.
+    mockFetches(TEAMS, [
+      {
+        id: 1,
+        status: "forfeited",
+        date: hoursAhead(8),
+        home_team: { score: 5 },
+        away_team: { score: 0 },
+      },
+      { id: 2, status: "scheduled", date: hoursAhead(48) },
+    ]);
+
+    const data = await getFirstTeamStripData();
+
+    expect(data?.result?.id).toBe(1);
+    expect(data?.fixture?.id).toBe(2);
+  });
+
   it("returns null when the feed has neither side", async () => {
     mockFetches(TEAMS, []);
     expect(await getFirstTeamStripData()).toBeNull();

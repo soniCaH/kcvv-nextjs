@@ -13,14 +13,14 @@ import {
 import type { ScheduleMatch } from "@/components/match/types";
 
 /**
- * How long a finished match stays newsworthy enough to headline the strip.
+ * How long a played match stays newsworthy enough to headline the strip.
  * Past this, the strip drops back to fixture-only — a result from a fortnight
  * ago at the top of every landing page reads as stale, not as news.
  */
 export const RESULT_RECENCY_MS = 72 * 60 * 60 * 1000;
 
 export interface MatchStripData {
-  /** Most recent finished match, only when inside `RESULT_RECENCY_MS`. */
+  /** Most recent played match, only when inside `RESULT_RECENCY_MS`. */
   result: ScheduleMatch | null;
   /** Next scheduled fixture. */
   fixture: ScheduleMatch | null;

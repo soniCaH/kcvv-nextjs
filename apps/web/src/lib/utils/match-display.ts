@@ -50,10 +50,13 @@ export function getResultColor(
 /**
  * Whether a match has been played (a score is meaningful). Shared by every row
  * that switches between a kickoff time and a scoreline + outcome underline
- * (`<TeamAgendaRow>`, the kalender agenda row) so the status set can't drift
- * between them.
+ * (`<TeamAgendaRow>`, the kalender agenda row) and by the homepage's
+ * result/fixture split (`first-teams.ts`) so the status set can't drift between
+ * them. Narrows, so callers can exhaustively `switch` over what's left (#2423).
  */
-export function isPlayedMatch(status: MatchStatus): boolean {
+export function isPlayedMatch(
+  status: MatchStatus,
+): status is "finished" | "forfeited" | "stopped" {
   return (
     status === "finished" || status === "forfeited" || status === "stopped"
   );
