@@ -3,7 +3,9 @@ import {
   hasScore,
   getScoreDisplay,
   getResultColor,
+  isExceptionalMatchStatus,
   isPlayedMatch,
+  isSettledMatch,
 } from "./match-display";
 import type { MatchStatus } from "@/lib/effect/schemas/match.schema";
 
@@ -156,6 +158,50 @@ describe("isPlayedMatch", () => {
       "cancelled",
     ] as MatchStatus[]) {
       expect(isPlayedMatch(status)).toBe(false);
+    }
+  });
+});
+
+describe("isSettledMatch", () => {
+  it("is true only for statuses whose outcome is final", () => {
+    for (const status of ["finished", "forfeited"] as MatchStatus[]) {
+      expect(isSettledMatch(status)).toBe(true);
+    }
+  });
+
+  it("excludes stopped — an abandoned match may be replayed", () => {
+    // Narrower than `isPlayedMatch` on purpose: the row still shows an
+    // abandoned scoreline, but nothing may headline on it (#2423).
+    expect(isPlayedMatch("stopped")).toBe(true);
+    expect(isSettledMatch("stopped")).toBe(false);
+  });
+
+  it("is false for the remaining statuses", () => {
+    for (const status of [
+      "scheduled",
+      "postponed",
+      "cancelled",
+    ] as MatchStatus[]) {
+      expect(isSettledMatch(status)).toBe(false);
+    }
+  });
+});
+
+describe("isExceptionalMatchStatus", () => {
+  it("is false for the two statuses the layout speaks for itself", () => {
+    for (const status of ["scheduled", "finished"] as MatchStatus[]) {
+      expect(isExceptionalMatchStatus(status)).toBe(false);
+    }
+  });
+
+  it("is true for every status that needs naming on the row", () => {
+    for (const status of [
+      "forfeited",
+      "postponed",
+      "cancelled",
+      "stopped",
+    ] as MatchStatus[]) {
+      expect(isExceptionalMatchStatus(status)).toBe(true);
     }
   });
 });

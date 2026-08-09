@@ -2,22 +2,25 @@
  * Pure view-model derivation for the homepage "Eerste ploegen" block (#2211).
  *
  * From a senior team's full season feed (`BffService.getMatches(psdId)`),
- * derive its last result + next fixture, mirroring the split used on the
- * team-detail agenda (`TeamMatchesSection`): next = earliest `scheduled` with
- * `date >= now`; result = most recent played match (`isPlayedMatch`, so
- * forfeits and abandoned matches count) that is either past its kickoff or
- * already carries a scoreline. See `matchSlot` for how every `MatchStatus`
- * maps onto the two slots. Both sides are emitted as `ScheduleMatch` via the shared
+ * derive its last result + next fixture: next = earliest `scheduled` with
+ * `date >= now`; result = most recent settled match (`isSettledMatch`, so
+ * forfeits count) that is either past its kickoff or already carries a
+ * scoreline. See `matchSlot` for how every `MatchStatus` maps onto the two
+ * slots. Both sides are emitted as `ScheduleMatch` via the shared
  * `transformMatchToSchedule`, so the block renders them with the same unified
  * `<TeamAgendaRow>` used on team pages + `/kalender` (#2301, Direction A) —
  * no bespoke card shapes to drift. Kept free of React so it can be unit-tested
  * in isolation.
+ *
+ * NB: this no longer mirrors `TeamMatchesSection`'s split — that surface still
+ * filters `status === "finished" && date < now`, so #2423 is live there too.
+ * It is on the issue's out-of-scope sibling list; do not treat it as the
+ * reference implementation.
  */
 import type { Match } from "@/lib/effect/schemas";
 import type { ScheduleMatch } from "@/components/match/types";
 import { transformMatchToSchedule } from "@/components/match/transform";
-import { hasScore, isPlayedMatch } from "@/lib/utils/match-display";
-import type { FirstTeamsCardKind } from "./first-teams-analytics";
+import { hasScore, isSettledMatch } from "@/lib/utils/match-display";
 
 export interface FirstTeamInput {
   /** Display label, e.g. "A-ploeg". */
@@ -68,54 +71,76 @@ export function selectSeniorTeams<T extends SeniorTeamCandidate>(
 }
 
 /**
- * Which of the block's two slots (`FirstTeamsCardKind`) a status may occupy —
- * `null` for a status that belongs in neither.
+ * How far ahead of kickoff a settled match may be dated and still headline as
+ * the last result. A forfeit is awarded in the days before a tie, so it has to
+ * be reachable before kickoff; but Belgian amateur football also stamps a
+ * `forfait général` on *every* remaining fixture at once when a club withdraws,
+ * and a 5-0 awarded five months out is not "the last result" — it is a future
+ * fixture that happens to carry a score. Beyond this window the genuinely most
+ * recent result keeps the slot.
+ */
+export const SETTLED_LOOKAHEAD_MS = 72 * 60 * 60 * 1000;
+
+/**
+ * Which of the block's two slots a status may occupy — `null` for a status that
+ * belongs in neither.
  *
  * Exhaustive over `MatchStatus`: a new member is a compile error here rather
  * than a match that silently disappears from both slots, which is exactly how
- * `forfeited` / `postponed` / `cancelled` went missing (#2423). The played set
- * is not re-listed — it comes from the shared `isPlayedMatch`, the same
- * predicate `<TeamAgendaRow>` uses to decide whether to render a scoreline, so
- * the picker and the row can't disagree about what a result is.
+ * `forfeited` / `postponed` / `cancelled` went missing (#2423). The settled set
+ * is not re-listed — it comes from the shared `isSettledMatch`, the same
+ * predicate `hasScore` and `<TeamAgendaRow>`'s outcome tint derive from.
  *
- * `postponed` / `cancelled` are deliberately in neither slot. Both slots answer
- * "what happened" and "where do I go next"; a match that will not be played
- * answers neither, and a rescheduled one returns to the feed as `scheduled` at
- * its new date. The team agenda (`/ploegen/<slug>/wedstrijden`) remains the
- * place that lists every match including these.
+ * `postponed`, `cancelled` and `stopped` are deliberately in neither slot. Both
+ * slots answer "what happened" and "where do I go next"; a match that will not
+ * be played as scheduled answers neither, and a rescheduled one returns to the
+ * feed as `scheduled` at its new date. `stopped` is here for that same reason —
+ * an abandoned match's partial scoreline is not a result, and publishing it
+ * would headline a score that never counted. The team agenda
+ * (`/ploegen/<slug>/wedstrijden`) remains the place that lists every match.
+ *
+ * Returns `null` — rather than throwing — on the impossible branch: this runs
+ * inside a `filter` on the homepage's render path, outside any error boundary
+ * (`app/(landing)/page.tsx` only wraps the *fetch* in `catchAll`). Dropping one
+ * match from a chrome block is a better failure than a 500 on the homepage.
+ * The `never` assignment keeps the compile-time guarantee either way.
  */
-function matchSlot(status: Match["status"]): FirstTeamsCardKind | null {
-  if (isPlayedMatch(status)) return "result";
+function matchSlot(status: Match["status"]): "result" | "fixture" | null {
+  if (isSettledMatch(status)) return "result";
   switch (status) {
     case "scheduled":
       return "fixture";
     case "postponed":
     case "cancelled":
+    case "stopped":
       return null;
     default: {
       const _exhaustive: never = status;
-      throw new Error(`Unhandled MatchStatus: ${String(_exhaustive)}`);
+      void _exhaustive;
+      return null;
     }
   }
 }
 
 /**
- * Most recent result. A played match qualifies once its kickoff has passed, or
+ * Most recent result. A settled match qualifies once its kickoff has passed, or
  * as soon as it carries a scoreline — a forfeit is awarded in advance, so
  * `date < now` alone would hide it right up to a kickoff that never happens
- * (#2423). Without a scoreline a future-dated match stays out: there is nothing
- * settled to headline yet.
+ * (#2423). Two bounds keep that from swallowing the slot: without a scoreline a
+ * future-dated match stays out (nothing is settled to headline yet), and beyond
+ * `SETTLED_LOOKAHEAD_MS` it stays out too.
  */
 export function pickLastResult(
   matches: readonly Match[],
   now: Date,
 ): Match | undefined {
   return matches
-    .filter(
-      (m) =>
-        matchSlot(m.status) === "result" &&
-        (m.date.getTime() < now.getTime() || hasScore(m)),
-    )
+    .filter((m) => {
+      if (matchSlot(m.status) !== "result") return false;
+      const untilKickoff = m.date.getTime() - now.getTime();
+      if (untilKickoff < 0) return true;
+      return untilKickoff <= SETTLED_LOOKAHEAD_MS && hasScore(m);
+    })
     .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
 }
 

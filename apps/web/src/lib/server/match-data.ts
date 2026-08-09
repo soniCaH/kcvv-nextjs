@@ -80,9 +80,14 @@ export const getFirstTeamStripData = cache(
       const lastResult = pickLastResult(matches, now);
       const nextFixture = pickNextFixture(matches, now);
 
+      // Symmetric on purpose: `pickLastResult` can return a match dated ahead
+      // of now (a forfeit awarded before kickoff), and a one-sided
+      // `now - date <= WINDOW` is trivially true for any future date — the
+      // window could never expire one (#2423).
       const isRecent =
         lastResult !== undefined &&
-        now.getTime() - lastResult.date.getTime() <= RESULT_RECENCY_MS;
+        Math.abs(now.getTime() - lastResult.date.getTime()) <=
+          RESULT_RECENCY_MS;
 
       const result = isRecent ? transformMatchToSchedule(lastResult) : null;
       const fixture = nextFixture

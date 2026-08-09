@@ -83,6 +83,51 @@ export const Upcoming: Story = {
 };
 
 /**
+ * Forfeited — the scoreline is awarded, not played, so the caption names it
+ * ("FF", brick) and the win still earns its jersey-deep underline. Without
+ * the marker the row is an unexplained 5–0 (#2423).
+ */
+export const Forfeited: Story = {
+  args: {
+    match: { ...win, id: 5, homeScore: 5, awayScore: 0, status: "forfeited" },
+  },
+};
+
+/**
+ * Forfeited in the featured slot — the marker drops to `warm` so it stays
+ * legible on jersey-deep, where brick would disappear.
+ */
+export const ForfeitedFeatured: Story = {
+  args: {
+    match: { ...win, id: 6, homeScore: 5, awayScore: 0, status: "forfeited" },
+    featured: true,
+  },
+};
+
+/**
+ * Postponed — kickoff time still shown (there is no score), but "PP" (Uitgesteld)
+ * stops the row reading as a match to turn up for.
+ */
+export const Postponed: Story = {
+  args: { match: { ...upcoming, id: 7, status: "postponed" } },
+};
+
+/** Cancelled — will not be played at all. */
+export const Cancelled: Story = {
+  args: { match: { ...upcoming, id: 8, status: "cancelled" } },
+};
+
+/**
+ * Abandoned early. The partial scoreline still renders (it is what happened on
+ * the pitch) but carries no outcome tint — nothing is settled until the replay.
+ */
+export const Stopped: Story = {
+  args: {
+    match: { ...win, id: 9, status: "stopped" },
+  },
+};
+
+/**
  * Opponent fields a non-first team — the "U23" designation (from PSD's
  * `awayTeam` code) is pinned beside the club name. The KCVV side carries its
  * numeric squad code and shows no suffix.

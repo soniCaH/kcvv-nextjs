@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import type { Match } from "@/lib/effect/schemas";
-import { deriveFirstTeamVM, firstTeamLabel } from "./first-teams";
+import {
+  deriveFirstTeamVM,
+  firstTeamLabel,
+  SETTLED_LOOKAHEAD_MS,
+} from "./first-teams";
 
 describe("firstTeamLabel", () => {
   it("maps trailing-letter first-eleven slugs to X-ploeg", () => {
@@ -210,8 +214,9 @@ describe("deriveFirstTeamVM", () => {
     expect(empty.division).toBe("3de Nationale");
   });
 
-  // #2423 — three of the six `MatchStatus` members matched neither predicate,
-  // so a forfeited / postponed / cancelled match was invisible in both slots.
+  // #2423 — four of the six `MatchStatus` members matched neither predicate, so
+  // a forfeited / postponed / cancelled / stopped match was invisible in both
+  // slots. Only `forfeited` belongs in one; the rest are excluded on purpose.
   describe("non-scheduled, non-finished statuses (#2423)", () => {
     it("selects a forfeited match settled before its kickoff as the result", () => {
       // The live case: a cup tie awarded 5-0 by forfeit ~8h before kickoff.
@@ -260,9 +265,9 @@ describe("deriveFirstTeamVM", () => {
       expect(vm.result?.id).toBe(1);
     });
 
-    it("selects a stopped match as the result, matching how the row renders it", () => {
-      // `isPlayedMatch` (shared with <TeamAgendaRow>) counts "stopped" as played,
-      // so the picker must agree — otherwise the row would never see one.
+    it("excludes a stopped match — an abandoned scoreline is not a result", () => {
+      // A match abandoned at 2-1 may be replayed; headlining it would publish a
+      // score that never counted. Same reasoning as `postponed`.
       const vm = deriveFirstTeamVM(
         team,
         [
@@ -273,6 +278,53 @@ describe("deriveFirstTeamVM", () => {
             isHome: true,
             homeScore: 2,
             awayScore: 1,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result).toBeUndefined();
+      expect(vm.fixture).toBeUndefined();
+    });
+
+    it("does not let a far-future forfeit displace the genuine last result", () => {
+      // `forfait général`: a withdrawing club has every remaining fixture
+      // stamped 5-0 at once. Those must not outrank last Saturday's real win.
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 1,
+            date: "2026-06-20T15:00:00Z",
+            status: "finished",
+            isHome: true,
+            homeScore: 3,
+            awayScore: 1,
+          }),
+          match({
+            id: 2,
+            date: "2026-11-24T15:00:00Z",
+            status: "forfeited",
+            isHome: true,
+            homeScore: 5,
+            awayScore: 0,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result?.id).toBe(1);
+    });
+
+    it("admits a settled forfeit exactly on the lookahead boundary", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 1,
+            date: new Date(NOW.getTime() + SETTLED_LOOKAHEAD_MS).toISOString(),
+            status: "forfeited",
+            isHome: true,
+            homeScore: 5,
+            awayScore: 0,
           }),
         ],
         NOW,

@@ -1,2 +1,2 @@
-export { MatchStatusBadge } from "./MatchStatusBadge";
+export { MatchStatusBadge, matchStatusWording } from "./MatchStatusBadge";
 export type { MatchStatusBadgeProps } from "./MatchStatusBadge";

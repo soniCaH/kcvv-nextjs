@@ -15,9 +15,12 @@ import { Crest, PRESS_DOWN_CLASSES } from "@/components/design-system";
 import { cn } from "@/lib/utils/cn";
 import {
   getResultColor,
+  isExceptionalMatchStatus,
   isPlayedMatch,
+  isSettledMatch,
   OUTCOME_UNDERLINE,
 } from "@/lib/utils/match-display";
+import { matchStatusWording } from "@/components/match/MatchStatusBadge";
 import { House, Bus } from "@/lib/icons.redesign";
 import type { ScheduleMatch } from "@/components/match/types";
 
@@ -68,7 +71,11 @@ function computeOutcome(
   match: ScheduleMatch,
   isHome: boolean | undefined,
 ): Outcome {
-  if (match.status !== "finished") return null;
+  // Settled, not merely finished: a forfeit is a real win or loss and must be
+  // tinted like one. `<MatchStripView>` derives its outcome from the scores
+  // alone, so gating on `=== "finished"` here made the two surfaces disagree
+  // about the same match (#2423). `stopped` stays out — nothing is settled.
+  if (!isSettledMatch(match.status)) return null;
   if (
     typeof match.homeScore !== "number" ||
     typeof match.awayScore !== "number" ||
@@ -214,11 +221,39 @@ export function TeamAgendaRow({
 
   const matchLabel = `${match.homeTeam.name} – ${match.awayTeam.name}, ${day} ${month}`;
 
-  // Caption (P2) shared by both layouts: an optional jersey-deep squad label
-  // (e.g. "A-Ploeg") followed by the competition. Rendered once, reused below.
+  // A status the layout can't speak for on its own — a forfeit otherwise reads
+  // as a bare scoreline, an `afgelast` match as a kickoff to turn up for. The
+  // wording comes from `<MatchStatusBadge>`'s table so "Forfait" is spelled the
+  // same here as on the match hero; only the chrome differs, because the badge's
+  // bordered block would not survive this 9px caption line (#2423).
+  const statusWording = isExceptionalMatchStatus(match.status)
+    ? matchStatusWording(match.status)
+    : null;
+
+  // Caption (P2) shared by both layouts: an optional status marker, then an
+  // optional jersey-deep squad label (e.g. "A-Ploeg"), then the competition.
+  // Rendered once, reused below.
   const captionContent =
-    captionLabel || match.competition ? (
+    statusWording || captionLabel || match.competition ? (
       <>
+        {statusWording ? (
+          // Abbreviation, not the long form: this caption shares a fixed-width
+          // centre column with the scoreline, so every extra character is taken
+          // straight off the team names either side — "FORFAIT · BEKER VAN
+          // VLAAMS-BRABANT" truncated them to "SK No…" / "KCV…". `FF` / `AFG`
+          // are the same short forms `<MatchStatusBadge>` renders, and `<abbr>`
+          // carries the long form for hover and assistive tech.
+          <abbr
+            title={statusWording.longForm}
+            className={cn(
+              "font-semibold no-underline",
+              featured ? "text-warm" : "text-alert",
+            )}
+          >
+            {statusWording.abbreviation}
+          </abbr>
+        ) : null}
+        {statusWording && (captionLabel || match.competition) ? " · " : null}
         {captionLabel ? (
           <span
             className={cn(
