@@ -311,25 +311,34 @@ export function TeamAgendaRow({
         ) : null}
 
         {/* Desktop layout (sm+): symmetric scoreboard */}
-        <div className="hidden w-full items-center gap-2 px-3 py-2 sm:flex">
-          {/* Home side */}
-          <div
-            className="flex min-w-0 flex-1 items-center gap-2"
-            title={match.homeTeam.name}
-          >
-            <Crest name={match.homeTeam.name} logo={match.homeTeam.logo} />
-            <TeamName
-              team={match.homeTeam}
-              featured={featured}
-              bold={isHome === true}
-            />
-          </div>
+        {/*
+          The caption sits on its own full-width line rather than inside the
+          centre column. A flex column is as wide as its widest child, and that
+          column is `shrink-0` — so a caption wider than the scoreline used to
+          set the column's width and never give it back, and the two `flex-1
+          min-w-0` sides absorbed the whole cost by truncating the club names
+          ("BEKER VAN BRABANT" → "SK Noss…" / "KCVV Ele…"). Being visually below
+          the score never mattered; they shared a box.
+        */}
+        <div className="hidden w-full flex-col justify-center px-3 py-2 sm:flex">
+          <div className="flex w-full items-center gap-2">
+            {/* Home side */}
+            <div
+              className="flex min-w-0 flex-1 items-center gap-2"
+              title={match.homeTeam.name}
+            >
+              <Crest name={match.homeTeam.name} logo={match.homeTeam.logo} />
+              <TeamName
+                team={match.homeTeam}
+                featured={featured}
+                bold={isHome === true}
+              />
+            </div>
 
-          {/* Score / time + competition caption */}
-          <div className="flex shrink-0 flex-col items-center gap-0.5 px-3">
+            {/* Score / time */}
             <span
               className={cn(
-                "leading-none",
+                "shrink-0 leading-none",
                 showUpcomingLabel
                   ? "font-mono text-[11px] font-semibold tracking-wider uppercase"
                   : "font-display-big text-[18px] tabular-nums",
@@ -343,31 +352,32 @@ export function TeamAgendaRow({
             >
               {scoreOrTime}
             </span>
-            {captionContent ? (
-              <span
-                className={cn(
-                  "font-mono text-[9px] tracking-wider uppercase",
-                  monoClass,
-                )}
-              >
-                {captionContent}
-              </span>
-            ) : null}
+
+            {/* Away side */}
+            <div
+              className="flex min-w-0 flex-1 flex-row-reverse items-center gap-2"
+              title={match.awayTeam.name}
+            >
+              <Crest name={match.awayTeam.name} logo={match.awayTeam.logo} />
+              <TeamName
+                team={match.awayTeam}
+                featured={featured}
+                bold={isHome === false}
+                align="right"
+              />
+            </div>
           </div>
 
-          {/* Away side */}
-          <div
-            className="flex min-w-0 flex-1 flex-row-reverse items-center gap-2"
-            title={match.awayTeam.name}
-          >
-            <Crest name={match.awayTeam.name} logo={match.awayTeam.logo} />
-            <TeamName
-              team={match.awayTeam}
-              featured={featured}
-              bold={isHome === false}
-              align="right"
-            />
-          </div>
+          {captionContent ? (
+            <span
+              className={cn(
+                "mt-0.5 text-center font-mono text-[9px] tracking-wider uppercase",
+                monoClass,
+              )}
+            >
+              {captionContent}
+            </span>
+          ) : null}
         </div>
 
         {/* Mobile layout: KCVV-centric column */}
