@@ -57,6 +57,22 @@ function isBadgeStatus(status: string): status is BadgeStatus {
   return Object.hasOwn(BADGE_SPECS, status);
 }
 
+/**
+ * The wording for a status, without the badge chrome. Lets tighter surfaces
+ * (`<TeamAgendaRow>`'s 9px caption line) name a status in their own register
+ * while still drawing the words from this one table — "Forfait" must not be
+ * spelled differently on the match hero and on an agenda row (#2423).
+ *
+ * Returns `null` for a status with nothing to say (`scheduled`).
+ */
+export function matchStatusWording(
+  status: MatchStatus | (string & {}),
+): { abbreviation: string; longForm: string } | null {
+  if (!isBadgeStatus(status)) return null;
+  const { abbreviation, longForm } = BADGE_SPECS[status];
+  return { abbreviation, longForm };
+}
+
 export function MatchStatusBadge({ status, className }: MatchStatusBadgeProps) {
   if (!isBadgeStatus(status)) return null;
 

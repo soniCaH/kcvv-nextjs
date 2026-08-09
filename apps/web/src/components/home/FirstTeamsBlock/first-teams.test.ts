@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import type { Match } from "@/lib/effect/schemas";
-import { deriveFirstTeamVM, firstTeamLabel } from "./first-teams";
+import {
+  deriveFirstTeamVM,
+  firstTeamLabel,
+  SETTLED_LOOKAHEAD_MS,
+} from "./first-teams";
 
 describe("firstTeamLabel", () => {
   it("maps trailing-letter first-eleven slugs to X-ploeg", () => {
@@ -208,6 +212,152 @@ describe("deriveFirstTeamVM", () => {
     expect(empty.fixture).toBeUndefined();
     expect(empty.label).toBe("A-ploeg");
     expect(empty.division).toBe("3de Nationale");
+  });
+
+  // #2423 — four of the six `MatchStatus` members matched neither predicate, so
+  // a forfeited / postponed / cancelled / stopped match was invisible in both
+  // slots. Only `forfeited` belongs in one; the rest are excluded on purpose.
+  describe("non-scheduled, non-finished statuses (#2423)", () => {
+    it("selects a forfeited match settled before its kickoff as the result", () => {
+      // The live case: a cup tie awarded 5-0 by forfeit ~8h before kickoff.
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 1,
+            date: "2026-06-20T15:00:00Z",
+            status: "finished",
+            isHome: true,
+            homeScore: 1,
+            awayScore: 5,
+          }),
+          match({
+            id: 2,
+            date: "2026-06-23T16:30:00Z",
+            status: "forfeited",
+            isHome: false,
+            homeScore: 5,
+            awayScore: 0,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result?.id).toBe(2);
+      expect(vm.result?.homeScore).toBe(5);
+      expect(vm.fixture).toBeUndefined();
+    });
+
+    it("selects a forfeited match whose kickoff has passed as the result", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 1,
+            date: "2026-06-10T15:00:00Z",
+            status: "forfeited",
+            isHome: true,
+            homeScore: 0,
+            awayScore: 5,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result?.id).toBe(1);
+    });
+
+    it("excludes a stopped match — an abandoned scoreline is not a result", () => {
+      // A match abandoned at 2-1 may be replayed; headlining it would publish a
+      // score that never counted. Same reasoning as `postponed`.
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 1,
+            date: "2026-06-10T15:00:00Z",
+            status: "stopped",
+            isHome: true,
+            homeScore: 2,
+            awayScore: 1,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result).toBeUndefined();
+      expect(vm.fixture).toBeUndefined();
+    });
+
+    it("does not let a far-future forfeit displace the genuine last result", () => {
+      // `forfait général`: a withdrawing club has every remaining fixture
+      // stamped 5-0 at once. Those must not outrank last Saturday's real win.
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 1,
+            date: "2026-06-20T15:00:00Z",
+            status: "finished",
+            isHome: true,
+            homeScore: 3,
+            awayScore: 1,
+          }),
+          match({
+            id: 2,
+            date: "2026-11-24T15:00:00Z",
+            status: "forfeited",
+            isHome: true,
+            homeScore: 5,
+            awayScore: 0,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result?.id).toBe(1);
+    });
+
+    it("admits a settled forfeit exactly on the lookahead boundary", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 1,
+            date: new Date(NOW.getTime() + SETTLED_LOOKAHEAD_MS).toISOString(),
+            status: "forfeited",
+            isHome: true,
+            homeScore: 5,
+            awayScore: 0,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result?.id).toBe(1);
+    });
+
+    it("keeps a future played match without a scoreline out of the result slot", () => {
+      // Nothing is settled yet, so it must not headline with a kickoff time in
+      // the result slot — it stays out until its kickoff has passed.
+      const vm = deriveFirstTeamVM(
+        team,
+        [match({ id: 1, date: "2026-06-29T15:00:00Z", status: "forfeited" })],
+        NOW,
+      );
+      expect(vm.result).toBeUndefined();
+    });
+
+    it.each(["postponed", "cancelled"] as const)(
+      "excludes a %s match from both slots and falls through to the next real one",
+      (status) => {
+        const vm = deriveFirstTeamVM(
+          team,
+          [
+            match({ id: 1, date: "2026-06-25T15:00:00Z", status }),
+            match({ id: 2, date: "2026-06-29T15:00:00Z", status: "scheduled" }),
+          ],
+          NOW,
+        );
+        expect(vm.result).toBeUndefined();
+        expect(vm.fixture?.id).toBe(2);
+      },
+    );
   });
 
   it("leaves scores undefined on the ScheduleMatch when the source has none", () => {

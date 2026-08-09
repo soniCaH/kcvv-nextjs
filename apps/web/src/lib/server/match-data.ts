@@ -13,14 +13,14 @@ import {
 import type { ScheduleMatch } from "@/components/match/types";
 
 /**
- * How long a finished match stays newsworthy enough to headline the strip.
+ * How long a played match stays newsworthy enough to headline the strip.
  * Past this, the strip drops back to fixture-only — a result from a fortnight
  * ago at the top of every landing page reads as stale, not as news.
  */
 export const RESULT_RECENCY_MS = 72 * 60 * 60 * 1000;
 
 export interface MatchStripData {
-  /** Most recent finished match, only when inside `RESULT_RECENCY_MS`. */
+  /** Most recent played match, only when inside `RESULT_RECENCY_MS`. */
   result: ScheduleMatch | null;
   /** Next scheduled fixture. */
   fixture: ScheduleMatch | null;
@@ -80,9 +80,14 @@ export const getFirstTeamStripData = cache(
       const lastResult = pickLastResult(matches, now);
       const nextFixture = pickNextFixture(matches, now);
 
+      // Symmetric on purpose: `pickLastResult` can return a match dated ahead
+      // of now (a forfeit awarded before kickoff), and a one-sided
+      // `now - date <= WINDOW` is trivially true for any future date — the
+      // window could never expire one (#2423).
       const isRecent =
         lastResult !== undefined &&
-        now.getTime() - lastResult.date.getTime() <= RESULT_RECENCY_MS;
+        Math.abs(now.getTime() - lastResult.date.getTime()) <=
+          RESULT_RECENCY_MS;
 
       const result = isRecent ? transformMatchToSchedule(lastResult) : null;
       const fixture = nextFixture

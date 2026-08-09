@@ -109,6 +109,35 @@ export const Outcomes: Story = {
   },
 };
 
+/**
+ * The #2423 live case: a cup tie awarded 5-0 by forfeit before its kickoff.
+ * It used to be invisible — neither `finished` nor `scheduled` — and the block
+ * showed the match after it as though this one did not exist. It now takes the
+ * result slot, and the caption names it so the score is not left unexplained.
+ */
+export const ForfeitedResult: Story = {
+  args: {
+    teams: [
+      {
+        ...aTeam,
+        result: {
+          ...aResult,
+          id: 103,
+          date: new Date("2026-06-28T16:30:00Z"),
+          homeTeam: { id: 55, name: "SK Nossegem" },
+          awayTeam: { id: 1235, name: "KCVV Elewijt" },
+          homeScore: 5,
+          awayScore: 0,
+          isHome: false,
+          status: "forfeited",
+          competition: "Beker van Vlaams-Brabant",
+        },
+      },
+      bTeam,
+    ],
+  },
+};
+
 // Graceful skip: A has no upcoming fixture (season end), B has no recent result.
 export const MissingSides: Story = {
   args: {

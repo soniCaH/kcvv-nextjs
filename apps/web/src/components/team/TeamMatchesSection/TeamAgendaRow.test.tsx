@@ -171,6 +171,65 @@ describe("TeamAgendaRow", () => {
       const spans = container.querySelectorAll("[style*='box-shadow']");
       expect(spans.length).toBe(0);
     });
+
+    it("tints a forfeit like any other win (#2423)", () => {
+      // <MatchStripView> derives its outcome from the scores alone, so gating
+      // this on `status === "finished"` made the two surfaces disagree about
+      // the same match.
+      const { container } = render(
+        <TeamAgendaRow match={{ ...FINISHED_WIN, status: "forfeited" }} />,
+      );
+      const spans = container.querySelectorAll("[style*='box-shadow']");
+      expect(spans.length).toBeGreaterThan(0);
+      expect(spans[0]?.getAttribute("style")).toContain("jersey-deep");
+    });
+
+    it("leaves an abandoned match untinted — nothing is settled", () => {
+      const { container } = render(
+        <TeamAgendaRow match={{ ...FINISHED_WIN, status: "stopped" }} />,
+      );
+      expect(container.querySelectorAll("[style*='box-shadow']").length).toBe(
+        0,
+      );
+    });
+  });
+
+  describe("Status marker in the caption (#2423)", () => {
+    it.each([
+      ["forfeited", "FF", "Forfait"],
+      ["postponed", "PP", "Uitgesteld"],
+      ["cancelled", "CANC", "Geannuleerd"],
+      ["stopped", "STOP", "Gestopt"],
+    ] as const)(
+      "marks a %s match with the <MatchStatusBadge> short form",
+      (status, abbreviation, longForm) => {
+        render(<TeamAgendaRow match={{ ...FINISHED_WIN, status }} />);
+        // Both layouts render the caption, so the marker appears more than once.
+        const markers = screen.getAllByText(abbreviation);
+        expect(markers.length).toBeGreaterThan(0);
+        // The long form still reaches hover + assistive tech via <abbr title>.
+        expect(markers[0]?.tagName).toBe("ABBR");
+        expect(markers[0]?.getAttribute("title")).toBe(longForm);
+      },
+    );
+
+    it("leaves a finished match unmarked — the scoreline already says it", () => {
+      const { container } = render(<TeamAgendaRow match={FINISHED_WIN} />);
+      expect(container.querySelector("abbr")).toBeNull();
+    });
+
+    it("leaves a scheduled match unmarked — the kickoff time already says it", () => {
+      const { container } = render(<TeamAgendaRow match={BASE} />);
+      expect(container.querySelector("abbr")).toBeNull();
+    });
+
+    it("keeps the competition alongside the marker", () => {
+      render(
+        <TeamAgendaRow match={{ ...FINISHED_WIN, status: "forfeited" }} />,
+      );
+      expect(screen.getAllByText("FF").length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/3e Provinciale A/).length).toBeGreaterThan(0);
+    });
   });
 
   describe("Featured card", () => {
