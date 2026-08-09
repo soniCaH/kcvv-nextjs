@@ -19,6 +19,7 @@
  */
 
 import { PageContainer, StripedSeam } from "@/components/design-system";
+import { FIRST_TEAMS_ROW_GRID } from "@/components/home/FirstTeamsBlock";
 
 /** A flush-image card footprint — image atop a border-2 ink body. */
 function CardSkeleton() {
@@ -73,10 +74,7 @@ export default function HomeLoading() {
           <div className="bg-cream/20 mb-4 h-3 w-32" />
           <div className="bg-cream/25 mb-8 h-9 w-64 max-w-full" />
           {Array.from({ length: 2 }).map((_, i) => (
-            <div
-              key={i}
-              className="border-cream/20 grid gap-3 border-t py-5 first:border-t-0 md:grid-cols-[0.72fr_1.25fr_1.25fr] md:gap-5"
-            >
+            <div key={i} className={FIRST_TEAMS_ROW_GRID}>
               <div className="bg-cream/20 h-6 w-32" />
               <div className="bg-cream/10 h-16" />
               <div className="bg-cream/10 h-16" />
