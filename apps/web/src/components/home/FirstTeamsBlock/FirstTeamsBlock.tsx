@@ -37,9 +37,26 @@ function SkipCard({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Row grid, shared with the homepage route skeleton so the two can't drift.
+ *
+ * Three columns only from `xl`: at `md` each scoreboard fell below its own
+ * min-content and the row overflowed the page (#2397). The label column is a
+ * bounded 11rem rather than the old `0.72fr` (~263px) — "A-ploeg" plus a
+ * division needs about 110px, and the ~90px that frees is what lets a 30-char
+ * club name sit unclipped. Bounded, not content-sized, because `divisionFull`
+ * is PSD-authored and would otherwise spend that width straight back.
+ *
+ * Coupled to `<TeamAgendaRow>`'s `fluidNames` threshold: three-up lands each
+ * card near 520px, deliberately under that 560px mark, because the fluid split
+ * is what seats a long opponent name in a card that narrow.
+ */
+export const FIRST_TEAMS_ROW_GRID =
+  "border-cream/20 grid gap-3 border-t py-5 first:border-t-0 xl:grid-cols-[minmax(0,11rem)_1fr_1fr] xl:gap-5";
+
 function FirstTeamRow({ team }: { team: FirstTeamVM }) {
   return (
-    <div className="border-cream/20 grid gap-3 border-t py-5 first:border-t-0 md:grid-cols-[0.72fr_1.25fr_1.25fr] md:items-stretch md:gap-5">
+    <div className={`${FIRST_TEAMS_ROW_GRID} xl:items-stretch`}>
       <div className="flex flex-col justify-center">
         <span className="font-display text-cream text-2xl leading-tight font-bold">
           {team.label}

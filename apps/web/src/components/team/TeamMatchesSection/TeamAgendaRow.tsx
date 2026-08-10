@@ -7,6 +7,11 @@
  *   A · desktop = symmetric scoreboard: [stub][home crest+name][score/time][away name+crest]
  *   B · mobile  = KCVV-centric column:  [stub][opponent crest+name+comp][home/away icon][score/time]
  *
+ * The two names always split the row evenly (`flex-1` a side), so the score sits
+ * dead centre whatever the clubs are called. A name too long for its half
+ * ellipsises — it never borrows from the other side, because a score that moves
+ * between rows reads as a broken table (#2397).
+ *
  * Design lock: docs/design/mockups/phase-6-team/detail-ia-locked.md §3
  */
 import Link from "next/link";

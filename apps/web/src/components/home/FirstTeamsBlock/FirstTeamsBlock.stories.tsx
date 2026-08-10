@@ -45,49 +45,55 @@ const aResult: ScheduleMatch = {
   competition: "3de Nationale",
 };
 
+const aFixture: ScheduleMatch = {
+  id: 102,
+  date: new Date("2026-06-29T13:00:00Z"),
+  time: "15:00",
+  // KCVV plays away → opponent (Sporting Hasselt) is the home side.
+  homeTeam: { id: 77, name: "Sporting Hasselt" },
+  awayTeam: { id: 1235, name: "KCVV Elewijt" },
+  isHome: false,
+  status: "scheduled",
+  competition: "3de Nationale",
+};
+
 const aTeam: FirstTeamVM = {
   label: "A-ploeg",
   slug: "a-ploeg",
   division: "3de Nationale",
   result: aResult,
-  fixture: {
-    id: 102,
-    date: new Date("2026-06-29T13:00:00Z"),
-    time: "15:00",
-    // KCVV plays away → opponent (Sporting Hasselt) is the home side.
-    homeTeam: { id: 77, name: "Sporting Hasselt" },
-    awayTeam: { id: 1235, name: "KCVV Elewijt" },
-    isHome: false,
-    status: "scheduled",
-    competition: "3de Nationale",
-  },
+  fixture: aFixture,
+};
+
+const bResult: ScheduleMatch = {
+  id: 201,
+  date: new Date("2026-06-22T13:30:00Z"),
+  homeTeam: { id: 88, name: "Tempo Overijse" },
+  awayTeam: { id: 1236, name: "KCVV Elewijt B" },
+  homeScore: 2,
+  awayScore: 0,
+  isHome: false,
+  status: "finished",
+  competition: "2de Provinciale",
+};
+
+const bFixture: ScheduleMatch = {
+  id: 202,
+  date: new Date("2026-06-28T17:30:00Z"),
+  time: "19:30",
+  homeTeam: { id: 1236, name: "KCVV Elewijt B" },
+  awayTeam: { id: 99, name: "VK Liedekerke" },
+  isHome: true,
+  status: "scheduled",
+  competition: "2de Provinciale",
 };
 
 const bTeam: FirstTeamVM = {
   label: "B-ploeg",
   slug: "b-ploeg",
   division: "2de Provinciale",
-  result: {
-    id: 201,
-    date: new Date("2026-06-22T13:30:00Z"),
-    homeTeam: { id: 88, name: "Tempo Overijse" },
-    awayTeam: { id: 1236, name: "KCVV Elewijt B" },
-    homeScore: 2,
-    awayScore: 0,
-    isHome: false,
-    status: "finished",
-    competition: "2de Provinciale",
-  },
-  fixture: {
-    id: 202,
-    date: new Date("2026-06-28T17:30:00Z"),
-    time: "19:30",
-    homeTeam: { id: 1236, name: "KCVV Elewijt B" },
-    awayTeam: { id: 99, name: "VK Liedekerke" },
-    isHome: true,
-    status: "scheduled",
-    competition: "2de Provinciale",
-  },
+  result: bResult,
+  fixture: bFixture,
 };
 
 export const Default: Story = {
@@ -134,6 +140,50 @@ export const ForfeitedResult: Story = {
         },
       },
       bTeam,
+    ],
+  },
+};
+
+/**
+ * The #2397 live case: real opponents, each carrying the `A` designation the
+ * BFF sends, which is what pushed these names past their half of the row.
+ * "Ritterklub Vsv Jette A" is the longest that occurs in the current fixture
+ * list and the widest the row must seat unclipped at 1440px.
+ *
+ * The score stays dead centre in every one of these rows — a scoreboard whose
+ * score wanders with the club names reads as a broken table.
+ */
+export const LongOpponentNames: Story = {
+  args: {
+    teams: [
+      {
+        ...aTeam,
+        result: {
+          ...aResult,
+          homeTeam: { id: 61, name: "Ohr Huldenberg", teamLabel: "A" },
+          awayTeam: { id: 1235, name: "KCVV Elewijt" },
+          isHome: false,
+        },
+        fixture: {
+          ...aFixture,
+          homeTeam: { id: 62, name: "VK Ninove", teamLabel: "A" },
+        },
+      },
+      {
+        ...bTeam,
+        result: {
+          ...bResult,
+          homeTeam: { id: 63, name: "SK Nossegem", teamLabel: "A" },
+        },
+        fixture: {
+          ...bFixture,
+          awayTeam: {
+            id: 64,
+            name: "Ritterklub Vsv Jette",
+            teamLabel: "A",
+          },
+        },
+      },
     ],
   },
 };

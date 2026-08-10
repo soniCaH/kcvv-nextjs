@@ -9,6 +9,7 @@
  *  - Featured (jersey-deep) vs normal card data-attribute
  *  - Mobile: home/away icon (House/Bus) visible
  *  - Long name truncation (title attribute)
+ *  - Symmetric scoreboard: both sides keep an even split (score stays centred)
  */
 
 import { describe, it, expect, vi } from "vitest";
@@ -359,6 +360,26 @@ describe("TeamAgendaRow", () => {
       const el = container.querySelector('[title="KSV Schoonbeek-Beverst A"]');
       expect(el).not.toBeNull();
     });
+  });
+
+  describe("Symmetric scoreboard (#2397)", () => {
+    // jsdom has no layout, so symmetry is asserted through the flex classes that
+    // produce it; the VR stories carry the real pixel coverage. Both sides stay
+    // `flex-1` (an even split) whoever is playing, so the score sits dead centre
+    // and never drifts from one row to the next.
+    const side = (container: HTMLElement, teamName: string) =>
+      container.querySelector(`[title="${teamName}"]`)?.className;
+
+    it.each([true, false, undefined])(
+      "splits the row evenly with isHome=%s",
+      (isHome) => {
+        const { container } = render(
+          <TeamAgendaRow match={{ ...BASE, isHome }} />,
+        );
+        expect(side(container, BASE.homeTeam.name)).toContain("flex-1");
+        expect(side(container, BASE.awayTeam.name)).toContain("flex-1");
+      },
+    );
   });
 
   describe("Link to match detail", () => {
