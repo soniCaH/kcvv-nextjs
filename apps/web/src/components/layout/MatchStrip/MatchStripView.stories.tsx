@@ -84,6 +84,32 @@ export const AwayLoss: Story = {
   },
 };
 
+/**
+ * Kicked off, score not yet published (#2390). `pickLastResult` — shared with
+ * the homepage block — now routes such a match to the result side, so the strip
+ * shows a result whose scoreline does not exist yet and falls back to the
+ * kickoff time. The desktop slider defaults to this slide, which is why the
+ * fallback matters: without it the space between the crests is simply empty for
+ * the hours after every kickoff.
+ */
+export const AwaitingResult: Story = {
+  args: {
+    data: {
+      result: {
+        ...homeWin,
+        id: 12347,
+        date: new Date("2026-08-06T17:30:00Z"),
+        time: "19:30",
+        status: "scheduled",
+        homeScore: undefined,
+        awayScore: undefined,
+        awayTeam: { id: 7777, name: "FC Zemst Sportief" },
+      },
+      fixture: awayFixture,
+    },
+  },
+};
+
 /** No opponent logo, no kickoff time, no competition — the fallback path. */
 export const WithoutOptionalFields: Story = {
   args: {

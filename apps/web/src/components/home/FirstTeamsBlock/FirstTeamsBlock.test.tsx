@@ -89,6 +89,40 @@ describe("FirstTeamsBlock", () => {
     expect(screen.getByText("Nog geen uitslag")).toBeInTheDocument();
   });
 
+  // #2390 — a kicked-off match takes the result slot before its score is
+  // published. <TeamAgendaRow> was expected to degrade on its own here rather
+  // than be changed, so this pins that: kickoff time, and no invented score.
+  it("renders a kicked-off match in the result slot as a kickoff time, not a score", () => {
+    render(
+      <FirstTeamsBlock
+        teams={[
+          {
+            label: "B-ploeg",
+            slug: "b-ploeg",
+            division: "2de Provinciale",
+            result: {
+              id: 203,
+              date: new Date("2026-06-25T17:30:00Z"),
+              time: "19:30",
+              homeTeam: { id: 1236, name: "KCVV Elewijt B" },
+              awayTeam: { id: 91, name: "FC Zemst Sportief" },
+              isHome: true,
+              status: "scheduled",
+              competition: "2de Provinciale",
+            },
+          },
+        ]}
+      />,
+    );
+    expect(screen.getAllByText("19:30").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("FC Zemst Sportief").length).toBeGreaterThan(0);
+    // It occupies the result slot, so the fixture side is the one left empty.
+    expect(screen.getByText("Geen geplande wedstrijd")).toBeInTheDocument();
+    expect(screen.queryByText("Nog geen uitslag")).not.toBeInTheDocument();
+    // Nothing dash-separated: no scoreline may be conjured from absent scores.
+    expect(screen.queryByText(/\d\s*[–—-]\s*\d/)).not.toBeInTheDocument();
+  });
+
   it("deep-links each row to its own match detail", () => {
     render(<FirstTeamsBlock teams={[aTeam]} />);
     expect(screen.getByRole("link", { name: /SK Londerzeel/ })).toHaveAttribute(

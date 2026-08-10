@@ -2,20 +2,27 @@
  * Pure view-model derivation for the homepage "Eerste ploegen" block (#2211).
  *
  * From a senior team's full season feed (`BffService.getMatches(psdId)`),
- * derive its last result + next fixture: next = earliest `scheduled` with
- * `date >= now`; result = most recent settled match (`isSettledMatch`, so
- * forfeits count) that is either past its kickoff or already carries a
- * scoreline. See `matchSlot` for how every `MatchStatus` maps onto the two
- * slots. Both sides are emitted as `ScheduleMatch` via the shared
- * `transformMatchToSchedule`, so the block renders them with the same unified
- * `<TeamAgendaRow>` used on team pages + `/kalender` (#2301, Direction A) —
- * no bespoke card shapes to drift. Kept free of React so it can be unit-tested
- * in isolation.
+ * derive its last result + next fixture: next = earliest fixture-slot match;
+ * result = most recent settled match (`isSettledMatch`, so forfeits count) that
+ * is either past its kickoff or already carries a scoreline, or one that has
+ * kicked off while the club waits for the score (#2390). `matchSlot` owns that
+ * routing for every `MatchStatus`. Both sides are emitted as `ScheduleMatch`
+ * via the shared `transformMatchToSchedule`, so the block renders them with the
+ * same unified `<TeamAgendaRow>` used on team pages + `/kalender` (#2301,
+ * Direction A) — no bespoke card shapes to drift. Kept free of React so it can
+ * be unit-tested in isolation.
+ *
+ * Despite living under `components/home/`, this is not homepage-private:
+ * `lib/server/match-data.ts` imports `pickLastResult` / `pickNextFixture` for
+ * the landing-page `<MatchStrip>` (#2387), so both surfaces always name the
+ * same match "the last one". Changing what a slot admits changes the strip too
+ * — #2390's scoreless result is why `<MatchStripView>`'s `Score` had to gain a
+ * kickoff-time fallback.
  *
  * NB: this no longer mirrors `TeamMatchesSection`'s split — that surface still
- * filters `status === "finished" && date < now`, so #2423 is live there too.
- * It is on the issue's out-of-scope sibling list; do not treat it as the
- * reference implementation.
+ * filters `status === "finished" && date < now`, so #2423 is live there too,
+ * as is #2390. It is on the issue's out-of-scope sibling list; do not treat it
+ * as the reference implementation.
  */
 import type { Match } from "@/lib/effect/schemas";
 import type { ScheduleMatch } from "@/components/match/types";
@@ -82,8 +89,15 @@ export function selectSeniorTeams<T extends SeniorTeamCandidate>(
 export const SETTLED_LOOKAHEAD_MS = 72 * 60 * 60 * 1000;
 
 /**
- * Which of the block's two slots a status may occupy — `null` for a status that
- * belongs in neither.
+ * Which of the block's two slots a match may occupy — `null` for one that
+ * belongs in neither. The single place that decides, so a match cannot land in
+ * both slots or fall out of both; every caller reads the answer, none re-derives
+ * it.
+ *
+ * Takes the whole match rather than its status because `scheduled` alone does
+ * not settle the question. Past its kickoff, a still-`scheduled` match has been
+ * played and is waiting on PSD to publish the score, which is a result — see
+ * that branch. The other statuses are decided on status alone.
  *
  * Exhaustive over `MatchStatus`: a new member is a compile error here rather
  * than a match that silently disappears from both slots, which is exactly how
@@ -105,17 +119,34 @@ export const SETTLED_LOOKAHEAD_MS = 72 * 60 * 60 * 1000;
  * match from a chrome block is a better failure than a 500 on the homepage.
  * The `never` assignment keeps the compile-time guarantee either way.
  */
-function matchSlot(status: Match["status"]): "result" | "fixture" | null {
-  if (isSettledMatch(status)) return "result";
-  switch (status) {
+function matchSlot(match: Match, now: Date): "result" | "fixture" | null {
+  if (isSettledMatch(match.status)) return "result";
+  switch (match.status) {
     case "scheduled":
-      return "fixture";
+      // Kicked off, score not yet published: PSD leaves a match `scheduled`
+      // until staff enter the result, so between kickoff and publication it is
+      // a played match wearing an upcoming status (#2390). It headlines the
+      // result slot scoreless — `<TeamAgendaRow>` falls back to the kickoff
+      // time — rather than staying in the fixture slot, where it would read as
+      // future-tense hours after kickoff and hide the genuinely next match.
+      //
+      // The BFF sees the same window from the other side: `teamMatchesTtl`
+      // (`apps/api/src/handlers/matches.ts`) drops the team-matches cache to
+      // the matchday TTL while a match is in it, which is what makes this slot
+      // heal quickly once the score lands. Deliberately mirrored in prose, not
+      // shared: separate deployables, and `@kcvv/api-contract` carries schemas,
+      // not status predicates — the same split `isSettledMatch` documents. They
+      // differ on purpose too, in that the BFF stops widening at 48 h to bound
+      // a polling cost while nothing here expires: a played match keeps the
+      // slot until a newer one displaces it, which beats falling back to a
+      // fortnight-old result as though last Saturday never happened.
+      return match.date.getTime() < now.getTime() ? "result" : "fixture";
     case "postponed":
     case "cancelled":
     case "stopped":
       return null;
     default: {
-      const _exhaustive: never = status;
+      const _exhaustive: never = match.status;
       void _exhaustive;
       return null;
     }
@@ -129,6 +160,11 @@ function matchSlot(status: Match["status"]): "result" | "fixture" | null {
  * (#2423). Two bounds keep that from swallowing the slot: without a scoreline a
  * future-dated match stays out (nothing is settled to headline yet), and beyond
  * `SETTLED_LOOKAHEAD_MS` it stays out too.
+ *
+ * A kicked-off match awaiting its score arrives here already routed by
+ * `matchSlot`, past-dated, so the first bound admits it; the shared date sort
+ * then decides between them, and a result published since kickoff outranks it
+ * as soon as it lands.
  */
 export function pickLastResult(
   matches: readonly Match[],
@@ -136,7 +172,7 @@ export function pickLastResult(
 ): Match | undefined {
   return matches
     .filter((m) => {
-      if (matchSlot(m.status) !== "result") return false;
+      if (matchSlot(m, now) !== "result") return false;
       const untilKickoff = m.date.getTime() - now.getTime();
       if (untilKickoff < 0) return true;
       return untilKickoff <= SETTLED_LOOKAHEAD_MS && hasScore(m);
@@ -144,15 +180,17 @@ export function pickLastResult(
     .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
 }
 
+/**
+ * Earliest upcoming fixture. No date test of its own: `matchSlot` only returns
+ * `"fixture"` for a match whose kickoff is still ahead, so re-checking here
+ * would be a second, drift-prone copy of that rule.
+ */
 export function pickNextFixture(
   matches: readonly Match[],
   now: Date,
 ): Match | undefined {
   return matches
-    .filter(
-      (m) =>
-        matchSlot(m.status) === "fixture" && m.date.getTime() >= now.getTime(),
-    )
+    .filter((m) => matchSlot(m, now) === "fixture")
     .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
 }
 

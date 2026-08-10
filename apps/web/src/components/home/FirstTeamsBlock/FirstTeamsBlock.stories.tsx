@@ -145,6 +145,38 @@ export const ForfeitedResult: Story = {
 };
 
 /**
+ * The #2390 live case: B-ploeg played FC Zemst Sportief on a Thursday evening,
+ * and until PSD published the score the match was `scheduled` with a past
+ * kickoff — in neither slot, so the homepage showed the match *before* it as
+ * the result. It now headlines the result slot scoreless.
+ *
+ * This is the only state where the result row shows a kickoff time instead of
+ * a scoreline: no score, no outcome underline, and `scheduled` is not an
+ * exceptional status so the caption stays on the competition alone. The A-ploeg
+ * row above it is the settled counterpart, for contrast in the same band.
+ */
+export const AwaitingResult: Story = {
+  args: {
+    teams: [
+      aTeam,
+      {
+        ...bTeam,
+        result: {
+          id: 203,
+          date: new Date("2026-06-25T17:30:00Z"),
+          time: "19:30",
+          homeTeam: { id: 1236, name: "KCVV Elewijt B" },
+          awayTeam: { id: 91, name: "FC Zemst Sportief" },
+          isHome: true,
+          status: "scheduled",
+          competition: "2de Provinciale",
+        },
+      },
+    ],
+  },
+};
+
+/**
  * The #2397 live case: real opponents, each carrying the `A` designation the
  * BFF sends, which is what pushed these names past their half of the row.
  * "Ritterklub Vsv Jette A" is the longest that occurs in the current fixture

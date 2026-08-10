@@ -135,6 +135,14 @@ function VenueGlyph({ home }: { home: boolean }) {
 /**
  * The canonical outcome marker: a highlighter sweep behind the score, and
  * nothing at all on a draw. Never a rule underneath it.
+ *
+ * Only ever rendered on the result side, which since #2390 also carries a match
+ * that has kicked off while PSD still owes the score. So a missing scoreline is
+ * a normal state here, not an anomaly, and it falls back to the kickoff time —
+ * the same substitution `<TeamAgendaRow>` makes for that match on the homepage.
+ * Returning `null` would leave the desktop slide, which defaults to the result,
+ * with an empty gap between the two crests for the hours after every kickoff.
+ * `vs.` is the last resort for a feed that carries neither score nor time.
  */
 function Score({
   match,
@@ -144,7 +152,13 @@ function Score({
   className?: string;
 }) {
   const score = scoreboardScore(match);
-  if (score === null) return null;
+  if (score === null) {
+    return (
+      <span className={cn("text-ink font-mono font-bold", className)}>
+        {match.time ?? "vs."}
+      </span>
+    );
+  }
   const outcome = outcomeOf(match);
   const shadow = outcome ? OUTCOME_UNDERLINE[outcome] : undefined;
   return (
