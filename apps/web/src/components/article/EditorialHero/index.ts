@@ -1,3 +1,4 @@
+export { toEditorialHeroProps } from "./to-editorial-hero-props";
 export {
   EditorialHero,
   type EditorialHeroProps,

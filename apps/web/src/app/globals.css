@@ -929,6 +929,26 @@
   padding-right: env(safe-area-inset-right, 0);
 }
 
+/* Read-more affordances ("Lees verder →") sit hidden at rest and are revealed
+   by the card's `group-hover:opacity-100` / `group-focus-*:opacity-100`. That
+   reveal is an *enhancement*, not a gate: where there is no hover there is
+   nothing to reveal, so on a touch device the cue simply stays on and the card
+   advertises that it is tappable (#2393; DESIGN.md — "nothing important hides
+   behind hover").
+
+   Owning the resting state here rather than as a bare `opacity-0` is what
+   keeps this `!important`-free: Tailwind compiles `group-hover:opacity-100` to
+   `.group-hover\:opacity-100:is(…)` at specificity (0,2,0), which outranks this
+   (0,1,0) rule on its own merits — so the reveal wins no matter which order
+   Tailwind happens to emit the two in. */
+@utility reveal-on-hover {
+  opacity: 0;
+  transition: opacity 300ms;
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
 /* Hide native scrollbar — cross-browser utility for horizontal scroll containers */
 @utility scrollbar-hide {
   scrollbar-width: none; /* Firefox */

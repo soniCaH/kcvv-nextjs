@@ -582,9 +582,12 @@ export function EditorialHero(props: EditorialHeroProps) {
             container so it aligns flush with the divider's right edge
             rather than the outer link's wrapper-padded edge. */}
         <PageContainer width="index" className="mt-2 flex justify-end">
+          {/* `reveal-on-hover` (globals.css) hides the cue at rest only where
+              hovering exists — on touch it stays on, so the hero's one
+              affordance is never invisible (#2393). */}
           <span
             aria-hidden="true"
-            className="text-jersey-deep pointer-events-none font-mono text-xs leading-none font-bold uppercase opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+            className="text-jersey-deep reveal-on-hover pointer-events-none font-mono text-xs leading-none font-bold uppercase group-hover:opacity-100 group-focus-visible:opacity-100"
           >
             ★ Lees verder →
           </span>

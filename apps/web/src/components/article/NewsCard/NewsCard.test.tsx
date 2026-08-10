@@ -196,12 +196,16 @@ describe("NewsCard", () => {
       expect(article?.className).not.toMatch(/--card-press-x/);
     });
 
-    it("hides the 'Lees verder' affordance at rest, reveals it on hover/focus (#2027)", () => {
+    it("hides the 'Lees verder' affordance at rest, reveals it on hover/focus (#2027, #2393)", () => {
       const { getByTestId } = render(<NewsCard {...defaultProps} />);
       const readMore = getByTestId("newscard-readmore");
-      expect(readMore.className).toMatch(/\bopacity-0\b/);
-      expect(readMore.className).toMatch(/group-hover:opacity-100/);
-      expect(readMore.className).toMatch(/group-focus-within:opacity-100/);
+      // `reveal-on-hover` carries the resting `opacity: 0` *and* the
+      // `(hover: none)` escape hatch that keeps the cue on screen for touch
+      // readers — a bare `opacity-0` here would hide it on phones (#2393).
+      expect(readMore).toHaveClass("reveal-on-hover");
+      expect(readMore).not.toHaveClass("opacity-0");
+      expect(readMore).toHaveClass("group-hover:opacity-100");
+      expect(readMore).toHaveClass("group-focus-within:opacity-100");
     });
   });
 
