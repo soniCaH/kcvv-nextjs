@@ -2,13 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Effect } from "effect";
 import { BffService, BffServiceLive } from "./BffService";
 
-// `cachedRead` wraps the hot reads in `unstable_cache`; there's no Next request
-// scope in vitest, so stub it to a pass-through. The encode/decode round-trip
-// inside `cachedRead` still runs — see the `Date`-restoration assertion below.
-vi.mock("next/cache", () => ({
-  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
-}));
-
 // Minimal fixture that satisfies the Match schema from @kcvv/api-contract.
 // date/time must be ISO strings because JSON.stringify converts Date objects.
 const sampleMatch = {
@@ -79,9 +72,7 @@ describe("BffService", () => {
     );
     expect(result).toHaveLength(1);
     expect(result[0]?.id).toBe(1);
-    // Date survives the cachedRead encode→(JSON cache)→decode round-trip
-    // (Match.date is DateFromStringOrDate; a naive unstable_cache wrap would
-    // leave it a string).
+    // Match.date is DateFromStringOrDate — it decodes to a real Date.
     expect(result[0]?.date).toBeInstanceOf(Date);
   });
 
@@ -144,7 +135,6 @@ describe("BffService", () => {
       }),
       expect.any(Object),
     );
-    // Date survives the cachedRead round-trip (getMatchDetail is cached too).
     expect(result.date).toBeInstanceOf(Date);
   });
 
@@ -166,15 +156,14 @@ describe("BffService", () => {
     expect(result[0]?.team_name).toBe("KCVV Elewijt");
   });
 
-  it("preserves the error's _tag through the cache wrap, with no extra BFF call", async () => {
-    // A BFF failure is captured as a Cause (runPromiseExit) and re-raised via
-    // failCause, so the original *tagged* error reaches the call site without a
-    // re-run — guarding the ploegen/[slug]/wedstrijden
-    // `catchTag("HttpNotFound") → notFound()` path. We assert on the specific tag
-    // (not catchAll): a naive Promise round-trip flattens the error to an opaque
-    // UnknownException, so catchTag would miss and fall through to "flattened" —
-    // i.e. the test FAILS against the bug, not just passes against the fix. (A
-    // 500 is decoded against the declared error union and fails as a ParseError.)
+  it("preserves the error's _tag, with exactly one BFF call", async () => {
+    // The typed error reaches the call site un-flattened — guarding the
+    // ploegen/[slug]/wedstrijden `catchTag("HttpNotFound") → notFound()` path.
+    // We assert on the specific tag (not catchAll): anything that flattens the
+    // error to an opaque UnknownException would fall through to "flattened".
+    // An empty 500 body fails the declared error union's decode, so the tag
+    // that survives here is ParseError — see the test below for the
+    // HttpNotFound path.
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(new Response("", { status: 500 })),
@@ -193,8 +182,38 @@ describe("BffService", () => {
     );
 
     expect(result).toBe("typed-survived");
-    // The failed effect runs once inside the cache fn and is re-raised from its
-    // captured Cause — no raw-effect re-run, so the BFF is hit exactly once.
+    // One read, one BFF call — nothing retries or re-runs on the error path.
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
+  });
+
+  it("surfaces a missing match as a typed HttpNotFound at the call site", async () => {
+    // The invariant behind `catchTag("HttpNotFound") → notFound()` at
+    // wedstrijd/[matchId] (and the empty-array fallbacks at sitemap.ts,
+    // ploegen/[slug]/wedstrijden, share, tegenstander).
+    //
+    // NB the status: 500, not 404. The `{ status }` argument in
+    // `packages/api-contract/src/schemas/http-errors.ts` is a plain schema
+    // annotation, which @effect/platform does not read (it wants
+    // `HttpApiSchema.annotations({ status })`), so every declared error resolves
+    // to 500 and carries its discriminator in the body instead. A real 404 is
+    // not in the client's decode map at all and surfaces as an untyped
+    // ResponseError. This pins the wire contract as it is, so fixing the status
+    // annotation fails loudly here rather than silently breaking `notFound()`.
+    mockFetchWith({ error: "Not found", _tag: "HttpNotFound" }, 500);
+
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const bff = yield* BffService;
+        return yield* bff.getMatchDetail(999).pipe(
+          Effect.catchTag("HttpNotFound", () =>
+            Effect.succeed("not-found" as const),
+          ),
+          Effect.catchAll(() => Effect.succeed("flattened" as const)),
+        );
+      }).pipe(Effect.provide(BffServiceLive)),
+    );
+
+    expect(result).toBe("not-found");
     expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
   });
 
