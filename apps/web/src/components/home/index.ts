@@ -18,7 +18,10 @@ export type {
   ArticleType,
 } from "./FeaturedUitgelichtRow";
 
-export { FeaturedEventBand } from "./FeaturedEventBand";
+export {
+  FeaturedEventBand,
+  toFeaturedEventBandEvent,
+} from "./FeaturedEventBand";
 export type {
   FeaturedEventBandProps,
   FeaturedEventBandEvent,
@@ -37,6 +40,7 @@ export {
   FirstTeamsBlock,
   deriveFirstTeamVM,
   firstTeamLabel,
+  firstTeamsHeading,
   selectSeniorTeams,
 } from "./FirstTeamsBlock";
 export type { FirstTeamsBlockProps, FirstTeamVM } from "./FirstTeamsBlock";

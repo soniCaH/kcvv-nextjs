@@ -45,8 +45,8 @@ import type { Match } from "@/lib/effect/schemas";
 import {
   BannerSlot,
   FeaturedEventBand,
+  toFeaturedEventBandEvent,
   FeaturedUitgelichtRow,
-  type FeaturedEventBandEvent,
   type UitgelichtArticle,
   type ArticleType as UitgelichtArticleType,
   NewsGrid,
@@ -55,6 +55,7 @@ import {
   FirstTeamsBlock,
   deriveFirstTeamVM,
   firstTeamLabel,
+  firstTeamsHeading,
   selectSeniorTeams,
   ClubshopBanner,
   YouthBackdrop,
@@ -205,23 +206,6 @@ function toUitgelichtArticle(article: ArticleVM): UitgelichtArticle {
     date: article.publishedAt ? formatArticleDate(article.publishedAt) : "",
     articleType: toUitgelichtArticleType(article.articleType),
     badge: article.tags[0],
-  };
-}
-
-function toFeaturedEventBandEvent(
-  event: EventVM | null,
-): FeaturedEventBandEvent | null {
-  if (!event || !event.dateStart) return null;
-  const isExternalLink = event.href && event.href !== "#" && event.href !== "";
-  return {
-    title: event.title,
-    slug: event.slug,
-    dateStart: event.dateStart,
-    dateEnd: event.dateEnd ?? null,
-    coverImage: event.coverImageUrl
-      ? { url: event.coverImageUrl, alt: event.title }
-      : null,
-    externalLink: isExternalLink ? { url: event.href, label: null } : null,
   };
 }
 
@@ -390,28 +374,15 @@ export default async function HomePage() {
   // "Eerste ploegen" — A/B last result + next fixture, carrying the
   // result→next-fixture transition. Self-contained dark band (own StripedSeam
   // top/bottom + padding), so the SectionStack wrapper stays flush (#2211).
-  // HP-4: "Dit weekend." only when a fixture is actually within the coming
-  // week; otherwise a calmer label so pre-season (next match ~weeks out)
-  // doesn't read oddly.
-  const soonestFixtureMs = Math.min(
-    ...firstTeamVMs.map(
-      (t) => t.fixture?.date.getTime() ?? Number.POSITIVE_INFINITY,
-    ),
-  );
-  const firstTeamsHeading =
-    Number.isFinite(soonestFixtureMs) &&
-    soonestFixtureMs - now.getTime() <= 7 * 24 * 60 * 60 * 1000
-      ? "Dit weekend."
-      : "Volgende wedstrijd.";
+  // HP-4: `firstTeamsHeading` owns when the block may claim "Dit weekend."
+  const heading = firstTeamsHeading(firstTeamVMs, now);
   const firstTeamsSection: SectionConfig | null = firstTeamVMs.some(
     (t) => t.result || t.fixture,
   )
     ? {
         key: "first-teams",
         bg: "transparent",
-        content: (
-          <FirstTeamsBlock teams={firstTeamVMs} heading={firstTeamsHeading} />
-        ),
+        content: <FirstTeamsBlock teams={firstTeamVMs} heading={heading} />,
         paddingTop: "pt-0",
         paddingBottom: "pb-0",
       }

@@ -35,9 +35,10 @@ export interface FeaturedEventBandEvent {
   dateEnd?: string | null;
   coverImage: FeaturedEventBandImage | null;
   externalLink?: FeaturedEventBandLink | null;
-  /** Falls back to "Kantine" per locked spec — schema field arrives in
-   *  the Phase 6 events redesign. */
-  location?: string | null;
+  /** Falls back to "Kantine" per locked spec when empty — most club events are
+   *  there. Required (though nullable) so a mapper cannot silently omit it and
+   *  let the default overwrite a real venue, which is how #2392 happened. */
+  location: string | null;
 }
 
 export interface FeaturedEventBandProps {

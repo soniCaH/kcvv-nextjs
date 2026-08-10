@@ -21,10 +21,10 @@ import type { FirstTeamVM } from "./first-teams";
 export interface FirstTeamsBlockProps {
   teams: FirstTeamVM[];
   /**
-   * Section heading. The homepage passes a fixture-aware label (HP-4) —
-   * "Dit weekend." only when a fixture is actually within the coming week,
-   * a calmer "Volgende wedstrijd." when the next match is weeks out
-   * (pre-season). Defaults to "Dit weekend." so stories/tests stay stable.
+   * Section heading. The homepage passes a fixture-aware label (HP-4) derived
+   * by `firstTeamsHeading`, which owns the rule — see its docblock in
+   * `first-teams.ts`. Defaults to "Dit weekend." so stories/tests stay stable;
+   * that default is an unconditional claim, so real callers must pass one.
    */
   heading?: string;
 }
