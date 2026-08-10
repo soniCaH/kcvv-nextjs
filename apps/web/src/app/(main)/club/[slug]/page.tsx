@@ -37,6 +37,13 @@ async function fetchPage(slug: string) {
   );
 }
 
+// Deliberately empty — CMS pages are not enumerated at build time, so a new
+// page goes live without a redeploy. Required all the same: without this export
+// the segment never enters the ISR cache and `revalidate` is inert (#2391).
+export async function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const page = await fetchPage(slug);

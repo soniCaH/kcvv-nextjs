@@ -2,6 +2,9 @@
  * News Listing Page
  * Symmetric 3-up featured row at top, 3-column grid below with a load-more
  * button, sticky category filter bar.
+ *
+ * No route-segment `revalidate`: the page awaits `searchParams` for
+ * `?categorie=`, so the segment is dynamic and a window would be inert (#2391).
  */
 
 import { Effect } from "effect";
@@ -87,5 +90,3 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
     </>
   );
 }
-
-export const revalidate = 3600;

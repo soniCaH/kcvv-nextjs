@@ -75,6 +75,13 @@ interface MatchPageProps {
   params: Promise<{ matchId: string }>;
 }
 
+// No static prerendering — the body fetches live PSD match data via the
+// rate-limited BFF. Empty, but required: without this export the segment never
+// enters the ISR cache and `revalidate` is inert (#2391).
+export async function generateStaticParams() {
+  return [];
+}
+
 /**
  * Build SEO metadata for a match page using the route `matchId`.
  *
