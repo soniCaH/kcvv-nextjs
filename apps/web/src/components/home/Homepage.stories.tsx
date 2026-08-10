@@ -105,6 +105,7 @@ const mockFeaturedEvent: FeaturedEventBandEvent = {
   slug: "sponsoravond-2026",
   dateStart: "2099-06-15T19:00:00.000Z",
   dateEnd: null,
+  location: "Sportpark Driesput, Elewijt",
   coverImage: {
     url: fixtureImage("event-cover", 0),
     alt: "Sponsoravond cover",
