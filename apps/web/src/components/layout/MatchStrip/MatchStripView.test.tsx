@@ -185,6 +185,46 @@ describe("MatchStripView", () => {
     ).toHaveAttribute("href", "/wedstrijd/42");
   });
 
+  // #2390 — `pickLastResult` now routes a kicked-off, not-yet-scored match to
+  // the result side, so the strip must render a result that has no scoreline.
+  // The desktop slider defaults to that slide, so returning nothing left an
+  // empty gap between the crests for the hours after every kickoff.
+  describe("result awaiting its score (#2390)", () => {
+    const awaiting: ScheduleMatch = {
+      ...result,
+      time: "19:30",
+      status: "scheduled",
+      homeScore: undefined,
+      awayScore: undefined,
+    };
+
+    it("shows the kickoff time in place of the missing scoreline", () => {
+      render(<MatchStripView data={{ result: awaiting, fixture: null }} />);
+      // Both layouts render, so the time appears on the mobile row and the
+      // desktop slide alike — neither may be blank.
+      expect(screen.getAllByText("19:30")).toHaveLength(2);
+    });
+
+    it("invents no scoreline, in the row's accessible name either", () => {
+      render(<MatchStripView data={{ result: awaiting, fixture: null }} />);
+      expect(screen.queryByText(/\d+\s*–\s*\d+/)).toBeNull();
+      expect(
+        screen.getByRole("link", {
+          name: /Uitslag.*KCVV Elewijt tegen RC Mechelen/,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    it("falls back to vs. when the feed carries neither score nor time", () => {
+      render(
+        <MatchStripView
+          data={{ result: { ...awaiting, time: undefined }, fixture: null }}
+        />,
+      );
+      expect(screen.getAllByText("vs.").length).toBeGreaterThan(0);
+    });
+  });
+
   it("offers the desktop switch only when both sides exist", () => {
     const { rerender } = render(<MatchStripView data={{ result, fixture }} />);
     expect(

@@ -117,7 +117,8 @@ describe("deriveFirstTeamVM", () => {
           homeScore: 0,
           awayScore: 0,
         }),
-        // a past scheduled match (data lag) is neither a result nor a fixture
+        // A past scheduled match is never a fixture. It is a result candidate
+        // since #2390, but an older one loses to the finished match below.
         match({ id: 22, date: "2026-06-01T15:00:00Z", status: "scheduled" }),
       ],
       NOW,
@@ -358,6 +359,116 @@ describe("deriveFirstTeamVM", () => {
         expect(vm.fixture?.id).toBe(2);
       },
     );
+  });
+
+  // #2390 — between kickoff and PSD publishing the result, a match is still
+  // `scheduled` with a past date, so it fell out of both slots and the club's
+  // most recent match was nowhere on the homepage for the hours that matters
+  // most (the evening after it was played).
+  describe("kicked off, result not yet published (#2390)", () => {
+    it("headlines a kicked-off match in the result slot without a scoreline", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 1,
+            date: "2026-06-22T19:30:00Z",
+            status: "scheduled",
+            isHome: true,
+            homeName: "KCVV Elewijt B",
+            awayName: "FC Zemst Sportief",
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result?.id).toBe(1);
+      expect(vm.result?.status).toBe("scheduled");
+      expect(vm.result?.homeScore).toBeUndefined();
+      expect(vm.result?.awayScore).toBeUndefined();
+    });
+
+    it("does not also leave it in the fixture slot", () => {
+      // The awaiting-result match belongs to one slot only; the fixture slot
+      // keeps answering "where do I go next".
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({ id: 1, date: "2026-06-22T19:30:00Z", status: "scheduled" }),
+          match({ id: 2, date: "2026-06-29T15:00:00Z", status: "scheduled" }),
+        ],
+        NOW,
+      );
+      expect(vm.result?.id).toBe(1);
+      expect(vm.fixture?.id).toBe(2);
+    });
+
+    it("yields the slot to a more recent finished match on the same day", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 1,
+            date: "2026-06-23T09:00:00Z",
+            status: "scheduled",
+          }),
+          match({
+            id: 2,
+            date: "2026-06-23T11:00:00Z",
+            status: "finished",
+            isHome: true,
+            homeScore: 2,
+            awayScore: 1,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result?.id).toBe(2);
+      expect(vm.result?.homeScore).toBe(2);
+    });
+
+    it("outranks an older finished match", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 1,
+            date: "2026-06-16T15:00:00Z",
+            status: "finished",
+            isHome: true,
+            homeScore: 3,
+            awayScore: 1,
+          }),
+          match({ id: 2, date: "2026-06-22T19:30:00Z", status: "scheduled" }),
+        ],
+        NOW,
+      );
+      expect(vm.result?.id).toBe(2);
+    });
+
+    // Past-dated is the new coverage: the #2423 block only dates these two
+    // ahead of `NOW`, so nothing there would catch a `date < now`-alone
+    // implementation. (`stopped` is already covered past-dated above.)
+    it.each(["postponed", "cancelled"] as const)(
+      "still skips a past %s match — only a kickoff that happened qualifies",
+      (status) => {
+        const vm = deriveFirstTeamVM(
+          team,
+          [match({ id: 1, date: "2026-06-22T19:30:00Z", status })],
+          NOW,
+        );
+        expect(vm.result).toBeUndefined();
+      },
+    );
+
+    it("keeps a not-yet-kicked-off scheduled match out of the result slot", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [match({ id: 1, date: "2026-06-29T15:00:00Z", status: "scheduled" })],
+        NOW,
+      );
+      expect(vm.result).toBeUndefined();
+      expect(vm.fixture?.id).toBe(1);
+    });
   });
 
   it("leaves scores undefined on the ScheduleMatch when the source has none", () => {
