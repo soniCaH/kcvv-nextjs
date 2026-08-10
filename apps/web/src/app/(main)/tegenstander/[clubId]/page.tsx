@@ -34,10 +34,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// 15 min ISR — renders live PSD opponent-match history. Without an explicit
-// revalidate this on-demand dynamic route would sit in the Full Route Cache
-// indefinitely, so it is aligned to the BFF freshness window.
+// 15 min ISR — renders live PSD opponent-match history, aligned to the BFF
+// freshness window.
 export const revalidate = 900;
+
+// No static prerendering — the body fetches live PSD data via the rate-limited
+// BFF. Empty, but required: without this export the segment never enters the
+// ISR cache and `revalidate` is inert (#2391).
+export async function generateStaticParams() {
+  return [];
+}
 
 interface OpponentPageProps {
   params: Promise<{ clubId: string }>;
