@@ -41,7 +41,7 @@ describe("SiteFooter", () => {
       "href",
       "/nieuws",
     );
-    expect(screen.getByRole("link", { name: "Kalender" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Wedstrijden" })).toHaveAttribute(
       "href",
       "/kalender",
     );
@@ -60,6 +60,10 @@ describe("SiteFooter", () => {
     expect(screen.getByRole("link", { name: "Jeugdwerking" })).toHaveAttribute(
       "href",
       "/jeugd",
+    );
+    expect(screen.getByRole("link", { name: "Onze sponsors" })).toHaveAttribute(
+      "href",
+      "/sponsors",
     );
   });
 
@@ -95,6 +99,9 @@ describe("SiteFooter", () => {
     expect(
       screen.getByRole("link", { name: "Praktische info" }),
     ).toHaveAttribute("href", "/club/praktische-informatie");
+    expect(
+      screen.getByRole("link", { name: "Hulp & wie-is-wie" }),
+    ).toHaveAttribute("href", "/hulp");
   });
 
   it("renders the colofon as club name plus address, with no © and no 1909", () => {

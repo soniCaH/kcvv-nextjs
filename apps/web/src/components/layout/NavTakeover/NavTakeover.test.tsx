@@ -7,7 +7,6 @@ import { NavTakeoverItem } from "./NavTakeoverItem";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
-  useSearchParams: () => new URLSearchParams(),
 }));
 
 describe("NavTakeover", () => {
@@ -130,21 +129,6 @@ describe("NavTakeoverItem", () => {
     render(<NavTakeoverItem label="Home" href="/" />);
     const link = screen.getByRole("link", { name: "Home" });
     expect(link).toHaveAttribute("href", "/");
-  });
-
-  it("renders ▾ glyph and toggles submenu when hasSubmenu is true", async () => {
-    const user = userEvent.setup();
-    render(
-      <NavTakeoverItem label="Teams" hasSubmenu>
-        <NavTakeoverItem label="A-Ploeg" href="/ploegen/a" />
-      </NavTakeoverItem>,
-    );
-    const trigger = screen.getByRole("button", { name: /teams/i });
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByRole("link", { name: /a-ploeg/i })).toBeNull();
-    await user.click(trigger);
-    expect(trigger).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("link", { name: /a-ploeg/i })).toBeInTheDocument();
   });
 
   it("applies active jersey-deep tone", () => {

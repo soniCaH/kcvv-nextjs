@@ -19,19 +19,21 @@ const wordmark = (
   </span>
 );
 
+/**
+ * The production nav, flat (#2415) — no submenu rows exist any more. `Home` is
+ * absent because the wordmark above is the home link.
+ */
 const navItems = (
   <>
-    <NavTakeoverItem label="Home" href="/" />
     <NavTakeoverItem label="Nieuws" href="/nieuws" active />
+    <NavTakeoverItem label="Wedstrijden" href="/kalender" />
     <NavTakeoverItem label="Evenementen" href="/evenementen" />
-    <NavTakeoverItem label="Teams" hasSubmenu>
-      <NavTakeoverItem label="A-Ploeg" href="/ploegen/a" />
-      <NavTakeoverItem label="B-Ploeg" href="/ploegen/b" />
-    </NavTakeoverItem>
-    <NavTakeoverItem label="Jeugd" hasSubmenu />
+    <NavTakeoverItem label="A-ploeg" href="/ploegen/eerste-elftallen-a" />
+    <NavTakeoverItem label="B-ploeg" href="/ploegen/eerste-elftallen-b" />
+    <NavTakeoverItem label="Jeugd" href="/jeugd" />
     <NavTakeoverItem label="Sponsors" href="/sponsors" />
     <NavTakeoverItem label="Hulp" href="/hulp" />
-    <NavTakeoverItem label="De club" hasSubmenu />
+    <NavTakeoverItem label="De club" href="/club" />
     <div className="mt-6">
       <Button variant="primary" size="md" fullWidth>
         Word lid
@@ -46,29 +48,5 @@ export const Open: Story = {
     onOpenChange: () => {},
     wordmark,
     children: navItems,
-  },
-};
-
-export const OpenWithSubmenuExpanded: Story = {
-  args: {
-    open: true,
-    onOpenChange: () => {},
-    wordmark,
-    children: (
-      <>
-        <NavTakeoverItem label="Home" href="/" />
-        <NavTakeoverItem label="Nieuws" href="/nieuws" />
-        <NavTakeoverItem label="Teams" hasSubmenu defaultExpanded>
-          <NavTakeoverItem label="A-Ploeg" href="/ploegen/a" />
-          <NavTakeoverItem label="B-Ploeg" href="/ploegen/b" />
-          <NavTakeoverItem label="C-Ploeg" href="/ploegen/c" />
-        </NavTakeoverItem>
-        <div className="mt-6">
-          <Button variant="primary" size="md" fullWidth>
-            Word lid
-          </Button>
-        </div>
-      </>
-    ),
   },
 };

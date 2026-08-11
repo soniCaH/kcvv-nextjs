@@ -1,171 +1,76 @@
 import type { TeamNavVM } from "@/lib/repositories/team.repository";
-import {
-  RESERVEN_LABEL,
-  RESERVEN_PSD_ID,
-  isAgeCode,
-} from "@/lib/utils/group-teams";
+import { RESERVEN_PSD_ID, isAgeCode } from "@/lib/utils/group-teams";
 
 export interface MenuItem {
   label: string;
   href: string;
-  /** Flat children — narrow dropdown panel (Teams, Jeugd). */
-  children?: MenuItem[];
-  /** Grouped children — wide dropdown panel (De club). Takes precedence over `children` when both are set. */
-  childGroups?: MenuItemGroup[];
 }
 
-export interface MenuItemGroup {
-  label: string;
-  items: MenuItem[];
-}
-
-export const staticMenuItems: MenuItem[] = [
-  { label: "Home", href: "/" },
-  { label: "Nieuws", href: "/nieuws" },
-  { label: "Evenementen", href: "/evenementen" },
-  { label: "Sponsors", href: "/sponsors" },
-  { label: "Hulp", href: "/hulp" },
-  {
-    label: "De club",
-    href: "/club",
-    childGroups: [
-      {
-        label: "Wie we zijn",
-        items: [
-          { label: "Geschiedenis", href: "/club/geschiedenis" },
-          { label: "Organigram", href: "/hulp#structuur" },
-          { label: "Bestuur", href: "/club/bestuur" },
-          { label: "Jeugdbestuur", href: "/club/jeugdbestuur" },
-          { label: "KCVV Angels", href: "/club/angels" },
-          { label: "KCVV Ultras", href: "/club/ultras" },
-        ],
-      },
-      {
-        label: "Praktisch",
-        items: [
-          { label: "Praktische info", href: "/club/praktische-informatie" },
-          { label: "Word vrijwilliger", href: "/club/vrijwilliger" },
-          { label: "Cashless clubkaart", href: "/club/cashless" },
-          { label: "Contact", href: "/club/contact" },
-          { label: "Downloads", href: "/club/downloads" },
-        ],
-      },
-    ],
-  },
-];
-
 /**
- * Flatten a MenuItem's child entries regardless of whether they live under
- * `children` (flat) or `childGroups` (grouped). `childGroups` wins when both
- * are present, mirroring the `<NavDropdown>` precedence rule.
+ * The nav, in order. Flat — every entry is a plain link (#2409, built by
+ * #2415); see `apps/web/DESIGN.md` § Navigation for why the dropdowns were
+ * deleted rather than regrouped, and `nav-reachability.test.ts` for the guard
+ * that keeps the deletion safe.
+ *
+ * `Home` is absent on purpose — the wordmark is the home link.
+ *
+ * Written as one literal rather than a static list spliced at an index: the
+ * whole nav is decided and flat, so the order should be readable top to bottom
+ * instead of reconstructed from a slice offset.
  */
-export const flattenChildren = (item: MenuItem): readonly MenuItem[] => {
-  if (item.childGroups && item.childGroups.length > 0) {
-    return item.childGroups.flatMap((g) => g.items);
-  }
-  return item.children ?? [];
-};
-
-/**
- * True when a MenuItem has at least one renderable child — either via
- * `children` or via at least one non-empty group inside `childGroups`. An
- * item with `childGroups: [{ label: 'X', items: [] }]` (empty shells) must
- * report `false` so the dropdown doesn't render an empty panel.
- */
-export const hasSubmenu = (item: MenuItem): boolean =>
-  (item.children?.length ?? 0) > 0 ||
-  (item.childGroups?.some((g) => (g.items?.length ?? 0) > 0) ?? false);
-
-// Senior/jeugd items are inserted after the first 3 static items (Home, Nieuws, Evenementen)
-const HEADER_COUNT = 3;
-
 export const buildMenuItems = (
   seniorItems: (MenuItem | null)[],
-  jeugdItem: MenuItem,
-): MenuItem[] =>
-  [
-    ...staticMenuItems.slice(0, HEADER_COUNT),
-    ...seniorItems,
-    jeugdItem,
-    ...staticMenuItems.slice(HEADER_COUNT),
-  ].filter((item): item is MenuItem => item !== null);
+): MenuItem[] => [
+  { label: "Nieuws", href: "/nieuws" },
+  { label: "Wedstrijden", href: "/kalender" },
+  { label: "Evenementen", href: "/evenementen" },
+  ...seniorItems.filter((item): item is MenuItem => item !== null),
+  { label: "Jeugd", href: "/jeugd" },
+  { label: "Sponsors", href: "/sponsors" },
+  { label: "Hulp", href: "/hulp" },
+  { label: "De club", href: "/club" },
+];
 
 export const buildSeniorMenuItem = (
   team: TeamNavVM | undefined,
   label: string,
-): MenuItem | null => {
-  if (!team?.slug) return null;
-  const href = `/ploegen/${team.slug}`;
-  // The team detail page is a single-scroll composition (Phase 6.C); sub-items
-  // jump to in-page section anchors (smooth-scrolled via globals.css), not the
-  // retired `?tab=` query params. Anchor ids mirror the `<section id>` values in
-  // `ploegen/[slug]/page.tsx`. "Info" lands on the page top (hero/overview).
-  return {
-    label,
-    href,
-    children: [
-      { label: "Info", href },
-      { label: "Spelers & staf", href: `${href}#spelers` },
-      { label: "Wedstrijden", href: `${href}#wedstrijden` },
-      { label: "Klassement", href: `${href}#klassement` },
-    ],
-  };
-};
+): MenuItem | null =>
+  team?.slug ? { label, href: `/ploegen/${team.slug}` } : null;
 
+/**
+ * "Eerste Elftallen A" → "A-ploeg". A name whose last word is not a single
+ * capital has no short form, so it renders in full.
+ *
+ * Naming only — this deliberately does **not** cap the length. Senior labels
+ * come from Sanity team names, so the nav's width is data-driven and needs
+ * bounding (#2409), but the bound belongs at the desktop render site: it is
+ * the desktop row that must fit one line at `lg`, and only the desktop row.
+ * `SiteHeader` applies `NAV_LABEL_TRUNCATE` there. Capping the string here
+ * instead would also chop the mobile drawer — full-width, 22px display type,
+ * no width constraint at all — and would put the ellipsis into the link's
+ * accessible name, which is the one place the full name must survive.
+ */
 export const seniorNavLabel = (name: string): string => {
-  const lastWord = name.trim().split(/\s+/).at(-1) ?? name;
-  return /^[A-Z]$/.test(lastWord) ? `${lastWord}-ploeg` : name;
+  const trimmed = name.trim();
+  const lastWord = trimmed.split(/\s+/).at(-1) ?? trimmed;
+  return /^[A-Z]$/.test(lastWord) ? `${lastWord}-ploeg` : trimmed;
 };
 
 const isReserven = (t: TeamNavVM): boolean => t.psdId === RESERVEN_PSD_ID;
 
 /**
  * NAV-1: the reserves belong under Jeugd, not the senior nav. `layout.tsx`
- * splits the roster with this before handing the remainder to
- * `buildJeugdItem`, and `nav-reachability.test.ts` imports it so the guard runs
- * against the real rule rather than a copy of it.
+ * splits the roster with this before handing the remainder to the senior nav
+ * builder, and `nav-reachability.test.ts` imports it so the guard runs against
+ * the real rule rather than a copy of it.
  */
 export const isUnderJeugd = (t: TeamNavVM): boolean =>
   isAgeCode(t.age ?? undefined) || isReserven(t);
 
-export const buildJeugdItem = (youthTeams?: TeamNavVM[]): MenuItem => {
-  // Filtering on the same predicate the caller split with keeps the label safe:
-  // anything left that is not the reserves has an age code to show.
-  const children = youthTeams?.filter(isUnderJeugd).map((t) => ({
-    label: isReserven(t) ? RESERVEN_LABEL : (t.age ?? ""),
-    href: `/ploegen/${t.slug}`,
-  }));
-  return {
-    label: "Jeugd",
-    href: "/jeugd",
-    children: children?.length ? children : undefined,
-  };
-};
-
-export const isMenuItemActive = (
-  href: string,
-  pathname: string,
-  searchParams: URLSearchParams,
-): boolean => {
-  const [itemPath, itemQuery] = href.split("?");
-
-  if (itemPath === "/") {
-    return pathname === "/" && !itemQuery;
-  }
-
-  if (pathname === itemPath && !itemQuery) {
-    return true;
-  }
-
-  if (itemQuery) {
-    const itemParams = new URLSearchParams(itemQuery);
-    const itemTab = itemParams.get("tab");
-    return pathname === itemPath && searchParams.get("tab") === itemTab;
-  }
-
-  if (pathname?.startsWith(itemPath + "/")) {
-    return true;
-  }
-
-  return false;
-};
+/**
+ * True when `pathname` is `href` or sits under it. Compared segment-wise, so
+ * `/club` matches `/club/bestuur` but never `/clubhuis` — the trailing slash
+ * is load-bearing, not cosmetic.
+ */
+export const isMenuItemActive = (href: string, pathname: string): boolean =>
+  pathname === href || pathname.startsWith(`${href}/`);

@@ -345,7 +345,20 @@ An eight-state machine shared identically by text input, select and textarea —
 - Uppercase mono, weight 600, tracking 0.04em, 11px scaling to 14px on wide viewports, no underline.
 - Default ink; hover and active shift to jersey-deep, colour only, 150ms.
 - The utility action carries a 1px ink border that recolours to jersey-deep on hover.
-- Dropdowns fade and drop 4px over 150ms; reduced motion collapses to instant. Mobile uses a full takeover drawer, not a squeezed menu.
+- **The nav is flat — no dropdowns.** Every top-level entry is a plain link. Mobile uses a full takeover drawer of the same flat list, not a squeezed menu.
+
+#### The top-level bar is exempt from the ≤4 working-memory limit
+
+A persistent nav is **scanned, not memorised**. The reader is not holding nine options in working memory and choosing between them; they are sweeping a fixed bar for the one word they already came for, and it sits in the same place on every page. The ≤4 ceiling governs a decision point — a set of options presented once, weighed against each other, then gone. The top-level bar is not one, so a count alone is not a finding against it.
+
+Two constraints do bite, and they are the ones to measure against:
+
+1. **One-line fit at `lg` (1024px)** with the longest realistic labels. This is a hard limit — the row must never wrap. Senior nav labels come from Sanity team names, so the desktop row bounds each entry itself (`max-w-[14ch] truncate`, exact because every nav label is mono) rather than trusting whatever an editor types. The bound lives at the desktop render site on purpose: the mobile drawer has no width constraint, and truncating the label string instead would chop the drawer too and put the ellipsis into the link's accessible name.
+2. **Glance-scannability for any transient panel.** This is what the ≤4 rubric was reaching for, and it is the constraint to apply if a panel is ever proposed again — it governs panels, not the persistent bar.
+
+Decided on [#2409](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2409), built by [#2415](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2415). The four dropdowns were **deleted rather than regrouped**, because each destination page already indexes its own children better than a transient panel can — `<ClubEditorialHub>` on `/club`, `<YouthDirectory>` on `/jeugd`, in-page section anchors on `/ploegen/[slug]`. `nav-reachability.test.ts` is the standing guard on that claim.
+
+The footer is a second, intent-based organisation of the same site and is **not** required to mirror the nav. The rule binding them: every top-level nav concept appears somewhere in the footer; the footer may hold more (`footerLinks.test.ts`).
 
 ### Stamp Badge
 

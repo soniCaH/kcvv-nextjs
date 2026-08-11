@@ -5,10 +5,10 @@ import {defineMigration, at, set} from 'sanity/migrate'
  *
  * `TEAMS_QUERY` and `TEAMS_LANDING_QUERY` both gate on
  * `showInNavigation != false`, so with the flag off Reserven renders on no
- * surface at all — not the Jeugd dropdown, not `/jeugd`, not `/ploegen`. That
- * contradicts the code around it: `layout.tsx` carries an explicit `NAV-1`
- * branch routing psdId 34 under Jeugd rather than the senior nav, and
- * `buildJeugdItem` labels it "Reserven" — both dead while the flag is false.
+ * surface at all — not `/jeugd`, not `/ploegen`. That contradicts the code
+ * around it: `layout.tsx` carries an explicit `NAV-1` branch routing psdId 34
+ * under Jeugd rather than the senior nav, and `groupTeamsForLanding` gives it
+ * its own "Reserven" group — both dead while the flag is false.
  *
  * #2414 adds the matching index-page surface (its own `Reserven` group in
  * `groupTeamsForLanding`, ahead of Bovenbouw). This migration is the data half:

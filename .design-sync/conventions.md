@@ -51,7 +51,7 @@ tilt on cards. Small text on `jersey-deep` uses `text-white` (cream fails AA the
   `AlertBadge`, `Spinner`, `ErrorState`.
 - **Sections & chrome**: `PageContainer`, `SectionStack`, `SectionTransition`,
   `CtaBand`, `StripedSeam`, dividers (`DashedDivider`, `DottedDivider`, `Divider`),
-  `SiteHeader`, `SiteFooter`, `NavDropdown`, `NavTakeover`.
+  `SiteHeader`, `SiteFooter`, `NavTakeover`.
 
 Read each component's `.prompt.md` for its props + examples and its `.d.ts` for the
 exact API. The stylesheet (`styles.css` and the `_ds_bundle.css` it imports) is the

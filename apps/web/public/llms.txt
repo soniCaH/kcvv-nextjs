@@ -27,7 +27,8 @@ De officiële website van KCVV Elewijt: https://www.kcvvelewijt.be
 - /hulp — Hulp & wie-is-wie: clubmedewerkers en contactpersonen
 - /club/contact — Contactgegevens
 - /club/word-lid — Lid worden (online inschrijvingsformulier)
-- /club/inschrijven — Praktische info (lidgeld, terugbetalingen, ProSoccerData)
+- /club/praktische-informatie — Praktische info (lidgeld, terugbetalingen, ProSoccerData)
+- /evenementen — Clubactiviteiten en evenementen
 - /zoeken — Zoeken op de website
 - /privacy — Privacybeleid
 

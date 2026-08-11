@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useRef, useState, Suspense } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { Button, getButtonClasses } from "@/components/design-system/Button";
 import { List, MagnifyingGlass } from "@/lib/icons.redesign";
@@ -10,26 +10,28 @@ import {
   buildMenuItems,
   buildSeniorMenuItem,
   seniorNavLabel,
-  buildJeugdItem,
-  flattenChildren,
-  hasSubmenu,
   isMenuItemActive,
-  type MenuItem,
 } from "../menuItems";
 import { NavTakeover, NavTakeoverItem } from "../NavTakeover";
-import {
-  NavDropdown,
-  NavDropdownProvider,
-  type NavDropdownItem,
-  type NavDropdownGroup,
-} from "../NavDropdown";
 import type { TeamNavVM } from "@/lib/repositories/team.repository";
 
 export interface SiteHeaderProps {
   seniorTeams?: TeamNavVM[];
-  youthTeams?: TeamNavVM[];
   className?: string;
 }
+
+/**
+ * Bounds a single desktop nav entry so the row cannot be blown out by a long
+ * Sanity team name (#2409's one-line-fit constraint at `lg`).
+ *
+ * `14ch` rather than a character cap on the label itself: it scales with the
+ * three mono sizes the row steps through (11 / 13 / 14px), it leaves the full
+ * name in the DOM so the link's accessible name stays intact, and it applies
+ * only to the desktop row — the mobile drawer has no width constraint. `ch` is
+ * exact here because every nav label is mono. `min-w-0` lets the flex item
+ * actually shrink; without it `truncate` never engages.
+ */
+const NAV_LABEL_TRUNCATE = "block max-w-[14ch] truncate";
 
 const Wordmark = () => (
   <Link
@@ -45,47 +47,19 @@ const Wordmark = () => (
   </Link>
 );
 
-function SiteHeaderInner({
-  seniorTeams,
-  youthTeams,
-  className,
-}: SiteHeaderProps) {
+export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
 
   const handleClose = useCallback(() => setDrawerOpen(false), []);
 
-  const jeugdItem = buildJeugdItem(youthTeams);
   const seniorMenuItems = (seniorTeams ?? []).map((t) =>
     buildSeniorMenuItem(t, seniorNavLabel(t.name)),
   );
-  const menuItems = buildMenuItems(seniorMenuItems, jeugdItem);
+  const menuItems = buildMenuItems(seniorMenuItems);
 
-  const isActive = (href: string) =>
-    isMenuItemActive(href, pathname, searchParams);
-  const hasActiveChild = (item: MenuItem) =>
-    flattenChildren(item).some((child) => isActive(child.href));
-
-  const toDropdownItems = (
-    children: readonly MenuItem[],
-  ): readonly NavDropdownItem[] =>
-    children.map((c) => ({
-      label: c.label,
-      href: c.href,
-      active: isActive(c.href),
-    }));
-
-  const toDropdownGroups = (
-    item: MenuItem,
-  ): readonly NavDropdownGroup[] | undefined =>
-    item.childGroups && item.childGroups.length > 0
-      ? item.childGroups.map((g) => ({
-          label: g.label,
-          items: toDropdownItems(g.items),
-        }))
-      : undefined;
+  const isActive = (href: string) => isMenuItemActive(href, pathname);
 
   return (
     <>
@@ -128,51 +102,28 @@ function SiteHeaderInner({
           <Wordmark />
 
           <nav aria-label="Hoofdnavigatie" className="flex w-full">
-            <NavDropdownProvider>
-              <ul className="m-0 flex w-full list-none items-center justify-between gap-x-4 gap-y-0 py-0 pr-0 pl-6 xl:gap-x-8 xl:pl-10 2xl:gap-x-10 2xl:pl-12">
-                {menuItems.map((item) => {
-                  const active = isActive(item.href) || hasActiveChild(item);
-                  if (hasSubmenu(item)) {
-                    const groups = toDropdownGroups(item);
-                    // `groups` (wide) wins over `items` (narrow) when both
-                    // would resolve. Only pass `items` when groups is absent.
-                    const dropdownItems =
-                      !groups && item.children
-                        ? toDropdownItems(item.children)
-                        : undefined;
-                    return (
-                      <NavDropdown
-                        key={item.href}
-                        label={item.label}
-                        href={item.href}
-                        triggerActive={active}
-                        items={dropdownItems}
-                        itemGroups={groups}
-                      />
-                    );
-                  }
-                  return (
-                    <li key={item.href} className="relative">
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          // `py-2 -my-2` — hit area only, no layout shift
-                          // (#2394). Desktop-only nav, so it never showed up in
-                          // the 390px walk, but it is the same 11px recipe the
-                          // wordmark above carries.
-                          "-my-2 py-2 font-mono text-[11px] font-semibold tracking-[0.04em] whitespace-nowrap uppercase no-underline transition-colors xl:text-[13px] 2xl:text-[14px]",
-                          active
-                            ? "text-jersey-deep"
-                            : "text-ink hover:text-jersey-deep",
-                        )}
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </NavDropdownProvider>
+            <ul className="m-0 flex w-full list-none items-center justify-between gap-x-4 gap-y-0 py-0 pr-0 pl-6 xl:gap-x-8 xl:pl-10 2xl:gap-x-10 2xl:pl-12">
+              {menuItems.map((item) => (
+                <li key={item.href} className="relative min-w-0">
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      // `py-2 -my-2` — hit area only, no layout shift (#2394).
+                      // Desktop-only nav, so it never showed up in the 390px
+                      // walk, but it is the same 11px recipe the wordmark
+                      // above carries.
+                      "-my-2 py-2 font-mono text-[11px] font-semibold tracking-[0.04em] whitespace-nowrap uppercase no-underline transition-colors xl:text-[13px] 2xl:text-[14px]",
+                      NAV_LABEL_TRUNCATE,
+                      isActive(item.href)
+                        ? "text-jersey-deep"
+                        : "text-ink hover:text-jersey-deep",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </nav>
 
           <div className="flex items-center gap-3 xl:gap-5">
@@ -199,38 +150,15 @@ function SiteHeaderInner({
         wordmark={<Wordmark />}
         returnFocusRef={hamburgerRef}
       >
-        {menuItems.map((item) => {
-          const active = isActive(item.href) || hasActiveChild(item);
-          if (hasSubmenu(item)) {
-            return (
-              <NavTakeoverItem
-                key={item.href}
-                label={item.label}
-                hasSubmenu
-                active={active}
-              >
-                {flattenChildren(item).map((child) => (
-                  <NavTakeoverItem
-                    key={child.href}
-                    label={child.label}
-                    href={child.href}
-                    active={isActive(child.href)}
-                    onNavigate={handleClose}
-                  />
-                ))}
-              </NavTakeoverItem>
-            );
-          }
-          return (
-            <NavTakeoverItem
-              key={item.href}
-              label={item.label}
-              href={item.href}
-              active={active}
-              onNavigate={handleClose}
-            />
-          );
-        })}
+        {menuItems.map((item) => (
+          <NavTakeoverItem
+            key={item.href}
+            label={item.label}
+            href={item.href}
+            active={isActive(item.href)}
+            onNavigate={handleClose}
+          />
+        ))}
         <div className="mt-6">
           <Link
             href="/club/word-lid"
@@ -249,9 +177,3 @@ function SiteHeaderInner({
     </>
   );
 }
-
-export const SiteHeader = (props: SiteHeaderProps) => (
-  <Suspense fallback={<div className="h-16" aria-hidden="true" />}>
-    <SiteHeaderInner {...props} />
-  </Suspense>
-);

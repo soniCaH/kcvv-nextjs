@@ -79,11 +79,9 @@ export default async function RootLayout({
     allTeams = [];
   }
 
+  // Only the senior sides get their own nav entry; `Jeugd` is a plain link to
+  // the directory that indexes the rest (#2415).
   const seniorTeams = allTeams.filter((t) => !isUnderJeugd(t));
-  const parseAge = (age: string) => parseInt(age.replace(/\D/g, "")) || 0;
-  const youthTeams = allTeams
-    .filter(isUnderJeugd)
-    .sort((a, b) => parseAge(b.age ?? "") - parseAge(a.age ?? ""));
 
   return (
     <html
@@ -121,7 +119,7 @@ export default async function RootLayout({
         <GoogleTagManagerLoader gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
         <ScrollToTop />
         <AccentStrip />
-        <SiteHeader youthTeams={youthTeams} seniorTeams={seniorTeams} />
+        <SiteHeader seniorTeams={seniorTeams} />
         {/* flex-1 column so a short page's footer sticks to the viewport
             bottom (ZOEK-1 / TEGEN-1) instead of floating up or leaving a gap. */}
         <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col">

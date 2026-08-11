@@ -30,18 +30,26 @@ const seniorTeams: TeamNavVM[] = [
   makeTeam({ slug: "kcvv-elewijt-b", name: "KCVV Elewijt B" }),
 ];
 
-const youthTeams: TeamNavVM[] = [
-  makeTeam({ slug: "u15", name: "U15", age: "U15" }),
-  makeTeam({ slug: "u13", name: "U13", age: "U13" }),
-  makeTeam({ slug: "u11", name: "U11", age: "U11" }),
-];
-
 export const Default: Story = {
-  args: { seniorTeams, youthTeams },
+  args: { seniorTeams },
 };
 
 export const NoDynamicTeams: Story = {
   args: {},
+};
+
+/**
+ * The width case the one-line-fit constraint is about (#2409): team names that
+ * carry no "… A" suffix get no short form, so they render in full — capped at
+ * `NAV_LABEL_MAX_CHARS`. This is the widest the nav row can legally get.
+ */
+export const LongTeamNames: Story = {
+  args: {
+    seniorTeams: [
+      makeTeam({ slug: "eerste-elftallen", name: "Eerste Elftallen" }),
+      makeTeam({ slug: "tweede-elftallen", name: "Tweede Elftallen" }),
+    ],
+  },
 };
 
 /**
@@ -52,7 +60,7 @@ export const NoDynamicTeams: Story = {
  * only be evaluated at the mobile/tablet VR viewports.
  */
 export const DrawerOpen: Story = {
-  args: { seniorTeams, youthTeams },
+  args: { seniorTeams },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const hamburger = canvas.queryByRole("button", { name: /open menu/i });
