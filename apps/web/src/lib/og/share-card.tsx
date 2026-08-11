@@ -30,11 +30,9 @@ const TOKENS = {
   inkMuted: "#6b6b6b",
   jerseyDeep: "#007c46",
   /**
-   * Pure white, not cream, on a jersey-deep fill. Same rule as the jersey-deep
-   * pill in DESIGN.md "Chips / Labels". The original reason — cream missing AA
-   * at 4.05:1 — no longer holds now that #2416 darkened the green (cream 4.69,
-   * white 5.29), but reconciling the white-on-jersey-deep surfaces back to
-   * cream is a consistency question #2416 left out of scope.
+   * Pure white on a jersey-deep fill, inherited from the pre-#2395 green — see
+   * DESIGN.md "Chips / Labels", which carries the open reconcile-to-cream
+   * question.
    */
   onJerseyDeep: "#ffffff",
 } as const;

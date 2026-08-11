@@ -56,12 +56,10 @@ export const TeamEnrolmentCta = ({
   };
 
   return (
-    // Cream and warm text on jersey-deep used to be sub-AA here (cream 4.04:1,
-    // warm 2.74:1), kept deliberately for YouthSection parity after
-    // jersey-deep-dark was offered and declined (enrolment-cta-locked.md §4).
-    // #2395 resolved it from the other end: the token itself darkened to
-    // #007c46, so cream now reads 4.69:1 and warm 3.17:1 with no change here.
-    // The parity argument survives — both surfaces moved together.
+    // Cream and warm text on jersey-deep used to be sub-AA here, kept
+    // deliberately for YouthSection parity after jersey-deep-dark was offered
+    // and declined (enrolment-cta-locked.md §4). #2395 resolved it from the
+    // other end by darkening the token itself, with no change needed here.
     <TapedCard
       bg="jersey-deep"
       shadow="soft"

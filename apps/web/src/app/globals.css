@@ -369,13 +369,10 @@
 
   /* Brand green (anchored to existing #4acf52 / #007c46) */
   --color-jersey: #4acf52;
-  /* Darkened one shade from #008755 by #2395/#2416, absorbing the former
-     `--color-jersey-link`. Cream reads 4.69:1 here (was 4.05) and the warm
-     accent 3.17:1 (was 2.74). Chosen by eye off a six-treatment compare page
-     (docs/design/mockups/go-live-2395-green-shade/) — no WCAG conformance
-     target is adopted, so the ratios only broke the tie. Picking the green
-     that already existed collapsed two tokens into one and changed no
-     component's colour classes. */
+  /* Darkened one shade from #008755 by #2395; absorbed the former
+     `--color-jersey-link`, which held this exact value. Cream 4.69:1, warm
+     3.17:1. Chosen by eye off docs/design/mockups/go-live-2395-green-shade/ —
+     no WCAG target is adopted, the ratios only broke the tie. */
   --color-jersey-deep: #007c46;
   --color-jersey-bright: #22c55e;
   /* Desaturated retro forest — third stop of `--gradient-jersey-deep-overlay`

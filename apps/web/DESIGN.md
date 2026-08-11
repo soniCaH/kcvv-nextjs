@@ -207,7 +207,7 @@ Status tones, tuned for print rather than for a dashboard. Each pairs a saturate
 
 **The Two-Greens Rule.** There are exactly two greens on cream, split by one question — does it carry text? `jersey` decorates and never touches text; `jersey-deep` carries everything that does, inline prose links included. Until #2395 the rule named three greens and was not literally true; `jersey-link` has since been absorbed into `jersey-deep`. Picking the wrong green is the single most common colour error in this system.
 
-**The Whole-Cream Rule.** Cream on a jersey-deep surface is cream, never a fraction of it. `text-cream/90` costs more contrast than a whole shade step of green does (4.05 → 3.56, where the #2395 shade step bought 4.05 → 4.69), so the fraction is always the worse trade. Scoped to jersey-deep: on `jersey-deep-dark` and ink, cream sits around 10.9:1 and a fraction is harmless.
+**The Whole-Cream Rule.** Cream on a jersey-deep surface is cream, never a fraction of it. `text-cream/90` costs more contrast than a whole shade step of green does (4.05 → 3.56, where the #2395 shade step bought 4.05 → 4.69), so the fraction is always the worse trade. Scoped to jersey-deep: on `jersey-deep-dark` (~10.9:1) and ink (17.5:1) cream has contrast to spare and a fraction is harmless. One known exception is still shipping — `<NumberDisplay tone="cream">` hardcodes `text-cream/70` on its label, which lands on jersey-deep wherever the component sits in a jersey-deep `<TapedCard>`. Fixing it means touching a shared primitive whose other callers are all on dark surfaces, so it is tracked separately rather than swept here.
 
 **The No-Grey-UI Rule.** There is no neutral grey in this system — not as a token, not as an option. A surface is cream, a step of cream, or ink. `gray-100` (`#f3f4f6`) was the last holdout, sitting under four homepage sections; #2342 deleted the token outright and reduced `SectionBg` to `jersey-deep | transparent`, so those sections now let the page cream through. If a section ever needs to step down from the page without going dark, add `cream-soft` to `SectionBg` — never reintroduce a grey.
 
@@ -308,7 +308,7 @@ Photographs get a newsprint treatment: a warm-tint filter (`sepia(0.06) saturate
 - **Primary:** jersey-deep fill, cream text, `4px 4px 0 0` ink shadow. Padding 0.75rem / 2rem at the default size (0.5/1.5 small, 1/2.5 large).
 - **Inverted:** cream fill, ink text, muted-ink shadow — for placement on dark surfaces.
 - **Secondary:** cream-soft fill, ink text. **Ghost:** transparent, ink text, `ink/5` hover wash.
-- **Hover:** the canonical press-down — `translate(1px, 1px)` with the shadow collapsing to none over 300ms. Primary additionally brightens 110%.
+- **Hover:** the canonical press-down — `translate(1px, 1px)` with the shadow collapsing to none over 300ms, and for primary that is the whole hover. Primary is the only variant with no hover fill: it used to brighten 110%, but a filter-based relight necessarily lands off-token (it pushed jersey-deep to `#00884d`), so #2395 removed it rather than mint a hover green.
 - **Focus:** a 2px jersey-deep ring at 2px offset.
 - **Disabled:** 50% opacity, `not-allowed` cursor, and every hover effect neutralised back to the resting surface so the button visibly does not react.
 - An optional trailing `→` glyph translates 4px right on group hover.

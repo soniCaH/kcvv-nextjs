@@ -46,9 +46,7 @@ export const YouthSection = ({ className }: YouthSectionProps) => (
         De toekomst van Elewijt.
       </EditorialHeading>
 
-      {/* Full cream, not a fraction of it: this sits on jersey-deep, where
-          text-cream/90 costs more contrast than a whole shade step of green.
-          See DESIGN.md "The Whole-Cream Rule" (#2395). */}
+      {/* Full cream — DESIGN.md "The Whole-Cream Rule". */}
       <p className="text-cream mb-6 max-w-xl text-base leading-relaxed">
         Onze jeugdwerking groeit elk jaar. Bovenbouw, Middenbouw en Onderbouw
         delen één doel: voetbal als zelfontplooiing — nooit als prestatie

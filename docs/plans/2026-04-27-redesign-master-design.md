@@ -133,15 +133,15 @@ All tokens live in `apps/web/src/app/globals.css` inside `@theme {}`. Tailwind v
 }
 ```
 
-| Combination          | Contrast   | Verdict                                                                                                                                                                                     |
-| -------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ink on cream         | 17.5:1     | AAA all sizes                                                                                                                                                                               |
-| ink-soft on cream    | 14.6:1     | AAA all sizes                                                                                                                                                                               |
-| ink-muted on cream   | 4.7:1      | AA normal text (just above the 4.5:1 threshold; AAA at ≥18pt)                                                                                                                               |
-| jersey on cream      | 1.8:1      | Decorative only — never text                                                                                                                                                                |
-| jersey-deep on cream | **4.05:1** | **AA large-text (≥18pt) only** — does NOT meet AA body (4.5:1). Use `--color-ink` or `--color-ink-soft` for body green-on-cream copy; reserve `jersey-deep` for headings, accents, and CTAs |
-| jersey-bright on ink | 8.7:1      | AAA all sizes                                                                                                                                                                               |
-| cream on ink         | 17.5:1     | AAA all sizes                                                                                                                                                                               |
+| Combination          | Contrast   | Verdict                                                                                                                                                                                                                             |
+| -------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ink on cream         | 17.5:1     | AAA all sizes                                                                                                                                                                                                                       |
+| ink-soft on cream    | 14.6:1     | AAA all sizes                                                                                                                                                                                                                       |
+| ink-muted on cream   | 4.7:1      | AA normal text (just above the 4.5:1 threshold; AAA at ≥18pt)                                                                                                                                                                       |
+| jersey on cream      | 1.8:1      | Decorative only — never text                                                                                                                                                                                                        |
+| jersey-deep on cream | **4.69:1** | Carries text at any size since #2395 darkened it to `#007c46` (was `#008755` at 4.05:1, large-text only). Still reserved for headings, accents, CTAs and inline links — body copy on cream stays `--color-ink` / `--color-ink-soft` |
+| jersey-bright on ink | 8.7:1      | AAA all sizes                                                                                                                                                                                                                       |
+| cream on ink         | 17.5:1     | AAA all sizes                                                                                                                                                                                                                       |
 
 ### 3.3 Typography tokens
 
