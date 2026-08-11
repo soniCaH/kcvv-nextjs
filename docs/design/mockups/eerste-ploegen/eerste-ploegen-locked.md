@@ -37,6 +37,12 @@ Official **home–away** (matches `TeamAgendaRow` site convention), KCVV bolded 
 - Missing result → result card replaced by "Nog geen uitslag" placeholder (non-interactive).
 - Missing fixture → fixture card replaced by "Geen geplande wedstrijd".
 - A team's whole row is dropped only if it has **neither** result nor fixture.
+- **Amended by #2399:** when that leaves _no_ rows, the band no longer disappears. Chrome
+  (seams, kicker, heading, "Volledige kalender →") stays and the rows region holds its shape
+  open with a dashed notice — #2427's tier-2 register. A vanished band made a PSD outage
+  indistinguishable from a club that never posted the result, so the notice names which it is:
+  - feed genuinely empty → "Nog geen wedstrijden ingepland."
+  - BFF read failed → "Uitslagen en wedstrijden zijn even niet beschikbaar. Probeer het later opnieuw."
 
 ## Plumbing
 

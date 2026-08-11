@@ -154,15 +154,49 @@ describe("FirstTeamsBlock", () => {
     });
   });
 
-  it("renders nothing when no team has a result or fixture", () => {
-    const { container } = render(
-      <FirstTeamsBlock
-        teams={[
-          { label: "A-ploeg", slug: "a-ploeg", division: "3de Nationale" },
-        ]}
-      />,
-    );
-    expect(container).toBeEmptyDOMElement();
-    expect(screen.queryByText("A-ploeg")).not.toBeInTheDocument();
+  // #2399 — the band used to return null here, which is what made a BFF outage
+  // look like a finished page. It now holds its shape and names the reason.
+  describe("with nothing to show", () => {
+    const noMatches = [
+      { label: "A-ploeg", slug: "a-ploeg", division: "3de Nationale" },
+    ];
+
+    it("keeps the band, drops the rows, and says the feed is empty", () => {
+      render(<FirstTeamsBlock teams={noMatches} />);
+      expect(
+        screen.getByRole("region", { name: "Eerste ploegen" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: /Volledige kalender/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Nog geen wedstrijden ingepland."),
+      ).toBeInTheDocument();
+      // The row itself is still dropped — no team label, no skip cards.
+      expect(screen.queryByText("A-ploeg")).not.toBeInTheDocument();
+      expect(screen.queryByText("Nog geen uitslag")).not.toBeInTheDocument();
+    });
+
+    it("says the feed is unavailable when the read failed", () => {
+      render(<FirstTeamsBlock teams={noMatches} unavailable />);
+      expect(
+        screen.getByText(
+          "Uitslagen en wedstrijden zijn even niet beschikbaar. Probeer het later opnieuw.",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText("Nog geen wedstrijden ingepland."),
+      ).not.toBeInTheDocument();
+    });
+
+    it("never shows the notice while a row still has a match", () => {
+      render(<FirstTeamsBlock teams={[aTeamResultOnly]} unavailable />);
+      expect(
+        screen.queryByText("Nog geen wedstrijden ingepland."),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/even niet beschikbaar/),
+      ).not.toBeInTheDocument();
+    });
   });
 });

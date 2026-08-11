@@ -41,7 +41,6 @@ import {
   TeamRepository,
   type TeamNavVM,
 } from "@/lib/repositories/team.repository";
-import type { Match } from "@/lib/effect/schemas";
 import {
   BannerSlot,
   FeaturedEventBand,
@@ -160,7 +159,8 @@ export default async function HomePage() {
       }).pipe(
         Effect.catchAll((error) => {
           console.error("[HomePage] Failed to fetch matches:", error);
-          return Effect.succeed([]);
+          // `null`, not `[]` — see `matchReadFailed` below (#2399).
+          return Effect.succeed(null);
         }),
       ),
     ),
@@ -193,7 +193,7 @@ export default async function HomePage() {
   ]);
 
   const articles = articlesResult;
-  const matches = matchesResult;
+  const matches = matchesResult ?? [];
   const banners = bannersResult;
   const featuredEvent = featuredEventResult;
 
@@ -209,7 +209,7 @@ export default async function HomePage() {
         Effect.gen(function* () {
           const bff = yield* BffService;
           return yield* bff.getMatches(Number(team.psdId));
-        }).pipe(Effect.catchAll(() => Effect.succeed<readonly Match[]>([]))),
+        }).pipe(Effect.catchAll(() => Effect.succeed(null))),
       ),
     ),
   );
@@ -228,6 +228,13 @@ export default async function HomePage() {
     );
   });
   const seniorPsdIds = new Set(seniorTeams.map((t) => Number(t.psdId)));
+  // #2399: "no matches" has two causes — a failed read and a genuinely empty
+  // feed — and the page used to render both by dropping the match sections and
+  // looking finished. Both BFF reads therefore fall back to `null` rather than
+  // `[]`, so the band below can name which one happened. Only the band consumes
+  // this; `<UpcomingMatches>` and `<MatchStrip>` still drop silently.
+  const matchReadFailed =
+    matchesResult === null || firstTeamsMatches.some((m) => m === null);
 
   const heroArticle = articles[0];
   const heroProps = heroArticle ? toEditorialHeroProps(heroArticle) : null;
@@ -248,7 +255,7 @@ export default async function HomePage() {
         <h1 className="text-jersey-deep mb-4 text-3xl font-bold lg:text-4xl">
           Welkom bij KCVV Elewijt
         </h1>
-        <p className="text-lg text-gray-600">
+        <p className="text-ink-muted text-lg">
           Inhoud kan momenteel niet worden geladen. Probeer het later opnieuw.
         </p>
       </PageContainer>
@@ -300,18 +307,24 @@ export default async function HomePage() {
   // result→next-fixture transition. Self-contained dark band (own StripedSeam
   // top/bottom + padding), so the SectionStack wrapper stays flush (#2211).
   // HP-4: `firstTeamsHeading` owns when the block may claim "Dit weekend."
+  // #2399: unconditional. The band is the one slot that acknowledges the match
+  // feed at all, so it holds its shape open and names the reason when there is
+  // nothing to show — dropping it shortened the spine to 7 bands and read as
+  // "the club never posted the result".
   const heading = firstTeamsHeading(firstTeamVMs, now);
-  const firstTeamsSection: SectionConfig | null = firstTeamVMs.some(
-    (t) => t.result || t.fixture,
-  )
-    ? {
-        key: "first-teams",
-        bg: "transparent",
-        content: <FirstTeamsBlock teams={firstTeamVMs} heading={heading} />,
-        paddingTop: "pt-0",
-        paddingBottom: "pb-0",
-      }
-    : null;
+  const firstTeamsSection: SectionConfig = {
+    key: "first-teams",
+    bg: "transparent",
+    content: (
+      <FirstTeamsBlock
+        teams={firstTeamVMs}
+        heading={heading}
+        unavailable={matchReadFailed}
+      />
+    ),
+    paddingTop: "pt-0",
+    paddingBottom: "pb-0",
+  };
 
   const featuredEventSection: SectionConfig | null = featuredEventBandEvent
     ? {

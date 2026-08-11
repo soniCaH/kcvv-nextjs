@@ -27,11 +27,27 @@ export interface FirstTeamsBlockProps {
    * that default is an unconditional claim, so real callers must pass one.
    */
   heading?: string;
+  /**
+   * A match read failed (BFF/PSD down or quota-exhausted), as opposed to the
+   * feed genuinely holding no matches. Only picks which copy the held-open
+   * notice carries; it is read solely on the no-rows path.
+   */
+  unavailable?: boolean;
 }
+
+/**
+ * The held-open dashed frame — #2427's tier-2 register: an empty slot inside a
+ * populated page keeps its shape so the absence reads as a known gap rather
+ * than a render failure. Shared by the per-slot `<SkipCard>` and the whole-band
+ * notice so the two can't drift, the way `FIRST_TEAMS_ROW_GRID` is below.
+ */
+const HELD_OPEN_FRAME = "border-cream/40 border-2 border-dashed text-center";
 
 function SkipCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border-cream/40 text-cream/65 flex items-center justify-center border-2 border-dashed px-4 py-3 text-center font-mono text-xs tracking-wide uppercase">
+    <div
+      className={`${HELD_OPEN_FRAME} text-cream/65 flex items-center justify-center px-4 py-3 font-mono text-xs tracking-wide uppercase`}
+    >
       {children}
     </div>
   );
@@ -92,14 +108,17 @@ function FirstTeamRow({ team }: { team: FirstTeamVM }) {
 
 /**
  * Render the "Eerste ploegen" band. Teams with neither a result nor a fixture
- * are dropped; the whole block renders nothing when no team has any match.
+ * are dropped; when that leaves no rows at all the band still renders — chrome
+ * plus a held-open notice — instead of vanishing (#2399). A silently absent
+ * band left the homepage looking finished during a BFF outage, so a supporter
+ * concluded the club had never posted the result.
  */
 export function FirstTeamsBlock({
   teams,
   heading = "Dit weekend.",
+  unavailable = false,
 }: FirstTeamsBlockProps) {
   const rows = teams.filter((t) => t.result || t.fixture);
-  if (rows.length === 0) return null;
 
   return (
     <section aria-label="Eerste ploegen" className="bg-jersey-deep-dark">
@@ -126,11 +145,22 @@ export function FirstTeamsBlock({
             Volledige kalender <span aria-hidden="true">→</span>
           </Link>
         </div>
-        <div className="flex flex-col">
-          {rows.map((team) => (
-            <FirstTeamRow key={team.slug} team={team} />
-          ))}
-        </div>
+        {rows.length > 0 ? (
+          <div className="flex flex-col">
+            {rows.map((team) => (
+              <FirstTeamRow key={team.slug} team={team} />
+            ))}
+          </div>
+        ) : (
+          // Body type rather than `<SkipCard>`'s mono uppercase — this is a
+          // sentence, not a two-word label. No action of its own: the band's
+          // "Volledige kalender →" above is already the way out.
+          <p className={`${HELD_OPEN_FRAME} text-cream/80 px-4 py-8`}>
+            {unavailable
+              ? "Uitslagen en wedstrijden zijn even niet beschikbaar. Probeer het later opnieuw."
+              : "Nog geen wedstrijden ingepland."}
+          </p>
+        )}
       </div>
       <StripedSeam colorPair="cream-jersey-deep" height="md" flip />
     </section>
