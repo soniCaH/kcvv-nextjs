@@ -15,7 +15,8 @@ import { BRAND } from "@/lib/constants";
  * hardcoded mirrors" and a grep found eight.
  *
  * Not covered here: `packages/sanity-studio`'s decorator previews, a separate
- * workspace that must not import from `apps/web`.
+ * workspace that must not import from `apps/web`. `og/share-card.tsx` needs no
+ * assertion — it spreads the /share palette rather than mirroring it.
  */
 const globalsCss = readFileSync(
   join(__dirname, "..", "app", "globals.css"),
@@ -56,5 +57,15 @@ describe("jersey-deep hex mirrors track globals.css", () => {
   // prose, explaining what it was absorbed into.
   it("no longer declares a separate jersey-link green", () => {
     expect(globalsCss).not.toMatch(/--color-jersey-link:/);
+  });
+
+  // The two consumers the deleted token used to own. Both indirect through
+  // `var()`, so they cannot drift in value — but they can be repointed at a
+  // token that no longer exists, which is silent until something renders.
+  it.each([
+    ["the cookie-banner link", /--cc-link-color:\s*var\(([^)]+)\)/],
+    [".prose-link", /\.prose-link\s*\{\s*color:\s*var\(([^)]+)\)/],
+  ])("resolves %s against jersey-deep", (_label, pattern) => {
+    expect(pattern.exec(globalsCss)?.[1]).toBe("--color-jersey-deep");
   });
 });

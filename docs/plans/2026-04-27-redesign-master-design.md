@@ -125,7 +125,7 @@ All tokens live in `apps/web/src/app/globals.css` inside `@theme {}`. Tailwind v
 
   /* Brand green (anchored to existing values) */
   --color-jersey: #4acf52; /* accent / tape / CTA — never body text on cream */
-  --color-jersey-deep: #008755; /* body-text-readable green on cream */
+  --color-jersey-deep: #007c46; /* the text-bearing green on cream (#2395) */
   --color-jersey-bright: #22c55e; /* green text on dark interludes */
 
   /* Edges */

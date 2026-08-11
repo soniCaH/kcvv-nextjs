@@ -172,7 +172,7 @@ A print palette: one paper, one ink, one green, one warm accent, and a small set
 
 ### Primary
 
-- **Jersey Deep** (`#007c46`): the club green, and the only green allowed to carry meaning. Primary buttons, large display headings, italic accent words in headlines, inline prose links, active states, and dark section fills. It reads 4.69:1 on cream — text-safe at any size, and still ≥3:1 against surrounding ink so a link stays distinguishable by colour alone. Darkened one shade from `#008755` by #2395, which also absorbed the former `jersey-link` (it held this exact value) so the system carries one text-bearing green instead of two.
+- **Jersey Deep** (`#007c46`): the club green, and on cream the only green allowed to carry meaning. Primary buttons, large display headings, italic accent words in headlines, inline prose links, active states, and dark section fills. It reads 4.69:1 on cream — text-safe at any size, and still ≥3:1 against surrounding ink so a link stays distinguishable by colour alone. Darkened one shade from `#008755` by #2395, which also absorbed the former `jersey-link` (it held this exact value) so cream carries one text-bearing green instead of two. On ink that job belongs to `jersey-bright`, below.
 - **Jersey** (`#4acf52`): the bright terrace green. Decorative only — stripe patterns, tape strips, spinner bars. **Never text, never on cream.**
 - **Jersey Bright** (`#22c55e`): green text on ink surfaces only, where the deep green disappears.
 - **Jersey Deep Dark** (`#133d28`): desaturated retro forest. The far stop of the photo-overlay gradient and the darkest green field.
