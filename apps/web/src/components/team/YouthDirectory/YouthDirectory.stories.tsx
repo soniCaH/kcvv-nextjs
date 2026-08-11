@@ -1,13 +1,23 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import type { YouthDivisionGroup } from "@/lib/utils/group-teams";
 import { YouthDirectory } from "./YouthDirectory";
-import { youthTeam as team } from "./youth-directory.fixtures";
+import { reservenTeam, youthTeam as team } from "./youth-directory.fixtures";
 
 // Local committed asset (Storybook `staticDirs`) so the squad-photo polaroid is
 // deterministic in VR. Teams without it render the <JerseyShirt> fallback.
 const PHOTO = "/images/ultras.jpg";
 
+/**
+ * The reserves — no age range, so the heading renders bare, and no age code, so
+ * the card captions by name over an initialled jersey (#2414).
+ */
+const reserven: YouthDivisionGroup = {
+  label: "Reserven",
+  teams: [reservenTeam()],
+};
+
 const divisions: YouthDivisionGroup[] = [
+  reserven,
   {
     label: "Bovenbouw",
     range: "U17–U21",
@@ -41,7 +51,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Full youth working — three divisions, age-code cards. */
+/** Full working — the reserves lead, then the three age divisions. */
 export const FullDirectory: Story = {
   args: { divisions },
 };
@@ -50,6 +60,7 @@ export const FullDirectory: Story = {
 export const SparseDirectory: Story = {
   args: {
     divisions: [
+      { label: "Reserven", teams: [] },
       { label: "Bovenbouw", range: "U17–U21", teams: [] },
       { label: "Middenbouw", range: "U12–U16", teams: [team("U13")] },
       { label: "Onderbouw", range: "U6–U11", teams: [] },

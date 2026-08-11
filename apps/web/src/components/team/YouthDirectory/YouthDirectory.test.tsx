@@ -5,13 +5,14 @@
  *  - Auto-hide (null) when no divisions have teams
  *  - Empty groups omitted; only populated divisions render
  *  - Age-code card per team, linking to its detail
+ *  - Rangeless group (Reserven): bare heading, name caption, initialled jersey
  */
 
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import type { YouthDivisionGroup } from "@/lib/utils/group-teams";
 import { YouthDirectory } from "./YouthDirectory";
-import { youthTeam as team } from "./youth-directory.fixtures";
+import { reservenTeam, youthTeam as team } from "./youth-directory.fixtures";
 
 const divisions: YouthDivisionGroup[] = [
   { label: "Bovenbouw", range: "U17–U21", teams: [team("U17")] },
@@ -77,5 +78,42 @@ describe("YouthDirectory", () => {
     expect(
       screen.getByLabelText("KCVV Elewijt U17 (geen ploegfoto)"),
     ).toBeInTheDocument();
+  });
+
+  describe("a group with no range (#2414)", () => {
+    const reserven: YouthDivisionGroup[] = [
+      { label: "Reserven", teams: [reservenTeam()] },
+    ];
+
+    it("renders the heading bare, with no ` · range` separator", () => {
+      render(<YouthDirectory divisions={reserven} />);
+      const heading = screen.getByRole("heading", { level: 3 });
+      expect(heading).toHaveTextContent("Reserven");
+      expect(heading.textContent).not.toContain("·");
+    });
+
+    it("still renders the group's card, linking to its detail", () => {
+      render(<YouthDirectory divisions={reserven} />);
+      const cards = screen.getAllByTestId("youth-team-card");
+      expect(cards).toHaveLength(1);
+      expect(cards[0].getAttribute("href")).toBe("/ploegen/reserven");
+    });
+
+    it("captions by name rather than by the senior age code 'A'", () => {
+      render(<YouthDirectory divisions={reserven} />);
+      const card = screen.getByTestId("youth-team-card");
+      // "A" alone would read as the A-ploeg; the name is the honest caption,
+      // and it must not also repeat as the division sub-caption.
+      expect(card.textContent).toContain("Reserven");
+      expect(card.textContent).not.toMatch(/\bA\b/);
+      expect(card.textContent?.match(/Reserven/g)).toHaveLength(1);
+    });
+
+    it("puts the name's initial on the jersey, not the whole word", () => {
+      render(<YouthDirectory divisions={reserven} />);
+      const jersey = screen.getByLabelText("Reserven (geen ploegfoto)");
+      expect(jersey).toHaveTextContent("R");
+      expect(jersey.textContent).not.toContain("Reserven");
+    });
   });
 });

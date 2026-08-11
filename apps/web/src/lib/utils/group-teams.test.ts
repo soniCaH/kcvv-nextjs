@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   groupTeamsForLanding,
   getYouthDivision,
+  isAgeCode,
   type TeamLandingItem,
 } from "./group-teams";
 
@@ -12,6 +13,7 @@ const makeTeam = (
   name: overrides.name ?? "Test Team",
   slug: overrides.slug ?? "test-team",
   age: overrides.age ?? "A",
+  psdId: overrides.psdId ?? null,
   division: overrides.division ?? null,
   divisionFull: overrides.divisionFull ?? null,
   season: overrides.season ?? null,
@@ -19,6 +21,13 @@ const makeTeam = (
   teamImageUrl: overrides.teamImageUrl ?? null,
   staff: overrides.staff ?? null,
 });
+
+/**
+ * Look a division up by label rather than index — `youthByDivision` leads with
+ * the Reserven group (#2414), so positional assertions drift.
+ */
+const divisionGroup = (teams: TeamLandingItem[], label: string) =>
+  groupTeamsForLanding(teams).youthByDivision.find((d) => d.label === label)!;
 
 describe("groupTeamsForLanding", () => {
   it("should extract A-team and B-team by name suffix (both have age 'A')", () => {
@@ -46,25 +55,57 @@ describe("groupTeamsForLanding", () => {
 
     const result = groupTeamsForLanding(teams);
 
-    expect(result.youthByDivision).toHaveLength(3);
-    expect(result.youthByDivision[0].label).toBe("Bovenbouw");
-    expect(result.youthByDivision[0].range).toBe("U17–U21");
-    expect(result.youthByDivision[0].teams.map((t) => t.age)).toEqual([
+    // Reserven leads, then the three bouw groups.
+    expect(result.youthByDivision.map((d) => d.label)).toEqual([
+      "Reserven",
+      "Bovenbouw",
+      "Middenbouw",
+      "Onderbouw",
+    ]);
+
+    expect(divisionGroup(teams, "Bovenbouw").range).toBe("U17–U21");
+    expect(divisionGroup(teams, "Bovenbouw").teams.map((t) => t.age)).toEqual([
       "U21",
       "U17",
     ]);
 
-    expect(result.youthByDivision[1].label).toBe("Middenbouw");
-    expect(result.youthByDivision[1].range).toBe("U12–U16");
-    expect(result.youthByDivision[1].teams.map((t) => t.age)).toEqual(["U13"]);
+    expect(divisionGroup(teams, "Middenbouw").range).toBe("U12–U16");
+    expect(divisionGroup(teams, "Middenbouw").teams.map((t) => t.age)).toEqual([
+      "U13",
+    ]);
 
-    expect(result.youthByDivision[2].label).toBe("Onderbouw");
-    expect(result.youthByDivision[2].range).toBe("U6–U11");
-    expect(result.youthByDivision[2].teams.map((t) => t.age)).toEqual([
+    expect(divisionGroup(teams, "Onderbouw").range).toBe("U6–U11");
+    expect(divisionGroup(teams, "Onderbouw").teams.map((t) => t.age)).toEqual([
       "U10",
       "U9",
       "U6",
     ]);
+  });
+
+  it("should group the reserves by psdId, with no age range", () => {
+    const teams = [
+      makeTeam({ _id: "a", age: "A", name: "Eerste Elftallen A" }),
+      makeTeam({
+        _id: "res",
+        age: "A",
+        psdId: "34",
+        name: "Reserven",
+        slug: "reserven",
+      }),
+      makeTeam({ _id: "u15", age: "U15", name: "KCVV Elewijt U15" }),
+    ];
+
+    const reserven = divisionGroup(teams, "Reserven");
+
+    expect(reserven.teams.map((t) => t.name)).toEqual(["Reserven"]);
+    expect(reserven.range).toBeUndefined();
+    // The reserves are not the A-ploeg, despite sharing its age code.
+    expect(groupTeamsForLanding(teams).aTeam?.name).toBe("Eerste Elftallen A");
+  });
+
+  it("should leave the reserves group empty when the roster has none", () => {
+    const teams = [makeTeam({ _id: "u15", age: "U15" })];
+    expect(divisionGroup(teams, "Reserven").teams).toHaveLength(0);
   });
 
   it("should return undefined for missing A-team or B-team", () => {
@@ -84,15 +125,11 @@ describe("groupTeamsForLanding", () => {
       makeTeam({ _id: "u21", age: "U21", name: "KCVV Elewijt U21" }),
     ];
 
-    const result = groupTeamsForLanding(teams);
-
-    // Bovenbouw: U21, U17
-    expect(result.youthByDivision[0].teams.map((t) => t.age)).toEqual([
+    expect(divisionGroup(teams, "Bovenbouw").teams.map((t) => t.age)).toEqual([
       "U21",
       "U17",
     ]);
-    // Middenbouw: U15, U15, U14
-    expect(result.youthByDivision[1].teams.map((t) => t.age)).toEqual([
+    expect(divisionGroup(teams, "Middenbouw").teams.map((t) => t.age)).toEqual([
       "U15",
       "U15",
       "U14",
@@ -104,19 +141,18 @@ describe("groupTeamsForLanding", () => {
       makeTeam({ age: "A", name: "Eerste Elftallen A" }),
       makeTeam({ age: "U15", name: "KCVV Elewijt U15" }),
     ];
-    const result = groupTeamsForLanding(teams);
-
-    expect(result.youthByDivision[0].teams).toHaveLength(0); // Bovenbouw: empty
-    expect(result.youthByDivision[1].teams).toHaveLength(1); // Middenbouw: U15
-    expect(result.youthByDivision[2].teams).toHaveLength(0); // Onderbouw: empty
+    expect(divisionGroup(teams, "Bovenbouw").teams).toHaveLength(0);
+    expect(divisionGroup(teams, "Middenbouw").teams).toHaveLength(1); // U15
+    expect(divisionGroup(teams, "Onderbouw").teams).toHaveLength(0);
   });
 
   it("should handle U19 in Bovenbouw", () => {
     const teams = [
       makeTeam({ _id: "u19", age: "U19", name: "KCVV Elewijt U19" }),
     ];
-    const result = groupTeamsForLanding(teams);
-    expect(result.youthByDivision[0].teams.map((t) => t.age)).toEqual(["U19"]);
+    expect(divisionGroup(teams, "Bovenbouw").teams.map((t) => t.age)).toEqual([
+      "U19",
+    ]);
   });
 
   it("should not include senior teams in youth divisions", () => {
@@ -131,6 +167,24 @@ describe("groupTeamsForLanding", () => {
 
     expect(allYouth).toHaveLength(1);
     expect(allYouth[0].age).toBe("U15");
+  });
+});
+
+describe("isAgeCode", () => {
+  it("should accept any U<n> code, including ones no division claims", () => {
+    expect(isAgeCode("U21")).toBe(true);
+    expect(isAgeCode("U6")).toBe(true);
+    // Deliberately broader than getYouthDivision — U5 is a real age code that
+    // falls outside Onderbouw's U6–U11 band. Callers that render the age want
+    // it; callers that place a team in a band must use getYouthDivision.
+    expect(isAgeCode("U5")).toBe(true);
+    expect(getYouthDivision("U5")).toBeNull();
+  });
+
+  it("should reject senior codes and absent ages", () => {
+    expect(isAgeCode("A")).toBe(false);
+    expect(isAgeCode("")).toBe(false);
+    expect(isAgeCode(undefined)).toBe(false);
   });
 });
 

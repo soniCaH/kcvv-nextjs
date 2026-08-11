@@ -43,7 +43,7 @@ export const YOUTH_TEAMS_CONTACT_QUERY =
 
 export const TEAMS_LANDING_QUERY =
   defineQuery(`*[_type == "team" && archived != true && showInNavigation != false && defined(age)] | order(name asc) {
-  _id, name, "slug": slug.current, age,
+  _id, psdId, name, "slug": slug.current, age,
   division, divisionFull, season, tagline,
   "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),
   staff[] { role, "member": member-> { firstName, lastName, functionTitle } }
@@ -216,6 +216,7 @@ function toTeamLandingItem(
     name: row.name ?? "",
     slug: row.slug ?? "",
     age: row.age ?? "",
+    psdId: row.psdId,
     division: row.division,
     divisionFull: row.divisionFull,
     season: row.season ?? null,

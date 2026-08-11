@@ -4,8 +4,10 @@ import type { ComponentType } from "react";
 import { cn } from "@/lib/utils/cn";
 import {
   DownloadSimple,
+  Envelope,
   Eye,
   FirstAid,
+  Handshake,
   Heart,
   House,
   Info,
@@ -19,8 +21,10 @@ import {
 
 const NAV_GLYPHS = {
   DownloadSimple,
+  Envelope,
   Eye,
   FirstAid,
+  Handshake,
   Heart,
   House,
   Info,

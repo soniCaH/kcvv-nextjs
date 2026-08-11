@@ -600,6 +600,7 @@ describe("TeamRepository", () => {
     ): TEAMS_LANDING_QUERY_RESULT[number] {
       return {
         _id: "team-1",
+        psdId: "1",
         name: "Eerste Elftallen A",
         slug: "eerste-elftallen-a",
         age: "A",
@@ -635,6 +636,7 @@ describe("TeamRepository", () => {
       expect(teams).toHaveLength(1);
       expect(teams[0]).toEqual({
         _id: "team-1",
+        psdId: "1",
         name: "Eerste Elftallen A",
         slug: "eerste-elftallen-a",
         age: "A",
