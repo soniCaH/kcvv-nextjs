@@ -12,7 +12,7 @@ export type HighlighterStrokeColor = "jersey" | "jersey-deep" | "ink" | "cream";
 // urlencoded hex (#) prefix for inlining inside an SVG data URL.
 const COLOR_FILL: Record<HighlighterStrokeColor, string> = {
   jersey: "%234acf52",
-  "jersey-deep": "%23008755",
+  "jersey-deep": "%23007c46",
   ink: "%230a0a0a",
   cream: "%23f5f1e6",
 };

@@ -68,14 +68,13 @@ panels. `ink-muted` is bylines / metadata / dividers.
 ## Jersey (brand green)
 
 The brand green. `jersey` is decorative/accent only (never text on cream);
-`jersey-deep` is for large headings and primary CTAs; `jersey-bright` is green
-text on dark interludes; `jersey-deep-dark` is the desaturated deep-green used
-in dark gradients.
+`jersey-deep` carries everything that is text — headings, primary CTAs and
+inline prose links alike; `jersey-bright` is green text on dark interludes;
+`jersey-deep-dark` is the desaturated deep-green used in dark gradients.
 
 <SwatchRow items={[
   { name: 'jersey (decorative / accents)', variable: '--color-jersey', hex: '#4acf52' },
-  { name: 'jersey-deep (headings / CTAs)', variable: '--color-jersey-deep', hex: '#008755' },
-  { name: 'jersey-link (inline body links — AA on cream)', variable: '--color-jersey-link', hex: '#007c46' },
+  { name: 'jersey-deep (headings / CTAs / inline links)', variable: '--color-jersey-deep', hex: '#007c46' },
   { name: 'jersey-bright (green text on ink)', variable: '--color-jersey-bright', hex: '#22c55e' },
   { name: 'jersey-deep-dark (dark gradients)', variable: '--color-jersey-deep-dark', hex: '#133d28' },
 ]} />
@@ -209,10 +208,10 @@ interludes, not on the cream surface.
     </tr>
     <tr>
       <td><code>--color-jersey-deep</code></td>
-      <td><code>#008755</code></td>
+      <td><code>#007c46</code></td>
       <td><div style={{ background: 'var(--color-jersey-deep)', height: '2.5rem', width: '100%', border: '1px solid var(--color-paper-edge)' }} /></td>
-      <td>Brand dark — large headings, primary CTAs</td>
-      <td><strong>4.05:1 — AA large-text (≥18pt) only, NOT body</strong></td>
+      <td>Brand dark — headings, primary CTAs, inline prose links</td>
+      <td>4.69:1 on cream — the only green that carries text</td>
     </tr>
     <tr>
       <td><code>--color-jersey-bright</code></td>
