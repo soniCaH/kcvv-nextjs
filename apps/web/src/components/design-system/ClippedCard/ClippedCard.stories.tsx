@@ -27,7 +27,7 @@ export const Playground: Story = {
     <ClippedCard>
       <div className="font-display max-w-[420px]">
         <p className="font-mono text-[11px] tracking-[0.08em] uppercase opacity-70">
-          Archief · 1909
+          Archief · Seizoen 26/27
         </p>
         <h3 className="text-display-sm mt-1">Het document.</h3>
         <p className="text-body-sm mt-3 leading-relaxed">

@@ -9,7 +9,13 @@ describe("llms.txt", () => {
     expect(llmsTxt).toContain("KCVV Elewijt");
     expect(llmsTxt).toContain("stamnummer 55");
     expect(llmsTxt).toContain("Er is maar één plezante compagnie");
-    expect(llmsTxt).toContain("1909");
+  });
+
+  // This file is repeated verbatim by systems that will never read
+  // /club/geschiedenis, so the origin travels with its qualification (#2435).
+  it("qualifies the club's origin instead of asserting a founding year", () => {
+    expect(llmsTxt).not.toMatch(/opgericht in \d{4}/i);
+    expect(llmsTxt).toMatch(/ontstaan uit fusies/i);
   });
 
   it("contains factual summary", () => {

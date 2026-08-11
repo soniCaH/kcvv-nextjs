@@ -59,7 +59,7 @@ When a task changes the architecture described in CLAUDE.md (new packages, renam
 
 Before the final commit on any branch, re-read every plan/doc file touched and verify that paths, script names, and code snippets match the current file tree. Stale plan files trigger the same review feedback as stale code.
 
-**Also re-verify `apps/web/public/llms.txt`** whenever routes are renamed/removed or club facts change — it hand-lists navigation paths and founding facts that silently drift (it shipped `/club/organigram` after the route was removed, and the founding year as 1924 instead of 1909). Cross-check its paths against the live route tree and its facts against `jsonld.ts` / footer constants.
+**Also re-verify `apps/web/public/llms.txt`** whenever routes are renamed/removed or club facts change — it hand-lists navigation paths and club facts that silently drift (it shipped `/club/organigram` long after the route was removed). Cross-check its paths against the live route tree and its facts against `apps/web/PRODUCT.md` → **Brand Commitments**, which is the authority. Note the club has **no** founding year on any surface but `/club/geschiedenis`: 1909 is inherited via mergers and is never asserted bare — `jsonld.ts` carries no `foundingDate` and the footer carries no year, so neither is a cross-check source (#2435).
 
 ### Documentation Standards
 

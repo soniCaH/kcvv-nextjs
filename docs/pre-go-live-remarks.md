@@ -273,7 +273,7 @@ breakpoints — relevant to sticky offsets.)
 
 Already in good shape — `public/llms.txt` (LLM-summary standard, served 200, robots-referenced), production robots allows all crawlers (AI ingestible), and strong JSON-LD across entities. Fixes:
 
-- ☐ **LLM-1** `[content]` **`llms.txt` founding year is wrong** — says "Opgericht in **1924**"; canonical is **1909** (owner-confirmed; `jsonld.ts:140 foundingDate` is correct). LLMs will repeat the wrong year. Fix to 1909.
+- ☑ **LLM-1** `[content]` **`llms.txt` origin claim** — superseded by #2422/#2435: the club states no founding year at all, only a qualified origin. Do not "fix" `llms.txt` or `jsonld.ts` back to a plain year; see PRODUCT.md → Brand Commitments, "Origin is told, never asserted".
 - ☐ **LLM-2** `[content]` `llms.txt` lists `/club/organigram`, which **is not a route** (organigram moved to `/hulp`). Fix the link. Also: `llms.txt` is hand-written/static → drift risk; add it to the "Plan & Doc Audit Before Closing a Branch" checklist (or generate it from the route map).
 - ☐ **LLM-3** `[infra]` _(decision)_ AI-training crawlers (GPTBot, CCBot, Google-Extended, ClaudeBot, PerplexityBot) are allowed **by omission** in `robots.ts`. Decide consciously: keep open (max chatbot/answer-engine visibility — recommended for a club) vs add per-bot `disallow`.
 - ↪ **LLM-4** OG-1 (broken `og:image`/`twitter:image`) + SEO-1 (`<title>` doubling) also degrade AI answer-card / link-unfurl presentation. Fixing those (already captured) covers the LLM angle.

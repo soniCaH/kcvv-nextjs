@@ -97,14 +97,13 @@ describe("SiteFooter", () => {
     ).toHaveAttribute("href", "/club/praktische-informatie");
   });
 
-  it("renders copyright with founding year 1909 and current year", () => {
-    render(<SiteFooter />);
-    const currentYear = new Date().getFullYear();
-    expect(
-      screen.getByText(
-        new RegExp(`©\\s*1909.*${currentYear}.*KCVV.*ELEWIJT`, "i"),
-      ),
-    ).toBeInTheDocument();
+  it("renders the colofon as club name plus address, with no © and no 1909", () => {
+    const { container } = render(<SiteFooter />);
+    expect(screen.getByText(/Driesstraat 32/).closest("p")).toHaveTextContent(
+      /KCVV\s*Elewijt\s*·\s*Driesstraat/,
+    );
+    expect(container).not.toHaveTextContent(/©/);
+    expect(container).not.toHaveTextContent(/1909/);
   });
 
   it("renders the club address in the colofon", () => {
