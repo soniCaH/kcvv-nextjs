@@ -11,7 +11,10 @@ import type { Metadata } from "next";
 import { Effect } from "effect";
 import { DateTime } from "luxon";
 import { runPromise } from "@/lib/effect/runtime";
-import { BffService } from "@/lib/effect/services/BffService";
+import {
+  BffService,
+  BFF_FAN_OUT_CONCURRENCY,
+} from "@/lib/effect/services/BffService";
 import { TeamRepository } from "@/lib/repositories/team.repository";
 import type { Match } from "@/lib/effect/schemas/match.schema";
 import { KCVV_CLUB_ID } from "@/lib/constants";
@@ -97,7 +100,7 @@ async function fetchScheurkalenderData(): Promise<ScheurkalenderData> {
             Effect.catchAll(() => Effect.succeed([] as readonly Match[])),
           ),
         ),
-        { concurrency: 5 },
+        { concurrency: BFF_FAN_OUT_CONCURRENCY },
       );
 
       // League only, labelled by the queried squad (getMatches doesn't set

@@ -51,6 +51,19 @@ export class BffService extends Context.Tag("BffService")<
 const DEFAULT_TIMEOUT = "30 seconds";
 
 /**
+ * One `Effect.all` concurrency for every per-team BFF fan-out (`/kalender`,
+ * `/scheurkalender`, `sitemap.ts`, `calendar.ics`). Production Sanity returns
+ * 17 teams with a psdId, so this clears the real list in a single wave — the
+ * old value of 5 cost four sequential waves per visitor, which only went
+ * unnoticed while a TTL sat in front of these reads (#2389, #2441).
+ *
+ * Deliberately a ceiling rather than `"unbounded"`: the BFF owns rate limiting
+ * and single-flight (#2328), so the client does not need to throttle, but a
+ * bound keeps an unexpectedly long team list from bursting arbitrarily wide.
+ */
+export const BFF_FAN_OUT_CONCURRENCY = 20;
+
+/**
  * This service adds no cache of its own — do not put one back (#2389). The BFF
  * owns freshness (#2326) and rate limiting + single-flight (#2328), so a second
  * TTL here bought nothing and actively froze: `unstable_cache`'s

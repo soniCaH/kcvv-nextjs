@@ -118,7 +118,8 @@ async function fetchRecentMatchIds(teamPsdIds: string[]): Promise<number[]> {
   try {
     const { Effect } = await import("effect");
     const { runPromise } = await import("@/lib/effect/runtime");
-    const { BffService } = await import("@/lib/effect/services/BffService");
+    const { BffService, BFF_FAN_OUT_CONCURRENCY } =
+      await import("@/lib/effect/services/BffService");
 
     const validTeamIds = teamPsdIds
       .map((id) => parseInt(id, 10))
@@ -141,7 +142,7 @@ async function fetchRecentMatchIds(teamPsdIds: string[]): Promise<number[]> {
     );
 
     const results = await runPromise(
-      Effect.all(effects, { concurrency: "unbounded" }),
+      Effect.all(effects, { concurrency: BFF_FAN_OUT_CONCURRENCY }),
     );
 
     const allMatchIds: number[] = [];

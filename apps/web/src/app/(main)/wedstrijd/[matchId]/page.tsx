@@ -28,6 +28,7 @@
  * inline `secondary` "Lees ook …" link instead (owner decision, #1914).
  */
 
+import { cache } from "react";
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -102,12 +103,7 @@ export async function generateMetadata({
   }
 
   try {
-    const match = await runPromise(
-      Effect.gen(function* () {
-        const bff = yield* BffService;
-        return yield* bff.getMatchDetail(numericId);
-      }),
-    );
+    const match = await fetchMatchOrNotFound(numericId);
 
     const title = formatMatchTitle(match);
     const description = formatMatchDescription(match);
@@ -124,6 +120,9 @@ export async function generateMetadata({
       },
     };
   } catch {
+    // Also swallows the `notFound()` sentinel for an unknown matchId, which is
+    // fine: the page component awaits the same memoized promise and re-throws
+    // it, so the 404 still renders — with exactly this title.
     return {
       title: "Wedstrijd niet gevonden",
     };
@@ -136,8 +135,16 @@ export async function generateMetadata({
  * surfaces as a 404 page. Other BFF errors (5xx, parse failures, timeouts)
  * bubble up — Next's error boundary handles them, which is what we want
  * for service outages: don't silently disguise them as "not found".
+ *
+ * Wrapped in React `cache()` so `generateMetadata` and the page component
+ * share one read: they run in the same render pass with the same `matchId`,
+ * and Next's `fetch` memoization cannot collapse them because
+ * `@effect/platform` always attaches an `AbortSignal`, which opts the request
+ * out of it (#2441). Per-render only — no TTL, see `BffServiceLive` (#2389).
  */
-async function fetchMatchOrNotFound(matchId: number): Promise<MatchDetail> {
+const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
+  matchId: number,
+): Promise<MatchDetail> {
   return runPromise(
     Effect.gen(function* () {
       const bff = yield* BffService;
@@ -149,6 +156,33 @@ async function fetchMatchOrNotFound(matchId: number): Promise<MatchDetail> {
       // `apps/web/src/app/sitemap.ts` HttpNotFound handler.
       Effect.catchTag("HttpNotFound", () => Effect.sync(() => notFound())),
     ),
+  );
+});
+
+/**
+ * Match-day standings (#2162) — league matches only. A cup/friendly/other
+ * match has no meaningful league table, so we gate on the BFF-surfaced
+ * structured `competitionType` (never on string-matching the Dutch label) and
+ * a resolved `kcvv_team_id`; anything else triggers no ranking fetch at all.
+ * Resilient: a BFF failure degrades to an empty table (auto-hidden), never a
+ * 500 — mirrors the `/ploegen/[slug]` standings fetch.
+ */
+async function fetchStandings(
+  match: MatchDetail,
+): Promise<readonly RankingEntry[]> {
+  if (match.competitionType !== "league" || match.kcvv_team_id == null) {
+    return [];
+  }
+  const standingsTeamId = match.kcvv_team_id;
+  return runPromise(
+    Effect.gen(function* () {
+      const bff = yield* BffService;
+      return yield* bff
+        .getRanking(standingsTeamId)
+        .pipe(
+          Effect.catchAll(() => Effect.succeed([] as readonly RankingEntry[])),
+        );
+    }),
   );
 }
 
@@ -162,27 +196,71 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
   const match = await fetchMatchOrNotFound(numericId);
 
-  // Fetch keeper PSD ids from Sanity (cached for 24h in the repo's
-  // module-scope memo + Sanity CDN — see PlayerRepository.findKeeperPsdIds).
-  // Used to flag KCVV-side keepers; opponent side falls back to the
-  // jersey-#1 heuristic. Returns `undefined` (not an empty Set) on Sanity
-  // failure so `enrichLineupWithKeeperFlag` can detect lookup failure and
-  // degrade BOTH sides to the jersey-#1 heuristic.
-  const keeperPsdIds: ReadonlySet<string> | undefined = await runPromise(
-    Effect.gen(function* () {
-      const repo = yield* PlayerRepository;
-      return yield* repo.findKeeperPsdIds();
-    }).pipe(
-      Effect.catchAllCause((cause) => {
-        console.warn(
-          "[wedstrijd/[matchId]] Sanity keeper lookup failed, " +
-            "falling back to jersey-#1 heuristic on both sides.",
-          { cause },
-        );
-        return Effect.succeed(undefined);
-      }),
-    ),
-  );
+  // These four depend only on `match` / `matchId` and never on each other, so
+  // they run as one wave instead of four serialized round-trips — `max()`
+  // latency rather than `sum()` (#2441). Each keeps its own fallback: none of
+  // them is load-bearing enough to take the page down.
+  const [keeperPsdIds, linkedArticles, galleries, standings] =
+    await Promise.all([
+      // Keeper PSD ids from Sanity (cached for 24h in the repo's module-scope
+      // memo + Sanity CDN — see PlayerRepository.findKeeperPsdIds). Used to
+      // flag KCVV-side keepers; opponent side falls back to the jersey-#1
+      // heuristic. Returns `undefined` (not an empty Set) on Sanity failure so
+      // `enrichLineupWithKeeperFlag` can detect lookup failure and degrade
+      // BOTH sides to the jersey-#1 heuristic.
+      runPromise(
+        Effect.gen(function* () {
+          const repo = yield* PlayerRepository;
+          return yield* repo.findKeeperPsdIds();
+        }).pipe(
+          Effect.catchAllCause((cause) => {
+            console.warn(
+              "[wedstrijd/[matchId]] Sanity keeper lookup failed, " +
+                "falling back to jersey-#1 heuristic on both sides.",
+              { cause },
+            );
+            return Effect.succeed(undefined);
+          }),
+        ),
+      ),
+      // The editorial article(s) linked to this match (#1914). Matches are
+      // BFF/PSD-native, so the link is the article's `linkedMatch` string id —
+      // the route `matchId` itself. Resilient: a Sanity outage degrades to "no
+      // card" rather than 500-ing the whole match page.
+      runPromise(
+        Effect.gen(function* () {
+          const repo = yield* ArticleRepository;
+          return yield* repo.findByLinkedMatch(matchId);
+        }).pipe(
+          Effect.catchAllCause((cause) => {
+            console.warn(
+              "[wedstrijd/[matchId]] linked-article lookup failed; " +
+                "rendering without the article link card.",
+              { cause },
+            );
+            return Effect.succeed<MatchArticleVM[]>([]);
+          }),
+        ),
+      ),
+      // Photo galleries linked to this match (#1471). A match can have several
+      // (warmup / match / viering); the repo returns them chronologically.
+      // Resilient: a Sanity outage degrades to "no galleries".
+      runPromise(
+        Effect.gen(function* () {
+          const repo = yield* PhotoGalleryRepository;
+          return yield* repo.findByLinkedMatch(matchId);
+        }).pipe(
+          Effect.catchAllCause((cause) => {
+            console.warn(
+              "[wedstrijd/[matchId]] gallery lookup failed; rendering without galleries.",
+              { cause },
+            );
+            return Effect.succeed<GalleryCardVM[]>([]);
+          }),
+        ),
+      ),
+      fetchStandings(match),
+    ]);
 
   const homeTeam = transformHomeTeam(match);
   const awayTeam = transformAwayTeam(match);
@@ -215,71 +293,11 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const hasLineup = homeLineup.length > 0 || awayLineup.length > 0;
   const hasEvents = events.length > 0;
 
-  // Fetch the editorial article(s) linked to this match (#1914). Matches are
-  // BFF/PSD-native, so the link is the article's `linkedMatch` string id — the
-  // route `matchId` itself. `selectMatchArticle` applies the per-state truth
-  // table to pick the hero article + (optional) inline secondary link.
-  // Resilient: a Sanity outage degrades to "no card" rather than 500-ing the
-  // whole match page, mirroring the keeper-lookup fallback above.
-  const linkedArticles = await runPromise(
-    Effect.gen(function* () {
-      const repo = yield* ArticleRepository;
-      return yield* repo.findByLinkedMatch(matchId);
-    }).pipe(
-      Effect.catchAllCause((cause) => {
-        console.warn(
-          "[wedstrijd/[matchId]] linked-article lookup failed; " +
-            "rendering without the article link card.",
-          { cause },
-        );
-        return Effect.succeed<MatchArticleVM[]>([]);
-      }),
-    ),
-  );
+  // `selectMatchArticle` applies the per-state truth table to pick the hero
+  // article + (optional) inline secondary link.
   const articleSelection = selectMatchArticle(linkedArticles, match.status);
   const hasArticle = articleSelection !== null;
-
-  // Photo galleries linked to this match (#1471). A match can have several
-  // (warmup / match / viering); the repo returns them chronologically. Resilient:
-  // a Sanity outage degrades to "no galleries" rather than 500-ing the page.
-  const galleries: GalleryCardVM[] = await runPromise(
-    Effect.gen(function* () {
-      const repo = yield* PhotoGalleryRepository;
-      return yield* repo.findByLinkedMatch(matchId);
-    }).pipe(
-      Effect.catchAllCause((cause) => {
-        console.warn(
-          "[wedstrijd/[matchId]] gallery lookup failed; rendering without galleries.",
-          { cause },
-        );
-        return Effect.succeed<GalleryCardVM[]>([]);
-      }),
-    ),
-  );
   const hasGallery = galleries.length > 0;
-
-  // Match-day standings (#2162) — league matches only. A cup/friendly/other
-  // match has no meaningful league table, so we gate on the BFF-surfaced
-  // structured `competitionType` (never on string-matching the Dutch label) and
-  // a resolved `kcvv_team_id`; anything else triggers no ranking fetch at all.
-  // Resilient: a BFF failure degrades to an empty table (auto-hidden), never a
-  // 500 — mirrors the `/ploegen/[slug]` standings fetch.
-  let standings: readonly RankingEntry[] = [];
-  if (match.competitionType === "league" && match.kcvv_team_id != null) {
-    const standingsTeamId = match.kcvv_team_id;
-    standings = await runPromise(
-      Effect.gen(function* () {
-        const bff = yield* BffService;
-        return yield* bff
-          .getRanking(standingsTeamId)
-          .pipe(
-            Effect.catchAll(() =>
-              Effect.succeed([] as readonly RankingEntry[]),
-            ),
-          );
-      }),
-    );
-  }
   const hasStandings = standings.length > 0;
 
   const matchLabel = formatMatchTitle(match);
