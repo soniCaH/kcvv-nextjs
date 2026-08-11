@@ -67,6 +67,7 @@ import {
 import { PageContainer, SectionStack } from "@/components/design-system";
 import type { SectionConfig } from "@/components/design-system";
 import { mapMatchesToUpcomingMatches } from "@/lib/mappers";
+import { getTeamMatches } from "@/lib/server/match-data";
 import { DEFAULT_OG_IMAGE, SITE_CONFIG } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildSportsClubJsonLd, buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
@@ -203,14 +204,11 @@ export default async function HomePage() {
   // matches feed. Sorted by slug so a-ploeg renders before b-ploeg.
   const seniorTeams = selectSeniorTeams(teamsResult);
 
+  // Deduped against this route group's layout `<MatchStripSlot>`, which wants
+  // the same A-side psdId — see `getTeamMatches` (#2441).
   const firstTeamsMatches = await Promise.all(
     seniorTeams.map((team) =>
-      runPromise(
-        Effect.gen(function* () {
-          const bff = yield* BffService;
-          return yield* bff.getMatches(Number(team.psdId));
-        }).pipe(Effect.catchAll(() => Effect.succeed(null))),
-      ),
+      getTeamMatches(Number(team.psdId)).catch(() => null),
     ),
   );
 

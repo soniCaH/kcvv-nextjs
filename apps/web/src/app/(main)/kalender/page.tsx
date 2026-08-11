@@ -5,7 +5,10 @@
 
 import { Effect } from "effect";
 import { runPromise } from "@/lib/effect/runtime";
-import { BffService } from "@/lib/effect/services/BffService";
+import {
+  BffService,
+  BFF_FAN_OUT_CONCURRENCY,
+} from "@/lib/effect/services/BffService";
 import { TeamRepository } from "@/lib/repositories/team.repository";
 import {
   EventRepository,
@@ -64,8 +67,24 @@ async function fetchCalendarData(): Promise<CalendarData> {
       const teamRepo = yield* TeamRepository;
       const eventRepo = yield* EventRepository;
 
-      // Fetch teams first to know which PSD IDs to query
-      const allTeams = yield* teamRepo.findAll();
+      // Teams first, to know which PSD IDs to query. The merged event feed —
+      // `event` docs + `articleType:event` articles (Phase 6.E, #1968), so
+      // event-articles surface on the calendar alongside matches — depends on
+      // neither the team list nor the match fan-out, so it rides along here
+      // instead of trailing the whole fan-out on a `force-dynamic` route
+      // (#2441). Graceful degradation on failure: a Sanity error yields an
+      // empty feed, not a crash.
+      const [allTeams, feedItems] = yield* Effect.all(
+        [
+          teamRepo.findAll(),
+          eventRepo
+            .findUpcomingForList()
+            .pipe(
+              Effect.catchAll(() => Effect.succeed([] as EventListItemVM[])),
+            ),
+        ],
+        { concurrency: "unbounded" },
+      );
       const teamsWithPsd = allTeams.filter((t) => t.psdId !== null);
 
       // Fetch full-season matches for all teams in parallel.
@@ -82,7 +101,7 @@ async function fetchCalendarData(): Promise<CalendarData> {
             Effect.catchAll(() => Effect.succeed([] as readonly Match[])),
           ),
         ),
-        { concurrency: 5 },
+        { concurrency: BFF_FAN_OUT_CONCURRENCY },
       );
 
       // Flatten, enrich with team label, and deduplicate by match ID.
@@ -100,14 +119,6 @@ async function fetchCalendarData(): Promise<CalendarData> {
           if (!map.has(cal.id)) map.set(cal.id, cal);
           return map;
         }, new Map<number, CalendarMatch>());
-
-      // Fetch the merged event feed — `event` docs + `articleType:event`
-      // articles (Phase 6.E, #1968) — so event-articles surface on the
-      // calendar alongside matches. Graceful degradation on failure: a Sanity
-      // error yields an empty feed, not a crash.
-      const feedItems = yield* eventRepo
-        .findUpcomingForList()
-        .pipe(Effect.catchAll(() => Effect.succeed([] as EventListItemVM[])));
 
       const teamInfos: CalendarTeamInfo[] = teamsWithPsd.map((t) => ({
         id: t.id,

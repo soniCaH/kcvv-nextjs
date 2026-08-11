@@ -10,6 +10,7 @@ import {
   selectSeniorTeams,
   type SeniorTeamCandidate,
 } from "@/components/home/FirstTeamsBlock/first-teams";
+import type { Match } from "@kcvv/api-contract";
 import type { ScheduleMatch } from "@/components/match/types";
 
 /**
@@ -37,6 +38,41 @@ export function pickFirstTeamPsdId(
   const first = selectSeniorTeams(teams)[0];
   return first?.psdId ? Number(first.psdId) : null;
 }
+
+/**
+ * A team's full season feed, deduplicated per render.
+ *
+ * The homepage and the `<MatchStrip>` in its layout both want the A side's
+ * feed, and nothing else collapses that into one read: Next's `fetch`
+ * memoization opts out whenever the caller passes an `AbortSignal`, which
+ * `@effect/platform`'s HTTP client always does — so 100% of BFF traffic
+ * bypasses it and the dedupe has to be explicit (#2441).
+ *
+ * This is per-render memoization only. It is not a TTL, and no `unstable_cache`
+ * belongs in front of it — see the note on `BffServiceLive` (#2389). For the
+ * same reason this helper must stay out of `api/calendar.ics/route.ts`, whose
+ * reads *are* wrapped in `unstable_cache`.
+ *
+ * Reach for it on any surface that can co-render `<MatchStripSlot />` — the
+ * (landing) layout mounts it, as do `/ploegen/[slug]`, `/wedstrijd/[matchId]`
+ * and `/spelers/[slug]`. Elsewhere (`/kalender`, `/scheurkalender`,
+ * `sitemap.ts`) call `bff.getMatches` inside your own `Effect.all`: there is no
+ * second reader to dedupe against, and those sites need the tagged error
+ * channel this helper flattens away.
+ *
+ * Rejects on a BFF failure; each call site owns its own fallback, because they
+ * disagree about what "no matches" should mean.
+ */
+export const getTeamMatches = cache(async function getTeamMatches(
+  psdId: number,
+): Promise<readonly Match[]> {
+  return runPromise(
+    Effect.gen(function* () {
+      const bff = yield* BffService;
+      return yield* bff.getMatches(psdId);
+    }),
+  );
+});
 
 /**
  * Fetch the first team's last result and next fixture for `<MatchStrip>`.
@@ -69,12 +105,7 @@ export const getFirstTeamStripData = cache(
       const psdId = pickFirstTeamPsdId(teams);
       if (psdId === null) return null;
 
-      const matches = await runPromise(
-        Effect.gen(function* () {
-          const bff = yield* BffService;
-          return yield* bff.getMatches(psdId);
-        }),
-      );
+      const matches = await getTeamMatches(psdId);
 
       const now = new Date();
       const lastResult = pickLastResult(matches, now);

@@ -21,6 +21,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd, buildSportsTeamJsonLd } from "@/lib/seo/jsonld";
 import { PageViewTracker, TrackInView } from "@/components/analytics";
 import { MatchStripSlot } from "@/components/layout/MatchStrip";
+import { getTeamMatches } from "@/lib/server/match-data";
 import { StripedSeam } from "@/components/design-system/StripedSeam";
 import { PageContainer } from "@/components/design-system/PageContainer";
 import { TeamHero } from "@/components/team/TeamHero";
@@ -88,28 +89,21 @@ interface BffData {
 
 async function fetchBffData(psdTeamId: number): Promise<BffData | null> {
   try {
-    const [matches, standings] = await runPromise(
-      Effect.gen(function* () {
-        const bff = yield* BffService;
-        return yield* Effect.all(
-          [
-            bff
-              .getMatches(psdTeamId)
-              .pipe(
-                Effect.catchAll(() => Effect.succeed([] as readonly Match[])),
-              ),
-            bff
-              .getRanking(psdTeamId)
-              .pipe(
-                Effect.catchAll(() =>
-                  Effect.succeed([] as readonly RankingEntry[]),
-                ),
-              ),
-          ],
-          { concurrency: "unbounded" },
-        );
-      }),
-    );
+    const [matches, standings] = await Promise.all([
+      // Via `getTeamMatches` because this page mounts its own
+      // `<MatchStripSlot />` further down, and on `/ploegen/eerste-elftallen-a`
+      // the strip resolves to this very psdId — the same double-read the
+      // homepage had (#2441).
+      getTeamMatches(psdTeamId).catch(() => [] as readonly Match[]),
+      runPromise(
+        Effect.gen(function* () {
+          const bff = yield* BffService;
+          return yield* bff.getRanking(psdTeamId);
+        }).pipe(
+          Effect.catchAll(() => Effect.succeed([] as readonly RankingEntry[])),
+        ),
+      ),
+    ]);
     return { matches, standings, teamId: psdTeamId };
   } catch {
     return null;
@@ -128,18 +122,21 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
   if (!team) notFound();
 
-  const relatedArticles = await runPromise(
-    Effect.gen(function* () {
-      const repo = yield* ArticleRepository;
-      return yield* repo.findRelated(team.id);
-    }),
-  );
-
   const psdTeamId = team.psdId ? parseInt(team.psdId, 10) : NaN;
-  const bffData =
+
+  // Both depend only on `team`, never on each other, so they share one wave
+  // rather than serializing Sanity behind the BFF pair (#2441).
+  const [relatedArticles, bffData] = await Promise.all([
+    runPromise(
+      Effect.gen(function* () {
+        const repo = yield* ArticleRepository;
+        return yield* repo.findRelated(team.id);
+      }),
+    ),
     Number.isFinite(psdTeamId) && psdTeamId > 0
-      ? await fetchBffData(psdTeamId)
-      : null;
+      ? fetchBffData(psdTeamId)
+      : null,
+  ]);
 
   const standings = bffData?.standings ?? [];
   const scheduleMatches = (bffData?.matches ?? []).map(

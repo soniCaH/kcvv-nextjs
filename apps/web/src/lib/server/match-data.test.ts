@@ -20,6 +20,7 @@ vi.mock("@/components/match/transform", () => ({
 import { runPromise } from "@/lib/effect/runtime";
 import {
   getFirstTeamStripData,
+  getTeamMatches,
   pickFirstTeamPsdId,
   RESULT_RECENCY_MS,
 } from "./match-data";
@@ -69,6 +70,25 @@ describe("pickFirstTeamPsdId", () => {
     expect(
       pickFirstTeamPsdId([{ psdId: "999", age: "U21", slug: "u21" }]),
     ).toBe(null);
+  });
+});
+
+describe("getTeamMatches", () => {
+  it("returns the team's season feed", async () => {
+    runPromiseMock.mockResolvedValueOnce([{ id: 7 }]);
+
+    await expect(getTeamMatches(111)).resolves.toEqual([{ id: 7 }]);
+  });
+
+  // The dedupe itself is React's `cache()`, mocked to a passthrough here. What
+  // this module owns is the contract around it: the helper stays unopinionated
+  // about failure so each call site can pick its own fallback — the homepage
+  // needs `null` to tell an outage from an empty feed (#2399), the strip drops
+  // silently.
+  it("rejects rather than swallowing a BFF failure", async () => {
+    runPromiseMock.mockRejectedValueOnce(new Error("BFF down"));
+
+    await expect(getTeamMatches(111)).rejects.toThrow("BFF down");
   });
 });
 

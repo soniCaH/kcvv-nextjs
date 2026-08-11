@@ -38,7 +38,7 @@ import {
 } from "@/components/article/EditorialHero";
 import { MatchGoalsBlock } from "@/components/article/blocks/MatchGoalsBlock";
 import { LinkButton } from "@/components/design-system";
-import { toHeroMatchData } from "./utils";
+import { parsePsdMatchId, toHeroMatchData } from "./utils";
 import { ArticleMetadata } from "@/components/article/ArticleMetadata";
 import { ArticleBodyMotion } from "@/components/article/ArticleBodyMotion";
 import {
@@ -333,54 +333,50 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     : undefined;
 
   // matchPreview / matchRecap server-fetch the linked PSD match (5.d-mat).
-  // The match id is a plain string copied from /wedstrijd/[matchId]; guard
-  // against missing/non-numeric values. Match chrome (score bar + Doelpunten)
-  // is enhancement — any BFF failure (404, outage, parse) degrades to no
-  // chrome rather than 404'ing or crashing the article.
+  // The match id is a plain string copied from /wedstrijd/[matchId], so
+  // `parsePsdMatchId` gates it to a positive safe integer. Match chrome
+  // (score bar + Doelpunten) is enhancement — any BFF failure (404, outage,
+  // parse) degrades to no chrome rather than 404'ing or crashing the article.
   const isMatchArticle =
     article.articleType === "matchPreview" ||
     article.articleType === "matchRecap";
-  const matchId =
-    isMatchArticle && article.linkedMatch
-      ? Number(article.linkedMatch)
-      : Number.NaN;
-  const matchDetail: MatchDetail | null = Number.isFinite(matchId)
-    ? await runPromise(
-        Effect.gen(function* () {
-          const bff = yield* BffService;
-          return yield* bff.getMatchDetail(matchId);
-        }).pipe(
-          Effect.catchAll(() => Effect.succeed<MatchDetail | null>(null)),
-        ),
-      )
-    : null;
-  const heroMatch = matchDetail ? toHeroMatchData(matchDetail) : null;
-
+  const matchId = isMatchArticle ? parsePsdMatchId(article.linkedMatch) : null;
   const hasEditorialArticles =
     article.relatedArticles && article.relatedArticles.length > 0;
 
-  let articleRelatedItems: RelatedContentItem[];
-  if (hasEditorialArticles) {
-    articleRelatedItems = mapEditorialArticles(
-      article.relatedArticles ?? undefined,
-    );
-  } else {
-    articleRelatedItems = await runPromise(
-      Effect.gen(function* () {
-        const bff = yield* BffService;
-        return yield* bff.getRelated(article.id);
-      }).pipe(
-        Effect.map(mapBffRelatedItems),
-        // Broad catch is intentional: this route uses generateStaticParams,
-        // so the BFF is called at build time for every article. Build
-        // workers (local dev, CI, Vercel) may not reach the Worker, and
-        // rendering must still succeed without a related-items block.
-        // Related content is editorial polish, not load-bearing — falling
-        // back to [] is preferable to failing the article page render.
-        Effect.catchAll(() => Effect.succeed([])),
-      ),
-    );
-  }
+  // The linked match and the related-items block are independent of each
+  // other, so they run as one wave rather than two serialized round-trips
+  // (#2441).
+  const [matchDetail, articleRelatedItems] = await Promise.all([
+    matchId !== null
+      ? runPromise(
+          Effect.gen(function* () {
+            const bff = yield* BffService;
+            return yield* bff.getMatchDetail(matchId);
+          }).pipe(
+            Effect.catchAll(() => Effect.succeed<MatchDetail | null>(null)),
+          ),
+        )
+      : null,
+    hasEditorialArticles
+      ? mapEditorialArticles(article.relatedArticles ?? undefined)
+      : runPromise(
+          Effect.gen(function* () {
+            const bff = yield* BffService;
+            return yield* bff.getRelated(article.id);
+          }).pipe(
+            Effect.map(mapBffRelatedItems),
+            // Broad catch is intentional: this route uses generateStaticParams,
+            // so the BFF is called at build time for every article. Build
+            // workers (local dev, CI, Vercel) may not reach the Worker, and
+            // rendering must still succeed without a related-items block.
+            // Related content is editorial polish, not load-bearing — falling
+            // back to [] is preferable to failing the article page render.
+            Effect.catchAll(() => Effect.succeed<RelatedContentItem[]>([])),
+          ),
+        ),
+  ]);
+  const heroMatch = matchDetail ? toHeroMatchData(matchDetail) : null;
 
   const relatedItems = mergeRelatedItems({
     curated: mapCuratedRelatedContent(article.relatedContent),

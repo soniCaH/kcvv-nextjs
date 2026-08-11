@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MatchDetail } from "@kcvv/api-contract";
-import { toHeroMatchData } from "./utils";
+import { parsePsdMatchId, toHeroMatchData } from "./utils";
 
 // Plain-object cast mirrors the wedstrijd/[matchId] utils test fixture —
 // toHeroMatchData only reads fields, so a structural object is sufficient.
@@ -115,5 +115,24 @@ describe("toHeroMatchData", () => {
     expect(data.homeScore).toBeUndefined();
     expect(data.awayScore).toBeUndefined();
     expect(data.kickoffTime).toBe("15:00");
+  });
+});
+
+describe("parsePsdMatchId", () => {
+  it("accepts a positive integer id", () => {
+    expect(parsePsdMatchId("12345")).toBe(12345);
+  });
+
+  it.each([
+    ["zero", "0"],
+    ["a negative id", "-1"],
+    ["a fractional id", "12.5"],
+    ["a value past MAX_SAFE_INTEGER", "9007199254740993"],
+    ["a non-numeric value", "abc"],
+    ["an empty string", ""],
+    ["null", null],
+    ["undefined", undefined],
+  ])("returns null for %s, so getMatchDetail is never called", (_, input) => {
+    expect(parsePsdMatchId(input)).toBeNull();
   });
 });

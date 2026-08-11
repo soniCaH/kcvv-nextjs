@@ -10,6 +10,22 @@ import { formatWidgetDate } from "@/lib/utils/dates";
 import { extractMatchTime } from "@/lib/utils/match-time";
 
 /**
+ * Parse the PSD match id off an article's `linkedMatch`. The field is a plain
+ * string an editor copies out of `/wedstrijd/[matchId]`, so it can hold
+ * anything. Only a positive safe integer addresses a real match — `"0"`, a
+ * negative, a fraction or a value past `Number.MAX_SAFE_INTEGER` would reach
+ * the BFF as a guaranteed-miss round-trip. Returns `null` when there is
+ * nothing worth fetching.
+ */
+export function parsePsdMatchId(
+  linkedMatch: string | null | undefined,
+): number | null {
+  if (!linkedMatch) return null;
+  const matchId = Number(linkedMatch);
+  return Number.isSafeInteger(matchId) && matchId > 0 ? matchId : null;
+}
+
+/**
  * Map the BFF `MatchDetail` onto the score-forward hero's `HeroMatchData`
  * (5.d-mat). KCVV side is id-driven, never name-based (see
  * `feedback_psd_match_identification`):
