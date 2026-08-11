@@ -18,7 +18,7 @@ export const TOKENS = {
   inkSoft: "#1f1f1f",
   inkMuted: "#6b6b6b",
   jersey: "#4acf52",
-  jerseyDeep: "#008755",
+  jerseyDeep: "#007c46",
   jerseyDeepDark: "#133d28",
   warm: "#f0c264",
   /** `--color-card-red` — the "brick" accent for negative sentiment. */

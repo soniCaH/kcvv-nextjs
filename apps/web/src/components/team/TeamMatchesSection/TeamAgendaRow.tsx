@@ -176,7 +176,9 @@ export function TeamAgendaRow({
   const outcome = computeOutcome(match, isHome);
   const isPlayed = isPlayedMatch(match.status);
 
-  // White on jersey-deep (4.56:1) passes WCAG AA; cream (#f5f1e6 → 4.04:1) does not.
+  // White on jersey-deep, inherited from the pre-#2395 green when cream missed
+  // AA there. Both clear it now (white 5.29:1, cream 4.69:1) — see DESIGN.md
+  // "Chips / Labels" for the open reconcile-to-cream question.
   const monoClass = featured ? "text-white" : "text-ink-muted";
 
   const hasScoreline =

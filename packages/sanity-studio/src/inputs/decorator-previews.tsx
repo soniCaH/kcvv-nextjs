@@ -15,7 +15,7 @@ import type {BlockDecoratorProps} from 'sanity'
  */
 
 // --color-jersey-deep (apps/web/src/app/globals.css).
-const JERSEY_DEEP = '#008755'
+const JERSEY_DEEP = '#007c46'
 
 export function PullquoteDecorator(props: BlockDecoratorProps) {
   return (

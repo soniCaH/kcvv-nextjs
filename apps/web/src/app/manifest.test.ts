@@ -35,7 +35,7 @@ describe("manifest.ts", () => {
   // ICON-2 — brand colors: jersey-deep theme, cream background.
   it("uses brand theme/background colors", () => {
     expect(result.theme_color).toBe(BRAND.primaryColor);
-    expect(result.theme_color).toBe("#008755"); // jersey-deep
+    expect(result.theme_color).toBe("#007c46"); // jersey-deep
     expect(result.background_color).toBe(BRAND.backgroundColor);
     expect(result.background_color).toBe("#f5f1e6"); // cream
   });

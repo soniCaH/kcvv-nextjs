@@ -113,7 +113,8 @@ export function TeamFlagship({
         className={cn(
           "mt-2 inline-flex items-center gap-1 border-2 px-4 py-2 font-mono text-[11px] tracking-[0.1em] uppercase transition-all duration-300 group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-none",
           isA
-            ? // white (not cream) text — cream on jersey-deep is 4.04:1, below AA
+            ? // white (not cream), inherited from the pre-#2395 green; both
+              // clear on today's jersey-deep. See DESIGN.md "Chips / Labels".
               "border-cream text-white shadow-[3px_3px_0_0_var(--color-cream)]"
             : "border-ink text-ink shadow-[3px_3px_0_0_var(--color-ink)]",
         )}

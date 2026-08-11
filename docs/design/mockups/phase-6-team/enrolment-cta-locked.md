@@ -84,9 +84,18 @@ height="md">` precedes it, exactly like every other section. Reuses the page
 - Rejected: V1 (cream card — quieter, lower CTA prominence); V3 (split poster —
   adds a net-new 2-column layout with no precedent).
 
-### Card shade + contrast (drill round 4)
+### Card shade + contrast (drill round 4) — **superseded by #2395**
 
-Cream/warm text on `jersey-deep` (#008755) misses WCAG AA for non-large text:
+> **Superseded 2026-08-11 by [#2395](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2395), implemented in #2416.** `jersey-deep`
+> is now `#007c46`, so this card's cream label/lead reads **4.69:1** and the warm
+> accent **3.17:1**. The round-4 call below is not reversed on new evidence — it
+> answered a different question. What it declined was `jersey-deep-dark`
+> (`#133d28`), a near-black forest green and a different colour; #2395 took a
+> single shade step within the same green, which round 4 was never offered. The
+> cross-consistency argument still holds and still points at `YouthSection`,
+> because the token moved under both surfaces at once.
+
+Cream/warm text on `jersey-deep` (then #008755) missed WCAG AA for non-large text:
 cream label/lead **4.04:1** (< 4.5), warm accent **2.74:1** (< 3). The display-lg
 heading passes as large text. Owner decision (2026-06-02, `contrast-shade.html`):
 **keep #008755** — it is the shade `YouthSection` already ships, and the repo's

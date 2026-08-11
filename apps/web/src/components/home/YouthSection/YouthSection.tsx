@@ -46,7 +46,8 @@ export const YouthSection = ({ className }: YouthSectionProps) => (
         De toekomst van Elewijt.
       </EditorialHeading>
 
-      <p className="text-cream/90 mb-6 max-w-xl text-base leading-relaxed">
+      {/* Full cream — DESIGN.md "The Whole-Cream Rule". */}
+      <p className="text-cream mb-6 max-w-xl text-base leading-relaxed">
         Onze jeugdwerking groeit elk jaar. Bovenbouw, Middenbouw en Onderbouw
         delen één doel: voetbal als zelfontplooiing — nooit als prestatie
         alleen.

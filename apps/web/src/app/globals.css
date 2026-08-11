@@ -367,20 +367,18 @@
   --color-ink-soft: #1f1f1f;
   --color-ink-muted: #6b6b6b;
 
-  /* Brand green (anchored to existing #4acf52 / #008755) */
+  /* Brand green (anchored to existing #4acf52 / #007c46) */
   --color-jersey: #4acf52;
-  --color-jersey-deep: #008755;
+  /* Darkened one shade from #008755 by #2395; absorbed the former
+     `--color-jersey-link`, which held this exact value. Cream 4.69:1, warm
+     3.17:1. Chosen by eye off docs/design/mockups/go-live-2395-green-shade/ —
+     no WCAG target is adopted, the ratios only broke the tie. */
+  --color-jersey-deep: #007c46;
   --color-jersey-bright: #22c55e;
   /* Desaturated retro forest — third stop of `--gradient-jersey-deep-overlay`
      and any darker-jersey accent (e.g. <TapeStrip warm> story border).
      Locked at #133d28 (not the brand-darker #005a39) by #1700 round-8c.B. */
   --color-jersey-deep-dark: #133d28;
-  /* Inline-link green (#2174). Jersey-deep (#008755) is only ~4.05:1 on cream —
-     below WCAG AA 4.5:1 for body text. This darker jersey is ~4.6:1 on cream
-     (AA) while staying ≥3:1 against ink / ink-soft body text, so links remain
-     distinguishable by colour at rest (the `.prose-link` marker only shows on
-     hover). Used by `.prose-link` + the cookie-banner link. */
-  --color-jersey-link: #007c46;
 
   /* Warm yellow — accent text (#1698), tape (`--tape-warm`), button stripes.
      Single source of truth for the hue; alpha variants derive via color-mix. */
@@ -705,7 +703,7 @@
    links) keep their own styling — this is body copy only. Unlayered so it beats
    the typography plugin and the `main a` colour fallback. */
 .prose-link {
-  color: var(--color-jersey-link);
+  color: var(--color-jersey-deep);
   text-decoration: none;
   font-weight: 500;
   /* 4px breathing room each side so the marker overshoots the text like the
@@ -715,12 +713,12 @@
      fragment of a wrapped link. */
   padding-inline: 4px;
   margin-inline: -4px;
-  /* #008755 (--color-jersey-deep) @ 40% baked into the fill — a CSS var can't
+  /* #007c46 (--color-jersey-deep) @ 40% baked into the fill — a CSS var can't
      be referenced inside a data-URI SVG. The marker's left/right ink edges sit
      at x=0/100 (not 1/99); left-anchored at background-position-x:0 the start
      stays pinned ~4px before the word and never creeps right as background-size
      animates the reveal. */
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 0 4.7 L 50 4.3 L 100 4.0 L 100 10.8 L 50 11.1 L 0 11.0 Z' fill='%23008755' fill-opacity='0.4'/></svg>");
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 0 4.7 L 50 4.3 L 100 4.0 L 100 10.8 L 50 11.1 L 0 11.0 Z' fill='%23007c46' fill-opacity='0.4'/></svg>");
   background-repeat: no-repeat;
   background-position: 0 100%;
   background-size: 0% 0.42em;
@@ -1026,7 +1024,7 @@
   --cc-secondary-color: var(--color-ink-muted);
 
   /* Links */
-  --cc-link-color: var(--color-jersey-link);
+  --cc-link-color: var(--color-jersey-deep);
 
   /* Primary button — jersey-deep + cream text */
   --cc-btn-primary-bg: var(--color-jersey-deep);

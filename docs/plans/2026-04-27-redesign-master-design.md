@@ -125,7 +125,7 @@ All tokens live in `apps/web/src/app/globals.css` inside `@theme {}`. Tailwind v
 
   /* Brand green (anchored to existing values) */
   --color-jersey: #4acf52; /* accent / tape / CTA — never body text on cream */
-  --color-jersey-deep: #008755; /* body-text-readable green on cream */
+  --color-jersey-deep: #007c46; /* the text-bearing green on cream (#2395) */
   --color-jersey-bright: #22c55e; /* green text on dark interludes */
 
   /* Edges */
@@ -133,15 +133,15 @@ All tokens live in `apps/web/src/app/globals.css` inside `@theme {}`. Tailwind v
 }
 ```
 
-| Combination          | Contrast   | Verdict                                                                                                                                                                                     |
-| -------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ink on cream         | 17.5:1     | AAA all sizes                                                                                                                                                                               |
-| ink-soft on cream    | 14.6:1     | AAA all sizes                                                                                                                                                                               |
-| ink-muted on cream   | 4.7:1      | AA normal text (just above the 4.5:1 threshold; AAA at ≥18pt)                                                                                                                               |
-| jersey on cream      | 1.8:1      | Decorative only — never text                                                                                                                                                                |
-| jersey-deep on cream | **4.05:1** | **AA large-text (≥18pt) only** — does NOT meet AA body (4.5:1). Use `--color-ink` or `--color-ink-soft` for body green-on-cream copy; reserve `jersey-deep` for headings, accents, and CTAs |
-| jersey-bright on ink | 8.7:1      | AAA all sizes                                                                                                                                                                               |
-| cream on ink         | 17.5:1     | AAA all sizes                                                                                                                                                                               |
+| Combination          | Contrast   | Verdict                                                                                                                                                                                                                             |
+| -------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ink on cream         | 17.5:1     | AAA all sizes                                                                                                                                                                                                                       |
+| ink-soft on cream    | 14.6:1     | AAA all sizes                                                                                                                                                                                                                       |
+| ink-muted on cream   | 4.7:1      | AA normal text (just above the 4.5:1 threshold; AAA at ≥18pt)                                                                                                                                                                       |
+| jersey on cream      | 1.8:1      | Decorative only — never text                                                                                                                                                                                                        |
+| jersey-deep on cream | **4.69:1** | Carries text at any size since #2395 darkened it to `#007c46` (was `#008755` at 4.05:1, large-text only). Still reserved for headings, accents, CTAs and inline links — body copy on cream stays `--color-ink` / `--color-ink-soft` |
+| jersey-bright on ink | 8.7:1      | AAA all sizes                                                                                                                                                                                                                       |
+| cream on ink         | 17.5:1     | AAA all sizes                                                                                                                                                                                                                       |
 
 ### 3.3 Typography tokens
 
@@ -790,7 +790,7 @@ Decisions made in the 2026-04-27 brainstorm, with rationale.
     - **Reverses entry 19's body-font lock.** All running text is now Freight Sans (one type family across the site bar IBM Plex Mono for labels/scores). The Typekit kit was trimmed by the owner to exactly three families: `freight-sans-pro`, `freight-display-pro`, `freight-big-pro`.
     - **FOUT tradeoff accepted + mitigated.** Body text now loads async via Typekit (vs instant self-hosted next/font). Mitigated by metric-matched (`size-adjust` + ascent/descent overrides) fallback `@font-face`s — `Freight Sans Fallback` (body) and `Freight Display Fallback` (display) — so the swap doesn't shift layout (the owner flagged the prior Georgia substitute as "way too big"). size-adjust values are first-pass, tuned on the dev server.
     - **Figures:** Freight Sans **defaults to oldstyle** figures, which reads editorially in prose for free. Stat surfaces (`NumberDisplay`, scores, standings) opt into **tabular lining** (`tabular-nums lining-nums`). The OpenType investigation found no heading-level feature win (Freight Display's `dlig`/`swsh` aren't in the font).
-    - **a11y:** introduced `--color-jersey-link` (#007c46, ~4.6:1 on cream) for inline links — `--color-jersey-deep` was only ~4.05:1, below WCAG AA 4.5:1 (CodeRabbit, PR #2173). Tuned to stay ≥3:1 vs body ink so links remain distinguishable by colour (WCAG 1.4.1).
+    - **a11y:** introduced `--color-jersey-link` (#007c46, ~4.6:1 on cream) for inline links — `--color-jersey-deep` was only ~4.05:1, below WCAG AA 4.5:1 (CodeRabbit, PR #2173). Tuned to stay ≥3:1 vs body ink so links remain distinguishable by colour (WCAG 1.4.1). **Superseded 2026-08-11 by #2395/#2416:** `--color-jersey-link` no longer exists — `--color-jersey-deep` was darkened to this same `#007c46`, absorbing it, so one green now carries all text.
 
 22. **Redesign complete — the editorial-redesign series is closed (#1531).** (2026-06-19) With the recolour spin-outs and Phase 10 redesigns merged, #1531's gated Phase A + B both shipped and the retro-terrace-fanzine system now covers every production surface:
     - **Phase 10 surfaces migrated:** a new generic editorial page-hero replacing `InteriorPageHero` (#2120; `/kalender` + `/club` + `/club/[slug]` + `/scheurkalender`); the `/club` index rebuilt with the banned "Meer dan een voetbalclub" motto removed (#2121); `/club/[slug]` CMS pages (#2122) and `/staf/[slug]` staff detail (#2124) moved to `<ArticleBody>`; `/club/contact` (#2123); and the cookie-consent banner retro reskin (#2125).

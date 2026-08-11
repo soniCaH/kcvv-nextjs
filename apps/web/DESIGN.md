@@ -10,8 +10,7 @@ colors:
   ink-soft: "#1f1f1f"
   ink-muted: "#6b6b6b"
   jersey: "#4acf52"
-  jersey-deep: "#008755"
-  jersey-link: "#007c46"
+  jersey-deep: "#007c46"
   jersey-bright: "#22c55e"
   jersey-deep-dark: "#133d28"
   warm: "#f0c264"
@@ -173,8 +172,7 @@ A print palette: one paper, one ink, one green, one warm accent, and a small set
 
 ### Primary
 
-- **Jersey Deep** (`#008755`): the club green, and the only green allowed to carry meaning. Primary buttons, large display headings, italic accent words in headlines, active states, and dark section fills. It is a text-safe green on cream at large sizes.
-- **Jersey Link** (`#007c46`): a fractionally darker green that exists for one reason — inline links in body copy. Jersey Deep is only ~4.05:1 on cream, below AA for normal text; this is ~4.6:1 while staying ≥3:1 against surrounding ink. Never use it for anything but inline prose links.
+- **Jersey Deep** (`#007c46`): the club green, and on cream the only green allowed to carry meaning. Primary buttons, large display headings, italic accent words in headlines, inline prose links, active states, and dark section fills. It reads 4.69:1 on cream — text-safe at any size, and still ≥3:1 against surrounding ink so a link stays distinguishable by colour alone. Darkened one shade from `#008755` by #2395, which also absorbed the former `jersey-link` (it held this exact value) so cream carries one text-bearing green instead of two. On ink that job belongs to `jersey-bright`, below.
 - **Jersey** (`#4acf52`): the bright terrace green. Decorative only — stripe patterns, tape strips, spinner bars. **Never text, never on cream.**
 - **Jersey Bright** (`#22c55e`): green text on ink surfaces only, where the deep green disappears.
 - **Jersey Deep Dark** (`#133d28`): desaturated retro forest. The far stop of the photo-overlay gradient and the darkest green field.
@@ -207,7 +205,9 @@ Status tones, tuned for print rather than for a dashboard. Each pairs a saturate
 
 **The Rare Green Rule.** Green is an event, not a surface treatment. On any given screen it appears on the primary CTA, the accent word in one heading, and active state — and effectively nowhere else. If a screen reads as green, it is wrong.
 
-**The Two-Greens Rule.** `jersey` is decorative and never touches text; `jersey-deep` carries meaning and text. Inline body links use `jersey-link` and nothing else. Picking the wrong green is the single most common colour error in this system.
+**The Two-Greens Rule.** There are exactly two greens on cream, split by one question — does it carry text? `jersey` decorates and never touches text; `jersey-deep` carries everything that does, inline prose links included. Until #2395 the rule named three greens and was not literally true; `jersey-link` has since been absorbed into `jersey-deep`. Picking the wrong green is the single most common colour error in this system.
+
+**The Whole-Cream Rule.** Cream on a jersey-deep surface is cream, never a fraction of it. `text-cream/90` costs more contrast than a whole shade step of green does (4.05 → 3.56, where the #2395 shade step bought 4.05 → 4.69), so the fraction is always the worse trade. Scoped to jersey-deep: on `jersey-deep-dark` (~10.9:1) and ink (17.5:1) cream has contrast to spare and a fraction is harmless. One known exception is still shipping — `<NumberDisplay tone="cream">` hardcodes `text-cream/70` on its label, which lands on jersey-deep wherever the component sits in a jersey-deep `<TapedCard>`. Fixing it means touching a shared primitive whose other callers are all on dark surfaces, so it is tracked separately rather than swept here.
 
 **The No-Grey-UI Rule.** There is no neutral grey in this system — not as a token, not as an option. A surface is cream, a step of cream, or ink. `gray-100` (`#f3f4f6`) was the last holdout, sitting under four homepage sections; #2342 deleted the token outright and reduced `SectionBg` to `jersey-deep | transparent`, so those sections now let the page cream through. If a section ever needs to step down from the page without going dark, add `cream-soft` to `SectionBg` — never reintroduce a grey.
 
@@ -308,7 +308,7 @@ Photographs get a newsprint treatment: a warm-tint filter (`sepia(0.06) saturate
 - **Primary:** jersey-deep fill, cream text, `4px 4px 0 0` ink shadow. Padding 0.75rem / 2rem at the default size (0.5/1.5 small, 1/2.5 large).
 - **Inverted:** cream fill, ink text, muted-ink shadow — for placement on dark surfaces.
 - **Secondary:** cream-soft fill, ink text. **Ghost:** transparent, ink text, `ink/5` hover wash.
-- **Hover:** the canonical press-down — `translate(1px, 1px)` with the shadow collapsing to none over 300ms. Primary additionally brightens 110%.
+- **Hover:** the canonical press-down — `translate(1px, 1px)` with the shadow collapsing to none over 300ms, and for primary that is the whole hover. Primary is the only variant with no hover fill: it used to brighten 110%, but a filter-based relight necessarily lands off-token (it pushed jersey-deep to `#00884d`), so #2395 removed it rather than mint a hover green.
 - **Focus:** a 2px jersey-deep ring at 2px offset.
 - **Disabled:** 50% opacity, `not-allowed` cursor, and every hover effect neutralised back to the resting surface so the button visibly does not react.
 - An optional trailing `→` glyph translates 4px right on group hover.
@@ -338,7 +338,7 @@ An eight-state machine shared identically by text input, select and textarea —
 ### Chips / Labels
 
 - **Mono Label:** the workhorse. Uppercase mono, 11px, tracking 0.08em, weight 500. Plain (inline, ink or cream) or as a solid pill in jersey, jersey-deep, ink or cream-soft.
-- Pills are sharp-cornered with 0.5rem / 0.25rem padding. The jersey-deep pill uses pure white text, not cream — cream at 85% on jersey-deep fails AA.
+- Pills are sharp-cornered with 0.5rem / 0.25rem padding. The jersey-deep pill uses pure white text, not cream. It was adopted when cream on the old `#008755` was the weaker pairing; on today's darker green full cream clears comfortably, so the white is inherited rather than required — reconciling it (and the handful of other white-on-jersey-deep surfaces) back to cream is an open consistency question, not a rule. Fractional cream, however, is never the answer here: see The Whole-Cream Rule.
 
 ### Navigation
 
@@ -362,7 +362,7 @@ A full-bleed 45° two-tone stripe band (12 / 18 / 24 / 28px tall) rendered as an
 - **Do** set every rectangle's border radius to `0` and reserve curves for true circles.
 - **Do** use hard offset shadows with `0` blur, in exactly the seven documented tokens.
 - **Do** press interactive surfaces into their shadow on hover (`translate(1px, 1px)` + `shadow-none`), gating only the translate behind `motion-safe:`.
-- **Do** pick the right green: `jersey` decorative only, `jersey-deep` for meaning and large text, `jersey-link` for inline prose links, `jersey-bright` for green text on ink.
+- **Do** pick the right green: `jersey` decorative only, `jersey-deep` for anything carrying text (headings, CTAs, inline prose links), `jersey-bright` for green text on ink.
 - **Do** reach for an existing primitive — taped card, ticket stub, mono label, editorial heading, tape strip, stamp badge, striped seam — before writing new markup.
 - **Do** route every page through the three container widths (680 / 1040 / 1280).
 - **Do** keep photographs in colour with the newsprint warm-tint; greyscale-to-colour-on-hover belongs to sponsor logos alone.

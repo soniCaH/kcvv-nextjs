@@ -23,16 +23,20 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-/** Mirrors `globals.css` `@theme` — Satori cannot read CSS custom properties. */
+import { TOKENS as SHARE_TOKENS } from "@/components/share/constants";
+
+/**
+ * Satori cannot read CSS custom properties, so the card needs concrete values.
+ * Borrows the /share palette rather than re-declaring it — same constraint, same
+ * literals, one fewer mirror to keep in step with `globals.css`. Only
+ * `onJerseyDeep` is specific to this card.
+ */
 const TOKENS = {
-  cream: "#f5f1e6",
-  ink: "#0a0a0a",
-  inkMuted: "#6b6b6b",
-  jerseyDeep: "#008755",
+  ...SHARE_TOKENS,
   /**
-   * Pure white, not cream, on a jersey-deep fill. Cream lands at 4.05:1 there
-   * and misses AA for body text; white clears it at 4.57:1. Same rule as the
-   * jersey-deep pill in DESIGN.md "Chips / Labels".
+   * Pure white on a jersey-deep fill, inherited from the pre-#2395 green — see
+   * DESIGN.md "Chips / Labels", which carries the open reconcile-to-cream
+   * question.
    */
   onJerseyDeep: "#ffffff",
 } as const;

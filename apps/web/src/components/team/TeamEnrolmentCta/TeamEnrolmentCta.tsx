@@ -56,10 +56,10 @@ export const TeamEnrolmentCta = ({
   };
 
   return (
-    // jersey-deep (#008755) is sub-AA for cream/warm text (cream 4.04:1, warm
-    // accent 2.74:1). Kept deliberately for YouthSection parity; the
-    // @storybook/addon-a11y check runs in warn mode (non-failing). The darker
-    // jersey-deep-dark passes AA but was declined. See enrolment-cta-locked.md §4.
+    // Cream and warm text on jersey-deep used to be sub-AA here, kept
+    // deliberately for YouthSection parity after jersey-deep-dark was offered
+    // and declined (enrolment-cta-locked.md §4). #2395 resolved it from the
+    // other end by darkening the token itself, with no change needed here.
     <TapedCard
       bg="jersey-deep"
       shadow="soft"

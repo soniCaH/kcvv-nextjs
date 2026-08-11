@@ -30,7 +30,10 @@ export function getButtonClasses({
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-jersey-deep",
 
     {
-      "bg-jersey-deep text-cream hover:brightness-110": variant === "primary",
+      // No hover fill: brightness-110 relit jersey-deep to #00884d and dropped
+      // cream back under the shade step #2395 bought. The canonical press-down
+      // below is primary's whole hover.
+      "bg-jersey-deep text-cream": variant === "primary",
       "bg-cream text-ink hover:bg-cream-soft": variant === "inverted",
       "bg-cream-soft text-ink hover:bg-cream": variant === "secondary",
       "bg-transparent text-ink hover:bg-ink/5": variant === "ghost",
@@ -47,11 +50,9 @@ export function getButtonClasses({
         : "hover:shadow-paper-sm",
     ],
     // On disabled, neutralise each variant's hover-fill back to its own base
-    // colour so the cursor-not-allowed button never appears to react. The base
-    // surfaces are: primary `bg-jersey-deep`, inverted `bg-cream`, secondary
-    // `bg-cream-soft`, ghost `bg-transparent`.
+    // colour so the cursor-not-allowed button never appears to react. Primary
+    // has no hover fill to neutralise.
     disabled && {
-      "hover:brightness-100": variant === "primary",
       "hover:bg-cream": variant === "inverted",
       "hover:bg-cream-soft": variant === "secondary",
       "hover:bg-transparent": variant === "ghost",
