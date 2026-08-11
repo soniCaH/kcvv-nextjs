@@ -137,7 +137,9 @@ export function buildSportsClubJsonLd(): WithContext<SportsClubOrganization> {
     name: SITE_CONFIG.title,
     url: SITE_CONFIG.siteUrl,
     logo: LOGO_URL,
-    foundingDate: "1909",
+    // No foundingDate: 1909 is inherited via mergers, and a Date-typed field
+    // has no room for that qualification — see PRODUCT.md "Origin is told,
+    // never asserted" (#2435).
     sameAs: [EXTERNAL_LINKS.facebook, EXTERNAL_LINKS.instagram],
     sport: "Soccer",
     address: {

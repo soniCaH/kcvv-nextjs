@@ -46,7 +46,7 @@ export default function ClubPage() {
           kicker="Onze club"
           headline="De plezantste compagnie"
           accent="compagnie"
-          lead="Sinds 1909 de thuishaven voor voetballiefhebbers in Elewijt — van de allerkleinsten tot het eerste elftal."
+          lead="De thuishaven voor voetballiefhebbers in Elewijt — van de allerkleinsten tot het eerste elftal."
         />
       </PageContainer>
 
@@ -61,10 +61,7 @@ export default function ClubPage() {
 
       {/* Mission. */}
       <PageContainer width="index" className="py-12">
-        <PullQuote
-          tone="ink"
-          attribution={{ name: "Sportpark Elewijt", source: "sinds 1909" }}
-        >
+        <PullQuote tone="ink" attribution={{ name: "Sportpark Elewijt" }}>
           Wij zijn KCVV Elewijt. Een plek waar jong en oud wekelijks samenkomen
           voor hun passie.
         </PullQuote>

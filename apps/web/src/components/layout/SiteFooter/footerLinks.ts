@@ -39,5 +39,4 @@ export const FOOTER_COLUMNS: ReadonlyArray<FooterColumn> = [
   },
 ];
 
-export const FOOTER_FOUNDING_YEAR = 1909;
 export const FOOTER_ADDRESS_LINE = "Driesstraat 32 · 1982 Elewijt";

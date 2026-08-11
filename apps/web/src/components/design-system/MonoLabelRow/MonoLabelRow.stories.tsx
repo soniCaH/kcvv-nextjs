@@ -75,7 +75,7 @@ export const OrderedList: Story = {
     as: "ol",
     items: [
       { label: "STAMNR. 55", variant: "pill-cream" },
-      { label: "SINDS 1909", variant: "pill-cream" },
+      { label: "SEIZOEN 26/27", variant: "pill-cream" },
     ],
   },
 };

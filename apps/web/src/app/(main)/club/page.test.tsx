@@ -27,8 +27,8 @@ vi.mock("next/link", () => ({
 }));
 
 describe("/club page", () => {
-  it("renders the typographic PageHero with the 1909 lead (not the stale '75 jaar')", () => {
-    render(<ClubPage />);
+  it("renders the typographic PageHero without a bare founding-year claim", () => {
+    const { container } = render(<ClubPage />);
 
     expect(screen.getByText("Onze club")).toBeInTheDocument();
     expect(
@@ -38,9 +38,10 @@ describe("/club page", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/sinds 1909 de thuishaven voor voetballiefhebbers/i),
+      screen.getByText(/de thuishaven voor voetballiefhebbers/i),
     ).toBeInTheDocument();
     expect(screen.queryByText(/75 jaar/i)).not.toBeInTheDocument();
+    expect(container).not.toHaveTextContent(/1909/);
   });
 
   it("renders the editorial hub linking to /club sub-pages", () => {

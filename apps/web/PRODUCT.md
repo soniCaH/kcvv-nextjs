@@ -65,7 +65,8 @@ Amateur clubs at this level either run a template site or live entirely on Faceb
 
 ## Brand Commitments
 
-- **Name:** KCVV Elewijt. Founded **1909**. Stamnummer **55**.
+- **Name:** KCVV Elewijt. Stamnummer **55**.
+- **Origin is told, never asserted:** the club reached its present form through takeovers and mergers, so **1909 is not the club's to market**. The year may be narrated as history alongside the mergers that produced it — `/club/geschiedenis` is the one place that does — and never stated as a bare founding fact in copy, chrome, structured data or `llms.txt`. Where the fact is useful, write it qualified ("ontstaan uit fusies; de oudste voorloper speelde vanaf 1909"), not as a founding date (#2422, #2435).
 - **Motto:** "Er is maar één plezante compagnie" — the club's only tagline. Never "meer dan een club" or any invented variant.
 - **Club colours:** green and white.
 - **Voice:** Dutch, plain, club-insider warmth without corporate polish. Never fabricate club history, honours, quotes, testimonials or magazine/edition chrome.
@@ -91,6 +92,8 @@ Amateur clubs at this level either run a template site or live entirely on Faceb
 4. **Sponsors get real estate, not decoration.** Sponsor presence is a product obligation with commercial consequences, and is designed deliberately rather than tucked into a footer strip.
 5. **Punch above the division.** The bar is not "good for an amateur club" — visible craft is itself one of the three success criteria.
 6. **The homepage does not declare a primary section.** Its bands sit at one weight by deliberate choice, not by neglect. With two co-equal primary audiences, any fixed ranking permanently demotes one of them on every visit. Five ranked and routed alternatives were built and rejected in favour of the flat baseline (#2408). A usability review will read this as a failed "single focus" heuristic; that outcome is understood and accepted. The jersey-deep youth band is the sheet's one deliberate visual break, not a rank.
+
+   The same rule governs the page's ending. The last content band is the most prominent position on a scrolled page, so it cannot be handed to either primary audience without reintroducing the ranking this principle refuses. The homepage tail is therefore audience-neutral by design — the sponsor wall and the clubshop band — and the club's signature is the footer's job, not a second identity band (#2422).
 
 ## Accessibility & Inclusion
 

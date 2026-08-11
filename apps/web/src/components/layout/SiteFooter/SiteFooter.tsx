@@ -4,19 +4,13 @@ import { FacebookLogo, InstagramLogo } from "@/lib/icons.redesign";
 import { EXTERNAL_LINKS } from "@/lib/constants";
 import { cn } from "@/lib/utils/cn";
 import { CookiePreferencesButton } from "./CookiePreferencesButton";
-import {
-  FOOTER_ADDRESS_LINE,
-  FOOTER_COLUMNS,
-  FOOTER_FOUNDING_YEAR,
-} from "./footerLinks";
+import { FOOTER_ADDRESS_LINE, FOOTER_COLUMNS } from "./footerLinks";
 
 export interface SiteFooterProps {
   className?: string;
 }
 
 export const SiteFooter = ({ className }: SiteFooterProps) => {
-  const currentYear = new Date().getFullYear();
-
   return (
     <footer
       className={cn("bg-cream text-ink", className)}
@@ -82,9 +76,10 @@ export const SiteFooter = ({ className }: SiteFooterProps) => {
       <div className="bg-ink text-cream pb-safe">
         <div className="mx-auto flex max-w-[1440px] flex-col items-start gap-3 px-6 py-3.5 leading-none md:flex-row md:items-center md:justify-between md:gap-6 md:px-10">
           <p className="m-0 flex flex-wrap items-center font-mono text-[9.5px] font-medium tracking-[0.06em] uppercase md:text-[10.5px]">
-            <span>
-              © {FOOTER_FOUNDING_YEAR}–{currentYear} KCVV Elewijt
-            </span>
+            {/* No © and no founding year: the club has no rights dispute to
+                defend, and 1909 is inherited via mergers — see PRODUCT.md
+                "Origin is told, never asserted" (#2435). */}
+            <span>KCVV Elewijt</span>
             <span aria-hidden="true" className="text-cream/40 mx-2">
               ·
             </span>
