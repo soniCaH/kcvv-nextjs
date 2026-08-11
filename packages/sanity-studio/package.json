@@ -27,7 +27,7 @@
   "peerDependencies": {
     "@sanity/icons": "3.8.0",
     "@sanity/ui": "3.2.0",
-    "react": "19.2.7",
+    "react": "19.2.8",
     "sanity": "6.1.0"
   },
   "devDependencies": {
