@@ -38,7 +38,7 @@ import {
 } from "@/components/article/EditorialHero";
 import { MatchGoalsBlock } from "@/components/article/blocks/MatchGoalsBlock";
 import { LinkButton } from "@/components/design-system";
-import { toHeroMatchData } from "./utils";
+import { parsePsdMatchId, toHeroMatchData } from "./utils";
 import { ArticleMetadata } from "@/components/article/ArticleMetadata";
 import { ArticleBodyMotion } from "@/components/article/ArticleBodyMotion";
 import {
@@ -333,17 +333,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     : undefined;
 
   // matchPreview / matchRecap server-fetch the linked PSD match (5.d-mat).
-  // The match id is a plain string copied from /wedstrijd/[matchId]; guard
-  // against missing/non-numeric values. Match chrome (score bar + Doelpunten)
-  // is enhancement — any BFF failure (404, outage, parse) degrades to no
-  // chrome rather than 404'ing or crashing the article.
+  // The match id is a plain string copied from /wedstrijd/[matchId], so
+  // `parsePsdMatchId` gates it to a positive safe integer. Match chrome
+  // (score bar + Doelpunten) is enhancement — any BFF failure (404, outage,
+  // parse) degrades to no chrome rather than 404'ing or crashing the article.
   const isMatchArticle =
     article.articleType === "matchPreview" ||
     article.articleType === "matchRecap";
-  const matchId =
-    isMatchArticle && article.linkedMatch
-      ? Number(article.linkedMatch)
-      : Number.NaN;
+  const matchId = isMatchArticle ? parsePsdMatchId(article.linkedMatch) : null;
   const hasEditorialArticles =
     article.relatedArticles && article.relatedArticles.length > 0;
 
@@ -351,7 +348,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // other, so they run as one wave rather than two serialized round-trips
   // (#2441).
   const [matchDetail, articleRelatedItems] = await Promise.all([
-    Number.isFinite(matchId)
+    matchId !== null
       ? runPromise(
           Effect.gen(function* () {
             const bff = yield* BffService;
