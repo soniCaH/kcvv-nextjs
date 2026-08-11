@@ -136,6 +136,9 @@ describe("EditorialHero — shell + placement", () => {
     expect(cta).toHaveClass("reveal-on-hover");
     expect(cta).not.toHaveClass("opacity-0");
     expect(cta).toHaveClass("group-hover:opacity-100");
+    // Keyboard reveal rides on the link itself (`group` sits on the <Link>),
+    // so this is `-focus-visible` where NewsCard needs `-focus-within`.
+    expect(cta).toHaveClass("group-focus-visible:opacity-100");
   });
 
   it("collapses the cover figure's offset shadow on group-hover so it presses with the link", () => {

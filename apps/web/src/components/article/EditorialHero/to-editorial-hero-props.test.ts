@@ -103,6 +103,17 @@ describe("toEditorialHeroProps", () => {
     expect(props).toHaveProperty("feature", { playerName: "Jens Peeters" });
   });
 
+  // An article typed `event`/`transfer` whose body carries no matching fact
+  // block projects the whole fact as null, not as an object of nulls — the
+  // variant renderers must get `undefined` so they skip the feature slot.
+  it.each([
+    ["event", { firstEventFact: null }],
+    ["transfer", { firstTransferFact: null }],
+  ] as const)("drops a missing %s fact entirely", (articleType, fact) => {
+    const props = toEditorialHeroProps(article({ articleType, ...fact }));
+    expect(props).toHaveProperty("feature", undefined);
+  });
+
   // Match articles stay kicker-only on the homepage — no `match` payload, so
   // the score-forward bar is detail-page-only.
   it.each(["matchPreview", "matchRecap"] as const)(
