@@ -47,7 +47,7 @@
     "@touch4it/ical-timezones": "1.9.0",
     "clsx": "2.1.1",
     "effect": "3.22.1",
-    "groq": "6.9.0",
+    "groq": "6.9.2",
     "html-to-image": "1.11.13",
     "ical-generator": "11.1.0",
     "luxon": "3.7.2",
