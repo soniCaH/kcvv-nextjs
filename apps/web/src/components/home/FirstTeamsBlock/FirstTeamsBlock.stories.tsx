@@ -20,7 +20,10 @@ const meta = {
           "<TeamAgendaRow> (same row as team pages + /kalender, #2301) — the " +
           "result as a cream row, the next fixture as the featured jersey-deep " +
           "card. Each row deep-links to its own match detail. A missing side " +
-          "drops to a skip placeholder; a team with neither is omitted. Spec: " +
+          "drops to a skip placeholder; a team with neither is omitted. When " +
+          "that leaves no rows at all the band still renders, with a held-open " +
+          "notice that distinguishes an empty feed from a failed read (#2399). " +
+          "Spec: " +
           "docs/design/mockups/eerste-ploegen/eerste-ploegen-locked.md.",
       },
     },
@@ -218,6 +221,21 @@ export const LongOpponentNames: Story = {
       },
     ],
   },
+};
+
+// Both no-row states pass the heading the page actually derives for them:
+// `firstTeamsHeading` sees no fixture, so it never claims "Dit weekend."
+const NO_ROWS_ARGS = {
+  teams: [{ label: "A-ploeg", slug: "a-ploeg" }],
+  heading: "Volgende wedstrijd.",
+};
+
+/** #2399 — the read succeeded and the feed is genuinely empty (mid-summer). */
+export const NoMatches: Story = { args: NO_ROWS_ARGS };
+
+/** #2399 — the same empty band, but the BFF read failed. Only the copy differs. */
+export const FeedUnavailable: Story = {
+  args: { ...NO_ROWS_ARGS, unavailable: true },
 };
 
 // Graceful skip: A has no upcoming fixture (season end), B has no recent result.
