@@ -37,6 +37,13 @@ const VARIANT_TYPE: Record<EditorialLinkVariant, string> = {
   inline: "font-medium",
 };
 
+// Hit area, not spacing (#2394). The cta variant is the label step at
+// `leading-none` — correct as type, 11px tall as a thumb target. The padding
+// grows it to ~27px and the equal negative margin pulls the box back, so the
+// consumer does not shift by a pixel. The two halves only work as a pair:
+// `py-2` alone would push `<SectionHeader>`'s heading row out of alignment.
+const CTA_HIT_AREA = "py-2 -my-2";
+
 export const EditorialLink = ({
   href,
   children,
@@ -55,6 +62,7 @@ export const EditorialLink = ({
       className={cn(
         "group inline-flex items-center gap-2",
         VARIANT_TYPE[variant],
+        variant === "cta" && CTA_HIT_AREA,
         TEXT_TONE[tone],
         className,
       )}

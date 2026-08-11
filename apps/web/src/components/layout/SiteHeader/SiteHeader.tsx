@@ -35,7 +35,9 @@ const Wordmark = () => (
   <Link
     href="/"
     aria-label="KCVV Elewijt — home"
-    className="font-display inline-block text-[20px] leading-none font-black whitespace-nowrap italic no-underline lg:text-[20px] xl:text-[24px] 2xl:text-[28px]"
+    // `py-1 -my-1` — hit area only, no layout shift (#2394). Not named in the
+    // ticket; the walk measured it at 20px and it is the site's home link.
+    className="font-display -my-1 inline-block py-1 text-[20px] leading-none font-black whitespace-nowrap italic no-underline lg:text-[20px] xl:text-[24px] 2xl:text-[28px]"
   >
     <span className="text-ink">
       KCVV <span className="text-jersey-deep">Elewijt</span>
@@ -154,7 +156,11 @@ function SiteHeaderInner({
                       <Link
                         href={item.href}
                         className={cn(
-                          "font-mono text-[11px] font-semibold tracking-[0.04em] whitespace-nowrap uppercase no-underline transition-colors xl:text-[13px] 2xl:text-[14px]",
+                          // `py-2 -my-2` — hit area only, no layout shift
+                          // (#2394). Desktop-only nav, so it never showed up in
+                          // the 390px walk, but it is the same 11px recipe the
+                          // wordmark above carries.
+                          "-my-2 py-2 font-mono text-[11px] font-semibold tracking-[0.04em] whitespace-nowrap uppercase no-underline transition-colors xl:text-[13px] 2xl:text-[14px]",
                           active
                             ? "text-jersey-deep"
                             : "text-ink hover:text-jersey-deep",

@@ -67,4 +67,17 @@ describe("EditorialLink", () => {
     );
     expect(container.firstChild).toHaveClass("custom-class");
   });
+
+  // #2394 — a tripwire for deleting the hit area, not a proof it works: jsdom
+  // computes no layout, so only the real coarse-pointer measurement at 390px
+  // can show the target is big enough. Both halves are asserted because the
+  // padding without the margin would reflow every section header.
+  it("cta variant carries the hit area and its layout-neutralising margin", () => {
+    const { container } = render(
+      <EditorialLink href="/x" variant="cta">
+        X
+      </EditorialLink>,
+    );
+    expect(container.firstChild).toHaveClass("py-2", "-my-2");
+  });
 });

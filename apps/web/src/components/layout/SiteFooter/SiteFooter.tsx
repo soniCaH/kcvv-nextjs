@@ -62,9 +62,16 @@ export const SiteFooter = ({ className }: SiteFooterProps) => {
               <ul className="flex flex-col gap-2.5">
                 {column.links.map((link) => (
                   <li key={link.href + link.label}>
+                    {/* `py-1 -my-1` lifts the 20px target to 28px without
+                        moving the row (#2394). `gap-2.5` (10px) stays wider
+                        than the 8px the two neighbouring hit areas borrow from
+                        it, so no two links ever overlap. The hover rule is a
+                        text-decoration rather than the old `border-b`, because
+                        a border sits at the bottom of the padded box (8px
+                        adrift) while a decoration stays on the baseline. */}
                     <Link
                       href={link.href}
-                      className="text-ink-soft hover:text-jersey-deep hover:border-jersey-deep inline-block border-b border-transparent text-[14px] leading-snug font-medium transition-colors duration-150"
+                      className="text-ink-soft hover:text-jersey-deep hover:decoration-jersey-deep -my-1 inline-block py-1 text-[14px] leading-snug font-medium underline decoration-transparent underline-offset-2 transition-colors duration-150"
                     >
                       {link.label}
                     </Link>

@@ -140,7 +140,8 @@ export function FirstTeamsBlock({
           </div>
           <Link
             href="/kalender"
-            className="text-warm hover:text-cream shrink-0 font-mono text-xs font-semibold tracking-wide uppercase transition-colors"
+            // `py-2 -my-2` — hit area only, no layout shift (#2394).
+            className="text-warm hover:text-cream -my-2 shrink-0 py-2 font-mono text-xs font-semibold tracking-wide uppercase transition-colors"
           >
             Volledige kalender <span aria-hidden="true">→</span>
           </Link>
