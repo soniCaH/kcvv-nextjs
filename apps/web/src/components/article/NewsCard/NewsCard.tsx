@@ -364,15 +364,18 @@ export const NewsCard = ({
                   "inline-flex items-center gap-1 font-mono text-[length:var(--text-label)] font-medium tracking-[var(--text-label--tracking)] uppercase",
                   // Hidden at rest, revealed on hover / keyboard focus —
                   // mirrors the homepage hero's "Lees verder" reveal idiom
-                  // (#2027). Opacity-only so the footer row reserves its
-                  // height and nothing reflows. The canonical press-down
-                  // hover stays intact via TapedCard's `interactive="press"`.
+                  // (#2027). `reveal-on-hover` (globals.css) owns the resting
+                  // state and keeps the cue visible where there is no hover to
+                  // reveal it with (#2393). Opacity-only so the footer row
+                  // reserves its height and nothing reflows. The canonical
+                  // press-down hover stays intact via TapedCard's
+                  // `interactive="press"`.
                   // `group-focus-within` (not `-focus-visible`): the `group`
                   // is the non-focusable <article> wrapper and the focusable
                   // <Link> is a descendant, so we react to focus *within* the
                   // card. (EditorialHero can use `-focus-visible` because there
                   // the `group` sits on the <Link> itself.)
-                  "opacity-0 transition-opacity duration-300 group-focus-within:opacity-100 group-hover:opacity-100",
+                  "reveal-on-hover group-focus-within:opacity-100 group-hover:opacity-100",
                   isDark ? "text-cream" : "text-jersey-deep",
                 )}
               >

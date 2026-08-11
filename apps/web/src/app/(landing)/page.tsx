@@ -63,7 +63,7 @@ import {
 } from "@/components/home";
 import {
   EditorialHero,
-  type EditorialHeroProps,
+  toEditorialHeroProps,
 } from "@/components/article/EditorialHero";
 import { PageContainer, SectionStack } from "@/components/design-system";
 import type { SectionConfig } from "@/components/design-system";
@@ -90,81 +90,6 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [DEFAULT_OG_IMAGE],
     },
   };
-}
-
-/**
- * Drop GROQ-nullable fields (`field: string | null`) so the resulting
- * shape matches the non-null `field?: string` API the EditorialHero
- * variant types expect. Generic enough to work for both transfer and
- * event projections.
- */
-function nullsToUndefined<T extends object>(
-  src: T | null | undefined,
-): { [K in keyof T]?: NonNullable<T[K]> } | undefined {
-  if (src == null) return undefined;
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(src)) {
-    if (value !== null) out[key] = value;
-  }
-  return out as { [K in keyof T]?: NonNullable<T[K]> };
-}
-
-/**
- * Map an `ArticleVM` onto `<EditorialHero placement="homepage">` props.
- * Mirrors the per-variant tail the retired `toHeroCarouselArticle`
- * built for `<HomepageHeroCarousel>`: each `articleType` contributes
- * the structured data the variant renderers need (subjects, transfer
- * fact, event fact, category). The discriminated union narrowing
- * surfaces a missing branch at compile time when a new `articleType`
- * lands (e.g. matchPreview / matchRecap from #1470).
- */
-function toEditorialHeroProps(article: ArticleVM): EditorialHeroProps {
-  const shared = {
-    placement: "homepage" as const,
-    slug: article.slug,
-    title: article.title,
-    coverImage: article.coverImageUrl
-      ? { url: article.coverImageUrl, alt: article.title }
-      : undefined,
-    date: article.publishedAt
-      ? formatArticleDate(article.publishedAt)
-      : undefined,
-    // PERF-1 (#2235): the homepage hero cover is the LCP element — eager-load
-    // it. Only this call site sets `priority`; below-fold rows stay lazy.
-    priority: true,
-  };
-
-  const variant = article.articleType ?? "announcement";
-  switch (variant) {
-    case "interview":
-      return { ...shared, variant, subjects: article.subjects };
-    case "event":
-      return {
-        ...shared,
-        variant,
-        feature: nullsToUndefined(article.firstEventFact),
-      };
-    case "transfer":
-      return {
-        ...shared,
-        variant,
-        feature: nullsToUndefined(article.firstTransferFact),
-      };
-    case "announcement":
-      return { ...shared, variant, category: article.tags[0] };
-    case "matchPreview":
-    case "matchRecap":
-      // Homepage hero stays kicker-only (VOORBESCHOUWING / MATCHVERSLAG) — no
-      // `match` data, so no score bar. The score-forward bar only renders on
-      // the detail page, which server-fetches the linked match (5.d-mat).
-      return { ...shared, variant };
-    default: {
-      const _exhaustive: never = variant;
-      throw new Error(
-        `Unhandled articleType in toEditorialHeroProps: ${String(_exhaustive)}`,
-      );
-    }
-  }
 }
 
 /**

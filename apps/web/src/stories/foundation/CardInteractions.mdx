@@ -11,7 +11,7 @@ export const CardDemo = ({ label, reveal, bg = "cream", soft = false, children }
       <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: bg === 'cream' ? 'var(--color-ink-muted)' : 'rgba(245,241,230,0.7)', marginBottom: '8px' }}>{label}</div>
       <div style={{ fontSize: '13px', color: bg === 'cream' ? 'var(--color-ink)' : 'var(--color-cream)', flex: 1 }}>{children}</div>
       {reveal && (
-        <div className="opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-300" style={{ fontFamily: 'var(--font-family-mono)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-jersey-deep)' }}>Lees verder →</div>
+        <div className="reveal-on-hover group-hover:opacity-100 group-focus-visible:opacity-100" style={{ fontFamily: 'var(--font-family-mono)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-jersey-deep)' }}>Lees verder →</div>
       )}
     </div>
   </div>
@@ -89,6 +89,8 @@ At rest a card casts a hard, un-blurred offset shadow (`shadow-paper-sm` = `4px 
 ## Navigation affordance — the "Lees verder →" reveal
 
 There is **no green accent bar** (the old `clip-path` bar was removed). Navigation cards instead reveal a mono "Lees verder →" cue on hover/focus while the whole card presses down. Hover the card below:
+
+Use the **`reveal-on-hover`** utility for the resting state rather than a bare `opacity-0` — the reveal is an enhancement, not a gate. On a touch device there is no hover to reveal the cue with, so `reveal-on-hover` leaves it on screen instead of hiding the card's only affordance (#2393; DESIGN.md — "nothing important hides behind hover").
 
 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '16px', marginBottom: '32px' }}>
   <CardDemo label="NewsCard" reveal>
