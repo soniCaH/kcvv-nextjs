@@ -29,12 +29,15 @@ interface ClubHubNavCard {
 export type ClubHubCard = ClubHubNewsCard | ClubHubNavCard;
 
 /**
- * The nine pinned `/club` index cards (3×3, design lock 10c3 + #2208). Three
- * `news` cards carry a newsprint cover photo (Geschiedenis · Ultras ·
- * Aansluiten); six `nav` cards carry a Phosphor-fill glyph panel (Bestuur ·
- * Organigram · Angels · Cashless · Downloads · Praktisch). Source order =
- * render order. Cashless + Downloads were previously nav-dropdown-only; the
- * Praktische info card lands as the 9th (#2208).
+ * The twelve pinned `/club` index cards (4 rows of 3, design lock 10c3 +
+ * #2208). Three `news` cards carry a newsprint cover photo (Geschiedenis ·
+ * Ultras · Aansluiten); nine `nav` cards carry a Phosphor-fill glyph panel.
+ * Source order = render order.
+ *
+ * The hub must stay a superset of the `De club` dropdown — #2409 deletes that
+ * panel and relies on this grid to index the same routes. Jeugdbestuur ·
+ * Vrijwilligers · Contact close that gap (#2414) and fill the fourth row;
+ * `nav-reachability.test.ts` is the guard.
  */
 export const CLUB_HUB_CARDS: ClubHubCard[] = [
   {
@@ -108,6 +111,30 @@ export const CLUB_HUB_CARDS: ClubHubCard[] = [
     title: "Alles wat je moet weten",
     arrowText: "Ontdek",
     iconName: "Info",
+  },
+  {
+    variant: "nav",
+    tag: "Jeugdbestuur",
+    href: "/club/jeugdbestuur",
+    title: "Wie de jeugd draaiende houdt",
+    arrowText: "Ontdek",
+    iconName: "SoccerBall",
+  },
+  {
+    variant: "nav",
+    tag: "Vrijwilligers",
+    href: "/club/vrijwilliger",
+    title: "Steek een handje toe",
+    arrowText: "Doe mee",
+    iconName: "Handshake",
+  },
+  {
+    variant: "nav",
+    tag: "Contact",
+    href: "/club/contact",
+    title: "Vind ons terug",
+    arrowText: "Neem contact op",
+    iconName: "Envelope",
   },
 ];
 

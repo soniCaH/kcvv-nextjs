@@ -3,6 +3,7 @@ export type TeamLandingItem = {
   name: string;
   slug: string;
   age: string;
+  psdId: string | null;
   division: string | null;
   divisionFull: string | null;
   season: string | null;
@@ -12,8 +13,12 @@ export type TeamLandingItem = {
 };
 
 export type YouthDivisionGroup = {
-  label: YouthDivisionName;
-  range: string;
+  label: YouthDivisionName | typeof RESERVEN_LABEL;
+  /**
+   * The group's age band, e.g. "U12–U16". Absent on groups that are not an
+   * age band at all (Reserven), which the directory heading renders bare.
+   */
+  range?: string;
   teams: TeamLandingItem[];
 };
 
@@ -29,10 +34,31 @@ const ONDERBOUW = ["U11", "U10", "U9", "U8", "U7", "U6"];
 
 export type YouthDivisionName = "Bovenbouw" | "Middenbouw" | "Onderbouw";
 
+/**
+ * Reserves team (PSD id). Its Sanity `age` is "A" — it is a senior-level side,
+ * a level between U21 and the B-ploeg — so no age parsing can place it and it
+ * gets its own group. Lives here rather than in `menuItems.ts` because the
+ * grouping is the surface that survives #2409's dropdown removal (#2414).
+ */
+export const RESERVEN_PSD_ID = "34";
+
+/** Display name of the reserves group — also the nav label in `menuItems.ts`. */
+export const RESERVEN_LABEL = "Reserven";
+
 /** Parse the numeric age from an age-group string (e.g. "U15" → 15). Returns null if unparseable. */
 function parseAge(ageGroup: string): number | null {
   const match = ageGroup.match(/^U(\d+)/i);
   return match ? parseInt(match[1], 10) : null;
+}
+
+/**
+ * True when a team's `age` is an age code (`U6`, `U15`, …) rather than a senior
+ * code like "A". Broader than `getYouthDivision`, which additionally requires
+ * the code to fall inside a bouw band — "U5" is an age code with no division.
+ * Callers that render the age (chest letter, card caption) want this one.
+ */
+export function isAgeCode(ageGroup: string | undefined): boolean {
+  return ageGroup != null && parseAge(ageGroup) != null;
 }
 
 /** Derive the youth division name from an age group string (e.g. "U15" → "Middenbouw"). */
@@ -74,6 +100,12 @@ export function groupTeamsForLanding(teams: TeamLandingItem[]): GroupedTeams {
     aTeam: seniors.find((t) => nameSuffix(t.name) === "A"),
     bTeam: seniors.find((t) => nameSuffix(t.name) === "B"),
     youthByDivision: [
+      // Above U21 and below the B-ploeg — so it leads the directory, ahead of
+      // Bovenbouw. `<YouthDirectory>` drops it when the roster has no Reserven.
+      {
+        label: RESERVEN_LABEL,
+        teams: teams.filter((t) => t.psdId === RESERVEN_PSD_ID),
+      },
       {
         label: "Bovenbouw",
         range: "U17–U21",

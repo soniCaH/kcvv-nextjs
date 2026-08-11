@@ -1,4 +1,9 @@
 import type { TeamNavVM } from "@/lib/repositories/team.repository";
+import {
+  RESERVEN_LABEL,
+  RESERVEN_PSD_ID,
+  isAgeCode,
+} from "@/lib/utils/group-teams";
 
 export interface MenuItem {
   label: string;
@@ -112,16 +117,24 @@ export const seniorNavLabel = (name: string): string => {
   return /^[A-Z]$/.test(lastWord) ? `${lastWord}-ploeg` : name;
 };
 
-/** Reserves team (PSD id) — surfaced under Jeugd, not the senior nav (NAV-1). */
-export const RESERVEN_PSD_ID = "34";
+const isReserven = (t: TeamNavVM): boolean => t.psdId === RESERVEN_PSD_ID;
+
+/**
+ * NAV-1: the reserves belong under Jeugd, not the senior nav. `layout.tsx`
+ * splits the roster with this before handing the remainder to
+ * `buildJeugdItem`, and `nav-reachability.test.ts` imports it so the guard runs
+ * against the real rule rather than a copy of it.
+ */
+export const isUnderJeugd = (t: TeamNavVM): boolean =>
+  isAgeCode(t.age ?? undefined) || isReserven(t);
 
 export const buildJeugdItem = (youthTeams?: TeamNavVM[]): MenuItem => {
-  const children = youthTeams
-    ?.filter((t) => t.age != null || t.psdId === RESERVEN_PSD_ID)
-    .map((t) => ({
-      label: t.psdId === RESERVEN_PSD_ID ? "Reserven" : t.age!,
-      href: `/ploegen/${t.slug}`,
-    }));
+  // Filtering on the same predicate the caller split with keeps the label safe:
+  // anything left that is not the reserves has an age code to show.
+  const children = youthTeams?.filter(isUnderJeugd).map((t) => ({
+    label: isReserven(t) ? RESERVEN_LABEL : (t.age ?? ""),
+    href: `/ploegen/${t.slug}`,
+  }));
   return {
     label: "Jeugd",
     href: "/jeugd",

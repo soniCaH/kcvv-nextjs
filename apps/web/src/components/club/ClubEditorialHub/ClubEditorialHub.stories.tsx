@@ -23,7 +23,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "The /club index nav hub (design lock 10c3 + #2208): a uniform 3×3 grid of 16:9 `<EditorialHubCard>`s under a 'Dit is KCVV.' header. Three news cards (newsprint-colour cover, jersey-deep tag) — Geschiedenis · Ultras · Aansluiten — and six nav cards (jersey-deep glyph panel, cream tag) — Bestuur · Organigram · Angels · Cashless · Downloads · Praktisch.",
+          "The /club index nav hub (design lock 10c3 + #2208): a uniform 3-up grid of 16:9 `<EditorialHubCard>`s under a 'Dit is KCVV.' header, four rows deep. Three news cards (newsprint-colour cover, jersey-deep tag) — Geschiedenis · Ultras · Aansluiten — and nine nav cards (jersey-deep glyph panel, cream tag) — Bestuur · Organigram · Angels · Cashless · Downloads · Praktisch · Jeugdbestuur · Vrijwilligers · Contact. The hub must stay a superset of the `De club` dropdown (#2414).",
       },
     },
   },
@@ -39,9 +39,20 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The full nine-card hub with local cover assets for deterministic VR. */
+/** The full twelve-card hub with local cover assets for deterministic VR. */
 export const Default: Story = {
   args: {
     cards: vrCards,
+  },
+};
+
+/**
+ * The fourth row alone — Jeugdbestuur · Vrijwilligers · Contact (#2414). The
+ * `Default` capture is viewport-clipped at three rows, so these cards and their
+ * glyphs would otherwise never reach a baseline.
+ */
+export const FourthRow: Story = {
+  args: {
+    cards: vrCards.slice(-3),
   },
 };
