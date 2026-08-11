@@ -33,8 +33,11 @@ import {defineMigration, at, set} from 'sanity/migrate'
  * Dry-run first:
  *   npx sanity@latest migration run show-reserven-in-navigation --project vhb33jaz --dataset production --dry-run
  *
- * Apply:
- *   npx sanity@latest migration run show-reserven-in-navigation --project vhb33jaz --dataset production
+ * Apply — `--no-dry-run` is required, dry mode is the CLI default. Add
+ * `--no-confirm` when running non-interactively, or it aborts on the prompt:
+ *   npx sanity@latest migration run show-reserven-in-navigation --project vhb33jaz --dataset production --no-dry-run
+ *
+ * Applied 2026-08-11: production 1 mutation; staging a no-op (no such document).
  */
 export default defineMigration({
   title: 'Show the Reserven team in navigation and on the team index pages',
