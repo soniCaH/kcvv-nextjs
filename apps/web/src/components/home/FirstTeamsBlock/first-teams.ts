@@ -28,6 +28,7 @@ import type { Match } from "@/lib/effect/schemas";
 import type { ScheduleMatch } from "@/components/match/types";
 import { transformMatchToSchedule } from "@/components/match/transform";
 import { hasScore, isSettledMatch } from "@/lib/utils/match-display";
+import { RESERVEN_PSD_ID } from "@/lib/utils/group-teams";
 
 export interface FirstTeamInput {
   /** Display label, e.g. "A-ploeg". */
@@ -64,16 +65,27 @@ export interface SeniorTeamCandidate {
 }
 
 /**
- * Senior (non-youth) teams that carry a `psdId`, sorted by slug so
+ * First teams (A/B) that carry a `psdId`, sorted by slug so
  * `eerste-elftallen-a` precedes `-b`. Shared by the homepage's
  * `<FirstTeamsBlock>` wiring and the landing strip's first-team lookup — the
  * two used to hold identical copies of this filter and could drift apart.
+ *
+ * Youth teams drop out on their `U*` age; Reserven needs a test of its own
+ * because its Sanity `age` is the senior code "A", so the age filter passes it
+ * through. It only surfaced here once #2414 flipped its `showInNavigation` on
+ * and the teams query stopped dropping it upstream. `groupTeamsForLanding`
+ * keeps it out of `/ploegen`'s A/B slots the same way, on the name suffix.
  */
 export function selectSeniorTeams<T extends SeniorTeamCandidate>(
   teams: readonly T[],
 ): T[] {
   return teams
-    .filter((t) => t.psdId && !(t.age ?? "").toUpperCase().startsWith("U"))
+    .filter(
+      (t) =>
+        t.psdId &&
+        t.psdId !== RESERVEN_PSD_ID &&
+        !(t.age ?? "").toUpperCase().startsWith("U"),
+    )
     .sort((a, b) => a.slug.localeCompare(b.slug));
 }
 

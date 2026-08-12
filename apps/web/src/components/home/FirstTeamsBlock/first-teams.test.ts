@@ -6,8 +6,10 @@ import {
   deriveFirstTeamVM,
   firstTeamLabel,
   firstTeamsHeading,
+  selectSeniorTeams,
   SETTLED_LOOKAHEAD_MS,
 } from "./first-teams";
+import { RESERVEN_PSD_ID } from "@/lib/utils/group-teams";
 
 describe("firstTeamLabel", () => {
   it("maps trailing-letter first-eleven slugs to X-ploeg", () => {
@@ -23,6 +25,22 @@ describe("firstTeamLabel", () => {
     expect(firstTeamLabel("fc-weitse-gans", "FC WEITSE GANS")).toBe(
       "FC WEITSE GANS",
     );
+  });
+});
+
+describe("selectSeniorTeams", () => {
+  const A = { psdId: "1235", age: "A", slug: "eerste-elftallen-a" };
+  const B = { psdId: "1236", age: "A", slug: "eerste-elftallen-b" };
+  // Reserven's Sanity `age` is "A", the same senior code the first teams carry.
+  const RESERVEN = { psdId: RESERVEN_PSD_ID, age: "A", slug: "reserven" };
+  const U15 = { psdId: "222", age: "U15", slug: "u15" };
+
+  it("keeps only A and B, in that order", () => {
+    expect(selectSeniorTeams([B, U15, RESERVEN, A])).toEqual([A, B]);
+  });
+
+  it("drops Reserven even though its age is a senior code", () => {
+    expect(selectSeniorTeams([RESERVEN])).toEqual([]);
   });
 });
 
