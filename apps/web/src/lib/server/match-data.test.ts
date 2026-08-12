@@ -139,6 +139,23 @@ describe("getFirstTeamStripData", () => {
     expect(data?.result?.id).toBe(1);
   });
 
+  it("keeps last weekend's result across a bye weekend", async () => {
+    // The one absolute-valued assertion in this file, deliberately: every other
+    // window test derives its dates from `RESULT_RECENCY_MS`, so all of them
+    // still pass if the constant is narrowed. This one fails — which is the
+    // point, since the window's whole job is to outlast a gap in the calendar.
+    // Ten days back is a fortnight-ago Saturday seen from the next weekend.
+    mockFetches(TEAMS, [
+      { id: 1, status: "finished", date: hoursAgo(10 * 24) },
+      { id: 2, status: "scheduled", date: hoursAhead(48) },
+    ]);
+
+    const data = await getFirstTeamStripData();
+
+    expect(data?.result?.id).toBe(1);
+    expect(data?.fixture?.id).toBe(2);
+  });
+
   it("returns the fixture alone when there is no recent result", async () => {
     mockFetches(TEAMS, [{ id: 2, status: "scheduled", date: hoursAhead(6) }]);
 
