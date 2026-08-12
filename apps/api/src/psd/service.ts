@@ -493,6 +493,9 @@ export const PsdServiceLive = Layer.effect(
                     }
 
                     const ownClubId = deriveOwnClubId(games);
+                    // `[0]` — one fixture per team, never a team's season. The
+                    // homepage agenda renders this list uncapped and leans on
+                    // that bound (#2405); widening it here needs a cap there.
                     const next = [...games]
                       .filter((m) => psdGameToMs(m) >= now)
                       .sort((a, b) => psdGameToMs(a) - psdGameToMs(b))[0];
