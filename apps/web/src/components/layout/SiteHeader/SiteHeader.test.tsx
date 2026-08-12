@@ -109,6 +109,18 @@ describe("SiteHeader", () => {
     ).toHaveAttribute("href", "/");
   });
 
+  it("marks the active entry with aria-current, not colour alone", () => {
+    // usePathname is mocked to "/", so no nav entry is active — assert the
+    // negative here and the positive in the menuItems unit tests.
+    render(<SiteHeader seniorTeams={seniorTeams} />);
+    const nav = screen.getAllByRole("navigation", {
+      name: /hoofdnavigatie/i,
+    })[0]!;
+    for (const link of nav.querySelectorAll("a")) {
+      expect(link).not.toHaveAttribute("aria-current");
+    }
+  });
+
   it("points Wedstrijden at /kalender", () => {
     render(<SiteHeader />);
     expect(

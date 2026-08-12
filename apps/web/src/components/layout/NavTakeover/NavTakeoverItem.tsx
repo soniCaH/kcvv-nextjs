@@ -27,6 +27,7 @@ export function NavTakeoverItem({
   return (
     <Link
       href={href}
+      aria-current={active ? "page" : undefined}
       onClick={(e) => {
         handleSamePageAnchorClick(e, href);
         onNavigate?.();

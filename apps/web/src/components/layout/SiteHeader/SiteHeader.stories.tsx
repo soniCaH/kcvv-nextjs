@@ -40,8 +40,10 @@ export const NoDynamicTeams: Story = {
 
 /**
  * The width case the one-line-fit constraint is about (#2409): team names that
- * carry no "… A" suffix get no short form, so they render in full — capped at
- * `NAV_LABEL_MAX_CHARS`. This is the widest the nav row can legally get.
+ * carry no "… A" suffix get no short form, so `seniorNavLabel` returns them
+ * whole. The label string is *not* capped — the desktop row bounds each entry
+ * in CSS (`max-w-[14ch] truncate`), so this is the widest the row can get
+ * while the full name stays in the DOM for the link's accessible name.
  */
 export const LongTeamNames: Story = {
   args: {

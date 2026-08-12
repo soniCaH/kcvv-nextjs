@@ -136,4 +136,19 @@ describe("NavTakeoverItem", () => {
     const link = screen.getByRole("link", { name: "Nieuws" });
     expect(link.className).toContain("text-jersey-deep");
   });
+
+  it("marks the active row with aria-current, not colour alone", () => {
+    const { rerender } = render(
+      <NavTakeoverItem label="Nieuws" href="/nieuws" active />,
+    );
+    expect(screen.getByRole("link", { name: "Nieuws" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    rerender(<NavTakeoverItem label="Nieuws" href="/nieuws" />);
+    expect(screen.getByRole("link", { name: "Nieuws" })).not.toHaveAttribute(
+      "aria-current",
+    );
+  });
 });

@@ -107,6 +107,10 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
                 <li key={item.href} className="relative min-w-0">
                   <Link
                     href={item.href}
+                    // The active entry is marked by colour alone otherwise —
+                    // the flat nav also lost the `aria-current` the dropdown
+                    // rows used to carry.
+                    aria-current={isActive(item.href) ? "page" : undefined}
                     className={cn(
                       // `py-2 -my-2` — hit area only, no layout shift (#2394).
                       // Desktop-only nav, so it never showed up in the 390px
@@ -126,7 +130,11 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
             </ul>
           </nav>
 
-          <div className="flex items-center gap-3 xl:gap-5">
+          {/* Gaps match the grid's column gap exactly, so the run from the
+              last nav item through the search icon to the CTA is evenly
+              spaced — otherwise the nav→icon step is the grid gap while the
+              icon→CTA step is this one, and the two read as uneven. */}
+          <div className="flex items-center gap-4 xl:gap-8 2xl:gap-10">
             <Link
               href="/zoeken"
               aria-label="Zoeken"

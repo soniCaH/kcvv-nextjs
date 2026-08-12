@@ -358,7 +358,7 @@ Two constraints do bite, and they are the ones to measure against:
 
 Decided on [#2409](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2409), built by [#2415](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2415). The four dropdowns were **deleted rather than regrouped**, because each destination page already indexes its own children better than a transient panel can — `<ClubEditorialHub>` on `/club`, `<YouthDirectory>` on `/jeugd`, in-page section anchors on `/ploegen/[slug]`. `nav-reachability.test.ts` is the standing guard on that claim.
 
-The footer is a second, intent-based organisation of the same site and is **not** required to mirror the nav. The rule binding them: every top-level nav concept appears somewhere in the footer; the footer may hold more (`footerLinks.test.ts`).
+The footer is a second, intent-based organisation of the same site and is **not** required to mirror the nav. The rule binding them: **every top-level nav destination appears somewhere in the footer as that same href**; the footer may hold more. One alias is supported, and only one — a `/ploegen/<slug>` team entry is covered by the footer's `/ploegen` index, because a per-team footer link would grow with the roster. Anything else must match exactly: a general "same branch of the route tree" rule reads well but cannot fail where it matters, since `/club` would then count as covered by an unrelated `/club/*` CTA in another column. Enforced by `footerLinks.test.ts`.
 
 ### Stamp Badge
 
