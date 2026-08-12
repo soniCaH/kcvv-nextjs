@@ -37,6 +37,14 @@ const makeMatch = (
   ...options,
 });
 
+/**
+ * The club's own ground. Only home fixtures carry it — and only in fixtures:
+ * PSD supplies no venue field and `apps/api/src/psd/transforms.ts` hardcodes
+ * `venue: undefined`, so production renders no venue at all today (#2398).
+ * Kept here so the caption's populated state stays covered for the day it does.
+ */
+const HOME_VENUE = "Driesstraat 32, 1982 Elewijt";
+
 export const mockUpcomingFive: UpcomingMatch[] = [
   makeMatch(
     501,
@@ -44,6 +52,7 @@ export const mockUpcomingFive: UpcomingMatch[] = [
     "15:00",
     kcvv(),
     opponent(59, "KVC Wilrijk"),
+    { venue: HOME_VENUE },
   ),
   makeMatch(
     502,
@@ -59,7 +68,11 @@ export const mockUpcomingFive: UpcomingMatch[] = [
     "14:30",
     kcvv(),
     opponent(448, "FC Wezel Sport"),
-    { kcvvTeamLabel: "B-Ploeg", competition: "4e Provinciale" },
+    {
+      kcvvTeamLabel: "B-Ploeg",
+      competition: "4e Provinciale",
+      venue: HOME_VENUE,
+    },
   ),
   makeMatch(
     504,
@@ -135,3 +148,11 @@ export const mockUpcomingTwelve: UpcomingMatch[] = [
 ];
 
 export const mockUpcomingThree: UpcomingMatch[] = mockUpcomingFive.slice(0, 3);
+
+/**
+ * Every fixture belongs to one squad — the end-of-season tail, when only the
+ * A-team has games left. The team filter has nothing to choose between and
+ * drops out entirely rather than rendering a single dead chip beside "Alles".
+ */
+export const mockUpcomingSingleTeam: UpcomingMatch[] =
+  mockUpcomingTwelve.filter((m) => m.kcvvTeamLabel === "A-Ploeg");

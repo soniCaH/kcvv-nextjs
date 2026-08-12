@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2398 — 2398-1: home/away vocabulary reconciliation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500;1,9..144,900&family=Archivo:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --jersey-deep-dark: #133d28;
+        --warm: #f0c264;
+        --brick: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --font-display: "Fraunces", georgia, serif;
+        --font-body: "Archivo", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      }
+      .harness-head {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 22px 28px;
+        font-family: var(--font-mono);
+      }
+      .harness-head h1 {
+        margin: 0 0 6px;
+        font-size: 15px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .harness-head p {
+        margin: 0 0 8px;
+        font-size: 13px;
+        color: #b9b9b9;
+        max-width: 92ch;
+        line-height: 1.6;
+      }
+      .harness-head b {
+        color: var(--warm);
+      }
+      .direction-bar {
+        background: var(--jersey-deep);
+        color: var(--cream);
+        padding: 11px 28px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        display: flex;
+        gap: 14px;
+        align-items: baseline;
+        border-bottom: 2px solid var(--ink);
+        border-top: 2px solid var(--ink);
+      }
+      .direction-bar .tag {
+        background: var(--warm);
+        color: var(--ink);
+        padding: 2px 9px;
+        font-weight: 700;
+        border: 1.5px solid var(--ink);
+      }
+      .direction-bar .note {
+        color: #cfeede;
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 12px;
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 24px 28px 40px;
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: 1fr 348px;
+        gap: 30px;
+        align-items: start;
+      }
+      @media (max-width: 900px) {
+        .pair {
+          grid-template-columns: 1fr;
+        }
+      }
+      .surface-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin-bottom: 3px;
+      }
+      .surface-sub {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-muted);
+        margin-bottom: 12px;
+      }
+
+      /* ── Surface 1: homepage <MatchRow> ────────────────────────────── */
+      .agenda {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .mrow {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        column-gap: 16px;
+        row-gap: 4px;
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        padding: 12px 16px;
+        box-shadow: 2px 2px 0 0 var(--ink);
+        text-decoration: none;
+        color: var(--ink);
+      }
+      .mrow .when {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: rgba(10, 10, 10, 0.7);
+        min-width: 10rem;
+      }
+      .mrow .teams {
+        font-size: 16px;
+        line-height: 1.2;
+      }
+      .mrow .teams .kcvv {
+        font-weight: 700;
+      }
+      .mrow .teams .dash {
+        color: rgba(10, 10, 10, 0.6);
+        margin: 0 8px;
+      }
+      .mrow .cap {
+        display: block;
+        margin-top: 2px;
+        font-size: 12px;
+        font-weight: 500;
+        color: rgba(10, 10, 10, 0.6);
+      }
+      .mrow .cap .venue {
+        color: var(--ink-muted);
+      }
+
+      /* pill (word) */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border: 1.5px solid var(--ink);
+        padding: 3px 9px;
+        white-space: nowrap;
+      }
+      .pill.home {
+        background: var(--jersey-deep);
+        color: var(--cream);
+      }
+      .pill.away {
+        background: var(--ink);
+        color: var(--cream);
+      }
+      .pill svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      /* bare glyph */
+      .glyph {
+        display: inline-flex;
+        color: var(--ink-muted);
+      }
+      .glyph svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      /* ── Surface 2: <TeamAgendaRow> mobile ─────────────────────────── */
+      .phone {
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        padding: 14px 12px;
+        box-shadow: 3px 3px 0 0 var(--ink);
+      }
+      .phone .cap-note {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--ink-muted);
+        text-align: center;
+        margin-bottom: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .trows {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .trow {
+        display: flex;
+        align-items: stretch;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 2px 2px 0 0 var(--ink);
+      }
+      .trow .stub {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 10px;
+        border-right: 2px dashed rgba(10, 10, 10, 0.3);
+        background: rgba(237, 232, 218, 0.3);
+        flex-shrink: 0;
+      }
+      .trow .stub .d {
+        font-family: var(--font-display);
+        font-size: 18px;
+        line-height: 1;
+        font-weight: 900;
+      }
+      .trow .stub .m {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .trow .body {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        flex: 1;
+        min-width: 0;
+      }
+      .crest {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+        background: var(--jersey-deep);
+        color: var(--cream);
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 900;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .trow .nm {
+        flex: 1;
+        min-width: 0;
+      }
+      .trow .nm .t {
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .trow .nm .c {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .trow .score {
+        font-family: var(--font-display);
+        font-size: 16px;
+        font-weight: 900;
+        flex-shrink: 0;
+        padding: 0 6px;
+      }
+      /* the tiny word variant used on the dense row in C / D */
+      .microword {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      .microstack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+        flex-shrink: 0;
+        color: var(--ink-muted);
+      }
+      .microstack svg {
+        width: 14px;
+        height: 14px;
+      }
+      .microstack .w {
+        font-family: var(--font-mono);
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .verdict {
+        background: var(--cream-deep);
+        border: 1px dashed var(--ink);
+        padding: 12px 16px;
+        margin-top: 18px;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .verdict b {
+        color: var(--brick);
+      }
+      .verdict .ok {
+        color: var(--jersey-deep);
+        font-weight: 700;
+      }
+
+      /* ── Resolved 2026-08-12: B locked. A / C / D kept in source for diff
+         history, hidden per the drill convention. ─────────────────────────── */
+      [data-variant="a"],
+      [data-variant="c"],
+      [data-variant="d"] {
+        display: none;
+      }
+      .locked {
+        background: var(--cream-soft);
+        border: 1px dashed var(--ink);
+        border-left: 5px solid var(--jersey-deep);
+        padding: 16px 20px;
+        margin: 24px 28px;
+        max-width: 1080px;
+      }
+      .locked h2 {
+        margin: 0 0 8px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+      }
+      .locked p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.65;
+        max-width: 92ch;
+      }
+      .locked b {
+        color: var(--brick);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="harness-head">
+      <h1>#2398 · drill 2398-1 — home/away vocabulary reconciliation</h1>
+      <p>
+        AC4:
+        <b
+          >"THUIS/UIT pills reconcile with TeamAgendaRow's House/Bus glyph — one
+          vocabulary for one fact, not two."</b
+        >
+        Today the same fact is spoken two ways: the homepage agenda uses a
+        filled
+        <b>THUIS</b>/<b>UIT</b> mono pill, the team-detail + /kalender agenda
+        uses a bare House/Bus Phosphor glyph with only an
+        <code>aria-label</code>.
+      </p>
+      <p>
+        Each panel below renders
+        <b>both surfaces with the same four fixtures</b>, so the reconciliation
+        is the only variable. The roomy homepage row is on the left; the dense
+        mobile agenda row — where the glyph was chosen because there is no width
+        for a word — is on the right.
+      </p>
+      <p>
+        Venue is baked into every panel's caption (AC1, prescriptive). Note it
+        renders
+        <b>nothing in production today</b> — PSD supplies no venue field and the
+        BFF hardcodes <code>undefined</code>; shown here only so you can judge
+        caption density once it exists.
+      </p>
+    </div>
+
+    <div class="locked">
+      <h2>★ Locked — 2026-08-12 · B "one sign, spoken at each surface's density"</h2>
+      <p>
+        <b>House means thuis, Bus means uit — everywhere.</b> The homepage
+        <code>&lt;MatchRow&gt;</code> pill keeps its word and gains the glyph;
+        the dense <code>&lt;TeamAgendaRow&gt;</code> mobile row stays glyph-only
+        and is untouched. Sentence-case "Thuis" / "Uit" replaces the shouted caps
+        so the glyph costs no net width. A / C / D are hidden above rather than
+        deleted. Known residual, accepted at lock: a reader who lands on the team
+        page first still meets the glyph without a word — that is
+        <b>#2404</b>'s territory, not this ticket's.
+      </p>
+    </div>
+
+    <!-- ═════════════════════════ A ═════════════════════════ -->
+    <div class="direction-bar" data-variant="a">
+      <span class="tag">A</span> Glyph everywhere
+      <span class="note"
+        >the pill retires — House/Bus on both surfaces, no words at all</span
+      >
+    </div>
+    <div class="wrap" data-variant="a">
+      <div class="pair">
+        <div>
+          <div class="surface-label">Homepage · &lt;MatchRow&gt;</div>
+          <div class="surface-sub">pill slot replaced by the bare glyph</div>
+          <div class="agenda">
+            <a class="mrow">
+              <span class="when">za 16 mei · 15:00</span>
+              <span class="teams"
+                ><span class="kcvv">KCVV Elewijt</span
+                ><span class="dash">—</span>KVC Wilrijk
+                <span class="cap"
+                  >A-Ploeg · 3e Afdeling VV ·
+                  <span class="venue">Driesstraat 32, Elewijt</span></span
+                ></span
+              >
+              <span class="glyph" title="Thuiswedstrijd"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                  /></svg
+              ></span>
+            </a>
+            <a class="mrow">
+              <span class="when">za 23 mei · 15:00</span>
+              <span class="teams"
+                >City Pirates<span class="dash">—</span
+                ><span class="kcvv">KCVV Elewijt</span>
+                <span class="cap">U21 · Provinciaal U21</span></span
+              >
+              <span class="glyph" title="Uitwedstrijd"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                  /></svg
+              ></span>
+            </a>
+            <a class="mrow">
+              <span class="when">za 30 mei · 14:30</span>
+              <span class="teams"
+                ><span class="kcvv">KCVV Elewijt</span
+                ><span class="dash">—</span>FC Wezel Sport
+                <span class="cap"
+                  >B-Ploeg · 4e Provinciale ·
+                  <span class="venue">Driesstraat 32, Elewijt</span></span
+                ></span
+              >
+              <span class="glyph" title="Thuiswedstrijd"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                  /></svg
+              ></span>
+            </a>
+            <a class="mrow">
+              <span class="when">za 6 jun · 15:00</span>
+              <span class="teams"
+                >Verbroedering Hofstade-Zemst<span class="dash">—</span
+                ><span class="kcvv">KCVV Elewijt</span>
+                <span class="cap">U15 · Gewestelijke U15</span></span
+              >
+              <span class="glyph" title="Uitwedstrijd"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                  /></svg
+              ></span>
+            </a>
+          </div>
+        </div>
+        <div>
+          <div class="surface-label">
+            Team detail / kalender · &lt;TeamAgendaRow&gt;
+          </div>
+          <div class="surface-sub">unchanged — already glyph-only</div>
+          <div class="phone">
+            <div class="cap-note">mobiel · 390px</div>
+            <div class="trows">
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">16</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">W</span>
+                  <span class="nm"
+                    ><span class="t">KVC Wilrijk</span
+                    ><span class="c">3e Afdeling VV</span></span
+                  >
+                  <span class="glyph" title="Thuiswedstrijd"
+                    ><svg
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      style="width: 14px; height: 14px"
+                    >
+                      <path
+                        d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                      /></svg
+                  ></span>
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">23</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">C</span>
+                  <span class="nm"
+                    ><span class="t">City Pirates</span
+                    ><span class="c">Provinciaal U21</span></span
+                  >
+                  <span class="glyph" title="Uitwedstrijd"
+                    ><svg
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      style="width: 14px; height: 14px"
+                    >
+                      <path
+                        d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                      /></svg
+                  ></span>
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">30</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">W</span>
+                  <span class="nm"
+                    ><span class="t">FC Wezel Sport</span
+                    ><span class="c">4e Provinciale</span></span
+                  >
+                  <span class="glyph" title="Thuiswedstrijd"
+                    ><svg
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      style="width: 14px; height: 14px"
+                    >
+                      <path
+                        d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                      /></svg
+                  ></span>
+                  <span class="score">14:30</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">6</span><span class="m">jun</span>
+                </div>
+                <div class="body">
+                  <span class="crest">H</span>
+                  <span class="nm"
+                    ><span class="t">Verbroedering Hofstade-Zemst</span
+                    ><span class="c">Gewestelijke U15</span></span
+                  >
+                  <span class="glyph" title="Uitwedstrijd"
+                    ><svg
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      style="width: 14px; height: 14px"
+                    >
+                      <path
+                        d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                      /></svg
+                  ></span>
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="verdict">
+        <b>Cost:</b> the homepage loses its only bold accent in the row — the
+        agenda goes flat and grey. And it walks straight into
+        <b>#2404</b> ("meaning carried by colour and position with no label"): a
+        bare glyph is exactly the unlegended encoding that ticket is open about.
+        <span class="ok">Gain:</span> maximum consistency, zero width cost.
+      </div>
+    </div>
+
+    <!-- ═════════════════════════ B ═════════════════════════ -->
+    <div class="direction-bar" data-variant="b">
+      <span class="tag">B</span> One sign, spoken at each surface's density
+      <span class="note"
+        >glyph + word where there is room, glyph alone where there is not</span
+      >
+    </div>
+    <div class="wrap" data-variant="b">
+      <div class="pair">
+        <div>
+          <div class="surface-label">Homepage · &lt;MatchRow&gt;</div>
+          <div class="surface-sub">pill keeps the word, gains the glyph</div>
+          <div class="agenda">
+            <a class="mrow">
+              <span class="when">za 16 mei · 15:00</span>
+              <span class="teams"
+                ><span class="kcvv">KCVV Elewijt</span
+                ><span class="dash">—</span>KVC Wilrijk
+                <span class="cap"
+                  >A-Ploeg · 3e Afdeling VV ·
+                  <span class="venue">Driesstraat 32, Elewijt</span></span
+                ></span
+              >
+              <span class="pill home"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                  /></svg
+                >Thuis</span
+              >
+            </a>
+            <a class="mrow">
+              <span class="when">za 23 mei · 15:00</span>
+              <span class="teams"
+                >City Pirates<span class="dash">—</span
+                ><span class="kcvv">KCVV Elewijt</span>
+                <span class="cap">U21 · Provinciaal U21</span></span
+              >
+              <span class="pill away"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                  /></svg
+                >Uit</span
+              >
+            </a>
+            <a class="mrow">
+              <span class="when">za 30 mei · 14:30</span>
+              <span class="teams"
+                ><span class="kcvv">KCVV Elewijt</span
+                ><span class="dash">—</span>FC Wezel Sport
+                <span class="cap"
+                  >B-Ploeg · 4e Provinciale ·
+                  <span class="venue">Driesstraat 32, Elewijt</span></span
+                ></span
+              >
+              <span class="pill home"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                  /></svg
+                >Thuis</span
+              >
+            </a>
+            <a class="mrow">
+              <span class="when">za 6 jun · 15:00</span>
+              <span class="teams"
+                >Verbroedering Hofstade-Zemst<span class="dash">—</span
+                ><span class="kcvv">KCVV Elewijt</span>
+                <span class="cap">U15 · Gewestelijke U15</span></span
+              >
+              <span class="pill away"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                  /></svg
+                >Uit</span
+              >
+            </a>
+          </div>
+        </div>
+        <div>
+          <div class="surface-label">
+            Team detail / kalender · &lt;TeamAgendaRow&gt;
+          </div>
+          <div class="surface-sub">
+            unchanged — the glyph now reads as the same sign
+          </div>
+          <div class="phone">
+            <div class="cap-note">mobiel · 390px</div>
+            <div class="trows">
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">16</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">W</span>
+                  <span class="nm"
+                    ><span class="t">KVC Wilrijk</span
+                    ><span class="c">3e Afdeling VV</span></span
+                  >
+                  <span class="glyph" title="Thuiswedstrijd"
+                    ><svg
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      style="width: 14px; height: 14px"
+                    >
+                      <path
+                        d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                      /></svg
+                  ></span>
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">23</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">C</span>
+                  <span class="nm"
+                    ><span class="t">City Pirates</span
+                    ><span class="c">Provinciaal U21</span></span
+                  >
+                  <span class="glyph" title="Uitwedstrijd"
+                    ><svg
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      style="width: 14px; height: 14px"
+                    >
+                      <path
+                        d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                      /></svg
+                  ></span>
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">30</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">W</span>
+                  <span class="nm"
+                    ><span class="t">FC Wezel Sport</span
+                    ><span class="c">4e Provinciale</span></span
+                  >
+                  <span class="glyph" title="Thuiswedstrijd"
+                    ><svg
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      style="width: 14px; height: 14px"
+                    >
+                      <path
+                        d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                      /></svg
+                  ></span>
+                  <span class="score">14:30</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">6</span><span class="m">jun</span>
+                </div>
+                <div class="body">
+                  <span class="crest">H</span>
+                  <span class="nm"
+                    ><span class="t">Verbroedering Hofstade-Zemst</span
+                    ><span class="c">Gewestelijke U15</span></span
+                  >
+                  <span class="glyph" title="Uitwedstrijd"
+                    ><svg
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      style="width: 14px; height: 14px"
+                    >
+                      <path
+                        d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                      /></svg
+                  ></span>
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="verdict">
+        <span class="ok">Gain:</span> one sign system — House means thuis, Bus
+        means uit, everywhere. The homepage keeps its accent and its word; the
+        dense row's glyph stops being an orphan because the reader has met it
+        captioned on the homepage first. Sentence-case "Thuis"/"Uit" over
+        shouted caps buys back the width the glyph costs. <b>Cost:</b> the dense
+        row still carries no word of its own — a reader who lands there first
+        still meets an unlegended glyph.
+      </div>
+    </div>
+
+    <!-- ═════════════════════════ C ═════════════════════════ -->
+    <div class="direction-bar" data-variant="c">
+      <span class="tag">C</span> Word everywhere
+      <span class="note"
+        >the glyph retires — the dense row swaps its icon for a micro mono
+        word</span
+      >
+    </div>
+    <div class="wrap" data-variant="c">
+      <div class="pair">
+        <div>
+          <div class="surface-label">Homepage · &lt;MatchRow&gt;</div>
+          <div class="surface-sub">unchanged — today's pill</div>
+          <div class="agenda">
+            <a class="mrow">
+              <span class="when">za 16 mei · 15:00</span>
+              <span class="teams"
+                ><span class="kcvv">KCVV Elewijt</span
+                ><span class="dash">—</span>KVC Wilrijk
+                <span class="cap"
+                  >A-Ploeg · 3e Afdeling VV ·
+                  <span class="venue">Driesstraat 32, Elewijt</span></span
+                ></span
+              >
+              <span class="pill home">Thuis</span>
+            </a>
+            <a class="mrow">
+              <span class="when">za 23 mei · 15:00</span>
+              <span class="teams"
+                >City Pirates<span class="dash">—</span
+                ><span class="kcvv">KCVV Elewijt</span>
+                <span class="cap">U21 · Provinciaal U21</span></span
+              >
+              <span class="pill away">Uit</span>
+            </a>
+            <a class="mrow">
+              <span class="when">za 30 mei · 14:30</span>
+              <span class="teams"
+                ><span class="kcvv">KCVV Elewijt</span
+                ><span class="dash">—</span>FC Wezel Sport
+                <span class="cap"
+                  >B-Ploeg · 4e Provinciale ·
+                  <span class="venue">Driesstraat 32, Elewijt</span></span
+                ></span
+              >
+              <span class="pill home">Thuis</span>
+            </a>
+            <a class="mrow">
+              <span class="when">za 6 jun · 15:00</span>
+              <span class="teams"
+                >Verbroedering Hofstade-Zemst<span class="dash">—</span
+                ><span class="kcvv">KCVV Elewijt</span>
+                <span class="cap">U15 · Gewestelijke U15</span></span
+              >
+              <span class="pill away">Uit</span>
+            </a>
+          </div>
+        </div>
+        <div>
+          <div class="surface-label">
+            Team detail / kalender · &lt;TeamAgendaRow&gt;
+          </div>
+          <div class="surface-sub">
+            glyph → 9px mono word (costs the opponent name ~14px)
+          </div>
+          <div class="phone">
+            <div class="cap-note">mobiel · 390px</div>
+            <div class="trows">
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">16</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">W</span>
+                  <span class="nm"
+                    ><span class="t">KVC Wilrijk</span
+                    ><span class="c">3e Afdeling VV</span></span
+                  >
+                  <span class="microword">Thuis</span>
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">23</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">C</span>
+                  <span class="nm"
+                    ><span class="t">City Pirates</span
+                    ><span class="c">Provinciaal U21</span></span
+                  >
+                  <span class="microword">Uit</span>
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">30</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">W</span>
+                  <span class="nm"
+                    ><span class="t">FC Wezel Sport</span
+                    ><span class="c">4e Provinciale</span></span
+                  >
+                  <span class="microword">Thuis</span>
+                  <span class="score">14:30</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">6</span><span class="m">jun</span>
+                </div>
+                <div class="body">
+                  <span class="crest">H</span>
+                  <span class="nm"
+                    ><span class="t">Verbroedering Hofstade-Zemst</span
+                    ><span class="c">Gewestelijke U15</span></span
+                  >
+                  <span class="microword">Uit</span>
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="verdict">
+        <span class="ok">Gain:</span> nothing is encoded by glyph alone — the
+        strongest answer to #2404. <b>Cost:</b> re-opens the width trade the
+        mobile row was designed around. Watch the fourth row — "Verbroedering
+        Hofstade-Zemst" truncates harder than in A/B. This is the same ~72px
+        argument #2388 settled on the strip, being re-litigated here.
+      </div>
+    </div>
+
+    <!-- ═════════════════════════ D ═════════════════════════ -->
+    <div class="direction-bar" data-variant="d">
+      <span class="tag">D</span> Glyph + word everywhere
+      <span class="note">the dense row stacks an 8px word under its icon</span>
+    </div>
+    <div class="wrap" data-variant="d">
+      <div class="pair">
+        <div>
+          <div class="surface-label">Homepage · &lt;MatchRow&gt;</div>
+          <div class="surface-sub">same as B</div>
+          <div class="agenda">
+            <a class="mrow">
+              <span class="when">za 16 mei · 15:00</span>
+              <span class="teams"
+                ><span class="kcvv">KCVV Elewijt</span
+                ><span class="dash">—</span>KVC Wilrijk
+                <span class="cap"
+                  >A-Ploeg · 3e Afdeling VV ·
+                  <span class="venue">Driesstraat 32, Elewijt</span></span
+                ></span
+              >
+              <span class="pill home"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                  /></svg
+                >Thuis</span
+              >
+            </a>
+            <a class="mrow">
+              <span class="when">za 23 mei · 15:00</span>
+              <span class="teams"
+                >City Pirates<span class="dash">—</span
+                ><span class="kcvv">KCVV Elewijt</span>
+                <span class="cap">U21 · Provinciaal U21</span></span
+              >
+              <span class="pill away"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                  /></svg
+                >Uit</span
+              >
+            </a>
+            <a class="mrow">
+              <span class="when">za 30 mei · 14:30</span>
+              <span class="teams"
+                ><span class="kcvv">KCVV Elewijt</span
+                ><span class="dash">—</span>FC Wezel Sport
+                <span class="cap"
+                  >B-Ploeg · 4e Provinciale ·
+                  <span class="venue">Driesstraat 32, Elewijt</span></span
+                ></span
+              >
+              <span class="pill home"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                  /></svg
+                >Thuis</span
+              >
+            </a>
+            <a class="mrow">
+              <span class="when">za 6 jun · 15:00</span>
+              <span class="teams"
+                >Verbroedering Hofstade-Zemst<span class="dash">—</span
+                ><span class="kcvv">KCVV Elewijt</span>
+                <span class="cap">U15 · Gewestelijke U15</span></span
+              >
+              <span class="pill away"
+                ><svg viewBox="0 0 256 256" fill="currentColor">
+                  <path
+                    d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                  /></svg
+                >Uit</span
+              >
+            </a>
+          </div>
+        </div>
+        <div>
+          <div class="surface-label">
+            Team detail / kalender · &lt;TeamAgendaRow&gt;
+          </div>
+          <div class="surface-sub">
+            icon + 8px word stacked (costs height, not width)
+          </div>
+          <div class="phone">
+            <div class="cap-note">mobiel · 390px</div>
+            <div class="trows">
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">16</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">W</span>
+                  <span class="nm"
+                    ><span class="t">KVC Wilrijk</span
+                    ><span class="c">3e Afdeling VV</span></span
+                  >
+                  <span class="microstack"
+                    ><svg viewBox="0 0 256 256" fill="currentColor">
+                      <path
+                        d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                      /></svg
+                    ><span class="w">Thuis</span></span
+                  >
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">23</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">C</span>
+                  <span class="nm"
+                    ><span class="t">City Pirates</span
+                    ><span class="c">Provinciaal U21</span></span
+                  >
+                  <span class="microstack"
+                    ><svg viewBox="0 0 256 256" fill="currentColor">
+                      <path
+                        d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                      /></svg
+                    ><span class="w">Uit</span></span
+                  >
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">30</span><span class="m">mei</span>
+                </div>
+                <div class="body">
+                  <span class="crest">W</span>
+                  <span class="nm"
+                    ><span class="t">FC Wezel Sport</span
+                    ><span class="c">4e Provinciale</span></span
+                  >
+                  <span class="microstack"
+                    ><svg viewBox="0 0 256 256" fill="currentColor">
+                      <path
+                        d="M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z"
+                      /></svg
+                    ><span class="w">Thuis</span></span
+                  >
+                  <span class="score">14:30</span>
+                </div>
+              </div>
+              <div class="trow">
+                <div class="stub">
+                  <span class="d">6</span><span class="m">jun</span>
+                </div>
+                <div class="body">
+                  <span class="crest">H</span>
+                  <span class="nm"
+                    ><span class="t">Verbroedering Hofstade-Zemst</span
+                    ><span class="c">Gewestelijke U15</span></span
+                  >
+                  <span class="microstack"
+                    ><svg viewBox="0 0 256 256" fill="currentColor">
+                      <path
+                        d="M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z"
+                      /></svg
+                    ><span class="w">Uit</span></span
+                  >
+                  <span class="score">15:00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="verdict">
+        <span class="ok">Gain:</span> fully self-describing on both surfaces,
+        and the stack spends height rather than the opponent's width, so the
+        truncation stays where C would have worsened it. <b>Cost:</b> a third
+        typographic size (8px) enters the dense row, which already carries a 9px
+        caption and a 14px name — and the row grows taller, which multiplies
+        across a long agenda.
+      </div>
+    </div>
+  </body>
+</html>

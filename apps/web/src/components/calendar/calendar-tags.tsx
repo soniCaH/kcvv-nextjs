@@ -14,6 +14,7 @@ import {
   EVENT_TYPE_FILL,
   type EventType,
 } from "@/components/event/event-type-style";
+import { HOME_AWAY_WORD } from "@/lib/utils/match-display";
 
 const TAG_BASE =
   "inline-flex shrink-0 items-center border-[1.5px] border-ink px-1.5 py-0.5 " +
@@ -49,7 +50,7 @@ export function MatchVenueTag({ isHome }: { isHome: boolean }) {
         isHome ? "bg-card-red text-cream" : "text-ink bg-transparent",
       )}
     >
-      {isHome ? "Thuis" : "Uit"}
+      {isHome ? HOME_AWAY_WORD.home : HOME_AWAY_WORD.away}
     </span>
   );
 }

@@ -111,3 +111,31 @@ export const OUTCOME_UNDERLINE: Record<
   draw: undefined,
   loss: "inset 0 -9px 0 color-mix(in srgb, var(--color-alert) 38%, var(--color-cream))",
 };
+
+/**
+ * The one home/away vocabulary (#2398 AC4). Four surfaces state this same fact
+ * and had four hand-maintained copies of the wording: `<UpcomingMatchesClient>`'s
+ * badge, `<TeamAgendaRow>`'s glyph, `<MatchStripView>`'s `<VenueGlyph>` (whose
+ * comment already claimed to reuse the row's vocabulary while copying it), and
+ * `<MatchVenueTag>` on `/kalender`.
+ *
+ * Only the *words* live here — `House`/`Bus` cannot, because `@/lib/icons.redesign`
+ * is a `"use client"` module and this file is imported by server code
+ * (`first-teams.ts`). Each surface keeps its own chrome and picks the register it
+ * has room for; the short form is for surfaces that also show the glyph, the
+ * long form for glyph-only surfaces where it is the accessible name.
+ *
+ * Colour is deliberately NOT unified here: `/kalender` fills home with
+ * `card-red` while the homepage badge uses `jersey-deep`. That reconcile is
+ * #2404's, not this one's.
+ */
+export const HOME_AWAY_WORD = {
+  home: "Thuis",
+  away: "Uit",
+} as const;
+
+/** Accessible name for a glyph-only home/away marker — see `HOME_AWAY_WORD`. */
+export const HOME_AWAY_A11Y_NAME = {
+  home: "Thuiswedstrijd",
+  away: "Uitwedstrijd",
+} as const;

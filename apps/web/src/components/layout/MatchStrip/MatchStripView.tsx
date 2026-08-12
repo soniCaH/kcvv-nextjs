@@ -6,7 +6,10 @@ import { cn } from "@/lib/utils/cn";
 import { MonoLabel } from "@/components/design-system/MonoLabel";
 import { getButtonClasses } from "@/components/design-system/Button";
 import { House, Bus } from "@/lib/icons.redesign";
-import { OUTCOME_UNDERLINE } from "@/lib/utils/match-display";
+import {
+  HOME_AWAY_A11Y_NAME,
+  OUTCOME_UNDERLINE,
+} from "@/lib/utils/match-display";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import { formatWidgetDate, formatDayMonth } from "@/lib/utils/dates";
 import type { MatchStripData } from "@/lib/server/match-data";
@@ -121,12 +124,16 @@ function Crest({ team, big = false }: { team: ScheduleTeam; big?: boolean }) {
   );
 }
 
-/** Reuses `<TeamAgendaRow>`'s venue glyph — one home/away vocabulary, not two. */
+/**
+ * Reuses `<TeamAgendaRow>`'s venue glyph — one home/away vocabulary, not two.
+ * The wording now comes from `HOME_AWAY_A11Y_NAME` rather than a copy, so that
+ * claim is enforced instead of aspirational (#2398).
+ */
 function VenueGlyph({ home }: { home: boolean }) {
   const Icon = home ? House : Bus;
   return (
     <Icon
-      aria-label={home ? "Thuiswedstrijd" : "Uitwedstrijd"}
+      aria-label={home ? HOME_AWAY_A11Y_NAME.home : HOME_AWAY_A11Y_NAME.away}
       className="text-ink-muted h-4 w-4 shrink-0"
     />
   );
