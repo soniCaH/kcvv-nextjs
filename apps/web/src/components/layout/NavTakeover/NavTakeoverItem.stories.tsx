@@ -19,11 +19,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Leaf: Story = {
-  args: { label: "Home", href: "/" },
-};
-
-export const Submenu: Story = {
-  args: { label: "Teams", hasSubmenu: true },
+  args: { label: "Nieuws", href: "/nieuws" },
 };
 
 export const Active: Story = {

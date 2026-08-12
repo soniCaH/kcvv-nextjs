@@ -35,7 +35,6 @@
       "viewport": "430x900"
     },
     "AccentStrip": { "cardMode": "single" },
-    "NavDropdown": { "cardMode": "column" },
     "ClippedCard": { "cardMode": "column" },
     "EditorialHeading": { "cardMode": "column" },
     "EditorialHeroShell": { "cardMode": "column" },

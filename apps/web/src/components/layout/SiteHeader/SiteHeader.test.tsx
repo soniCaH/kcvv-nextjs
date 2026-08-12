@@ -5,7 +5,6 @@ import { SiteHeader } from "./SiteHeader";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
-  useSearchParams: () => new URLSearchParams(),
 }));
 
 import type { TeamNavVM } from "@/lib/repositories/team.repository";
@@ -25,11 +24,6 @@ const makeTeam = (over: Partial<TeamNavVM>): TeamNavVM => ({
 const seniorTeams: TeamNavVM[] = [
   makeTeam({ slug: "kcvv-elewijt-a", name: "KCVV Elewijt A" }),
   makeTeam({ slug: "kcvv-elewijt-b", name: "KCVV Elewijt B" }),
-];
-
-const youthTeams: TeamNavVM[] = [
-  makeTeam({ slug: "u15", name: "U15", age: "U15" }),
-  makeTeam({ slug: "u13", name: "U13", age: "U13" }),
 ];
 
 describe("SiteHeader", () => {
@@ -73,23 +67,64 @@ describe("SiteHeader", () => {
 
   it("opens the drawer when the hamburger is clicked", async () => {
     const user = userEvent.setup();
-    render(<SiteHeader seniorTeams={seniorTeams} youthTeams={youthTeams} />);
+    render(<SiteHeader seniorTeams={seniorTeams} />);
     const hamburger = screen.getByRole("button", { name: /open menu/i });
     expect(screen.queryByRole("dialog")).toBeNull();
     await user.click(hamburger);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
-  it("renders the same nav items as the static menu on desktop", () => {
+  it("renders the 9-item flat nav on desktop, in order", () => {
+    render(<SiteHeader seniorTeams={seniorTeams} />);
+    const nav = screen.getAllByRole("navigation", {
+      name: /hoofdnavigatie/i,
+    })[0]!;
+    const labels = Array.from(nav.querySelectorAll("a")).map(
+      (a) => a.textContent,
+    );
+    expect(labels).toEqual([
+      "Nieuws",
+      "Wedstrijden",
+      "Evenementen",
+      "A-ploeg",
+      "B-ploeg",
+      "Jeugd",
+      "Sponsors",
+      "Hulp",
+      "De club",
+    ]);
+  });
+
+  it("has no dropdown triggers — every nav entry is a plain link", () => {
+    render(<SiteHeader seniorTeams={seniorTeams} />);
+    expect(document.querySelector("[aria-haspopup]")).toBeNull();
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
+
+  it("drops Home from the nav — the wordmark is the home link", () => {
+    render(<SiteHeader seniorTeams={seniorTeams} />);
+    expect(screen.queryByRole("link", { name: "Home" })).toBeNull();
+    expect(
+      screen.getAllByRole("link", { name: /KCVV Elewijt — home/i })[0],
+    ).toHaveAttribute("href", "/");
+  });
+
+  it("marks the active entry with aria-current, not colour alone", () => {
+    // usePathname is mocked to "/", so no nav entry is active — assert the
+    // negative here and the positive in the menuItems unit tests.
+    render(<SiteHeader seniorTeams={seniorTeams} />);
+    const nav = screen.getAllByRole("navigation", {
+      name: /hoofdnavigatie/i,
+    })[0]!;
+    for (const link of nav.querySelectorAll("a")) {
+      expect(link).not.toHaveAttribute("aria-current");
+    }
+  });
+
+  it("points Wedstrijden at /kalender", () => {
     render(<SiteHeader />);
     expect(
-      screen.getAllByRole("link", { name: "Home" }).length,
-    ).toBeGreaterThan(0);
-    expect(
-      screen.getAllByRole("link", { name: "Nieuws" }).length,
-    ).toBeGreaterThan(0);
-    expect(
-      screen.getAllByRole("link", { name: /sponsors/i }).length,
-    ).toBeGreaterThan(0);
+      screen.getAllByRole("link", { name: "Wedstrijden" })[0],
+    ).toHaveAttribute("href", "/kalender");
   });
 });

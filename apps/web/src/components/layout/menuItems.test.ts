@@ -1,90 +1,37 @@
 import { describe, it, expect } from "vitest";
 import {
-  staticMenuItems,
   buildMenuItems,
   buildSeniorMenuItem,
-  buildJeugdItem,
   isMenuItemActive,
-  flattenChildren,
-  hasSubmenu,
+  seniorNavLabel,
 } from "./menuItems";
 import type { MenuItem } from "./menuItems";
 import type { TeamNavVM } from "@/lib/repositories/team.repository";
 
-describe("staticMenuItems", () => {
-  it("does not contain a Zoeken entry", () => {
-    const labels = staticMenuItems.map((item) => item.label);
-    expect(labels).not.toContain("Zoeken");
-  });
-
-  it("places De club children under two groups: Wie we zijn / Praktisch", () => {
-    const deClub = staticMenuItems.find((item) => item.label === "De club");
-    expect(deClub).toBeDefined();
-    expect(deClub!.children).toBeUndefined();
-    const groupLabels = deClub!.childGroups!.map((g) => g.label);
-    expect(groupLabels).toEqual(["Wie we zijn", "Praktisch"]);
-  });
-
-  it("groups identity content under 'Wie we zijn' (6 items)", () => {
-    const deClub = staticMenuItems.find((item) => item.label === "De club")!;
-    const wieWeZijn = deClub.childGroups!.find(
-      (g) => g.label === "Wie we zijn",
-    )!;
-    const labels = wieWeZijn.items.map((i) => i.label);
-    expect(labels).toEqual([
-      "Geschiedenis",
-      "Organigram",
-      "Bestuur",
-      "Jeugdbestuur",
-      "KCVV Angels",
-      "KCVV Ultras",
-    ]);
-  });
-
-  it("groups operational content under 'Praktisch' (5 items)", () => {
-    const deClub = staticMenuItems.find((item) => item.label === "De club")!;
-    const praktisch = deClub.childGroups!.find((g) => g.label === "Praktisch")!;
-    const labels = praktisch.items.map((i) => i.label);
-    expect(labels).toEqual([
-      "Praktische info",
-      "Word vrijwilliger",
-      "Cashless clubkaart",
-      "Contact",
-      "Downloads",
-    ]);
-  });
-
-  it("preserves Word vrijwilliger href for backwards compatibility", () => {
-    const deClub = staticMenuItems.find((item) => item.label === "De club")!;
-    const vrijwilliger = deClub
-      .childGroups!.flatMap((g) => g.items)
-      .find((i) => i.label === "Word vrijwilliger");
-    expect(vrijwilliger?.href).toBe("/club/vrijwilliger");
-  });
-});
-
 describe("buildMenuItems", () => {
+  it("contains neither Zoeken nor Home — both live outside the nav list", () => {
+    const nav = buildMenuItems([]);
+    expect(nav.map((i) => i.label)).not.toContain("Zoeken");
+    expect(nav.map((i) => i.href)).not.toContain("/");
+  });
+
+  it("labels the calendar route Wedstrijden", () => {
+    const kalender = buildMenuItems([]).find((i) => i.href === "/kalender");
+    expect(kalender?.label).toBe("Wedstrijden");
+  });
+
   const seniorItems: MenuItem[] = [
-    { label: "A-Ploeg", href: "/ploegen/a-ploeg" },
-    { label: "B-Ploeg", href: "/ploegen/b-ploeg" },
+    { label: "A-ploeg", href: "/ploegen/a-ploeg" },
+    { label: "B-ploeg", href: "/ploegen/b-ploeg" },
   ];
 
-  const jeugdItem: MenuItem = {
-    label: "Jeugd",
-    href: "/jeugd",
-    children: [{ label: "U21", href: "/ploegen/u21" }],
-  };
-
-  it("inserts senior items and jeugd after the first 3 static items", () => {
-    const result = buildMenuItems(seniorItems, jeugdItem);
-    const labels = result.map((item) => item.label);
-
-    expect(labels).toEqual([
-      "Home",
+  it("renders the decided 9-item order", () => {
+    expect(buildMenuItems(seniorItems).map((i) => i.label)).toEqual([
       "Nieuws",
+      "Wedstrijden",
       "Evenementen",
-      "A-Ploeg",
-      "B-Ploeg",
+      "A-ploeg",
+      "B-ploeg",
       "Jeugd",
       "Sponsors",
       "Hulp",
@@ -93,12 +40,9 @@ describe("buildMenuItems", () => {
   });
 
   it("works with no senior items", () => {
-    const result = buildMenuItems([], jeugdItem);
-    const labels = result.map((item) => item.label);
-
-    expect(labels).toEqual([
-      "Home",
+    expect(buildMenuItems([]).map((i) => i.label)).toEqual([
       "Nieuws",
+      "Wedstrijden",
       "Evenementen",
       "Jeugd",
       "Sponsors",
@@ -108,34 +52,21 @@ describe("buildMenuItems", () => {
   });
 
   it("filters out null entries from seniorItems", () => {
-    const seniorItems: (MenuItem | null)[] = [
+    const withNull: (MenuItem | null)[] = [
       { label: "A", href: "/a" },
       null,
       { label: "B", href: "/b" },
     ];
-    const result = buildMenuItems(seniorItems, jeugdItem);
-    const labels = result.map((item) => item.label);
+    const labels = buildMenuItems(withNull).map((i) => i.label);
 
-    expect(labels).toEqual([
-      "Home",
-      "Nieuws",
-      "Evenementen",
-      "A",
-      "B",
-      "Jeugd",
-      "Sponsors",
-      "Hulp",
-      "De club",
-    ]);
+    expect(labels).toContain("A");
+    expect(labels).toContain("B");
   });
 
-  it("preserves children/childGroups on all items", () => {
-    const result = buildMenuItems(seniorItems, jeugdItem);
-    const jeugd = result.find((item) => item.label === "Jeugd");
-    expect(jeugd?.children).toEqual([{ label: "U21", href: "/ploegen/u21" }]);
-
-    const club = result.find((item) => item.label === "De club");
-    expect(club?.childGroups?.length).toBeGreaterThan(0);
+  it("emits leaf items only — nothing carries children", () => {
+    for (const item of buildMenuItems(seniorItems)) {
+      expect(Object.keys(item).sort()).toEqual(["href", "label"]);
+    }
   });
 });
 
@@ -143,238 +74,59 @@ describe("buildSeniorMenuItem", () => {
   const team = { slug: "a-ploeg", name: "KCVV Elewijt A" } as TeamNavVM;
 
   it("returns null when the team has no slug", () => {
-    expect(buildSeniorMenuItem(undefined, "A-Ploeg")).toBeNull();
+    expect(buildSeniorMenuItem(undefined, "A-ploeg")).toBeNull();
     expect(
-      buildSeniorMenuItem({ slug: "", name: "x" } as TeamNavVM, "A-Ploeg"),
+      buildSeniorMenuItem({ slug: "", name: "x" } as TeamNavVM, "A-ploeg"),
     ).toBeNull();
   });
 
-  it("points sub-items at single-scroll section anchors, not ?tab= params", () => {
-    const item = buildSeniorMenuItem(team, "A-Ploeg");
-    expect(item).not.toBeNull();
-    const hrefs = Object.fromEntries(
-      (item!.children ?? []).map((c) => [c.label, c.href]),
-    );
-    expect(hrefs).toEqual({
-      Info: "/ploegen/a-ploeg",
-      "Spelers & staf": "/ploegen/a-ploeg#spelers",
-      Wedstrijden: "/ploegen/a-ploeg#wedstrijden",
-      Klassement: "/ploegen/a-ploeg#klassement",
+  it("returns a plain link to the team page", () => {
+    expect(buildSeniorMenuItem(team, "A-ploeg")).toEqual({
+      label: "A-ploeg",
+      href: "/ploegen/a-ploeg",
     });
-    // No legacy tab query params survive.
-    for (const child of item!.children ?? []) {
-      expect(child.href).not.toContain("?tab=");
-    }
   });
 });
 
-describe("flattenChildren", () => {
-  it("returns empty array when neither children nor childGroups are set", () => {
-    const item: MenuItem = { label: "Home", href: "/" };
-    expect(flattenChildren(item)).toEqual([]);
+describe("seniorNavLabel", () => {
+  it("shortens a trailing single capital to <X>-ploeg", () => {
+    expect(seniorNavLabel("Eerste Elftallen A")).toBe("A-ploeg");
+    expect(seniorNavLabel("KCVV Elewijt B")).toBe("B-ploeg");
   });
 
-  it("returns flat children when only children is set", () => {
-    const item: MenuItem = {
-      label: "Teams",
-      href: "/ploegen",
-      children: [
-        { label: "Info", href: "/ploegen/a" },
-        { label: "Stand", href: "/ploegen/a?tab=stand" },
-      ],
-    };
-    expect(flattenChildren(item)).toEqual(item.children);
+  it("passes a short name through untouched", () => {
+    expect(seniorNavLabel("Reserven")).toBe("Reserven");
   });
 
-  it("flattens childGroups into a single array preserving order", () => {
-    const item: MenuItem = {
-      label: "De club",
-      href: "/club",
-      childGroups: [
-        {
-          label: "A",
-          items: [{ label: "X", href: "/x" }],
-        },
-        {
-          label: "B",
-          items: [
-            { label: "Y", href: "/y" },
-            { label: "Z", href: "/z" },
-          ],
-        },
-      ],
-    };
-    expect(flattenChildren(item).map((c) => c.label)).toEqual(["X", "Y", "Z"]);
+  it("returns a long name whole — width is bounded in CSS, not here", () => {
+    // The desktop row bounds itself with `NAV_LABEL_TRUNCATE` (max-w-[14ch]
+    // truncate). Truncating the string instead would also chop the mobile
+    // drawer, which has no width constraint, and would push the ellipsis into
+    // the link's accessible name.
+    const long = "Koninklijke Voetbalvereniging Elewijt";
+    expect(seniorNavLabel(long)).toBe(long);
   });
 
-  it("prefers childGroups over children when both are set", () => {
-    const item: MenuItem = {
-      label: "Both",
-      href: "/both",
-      children: [{ label: "from-children", href: "/c" }],
-      childGroups: [
-        { label: "G", items: [{ label: "from-groups", href: "/g" }] },
-      ],
-    };
-    expect(flattenChildren(item).map((c) => c.label)).toEqual(["from-groups"]);
-  });
-});
-
-describe("hasSubmenu", () => {
-  it("is false for leaf items", () => {
-    expect(hasSubmenu({ label: "Home", href: "/" })).toBe(false);
-  });
-
-  it("is true when children has at least one entry", () => {
-    expect(
-      hasSubmenu({
-        label: "Teams",
-        href: "/ploegen",
-        children: [{ label: "Info", href: "/ploegen/a" }],
-      }),
-    ).toBe(true);
-  });
-
-  it("is true when childGroups has at least one entry", () => {
-    expect(
-      hasSubmenu({
-        label: "De club",
-        href: "/club",
-        childGroups: [{ label: "G", items: [{ label: "X", href: "/x" }] }],
-      }),
-    ).toBe(true);
-  });
-
-  it("is false when both arrays are present but empty", () => {
-    expect(
-      hasSubmenu({
-        label: "Empty",
-        href: "/e",
-        children: [],
-        childGroups: [],
-      }),
-    ).toBe(false);
-  });
-
-  it("is false when childGroups holds only empty group shells", () => {
-    expect(
-      hasSubmenu({
-        label: "Shells",
-        href: "/s",
-        childGroups: [
-          { label: "G1", items: [] },
-          { label: "G2", items: [] },
-        ],
-      }),
-    ).toBe(false);
-  });
-
-  it("is true when at least one childGroup has items (mixed)", () => {
-    expect(
-      hasSubmenu({
-        label: "Mixed",
-        href: "/m",
-        childGroups: [
-          { label: "Empty", items: [] },
-          { label: "HasItems", items: [{ label: "X", href: "/x" }] },
-        ],
-      }),
-    ).toBe(true);
+  it("trims surrounding whitespace before deciding", () => {
+    expect(seniorNavLabel("  Eerste Elftallen A  ")).toBe("A-ploeg");
   });
 });
 
 describe("isMenuItemActive", () => {
-  const params = (tab?: string) => {
-    const sp = new URLSearchParams();
-    if (tab) sp.set("tab", tab);
-    return sp;
-  };
-
-  it("marks parent item active on its own tabbed page", () => {
-    expect(
-      isMenuItemActive(
-        "/ploegen/a-ploeg",
-        "/ploegen/a-ploeg",
-        params("wedstrijden"),
-      ),
-    ).toBe(true);
-  });
-
-  it("marks parent item active with no query params", () => {
-    expect(
-      isMenuItemActive("/ploegen/a-ploeg", "/ploegen/a-ploeg", params()),
-    ).toBe(true);
-  });
-
-  it("marks tab child active when tab matches", () => {
-    expect(
-      isMenuItemActive(
-        "/ploegen/a-ploeg?tab=wedstrijden",
-        "/ploegen/a-ploeg",
-        params("wedstrijden"),
-      ),
-    ).toBe(true);
-  });
-
-  it("does not mark tab child active when tab differs", () => {
-    expect(
-      isMenuItemActive(
-        "/ploegen/a-ploeg?tab=wedstrijden",
-        "/ploegen/a-ploeg",
-        params("klassement"),
-      ),
-    ).toBe(false);
+  it("marks an item active on its own page", () => {
+    expect(isMenuItemActive("/ploegen/a-ploeg", "/ploegen/a-ploeg")).toBe(true);
   });
 
   it("marks home active only on exact /", () => {
-    expect(isMenuItemActive("/", "/", params())).toBe(true);
-    expect(isMenuItemActive("/", "/nieuws", params())).toBe(false);
+    expect(isMenuItemActive("/", "/")).toBe(true);
+    expect(isMenuItemActive("/", "/nieuws")).toBe(false);
   });
 
   it("marks child paths active", () => {
-    expect(isMenuItemActive("/club", "/club/geschiedenis", params())).toBe(
-      true,
-    );
+    expect(isMenuItemActive("/club", "/club/geschiedenis")).toBe(true);
   });
 
-  it("does not mark a section-anchor child active (no scroll-spy)", () => {
-    // Hash-only differences cannot be resolved from the pathname alone, so a
-    // single-scroll section child stays inactive — the team's own page (and its
-    // bare "Info" child / parent) carries the active marker instead.
-    expect(
-      isMenuItemActive(
-        "/ploegen/a-ploeg#wedstrijden",
-        "/ploegen/a-ploeg",
-        params(),
-      ),
-    ).toBe(false);
-  });
-});
-
-describe("buildJeugdItem", () => {
-  it("returns undefined children when youthTeams is undefined", () => {
-    const item = buildJeugdItem(undefined);
-    expect(item.children).toBeUndefined();
-  });
-
-  it("returns undefined children when all teams are filtered out", () => {
-    const teams: TeamNavVM[] = [
-      { slug: "u21", age: null, name: "U21" },
-    ] as TeamNavVM[];
-    const item = buildJeugdItem(teams);
-    expect(item.children).toBeUndefined();
-  });
-
-  it("returns undefined children for empty array", () => {
-    const item = buildJeugdItem([]);
-    expect(item.children).toBeUndefined();
-  });
-
-  it("returns children when youth teams have ages", () => {
-    const teams: TeamNavVM[] = [
-      { slug: "u21", age: "U21", name: "U21" },
-    ] as TeamNavVM[];
-    const item = buildJeugdItem(teams);
-    expect(item.children).toEqual([{ label: "U21", href: "/ploegen/u21" }]);
+  it("does not match a sibling route sharing a prefix", () => {
+    expect(isMenuItemActive("/club", "/clubhuis")).toBe(false);
   });
 });

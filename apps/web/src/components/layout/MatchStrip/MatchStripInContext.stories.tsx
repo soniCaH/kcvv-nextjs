@@ -33,10 +33,6 @@ const seniorTeams: TeamNavVM[] = [
   makeTeam({ slug: "kcvv-elewijt-a", name: "KCVV Elewijt A" }),
   makeTeam({ slug: "kcvv-elewijt-b", name: "KCVV Elewijt B" }),
 ];
-const youthTeams: TeamNavVM[] = [
-  makeTeam({ slug: "u15", name: "U15", age: "U15" }),
-  makeTeam({ slug: "u13", name: "U13", age: "U13" }),
-];
 
 const homeResult: ScheduleMatch = {
   id: 12345,
@@ -68,7 +64,7 @@ const awayFixture: ScheduleMatch = {
 function PageShell({ data }: { data: MatchStripData | null }) {
   return (
     <div className="bg-cream-soft min-h-screen">
-      <SiteHeader seniorTeams={seniorTeams} youthTeams={youthTeams} />
+      <SiteHeader seniorTeams={seniorTeams} />
       {data ? <MatchStripView data={data} /> : null}
       <main className="mx-auto max-w-[1200px] px-4 py-12 lg:px-8">
         <div className="border-paper-edge bg-cream rounded-none border p-8">

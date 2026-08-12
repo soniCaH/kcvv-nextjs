@@ -35,11 +35,15 @@ import type {
 } from "./utils";
 
 export const metadata = buildPageMetadata({
-  title: "Kalender",
+  // Two different labels for this route, on purpose (#2415): the flat nav says
+  // "Wedstrijden" — short enough for a one-line bar — while the page's H1 and
+  // its metadata both say "Wedstrijdkalender". The title was the thing out of
+  // step; it used to read "Kalender", matching neither.
+  title: "Wedstrijdkalender",
   description:
     "Alle wedstrijden én clubactiviteiten van KCVV Elewijt op één kalender — A-ploeg, B-ploeg en jeugd. Bekijk per maand, week of als agenda, of abonneer je op je ploeg.",
   path: "/kalender",
-  ogTitle: "Kalender — KCVV Elewijt",
+  ogTitle: "Wedstrijdkalender — KCVV Elewijt",
   ogDescription:
     "Alle wedstrijden én clubactiviteiten van KCVV Elewijt op één kalender.",
   keywords: [

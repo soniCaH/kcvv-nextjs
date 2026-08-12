@@ -11,15 +11,6 @@ export type { SiteHeaderProps } from "./SiteHeader";
 export { NavTakeover, NavTakeoverItem } from "./NavTakeover";
 export type { NavTakeoverProps, NavTakeoverItemProps } from "./NavTakeover";
 
-// NavDropdown
-export { NavDropdown, NavDropdownProvider } from "./NavDropdown";
-export type {
-  NavDropdownProps,
-  NavDropdownProviderProps,
-  NavDropdownItem,
-  NavDropdownGroup,
-} from "./NavDropdown";
-
 // SiteFooter
 export { SiteFooter } from "./SiteFooter";
 export type { SiteFooterProps } from "./SiteFooter";

@@ -7,7 +7,6 @@ import { NavTakeoverItem } from "./NavTakeoverItem";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
-  useSearchParams: () => new URLSearchParams(),
 }));
 
 describe("NavTakeover", () => {
@@ -132,24 +131,24 @@ describe("NavTakeoverItem", () => {
     expect(link).toHaveAttribute("href", "/");
   });
 
-  it("renders ▾ glyph and toggles submenu when hasSubmenu is true", async () => {
-    const user = userEvent.setup();
-    render(
-      <NavTakeoverItem label="Teams" hasSubmenu>
-        <NavTakeoverItem label="A-Ploeg" href="/ploegen/a" />
-      </NavTakeoverItem>,
-    );
-    const trigger = screen.getByRole("button", { name: /teams/i });
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByRole("link", { name: /a-ploeg/i })).toBeNull();
-    await user.click(trigger);
-    expect(trigger).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("link", { name: /a-ploeg/i })).toBeInTheDocument();
-  });
-
   it("applies active jersey-deep tone", () => {
     render(<NavTakeoverItem label="Nieuws" href="/nieuws" active />);
     const link = screen.getByRole("link", { name: "Nieuws" });
     expect(link.className).toContain("text-jersey-deep");
+  });
+
+  it("marks the active row with aria-current, not colour alone", () => {
+    const { rerender } = render(
+      <NavTakeoverItem label="Nieuws" href="/nieuws" active />,
+    );
+    expect(screen.getByRole("link", { name: "Nieuws" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    rerender(<NavTakeoverItem label="Nieuws" href="/nieuws" />);
+    expect(screen.getByRole("link", { name: "Nieuws" })).not.toHaveAttribute(
+      "aria-current",
+    );
   });
 });

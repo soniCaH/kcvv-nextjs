@@ -1,24 +1,30 @@
 /**
- * Nav → index-page reachability guard (#2414).
+ * Nav → index-page reachability guard (#2414, repointed by #2415).
  *
- * #2409 deletes every nav dropdown on the grounds that each destination page
+ * #2409 deleted every nav dropdown on the grounds that each destination page
  * already indexes its own children. That is only safe while the index pages
- * are supersets of the panels they replace. These tests are that guard: if a
- * dropdown link has no counterpart on its index page, deleting the dropdown
- * makes the route unreachable, and this file fails first.
+ * stay supersets of the panels they replaced — and now that the panels are
+ * gone, nothing in the source states what they used to hold. So the former
+ * panel contents live here, frozen, and these tests assert the index pages
+ * still cover them.
  *
- * Scope: the `De club` panel → `<ClubEditorialHub>`, and `buildJeugdItem`'s
- * children → the `<YouthDirectory>` groups rendered on `/jeugd` + `/ploegen`.
- * The senior panels are anchors into a page that already renders those
- * sections, so they need no index counterpart.
+ * Read the frozen list as "routes that had a nav link before #2415". If a
+ * route drops off its index page, it becomes unreachable from the chrome
+ * entirely, and this file fails first.
+ *
+ * Scope: the `De club` panel → `<ClubEditorialHub>`, and the `Jeugd` panel →
+ * the `<YouthDirectory>` groups rendered on `/jeugd` + `/ploegen`. The senior
+ * panels were anchors into a page that already renders those sections, so they
+ * need no index counterpart.
  *
  * KNOWN GAP — `ROSTER` mirrors the teams production actually shows. The nav
  * admits any age code (`isAgeCode`), but only U6–U21 land in a bouw band, so an
- * out-of-band age like `U5` would enter the dropdown and reach no group. The
- * one such document (`KCVVE U5`) carries `showInNavigation: false`, so it is
- * latent rather than live; closing it means changing which teams a group
- * claims, which #2414 deliberately left alone. Tracked as follow-up — add the
- * boundary team to `ROSTER` when that lands and this guard will hold it.
+ * out-of-band age like `U5` would have entered the dropdown and reached no
+ * group. The one such document (`KCVVE U5`) carries `showInNavigation: false`,
+ * so it is latent rather than live; closing it means changing which teams a
+ * group claims, which #2414 deliberately left alone. Tracked as follow-up —
+ * add the boundary team to `ROSTER` when that lands and this guard will hold
+ * it.
  */
 
 import { describe, it, expect } from "vitest";
@@ -30,14 +36,27 @@ import {
   RESERVEN_PSD_ID,
   type TeamLandingItem,
 } from "@/lib/utils/group-teams";
-import {
-  buildJeugdItem,
-  flattenChildren,
-  isUnderJeugd,
-  staticMenuItems,
-} from "./menuItems";
+import { buildMenuItems, isUnderJeugd } from "./menuItems";
 
-const clubMenuItem = staticMenuItems.find((i) => i.href === "/club");
+/**
+ * The `De club` dropdown as it stood at `main@00570d8f`, the commit before
+ * #2415 deleted it. Frozen deliberately: this is a historical record of what
+ * the chrome used to reach, not a live structure to be kept in sync with
+ * anything. Only ever shrink it if a route is genuinely retired.
+ */
+const FORMER_DE_CLUB_PANEL = [
+  "/club/geschiedenis",
+  "/hulp#structuur",
+  "/club/bestuur",
+  "/club/jeugdbestuur",
+  "/club/angels",
+  "/club/ultras",
+  "/club/praktische-informatie",
+  "/club/vrijwilliger",
+  "/club/cashless",
+  "/club/contact",
+  "/club/downloads",
+] as const;
 
 /**
  * The production team roster, in both view-model shapes. Mirrors the real
@@ -78,30 +97,31 @@ const youthDirectoryHrefs = (teams: TeamLandingItem[]): string[] =>
     .youthByDivision.flatMap((d) => d.teams)
     .map((t) => `/ploegen/${t.slug}`);
 
-describe("`De club` dropdown → /club index parity", () => {
-  it("finds the `De club` menu item", () => {
-    expect(clubMenuItem).toBeDefined();
+describe("former `De club` panel → /club index parity", () => {
+  it("still has a top-level `De club` entry pointing at the hub", () => {
+    const clubMenuItem = buildMenuItems([]).find((i) => i.href === "/club");
+    expect(clubMenuItem?.label).toBe("De club");
   });
 
-  it("indexes every `De club` dropdown link on the /club hub", () => {
+  it("indexes every former `De club` panel link on the /club hub", () => {
     const hubHrefs = CLUB_HUB_CARDS.map((c) => c.href);
-    const dropdownHrefs = flattenChildren(clubMenuItem!).map((c) => c.href);
 
-    expect(dropdownHrefs.length).toBeGreaterThan(0);
-    const missing = dropdownHrefs.filter((h) => !hubHrefs.includes(h));
+    const missing = FORMER_DE_CLUB_PANEL.filter((h) => !hubHrefs.includes(h));
     expect(missing).toEqual([]);
   });
 });
 
-describe("`Jeugd` dropdown → /jeugd + /ploegen index parity", () => {
-  it("indexes every `Jeugd` dropdown link in a youth-directory group", () => {
-    const dropdownHrefs = flattenChildren(
-      buildJeugdItem(navTeams.filter(isUnderJeugd)),
-    ).map((c) => c.href);
+describe("former `Jeugd` panel → /jeugd + /ploegen index parity", () => {
+  it("indexes every team that had a `Jeugd` panel link in a directory group", () => {
+    // The panel listed exactly the teams `isUnderJeugd` selects, so the guard
+    // stays data-driven: it grows with the roster rather than with a literal.
+    const formerPanelHrefs = navTeams
+      .filter(isUnderJeugd)
+      .map((t) => `/ploegen/${t.slug}`);
     const indexHrefs = youthDirectoryHrefs(landingTeams);
 
-    expect(dropdownHrefs.length).toBeGreaterThan(0);
-    const missing = dropdownHrefs.filter((h) => !indexHrefs.includes(h));
+    expect(formerPanelHrefs.length).toBeGreaterThan(0);
+    const missing = formerPanelHrefs.filter((h) => !indexHrefs.includes(h));
     expect(missing).toEqual([]);
   });
 
