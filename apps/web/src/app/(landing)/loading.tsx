@@ -117,11 +117,27 @@ export default function HomeLoading() {
         aria-hidden="true"
       >
         <div className="bg-paper-edge mb-6 h-9 w-64" />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+        {/* Team-chip filter row, then the stacked agenda rows — the band is a
+            list, not a card grid (#2398). Chip widths approximate the real
+            "Alles · A-Ploeg · U21 …" facet set, in Tailwind units to match the
+            /kalender chip skeleton. `pb-1.5` mirrors the gutter <FilterTabs>
+            leaves so its paper shadow isn't clipped. */}
+        <div className="mb-5 flex gap-3 pb-1.5">
+          {["w-16", "w-24", "w-20", "w-14", "w-16"].map((w, i) => (
             <div
               key={i}
-              className="border-ink bg-cream shadow-paper-sm h-32 border-2"
+              className={`border-ink bg-cream-soft shadow-paper-sm h-7 border-2 ${w}`}
+            />
+          ))}
+        </div>
+        {/* <MatchRow> is a two-line grid below `sm` and one line above it, so
+            the skeleton has to be too or the swap reflows on mobile — the exact
+            viewport the youth-parent path targets. */}
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="border-ink bg-cream shadow-paper-sm h-[86px] border-2 sm:h-[70px]"
             />
           ))}
         </div>

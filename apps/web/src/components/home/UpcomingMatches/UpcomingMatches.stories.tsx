@@ -4,6 +4,7 @@ import {
   mockUpcomingFive,
   mockUpcomingTwelve,
   mockUpcomingThree,
+  mockUpcomingSingleTeam,
 } from "./UpcomingMatches.mocks";
 
 const meta = {
@@ -15,7 +16,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Homepage upcoming-matches block (Phase 4.B.2). Single-purpose schedule listing across all KCVV teams. Renames the legacy `<MatchesSliderSection>` and absorbs `<MatchWidget>`. Default shows 5 chronological matches; inline expand reveals all upcoming, and the `/kalender` link is only visible after expansion. Empty state returns null.",
+          "Homepage upcoming-matches block (Phase 4.B.2). Single-purpose schedule listing across all KCVV teams. Renames the legacy `<MatchesSliderSection>` and absorbs `<MatchWidget>`. Default shows 5 chronological matches; inline expand reveals all upcoming and is reversible, and the `/kalender` link is only visible after expansion. Empty state returns null.\n\n#2398 added the youth-parent path: a label-sorted team-chip filter (`<FilterTabs>`) above the list, the venue in each row's caption, and the home/away badge reconciled with `<TeamAgendaRow>`'s House/Bus glyph per drill 2398-1 variant B. Venue renders nothing in production today — PSD supplies no venue field and the BFF hardcodes `undefined` — so the fixtures below carry one only to keep the populated caption covered.",
       },
     },
   },
@@ -78,7 +79,19 @@ export const Expanded: Story = {
     docs: {
       description: {
         story:
-          "Expanded state — all upcoming matches visible in one chronological list, `/kalender` link revealed.",
+          "Expanded state — all upcoming matches visible in one chronological list, `/kalender` link revealed, and the control now reads 'Toon minder ↑' so the expansion is reversible (#2398).",
+      },
+    },
+  },
+};
+
+export const SingleTeamNoFilter: Story = {
+  args: { matches: mockUpcomingSingleTeam },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Every fixture belongs to one squad — the end-of-season tail. The team filter drops out entirely rather than rendering a reset beside a single dead facet (#2398).",
       },
     },
   },

@@ -20,6 +20,7 @@ import { Crest, PRESS_DOWN_CLASSES } from "@/components/design-system";
 import { cn } from "@/lib/utils/cn";
 import {
   getResultColor,
+  HOME_AWAY_A11Y_NAME,
   isExceptionalMatchStatus,
   isPlayedMatch,
   isSettledMatch,
@@ -411,7 +412,9 @@ export function TeamAgendaRow({
                 </div>
                 <VenueIcon
                   size={14}
-                  aria-label={isHome ? "Thuiswedstrijd" : "Uitwedstrijd"}
+                  aria-label={
+                    isHome ? HOME_AWAY_A11Y_NAME.home : HOME_AWAY_A11Y_NAME.away
+                  }
                   className={cn(
                     "shrink-0",
                     featured ? "text-white" : "text-ink-muted",
