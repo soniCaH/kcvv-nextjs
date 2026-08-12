@@ -9,6 +9,13 @@ export interface BannerSlotProps {
   alt: string;
   /** Optional click-through URL — wraps in <a> when set */
   href?: string;
+  /**
+   * Which of the three homepage slots this is. Emitted as the inert
+   * `data-banner-slot` marker that `<HomepageAnalytics>` delegates on, and as
+   * the `position` param on the banner events (#2400) — the slots sit at very
+   * different scroll depths, so an undifferentiated banner event says nothing.
+   */
+  slot?: "a" | "b" | "c";
   /** Additional CSS classes */
   className?: string;
 }
@@ -23,6 +30,7 @@ export const BannerSlot = ({
   image,
   alt,
   href,
+  slot,
   className,
 }: BannerSlotProps) => {
   const inner = (
@@ -55,6 +63,7 @@ export const BannerSlot = ({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
+          data-banner-slot={slot}
           className="group block transition-all duration-300 motion-safe:hover:translate-x-1 motion-safe:hover:translate-y-1"
         >
           {inner}

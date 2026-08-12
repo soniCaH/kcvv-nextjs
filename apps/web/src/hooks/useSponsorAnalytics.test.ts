@@ -49,6 +49,29 @@ describe("useSponsorAnalytics", () => {
     expect(params.sponsor_id).toBe(hashMemberId("raw-secret-id"));
   });
 
+  it("carries source when the tile sat on the homepage", () => {
+    const { result } = renderHook(() => useSponsorAnalytics());
+    act(() =>
+      result.current.trackSponsorClick({
+        sponsorId: "hp-1",
+        tier: "hoofdsponsor",
+        source: "homepage",
+      }),
+    );
+    expect(mockTrackEvent).toHaveBeenCalledWith("sponsor_click", {
+      sponsor_id: hashMemberId("hp-1"),
+      tier: "hoofdsponsor",
+      source: "homepage",
+    });
+  });
+
+  it("omits source on the /sponsors page", () => {
+    const { result } = renderHook(() => useSponsorAnalytics());
+    act(() => result.current.trackSponsorClick({ sponsorId: "sp-1" }));
+    const params = mockTrackEvent.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(params).not.toHaveProperty("source");
+  });
+
   it("omits tier when absent", () => {
     const { result } = renderHook(() => useSponsorAnalytics());
     act(() => result.current.trackSponsorClick({ sponsorId: "x" }));

@@ -31,7 +31,11 @@ import {
   toHomepageArticles,
 } from "@/lib/repositories/article.repository";
 import { formatArticleDate } from "@/lib/utils/dates";
-import { HomepageRepository } from "@/lib/repositories/homepage.repository";
+import {
+  HomepageRepository,
+  type BannerSlotVM,
+} from "@/lib/repositories/homepage.repository";
+import { TrackInView } from "@/components/analytics";
 import {
   EventRepository,
   type EventVM,
@@ -43,6 +47,7 @@ import {
 } from "@/lib/repositories/team.repository";
 import {
   BannerSlot,
+  HomepageAnalytics,
   FeaturedEventBand,
   toFeaturedEventBandEvent,
   FeaturedUitgelichtRow,
@@ -334,21 +339,7 @@ export default async function HomePage() {
       }
     : null;
 
-  const bannerSlotASection: SectionConfig | null = banners.bannerSlotA
-    ? {
-        key: "banner-a",
-        bg: "transparent",
-        content: (
-          <BannerSlot
-            image={banners.bannerSlotA.imageUrl}
-            alt={banners.bannerSlotA.alt}
-            href={banners.bannerSlotA.href}
-          />
-        ),
-        paddingTop: "pt-0",
-        paddingBottom: "pb-0",
-      }
-    : null;
+  const bannerSlotASection = toBannerSection("a", banners.bannerSlotA);
 
   const latestNewsSection: SectionConfig | null =
     newsGridArticles.length > 0
@@ -378,21 +369,7 @@ export default async function HomePage() {
         }
       : null;
 
-  const bannerSlotBSection: SectionConfig | null = banners.bannerSlotB
-    ? {
-        key: "banner-b",
-        bg: "transparent",
-        content: (
-          <BannerSlot
-            image={banners.bannerSlotB.imageUrl}
-            alt={banners.bannerSlotB.alt}
-            href={banners.bannerSlotB.href}
-          />
-        ),
-        paddingTop: "pt-0",
-        paddingBottom: "pb-0",
-      }
-    : null;
+  const bannerSlotBSection = toBannerSection("b", banners.bannerSlotB);
 
   const youthSection: SectionConfig = {
     key: "youth",
@@ -409,26 +386,21 @@ export default async function HomePage() {
     paddingTop: "pt-0",
   };
 
-  const bannerSlotCSection: SectionConfig | null = banners.bannerSlotC
-    ? {
-        key: "banner-c",
-        bg: "transparent",
-        content: (
-          <BannerSlot
-            image={banners.bannerSlotC.imageUrl}
-            alt={banners.bannerSlotC.alt}
-            href={banners.bannerSlotC.href}
-          />
-        ),
-        paddingTop: "pt-0",
-        paddingBottom: "pb-0",
-      }
-    : null;
+  const bannerSlotCSection = toBannerSection("c", banners.bannerSlotC);
 
   const sponsorsSection: SectionConfig = {
     key: "sponsors",
     bg: "transparent",
-    content: <SponsorsSection />,
+    content: (
+      // The block sits near the bottom of the spine, so a mount-time event
+      // would count every homepage load as a sponsor impression (#2400).
+      <TrackInView
+        eventName="sponsor_impression"
+        params={{ source: "homepage" }}
+      >
+        <SponsorsSection />
+      </TrackInView>
+    ),
     paddingTop: "pt-0",
     paddingBottom: "pb-0",
   };
@@ -454,28 +426,64 @@ export default async function HomePage() {
           { name: "Home", url: SITE_CONFIG.siteUrl },
         ])}
       />
-      <SectionStack
-        sections={[
-          heroSection,
-          // #2387: "Dit weekend." sits directly under the hero, ahead of the
-          // editorial rows. The result used to land ~2,200px down on a phone,
-          // behind the hero and three Uitgelicht cards, which contradicted
-          // product principle 1 ("the result is the headline").
-          firstTeamsSection,
-          uitgelichtSection,
-          featuredEventSection,
-          bannerSlotASection,
-          latestNewsSection,
-          upcomingMatchesSection,
-          bannerSlotBSection,
-          youthSection,
-          bannerSlotCSection,
-          sponsorsSection,
-          clubshopSection,
-        ]}
-      />
+      <HomepageAnalytics>
+        <SectionStack
+          sections={[
+            heroSection,
+            // #2387: "Dit weekend." sits directly under the hero, ahead of the
+            // editorial rows. The result used to land ~2,200px down on a phone,
+            // behind the hero and three Uitgelicht cards, which contradicted
+            // product principle 1 ("the result is the headline").
+            firstTeamsSection,
+            uitgelichtSection,
+            featuredEventSection,
+            bannerSlotASection,
+            latestNewsSection,
+            upcomingMatchesSection,
+            bannerSlotBSection,
+            youthSection,
+            bannerSlotCSection,
+            sponsorsSection,
+            clubshopSection,
+          ]}
+        />
+      </HomepageAnalytics>
     </>
   );
+}
+
+/**
+ * One homepage banner slot, instrumented (#2400). The three slots differ only
+ * in their content and scroll depth, so they share a builder rather than three
+ * near-identical literals — `position` is what tells them apart in GA4.
+ */
+function toBannerSection(
+  slot: "a" | "b" | "c",
+  banner: BannerSlotVM | null,
+): SectionConfig | null {
+  if (!banner) return null;
+  return {
+    key: `banner-${slot}`,
+    bg: "transparent",
+    content: (
+      // `destination` matches what `banner_click` sends, so impressions and
+      // clicks join on it. The slot alone can't identify the creative — the
+      // three slots are fixed but their campaigns rotate.
+      <TrackInView
+        eventName="banner_impression"
+        params={{ position: slot, destination: banner.href ?? "" }}
+      >
+        <BannerSlot
+          image={banner.imageUrl}
+          alt={banner.alt}
+          href={banner.href}
+          slot={slot}
+        />
+      </TrackInView>
+    ),
+    paddingTop: "pt-0",
+    paddingBottom: "pb-0",
+  };
 }
 
 /**

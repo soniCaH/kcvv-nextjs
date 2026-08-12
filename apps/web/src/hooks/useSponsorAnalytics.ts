@@ -8,6 +8,12 @@ interface SponsorClickInput {
   /** Internal Sanity sponsor id — hashed before it leaves the client. */
   sponsorId: string;
   tier?: SponsorTier;
+  /**
+   * Which surface the tile sat on — `homepage` for `<SponsorsBlock>`, omitted
+   * on `/sponsors` (#2400). Without it the two surfaces are indistinguishable
+   * in GA4 and neither can be judged on its own.
+   */
+  source?: "homepage";
 }
 
 /**
@@ -25,10 +31,11 @@ export function useSponsorAnalytics() {
   }, []);
 
   const trackSponsorClick = useCallback(
-    ({ sponsorId, tier }: SponsorClickInput) => {
+    ({ sponsorId, tier, source }: SponsorClickInput) => {
       trackEvent("sponsor_click", {
         sponsor_id: hashMemberId(sponsorId),
         ...(tier ? { tier } : {}),
+        ...(source ? { source } : {}),
       });
     },
     [],

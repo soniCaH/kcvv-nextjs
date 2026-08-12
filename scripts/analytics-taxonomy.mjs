@@ -40,6 +40,9 @@ export const prefixes = [
   "clubshop_banner_",
   "kalender_",
   "sponsor_",
+  "banner_",
+  "nav_",
+  "footer_",
   "jeugd_",
   "hub_",
   "board_",
@@ -121,6 +124,16 @@ export const params = [
   // ── Sponsors ────────────────────────────────────────────────────────────
   { parameterName: "sponsor_id", displayName: "Sponsor ID hashed" },
   { parameterName: "tier", displayName: "Sponsor tier" },
+  // ── Global chrome + homepage banners (#2419 / #2400) ────────────────────
+  // No new params: `nav_link_click` / `footer_link_click` reuse `destination`
+  // + `source` + `category` (the footer column), and `banner_impression` /
+  // `banner_click` reuse `position` (the a/b/c slot) + `destination`. GA4 caps
+  // event-scoped custom dimensions at 50 and this list is already past it, so
+  // these families deliberately mint none — `event_name` segments them.
+  // Note `position` is a 1-indexed rank everywhere else (search results, hub
+  // rows); the banner families overload it with the a/b/c slot letter, which
+  // matches the Sanity field names (`bannerSlotA`) an editor would change.
+  // Any report on `position` therefore has to filter by `event_name` first.
   // ── Jeugd nav hub ───────────────────────────────────────────────────────
   { parameterName: "card_type", displayName: "Card type" },
   { parameterName: "tag", displayName: "Card tag" },

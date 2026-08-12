@@ -33,6 +33,9 @@ export type { NewsCardProps } from "@/components/article/NewsCard";
 export { BannerSlot } from "./BannerSlot";
 export type { BannerSlotProps } from "./BannerSlot";
 
+export { HomepageAnalytics } from "./HomepageAnalytics";
+export type { HomepageAnalyticsProps } from "./HomepageAnalytics";
+
 export { UpcomingMatches } from "./UpcomingMatches";
 export type { UpcomingMatchesProps } from "./UpcomingMatches";
 

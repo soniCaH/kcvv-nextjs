@@ -14,6 +14,9 @@
  *               exit WITHOUT writing anything.
  *   --dump      Read-only: print the live trigger, GA4 tag, and DLVs as JSON,
  *               so the exact resource shapes can be confirmed. No writes.
+ *   --publish   Publish the version it creates, instead of leaving it for a
+ *               manual review + publish in the GTM UI. Reversible: GTM keeps
+ *               every version, and re-publishing the previous one rolls back.
  *   Abort       A real run aborts (non-zero) if the live trigger RegEx contains a
  *               token NOT in the taxonomy, instead of dropping it. --dry-run only
  *               warns. --force-regex overwrites the RegEx with the canonical one
@@ -21,29 +24,64 @@
  *   Orphans     Live DLV keys / tag param rows / regex tokens the taxonomy no
  *               longer contains are PRINTED (read-only) and never auto-deleted.
  *
+ * UNATTENDED WRITES — GTM v2's write quota is low and bursty callers get 429s,
+ * so every mutating call goes through one serialized, paced queue (see
+ * `write()`): a fixed gap between writes, then exponential backoff on top for
+ * whatever still bounces. A full sync is therefore SLOW by design — minutes,
+ * not seconds — and that is the trade for a run that finishes on its own.
+ *
+ * There is no bulk-create endpoint for variables in GTM API v2, so DLVs cost
+ * one request each; "batching" here means paced + resumable, not fewer calls.
+ * The run is idempotent: it re-reads live state before planning AND again
+ * before the create loop, so an interrupted run can simply be re-run and picks
+ * up whatever is still missing without ever duplicating.
+ *
  * AUTH — Google blocks gcloud's built-in OAuth client from requesting these
  * sensitive scopes for ADC. Use a user-owned OAuth client (one-time):
  *   1. GCP Console → enable "Tag Manager API" (+ "Google Analytics Admin API").
  *   2. OAuth consent screen → add yourself as a Test user.
  *   3. Credentials → create an OAuth client ID, type "Desktop app", download JSON.
- *   4. gcloud auth application-default login \
- *        --client-id-file=<that>.json \
- *        --scopes=https://www.googleapis.com/auth/tagmanager.edit.containers,\
- *                 https://www.googleapis.com/auth/tagmanager.edit.containerversions
+ *   4. gcloud auth application-default login --client-id-file=<that>.json \
+ *        --scopes=https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/tagmanager.edit.containers,https://www.googleapis.com/auth/tagmanager.edit.containerversions,https://www.googleapis.com/auth/tagmanager.publish
+ *
+ * Three gotchas on step 4, each of which fails in a way that does NOT name the
+ * real cause:
+ *   - `cloud-platform` is MANDATORY. gcloud rejects any ADC `--scopes` list
+ *     without it ("cloud-platform scope is required but not requested").
+ *   - Keep `--scopes` on the SAME line as the rest, or put the `\` at the very
+ *     end of a line. A `\` followed by a space mid-line escapes that space
+ *     instead of continuing the line, so gcloud never sees the flag and
+ *     silently falls back to its DEFAULT ADC scopes — which include
+ *     `sqlservice.login` and blow up with "Some requested scopes were
+ *     invalid". That error is a symptom of the typo, not of a bad scope list.
+ *   - `tagmanager.publish` is needed ONLY for --publish; the two edit scopes
+ *     cover a normal run.
+ *
+ * While the consent screen is in "Testing" status Google expires the refresh
+ * token after 7 days, so step 4 has to be repeated periodically — an
+ * `invalid_grant: Bad Request` from `print-access-token` is that expiry, not a
+ * broken setup.
  *
  * ENV (required unless noted) — live values for the KCVV `GTM-P36Q8LHM`
  * container (account owned by kevin.van.ransbeeck@gmail.com — auth as that user):
  *   GTM_ACCOUNT_ID=4702633562
  *   GTM_CONTAINER_ID=247406304
- *   GTM_WORKSPACE_ID=10       (Default Workspace; or a fresh workspace's id)
+ *   GTM_WORKSPACE_ID  OPTIONAL and normally omitted — the script discovers the
+ *                     writable workspace itself. Workspace ids ROTATE (creating
+ *                     a version consumes the workspace and GTM opens a fresh
+ *                     one under a new id), so a pinned value works exactly once
+ *                     and then fails with "Workspace is already submitted".
  *   GTM_TRIGGER_NAME  (default "Custom Event — KCVV Analytics")
  *   GTM_TAG_NAME      (default "GA4 Event — KCVV Custom Events")
  *   GTM_DLV_PREFIX    (default "dlv - ")  — matches the live container convention
+ *   GTM_WRITE_PACE_MS (default 4000) — minimum gap between two write calls.
+ *                     Raise it if 429s still show up; the run just takes longer.
  *
  * Usage:
  *   node scripts/sync-gtm.mjs --dump
  *   node scripts/sync-gtm.mjs --dry-run
- *   node scripts/sync-gtm.mjs            # writes to the workspace + creates a version
+ *   node scripts/sync-gtm.mjs            # writes + creates an UNPUBLISHED version
+ *   node scripts/sync-gtm.mjs --publish  # writes + creates + publishes it
  */
 
 import { execSync } from "child_process";
@@ -54,16 +92,40 @@ const DUMP = process.argv.includes("--dump");
 // Overwrite the live trigger RegEx even if it carries tokens absent from the
 // taxonomy (e.g. stale/superseded ones). Without it, a real run aborts on those.
 const FORCE_REGEX = process.argv.includes("--force-regex");
+// Publish the created version too, so a run needs no follow-up in the GTM UI.
+const PUBLISH = process.argv.includes("--publish");
 
 const ACCOUNT_ID = reqEnv("GTM_ACCOUNT_ID");
 const CONTAINER_ID = reqEnv("GTM_CONTAINER_ID");
-const WORKSPACE_ID = reqEnv("GTM_WORKSPACE_ID");
+// Optional — see `resolveWorkspace()`. Pinning it is usually WRONG.
+const WORKSPACE_ID = process.env.GTM_WORKSPACE_ID;
 const TRIGGER_NAME = process.env.GTM_TRIGGER_NAME ?? "Custom Event — KCVV Analytics";
 const TAG_NAME = process.env.GTM_TAG_NAME ?? "GA4 Event — KCVV Custom Events";
 const DLV_PREFIX = process.env.GTM_DLV_PREFIX ?? "dlv - ";
+const WRITE_PACE_MS = positivePace(process.env.GTM_WRITE_PACE_MS, 4000);
+
+/**
+ * Pacing is the script's main defence against the write quota, and a bad value
+ * disables it *silently*: `Number("")` is 0 and `Number("abc")` is NaN, and
+ * both make the `since < WRITE_PACE_MS` comparison false forever. Anything not
+ * a finite positive number falls back to the default, loudly.
+ */
+function positivePace(raw, fallback) {
+  if (raw === undefined) return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) {
+    console.warn(
+      `WARNING: GTM_WRITE_PACE_MS=${JSON.stringify(raw)} is not a positive number; using ${fallback}ms.`,
+    );
+    return fallback;
+  }
+  return n;
+}
 
 const API = "https://tagmanager.googleapis.com/tagmanager/v2";
-const WS = `${API}/accounts/${ACCOUNT_ID}/containers/${CONTAINER_ID}/workspaces/${WORKSPACE_ID}`;
+const CONTAINER = `${API}/accounts/${ACCOUNT_ID}/containers/${CONTAINER_ID}`;
+/** Workspace base URL. Assigned once by `resolveWorkspace()` in `main()`. */
+let WS;
 
 const TOKEN = getToken();
 
@@ -102,9 +164,11 @@ async function api(method, url, body, attempt = 0) {
     signal: AbortSignal.timeout(30_000),
   });
   // GTM API v2 has a low per-minute write quota; back off + retry on 429/5xx.
-  if ((res.status === 429 || res.status >= 500) && attempt < 6) {
+  // Writes are already paced by `write()`, so a 429 here means the quota is
+  // tighter than GTM_WRITE_PACE_MS assumes — wait it out rather than give up.
+  if ((res.status === 429 || res.status >= 500) && attempt < 8) {
     const retryAfter = Number(res.headers.get("retry-after"));
-    const waitMs = retryAfter > 0 ? retryAfter * 1000 : Math.min(2000 * 2 ** attempt, 30000);
+    const waitMs = retryAfter > 0 ? retryAfter * 1000 : Math.min(2000 * 2 ** attempt, 60000);
     console.warn(`  …${res.status} on ${method} ${url.split("/").pop()}; retrying in ${Math.round(waitMs / 1000)}s`);
     await sleep(waitMs);
     return api(method, url, body, attempt + 1);
@@ -112,9 +176,66 @@ async function api(method, url, body, attempt = 0) {
   const text = await res.text();
   const json = text ? JSON.parse(text) : {};
   if (!res.ok) {
-    throw new Error(`${method} ${url} → ${res.status}: ${json?.error?.message ?? text}`);
+    const err = new Error(`${method} ${url} → ${res.status}: ${json?.error?.message ?? text}`);
+    // Carry the status as data. Sniffing it out of the message is unreliable —
+    // the fingerprint-guarded PUT URL contains the word "fingerprint", so a
+    // text match there flags every failure as a concurrency conflict.
+    err.status = res.status;
+    throw err;
   }
   return json;
+}
+
+/**
+ * Every mutating call goes through here: one at a time, never closer together
+ * than GTM_WRITE_PACE_MS. Serialising on a single promise chain keeps the gap
+ * honest even though callers `await` in a loop, and means a burst can never
+ * form in the first place — `api()`'s backoff is then only a safety net.
+ */
+let writeChain = Promise.resolve();
+let lastWriteAt = 0;
+function write(method, url, body) {
+  writeChain = writeChain.then(async () => {
+    const since = Date.now() - lastWriteAt;
+    if (lastWriteAt > 0 && since < WRITE_PACE_MS) await sleep(WRITE_PACE_MS - since);
+    try {
+      return await api(method, url, body);
+    } finally {
+      // Stamp on the way OUT, not in. `api()` may have burned a minute of
+      // retries internally; measuring the next gap from the start of that
+      // would let the following write fire instantly, precisely when the
+      // quota is most stressed. `finally` so a throw still paces the retry.
+      lastWriteAt = Date.now();
+    }
+  });
+  return writeChain;
+}
+
+/**
+ * Re-read an entity by path, then PUT it with GTM's optimistic-concurrency
+ * `fingerprint`. Two things this buys over PUTting the copy fetched at plan
+ * time: the mutation applies to whatever the entity looks like NOW (a paced
+ * run can spend minutes between planning and writing), and a concurrent edit
+ * in the GTM UI makes the write fail loudly instead of silently reverting it.
+ */
+async function updateEntity(path, mutate, label) {
+  const fresh = await api("GET", `${API}/${path}`);
+  const updated = structuredClone(fresh);
+  if (mutate(updated) === false) {
+    console.log(`• ${label}: already up to date on re-read; skipped`);
+    return null;
+  }
+  const url = `${API}/${path}?fingerprint=${encodeURIComponent(fresh.fingerprint ?? "")}`;
+  try {
+    return await write("PUT", url, updated);
+  } catch (e) {
+    if (e.status === 409) {
+      throw new Error(
+        `${label}: changed in GTM while this run was in flight. Nothing was written — re-run the script.`,
+      );
+    }
+    throw e;
+  }
 }
 
 /** Find the entity named `name` in a `GET list` response keyed by `key`. */
@@ -122,8 +243,13 @@ function findByName(list, key, name) {
   return (list[key] ?? []).find((e) => e.name === name);
 }
 
-/** The taxonomy's full set of dataLayer keys (== GA4 param names). */
+/**
+ * The taxonomy's dataLayer keys (== GA4 param names), deduped. The Set is what
+ * every plan is built from, so a key listed twice in the taxonomy (easy to do
+ * when a param serves two event families) can never become two DLVs.
+ */
 const TAXONOMY_KEYS = new Set(params.map((p) => p.parameterName));
+const TAXONOMY_KEY_LIST = [...TAXONOMY_KEYS];
 
 /** DLV resource for a dataLayer key. The key lives in the `name` parameter. */
 function dlvResource(key) {
@@ -141,6 +267,22 @@ function dlvResource(key) {
 /** The dataLayer key a DLV variable reads (its `name` parameter value). */
 function dlvKey(variable) {
   return variable.parameter?.find((p) => p.key === "name")?.value;
+}
+
+/**
+ * Tokens in a live trigger RegEx that the taxonomy does not know about — a
+ * prefix somebody added in the GTM UI, or one this file dropped. Overwriting
+ * the RegEx would delete them, so both the plan and the write re-check.
+ * Tolerates an anchored/grouped live value (`^(a|b|c)$`).
+ */
+function unknownIn(regexValue) {
+  const canonicalTokens = buildTriggerRegex().split("|");
+  return (regexValue ?? "")
+    .replace(/^\^?\(?/, "")
+    .replace(/\)?\$?$/, "")
+    .split("|")
+    .filter(Boolean)
+    .filter((t) => !canonicalTokens.includes(t));
 }
 
 /** The arg1 (regex) value of a customEvent trigger's matchRegex filter. */
@@ -164,6 +306,24 @@ function tagParamNames(tag) {
     .filter(Boolean);
 }
 
+/**
+ * Index a live variables list two ways: DLVs by the dataLayer key they read
+ * (how we decide a key is already covered) and ALL variable names (how we
+ * avoid POSTing a name the container already uses for something else).
+ */
+function indexVariables(variablesList) {
+  const byKey = new Map();
+  const names = new Set();
+  for (const v of variablesList.variable ?? []) {
+    if (v.name) names.add(v.name);
+    if (v.type === "v") {
+      const key = dlvKey(v);
+      if (key) byKey.set(key, v);
+    }
+  }
+  return { byKey, names };
+}
+
 function tagParamRow(name) {
   return {
     type: "map",
@@ -174,7 +334,56 @@ function tagParamRow(name) {
   };
 }
 
+/**
+ * Pick the workspace to write into.
+ *
+ * A workspace id is NOT stable and must not be pinned in a runbook: creating a
+ * version consumes the workspace (it becomes that version, and further writes
+ * fail with `400: Workspace is already submitted`), and GTM opens a fresh
+ * "Default Workspace" under a NEW id. A pinned id therefore works exactly once
+ * — it went stale between #1974 and #2419, where id 10 had become version 10.
+ *
+ * The list endpoint returns only writable workspaces, so anything it hands
+ * back is a valid target. `GTM_WORKSPACE_ID` still overrides, for the rare case
+ * of a deliberately separate workspace.
+ */
+async function resolveWorkspace() {
+  if (WORKSPACE_ID) return `${CONTAINER}/workspaces/${WORKSPACE_ID}`;
+
+  const spaces = (await api("GET", `${CONTAINER}/workspaces`)).workspace ?? [];
+  if (spaces.length === 0) {
+    throw new Error(
+      "No writable workspace in this container. Open GTM and create one, or set GTM_WORKSPACE_ID.",
+    );
+  }
+  const chosen =
+    spaces.find((w) => w.name === "Default Workspace") ??
+    (spaces.length === 1 ? spaces[0] : null);
+  if (!chosen) {
+    throw new Error(
+      `Several workspaces and no "Default Workspace" — set GTM_WORKSPACE_ID to one of: ` +
+        spaces.map((w) => `${w.workspaceId} (${w.name})`).join(", "),
+    );
+  }
+  console.log(`Workspace: ${chosen.workspaceId} (${chosen.name})`);
+  return `${CONTAINER}/workspaces/${chosen.workspaceId}`;
+}
+
+/**
+ * Both `create_version` and `:publish` return `compilerError` alongside a 200,
+ * so success has to be read out of the body rather than the status line.
+ */
+function assertCompiled(response, label) {
+  if (!response?.compilerError) return;
+  throw new Error(
+    `${label} failed to compile. GTM returned compilerError — open the version in the ` +
+      `GTM UI to see which tag/trigger/variable is broken. Nothing further was published.`,
+  );
+}
+
 async function main() {
+  WS = await resolveWorkspace();
+
   // ── Load live entities ────────────────────────────────────────────────
   const [variablesList, triggersList, tagsList] = await Promise.all([
     api("GET", `${WS}/variables`),
@@ -192,25 +401,12 @@ async function main() {
     return;
   }
 
-  const liveDlvByKey = new Map();
-  for (const v of variablesList.variable ?? []) {
-    if (v.type === "v") {
-      const key = dlvKey(v);
-      if (key) liveDlvByKey.set(key, v);
-    }
-  }
+  const { byKey: liveDlvByKey, names: liveVarNames } = indexVariables(variablesList);
 
   // ── 1. Trigger regex (abort if live has an unknown token) ─────────────
   const canonical = buildTriggerRegex();
-  const canonicalTokens = canonical.split("|");
   const liveRegex = triggerRegexParam(trigger)?.value ?? "";
-  // Tolerate an anchored/grouped live regex (`^(a|b|c)$`) when token-checking.
-  const liveTokens = liveRegex
-    .replace(/^\^?\(?/, "")
-    .replace(/\)?\$?$/, "")
-    .split("|")
-    .filter(Boolean);
-  const unknownTokens = liveTokens.filter((t) => !canonicalTokens.includes(t));
+  const unknownTokens = unknownIn(liveRegex);
   const regexNeedsUpdate = liveRegex !== canonical;
   if (unknownTokens.length > 0) {
     const msg =
@@ -226,11 +422,23 @@ async function main() {
   }
 
   // ── 2. DLVs to create (deduped by dataLayer key) ──────────────────────
-  const dlvsToCreate = params.map((p) => p.parameterName).filter((k) => !liveDlvByKey.has(k));
+  const dlvCandidates = TAXONOMY_KEY_LIST.filter((k) => !liveDlvByKey.has(k));
+  // A variable already holding the target NAME but reading a different key is
+  // not ours to overwrite, and POSTing it again would either 409 or leave two
+  // same-named variables. Report it and let a human decide.
+  const dlvNameConflicts = dlvCandidates.filter((k) => liveVarNames.has(`${DLV_PREFIX}${k}`));
+  const dlvsToCreate = dlvCandidates.filter((k) => !liveVarNames.has(`${DLV_PREFIX}${k}`));
 
   // ── 3. GA4 tag param rows to add (deduped by name) ────────────────────
+  // A row's value is a `{{dlv - <key>}}` reference. For a name-conflicted key
+  // that reference RESOLVES — to the foreign variable holding the name — so
+  // adding the row would quietly feed the GA4 param from the wrong source.
+  // Worse than a missing param; skip until the conflict is resolved by hand.
+  const conflicted = new Set(dlvNameConflicts);
   const liveTagParams = new Set(tagParamNames(tag));
-  const tagRowsToAdd = params.map((p) => p.parameterName).filter((k) => !liveTagParams.has(k));
+  const tagRowsToAdd = TAXONOMY_KEY_LIST.filter(
+    (k) => !liveTagParams.has(k) && !conflicted.has(k),
+  );
 
   // ── Orphan report (read-only) ─────────────────────────────────────────
   const orphanDlvs = [...liveDlvByKey.keys()].filter((k) => !TAXONOMY_KEYS.has(k));
@@ -244,7 +452,17 @@ async function main() {
     console.log(`  canonical: ${canonical}`);
   }
   console.log(`DLVs to create (${dlvsToCreate.length}): ${dlvsToCreate.join(", ") || "—"}`);
+  if (dlvNameConflicts.length > 0) {
+    console.log(
+      `  ! name already taken by a non-DLV / mismatched variable (${dlvNameConflicts.length}), skipped: ${dlvNameConflicts.join(", ")}`,
+    );
+  }
   console.log(`GA4 tag param rows to add (${tagRowsToAdd.length}): ${tagRowsToAdd.join(", ") || "—"}`);
+  const writeCount =
+    (regexNeedsUpdate ? 1 : 0) + dlvsToCreate.length + (tagRowsToAdd.length > 0 ? 1 : 0) + 1;
+  console.log(
+    `Writes: ${writeCount}, paced ${WRITE_PACE_MS}ms apart → ~${Math.ceil((writeCount * WRITE_PACE_MS) / 1000)}s minimum.`,
+  );
   console.log("── Orphan report (read-only; nothing deleted) ─────");
   console.log(`  regex tokens not in taxonomy (${unknownTokens.length}): ${unknownTokens.join(", ") || "—"}`);
   console.log(`  DLV keys not in taxonomy (${orphanDlvs.length}): ${orphanDlvs.join(", ") || "—"}`);
@@ -257,52 +475,112 @@ async function main() {
 
   // ── Apply ───────────────────────────────────────────────────────────────
   if (regexNeedsUpdate) {
-    const updated = structuredClone(trigger);
-    const param = triggerRegexParam(updated);
-    if (param) {
-      param.value = canonical;
-    } else {
-      // Live trigger has no matchRegex filter yet — append one, preserving any
-      // other existing filter conditions on the trigger.
-      updated.customEventFilter = [
-        ...(updated.customEventFilter ?? []),
-        {
-          type: "matchRegex",
-          parameter: [
-            { type: "template", key: "arg0", value: "{{_event}}" },
-            { type: "template", key: "arg1", value: canonical },
-          ],
-        },
-      ];
-    }
-    await api("PUT", `${API}/${trigger.path}`, updated);
+    await updateEntity(
+      trigger.path,
+      (updated) => {
+        const param = triggerRegexParam(updated);
+        if (param) {
+          if (param.value === canonical) return false;
+          // The plan-time abort checked the trigger as it looked at load.
+          // `fingerprint` only covers the window from this re-read to the PUT,
+          // so a UI edit landing before it would be clobbered silently — and
+          // dropping someone's manually-added prefix is exactly the failure
+          // that check exists to prevent. Re-run it against what we just read.
+          const fresh = unknownIn(param.value);
+          if (fresh.length > 0 && !FORCE_REGEX) {
+            throw new Error(
+              `trigger regex gained token(s) absent from the taxonomy since the plan: ${fresh.join(", ")}\n` +
+                `  → add them to scripts/analytics-taxonomy.mjs, or rerun with --force-regex to overwrite.`,
+            );
+          }
+          param.value = canonical;
+        } else {
+          // Live trigger has no matchRegex filter yet — append one, preserving
+          // any other existing filter conditions on the trigger.
+          updated.customEventFilter = [
+            ...(updated.customEventFilter ?? []),
+            {
+              type: "matchRegex",
+              parameter: [
+                { type: "template", key: "arg0", value: "{{_event}}" },
+                { type: "template", key: "arg1", value: canonical },
+              ],
+            },
+          ];
+        }
+      },
+      "trigger regex",
+    );
     console.log(`✓ trigger regex updated`);
   }
 
-  for (const key of dlvsToCreate) {
-    await api("POST", `${WS}/variables`, dlvResource(key));
-    console.log(`✓ DLV created: ${DLV_PREFIX}${key}`);
+  // Re-read the variables right before creating any. Cheap insurance for two
+  // cases: a trigger write above that spent minutes in backoff, and a re-run of
+  // an interrupted sync, which must see the DLVs the previous attempt already
+  // created rather than duplicate them.
+  if (dlvsToCreate.length > 0) {
+    const { byKey: freshDlvByKey, names: freshNames } = indexVariables(
+      await api("GET", `${WS}/variables`),
+    );
+    for (const key of dlvsToCreate) {
+      if (freshDlvByKey.has(key)) {
+        console.log(`• DLV already present, skipped: ${DLV_PREFIX}${key}`);
+        continue;
+      }
+      if (freshNames.has(`${DLV_PREFIX}${key}`)) {
+        console.log(`! name taken by another variable, skipped: ${DLV_PREFIX}${key}`);
+        continue;
+      }
+      await write("POST", `${WS}/variables`, dlvResource(key));
+      console.log(`✓ DLV created: ${DLV_PREFIX}${key}`);
+    }
   }
 
   if (tagRowsToAdd.length > 0) {
-    const updated = structuredClone(tag);
-    let list = tagParamList(updated);
-    if (!list) {
-      list = { type: "list", key: "eventSettingsTable", list: [] };
-      updated.parameter = [...(updated.parameter ?? []), list];
-    }
-    list.list = [...(list.list ?? []), ...tagRowsToAdd.map(tagParamRow)];
-    await api("PUT", `${API}/${tag.path}`, updated);
+    await updateEntity(
+      tag.path,
+      (updated) => {
+        // Re-dedupe against the freshly-read tag, not the planned snapshot.
+        const present = new Set(tagParamNames(updated));
+        const rows = tagRowsToAdd.filter((k) => !present.has(k));
+        if (rows.length === 0) return false;
+        let list = tagParamList(updated);
+        if (!list) {
+          list = { type: "list", key: "eventSettingsTable", list: [] };
+          updated.parameter = [...(updated.parameter ?? []), list];
+        }
+        list.list = [...(list.list ?? []), ...rows.map(tagParamRow)];
+      },
+      "GA4 tag param rows",
+    );
     console.log(`✓ GA4 tag param rows added: ${tagRowsToAdd.length}`);
   }
 
-  // ── Unpublished version for owner review ────────────────────────────────
-  const version = await api("POST", `${WS}:create_version`, {
+  // ── Container version ───────────────────────────────────────────────────
+  const version = await write("POST", `${WS}:create_version`, {
     name: "KCVV analytics taxonomy sync",
-    notes: "Automated by scripts/sync-gtm.mjs (#1974). Review the diff and publish.",
+    notes: `Automated by scripts/sync-gtm.mjs (#1974). Trigger RegEx: ${canonical}`,
   });
-  const id = version?.containerVersion?.containerVersionId ?? "(see GTM UI)";
-  console.log(`\n✓ Created UNPUBLISHED container version ${id}. Review + publish it in the GTM UI.`);
+  const created = version?.containerVersion;
+  const id = created?.containerVersionId ?? "(see GTM UI)";
+  // GTM reports a failed compile in the RESPONSE BODY, not the HTTP status, so
+  // a broken version arrives as a 200. Printing "✓" on it would be a false
+  // success — and since --publish pushes it live, a loud failure here is the
+  // only thing between a compile error and production.
+  assertCompiled(version, `container version ${id}`);
+
+  if (!PUBLISH) {
+    console.log(`\n✓ Created UNPUBLISHED container version ${id}. Review + publish it in the GTM UI.`);
+    return;
+  }
+
+  if (!created?.path) {
+    throw new Error(`Version ${id} created, but no path came back — publish it in the GTM UI.`);
+  }
+  const published = await write("POST", `${API}/${created.path}:publish`);
+  assertCompiled(published, `publish of container version ${id}`);
+  console.log(`\n✓ Created AND PUBLISHED container version ${id}. Events reach GA4 from now on.`);
+  console.log(`  Roll back by re-publishing the previous version in the GTM UI.`);
 }
 
 main().catch((e) => {
