@@ -343,12 +343,28 @@
         <em>“een expliciete notitie waarom sponsors vrijgesteld zijn”</em>.
       </p>
       <p>
-        <b>De echte data (productie, vandaag opgevraagd).</b> 33
+        <b>De echte data — momentopname van 12 augustus 2026.</b> 33
         sponsor-documenten; geen enkele heeft <code>tier</code> gezet, dus de
         fallback-tak in <code>SponsorsSection</code> bepaalt de selectie:
         <code>type ∈ [crossing, green, white]</code> → <b>16 tegels</b>. Dat is
         <b>4 rijen</b> op lg (5 kolommen), <b>6 rijen</b> op sm,
         <b>8 rijen</b> op mobiel. Dit is dus geen theoretisch randgeval.
+      </p>
+      <p>
+        <b>Bron van die cijfers</b> — Sanity project <code>vhb33jaz</code>,
+        dataset <code>production</code>, API <code>v2024-01-01</code>, twee
+        GROQ-tellingen:
+        <br />
+        <code>count(*[_type == "sponsor"])</code> → 33
+        <br />
+        <code
+          >count(*[_type == "sponsor" &amp;&amp; !defined(tier) &amp;&amp; type
+          in ["crossing", "green", "white"]])</code
+        >
+        → 16
+        <br />
+        Beide tellingen bewegen mee met de CMS-inhoud; hertel ze voor je deze
+        pagina als bewijs aanhaalt.
       </p>
       <p>
         <b>Wat er al is.</b> De blok heeft al een overloop-uitgang: de link
@@ -615,7 +631,11 @@
         </tr>
       </table>
 
-      <h3>Wat het raakt</h3>
+      <h3>Wat het zou raken — alleen als er tóch een cap komt</h3>
+      <p style="margin: 0 0 6px; font-size: 12px; color: var(--ink-muted)">
+        Niet uitgevoerd: D is gekozen, zie hieronder. Bewaard zodat een latere
+        heropening niet opnieuw hoeft te worden uitgezocht.
+      </p>
       <table>
         <tr>
           <th>Bestand</th>
@@ -646,13 +666,21 @@
       </table>
 
       <div class="q">
-        <b>Vraag 2405-2</b>
-        Krijgt <code>SponsorsBlock</code> een cap — en zo ja, welke? Mijn
-        voorstel is <b>D + een expliciete notitie in de code</b>: de blok heeft
-        al een overloop-uitgang, de selectie is al gefilterd tot betalende
-        partners, en een cap haalt betalende sponsors van de homepage voor een
-        probleem dat de andere secties niet hebben. Als je wél een cap wil, is
-        <b>A</b> de goedkoopste (blijft server component).
+        <b>Vraag 2405-2 — beslist: optie D (2026-08-12)</b>
+        <code>SponsorsBlock</code> krijgt <b>geen cap</b>. Sponsors betalen voor
+        de zichtbaarheid, dus de muur inkorten is een commerciële beslissing en
+        geen layout-beslissing; de selectie is al gefilterd tot de betalende
+        tiers, en de <code>/sponsors</code>-link is dezelfde overloop-uitgang
+        die <code>NewsGrid</code> gebruikt. Alleen de <code>slice()</code>
+        ontbreekt, en die ontbreekt met opzet. De blok blijft daarmee ook een
+        server component.
+        <br /><br />
+        Vastgelegd in code, niet enkel in proza: de bestaande test “filters out
+        sympathisant rows and renders only hoofdsponsor + sponsor” telt de
+        gerenderde <code>listitem</code>s tegen de input, dus elke
+        <code>slice()</code> die hier alsnog wordt toegevoegd, maakt die test
+        rood. Er zijn dus <b>geen</b> nieuwe stories en <b>geen</b> nieuwe
+        VR-baselines nodig — de bestaande zijn byte-identiek gebleven.
       </div>
     </div>
   </body>

@@ -924,8 +924,31 @@
         <tr>
           <td><code>FeaturedUitgelichtRow.tsx</code></td>
           <td>
-            grid-klasse afgeleid van <code>cards.length</code> i.p.v. hardcoded
-            <code>md:grid-cols-3</code>
+            <code>md:grid-cols-3</code> vervangen door twee geëxporteerde
+            constanten: <code>UITGELICHT_ROW_CLASS</code> (de flex-rij,
+            <code>justify-center</code>) en
+            <code>UITGELICHT_CARD_CLASS</code> (<code
+              >basis-full md:basis-[calc((100%-4rem)/3)]</code
+            >). Het aantal kolommen wordt <b>niet</b> uit
+            <code>cards.length</code> afgeleid — de kaartbreedte is
+            telling-onafhankelijk en de flex-rij centreert wat er staat.
+          </td>
+        </tr>
+        <tr>
+          <td><code>FeaturedUitgelichtRow/index.ts</code></td>
+          <td>
+            beide constanten mee re-exporteren, zoals
+            <code>FirstTeamsBlock/index.ts</code> met
+            <code>FIRST_TEAMS_ROW_GRID</code> doet
+          </td>
+        </tr>
+        <tr>
+          <td><code>app/(landing)/loading.tsx</code></td>
+          <td>
+            de route-skeleton importeert dezelfde twee constanten, zodat rij en
+            skeleton niet meer uit elkaar kunnen lopen — de skeleton stond al op
+            een kale <code>gap-6</code> en miste de <code>md:gap-8</code> van de
+            echte rij
           </td>
         </tr>
         <tr>
@@ -938,18 +961,34 @@
         <tr>
           <td><code>test/vr/__snapshots__/</code></td>
           <td>
-            <code>features-home-featureduitgelichtrow--one-article--*</code> (3)
-            en <code>--two-articles--*</code> (3) opnieuw vastleggen
+            <code>--one-article--</code> en <code>--two-articles--</code> op
+            <b>desktop + tablet</b> — 4 baselines. Mobiel verandert niet (<code
+              >basis-full</code
+            >
+            stapelt zoals <code>grid-cols-1</code> deed), en
+            <code>--three-articles--</code> rendert identiek aan de oude grid.
           </td>
         </tr>
       </table>
 
       <div class="q">
-        <b>Vraag 2405-1</b>
-        Welke vorm krijgt “Uitgelicht” met één artikel — <b>A</b> volle breedte,
-        <b>B</b> gecentreerd op ~760px, of <b>B + C</b> (gecentreerd bij 1 én
-        het 2-artikel-gat mee opgelost)? Mijn voorstel is <b>B + C</b>: het lost
-        beide gaten op zonder de hero-hiërarchie om te keren.
+        <b>Vraag 2405-1 — beslist: optie E (2026-08-12)</b>
+        Gekozen vorm: <b>E</b>. De rij wordt een
+        <code>flex flex-wrap justify-center</code>-rij waarin elke kaart
+        <code>md:basis-[calc((100%-4rem)/3)]</code> houdt — de
+        <code>4rem</code> is <code>md:gap-8</code> × de 2 tussenruimtes van een
+        drie-up, dus dat is exact de breedte die een
+        <code>grid-cols-3</code>-kolom oplevert. De kaart is daarmee
+        <b>telling-onafhankelijk</b>: één artikel rendert op dezelfde 384px als
+        drie, met symmetrische marges links en rechts. Twee artikels krijgen
+        dezelfde behandeling; drie renderen identiek aan de grid die dit
+        vervangt. <br /><br />
+        A, B en C zijn afgewezen: ze schalen allemaal de <em>kaart</em> mee met
+        de telling (A/C tot 1216px, B tot 760px). De eigenaar: de kaart moet in
+        zijn ontworpen afmetingen blijven en niet 3× zo groot worden — het
+        probleem was de <b>asymmetrie</b>, niet de lege ruimte. Er komt dus geen
+        variabele kaartbreedte en geen van <code>cards.length</code> afgeleide
+        kolomtelling.
       </div>
     </div>
   </body>
