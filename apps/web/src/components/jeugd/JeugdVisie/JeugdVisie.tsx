@@ -37,7 +37,7 @@ export function JeugdVisie() {
         <div className="grid grid-cols-[auto_1fr] items-center gap-5 sm:gap-6">
           <QuoteMark color="jersey" />
           <div className="flex flex-col gap-3">
-            <p className="text-ink font-display text-[length:var(--text-display-sm)] leading-[var(--text-display-sm--lh)] italic">
+            <p className="text-ink font-display text-display-sm italic">
               Bij KCVV Elewijt staat plezier op één. Wie graag speelt, leert
               vanzelf — techniek, teamspirit en respect groeien mee.
             </p>

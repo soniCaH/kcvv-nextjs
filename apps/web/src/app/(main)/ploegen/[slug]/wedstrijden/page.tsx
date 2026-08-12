@@ -177,7 +177,7 @@ export default async function WedstrijdenPage({
             {monthGroups.map((group) => (
               <section key={group.label} aria-label={group.label}>
                 {/* Newspaper month heading — display-big, no rule beneath */}
-                <h2 className="font-display-big text-ink mb-4 text-[length:var(--text-display-xl)] leading-[var(--text-display-xl--lh)] tracking-tight">
+                <h2 className="font-display-big text-ink text-display-xl mb-4 tracking-tight">
                   {group.monthName}{" "}
                   <em className="text-jersey-deep italic">
                     {group.yearSuffix}

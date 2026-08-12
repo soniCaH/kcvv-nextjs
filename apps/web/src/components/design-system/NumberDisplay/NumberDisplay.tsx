@@ -17,12 +17,9 @@ export interface NumberDisplayProps {
 }
 
 const SIZE_CLASS: Record<NumberDisplaySize, string> = {
-  "display-2xl":
-    "text-[length:var(--text-display-2xl)] leading-[var(--text-display-2xl--lh)]",
-  "display-xl":
-    "text-[length:var(--text-display-xl)] leading-[var(--text-display-xl--lh)]",
-  "display-lg":
-    "text-[length:var(--text-display-lg)] leading-[var(--text-display-lg--lh)]",
+  "display-2xl": "text-display-2xl",
+  "display-xl": "text-display-xl",
+  "display-lg": "text-display-lg",
 };
 
 const TONE_CLASS: Record<NumberDisplayTone, string> = {
@@ -78,7 +75,7 @@ export function NumberDisplay({
   const labelSection = label ? (
     <span
       className={cn(
-        "font-mono text-[length:var(--text-mono-sm)] leading-none tracking-[0.08em] uppercase",
+        "text-mono-sm font-mono leading-none tracking-[0.08em] uppercase",
         tone === "cream" ? "text-cream/70" : "text-ink-muted",
       )}
     >

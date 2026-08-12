@@ -34,7 +34,7 @@ export function EditorialByline({ author }: EditorialBylineProps) {
   return (
     <p
       data-editorial-byline="true"
-      className="text-ink-muted flex items-center gap-2 font-mono text-[length:var(--text-label)] leading-none tracking-[var(--text-label--tracking)] uppercase"
+      className="text-ink-muted text-label flex items-center gap-2 font-mono leading-none uppercase"
     >
       <MonoStar />
       {hasRealAuthor ? (

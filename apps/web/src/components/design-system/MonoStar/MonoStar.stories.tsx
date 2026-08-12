@@ -26,7 +26,7 @@ export const Playground: Story = {};
  */
 export const InlineWithCaps: Story = {
   render: () => (
-    <span className="font-mono text-[length:var(--text-label)] tracking-[var(--text-label--tracking)] uppercase">
+    <span className="text-label font-mono uppercase">
       KCVV ELEWIJT <MonoStar /> SEIZOEN 2025
     </span>
   ),
@@ -38,7 +38,7 @@ export const InlineWithCaps: Story = {
  */
 export const AgainstBulletDivider: Story = {
   render: () => (
-    <span className="font-mono text-[length:var(--text-label)] tracking-[var(--text-label--tracking)] uppercase">
+    <span className="text-label font-mono uppercase">
       INTERVIEW <span aria-hidden="true">·</span> <MonoStar />{" "}
       <span aria-hidden="true">·</span> MATCHVERSLAG
     </span>
@@ -46,16 +46,17 @@ export const AgainstBulletDivider: Story = {
 };
 
 /**
- * Inherits font-size from the parent — the same component reads correctly
- * at both `--text-label` (11px) and a smaller `text-[10px]` caller.
+ * Inherits font-size from the parent — the same component reads correctly at
+ * both label steps: `label` (11px, standing alone) and `label-sm` (10px, for a
+ * label attached above body text that has to recede).
  */
 export const SizeInheritance: Story = {
   render: () => (
     <div className="flex flex-col items-start gap-3 font-mono uppercase">
-      <span className="text-[length:var(--text-label)] tracking-[var(--text-label--tracking)]">
+      <span className="text-label">
         LABEL SIZE <MonoStar /> 11PX
       </span>
-      <span className="text-[10px] tracking-[var(--text-label--tracking)]">
+      <span className="text-label-sm">
         SMALLER <MonoStar /> 10PX
       </span>
     </div>

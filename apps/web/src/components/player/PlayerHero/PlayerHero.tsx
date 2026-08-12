@@ -182,13 +182,13 @@ export function PlayerHero({
         <h1 className="text-ink m-0 flex flex-col leading-[0.9]">
           <span
             data-testid="player-hero-first-name"
-            className="font-display-big block text-[length:var(--text-display-2xl)] leading-[var(--text-display-2xl--lh)] font-black"
+            className="font-display-big text-display-2xl block font-black"
           >
             {firstName}
           </span>
           <span
             data-testid="player-hero-last-name"
-            className="font-display block text-[length:var(--text-display-xl)] leading-[var(--text-display-xl--lh)] font-normal italic"
+            className="font-display text-display-xl block font-normal italic"
           >
             {lastName}.
           </span>

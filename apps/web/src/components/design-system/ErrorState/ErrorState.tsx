@@ -72,7 +72,7 @@ export interface ErrorStateProps {
 }
 
 const CODE_LINE_CLASS =
-  "text-ink-muted font-mono text-[length:var(--text-mono-sm)] font-semibold tracking-[0.14em] uppercase";
+  "text-ink-muted font-mono text-mono-sm font-semibold tracking-[0.14em] uppercase";
 
 function lastWord(value: string): string {
   const words = value.trim().split(/\s+/);
@@ -150,9 +150,7 @@ export function ErrorState({
           {pun}
         </EditorialHeading>
 
-        <p className="text-ink-soft mt-3.5 max-w-[46ch] text-[length:var(--text-body-md)] leading-[var(--text-body-md--lh)]">
-          {body}
-        </p>
+        <p className="text-ink-soft text-body-md mt-3.5 max-w-[46ch]">{body}</p>
 
         <ActionRow actions={actions} />
       </div>

@@ -212,7 +212,7 @@ const HomeAwayBadge = ({ side }: { side: KcvvSide }) => {
         // it absorbs the 2px the bordered pills spend on their edge and lands
         // at the same outer size.
         "inline-flex shrink-0 items-center gap-1.5 px-2.5 py-1.5",
-        "font-mono text-[length:var(--text-label)] leading-none font-medium tracking-[var(--text-label--tracking)]",
+        "text-label font-mono leading-none font-medium",
         // jersey-deep, never the bright jersey — the redesign's ink-adjacent
         // green is the only one that carries white text safely.
         isHome ? "bg-jersey-deep text-white" : "bg-ink text-cream",

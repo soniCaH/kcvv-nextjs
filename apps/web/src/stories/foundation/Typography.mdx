@@ -76,35 +76,37 @@ The samples below render live from the CSS variables.
     <div style={{ width: '48px' }}>px</div>
     <div>Sample</div>
   </div>
-  <TypeSample token="--font-size-xs" size="0.75rem" px="12px" sample="Body small / meta / labels" />
-  <TypeSample token="--font-size-sm" size="0.8125rem" px="13px" sample="Captions, helper text" />
-  <TypeSample token="--font-size-base" size="1rem" px="16px" sample="Default body text" />
-  <TypeSample token="--font-size-lg" size="1.125rem" px="18px" sample="Lead paragraph / intro text" />
-  <TypeSample token="--font-size-xl" size="1.25rem" px="20px" sample="Card titles / section labels" />
-  <TypeSample token="--font-size-2xl" size="1.375rem" px="22px" weight={700} font="var(--font-display)" sample="Sub-headings (mobile h2)" />
-  <TypeSample token="--font-size-3xl" size="1.5rem" px="24px" weight={700} font="var(--font-display)" sample="Section headings (desktop h3)" />
-  <TypeSample token="--font-size-4xl" size="1.75rem" px="28px" weight={700} font="var(--font-display)" sample="Page title (mobile h1)" />
-  <TypeSample token="--font-size-5xl" size="2rem" px="32px" weight={700} font="var(--font-display)" sample="Feature headings (desktop h2)" />
-  <TypeSample token="--font-size-stat" size="2.5rem" px="40px" weight={900} font="var(--font-display-big)" sample="Stats / large numbers" />
-  <TypeSample token="--font-size-6xl" size="3rem" px="48px" weight={700} font="var(--font-display)" sample="Hero title (desktop h1)" />
-  <TypeSample token="--font-size-hero" size="clamp(3rem, 7vw, 5.5rem)" px="48–88px" weight={700} font="var(--font-display)" sample="Hero heading (responsive)" />
+  <TypeSample token="--text-label-sm" size="0.625rem" px="10px" sample="Label attached above body text" />
+  <TypeSample token="--text-label" size="0.6875rem" px="11px" sample="Kickers, badges, pills, statuses" />
+  <TypeSample token="--text-mono-sm" size="0.75rem" px="12px" sample="Small inline data" />
+  <TypeSample token="--text-body-sm" size="0.875rem" px="14px" sample="Captions, helper text" />
+  <TypeSample token="--text-mono-md" size="0.875rem" px="14px" sample="Scores, dates, stat values" />
+  <TypeSample token="--text-body-md" size="1rem" px="16px" sample="Default body text" />
+  <TypeSample token="--text-body-lg" size="1.125rem" px="18px" sample="Lead paragraph / intro text" />
+  <TypeSample token="--text-display-sm" size="clamp(1.25rem, 1rem + 1vw, 1.5rem)" px="20–24px" weight={700} font="var(--font-display)" sample="Card headings / sub-sections" />
+  <TypeSample token="--text-display-md" size="clamp(1.5rem, 1rem + 1.5vw, 2rem)" px="24–32px" weight={700} font="var(--font-display)" sample="Sub-headings (h2)" />
+  <TypeSample token="--text-display-lg" size="clamp(2rem, 1.25rem + 3vw, 3rem)" px="32–48px" weight={700} font="var(--font-display)" sample="Default editorial heading (h1)" />
+  <TypeSample token="--text-display-xl" size="clamp(2.75rem, 1.5rem + 5vw, 4.5rem)" px="44–72px" weight={700} font="var(--font-display)" sample="Section-opening headings" />
+  <TypeSample token="--text-display-2xl" size="clamp(3.5rem, 1.5rem + 8vw, 6rem)" px="56–96px" weight={900} font="var(--font-display-big)" sample="Page-defining hero heading" />
 </div>
+
+Every token has a matching utility — `text-label`, `text-body-md`, `text-display-lg`. **Use the utility.** Writing `text-[length:var(--text-display-lg)]` sets font-size only and silently drops the step's line-height and tracking (#2417).
 
 ---
 
 ## Heading Scale
 
-Headings are set globally in CSS — no per-component overrides needed.
+Headings are set globally in CSS — no per-component overrides needed. Since #2417 h1–h3 take the fluid display steps and **scale continuously with the viewport**, so there is no longer a mobile/desktop split or a jump at 768px. h4–h6 are flat: no display step sits below `display-sm`.
 
 <table>
-  <thead><tr><th>Heading</th><th>Mobile</th><th>Desktop (≥768px)</th></tr></thead>
+  <thead><tr><th>Heading</th><th>Token</th><th>Range</th></tr></thead>
   <tbody>
-    <tr><td>h1</td><td>28px (<code>4xl</code>)</td><td>48px (<code>6xl</code>)</td></tr>
-    <tr><td>h2</td><td>22px (<code>2xl</code>)</td><td>32px (<code>5xl</code>)</td></tr>
-    <tr><td>h3</td><td>20px (<code>xl</code>)</td><td>24px (<code>3xl</code>)</td></tr>
-    <tr><td>h4</td><td>18px (<code>lg</code>)</td><td>22px (<code>2xl</code>)</td></tr>
-    <tr><td>h5</td><td>16px (<code>base</code>)</td><td>16px (<code>base</code>)</td></tr>
-    <tr><td>h6</td><td>13px (<code>sm</code>)</td><td>13px (<code>sm</code>)</td></tr>
+    <tr><td>h1</td><td><code>--text-display-lg</code></td><td>32px → 48px (48px from ~933px wide)</td></tr>
+    <tr><td>h2</td><td><code>--text-display-md</code></td><td>24px → 32px (32px from ~1067px wide)</td></tr>
+    <tr><td>h3</td><td><code>--text-display-sm</code></td><td>20px → 24px</td></tr>
+    <tr><td>h4</td><td><code>--text-body-lg</code></td><td>18px</td></tr>
+    <tr><td>h5</td><td><code>--text-body-md</code></td><td>16px</td></tr>
+    <tr><td>h6</td><td><code>--text-body-sm</code></td><td>14px</td></tr>
   </tbody>
 </table>
 
@@ -183,23 +185,23 @@ visible at a glance. Dutch diacritics (`é`, `ï`) and italic emphasis are
 exercised on the display rows.
 
 <div style={{ background: 'var(--color-cream)', padding: '2rem', borderRadius: '8px', marginBottom: '24px', border: '1px solid var(--color-paper-edge)' }}>
-  <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-display-xl)', lineHeight: 'var(--text-display-xl--lh)', fontWeight: 900, color: 'var(--color-ink)', marginBottom: '0.5rem' }}>Laatste <em style={{ fontStyle: 'italic', fontWeight: 700 }}>nieuws.</em></div>
-  <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--color-ink-muted)' }}>--font-display · --text-display-xl · weight 900 + italic 700</div>
+  <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-display-xl)', lineHeight: 'var(--text-display-xl--line-height)', fontWeight: 700, color: 'var(--color-ink)', marginBottom: '0.5rem' }}>Laatste <em style={{ fontStyle: 'italic', fontWeight: 700 }}>nieuws.</em></div>
+  <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--color-ink-muted)' }}>--font-display · --text-display-xl · weight 700 + italic 700</div>
 </div>
 
 <div style={{ background: 'var(--color-cream)', padding: '2rem', borderRadius: '8px', marginBottom: '24px', border: '1px solid var(--color-paper-edge)' }}>
-  <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-display-lg)', lineHeight: 'var(--text-display-lg--lh)', fontWeight: 700, color: 'var(--color-ink)', marginBottom: '0.5rem' }}>Het rooster.</div>
+  <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-display-lg)', lineHeight: 'var(--text-display-lg--line-height)', fontWeight: 700, color: 'var(--color-ink)', marginBottom: '0.5rem' }}>Het rooster.</div>
   <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--color-ink-muted)' }}>--font-display · --text-display-lg · weight 700</div>
 </div>
 
 <div style={{ background: 'var(--color-cream)', padding: '2rem', borderRadius: '8px', marginBottom: '24px', border: '1px solid var(--color-paper-edge)' }}>
-  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-body-md)', lineHeight: 'var(--text-body-md--lh)', color: 'var(--color-ink)', marginBottom: '0.5rem' }}>Drie afdelingen, 320 kinderen, één idee: plezier eerst.</div>
-  <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--color-ink-muted)' }}>--font-body · --text-body-md</div>
+  <div style={{ fontFamily: 'var(--font-family-body)', fontSize: 'var(--text-body-md)', lineHeight: 'var(--text-body-md--line-height)', color: 'var(--color-ink)', marginBottom: '0.5rem' }}>Drie afdelingen, 320 kinderen, één idee: plezier eerst.</div>
+  <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--color-ink-muted)' }}>--font-family-body · --text-body-md</div>
 </div>
 
 <div style={{ background: 'var(--color-cream)', padding: '2rem', borderRadius: '8px', marginBottom: '24px', border: '1px solid var(--color-paper-edge)' }}>
-  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-label)', letterSpacing: 'var(--text-label--tracking)', textTransform: 'uppercase', lineHeight: 1, color: 'var(--color-ink)', marginBottom: '0.5rem' }}>INTERVIEW · SNELTREIN · 8 MIN</div>
-  <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--color-ink-muted)' }}>--font-mono · --text-label · uppercase + 0.08em tracking</div>
+  <div style={{ fontFamily: 'var(--font-family-mono)', fontSize: 'var(--text-label)', letterSpacing: 'var(--text-label--letter-spacing)', textTransform: 'uppercase', lineHeight: 'var(--text-label--line-height)', color: 'var(--color-ink)', marginBottom: '0.5rem' }}>INTERVIEW · SNELTREIN · 8 MIN</div>
+  <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--color-ink-muted)' }}>--font-family-mono · --text-label · uppercase + 0.08em tracking</div>
 </div>
 
 ### Token reference
@@ -276,15 +278,15 @@ exercised on the display rows.
     <tr>
       <td><code>--text-label</code></td>
       <td><code>0.6875rem</code> · lh <code>1</code></td>
-      <td>Uppercase label / kicker — use with <code>--text-label--tracking</code></td>
+      <td>Uppercase label / kicker — use with <code>--text-label--letter-spacing</code></td>
     </tr>
     <tr>
-      <td><code>--text-label--lh</code></td>
+      <td><code>--text-label--line-height</code></td>
       <td><code>1</code></td>
       <td>Line-height companion for <code>--text-label</code></td>
     </tr>
     <tr>
-      <td><code>--text-label--tracking</code></td>
+      <td><code>--text-label--letter-spacing</code></td>
       <td><code>0.08em</code></td>
       <td>Letter-spacing companion for <code>--text-label</code></td>
     </tr>

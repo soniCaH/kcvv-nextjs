@@ -296,7 +296,7 @@ export const NewsCard = ({
               <span
                 data-testid="newscard-type-label"
                 className={cn(
-                  "inline-flex items-center gap-1.5 font-mono text-[length:var(--text-label)] font-bold tracking-[var(--text-label--tracking)] uppercase",
+                  "text-label inline-flex items-center gap-1.5 font-mono font-bold uppercase",
                   isDark ? "text-cream" : "text-jersey-deep",
                 )}
               >
@@ -361,7 +361,7 @@ export const NewsCard = ({
                 aria-hidden="true"
                 data-testid="newscard-readmore"
                 className={cn(
-                  "inline-flex items-center gap-1 font-mono text-[length:var(--text-label)] font-medium tracking-[var(--text-label--tracking)] uppercase",
+                  "text-label inline-flex items-center gap-1 font-mono font-medium uppercase",
                   // Hidden at rest, revealed on hover / keyboard focus —
                   // mirrors the homepage hero's "Lees verder" reveal idiom
                   // (#2027). `reveal-on-hover` (globals.css) owns the resting

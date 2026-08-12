@@ -67,16 +67,11 @@ export interface EditorialHeadingProps {
 }
 
 const SIZE_CLASS: Record<EditorialHeadingSize, string> = {
-  "display-2xl":
-    "font-display-big text-[length:var(--text-display-2xl)] leading-[var(--text-display-2xl--lh)] font-black",
-  "display-xl":
-    "font-display text-[length:var(--text-display-xl)] leading-[var(--text-display-xl--lh)] font-bold",
-  "display-lg":
-    "font-display text-[length:var(--text-display-lg)] leading-[var(--text-display-lg--lh)] font-bold",
-  "display-md":
-    "font-display text-[length:var(--text-display-md)] leading-[var(--text-display-md--lh)] font-bold",
-  "display-sm":
-    "font-display text-[length:var(--text-display-sm)] leading-[var(--text-display-sm--lh)] font-semibold",
+  "display-2xl": "font-display-big text-display-2xl font-black",
+  "display-xl": "font-display text-display-xl font-bold",
+  "display-lg": "font-display text-display-lg font-bold",
+  "display-md": "font-display text-display-md font-bold",
+  "display-sm": "font-display text-display-sm font-semibold",
 };
 
 const TONE_CLASS: Record<EditorialHeadingTone, string> = {

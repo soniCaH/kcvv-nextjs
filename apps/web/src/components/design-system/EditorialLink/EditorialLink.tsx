@@ -33,7 +33,7 @@ const SWEEP_TONE: Record<EditorialLinkTone, string> = {
 };
 
 const VARIANT_TYPE: Record<EditorialLinkVariant, string> = {
-  cta: "font-mono text-[length:var(--text-label)] leading-none font-medium tracking-[var(--text-label--tracking)] uppercase",
+  cta: "font-mono text-label leading-none font-medium uppercase",
   inline: "font-medium",
 };
 

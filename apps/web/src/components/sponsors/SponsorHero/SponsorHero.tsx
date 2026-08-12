@@ -47,7 +47,7 @@ export function SponsorHero({ featured }: SponsorHeroProps) {
         >
           Merci aan onze sponsors
         </EditorialHeading>
-        <p className="font-display text-ink-muted mt-6 text-[length:var(--text-display-sm)] leading-[var(--text-display-sm--lh)] italic">
+        <p className="font-display text-ink-muted text-display-sm mt-6 italic">
           Samen met hen blijven we de plezantste compagnie.
         </p>
       </div>

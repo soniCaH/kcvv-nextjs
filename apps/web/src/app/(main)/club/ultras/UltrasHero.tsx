@@ -52,11 +52,11 @@ export function UltrasHero({ joinHref }: UltrasHeroProps) {
           Supporters · KCVV Ultra&apos;s 55
         </MonoLabel>
 
-        <h1 className="font-display-big text-cream text-[length:var(--text-display-2xl)] leading-[0.95] font-black tracking-tight hyphens-auto uppercase">
+        <h1 className="font-display-big text-cream text-display-2xl leading-[0.95] font-black tracking-tight hyphens-auto uppercase">
           De <span className="text-warm">luidste</span> hoek
         </h1>
 
-        <p className="text-cream/85 max-w-xl text-[length:var(--text-body-lg)] leading-[var(--text-body-lg--lh)]">
+        <p className="text-cream/85 text-body-lg max-w-xl">
           Positief aanmoedigen van onze ploeg — vocaal, met trommels, met
           sfeermateriaal.
         </p>

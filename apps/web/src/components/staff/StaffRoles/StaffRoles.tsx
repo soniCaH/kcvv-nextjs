@@ -83,7 +83,7 @@ export function StaffRoles({
                 {pos.title}
               </span>
               {pos.department ? (
-                <span className="text-ink-muted ml-auto font-mono text-[length:var(--text-mono-sm)] tracking-[0.06em] uppercase">
+                <span className="text-ink-muted text-mono-sm ml-auto font-mono tracking-[0.06em] uppercase">
                   {pos.department}
                 </span>
               ) : null}
@@ -94,7 +94,7 @@ export function StaffRoles({
 
       {responsibilities.length > 0 ? (
         <>
-          <p className="text-ink-muted mt-7 mb-3 font-mono text-[length:var(--text-label)] tracking-[var(--text-label--tracking)] uppercase">
+          <p className="text-ink-muted text-label mt-7 mb-3 font-mono uppercase">
             Aanspreekpunt voor
           </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -117,7 +117,7 @@ export function StaffRoles({
                       {resp.title}
                     </span>
                     {resp.category ? (
-                      <span className="text-ink-muted mt-0.5 block font-mono text-[length:var(--text-label)] tracking-[var(--text-label--tracking)] uppercase">
+                      <span className="text-ink-muted text-label mt-0.5 block font-mono uppercase">
                         {resp.category}
                       </span>
                     ) : null}
