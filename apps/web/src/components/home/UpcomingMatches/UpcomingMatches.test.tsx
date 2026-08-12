@@ -9,6 +9,7 @@ import {
   mockUpcomingSingleTeam,
 } from "./UpcomingMatches.mocks";
 import { trackEvent } from "@/lib/analytics/track-event";
+import type { UpcomingMatch } from "@/components/match/types";
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
@@ -104,6 +105,34 @@ describe("UpcomingMatches", () => {
   it("keeps the badge glyph decorative so the fact is announced once", () => {
     render(<UpcomingMatches matches={[mockUpcomingFive[0]!]} />);
     expect(screen.queryByLabelText("Thuiswedstrijd")).not.toBeInTheDocument();
+  });
+
+  // Regression: the badge used to take `isHome={homeIsKcvv}`, so a fixture
+  // where neither id matched fell into the falsy branch and claimed "Uit".
+  it("renders no badge when neither team is KCVV, rather than claiming Uit", () => {
+    const neitherIsKcvv: UpcomingMatch = {
+      ...mockUpcomingFive[0]!,
+      homeTeam: { id: 59, name: "KVC Wilrijk" },
+      awayTeam: { id: 628, name: "City Pirates" },
+    };
+    render(<UpcomingMatches matches={[neitherIsKcvv]} />);
+    expect(screen.queryByText("Uit")).not.toBeInTheDocument();
+    expect(screen.queryByText("Thuis")).not.toBeInTheDocument();
+    // The row itself still renders — an unplaceable fixture is not a broken one.
+    expect(rowLinks()).toHaveLength(1);
+  });
+
+  // KCVV vs KCVV is real data (pitch-reservation placeholders). It reads as a
+  // home fixture, and both names stay emphasised.
+  it("treats a KCVV-vs-KCVV fixture as home", () => {
+    const bothAreKcvv: UpcomingMatch = {
+      ...mockUpcomingFive[0]!,
+      homeTeam: { id: 1235, name: "KCVV Elewijt" },
+      awayTeam: { id: 1235, name: "KCVV Elewijt B" },
+    };
+    render(<UpcomingMatches matches={[bothAreKcvv]} />);
+    expect(screen.getByText("Thuis")).toBeInTheDocument();
+    expect(screen.queryByText("Uit")).not.toBeInTheDocument();
   });
 
   // ── AC1 · venue in the caption line ───────────────────────────────────────

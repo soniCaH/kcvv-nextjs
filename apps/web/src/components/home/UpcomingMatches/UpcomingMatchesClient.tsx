@@ -18,6 +18,9 @@ import {
 /** Filter value meaning "no team filter" — never a real squad label. */
 const ALL_TEAMS = "all";
 
+/** Which side of a fixture KCVV is playing. Absent when neither team is ours. */
+type KcvvSide = "home" | "away";
+
 export interface UpcomingMatchesClientProps {
   matches: UpcomingMatch[];
   initialVisible: number;
@@ -182,8 +185,13 @@ export const UpcomingMatchesClient = ({
  *
  * The wording itself comes from `HOME_AWAY_WORD` so no surface holds its own
  * copy of the words.
+ *
+ * Takes the resolved side rather than a boolean: a two-state flag has no way to
+ * say "neither team is ours", and the falsy branch would silently claim `Uit`.
+ * `<TeamAgendaRow>` models the same fact the same way (`boolean | undefined`).
  */
-const HomeAwayBadge = ({ isHome }: { isHome: boolean }) => {
+const HomeAwayBadge = ({ side }: { side: KcvvSide }) => {
+  const isHome = side === "home";
   const Icon = isHome ? House : Bus;
   return (
     <span
@@ -212,6 +220,19 @@ interface MatchRowProps {
 const MatchRow = ({ match, kcvvTeamId }: MatchRowProps) => {
   const homeIsKcvv = match.homeTeam.id === kcvvTeamId;
   const awayIsKcvv = match.awayTeam.id === kcvvTeamId;
+  // Which side the badge speaks for, derived from the two flags above so it can
+  // never contradict the emphasis. `undefined` when neither id matches: the old
+  // `isHome={homeIsKcvv}` collapsed that case into the falsy branch and rendered
+  // "Uit", asserting an away fixture for a match it cannot place.
+  //
+  // Home wins a tie. KCVV-vs-KCVV is real data — pitch-reservation placeholders
+  // come through the feed — and reads as a home fixture; both names still bold,
+  // because each flag is an independent truth about its own team.
+  const kcvvSide: KcvvSide | undefined = homeIsKcvv
+    ? "home"
+    : awayIsKcvv
+      ? "away"
+      : undefined;
   const dateLabel = formatWidgetDate(match.date);
   const when = [dateLabel, match.time].filter(Boolean).join(" · ");
   // Venue last, and only when present. PSD supplies no venue field today —
@@ -252,7 +273,7 @@ const MatchRow = ({ match, kcvvTeamId }: MatchRowProps) => {
       </span>
 
       <span className="col-start-2 row-start-1 sm:col-auto sm:row-auto">
-        <HomeAwayBadge isHome={homeIsKcvv} />
+        {kcvvSide && <HomeAwayBadge side={kcvvSide} />}
       </span>
     </Link>
   );
