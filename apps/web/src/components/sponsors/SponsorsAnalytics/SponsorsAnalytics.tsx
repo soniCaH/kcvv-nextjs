@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
-import {
-  useSponsorAnalytics,
-  type SponsorTier,
-} from "@/hooks/useSponsorAnalytics";
+import { useSponsorAnalytics } from "@/hooks/useSponsorAnalytics";
+import { readSponsorAttrs } from "@/lib/analytics/sponsor-attrs";
 import { useDelegatedClick } from "@/hooks/useDelegatedClick";
 
 export interface SponsorsAnalyticsProps {
@@ -45,16 +43,13 @@ export function SponsorsAnalytics({ children }: SponsorsAnalyticsProps) {
         return;
       }
 
-      const sponsorId = el.getAttribute("data-sponsor-id");
-      if (!sponsorId) return;
-      const tier = (el.getAttribute("data-sponsor-tier") || undefined) as
-        | SponsorTier
-        | undefined;
+      const sponsor = readSponsorAttrs(el);
+      if (!sponsor) return;
 
       if (el.hasAttribute("data-sponsor-featured")) {
-        trackSponsorFeaturedClick({ sponsorId, tier });
+        trackSponsorFeaturedClick(sponsor);
       } else {
-        trackSponsorClick({ sponsorId, tier });
+        trackSponsorClick(sponsor);
       }
     },
   });

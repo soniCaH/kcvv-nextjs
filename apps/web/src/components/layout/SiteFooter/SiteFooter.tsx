@@ -4,6 +4,7 @@ import { FacebookLogo, InstagramLogo } from "@/lib/icons.redesign";
 import { EXTERNAL_LINKS } from "@/lib/constants";
 import { cn } from "@/lib/utils/cn";
 import { CookiePreferencesButton } from "./CookiePreferencesButton";
+import { FooterAnalytics } from "./FooterAnalytics";
 import { FOOTER_ADDRESS_LINE, FOOTER_COLUMNS } from "./footerLinks";
 
 export interface SiteFooterProps {
@@ -47,7 +48,7 @@ export const SiteFooter = ({ className }: SiteFooterProps) => {
 
       {/* Directory — 3-col task-oriented link grid */}
       <div className="mx-auto max-w-[1440px] px-6 py-10 md:px-10 md:py-12">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-7">
+        <FooterAnalytics className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-7">
           {FOOTER_COLUMNS.map((column) => (
             <div key={column.heading}>
               <h3 className="border-jersey-deep text-ink mb-3 border-b-[1.5px] pb-2 font-mono text-[11px] font-bold tracking-[0.1em] uppercase">
@@ -65,6 +66,7 @@ export const SiteFooter = ({ className }: SiteFooterProps) => {
                         adrift) while a decoration stays on the baseline. */}
                     <Link
                       href={link.href}
+                      data-footer-column={column.heading}
                       className="text-ink-soft hover:text-jersey-deep hover:decoration-jersey-deep -my-1 inline-block py-1 text-[14px] leading-snug font-medium underline decoration-transparent underline-offset-2 transition-colors duration-150"
                     >
                       {link.label}
@@ -74,7 +76,7 @@ export const SiteFooter = ({ className }: SiteFooterProps) => {
               </ul>
             </div>
           ))}
-        </div>
+        </FooterAnalytics>
       </div>
 
       {/* Ink bottom bar — colofon. `pb-safe` extends the ink through the iOS

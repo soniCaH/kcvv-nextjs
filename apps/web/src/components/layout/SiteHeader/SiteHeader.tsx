@@ -6,6 +6,11 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { Button, getButtonClasses } from "@/components/design-system/Button";
 import { List, MagnifyingGlass } from "@/lib/icons.redesign";
+import { useDelegatedClick } from "@/hooks/useDelegatedClick";
+import {
+  useNavigationAnalytics,
+  type NavSource,
+} from "@/hooks/useNavigationAnalytics";
 import {
   buildMenuItems,
   buildSeniorMenuItem,
@@ -51,8 +56,37 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const { trackNavClick } = useNavigationAnalytics();
 
-  const handleClose = useCallback(() => setDrawerOpen(false), []);
+  // One native listener on the (always-mounted) `<header>` reads the inert
+  // `data-nav-source` marker off whichever link was hit — #2419's delegation
+  // requirement. The destination comes off the anchor's own `href`, so a new
+  // nav entry never has to repeat its route in a second attribute. The
+  // takeover is handled separately below.
+  useDelegatedClick(headerRef, {
+    selector: "[data-nav-source]",
+    onMatch: (el) => {
+      const destination = el.getAttribute("href");
+      const source = el.getAttribute("data-nav-source") as NavSource | null;
+      if (!destination || !source) return;
+      trackNavClick({ destination, source });
+    },
+  });
+
+  // The takeover is a JSX sibling of `<header>`, so the delegated listener
+  // above cannot reach it. It could get its own — but the panel is client-only
+  // (delegation elsewhere exists to keep Server Components server-rendered,
+  // which buys nothing here) and every row already owns an `onNavigate`
+  // callback for the drawer close. Tracking rides that rather than adding a
+  // second mechanism and a persistently-mounted wrapper to hang it on.
+  const handleTakeoverNavigate = useCallback(
+    (destination: string) => {
+      trackNavClick({ destination, source: "takeover" });
+      setDrawerOpen(false);
+    },
+    [trackNavClick],
+  );
 
   const seniorMenuItems = (seniorTeams ?? []).map((t) =>
     buildSeniorMenuItem(t, seniorNavLabel(t.name)),
@@ -64,6 +98,7 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
   return (
     <>
       <header
+        ref={headerRef}
         className={cn(
           "bg-cream border-paper-edge sticky top-0 z-50 border-b",
           className,
@@ -91,6 +126,7 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
           <Link
             href="/zoeken"
             aria-label="Zoeken"
+            data-nav-source="mobile"
             className="text-ink hover:text-jersey-deep inline-flex h-11 w-11 items-center justify-center transition-colors"
           >
             <MagnifyingGlass size={20} aria-hidden="true" />
@@ -111,6 +147,7 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
                     // the flat nav also lost the `aria-current` the dropdown
                     // rows used to carry.
                     aria-current={isActive(item.href) ? "page" : undefined}
+                    data-nav-source="desktop"
                     className={cn(
                       // `py-2 -my-2` — hit area only, no layout shift (#2394).
                       // Desktop-only nav, so it never showed up in the 390px
@@ -138,12 +175,14 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
             <Link
               href="/zoeken"
               aria-label="Zoeken"
+              data-nav-source="desktop"
               className="text-ink hover:text-jersey-deep inline-flex items-center transition-colors"
             >
               <MagnifyingGlass size={18} aria-hidden="true" />
             </Link>
             <Link
               href="/club/word-lid"
+              data-nav-source="desktop"
               className="border-ink text-ink hover:border-jersey-deep hover:text-jersey-deep inline-flex items-center border px-2.5 py-1.5 font-mono text-[11px] font-semibold tracking-[0.04em] whitespace-nowrap uppercase no-underline transition-colors duration-150 xl:px-3.5 xl:py-2 xl:text-[13px] 2xl:text-[14px]"
             >
               Word lid
@@ -164,13 +203,13 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
             label={item.label}
             href={item.href}
             active={isActive(item.href)}
-            onNavigate={handleClose}
+            onNavigate={() => handleTakeoverNavigate(item.href)}
           />
         ))}
         <div className="mt-6">
           <Link
             href="/club/word-lid"
-            onClick={handleClose}
+            onClick={() => handleTakeoverNavigate("/club/word-lid")}
             className={getButtonClasses({
               variant: "primary",
               size: "md",
