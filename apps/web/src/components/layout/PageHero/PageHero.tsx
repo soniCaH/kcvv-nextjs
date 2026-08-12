@@ -118,7 +118,7 @@ export function PageHero({
           (0.08em) token used by inline label rows. */}
       <span
         data-testid="page-hero-kicker"
-        className="text-jersey-deep font-mono text-[length:var(--text-label)] font-semibold tracking-[0.18em] uppercase"
+        className="text-jersey-deep text-label font-mono font-semibold tracking-[0.18em] uppercase"
       >
         {kicker}
       </span>

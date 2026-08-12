@@ -72,15 +72,9 @@ function CheckboxField({
           onChange={(e) => onChange(e.target.checked)}
           className="accent-jersey-deep mt-0.5 size-4 shrink-0 rounded-none"
         />
-        <span className="text-ink text-[length:var(--text-body-sm)] leading-snug">
-          {children}
-        </span>
+        <span className="text-ink text-body-sm leading-snug">{children}</span>
       </label>
-      {error ? (
-        <p className="text-alert mt-1 text-[length:var(--text-body-sm)]">
-          {error}
-        </p>
-      ) : null}
+      {error ? <p className="text-alert text-body-sm mt-1">{error}</p> : null}
     </div>
   );
 }
@@ -224,7 +218,7 @@ export function MembershipForm({
         <h2 className="font-display mb-3 text-[32px] leading-[1.05] font-black">
           Bedankt voor je interesse!
         </h2>
-        <p className="text-ink-soft text-[length:var(--text-body-md)]">
+        <p className="text-ink-soft text-body-md">
           We hebben je aanvraag goed ontvangen en sturen je een
           bevestigingsmail. Iemand van de club neemt binnenkort contact op.
         </p>
@@ -451,7 +445,7 @@ export function MembershipForm({
           <p
             role="alert"
             aria-live="assertive"
-            className="text-alert mt-5 text-[length:var(--text-body-md)]"
+            className="text-alert text-body-md mt-5"
           >
             {generalError}
           </p>

@@ -148,7 +148,7 @@ export function PullQuote({
         <q
           className={cn(
             "font-display block italic",
-            "text-[length:var(--text-display-sm)] leading-[var(--text-display-sm--lh)]",
+            "text-display-sm",
             palette.body,
           )}
         >
@@ -186,7 +186,7 @@ function PullQuoteAttributionRow({
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span
           className={cn(
-            "font-mono text-[length:var(--text-label)] leading-none font-medium tracking-[var(--text-label--tracking)] uppercase",
+            "text-label font-mono leading-none font-medium uppercase",
             palette.name,
           )}
         >
@@ -207,7 +207,7 @@ function PullQuoteAttributionRow({
             <span
               data-pull-quote-meta-index={i}
               className={cn(
-                "font-mono text-[length:var(--text-label)] leading-none tracking-[var(--text-label--tracking)] uppercase",
+                "text-label font-mono leading-none uppercase",
                 palette.metaText,
               )}
             >
@@ -252,7 +252,7 @@ function PullQuoteAttributionRow({
                 <span
                   data-pull-quote-meta-index={i}
                   className={cn(
-                    "font-mono text-[length:var(--text-label)] leading-none tracking-[var(--text-label--tracking)] uppercase",
+                    "text-label font-mono leading-none uppercase",
                     palette.metaText,
                   )}
                 >

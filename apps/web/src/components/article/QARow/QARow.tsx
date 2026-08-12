@@ -118,7 +118,7 @@ function SpeakerHeader({
         // globals.css so the `<p>`'s outer box equals its 32px content
         // box. Without this the parent flex `items-center` centres a
         // 48px box, pushing the text to the top of the visible area.
-        className="text-ink-muted m-0 flex h-8 items-center font-mono text-[length:var(--text-label)] tracking-[var(--text-label--tracking)] uppercase"
+        className="text-ink-muted text-label m-0 flex h-8 items-center font-mono uppercase"
       >
         <span className="text-ink">{tagName}</span>
         {role ? (
@@ -156,7 +156,7 @@ export function QARow({ question, respondents, className }: QARowProps) {
         */}
         <h3
           data-qa-row="question"
-          className="font-display text-[length:var(--text-display-sm)] leading-[var(--text-display-sm--lh)] font-semibold italic"
+          className="font-display text-display-sm font-semibold italic"
         >
           {question}
         </h3>
@@ -176,10 +176,7 @@ export function QARow({ question, respondents, className }: QARowProps) {
           */}
           <div
             data-qa-row="answer"
-            className={cn(
-              "text-body-md leading-[var(--text-body-md--lh)]",
-              hasSpeaker ? "mt-2 pl-11" : "",
-            )}
+            className={cn("text-body-md", hasSpeaker ? "mt-2 pl-11" : "")}
           >
             {r.answer}
           </div>
@@ -204,7 +201,7 @@ export function QARow({ question, respondents, className }: QARowProps) {
     >
       <h3
         data-qa-row="question"
-        className="font-display text-[length:var(--text-display-sm)] leading-[var(--text-display-sm--lh)] font-semibold italic"
+        className="font-display text-display-sm font-semibold italic"
       >
         {question}
       </h3>
@@ -229,10 +226,7 @@ export function QARow({ question, respondents, className }: QARowProps) {
               )}
               <div
                 data-qa-row="answer"
-                className={cn(
-                  "text-body-md leading-[var(--text-body-md--lh)]",
-                  hasSpeaker ? "mt-2 pl-11" : "",
-                )}
+                className={cn("text-body-md", hasSpeaker ? "mt-2 pl-11" : "")}
               >
                 {r.answer}
               </div>

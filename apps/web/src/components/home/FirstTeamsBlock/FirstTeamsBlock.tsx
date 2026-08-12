@@ -78,7 +78,7 @@ function FirstTeamRow({ team }: { team: FirstTeamVM }) {
           {team.label}
         </span>
         {team.division ? (
-          <span className="text-cream/70 mt-1 font-mono text-[length:var(--text-label)] tracking-[var(--text-label--tracking)] uppercase">
+          <span className="text-cream/70 text-label mt-1 font-mono uppercase">
             {team.division}
           </span>
         ) : null}
@@ -126,7 +126,7 @@ export function FirstTeamsBlock({
       <div className="mx-auto max-w-[var(--container-index)] px-4 py-10 md:px-8 md:py-12">
         <div className="mb-6 flex items-end justify-between gap-4 md:mb-8">
           <div>
-            <span className="text-warm font-mono text-[length:var(--text-label)] font-semibold tracking-[var(--text-label--tracking)] uppercase">
+            <span className="text-warm text-label font-mono font-semibold uppercase">
               Eerste ploegen
             </span>
             <EditorialHeading

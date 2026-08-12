@@ -135,7 +135,7 @@ export function TeamHero({
         {showTagline ? (
           <p
             data-testid="team-hero-tagline"
-            className="font-display text-ink-muted text-[length:var(--text-display-sm)] leading-[var(--text-display-sm--lh)] italic"
+            className="font-display text-ink-muted text-display-sm italic"
           >
             {tagline}
           </p>
@@ -186,7 +186,7 @@ export function TeamHero({
             <MonoLabel variant="plain" size="sm">
               Seizoen
             </MonoLabel>
-            <span className="font-display-big text-ink text-[length:var(--text-display-sm)] leading-none">
+            <span className="font-display-big text-ink text-display-sm leading-none">
               {season}
             </span>
           </div>

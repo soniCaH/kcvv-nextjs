@@ -125,10 +125,10 @@ export function StaffHero({
         </span>
 
         <h1 className="text-ink m-0 flex flex-col leading-[0.9]">
-          <span className="font-display-big block text-[length:var(--text-display-2xl)] leading-[var(--text-display-2xl--lh)] font-black">
+          <span className="font-display-big text-display-2xl block font-black">
             {firstName}
           </span>
-          <span className="font-display block text-[length:var(--text-display-xl)] leading-[var(--text-display-xl--lh)] font-normal italic">
+          <span className="font-display text-display-xl block font-normal italic">
             {lastName}.
           </span>
         </h1>
@@ -148,7 +148,7 @@ export function StaffHero({
         ) : null}
 
         {showContact ? (
-          <div className="flex flex-wrap gap-x-5 gap-y-2 font-mono text-[length:var(--text-mono-sm)]">
+          <div className="text-mono-sm flex flex-wrap gap-x-5 gap-y-2 font-mono">
             {email ? (
               <ContactLink
                 href={`mailto:${email}`}

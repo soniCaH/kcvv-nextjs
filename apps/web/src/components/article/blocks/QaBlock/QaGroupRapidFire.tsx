@@ -76,7 +76,7 @@ export const QaGroupRapidFire = ({
           />
           <p
             data-rapidfire="speaker-tag"
-            className="text-ink-muted m-0 flex h-8 items-center font-mono text-[length:var(--text-label)] tracking-[var(--text-label--tracking)] uppercase"
+            className="text-ink-muted text-label m-0 flex h-8 items-center font-mono uppercase"
           >
             <span className="text-ink">
               {(respondent.fullName ?? respondent.firstName).trim()}

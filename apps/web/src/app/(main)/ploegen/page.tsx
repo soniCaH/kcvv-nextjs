@@ -73,7 +73,7 @@ export default async function TeamsPage() {
           >
             Onze ploegen
           </EditorialHeading>
-          <p className="font-display text-ink-muted text-[length:var(--text-display-sm)] leading-[var(--text-display-sm--lh)] italic">
+          <p className="font-display text-ink-muted text-display-sm italic">
             Van de eerste ploeg tot de allerkleinsten — één plezante compagnie.
           </p>
         </header>

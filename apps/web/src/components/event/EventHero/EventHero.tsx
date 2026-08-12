@@ -40,8 +40,11 @@ export interface EventHeroProps {
   ctas?: ReactNode;
 }
 
+// `leading-snug`, not the token's own line-height: `text-label` declares lh 1,
+// which is right for a single-line kicker or pill but collides the lines of a
+// long venue name that wraps on a narrow viewport.
 const MONO_META_CLASS =
-  "font-mono text-[length:var(--text-label)] tracking-[var(--text-label--tracking)] text-ink-muted uppercase";
+  "font-mono text-label leading-snug text-ink-muted uppercase";
 
 /**
  * Editorial detail hero for `/evenementen/[slug]` (design lock 6e5 — variant D

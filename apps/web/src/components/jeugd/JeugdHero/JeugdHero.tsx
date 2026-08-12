@@ -44,7 +44,7 @@ export function JeugdHero({ imageUrl = DEFAULT_PHOTO }: JeugdHeroProps) {
         >
           Beter worden begint met plezier
         </EditorialHeading>
-        <p className="text-ink-soft font-display text-[length:var(--text-display-sm)] leading-[var(--text-display-sm--lh)] italic">
+        <p className="text-ink-soft font-display text-display-sm italic">
           Een doordachte opleiding van Onderbouw tot Bovenbouw, met
           gediplomeerde trainers en plezier als motor. Want wie graag speelt,
           groeit vanzelf — op en naast het veld.

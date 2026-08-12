@@ -47,7 +47,7 @@ export default function WordLidPage() {
       />
       <PageContainer width="prose">
         <header className="mb-10 flex flex-col">
-          <span className="text-jersey-deep font-mono text-[length:var(--text-label)] font-semibold tracking-[var(--text-label--tracking)] uppercase">
+          <span className="text-jersey-deep text-label font-mono font-semibold uppercase">
             Sluit je aan
           </span>
           <EditorialHeading
@@ -58,13 +58,13 @@ export default function WordLidPage() {
           >
             Doe
           </EditorialHeading>
-          <p className="text-ink-soft font-display mt-5 max-w-[60ch] text-[length:var(--text-body-lg)] leading-[var(--text-body-lg--lh)]">
+          <p className="text-ink-soft font-display text-body-lg mt-5 max-w-[60ch]">
             Speler, jeugdspeler, vrijwilliger, trainer of scheidsrechter — vul
             het formulier in en we nemen binnenkort contact met je op. Dit is
             een aanvraag: sommige ploegen zitten vol, dus een plekje is niet
             altijd gegarandeerd.
           </p>
-          <p className="mt-4 text-[length:var(--text-body-md)]">
+          <p className="text-body-md mt-4">
             <Link href="/club/praktische-informatie" className="prose-link">
               Praktische info →
             </Link>

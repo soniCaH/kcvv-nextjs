@@ -18,7 +18,7 @@ export function RaffleCallout() {
       dataAttrs={{ "data-testid": "raffle-callout" }}
     >
       {/* Full cream — DESIGN.md "The Whole-Cream Rule". */}
-      <p className="text-cream mb-5 text-center font-mono text-[length:var(--text-label)] tracking-[0.08em] uppercase">
+      <p className="text-cream text-label mb-5 text-center font-mono leading-snug uppercase">
         Schijt je rijk · seizoen 2018-2019
       </p>
       <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:gap-12">

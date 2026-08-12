@@ -52,10 +52,10 @@ const proseClasses = [
   "text-ink-soft",
   "[&_[role=separator]]:my-7",
   "[&_h2]:mt-0 [&_h2]:mb-2.5 [&_h2]:font-display [&_h2]:font-bold [&_h2]:text-ink",
-  "[&_h2]:text-[length:var(--text-display-sm)] [&_h2]:leading-[var(--text-display-sm--lh)]",
-  "[&_p]:mt-3 [&_p]:text-[length:var(--text-body-md)] [&_p]:leading-[var(--text-body-md--lh)]",
+  "[&_h2]:text-display-sm",
+  "[&_p]:mt-3 [&_p]:text-body-md",
   "[&_ul]:mt-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5",
-  "[&_li]:text-[length:var(--text-body-md)] [&_li]:leading-[var(--text-body-md--lh)]",
+  "[&_li]:text-body-md",
   "[&_strong]:font-semibold [&_strong]:text-ink",
 ].join(" ");
 
@@ -68,7 +68,7 @@ export default function PrivacyPage() {
               jersey-deep kicker, but MonoLabel's `plain` variant only supports
               ink/cream tones. Reuses the canonical label-token kicker vocabulary
               (cf. EditorialHubCard / MatchArticleLinkCard). */}
-          <span className="text-jersey-deep font-mono text-[length:var(--text-label)] font-semibold tracking-[var(--text-label--tracking)] uppercase">
+          <span className="text-jersey-deep text-label font-mono font-semibold uppercase">
             Juridisch
           </span>
           <EditorialHeading
@@ -79,10 +79,10 @@ export default function PrivacyPage() {
           >
             Privacyverklaring
           </EditorialHeading>
-          <p className="text-ink-muted mt-3.5 font-mono text-[length:var(--text-mono-sm)] tracking-[0.04em]">
+          <p className="text-ink-muted text-mono-sm mt-3.5 font-mono tracking-[0.04em]">
             Laatst bijgewerkt · {LAST_UPDATED}
           </p>
-          <p className="text-ink-soft font-display mt-5 max-w-[60ch] text-[length:var(--text-body-lg)] leading-[var(--text-body-lg--lh)]">
+          <p className="text-ink-soft font-display text-body-lg mt-5 max-w-[60ch]">
             KCVV Elewijt, gevestigd aan Driesstraat 32, 1982 Elewijt,
             respecteert je privacy en behandelt je persoonsgegevens
             vertrouwelijk. Deze privacyverklaring legt uit welke gegevens we

@@ -76,7 +76,7 @@ export default function ClubPage() {
             <div>
               {/* Jersey-deep mono kicker — MonoLabel's plain variant only renders
                   ink/cream, so this is a raw label-token span (matches PageHero). */}
-              <span className="text-jersey-deep font-mono text-[length:var(--text-label)] font-semibold tracking-[0.18em] uppercase">
+              <span className="text-jersey-deep text-label font-mono font-semibold tracking-[0.18em] uppercase">
                 Contact
               </span>
               <EditorialHeading

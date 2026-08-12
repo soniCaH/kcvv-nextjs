@@ -162,7 +162,7 @@ What this deliberately is not: the Sportlink/Twizzit amateur-club house style (s
 - Zero border radius on every rectangle; circles are the only curve
 - Hard offset shadows (`4px 4px 0 0` ink), never blur
 - Press-down interaction: surfaces slide into their shadow instead of lifting
-- Serif display type at extreme scale against 11px uppercase mono labels — no middle register
+- Serif display type at extreme scale against 10–11px uppercase mono labels — no middle register
 - Tape, stamps, perforations and hand-drawn strokes as the ornament vocabulary
 - Green is rare and load-bearing, never a wash
 
@@ -230,6 +230,9 @@ Status tones, tuned for print rather than for a dashboard. Each pairs a saturate
 - **Body Large / Small** (400, 1.125rem lh 1.55 / 0.875rem lh 1.55): leads and captions.
 - **Mono** (500, 0.875rem, lh 1.4): scores, dates, stat values, inline data.
 - **Label** (500, 0.6875rem / 11px, lh 1, tracking 0.08em, uppercase): kickers, badges, pills, statuses, nav. The most-used non-body style in the system.
+- **Label Small** (500, 0.625rem / 10px, lh 1, tracking 0.08em, uppercase): a label attached directly above body text, where the 11px step would compete with it rather than introduce it.
+
+Every step above is a token with a utility class — `text-display-lg`, `text-body-md`, `text-label`. Reach for the class. **Never `text-[length:var(--text-display-lg)]`**: the arbitrary-value form sets font-size and silently drops the step's line-height and tracking, which is what produced the hand-applied `leading-*` sprawl the ramp was built to prevent (#2417).
 
 Navigation sits just outside the label token — uppercase mono, 600 weight, tracking 0.04em, scaling 11px → 13px → 14px across `xl` / `2xl`.
 
@@ -241,7 +244,9 @@ Navigation sits just outside the label token — uppercase mono, 600 weight, tra
 
 **The Terminal Period Rule.** Editorial headings are auto-terminated with a period unless they already end in `.`, `?` or `!`. The period is part of the voice — declarative, printed, finished.
 
-**The No Middle Register Rule.** There is display serif and there is 11px mono. Resist inventing a 16px semibold sans "section label" — that is product-UI language and it flattens the contrast the system runs on.
+**The No Middle Register Rule.** There is display serif and there is small uppercase mono. Resist inventing a 16px semibold sans "section label" — that is product-UI language and it flattens the contrast the system runs on.
+
+**The 11px Floor Rule.** Nothing sentence-case sets below 11px. Uppercase tracked mono is allowed exactly one step under it, at 10px (`text-label-sm`), and nothing goes lower. The exemption is not a loophole — it is a measurement. Caps fill the full cap-height where lowercase fills only the x-height, so 11px uppercase reads as _equal_ in weight to 16px lowercase body rather than subordinate to it; a label sitting directly above a paragraph needs the 10px step to actually recede. Point size alone is the wrong metric for legibility here. Element sizing inside a diagram (`VolledigOrganigram`) is not type and is not governed by this rule.
 
 ## Layout
 

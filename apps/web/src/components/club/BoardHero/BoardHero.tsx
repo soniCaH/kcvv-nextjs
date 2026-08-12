@@ -46,7 +46,7 @@ export function BoardHero({ name, tagline, imageUrl }: BoardHeroProps) {
           >
             {name}
           </EditorialHeading>
-          <p className="text-cream/85 font-display text-[length:var(--text-display-sm)] leading-[var(--text-display-sm--lh)] italic">
+          <p className="text-cream/85 font-display text-display-sm italic">
             {lead}
           </p>
         </div>

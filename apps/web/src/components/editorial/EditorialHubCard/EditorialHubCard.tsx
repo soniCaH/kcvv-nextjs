@@ -131,7 +131,7 @@ export function EditorialHubCard({
         <span className="text-ink font-display line-clamp-2 text-lg leading-tight font-extrabold italic">
           {title}
         </span>
-        <span className="text-jersey-deep inline-flex items-center gap-1 font-mono text-[length:var(--text-label)] leading-none font-medium tracking-[var(--text-label--tracking)] uppercase">
+        <span className="text-jersey-deep text-label inline-flex items-center gap-1 font-mono leading-none font-medium uppercase">
           {arrowText}
           <span
             aria-hidden="true"

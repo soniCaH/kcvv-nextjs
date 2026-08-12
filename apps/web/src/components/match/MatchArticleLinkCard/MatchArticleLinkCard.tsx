@@ -61,7 +61,7 @@ const CARD_ROTATION = -0.3;
 
 // Mono-caps link styling shared by the card CTA and the inline secondary link.
 const MONO_LINK_CLASS =
-  "font-mono text-[length:var(--text-label)] font-bold tracking-[var(--text-label--tracking)] uppercase text-jersey-deep";
+  "font-mono text-label font-bold uppercase text-jersey-deep";
 
 export function MatchArticleLinkCard({
   article,

@@ -60,7 +60,7 @@ export function MonoLabelRow({
                 data-divider="true"
                 data-divider-glyph={divider}
                 aria-hidden="true"
-                className="text-ink-muted font-mono text-[length:var(--text-label)] leading-none"
+                className="text-ink-muted text-label font-mono leading-none"
               >
                 {divider}
               </span>

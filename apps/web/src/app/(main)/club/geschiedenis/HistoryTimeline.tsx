@@ -36,7 +36,7 @@ export function HeritageHero() {
       >
         Meer dan een eeuw
       </EditorialHeading>
-      <p className="font-display text-ink-muted text-[length:var(--text-display-sm)] leading-[var(--text-display-sm--lh)] italic">
+      <p className="font-display text-ink-muted text-display-sm italic">
         Van de Jonge Footbalclub in 1909 tot het nationale voetbal vandaag — de
         rijke geschiedenis van één plezante compagnie.
       </p>
