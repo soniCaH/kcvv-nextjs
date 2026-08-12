@@ -41,15 +41,24 @@
  *   1. GCP Console → enable "Tag Manager API" (+ "Google Analytics Admin API").
  *   2. OAuth consent screen → add yourself as a Test user.
  *   3. Credentials → create an OAuth client ID, type "Desktop app", download JSON.
- *   4. gcloud auth application-default login \
- *        --client-id-file=<that>.json \
- *        --scopes=https://www.googleapis.com/auth/tagmanager.edit.containers,\
- *                 https://www.googleapis.com/auth/tagmanager.edit.containerversions,\
- *                 https://www.googleapis.com/auth/tagmanager.publish
+ *   4. gcloud auth application-default login --client-id-file=<that>.json \
+ *        --scopes=https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/tagmanager.edit.containers,https://www.googleapis.com/auth/tagmanager.edit.containerversions,https://www.googleapis.com/auth/tagmanager.publish
  *
- * The third scope is needed ONLY for --publish; the first two cover a normal
- * run. While the consent screen is in "Testing" status Google expires the
- * refresh token after 7 days, so step 4 has to be repeated periodically — a
+ * Three gotchas on step 4, each of which fails in a way that does NOT name the
+ * real cause:
+ *   - `cloud-platform` is MANDATORY. gcloud rejects any ADC `--scopes` list
+ *     without it ("cloud-platform scope is required but not requested").
+ *   - Keep `--scopes` on the SAME line as the rest, or put the `\` at the very
+ *     end of a line. A `\` followed by a space mid-line escapes that space
+ *     instead of continuing the line, so gcloud never sees the flag and
+ *     silently falls back to its DEFAULT ADC scopes — which include
+ *     `sqlservice.login` and blow up with "Some requested scopes were
+ *     invalid". That error is a symptom of the typo, not of a bad scope list.
+ *   - `tagmanager.publish` is needed ONLY for --publish; the two edit scopes
+ *     cover a normal run.
+ *
+ * While the consent screen is in "Testing" status Google expires the refresh
+ * token after 7 days, so step 4 has to be repeated periodically — an
  * `invalid_grant: Bad Request` from `print-access-token` is that expiry, not a
  * broken setup.
  *
