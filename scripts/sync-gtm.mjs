@@ -66,7 +66,11 @@
  * container (account owned by kevin.van.ransbeeck@gmail.com — auth as that user):
  *   GTM_ACCOUNT_ID=4702633562
  *   GTM_CONTAINER_ID=247406304
- *   GTM_WORKSPACE_ID=10       (Default Workspace; or a fresh workspace's id)
+ *   GTM_WORKSPACE_ID  OPTIONAL and normally omitted — the script discovers the
+ *                     writable workspace itself. Workspace ids ROTATE (creating
+ *                     a version consumes the workspace and GTM opens a fresh
+ *                     one under a new id), so a pinned value works exactly once
+ *                     and then fails with "Workspace is already submitted".
  *   GTM_TRIGGER_NAME  (default "Custom Event — KCVV Analytics")
  *   GTM_TAG_NAME      (default "GA4 Event — KCVV Custom Events")
  *   GTM_DLV_PREFIX    (default "dlv - ")  — matches the live container convention
@@ -93,14 +97,17 @@ const PUBLISH = process.argv.includes("--publish");
 
 const ACCOUNT_ID = reqEnv("GTM_ACCOUNT_ID");
 const CONTAINER_ID = reqEnv("GTM_CONTAINER_ID");
-const WORKSPACE_ID = reqEnv("GTM_WORKSPACE_ID");
+// Optional — see `resolveWorkspace()`. Pinning it is usually WRONG.
+const WORKSPACE_ID = process.env.GTM_WORKSPACE_ID;
 const TRIGGER_NAME = process.env.GTM_TRIGGER_NAME ?? "Custom Event — KCVV Analytics";
 const TAG_NAME = process.env.GTM_TAG_NAME ?? "GA4 Event — KCVV Custom Events";
 const DLV_PREFIX = process.env.GTM_DLV_PREFIX ?? "dlv - ";
 const WRITE_PACE_MS = Number(process.env.GTM_WRITE_PACE_MS ?? 4000);
 
 const API = "https://tagmanager.googleapis.com/tagmanager/v2";
-const WS = `${API}/accounts/${ACCOUNT_ID}/containers/${CONTAINER_ID}/workspaces/${WORKSPACE_ID}`;
+const CONTAINER = `${API}/accounts/${ACCOUNT_ID}/containers/${CONTAINER_ID}`;
+/** Workspace base URL. Assigned once by `resolveWorkspace()` in `main()`. */
+let WS;
 
 const TOKEN = getToken();
 
@@ -151,7 +158,12 @@ async function api(method, url, body, attempt = 0) {
   const text = await res.text();
   const json = text ? JSON.parse(text) : {};
   if (!res.ok) {
-    throw new Error(`${method} ${url} → ${res.status}: ${json?.error?.message ?? text}`);
+    const err = new Error(`${method} ${url} → ${res.status}: ${json?.error?.message ?? text}`);
+    // Carry the status as data. Sniffing it out of the message is unreliable —
+    // the fingerprint-guarded PUT URL contains the word "fingerprint", so a
+    // text match there flags every failure as a concurrency conflict.
+    err.status = res.status;
+    throw err;
   }
   return json;
 }
@@ -192,7 +204,7 @@ async function updateEntity(path, mutate, label) {
   try {
     return await write("PUT", url, updated);
   } catch (e) {
-    if (String(e.message).includes("409") || /fingerprint/i.test(e.message)) {
+    if (e.status === 409) {
       throw new Error(
         `${label}: changed in GTM while this run was in flight. Nothing was written — re-run the script.`,
       );
@@ -281,7 +293,44 @@ function tagParamRow(name) {
   };
 }
 
+/**
+ * Pick the workspace to write into.
+ *
+ * A workspace id is NOT stable and must not be pinned in a runbook: creating a
+ * version consumes the workspace (it becomes that version, and further writes
+ * fail with `400: Workspace is already submitted`), and GTM opens a fresh
+ * "Default Workspace" under a NEW id. A pinned id therefore works exactly once
+ * — it went stale between #1974 and #2419, where id 10 had become version 10.
+ *
+ * The list endpoint returns only writable workspaces, so anything it hands
+ * back is a valid target. `GTM_WORKSPACE_ID` still overrides, for the rare case
+ * of a deliberately separate workspace.
+ */
+async function resolveWorkspace() {
+  if (WORKSPACE_ID) return `${CONTAINER}/workspaces/${WORKSPACE_ID}`;
+
+  const spaces = (await api("GET", `${CONTAINER}/workspaces`)).workspace ?? [];
+  if (spaces.length === 0) {
+    throw new Error(
+      "No writable workspace in this container. Open GTM and create one, or set GTM_WORKSPACE_ID.",
+    );
+  }
+  const chosen =
+    spaces.find((w) => w.name === "Default Workspace") ??
+    (spaces.length === 1 ? spaces[0] : null);
+  if (!chosen) {
+    throw new Error(
+      `Several workspaces and no "Default Workspace" — set GTM_WORKSPACE_ID to one of: ` +
+        spaces.map((w) => `${w.workspaceId} (${w.name})`).join(", "),
+    );
+  }
+  console.log(`Workspace: ${chosen.workspaceId} (${chosen.name})`);
+  return `${CONTAINER}/workspaces/${chosen.workspaceId}`;
+}
+
 async function main() {
+  WS = await resolveWorkspace();
+
   // ── Load live entities ────────────────────────────────────────────────
   const [variablesList, triggersList, tagsList] = await Promise.all([
     api("GET", `${WS}/variables`),
