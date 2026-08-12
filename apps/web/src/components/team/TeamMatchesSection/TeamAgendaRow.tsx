@@ -302,9 +302,7 @@ export function TeamAgendaRow({
     // user to turn up for a match that is off — the same failure the visible
     // `statusWording` marker exists to prevent (#2423). A `upcomingLabel`
     // surface ("Gepland") has deliberately dropped the precise time.
-    match.status === "scheduled" && !showUpcomingLabel
-      ? ` om ${formatKickoff(match)}`
-      : "",
+    match.status === "scheduled" && !showUpcomingLabel ? ` om ${kickoff}` : "",
     // And the status itself has to reach the name, not just the caption: the
     // label replaces the row's contents, so a forfeit otherwise announces as a
     // plain win. Long form here — there is no width to save in a string.
