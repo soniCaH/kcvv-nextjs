@@ -110,9 +110,19 @@ function formatKickoff(match: ScheduleMatch): string {
 }
 
 /**
- * Team name with an optional designation suffix ("A" / "B" / "U23"). The club
- * name truncates within the available space; the suffix stays pinned beside it
- * so the opponent's specific team (e.g. "… U23") is always legible.
+ * Team name with an optional designation suffix ("A" / "B" / "U23").
+ *
+ * Name and suffix share ONE truncating box, so the ellipsis eats the suffix
+ * before it touches the club name (#2405). The suffix used to be a `shrink-0`
+ * sibling pinned outside the truncation, which inverted the priority: "Yellow
+ * Red KV Mechelen U23" clipped to "Yellow Red KV Mech… U23", keeping the three
+ * characters a reader can infer and dropping the ones they cannot. A reader
+ * scanning for the opponent needs the club; the squad is the detail that gives
+ * way first.
+ *
+ * `block` is load-bearing: the mobile layout hands this a plain `<div>` parent,
+ * and `overflow: hidden` does nothing on an inline box. In the desktop flex row
+ * the flex container blockifies it anyway, so one class serves both.
  */
 function TeamName({
   team,
@@ -128,31 +138,29 @@ function TeamName({
   return (
     <span
       className={cn(
-        "flex min-w-0 flex-1 items-baseline gap-1.5",
-        align === "right" && "justify-end",
+        "block min-w-0 flex-1 truncate text-sm",
+        align === "right" && "text-right",
+        featured ? "text-white" : "text-ink",
+        bold && "font-semibold",
       )}
     >
-      <span
-        className={cn(
-          "min-w-0 truncate text-sm",
-          align === "right" && "text-right",
-          featured ? "text-white" : "text-ink",
-          bold && "font-semibold",
-        )}
-      >
-        {team.name}
-      </span>
+      {team.name}
       {team.teamLabel ? (
-        <span
-          className={cn(
-            "shrink-0 font-mono text-[10px] font-semibold tracking-wide",
-            // White on jersey-deep / ink-muted on cream — matches the
-            // competition caption's contrast-safe tones.
-            featured ? "text-white" : "text-ink-muted",
-          )}
-        >
-          {team.teamLabel}
-        </span>
+        <>
+          {/* A real space, not a margin — the suffix now sits inside the name's
+              text run, so the gap has to survive into the text content or the
+              row reads as "MechelenU23" to a screen reader. */}{" "}
+          <span
+            className={cn(
+              "font-mono text-[10px] font-semibold tracking-wide",
+              // White on jersey-deep / ink-muted on cream — matches the
+              // competition caption's contrast-safe tones.
+              featured ? "text-white" : "text-ink-muted",
+            )}
+          >
+            {team.teamLabel}
+          </span>
+        </>
       ) : null}
     </span>
   );

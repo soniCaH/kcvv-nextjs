@@ -90,6 +90,18 @@ export const UpcomingMatchesClient = ({
       : chronological.filter((m) => matchTeamLabel(m) === selectedTeam);
 
   const canExpand = scoped.length > initialVisible;
+  // Expanding shows the whole scoped set, deliberately uncapped (#2405).
+  //
+  // The list cannot run away: `getNextMatches` returns exactly ONE fixture per
+  // visible team — never a team's season — so its length is the club's team
+  // count, not the calendar's. Today that is 21 teams past the BFF's
+  // `showInNavigation != false` gate, of which the homepage routes the 3 senior
+  // sides to `<FirstTeamsBlock>`, leaving at most 18 rows here. A cap would be
+  // an arbitrary number sitting in front of a bound the data already enforces,
+  // and virtualising 18 rows costs more than it saves.
+  //
+  // `apps/api/src/psd/service.test.ts` locks the one-row-per-team invariant. If
+  // that test ever goes red, this line is what needs a real cap.
   const visible = expanded ? scoped : scoped.slice(0, initialVisible);
 
   const handleFilter = (value: string) => {

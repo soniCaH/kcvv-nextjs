@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2405 · 2405-2 — SponsorsBlock: cap of niet?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey: #4acf52;
+        --jersey-deep: #007c46;
+        --jersey-deep-dark: #133d28;
+        --warm: #f0c264;
+        --brick: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --font-display: "Fraunces", georgia, serif;
+        --font-body: "Archivo", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.92em;
+      }
+
+      .head {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 22px 28px;
+        font-family: var(--font-mono);
+      }
+      .head h1 {
+        margin: 0 0 6px;
+        font-size: 15px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .head p {
+        margin: 0 0 6px;
+        font-size: 13px;
+        color: #b9b9b9;
+        line-height: 1.65;
+        max-width: 108ch;
+      }
+      .head b {
+        color: var(--warm);
+      }
+      .head .em {
+        color: var(--jersey);
+      }
+      .head code {
+        color: #e7e7e7;
+      }
+
+      .bar {
+        background: var(--jersey-deep);
+        color: var(--cream);
+        padding: 11px 28px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--ink);
+        border-top: 1px solid rgba(0, 0, 0, 0.25);
+      }
+      .bar.rec {
+        background: var(--jersey-deep-dark);
+      }
+      .bar .tg {
+        background: var(--warm);
+        color: var(--ink);
+        padding: 2px 9px;
+        font-weight: 700;
+        border: 1.5px solid var(--ink);
+        margin-right: 10px;
+      }
+      .bar .note {
+        color: #cfeede;
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 12px;
+      }
+
+      .stage {
+        padding: 26px 28px 34px;
+        border-bottom: 1px dashed var(--paper-edge);
+      }
+      .why {
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--ink-soft);
+        max-width: 104ch;
+        margin-bottom: 18px;
+      }
+      .why h4 {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 8px;
+      }
+      .why ul {
+        margin: 8px 0 0;
+        padding-left: 16px;
+      }
+      .why li {
+        margin-bottom: 5px;
+      }
+      .why .con {
+        color: var(--brick);
+      }
+      .why b {
+        color: var(--ink);
+      }
+
+      .vpcap {
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 0 0 8px;
+      }
+      .vp {
+        width: 794px; /* 1280 × 0.62 */
+        max-width: 100%;
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream-deep);
+        overflow: hidden;
+      }
+      .vp .inner {
+        padding: 30px 20px 34px;
+      }
+
+      /* SectionHeader */
+      .sh {
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: 27px;
+        line-height: 1.06;
+        letter-spacing: -0.015em;
+        margin: 0 0 20px;
+      }
+      .sh i {
+        font-weight: 600;
+        font-style: italic;
+      }
+
+      /* SPONSOR_TILE_GRID_CLASS at lg → 5 kolommen */
+      .wall {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 9px; /* lg:gap-3.5 = 14 × 0.62 */
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .tile {
+        background: var(--cream-soft);
+        min-height: 43px; /* min-h-[70px] × 0.62 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 9px;
+      }
+      .tile span {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 11px;
+        color: rgba(10, 10, 10, 0.8);
+        text-align: center;
+        line-height: 1.25;
+        filter: grayscale(1);
+      }
+      .tile.cut {
+        background: repeating-linear-gradient(
+          45deg,
+          rgba(201, 63, 28, 0.07) 0 8px,
+          transparent 8px 16px
+        );
+        border: 1.5px dashed rgba(201, 63, 28, 0.55);
+      }
+      .tile.cut span {
+        color: var(--brick);
+        font-family: var(--font-mono);
+        font-style: normal;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .tail {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 22px;
+      }
+      .tail a,
+      .tail span.link {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink);
+        text-decoration: none;
+        border-bottom: 1.5px solid transparent;
+      }
+      .tailrow {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 22px;
+        gap: 16px;
+      }
+      .more {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 3px 3px 0 0 var(--ink);
+        padding: 8px 13px;
+      }
+      .rowcount {
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+
+      .dims {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--ink-muted);
+        margin-top: 10px;
+        letter-spacing: 0.03em;
+      }
+      .dims b {
+        color: var(--ink);
+      }
+      .statecap {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink);
+        background: var(--cream-deep);
+        border: 1.5px solid var(--ink);
+        display: inline-block;
+        padding: 3px 9px;
+        margin: 22px 0 10px;
+      }
+
+      .legend {
+        background: var(--cream-deep);
+        border-top: 2px solid var(--ink);
+        padding: 24px 28px 30px;
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        line-height: 1.75;
+      }
+      .legend h3 {
+        margin: 0 0 10px;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+      }
+      .legend table {
+        border-collapse: collapse;
+        margin: 6px 0 18px;
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        width: 100%;
+        max-width: 1000px;
+      }
+      .legend th,
+      .legend td {
+        border: 1px solid var(--paper-edge);
+        padding: 7px 10px;
+        text-align: left;
+        vertical-align: top;
+        font-size: 12px;
+      }
+      .legend th {
+        background: var(--cream-soft);
+        font-size: 10.5px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .legend .q {
+        border: 2px solid var(--ink);
+        background: var(--warm);
+        padding: 13px 16px;
+        margin-top: 8px;
+        max-width: 1000px;
+      }
+      .legend .q b {
+        display: block;
+        margin-bottom: 4px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="head">
+      <h1>
+        #2405 · drill 2405-2 — SponsorsBlock: cap of expliciet vrijgesteld?
+      </h1>
+      <p>
+        <b>Het probleem (AC4).</b> <code>SponsorsBlock</code> rendert
+        <span class="em">élke</span> sponsor zonder cap, terwijl
+        <code>NewsGrid</code> op 6 capt, de agenda op 5 en “Uitgelicht” op 3. De
+        AC laat twee uitwegen open:
+        <em>“een cap + een toon-alles-affordance”</em> óf
+        <em>“een expliciete notitie waarom sponsors vrijgesteld zijn”</em>.
+      </p>
+      <p>
+        <b>De echte data (productie, vandaag opgevraagd).</b> 33
+        sponsor-documenten; geen enkele heeft <code>tier</code> gezet, dus de
+        fallback-tak in <code>SponsorsSection</code> bepaalt de selectie:
+        <code>type ∈ [crossing, green, white]</code> → <b>16 tegels</b>. Dat is
+        <b>4 rijen</b> op lg (5 kolommen), <b>6 rijen</b> op sm,
+        <b>8 rijen</b> op mobiel. Dit is dus geen theoretisch randgeval.
+      </p>
+      <p>
+        <b>Wat er al is.</b> De blok heeft al een overloop-uitgang: de link
+        <code>Alle sponsors &amp; sympathisanten →</code> naar
+        <code>/sponsors</code> — exact hetzelfde patroon als NewsGrid’s
+        <code>Al het nieuws →</code>. <code>SponsorsBlock</code> is een
+        <span class="em">server component</span>; een uitklapknop maakt er een
+        client component van.
+      </p>
+    </div>
+
+    <!-- ── VANDAAG / D ────────────────────────────────────────────────────── -->
+    <div class="bar">
+      <span class="tg">D</span> Vandaag — geen cap (= de “vrijgesteld”-uitweg)
+      <span class="note">· 16 tegels, 4 rijen op lg</span>
+    </div>
+    <div class="stage">
+      <div class="why">
+        <h4>Het argument vóór vrijstelling</h4>
+        Sponsors <b>betalen</b> voor zichtbaarheid. Een cap is hier geen
+        UI-keuze maar een commerciële: hij haalt betalende partners van de
+        homepage. De selectie is bovendien al gefilterd tot de betalende tiers —
+        de sympathisanten staan er niet tussen.
+        <ul>
+          <li>
+            <b>Voor:</b> nul risico op een boze sponsor; nul code; de bestaande
+            link blijft de weg naar de volledige muur.
+          </li>
+          <li class="con">
+            <b>Tegen:</b> 8 rijen logo’s op mobiel is de langste ononderbroken
+            lijst van de homepage — precies waar de AC over gaat. En het blijft
+            onbegrensd: 40 sponsors = 20 rijen.
+          </li>
+        </ul>
+      </div>
+      <p class="vpcap">Desktop 1280 · lg = 5 kolommen · 16 sponsors</p>
+      <div class="vp">
+        <div class="inner">
+          <h2 class="sh">Met dank aan onze <i>sponsors.</i></h2>
+          <ul class="wall">
+            <li class="tile"><span>Alupoort</span></li>
+            <li class="tile"><span>Bauvall Trans</span></li>
+            <li class="tile"><span>Brasserie Canal</span></li>
+            <li class="tile"><span>Café ’t Steen</span></li>
+            <li class="tile"><span>De Drie Fonteinen</span></li>
+            <li class="tile"><span>Garage Verstraeten</span></li>
+            <li class="tile"><span>Immolution</span></li>
+            <li class="tile"><span>JSD Immo</span></li>
+            <li class="tile"><span>Loonwerken Binst</span></li>
+            <li class="tile"><span>Spar Elewijt</span></li>
+            <li class="tile"><span>Transport Junius</span></li>
+            <li class="tile"><span>Uniac</span></li>
+            <li class="tile"><span>Banden Michel</span></li>
+            <li class="tile"><span>Gravo</span></li>
+            <li class="tile"><span>Q8 De Ron</span></li>
+            <li class="tile"><span>Roefs NV</span></li>
+          </ul>
+          <div class="tailrow">
+            <span class="rowcount">4 rijen · 16 van 16</span>
+            <span class="link">Alle sponsors &amp; sympathisanten →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── A ──────────────────────────────────────────────────────────────── -->
+    <div class="bar rec">
+      <span class="tg">A</span> Cap op 10 + de bestaande link (geen knop)
+      <span class="note">· blijft server component — NewsGrid’s patroon</span>
+    </div>
+    <div class="stage">
+      <div class="why">
+        <h4>Karakter</h4>
+        Exact wat <code>NewsGrid</code> doet: <code>slice(0, 10)</code> en de
+        overloop loopt via de link die er al staat. 10 = <b>2 volle rijen</b> op
+        lg én <b>5 volle rijen</b> op mobiel — geen rafelrand op de twee
+        viewports die er het meest toe doen.
+        <ul>
+          <li>
+            <b>Voor:</b> geen <code>"use client"</code>, geen state, geen extra
+            analytics; consistent met elke andere sectie op de spine.
+          </li>
+          <li class="con">
+            <b>Tegen:</b> 6 betalende sponsors verdwijnen van de homepage. Dat
+            is een commerciële beslissing, geen UI-beslissing.
+          </li>
+        </ul>
+      </div>
+      <p class="vpcap">Desktop 1280 · lg = 5 kolommen · cap 10</p>
+      <div class="vp">
+        <div class="inner">
+          <h2 class="sh">Met dank aan onze <i>sponsors.</i></h2>
+          <ul class="wall">
+            <li class="tile"><span>Alupoort</span></li>
+            <li class="tile"><span>Bauvall Trans</span></li>
+            <li class="tile"><span>Brasserie Canal</span></li>
+            <li class="tile"><span>Café ’t Steen</span></li>
+            <li class="tile"><span>De Drie Fonteinen</span></li>
+            <li class="tile"><span>Garage Verstraeten</span></li>
+            <li class="tile"><span>Immolution</span></li>
+            <li class="tile"><span>JSD Immo</span></li>
+            <li class="tile"><span>Loonwerken Binst</span></li>
+            <li class="tile"><span>Spar Elewijt</span></li>
+            <li class="tile cut"><span>weg</span></li>
+            <li class="tile cut"><span>weg</span></li>
+            <li class="tile cut"><span>weg</span></li>
+            <li class="tile cut"><span>weg</span></li>
+            <li class="tile cut"><span>weg</span></li>
+          </ul>
+          <div class="tailrow">
+            <span class="rowcount">2 rijen · 10 van 16 · +6 op /sponsors</span>
+            <span class="link">Alle sponsors &amp; sympathisanten →</span>
+          </div>
+          <p class="dims">
+            gearceerde tegels = <b>niet gerenderd</b>, alleen hier getoond om te
+            zien wie wegvalt
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── B ──────────────────────────────────────────────────────────────── -->
+    <div class="bar">
+      <span class="tg">B</span> Cap op 10 + uitklapknop “Toon alle 16 sponsors
+      ↓”
+      <span class="note"
+        >· kopieert UpcomingMatches — wordt client component</span
+      >
+    </div>
+    <div class="stage">
+      <div class="why">
+        <h4>Karakter</h4>
+        Het enige echte progressive-disclosure-patroon in de codebase
+        (<code>UpcomingMatchesClient</code>) toegepast op sponsors: kort by
+        default, alles op één klik. Niemand verdwijnt permanent.
+        <ul>
+          <li>
+            <b>Voor:</b> homepage blijft kort én geen enkele sponsor verliest
+            zijn plek — het compromis dat beide bezwaren dekt.
+          </li>
+          <li class="con">
+            <b>Tegen:</b> <code>SponsorsBlock</code> wordt een client component
+            (nu server); een sponsor achter een klik is nog steeds minder
+            zichtbaar dan een sponsor in beeld; twee overloop-uitgangen naast
+            elkaar (knop + link) is één te veel.
+          </li>
+        </ul>
+      </div>
+      <p class="vpcap">Desktop 1280 · lg = 5 kolommen · cap 10, ingeklapt</p>
+      <div class="vp">
+        <div class="inner">
+          <h2 class="sh">Met dank aan onze <i>sponsors.</i></h2>
+          <ul class="wall">
+            <li class="tile"><span>Alupoort</span></li>
+            <li class="tile"><span>Bauvall Trans</span></li>
+            <li class="tile"><span>Brasserie Canal</span></li>
+            <li class="tile"><span>Café ’t Steen</span></li>
+            <li class="tile"><span>De Drie Fonteinen</span></li>
+            <li class="tile"><span>Garage Verstraeten</span></li>
+            <li class="tile"><span>Immolution</span></li>
+            <li class="tile"><span>JSD Immo</span></li>
+            <li class="tile"><span>Loonwerken Binst</span></li>
+            <li class="tile"><span>Spar Elewijt</span></li>
+          </ul>
+          <div class="tailrow">
+            <span class="more">Toon alle 16 sponsors ↓</span>
+            <span class="link">Alle sponsors &amp; sympathisanten →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── C ──────────────────────────────────────────────────────────────── -->
+    <div class="bar">
+      <span class="tg">C</span> Cap op 15 — alleen de rafelrand weg
+      <span class="note">· 3 volle rijen op lg, 5 op sm</span>
+    </div>
+    <div class="stage">
+      <div class="why">
+        <h4>Karakter</h4>
+        Een cap die vandaag <b>precies één</b> sponsor verbergt en vooral de
+        laatste half-lege rij opruimt. Formeel voldoet het aan de AC (er ís een
+        cap) zonder de commerciële pijn van A.
+        <ul>
+          <li>
+            <b>Voor:</b> begrenst de lijst echt (40 sponsors → nog steeds 15); 3
+            volle rijen op lg, 5 op sm.
+          </li>
+          <li class="con">
+            <b>Tegen:</b> voelt willekeurig — een cap die 1 van 16 wegsnijdt is
+            eerder een rafelrand-fix dan een antwoord op “ongecapte lijst”. En
+            de arbitraire sponsor die wegvalt is alfabetisch bepaald.
+          </li>
+        </ul>
+      </div>
+      <p class="vpcap">Desktop 1280 · lg = 5 kolommen · cap 15</p>
+      <div class="vp">
+        <div class="inner">
+          <h2 class="sh">Met dank aan onze <i>sponsors.</i></h2>
+          <ul class="wall">
+            <li class="tile"><span>Alupoort</span></li>
+            <li class="tile"><span>Bauvall Trans</span></li>
+            <li class="tile"><span>Brasserie Canal</span></li>
+            <li class="tile"><span>Café ’t Steen</span></li>
+            <li class="tile"><span>De Drie Fonteinen</span></li>
+            <li class="tile"><span>Garage Verstraeten</span></li>
+            <li class="tile"><span>Immolution</span></li>
+            <li class="tile"><span>JSD Immo</span></li>
+            <li class="tile"><span>Loonwerken Binst</span></li>
+            <li class="tile"><span>Spar Elewijt</span></li>
+            <li class="tile"><span>Transport Junius</span></li>
+            <li class="tile"><span>Uniac</span></li>
+            <li class="tile"><span>Banden Michel</span></li>
+            <li class="tile"><span>Gravo</span></li>
+            <li class="tile"><span>Q8 De Ron</span></li>
+            <li class="tile cut"><span>weg</span></li>
+          </ul>
+          <div class="tailrow">
+            <span class="rowcount">3 rijen · 15 van 16</span>
+            <span class="link">Alle sponsors &amp; sympathisanten →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── legend ─────────────────────────────────────────────────────────── -->
+    <div class="legend">
+      <h3>Vergelijking</h3>
+      <table>
+        <tr>
+          <th>Optie</th>
+          <th>Zichtbaar vandaag</th>
+          <th>Rijen lg / sm / mobiel</th>
+          <th>Server component?</th>
+          <th>Sponsor verliest plek?</th>
+        </tr>
+        <tr>
+          <td><b>D</b> geen cap (vandaag)</td>
+          <td>16 / 16</td>
+          <td>4 / 6 / 8</td>
+          <td>ja</td>
+          <td>nee</td>
+        </tr>
+        <tr>
+          <td><b>A</b> cap 10 + link</td>
+          <td>10 / 16</td>
+          <td>2 / 4 / 5</td>
+          <td>ja</td>
+          <td style="color: var(--brick)">ja — 6</td>
+        </tr>
+        <tr>
+          <td><b>B</b> cap 10 + knop</td>
+          <td>10 → 16 na klik</td>
+          <td>2 / 4 / 5 (ingeklapt)</td>
+          <td style="color: var(--brick)">nee — wordt client</td>
+          <td>nee (achter een klik)</td>
+        </tr>
+        <tr>
+          <td><b>C</b> cap 15 + link</td>
+          <td>15 / 16</td>
+          <td>3 / 5 / 8</td>
+          <td>ja</td>
+          <td style="color: var(--brick)">ja — 1</td>
+        </tr>
+      </table>
+
+      <h3>Wat het raakt</h3>
+      <table>
+        <tr>
+          <th>Bestand</th>
+          <th>Wijziging</th>
+        </tr>
+        <tr>
+          <td><code>SponsorsBlock.tsx</code></td>
+          <td>
+            A/C: één <code>slice()</code> + commentaar. B:
+            <code>"use client"</code>, <code>useState</code>, knop,
+            analytics-events
+          </td>
+        </tr>
+        <tr>
+          <td><code>SponsorsBlock.stories.tsx</code></td>
+          <td>
+            nieuwe story voor de gecapte staat (mocks hebben er 13, cap-gedrag
+            is nu niet gedekt)
+          </td>
+        </tr>
+        <tr>
+          <td><code>test/vr/__snapshots__/</code></td>
+          <td>
+            <code>features-sponsors-sponsorsblock--*</code> +
+            <code>features-home-sponsorssection--*</code> opnieuw vastleggen
+          </td>
+        </tr>
+      </table>
+
+      <div class="q">
+        <b>Vraag 2405-2</b>
+        Krijgt <code>SponsorsBlock</code> een cap — en zo ja, welke? Mijn
+        voorstel is <b>D + een expliciete notitie in de code</b>: de blok heeft
+        al een overloop-uitgang, de selectie is al gefilterd tot betalende
+        partners, en een cap haalt betalende sponsors van de homepage voor een
+        probleem dat de andere secties niet hebben. Als je wél een cap wil, is
+        <b>A</b> de goedkoopste (blijft server component).
+      </div>
+    </div>
+  </body>
+</html>

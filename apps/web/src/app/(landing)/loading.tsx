@@ -20,6 +20,10 @@
 
 import { PageContainer, StripedSeam } from "@/components/design-system";
 import { FIRST_TEAMS_ROW_GRID } from "@/components/home/FirstTeamsBlock";
+import {
+  UITGELICHT_ROW_CLASS,
+  UITGELICHT_CARD_CLASS,
+} from "@/components/home/FeaturedUitgelichtRow";
 
 /** A flush-image card footprint — image atop a border-2 ink body. */
 function CardSkeleton() {
@@ -88,11 +92,13 @@ export default function HomeLoading() {
       <div className="bg-cream-soft py-12 md:py-16">
         <PageContainer width="index" className="motion-safe:animate-pulse">
           <div className="bg-paper-edge mb-6 h-9 w-48" />
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <ul className={UITGELICHT_ROW_CLASS}>
             {Array.from({ length: 3 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <li key={i} className={UITGELICHT_CARD_CLASS}>
+                <CardSkeleton />
+              </li>
             ))}
-          </div>
+          </ul>
         </PageContainer>
       </div>
 
