@@ -4,6 +4,8 @@ import { render, screen } from "@testing-library/react";
 import type { ImageProps } from "next/image";
 import {
   FeaturedUitgelichtRow,
+  UITGELICHT_ROW_CLASS,
+  UITGELICHT_CARD_CLASS,
   type UitgelichtArticle,
 } from "./FeaturedUitgelichtRow";
 
@@ -24,6 +26,12 @@ const sampleArticle = (
   date: "14 mei 2026",
   ...over,
 });
+
+/** `n` distinct articles — distinct `href`s, since that is the React key. */
+const rowOf = (n: number): UitgelichtArticle[] =>
+  Array.from({ length: n }, (_, i) =>
+    sampleArticle({ href: `/a-${i}`, title: `A-${i}` }),
+  );
 
 describe("FeaturedUitgelichtRow", () => {
   describe("Drop-if-empty", () => {
@@ -58,10 +66,7 @@ describe("FeaturedUitgelichtRow", () => {
     });
 
     it("caps at 3 even when the caller passes more", () => {
-      const articles = Array.from({ length: 5 }, (_, i) =>
-        sampleArticle({ href: `/a-${i}`, title: `A-${i}` }),
-      );
-      render(<FeaturedUitgelichtRow articles={articles} />);
+      render(<FeaturedUitgelichtRow articles={rowOf(5)} />);
       expect(screen.getAllByRole("article")).toHaveLength(3);
     });
 
@@ -92,6 +97,43 @@ describe("FeaturedUitgelichtRow", () => {
         />,
       );
       expect(two.container.querySelectorAll("article")).toHaveLength(2);
+    });
+  });
+
+  describe("Short-row layout (#2405)", () => {
+    it("centres a flex row of count-independent cards", () => {
+      // jsdom has no layout, so the centring is asserted through the classes
+      // that produce it; the VR stories at N=1/2/3 carry the pixel coverage.
+      // Asserted against the exported constants rather than literals, so the
+      // arithmetic lives in exactly one place and a deliberate gap change
+      // doesn't fail this test for the wrong reason.
+      const { container } = render(
+        <FeaturedUitgelichtRow articles={[sampleArticle({ href: "/a" })]} />,
+      );
+      expect(container.querySelector("ul")?.className).toBe(
+        UITGELICHT_ROW_CLASS,
+      );
+      expect(container.querySelector("li")?.className).toBe(
+        UITGELICHT_CARD_CLASS,
+      );
+    });
+
+    it("gives every card the same width whatever the count", () => {
+      const widthsAt = (n: number) => {
+        const { container, unmount } = render(
+          <FeaturedUitgelichtRow articles={rowOf(n)} />,
+        );
+        const widths = [...container.querySelectorAll("li")].map(
+          (li) => li.className,
+        );
+        unmount();
+        return widths;
+      };
+      // The defect this fixes: one article used to occupy one of three grid
+      // columns. Now it carries the same basis three articles do.
+      expect(widthsAt(1)).toStrictEqual([UITGELICHT_CARD_CLASS]);
+      expect(widthsAt(2)).toStrictEqual(Array(2).fill(UITGELICHT_CARD_CLASS));
+      expect(widthsAt(3)).toStrictEqual(Array(3).fill(UITGELICHT_CARD_CLASS));
     });
   });
 

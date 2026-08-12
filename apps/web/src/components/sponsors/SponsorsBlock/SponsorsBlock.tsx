@@ -11,6 +11,15 @@ export interface SponsorsBlockProps {
 }
 
 export const SponsorsBlock = ({ sponsors, className }: SponsorsBlockProps) => {
+  // Deliberately uncapped, unlike the rest of the homepage spine (`<NewsGrid>`
+  // 6, the agenda 5, `<FeaturedUitgelichtRow>` 3). Owner decision, #2405,
+  // 2026-08-12: sponsors pay for the visibility, so truncating the wall is a
+  // commercial call and not a layout one — and the list is already filtered to
+  // the paying tiers below, so there is no long tail to trim.
+  //
+  // Not prose-only: `SponsorsBlock.test.tsx`'s "filters out sympathisant rows
+  // and renders only hoofdsponsor + sponsor" counts the rendered `listitem`s
+  // against the input, so any `slice()` added here turns it red.
   const visible = sponsors
     .filter((s) => s.tier === "hoofdsponsor" || s.tier === "sponsor")
     .slice()

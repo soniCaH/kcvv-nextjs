@@ -71,6 +71,16 @@ const FINISHED_LOSS: ScheduleMatch = {
   isHome: true,
 };
 
+/** An opponent whose name outruns the row, carrying a squad suffix (#2405). */
+const LONG_AWAY: ScheduleMatch = {
+  ...BASE,
+  awayTeam: {
+    id: 20,
+    name: "Yellow Red Koninklijke Voetbalclub Mechelen",
+    teamLabel: "U23",
+  },
+};
+
 describe("TeamAgendaRow", () => {
   describe("Date stub", () => {
     it("renders the day number", () => {
@@ -403,18 +413,7 @@ describe("TeamAgendaRow", () => {
 
   describe("Team designation (team_label)", () => {
     it("renders the opponent's team designation suffix", () => {
-      render(
-        <TeamAgendaRow
-          match={{
-            ...BASE,
-            awayTeam: {
-              id: 20,
-              name: "Yellow Red KV Mechelen",
-              teamLabel: "U23",
-            },
-          }}
-        />,
-      );
+      render(<TeamAgendaRow match={LONG_AWAY} />);
       // Appears once per layout (desktop away + mobile opponent column).
       const labels = screen.getAllByText("U23");
       expect(labels.length).toBeGreaterThan(0);
@@ -423,6 +422,23 @@ describe("TeamAgendaRow", () => {
     it("does not render a suffix when teamLabel is absent", () => {
       render(<TeamAgendaRow match={BASE} />);
       expect(screen.queryByText("U23")).toBeNull();
+    });
+
+    // #2405 — truncation priority. jsdom has no layout, so it is asserted
+    // structurally: the suffix lives INSIDE the truncating box, which is what
+    // makes the ellipsis reach it before the club name. The old markup pinned
+    // it outside as a `shrink-0` sibling, so the club name absorbed the whole
+    // cost ("Yellow Red KV Mech… U23"). VR carries the pixel coverage.
+    it("nests the suffix inside the truncating box, with a space before it", () => {
+      render(<TeamAgendaRow match={LONG_AWAY} />);
+      for (const suffix of screen.getAllByText("U23")) {
+        expect(suffix.parentElement?.className).toContain("truncate");
+        // The space has to survive into textContent, not just be a margin, or
+        // the row reads as "MechelenU23".
+        expect(suffix.parentElement?.textContent).toContain(
+          `${LONG_AWAY.awayTeam.name} U23`,
+        );
+      }
     });
   });
 

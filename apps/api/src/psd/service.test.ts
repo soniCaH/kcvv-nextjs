@@ -474,6 +474,54 @@ describe("PsdService.getNextMatches", () => {
     }
   });
 
+  // #2405 — the homepage agenda renders this list without a cap, and the only
+  // thing standing between it and an unbounded page is the `[0]` in
+  // `getNextMatches`: one fixture per visible team, never a team's whole
+  // season. That makes the agenda's length a function of the club's team
+  // count, not of how busy the calendar is. If this ever returns more than one
+  // row per team, `<UpcomingMatchesClient>` needs a real cap — the derivation
+  // lives in the note there.
+  it("returns exactly one fixture per team however many that team has", async () => {
+    // Feed order is deliberately not chronological — the service must sort and
+    // take the earliest, not trust the order PSD happens to return.
+    const fourUpcoming = {
+      content: ["03", "01", "04", "02"].map((day) => ({
+        ...rawFutureGame,
+        date: `2099-12-${day} 00:00`,
+      })),
+    };
+
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes("/games/team/")) {
+        return Promise.resolve({ ok: true, json: async () => fourUpcoming });
+      }
+      if (url.includes("/seasons")) {
+        return Promise.resolve({ ok: true, json: async () => seasons });
+      }
+      return Promise.resolve({ ok: true, json: async () => rawTeams });
+    });
+
+    const result = await runService((svc) => svc.getNextMatches(), {
+      sanityMock: makeSanityMock(["1", "23"]),
+    });
+
+    expect(result._tag).toBe("Right");
+    if (result._tag === "Right") {
+      // Two visible teams × four upcoming fixtures each = two rows, not eight —
+      // and each row is that team's earliest, not the feed's first.
+      expect(
+        result.right.map((m) => [
+          m.kcvv_team_id,
+          m.date.toISOString().slice(0, 10),
+        ]),
+      ).toStrictEqual([
+        [1, "2099-12-01"],
+        [23, "2099-12-01"],
+      ]);
+    }
+  });
+
   it("filters invalid games from team match lists", async () => {
     const ghostGame = {
       id: 888,

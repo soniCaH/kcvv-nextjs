@@ -57,6 +57,25 @@ function bgForArticle(type: UitgelichtArticle["articleType"]): NewsCardBg {
   return type ? BG_BY_TYPE[type] : "cream";
 }
 
+/**
+ * Row + card classes for the Uitgelicht three-up, exported as a pair and shared
+ * with the homepage route skeleton so the two can't drift — the same contract
+ * `FIRST_TEAMS_ROW_GRID` and `SPONSOR_TILE_GRID_CLASS` keep for their sections.
+ * (The skeleton had already drifted to a bare `gap-6` before #2405 exported
+ * these, so its cards rendered wider than the real ones at `md`.)
+ *
+ * Flex, not grid, so a short row centres instead of leaving holes on the right
+ * (#2405). The `4rem` in the basis is `md:gap-8` × the 2 gaps a three-up has,
+ * so `calc((100% - 4rem) / 3)` is exactly the width a `grid-cols-3` column
+ * resolves to — the card is count-independent, and three articles render
+ * identically to the grid this replaced. The two constants therefore move
+ * together with each other and with the `slice(0, 3)` cap below.
+ */
+export const UITGELICHT_ROW_CLASS =
+  "flex list-none flex-wrap justify-center gap-6 p-0 md:gap-8";
+export const UITGELICHT_CARD_CLASS =
+  "basis-full md:basis-[calc((100%-4rem)/3)]";
+
 export interface FeaturedUitgelichtRowProps {
   /**
    * 0..3 featured articles. The row drops itself entirely when
@@ -96,9 +115,9 @@ export const FeaturedUitgelichtRow = ({
           Uitgelicht
         </EditorialHeading>
 
-        <ul className="grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-3 md:gap-8">
+        <ul className={UITGELICHT_ROW_CLASS}>
           {cards.map((article) => (
-            <li key={article.href} className="h-full">
+            <li key={article.href} className={UITGELICHT_CARD_CLASS}>
               <NewsCard
                 variant="featured"
                 title={article.title}
