@@ -1,7 +1,7 @@
 // apps/web/src/components/home/NewsGrid/NewsGrid.tsx
 import { SectionHeader } from "@/components/design-system";
 import { NewsCard } from "@/components/article/NewsCard";
-import { matchTypeCardLabel } from "@/lib/utils/article-type-label";
+import { articleTypeCardLabel } from "@/lib/utils/article-type-label";
 import type {
   NewsCardBg,
   NewsCardRotation,
@@ -58,6 +58,11 @@ export interface NewsGridProps {
 // run with 3–4 transfers in the grid will read heavy. See
 // `card-semantics-locked.md` for the rationale that retired the
 // previous slot-rhythm cycle.
+//
+// The green is a shorthand for readers who have learned it, not the signal
+// itself: `articleTypeCardLabel` names the type in the card's mono meta row
+// below, which is what the same lock's "Card meta row" section always
+// specified and #2404 restored.
 const BG_BY_TYPE: Record<ArticleType, NewsCardBg> = {
   transfer: "jersey-deep",
   interview: "cream",
@@ -123,7 +128,7 @@ export const NewsGrid = ({
                 imageUrl={article.imageUrl}
                 imageAlt={article.imageAlt}
                 badge={article.tags?.[0]?.name}
-                typeLabel={matchTypeCardLabel(article.articleType)}
+                typeLabel={articleTypeCardLabel(article.articleType)}
                 date={article.date}
                 aspectRatio="landscape-16-9"
                 rotation={SLOT_ROTATIONS[idx]}

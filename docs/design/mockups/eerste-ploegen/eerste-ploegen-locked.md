@@ -28,6 +28,31 @@ Homepage spine (`app/(landing)/page.tsx`), in a new section **immediately after 
   opponent crest/name + home/away + kickoff time.
 - **Two independent press targets per row** (not one row group) — links split per the owner decision.
 
+## Outcome word — amended by #2404
+
+The lock called for an **outcome word** on the result card. The #2301 unification onto the
+shared `<TeamAgendaRow>` dropped it, leaving the two cards told apart only by cream-vs-green
+and by which column they sat in, and the win/loss tint carried by hue alone.
+
+It is back, in the row's mono caption rather than beside the scoreline — the caption already
+renders there, so it costs no height, and the centre column stays free for the score (#2397).
+`<TeamAgendaRow kind="result" | "fixture">` resolves it most-informative-first:
+
+| state                               | caption opens with                                         |
+| ----------------------------------- | ---------------------------------------------------------- |
+| settled (`finished` / `forfeited`)  | `Winst` / `Gelijkspel` / `Verlies`                         |
+| a status the layout can't speak for | nothing — the `PP` / `AFG` / `STOP` marker already says it |
+| otherwise                           | the slot's own word: `Uitslag` / `Volgende`                |
+
+The words live in `OUTCOME_WORD` / `MATCH_KIND_WORD` (`lib/utils/match-display.ts`), beside the
+`OUTCOME_UNDERLINE` they de-colour. The prop is opt-in: `<TeamMatchesSection>` heads its featured
+row "Eerstvolgende" and `/kalender` groups rows under a date, so both would say it twice.
+
+**The slot is the caller's answer, never derived from `match.status`.** `pickLastResult` puts a
+match whose kickoff has passed into the result column even while PSD still calls it `scheduled` —
+the `AwaitingResult` state this lock's "graceful skip" section already anticipates. A status-derived
+word labelled that column "Volgende", the same word as the fixture card beside it.
+
 ## Scoreline orientation
 
 Official **home–away** (matches `TeamAgendaRow` site convention), KCVV bolded wherever it sits.

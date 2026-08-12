@@ -14,6 +14,7 @@
  *
  * Design lock: docs/design/mockups/phase-6-team/detail-ia-locked.md §3
  */
+import { Fragment } from "react";
 import Link from "next/link";
 import { DateTime } from "luxon";
 import { Crest, PRESS_DOWN_CLASSES } from "@/components/design-system";
@@ -24,7 +25,11 @@ import {
   isExceptionalMatchStatus,
   isPlayedMatch,
   isSettledMatch,
+  MATCH_KIND_WORD,
   OUTCOME_UNDERLINE,
+  OUTCOME_WORD,
+  type MatchOutcome,
+  type MatchRowKind,
 } from "@/lib/utils/match-display";
 import { matchStatusWording } from "@/components/match/MatchStatusBadge";
 import { House, Bus } from "@/lib/icons.redesign";
@@ -68,10 +73,30 @@ export interface TeamAgendaRowProps {
    * next fixture's start time matters.
    */
   upcomingLabel?: string;
+  /**
+   * Which slot this row is filling. Supplying it names the row at the head of
+   * the caption — and in the accessible name — instead of leaving that to the
+   * card's colour and its position (#2404).
+   *
+   * Resolution order, most informative first: a settled match uses
+   * `OUTCOME_WORD` ("Winst" / "Gelijkspel" / "Verlies"), which also de-colours
+   * the win/loss tint the score carries; a status the layout can't speak for
+   * (`PP` / `AFG` / `STOP`) is left to `statusWording` below, since "Volgende ·
+   * AFG" would contradict itself; otherwise the slot's own word.
+   *
+   * It is the *caller's* answer, never derived from `match.status` — see
+   * `MatchRowKind`. Omitted by default, because most host surfaces already say
+   * it in their own chrome and would otherwise say it twice:
+   * `<TeamMatchesSection>` heads its featured row "Eerstvolgende", and
+   * `/kalender` groups rows under a date where "Volgende" would be a lie for
+   * any day but today's. The homepage `<FirstTeamsBlock>` is the surface with
+   * two colour-coded columns and no words anywhere.
+   */
+  kind?: MatchRowKind;
   className?: string;
 }
 
-type Outcome = "win" | "draw" | "loss" | null;
+type Outcome = MatchOutcome | null;
 
 function computeOutcome(
   match: ScheduleMatch,
@@ -174,6 +199,7 @@ export function TeamAgendaRow({
   onNavigate,
   captionLabel,
   upcomingLabel,
+  kind,
   className,
 }: TeamAgendaRowProps) {
   // Prefer match.is_home (provided by BFF); fall back to comparing kcvvTeamId
@@ -199,11 +225,14 @@ export function TeamAgendaRow({
   // a finished match with missing scores on the kickoff time rather than wrongly
   // reading "Gepland".
   const showUpcomingLabel = !isPlayed && upcomingLabel != null;
+  // Once, not twice: the score slot and the accessible name both want it on a
+  // scheduled row.
+  const kickoff = formatKickoff(match);
   const scoreOrTime = hasScoreline
     ? `${match.homeScore} – ${match.awayScore}`
     : showUpcomingLabel
       ? upcomingLabel
-      : formatKickoff(match);
+      : kickoff;
 
   // Scorelines and kickoff times use the big display face; the "Gepland" label
   // drops to the mono caption register (cf. the mockup `.score.sched`).
@@ -235,8 +264,6 @@ export function TeamAgendaRow({
   const day = formatDay(match.date);
   const month = formatMonth(match.date);
 
-  const matchLabel = `${match.homeTeam.name} – ${match.awayTeam.name}, ${day} ${month}`;
-
   // A status the layout can't speak for on its own — a forfeit otherwise reads
   // as a bare scoreline, an `afgelast` match as a kickoff to turn up for. The
   // wording comes from `<MatchStatusBadge>`'s table so "Forfait" is spelled the
@@ -246,44 +273,95 @@ export function TeamAgendaRow({
     ? matchStatusWording(match.status)
     : null;
 
-  // Caption (P2) shared by both layouts: an optional status marker, then an
-  // optional jersey-deep squad label (e.g. "A-Ploeg"), then the competition.
-  // Rendered once, reused below.
-  const captionContent =
-    statusWording || captionLabel || match.competition ? (
-      <>
-        {statusWording ? (
-          // Abbreviation, not the long form: this caption shares a fixed-width
-          // centre column with the scoreline, so every extra character is taken
-          // straight off the team names either side — "FORFAIT · BEKER VAN
-          // VLAAMS-BRABANT" truncated them to "SK No…" / "KCV…". `FF` / `AFG`
-          // are the same short forms `<MatchStatusBadge>` renders, and `<abbr>`
-          // carries the long form for hover and assistive tech.
-          <abbr
-            title={statusWording.longForm}
-            className={cn(
-              "font-semibold no-underline",
-              featured ? "text-warm" : "text-alert",
-            )}
-          >
-            {statusWording.abbreviation}
-          </abbr>
-        ) : null}
-        {statusWording && (captionLabel || match.competition) ? " · " : null}
-        {captionLabel ? (
-          <span
-            className={cn(
-              "font-semibold",
-              featured ? "text-warm" : "text-jersey-deep",
-            )}
-          >
-            {captionLabel}
-          </span>
-        ) : null}
-        {captionLabel && match.competition ? " · " : null}
-        {match.competition}
-      </>
-    ) : null;
+  // See `kind` for the resolution order. `statusWording` wins over the slot
+  // word — "Volgende · AFG" would argue with itself — but not over an outcome,
+  // because a forfeit is settled and still has a winner to name.
+  const kindWord =
+    kind == null
+      ? null
+      : outcome
+        ? OUTCOME_WORD[outcome]
+        : statusWording
+          ? null
+          : MATCH_KIND_WORD[kind];
+
+  // The `aria-label` replaces the row's contents as its accessible name, so
+  // anything not spelled out here is unreachable by a screen reader tabbing the
+  // links — and until #2404 that included the scoreline itself. Stated
+  // side-by-side with each name, the way `<MatchStripView>`'s ledger rows do it,
+  // since "3 – 1" alone does not say whose goals are whose.
+  const scoreboardLabel = hasScoreline
+    ? `${match.homeTeam.name} ${match.homeScore} – ${match.awayTeam.name} ${match.awayScore}`
+    : `${match.homeTeam.name} – ${match.awayTeam.name}`;
+  const matchLabel = [
+    kindWord ? `${kindWord}: ` : "",
+    scoreboardLabel,
+    `, ${day} ${month}`,
+    // `scheduled`, not merely `!isPlayed`: a postponed or cancelled match is
+    // also not played, and announcing its kickoff would tell a screen-reader
+    // user to turn up for a match that is off — the same failure the visible
+    // `statusWording` marker exists to prevent (#2423). A `upcomingLabel`
+    // surface ("Gepland") has deliberately dropped the precise time.
+    match.status === "scheduled" && !showUpcomingLabel
+      ? ` om ${formatKickoff(match)}`
+      : "",
+    // And the status itself has to reach the name, not just the caption: the
+    // label replaces the row's contents, so a forfeit otherwise announces as a
+    // plain win. Long form here — there is no width to save in a string.
+    statusWording ? ` — ${statusWording.longForm}` : "",
+  ].join("");
+
+  // Caption (P2) shared by both layouts: the optional kind word, an optional
+  // status marker, then an optional jersey-deep squad label (e.g. "A-Ploeg"),
+  // then the competition. Rendered once, reused below.
+  //
+  // Built as a list and interleaved once rather than as a ladder of `a && (b ||
+  // c || d) ? " · "` separators — each of those has to name every later segment,
+  // so a fourth entry (#2404's kind word) meant a third separator and a re-read
+  // of the two before it. A missed tail-check shows up as a stray or swallowed
+  // separator, which nothing here would fail on.
+  //
+  // On jersey-deep every emphasised segment collapses to `warm`; only the cream
+  // side gives each one its own tone.
+  const emphasis = (creamTone: string) =>
+    cn("font-semibold", featured ? "text-warm" : creamTone);
+
+  const captionParts = [
+    kindWord ? <span className={emphasis("text-ink")}>{kindWord}</span> : null,
+    statusWording ? (
+      // Abbreviation, not the long form: this caption shares a fixed-width
+      // centre column with the scoreline, so every extra character is taken
+      // straight off the team names either side — "FORFAIT · BEKER VAN
+      // VLAAMS-BRABANT" truncated them to "SK No…" / "KCV…". `FF` / `AFG`
+      // are the same short forms `<MatchStatusBadge>` renders, and `<abbr>`
+      // carries the long form for hover and assistive tech.
+      <abbr
+        title={statusWording.longForm}
+        className={cn(emphasis("text-alert"), "no-underline")}
+      >
+        {statusWording.abbreviation}
+      </abbr>
+    ) : null,
+    captionLabel ? (
+      <span className={emphasis("text-jersey-deep")}>{captionLabel}</span>
+    ) : null,
+    // `||` not `??` — an empty-string competition must drop out, not render a
+    // trailing separator.
+    match.competition || null,
+  ].filter(Boolean);
+
+  const captionContent = captionParts.length ? (
+    <>
+      {captionParts.map((part, i) => (
+        // `<Fragment>` adds no DOM node, so the caption's text content and its
+        // pixels are unchanged by the interleave.
+        <Fragment key={i}>
+          {i > 0 ? " · " : null}
+          {part}
+        </Fragment>
+      ))}
+    </>
+  ) : null;
 
   return (
     <Link

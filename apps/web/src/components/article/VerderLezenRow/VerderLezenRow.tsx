@@ -5,6 +5,7 @@ import type { PortableTextBlock } from "@portabletext/react";
 import { EditorialHeading } from "@/components/design-system/EditorialHeading";
 import { HorizontalSlider } from "@/components/design-system/HorizontalSlider";
 import { NewsCard, type NewsCardBg } from "@/components/article/NewsCard";
+import { articleTypeCardLabel } from "@/lib/utils/article-type-label";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { useArticleAnalytics } from "@/hooks/useArticleAnalytics";
 import type {
@@ -297,6 +298,9 @@ export function VerderLezenRow({
                 imageUrl={item.imageUrl}
                 imageAlt={item.imageAlt}
                 badge={item.badge}
+                // The third surface applying the transfer-green rule, so the
+                // third that has to say the word (#2404).
+                typeLabel={articleTypeCardLabel(item.articleType)}
                 date={item.date}
                 aspectRatio="landscape-16-9"
                 rotation={ROTATION_CYCLE[i % ROTATION_CYCLE.length] ?? "none"}

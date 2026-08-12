@@ -1,6 +1,7 @@
 // apps/web/src/components/home/FeaturedUitgelichtRow/FeaturedUitgelichtRow.tsx
 import { EditorialHeading } from "@/components/design-system";
 import { NewsCard } from "@/components/article/NewsCard";
+import { articleTypeCardLabel } from "@/lib/utils/article-type-label";
 import type { NewsCardBg } from "@/components/article/NewsCard/NewsCard";
 
 /**
@@ -125,6 +126,10 @@ export const FeaturedUitgelichtRow = ({
                 imageUrl={article.imageUrl}
                 imageAlt={article.imageAlt}
                 badge={article.badge}
+                // Same reason as `<NewsGrid>`'s (#2404): this row applies the
+                // same `BG_BY_TYPE`, so an unlabelled green card here would sit
+                // directly above a labelled one in the grid below.
+                typeLabel={articleTypeCardLabel(article.articleType)}
                 date={article.date}
                 dek={article.dek}
                 aspectRatio="landscape-16-9"

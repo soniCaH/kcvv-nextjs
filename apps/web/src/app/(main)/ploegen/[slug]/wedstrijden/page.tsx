@@ -200,6 +200,13 @@ export default async function WedstrijdenPage({
                         match={m}
                         kcvvTeamId={psdTeamId}
                         featured={nextMatch?.id === m.id}
+                        // One green row inside a month list headed only by
+                        // "September '26" — unlike `<TeamMatchesSection>`, this
+                        // page has no "Eerstvolgende" heading to say what the
+                        // colour means, so the row says it (#2404). Only the
+                        // featured row: the rest are plain cream and carry no
+                        // claim that needs naming.
+                        kind={nextMatch?.id === m.id ? "fixture" : undefined}
                       />
                     </div>
                   ))}

@@ -8,7 +8,9 @@ import { getButtonClasses } from "@/components/design-system/Button";
 import { House, Bus } from "@/lib/icons.redesign";
 import {
   HOME_AWAY_A11Y_NAME,
+  MATCH_KIND_WORD,
   OUTCOME_UNDERLINE,
+  type MatchRowKind,
 } from "@/lib/utils/match-display";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import { formatWidgetDate, formatDayMonth } from "@/lib/utils/dates";
@@ -182,13 +184,29 @@ function Score({
  * Unboxed on purpose: a bordered date stub next to the bordered crest reads as
  * two competing squares. `<TeamAgendaRow>` can afford the box because it sits
  * inside a ticket-stub card; the strip is a flat band.
+ *
+ * Two lines since #2404: the date, then which kind of row this is. #2388 had
+ * dropped those words because inline they cost 72px — most of what squeezed the
+ * opponent name — and left the two rows told apart only by their order and by
+ * score-versus-time. Stacked under the date they cost 8px of width (`w-12` →
+ * `w-14`, the widest word being "Volgende") and one 9px line of height, which
+ * is the trade #2388's own note proposed.
  */
-function StripDate({ date }: { date: Date }) {
+function StripDate({ date, kind }: { date: Date; kind: MatchRowKind }) {
   const { day, month } = formatDayMonth(date);
   return (
-    <span className="text-ink text-mono-sm w-12 shrink-0 font-mono font-bold whitespace-nowrap tabular-nums">
+    <span className="text-ink text-mono-sm w-14 shrink-0 font-mono font-bold whitespace-nowrap tabular-nums">
       {day}{" "}
       <span className="text-ink-muted font-medium uppercase">{month}</span>
+      {/* jersey-deep, not the stub's own ink/ink-muted pair: at 9px directly
+          under a bold date, an ink word reads as a third line of the date
+          rather than as a label. Green is the one accent this cream band
+          already carries (its top border), so it separates without adding a
+          hue. On `<TeamAgendaRow>` the same word takes ink instead, because
+          there it sits inside an ink-muted caption and emphasis runs darker. */}
+      <span className="text-jersey-deep block text-[9px] leading-tight tracking-[0.06em] uppercase">
+        {MATCH_KIND_WORD[kind]}
+      </span>
     </span>
   );
 }
@@ -201,7 +219,7 @@ function LedgerLinkRow({
   last = false,
 }: {
   match: ScheduleMatch;
-  kind: "result" | "fixture";
+  kind: MatchRowKind;
   last?: boolean;
 }) {
   const home = isKcvvHome(match);
@@ -218,12 +236,16 @@ function LedgerLinkRow({
         ? `${homeScore} - ${opponent.name} ${awayScore}`
         : `${awayScore} - ${opponent.name} ${homeScore}`
       : null;
+  // The words come from `MATCH_KIND_WORD`, the same source `<StripDate>` renders
+  // eight lines below — the visible stub and the accessible name for one row
+  // were two independent copies of "Uitslag" / "Volgende" until #2404, which is
+  // the drift the constant exists to end.
   const label =
     kind === "result"
       ? scored
-        ? `Uitslag ${dateLabel}: KCVV Elewijt ${scored}`
-        : `Uitslag ${dateLabel}: KCVV Elewijt tegen ${opponent.name}`
-      : `Volgende wedstrijd ${dateLabel}${match.time ? ` om ${match.time}` : ""}: KCVV Elewijt tegen ${opponent.name}`;
+        ? `${MATCH_KIND_WORD.result} ${dateLabel}: KCVV Elewijt ${scored}`
+        : `${MATCH_KIND_WORD.result} ${dateLabel}: KCVV Elewijt tegen ${opponent.name}`
+      : `${MATCH_KIND_WORD.fixture} wedstrijd ${dateLabel}${match.time ? ` om ${match.time}` : ""}: KCVV Elewijt tegen ${opponent.name}`;
 
   return (
     <Link
@@ -235,7 +257,7 @@ function LedgerLinkRow({
         last ? "" : "border-ink/15 border-b",
       )}
     >
-      <StripDate date={match.date} />
+      <StripDate date={match.date} kind={kind} />
       <Crest team={opponent} />
       <span className="font-display text-ink min-w-0 flex-1 truncate leading-none font-bold italic">
         {opponent.name}
@@ -303,9 +325,7 @@ function DesktopSlider({
             ←
           </button>
           <span className="text-ink-muted w-20 text-center">
-            <MonoLabel size="sm">
-              {isResultSlide ? "Uitslag" : "Volgende"}
-            </MonoLabel>
+            <MonoLabel size="sm">{MATCH_KIND_WORD[slide.kind]}</MonoLabel>
           </span>
           <button
             type="button"
@@ -320,9 +340,7 @@ function DesktopSlider({
       ) : (
         <div className="border-ink/15 flex items-center border-r px-5">
           <span className="text-ink-muted">
-            <MonoLabel size="sm">
-              {isResultSlide ? "Uitslag" : "Volgende"}
-            </MonoLabel>
+            <MonoLabel size="sm">{MATCH_KIND_WORD[slide.kind]}</MonoLabel>
           </span>
         </div>
       )}

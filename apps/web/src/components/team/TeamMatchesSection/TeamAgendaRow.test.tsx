@@ -407,7 +407,126 @@ describe("TeamAgendaRow", () => {
       // a space-padded dash separator, plus the date suffix (see `matchLabel`
       // in TeamAgendaRow). The `[–—-]` class tolerates en-/em-dash or hyphen
       // without locking the exact glyph, but still fails on a format change.
-      expect(label).toMatch(/^KCVV Elewijt [–—-] FC Opponent, 15 aug$/);
+      expect(label).toMatch(
+        /^KCVV Elewijt [–—-] FC Opponent, 15 aug om 15:00$/,
+      );
+    });
+
+    // #2404 — the label REPLACES the row's contents as its accessible name, so
+    // a score missing from it is a score no screen-reader user ever hears.
+    it("spells the scoreline out beside each name", () => {
+      render(<TeamAgendaRow match={FINISHED_WIN} />);
+      const label = screen.getByRole("link").getAttribute("aria-label") ?? "";
+      expect(label).toMatch(/^KCVV Elewijt 3 [–—-] FC Opponent 1, 15 aug$/);
+    });
+
+    it("omits the kickoff from the name when the row shows an upcoming label", () => {
+      render(<TeamAgendaRow match={BASE} upcomingLabel="Gepland" />);
+      const label = screen.getByRole("link").getAttribute("aria-label") ?? "";
+      expect(label).not.toContain("om 15:00");
+    });
+
+    it("prefixes the kind word when a slot is given", () => {
+      render(<TeamAgendaRow match={FINISHED_WIN} kind="result" />);
+      const label = screen.getByRole("link").getAttribute("aria-label") ?? "";
+      expect(label).toMatch(/^Winst: KCVV Elewijt 3 /);
+    });
+
+    /**
+     * The label REPLACES the row's contents, so the status marker rendered in
+     * the visible caption never reaches a screen reader on its own. Announcing
+     * a kickoff for a match that is off is the #2423 failure in audio.
+     */
+    it.each([
+      ["postponed", "Uitgesteld"],
+      ["cancelled", "Geannuleerd"],
+    ] as const)(
+      "names a %s match and asserts no kickoff",
+      (status, longForm) => {
+        render(<TeamAgendaRow match={{ ...BASE, status }} />);
+        const label = screen.getByRole("link").getAttribute("aria-label") ?? "";
+        expect(label).toContain(longForm);
+        expect(label).not.toContain("om 15:00");
+      },
+    );
+
+    it("names a forfeit rather than announcing it as a plain win", () => {
+      render(
+        <TeamAgendaRow
+          match={{ ...FINISHED_WIN, status: "forfeited" }}
+          kind="result"
+        />,
+      );
+      const label = screen.getByRole("link").getAttribute("aria-label") ?? "";
+      expect(label).toContain("Forfait");
+    });
+  });
+
+  // #2404 — cream-vs-green and left-vs-right were the only carriers of
+  // "this is a result" / "this is the next fixture".
+  describe("Kind word", () => {
+    const captionOf = () => screen.getByTestId("team-agenda-row").textContent;
+
+    it("names the outcome on a settled win", () => {
+      render(<TeamAgendaRow match={FINISHED_WIN} kind="result" />);
+      expect(captionOf()).toContain("Winst");
+    });
+
+    it("names the outcome on a draw, which the underline cannot", () => {
+      render(<TeamAgendaRow match={FINISHED_DRAW} kind="result" />);
+      expect(captionOf()).toContain("Gelijkspel");
+    });
+
+    it("names the outcome on a loss", () => {
+      render(<TeamAgendaRow match={FINISHED_LOSS} kind="result" />);
+      expect(captionOf()).toContain("Verlies");
+    });
+
+    it("reads 'Volgende' in the fixture slot", () => {
+      render(<TeamAgendaRow match={BASE} kind="fixture" />);
+      expect(captionOf()).toContain("Volgende");
+    });
+
+    /**
+     * The regression this prop exists for. `pickLastResult` hands the result
+     * column a match whose kickoff has passed while PSD still says
+     * `scheduled` — deriving the word from status labelled it "Volgende", the
+     * same word as the fixture card beside it.
+     */
+    it("says 'Uitslag', not 'Volgende', for a scheduled match in the result slot", () => {
+      render(<TeamAgendaRow match={BASE} kind="result" />);
+      const text = captionOf();
+      expect(text).toContain("Uitslag");
+      expect(text).not.toContain("Volgende");
+    });
+
+    it("still names the winner of a forfeit, alongside the FF marker", () => {
+      render(
+        <TeamAgendaRow
+          match={{ ...FINISHED_WIN, status: "forfeited" }}
+          kind="result"
+        />,
+      );
+      const text = captionOf();
+      expect(text).toContain("Winst");
+      expect(text).toContain("FF");
+    });
+
+    it.each(["postponed", "cancelled", "stopped"] as const)(
+      "defers to the %s status marker rather than adding a slot word",
+      (status) => {
+        render(<TeamAgendaRow match={{ ...BASE, status }} kind="fixture" />);
+        const text = captionOf();
+        expect(text).not.toContain("Volgende");
+        expect(text).not.toContain("Uitslag");
+      },
+    );
+
+    it("says nothing extra when no slot is given", () => {
+      render(<TeamAgendaRow match={FINISHED_WIN} />);
+      const text = captionOf();
+      expect(text).not.toContain("Winst");
+      expect(text).not.toContain("Uitslag");
     });
   });
 

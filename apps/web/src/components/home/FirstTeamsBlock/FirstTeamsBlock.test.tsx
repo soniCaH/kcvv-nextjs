@@ -121,6 +121,20 @@ describe("FirstTeamsBlock", () => {
     expect(screen.queryByText("Nog geen uitslag")).not.toBeInTheDocument();
     // Nothing dash-separated: no scoreline may be conjured from absent scores.
     expect(screen.queryByText(/\d\s*[–—-]\s*\d/)).not.toBeInTheDocument();
+    // #2404 — and the column still calls itself the result column. PSD has not
+    // flipped this match off `scheduled` yet, so a row deriving its own word
+    // from status would label the result card "Volgende" — the fixture card's
+    // word, on the wrong side of the row.
+    expect(screen.getAllByText(/Uitslag/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Volgende/)).not.toBeInTheDocument();
+  });
+
+  it("names each column on the row itself, not by cream-vs-green alone (#2404)", () => {
+    render(<FirstTeamsBlock teams={[aTeam]} />);
+    // The result card carries the outcome, which also de-colours the win tint;
+    // the fixture card carries the slot word.
+    expect(screen.getAllByText(/Winst/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Volgende/).length).toBeGreaterThan(0);
   });
 
   it("deep-links each row to its own match detail", () => {

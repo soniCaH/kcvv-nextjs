@@ -118,6 +118,13 @@ Unchanged from Phase 4 Round 5b's `<NewsCard>` spec:
 
 - MonoLabel row above the heading: `${variant} · ${date}` (e.g.
   `Transfer · Vr 9 mei`).
+  - **Amended by #2404.** This shipped only for the two match variants
+    (`matchPreview` / `matchRecap`), which left `transfer` — the one type
+    whose card changes colour — with nothing to say why. The green is the
+    shorthand, not the signal: `articleTypeCardLabel` now names `Transfer`
+    too. The calm cream types stay unlabelled on purpose; naming those is
+    still the open card-semantics decision the helper's docblock describes,
+    and it would put a second mono label beside the CMS tag on every card.
 - Footer below the cover (when present): date `<time>` + countdown
   (events) + `Lees verder →`.
 - Press-down hover: `hover:shadow-none hover:translate-x-1 hover:translate-y-1`.

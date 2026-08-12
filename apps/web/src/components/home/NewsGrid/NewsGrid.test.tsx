@@ -132,6 +132,25 @@ describe("NewsGrid", () => {
         "cream",
       );
     });
+
+    // #2404 — the jersey-deep tile above is the "green = transfer" semantic the
+    // R3.B lock bought. It is worth nothing to a reader who has not learned the
+    // pattern, or cannot see the green, unless the card also says the word.
+    it("labels the transfer card, so the green is not the only signal", () => {
+      render(
+        <NewsGrid articles={[makeArticle(1, { articleType: "transfer" })]} />,
+      );
+      expect(screen.getByTestId("newscard-type-label").textContent).toBe(
+        "Transfer",
+      );
+    });
+
+    it("leaves the calm cream types unlabelled", () => {
+      render(
+        <NewsGrid articles={[makeArticle(1, { articleType: "interview" })]} />,
+      );
+      expect(screen.queryByTestId("newscard-type-label")).toBeNull();
+    });
   });
 
   describe("Aspect ratio", () => {
