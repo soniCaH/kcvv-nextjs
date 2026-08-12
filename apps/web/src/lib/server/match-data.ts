@@ -15,10 +15,21 @@ import type { ScheduleMatch } from "@/components/match/types";
 
 /**
  * How long a played match stays newsworthy enough to headline the strip.
- * Past this, the strip drops back to fixture-only — a result from a fortnight
- * ago at the top of every landing page reads as stale, not as news.
+ * Past this, the strip drops back to fixture-only.
+ *
+ * Sized against the fixture calendar, not against a news cycle. The original
+ * 72 h (#2387) expired on the Tuesday evening after a Saturday kickoff, so the
+ * strip ran fixture-only for most of every week, and one bye weekend blanked
+ * the result slot entirely. Fifteen days clears a skipped weekend with room to
+ * spare, while a genuinely dormant strip — winter break, end of season — still
+ * falls back to the fixture alone rather than headlining a stale scoreline.
+ *
+ * Only the past arm of this window is load-bearing. The check is symmetric
+ * (`Math.abs`, #2423) so that a forfeit awarded before kickoff can reach the
+ * slot, but how far ahead one may be dated is `pickLastResult`'s own, tighter
+ * `SETTLED_LOOKAHEAD_MS` — widening here admits no future match it would not.
  */
-export const RESULT_RECENCY_MS = 72 * 60 * 60 * 1000;
+export const RESULT_RECENCY_MS = 15 * 24 * 60 * 60 * 1000;
 
 export interface MatchStripData {
   /** Most recent played match, only when inside `RESULT_RECENCY_MS`. */
