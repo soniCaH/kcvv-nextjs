@@ -102,7 +102,25 @@ const WORKSPACE_ID = process.env.GTM_WORKSPACE_ID;
 const TRIGGER_NAME = process.env.GTM_TRIGGER_NAME ?? "Custom Event — KCVV Analytics";
 const TAG_NAME = process.env.GTM_TAG_NAME ?? "GA4 Event — KCVV Custom Events";
 const DLV_PREFIX = process.env.GTM_DLV_PREFIX ?? "dlv - ";
-const WRITE_PACE_MS = Number(process.env.GTM_WRITE_PACE_MS ?? 4000);
+const WRITE_PACE_MS = positivePace(process.env.GTM_WRITE_PACE_MS, 4000);
+
+/**
+ * Pacing is the script's main defence against the write quota, and a bad value
+ * disables it *silently*: `Number("")` is 0 and `Number("abc")` is NaN, and
+ * both make the `since < WRITE_PACE_MS` comparison false forever. Anything not
+ * a finite positive number falls back to the default, loudly.
+ */
+function positivePace(raw, fallback) {
+  if (raw === undefined) return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) {
+    console.warn(
+      `WARNING: GTM_WRITE_PACE_MS=${JSON.stringify(raw)} is not a positive number; using ${fallback}ms.`,
+    );
+    return fallback;
+  }
+  return n;
+}
 
 const API = "https://tagmanager.googleapis.com/tagmanager/v2";
 const CONTAINER = `${API}/accounts/${ACCOUNT_ID}/containers/${CONTAINER_ID}`;
@@ -180,8 +198,15 @@ function write(method, url, body) {
   writeChain = writeChain.then(async () => {
     const since = Date.now() - lastWriteAt;
     if (lastWriteAt > 0 && since < WRITE_PACE_MS) await sleep(WRITE_PACE_MS - since);
-    lastWriteAt = Date.now();
-    return api(method, url, body);
+    try {
+      return await api(method, url, body);
+    } finally {
+      // Stamp on the way OUT, not in. `api()` may have burned a minute of
+      // retries internally; measuring the next gap from the start of that
+      // would let the following write fire instantly, precisely when the
+      // quota is most stressed. `finally` so a throw still paces the retry.
+      lastWriteAt = Date.now();
+    }
   });
   return writeChain;
 }
@@ -242,6 +267,22 @@ function dlvResource(key) {
 /** The dataLayer key a DLV variable reads (its `name` parameter value). */
 function dlvKey(variable) {
   return variable.parameter?.find((p) => p.key === "name")?.value;
+}
+
+/**
+ * Tokens in a live trigger RegEx that the taxonomy does not know about — a
+ * prefix somebody added in the GTM UI, or one this file dropped. Overwriting
+ * the RegEx would delete them, so both the plan and the write re-check.
+ * Tolerates an anchored/grouped live value (`^(a|b|c)$`).
+ */
+function unknownIn(regexValue) {
+  const canonicalTokens = buildTriggerRegex().split("|");
+  return (regexValue ?? "")
+    .replace(/^\^?\(?/, "")
+    .replace(/\)?\$?$/, "")
+    .split("|")
+    .filter(Boolean)
+    .filter((t) => !canonicalTokens.includes(t));
 }
 
 /** The arg1 (regex) value of a customEvent trigger's matchRegex filter. */
@@ -328,6 +369,18 @@ async function resolveWorkspace() {
   return `${CONTAINER}/workspaces/${chosen.workspaceId}`;
 }
 
+/**
+ * Both `create_version` and `:publish` return `compilerError` alongside a 200,
+ * so success has to be read out of the body rather than the status line.
+ */
+function assertCompiled(response, label) {
+  if (!response?.compilerError) return;
+  throw new Error(
+    `${label} failed to compile. GTM returned compilerError — open the version in the ` +
+      `GTM UI to see which tag/trigger/variable is broken. Nothing further was published.`,
+  );
+}
+
 async function main() {
   WS = await resolveWorkspace();
 
@@ -352,15 +405,8 @@ async function main() {
 
   // ── 1. Trigger regex (abort if live has an unknown token) ─────────────
   const canonical = buildTriggerRegex();
-  const canonicalTokens = canonical.split("|");
   const liveRegex = triggerRegexParam(trigger)?.value ?? "";
-  // Tolerate an anchored/grouped live regex (`^(a|b|c)$`) when token-checking.
-  const liveTokens = liveRegex
-    .replace(/^\^?\(?/, "")
-    .replace(/\)?\$?$/, "")
-    .split("|")
-    .filter(Boolean);
-  const unknownTokens = liveTokens.filter((t) => !canonicalTokens.includes(t));
+  const unknownTokens = unknownIn(liveRegex);
   const regexNeedsUpdate = liveRegex !== canonical;
   if (unknownTokens.length > 0) {
     const msg =
@@ -384,8 +430,15 @@ async function main() {
   const dlvsToCreate = dlvCandidates.filter((k) => !liveVarNames.has(`${DLV_PREFIX}${k}`));
 
   // ── 3. GA4 tag param rows to add (deduped by name) ────────────────────
+  // A row's value is a `{{dlv - <key>}}` reference. For a name-conflicted key
+  // that reference RESOLVES — to the foreign variable holding the name — so
+  // adding the row would quietly feed the GA4 param from the wrong source.
+  // Worse than a missing param; skip until the conflict is resolved by hand.
+  const conflicted = new Set(dlvNameConflicts);
   const liveTagParams = new Set(tagParamNames(tag));
-  const tagRowsToAdd = TAXONOMY_KEY_LIST.filter((k) => !liveTagParams.has(k));
+  const tagRowsToAdd = TAXONOMY_KEY_LIST.filter(
+    (k) => !liveTagParams.has(k) && !conflicted.has(k),
+  );
 
   // ── Orphan report (read-only) ─────────────────────────────────────────
   const orphanDlvs = [...liveDlvByKey.keys()].filter((k) => !TAXONOMY_KEYS.has(k));
@@ -428,6 +481,18 @@ async function main() {
         const param = triggerRegexParam(updated);
         if (param) {
           if (param.value === canonical) return false;
+          // The plan-time abort checked the trigger as it looked at load.
+          // `fingerprint` only covers the window from this re-read to the PUT,
+          // so a UI edit landing before it would be clobbered silently — and
+          // dropping someone's manually-added prefix is exactly the failure
+          // that check exists to prevent. Re-run it against what we just read.
+          const fresh = unknownIn(param.value);
+          if (fresh.length > 0 && !FORCE_REGEX) {
+            throw new Error(
+              `trigger regex gained token(s) absent from the taxonomy since the plan: ${fresh.join(", ")}\n` +
+                `  → add them to scripts/analytics-taxonomy.mjs, or rerun with --force-regex to overwrite.`,
+            );
+          }
           param.value = canonical;
         } else {
           // Live trigger has no matchRegex filter yet — append one, preserving
@@ -498,6 +563,11 @@ async function main() {
   });
   const created = version?.containerVersion;
   const id = created?.containerVersionId ?? "(see GTM UI)";
+  // GTM reports a failed compile in the RESPONSE BODY, not the HTTP status, so
+  // a broken version arrives as a 200. Printing "✓" on it would be a false
+  // success — and since --publish pushes it live, a loud failure here is the
+  // only thing between a compile error and production.
+  assertCompiled(version, `container version ${id}`);
 
   if (!PUBLISH) {
     console.log(`\n✓ Created UNPUBLISHED container version ${id}. Review + publish it in the GTM UI.`);
@@ -507,7 +577,8 @@ async function main() {
   if (!created?.path) {
     throw new Error(`Version ${id} created, but no path came back — publish it in the GTM UI.`);
   }
-  await write("POST", `${API}/${created.path}:publish`);
+  const published = await write("POST", `${API}/${created.path}:publish`);
+  assertCompiled(published, `publish of container version ${id}`);
   console.log(`\n✓ Created AND PUBLISHED container version ${id}. Events reach GA4 from now on.`);
   console.log(`  Roll back by re-publishing the previous version in the GTM UI.`);
 }

@@ -466,7 +466,13 @@ function toBannerSection(
     key: `banner-${slot}`,
     bg: "transparent",
     content: (
-      <TrackInView eventName="banner_impression" params={{ position: slot }}>
+      // `destination` matches what `banner_click` sends, so impressions and
+      // clicks join on it. The slot alone can't identify the creative — the
+      // three slots are fixed but their campaigns rotate.
+      <TrackInView
+        eventName="banner_impression"
+        params={{ position: slot, destination: banner.href ?? "" }}
+      >
         <BannerSlot
           image={banner.imageUrl}
           alt={banner.alt}
