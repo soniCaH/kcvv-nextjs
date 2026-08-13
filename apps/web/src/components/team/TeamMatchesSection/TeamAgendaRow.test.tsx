@@ -469,91 +469,94 @@ describe("TeamAgendaRow", () => {
   // #2404 — cream-vs-green and left-vs-right were the only carriers of
   // "this is a result" / "this is the next fixture".
   describe("Kind word", () => {
-    const captionOf = () => screen.getByTestId("team-agenda-row").textContent;
+    // Both layouts are in the DOM under jsdom (no CSS breakpoints), so the row's
+    // combined `textContent` cannot tell them apart — and since #2404 they no
+    // longer carry the same caption. Scope every assertion to one of them.
+    const desktopText = () =>
+      document.querySelector('[data-layout="desktop"]')?.textContent ?? "";
+    const mobileText = () =>
+      document.querySelector('[data-layout="mobile"]')?.textContent ?? "";
 
-    it("names the outcome on a settled win", () => {
-      render(<TeamAgendaRow match={FINISHED_WIN} kind="result" />);
-      expect(captionOf()).toContain("Winst");
-    });
+    describe("when the surface names its rows (kind given)", () => {
+      it.each([
+        [FINISHED_WIN, "Winst"],
+        [FINISHED_DRAW, "Gelijkspel"],
+        [FINISHED_LOSS, "Verlies"],
+      ] as const)("names the outcome on both layouts: %#", (match, word) => {
+        render(<TeamAgendaRow match={match} kind="result" />);
+        expect(desktopText()).toContain(word);
+        expect(mobileText()).toContain(word);
+      });
 
-    it("names the outcome on a draw, which the underline cannot", () => {
-      render(<TeamAgendaRow match={FINISHED_DRAW} kind="result" />);
-      expect(captionOf()).toContain("Gelijkspel");
-    });
+      it("reads 'Volgende' in the fixture slot", () => {
+        render(<TeamAgendaRow match={BASE} kind="fixture" />);
+        expect(desktopText()).toContain("Volgende");
+      });
 
-    it("names the outcome on a loss", () => {
-      render(<TeamAgendaRow match={FINISHED_LOSS} kind="result" />);
-      expect(captionOf()).toContain("Verlies");
-    });
+      /**
+       * The regression this prop exists for. `pickLastResult` hands the result
+       * column a match whose kickoff has passed while PSD still says
+       * `scheduled` — deriving the word from status labelled it "Volgende", the
+       * same word as the fixture card beside it.
+       */
+      it("says 'Uitslag', not 'Volgende', for a scheduled match in the result slot", () => {
+        render(<TeamAgendaRow match={BASE} kind="result" />);
+        expect(desktopText()).toContain("Uitslag");
+        expect(desktopText()).not.toContain("Volgende");
+      });
 
-    it("reads 'Volgende' in the fixture slot", () => {
-      render(<TeamAgendaRow match={BASE} kind="fixture" />);
-      expect(captionOf()).toContain("Volgende");
-    });
+      it("still names the winner of a forfeit, alongside the FF marker", () => {
+        render(
+          <TeamAgendaRow
+            match={{ ...FINISHED_WIN, status: "forfeited" }}
+            kind="result"
+          />,
+        );
+        expect(desktopText()).toContain("Winst");
+        expect(desktopText()).toContain("FF");
+      });
 
-    /**
-     * The regression this prop exists for. `pickLastResult` hands the result
-     * column a match whose kickoff has passed while PSD still says
-     * `scheduled` — deriving the word from status labelled it "Volgende", the
-     * same word as the fixture card beside it.
-     */
-    it("says 'Uitslag', not 'Volgende', for a scheduled match in the result slot", () => {
-      render(<TeamAgendaRow match={BASE} kind="result" />);
-      const text = captionOf();
-      expect(text).toContain("Uitslag");
-      expect(text).not.toContain("Volgende");
-    });
-
-    it("still names the winner of a forfeit, alongside the FF marker", () => {
-      render(
-        <TeamAgendaRow
-          match={{ ...FINISHED_WIN, status: "forfeited" }}
-          kind="result"
-        />,
+      it.each(["postponed", "cancelled", "stopped"] as const)(
+        "defers to the %s status marker rather than adding a slot word",
+        (status) => {
+          render(<TeamAgendaRow match={{ ...BASE, status }} kind="fixture" />);
+          expect(desktopText()).not.toContain("Volgende");
+          expect(desktopText()).not.toContain("Uitslag");
+        },
       );
-      const text = captionOf();
-      expect(text).toContain("Winst");
-      expect(text).toContain("FF");
-    });
-
-    it.each(["postponed", "cancelled", "stopped"] as const)(
-      "defers to the %s status marker rather than adding a slot word",
-      (status) => {
-        render(<TeamAgendaRow match={{ ...BASE, status }} kind="fixture" />);
-        const text = captionOf();
-        expect(text).not.toContain("Volgende");
-        expect(text).not.toContain("Uitslag");
-      },
-    );
-
-    /**
-     * The outcome is a property of the match, not of the surface: every page
-     * that renders `OUTCOME_UNDERLINE` needs the word, because the tint is
-     * otherwise the only thing saying who won. Only the *slot* word waits to
-     * be asked for.
-     */
-    it("names the outcome even with no slot given", () => {
-      render(<TeamAgendaRow match={FINISHED_WIN} />);
-      const text = captionOf();
-      expect(text).toContain("Winst");
-      expect(text).not.toContain("Uitslag");
     });
 
     /**
-     * `OUTCOME_UNDERLINE.draw` is `undefined` — a draw is the one outcome the
-     * tint cannot draw, so an unlabelled 2–2 is pixel-identical to a match
-     * whose outcome could not be computed.
+     * The desktop scoreboard prints both clubs either side of the score, so
+     * "K Lyra-Lierse 4 – 0 KCVV Elewijt" already says who lost and the word
+     * would restate the row — down a season of results, as a column of the same
+     * word. The mobile column shows the opponent alone, so the same scoreline
+     * needs it.
      */
-    it("names a draw with no slot given, which the tint cannot", () => {
-      render(<TeamAgendaRow match={FINISHED_DRAW} />);
-      expect(captionOf()).toContain("Gelijkspel");
-    });
+    describe("when the surface does not (kind omitted)", () => {
+      it.each([
+        [FINISHED_WIN, "Winst"],
+        [FINISHED_DRAW, "Gelijkspel"],
+        [FINISHED_LOSS, "Verlies"],
+      ] as const)("names the outcome on mobile only: %#", (match, word) => {
+        render(<TeamAgendaRow match={match} />);
+        expect(mobileText()).toContain(word);
+        expect(desktopText()).not.toContain(word);
+      });
 
-    it("adds no slot word to an unsettled match when none is asked for", () => {
-      render(<TeamAgendaRow match={BASE} />);
-      const text = captionOf();
-      expect(text).not.toContain("Volgende");
-      expect(text).not.toContain("Uitslag");
+      it("leaves the desktop caption on the competition alone", () => {
+        render(<TeamAgendaRow match={FINISHED_WIN} />);
+        expect(desktopText()).toContain("3e Provinciale A");
+        expect(desktopText()).not.toContain("Uitslag");
+      });
+
+      it("adds no slot word to an unsettled match on either layout", () => {
+        render(<TeamAgendaRow match={BASE} />);
+        for (const text of [desktopText(), mobileText()]) {
+          expect(text).not.toContain("Volgende");
+          expect(text).not.toContain("Uitslag");
+        }
+      });
     });
   });
 
