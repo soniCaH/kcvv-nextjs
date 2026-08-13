@@ -74,22 +74,20 @@ export interface TeamAgendaRowProps {
    */
   upcomingLabel?: string;
   /**
-   * Which slot this row is filling. Supplying it names the row at the head of
-   * the caption — and in the accessible name — instead of leaving that to the
-   * card's colour and its position (#2404).
+   * Which slot this row is filling, when the surface needs the row to say so
+   * (#2404).
    *
-   * Resolution order, most informative first: a settled match uses
-   * `OUTCOME_WORD` ("Winst" / "Gelijkspel" / "Verlies"), which also de-colours
-   * the win/loss tint the score carries; a status the layout can't speak for
-   * (`PP` / `AFG` / `STOP`) is left to `statusWording` below, since "Volgende ·
-   * AFG" would contradict itself; otherwise the slot's own word.
+   * This governs the *slot* word only — `Uitslag` / `Volgende`. The outcome
+   * word on a settled match is not gated by it and renders unconditionally;
+   * see the resolution order at `kindWord` below.
    *
    * It is the *caller's* answer, never derived from `match.status` — see
-   * `MatchRowKind`. Omitted by default, because most host surfaces already say
-   * it in their own chrome and would otherwise say it twice:
-   * `<TeamMatchesSection>` heads its featured row "Eerstvolgende", and
+   * `MatchRowKind`. Omitted by default, because most host surfaces already
+   * answer it in their own chrome and would otherwise say it twice:
+   * `<TeamMatchesSection>` heads its featured row "Eerstvolgende",
    * `/kalender` groups rows under a date where "Volgende" would be a lie for
-   * any day but today's. The homepage `<FirstTeamsBlock>` is the surface with
+   * any day but today's, and `/ploegen/<slug>/wedstrijden` bands its rows by
+   * month in date order. The homepage `<FirstTeamsBlock>` is the surface with
    * two colour-coded columns and no words anywhere.
    */
   kind?: MatchRowKind;
@@ -273,17 +271,23 @@ export function TeamAgendaRow({
     ? matchStatusWording(match.status)
     : null;
 
-  // See `kind` for the resolution order. `statusWording` wins over the slot
-  // word — "Volgende · AFG" would argue with itself — but not over an outcome,
-  // because a forfeit is settled and still has a winner to name.
-  const kindWord =
-    kind == null
+  // Two facts, not one. Whether KCVV won is a property of the *match*, true on
+  // every surface that paints `OUTCOME_UNDERLINE`, so it is never gated: the
+  // tint is the only thing saying it otherwise, and a draw is not even tinted —
+  // `OUTCOME_UNDERLINE.draw` is `undefined`, so a 2–2 is pixel-identical to a
+  // match whose outcome could not be computed. Only the word tells them apart.
+  //
+  // Which slot the row fills is a property of the *surface*, so that half stays
+  // behind `kind`. `statusWording` wins over the slot word — "Volgende · AFG"
+  // would argue with itself — but not over an outcome, because a forfeit is
+  // settled and still has a winner to name.
+  const kindWord = outcome
+    ? OUTCOME_WORD[outcome]
+    : statusWording
       ? null
-      : outcome
-        ? OUTCOME_WORD[outcome]
-        : statusWording
-          ? null
-          : MATCH_KIND_WORD[kind];
+      : kind
+        ? MATCH_KIND_WORD[kind]
+        : null;
 
   // The `aria-label` replaces the row's contents as its accessible name, so
   // anything not spelled out here is unreachable by a screen reader tabbing the

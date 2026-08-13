@@ -413,11 +413,15 @@ describe("TeamAgendaRow", () => {
     });
 
     // #2404 — the label REPLACES the row's contents as its accessible name, so
-    // a score missing from it is a score no screen-reader user ever hears.
-    it("spells the scoreline out beside each name", () => {
+    // a score missing from it is a score no screen-reader user ever hears. The
+    // outcome leads it on any settled match, slot or no slot: the tint that
+    // would otherwise carry it reaches no screen reader at all.
+    it("spells the scoreline out beside each name, led by the outcome", () => {
       render(<TeamAgendaRow match={FINISHED_WIN} />);
       const label = screen.getByRole("link").getAttribute("aria-label") ?? "";
-      expect(label).toMatch(/^KCVV Elewijt 3 [–—-] FC Opponent 1, 15 aug$/);
+      expect(label).toMatch(
+        /^Winst: KCVV Elewijt 3 [–—-] FC Opponent 1, 15 aug$/,
+      );
     });
 
     it("omits the kickoff from the name when the row shows an upcoming label", () => {
@@ -522,10 +526,33 @@ describe("TeamAgendaRow", () => {
       },
     );
 
-    it("says nothing extra when no slot is given", () => {
+    /**
+     * The outcome is a property of the match, not of the surface: every page
+     * that renders `OUTCOME_UNDERLINE` needs the word, because the tint is
+     * otherwise the only thing saying who won. Only the *slot* word waits to
+     * be asked for.
+     */
+    it("names the outcome even with no slot given", () => {
       render(<TeamAgendaRow match={FINISHED_WIN} />);
       const text = captionOf();
-      expect(text).not.toContain("Winst");
+      expect(text).toContain("Winst");
+      expect(text).not.toContain("Uitslag");
+    });
+
+    /**
+     * `OUTCOME_UNDERLINE.draw` is `undefined` — a draw is the one outcome the
+     * tint cannot draw, so an unlabelled 2–2 is pixel-identical to a match
+     * whose outcome could not be computed.
+     */
+    it("names a draw with no slot given, which the tint cannot", () => {
+      render(<TeamAgendaRow match={FINISHED_DRAW} />);
+      expect(captionOf()).toContain("Gelijkspel");
+    });
+
+    it("adds no slot word to an unsettled match when none is asked for", () => {
+      render(<TeamAgendaRow match={BASE} />);
+      const text = captionOf();
+      expect(text).not.toContain("Volgende");
       expect(text).not.toContain("Uitslag");
     });
   });

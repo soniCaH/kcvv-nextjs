@@ -36,17 +36,24 @@ and by which column they sat in, and the win/loss tint carried by hue alone.
 
 It is back, in the row's mono caption rather than beside the scoreline — the caption already
 renders there, so it costs no height, and the centre column stays free for the score (#2397).
-`<TeamAgendaRow kind="result" | "fixture">` resolves it most-informative-first:
+`<TeamAgendaRow>` resolves it most-informative-first:
 
 | state                               | caption opens with                                         |
 | ----------------------------------- | ---------------------------------------------------------- |
 | settled (`finished` / `forfeited`)  | `Winst` / `Gelijkspel` / `Verlies`                         |
 | a status the layout can't speak for | nothing — the `PP` / `AFG` / `STOP` marker already says it |
-| otherwise                           | the slot's own word: `Uitslag` / `Volgende`                |
+| otherwise, if a slot was given      | the slot's own word: `Uitslag` / `Volgende`                |
 
 The words live in `OUTCOME_WORD` / `MATCH_KIND_WORD` (`lib/utils/match-display.ts`), beside the
-`OUTCOME_UNDERLINE` they de-colour. The prop is opt-in: `<TeamMatchesSection>` heads its featured
-row "Eerstvolgende" and `/kalender` groups rows under a date, so both would say it twice.
+`OUTCOME_UNDERLINE` they de-colour.
+
+**The two halves are gated differently, because they are different facts.** The outcome is a
+property of the match and renders on every surface — the tint is otherwise its only carrier, and
+a draw is not tinted at all (`OUTCOME_UNDERLINE.draw` is `undefined`), so an unlabelled 2–2 is
+pixel-identical to a match whose outcome could not be computed. The slot word is a property of
+the surface and waits for the `kind` prop: `<TeamMatchesSection>` heads its featured row
+"Eerstvolgende", `/kalender` groups rows under a date, and `/ploegen/<slug>/wedstrijden` bands
+its rows by month, so all three would otherwise say it twice.
 
 **The slot is the caller's answer, never derived from `match.status`.** `pickLastResult` puts a
 match whose kickoff has passed into the result column even while PSD still calls it `scheduled` —
