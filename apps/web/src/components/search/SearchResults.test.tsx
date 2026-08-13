@@ -234,7 +234,9 @@ describe("SearchResults", () => {
     it("should display the taped jersey artefact in the empty state", () => {
       render(<SearchResults results={[]} query="nothing" activeType="all" />);
 
-      expect(screen.getByLabelText("KCVV jersey")).toBeInTheDocument();
+      // The jersey artefact is silent (#2559 rule 4) — assert the drawing,
+      // not a label it no longer carries.
+      expect(document.querySelector("figure[aria-hidden]")).toBeInTheDocument();
     });
 
     it("should not display count message when empty", () => {

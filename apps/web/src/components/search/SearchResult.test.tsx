@@ -108,8 +108,10 @@ describe("SearchResult", () => {
 
       render(<SearchResult result={article} />);
 
-      const image = screen.getByAltText("Article with image");
-      expect(image).toBeInTheDocument();
+      // #2559 rule 1: the result title is the visible link text beside this
+      // thumbnail, so the thumbnail is decorative — identified by src.
+      const image = document.querySelector("img");
+      expect(image).toHaveAttribute("alt", "");
       expect(image).toHaveAttribute("src", "/images/test.jpg");
     });
 
@@ -251,8 +253,9 @@ describe("SearchResult", () => {
 
       render(<SearchResult result={player} />);
 
-      const image = screen.getByAltText("Jan Janssens");
-      expect(image).toBeInTheDocument();
+      const img = document.querySelector("img");
+      expect(img).toHaveAttribute("src", "/images/player.jpg");
+      expect(img).toHaveAttribute("alt", "");
     });
   });
 
@@ -293,8 +296,9 @@ describe("SearchResult", () => {
 
       render(<SearchResult result={team} />);
 
-      const image = screen.getByAltText("Eerste Ploeg");
-      expect(image).toBeInTheDocument();
+      const img = document.querySelector("img");
+      expect(img).toHaveAttribute("src", "/images/team.jpg");
+      expect(img).toHaveAttribute("alt", "");
     });
   });
 
@@ -331,7 +335,9 @@ describe("SearchResult", () => {
 
       render(<SearchResult result={team} />);
 
-      expect(screen.getByAltText("A-Ploeg")).toBeInTheDocument();
+      const img = document.querySelector("img");
+      expect(img).toHaveAttribute("src", "/images/team.jpg");
+      expect(img).toHaveAttribute("alt", "");
       expect(
         screen.queryByTestId("search-result-thumb-fallback"),
       ).not.toBeInTheDocument();
@@ -397,8 +403,9 @@ describe("SearchResult", () => {
 
       render(<SearchResult result={result} />);
 
-      const image = screen.getByAltText("Article Title");
-      expect(image).toBeInTheDocument();
+      const img = document.querySelector("img");
+      expect(img).toHaveAttribute("src", "/images/test.jpg");
+      expect(img).toHaveAttribute("alt", "");
     });
   });
 });

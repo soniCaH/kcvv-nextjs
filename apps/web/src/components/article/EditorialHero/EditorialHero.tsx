@@ -72,9 +72,18 @@ export type EditorialHeroVariant =
 
 export type EditorialHeroPlacement = "detail" | "homepage";
 
+/**
+ * The cover carries a URL and nothing else. It is decorative and takes
+ * `alt=""` (#2559 / #2548 rule 1): the cover sits in the same section as the
+ * hero's own `<h1>`, so the headline already names it.
+ *
+ * There was an `alt` here, and both call sites passed the article title — the
+ * hero read it and looked like the one component honouring an authored alt
+ * while it repeated the headline rendering directly below. Deleting the field
+ * is what stops that from being re-introduced.
+ */
 export interface EditorialHeroCoverImage {
   url: string;
-  alt: string;
 }
 
 // ─── Shared editorial slot props ────────────────────────────────────────────
@@ -227,7 +236,7 @@ function EditorialHeroCover({
     >
       <Image
         src={coverImage.url}
-        alt={coverImage.alt}
+        alt=""
         fill
         priority={priority}
         sizes="(min-width: 1024px) 440px, 100vw"

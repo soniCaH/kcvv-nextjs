@@ -56,7 +56,7 @@ export function TeamFlagship({
       {hasPhoto ? (
         <Image
           src={teamImageUrl!}
-          alt={`${category} teamfoto`}
+          alt=""
           fill
           unoptimized
           sizes="(max-width: 640px) 100vw, 50vw"
@@ -65,7 +65,7 @@ export function TeamFlagship({
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center p-8">
-          <JerseyShirt ariaLabel={`${category} jersey`} className="h-40 w-40" />
+          <JerseyShirt className="h-40 w-40" />
         </div>
       )}
     </div>

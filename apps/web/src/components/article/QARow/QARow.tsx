@@ -45,8 +45,9 @@ export interface QARowRespondent {
    */
   firstName?: string;
   /**
-   * Full display name for the speaker tag + avatar's accessible name.
-   * Falls back to `firstName`.
+   * Full display name rendered as the visible speaker tag. Falls back to
+   * `firstName`. This is visible text — it is NOT an accessible name for the
+   * avatar, which is silent (#2559 rule 4) and takes no name prop.
    */
   fullName?: string;
   /**
@@ -110,7 +111,7 @@ function SpeakerHeader({
       {isCluster ? (
         <SubjectAvatarCluster members={cluster} scale="row" />
       ) : (
-        <SubjectAvatar firstName={firstName} fullName={fullName} scale="row" />
+        <SubjectAvatar firstName={firstName} scale="row" />
       )}
       <p
         data-qa-row="speaker-tag"

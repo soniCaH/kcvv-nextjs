@@ -68,7 +68,7 @@ export const SearchResult = ({ result, onClick }: SearchResultProps) => {
         {result.imageUrl ? (
           <Image
             src={result.imageUrl}
-            alt={result.title}
+            alt=""
             fill
             className="object-cover"
             sizes="64px"

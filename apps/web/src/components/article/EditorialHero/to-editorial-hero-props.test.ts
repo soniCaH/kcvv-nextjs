@@ -44,9 +44,10 @@ describe("toEditorialHeroProps", () => {
     const props = toEditorialHeroProps(article());
     expect(props.placement).toBe("homepage");
     expect(props.priority).toBe(true);
+    // #2559: the cover carries a URL and nothing else. It used to carry the
+    // article title as an alt, repeating the <h1> it renders under.
     expect(props.coverImage).toEqual({
       url: "https://cdn.example/cover.jpg",
-      alt: "Kampioen! 58 punten en titel in eerste provinciale.",
     });
   });
 

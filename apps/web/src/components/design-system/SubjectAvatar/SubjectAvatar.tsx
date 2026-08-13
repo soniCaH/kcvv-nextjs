@@ -22,21 +22,21 @@ import { cn } from "@/lib/utils/cn";
  */
 export type SubjectAvatarScale = "byline" | "row" | "attribution";
 
+/*
+ * The avatar never speaks (#2559 / #2548 rule 4). Both paths are silent: the
+ * monogram is two letters and the photo sits beside the subject's own name in
+ * the attribution row, so either would only repeat text the reader already
+ * has. There was a `fullName` prop feeding an accessible name — it is gone,
+ * because a slot that must stay silent has no use for one.
+ */
+
 export interface SubjectAvatarProps {
   /**
-   * Used for both monogram derivation (first letter, uppercased) and
-   * the photo path's accessible name (when `fullName` is omitted).
-   * Custom subjects pass the value of `customName`; staff subjects pass
-   * the value of `firstName`; player subjects pass `firstName`.
+   * Monogram derivation only (first letter, uppercased). Custom subjects
+   * pass the value of `customName`; staff subjects pass the value of
+   * `firstName`; player subjects pass `firstName`.
    */
   firstName: string;
-  /**
-   * Full display name for screen readers (defaults to `firstName`).
-   * Pull-quote attribution renders the full name beside the avatar, so
-   * the visible name is in the attribution row — the avatar's alt is
-   * the same text repeated unless the consumer overrides.
-   */
-  fullName?: string;
   /**
    * Source URL for the photo path. When `null`/empty/missing AND
    * `scale === "attribution"`, the avatar falls back to the monogram
@@ -84,7 +84,6 @@ function deriveInitial(firstName: string): string {
 
 export function SubjectAvatar({
   firstName,
-  fullName,
   photoUrl,
   scale,
   className,
@@ -96,7 +95,6 @@ export function SubjectAvatar({
   const normalizedPhotoUrl =
     typeof photoUrl === "string" ? photoUrl.trim() : "";
   const hasPhoto = scale === "attribution" && normalizedPhotoUrl.length > 0;
-  const accessibleName = (fullName ?? firstName).trim() || "Subject";
 
   if (hasPhoto) {
     return (
@@ -111,7 +109,7 @@ export function SubjectAvatar({
       >
         <Image
           src={normalizedPhotoUrl}
-          alt={accessibleName}
+          alt=""
           fill
           sizes={tokens.sizes}
           className="object-cover"
@@ -131,8 +129,7 @@ export function SubjectAvatar({
     <div
       data-subject-avatar="monogram"
       data-scale={scale}
-      aria-label={accessibleName}
-      role="img"
+      aria-hidden="true"
       className={cn(
         "bg-jersey-deep inline-flex shrink-0 items-center justify-center rounded-full",
         tokens.box,

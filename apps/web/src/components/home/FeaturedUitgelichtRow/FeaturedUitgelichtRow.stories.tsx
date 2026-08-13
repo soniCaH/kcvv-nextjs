@@ -48,7 +48,6 @@ const article = (
   href: `/nieuws/uitgelicht-${slot}`,
   title,
   imageUrl: fixtureImage("article-hero-generic", slot),
-  imageAlt: title,
   date: `${14 + slot} mei 2026`,
   articleType,
   badge,

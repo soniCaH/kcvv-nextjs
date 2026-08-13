@@ -117,32 +117,22 @@ describe("<SubjectAvatar>", () => {
       expect(container.textContent).toBe("T");
     });
 
-    it("uses fullName for the disc's accessible name when supplied", () => {
+    it("gives the disc no accessible name — a monogram identifies nobody", () => {
       const { container } = render(
-        <SubjectAvatar firstName="Tom" fullName="Tom De Smet" scale="byline" />,
+        <SubjectAvatar firstName="Tom" scale="byline" />,
       );
       const disc = container.firstElementChild as HTMLElement;
-      expect(disc.getAttribute("aria-label")).toBe("Tom De Smet");
-      expect(disc.getAttribute("role")).toBe("img");
+      expect(disc.getAttribute("aria-hidden")).toBe("true");
+      expect(disc.getAttribute("aria-label")).toBeNull();
+      expect(disc.getAttribute("role")).toBeNull();
     });
   });
 
   describe("accessibility", () => {
-    it("uses fullName for the photo alt when supplied", () => {
-      const { container } = render(
-        <SubjectAvatar
-          firstName="Wim"
-          fullName="Wim Govaerts"
-          photoUrl="https://example.com/wim.jpg"
-          scale="attribution"
-        />,
-      );
-      expect(container.querySelector("img")?.getAttribute("alt")).toBe(
-        "Wim Govaerts",
-      );
-    });
-
-    it("falls back to firstName for the photo alt when fullName omitted", () => {
+    // #2559 rule 4. The avatar sits beside the subject's own name in the
+    // attribution row, so both paths are silent and there is no prop to name
+    // them with.
+    it("leaves the photo path silent", () => {
       const { container } = render(
         <SubjectAvatar
           firstName="Wim"
@@ -150,17 +140,17 @@ describe("<SubjectAvatar>", () => {
           scale="attribution"
         />,
       );
-      expect(container.querySelector("img")?.getAttribute("alt")).toBe("Wim");
+      expect(container.querySelector("img")?.getAttribute("alt")).toBe("");
     });
 
-    it("labels the monogram disc via aria-label so AT reads the subject name", () => {
+    it("leaves the monogram path silent", () => {
       const { container } = render(
-        <SubjectAvatar firstName="Anouk" fullName="Anouk De Wit" scale="row" />,
+        <SubjectAvatar firstName="Anouk" scale="row" />,
       );
-      expect(container.firstElementChild?.getAttribute("aria-label")).toBe(
-        "Anouk De Wit",
-      );
-      expect(container.firstElementChild?.getAttribute("role")).toBe("img");
+      const disc = container.firstElementChild as HTMLElement;
+      expect(disc.getAttribute("aria-hidden")).toBe("true");
+      expect(disc.getAttribute("aria-label")).toBeNull();
+      expect(disc.getAttribute("role")).toBeNull();
     });
   });
 });

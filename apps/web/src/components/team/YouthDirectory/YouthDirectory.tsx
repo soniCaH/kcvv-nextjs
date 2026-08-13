@@ -80,7 +80,7 @@ export function YouthDirectory({ divisions, className }: YouthDirectoryProps) {
                       {team.teamImageUrl ? (
                         <Image
                           src={team.teamImageUrl}
-                          alt={`${team.name} ploegfoto`}
+                          alt=""
                           fill
                           // Sanity CDN URL already carries ?w/q/fm transforms —
                           // skip /_next/image (matches TeamFlagship/PlayerCard/TeamStaff).
@@ -93,7 +93,6 @@ export function YouthDirectory({ divisions, className }: YouthDirectoryProps) {
                         <div className="bg-cream-soft flex h-full w-full items-center justify-center">
                           <JerseyShirt
                             letterOverlay={chestMark}
-                            ariaLabel={`${team.name} (geen ploegfoto)`}
                             className="h-full max-h-24 w-auto py-2"
                           />
                         </div>

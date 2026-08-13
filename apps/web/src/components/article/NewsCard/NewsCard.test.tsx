@@ -46,22 +46,27 @@ describe("NewsCard", () => {
 
   describe("Image", () => {
     it("renders image when imageUrl provided", () => {
-      render(
-        <NewsCard
-          {...defaultProps}
-          imageUrl="/test.jpg"
-          imageAlt="Test image"
-        />,
+      const { container } = render(
+        <NewsCard {...defaultProps} imageUrl="/test.jpg" />,
       );
-      expect(screen.getByRole("img")).toHaveAttribute("alt", "Test image");
+      expect(container.querySelector("img")).toHaveAttribute(
+        "src",
+        "/test.jpg",
+      );
     });
 
-    it("uses title as alt when imageAlt not provided", () => {
-      render(<NewsCard {...defaultProps} imageUrl="/test.jpg" />);
-      expect(screen.getByRole("img")).toHaveAttribute(
-        "alt",
-        "Test Article Title",
+    it("leaves the cover decorative — the card title already names it", () => {
+      // #2559 rule 1: the title renders 8px below this image, so an alt
+      // repeating it spends the reader's attention twice. An empty alt takes
+      // the image out of the accessibility tree entirely, hence querySelector.
+      const { container } = render(
+        <NewsCard {...defaultProps} imageUrl="/test.jpg" />,
       );
+      expect(container.querySelector("img")).toHaveAttribute("alt", "");
+      expect(screen.queryByRole("img")).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: /Test Article Title/ }),
+      ).toBeInTheDocument();
     });
 
     it("renders fallback placeholder when imageUrl not provided", () => {

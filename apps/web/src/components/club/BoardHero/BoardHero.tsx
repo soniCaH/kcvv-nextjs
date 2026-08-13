@@ -67,7 +67,7 @@ export function BoardHero({ name, tagline, imageUrl }: BoardHeroProps) {
           >
             <Image
               src={imageUrl}
-              alt={`${name} groepsfoto`}
+              alt=""
               fill
               sizes="(min-width: 768px) 24rem, 100vw"
               className="object-cover"

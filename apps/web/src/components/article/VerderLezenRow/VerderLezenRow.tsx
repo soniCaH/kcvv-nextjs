@@ -66,7 +66,6 @@ export interface VerderLezenItem {
   title: string;
   href: string;
   imageUrl?: string;
-  imageAlt?: string;
   /** Single category label rendered above the title (article tag). */
   badge?: string;
   /** Display date (e.g. formatted `publishedAt`). */
@@ -296,7 +295,6 @@ export function VerderLezenRow({
                 title={item.title}
                 href={item.href}
                 imageUrl={item.imageUrl}
-                imageAlt={item.imageAlt}
                 badge={item.badge}
                 // The third surface applying the transfer-green rule, so the
                 // third that has to say the word (#2404).

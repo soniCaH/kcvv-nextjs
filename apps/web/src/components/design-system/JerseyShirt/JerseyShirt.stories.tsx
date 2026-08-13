@@ -27,11 +27,11 @@ export const Default: Story = {
 };
 
 export const WithLetterU11: Story = {
-  args: { letterOverlay: "U11", ariaLabel: "U11 jersey" },
+  args: { letterOverlay: "U11" },
 };
 
 export const WithLetterA: Story = {
-  args: { letterOverlay: "A", ariaLabel: "A-ploeg jersey" },
+  args: { letterOverlay: "A" },
 };
 
 /**
@@ -40,7 +40,7 @@ export const WithLetterA: Story = {
  * background — matching `master design §5.1 step 8`.
  */
 export const OnYouthBlockBand: Story = {
-  args: { letterOverlay: "U11", ariaLabel: "U11 jersey" },
+  args: { letterOverlay: "U11" },
   decorators: [
     (Story) => (
       <div className="bg-jersey-deep border-ink border-2 p-16">

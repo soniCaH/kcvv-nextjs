@@ -80,16 +80,44 @@ describe("MatchEvents", () => {
 
     it("renders a team-logo chip per event row in chronological mode", () => {
       render(<MatchEvents {...defaultProps} />);
-      // The default fixture has 5 home events + 4 away events = 9 total.
-      // The typographic-shield fallback renders a "K" chip for KCVV and a
-      // "K" chip for KFC. Both teams' names start with K, so just look for
-      // the aria-label = full team name.
+      // Both branches of the chip are silent (#2559 rules 3 + 4) — the row
+      // carries the team name instead, see the test below. `data-team` is the
+      // inert hook that keeps the two teams distinguishable here: both names
+      // start with "K", so the rendered initial cannot tell them apart.
       expect(
-        screen.getAllByLabelText("KCVV Elewijt").length,
+        document.querySelectorAll('[data-team="KCVV Elewijt"]').length,
       ).toBeGreaterThanOrEqual(1);
       expect(
-        screen.getAllByLabelText("KFC Turnhout").length,
+        document.querySelectorAll('[data-team="KFC Turnhout"]').length,
       ).toBeGreaterThanOrEqual(1);
+      expect(screen.queryByLabelText("KCVV Elewijt")).not.toBeInTheDocument();
+    });
+
+    it("names each row's own team to a screen reader", () => {
+      // The chip went silent, and in chronological mode the team is otherwise
+      // conveyed only by which of the two name columns is filled — a purely
+      // visual signal. Each row carries its own team name (#2559 rule 1).
+      //
+      // Asserted per row against the event's `team`, not as a set: a component
+      // that stamped the same name on every row would satisfy "both teams
+      // appear somewhere" while telling a screen-reader user the wrong side.
+      const expected = [...events]
+        .sort((a, b) => a.minute - b.minute)
+        .map((e) =>
+          e.team === "home"
+            ? defaultProps.homeTeamName
+            : defaultProps.awayTeamName,
+        );
+      // Guards the fixture itself — per-row mapping only proves anything while
+      // both sides are represented.
+      expect(new Set(expected).size).toBe(2);
+
+      const { container } = render(<MatchEvents {...defaultProps} />);
+      const rows = Array.from(container.querySelectorAll("ol > li"));
+      expect(rows).toHaveLength(expected.length);
+      expect(
+        rows.map((row) => row.querySelector(".sr-only")?.textContent),
+      ).toEqual(expected);
     });
   });
 

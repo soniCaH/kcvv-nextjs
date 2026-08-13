@@ -305,7 +305,9 @@ describe("ArticleRepository", () => {
 
       expect(hp.href).toBe("/nieuws/test-article");
       expect(hp.title).toBe("Test Article");
-      expect(hp.imageAlt).toBe("Test Article");
+      // #2559: no derived alt. The card's own title names the cover, so the
+      // repository has no alt to hand down and no `imageAlt` field to hand it in.
+      expect("imageAlt" in hp).toBe(false);
       expect(hp.imageUrl).toBe("https://cdn.sanity.io/cover.webp");
       expect(hp.tags).toEqual([
         { name: "Eerste ploeg" },

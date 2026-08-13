@@ -82,15 +82,21 @@ describe("PageHero", () => {
   });
 
   it("renders the image inside a TapedFigure when an image is provided", () => {
-    render(
-      <PageHero
-        {...defaultProps}
-        image="/images/youth-trainers.jpg"
-        imageAlt="KCVV jeugdtraining"
-      />,
+    const { container } = render(
+      <PageHero {...defaultProps} image="/images/youth-trainers.jpg" />,
     );
-    const img = screen.getByAltText("KCVV jeugdtraining");
+    const img = container.querySelector("img");
     expect(img).toHaveAttribute("src", "/images/youth-trainers.jpg");
+  });
+
+  it("keeps the hero image decorative — the h1 already names the page", () => {
+    // #2559 rule 1. The empty alt is a decision, not a parameter default:
+    // there is no prop a caller could pass to override it.
+    const { container } = render(
+      <PageHero {...defaultProps} image="/images/youth-trainers.jpg" />,
+    );
+    expect(container.querySelector("img")).toHaveAttribute("alt", "");
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
   it("renders the typographic (no-image) state with a dotted divider", () => {
@@ -106,7 +112,6 @@ describe("PageHero", () => {
       <PageHero
         {...defaultProps}
         image="/images/youth-trainers.jpg"
-        imageAlt="KCVV jeugdtraining"
         size="compact"
       />,
     );
@@ -162,7 +167,7 @@ describe("PageHero", () => {
 
   it("adds the figure's warm tape in the image state (shell + figure)", () => {
     const { container } = render(
-      <PageHero {...defaultProps} image="/images/x.jpg" imageAlt="x" />,
+      <PageHero {...defaultProps} image="/images/x.jpg" />,
     );
     const warmTapes = container.querySelectorAll('[data-color="warm"]');
     expect(warmTapes).toHaveLength(2);
@@ -170,7 +175,7 @@ describe("PageHero", () => {
 
   it("does not render any legacy gradient, font-title, or kcvv-* classes", () => {
     const { container } = render(
-      <PageHero {...defaultProps} image="/images/x.jpg" imageAlt="x" />,
+      <PageHero {...defaultProps} image="/images/x.jpg" />,
     );
     expect(container.querySelector('[class*="kcvv-"]')).not.toBeInTheDocument();
     expect(

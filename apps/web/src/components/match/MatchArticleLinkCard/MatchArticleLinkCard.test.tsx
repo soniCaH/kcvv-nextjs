@@ -58,9 +58,11 @@ describe("MatchArticleLinkCard", () => {
       expect(link).toHaveAttribute("href", "/nieuws/kcvv-wint-de-derby");
     });
 
-    it("renders the cover image with the title as alt text", () => {
+    it("leaves the cover decorative — the link name already carries the title", () => {
+      // #2559 rule 1. The test above asserts the title is the link's accessible
+      // name, which is exactly why repeating it on the image says nothing.
       render(<MatchArticleLinkCard article={ARTICLE} kicker={RECAP_KICKER} />);
-      expect(screen.getByAltText(ARTICLE.title)).toBeInTheDocument();
+      expect(document.querySelector("img")).toHaveAttribute("alt", "");
     });
   });
 

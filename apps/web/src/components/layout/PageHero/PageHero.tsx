@@ -17,6 +17,13 @@ import { LinkButton } from "@/components/design-system/LinkButton";
  * the retired legacy `<PageHero>` name and replaces the dark-gradient
  * `<InteriorPageHero>` placeholder.
  *
+ * **The hero image is decorative and takes `alt=""`. This is a decision, not a
+ * default** (#2559 / #2548 rule 1): the image sits in the same section as the
+ * `<h1>` this hero renders, so the heading already names the subject and the
+ * photograph would only repeat it. The hero therefore takes no alt parameter —
+ * there is nothing a caller could correctly pass. Every route adopting this
+ * opening inherits that rule rather than a parameter default nobody chose.
+ *
  * Composes existing retro-terrace-fanzine primitives only — no new vocabulary:
  *   - Shell  → `<TapedCard bg="cream">` + one warm `<TapeStrip>` (top-left).
  *   - Kicker → jersey-deep raw label-token mono span (MonoLabel plain only
@@ -52,8 +59,6 @@ export interface PageHeroProps {
   lead?: string;
   /** Optional landscape hero image URL. Suppressed when `size="compact"`. */
   image?: string;
-  /** Alt text for the hero image. */
-  imageAlt?: string;
   /** Optional CTA rendered as a primary `<LinkButton>`. */
   cta?: { label: string; href: string };
   /**
@@ -79,7 +84,6 @@ export function PageHero({
   accent,
   lead,
   image,
-  imageAlt = "",
   cta,
   adornment,
   size = "default",
@@ -200,7 +204,7 @@ export function PageHero({
           >
             <Image
               src={image!}
-              alt={imageAlt}
+              alt=""
               fill
               priority
               sizes="(min-width: 768px) 40vw, 100vw"

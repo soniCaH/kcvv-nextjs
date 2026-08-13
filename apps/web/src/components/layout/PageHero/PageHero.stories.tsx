@@ -30,7 +30,6 @@ const meta = {
     },
     lead: { control: "text", description: "Italic display lead (auto-hides)" },
     image: { control: "text", description: "Landscape hero image URL" },
-    imageAlt: { control: "text", description: "Alt text for the hero image" },
     size: {
       control: "select",
       options: ["default", "compact"],
@@ -49,7 +48,6 @@ export const WithImage: Story = {
     headline: "Wedstrijdkalender",
     lead: "Alle wedstrijden en activiteiten van KCVV Elewijt, seizoen na seizoen.",
     image: "/images/youth-trainers.jpg",
-    imageAlt: "KCVV jeugdtraining",
   },
 };
 
@@ -90,7 +88,6 @@ export const LongHeadline: Story = {
     accent: "compagnie",
     lead: "Van de allerkleinsten tot het eerste elftal — bij KCVV is iedereen welkom.",
     image: "/images/youth-trainers.jpg",
-    imageAlt: "KCVV jeugdtraining",
   },
 };
 
@@ -117,7 +114,6 @@ export const Mobile: Story = {
     headline: "Wedstrijdkalender",
     lead: "Alle wedstrijden en activiteiten, seizoen na seizoen.",
     image: "/images/youth-trainers.jpg",
-    imageAlt: "KCVV jeugdtraining",
   },
   globals: {
     viewport: { value: "kcvvMobile" },

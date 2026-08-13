@@ -402,7 +402,6 @@ function renderPullQuote(
         avatarSlot={
           <SubjectAvatar
             firstName={deriveSubjectFirstName(respondent, resolved.name)}
-            fullName={resolved.name}
             photoUrl={resolved.photoUrl}
             scale="attribution"
           />

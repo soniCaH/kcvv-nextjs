@@ -13,9 +13,14 @@ import type {
 // ─── GROQ Queries ────────────────────────────────────────────────────────────
 
 // Card projection (list + detail-page insertions). `images[0]` is the canonical
-// cover (no separate `coverImage` field). `coverAlt` falls back to the first
-// caption, then the title. The projection is inlined per-query rather than
-// interpolated so `sanity typegen` can statically resolve each result type.
+// cover (no separate `coverImage` field). The projection is inlined per-query
+// rather than interpolated so `sanity typegen` can statically resolve each
+// result type.
+//
+// No `coverAlt`: the card's own title names the cover in the same section, so
+// the cover is decorative and takes `alt=""` (#2559 / #2548 rule 1). The
+// caption-then-title fallback this projection used to carry had exactly one
+// consumer, and that consumer now passes nothing.
 export const GALLERIES_QUERY =
   defineQuery(`*[_type == "photoGallery" && defined(slug.current)] | order(publishedAt desc) {
   "id": _id,
@@ -24,8 +29,7 @@ export const GALLERIES_QUERY =
   "publishedAt": coalesce(publishedAt, ""),
   "imageCount": coalesce(count(images), 0),
   "coverUrl": images[0].asset->url,
-  "coverLqip": images[0].asset->metadata.lqip,
-  "coverAlt": coalesce(images[0].caption, title, "")
+  "coverLqip": images[0].asset->metadata.lqip
 }`);
 
 /**
@@ -48,7 +52,7 @@ export const GALLERY_BY_SLUG_QUERY =
   "images": images[]{
     "url": asset->url,
     "lqip": asset->metadata.lqip,
-    "alt": coalesce(alt, caption, ""),
+    "alt": coalesce(alt, ""),
     "caption": coalesce(caption, ""),
     "credit": coalesce(credit, ^.defaultCredit, "")
   }
@@ -69,8 +73,7 @@ export const GALLERIES_BY_MATCH_QUERY =
   "publishedAt": coalesce(publishedAt, ""),
   "imageCount": coalesce(count(images), 0),
   "coverUrl": images[0].asset->url,
-  "coverLqip": images[0].asset->metadata.lqip,
-  "coverAlt": coalesce(images[0].caption, title, "")
+  "coverLqip": images[0].asset->metadata.lqip
 }`);
 
 // Galleries linked to an event document, oldest-first. Same card shape.
@@ -82,8 +85,7 @@ export const GALLERIES_BY_EVENT_QUERY =
   "publishedAt": coalesce(publishedAt, ""),
   "imageCount": coalesce(count(images), 0),
   "coverUrl": images[0].asset->url,
-  "coverLqip": images[0].asset->metadata.lqip,
-  "coverAlt": coalesce(images[0].caption, title, "")
+  "coverLqip": images[0].asset->metadata.lqip
 }`);
 
 // ─── View Models ─────────────────────────────────────────────────────────────

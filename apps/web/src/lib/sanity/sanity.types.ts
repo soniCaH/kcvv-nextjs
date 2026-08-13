@@ -2304,7 +2304,7 @@ export type PAGE_BY_SLUG_QUERY_RESULT = {
 
 // Source: ../web/src/lib/repositories/photoGallery.repository.ts
 // Variable: GALLERIES_QUERY
-// Query: *[_type == "photoGallery" && defined(slug.current)] | order(publishedAt desc) {  "id": _id,  "title": coalesce(title, ""),  "slug": coalesce(slug.current, ""),  "publishedAt": coalesce(publishedAt, ""),  "imageCount": coalesce(count(images), 0),  "coverUrl": images[0].asset->url,  "coverLqip": images[0].asset->metadata.lqip,  "coverAlt": coalesce(images[0].caption, title, "")}
+// Query: *[_type == "photoGallery" && defined(slug.current)] | order(publishedAt desc) {  "id": _id,  "title": coalesce(title, ""),  "slug": coalesce(slug.current, ""),  "publishedAt": coalesce(publishedAt, ""),  "imageCount": coalesce(count(images), 0),  "coverUrl": images[0].asset->url,  "coverLqip": images[0].asset->metadata.lqip}
 export type GALLERIES_QUERY_RESULT = Array<{
   id: string;
   title: string | "";
@@ -2313,12 +2313,11 @@ export type GALLERIES_QUERY_RESULT = Array<{
   imageCount: number | 0;
   coverUrl: string | null;
   coverLqip: string | null;
-  coverAlt: string | "";
 }>;
 
 // Source: ../web/src/lib/repositories/photoGallery.repository.ts
 // Variable: GALLERY_BY_SLUG_QUERY
-// Query: *[_type == "photoGallery" && slug.current == $slug][0] {  "id": _id,  "updatedAt": _updatedAt,  "title": coalesce(title, ""),  "slug": coalesce(slug.current, ""),  "publishedAt": coalesce(publishedAt, ""),  "descriptionText": pt::text(description),  "descriptionRich": description,  "images": images[]{    "url": asset->url,    "lqip": asset->metadata.lqip,    "alt": coalesce(alt, caption, ""),    "caption": coalesce(caption, ""),    "credit": coalesce(credit, ^.defaultCredit, "")  }}
+// Query: *[_type == "photoGallery" && slug.current == $slug][0] {  "id": _id,  "updatedAt": _updatedAt,  "title": coalesce(title, ""),  "slug": coalesce(slug.current, ""),  "publishedAt": coalesce(publishedAt, ""),  "descriptionText": pt::text(description),  "descriptionRich": description,  "images": images[]{    "url": asset->url,    "lqip": asset->metadata.lqip,    "alt": coalesce(alt, ""),    "caption": coalesce(caption, ""),    "credit": coalesce(credit, ^.defaultCredit, "")  }}
 export type GALLERY_BY_SLUG_QUERY_RESULT = {
   id: string;
   updatedAt: string;
@@ -2363,7 +2362,7 @@ export type GALLERY_SLUGS_QUERY_RESULT = Array<{
 
 // Source: ../web/src/lib/repositories/photoGallery.repository.ts
 // Variable: GALLERIES_BY_MATCH_QUERY
-// Query: *[_type == "photoGallery" && linkedMatch == $matchId && defined(slug.current)] | order(publishedAt asc) {  "id": _id,  "title": coalesce(title, ""),  "slug": coalesce(slug.current, ""),  "publishedAt": coalesce(publishedAt, ""),  "imageCount": coalesce(count(images), 0),  "coverUrl": images[0].asset->url,  "coverLqip": images[0].asset->metadata.lqip,  "coverAlt": coalesce(images[0].caption, title, "")}
+// Query: *[_type == "photoGallery" && linkedMatch == $matchId && defined(slug.current)] | order(publishedAt asc) {  "id": _id,  "title": coalesce(title, ""),  "slug": coalesce(slug.current, ""),  "publishedAt": coalesce(publishedAt, ""),  "imageCount": coalesce(count(images), 0),  "coverUrl": images[0].asset->url,  "coverLqip": images[0].asset->metadata.lqip}
 export type GALLERIES_BY_MATCH_QUERY_RESULT = Array<{
   id: string;
   title: string | "";
@@ -2372,12 +2371,11 @@ export type GALLERIES_BY_MATCH_QUERY_RESULT = Array<{
   imageCount: number | 0;
   coverUrl: string | null;
   coverLqip: string | null;
-  coverAlt: string | "";
 }>;
 
 // Source: ../web/src/lib/repositories/photoGallery.repository.ts
 // Variable: GALLERIES_BY_EVENT_QUERY
-// Query: *[_type == "photoGallery" && linkedEvent._ref == $eventId && defined(slug.current)] | order(publishedAt asc) {  "id": _id,  "title": coalesce(title, ""),  "slug": coalesce(slug.current, ""),  "publishedAt": coalesce(publishedAt, ""),  "imageCount": coalesce(count(images), 0),  "coverUrl": images[0].asset->url,  "coverLqip": images[0].asset->metadata.lqip,  "coverAlt": coalesce(images[0].caption, title, "")}
+// Query: *[_type == "photoGallery" && linkedEvent._ref == $eventId && defined(slug.current)] | order(publishedAt asc) {  "id": _id,  "title": coalesce(title, ""),  "slug": coalesce(slug.current, ""),  "publishedAt": coalesce(publishedAt, ""),  "imageCount": coalesce(count(images), 0),  "coverUrl": images[0].asset->url,  "coverLqip": images[0].asset->metadata.lqip}
 export type GALLERIES_BY_EVENT_QUERY_RESULT = Array<{
   id: string;
   title: string | "";
@@ -2386,7 +2384,6 @@ export type GALLERIES_BY_EVENT_QUERY_RESULT = Array<{
   imageCount: number | 0;
   coverUrl: string | null;
   coverLqip: string | null;
-  coverAlt: string | "";
 }>;
 
 // Source: ../web/src/lib/repositories/player.repository.ts
@@ -2820,11 +2817,11 @@ declare module "@sanity/client" {
     '*[_type == "homePage"][0] {\n    "matchesSliderPlaceholder": matchesSliderPlaceholder {\n      nextSeasonKickoff,\n      announcementText,\n      announcementHref,\n      "highlightImage": highlightImage {\n        alt,\n        "asset": asset->{\n          _id,\n          url,\n          "lqip": metadata.lqip,\n          "dimensions": metadata.dimensions\n        }\n      }\n    }\n  }': HOMEPAGE_PLACEHOLDER_QUERY_RESULT;
     '*[_type == "jeugdLandingPage"][0] {\n  editorialCards[] {\n    tag, title, description, arrowText, href,\n    "imageUrl": image.asset->url + "?w=900&q=80&fm=webp",\n    position, cardType\n  }\n}': JEUGD_LANDING_PAGE_QUERY_RESULT;
     '*[_type == "page" && slug.current == $slug][0] {\n  "id": _id, "title": coalesce(title, ""), "slug": coalesce(slug.current, ""),\n  "heroImageUrl": heroImage.asset->url + "?w=1600&q=80&fm=webp&fit=max",\n  metaDescription,\n  "ogImageUrl": ogImage.asset->url + "?w=1200&h=630&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(ogImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(ogImage.hotspot.y, 0.5)),\n  body[]{ ..., "fileUrl": file.asset->url, "fileSize": file.asset->size, "fileMimeType": file.asset->mimeType, "fileOriginalFilename": file.asset->originalFilename, "asset": select(_type == "image" => asset->{ "url": url + "?w=800&q=80&fm=webp&fit=max", title, description, creditLine, metadata{dimensions, lqip} }, _type == "articleImage" => image.asset->{ "url": url + "?w=800&q=80&fm=webp&fit=max", title, description, creditLine, metadata{dimensions, lqip} }) }\n}': PAGE_BY_SLUG_QUERY_RESULT;
-    '*[_type == "photoGallery" && defined(slug.current)] | order(publishedAt desc) {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip,\n  "coverAlt": coalesce(images[0].caption, title, "")\n}': GALLERIES_QUERY_RESULT;
-    '*[_type == "photoGallery" && slug.current == $slug][0] {\n  "id": _id,\n  "updatedAt": _updatedAt,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "descriptionText": pt::text(description),\n  "descriptionRich": description,\n  "images": images[]{\n    "url": asset->url,\n    "lqip": asset->metadata.lqip,\n    "alt": coalesce(alt, caption, ""),\n    "caption": coalesce(caption, ""),\n    "credit": coalesce(credit, ^.defaultCredit, "")\n  }\n}': GALLERY_BY_SLUG_QUERY_RESULT;
+    '*[_type == "photoGallery" && defined(slug.current)] | order(publishedAt desc) {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip\n}': GALLERIES_QUERY_RESULT;
+    '*[_type == "photoGallery" && slug.current == $slug][0] {\n  "id": _id,\n  "updatedAt": _updatedAt,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "descriptionText": pt::text(description),\n  "descriptionRich": description,\n  "images": images[]{\n    "url": asset->url,\n    "lqip": asset->metadata.lqip,\n    "alt": coalesce(alt, ""),\n    "caption": coalesce(caption, ""),\n    "credit": coalesce(credit, ^.defaultCredit, "")\n  }\n}': GALLERY_BY_SLUG_QUERY_RESULT;
     '*[_type == "photoGallery" && defined(slug.current)] { "slug": coalesce(slug.current, ""), "updatedAt": _updatedAt }': GALLERY_SLUGS_QUERY_RESULT;
-    '*[_type == "photoGallery" && linkedMatch == $matchId && defined(slug.current)] | order(publishedAt asc) {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip,\n  "coverAlt": coalesce(images[0].caption, title, "")\n}': GALLERIES_BY_MATCH_QUERY_RESULT;
-    '*[_type == "photoGallery" && linkedEvent._ref == $eventId && defined(slug.current)] | order(publishedAt asc) {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip,\n  "coverAlt": coalesce(images[0].caption, title, "")\n}': GALLERIES_BY_EVENT_QUERY_RESULT;
+    '*[_type == "photoGallery" && linkedMatch == $matchId && defined(slug.current)] | order(publishedAt asc) {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip\n}': GALLERIES_BY_MATCH_QUERY_RESULT;
+    '*[_type == "photoGallery" && linkedEvent._ref == $eventId && defined(slug.current)] | order(publishedAt asc) {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip\n}': GALLERIES_BY_EVENT_QUERY_RESULT;
     '*[_type == "player" && archived != true] | order(lastName asc) {\n  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,\n  birthDate,\n  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",\n  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  bio\n}': PLAYERS_QUERY_RESULT;
     '*[_type == "player" && psdId == $psdId][0] {\n  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,\n  birthDate,\n  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",\n  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  bio,\n  "currentTeam": *[_type == "team" && archived != true && references(^._id)] | order(name asc)[0] {\n    name, season\n  }\n}': PLAYER_BY_PSD_ID_QUERY_RESULT;
     '*[_type == "player" && keeper == true && archived != true].psdId': KEEPER_PSD_IDS_QUERY_RESULT;

@@ -88,7 +88,9 @@ describe("ErrorState", () => {
 
   it("renders the HTTP code as the jersey shirt number", () => {
     renderNotFound();
-    const figure = screen.getByRole("figure", { name: "KCVV-shirt" });
+    // The jersey is a silent artefact (#2559 rule 4), so it is queried as an
+    // element rather than by an accessible name it no longer carries.
+    const figure = document.querySelector("figure[aria-hidden]") as HTMLElement;
     expect(figure).toBeInTheDocument();
     expect(within(figure).getByText("404")).toBeInTheDocument();
   });

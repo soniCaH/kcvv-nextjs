@@ -20,8 +20,6 @@ export interface EditorialHubCardProps {
   variant: EditorialHubCardVariant;
   /** News variant cover photo (newsprint colour — never greyscale). */
   imageUrl?: string;
-  /** Alt text for the news cover photo. */
-  imageAlt?: string;
   /**
    * Nav variant glyph — a pre-rendered icon node centered on the jersey-deep
    * panel (e.g. `<NavGlyph name="Eye" />`). Kept as a `ReactNode` so this card
@@ -65,7 +63,6 @@ export function EditorialHubCard({
   arrowText,
   variant,
   imageUrl,
-  imageAlt,
   icon,
   sizes,
   articleIdHashed,
@@ -113,7 +110,7 @@ export function EditorialHubCard({
               // treatment is reserved for sponsor logos).
               <Image
                 src={imageUrl}
-                alt={imageAlt ?? ""}
+                alt=""
                 fill
                 sizes={sizes ?? DEFAULT_NEWS_SIZES}
                 className="object-cover"

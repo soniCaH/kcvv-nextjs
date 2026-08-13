@@ -35,15 +35,14 @@ describe("EditorialHubCard", () => {
           title="U15 wint in stijl"
           arrowText="Lees meer"
           imageUrl="/images/cover.jpg"
-          imageAlt="U15 viert"
         />,
       );
       const link = screen.getByRole("link", { name: /u15 wint in stijl/i });
       expect(link).toHaveAttribute("href", "/nieuws/u15-wint");
-      expect(screen.getByRole("img", { name: "U15 viert" })).toHaveAttribute(
-        "src",
-        "/images/cover.jpg",
-      );
+      // #2559 rule 1: the card's own title names the cover.
+      const cover = document.querySelector("img");
+      expect(cover).toHaveAttribute("src", "/images/cover.jpg");
+      expect(cover).toHaveAttribute("alt", "");
       expect(screen.getByText("Jeugd")).toBeInTheDocument();
       expect(screen.getByText("Lees meer")).toBeInTheDocument();
       expect(screen.queryByTestId("nav-glyph")).not.toBeInTheDocument();

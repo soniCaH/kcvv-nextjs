@@ -113,8 +113,11 @@ describe("OrgPersonCard — single", () => {
         })}
       />,
     );
-    const img = screen.getByRole("img", { name: "Luc Boons" });
-    expect(img).toBeInTheDocument();
+    // #2559 rule 1: the card renders the person's name, so the portrait is
+    // decorative. Identify it by src — the alt no longer can.
+    const img = document.querySelector("img");
+    expect(img).toHaveAttribute("src", "/x/luc.jpg");
+    expect(img).toHaveAttribute("alt", "");
     expect(screen.queryByText("LB")).not.toBeInTheDocument();
   });
 });
@@ -157,9 +160,11 @@ describe("OrgPersonCard — shared", () => {
 
   it("renders a holder photo in the dual avatar and a monogram for the photo-less holder", () => {
     render(<OrgPersonCard node={shared} />);
-    // The dual avatar is an aria-hidden decorative cue, so query the photo by
-    // its alt text (not by role) and the photo-less holder by its monogram.
-    expect(screen.getByAltText("Paula Vos")).toBeInTheDocument();
+    // The dual avatar is an aria-hidden decorative cue and the photo itself is
+    // silent too (#2559), so Paula's photo is identified by src.
+    const img = document.querySelector("img");
+    expect(img).toHaveAttribute("src", "/x/paula.jpg");
+    expect(img).toHaveAttribute("alt", "");
     // Jan De Smet → first + last token initial ("JS", not "JD").
     expect(screen.getByText("JS")).toBeInTheDocument();
   });

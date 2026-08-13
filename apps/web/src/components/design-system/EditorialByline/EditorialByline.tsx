@@ -38,15 +38,13 @@ export function EditorialByline({ author }: EditorialBylineProps) {
     >
       <MonoStar />
       {hasRealAuthor ? (
-        // Wrap in aria-hidden so AT only reads the byline text below —
-        // otherwise SubjectAvatar's `role="img"` + `aria-label` would
-        // announce the author name twice (chip + "Door {author}").
+        // This wrapper existed because SubjectAvatar's `role="img"` +
+        // `aria-label` would announce the author name twice (chip + "Door
+        // {author}"). The avatar is silent on its own now (#2559 rule 4), so
+        // the aria-hidden is belt-and-braces — but the wrapper is also a flex
+        // child of this row, and #2559 must not move a pixel, so it stays.
         <span aria-hidden="true" className="inline-flex">
-          <SubjectAvatar
-            firstName={trimmed}
-            fullName={trimmed}
-            scale="byline"
-          />
+          <SubjectAvatar firstName={trimmed} scale="byline" />
         </span>
       ) : null}
       <span>Door {displayName}</span>

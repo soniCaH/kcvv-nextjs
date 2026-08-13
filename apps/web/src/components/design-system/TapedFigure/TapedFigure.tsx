@@ -35,11 +35,30 @@ export type TapedFigurePadding = "sm" | "none";
  */
 export type TapedFigureTint = "newsprint" | "none";
 
+/**
+ * **The figure's either-or: a captioned figure needs no alt; an uncaptioned
+ * one carries everything the caption would have said.** (#2559 / #2548 rule 2.)
+ *
+ * Both shapes are this same primitive, which is why the rule lives here.
+ *
+ * - **`caption` present** → the child image takes `alt=""`. The caption is
+ *   visible text in the same section, so an alt beside it is the same sentence
+ *   spent twice. `/club/geschiedenis` is the worked example: eight photographs
+ *   whose alt was byte-identical to the caption's first line, while the caption
+ *   itself named every person in the frame.
+ * - **`caption` absent** → the child image's `alt` is the sole carrier and must
+ *   describe the moment, not name the thing beside it. `/club/ultras` and
+ *   `<JeugdHero>` are the worked examples: their headings say only *Ultras* /
+ *   *Jeugd*, so the alt says *"op de kampioenenmatch in 3e provinciale"*.
+ *
+ * There is no `alt` prop here. One existed as a documentation-only prop that
+ * rendered nothing, which is precisely the shape that lets a caller believe an
+ * alt was set. The child image element owns the attribute; this docblock owns
+ * the rule.
+ */
 export interface TapedFigureProps {
   /** The image element to render inside the polaroid frame. Caller decides next/image, plain <img>, SanityImage, etc. */
   children: ReactNode;
-  /** Documentation prop — the rendered image element owns the actual alt attribute. */
-  alt?: string;
   aspect?: TapedFigureAspect;
   caption?: string;
   credit?: string;

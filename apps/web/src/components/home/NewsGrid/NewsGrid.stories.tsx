@@ -61,7 +61,6 @@ const article = (
     SLOT_SHAPES[slot % SLOT_SHAPES.length] ?? "article-hero-generic",
     slot,
   ),
-  imageAlt: title,
   date: `${15 + slot} mei 2025`,
   tags: [{ name: tag }],
   articleType,

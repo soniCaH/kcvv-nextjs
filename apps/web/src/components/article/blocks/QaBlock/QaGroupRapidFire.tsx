@@ -69,11 +69,7 @@ export const QaGroupRapidFire = ({
           data-rapidfire="speaker"
           className="mb-[18px] flex items-center gap-3"
         >
-          <SubjectAvatar
-            firstName={respondent.firstName}
-            fullName={respondent.fullName}
-            scale="row"
-          />
+          <SubjectAvatar firstName={respondent.firstName} scale="row" />
           <p
             data-rapidfire="speaker-tag"
             className="text-ink-muted text-label m-0 flex h-8 items-center font-mono uppercase"

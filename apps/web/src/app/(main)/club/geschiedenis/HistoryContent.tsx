@@ -202,7 +202,7 @@ function TimelineContent() {
       >
         <Image
           src={HISTORY_52_53}
-          alt="SK Elewijt kampioen 52-53"
+          alt=""
           fill
           sizes={PHOTO_SIZES}
           className="object-contain"
@@ -228,7 +228,7 @@ function TimelineContent() {
       >
         <Image
           src={HISTORY_58_59}
-          alt="SK Elewijt kampioen 58-59"
+          alt=""
           fill
           sizes={PHOTO_SIZES}
           className="object-contain"
@@ -266,7 +266,7 @@ function TimelineContent() {
       >
         <Image
           src={HISTORY_63_64}
-          alt="FC Elewijt kampioen 63-64"
+          alt=""
           fill
           sizes={PHOTO_SIZES}
           className="object-contain"
@@ -286,7 +286,7 @@ function TimelineContent() {
       >
         <Image
           src={HISTORY_FUSIE}
-          alt="De fusieclub VV Elewijt"
+          alt=""
           fill
           sizes={PHOTO_SIZES}
           className="object-contain"
@@ -340,7 +340,7 @@ function TimelineContent() {
       >
         <Image
           src={HISTORY_BVB}
-          alt="Crossing Elewijt won de beker van Brabant in 1988"
+          alt=""
           fill
           sizes={PHOTO_SIZES}
           className="object-contain"
@@ -398,7 +398,7 @@ function TimelineContent() {
       >
         <Image
           src={HISTORY_2018}
-          alt="KCVV Elewijt speelt kampioen in 2018-2019 met 79 punten op 90"
+          alt=""
           fill
           sizes={PHOTO_SIZES}
           className="object-contain"
@@ -433,7 +433,7 @@ function TimelineContent() {
       >
         <Image
           src={HISTORY_2022}
-          alt="KCVV Elewijt promoveert via eindronde naar eerste provinciale"
+          alt=""
           fill
           sizes={PHOTO_SIZES}
           className="object-contain"
@@ -499,7 +499,7 @@ function TimelineContent() {
       >
         <Image
           src={HISTORY_24_25}
-          alt="KCVV Elewijt kampioen 2024-2025 in eerste provinciale"
+          alt=""
           fill
           sizes={PHOTO_SIZES}
           className="object-contain"

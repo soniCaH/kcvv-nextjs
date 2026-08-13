@@ -373,6 +373,28 @@ A rotated, content-bearing paper stamp that pins over the edge of a card — 14p
 
 A full-bleed 45° two-tone stripe band (12 / 18 / 24 / 28px tall) rendered as an SVG pattern, used as a section rule. Four pairs: ink-cream (default, high contrast), jersey-cream, jersey-tonal-dark, and cream-jersey-deep. The angle can flip so a top and bottom seam lean toward each other and "tape" a section shut.
 
+## What an Image Says
+
+**An image says only what the page does not already say.** If the subject is named in the same section — a card's own title, a figure's own caption, an opening's own `<h1>` — the image is decorative and says nothing. Where nothing else names it, the image carries the whole burden.
+
+This is not only a screen-reader rule. The usage scene is a phone held in daylight on the sideline, possibly on a weak connection; on a weak connection the alt text **is** the page.
+
+Decided on [#2548](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2548), built by [#2559](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2559).
+
+### Named Rules
+
+**The Section Radius Rule.** An image describes at a radius of one section — not the control, and not the page. A card's title silences its own image; an `<h1>` silences its opening's photograph; a caption silences its own figure. A page-level heading does **not** silence a run of distinct photographs, which is the whole difference between one article hero and fifty-five gallery photos.
+
+**The Slot, Not The Tag Rule.** The unit is the image slot, so whatever fills it answers to the same rule: `alt` on a photo, `aria-label` on an artefact fallback, and anything carrying `role="img"`. A slot's two branches do not get two different verdicts.
+
+**The Silent Artefact Rule.** An artefact is not a likeness, so it never speaks — it is `aria-hidden` even where the rule would otherwise let it talk. The jersey illustration is the same drawing for all 294 players and a monogram is two letters; neither identifies anybody. `<JerseyShirt>`, `<SubjectAvatar>` and `<SubjectAvatarCluster>` are all silent, and none of them takes an accessible-name prop.
+
+**The Either-Or Rule.** A figure with a caption needs no alt; a figure without one carries everything the caption would have said. Look for the same shape elsewhere: a sponsor tile renders a logo _with_ an alt **or** a visible wordmark, never both — which is why `formatSponsorAlt` survives, since when the logo paints, the alt is the only naming on the tile.
+
+**The Alone Image Rule.** An image with nothing else on the page to name it says its position and extent — `Foto 12 van 55` — never the collection, which the `<h1>` already named in the same section.
+
+**Authored alt is an override, never a prerequisite.** The derived rule has to be correct on the day it ships with zero authored alts anywhere. No cover image _gains_ an alt field: a cover is structurally incapable of being alone (hero under its own `<h1>`, card under its own title, related row under its own link text), and an optional field that is correct when empty invites a half-filled state. If a cover ever needs to speak, the in-body image slot already exists for it. The one pre-existing exception — the event cover's `alt` — no longer reaches the page; it survives only as the social-share card's description, and its Studio help text says so.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -386,6 +408,7 @@ A full-bleed 45° two-tone stripe band (12 / 18 / 24 / 28px tall) rendered as an
 - **Do** keep photographs in colour with the newsprint warm-tint; greyscale-to-colour-on-hover belongs to sponsor logos alone.
 - **Do** author heading emphasis as a Portable Text `accent` decorator, one emphasis per heading.
 - **Do** use Phosphor Fill icons from the single icon source.
+- **Do** give an image `alt=""` when its own section already names it, and describe the moment when nothing else does.
 
 ### Don't:
 
@@ -401,3 +424,6 @@ A full-bleed 45° two-tone stripe band (12 / 18 / 24 / 28px tall) rendered as an
 - **Don't** reintroduce a neutral grey. `gray-100`, `foundation-gray-light` and the four `table-*` tokens have all been deleted; a section that needs to step down from the page gets `cream-soft`, not a grey.
 - **Don't** rely on hover to reveal anything necessary — the primary usage scene is a phone, outdoors.
 - **Don't** use emoji as icons.
+- **Don't** feed a heading, a card title or a caption back into the image beside it — a duplicated sentence spends the reader's attention twice for nothing.
+- **Don't** give an artefact an accessible name. The jersey illustration and the monogram disc identify nobody, so they take `aria-hidden`, not a label.
+- **Don't** add an alt field to a cover image. A cover is never alone, and an optional field that is correct when empty only invites a half-filled one.

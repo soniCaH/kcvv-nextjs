@@ -53,7 +53,7 @@ export const ClubshopBanner = ({ className }: ClubshopBannerProps) => {
             aria-hidden="true"
             className="pointer-events-none absolute top-1/2 right-0 z-0 hidden -translate-y-1/2 sm:block"
           >
-            <JerseyShirt ariaLabel="" className="mx-0 h-35 w-35" />
+            <JerseyShirt className="mx-0 h-35 w-35" />
           </div>
 
           <div className="relative z-10 max-w-3xl">

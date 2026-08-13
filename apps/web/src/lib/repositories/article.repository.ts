@@ -260,7 +260,6 @@ export interface HomepageArticle {
   title: string;
   description?: string;
   imageUrl?: string;
-  imageAlt: string;
   date: string;
   dateIso: string;
   tags: Array<{ name: string }>;
@@ -328,7 +327,6 @@ export function toHomepageArticle(article: ArticleVM): HomepageArticle {
     href: `/nieuws/${article.slug}`,
     title: article.title,
     imageUrl: article.coverImageUrl ?? undefined,
-    imageAlt: article.title,
     date: article.publishedAt ? formatArticleDate(article.publishedAt) : "",
     dateIso: article.publishedAt ?? "",
     tags: article.tags.map((t) => ({ name: t })),

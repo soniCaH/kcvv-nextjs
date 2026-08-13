@@ -256,7 +256,6 @@ export const QaBlock = ({ value, subjects = null }: QaBlockProps) => {
           avatarSlot={
             <SubjectAvatar
               firstName={firstName}
-              fullName={resolved.name}
               photoUrl={resolved.photoUrl}
               scale="attribution"
             />

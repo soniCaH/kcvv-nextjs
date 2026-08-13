@@ -33,7 +33,6 @@ type Story = StoryObj<typeof meta>;
 export const BylineMonogram: Story = {
   args: {
     firstName: "Tom",
-    fullName: "Tom De Smet",
     scale: "byline",
   },
 };
@@ -44,7 +43,6 @@ export const BylineMonogram: Story = {
 export const RowMonogram: Story = {
   args: {
     firstName: "Wim",
-    fullName: "Wim Govaerts",
     scale: "row",
   },
 };
@@ -54,7 +52,6 @@ export const RowMonogram: Story = {
 export const AttributionPhoto: Story = {
   args: {
     firstName: "Wim",
-    fullName: "Wim Govaerts",
     photoUrl: fixtureImage("staff-portrait", 0),
     scale: "attribution",
   },
@@ -64,7 +61,6 @@ export const AttributionPhoto: Story = {
 export const AttributionMonogramFallback: Story = {
   args: {
     firstName: "Anouk",
-    fullName: "Anouk De Wit",
     scale: "attribution",
   },
 };
@@ -77,7 +73,7 @@ export const ScaleComparison: Story = {
   render: () => (
     <div className="flex items-center gap-8">
       <div className="flex flex-col items-center gap-2">
-        <SubjectAvatar firstName="Wim" fullName="Wim Govaerts" scale="row" />
+        <SubjectAvatar firstName="Wim" scale="row" />
         <span className="font-mono text-[10px] tracking-[0.18em] uppercase">
           row · 32px
         </span>
@@ -85,7 +81,6 @@ export const ScaleComparison: Story = {
       <div className="flex flex-col items-center gap-2">
         <SubjectAvatar
           firstName="Wim"
-          fullName="Wim Govaerts"
           photoUrl={fixtureImage("staff-portrait", 0)}
           scale="attribution"
         />
@@ -94,11 +89,7 @@ export const ScaleComparison: Story = {
         </span>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <SubjectAvatar
-          firstName="Anouk"
-          fullName="Anouk De Wit"
-          scale="attribution"
-        />
+        <SubjectAvatar firstName="Anouk" scale="attribution" />
         <span className="font-mono text-[10px] tracking-[0.18em] uppercase">
           attribution · 64px (fallback)
         </span>

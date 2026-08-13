@@ -159,7 +159,7 @@ export function TeamHero({
           {hasPhoto ? (
             <Image
               src={teamImageUrl!}
-              alt={`${category} teamfoto`}
+              alt=""
               width={420}
               height={280}
               unoptimized
@@ -169,7 +169,6 @@ export function TeamHero({
             <div className="flex h-full w-full items-center justify-center">
               <JerseyShirt
                 letterOverlay={jerseyLetter}
-                ariaLabel={`${category} jersey`}
                 className="h-full max-h-[160px] w-full max-w-[160px]"
               />
             </div>

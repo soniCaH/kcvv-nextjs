@@ -59,8 +59,9 @@ describe("YouthDirectory", () => {
         ]}
       />,
     );
-    const img = screen.getByAltText("KCVV Elewijt U17 ploegfoto");
-    expect(img).toBeInTheDocument();
+    // #2559 rule 1: the card title names the team, so the squad photo is
+    // decorative — and "ploegfoto" was one of three nouns for one photograph.
+    expect(document.querySelector("img")).toHaveAttribute("alt", "");
   });
 
   it("falls back to the JerseyShirt illustration when a team has no photo", () => {
@@ -71,13 +72,11 @@ describe("YouthDirectory", () => {
         ]}
       />,
     );
-    // No squad <img>; the JerseyShirt fallback carries an accessible label.
-    expect(
-      screen.queryByAltText("KCVV Elewijt U17 ploegfoto"),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByLabelText("KCVV Elewijt U17 (geen ploegfoto)"),
-    ).toBeInTheDocument();
+    // No squad <img>; the JerseyShirt fallback renders in its place and is
+    // silent (#2559 rule 4) — the artefact answers to the same rule as the
+    // photo it stands in for.
+    expect(document.querySelector("img")).toBeNull();
+    expect(document.querySelector("figure[aria-hidden]")).toBeInTheDocument();
   });
 
   describe("a group with no range (#2414)", () => {
@@ -111,7 +110,9 @@ describe("YouthDirectory", () => {
 
     it("puts the name's initial on the jersey, not the whole word", () => {
       render(<YouthDirectory divisions={reserven} />);
-      const jersey = screen.getByLabelText("Reserven (geen ploegfoto)");
+      const jersey = document.querySelector(
+        "figure[aria-hidden]",
+      ) as HTMLElement;
       expect(jersey).toHaveTextContent("R");
       expect(jersey.textContent).not.toContain("Reserven");
     });

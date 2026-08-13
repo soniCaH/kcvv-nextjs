@@ -178,7 +178,6 @@ export function NewsListingClient({
       title={article.title}
       href={`/nieuws/${article.slug}`}
       imageUrl={article.coverImageUrl ?? undefined}
-      imageAlt={article.title}
       badge={article.tags[0] ?? undefined}
       typeLabel={articleTypeCardLabel(article.articleType)}
       // Featured row uses the medium `md` tape (mirroring

@@ -30,7 +30,6 @@ export const GalleryCardGrid = ({
         title={gallery.title}
         href={`/galerij/${gallery.slug}`}
         coverUrl={gallery.coverUrl}
-        coverAlt={gallery.coverAlt || gallery.title}
         coverLqip={gallery.coverLqip}
         imageCount={gallery.imageCount}
         date={

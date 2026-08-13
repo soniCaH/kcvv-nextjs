@@ -107,13 +107,12 @@ describe("MatchEventsSection", () => {
         ]}
       />,
     );
-    expect(screen.getByAltText("KCVV Elewijt")).toHaveAttribute(
-      "src",
-      expect.stringContaining("kcvv.png"),
-    );
-    expect(screen.getByAltText("RC Mechelen")).toHaveAttribute(
-      "src",
-      expect.stringContaining("rc.png"),
-    );
+    // The crests are decorative (#2559 rule 4) — the team is named in the row —
+    // so they are matched on src rather than on an alt they no longer carry.
+    const [home, away] = Array.from(document.querySelectorAll("img"));
+    expect(home).toHaveAttribute("src", expect.stringContaining("kcvv.png"));
+    expect(home).toHaveAttribute("alt", "");
+    expect(away).toHaveAttribute("src", expect.stringContaining("rc.png"));
+    expect(away).toHaveAttribute("alt", "");
   });
 });
