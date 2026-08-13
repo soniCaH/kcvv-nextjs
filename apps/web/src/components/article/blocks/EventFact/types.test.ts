@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   resolveEventDate,
   resolveEventRange,
-  formatTimeRange,
   DEFAULT_TICKET_LABEL,
 } from "./types";
 
@@ -50,25 +49,6 @@ describe("resolveEventDate", () => {
     const out = resolveEventDate("2026-01-01");
     if (!out.hasDate) throw new Error("expected hasDate: true");
     expect(out.weekday).toBe("donderdag");
-  });
-});
-
-describe("formatTimeRange", () => {
-  it("joins both ends with a dash when present", () => {
-    expect(formatTimeRange("10:00", "17:00")).toBe("10:00 - 17:00");
-  });
-
-  it("returns just the start time when end is missing", () => {
-    expect(formatTimeRange("10:00", undefined)).toBe("10:00");
-  });
-
-  it("returns just the end time when start is missing", () => {
-    expect(formatTimeRange(undefined, "17:00")).toBe("17:00");
-  });
-
-  it("returns undefined when both are missing — caller skips the slot", () => {
-    expect(formatTimeRange(undefined, undefined)).toBeUndefined();
-    expect(formatTimeRange("", "")).toBeUndefined();
   });
 });
 

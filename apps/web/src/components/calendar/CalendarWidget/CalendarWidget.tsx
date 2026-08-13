@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { DateTime } from "luxon";
 import { cn } from "@/lib/utils/cn";
+import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { CalendarMonth } from "../CalendarMonth";
 import { CalendarWeek } from "../CalendarWeek";
@@ -100,13 +101,15 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
   // One shared period anchor for all three views (6.D lock — switching Maand /
   // Week / Agenda keeps the navigated window). Month + Agenda page by month,
   // Week pages by week; both derive from this single cursor, seeded from
-  // `today` (defaults to the real clock).
-  const seedDay = today ?? DateTime.now().toISODate()!;
+  // `today` defaults to the club's clock: the seed is evaluated once on the UTC
+  // server and again in the visitor's zone at hydration, so an unpinned one can
+  // open the widget on a different day than the grid rings as today.
+  const seedDay = today ?? clubToday();
   const [cursor, setCursor] = useState<string>(seedDay);
   const [selectedDate, setSelectedDate] = useState(seedDay);
   const [subscribePanelOpen, setSubscribePanelOpen] = useState(false);
 
-  const cursorDt = DateTime.fromISO(cursor);
+  const cursorDt = toDisplayZone(cursor);
   const currentMonth = cursorDt.month;
   const currentYear = cursorDt.year;
   const weekStart = cursorDt.startOf("week").toISODate()!;

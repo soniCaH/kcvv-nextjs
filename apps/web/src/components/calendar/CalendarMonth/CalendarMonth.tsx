@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { DateTime } from "luxon";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
+import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { TeamAgendaRow } from "@/components/team/TeamMatchesSection/TeamAgendaRow";
 import { EVENT_TYPE_FILL } from "@/components/event/event-type-style";
 import { EventTypeTag } from "../calendar-tags";
@@ -200,7 +200,7 @@ export function CalendarMonth({
   );
   const selected = byDay.get(selectedDate) ?? EMPTY_DAY_FEED;
 
-  const today = DateTime.now().toISODate()!;
+  const today = clubToday();
 
   return (
     <div>
@@ -222,7 +222,7 @@ export function CalendarMonth({
         data-testid="month-grid"
       >
         {days.map((day) => {
-          const dt = DateTime.fromISO(day);
+          const dt = toDisplayZone(day);
           const isCurrentMonth = dt.month === currentMonth;
           const isToday = day === today;
           const isSelected = day === selectedDate;
@@ -233,10 +233,7 @@ export function CalendarMonth({
               key={day}
               type="button"
               onClick={() => onSelectDate(day)}
-              aria-label={dt.toLocaleString(
-                { day: "numeric", month: "long" },
-                { locale: "nl-BE" },
-              )}
+              aria-label={dt.toFormat("d MMMM")}
               aria-pressed={isSelected}
               className={cn(
                 "border-paper-edge flex min-h-[108px] flex-col items-stretch border-r border-b border-dashed p-1.5 text-left transition-colors last:border-r-0",

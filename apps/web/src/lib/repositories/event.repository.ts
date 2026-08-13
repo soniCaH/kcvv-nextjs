@@ -2,7 +2,7 @@ import { Context, Effect, Layer } from "effect";
 import { defineQuery } from "groq";
 import { DateTime } from "luxon";
 import { fetchGroq } from "../sanity/fetch-groq";
-import { EVENT_TIMEZONE } from "../utils/event-datetime";
+import { CLUB_TIMEZONE, clubToday } from "../utils/dates";
 import type { EventType } from "@/components/event/event-type-style";
 import type {
   EVENTS_QUERY_RESULT,
@@ -143,7 +143,7 @@ export interface EventListItemVM {
 /**
  * Build an event ISO from an `eventFact`'s calendar `date` + optional `time`
  * (`HH:mm`). The fact date is a Brussels wall-clock day, so it is encoded as an
- * offset-aware ISO in `EVENT_TIMEZONE`: `parseEventDateTime` then round-trips it
+ * offset-aware ISO in `CLUB_TIMEZONE`: `parseEventDateTime` then round-trips it
  * to the same local time (its explicit-offset branch wins over the
  * `{ zone: "utc" }` default). A missing/invalid `time` yields local midnight,
  * which `<TicketStub>` reads as all-day and renders without a time — matching
@@ -163,7 +163,7 @@ function articleFactToIso(
     typeof time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(time)
       ? time
       : "00:00";
-  const dt = DateTime.fromISO(`${date}T${hhmm}`, { zone: EVENT_TIMEZONE });
+  const dt = DateTime.fromISO(`${date}T${hhmm}`, { zone: CLUB_TIMEZONE });
   return dt.isValid ? dt.toISO() : null;
 }
 
@@ -249,7 +249,7 @@ export const EventRepositoryLive = Layer.succeed(EventRepository, {
       events: fetchGroq<EVENTS_QUERY_RESULT>(EVENTS_QUERY),
       articles: fetchGroq<EVENT_ARTICLES_QUERY_RESULT>(EVENT_ARTICLES_QUERY, {
         // Brussels-local calendar day — see EVENT_ARTICLES_QUERY's $today note.
-        today: DateTime.now().setZone(EVENT_TIMEZONE).toISODate(),
+        today: clubToday(),
       }),
     }).pipe(
       Effect.map(({ events, articles }) => mergeEventFeed(events, articles)),

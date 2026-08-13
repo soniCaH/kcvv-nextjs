@@ -8,6 +8,7 @@ import type {
 } from "@/lib/effect/schemas/match.schema";
 import type { MatchHeroTeam } from "@/components/match/MatchHero";
 import type { LineupPlayer } from "@/components/match/MatchLineup";
+import { toMatchDisplayZone } from "@/lib/utils/dates";
 
 /**
  * Convert a match's home team into props suitable for the MatchHero component.
@@ -119,20 +120,20 @@ export function formatMatchTitle(match: MatchDetail): string {
 }
 
 /**
- * Build an SEO-friendly description for a match by combining its title, competition, and localized date.
+ * Build an SEO-friendly description for a match by combining its title,
+ * competition, and date.
+ *
+ * `zaterdag 12 september 2026` has one consumer — this page's metadata — so the
+ * shape stays local (#2430 rule 2). The parse does not: a BFF match date is
+ * Belgian wall-clock in its UTC fields, so it reads through `toMatchDisplayZone`.
  *
  * @param match - The match details used to generate the description
- * @returns A string in the form "<title> - <competition> op <date>" where `<date>` is formatted using the "nl-BE" locale with weekday, year, month, and day
+ * @returns A string in the form "<title> - <competition> op <date>"
  */
 export function formatMatchDescription(match: MatchDetail): string {
   const title = formatMatchTitle(match);
   const competition = match.competition || "Wedstrijd";
-  const dateStr = match.date.toLocaleDateString("nl-BE", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const dateStr = toMatchDisplayZone(match.date).toFormat("cccc d MMMM yyyy");
 
   return `${title} - ${competition} op ${dateStr}`;
 }

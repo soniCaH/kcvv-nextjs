@@ -2,8 +2,10 @@ import ical from "ical-generator";
 import { getVtimezoneComponent } from "@touch4it/ical-timezones";
 import { DateTime } from "luxon";
 import type { Match } from "@kcvv/api-contract";
+// Doubles as the calendar's `TZID` — an iCal protocol value, not only a display
+// pin — so it is read from the one home rather than restated.
+import { CLUB_TIMEZONE as TIMEZONE } from "./dates";
 
-const TIMEZONE = "Europe/Brussels";
 const HOME_VENUE_FALLBACK = "Sportpark Elewijt, Elewijt, België";
 
 export interface IcalOptions {

@@ -12,6 +12,7 @@ import {
 import type { MatchStatus, ScheduleMatch } from "@/components/match/types";
 import { getScoreDisplay, type ScoreDisplay } from "@/lib/utils/match-display";
 import { capitalize } from "@/lib/utils/capitalize";
+import { CLUB_TIMEZONE, toDisplayZone } from "@/lib/utils/dates";
 import type { ItemListEntry } from "@/lib/seo/jsonld";
 export type { ScoreDisplay } from "@/lib/utils/match-display";
 
@@ -148,10 +149,29 @@ export type CalendarFeedItem =
       event: CalendarEvent;
     };
 
-/** ISO → epoch ms sort key; an unparseable date sorts to the end (not NaN). */
+/**
+ * ISO → epoch ms sort key; an unparseable date sorts to the end (not NaN).
+ *
+ * Deliberately *not* `toDisplayZone`: the result is an instant, and neither a
+ * zone nor a locale can change one. Reading the input as UTC is the same
+ * offset-less contract the shared parse uses, without paying for a zone
+ * resolution per comparison.
+ */
 function toFeedSortKey(iso: string): number {
-  const ms = DateTime.fromISO(iso).toMillis();
+  const ms = DateTime.fromISO(iso, { zone: "utc" }).toMillis();
   return Number.isNaN(ms) ? Number.POSITIVE_INFINITY : ms;
+}
+
+/**
+ * First of a calendar month in the club's zone — the month grid, the month nav
+ * label and the agenda window all start from the same construction rather than
+ * `DateTime.local()`, which would take the runtime zone.
+ */
+function clubMonthStart(year: number, month: number): DateTime {
+  return DateTime.fromObject(
+    { year, month, day: 1 },
+    { zone: CLUB_TIMEZONE, locale: "nl" },
+  );
 }
 
 /**
@@ -185,9 +205,13 @@ export function buildCalendarFeed(
     }),
   );
 
-  return [...matchItems, ...eventItems].sort(
-    (a, b) => toFeedSortKey(a.dateStart) - toFeedSortKey(b.dateStart),
-  );
+  // Key once per item, not twice per comparison — the comparator runs
+  // O(n log n) times and a Luxon parse is ~1.5µs, which a full season of
+  // fixtures turns into tens of milliseconds on a `force-dynamic` route.
+  return [...matchItems, ...eventItems]
+    .map((item) => ({ item, key: toFeedSortKey(item.dateStart) }))
+    .sort((a, b) => a.key - b.key)
+    .map(({ item }) => item);
 }
 
 /**
@@ -206,10 +230,7 @@ export function buildKalenderItemListEntries(
   const nowMs = options.nowMs ?? Date.now();
   const limit = options.limit ?? 30;
   return feed
-    .filter((item) => {
-      const ms = DateTime.fromISO(item.dateStart).toMillis();
-      return !Number.isNaN(ms) && ms >= nowMs;
-    })
+    .filter((item) => toFeedSortKey(item.dateStart) >= nowMs)
     .slice(0, limit)
     .map((item) =>
       item.source === "match"
@@ -219,13 +240,6 @@ export function buildKalenderItemListEntries(
           }
         : { name: item.event.title, url: `${siteUrl}${item.event.href}` },
     );
-}
-
-const TIMEZONE = "Europe/Brussels";
-
-/** Parse an ISO string into the club's local timezone */
-function toLocalDate(iso: string): DateTime {
-  return DateTime.fromISO(iso, { zone: TIMEZONE });
 }
 
 /** A single day's bucketed feed — matches + events, each time-sorted. */
@@ -250,6 +264,9 @@ function ensureDayFeed(map: Map<string, DayFeed>, day: string): DayFeed {
  * every grid cell / month day. Multi-day events surface under every day they
  * span (same semantics as `getEventsForDay`); buckets are time-sorted to match
  * the per-day helpers. Consumers `useMemo` this on `[matches, events]`.
+ *
+ * Matches bucket through `toDisplayZone` too, not `toMatchDisplayZone`; the two
+ * only disagree for a kickoff at/after 22:00, which the PSD feed does not carry.
  */
 export function groupFeedByDay(
   matches: CalendarMatch[],
@@ -258,19 +275,19 @@ export function groupFeedByDay(
   const map = new Map<string, DayFeed>();
 
   for (const match of matches) {
-    const dt = toLocalDate(match.date);
+    const dt = toDisplayZone(match.date);
     if (!dt.isValid) continue;
     ensureDayFeed(map, dt.toISODate()!).matches.push(match);
   }
 
   for (const event of events) {
-    const start = toLocalDate(event.dateStart);
+    const start = toDisplayZone(event.dateStart);
     if (!start.isValid) continue;
     // The start day always carries the event…
     ensureDayFeed(map, start.toISODate()!).events.push(event);
     // …and every later day it spans (inclusive), for a valid multi-day end.
     if (event.dateEnd) {
-      const end = toLocalDate(event.dateEnd);
+      const end = toDisplayZone(event.dateEnd);
       if (end.isValid) {
         let cursor = start.startOf("day").plus({ days: 1 });
         const last = end.startOf("day");
@@ -297,7 +314,7 @@ export const EMPTY_DAY_FEED: DayFeed = { matches: [], events: [] };
  * Always starts on Monday and ends on Sunday, producing 35 or 42 cells.
  */
 export function getDaysInMonth(year: number, month: number): string[] {
-  const firstOfMonth = DateTime.local(year, month, 1);
+  const firstOfMonth = clubMonthStart(year, month);
   // ISO weekday: 1=Monday, 7=Sunday
   const startOffset = firstOfMonth.weekday - 1;
   const gridStart = firstOfMonth.minus({ days: startOffset });
@@ -314,7 +331,7 @@ export function getDaysInMonth(year: number, month: number): string[] {
 
 /** Returns 7 YYYY-MM-DD strings (Mon-Sun) for the week containing `dateStr` */
 export function getDaysInWeek(dateStr: string): string[] {
-  const dt = DateTime.fromISO(dateStr);
+  const dt = toDisplayZone(dateStr);
   const monday = dt.startOf("week"); // Luxon weeks start on Monday by default
   const days: string[] = [];
   for (let i = 0; i < 7; i++) {
@@ -373,20 +390,22 @@ export function calendarMatchToScheduleMatch(
   };
 }
 
+// The date labels below are route chrome, not site vocabulary — a week-range
+// label is not a shape any other route renders — so they stay local (#2430
+// rule 2). What they may not do is invent their own zone or locale handling:
+// each parses through the shared `toDisplayZone` and formats with Luxon's
+// `toFormat`, never `toLocale*`, which would resolve month and weekday names
+// from whatever ICU data the runtime happens to ship.
+
 /**
  * Day-detail / agenda day heading — `"Zaterdag 12 september"` (weekday
  * capitalised, club locale). Used by the grid's selected-day detail and the
  * agenda's per-day groups so both read identically.
  */
 export function formatDayDetailHeading(day: string): string {
-  const dt = DateTime.fromISO(day, { zone: TIMEZONE });
+  const dt = toDisplayZone(day);
   if (!dt.isValid) return day;
-  return capitalize(
-    dt.toLocaleString(
-      { weekday: "long", day: "numeric", month: "long" },
-      { locale: "nl-BE" },
-    ),
-  );
+  return capitalize(dt.toFormat("cccc d MMMM"));
 }
 
 /**
@@ -418,11 +437,7 @@ export function formatItemCount(
  * sync.
  */
 export function formatMonthNavLabel(year: number, month: number): string {
-  const monthName = DateTime.local(year, month, 1).toLocaleString(
-    { month: "long" },
-    { locale: "nl-BE" },
-  );
-  return `${capitalize(monthName)} '${String(year).slice(-2)}`;
+  return `${capitalize(clubMonthStart(year, month).toFormat("MMMM"))} '${String(year).slice(-2)}`;
 }
 
 /**
@@ -431,12 +446,12 @@ export function formatMonthNavLabel(year: number, month: number): string {
  */
 export function formatWeekRangeLabel(weekStart: string): string {
   const days = getDaysInWeek(weekStart);
-  const first = DateTime.fromISO(days[0]!);
-  const last = DateTime.fromISO(days[6]!);
+  const first = toDisplayZone(days[0]!);
+  const last = toDisplayZone(days[6]!);
   const sameMonth = first.month === last.month && first.year === last.year;
   return sameMonth
-    ? `${first.day} - ${last.day} ${first.toLocaleString({ month: "long", year: "numeric" }, { locale: "nl-BE" })}`
-    : `${first.day} ${first.toLocaleString({ month: "long" }, { locale: "nl-BE" })} - ${last.day} ${last.toLocaleString({ month: "long", year: "numeric" }, { locale: "nl-BE" })}`;
+    ? `${first.day} - ${last.day} ${first.toFormat("MMMM yyyy")}`
+    : `${first.day} ${first.toFormat("MMMM")} - ${last.day} ${last.toFormat("MMMM yyyy")}`;
 }
 
 /**
@@ -445,7 +460,7 @@ export function formatWeekRangeLabel(weekStart: string): string {
  * spurious midnight time.
  */
 export function formatEventTime(iso: string): string | null {
-  const dt = DateTime.fromISO(iso, { zone: TIMEZONE });
+  const dt = toDisplayZone(iso);
   if (!dt.isValid) return null;
   const time = dt.toFormat("HH:mm");
   return time === "00:00" ? null : time;
@@ -476,7 +491,7 @@ export function buildMonthAgenda(
   month: number,
 ): AgendaDayGroup[] {
   const byDay = groupFeedByDay(matches, events);
-  const first = DateTime.local(year, month, 1);
+  const first = clubMonthStart(year, month);
   const daysInMonth = first.daysInMonth!;
 
   const groups: AgendaDayGroup[] = [];

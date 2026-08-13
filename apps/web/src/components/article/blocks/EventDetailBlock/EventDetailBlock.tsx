@@ -5,14 +5,18 @@ import { MonoLabel } from "@/components/design-system/MonoLabel";
 import { getButtonClasses } from "@/components/design-system/Button";
 import {
   DEFAULT_TICKET_LABEL,
-  formatTimeRange,
   resolveEventRange,
   type EventFactValue,
   type ResolvedEvent,
   type ResolvedEventRange,
   type ResolvedSession,
 } from "../EventFact/types";
-import { formatWidgetDate } from "@/lib/utils/dates";
+import { formatTimeRange } from "../EventFact/format-time-range";
+import {
+  CLUB_TIMEZONE,
+  formatWidgetDate,
+  toDisplayZone,
+} from "@/lib/utils/dates";
 import { cn } from "@/lib/utils/cn";
 
 export interface EventDetailBlockProps {
@@ -67,7 +71,7 @@ export function deriveIsPast(
   // event flips to "past" up to ~2h early around the UTC midnight
   // boundary (Brussels is UTC+1/+2). The reference dates are timezone-less
   // calendar dates, so the only zone that matters is the club's.
-  const today = DateTime.fromJSDate(now).setZone("Europe/Brussels").toISODate();
+  const today = toDisplayZone(now).toISODate();
   if (!today) return false;
   const range = resolveEventRange(value.date, value.endDate, value.sessions);
   const reference =
@@ -163,7 +167,7 @@ function buildGoogleCalendarUrl(
     range.kind === "single" ? range.date.dateIso : range.start.dateIso;
   const endIso =
     range.kind === "single" ? range.date.dateIso : range.end.dateIso;
-  const zone = "Europe/Brussels";
+  const zone = CLUB_TIMEZONE;
 
   // Per-day sessions carry their own hours (the panel shows "Zie schema"),
   // so the top-level start/end don't describe the whole span — model the
