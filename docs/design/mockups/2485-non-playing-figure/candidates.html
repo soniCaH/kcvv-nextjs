@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2485 — een figuur voor wie het shirt niet draagt</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --paper-edge: #d9d2bd;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --filter-photo-newsprint: sepia(0.06) saturate(0.94) hue-rotate(-4deg)
+          contrast(1.02) brightness(1.01);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        line-height: 1.5;
+      }
+      /* Mirrors <PageContainer> exactly: max-w 1040 + px-4 md:px-8 → 976px
+         content box, the width that makes the run 6 columns at 140px minmax. */
+      .wrap {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 40px 16px 120px;
+      }
+      @media (min-width: 768px) {
+        .wrap {
+          padding: 40px 32px 120px;
+        }
+      }
+
+      h1 {
+        font-family: var(--font-big);
+        font-size: clamp(30px, 5vw, 46px);
+        font-weight: 900;
+        line-height: 1;
+        margin: 0 0 8px;
+      }
+      h2 {
+        font-family: var(--font-big);
+        font-size: 26px;
+        font-weight: 900;
+        line-height: 1.05;
+        margin: 0 0 4px;
+      }
+      h3 {
+        font-family: var(--font-display);
+        font-size: 19px;
+        font-weight: 600;
+        margin: 28px 0 6px;
+      }
+      p {
+        margin: 0 0 12px;
+        max-width: 680px;
+      }
+      .lede {
+        font-size: 18px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 0 0 6px;
+      }
+      hr {
+        border: 0;
+        border-top: 2px solid var(--ink);
+        margin: 48px 0 28px;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+        background: var(--cream-soft);
+        padding: 1px 4px;
+      }
+      table.facts {
+        border-collapse: collapse;
+        width: 100%;
+        max-width: 680px;
+        margin: 0 0 20px;
+        font-size: 14px;
+      }
+      table.facts th,
+      table.facts td {
+        border-bottom: 1px solid var(--paper-edge);
+        text-align: left;
+        padding: 7px 10px 7px 0;
+        vertical-align: top;
+      }
+      table.facts th {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        font-weight: 500;
+      }
+      td.num {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ── card vocabulary, post-#2477 ──────────────────────────────── */
+      .grid-person {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 16px;
+      }
+      .taped {
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        height: 100%;
+        padding: 8px 8px 12px;
+      }
+      .well {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--paper-edge);
+        background: var(--cream-soft);
+        aspect-ratio: 3 / 4;
+      }
+      .well img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: var(--filter-photo-newsprint);
+      }
+      .name {
+        font-family: var(--font-display);
+        color: var(--ink);
+        line-height: 1.05;
+        margin: 8px 0 0;
+        font-size: 16px;
+      }
+      .name b {
+        font-weight: 600;
+      }
+      .name em {
+        font-weight: 400;
+        font-style: italic;
+      }
+      .role {
+        color: var(--ink-muted);
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 4px 0 0;
+      }
+      .grouprule {
+        color: var(--ink-muted);
+        border-bottom: 1px solid var(--paper-edge);
+        padding-bottom: 6px;
+        margin: 0 0 12px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      /* initials plate — the artefact <StaffHero> already ships today */
+      .plate {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-big);
+        font-weight: 900;
+        font-size: 46px;
+        letter-spacing: -0.02em;
+      }
+      .plate--loud {
+        background: var(--jersey-deep);
+        color: var(--cream);
+      }
+      .plate--quiet {
+        background: var(--cream-soft);
+        color: var(--jersey-deep);
+      }
+
+      .candidate {
+        margin: 0 0 44px;
+      }
+      .runs {
+        display: grid;
+        gap: 28px;
+        margin-top: 14px;
+      }
+      @media (min-width: 900px) {
+        .runs {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .run-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 0 0 8px;
+      }
+      .verdict {
+        border-left: 3px solid var(--ink);
+        padding: 2px 0 2px 12px;
+        margin: 10px 0 0;
+        max-width: 680px;
+        font-size: 15px;
+      }
+      .verdict b {
+        font-weight: 600;
+      }
+      .strip {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        margin: 12px 0 4px;
+      }
+      .strip .cell {
+        width: 132px;
+      }
+      .cellcap {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 6px 0 0;
+      }
+      .dvar {
+        margin: 0 0 34px;
+      }
+      .dvar-row {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .dvar-run {
+        flex: 1 1 520px;
+        min-width: 300px;
+      }
+      .swatch-well {
+        position: relative;
+        aspect-ratio: 3 / 4;
+        border: 1px solid var(--paper-edge);
+        background: var(--cream-soft);
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="kicker">#2485 · wayfinder prototype · kaart #2425</p>
+      <h1>Een figuur voor wie het shirt niet draagt.</h1>
+      <p class="verdict">
+        <b>Gekozen 2026-08-12: D7a</b> — richting D (getekende jas), variant D1
+        (revers + knooplijn), in omgekeerde inkt met de kop mee: inkt-onderdruk,
+        jersey-deep bovendruk. Sleutel is het documenttype — een
+        <code>staffMember</code> krijgt de jas, een speler het shirt. Zie
+        <i>Richting D gekozen — zeven jassen</i> verderop.
+      </p>
+      <p class="lede">
+        #2477 zet elke persoon in een directory op één 3:4-kaart en houdt de
+        getekende figuur als artefact zonder foto. De enige figuur die de site
+        heeft, draagt een <i>speelshirt</i>. Wat komt er in de plaats — en
+        waarop kiest de kaart tussen de twee?
+      </p>
+
+      <hr />
+
+      <h2>Eerst: de meting klopt niet met het ticket.</h2>
+      <p>
+        Het ticket telde 4 pagina's. De staf-kaart rendert op
+        <b>21 pagina's</b> — 18 ploegpagina's plus drie bestuurspagina's. Alle
+        cijfers hieronder zijn geteld in de productie-HTML van
+        <code>kcvv-nextjs.vercel.app</code> op 2026-08-12.
+      </p>
+      <table class="facts">
+        <tr>
+          <th>Wat</th>
+          <th>Ticket</th>
+          <th>Gemeten</th>
+        </tr>
+        <tr>
+          <td>Staf-kaarten in totaal</td>
+          <td class="num">28</td>
+          <td class="num">98 (op 21 pagina's)</td>
+        </tr>
+        <tr>
+          <td>Daarvan zonder foto</td>
+          <td class="num">14 (50%)</td>
+          <td class="num">70 (71%)</td>
+        </tr>
+        <tr>
+          <td>Pagina's waar élke staf-kaart fotoloos is</td>
+          <td class="num">—</td>
+          <td class="num">10 van 21</td>
+        </tr>
+        <tr>
+          <td>Spelerskaarten zonder foto (het shirt-figuur)</td>
+          <td class="num">—</td>
+          <td class="num">83 van 231</td>
+        </tr>
+      </table>
+      <p>
+        De tweede variant is dus geen randgeval: hij zou <b>70 keer</b>
+        renderen tegenover 83 keer voor het shirt-figuur. Bijna de helft van
+        alle fotoloze personen op de site.
+      </p>
+
+      <h3>Maar de sleutel bestaat niet.</h3>
+      <p>
+        Waarop zou de kaart moeten kiezen? Het ticket stelt voor: een eigenschap
+        van de <i>persoon</i>, niet van de route. Dit is wat die eigenschap
+        vandaag zegt, geteld over de 70 fotoloze staf-kaarten:
+      </p>
+      <table class="facts">
+        <tr>
+          <th>Label op de kaart</th>
+          <th>Aantal</th>
+          <th>Zegt het iets over het shirt?</th>
+        </tr>
+        <tr>
+          <td><code>Staf</code> — de letterlijke fallback</td>
+          <td class="num">42</td>
+          <td>Nee. Geen <code>functionTitle</code>, geen <code>role</code>.</td>
+        </tr>
+        <tr>
+          <td>Jeugdcoördinator</td>
+          <td class="num">19</td>
+          <td>Voetbalkant. En het is één mens, op 19 pagina's.</td>
+        </tr>
+        <tr>
+          <td>Video-analyst</td>
+          <td class="num">4</td>
+          <td>Voetbalkant.</td>
+        </tr>
+        <tr>
+          <td>Jeugdvoorzitter · Jeugdbestuur</td>
+          <td class="num">3</td>
+          <td>Ja — bestuur.</td>
+        </tr>
+        <tr>
+          <td>T1 - A-team · Afgevaardigde B-ploeg</td>
+          <td class="num">2</td>
+          <td>Voetbalkant.</td>
+        </tr>
+      </table>
+      <p>
+        <b>60% van de doelgroep draagt het label <code>Staf</code></b> — dat wil
+        zeggen: over die 42 kaarten weet de site niets. En de persoon die het
+        ticket noemt, de Voorzitter, <b>heeft een foto</b> en komt op dit pad
+        nooit terecht. Van de 70 fotoloze kaarten zijn er
+        <b>drie</b> aantoonbaar bestuur.
+      </p>
+
+      <h3>Twee feiten die een sleutel op documenttype ook uitsluiten.</h3>
+      <p>
+        <b>Acht mensen renderen als spelerskaart én als staf-kaart</b> — Lucas
+        Goovaerts (speler A-ploeg, staf U14), Remco Talboom en Ruben Lebrun
+        (spelers B-ploeg, staf U9), Dean Weins, Lars Cristiaens, Niels De Wael,
+        Stan Cornelissen, Sven Cristiaens. Dezelfde mens, twee kaarten. Een
+        sleutel op documenttype geeft hen op de ene pagina een shirt en op de
+        andere een jas — precies de divergentie die #2462 regel 1 sloot.
+      </p>
+      <p>
+        <b>Negen mensen staan op meer dan één pagina</b>, vier daarvan zowel op
+        een bestuurspagina als op een ploegpagina (Ilona Trouwkens, Stefan De
+        Wael, Mike Meuwis, Tim Ooghe). Een sleutel op route splitst ook hén in
+        tweeën.
+      </p>
+
+      <hr />
+
+      <h2>De kandidaten</h2>
+      <p>
+        Elke kandidaat staat in twee echte runs: <code>/club/bestuur</code>
+        (11 kaarten, 4 fotoloos — het gemengde geval) en
+        <code>/ploegen/kcvve-u17</code> (7 kaarten, 7 fotoloos — de muur). Echte
+        namen, echte foto's, echte labels. De kaart is #2477's 3:4-kaart op
+        #2477's raster, met de mono-caps regel erboven.
+      </p>
+
+      <div class="candidate">
+        <h3>A · Eén figuur voor iedereen — geen tweede variant</h3>
+        <p>
+          Het shirt-figuur bedient elke persoon. Kost niets, is precies wat
+          #2462 regel 1 letterlijk zegt (persoon →
+          <code>JerseyIllustration</code>), en de acht speler-én-staf mensen
+          blijven één figuur.
+        </p>
+        <div class="runs" data-cand="jersey"></div>
+      </div>
+
+      <div class="candidate">
+        <h3>
+          B · De initialenplaat — wat <code>&lt;StaffHero&gt;</code> vandaag al
+          doet
+        </h3>
+        <p>
+          Op <code>/staf/[slug]</code> krijgt een staflid zonder foto nu al géén
+          shirt-figuur maar een jersey-deep plaat met zijn initialen, in
+          dezelfde 3:4 <code>&lt;TapedFigure&gt;</code>. De docblock zegt het
+          met zoveel woorden: <i>"NOT the player-only jersey illustration"</i>.
+          De tweede variant bestaat dus al — hij is alleen niet getekend.
+          Voordeel dat geen enkele tekening heeft: <b>hij individualiseert</b>.
+        </p>
+        <div class="runs" data-cand="plate-loud"></div>
+      </div>
+
+      <div class="candidate">
+        <h3>B2 · Dezelfde plaat, stil — jersey-deep op cream-soft</h3>
+        <p>
+          De luide plaat is een held-formaat beslissing; zeven ervan naast
+          elkaar is een muur groen. Dit is dezelfde letters, omgekeerd — de
+          inkt-op-papier verhouding van de 64px-cirkel die #2477 net schrapte.
+        </p>
+        <div class="runs" data-cand="plate-quiet"></div>
+      </div>
+
+      <div class="candidate">
+        <h3>C · Kale romp — dezelfde hand, kit-tekens weg</h3>
+        <p>
+          Zelfde kop, zelfde romp, zelfde twee drukgangen; V-kraag en strepen
+          verdwijnen. Het verschil is een <i>afwezigheid</i>, dus het kan geen
+          verkeerd kledingstuk suggereren.
+        </p>
+        <div class="runs" data-cand="plain"></div>
+      </div>
+
+      <div class="candidate">
+        <h3>D · Jas — revers en knooplijn</h3>
+        <p>
+          Twee revers die naar beneden samenlopen plus een verticale knooplijn.
+          Leest op 140px, want het zijn drie zware lijnen en geen detail.
+        </p>
+        <div class="runs" data-cand="coat"></div>
+      </div>
+
+      <div class="candidate">
+        <h3>E · Sjaal — het tribune-object</h3>
+        <p>
+          Geen speelshirt maar wel clubkleuren: een sjaal over de schouders. Het
+          enige kledingstuk in dit rijtje dat <i>de club</i> zegt in plaats van
+          <i>een functie</i>.
+        </p>
+        <div class="runs" data-cand="scarf"></div>
+      </div>
+
+      <hr />
+
+      <h2>Richting D gekozen — zeven jassen</h2>
+      <p>
+        Zelfde kop, zelfde romp, zelfde schouderstukken, zelfde twee drukgangen.
+        Alleen de lijnen op de romp verschillen. Elke variant staat groot en
+        daarnaast in een echte rij: twee foto's van bestuursleden met twee
+        getekende figuren ertussen, want dáár moet de jas standhouden.
+      </p>
+      <div id="dvars"></div>
+
+      <hr />
+
+      <h2>De vijf artefacten naast elkaar, op kaartformaat</h2>
+      <p>
+        Zelfde persoon, zelfde well, geen omringende run — puur de tekening.
+      </p>
+      <div class="strip" id="strip"></div>
+
+      <hr />
+
+      <h2>Wat er nog uit de meting viel</h2>
+      <table class="facts">
+        <tr>
+          <th>Vondst</th>
+          <th>Wat</th>
+        </tr>
+        <tr>
+          <td>Staf-foto's zijn 200px breed</td>
+          <td>
+            <code>team.repository.ts:35</code> projecteert
+            <code>?w=200&amp;fit=max</code> — gemaakt voor de 64px-cirkel.
+            #2477's 3:4-kaart is ~190px CSS, dus ~380px op een 2×-scherm. De
+            projectie moet mee omhoog, anders wordt elke stáffoto zacht terwijl
+            de spelersfoto's (300–400px) scherp blijven.
+          </td>
+        </tr>
+        <tr>
+          <td><code>T1 - A-team</code> staat er letterlijk</td>
+          <td>
+            <code>FUNCTION_CODE_LABELS</code> mapt <code>T1</code> →
+            Hoofdtrainer, maar PSD stuurt <code>"T1 - A-team"</code>, dus de map
+            vuurt nooit en de bezoeker leest de code. Vier van de acht
+            trainerslabels in productie zijn zo'n code.
+          </td>
+        </tr>
+        <tr>
+          <td>Eén mens is 27% van de doelgroep</td>
+          <td>
+            Kevin Schutijser (Jeugdcoördinator, geen foto) rendert op 19 van de
+            21 pagina's — 19 van de 70 fotoloze kaarten.
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <script>
+      // ── real production data, scraped 2026-08-12 ────────────────────
+      const RUNS = {
+        bestuur: {
+          label: "/club/bestuur — 11 kaarten, 4 fotoloos",
+          rule: "Bestuur",
+          people: [
+            {
+              f: "Rudy",
+              l: "Bautmans",
+              r: "Voorzitter",
+              p: "01b488e4d5588c853c535a56b97e94c39d3614b7-1250x1250.png",
+            },
+            { f: "Ilona", l: "Trouwkens", r: "Staf", p: null },
+            {
+              f: "Stefan",
+              l: "Robberechts",
+              r: "Afgevaardigde A-ploeg",
+              p: "ab6d98ddaafc68acf76b6a25350152921285c2de-1250x1250.png",
+            },
+            {
+              f: "Erik",
+              l: "Talboom",
+              r: "Staf",
+              p: "1544e326634215c9f20adcc322060945ddf683d2-807x1000.png",
+            },
+            {
+              f: "Werner",
+              l: "Sanfrinnon",
+              r: "Staf",
+              p: "272f36b6192fadc0a968f77bce19f4b662104d14-807x1000.png",
+            },
+            {
+              f: "Hans",
+              l: "Junius",
+              r: "Staf",
+              p: "43c41a10c3fd84a107e4a7e9d6b10d5594d2ebcb-807x1000.png",
+            },
+            { f: "Stefan", l: "De Wael", r: "Staf", p: null },
+            { f: "Christian", l: "Nobels", r: "Staf", p: null },
+            { f: "Luc", l: "Deheyder", r: "Staf", p: null },
+            {
+              f: "Paul",
+              l: "Vanhamme",
+              r: "Staf",
+              p: "6d3d8b01c243a74bf8071269c8c2c75702d2a646-807x1000.png",
+            },
+            {
+              f: "Kevin",
+              l: "Van Ransbeeck",
+              r: "Controller",
+              p: "df1df677308ff4311bbbc781fb9c27b2d2c505a1-807x1000.png",
+            },
+          ],
+        },
+        u17: {
+          label: "/ploegen/kcvve-u17 — 7 kaarten, 7 fotoloos",
+          rule: "Staf",
+          people: [
+            { f: "David", l: "De Keyzer", r: "Staf", p: null },
+            { f: "David", l: "Dooms", r: "Staf", p: null },
+            { f: "Nick", l: "Lauwers", r: "Staf", p: null },
+            { f: "Jeroen", l: "Peeters", r: "Staf", p: null },
+            { f: "Kevin", l: "Schutijser", r: "Jeugdcoördinator", p: null },
+            { f: "Paul", l: "Van Den Bosch", r: "Staf", p: null },
+            { f: "Maarten", l: "Weber", r: "Staf", p: null },
+          ],
+        },
+      };
+      const CDN = "https://cdn.sanity.io/images/vhb33jaz/production/";
+      const IMG = "?w=400&q=80&fm=webp&fit=max";
+
+      const initials = (f, l) =>
+        (f.trim()[0] + l.trim()[0]).toLocaleUpperCase("nl-BE");
+
+      // ── the figure: two passes, verbatim geometry from _jersey-paths.ts.
+      // Only the overprint's garment lines change per kind — the head, the
+      // torso, the shoulder bumps and both passes stay byte-identical.
+      const GARMENT = {
+        jersey: `
+          <path d="M 92 132 L 110 156 L 128 132"/>
+          <path d="M 70 168 L 70 300" stroke-width="2"/>
+          <path d="M 88 158 L 88 300" stroke-width="2"/>
+          <path d="M 132 158 L 132 300" stroke-width="2"/>
+          <path d="M 150 168 L 150 300" stroke-width="2"/>`,
+        plain: ``,
+        // D1 — revers die samenlopen + knooplijn
+        coat: `
+          <path d="M 84 137 L 110 198 L 136 137"/>
+          <path d="M 110 198 L 110 300" stroke-width="2"/>
+          <path d="M 96 165 L 78 176" stroke-width="2"/>
+          <path d="M 124 165 L 142 176" stroke-width="2"/>`,
+        // D2 — trainingsjas: kraagband + rits van hals tot zoom
+        zip: `
+          <path d="M 86 141 L 110 152 L 134 141"/>
+          <path d="M 110 152 L 110 300"/>`,
+        // D3 — colbert met notch-revers
+        notch: `
+          <path d="M 88 134 L 96 170 L 110 200 L 124 170 L 132 134"/>
+          <path d="M 96 170 L 76 164" stroke-width="2"/>
+          <path d="M 124 170 L 144 164" stroke-width="2"/>
+          <path d="M 110 200 L 110 300" stroke-width="2"/>`,
+        // D4 — sjaalkraag: gebogen revers, geen hoeken
+        shawl: `
+          <path d="M 82 136 Q 96 180 110 196 Q 124 180 138 136"/>
+          <path d="M 110 196 L 110 300" stroke-width="2"/>`,
+        // D5 — bodywarmer: armsgaten + middennaad
+        gilet: `
+          <path d="M 74 163 L 68 300" stroke-width="2"/>
+          <path d="M 146 163 L 152 300" stroke-width="2"/>
+          <path d="M 92 133 L 110 158 L 128 133"/>
+          <path d="M 110 158 L 110 300" stroke-width="2"/>`,
+        // D6 — hemdkraag met knopen
+        collar: `
+          <path d="M 92 132 L 110 158 L 128 132"/>
+          <path d="M 92 132 L 82 150 L 100 146" stroke-width="2"/>
+          <path d="M 128 132 L 138 150 L 120 146" stroke-width="2"/>
+          <path d="M 110 176 L 110 182" stroke-width="5" stroke-linecap="butt"/>
+          <path d="M 110 208 L 110 214" stroke-width="5" stroke-linecap="butt"/>
+          <path d="M 110 240 L 110 246" stroke-width="5" stroke-linecap="butt"/>`,
+        scarf: `
+          <path d="M 84 154 Q 110 132 136 154" stroke-width="12" stroke-linecap="butt"/>
+          <path d="M 88 150 L 84 238" stroke-width="12" stroke-linecap="butt"/>
+          <path d="M 132 150 L 136 238" stroke-width="12" stroke-linecap="butt"/>`,
+      };
+
+      // invert: false | "all" (kop mee) | "garment" (alleen het kledingstuk)
+      const figure = (kind, invert) => {
+        const dark = invert === "all" || invert === "garment";
+        const headFill = invert === "all" ? "var(--ink)" : "var(--jersey-deep)";
+        const bodyFill = dark ? "var(--ink)" : "var(--jersey-deep)";
+        const headLine = invert === "all" ? "var(--jersey-deep)" : "var(--ink)";
+        const bodyLine = dark ? "var(--jersey-deep)" : "var(--ink)";
+        return `
+        <div style="position:absolute;inset:0;background:var(--cream-soft)">
+          <div style="position:absolute;inset:0;opacity:.95;mix-blend-mode:multiply">
+            <svg viewBox="0 0 220 300" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:100%">
+              <ellipse cx="110" cy="78" rx="44" ry="48" fill="${headFill}"/>
+              <g fill="${bodyFill}">
+                <path d="M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300 Z"/>
+                <path d="M 52 168 L 70 162 L 72 196 L 54 200 Z"/>
+                <path d="M 168 168 L 150 162 L 148 196 L 166 200 Z"/>
+              </g>
+            </svg>
+          </div>
+          <div style="position:absolute;inset:0;transform:translate(2px,1px)">
+            <svg viewBox="0 0 220 300" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:100%">
+              <g fill="none" stroke-width="3" stroke-linejoin="miter" stroke-linecap="square">
+                <ellipse cx="110" cy="78" rx="44" ry="48" stroke="${headLine}"/>
+                <g stroke="${bodyLine}">
+                  <path d="M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300"/>
+                  ${GARMENT[kind]}
+                </g>
+              </g>
+            </svg>
+          </div>
+        </div>`;
+      };
+
+      // <JerseyShirt> zoals hij vandaag rendert — het ploeg-artefact van #2462.
+      // Zelfde palet als D7, dus hier staat hij ter controle van de botsing.
+      const teamShirt = () => `
+        <div style="position:absolute;inset:0;background:var(--cream-soft)">
+          <div style="position:absolute;inset:0;opacity:.95;mix-blend-mode:multiply">
+            <svg viewBox="0 120 220 180" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:100%">
+              <path fill="var(--ink)" d="M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300 Z"/>
+            </svg>
+          </div>
+          <div style="position:absolute;inset:0;transform:translate(2px,1px)">
+            <svg viewBox="0 120 220 180" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:100%">
+              <g fill="none" stroke="var(--jersey-deep)" stroke-width="3" stroke-linejoin="miter" stroke-linecap="square">
+                <path d="M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300"/>
+                <path d="M 92 132 L 110 156 L 128 132"/>
+                <path d="M 70 168 L 70 300" stroke-width="2"/>
+                <path d="M 88 158 L 88 300" stroke-width="2"/>
+                <path d="M 132 158 L 132 300" stroke-width="2"/>
+                <path d="M 150 168 L 150 300" stroke-width="2"/>
+              </g>
+            </svg>
+          </div>
+          <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-big);font-weight:900;font-size:52px;color:var(--cream);text-shadow:2px 2px 0 var(--ink),-1px -1px 0 var(--ink),1px -1px 0 var(--ink),-1px 1px 0 var(--ink)">E</span>
+        </div>`;
+
+      const plate = (p, tone) =>
+        `<span class="plate plate--${tone}">${initials(p.f, p.l)}</span>`;
+
+      const artefact = (p, cand, invert) =>
+        cand === "plate-loud"
+          ? plate(p, "loud")
+          : cand === "plate-quiet"
+            ? plate(p, "quiet")
+            : figure(cand, invert);
+
+      const card = (p, cand, invert) => `
+        <div class="taped">
+          <div class="well">
+            ${p.p ? `<img src="${CDN}${p.p}${IMG}" alt="${p.f} ${p.l}">` : artefact(p, cand, invert)}
+          </div>
+          <p class="name"><b>${p.f}</b> <em>${p.l}</em></p>
+          <p class="role">${p.r}</p>
+        </div>`;
+
+      const runBlock = (key, cand) => {
+        const run = RUNS[key];
+        return `
+          <div>
+            <p class="run-label">${run.label}</p>
+            <p class="grouprule">${run.rule}</p>
+            <div class="grid-person">${run.people.map((p) => card(p, cand)).join("")}</div>
+          </div>`;
+      };
+
+      document.querySelectorAll(".runs").forEach((el) => {
+        const cand = el.dataset.cand;
+        el.innerHTML = runBlock("bestuur", cand) + runBlock("u17", cand);
+      });
+
+      // ── richting D: de jasvarianten ────────────────────────────────
+      const DVARS = [
+        [
+          "coat",
+          false,
+          "D1 · revers + knooplijn",
+          "Twee revers die samenlopen tot op borsthoogte, daaronder de knooplijn.",
+        ],
+        [
+          "zip",
+          false,
+          "D2 · trainingsjas met rits",
+          "Kraagband plus één rits van hals tot zoom. Twee lijnen, meer niet — het kledingstuk dat een jeugdtrainer effectief draagt.",
+        ],
+        [
+          "notch",
+          false,
+          "D3 · colbert met notch-revers",
+          "De klassieke kerf in de revers. Meeste lijnen van het rijtje.",
+        ],
+        [
+          "shawl",
+          false,
+          "D4 · sjaalkraag",
+          "Gebogen revers in plaats van hoekige — de enige ronde vorm in een figuur dat verder alleen rechte hoeken heeft.",
+        ],
+        [
+          "gilet",
+          false,
+          "D5 · bodywarmer",
+          "Armsgaten als naden opzij, V-hals, middennaad. Leest als een vest over iets anders.",
+        ],
+        [
+          "collar",
+          false,
+          "D6 · hemdkraag met knopen",
+          "Kraagpunten en drie knopen. Het detail is klein — de test is of het op 140px nog iets zegt.",
+        ],
+        [
+          "coat",
+          "all",
+          "D7a · omgekeerde inkt, kop mee",
+          "Dezelfde jas met JerseyShirt's palet: inkt-onderdruk, jersey-deep bovendruk. Alles keert om, ook de kop.",
+        ],
+        [
+          "coat",
+          "garment",
+          "D7b · omgekeerde inkt, kop groen",
+          "Alleen het kledingstuk keert om. De kop blijft jersey-deep met inktlijn, dus de persoon blijft een persoon en de jas wordt donker.",
+        ],
+        [
+          "zip",
+          "garment",
+          "D7c · rits, kop groen",
+          "Dezelfde omkering op D2's rits in plaats van D1's revers — de minste lijnen op de donkerste romp.",
+        ],
+      ];
+      const MIX = [
+        RUNS.bestuur.people[3],
+        RUNS.bestuur.people[7],
+        RUNS.bestuur.people[5],
+        RUNS.bestuur.people[8],
+      ];
+      document.getElementById("dvars").innerHTML = DVARS.map(
+        ([kind, invert, title, note]) => `
+          <div class="dvar">
+            <h3>${title}</h3>
+            <p>${note}</p>
+            <div class="dvar-row">
+              <div class="cell">
+                <div class="swatch-well">${figure(kind, invert)}</div>
+                <p class="cellcap">groot</p>
+              </div>
+              <div class="dvar-run">
+                <div class="grid-person">${MIX.map((p) => card(p, kind, invert)).join("")}</div>
+              </div>
+            </div>
+          </div>`,
+      ).join("");
+
+      // side-by-side strip
+      const STRIP = [
+        ["jersey", "A · shirt"],
+        ["plate-loud", "B · plaat luid"],
+        ["plate-quiet", "B2 · plaat stil"],
+        ["plain", "C · kale romp"],
+        ["coat", "D · jas"],
+        ["scarf", "E · sjaal"],
+      ];
+      const who = { f: "Christian", l: "Nobels" };
+      document.getElementById("strip").innerHTML = STRIP.map(
+        ([kind, cap]) => `
+          <div class="cell">
+            <div class="swatch-well">${artefact(who, kind)}</div>
+            <p class="cellcap">${cap}</p>
+          </div>`,
+      ).join("");
+    </script>
+  </body>
+</html>

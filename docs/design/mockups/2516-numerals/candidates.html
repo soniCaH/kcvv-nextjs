@@ -1,0 +1,1724 @@
+<!doctype html>
+<html lang="nl" data-q1="ships" data-q2="asis" data-q3="ships" data-q5="ships">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2516 — how a number renders · candidates</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ─────────────────────────────────────────────────────────────
+         Real tokens, lifted from apps/web/src/app/globals.css @theme.
+         Do not "improve" them — the point of this page is that what
+         you see is what the site serves.
+         ───────────────────────────────────────────────────────────── */
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey: #4acf52;
+        --jersey-deep: #007c46;
+        --jersey-deep-dark: #133d28;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+
+        --display-big: "freight-big-pro", georgia, "Times New Roman", serif;
+        --display: "freight-display-pro", georgia, "Times New Roman", serif;
+        --body: "freight-sans-pro", -apple-system, system-ui, Arial, sans-serif;
+
+        /* Q5 rebinds this. Default = the stack that actually ships. */
+        --mono:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --shadow-paper-md: 6px 6px 0 0 var(--ink);
+        --text-label: 0.6875rem;
+      }
+      html[data-q5="plex"] {
+        --mono: "IBM Plex Mono", ui-monospace, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--body);
+        font-size: 16px;
+        line-height: 1.6;
+        padding-bottom: 200px;
+      }
+      .wrap {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .wide {
+        max-width: 1280px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--display-big);
+        font-weight: 900;
+        line-height: 1;
+        margin: 0 0 0.4em;
+      }
+      h1 {
+        font-size: 56px;
+      }
+      h2 {
+        font-size: 34px;
+        margin-top: 0;
+      }
+      h3 {
+        font-family: var(--display);
+        font-weight: 700;
+        font-size: 22px;
+        line-height: 1.2;
+      }
+      p {
+        margin: 0 0 1em;
+      }
+      code {
+        font-family: var(--mono);
+        font-size: 0.86em;
+        background: var(--cream-soft);
+        padding: 1px 5px;
+        border: 1px solid var(--paper-edge);
+      }
+      .kicker {
+        font-family: var(--mono);
+        font-size: var(--text-label);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-bottom: 10px;
+        display: block;
+      }
+      .lede {
+        font-size: 18px;
+        line-height: 1.55;
+        max-width: 680px;
+      }
+      .note {
+        font-size: 14px;
+        color: var(--ink-muted);
+        max-width: 680px;
+      }
+
+      section.band {
+        border-top: 2px solid var(--ink);
+        padding: 56px 0;
+      }
+      section.band.dark {
+        background: var(--jersey-deep-dark);
+        color: var(--cream);
+      }
+      section.band.dark h2,
+      section.band.dark h3 {
+        color: var(--cream);
+      }
+      section.band.dark .note,
+      section.band.dark .kicker {
+        color: rgba(245, 241, 230, 0.7);
+      }
+
+      /* ── paper primitives (TapedCard / stub / chip) ───────────────── */
+      .paper {
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 28px;
+      }
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+      }
+
+      /* ── THE FIGURE CLASSES ───────────────────────────────────────
+         Every number in the reproductions below carries `.fig` plus a
+         role. The control bar rewrites family + figure style through
+         these, so what changes is exactly what the decision changes.
+         ───────────────────────────────────────────────────────────── */
+      .fig {
+        font-variant-numeric: normal;
+      }
+
+      /* --- Q1: which family --- */
+      html[data-q1="mono"] .fig.subject,
+      html[data-q1="mono"] .fig.tag {
+        font-family: var(--mono) !important;
+        font-weight: 600 !important;
+        font-style: normal !important;
+      }
+      html[data-q1="display"] .fig.subject,
+      html[data-q1="display"] .fig.tag {
+        font-family: var(--display-big) !important;
+        font-weight: 900 !important;
+      }
+      html[data-q1="split"] .fig.subject {
+        font-family: var(--display-big) !important;
+        font-weight: 900 !important;
+      }
+      html[data-q1="split"] .fig.tag {
+        font-family: var(--mono) !important;
+        font-weight: 600 !important;
+        font-style: normal !important;
+      }
+
+      /* --- Q3: which figure style --- */
+      html[data-q3="oldstyle"] .fig {
+        font-variant-numeric: normal !important;
+      }
+      html[data-q3="lining-data"] .fig.subject,
+      html[data-q3="lining-data"] .fig.tag {
+        font-variant-numeric: lining-nums !important;
+      }
+      html[data-q3="lining-data"] .fig.inline {
+        font-variant-numeric: normal !important;
+      }
+      html[data-q3="by-family"] .fig.subject,
+      html[data-q3="by-family"] .fig.tag {
+        font-variant-numeric: lining-nums !important;
+      }
+      html[data-q3="by-family"] .fig.inline,
+      html[data-q3="by-family"] .fig.on-body {
+        font-variant-numeric: normal !important;
+      }
+
+      /* --- role badges (hold ⌥ / Alt to reveal) --- */
+      .fig {
+        position: relative;
+      }
+      body.show-roles .fig::after {
+        content: attr(data-role);
+        position: absolute;
+        left: 50%;
+        top: 100%;
+        transform: translateX(-50%);
+        font-family: var(--mono);
+        font-size: 8px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        line-height: 1;
+        padding: 2px 3px;
+        white-space: nowrap;
+        background: var(--card-red);
+        color: #fff;
+        z-index: 5;
+        pointer-events: none;
+      }
+
+      /* ── shipped classes, reproduced verbatim ─────────────────────── */
+      .ship-agenda-score {
+        font-family: var(--display-big);
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+      .ship-agenda-day {
+        font-family: var(--display-big);
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 1;
+      }
+      .ship-hero-score {
+        font-family: var(--display-big);
+        font-size: 34px;
+        font-weight: 900;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+      .ship-minute {
+        font-family: var(--display-big);
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.025em;
+        font-variant-numeric: tabular-nums;
+      }
+      .ship-lineup-num {
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        font-variant-numeric: tabular-nums;
+      }
+      .ship-card-num {
+        font-family: var(--display-big);
+        font-size: 14px;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+      }
+      .ship-hero-num {
+        font-family: var(--display-big);
+        font-size: 76px;
+        font-weight: 900;
+        line-height: 1;
+        font-variant-numeric: lining-nums tabular-nums;
+        color: var(--jersey);
+      }
+      .ship-cal-time {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--ink-muted);
+      }
+      .ship-cal-score {
+        font-family: var(--display);
+        font-size: 15px;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+      }
+      .ship-strip-date {
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .ship-cell {
+        font-variant-numeric: tabular-nums;
+      }
+      .ship-points {
+        font-family: var(--display-big);
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+      }
+      .ship-stat {
+        font-family: var(--display-big);
+        font-size: 72px;
+        font-weight: 900;
+        line-height: 1;
+        font-variant-numeric: lining-nums tabular-nums;
+      }
+
+      /* ── agenda row (TeamAgendaRow) ───────────────────────────────── */
+      .agenda {
+        display: flex;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+      .agenda .stub {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+        border-right: 2px solid var(--ink);
+        background: color-mix(in srgb, var(--cream-soft) 30%, transparent);
+        min-width: 58px;
+      }
+      .agenda .stub .mo {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .agenda .body {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+      }
+      .agenda .side {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+      }
+      .agenda .side.away {
+        flex-direction: row-reverse;
+      }
+      .agenda .side span {
+        font-family: var(--display);
+        font-style: italic;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .agenda .side span.kcvv {
+        font-style: normal;
+        font-weight: 600;
+      }
+      .agenda .score {
+        flex: none;
+        padding: 0 8px;
+      }
+      .agenda img {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+        flex: none;
+      }
+      .agenda .comp {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        text-align: center;
+        padding-bottom: 6px;
+      }
+
+      /* ── standings ────────────────────────────────────────────────── */
+      table.standings {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      table.standings th {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        text-align: right;
+        padding: 8px;
+        font-weight: 500;
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      table.standings th.l,
+      table.standings td.l {
+        text-align: left;
+      }
+      table.standings td {
+        padding: 8px;
+        text-align: right;
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      table.standings td.team {
+        font-family: var(--display);
+        font-style: italic;
+      }
+      table.standings tr.kcvv {
+        background: color-mix(in srgb, var(--jersey-deep) 12%, var(--cream));
+        box-shadow: inset 3px 0 0 var(--jersey-deep);
+      }
+      table.standings tr.kcvv td.team {
+        font-style: normal;
+        font-weight: 600;
+      }
+
+      /* ── squad card ───────────────────────────────────────────────── */
+      .squad {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      .squad .card {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 8px;
+      }
+      .squad .shot {
+        position: relative;
+        aspect-ratio: 3 / 4;
+        background: repeating-linear-gradient(
+          135deg,
+          var(--cream-soft) 0 6px,
+          var(--cream-deep) 6px 12px
+        );
+        border: 1px solid var(--paper-edge);
+      }
+      .squad .chip {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 26px;
+        height: 26px;
+        display: grid;
+        place-items: center;
+        background: var(--jersey-deep);
+        color: var(--cream);
+        border: 1.5px solid var(--ink);
+      }
+      .squad .nm {
+        font-family: var(--display);
+        margin-top: 8px;
+        line-height: 1.05;
+        font-size: 15px;
+      }
+      .squad .nm em {
+        font-style: italic;
+        font-weight: 400;
+      }
+      .squad .nm b {
+        font-weight: 600;
+      }
+
+      /* ── lineup ───────────────────────────────────────────────────── */
+      .lineup {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 4px 0;
+      }
+      .lineup .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 14px;
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      .lineup .row:last-child {
+        border-bottom: 0;
+      }
+      .lineup .num {
+        width: 22px;
+        text-align: right;
+        flex: none;
+        color: var(--ink-muted);
+      }
+      .lineup .who {
+        font-family: var(--display);
+        font-size: 15px;
+      }
+
+      /* ── match hero ───────────────────────────────────────────────── */
+      .hero {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-md);
+        padding: 26px 22px;
+        text-align: center;
+      }
+      .hero .teams {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+      }
+      .hero img {
+        width: 54px;
+        height: 54px;
+        object-fit: contain;
+      }
+      .hero .tn {
+        font-family: var(--display);
+        font-size: 17px;
+        font-style: italic;
+      }
+
+      /* ── calendar agenda ──────────────────────────────────────────── */
+      .cal .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 12px;
+        border-bottom: 1px solid var(--paper-edge);
+        font-size: 13px;
+      }
+      .cal .daybox {
+        width: 34px;
+        flex: none;
+        text-align: center;
+      }
+      .cal .t {
+        flex: 1;
+        font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .cal .cmp {
+        font-family: var(--mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        flex: none;
+      }
+
+      /* ── specimen blocks ──────────────────────────────────────────── */
+      .spec {
+        background: var(--cream-soft);
+        border: 1px solid var(--paper-edge);
+        padding: 18px 20px;
+        margin-bottom: 14px;
+      }
+      .spec .lab {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-bottom: 8px;
+      }
+      .spec .big {
+        font-size: 44px;
+        line-height: 1.15;
+        white-space: nowrap;
+        overflow-x: auto;
+      }
+      .rule {
+        border-left: 3px solid var(--jersey-deep);
+        padding: 4px 0 4px 16px;
+        margin: 0 0 18px;
+        max-width: 680px;
+      }
+      .verdict {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid currentColor;
+        padding: 3px 7px;
+        display: inline-block;
+      }
+      .v-rec {
+        color: var(--jersey-deep);
+      }
+      .v-no {
+        color: var(--card-red);
+      }
+
+      /* ── control bar ──────────────────────────────────────────────── */
+      #bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--ink);
+        color: var(--cream);
+        border-top: 2px solid var(--jersey);
+        padding: 10px 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 22px;
+        z-index: 100;
+        font-family: var(--mono);
+        font-size: 11px;
+        align-items: center;
+      }
+      #bar .grp {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      #bar .gl {
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.55;
+        margin-right: 2px;
+      }
+      #bar button {
+        font: inherit;
+        background: transparent;
+        color: var(--cream);
+        border: 1px solid rgba(245, 241, 230, 0.35);
+        padding: 4px 9px;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      #bar button[aria-pressed="true"] {
+        background: var(--jersey-deep);
+        border-color: var(--jersey);
+        font-weight: 700;
+      }
+      #bar .hint {
+        margin-left: auto;
+        opacity: 0.5;
+        text-transform: none;
+        letter-spacing: 0;
+      }
+      @media (max-width: 900px) {
+        #bar .hint {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section class="band" style="border-top: 0; padding-top: 44px">
+      <div class="wrap">
+        <span class="kicker"
+          >#2516 · cross-page consistency walk · prototype</span
+        >
+        <h1>How a number renders</h1>
+        <p class="lede">
+          Every surface below is the real component markup on the real Typekit
+          faces, with the real tokens. The bar at the bottom rewrites the
+          decision live — so you are judging the change on the page, not a
+          swatch. Hold <strong>Alt / ⌥</strong> to label every figure with the
+          role it has been assigned.
+        </p>
+        <div class="rule">
+          <p class="note" style="margin: 0">
+            Four measured facts drive this page:
+            <strong>the site defaults to oldstyle figures everywhere</strong>
+            except two nodes on <code>/club/ultras</code>;
+            <strong><code>tabular-nums</code> does nothing</strong> on any face
+            this site uses;
+            <strong><code>lining-nums</code> is the only working switch</strong
+            >, and on Freight Sans it also equalises the widths; and
+            <strong
+              ><code>font-mono</code> currently resolves to the visitor's OS
+              monospace font</strong
+            >, not IBM Plex Mono.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════ THE FONT FACTS ═══════════════════════════════ -->
+    <section class="band">
+      <div class="wrap">
+        <span class="kicker">The evidence · not a candidate</span>
+        <h2>What the kit actually ships</h2>
+        <p class="note" style="margin-bottom: 24px">
+          Measured against <code>use.typekit.net/cvo5raz</code> at 200px. These
+          three specimens are live type, not screenshots — if the kit changes,
+          this page changes with it.
+        </p>
+
+        <div class="spec">
+          <div class="lab">
+            freight-big-pro 900 — default (what every score, minute and points
+            cell renders as today)
+          </div>
+          <div
+            class="big"
+            style="
+              font-family: var(--display-big);
+              font-weight: 900;
+              font-variant-numeric: normal;
+            "
+          >
+            H 0123456789 · 2 – 1 · 10 · 34
+          </div>
+        </div>
+        <div class="spec">
+          <div class="lab">
+            freight-big-pro 900 — lining-nums (only /club/ultras gets this, 2
+            nodes site-wide)
+          </div>
+          <div
+            class="big"
+            style="
+              font-family: var(--display-big);
+              font-weight: 900;
+              font-variant-numeric: lining-nums;
+            "
+          >
+            H 0123456789 · 2 – 1 · 10 · 34
+          </div>
+        </div>
+        <div class="spec">
+          <div class="lab">
+            freight-big-pro 900 — oldstyle-nums (byte-identical to the default:
+            the default IS oldstyle)
+          </div>
+          <div
+            class="big"
+            style="
+              font-family: var(--display-big);
+              font-weight: 900;
+              font-variant-numeric: oldstyle-nums;
+            "
+          >
+            H 0123456789 · 2 – 1 · 10 · 34
+          </div>
+        </div>
+
+        <p class="note" style="margin-top: 22px">
+          Look at <code>10</code> and <code>34</code>. In the default the
+          <code>1</code> and <code>0</code> sit at x-height while the
+          <code>3</code> and <code>4</code> drop below the baseline — that is a
+          text figure, drawn to sit down inside a sentence. It is currently
+          carrying every scoreline on the site.
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════ Q2 — TABULAR ═════════════════════════════════ -->
+    <section class="band">
+      <div class="wrap wide">
+        <span class="kicker">Q2</span>
+        <h2>
+          <code>tabular-nums</code> is inert — delete it, keep it, or replace it
+        </h2>
+        <p class="note" style="margin-bottom: 28px">
+          22 source sites carry <code>tabular-nums</code>. The kit has no
+          <code>tnum</code> feature, so on all four families the class changes
+          nothing. Here is the only surface where the alignment it promises
+          actually matters — the standings table, whose points column is
+          <code>font-display-big</code>.
+        </p>
+
+        <div class="grid3">
+          <div>
+            <h3>A · as-is <span class="verdict v-no">ships today</span></h3>
+            <p class="note">
+              Body face + <code>tabular-nums</code>. The class is inert, so the
+              columns are proportional oldstyle and the digits do not line up.
+            </p>
+            <div class="paper" style="padding: 6px 0">
+              <table class="standings">
+                <thead>
+                  <tr>
+                    <th class="l">#</th>
+                    <th class="l">Ploeg</th>
+                    <th>M</th>
+                    <th>+/-</th>
+                    <th>Ptn</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="l ship-cell">1</td>
+                    <td class="l team">K Londerzeel SK</td>
+                    <td class="ship-cell">11</td>
+                    <td class="ship-cell">+18</td>
+                    <td class="ship-points">27</td>
+                  </tr>
+                  <tr class="kcvv">
+                    <td class="l ship-cell">4</td>
+                    <td class="l team">KCVV Elewijt</td>
+                    <td class="ship-cell">11</td>
+                    <td class="ship-cell">+4</td>
+                    <td class="ship-points">19</td>
+                  </tr>
+                  <tr>
+                    <td class="l ship-cell">10</td>
+                    <td class="l team">Ras Saintoise</td>
+                    <td class="ship-cell">11</td>
+                    <td class="ship-cell">−7</td>
+                    <td class="ship-points">9</td>
+                  </tr>
+                  <tr>
+                    <td class="l ship-cell">14</td>
+                    <td class="l team">K Lyra-Lierse</td>
+                    <td class="ship-cell">11</td>
+                    <td class="ship-cell">−21</td>
+                    <td class="ship-points">3</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h3>B · <code>lining-nums</code> on the body face</h3>
+            <p class="note">
+              Delete <code>tabular-nums</code>, add <code>lining-nums</code>. On
+              Freight Sans this gives exactly equal widths — measured 100.0px
+              for all ten digits. The points column stays display-big and still
+              cannot align.
+            </p>
+            <div class="paper" style="padding: 6px 0">
+              <table
+                class="standings"
+                style="font-variant-numeric: lining-nums"
+              >
+                <thead>
+                  <tr>
+                    <th class="l">#</th>
+                    <th class="l">Ploeg</th>
+                    <th>M</th>
+                    <th>+/-</th>
+                    <th>Ptn</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="l">1</td>
+                    <td class="l team">K Londerzeel SK</td>
+                    <td>11</td>
+                    <td>+18</td>
+                    <td class="ship-points">27</td>
+                  </tr>
+                  <tr class="kcvv">
+                    <td class="l">4</td>
+                    <td class="l team">KCVV Elewijt</td>
+                    <td>11</td>
+                    <td>+4</td>
+                    <td class="ship-points">19</td>
+                  </tr>
+                  <tr>
+                    <td class="l">10</td>
+                    <td class="l team">Ras Saintoise</td>
+                    <td>11</td>
+                    <td>−7</td>
+                    <td class="ship-points">9</td>
+                  </tr>
+                  <tr>
+                    <td class="l">14</td>
+                    <td class="l team">K Lyra-Lierse</td>
+                    <td>11</td>
+                    <td>−21</td>
+                    <td class="ship-points">3</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h3>
+              C · the column goes mono
+              <span class="verdict v-rec">recommended</span>
+            </h3>
+            <p class="note">
+              Mono is monospaced by construction, so every column aligns
+              including the points — and it is the register DESIGN.md already
+              assigns to a stat value.
+            </p>
+            <div class="paper" style="padding: 6px 0">
+              <table
+                class="standings"
+                style="font-family: var(--mono); font-size: 13px"
+              >
+                <thead>
+                  <tr>
+                    <th class="l">#</th>
+                    <th class="l">Ploeg</th>
+                    <th>M</th>
+                    <th>+/-</th>
+                    <th>Ptn</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="l">1</td>
+                    <td class="l team" style="font-family: var(--display)">
+                      K Londerzeel SK
+                    </td>
+                    <td>11</td>
+                    <td>+18</td>
+                    <td style="font-weight: 700">27</td>
+                  </tr>
+                  <tr class="kcvv">
+                    <td class="l">4</td>
+                    <td class="l team" style="font-family: var(--display)">
+                      KCVV Elewijt
+                    </td>
+                    <td>11</td>
+                    <td>+4</td>
+                    <td style="font-weight: 700">19</td>
+                  </tr>
+                  <tr>
+                    <td class="l">10</td>
+                    <td class="l team" style="font-family: var(--display)">
+                      Ras Saintoise
+                    </td>
+                    <td>11</td>
+                    <td>−7</td>
+                    <td style="font-weight: 700">9</td>
+                  </tr>
+                  <tr>
+                    <td class="l">14</td>
+                    <td class="l team" style="font-family: var(--display)">
+                      K Lyra-Lierse
+                    </td>
+                    <td>11</td>
+                    <td>−21</td>
+                    <td style="font-weight: 700">3</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <p class="note" style="margin-top: 24px">
+          The table cannot have both:
+          <strong
+            >there is no tabular figure set in either display face at any
+            setting</strong
+          >, so a display-big points column is a permanently ragged column. C is
+          the only candidate where the number under <code>Ptn</code> lines up
+          with the number above it.
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════ Q1 + Q3 LIVE CONTEXT ═════════════════════════ -->
+    <section class="band">
+      <div class="wrap wide">
+        <span class="kicker">Q1 · Q3 · live — drive these from the bar</span>
+        <h2>The same eight surfaces, under whichever rule you pick</h2>
+        <p class="note" style="margin-bottom: 30px">
+          Real fixtures, real crests, real markup. <strong>Alt / ⌥</strong>
+          labels each figure with the role it has been given —
+          <em>subject</em> (the number is what the surface is about),
+          <em>tag</em> (the number annotates something else), or
+          <em>inline</em> (the number is a word in a sentence). Dispute the
+          roles, not just the fonts: under the split rule the roles are the
+          whole decision.
+        </p>
+
+        <div class="grid2" style="align-items: start">
+          <!-- ── match hero ── -->
+          <div>
+            <h3>/wedstrijd/[matchId] — the hero score</h3>
+            <div class="hero">
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 11px;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: var(--ink-muted);
+                  margin-bottom: 14px;
+                "
+              >
+                Beker van Vlaanderen · 25 juli
+              </div>
+              <div class="teams">
+                <img
+                  src="https://dfaozfi7c7f3s.cloudfront.net/logos/extra_groot/1235.png?v=2"
+                  alt=""
+                />
+                <span class="fig subject ship-hero-score" data-role="subject"
+                  >2 – 2</span
+                >
+                <img
+                  src="https://dfaozfi7c7f3s.cloudfront.net/logos/extra_groot/93.png?v=1"
+                  alt=""
+                />
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: center;
+                  gap: 40px;
+                  margin-top: 12px;
+                "
+              >
+                <span class="tn">KCVV Elewijt</span
+                ><span class="tn">K Londerzeel SK</span>
+              </div>
+            </div>
+            <p class="note" style="margin-top: 10px">
+              The one place where the scoreline <em>is</em> the page.
+            </p>
+          </div>
+
+          <!-- ── agenda rows ── -->
+          <div>
+            <h3>/ploegen/[slug]/wedstrijden — the fixture list</h3>
+            <div class="agenda">
+              <div class="stub">
+                <span class="fig tag ship-agenda-day" data-role="tag">21</span>
+                <span class="mo">jul</span>
+              </div>
+              <div style="flex: 1">
+                <div class="body">
+                  <div class="side">
+                    <img
+                      src="https://dfaozfi7c7f3s.cloudfront.net/logos/extra_groot/115.png?v=1"
+                      alt=""
+                    /><span>K Lyra-Lierse</span>
+                  </div>
+                  <span class="fig tag score ship-agenda-score" data-role="tag"
+                    >4 – 0</span
+                  >
+                  <div class="side away">
+                    <img
+                      src="https://dfaozfi7c7f3s.cloudfront.net/logos/extra_groot/1235.png?v=2"
+                      alt=""
+                    /><span class="kcvv">KCVV Elewijt</span>
+                  </div>
+                </div>
+                <div class="comp">Vriendschappelijk</div>
+              </div>
+            </div>
+            <div class="agenda">
+              <div class="stub">
+                <span class="fig tag ship-agenda-day" data-role="tag">2</span>
+                <span class="mo">aug</span>
+              </div>
+              <div style="flex: 1">
+                <div class="body">
+                  <div class="side">
+                    <img
+                      src="https://dfaozfi7c7f3s.cloudfront.net/logos/extra_groot/685.png?v=1"
+                      alt=""
+                    /><span>Ras Saintoise</span>
+                  </div>
+                  <span class="fig tag score ship-agenda-score" data-role="tag"
+                    >4 – 1</span
+                  >
+                  <div class="side away">
+                    <img
+                      src="https://dfaozfi7c7f3s.cloudfront.net/logos/extra_groot/1235.png?v=2"
+                      alt=""
+                    /><span class="kcvv">KCVV Elewijt</span>
+                  </div>
+                </div>
+                <div class="comp">Croky Cup</div>
+              </div>
+            </div>
+            <p class="note" style="margin-top: 10px">
+              <strong>The tell.</strong> The day stub and the score are the same
+              family at the same size, 48 lines apart in one file — and only one
+              of them carries <code>tabular-nums</code>. Because the class is
+              inert, they render identically either way.
+            </p>
+            <p class="note">
+              <strong>Watch the club names as you switch.</strong> Mono is the
+              widest of the four faces, so a mono scoreline in this row eats
+              width the two <code>flex-1 min-w-0</code> sides pay for — the
+              names start truncating. Whatever this ticket decides, that is the
+              cost it charges here, and only here.
+            </p>
+          </div>
+
+          <!-- ── lineup ── -->
+          <div>
+            <h3>/wedstrijd/[matchId] — the lineup</h3>
+            <div class="lineup">
+              <div class="row">
+                <span class="fig tag num ship-lineup-num" data-role="tag"
+                  >1</span
+                ><span class="who">Jarne Van der Auwera</span>
+              </div>
+              <div class="row">
+                <span class="fig tag num ship-lineup-num" data-role="tag"
+                  >4</span
+                ><span class="who">Kevin Schutijser</span>
+              </div>
+              <div class="row">
+                <span class="fig tag num ship-lineup-num" data-role="tag"
+                  >10</span
+                ><span class="who">Robbe Vermeiren</span>
+              </div>
+              <div class="row">
+                <span class="fig tag num ship-lineup-num" data-role="tag"
+                  >37</span
+                ><span class="who">Seppe De Coninck</span>
+              </div>
+            </div>
+            <p class="note" style="margin-top: 10px">
+              Shirt number #1 of 3 — mono, 12px.
+            </p>
+          </div>
+
+          <!-- ── squad ── -->
+          <div>
+            <h3>/ploegen/[slug] — the squad grid</h3>
+            <div class="squad">
+              <div class="card">
+                <div class="shot">
+                  <span class="fig tag chip ship-card-num" data-role="tag"
+                    >4</span
+                  >
+                </div>
+                <p class="nm"><b>Kevin</b> <em>Schutijser</em></p>
+              </div>
+              <div class="card">
+                <div class="shot">
+                  <span class="fig tag chip ship-card-num" data-role="tag"
+                    >10</span
+                  >
+                </div>
+                <p class="nm"><b>Robbe</b> <em>Vermeiren</em></p>
+              </div>
+              <div class="card">
+                <div class="shot">
+                  <span class="fig tag chip ship-card-num" data-role="tag"
+                    >37</span
+                  >
+                </div>
+                <p class="nm"><b>Seppe</b> <em>De Coninck</em></p>
+              </div>
+            </div>
+            <p class="note" style="margin-top: 10px">
+              Shirt number #2 of 3 — display-big, 14px, in a 26px chip. Note the
+              descenders on <code>4</code> and <code>37</code> under the default
+              figures: the digit hangs below the optical centre of the square.
+              <strong>Renders zero times in production</strong> — no player
+              carries a <code>jerseyNumber</code> today.
+            </p>
+          </div>
+
+          <!-- ── player hero ── -->
+          <div>
+            <h3>/spelers/[slug] — the hero number</h3>
+            <div class="paper" style="padding: 24px 22px">
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 11px;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: var(--ink-muted);
+                "
+              >
+                Eerste elftal A
+              </div>
+              <div style="margin: 10px 0 4px">
+                <span
+                  style="
+                    font-family: var(--mono);
+                    font-size: 30px;
+                    font-weight: 500;
+                    letter-spacing: 0.04em;
+                    color: var(--jersey);
+                    vertical-align: 0.42em;
+                  "
+                  >#</span
+                ><span class="fig subject ship-hero-num" data-role="subject"
+                  >10</span
+                >
+              </div>
+              <div
+                style="
+                  font-family: var(--display-big);
+                  font-weight: 900;
+                  font-size: 42px;
+                  line-height: 0.95;
+                "
+              >
+                Robbe<br /><em
+                  style="
+                    font-family: var(--display);
+                    font-weight: 400;
+                    font-style: italic;
+                  "
+                  >Vermeiren</em
+                >
+              </div>
+            </div>
+            <p class="note" style="margin-top: 10px">
+              Shirt number #3 of 3 — display-big at <code>display-2xl</code>,
+              with a mono <code>#</code>. The only shirt number the site treats
+              as a subject.
+              <strong>Also renders zero times in production.</strong>
+            </p>
+          </div>
+
+          <!-- ── calendar ── -->
+          <div>
+            <h3>/kalender — the agenda list</h3>
+            <div class="paper cal" style="padding: 4px 0">
+              <div class="row">
+                <span class="daybox"
+                  ><span class="fig tag ship-cal-time" data-role="tag"
+                    >15:00</span
+                  ></span
+                ><span class="t">K Lyra-Lierse — KCVV Elewijt</span
+                ><span class="fig tag ship-cal-score" data-role="tag"
+                  >4 – 0</span
+                ><span class="cmp">Vriendsch.</span>
+              </div>
+              <div class="row">
+                <span class="daybox"
+                  ><span class="fig tag ship-cal-time" data-role="tag"
+                    >20:00</span
+                  ></span
+                ><span class="t">KCVV Elewijt — K Londerzeel SK</span
+                ><span class="fig tag ship-cal-score" data-role="tag"
+                  >2 – 2</span
+                ><span class="cmp">Beker</span>
+              </div>
+              <div class="row">
+                <span class="daybox"
+                  ><span class="fig tag ship-cal-time" data-role="tag"
+                    >19:30</span
+                  ></span
+                ><span class="t">Ras Saintoise — KCVV Elewijt</span
+                ><span class="fig tag ship-cal-score" data-role="tag"
+                  >4 – 1</span
+                ><span class="cmp">Croky Cup</span>
+              </div>
+            </div>
+            <p class="note" style="margin-top: 10px">
+              A third family for the score: <code>font-display</code>, not
+              <code>font-display-big</code> — beside a kick-off time that is
+              already mono. Two registers, one row.
+            </p>
+          </div>
+
+          <!-- ── minute ── -->
+          <div>
+            <h3>/wedstrijd/[matchId] — goal minutes</h3>
+            <div class="paper" style="padding: 14px 18px">
+              <div
+                style="
+                  display: flex;
+                  align-items: baseline;
+                  gap: 12px;
+                  padding: 6px 0;
+                "
+              >
+                <span class="fig tag ship-minute" data-role="tag">23'</span
+                ><span style="font-family: var(--display); font-size: 15px"
+                  >Robbe Vermeiren</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: baseline;
+                  gap: 12px;
+                  padding: 6px 0;
+                "
+              >
+                <span class="fig tag ship-minute" data-role="tag">45+2'</span
+                ><span style="font-family: var(--display); font-size: 15px"
+                  >Seppe De Coninck</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: baseline;
+                  gap: 12px;
+                  padding: 6px 0;
+                "
+              >
+                <span class="fig tag ship-minute" data-role="tag">78'</span
+                ><span style="font-family: var(--display); font-size: 15px"
+                  >Kevin Schutijser</span
+                >
+              </div>
+            </div>
+            <p class="note" style="margin-top: 10px">
+              Also rendered on <code>/nieuws/[slug]</code> via
+              <code>MatchGoalsBlock</code> — a figure inside an article.
+            </p>
+          </div>
+
+          <!-- ── ultras ── -->
+          <div>
+            <h3>/club/ultras — the raffle stats</h3>
+            <div
+              style="
+                background: var(--jersey-deep-dark);
+                border: 2px solid var(--ink);
+                box-shadow: var(--shadow-paper-sm);
+                padding: 26px 22px;
+                text-align: center;
+                color: var(--cream);
+              "
+            >
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 11px;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  margin-bottom: 18px;
+                "
+              >
+                Schijt je rijk · seizoen 2018-2019
+              </div>
+              <div style="display: flex; justify-content: center; gap: 46px">
+                <div>
+                  <div
+                    class="fig subject ship-stat"
+                    data-role="subject"
+                    style="color: var(--cream)"
+                  >
+                    500
+                  </div>
+                  <div
+                    style="
+                      font-family: var(--mono);
+                      font-size: 12px;
+                      text-transform: uppercase;
+                      letter-spacing: 0.08em;
+                      opacity: 0.7;
+                      margin-top: 8px;
+                    "
+                  >
+                    lotjes
+                  </div>
+                </div>
+                <div>
+                  <div>
+                    <span
+                      style="
+                        font-family: var(--display);
+                        font-size: 40px;
+                        font-style: italic;
+                        font-weight: 600;
+                        vertical-align: 0.35em;
+                      "
+                      >€</span
+                    ><span
+                      class="fig subject ship-stat"
+                      data-role="subject"
+                      style="color: var(--cream)"
+                      >750</span
+                    >
+                  </div>
+                  <div
+                    style="
+                      font-family: var(--mono);
+                      font-size: 12px;
+                      text-transform: uppercase;
+                      letter-spacing: 0.08em;
+                      opacity: 0.7;
+                      margin-top: 8px;
+                    "
+                  >
+                    cheque
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="note" style="margin-top: 10px">
+              <strong>The only lining figures on the entire site</strong> — two
+              nodes, and only because one primitive happens to set the class.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════ Q4 — SCOPE ═══════════════════════════════════ -->
+    <section class="band">
+      <div class="wrap">
+        <span class="kicker">Q4</span>
+        <h2>Where does a figure stop being a figure?</h2>
+        <p class="note" style="margin-bottom: 26px">
+          These also move under the bar. If the rule cannot say why the
+          <code>34</code> below is not a figure, it is not a rule anyone can
+          apply to a surface that does not exist yet.
+        </p>
+
+        <div class="paper" style="padding: 22px 24px; margin-bottom: 20px">
+          <div
+            class="lab"
+            style="
+              font-family: var(--mono);
+              font-size: 10px;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              color: var(--ink-muted);
+              margin-bottom: 12px;
+            "
+          >
+            Counts inside a sentence — /hulp, /galerij, the organigram
+          </div>
+          <p style="margin: 0 0 8px">
+            Alle <span class="fig inline" data-role="inline">34</span> vragen
+          </p>
+          <p style="margin: 0 0 8px">
+            <span class="fig inline" data-role="inline">12</span> foto's
+          </p>
+          <p style="margin: 0">
+            positie <span class="fig inline" data-role="inline">3</span> van
+            <span class="fig inline" data-role="inline">11</span> ·
+            <span class="fig inline" data-role="inline">7</span> onderliggende
+            functies
+          </p>
+        </div>
+
+        <div class="paper" style="padding: 22px 24px">
+          <div
+            class="lab"
+            style="
+              font-family: var(--mono);
+              font-size: 10px;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              color: var(--ink-muted);
+              margin-bottom: 12px;
+            "
+          >
+            The day-of-month — two families, and only one site is the outlier
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 42px;
+              flex-wrap: wrap;
+              align-items: baseline;
+            "
+          >
+            <div>
+              <span class="fig tag ship-agenda-day" data-role="tag">21</span>
+              <span
+                style="
+                  font-family: var(--mono);
+                  font-size: 11px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                  color: var(--ink-muted);
+                "
+                >jul</span
+              >
+              <div class="note" style="font-size: 12px">
+                <code>TeamAgendaRow:304</code> — display-big 18px<br /><strong
+                  >the only one that moves</strong
+                >
+              </div>
+            </div>
+            <div>
+              <span class="fig tag ship-strip-date" data-role="tag">21</span>
+              <span
+                style="
+                  font-family: var(--mono);
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  color: var(--ink-muted);
+                "
+                >jul</span
+              >
+              <div class="note" style="font-size: 12px">
+                <code>MatchStripView:189</code> — mono 12px<br />already
+                conformant
+              </div>
+            </div>
+            <div>
+              <span
+                class="fig tag"
+                style="
+                  font-family: var(--mono);
+                  font-size: 11px;
+                  color: var(--ink-muted);
+                "
+                data-role="tag"
+                >21</span
+              >
+              <div class="note" style="font-size: 12px">
+                <code>CalendarMonth:252</code> — mono 11px<br />already
+                conformant
+              </div>
+            </div>
+          </div>
+          <p class="note" style="margin-top: 14px; margin-bottom: 0">
+            Corrected while inventorying: <code>CalendarAgenda</code> renders
+            <strong>no day number at all</strong> — it groups by day under a
+            heading and shows a kick-off time in mono. So the day-of-month is
+            two families across three sites, and <code>TeamAgendaRow</code> is
+            the single outlier.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════ Q5 — THE MONO DEFECT ═════════════════════════ -->
+    <section class="band dark">
+      <div class="wrap">
+        <span class="kicker">Q5 · a shipped defect, not a candidate</span>
+        <h2>“Mono” is not IBM Plex Mono anywhere on the site</h2>
+        <p
+          class="note"
+          style="margin-bottom: 26px; color: rgba(245, 241, 230, 0.75)"
+        >
+          <code
+            style="
+              background: rgba(255, 255, 255, 0.08);
+              border-color: rgba(255, 255, 255, 0.2);
+              color: inherit;
+            "
+            >--font-family-mono</code
+          >
+          is declared in
+          <code
+            style="
+              background: rgba(255, 255, 255, 0.08);
+              border-color: rgba(255, 255, 255, 0.2);
+              color: inherit;
+            "
+            >@theme</code
+          >, but Tailwind v4's key is
+          <code
+            style="
+              background: rgba(255, 255, 255, 0.08);
+              border-color: rgba(255, 255, 255, 0.2);
+              color: inherit;
+            "
+            >--font-mono</code
+          >
+          — so the generated
+          <code
+            style="
+              background: rgba(255, 255, 255, 0.08);
+              border-color: rgba(255, 255, 255, 0.2);
+              color: inherit;
+            "
+            >font-mono</code
+          >
+          utility is Tailwind's default stack, and the project's own
+          <code
+            style="
+              background: rgba(255, 255, 255, 0.08);
+              border-color: rgba(255, 255, 255, 0.2);
+              color: inherit;
+            "
+            >.font-mono</code
+          >
+          sits in
+          <code
+            style="
+              background: rgba(255, 255, 255, 0.08);
+              border-color: rgba(255, 255, 255, 0.2);
+              color: inherit;
+            "
+            >@layer base</code
+          >
+          and loses.
+          <strong style="color: var(--cream)"
+            >85 elements on /kalender alone, including the entire global
+            nav.</strong
+          >
+          Flip Q5 in the bar and every mono glyph on this page changes.
+        </p>
+
+        <div class="grid2">
+          <div>
+            <div
+              class="lab"
+              style="
+                font-family: var(--mono);
+                font-size: 10px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                opacity: 0.6;
+                margin-bottom: 10px;
+              "
+            >
+              What ships — the visitor's OS mono
+            </div>
+            <div
+              style="
+                font-family:
+                  ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                  &quot;Liberation Mono&quot;, &quot;Courier New&quot;,
+                  monospace;
+                font-size: 26px;
+                font-weight: 600;
+                letter-spacing: 0.04em;
+              "
+            >
+              WEDSTRIJDEN · 2 – 1 · 20:00
+            </div>
+            <p
+              class="note"
+              style="color: rgba(245, 241, 230, 0.6); margin-top: 8px"
+            >
+              SF Mono on macOS · Consolas on Windows · Liberation Mono on Linux.
+              The label register is a different typeface per visitor.
+            </p>
+          </div>
+          <div>
+            <div
+              class="lab"
+              style="
+                font-family: var(--mono);
+                font-size: 10px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                opacity: 0.6;
+                margin-bottom: 10px;
+              "
+            >
+              What DESIGN.md says — IBM Plex Mono
+            </div>
+            <div
+              style="
+                font-family: &quot;IBM Plex Mono&quot;, monospace;
+                font-size: 26px;
+                font-weight: 600;
+                letter-spacing: 0.04em;
+              "
+            >
+              WEDSTRIJDEN · 2 – 1 · 20:00
+            </div>
+            <p
+              class="note"
+              style="color: rgba(245, 241, 230, 0.6); margin-top: 8px"
+            >
+              Loaded on every page via next/font, and never applied by the
+              utility that is supposed to reach it.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════ CONTROL BAR ══════════════════════════════════ -->
+    <div id="bar">
+      <div class="grp">
+        <span class="gl">Q1 family</span>
+        <button data-k="q1" data-v="ships">ships</button>
+        <button data-k="q1" data-v="mono">a · mono</button>
+        <button data-k="q1" data-v="display">b · display</button>
+        <button data-k="q1" data-v="split">c · split</button>
+      </div>
+      <div class="grp">
+        <span class="gl">Q3 figures</span>
+        <button data-k="q3" data-v="ships">ships</button>
+        <button data-k="q3" data-v="oldstyle">a · oldstyle</button>
+        <button data-k="q3" data-v="lining-data">b · lining=data</button>
+        <button data-k="q3" data-v="by-family">c · by family</button>
+      </div>
+      <div class="grp">
+        <span class="gl">Q5 mono</span>
+        <button data-k="q5" data-v="ships">os mono</button>
+        <button data-k="q5" data-v="plex">ibm plex</button>
+      </div>
+      <span class="hint">⌥ Alt — show roles</span>
+    </div>
+
+    <script>
+      const url = new URL(location.href);
+      for (const k of ["q1", "q3", "q5"]) {
+        const v = url.searchParams.get(k);
+        if (v) document.documentElement.dataset[k] = v;
+      }
+      const sync = () => {
+        document.querySelectorAll("#bar button").forEach((b) => {
+          b.setAttribute(
+            "aria-pressed",
+            String(
+              document.documentElement.dataset[b.dataset.k] === b.dataset.v,
+            ),
+          );
+        });
+      };
+      document.querySelectorAll("#bar button").forEach((b) => {
+        b.addEventListener("click", () => {
+          document.documentElement.dataset[b.dataset.k] = b.dataset.v;
+          const u = new URL(location.href);
+          u.searchParams.set(b.dataset.k, b.dataset.v);
+          history.replaceState(null, "", u);
+          sync();
+        });
+      });
+      sync();
+      addEventListener("keydown", (e) => {
+        if (e.key === "Alt") document.body.classList.add("show-roles");
+      });
+      addEventListener("keyup", (e) => {
+        if (e.key === "Alt") document.body.classList.remove("show-roles");
+      });
+      addEventListener("blur", () =>
+        document.body.classList.remove("show-roles"),
+      );
+    </script>
+  </body>
+</html>

@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2474 — decisions so far, and the one still open</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #008755;
+        --jersey-link: #007c46;
+        --warm: #f0c264;
+        --paper-edge: #d9d2bd;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --text-label: 0.6875rem;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 34px 0 30px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin: 0 0 10px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: 2.2rem;
+        line-height: 1.1;
+        margin: 0 0 12px;
+        font-weight: 400;
+      }
+      header.top p {
+        margin: 0;
+        max-width: 74ch;
+        color: rgb(245 241 230 / 0.82);
+        font-size: 0.95rem;
+      }
+
+      section {
+        padding: 48px 0;
+        border-bottom: 2px solid var(--ink);
+      }
+      section.open {
+        background: var(--cream);
+      }
+      h2 {
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        font-weight: 400;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      .sub {
+        color: var(--ink-soft);
+        margin: 0 0 28px;
+        max-width: 74ch;
+        font-size: 0.96rem;
+      }
+
+      /* decision rows */
+      .d {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        margin-bottom: 0;
+      }
+      @media (min-width: 940px) {
+        .d {
+          grid-template-columns: 34px 1fr 1.15fr;
+        }
+      }
+      .d + .d {
+        border-top: none;
+      }
+      .dnum {
+        background: var(--ink);
+        color: var(--warm);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 16px 0;
+      }
+      .dtext {
+        padding: 16px 18px;
+        border-right: 1px solid var(--paper-edge);
+      }
+      .dtext strong {
+        display: block;
+        font-size: 0.98rem;
+        margin-bottom: 5px;
+      }
+      .dtext span {
+        font-size: 0.88rem;
+        color: var(--ink-soft);
+      }
+      .dtext code,
+      .sub code,
+      .note code {
+        font-family: var(--font-mono);
+        font-size: 0.84em;
+        background: rgb(217 210 189 / 0.45);
+        padding: 1px 4px;
+      }
+      .ddemo {
+        padding: 18px 20px;
+        background: rgb(217 210 189 / 0.16);
+      }
+      .dlab {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 0 0 10px;
+      }
+      .dlab + .dlab {
+        margin-top: 16px;
+      }
+
+      /* ============ the three final treatments ============ */
+      /* 1 — body copy marker (.prose-link, unchanged) */
+      .prose-link {
+        color: var(--jersey-link);
+        text-decoration: none;
+        font-weight: 500;
+        padding-inline: 4px;
+        margin-inline: -4px;
+        background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 0 4.7 L 50 4.3 L 100 4.0 L 100 10.8 L 50 11.1 L 0 11.0 Z' fill='%23008755' fill-opacity='0.4'/></svg>");
+        background-repeat: no-repeat;
+        background-position: 0 100%;
+        background-size: 0% 0.42em;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+        transition: background-size 320ms ease-out;
+      }
+      .prose-link:hover,
+      .on .prose-link {
+        background-size: 100% 0.42em;
+      }
+      .body-demo {
+        font-size: 1.0625rem;
+        line-height: 1.75;
+        color: var(--ink-soft);
+        margin: 0;
+      }
+
+      /* 2 — uppercase mono CTA: arrow only, NO marker */
+      .cta {
+        color: var(--jersey-link);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding-block: 8px;
+        margin-block: -8px;
+      }
+      .cta .ar {
+        transition: transform 0.3s;
+      }
+      .cta:hover .ar,
+      .on .cta .ar {
+        transform: translateX(4px);
+      }
+
+      /* 3 — lowercase action link: icon + marker */
+      .act {
+        color: var(--jersey-link);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 2.1;
+      }
+      .act .mk {
+        padding-inline: 4px;
+        margin-inline: -4px;
+        background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 0 4.7 L 50 4.3 L 100 4.0 L 100 10.8 L 50 11.1 L 0 11.0 Z' fill='%23008755' fill-opacity='0.4'/></svg>");
+        background-repeat: no-repeat;
+        background-position: 0 100%;
+        background-size: 0% 0.42em;
+        transition: background-size 320ms ease-out;
+      }
+      .act:hover .mk,
+      .on .act .mk {
+        background-size: 100% 0.42em;
+      }
+
+      /* dead — struck through */
+      .dead {
+        opacity: 0.45;
+      }
+      .dead-tag {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        border: 1px solid var(--card-red);
+        padding: 2px 6px;
+        display: inline-block;
+      }
+
+      /* ============ open question ============ */
+      .q {
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        background: var(--cream-soft);
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 820px) {
+        .q {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .qcol {
+        padding: 24px 24px 28px;
+      }
+      .qcol + .qcol {
+        border-left: 2px solid var(--ink);
+      }
+      .qtag {
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        display: inline-block;
+        padding: 4px 9px;
+        border: 2px solid var(--ink);
+        margin-bottom: 14px;
+      }
+      .qtag.rec {
+        background: var(--jersey-link);
+        color: var(--cream);
+        border-color: var(--jersey-link);
+      }
+      .qcard {
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        padding: 16px 18px 18px;
+        margin-bottom: 16px;
+      }
+      .qcard-h {
+        font-family: var(--font-big);
+        font-size: 1.05rem;
+        margin: 0 0 4px;
+      }
+      .qcard-b {
+        font-size: 0.9rem;
+        color: var(--ink-soft);
+        margin: 0 0 12px;
+      }
+      .cites {
+        list-style: none;
+        margin: 0;
+        padding: 10px 0 0;
+        border-top: 1px solid var(--paper-edge);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px 16px;
+      }
+      .cite {
+        color: var(--jersey-link);
+        text-decoration: none;
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+      }
+      .cite-plain {
+        text-underline-offset: 2px;
+      }
+      .cite-plain:hover,
+      .on .cite-plain {
+        text-decoration: underline;
+      }
+      .cite-mark {
+        padding-inline: 3px;
+        margin-inline: -3px;
+        background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 0 4.7 L 50 4.3 L 100 4.0 L 100 10.8 L 50 11.1 L 0 11.0 Z' fill='%23008755' fill-opacity='0.4'/></svg>");
+        background-repeat: no-repeat;
+        background-position: 0 100%;
+        background-size: 0% 0.42em;
+        transition: background-size 320ms ease-out;
+      }
+      .cite-mark:hover,
+      .on .cite-mark {
+        background-size: 100% 0.42em;
+      }
+      .qwhy {
+        font-size: 0.9rem;
+        color: var(--ink-soft);
+        margin: 0;
+      }
+      .qwhy strong {
+        color: var(--ink);
+      }
+
+      .note {
+        border-top: 1px solid var(--paper-edge);
+        padding-top: 12px;
+        margin: 26px 0 0;
+        font-size: 0.92rem;
+        color: var(--ink-soft);
+        max-width: 76ch;
+      }
+      .note strong {
+        color: var(--jersey-link);
+      }
+
+      .btn {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: var(--warm);
+        color: var(--ink);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 10px 18px;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+      .btn:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="kicker">#2474 · wayfinder #2425</p>
+        <h1>How a text link renders when it is not a button</h1>
+        <p>
+          Everything below the fold is <strong>settled</strong> — nine
+          decisions, each with its final rendering.
+          <strong>One question is still open</strong>, at the very bottom. Hover
+          anything, or hit the button to freeze every hover state at once.
+        </p>
+        <button class="btn" id="toggle">▶ Show all hover states</button>
+      </div>
+    </header>
+
+    <!-- ═══════════ SETTLED ═══════════ -->
+    <section>
+      <div class="wrap">
+        <h2>Settled</h2>
+        <p class="sub">
+          Three treatments in total. Which one a link gets is decided by two
+          questions:
+          <strong>is it inside a sentence?</strong> and
+          <strong>does it send you elsewhere on the site?</strong>
+        </p>
+
+        <div class="d">
+          <div class="dnum">1</div>
+          <div class="dtext">
+            <strong>A link inside a sentence keeps the marker</strong>
+            <span
+              >Unchanged from today’s <code>.prose-link</code>. 10 render sites:
+              article bodies, <code>/privacy</code> ×6,
+              <code>/club/word-lid</code>, the membership form.</span
+            >
+          </div>
+          <div class="ddemo">
+            <p class="dlab">hover to see the marker</p>
+            <p class="body-demo">
+              Wie wil aansluiten vindt alles op de
+              <a href="#" class="prose-link">praktische informatie</a>-pagina,
+              of neemt contact op via
+              <a href="#" class="prose-link">info@kcvvelewijt.be</a>.
+            </p>
+          </div>
+        </div>
+
+        <div class="d">
+          <div class="dnum">2</div>
+          <div class="dtext">
+            <strong
+              ><code>/zoeken</code>’s “geen treffers” links move into that
+              class</strong
+            >
+            <span
+              >They read as an affordance today, but they sit in a running
+              sentence — so they are prose, and they take the marker. This was
+              the correction you spotted early on.</span
+            >
+          </div>
+          <div class="ddemo">
+            <p class="dlab">SearchNoResultsCard</p>
+            <p class="body-demo">
+              Niets gevonden voor “<strong>kalender</strong>”. Probeer een
+              andere term — of spring meteen naar
+              <a href="#" class="prose-link">nieuws</a>,
+              <a href="#" class="prose-link">ploegen</a> of
+              <a href="#" class="prose-link">spelers</a>.
+            </p>
+          </div>
+        </div>
+
+        <div class="d">
+          <div class="dnum">3</div>
+          <div class="dtext">
+            <strong
+              >A link that sends you elsewhere is uppercase mono with an arrow —
+              and no marker</strong
+            >
+            <span
+              >The marker cannot work on uppercase: caps have no descenders for
+              the band to bind to, so it floats underneath at every value we
+              tried. The arrow glyph is visible <em>at rest</em>, which is what
+              carries the affordance — the slide is a pointer-only extra.</span
+            >
+          </div>
+          <div class="ddemo">
+            <p class="dlab">hover — the arrow slides, nothing else</p>
+            <a href="#" class="cta"
+              >Alle sponsors &amp; sympathisanten<span class="ar">→</span></a
+            >
+            <p class="dlab">also this one</p>
+            <a href="#" class="cta">Ook in agenda<span class="ar">→</span></a>
+          </div>
+        </div>
+
+        <div class="d">
+          <div class="dnum">4</div>
+          <div class="dtext">
+            <strong>An action keeps its icon and takes the marker</strong>
+            <span
+              >Opening your mail app or Google Maps is not “going somewhere on
+              the site”, so no arrow. It is lowercase body type, so the marker
+              binds correctly. <code>/club/contact</code>.</span
+            >
+          </div>
+          <div class="ddemo">
+            <p class="dlab">hover</p>
+            <a href="#" class="act"
+              ><span class="mk">✉ info@kcvvelewijt.be</span></a
+            ><br />
+            <a href="#" class="act"
+              ><span class="mk">➜ Routebeschrijving</span></a
+            >
+          </div>
+        </div>
+
+        <div class="d">
+          <div class="dnum">5</div>
+          <div class="dtext">
+            <strong>One green for every link: <code>#007c46</code></strong>
+            <span
+              >Today CTAs rest at <code>#008755</code> and prose at
+              <code>#007c46</code>. One value means the site has exactly one
+              colour that says “link”. The marker’s slab stays
+              <code>#008755</code> at 40% underneath.</span
+            >
+          </div>
+          <div class="ddemo">
+            <p class="dlab">all three treatments, one colour</p>
+            <a href="#" class="cta">Alle sponsors<span class="ar">→</span></a
+            ><br />
+            <a href="#" class="act"
+              ><span class="mk">✉ info@kcvvelewijt.be</span></a
+            >
+            <p class="body-demo" style="margin-top: 8px">
+              …of lees de
+              <a href="#" class="prose-link">praktische informatie</a>.
+            </p>
+          </div>
+        </div>
+
+        <div class="d">
+          <div class="dnum">6</div>
+          <div class="dtext">
+            <strong
+              ><code>SponsorsBlock</code> stops hand-rolling its link</strong
+            >
+            <span
+              >It already renders <code>&lt;SectionHeader&gt;</code> but never
+              passes <code>linkText</code> — so it hand-built the same link ten
+              lines below, and #2394’s tap-target fix had to be applied to both
+              copies by hand. It adopts the shared one.</span
+            >
+          </div>
+          <div class="ddemo">
+            <p class="dlab">before → after</p>
+            <span
+              style="
+                font-family: var(--font-mono);
+                font-size: 0.78rem;
+                color: var(--ink-muted);
+              "
+              >15 hand-written classes</span
+            ><br /><br />
+            <a href="#" class="cta"
+              >Alle sponsors &amp; sympathisanten<span class="ar">→</span></a
+            >
+          </div>
+        </div>
+
+        <div class="d">
+          <div class="dnum">7</div>
+          <div class="dtext">
+            <strong
+              ><code>&lt;EditorialLink variant="inline"&gt;</code> is
+              deleted</strong
+            >
+            <span
+              >Zero render sites, and it cannot flow inside a sentence — it is
+              <code>inline-flex</code>, so it becomes an unbreakable box that
+              splits the copy around it. <code>.prose-link</code> does the job
+              and already ships.</span
+            >
+          </div>
+          <div class="ddemo">
+            <p class="dlab">what it did to a wrapped sentence</p>
+            <span class="dead-tag">deleted</span>
+            <p
+              class="body-demo dead"
+              style="max-width: 260px; font-size: 0.95rem"
+            >
+              Lees meer over<br />
+              <span style="color: var(--jersey-deep)"
+                >de praktische informatie voor nieuwe leden</span
+              ><br />
+              voor je inschrijft.
+            </p>
+          </div>
+        </div>
+
+        <div class="d">
+          <div class="dnum">8</div>
+          <div class="dtext">
+            <strong
+              ><code>TicketStub</code>’s “Meer details” gets #2393’s touch
+              fix</strong
+            >
+            <span
+              >It is <code>opacity-0</code> until hover with no
+              <code>reveal-on-hover</code>
+              gate, so on a phone it never appears at all — on
+              <code>/evenementen</code> and <code>/evenementen/[slug]</code>.
+              <code>NewsCard</code> and <code>EditorialHero</code> were fixed
+              today; this one was missed.</span
+            >
+          </div>
+          <div class="ddemo">
+            <p class="dlab">the same bug #2393 just closed elsewhere</p>
+            <span
+              style="
+                font-family: var(--font-mono);
+                font-size: 0.76rem;
+                color: var(--ink-muted);
+              "
+              >opacity-0 → invisible on touch</span
+            >
+          </div>
+        </div>
+
+        <div class="d">
+          <div class="dnum">9</div>
+          <div class="dtext">
+            <strong
+              >The homepage inherits two questions, it does not get changed
+              here</strong
+            >
+            <span
+              ><code>NewsGrid</code>’s <em>“Al het nieuws”</em> is the only live
+              <code>cta</code> on the site, and
+              <code>UpcomingMatchesClient</code> carries a byte-identical twin
+              of SponsorsBlock’s hand-rolled link. Both are
+              <code>components/home/</code>, so they belong to #2402.</span
+            >
+          </div>
+          <div class="ddemo">
+            <p class="dlab">handed over, not decided</p>
+            <span
+              style="
+                font-family: var(--font-mono);
+                font-size: 0.76rem;
+                color: var(--ink-muted);
+              "
+              >→ #2402</span
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ OPEN ═══════════ -->
+    <section class="open">
+      <div class="wrap">
+        <h2>The one thing still open</h2>
+        <p class="sub">
+          <strong><code>/zoeken</code>’s source citations.</strong> When the
+          search answers a question, it lists the pages it drew from underneath.
+          They are 11px mono, <em>mixed case</em> — which is neither of the two
+          cases already settled, so I never rendered them. Here they are both
+          ways. Hover, or use the button at the top.
+        </p>
+
+        <div class="q">
+          <div class="qcol">
+            <span class="qtag rec">A · plain — recommended</span>
+            <div class="qcard">
+              <p class="qcard-h">Word lid van KCVV</p>
+              <p class="qcard-b">
+                Je kan het hele jaar door aansluiten. Voor jeugdspelers loopt de
+                inschrijving via de jeugdwerking.
+              </p>
+              <ul class="cites">
+                <li>
+                  <a href="#" class="cite cite-plain">Word lid van KCVV</a>
+                </li>
+                <li>
+                  <a href="#" class="cite cite-plain">Praktische informatie</a>
+                </li>
+                <li><a href="#" class="cite cite-plain">Ploegen</a></li>
+              </ul>
+            </div>
+            <p class="qwhy">
+              <strong>Underline on hover, as today.</strong> A citation is where
+              an answer came from, not somewhere you are being sent — it stays
+              quiet and lets the answer above it lead. Three markers lighting up
+              in one small row is a lot of green for a footnote.
+            </p>
+          </div>
+
+          <div class="qcol">
+            <span class="qtag">B · marker</span>
+            <div class="qcard">
+              <p class="qcard-h">Word lid van KCVV</p>
+              <p class="qcard-b">
+                Je kan het hele jaar door aansluiten. Voor jeugdspelers loopt de
+                inschrijving via de jeugdwerking.
+              </p>
+              <ul class="cites">
+                <li>
+                  <a href="#" class="cite cite-mark">Word lid van KCVV</a>
+                </li>
+                <li>
+                  <a href="#" class="cite cite-mark">Praktische informatie</a>
+                </li>
+                <li><a href="#" class="cite cite-mark">Ploegen</a></li>
+              </ul>
+            </div>
+            <p class="qwhy">
+              <strong>Same marker as body copy.</strong> Mono is mixed case
+              here, so it has descenders — the <em>g</em> in “Ploegen” — and the
+              band binds the way it does in a sentence. This is the “one gesture
+              everywhere” you were after, extended as far as the letterforms
+              allow.
+            </p>
+          </div>
+        </div>
+
+        <p class="note">
+          <strong>Either answer closes the ticket.</strong> Nothing else depends
+          on it: the other eight decisions stand whichever you pick, and if you
+          choose A and later decide the marker suits them, the rule already
+          permits it — it is a one-line change, not a re-decision.
+        </p>
+      </div>
+    </section>
+
+    <script>
+      const btn = document.getElementById("toggle");
+      btn.addEventListener("click", () => {
+        const on = document.body.classList.toggle("on");
+        btn.textContent = on
+          ? "⏹ Reset hover states"
+          : "▶ Show all hover states";
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1986 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      #2442 — The up-link: eight treatments against the real openings
+    </title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #008755;
+        --jersey-deep-dark: #133d28;
+        --jersey-link: #007c46;
+        --warm: #f0c264;
+        --paper-edge: #d9d2bd;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --shadow-paper-md: 6px 6px 0 0 var(--ink);
+        --text-label: 0.6875rem;
+        --text-label-tracking: 0.08em;
+        --container-wide: 1040px;
+        --container-prose: 680px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 40px 24px 120px;
+      }
+      .page-kicker {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+      }
+      h1.page-title {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.25rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 8px 0 16px;
+      }
+      h2.round {
+        font-family: var(--font-big);
+        font-size: clamp(1.5rem, 1rem + 1.5vw, 2rem);
+        line-height: 1.15;
+        margin: 72px 0 6px;
+        border-top: 2px solid var(--ink);
+        padding-top: 24px;
+      }
+      h3.vname {
+        font-family: var(--font-big);
+        font-size: 1.25rem;
+        line-height: 1.2;
+        margin: 0 0 2px;
+      }
+      p.lede {
+        max-width: 680px;
+        color: var(--ink-soft);
+        margin: 0 0 12px;
+      }
+      .note {
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 18px 22px;
+        margin: 24px 0 40px;
+        max-width: 900px;
+      }
+      .note h4 {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 8px;
+      }
+      .note ul,
+      .note ol {
+        margin: 8px 0 0;
+        padding-left: 20px;
+      }
+      .note li {
+        margin-bottom: 6px;
+      }
+      .note.warn {
+        background: #f2e3dd;
+        border-color: var(--card-red);
+        box-shadow: 4px 4px 0 0 var(--card-red);
+      }
+      .note.warn h4 {
+        color: var(--card-red);
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+
+      /* ── Specimen frame ───────────────────────────────────────── */
+      .specimen {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        margin: 0 0 40px;
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .specimen > .meta {
+        border-bottom: 2px solid var(--ink);
+        background: var(--cream-soft);
+        padding: 12px 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        align-items: baseline;
+      }
+      .specimen > .meta .tag {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .specimen > .meta .verdict {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 3px 7px;
+        border: 1px solid var(--ink);
+      }
+      .verdict.ok {
+        background: #d8e7d0;
+      }
+      .verdict.risk {
+        background: #ecddb8;
+      }
+      .verdict.dead {
+        background: #e8d5cf;
+      }
+      .stage {
+        padding: 0;
+        overflow: hidden;
+      }
+      .caption {
+        border-top: 1px dashed var(--paper-edge);
+        padding: 12px 18px;
+        font-size: 0.9rem;
+        color: var(--ink-soft);
+      }
+      .caption strong {
+        font-weight: 600;
+      }
+
+      /* Fake sticky site header, so "under the header" is real */
+      .siteheader {
+        background: var(--cream);
+        border-bottom: 2px solid var(--ink);
+        padding: 10px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .siteheader .logo {
+        font-family: var(--font-big);
+        font-weight: 900;
+        font-size: 15px;
+        letter-spacing: 0.02em;
+      }
+      .siteheader nav {
+        display: flex;
+        gap: 14px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .siteheader .burger {
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+
+      /* Page container replica */
+      .pc {
+        max-width: var(--container-wide);
+        margin: 0 auto;
+        width: 100%;
+        padding: 0 16px;
+      }
+      @media (min-width: 768px) {
+        .pc {
+          padding: 0 32px;
+        }
+      }
+      .pc-prose {
+        max-width: var(--container-prose);
+      }
+      .pad {
+        padding-top: 48px;
+        padding-bottom: 24px;
+      }
+
+      /* ── Shared opening pieces ────────────────────────────────── */
+      .kicker-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: var(--text-label-tracking);
+        text-transform: uppercase;
+        line-height: 1;
+        font-weight: 500;
+        color: var(--ink);
+      }
+      .mono.muted {
+        color: var(--ink-muted);
+      }
+      .mono.cream {
+        color: var(--cream);
+      }
+      .dot {
+        display: inline-block;
+        width: 3px;
+        height: 3px;
+        border-radius: 999px;
+        background: rgb(107 107 107 / 0.6);
+      }
+      .h1 {
+        font-family: var(--font-big);
+        font-weight: 900;
+        font-size: clamp(2.75rem, 1.5rem + 5vw, 4.5rem);
+        line-height: 1.05;
+        margin: 12px 0 0;
+        letter-spacing: -0.01em;
+      }
+      .h1 .accent {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 400;
+        color: var(--jersey-deep);
+      }
+      .h1 .warmdot {
+        color: var(--warm);
+      }
+      .lead {
+        font-family: var(--font-display);
+        font-style: italic;
+        color: var(--ink-soft);
+        font-size: 1.15rem;
+        line-height: 1.38;
+        margin: 14px 0 0;
+        max-width: 46ch;
+      }
+      .byline {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: var(--text-label-tracking);
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 18px;
+      }
+      .figure {
+        border: 2px solid var(--ink);
+        background: linear-gradient(135deg, #cfc7ae, #b9b09a);
+        box-shadow: var(--shadow-paper-sm);
+        aspect-ratio: 16 / 9;
+        position: relative;
+        transform: rotate(-0.6deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #6d6752;
+      }
+      .figure::before {
+        content: "";
+        position: absolute;
+        top: -9px;
+        left: 22%;
+        width: 84px;
+        height: 18px;
+        background: rgb(232 224 200 / 0.9);
+        border: 1px solid rgb(0 0 0 / 0.12);
+        transform: rotate(-3deg);
+      }
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      @media (min-width: 900px) {
+        .hero-grid {
+          grid-template-columns: 60fr 40fr;
+          gap: 48px;
+          align-items: start;
+        }
+      }
+      .hero-rule {
+        border-bottom: 1px solid var(--ink);
+        margin: 24px 16px 0;
+      }
+
+      /* Taped card (PageHero / MatchHero shell) */
+      .taped {
+        position: relative;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-md);
+      }
+      .taped .tape {
+        position: absolute;
+        top: -10px;
+        left: 26px;
+        width: 110px;
+        height: 20px;
+        background: rgb(240 194 100 / 0.85);
+        border: 1px solid rgb(0 0 0 / 0.14);
+        transform: rotate(-2deg);
+      }
+
+      /* MatchHero replica */
+      .match {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 700px) {
+        .match {
+          grid-template-columns: 110px 1fr;
+        }
+      }
+      .match .stub {
+        background: var(--cream-soft);
+        border-bottom: 2px dashed var(--ink);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      @media (min-width: 700px) {
+        .match .stub {
+          border-bottom: 0;
+          border-right: 2px dashed var(--ink);
+        }
+      }
+      .match .stub .d {
+        font-family: var(--font-big);
+        font-weight: 900;
+        font-size: 24px;
+        line-height: 1;
+      }
+      .match .body {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+      .match .teams {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 20px;
+      }
+      .match .team {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+      .match .team.end {
+        flex-direction: row-reverse;
+        text-align: right;
+      }
+      .match .crest {
+        width: 40px;
+        height: 40px;
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        background: var(--cream-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-big);
+        font-weight: 900;
+        font-size: 18px;
+        flex: none;
+      }
+      .match .tname {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 20px;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .match .score {
+        font-family: var(--font-big);
+        font-weight: 900;
+        font-size: 34px;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+      .match .metaline {
+        border-top: 1px solid var(--ink);
+        padding-top: 12px;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .match .stamp {
+        position: absolute;
+        top: -12px;
+        right: 16px;
+        transform: rotate(2deg);
+        background: var(--ink);
+        color: var(--cream);
+        border: 2px solid var(--ink);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        z-index: 3;
+      }
+
+      /* Dark full-bleed band (UltrasHero / BoardHero) */
+      .band-dark {
+        background: var(--jersey-deep-dark);
+        position: relative;
+        overflow: hidden;
+      }
+      .band-dark::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          115deg,
+          rgb(255 255 255 / 0.03) 0 2px,
+          transparent 2px 7px
+        );
+        pointer-events: none;
+      }
+      .band-dark .inner {
+        position: relative;
+        z-index: 1;
+        padding: 72px 0 76px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+      }
+      .band-dark .h1 {
+        color: var(--cream);
+        text-transform: uppercase;
+        font-size: clamp(3rem, 1.5rem + 6vw, 5rem);
+        line-height: 0.95;
+        margin: 0;
+      }
+      .band-dark .h1 .accent {
+        color: var(--warm);
+        font-family: var(--font-big);
+        font-style: normal;
+        font-weight: 900;
+      }
+      .band-dark p.sub {
+        color: rgb(245 241 230 / 0.85);
+        max-width: 34rem;
+        margin: 0;
+      }
+      .btn-cream {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 2px solid var(--cream);
+        color: var(--cream);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 10px 16px;
+      }
+
+      /* EventHero replica — centred, 680 */
+      .eventhero {
+        max-width: var(--container-prose);
+        margin: 0 auto;
+        padding: 48px 16px 24px;
+        text-align: center;
+      }
+      .pill {
+        display: inline-block;
+        background: var(--jersey-deep);
+        color: #fff;
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: var(--text-label-tracking);
+        text-transform: uppercase;
+        padding: 6px 9px;
+        line-height: 1;
+      }
+      .pill-ink {
+        background: var(--ink);
+        color: var(--cream);
+      }
+      .pill-cream {
+        background: var(--cream-soft);
+        color: var(--ink);
+        border: 1px solid var(--paper-edge);
+      }
+
+      /* ── THE VARIANTS ─────────────────────────────────────────── */
+
+      /* V1 — standalone mono row above the opening */
+      .up-mono {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 24px;
+        padding: 6px 0;
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: var(--text-label-tracking);
+        text-transform: uppercase;
+        line-height: 1;
+        color: var(--jersey-link);
+        text-decoration: none;
+        border-bottom: 1px solid currentColor;
+        text-underline-offset: 3px;
+      }
+      .up-mono:hover {
+        color: var(--ink);
+      }
+      .up-mono .caret {
+        font-size: 13px;
+        line-height: 1;
+        transform: translateY(-0.5px);
+      }
+      .up-mono.on-dark {
+        color: var(--cream);
+      }
+      .up-mono.on-dark:hover {
+        color: var(--warm);
+      }
+
+      /* V2 — linked first segment inside the existing kicker */
+      .kicker-link {
+        color: var(--jersey-link);
+        text-decoration: none;
+        border-bottom: 1px solid currentColor;
+        text-underline-offset: 3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .kicker-link:hover {
+        color: var(--ink);
+      }
+
+      /* V4 — filing tab hanging off the opening's top edge */
+      .tabwrap {
+        position: relative;
+        padding-top: 30px;
+      }
+      .up-tab {
+        position: absolute;
+        top: 0;
+        left: 22px;
+        z-index: 4;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 30px;
+        padding: 8px 14px 10px;
+        background: var(--cream-soft);
+        border: 2px solid var(--ink);
+        border-bottom: 0;
+        box-shadow: 3px 0 0 0 var(--ink);
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: var(--text-label-tracking);
+        text-transform: uppercase;
+        line-height: 1;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .up-tab:hover {
+        background: var(--warm);
+      }
+
+      /* V5 — foot-of-page way-out bar */
+      .seam {
+        height: 14px;
+        background: repeating-linear-gradient(
+          -45deg,
+          var(--ink) 0 10px,
+          var(--cream) 10px 20px
+        );
+      }
+      .wayout {
+        background: var(--cream-soft);
+        padding: 26px 0;
+      }
+      .wayout .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      /* V6 — sticky mini-bar */
+      .minibar {
+        background: var(--cream-soft);
+        border-bottom: 1px solid var(--paper-edge);
+        padding: 0 18px;
+      }
+      .minibar .inner {
+        display: flex;
+        align-items: center;
+        min-height: 36px;
+      }
+
+      /* V7 — eyebrow bound to the headline block */
+      .eyebrow-block .up-mono {
+        margin-bottom: 2px;
+        border-bottom: 0;
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+      }
+
+      /* V8 — paper chip */
+      /* Canonical press-down: resting shadow is --shadow-paper-sm (4px 4px)
+         so PRESS_DOWN_CLASSES' motion-safe translate-x-1/y-1 (4px) lands the
+         chip exactly flush. transition-all duration-300, shadow collapse
+         ungated. See components/design-system/press-down.ts. */
+      .up-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 30px;
+        padding: 7px 12px;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        color: var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: var(--text-label-tracking);
+        text-transform: uppercase;
+        line-height: 1;
+        text-decoration: none;
+        transition: all 0.3s;
+      }
+      .up-chip:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .up-chip:hover {
+          transform: none;
+        }
+      }
+      .up-chip.on-dark {
+        background: transparent;
+        border-color: var(--cream);
+        color: var(--cream);
+        box-shadow: 4px 4px 0 0 var(--warm);
+      }
+      .up-chip.on-dark:hover {
+        box-shadow: none;
+      }
+
+      /* target overlay */
+      .showtarget .up-mono,
+      .showtarget .up-chip,
+      .showtarget .up-tab,
+      .showtarget .kicker-link {
+        outline: 1px dashed var(--card-red);
+        outline-offset: 0;
+      }
+
+      /* mobile column */
+      .phones {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 28px;
+      }
+      .phone {
+        width: 390px;
+        max-width: 100%;
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        background: var(--cream);
+        overflow: hidden;
+      }
+      .phone .label {
+        background: var(--ink);
+        color: var(--cream);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        padding: 7px 12px;
+      }
+      .phone .pc {
+        padding: 0 16px;
+      }
+      .phone .h1 {
+        font-size: 2.4rem;
+      }
+      .phone .band-dark .h1 {
+        font-size: 2.6rem;
+      }
+      .phone .band-dark .inner {
+        padding: 40px 0 44px;
+      }
+
+      table.score {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 24px 0 0;
+        font-size: 0.9rem;
+      }
+      table.score th,
+      table.score td {
+        border: 1px solid var(--ink);
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      table.score th {
+        background: var(--cream-soft);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      table.score td.y {
+        background: #d8e7d0;
+      }
+      table.score td.n {
+        background: #e8d5cf;
+      }
+      table.score td.m {
+        background: #ecddb8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <span class="page-kicker">#2442 · Prototype · Wayfinder map #2425</span>
+      <h1 class="page-title">
+        The up-link<span style="color: var(--warm)">.</span>
+      </h1>
+      <p class="lede">
+        #2428 settled the rule: every route whose breadcrumb trail is deeper
+        than <code>Home → self</code> gets <strong>one</strong> link to its
+        structural parent, labelled with the bare parent name. 17 routes. It
+        deliberately did not settle what that link looks like or where it sits.
+        Eight treatments below, rendered against the openings they actually have
+        to survive.
+      </p>
+
+      <div
+        class="note"
+        style="
+          background: #d8e7d0;
+          border-color: var(--jersey-deep);
+          box-shadow: 4px 4px 0 0 var(--jersey-deep);
+        "
+      >
+        <h4>Resolved 2026-08-10 — variant 8, the paper chip</h4>
+        <ul style="margin-top: 0">
+          <li>
+            <strong>Treatment: variant 8.</strong> An object, not a line — a
+            bordered, offset-shadowed chip carrying the canonical press-down.
+            30px target from its own padding, no dependency on the type ramp.
+          </li>
+          <li>
+            <strong>Dark bands: inside, tone-swapped.</strong> The 4 dark routes
+            render the chip <em>within</em> the band (cream border, warm shadow)
+            so the band keeps its flush arrival. Everywhere else the page
+            renders it above the opening.
+          </li>
+          <li>
+            <strong>Alignment: always the container's left edge.</strong> One
+            rule for all 17. <code>EventHero</code> is the only centred opening
+            and it tolerates a left-aligned chip rather than the chip adapting
+            per route.
+          </li>
+        </ul>
+        <p style="margin: 10px 0 0">
+          Everything below is the working that got there — kept because the
+          rejected variants carry the reasons.
+        </p>
+      </div>
+
+      <div class="note warn">
+        <h4>Chart correction — the two "full-bleed dark bands" are cream</h4>
+        <p style="margin: 0 0 8px">
+          The ticket's Notes name <code>MatchHero</code> and
+          <code>TeamHero</code> as the full-bleed dark-band stress cases. Both
+          are wrong:
+        </p>
+        <ul style="margin-top: 0">
+          <li>
+            <code>MatchHero</code> is a
+            <code>&lt;TapedCard bg="cream"&gt;</code> rendered <em>inside</em>
+            <code>&lt;PageContainer className="py-12"&gt;</code>
+            (<code>wedstrijd/[matchId]/page.tsx</code>).
+          </li>
+          <li>
+            <code>TeamHero</code> is a plain cream
+            <code>&lt;section&gt;</code> inside
+            <code>&lt;PageContainer&gt;</code>
+            (<code>ploegen/[slug]/page.tsx:201</code>).
+          </li>
+          <li>
+            <code>PlayerHero</code> and <code>StaffHero</code> are cream
+            <code>&lt;section&gt;</code>s too.
+          </li>
+        </ul>
+        <p style="margin: 10px 0 0">
+          The real full-bleed dark bands among the 17 are
+          <strong><code>UltrasHero</code></strong> (<code>/club/ultras</code>)
+          and
+          <strong><code>BoardHero</code></strong> (<code>/club/bestuur</code>,
+          <code>/club/jeugdbestuur</code>, <code>/club/angels</code>) — both
+          <code>&lt;header class="bg-jersey-deep-dark"&gt;</code> starting flush
+          against the sticky site header, with no cream above them. That is a
+          harder case than the ticket described, because there is nowhere on
+          cream to put a link. Four routes, not two.
+        </p>
+        <p style="margin: 10px 0 0">
+          <strong>But cost it against #2426's build, not today's tree.</strong>
+          #2426 <em>deletes</em> <code>BoardHero</code>: the three board pages
+          move onto <code>PageHero register="dark"</code>, and the 8 hand-rolled
+          routes onto <code>PageHero register="minimal"</code>. Post-#2426,
+          <strong
+            >9 of the 17 up-link routes render their opening through
+            <code>PageHero</code></strong
+          >
+          (<code>/club/[slug]</code>, <code>/club/contact</code>,
+          <code>/tegenstander/[clubId]</code>, <code>/club/geschiedenis</code>,
+          <code>/club/word-lid</code>, <code>/galerij/[slug]</code>,
+          <code>/ploegen/[slug]/wedstrijden</code> + the 3 board pages), and the
+          dark register is <code>PageHero</code> ×3 + <code>UltrasHero</code> ×1
+          — <strong>two components</strong>, not the eight #2428 costed a slot
+          against.
+        </p>
+        <p style="margin: 10px 0 0">
+          Second correction: <strong><code>EventHero</code></strong> is
+          <code>text-center</code> inside a 680 column — so it is the
+          <em>alignment</em> outlier, which the Notes never mention.
+        </p>
+      </div>
+
+      <div class="note">
+        <h4>Constraints carried in from #2428 / #2426 / #2394</h4>
+        <ol>
+          <li>
+            One link, one parent, bare parent name. Never
+            <code>Terug naar …</code>, never <code>Alle …</code>, never a chain,
+            never referrer-derived.
+          </li>
+          <li>
+            <code>CaretLeft</code> exists in <code>icons.redesign.ts</code>;
+            <code>ArrowLeft</code> does not.
+          </li>
+          <li>
+            The kicker slot carries domain data on 8 of 10 detail routes.
+            Verified in source: <code>MatchHero</code> → match status,
+            <code>EventHero</code> → date range, <code>PlayerHero</code> → team
+            label, <code>TeamHero</code> → <code>"KCVV Elewijt · Jeugd"</code>,
+            <code>EditorialHero</code> → type + date.
+          </li>
+          <li>
+            No hover-only affordances. Visibly a link at rest or it fails.
+          </li>
+          <li>
+            24px minimum target. <code>--text-label</code> is
+            <code>0.6875rem</code> with <code>--text-label--lh: 1</code> — an
+            11px line box, so every variant must say how it reaches 24.
+          </li>
+          <li>
+            Sharp corners, press-down hover, <code>jersey-deep</code> not bright
+            jersey, Phosphor Fill icons.
+          </li>
+        </ol>
+        <p style="margin: 12px 0 0">
+          <em
+            >Red dashed outlines mark the hit target wherever a specimen carries
+            the <code>showtarget</code> class.</em
+          >
+        </p>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <h2 class="round">Round 1 — eight treatments, one opening</h2>
+      <p class="lede">
+        All eight against <code>/nieuws/[slug]</code> —
+        <code>EditorialHero</code>, cream, left-aligned, 60/40 grid, kicker
+        already occupied by <code>MATCHVERSLAG · 19.04.2026</code>. The most
+        common of the 17 and the easiest; a variant that struggles here is dead
+        on arrival.
+      </p>
+
+      <!-- V1 -->
+      <section class="specimen showtarget">
+        <div class="meta">
+          <span class="tag">Variant 1</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Standalone mono row above the opening
+          </h3>
+          <span class="verdict ok">reaches 24px</span>
+          <span class="tag"
+            >the #2428 lean · costs 0 component API changes</span
+          >
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div class="pc" style="padding-top: 20px">
+            <a class="up-mono" href="#"><span class="caret">‹</span> Nieuws</a>
+          </div>
+          <div class="pc" style="padding-bottom: 24px">
+            <div class="hero-grid">
+              <div>
+                <div class="kicker-row">
+                  <span class="mono">Matchverslag</span><span class="dot"></span
+                  ><span class="mono">19.04.2026</span>
+                </div>
+                <div class="h1">
+                  Drie punten in de<br />laatste minuut<span class="warmdot"
+                    >.</span
+                  >
+                </div>
+                <p class="lead">
+                  Een ploeg die niet meer wist wat verliezen was, tot Peeters in
+                  de 92ste minuut de bal in de bovenhoek legde.
+                </p>
+                <p class="byline">Door redactie</p>
+              </div>
+              <div class="figure">cover 16:9</div>
+            </div>
+            <div class="hero-rule"></div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong>Own line, own container, own rhythm.</strong> Sits in the
+          page's existing <code>&lt;PageContainer&gt;</code>, so it aligns with
+          the kicker below it and needs no change to any of the 8 opening
+          components. <code>min-height:24px</code> +
+          <code>padding:6px 0</code> gets it to target without touching the type
+          ramp. Borrows the kicker's mono/caps register without occupying its
+          slot — which is exactly what #2428 argued for. Risk: it is one more
+          horizontal line of chrome between the header and the headline, and on
+          the four dark-band routes there is no cream strip for it to live in
+          (Round 2).
+        </div>
+      </section>
+
+      <!-- V2 -->
+      <section class="specimen showtarget">
+        <div class="meta">
+          <span class="tag">Variant 2</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Parent segment prepended into the existing kicker
+          </h3>
+          <span class="verdict dead">11px target</span>
+          <span class="tag"
+            >additive <code>href?</code> on MonoLabelRowItem</span
+          >
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div class="pc pad">
+            <div class="hero-grid">
+              <div>
+                <div class="kicker-row">
+                  <a class="mono kicker-link" href="#"
+                    ><span style="font-size: 12px">‹</span> Nieuws</a
+                  ><span class="dot"></span
+                  ><span class="mono">Matchverslag</span
+                  ><span class="dot"></span><span class="mono">19.04.2026</span>
+                </div>
+                <div class="h1">
+                  Drie punten in de<br />laatste minuut<span class="warmdot"
+                    >.</span
+                  >
+                </div>
+                <p class="lead">
+                  Een ploeg die niet meer wist wat verliezen was, tot Peeters in
+                  de 92ste minuut de bal in de bovenhoek legde.
+                </p>
+                <p class="byline">Door redactie</p>
+              </div>
+              <div class="figure">cover 16:9</div>
+            </div>
+            <div class="hero-rule"></div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong>Zero layout risk — and that is its whole case.</strong> No new
+          line, no new element, nothing above the opening to fight a band.
+          <code>MonoLabelRow</code> already renders this exact shape and needs
+          only an additive <code>href?</code>. But: the target is an 11px line
+          box with no room to grow (padding on one segment would break the row's
+          baseline), so it fails #2394 standing alone. And the linked segment
+          reads as one more inert label — underline is the only thing telling
+          you it is a link, at 11px. It also has to be threaded through 8
+          different kicker constructions, several of which build their items
+          from domain logic (<code>getKicker(status)</code>), not from the page.
+        </div>
+      </section>
+
+      <!-- V3 -->
+      <section class="specimen">
+        <div class="meta">
+          <span class="tag">Variant 3</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Full chain rendered as a MonoLabelRow
+          </h3>
+          <span class="verdict dead">portal chrome</span>
+          <span class="tag">rendered once, as promised</span>
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div class="pc" style="padding-top: 20px">
+            <div class="kicker-row">
+              <a class="mono kicker-link" href="#">Home</a
+              ><span class="dot"></span
+              ><a class="mono kicker-link" href="#">Nieuws</a
+              ><span class="dot"></span
+              ><span class="mono muted">Drie punten in de laatste minuut</span>
+            </div>
+          </div>
+          <div class="pc" style="padding-bottom: 24px; padding-top: 8px">
+            <div class="hero-grid">
+              <div>
+                <div class="kicker-row">
+                  <span class="mono">Matchverslag</span><span class="dot"></span
+                  ><span class="mono">19.04.2026</span>
+                </div>
+                <div class="h1">
+                  Drie punten in de<br />laatste minuut<span class="warmdot"
+                    >.</span
+                  >
+                </div>
+                <p class="lead">
+                  Een ploeg die niet meer wist wat verliezen was, tot Peeters in
+                  de 92ste minuut de bal in de bovenhoek legde.
+                </p>
+                <p class="byline">Door redactie</p>
+              </div>
+              <div class="figure">cover 16:9</div>
+            </div>
+            <div class="hero-rule"></div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong>Seen, as #2428 asked.</strong> The data exists on 14 routes so
+          this costs nothing to render — and the render is the argument. Two
+          mono rows stack directly on top of each other and the eye cannot tell
+          which one is navigation; the third segment repeats the
+          <code>&lt;h1&gt;</code> verbatim, six words above it. It also puts
+          "Home" on screen on a site whose logo is already a home link in the
+          sticky header. Rejected by argument in #2428, rejected again by eye.
+        </div>
+      </section>
+
+      <!-- V4 -->
+      <section class="specimen showtarget">
+        <div class="meta">
+          <span class="tag">Variant 4</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Filing tab hanging off the opening's top edge
+          </h3>
+          <span class="verdict risk">needs a bordered opening</span>
+          <span class="tag">reads physical, not navigational</span>
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div class="pc" style="padding: 44px 16px 24px">
+            <div class="tabwrap">
+              <a class="up-tab" href="#"><span>‹</span> Nieuws</a>
+              <div class="taped" style="padding: 28px 26px 26px">
+                <div class="kicker-row">
+                  <span class="mono">Matchverslag</span><span class="dot"></span
+                  ><span class="mono">19.04.2026</span>
+                </div>
+                <div
+                  class="h1"
+                  style="font-size: clamp(2.2rem, 1.2rem + 4vw, 3.4rem)"
+                >
+                  Drie punten in de laatste minuut<span class="warmdot">.</span>
+                </div>
+                <p class="lead">
+                  Een ploeg die niet meer wist wat verliezen was, tot Peeters in
+                  de 92ste minuut de bal in de bovenhoek legde.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong>The fanzine register's own answer</strong> — a filing tab says
+          "you are inside this section" without a single navigational word, and
+          it reaches 30px without argument. But it needs an opening with a
+          <em>drawable top edge</em>, and only 2 of the 8 opening components
+          have one (<code>PageHero</code> and <code>MatchHero</code>, both
+          <code>TapedCard</code>). Shown here against a
+          <code>TapedCard</code> the article hero does not actually have —
+          <code>EditorialHeroShell</code> is a bare grid with a bottom rule, so
+          the tab would hang off nothing. Also collides with
+          <code>MatchHero</code>'s corner stamp and <code>PageHero</code>'s warm
+          tape, both of which already live on that edge.
+        </div>
+      </section>
+
+      <!-- V5 -->
+      <section class="specimen">
+        <div class="meta">
+          <span class="tag">Variant 5</span>
+          <h3 class="vname" style="flex: 1 1 100%">Foot-of-page way-out bar</h3>
+          <span class="verdict dead">loses the cold arrival</span>
+          <span class="tag">but see the note — this is #2443's shape</span>
+        </div>
+        <div class="stage">
+          <div class="pc" style="padding-top: 20px; padding-bottom: 20px">
+            <p class="mono muted" style="letter-spacing: 0.14em">
+              ⋯ einde artikel ⋯
+            </p>
+          </div>
+          <div class="seam"></div>
+          <div class="wayout">
+            <div class="pc">
+              <div class="row">
+                <a class="up-mono" href="#"
+                  ><span class="caret">‹</span> Nieuws</a
+                >
+                <span class="mono muted">Verder lezen →</span>
+              </div>
+            </div>
+          </div>
+          <div class="seam"></div>
+        </div>
+        <div class="caption">
+          <strong>Wrong ticket, right idea.</strong> As an up-link it fails the
+          one case that justifies the affordance: the matchday cold arrival from
+          a share link, where the visitor wants out <em>before</em> reading, not
+          after. But rendered next to "Verder lezen" it shows what up and onward
+          look like as one closing gesture — which is real input for #2443, not
+          for this ticket. Keep the pairing in mind there; do not adopt it here.
+        </div>
+      </section>
+
+      <!-- V6 -->
+      <section class="specimen showtarget">
+        <div class="meta">
+          <span class="tag">Variant 6</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Sticky mini-bar under the sticky header
+          </h3>
+          <span class="verdict risk">persistent chrome</span>
+          <span class="tag">solves dark bands and mobile in one move</span>
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div class="minibar">
+            <div class="inner">
+              <a class="up-mono" style="border-bottom: 0" href="#"
+                ><span class="caret">‹</span> Nieuws</a
+              >
+            </div>
+          </div>
+          <div class="pc pad">
+            <div class="hero-grid">
+              <div>
+                <div class="kicker-row">
+                  <span class="mono">Matchverslag</span><span class="dot"></span
+                  ><span class="mono">19.04.2026</span>
+                </div>
+                <div class="h1">
+                  Drie punten in de<br />laatste minuut<span class="warmdot"
+                    >.</span
+                  >
+                </div>
+                <p class="lead">
+                  Een ploeg die niet meer wist wat verliezen was, tot Peeters in
+                  de 92ste minuut de bal in de bovenhoek legde.
+                </p>
+                <p class="byline">Door redactie</p>
+              </div>
+              <div class="figure">cover 16:9</div>
+            </div>
+            <div class="hero-rule"></div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong
+            >The only variant that works on all 17 without exception</strong
+          >
+          — it lives above every opening including the dark bands, because it is
+          part of the chrome rather than part of the page. And below
+          <code>lg</code> the nav is a hamburger, so a persistent parent name is
+          worth more on mobile than anywhere else. The cost is real though: a
+          second sticky strip on a site that already has one, on 17 of 31
+          routes, eating vertical space for the entire scroll. It also stops
+          being "the page's own link" and becomes browser chrome — a different
+          thing from what #2428 decided.
+        </div>
+      </section>
+
+      <!-- V7 -->
+      <section class="specimen showtarget">
+        <div class="meta">
+          <span class="tag">Variant 7</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Eyebrow bound to the headline block
+          </h3>
+          <span class="verdict risk">three mono rows stack</span>
+          <span class="tag">moves with the opening, not on top of it</span>
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div class="pc pad">
+            <div class="hero-grid">
+              <div class="eyebrow-block">
+                <a class="up-mono" href="#"
+                  ><span class="caret">‹</span> Nieuws</a
+                >
+                <div class="kicker-row" style="margin-top: 4px">
+                  <span class="mono">Matchverslag</span><span class="dot"></span
+                  ><span class="mono">19.04.2026</span>
+                </div>
+                <div class="h1">
+                  Drie punten in de<br />laatste minuut<span class="warmdot"
+                    >.</span
+                  >
+                </div>
+                <p class="lead">
+                  Een ploeg die niet meer wist wat verliezen was, tot Peeters in
+                  de 92ste minuut de bal in de bovenhoek legde.
+                </p>
+                <p class="byline">Door redactie</p>
+              </div>
+              <div class="figure">cover 16:9</div>
+            </div>
+            <div class="hero-rule"></div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong>Variant 1's twin, one level in.</strong> Visually
+          near-identical on this opening — the difference is ownership: the
+          eyebrow is inside the opening component, so it needs a slot on all 8
+          (exactly the cost #2428 rejected), and it inherits the opening's
+          alignment, which means it centres itself on <code>EventHero</code> and
+          lands inside the taped card on <code>MatchHero</code>. It also stacks
+          two mono rows with only 4px between them, so the up-link and the
+          kicker read as one wrapped line rather than two things.
+        </div>
+      </section>
+
+      <!-- V8 -->
+      <section class="specimen showtarget">
+        <div class="meta">
+          <span class="tag">Variant 8 · new</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Paper chip — a bordered press-down object
+          </h3>
+          <span class="verdict ok">30px, tone-portable</span>
+          <span class="tag">
+            precedent: PlayerHero's stub, TeamHero's season stub
+          </span>
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div class="pc" style="padding-top: 22px">
+            <a class="up-chip" href="#"><span>‹</span> Nieuws</a>
+          </div>
+          <div class="pc" style="padding-bottom: 24px; padding-top: 22px">
+            <div class="hero-grid">
+              <div>
+                <div class="kicker-row">
+                  <span class="mono">Matchverslag</span><span class="dot"></span
+                  ><span class="mono">19.04.2026</span>
+                </div>
+                <div class="h1">
+                  Drie punten in de<br />laatste minuut<span class="warmdot"
+                    >.</span
+                  >
+                </div>
+                <p class="lead">
+                  Een ploeg die niet meer wist wat verliezen was, tot Peeters in
+                  de 92ste minuut de bal in de bovenhoek legde.
+                </p>
+                <p class="byline">Door redactie</p>
+              </div>
+              <div class="figure">cover 16:9</div>
+            </div>
+            <div class="hero-rule"></div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong
+            >Variant 1's placement, but an object instead of a line.</strong
+          >
+          Carries its own background, so it survives on any surface — the one
+          property variants 1, 2 and 7 lack. 30px target from its own padding,
+          no type-ramp dependency. Visibly a control at rest (border + offset
+          shadow), takes the canonical press-down hover, and the register
+          already exists on this site:
+          <code>PlayerHero</code>'s
+          <code>border-2 … shadow-[2px_2px_0]</code> stub (line 213) and
+          <code>TeamHero</code>'s season stub are the same object. Cost: it is
+          louder than a link — it reads as a button on a page whose other
+          buttons do things rather than go places.
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <h2 class="round">Round 2 — the four hard openings</h2>
+      <p class="lede">
+        Variants 1, 2, 4 and 8 attach to the opening, so they are the ones the
+        hard cases can break. Variant 3 shares variant 1's placement (and is
+        already dead), 7 shares 2's attachment, and 5 / 6 sit outside the
+        opening entirely — 6 is re-shown against the dark band because that is
+        where it earns its case.
+      </p>
+
+      <!-- HARD 1 — dark band -->
+      <section class="specimen showtarget">
+        <div class="meta">
+          <span class="tag">Hard opening 1 of 4</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Full-bleed dark band — <code>/club/ultras</code>,
+            <code>/club/bestuur</code> ×3
+          </h3>
+          <span class="tag"
+            >the band starts flush against the sticky header — there is no cream
+            above it</span
+          >
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <!-- V1 on dark: the cream strip problem -->
+          <div class="pc" style="padding: 14px 16px">
+            <a class="up-mono" href="#"><span class="caret">‹</span> De club</a>
+          </div>
+          <div class="band-dark">
+            <div class="pc inner">
+              <span class="mono cream">KCVV Elewijt · Supporters</span>
+              <div class="h1">De <span class="accent">luidste</span> hoek</div>
+              <p class="sub">
+                Trommels, vlaggen en een bak pintjes. De harde kern van Elewijt
+                staat elke thuismatch achter het doel.
+              </p>
+              <span class="btn-cream">Word ultra</span>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong
+            >Variant 1 — this is the failure the ticket asked about.</strong
+          >
+          The up-link forces a ~52px cream strip between the sticky header and a
+          band that is designed to start at the header's edge. The band stops
+          being an arrival and becomes a section further down the page. Same
+          failure for variants 2 and 7 (there is no cream kicker — the band's
+          kicker is <code>tone="cream"</code>, <em>inside</em> the dark) and for
+          4 (nothing to hang a tab off; the band has no card edge).
+        </div>
+      </section>
+
+      <section class="specimen showtarget">
+        <div class="meta">
+          <span class="tag">Hard opening 1 · rescues</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Variant 8 inside the band · variant 6 above it
+          </h3>
+          <span class="verdict ok">both survive</span>
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div class="band-dark">
+            <div
+              class="pc"
+              style="
+                position: relative;
+                z-index: 1;
+                padding-top: 20px;
+                text-align: left;
+              "
+            >
+              <a class="up-chip on-dark" href="#"><span>‹</span> De club</a>
+            </div>
+            <div class="pc inner" style="padding-top: 34px">
+              <span class="mono cream">KCVV Elewijt · Supporters</span>
+              <div class="h1">De <span class="accent">luidste</span> hoek</div>
+              <p class="sub">
+                Trommels, vlaggen en een bak pintjes. De harde kern van Elewijt
+                staat elke thuismatch achter het doel.
+              </p>
+              <span class="btn-cream">Word ultra</span>
+            </div>
+          </div>
+
+          <div style="height: 40px"></div>
+
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div class="minibar">
+            <div class="inner">
+              <a class="up-mono" style="border-bottom: 0" href="#"
+                ><span class="caret">‹</span> De club</a
+              >
+            </div>
+          </div>
+          <div class="band-dark">
+            <div class="pc inner">
+              <span class="mono cream">KCVV Elewijt · Supporters</span>
+              <div class="h1">De <span class="accent">luidste</span> hoek</div>
+              <p class="sub">
+                Trommels, vlaggen en een bak pintjes. De harde kern van Elewijt
+                staat elke thuismatch achter het doel.
+              </p>
+              <span class="btn-cream">Word ultra</span>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong
+            >Top — variant 8, tone-swapped, rendered inside the band.</strong
+          >
+          The band keeps its flush arrival; the chip inverts to a cream border
+          with a warm shadow. But note what this costs: to sit inside the band,
+          the chip has to be rendered <em>by the opening component</em>. That
+          was priced at eight API changes in #2428 — but post-#2426 the dark
+          register is <code>PageHero register="dark"</code> ×3 +
+          <code>UltrasHero</code> ×1, so it is <strong>two components</strong>,
+          and one of them is the shared opening that 9 of the 17 routes go
+          through anyway. The real question is whether "the page renders it
+          above, except the two dark openings render it inside" is one rule or
+          two. <br /><br />
+          <strong>Bottom — variant 6.</strong> No exception needed at all: the
+          mini-bar is chrome, so the band still starts flush against
+          <em>it</em>. The strip is cream-soft rather than cream, which reads as
+          part of the header rather than part of the page.
+        </div>
+      </section>
+
+      <!-- HARD 2 — centred EventHero -->
+      <section class="specimen showtarget">
+        <div class="meta">
+          <span class="tag">Hard opening 2 of 4</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Centred, 680 column — <code>/evenementen/[slug]</code>
+          </h3>
+          <span class="verdict risk">alignment fight</span>
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div class="pc pc-prose" style="padding-top: 22px">
+            <a class="up-chip" href="#"><span>‹</span> Evenementen</a>
+          </div>
+          <div class="eventhero" style="padding-top: 22px">
+            <span class="pill">Clubevent</span>
+            <p class="mono muted" style="margin: 14px 0 0">
+              ZA 12 SEP · 14:00 — 22:00
+            </p>
+            <div class="h1" style="margin-top: 6px">
+              Kaas- en <span class="accent">wijnavond</span>
+            </div>
+            <p class="mono muted" style="margin: 8px 0 0">
+              Kantine KCVV Elewijt
+            </p>
+            <div
+              style="
+                margin-top: 24px;
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+              "
+            >
+              <span class="pill-ink pill">In agenda</span
+              ><span class="pill-cream pill">Deel</span>
+            </div>
+          </div>
+
+          <div
+            style="
+              border-top: 2px dashed var(--paper-edge);
+              margin: 34px 0 0;
+              padding-top: 8px;
+            "
+          ></div>
+
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div
+            class="pc pc-prose"
+            style="padding-top: 22px; text-align: center"
+          >
+            <a class="up-chip" href="#"><span>‹</span> Evenementen</a>
+          </div>
+          <div class="eventhero" style="padding-top: 22px">
+            <span class="pill">Clubevent</span>
+            <p class="mono muted" style="margin: 14px 0 0">
+              ZA 12 SEP · 14:00 — 22:00
+            </p>
+            <div class="h1" style="margin-top: 6px">
+              Kaas- en <span class="accent">wijnavond</span>
+            </div>
+            <p class="mono muted" style="margin: 8px 0 0">
+              Kantine KCVV Elewijt
+            </p>
+            <div
+              style="
+                margin-top: 24px;
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+              "
+            >
+              <span class="pill-ink pill">In agenda</span
+              ><span class="pill-cream pill">Deel</span>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong
+            >Top — container's left edge (the rule for the other 16).</strong
+          >
+          The 680 column's left edge is a real edge here, but the page has no
+          other left-aligned element above the fold, so the chip reads as parked
+          beside the composition rather than introducing it.
+          <br /><br />
+          <strong>Bottom — centred with the opening.</strong> Reads as part of
+          the stack, but it is now a per-route adaptation: the up-link would
+          follow whatever alignment its opening happens to have, which is one
+          more thing to get wrong on the next opening someone builds.
+          <code>EventHero</code> is the only centred opening among the 17, so
+          this buys consistency on one route at the cost of a rule that holds on
+          all of them.
+        </div>
+      </section>
+
+      <!-- HARD 3 — MatchHero taped card -->
+      <section class="specimen showtarget">
+        <div class="meta">
+          <span class="tag">Hard opening 3 of 4</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Taped card with a corner stamp — <code>/wedstrijd/[matchId]</code>
+          </h3>
+          <span class="verdict risk">the stamp owns the top edge</span>
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div
+            class="pc"
+            style="
+              background: var(--jersey-deep-dark);
+              max-width: none;
+              padding: 10px 0;
+            "
+          >
+            <div class="pc">
+              <span class="mono cream">Volgende match · ZA 12 SEP · 15:00</span>
+            </div>
+          </div>
+          <div class="pc" style="padding-top: 20px">
+            <a class="up-mono" href="#"
+              ><span class="caret">‹</span> Kalender</a
+            >
+          </div>
+          <div class="pc" style="padding: 26px 16px 30px">
+            <div class="taped">
+              <span class="stamp">Gespeeld</span>
+              <div class="match">
+                <div class="stub">
+                  <div>
+                    <div class="d">ZA 19</div>
+                    <div class="d">APR</div>
+                  </div>
+                  <div style="font-family: var(--font-mono); font-size: 14px">
+                    15:00
+                  </div>
+                  <div class="mono muted" style="letter-spacing: 0.14em">
+                    Sportcomplex<br />Elewijt
+                  </div>
+                </div>
+                <div class="body">
+                  <div class="mono" style="letter-spacing: 0.18em">
+                    ∗ Matchverslag
+                  </div>
+                  <div class="teams">
+                    <div class="team">
+                      <span class="crest">K</span
+                      ><span class="tname">KCVV Elewijt</span>
+                    </div>
+                    <div class="score">
+                      3 <span class="mono muted">—</span> 2
+                    </div>
+                    <div class="team end">
+                      <span class="crest">S</span
+                      ><span class="tname">SK Weerde</span>
+                    </div>
+                  </div>
+                  <div class="metaline">
+                    3de Prov. B <span class="mono muted">·</span> Eerste elftal
+                    A <span class="mono muted">·</span> ’25/’26
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong>Variant 1 shown; note what sits above it.</strong>
+          <code>/wedstrijd</code> and <code>/spelers</code> render
+          <code>&lt;MatchStripSlot /&gt;</code> full-bleed between the header
+          and the opening (the dark strip above), so the up-link is the
+          <em>third</em> band the visitor crosses before reaching the headline.
+          That is the strongest argument against variant 1 on these two routes
+          specifically — and it is not a dark-band problem, it is a stacking
+          problem. Variant 4's tab is also dead here: the corner stamp
+          (<code>MatchStatusBadge</code>, <code>-top-3 right-4</code>) already
+          hangs off this card's top edge, and a tab on the left plus a stamp on
+          the right turns the card into a filing cabinet.
+        </div>
+      </section>
+
+      <!-- HARD 4 — bare heading -->
+      <section class="specimen showtarget">
+        <div class="meta">
+          <span class="tag">Hard opening 4 of 4</span>
+          <h3 class="vname" style="flex: 1 1 100%">
+            Bare heading, no opening component —
+            <code>/ploegen/[slug]/wedstrijden</code>
+          </h3>
+          <span class="verdict ok">the kicker is dropped here anyway</span>
+        </div>
+        <div class="stage">
+          <div class="siteheader">
+            <span class="logo">KCVV ELEWIJT</span>
+            <nav>
+              <span>Nieuws</span><span>Ploegen</span><span>De club</span>
+            </nav>
+          </div>
+          <div class="pc" style="padding-top: 22px">
+            <a class="up-mono" href="#"
+              ><span class="caret">‹</span> KCVV Elewijt U15</a
+            >
+          </div>
+          <div class="pc" style="padding: 10px 16px 34px">
+            <div class="h1" style="margin-top: 6px">
+              Wedstrijden<span class="warmdot">.</span>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <strong>The easiest case, and the one that proves the rule.</strong>
+          #2428 drops the inert <code>&lt;p&gt;{team.name}&lt;/p&gt;</code> that
+          currently sits here (line 156) — so the up-link replaces text that was
+          already in this exact position, doing the same job without being a
+          link. Nothing above it, nothing beside it, no alignment fight. Note
+          the label is the only <em>dynamic</em> one of the 17 (the team's
+          name), and it is long enough to wrap on mobile — see the phones below.
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <h2 class="round">Round 3 — mobile, 390px</h2>
+      <p class="lede">
+        Below <code>lg</code> the nav collapses to a hamburger
+        (<code>SiteHeader.tsx:97</code>), so mobile is where the up-link earns
+        its keep — and where vertical space is most expensive.
+      </p>
+
+      <div class="phones">
+        <div class="phone">
+          <div class="label">V1 · mono row · /nieuws/[slug]</div>
+          <div class="siteheader">
+            <span class="logo">KCVV</span><span class="burger">☰</span>
+          </div>
+          <div class="pc" style="padding-top: 14px">
+            <a class="up-mono" href="#"><span class="caret">‹</span> Nieuws</a>
+          </div>
+          <div class="pc" style="padding-bottom: 20px">
+            <div class="kicker-row" style="margin-top: 10px">
+              <span class="mono">Matchverslag</span><span class="dot"></span
+              ><span class="mono">19.04.2026</span>
+            </div>
+            <div class="h1">
+              Drie punten in de laatste minuut<span class="warmdot">.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone">
+          <div class="label">V8 · paper chip · /nieuws/[slug]</div>
+          <div class="siteheader">
+            <span class="logo">KCVV</span><span class="burger">☰</span>
+          </div>
+          <div class="pc" style="padding-top: 16px">
+            <a class="up-chip" href="#"><span>‹</span> Nieuws</a>
+          </div>
+          <div class="pc" style="padding-bottom: 20px">
+            <div class="kicker-row" style="margin-top: 16px">
+              <span class="mono">Matchverslag</span><span class="dot"></span
+              ><span class="mono">19.04.2026</span>
+            </div>
+            <div class="h1">
+              Drie punten in de laatste minuut<span class="warmdot">.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone">
+          <div class="label">V6 · sticky mini-bar · /club/ultras</div>
+          <div class="siteheader">
+            <span class="logo">KCVV</span><span class="burger">☰</span>
+          </div>
+          <div class="minibar">
+            <div class="inner">
+              <a class="up-mono" style="border-bottom: 0" href="#"
+                ><span class="caret">‹</span> De club</a
+              >
+            </div>
+          </div>
+          <div class="band-dark">
+            <div class="pc inner">
+              <span class="mono cream">KCVV Elewijt · Supporters</span>
+              <div class="h1">De <span class="accent">luidste</span> hoek</div>
+              <p class="sub">Trommels, vlaggen en een bak pintjes.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone">
+          <div class="label">
+            V1 · longest label · /ploegen/[slug]/wedstrijden
+          </div>
+          <div class="siteheader">
+            <span class="logo">KCVV</span><span class="burger">☰</span>
+          </div>
+          <div class="pc" style="padding-top: 14px">
+            <a class="up-mono" href="#"
+              ><span class="caret">‹</span> KCVV Elewijt Eerste Elftallen A</a
+            >
+          </div>
+          <div class="pc" style="padding-bottom: 20px">
+            <div class="h1" style="margin-top: 10px">
+              Wedstrijden<span class="warmdot">.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone">
+          <div class="label">V2 · kicker prefix · wraps at 390</div>
+          <div class="siteheader">
+            <span class="logo">KCVV</span><span class="burger">☰</span>
+          </div>
+          <div class="pc" style="padding-top: 20px; padding-bottom: 20px">
+            <div class="kicker-row">
+              <a class="mono kicker-link" href="#"
+                ><span style="font-size: 12px">‹</span> Evenementen</a
+              ><span class="dot"></span><span class="mono">ZA 12 SEP</span
+              ><span class="dot"></span><span class="mono">14:00 — 22:00</span>
+            </div>
+            <div class="h1" style="margin-top: 10px">
+              Kaas- en <span class="accent">wijnavond</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <h2 class="round">Scorecard</h2>
+      <table class="score">
+        <thead>
+          <tr>
+            <th>Variant</th>
+            <th>24px target</th>
+            <th>Survives the 4 dark routes</th>
+            <th>Component API cost</th>
+            <th>Link at rest</th>
+            <th>Vertical cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1 · mono row above</strong></td>
+            <td class="y">yes — own padding</td>
+            <td class="n">no — forces a cream strip</td>
+            <td class="y">none (page renders it)</td>
+            <td class="m">underline at 11px</td>
+            <td class="m">~52px, 17 routes</td>
+          </tr>
+          <tr>
+            <td><strong>2 · kicker prefix</strong></td>
+            <td class="n">no — 11px line box</td>
+            <td class="m">yes, but the kicker is inside the band</td>
+            <td class="n">8 kicker constructions</td>
+            <td class="n">reads as a label</td>
+            <td class="y">zero</td>
+          </tr>
+          <tr>
+            <td><strong>3 · full chain</strong></td>
+            <td class="y">yes</td>
+            <td class="n">no</td>
+            <td class="y">none</td>
+            <td class="m">two mono rows collide</td>
+            <td class="n">~52px + repeats the h1</td>
+          </tr>
+          <tr>
+            <td><strong>4 · filing tab</strong></td>
+            <td class="y">yes — 30px</td>
+            <td class="n">no — bands have no card edge</td>
+            <td class="n">needs a bordered opening (2 of 8)</td>
+            <td class="y">unmistakably an object</td>
+            <td class="y">~30px, overlaps</td>
+          </tr>
+          <tr>
+            <td><strong>5 · foot bar</strong></td>
+            <td class="y">yes</td>
+            <td class="y">yes</td>
+            <td class="y">none</td>
+            <td class="y">yes</td>
+            <td class="n">fails the cold arrival — wrong ticket</td>
+          </tr>
+          <tr>
+            <td><strong>6 · sticky mini-bar</strong></td>
+            <td class="y">yes — 36px</td>
+            <td class="y">yes, no exception</td>
+            <td class="y">none — it is chrome</td>
+            <td class="m">chrome, not page</td>
+            <td class="n">36px for the whole scroll</td>
+          </tr>
+          <tr>
+            <td><strong>7 · headline eyebrow</strong></td>
+            <td class="y">yes</td>
+            <td class="m">inherits the band's tone</td>
+            <td class="n">slot on all 8</td>
+            <td class="m">same as 1</td>
+            <td class="m">~30px</td>
+          </tr>
+          <tr>
+            <td><strong>8 · paper chip</strong></td>
+            <td class="y">yes — 30px</td>
+            <td class="m">yes, if the 2 dark heroes render it</td>
+            <td class="m">none, +1 prop on 2 dark heroes</td>
+            <td class="y">border + shadow at rest</td>
+            <td class="m">~46px</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note" style="margin-top: 40px">
+        <h4>The three questions the render surfaced</h4>
+        <ol>
+          <li>
+            <strong>Is the dark band an exception or a second rule?</strong>
+            Four routes (<code>/club/ultras</code> + three
+            <code>createBoardPage</code> leaves) have an opening that starts
+            flush against the sticky header. Either the page renders the up-link
+            above the opening and those four render it <em>inside</em> (two
+            component changes, one written exception), or the affordance moves
+            into the chrome (variant 6) and there is no exception at all.
+          </li>
+          <li>
+            <strong>Line or object?</strong> Variant 1 is quieter and cheaper;
+            variant 8 is unmistakably a control at rest, reaches 24px without
+            argument, and is tone-portable — but it is louder than a link on a
+            page whose other bordered-and-shadowed things are buttons that
+            <em>do</em> rather than <em>go</em>.
+          </li>
+          <li>
+            <strong>Does the link follow the container or the opening?</strong>
+            <code>EventHero</code> is centred; <code>MatchHero</code> sits
+            inside a taped card; <code>/wedstrijd</code> and
+            <code>/spelers</code> already put a full-bleed
+            <code>MatchStripSlot</code> in this exact position. One fixed
+            alignment across 17 routes, or per-route adaptation?
+          </li>
+        </ol>
+      </div>
+    </div>
+  </body>
+</html>

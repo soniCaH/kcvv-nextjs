@@ -1,0 +1,1599 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2474 — .prose-link vs EditorialLink variant="inline"</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #008755;
+        --jersey-link: #007c46;
+        --jersey-deep-dark: #133d28;
+        --warm: #f0c264;
+        --paper-edge: #d9d2bd;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --text-label: 0.6875rem;
+        --container-prose: 680px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      /* ============ prototype chrome — NOT part of the design ============ */
+      .proto {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 30px 24px 28px;
+      }
+      .proto-inner,
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+      .proto-kicker {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin: 0 0 10px;
+      }
+      .proto h1 {
+        font-family: var(--font-big);
+        font-size: 2.1rem;
+        line-height: 1.1;
+        margin: 0 0 12px;
+        font-weight: 400;
+      }
+      .proto p {
+        margin: 0;
+        max-width: 76ch;
+        color: rgb(245 241 230 / 0.82);
+        font-size: 0.95rem;
+      }
+      .proto .controls {
+        margin-top: 22px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .btn {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: var(--warm);
+        color: var(--ink);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 10px 18px;
+        cursor: pointer;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s;
+      }
+      .btn:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+      .btn.is-off {
+        background: var(--cream);
+      }
+      .hint {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        color: rgb(245 241 230 / 0.6);
+      }
+
+      section.block {
+        padding: 56px 24px;
+        border-bottom: 2px solid var(--ink);
+      }
+      section.block:nth-of-type(even) {
+        background: var(--cream);
+      }
+      .sec-kicker {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--jersey-link);
+        margin: 0 0 8px;
+      }
+      h2 {
+        font-family: var(--font-big);
+        font-size: 1.8rem;
+        line-height: 1.15;
+        font-weight: 400;
+        margin: 0 0 6px;
+      }
+      .lede {
+        color: var(--ink-soft);
+        max-width: 74ch;
+        margin: 0 0 30px;
+        font-size: 0.98rem;
+      }
+      /* Annotation note — the site's own idiom for a marked-off aside: a thin
+         paper rule above, polarity carried in the type rather than in a slab
+         (the #2469 call — meaning in the words, not in a coloured bar). */
+      .verdict {
+        border-top: 1px solid var(--paper-edge);
+        padding: 12px 0 0;
+        margin: 24px 0 0;
+        font-size: 0.94rem;
+        color: var(--ink-soft);
+        max-width: 74ch;
+      }
+      .verdict strong {
+        color: var(--jersey-link);
+      }
+      .verdict.bad strong {
+        color: var(--card-red);
+        font-style: italic;
+      }
+
+      .pair {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 26px;
+      }
+      @media (min-width: 900px) {
+        .pair {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .panel {
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 22px 24px 26px;
+      }
+      section.block:nth-of-type(even) .panel {
+        background: var(--cream-soft);
+      }
+      .panel-tag {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        display: inline-block;
+        padding: 3px 8px;
+        border: 1px solid var(--ink);
+        margin: 0 0 4px;
+      }
+      .tag-ships {
+        background: var(--jersey-link);
+        color: var(--cream);
+        border-color: var(--jersey-link);
+      }
+      .tag-dead {
+        background: var(--cream-deep);
+        color: var(--ink-muted);
+      }
+      .panel-name {
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        color: var(--ink-muted);
+        margin: 6px 0 18px;
+      }
+      .demo-copy {
+        font-size: 1.0625rem;
+        line-height: 1.75;
+        color: var(--ink-soft);
+        max-width: var(--container-prose);
+      }
+      .narrow {
+        max-width: 290px;
+        border: 1px dashed var(--paper-edge);
+        padding: 12px 14px;
+        background: rgb(217 210 189 / 0.16);
+      }
+      .narrow-label {
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 0 0 8px;
+      }
+
+      /* ============ A — .prose-link, exactly as globals.css:707 ============ */
+      .prose-link {
+        color: var(--jersey-link);
+        text-decoration: none;
+        font-weight: 500;
+        padding-inline: 4px;
+        margin-inline: -4px;
+        background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 0 4.7 L 50 4.3 L 100 4.0 L 100 10.8 L 50 11.1 L 0 11.0 Z' fill='%23008755' fill-opacity='0.4'/></svg>");
+        background-repeat: no-repeat;
+        background-position: 0 100%;
+        background-size: 0% 0.42em;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+        transition:
+          color 0.3s ease,
+          background-size 320ms ease-out;
+      }
+      .prose-link:hover,
+      .prose-link:focus-visible,
+      body.force-on .prose-link {
+        background-size: 100% 0.42em;
+      }
+
+      /* ====== B — EditorialLink variant="inline", as EditorialLink.tsx ====== */
+      .ed-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        color: var(--jersey-deep);
+        text-decoration: none;
+      }
+      .ed-link > .ed-text {
+        position: relative;
+        display: inline-block;
+      }
+      .ed-link .ed-sweep {
+        position: absolute;
+        right: 0;
+        bottom: -4px;
+        left: 0;
+        height: 0.45em;
+        background: var(--jersey-deep);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease-out;
+        -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 1 4.7 L 50 4.3 L 99 4.0 L 99 10.8 L 50 11.1 L 1 11.0 Z' fill='black'/></svg>");
+        mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 1 4.7 L 50 4.3 L 99 4.0 L 99 10.8 L 50 11.1 L 1 11.0 Z' fill='black'/></svg>");
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+      }
+      .ed-link:hover .ed-sweep,
+      body.force-on .ed-sweep {
+        transform: scaleX(1);
+      }
+
+      /* ============ measurement table ============ */
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.9rem;
+        background: var(--cream);
+        border: 2px solid var(--ink);
+      }
+      section.block:nth-of-type(even) table {
+        background: var(--cream-soft);
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--paper-edge);
+        vertical-align: top;
+      }
+      th {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        background: var(--ink);
+        color: var(--cream);
+        border-bottom: none;
+      }
+      td.axis {
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      td code,
+      .demo-copy code {
+        font-family: var(--font-mono);
+        font-size: 0.84em;
+        background: rgb(217 210 189 / 0.4);
+        padding: 1px 4px;
+      }
+      .swatch {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 1px solid var(--ink);
+        vertical-align: -1px;
+        margin-right: 5px;
+      }
+
+      /* ============ the two registers, side by side ============ */
+      .register {
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 24px 26px 28px;
+      }
+      .affordance {
+        color: var(--ink);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding-block: 8px;
+        margin-block: -8px;
+        text-underline-offset: 4px;
+      }
+      .affordance:hover {
+        color: var(--jersey-link);
+        text-decoration: underline;
+      }
+      /* ============ Test 5 — the Q6 comparison grid ============ */
+      .q6grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+      }
+      @media (min-width: 1000px) {
+        .q6grid {
+          grid-template-columns: 0.85fr 1.1fr 1.1fr 1.1fr;
+        }
+      }
+      section.block:nth-of-type(even) .q6grid {
+        background: var(--cream-soft);
+      }
+      .q6head {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        background: var(--ink);
+        color: var(--cream);
+        padding: 9px 14px;
+      }
+      .q6head code {
+        background: none;
+        color: var(--warm);
+        text-transform: none;
+      }
+      .q6head em {
+        color: var(--warm);
+        font-style: normal;
+      }
+      .q6label,
+      .q6cell {
+        padding: 18px 14px;
+        border-top: 1px solid var(--paper-edge);
+      }
+      .q6label {
+        background: rgb(217 210 189 / 0.28);
+      }
+      .q6label strong {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+      }
+      .q6label span {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--ink-muted);
+        margin-top: 2px;
+      }
+      .q6label em {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--ink-soft);
+        margin-top: 7px;
+      }
+      .q6label em.q6settled {
+        color: var(--jersey-link);
+        font-style: normal;
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .q6note {
+        font-family: var(--font-mono);
+        font-size: 0.64rem;
+        letter-spacing: 0.05em;
+        color: var(--ink-muted);
+        margin: 12px 0 0;
+      }
+
+      /* the four idioms exactly as they ship */
+      .t-sponsors {
+        color: var(--ink);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        text-underline-offset: 4px;
+      }
+      .t-sponsors:hover {
+        color: var(--jersey-link);
+        text-decoration: underline;
+      }
+      .t-eventfact {
+        color: var(--ink-muted);
+        text-decoration: none;
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        text-underline-offset: 4px;
+      }
+      .t-eventfact:hover {
+        color: var(--ink);
+        text-decoration: underline;
+      }
+      .t-cites {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 16px;
+      }
+      .t-cite {
+        color: var(--jersey-deep);
+        text-decoration: none;
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-underline-offset: 2px;
+      }
+      .t-cite:hover {
+        text-decoration: underline;
+      }
+      .t-contact {
+        color: var(--jersey-deep);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 2.1;
+      }
+      .t-contact:hover {
+        text-decoration: underline;
+      }
+
+      /* EditorialLink variant="cta" */
+      .t-cta {
+        position: relative;
+        color: var(--jersey-deep);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding-block: 8px;
+        margin-block: -8px;
+      }
+      .t-cta-sm {
+        font-size: 0.625rem;
+      }
+      .t-sw {
+        position: absolute;
+        left: 0;
+        bottom: 2px;
+        height: 0.45em;
+        width: calc(100% - 18px);
+        background: var(--jersey-deep);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease-out;
+        -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 1 4.7 L 50 4.3 L 99 4.0 L 99 10.8 L 50 11.1 L 1 11.0 Z' fill='black'/></svg>");
+        mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 1 4.7 L 50 4.3 L 99 4.0 L 99 10.8 L 50 11.1 L 1 11.0 Z' fill='black'/></svg>");
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+      }
+      .t-cta:hover .t-sw,
+      body.force-on .t-sw {
+        transform: scaleX(1);
+      }
+      .t-ar {
+        transition: transform 0.3s;
+      }
+      .t-cta:hover .t-ar {
+        transform: translateX(4px);
+      }
+
+      /* ============ Test 6 — cta with / without sweep ============ */
+      .q7wrap {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+      }
+      section.block:nth-of-type(even) .q7wrap {
+        background: var(--cream-soft);
+      }
+      .q7row {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 900px) {
+        .q7row {
+          grid-template-columns: 0.7fr 1.15fr 1.15fr;
+        }
+      }
+      .q7row + .q7row {
+        border-top: 2px solid var(--ink);
+      }
+      .q7tag {
+        padding: 18px 16px;
+        background: rgb(217 210 189 / 0.28);
+      }
+      .q7tag strong {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+      }
+      .q7tag span {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        color: var(--ink-muted);
+        margin-top: 4px;
+      }
+      .q7demo {
+        padding: 16px 18px 20px;
+        border-left: 1px solid var(--paper-edge);
+      }
+      .q7state {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 0 0 14px;
+      }
+      .q7state em {
+        font-style: normal;
+        text-transform: none;
+        letter-spacing: 0;
+      }
+      .sh-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 18px;
+        border-bottom: 1px solid var(--paper-edge);
+        padding-bottom: 10px;
+      }
+      .sh-title {
+        font-family: var(--font-big);
+        font-size: 1.45rem;
+        line-height: 1.1;
+      }
+      .sh-title em {
+        font-style: italic;
+        color: var(--jersey-link);
+      }
+
+      .c7 {
+        position: relative;
+        color: var(--jersey-link);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding-block: 8px;
+        margin-block: -8px;
+      }
+      .c7-deep {
+        color: var(--jersey-deep);
+      }
+      /* The marker — .prose-link's exact treatment, applied to the label span
+         only so the arrow stays outside it. Same slab, same 40%, same
+         background-size reveal: one implementation, two type treatments. */
+      .c7-mark .c7-txt {
+        padding-inline: 4px;
+        margin-inline: -4px;
+        background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 0 4.7 L 50 4.3 L 100 4.0 L 100 10.8 L 50 11.1 L 0 11.0 Z' fill='%23008755' fill-opacity='0.4'/></svg>");
+        background-repeat: no-repeat;
+        background-position: 0 100%;
+        background-size: 0% 0.42em;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+        transition: background-size 320ms ease-out;
+      }
+      .c7-mark.is-hover .c7-txt,
+      .c7-mark:hover .c7-txt {
+        background-size: 100% 0.42em;
+      }
+      .c7-body {
+        font-family: var(--font-body);
+        font-size: 0.875rem;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+      /* ---- marker tuning strip ---- */
+      .tune {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+      }
+      section.block:nth-of-type(even) .tune {
+        background: var(--cream-soft);
+      }
+      .tunerow {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        flex-wrap: wrap;
+        padding: 16px 20px;
+      }
+      .tunerow + .tunerow {
+        border-top: 1px solid var(--paper-edge);
+      }
+      .tunerow-ref {
+        background: rgb(217 210 189 / 0.3);
+        border-top: 2px solid var(--ink);
+      }
+      .tunelab {
+        flex: 0 0 210px;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--ink-muted);
+      }
+      .tunelab em {
+        display: block;
+        font-style: normal;
+        font-size: 0.62rem;
+        margin-top: 3px;
+        opacity: 0.75;
+      }
+      .tuneref {
+        font-size: 1.0625rem;
+        color: var(--ink-soft);
+      }
+      .t36.is-hover .c7-txt {
+        background-size: 100% 0.358em;
+      }
+      .t42.is-hover .c7-txt {
+        background-size: 100% 0.42em;
+      }
+      .t65.is-hover .c7-txt {
+        background-size: 100% 0.65em;
+      }
+      .tight {
+        letter-spacing: 0.02em;
+      }
+      .lowerbody {
+        font-family: var(--font-body);
+        letter-spacing: 0;
+        text-transform: none;
+        font-weight: 600;
+      }
+      .big {
+        font-size: 0.875rem;
+      }
+      .tunerow-iso {
+        background: rgb(0 135 85 / 0.05);
+        border-top: 2px solid var(--ink);
+        align-items: flex-start;
+      }
+      .isocol {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .isolab {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+
+      .q7four {
+        display: grid;
+        grid-template-columns: 1fr;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+      }
+      @media (min-width: 760px) {
+        .q7four {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      section.block:nth-of-type(even) .q7four {
+        background: var(--cream-soft);
+      }
+      .q7fourcell {
+        padding: 20px 20px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      .q7fourcell + .q7fourcell {
+        border-left: 1px solid var(--paper-edge);
+      }
+      .c7-ar {
+        transition: transform 0.3s;
+      }
+      .c7.is-hover .c7-ar,
+      .c7:hover .c7-ar {
+        transform: translateX(4px);
+      }
+
+      .q7colours {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+      }
+      @media (min-width: 760px) {
+        .q7colours {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      section.block:nth-of-type(even) .q7colours {
+        background: var(--cream-soft);
+      }
+      .q7swatchbox {
+        padding: 20px 20px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+      }
+      .q7swatchbox + .q7swatchbox {
+        border-left: 1px solid var(--paper-edge);
+      }
+
+      .reg-note {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 18px 0 0;
+        padding-top: 12px;
+        border-top: 1px solid var(--paper-edge);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="proto">
+      <div class="proto-inner">
+        <p class="proto-kicker">#2474 · wayfinder #2425 · prototype</p>
+        <h1>Two highlighter links, one of which has never shipped</h1>
+        <p>
+          <code>.prose-link</code> (globals.css:707) renders on
+          <strong>10 sites</strong>.
+          <code>&lt;EditorialLink variant="inline"&gt;</code> renders on
+          <strong>zero</strong> — its only consumer,
+          <code>&lt;SectionHeader&gt;</code>, passes <code>variant="cta"</code>.
+          They are the same idea built twice. This page shows what actually
+          differs.
+        </p>
+        <div class="controls">
+          <button class="btn" id="toggle">▶ Play both sweeps</button>
+          <span class="hint"
+            >…or hover any link. The button drives both at once, since you can
+            only hover one.</span
+          >
+        </div>
+      </div>
+    </header>
+
+    <!-- ══════════════════════ 1. THE WRAP TEST ══════════════════════ -->
+    <section class="block">
+      <div class="wrap">
+        <p class="sec-kicker">Test 1 — the decisive one</p>
+        <h2>What happens when a link breaks across two lines</h2>
+        <p class="lede">
+          Body copy wraps. A link inside a sentence will sooner or later
+          straddle a line break — and a Sanity editor can make that happen at
+          any time by typing. Both columns below hold the <em>same</em> long
+          link in a narrow measure.
+        </p>
+
+        <div class="pair">
+          <div class="panel">
+            <span class="panel-tag tag-ships">Ships · 10 sites</span>
+            <p class="panel-name">.prose-link</p>
+            <div class="narrow">
+              <p class="narrow-label">measure forced to 290px</p>
+              <p class="demo-copy" style="font-size: 1rem">
+                Lees meer over
+                <a href="#" class="prose-link"
+                  >de praktische informatie voor nieuwe leden</a
+                >
+                voor je inschrijft.
+              </p>
+            </div>
+            <p class="verdict">
+              <strong>Wraps correctly.</strong>
+              <code>box-decoration-break: clone</code> restores the marker on
+              <em>every</em> fragment, and the paired
+              <code>padding-inline: 4px</code> /
+              <code>margin-inline: -4px</code> gives each fragment its 4px
+              overshoot back without shifting the surrounding copy. This was
+              added deliberately — globals.css calls it “the CMS-1 wrapped-link
+              bug”.
+            </p>
+          </div>
+
+          <div class="panel">
+            <span class="panel-tag tag-dead">Never shipped</span>
+            <p class="panel-name">&lt;EditorialLink variant="inline"&gt;</p>
+            <div class="narrow">
+              <p class="narrow-label">measure forced to 290px</p>
+              <p class="demo-copy" style="font-size: 1rem">
+                Lees meer over
+                <a href="#" class="ed-link"
+                  ><span class="ed-text"
+                    >de praktische informatie voor nieuwe leden<span
+                      class="ed-sweep"
+                      aria-hidden="true"
+                    ></span></span
+                ></a>
+                voor je inschrijft.
+              </p>
+            </div>
+            <p class="verdict bad">
+              <strong>Cannot flow with the sentence.</strong> The text does wrap
+              inside the link — but <code>inline-flex</code> makes the whole
+              link an <em>atomic box</em>, so it cannot share a line with the
+              copy around it. Measured: <code>.prose-link</code> returns
+              <strong>2 client rects</strong> (it broke across the line like
+              text), <code>EditorialLink</code> returns <strong>1</strong> — one
+              box, pushed onto its own line, splitting the sentence into three
+              chunks. And because the sweep is absolutely positioned to the
+              <em>box</em>, a wrapped link gets one slab under the last line
+              only.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ 2. AT REST & ANIMATING ══════════════════════ -->
+    <section class="block">
+      <div class="wrap">
+        <p class="sec-kicker">Test 2 — the look</p>
+        <h2>Resting colour, sweep weight, and how the reveal moves</h2>
+        <p class="lede">
+          Both reveal left-to-right, but by different mechanisms —
+          <code>.prose-link</code> grows <code>background-size</code> (the slab
+          is <em>cropped</em> open, so its hand-pulled top edge stays put),
+          while <code>EditorialLink</code> scales
+          <code>transform: scaleX</code> (the whole slab is
+          <em>squashed</em> and stretches out, so the asymmetry distorts as it
+          plays). Hit the button in the header to run both.
+          <strong>Watch where the slab lands</strong> — that turns out to matter
+          more than either the colour or the timing.
+        </p>
+
+        <div class="pair">
+          <div class="panel">
+            <span class="panel-tag tag-ships">Ships · 10 sites</span>
+            <p class="panel-name">.prose-link</p>
+            <p class="demo-copy">
+              De club telt vandaag ruim 400 leden. Wie wil aansluiten vindt
+              alles op de
+              <a href="#" class="prose-link">praktische informatie</a>-pagina,
+              of neemt contact op via
+              <a href="#" class="prose-link">info@kcvvelewijt.be</a>. Nieuwe
+              spelers zijn welkom vanaf <a href="#" class="prose-link">U6</a>.
+            </p>
+            <p class="verdict">
+              Text <span class="swatch" style="background: #007c46"></span
+              ><code>#007c46</code> · slab <code>#008755</code> at
+              <strong>40% opacity</strong> · height <code>0.42em</code>, sitting
+              on the baseline box.
+            </p>
+          </div>
+
+          <div class="panel">
+            <span class="panel-tag tag-dead">Never shipped</span>
+            <p class="panel-name">&lt;EditorialLink variant="inline"&gt;</p>
+            <p class="demo-copy">
+              De club telt vandaag ruim 400 leden. Wie wil aansluiten vindt
+              alles op de
+              <a href="#" class="ed-link"
+                ><span class="ed-text"
+                  >praktische informatie<span
+                    class="ed-sweep"
+                    aria-hidden="true"
+                  ></span></span></a
+              >-pagina, of neemt contact op via
+              <a href="#" class="ed-link"
+                ><span class="ed-text"
+                  >info@kcvvelewijt.be<span
+                    class="ed-sweep"
+                    aria-hidden="true"
+                  ></span></span></a
+              >. Nieuwe spelers zijn welkom vanaf
+              <a href="#" class="ed-link"
+                ><span class="ed-text"
+                  >U6<span class="ed-sweep" aria-hidden="true"></span></span></a
+              >.
+            </p>
+            <p class="verdict bad">
+              Text <span class="swatch" style="background: #008755"></span
+              ><code>#008755</code> · slab <code>#008755</code> at
+              <strong>full opacity</strong> · height <code>0.45em</code>, pushed
+              <code>-4px</code> below.
+              <strong>This is the real difference:</strong> a full-opacity slab
+              sitting below the baseline is not a highlighter at all — it reads
+              as a thick solid underline. The left column marks
+              <em>over</em> the word; this one draws a rule <em>under</em> it.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ 3. MEASURED ══════════════════════ -->
+    <section class="block">
+      <div class="wrap">
+        <p class="sec-kicker">Test 3 — every axis</p>
+        <h2>What actually differs</h2>
+        <p class="lede">
+          Read from the two source files, not estimated. Nothing here is a
+          matter of taste except the last two rows.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 20%">axis</th>
+              <th style="width: 40%">.prose-link — ships</th>
+              <th style="width: 40%">EditorialLink inline — dead</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="axis">wraps</td>
+              <td>Yes — <code>box-decoration-break: clone</code></td>
+              <td>
+                <strong>No</strong> — <code>inline-flex</code> +
+                <code>inline-block</code>
+              </td>
+            </tr>
+            <tr>
+              <td class="axis">text colour</td>
+              <td>
+                <span class="swatch" style="background: #007c46"></span
+                ><code>--color-jersey-link</code> #007c46
+              </td>
+              <td>
+                <span class="swatch" style="background: #008755"></span
+                ><code>--color-jersey-deep</code> #008755
+              </td>
+            </tr>
+            <tr>
+              <td class="axis">slab opacity</td>
+              <td>0.4 (baked into the data URI)</td>
+              <td>1.0 (<code>bg-jersey-deep</code>)</td>
+            </tr>
+            <tr>
+              <td class="axis">slab height</td>
+              <td><code>0.42em</code></td>
+              <td><code>0.45em</code></td>
+            </tr>
+            <tr>
+              <td class="axis">slab position</td>
+              <td><code>background-position: 0 100%</code></td>
+              <td><code>-bottom-1</code> (−4px)</td>
+            </tr>
+            <tr>
+              <td class="axis">animates</td>
+              <td><code>background-size</code> 0%→100%, 320ms</td>
+              <td><code>transform: scaleX</code> 0→1, 300ms</td>
+            </tr>
+            <tr>
+              <td class="axis">path edges</td>
+              <td><code>x = 0 / 100</code></td>
+              <td><code>x = 1 / 99</code> (<code>STROKE_PATH</code>)</td>
+            </tr>
+            <tr>
+              <td class="axis">overshoot</td>
+              <td>±4px, restored per fragment</td>
+              <td>none</td>
+            </tr>
+            <tr>
+              <td class="axis">reduced motion</td>
+              <td>not gated</td>
+              <td><code>motion-reduce:transition-none</code></td>
+            </tr>
+            <tr>
+              <td class="axis">arrow slot</td>
+              <td>none</td>
+              <td><code>withArrow</code> (off by default for inline)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="verdict">
+          <strong>The path fork is justified, not drift.</strong>
+          globals.css:719 explains it: the <code>0/100</code> edges exist
+          <em>because</em> the reveal animates
+          <code>background-position-x: 0</code>, so the slab’s start stays
+          pinned ~4px before the word instead of creeping right.
+          <code>STROKE_PATH</code>’s <code>1/99</code> is correct for a
+          <code>scaleX</code> reveal. Neither is wrong — they follow from their
+          mechanism, which is why “just call the component” was never free.
+        </p>
+        <p class="verdict bad">
+          <strong
+            >The one thing EditorialLink has that .prose-link lacks:</strong
+          >
+          a <code>motion-reduce</code> gate. <code>.prose-link</code> animates
+          regardless of <code>prefers-reduced-motion</code>. That is worth
+          carrying across whichever way this goes.
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ 4. NOT ONE PALE SITE ══════════════════════ -->
+    <section class="block">
+      <div class="wrap">
+        <p class="sec-kicker">Test 4 — your remark</p>
+        <h2>Consistency here does not flatten the site</h2>
+        <p class="lede">
+          The rule under discussion is <em>two</em> registers, not one. A link
+          inside a sentence and a link that is its own object stay visibly
+          different things — and the affordance register is where a section can
+          still carry its own character. What the rule removes is the
+          <em>accidental</em> variation: four type sizes and three colours
+          applied to the same job by different hands on different days.
+        </p>
+
+        <div class="pair">
+          <div class="register">
+            <span class="panel-tag tag-ships">Register 1 · body copy</span>
+            <p class="panel-name">2 sites in scope · marker sweep</p>
+            <p class="demo-copy">
+              Niets gevonden voor “<strong>kalender</strong>”. Probeer een
+              andere term — of spring meteen naar
+              <a href="#" class="prose-link">nieuws</a>,
+              <a href="#" class="prose-link">ploegen</a> of
+              <a href="#" class="prose-link">spelers</a>.
+            </p>
+            <p class="reg-note">
+              ↑ SearchNoResultsCard — a sentence, not an affordance row.
+              Currently wears the affordance costume.
+            </p>
+          </div>
+
+          <div class="register">
+            <span class="panel-tag tag-ships">Register 2 · affordance</span>
+            <p class="panel-name">4 sites in scope · its own object</p>
+            <p class="demo-copy" style="margin-bottom: 4px">
+              Onze partners maken elk seizoen mogelijk. Van hoofdsponsor tot
+              sympathisant — samen dragen ze de club.
+            </p>
+            <p style="margin: 18px 0 0; text-align: right">
+              <a href="#" class="affordance"
+                >Alle sponsors &amp; sympathisanten →</a
+              >
+            </p>
+            <p class="reg-note">
+              ↑ SponsorsBlock — a link that is its own object, on its own line.
+            </p>
+          </div>
+        </div>
+
+        <p class="verdict">
+          <strong
+            >The two registers read as different things at a glance</strong
+          >
+          — one is a green word wearing a marker, the other is uppercase mono
+          with an arrow. That is the distinction worth keeping. Deciding
+          <em>which</em> of the two a given link is does not make the page
+          paler; it stops <code>/zoeken</code> from rendering one of each, one
+          line apart, in two idioms that match neither.
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ 5. THE Q6 DECISION ══════════════════════ -->
+    <section class="block">
+      <div class="wrap">
+        <p class="sec-kicker">Test 5 — the open decision</p>
+        <h2>The other three affordance links</h2>
+        <p class="lede">
+          <strong>“Alle sponsors” is already settled</strong> — it becomes
+          <code>variant="cta"</code>. The question is what happens to the
+          <em>other three</em>. Each row is one real site. Read across: what
+          ships today, then the two ways it could go.
+        </p>
+
+        <div class="q6grid">
+          <div class="q6head">the site</div>
+          <div class="q6head">ships today</div>
+          <div class="q6head">A · all four become <code>cta</code></div>
+          <div class="q6head">B · two registers <em>(my lean)</em></div>
+
+          <!-- settled row, for reference -->
+          <div class="q6label">
+            <strong>SponsorsBlock</strong><span>/ploegen/[slug]</span
+            ><em class="q6settled">settled by Q3</em>
+          </div>
+          <div class="q6cell">
+            <a href="#" class="t-sponsors"
+              >Alle sponsors &amp; sympathisanten →</a
+            >
+          </div>
+          <div class="q6cell">
+            <a href="#" class="t-cta"
+              >Alle sponsors &amp; sympathisanten<span class="t-sw"></span
+              ><span class="t-ar">→</span></a
+            >
+          </div>
+          <div class="q6cell">
+            <a href="#" class="t-cta"
+              >Alle sponsors &amp; sympathisanten<span class="t-sw"></span
+              ><span class="t-ar">→</span></a
+            >
+          </div>
+
+          <div class="q6label">
+            <strong>EventFactInline</strong><span>in every article body</span>
+            <em>cross-reference → /evenementen</em>
+          </div>
+          <div class="q6cell">
+            <a href="#" class="t-eventfact">★ Ook in agenda →</a>
+          </div>
+          <div class="q6cell">
+            <a href="#" class="t-cta"
+              >Ook in agenda<span class="t-sw"></span
+              ><span class="t-ar">→</span></a
+            >
+          </div>
+          <div class="q6cell">
+            <a href="#" class="t-cta"
+              >Ook in agenda<span class="t-sw"></span
+              ><span class="t-ar">→</span></a
+            >
+          </div>
+
+          <div class="q6label">
+            <strong>SearchAnswerCard</strong><span>/zoeken</span>
+            <em>source citations — a row of them</em>
+          </div>
+          <div class="q6cell">
+            <ul class="t-cites">
+              <li><a href="#" class="t-cite">Word lid van KCVV</a></li>
+              <li><a href="#" class="t-cite">Praktische informatie</a></li>
+              <li><a href="#" class="t-cite">Contact</a></li>
+            </ul>
+          </div>
+          <div class="q6cell">
+            <ul class="t-cites">
+              <li>
+                <a href="#" class="t-cta t-cta-sm"
+                  >Word lid van KCVV<span class="t-sw"></span
+                  ><span class="t-ar">→</span></a
+                >
+              </li>
+              <li>
+                <a href="#" class="t-cta t-cta-sm"
+                  >Praktische informatie<span class="t-sw"></span
+                  ><span class="t-ar">→</span></a
+                >
+              </li>
+              <li>
+                <a href="#" class="t-cta t-cta-sm"
+                  >Contact<span class="t-sw"></span
+                  ><span class="t-ar">→</span></a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="q6cell">
+            <ul class="t-cites">
+              <li><a href="#" class="t-cite">Word lid van KCVV</a></li>
+              <li><a href="#" class="t-cite">Praktische informatie</a></li>
+              <li><a href="#" class="t-cite">Contact</a></li>
+            </ul>
+            <p class="q6note">unchanged — a citation row is its own object</p>
+          </div>
+
+          <div class="q6label">
+            <strong>ContactPage</strong><span>/club/contact</span>
+            <em>actions — opens mail / maps</em>
+          </div>
+          <div class="q6cell">
+            <a href="#" class="t-contact">✉ info@kcvvelewijt.be</a><br />
+            <a href="#" class="t-contact">Routebeschrijving →</a>
+          </div>
+          <div class="q6cell">
+            <a href="#" class="t-cta"
+              >info@kcvvelewijt.be<span class="t-sw"></span
+              ><span class="t-ar">→</span></a
+            ><br />
+            <a href="#" class="t-cta"
+              >Routebeschrijving<span class="t-sw"></span
+              ><span class="t-ar">→</span></a
+            >
+          </div>
+          <div class="q6cell">
+            <a href="#" class="t-contact">✉ info@kcvvelewijt.be</a><br />
+            <a href="#" class="t-contact">Routebeschrijving →</a>
+            <p class="q6note">unchanged — an action, not a destination</p>
+          </div>
+        </div>
+
+        <p class="verdict">
+          <strong>A costs you the two things that carry meaning.</strong> The
+          citation row becomes three CTAs stacked in a wrapped list — each
+          shouting at the same volume as a section footer — and the mail/maps
+          links lose their icons, which are the only thing saying “this opens
+          your mail app” before you click.
+        </p>
+        <p class="verdict bad">
+          <strong>B costs you a clean rule.</strong> “Two registers” is really
+          “<em>cta</em>, plus two exceptions I argued for” — and every exception
+          is where drift starts again. If you want one sentence someone can
+          apply without asking, A is the one that survives contact with the next
+          developer.
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ 6. CTA WITH / WITHOUT THE SWEEP ══════════════════════ -->
+    <section class="block">
+      <div class="wrap">
+        <p class="sec-kicker">Test 6 — Q7</p>
+        <h2>The CTA with its sweep, and without it</h2>
+        <p class="lede">
+          Hover states are rendered <em>statically</em> in the right-hand column
+          so you can compare them without chasing a cursor. The context is the
+          real one: <code>&lt;SectionHeader&gt;</code>’s heading row, which is
+          where the only live <code>cta</code> on the site sits today.
+        </p>
+
+        <p class="lede" style="margin-top: -16px">
+          <strong>Correction on the first version of this test:</strong> it
+          rendered the sweep at <code>EditorialLink</code>’s
+          <strong>full opacity</strong> — the value already judged wrong in Test
+          2 — which stacked the deck against the marker. Row B and C below use
+          <code>.prose-link</code>’s real <strong>40%</strong>, the marker
+          actually on the table.
+        </p>
+
+        <div class="q7wrap">
+          <div class="q7row">
+            <div class="q7tag">
+              <strong>A · arrow only</strong>
+              <span>no marker</span>
+            </div>
+            <div class="q7demo">
+              <p class="q7state">at rest</p>
+              <div class="sh-row">
+                <span class="sh-title">Het laatste <em>nieuws</em></span>
+                <a href="#" class="c7"
+                  ><span class="c7-txt">Al het nieuws</span
+                  ><span class="c7-ar">→</span></a
+                >
+              </div>
+            </div>
+            <div class="q7demo">
+              <p class="q7state">on hover</p>
+              <div class="sh-row">
+                <span class="sh-title">Het laatste <em>nieuws</em></span>
+                <a href="#" class="c7 is-hover"
+                  ><span class="c7-txt">Al het nieuws</span
+                  ><span class="c7-ar">→</span></a
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="q7row">
+            <div class="q7tag">
+              <strong>B · marker + arrow</strong>
+              <span>40% · “goes somewhere”</span>
+            </div>
+            <div class="q7demo">
+              <p class="q7state">at rest</p>
+              <div class="sh-row">
+                <span class="sh-title">Het laatste <em>nieuws</em></span>
+                <a href="#" class="c7 c7-mark"
+                  ><span class="c7-txt">Al het nieuws</span
+                  ><span class="c7-ar">→</span></a
+                >
+              </div>
+            </div>
+            <div class="q7demo">
+              <p class="q7state">on hover</p>
+              <div class="sh-row">
+                <span class="sh-title">Het laatste <em>nieuws</em></span>
+                <a href="#" class="c7 c7-mark is-hover"
+                  ><span class="c7-txt">Al het nieuws</span
+                  ><span class="c7-ar">→</span></a
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="q7row">
+            <div class="q7tag">
+              <strong>C · marker, no arrow</strong>
+              <span>40% · citation / action</span>
+            </div>
+            <div class="q7demo">
+              <p class="q7state">at rest</p>
+              <div class="sh-row">
+                <span class="sh-title">Bronnen</span>
+                <a href="#" class="c7 c7-mark"
+                  ><span class="c7-txt">Word lid van KCVV</span></a
+                >
+              </div>
+            </div>
+            <div class="q7demo">
+              <p class="q7state">on hover</p>
+              <div class="sh-row">
+                <span class="sh-title">Bronnen</span>
+                <a href="#" class="c7 c7-mark is-hover"
+                  ><span class="c7-txt">Word lid van KCVV</span></a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="verdict">
+          <strong>Two axes, not one.</strong> The <em>marker</em> says “this is
+          a link” and rides every one of them; the <em>arrow</em> says “you will
+          end up somewhere else” and rides only the ones that do. That keeps the
+          Q6 arrow test intact while giving the whole family one shared gesture.
+        </p>
+
+        <h2 style="margin-top: 44px; font-size: 1.35rem">
+          All four, in the proposed treatment
+        </h2>
+        <p class="lede">
+          Hover states static again. Two carry the arrow, two do not — nothing
+          else differs.
+        </p>
+        <div class="q7four">
+          <div class="q7fourcell">
+            <p class="q7state">goes somewhere <em>· arrow</em></p>
+            <a href="#" class="c7 c7-mark is-hover"
+              ><span class="c7-txt">Alle sponsors &amp; sympathisanten</span
+              ><span class="c7-ar">→</span></a
+            >
+            <a href="#" class="c7 c7-mark is-hover"
+              ><span class="c7-txt">Ook in agenda</span
+              ><span class="c7-ar">→</span></a
+            >
+          </div>
+          <div class="q7fourcell">
+            <p class="q7state">source / action <em>· no arrow</em></p>
+            <a href="#" class="c7 c7-mark is-hover"
+              ><span class="c7-txt">Word lid van KCVV</span></a
+            >
+            <a href="#" class="c7 c7-mark c7-body is-hover"
+              ><span class="c7-txt">✉ Routebeschrijving</span></a
+            >
+          </div>
+        </div>
+
+        <h2 style="margin-top: 44px; font-size: 1.35rem">
+          Tuning the marker for uppercase
+        </h2>
+        <p class="lede">
+          <strong>Why the last one looked like nothing:</strong>
+          <code>0.42em</code> anchored at
+          <code>background-position: 0 100%</code> is measured from the bottom
+          of the em box. Lowercase body copy has descenders below the baseline,
+          so the band cuts up through the x-height and reads as a marker.
+          Uppercase has <em>no</em> descenders and taller letterforms, so the
+          identical band sits in the empty gap under the caps and clips only
+          their bottom edge. Same value, different type, different result — it
+          needs its own number. All shown in hover state.
+        </p>
+        <div class="tune">
+          <div class="tunerow">
+            <span class="tunelab"
+              >0.358em<em
+                >MEASURED exact ratio match — 14.6% of cap height</em
+              ></span
+            >
+            <a href="#" class="c7 c7-mark is-hover t36"
+              ><span class="c7-txt">Word lid van KCVV</span></a
+            >
+            <a href="#" class="c7 c7-mark is-hover t36"
+              ><span class="c7-txt">Alle sponsors &amp; sympathisanten</span
+              ><span class="c7-ar">→</span></a
+            >
+          </div>
+          <div class="tunerow">
+            <span class="tunelab"
+              >0.42em<em>today’s value — already 25% of cap height</em></span
+            >
+            <a href="#" class="c7 c7-mark is-hover t42"
+              ><span class="c7-txt">Word lid van KCVV</span></a
+            >
+            <a href="#" class="c7 c7-mark is-hover t42"
+              ><span class="c7-txt">Alle sponsors &amp; sympathisanten</span
+              ><span class="c7-ar">→</span></a
+            >
+          </div>
+          <div class="tunerow">
+            <span class="tunelab"
+              >0.65em<em
+                >MEASURED same absolute band — 7.14px, as body copy</em
+              ></span
+            >
+            <a href="#" class="c7 c7-mark is-hover t65"
+              ><span class="c7-txt">Word lid van KCVV</span></a
+            >
+            <a href="#" class="c7 c7-mark is-hover t65"
+              ><span class="c7-txt">Alle sponsors &amp; sympathisanten</span
+              ><span class="c7-ar">→</span></a
+            >
+          </div>
+          <div class="tunerow">
+            <span class="tunelab"
+              >0.65em, tracking off<em
+                >same band, mono tracking normalised</em
+              ></span
+            >
+            <a href="#" class="c7 c7-mark is-hover t65 tight"
+              ><span class="c7-txt">Word lid van KCVV</span></a
+            >
+            <a href="#" class="c7 c7-mark is-hover t65 tight"
+              ><span class="c7-txt">Alle sponsors &amp; sympathisanten</span
+              ><span class="c7-ar">→</span></a
+            >
+          </div>
+          <div class="tunerow tunerow-ref">
+            <span class="tunelab"
+              >body copy, for reference<em>0.42em on 17px lowercase</em></span
+            >
+            <span class="tuneref"
+              >Wie wil aansluiten vindt alles op de
+              <a
+                href="#"
+                class="prose-link"
+                style="background-size: 100% 0.42em"
+                >praktische informatie</a
+              >-pagina.</span
+            >
+          </div>
+          <div class="tunerow tunerow-iso">
+            <span class="tunelab"
+              >ISOLATING THE VARIABLE<em
+                >same 0.42em marker, same 11px — only the type changes</em
+              ></span
+            >
+            <div class="isocol">
+              <span class="isolab">uppercase mono + 0.08em tracking</span>
+              <a href="#" class="c7 c7-mark is-hover t42"
+                ><span class="c7-txt">Alle sponsors &amp; sympathisanten</span
+                ><span class="c7-ar">→</span></a
+              >
+            </div>
+            <div class="isocol">
+              <span class="isolab">lowercase body font, same size</span>
+              <a href="#" class="c7 c7-mark is-hover t42 lowerbody"
+                ><span class="c7-txt">Alle sponsors &amp; sympathisanten</span
+                ><span class="c7-ar">→</span></a
+              >
+            </div>
+            <div class="isocol">
+              <span class="isolab">lowercase body, 14px</span>
+              <a href="#" class="c7 c7-mark is-hover t42 lowerbody big"
+                ><span class="c7-txt">Alle sponsors &amp; sympathisanten</span
+                ><span class="c7-ar">→</span></a
+              >
+            </div>
+          </div>
+        </div>
+        <p class="verdict">
+          <strong>The reference row is the target.</strong> Whichever uppercase
+          value makes the band sit against the letters the way the bottom row
+          does is the right one — the number differs, the gesture matches.
+        </p>
+
+        <h2 style="margin-top: 44px; font-size: 1.35rem">
+          And the resting colour
+        </h2>
+        <p class="lede">
+          Both at 11px mono uppercase on cream — the size the CTA actually
+          renders at.
+        </p>
+        <div class="q7colours">
+          <div class="q7swatchbox">
+            <p class="q7state">#008755 · jersey-deep <em>(cta today)</em></p>
+            <a href="#" class="c7 c7-deep"
+              >Alle sponsors &amp; sympathisanten<span class="c7-ar">→</span></a
+            >
+            <a href="#" class="c7 c7-deep"
+              >Ook in agenda<span class="c7-ar">→</span></a
+            >
+            <a href="#" class="c7 c7-deep"
+              >Al het nieuws<span class="c7-ar">→</span></a
+            >
+          </div>
+          <div class="q7swatchbox">
+            <p class="q7state">
+              #007c46 · jersey-link <em>(prose-link today)</em>
+            </p>
+            <a href="#" class="c7"
+              >Alle sponsors &amp; sympathisanten<span class="c7-ar">→</span></a
+            >
+            <a href="#" class="c7">Ook in agenda<span class="c7-ar">→</span></a>
+            <a href="#" class="c7">Al het nieuws<span class="c7-ar">→</span></a>
+          </div>
+        </div>
+        <p class="verdict">
+          <strong>One link colour, whichever you pick.</strong> The gap is small
+          at display size and opens up at 11px, which is the size that matters
+          here — the right-hand column is the one already used for body-copy
+          links, so choosing it means the site has exactly one green that means
+          “link”.
+        </p>
+      </div>
+    </section>
+
+    <script>
+      const btn = document.getElementById("toggle");
+      btn.addEventListener("click", () => {
+        const on = document.body.classList.toggle("force-on");
+        btn.textContent = on ? "⏹ Reset both sweeps" : "▶ Play both sweeps";
+        btn.classList.toggle("is-off", on);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2472 — The opponent card with no real crest</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #008755;
+        --jersey-deep-dark: #133d28;
+        --warm: #f0c264;
+        --paper-edge: #d9d2bd;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --shadow-paper-md: 6px 6px 0 0 var(--ink);
+        --text-label: 0.6875rem;
+        --tape-warm: rgb(240 194 100 / 0.85);
+        --filter-photo-newsprint: sepia(0.06) saturate(0.94) hue-rotate(-4deg);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      /* ============ prototype chrome — NOT part of the design ============ */
+      .proto {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 30px 24px 28px;
+      }
+      .proto-inner {
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+      .proto-kicker {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin: 0 0 8px;
+      }
+      .proto h1 {
+        font-family: var(--font-big);
+        font-size: clamp(1.6rem, 1.1rem + 2vw, 2.4rem);
+        line-height: 1.08;
+        margin: 0 0 14px;
+        font-weight: 400;
+      }
+      .proto p {
+        margin: 0 0 10px;
+        max-width: 74ch;
+        color: #ddd6c4;
+        font-size: 15px;
+      }
+      .proto strong {
+        color: var(--cream);
+      }
+      .proto code {
+        font-family: var(--font-mono);
+        font-size: 0.86em;
+        background: #262626;
+        padding: 1px 5px;
+      }
+      .facts {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        margin: 20px 0 4px;
+      }
+      .fact {
+        border: 1px solid #3a3a3a;
+        padding: 12px 14px;
+      }
+      .fact b {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 1.5rem;
+        color: var(--warm);
+        line-height: 1.1;
+      }
+      .fact span {
+        font-size: 13px;
+        color: #c9c2ae;
+        line-height: 1.4;
+        display: block;
+        margin-top: 4px;
+      }
+
+      /* ============ section scaffolding ============ */
+      section.cand {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 48px 24px 8px;
+      }
+      .sec-head {
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 10px;
+        margin-bottom: 8px;
+      }
+      .sec-head h2 {
+        font-family: var(--font-big);
+        font-weight: 400;
+        font-size: 1.9rem;
+        line-height: 1.15;
+        margin: 0;
+      }
+      .sec-head .q {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 700;
+      }
+      section.cand > p.blurb {
+        margin: 14px 0 0;
+        max-width: 76ch;
+      }
+      .verdictline {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        border: 1px solid var(--paper-edge);
+        background: var(--cream);
+        color: var(--jersey-deep);
+      }
+      .verdictline.bad {
+        color: #b84a3a;
+      }
+
+      /* ============ the row — mirrors <HorizontalSlider> ============ */
+      .row {
+        display: flex;
+        gap: 32px;
+        overflow-x: auto;
+        padding: 34px 4px 30px;
+        margin-top: 14px;
+        scrollbar-width: thin;
+      }
+      .slot {
+        width: 288px;
+        flex: 0 0 auto;
+        position: relative;
+      }
+      .slot > .kindlabel {
+        position: absolute;
+        top: -26px;
+        left: 0;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .slot > .kindlabel.warn {
+        color: #b84a3a;
+        font-weight: 700;
+      }
+
+      /* ============ <TapedCard> ============ */
+      .card {
+        position: relative;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-md);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      .card[data-rot="a"] {
+        transform: rotate(-0.5deg);
+      }
+      .card[data-rot="b"] {
+        transform: rotate(-0.25deg);
+      }
+      .card[data-rot="c"] {
+        transform: rotate(0.25deg);
+      }
+      .tape {
+        position: absolute;
+        top: 0;
+        left: 12%;
+        z-index: 20;
+        width: 64px;
+        height: 16px;
+        background: var(--tape-warm);
+        opacity: 0.9;
+        transform: translateY(-50%) rotate(-0.5deg);
+        pointer-events: none;
+      }
+      .figure {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+      }
+      .figure img.photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        filter: var(--filter-photo-newsprint);
+      }
+      .crestwrap {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--cream-soft);
+      }
+      .crestwrap img {
+        max-height: 76%;
+        max-width: 46%;
+        object-fit: contain;
+        display: block;
+      }
+      .meta {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 16px;
+        border-top: 1px solid var(--ink);
+        padding: 20px;
+      }
+      .badge {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        line-height: 1;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--ink);
+      }
+      .card h3 {
+        font-family: var(--font-big);
+        font-weight: 400;
+        font-size: clamp(1.25rem, 1rem + 1vw, 1.5rem);
+        line-height: 1.3;
+        margin: 0;
+        hyphens: auto;
+      }
+      .foot {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-top: 2px solid var(--paper-edge);
+        padding-top: 12px;
+      }
+      .foot .date,
+      .foot .cta {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      /* ============ the scale ladder ============ */
+      .ladder {
+        margin-top: 30px;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        padding: 0;
+        overflow-x: auto;
+      }
+      table.scale {
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 720px;
+      }
+      table.scale th,
+      table.scale td {
+        border: 1px solid var(--paper-edge);
+        padding: 14px 12px;
+        text-align: center;
+        vertical-align: middle;
+      }
+      table.scale th {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        background: var(--cream-soft);
+      }
+      table.scale th.rowhead,
+      table.scale td.rowhead {
+        text-align: left;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        background: var(--cream-soft);
+      }
+      table.scale td .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--cream-soft);
+      }
+      table.scale td .chip img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+      .where {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        display: block;
+        margin-top: 6px;
+        text-transform: none;
+      }
+
+      /* ============ live-context strip ============ */
+      .agenda {
+        margin-top: 30px;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .agenda-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      .agenda-row:last-child {
+        border-bottom: 0;
+      }
+      .agenda-row .d {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        width: 96px;
+        flex: 0 0 auto;
+      }
+      .agenda-row .side {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .agenda-row .side img {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+        flex: 0 0 auto;
+      }
+      .agenda-row .side span {
+        font-family: var(--font-display);
+        font-size: 15px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .agenda-row .vs {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-muted);
+        flex: 0 0 auto;
+      }
+      table.meas {
+        border-collapse: collapse;
+        font-size: 14px;
+        width: 100%;
+        margin-top: 22px;
+        background: var(--cream);
+        border: 2px solid var(--ink);
+      }
+      table.meas th,
+      table.meas td {
+        border: 1px solid var(--paper-edge);
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+      table.meas th {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        background: var(--cream-soft);
+      }
+      table.meas code {
+        font-family: var(--font-mono);
+        font-size: 0.86em;
+      }
+      footer.proto {
+        margin-top: 56px;
+      }
+
+      /* ============ locked-decision recap ============ */
+      .locked {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 40px 24px 0;
+      }
+      .locked .box {
+        border: 2px dashed var(--ink);
+        background: var(--cream-soft);
+        padding: 22px 24px;
+      }
+      .locked .stamp {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 8px;
+      }
+      .locked h2 {
+        font-family: var(--font-big);
+        font-weight: 400;
+        font-size: 1.5rem;
+        line-height: 1.2;
+        margin: 0 0 10px;
+      }
+      .locked p {
+        margin: 0 0 10px;
+        max-width: 78ch;
+      }
+      .locked p:last-child {
+        margin-bottom: 0;
+      }
+      .locked code {
+        font-family: var(--font-mono);
+        font-size: 0.86em;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="proto">
+      <div class="proto-inner">
+        <p class="proto-kicker">Wayfinder #2425 · ticket #2472 · round 1</p>
+        <h1>The opponent card when PSD has no real crest</h1>
+        <p>
+          #2462 locked it: a club-kind card shows
+          <strong>its crest, contained on <code>cream-soft</code></strong
+          >, landing at ~121px in a 288px card. This ticket asks what that card
+          shows when the crest is not a crest.
+        </p>
+        <p>
+          Measured 2026-08-11 against production —
+          <strong>54 opponent clubs</strong>, every club KCVV's two senior teams
+          and the club calendar actually reference this season. All 15 youth
+          fixture pages are empty (<em>Geen wedstrijden gepland</em>), so this
+          is the entire observable opponent set today.
+        </p>
+        <div class="facts">
+          <div class="fact">
+            <b>4 / 54</b
+            ><span
+              >grey-shield placeholder — the CDN 302 sends them to
+              <code>/0/logos/xl.png</code> instead of
+              <code>/&lt;clubId&gt;/</code></span
+            >
+          </div>
+          <div class="fact">
+            <b>1 / 54</b
+            ><span
+              >a 204-byte PNG whose every pixel is <code>(0,0,0,0)</code> —
+              180×180 of nothing. HTTP 200, real per-club URL</span
+            >
+          </div>
+          <div class="fact">
+            <b>0 / 348</b
+            ><span
+              >logo values that are null. <code>&lt;Crest&gt;</code>'s
+              initialled disc renders <strong>nowhere</strong> in
+              production</span
+            >
+          </div>
+          <div class="fact">
+            <b>5 sizes</b
+            ><span
+              >the crest already ships at 16, 18, 20, 26 and 64px — plus
+              150–300px on <code>/share</code></span
+            >
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= LOCKED ================= -->
+    <section class="locked">
+      <div class="box">
+        <p class="stamp">★ Locked — 2026-08-11 · answer A</p>
+        <h2>The placeholder is accepted. Nothing changes, nowhere.</h2>
+        <p>
+          Judged on the render below, at all five shipped sizes plus the card's
+          121px: the grey shield is not a defect at any scale, and neither is
+          the transparent one. The card shows whatever PSD returns. No
+          detection, no substitution, no deny-list.
+          <code>&lt;Crest&gt;</code> does not learn about the placeholder at any
+          size.
+        </p>
+        <p>
+          A missing crest is upstream data work in PSD, not a render-time
+          concern. The evidence below stays visible as the record of what was
+          judged, not as an open question.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= Q1 — resolved, kept as the record ================= -->
+    <section class="cand">
+      <div class="sec-head">
+        <span class="q"
+          >Question 1 — is this a defect, and at which scale?</span
+        >
+        <h2>The same row, three kinds of "no crest"</h2>
+      </div>
+      <p class="blurb">
+        The row below is <code>&lt;RelatedRow&gt;</code> on
+        <code>/wedstrijd/[matchId]</code> — the one and only surface that
+        renders an opponent card. Real card width (288px), real production
+        crests, real club names, anchored by a photo card as the neighbour. Slot
+        2 is the control: a crest that exists.
+      </p>
+
+      <div class="row">
+        <div class="slot">
+          <span class="kindlabel">article · has a photo (neighbour)</span>
+          <article class="card" data-rot="a">
+            <span class="tape"></span>
+            <div class="figure">
+              <img
+                class="photo"
+                src="https://cdn.sanity.io/images/vhb33jaz/production/9c1e0d3f6f6b1c0b5f6d2e1a5b3c8d9e0f1a2b3c-1600x900.jpg"
+                alt=""
+                onerror="
+                  this.style.background = 'var(--cream-deep)';
+                  this.removeAttribute('src');
+                "
+              />
+            </div>
+            <div class="meta">
+              <span class="badge">Artikel</span>
+              <h3>Vier op een rij voor de A-ploeg</h3>
+              <div class="foot">
+                <span class="date">12 aug 2026</span
+                ><span class="cta">Lees verder →</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="slot">
+          <span class="kindlabel">opponent · a real crest (control)</span>
+          <article class="card" data-rot="b">
+            <span class="tape"></span>
+            <div class="figure">
+              <div class="crestwrap">
+                <img
+                  src="https://d27icfeclbfo1q.cloudfront.net/1307/logos/xl.png?v=1"
+                  alt=""
+                />
+              </div>
+            </div>
+            <div class="meta">
+              <span class="badge">Tegenstander</span>
+              <h3>VK Ninove</h3>
+              <div class="foot">
+                <span class="date"></span
+                ><span class="cta">Onderlinge historiek →</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="slot">
+          <span class="kindlabel warn">opponent · grey-shield placeholder</span>
+          <article class="card" data-rot="c">
+            <span class="tape"></span>
+            <div class="figure">
+              <div class="crestwrap">
+                <img
+                  src="https://d27icfeclbfo1q.cloudfront.net/0/logos/xl.png"
+                  alt=""
+                />
+              </div>
+            </div>
+            <div class="meta">
+              <span class="badge">Tegenstander</span>
+              <h3>SK Laar</h3>
+              <div class="foot">
+                <span class="date"></span
+                ><span class="cta">Onderlinge historiek →</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="slot">
+          <span class="kindlabel warn">opponent · 180×180 of nothing</span>
+          <article class="card" data-rot="b">
+            <span class="tape"></span>
+            <div class="figure">
+              <div class="crestwrap">
+                <img
+                  src="https://d27icfeclbfo1q.cloudfront.net/447/logos/xl.png?v=1"
+                  alt=""
+                />
+              </div>
+            </div>
+            <div class="meta">
+              <span class="badge">Tegenstander</span>
+              <h3>KV Bonheiden</h3>
+              <div class="foot">
+                <span class="date"></span
+                ><span class="cta">Onderlinge historiek →</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <p class="verdictline bad">
+        two failure modes, not one · the shield asserts an identity · the blank
+        asserts nothing
+      </p>
+
+      <h3
+        style="
+          font-family: var(--font-big);
+          font-weight: 400;
+          font-size: 1.35rem;
+          margin: 40px 0 0;
+        "
+      >
+        Where the same three already paint today
+      </h3>
+      <p class="blurb">
+        The ticket says the placeholder is "a harmless smudge nobody reads" at
+        small sizes. Every size below ships in production right now. The card's
+        ~121px is the new one — the 64px is the
+        <code>/tegenstander</code> hero and the 150–300px are
+        <code>/share</code>.
+      </p>
+
+      <div class="ladder">
+        <table class="scale">
+          <thead>
+            <tr>
+              <th class="rowhead">club</th>
+              <th>16px<span class="where">StandingsTable</span></th>
+              <th>20px<span class="where">TeamAgendaRow</span></th>
+              <th>26px<span class="where">EditorialHero</span></th>
+              <th>64px<span class="where">/tegenstander hero</span></th>
+              <th>121px<span class="where">the card (#2462)</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="rowhead">
+                VK Ninove<br /><span class="where">real crest</span>
+              </td>
+              <td>
+                <span class="chip" style="width: 16px; height: 16px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/1307/logos/xl.png?v=1"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 20px; height: 20px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/1307/logos/xl.png?v=1"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 26px; height: 26px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/1307/logos/xl.png?v=1"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 64px; height: 64px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/1307/logos/xl.png?v=1"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 121px; height: 121px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/1307/logos/xl.png?v=1"
+                    alt=""
+                /></span>
+              </td>
+            </tr>
+            <tr>
+              <td class="rowhead">
+                SK Laar<br /><span class="where">grey shield</span>
+              </td>
+              <td>
+                <span class="chip" style="width: 16px; height: 16px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/0/logos/xl.png"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 20px; height: 20px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/0/logos/xl.png"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 26px; height: 26px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/0/logos/xl.png"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 64px; height: 64px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/0/logos/xl.png"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 121px; height: 121px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/0/logos/xl.png"
+                    alt=""
+                /></span>
+              </td>
+            </tr>
+            <tr>
+              <td class="rowhead">
+                KV Bonheiden<br /><span class="where">transparent</span>
+              </td>
+              <td>
+                <span class="chip" style="width: 16px; height: 16px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/447/logos/xl.png?v=1"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 20px; height: 20px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/447/logos/xl.png?v=1"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 26px; height: 26px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/447/logos/xl.png?v=1"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 64px; height: 64px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/447/logos/xl.png?v=1"
+                    alt=""
+                /></span>
+              </td>
+              <td>
+                <span class="chip" style="width: 121px; height: 121px"
+                  ><img
+                    src="https://d27icfeclbfo1q.cloudfront.net/447/logos/xl.png?v=1"
+                    alt=""
+                /></span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3
+        style="
+          font-family: var(--font-big);
+          font-weight: 400;
+          font-size: 1.35rem;
+          margin: 40px 0 0;
+        "
+      >
+        …and in the row it actually lives in
+      </h3>
+      <p class="blurb">
+        <code>TeamAgendaRow</code> at 20px, the live treatment on
+        <code>/ploegen/[slug]/wedstrijden</code> and <code>/kalender</code>.
+        Three of these four fixtures are real; judge whether the two broken
+        crests read as broken here.
+      </p>
+
+      <div class="agenda">
+        <div class="agenda-row">
+          <span class="d">wo 12 aug</span>
+          <span class="side"
+            ><img
+              src="https://d27icfeclbfo1q.cloudfront.net/1307/logos/xl.png?v=1"
+              alt=""
+            /><span>VK Ninove</span></span
+          >
+          <span class="vs">—</span>
+          <span class="side"
+            ><img
+              src="https://d27icfeclbfo1q.cloudfront.net/1235/logos/xl.png?v=2"
+              alt=""
+            /><span>KCVV Elewijt</span></span
+          >
+        </div>
+        <div class="agenda-row">
+          <span class="d">za 15 aug</span>
+          <span class="side"
+            ><img
+              src="https://d27icfeclbfo1q.cloudfront.net/1235/logos/xl.png?v=2"
+              alt=""
+            /><span>KCVV Elewijt</span></span
+          >
+          <span class="vs">—</span>
+          <span class="side"
+            ><img
+              src="https://d27icfeclbfo1q.cloudfront.net/0/logos/xl.png"
+              alt=""
+            /><span>SK Laar</span></span
+          >
+        </div>
+        <div class="agenda-row">
+          <span class="d">za 22 aug</span>
+          <span class="side"
+            ><img
+              src="https://d27icfeclbfo1q.cloudfront.net/1235/logos/xl.png?v=2"
+              alt=""
+            /><span>KCVV Elewijt</span></span
+          >
+          <span class="vs">—</span>
+          <span class="side"
+            ><img
+              src="https://d27icfeclbfo1q.cloudfront.net/447/logos/xl.png?v=1"
+              alt=""
+            /><span>KV Bonheiden</span></span
+          >
+        </div>
+        <div class="agenda-row">
+          <span class="d">za 29 aug</span>
+          <span class="side"
+            ><img
+              src="https://d27icfeclbfo1q.cloudfront.net/0/logos/xl.png"
+              alt=""
+            /><span>FC Inkad Diegem</span></span
+          >
+          <span class="vs">—</span>
+          <span class="side"
+            ><img
+              src="https://d27icfeclbfo1q.cloudfront.net/1235/logos/xl.png?v=2"
+              alt=""
+            /><span>KCVV Elewijt</span></span
+          >
+        </div>
+      </div>
+
+      <table class="meas">
+        <thead>
+          <tr>
+            <th style="width: 24%">what the ticket assumed</th>
+            <th>what production says</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>"unknown ids return a generic grey shield"</td>
+            <td>
+              True, and the 302 <code>Location</code> names it: a real crest
+              redirects to <code>/&lt;clubId&gt;/logos/xl.png</code>, a
+              placeholder to <code>/0/logos/xl.png</code>. That is a cheaper
+              tell than hashing bytes — but it still costs one round trip per
+              club.
+            </td>
+          </tr>
+          <tr>
+            <td>one failure mode</td>
+            <td>
+              <strong>Two.</strong> KV Bonheiden (447) returns a real per-club
+              URL, HTTP 200, <code>?v=1</code>, 180×180 RGBA — and every pixel
+              is fully transparent. Neither the redirect target nor the version
+              param sees it. Only reading pixels does.
+            </td>
+          </tr>
+          <tr>
+            <td><code>?v=null</code> might be the signal</td>
+            <td>
+              It is not. Two of the four shields are <code>?v=null</code>; SK
+              Laar (18444) and FC Inkad Diegem (60820) are <code>?v=1</code> and
+              still resolve to <code>/0/</code>. Half the cases, no better.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              "<code>&lt;Crest&gt;</code>'s disc can never fire
+              <em>on the PSD path</em>"
+            </td>
+            <td>
+              Sharper than that: <strong>it never fires at all.</strong> 348
+              logo values across the three fixture-bearing routes, zero null,
+              zero <code>border-current</code> in the shipped HTML. The disc is
+              dead code on every public route — so "promote the disc to card
+              scale" means promoting something that has never rendered.
+            </td>
+          </tr>
+          <tr>
+            <td>the crest is untested above 64px</td>
+            <td>
+              <code>/share</code>'s <code>CrestTile</code> draws it at
+              <strong>150, 180, 236 and 300px</strong> inside a paper chip with
+              a 5px ink border — a bigger crest than this card will ever show,
+              already shipping to staff.
+            </td>
+          </tr>
+          <tr>
+            <td>"the opponent card" (unscoped)</td>
+            <td>
+              Exactly one surface: <code>&lt;RelatedRow&gt;</code> on
+              <code>/wedstrijd/[matchId]</code>, per #2443's table. One card,
+              one route. And the union that feeds it
+              (<code>RelatedContentItem</code>, 6 members) has
+              <strong>no club member yet</strong> — #2443's build adds it.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="proto">
+      <div class="proto-inner">
+        <p class="proto-kicker">round 1 · resolved · ticket closed</p>
+        <p>
+          Answer <strong>A</strong> — not a defect anywhere. Q2 (which detector)
+          and Q3 (what replaces the crest) were downstream of a "yes" and were
+          never drawn: under A there is nothing to detect and nothing to
+          replace.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

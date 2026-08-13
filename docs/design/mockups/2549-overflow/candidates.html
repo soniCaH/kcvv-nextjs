@@ -1,0 +1,2008 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2549 — what happens to a name that does not fit its slot</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #008755;
+        --jersey-link: #007c46;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --text-label: 0.6875rem;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 34px 0 30px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin: 0 0 10px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: 2.2rem;
+        line-height: 1.1;
+        margin: 0 0 12px;
+        font-weight: 400;
+      }
+      header.top p {
+        margin: 0 0 8px;
+        max-width: 82ch;
+        color: rgb(245 241 230 / 0.85);
+        font-size: 0.95rem;
+      }
+      header.top strong {
+        color: var(--warm);
+      }
+      header.top .facts {
+        border-top: 1px solid rgb(240 194 100 / 0.4);
+        padding-top: 16px;
+        margin-top: 20px;
+      }
+      header.top .facts li {
+        max-width: 82ch;
+        color: rgb(245 241 230 / 0.85);
+        font-size: 0.92rem;
+        margin-bottom: 6px;
+      }
+      header.top code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        color: var(--warm);
+      }
+
+      section {
+        padding: 40px 0;
+        border-bottom: 2px solid var(--ink);
+      }
+      section.alt {
+        background: var(--cream);
+      }
+      h2 {
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        font-weight: 400;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      .sub {
+        color: var(--ink-soft);
+        margin: 0 0 26px;
+        max-width: 84ch;
+        font-size: 0.96rem;
+      }
+      .note {
+        font-size: 0.86rem;
+        color: var(--ink-muted);
+        max-width: 84ch;
+        margin: 12px 0 0;
+      }
+
+      /* ---- candidate grid ---- */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 22px;
+        align-items: start;
+      }
+      .cand {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+      }
+      .cand > header {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 10px 14px;
+      }
+      .cand > header .id {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        color: var(--warm);
+        display: block;
+        margin-bottom: 3px;
+      }
+      .cand > header .nm {
+        font-family: var(--font-big);
+        font-size: 1.12rem;
+        line-height: 1.2;
+      }
+      .cand .body {
+        padding: 16px 14px 14px;
+      }
+      .cand .why {
+        font-size: 0.85rem;
+        color: var(--ink-soft);
+        margin: 14px 0 0;
+        padding-top: 12px;
+        border-top: 1px dashed var(--cream-deep);
+      }
+      .cand .why b {
+        font-weight: 600;
+      }
+      .cand .cost {
+        font-size: 0.8rem;
+        color: var(--card-red);
+        margin: 8px 0 0;
+        font-weight: 600;
+      }
+
+      /* ---- the phone track: 375px viewport minus the 16px gutters = 343px ---- */
+      .phone {
+        width: 343px;
+        max-width: 100%;
+        margin: 0 auto 18px;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        padding: 10px;
+      }
+      .phone > .tag {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-bottom: 8px;
+        display: block;
+      }
+
+      /* ---- S1 · calendar agenda row (/kalender) ---- */
+      .agenda-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--cream-deep);
+      }
+      .agenda-row .t {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-muted);
+        flex-shrink: 0;
+      }
+      .agenda-row .club {
+        font-size: 15px;
+        font-weight: 600;
+        min-width: 0;
+        flex: 1;
+      }
+
+      /* ---- S2 · standings row (/ploegen/[slug]) ---- */
+      .stand-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--cream-deep);
+        font-size: 14px;
+      }
+      .stand-row .pos {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-muted);
+        width: 16px;
+        flex-shrink: 0;
+      }
+      .stand-row .crest {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--cream-deep);
+        flex-shrink: 0;
+      }
+      .stand-row .club {
+        font-family: var(--font-big);
+        font-style: italic;
+        min-width: 0;
+        flex: 1;
+      }
+      .stand-row .num {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        width: 20px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      /* ---- S3 · news card (/nieuws) ---- */
+      .news-card {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 12px;
+      }
+      .news-card .ph {
+        height: 92px;
+        background: var(--cream-deep);
+        margin: -12px -12px 12px;
+      }
+      .news-card h4 {
+        font-family: var(--font-big);
+        font-style: italic;
+        font-weight: 800;
+        font-size: 18px;
+        line-height: 1.15;
+        margin: 0 0 7px;
+      }
+      .news-card p {
+        font-size: 14px;
+        line-height: 1.45;
+        color: var(--ink-soft);
+        margin: 0;
+      }
+
+      /* ---- S4 · org person card (/hulp) ---- */
+      .person-card {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        padding: 12px;
+        text-align: center;
+        width: 150px;
+      }
+      .person-card .av {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--cream-deep);
+        margin: 0 auto 8px;
+      }
+      .person-card .nm2 {
+        font-family: var(--font-big);
+        font-style: italic;
+        font-weight: 700;
+        font-size: 15px;
+        line-height: 1.15;
+      }
+      .person-card .role {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 5px;
+        line-height: 1.35;
+      }
+
+      /* ================= the four rules ================= */
+      /* A — the slot decides: rows cut to one line, cards cut to N lines */
+      .A .club,
+      .A .role {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .A h4 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .A p {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      /* B — the kind decides: a name is never cut, prose is */
+      .B .club,
+      .B .nm2,
+      .B .role {
+        -webkit-hyphens: auto;
+        hyphens: auto;
+        overflow-wrap: normal;
+      }
+      .B h4 {
+        -webkit-hyphens: auto;
+        hyphens: auto;
+      }
+      .B p {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      /* C — nothing is ever cut */
+      .C .club,
+      .C .nm2,
+      .C .role,
+      .C h4,
+      .C p {
+        -webkit-hyphens: auto;
+        hyphens: auto;
+      }
+
+      /* D — the slot decides, but type shrinks before it cuts */
+      .D .club,
+      .D .role {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .D .club.long {
+        font-size: 13px;
+      }
+      .D .stand-row .club.long {
+        font-size: 12.5px;
+      }
+      .D .role.long {
+        font-size: 9.5px;
+        letter-spacing: 0.03em;
+      }
+      .D h4 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .D p {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .today {
+        background: var(--warm);
+        padding: 2px 6px;
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      /* ---- resolved rounds collapse to a lock block; options hidden, not deleted ---- */
+      .resolved {
+        display: none;
+      }
+      .lock {
+        background: var(--cream-soft);
+        border: 2px dashed var(--ink);
+        padding: 18px 20px;
+        margin: 0 0 8px;
+      }
+      .lock .stamp {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        display: block;
+        margin-bottom: 8px;
+      }
+      .lock p {
+        margin: 0;
+        max-width: 84ch;
+        font-size: 0.94rem;
+      }
+      .lock p + p {
+        margin-top: 10px;
+      }
+
+      /* ================= round 2 · what is a row, what is a card ================= */
+      .hero-band {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 14px 12px;
+      }
+      .hero-band .comp {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin-bottom: 8px;
+      }
+      .hero-band .teams {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .hero-band .tm {
+        font-family: var(--font-big);
+        font-style: italic;
+        font-size: 19px;
+        line-height: 1.1;
+        min-width: 0;
+        flex: 1;
+      }
+      .hero-band .sc {
+        font-family: var(--font-mono);
+        font-size: 20px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .dl-btn {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .dl-btn .stampbox {
+        background: var(--ink);
+        color: var(--warm);
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        padding: 8px 7px;
+        flex-shrink: 0;
+        text-align: center;
+        line-height: 1.3;
+      }
+      .dl-btn .lbl {
+        font-family: var(--font-big);
+        font-style: italic;
+        font-weight: 700;
+        font-size: 16px;
+        min-width: 0;
+        flex: 1;
+        line-height: 1.15;
+      }
+
+      .squad {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .squad .pc {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        padding: 8px;
+      }
+      .squad .pc .ph2 {
+        aspect-ratio: 3/4;
+        background: var(--cream-deep);
+        margin-bottom: 7px;
+      }
+      .squad .pc .pn {
+        font-family: var(--font-big);
+        font-style: italic;
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 1.15;
+      }
+
+      /* R2 · reading 1 — two buckets: one-line box cuts, multi-line box clamps */
+      .R1 .tm,
+      .R1 .lbl,
+      .R1 .role2 {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .R1 .pn {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      /* R2 · reading 2 — three buckets: the subject is never cut */
+      .R2 .tm,
+      .R2 .pn {
+        -webkit-hyphens: auto;
+        hyphens: auto;
+      }
+      .R2 .lbl,
+      .R2 .role2 {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* R2 · reading 3 — the label register is always a row */
+      .R3 .role2,
+      .R3 .lbl {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .R3 .tm {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .R3 .pn {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .role2 {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 5px;
+        line-height: 1.35;
+      }
+
+      /* ================= round 4 · the line count ================= */
+      .N2 h4,
+      .N2 p,
+      .N3 h4,
+      .N3 p,
+      .N23 h4,
+      .N23 p,
+      .N32 h4,
+      .N32 p {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        -webkit-hyphens: auto;
+        hyphens: auto;
+      }
+      .N2 h4 {
+        -webkit-line-clamp: 2;
+      }
+      .N2 p {
+        -webkit-line-clamp: 2;
+      }
+      .N3 h4 {
+        -webkit-line-clamp: 3;
+      }
+      .N3 p {
+        -webkit-line-clamp: 3;
+      }
+      .N23 h4 {
+        -webkit-line-clamp: 2;
+      }
+      .N23 p {
+        -webkit-line-clamp: 3;
+      }
+      .N32 h4 {
+        -webkit-line-clamp: 3;
+      }
+      .N32 p {
+        -webkit-line-clamp: 2;
+      }
+
+      .measure {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        padding: 18px 20px;
+      }
+      .measure h3 {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 0 0 14px;
+      }
+      .measure table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.86rem;
+      }
+      .measure th {
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        text-align: left;
+        color: var(--ink-muted);
+        border-bottom: 2px solid var(--ink);
+        padding: 6px 10px 6px 0;
+      }
+      .measure td {
+        padding: 7px 10px 7px 0;
+        border-bottom: 1px solid var(--cream-deep);
+      }
+      .measure .hint {
+        color: var(--ink-muted);
+        font-size: 0.9em;
+      }
+      .measure code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+      }
+
+      /* ================= round 5 · hyphenation (3/2 lock baked in) ================= */
+      .H1 h4,
+      .H2 h4,
+      .H3 h4,
+      .H4 h4 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .H1 p,
+      .H2 p,
+      .H3 p,
+      .H4 p {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .H1 .pn,
+      .H2 .pn,
+      .H3 .pn,
+      .H4 .pn {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .H1 h4,
+      .H1 p,
+      .H1 .pn {
+        -webkit-hyphens: auto;
+        hyphens: auto;
+      } /* everywhere text wraps */
+      .H2 h4,
+      .H2 .pn {
+        -webkit-hyphens: auto;
+        hyphens: auto;
+      } /* display type only */
+      .H3 h4,
+      .H3 p {
+        -webkit-hyphens: auto;
+        hyphens: auto;
+      } /* prose only, never a name */
+      /* H4 — nothing */
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="kicker">
+          Wayfinder #2425 · ticket #2549 · round 1 of the drill
+        </p>
+        <h1>What happens to a name that does not fit its slot?</h1>
+        <p>
+          The site has <strong>four idioms</strong> for a string longer than its
+          slot — cut to one line (<code>truncate</code>, 16 sites), cut to N
+          lines (<code>line-clamp-N</code>, 16 sites, N ∈ {1,2,3}),
+          wrap-and-hyphenate (<code>hyphens-auto</code>, 9 sites), and do
+          nothing at all. Nothing chooses between them. This round asks only the
+          governing question:
+          <strong>what decides which idiom a slot gets?</strong>
+        </p>
+        <ul class="facts">
+          <li>
+            Every string below is <strong>real production data</strong>, read
+            today. <code>K Hoger Op Wolvertem Merchtem</code> (29 chars) is this
+            season's longest opponent on
+            <code>/ploegen/eerste-elftallen-a/wedstrijden</code>.
+          </li>
+          <li>
+            Every panel is the <strong>343px phone track</strong> — a 375px
+            viewport minus its gutters. This is where the cut bites.
+          </li>
+          <li>
+            <strong>PRODUCT.md:103</strong> rules out "hover-only affordances"
+            for this audience, which kills the <code>title</code>-attribute
+            recovery that 4 of the 10 truncating files use today.
+          </li>
+          <li>
+            A cut is <strong>sighted-only</strong>: CSS truncation leaves the
+            whole string in the DOM, so a screen reader always gets the full
+            name.
+          </li>
+        </ul>
+      </div>
+    </header>
+
+    <section>
+      <div class="wrap">
+        <h2>Round 1 — what decides the idiom?</h2>
+
+        <div class="lock">
+          <span class="stamp"
+            >★ Locked — 2026-08-12 — Rule A, the slot decides</span
+          >
+          <p>
+            <b>Geometry rules, not content kind.</b> A <b>row</b> is one line
+            and cuts; a <b>card</b> is N lines and cuts. The rule is checkable
+            by looking at the slot, without knowing what is in it — which is
+            what the other three candidates gave up. Rejected: B (the kind
+            decides) because uneven row heights cost more than a half-shown
+            name; C (never cut) because a card grid loses its shared height; D
+            (shrink before cutting) because it breaks the type ramp that #2490
+            owns.
+          </p>
+          <p>
+            <b>What this settles onward:</b> cutting is now the site's norm
+            rather than its accident, so every later round in this drill is
+            about <i>how</i> the cut behaves — never about whether it happens.
+          </p>
+        </div>
+
+        <p class="sub" style="margin-top: 22px">
+          Same four surfaces in every panel, same data, only the rule changes.
+          <span class="today">A is roughly what ships today</span>, made
+          uniform.
+        </p>
+
+        <div class="grid resolved">
+          <!-- ================= A ================= -->
+          <article class="cand A">
+            <header>
+              <span class="id">RULE A</span>
+              <span class="nm">The slot decides</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">S1 · /kalender — agenda row</span>
+                <div class="agenda-row">
+                  <span class="t">14:30</span
+                  ><span class="club">K Hoger Op Wolvertem Merchtem</span>
+                </div>
+                <div class="agenda-row">
+                  <span class="t">15:00</span
+                  ><span class="club">SC City Pirates Antwerpen</span>
+                </div>
+                <div class="agenda-row">
+                  <span class="t">19:45</span
+                  ><span class="club">Ohr Huldenberg</span>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S2 · /ploegen — standings row</span>
+                <div class="stand-row">
+                  <span class="pos">4</span><span class="crest"></span
+                  ><span class="club">K Hoger Op Wolvertem Merchtem</span
+                  ><span class="num">12</span><span class="num">21</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">5</span><span class="crest"></span
+                  ><span class="club">Eendr Elene-Grotenberge</span
+                  ><span class="num">12</span><span class="num">19</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">6</span><span class="crest"></span
+                  ><span class="club">KCVV Elewijt</span
+                  ><span class="num">12</span><span class="num">18</span>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S3 · /nieuws — card</span>
+                <div class="news-card">
+                  <div class="ph"></div>
+                  <h4>
+                    Nillie en Julien: "slechtste verliezer en een klein beetje
+                    zagen".
+                  </h4>
+                  <p>
+                    KCVV Elewijt B kijkt met veel ambitie uit naar het nieuwe
+                    seizoen. Na enkele sterke jaren was het tijd om de volgende
+                    stap te zetten: een doordachte verjonging van onze kern.
+                  </p>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S4 · /hulp — person card</span>
+                <div class="person-card">
+                  <div class="av"></div>
+                  <div class="nm2">Christophe</div>
+                  <div class="role">Gerechtelijk Correspondent</div>
+                </div>
+              </div>
+              <p class="why">
+                <b>The geometry rules.</b> A row is one line and cuts; a card is
+                N lines and cuts. One rule you can check by looking at the slot,
+                without knowing what is in it.
+              </p>
+              <p class="cost">
+                Cost: a club's identity is routinely half-shown, and on touch
+                there is no way to get the rest.
+              </p>
+            </div>
+          </article>
+
+          <!-- ================= B ================= -->
+          <article class="cand B">
+            <header>
+              <span class="id">RULE B</span>
+              <span class="nm">The kind decides</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">S1 · /kalender — agenda row</span>
+                <div class="agenda-row">
+                  <span class="t">14:30</span
+                  ><span class="club">K Hoger Op Wolvertem Merchtem</span>
+                </div>
+                <div class="agenda-row">
+                  <span class="t">15:00</span
+                  ><span class="club">SC City Pirates Antwerpen</span>
+                </div>
+                <div class="agenda-row">
+                  <span class="t">19:45</span
+                  ><span class="club">Ohr Huldenberg</span>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S2 · /ploegen — standings row</span>
+                <div class="stand-row">
+                  <span class="pos">4</span><span class="crest"></span
+                  ><span class="club">K Hoger Op Wolvertem Merchtem</span
+                  ><span class="num">12</span><span class="num">21</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">5</span><span class="crest"></span
+                  ><span class="club">Eendr Elene-Grotenberge</span
+                  ><span class="num">12</span><span class="num">19</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">6</span><span class="crest"></span
+                  ><span class="club">KCVV Elewijt</span
+                  ><span class="num">12</span><span class="num">18</span>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S3 · /nieuws — card</span>
+                <div class="news-card">
+                  <div class="ph"></div>
+                  <h4>
+                    Nillie en Julien: "slechtste verliezer en een klein beetje
+                    zagen".
+                  </h4>
+                  <p>
+                    KCVV Elewijt B kijkt met veel ambitie uit naar het nieuwe
+                    seizoen. Na enkele sterke jaren was het tijd om de volgende
+                    stap te zetten: een doordachte verjonging van onze kern.
+                  </p>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S4 · /hulp — person card</span>
+                <div class="person-card">
+                  <div class="av"></div>
+                  <div class="nm2">Christophe</div>
+                  <div class="role">Gerechtelijk Correspondent</div>
+                </div>
+              </div>
+              <p class="why">
+                <b>Identity beats geometry.</b> A <i>name</i> — club, person,
+                team — is never shown partially: it wraps, hyphenating if it
+                must. Only <i>prose</i> (a lead, a description) is cut, because
+                prose already promises there is more.
+              </p>
+              <p class="cost">
+                Cost: rows stop being one uniform height, so a fixture list and
+                a standings table breathe unevenly.
+              </p>
+            </div>
+          </article>
+
+          <!-- ================= C ================= -->
+          <article class="cand C">
+            <header>
+              <span class="id">RULE C</span>
+              <span class="nm">Nothing is ever cut</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">S1 · /kalender — agenda row</span>
+                <div class="agenda-row">
+                  <span class="t">14:30</span
+                  ><span class="club">K Hoger Op Wolvertem Merchtem</span>
+                </div>
+                <div class="agenda-row">
+                  <span class="t">15:00</span
+                  ><span class="club">SC City Pirates Antwerpen</span>
+                </div>
+                <div class="agenda-row">
+                  <span class="t">19:45</span
+                  ><span class="club">Ohr Huldenberg</span>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S2 · /ploegen — standings row</span>
+                <div class="stand-row">
+                  <span class="pos">4</span><span class="crest"></span
+                  ><span class="club">K Hoger Op Wolvertem Merchtem</span
+                  ><span class="num">12</span><span class="num">21</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">5</span><span class="crest"></span
+                  ><span class="club">Eendr Elene-Grotenberge</span
+                  ><span class="num">12</span><span class="num">19</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">6</span><span class="crest"></span
+                  ><span class="club">KCVV Elewijt</span
+                  ><span class="num">12</span><span class="num">18</span>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S3 · /nieuws — card</span>
+                <div class="news-card">
+                  <div class="ph"></div>
+                  <h4>
+                    Nillie en Julien: "slechtste verliezer en een klein beetje
+                    zagen".
+                  </h4>
+                  <p>
+                    KCVV Elewijt B kijkt met veel ambitie uit naar het nieuwe
+                    seizoen. Na enkele sterke jaren was het tijd om de volgende
+                    stap te zetten: een doordachte verjonging van onze kern.
+                  </p>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S4 · /hulp — person card</span>
+                <div class="person-card">
+                  <div class="av"></div>
+                  <div class="nm2">Christophe</div>
+                  <div class="role">Gerechtelijk Correspondent</div>
+                </div>
+              </div>
+              <p class="why">
+                <b>The site never withholds.</b> No ellipsis exists anywhere;
+                every slot grows to fit its content. The simplest rule to state
+                and the only one that never loses a word.
+              </p>
+              <p class="cost">
+                Cost: a card grid loses its shared card height, and a long lead
+                can push a card to twice its neighbour.
+              </p>
+            </div>
+          </article>
+
+          <!-- ================= D ================= -->
+          <article class="cand D">
+            <header>
+              <span class="id">RULE D</span>
+              <span class="nm">Shrink before you cut</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">S1 · /kalender — agenda row</span>
+                <div class="agenda-row">
+                  <span class="t">14:30</span
+                  ><span class="club long">K Hoger Op Wolvertem Merchtem</span>
+                </div>
+                <div class="agenda-row">
+                  <span class="t">15:00</span
+                  ><span class="club long">SC City Pirates Antwerpen</span>
+                </div>
+                <div class="agenda-row">
+                  <span class="t">19:45</span
+                  ><span class="club">Ohr Huldenberg</span>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S2 · /ploegen — standings row</span>
+                <div class="stand-row">
+                  <span class="pos">4</span><span class="crest"></span
+                  ><span class="club long">K Hoger Op Wolvertem Merchtem</span
+                  ><span class="num">12</span><span class="num">21</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">5</span><span class="crest"></span
+                  ><span class="club long">Eendr Elene-Grotenberge</span
+                  ><span class="num">12</span><span class="num">19</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">6</span><span class="crest"></span
+                  ><span class="club">KCVV Elewijt</span
+                  ><span class="num">12</span><span class="num">18</span>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S3 · /nieuws — card</span>
+                <div class="news-card">
+                  <div class="ph"></div>
+                  <h4>
+                    Nillie en Julien: "slechtste verliezer en een klein beetje
+                    zagen".
+                  </h4>
+                  <p>
+                    KCVV Elewijt B kijkt met veel ambitie uit naar het nieuwe
+                    seizoen. Na enkele sterke jaren was het tijd om de volgende
+                    stap te zetten: een doordachte verjonging van onze kern.
+                  </p>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">S4 · /hulp — person card</span>
+                <div class="person-card">
+                  <div class="av"></div>
+                  <div class="nm2">Christophe</div>
+                  <div class="role long">Gerechtelijk Correspondent</div>
+                </div>
+              </div>
+              <p class="why">
+                <b>Geometry holds, type yields.</b> The row keeps its one line,
+                but a long name steps down a size (or two) to fit whole. The
+                ellipsis only appears past the floor.
+              </p>
+              <p class="cost">
+                Cost: the type ramp stops being a ramp — the same field renders
+                at three sizes down one column, and #2490 owns that ramp.
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap">
+        <h2>Round 2 — so what is a row, and what is a card?</h2>
+
+        <div class="lock">
+          <span class="stamp"
+            >★ Locked — 2026-08-12 — Reading 3, the label register picks the
+            bucket</span
+          >
+          <p>
+            <b>A row stays a row</b> (round 1) and cuts. For every slot that is
+            <i>not</i> already a row, the type register names the bucket:
+            <b>mono / label type cuts to one line</b>,
+            <b>display and body type clamps to N lines</b>. So the match hero's
+            two clubs render whole, a role inside a person card cuts, a
+            squad-grid name clamps, and a download control's label clamps — and
+            its height stops being fixed, which is the accepted cost.
+          </p>
+          <p>
+            <b>Why this reading:</b> it reuses a split the site already made —
+            #2516's
+            <i
+              >display face when the number is the subject, mono when it is a
+              tag</i
+            >
+            — so a mono label is already the site's way of saying "this is a
+            tag, not a sentence", and a tag is the thing that survives being
+            cut. It also needs no per-surface judgement, which is what rule A
+            was chosen for. Rejected: reading 1 (the box decides) because it
+            half-shows the match page's own subject in its largest type; reading
+            2 (the subject is exempt) because "subject" is a judgement call
+            written down per surface.
+          </p>
+        </div>
+
+        <p class="sub" style="margin-top: 22px">
+          Rule A keys on the slot, which means the slot has to be nameable. Most
+          surfaces are obvious: an agenda row is a row, a news card is a card.
+          <b>Four are not</b>, and they are exactly the four where today's
+          idioms disagree with each other. Same four surfaces in every panel,
+          same real data, only the reading of rule A changes.
+        </p>
+
+        <div class="grid resolved">
+          <!-- ================= R1 ================= -->
+          <article class="cand R1">
+            <header>
+              <span class="id">READING 1</span>
+              <span class="nm">Two buckets, decided by the box</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">T1 · /wedstrijd — match hero</span>
+                <div class="hero-band">
+                  <div class="comp">2e Provinciale B · speeldag 12</div>
+                  <div class="teams">
+                    <span class="tm">KCVV Elewijt</span
+                    ><span class="sc">2–1</span
+                    ><span class="tm">K Hoger Op Wolvertem Merchtem</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">T2 · /hulp — role inside a card</span>
+                <div class="person-card">
+                  <div class="av"></div>
+                  <div class="nm2">Christophe</div>
+                  <div class="role2">Gerechtelijk Correspondent</div>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">T3 · /ploegen — squad grid</span>
+                <div class="squad">
+                  <div class="pc">
+                    <div class="ph2"></div>
+                    <div class="pn">Christopher Louis Veka</div>
+                  </div>
+                  <div class="pc">
+                    <div class="ph2"></div>
+                    <div class="pn">Levi Antonissen</div>
+                  </div>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">T4 · download control</span>
+                <div class="dl-btn">
+                  <span class="stampbox">PDF<br />BESTAND</span>
+                  <span class="lbl"
+                    >Huishoudelijk reglement KCVV Elewijt 2026</span
+                  >
+                </div>
+              </div>
+              <p class="why">
+                <b>The box is the bucket.</b> If the element is a single-line
+                box it cuts; if it is a multi-line box it clamps. No taxonomy to
+                maintain — you read it off the CSS, not off the meaning.
+              </p>
+              <p class="cost">
+                Cost: the match hero's own subject — the two clubs the page is
+                about — is half-shown in the page's largest type.
+              </p>
+            </div>
+          </article>
+
+          <!-- ================= R2 ================= -->
+          <article class="cand R2">
+            <header>
+              <span class="id">READING 2</span>
+              <span class="nm">Three buckets — the subject is never cut</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">T1 · /wedstrijd — match hero</span>
+                <div class="hero-band">
+                  <div class="comp">2e Provinciale B · speeldag 12</div>
+                  <div class="teams">
+                    <span class="tm">KCVV Elewijt</span
+                    ><span class="sc">2–1</span
+                    ><span class="tm">K Hoger Op Wolvertem Merchtem</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">T2 · /hulp — role inside a card</span>
+                <div class="person-card">
+                  <div class="av"></div>
+                  <div class="nm2">Christophe</div>
+                  <div class="role2">Gerechtelijk Correspondent</div>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">T3 · /ploegen — squad grid</span>
+                <div class="squad">
+                  <div class="pc">
+                    <div class="ph2"></div>
+                    <div class="pn">Christopher Louis Veka</div>
+                  </div>
+                  <div class="pc">
+                    <div class="ph2"></div>
+                    <div class="pn">Levi Antonissen</div>
+                  </div>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">T4 · download control</span>
+                <div class="dl-btn">
+                  <span class="stampbox">PDF<br />BESTAND</span>
+                  <span class="lbl"
+                    >Huishoudelijk reglement KCVV Elewijt 2026</span
+                  >
+                </div>
+              </div>
+              <p class="why">
+                <b>One exemption, stated once.</b> Rows cut and cards clamp —
+                except the thing the surface is <i>about</i>: the hero's clubs,
+                the player's own name on their own card. Those render whole.
+                Everything else follows reading 1.
+              </p>
+              <p class="cost">
+                Cost: "subject" is a judgement call, so it needs writing down
+                per surface — the one thing rule A was chosen to avoid.
+              </p>
+            </div>
+          </article>
+
+          <!-- ================= R3 ================= -->
+          <article class="cand R3">
+            <header>
+              <span class="id">READING 3</span>
+              <span class="nm">The label register is always a row</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">T1 · /wedstrijd — match hero</span>
+                <div class="hero-band">
+                  <div class="comp">2e Provinciale B · speeldag 12</div>
+                  <div class="teams">
+                    <span class="tm">KCVV Elewijt</span
+                    ><span class="sc">2–1</span
+                    ><span class="tm">K Hoger Op Wolvertem Merchtem</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">T2 · /hulp — role inside a card</span>
+                <div class="person-card">
+                  <div class="av"></div>
+                  <div class="nm2">Christophe</div>
+                  <div class="role2">Gerechtelijk Correspondent</div>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">T3 · /ploegen — squad grid</span>
+                <div class="squad">
+                  <div class="pc">
+                    <div class="ph2"></div>
+                    <div class="pn">Christopher Louis Veka</div>
+                  </div>
+                  <div class="pc">
+                    <div class="ph2"></div>
+                    <div class="pn">Levi Antonissen</div>
+                  </div>
+                </div>
+              </div>
+              <div class="phone">
+                <span class="tag">T4 · download control</span>
+                <div class="dl-btn">
+                  <span class="stampbox">PDF<br />BESTAND</span>
+                  <span class="lbl"
+                    >Huishoudelijk reglement KCVV Elewijt 2026</span
+                  >
+                </div>
+              </div>
+              <p class="why">
+                <b>Typeface picks the bucket.</b> Anything in the mono label
+                register is one line and cuts; anything in display or body type
+                clamps to N lines. The register already marks "this is a tag,
+                not a sentence" everywhere else on the site — #2516 used exactly
+                that split for numerals.
+              </p>
+              <p class="cost">
+                Cost: the download control's label is display type, so it grows
+                to two lines and the control's height stops being fixed.
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Round 3 — does the reader ever get the rest back?</h2>
+
+        <div class="lock">
+          <span class="stamp"
+            >★ Locked — 2026-08-12 — Option d, one rule for both families</span
+          >
+          <p>
+            <b
+              ><code>title</code> carries the full form of anything the layout
+              shortened.</b
+            >
+            It reaches all ten truncating files <i>and</i> the two status badges
+            that already do this (<code>MatchStatusBadge:84</code>,
+            <code>TeamAgendaRow:255</code>) — one rule, one meaning, six files
+            gain it. It is explicitly a <b>desktop bonus</b>, never the only
+            route to the information.
+          </p>
+          <p>
+            <b>On the <code>PRODUCT.md</code> tension:</b> the line bans
+            interaction that <i>must be discovered</i> in order to use the site.
+            A tooltip revealing a name you can already mostly read is not that.
+            The tension is resolved once, here, in writing — it is not a
+            standing cost. Two costs are accepted on the record: the phone
+            reader gets nothing from it (round 1 already accepted the bare cut
+            as the baseline, so this only adds on top), and because the full
+            string is already in the DOM a <code>title</code> may be announced
+            twice by some screen readers. Rejected: a (delete it) because the
+            narrow reading of <code>PRODUCT.md</code> holds; b and c because
+            neither is needed once the bonus is legitimate.
+          </p>
+        </div>
+
+        <p class="sub" style="margin-top: 22px">
+          Two locks in, cutting is the site's norm. Today four files hand the
+          cut string back through a
+          <code>title</code> attribute — <code>CalendarWeek</code>,
+          <code>MatchHero</code>, <code>StandingsTable</code>,
+          <code>TeamAgendaRow</code> — and six do not.
+          <code>PRODUCT.md:103</code> rules out "hover-only affordances" for
+          this audience, so <b>the current mechanism cannot simply stay</b>; it
+          needs a verdict. <br /><br />
+          The surface below is the sharpest case on the site: a
+          <b>standings row</b>, where the club name is cut and the row
+          <b>links nowhere</b> — unlike a fixture row, which at least leads to a
+          match page carrying the full name. Real data, real 343px track.
+        </p>
+
+        <div class="grid resolved">
+          <!-- ================= Ra ================= -->
+          <article class="cand A">
+            <header>
+              <span class="id">OPTION a</span>
+              <span class="nm">No recovery — delete the title attributes</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">/ploegen — standings, no way out</span>
+                <div class="stand-row">
+                  <span class="pos">4</span><span class="crest"></span
+                  ><span class="club">K Hoger Op Wolvertem Merchtem</span
+                  ><span class="num">12</span><span class="num">21</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">5</span><span class="crest"></span
+                  ><span class="club">SC City Pirates Antwerpen</span
+                  ><span class="num">12</span><span class="num">19</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">6</span><span class="crest"></span
+                  ><span class="club">KCVV Elewijt</span
+                  ><span class="num">12</span><span class="num">18</span>
+                </div>
+              </div>
+              <p class="why">
+                <b>The cut is final, and that is the deal.</b> The four
+                <code>title</code> attributes go, so all ten truncating files
+                behave identically. Where a row links out, the destination
+                carries the whole name; where it does not, the reader lives with
+                the cut — as they already do on six of the ten files today.
+              </p>
+              <p class="cost">
+                Cost: on the standings table the club is simply never fully
+                named anywhere on the page.
+              </p>
+            </div>
+          </article>
+
+          <!-- ================= Rb ================= -->
+          <article class="cand A">
+            <header>
+              <span class="id">OPTION b</span>
+              <span class="nm">Never cut where there is no way out</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">/ploegen — standings, no way out</span>
+                <div class="stand-row">
+                  <span class="pos">4</span><span class="crest"></span
+                  ><span
+                    class="club"
+                    style="
+                      white-space: normal;
+                      overflow: visible;
+                      -webkit-hyphens: auto;
+                      hyphens: auto;
+                    "
+                    >K Hoger Op Wolvertem Merchtem</span
+                  ><span class="num">12</span><span class="num">21</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">5</span><span class="crest"></span
+                  ><span
+                    class="club"
+                    style="
+                      white-space: normal;
+                      overflow: visible;
+                      -webkit-hyphens: auto;
+                      hyphens: auto;
+                    "
+                    >SC City Pirates Antwerpen</span
+                  ><span class="num">12</span><span class="num">19</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">6</span><span class="crest"></span
+                  ><span class="club">KCVV Elewijt</span
+                  ><span class="num">12</span><span class="num">18</span>
+                </div>
+              </div>
+              <p class="why">
+                <b
+                  >The cut has to be recoverable, and a link is the recovery.</b
+                >
+                A row that leads somewhere may cut, because the destination
+                names the thing in full. A row that leads nowhere may not — it
+                wraps instead. The rule stays mechanical: does this row have an
+                <code>href</code>?
+              </p>
+              <p class="cost">
+                Cost: reopens part of round 1 — the standings row stops being
+                one uniform line, and it is the site's densest row.
+              </p>
+            </div>
+          </article>
+
+          <!-- ================= Rc ================= -->
+          <article class="cand A">
+            <header>
+              <span class="id">OPTION c</span>
+              <span class="nm">Tap to reveal, in place</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">/ploegen — standings, one row tapped</span>
+                <div class="stand-row">
+                  <span class="pos">4</span><span class="crest"></span
+                  ><span
+                    class="club"
+                    style="
+                      white-space: normal;
+                      overflow: visible;
+                      background: var(--warm);
+                      padding: 1px 3px;
+                    "
+                    >K Hoger Op Wolvertem Merchtem</span
+                  ><span class="num">12</span><span class="num">21</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">5</span><span class="crest"></span
+                  ><span class="club">SC City Pirates Antwerpen</span
+                  ><span class="num">12</span><span class="num">19</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">6</span><span class="crest"></span
+                  ><span class="club">KCVV Elewijt</span
+                  ><span class="num">12</span><span class="num">18</span>
+                </div>
+              </div>
+              <p class="why">
+                <b>Replace hover with tap.</b> A cut string becomes tappable and
+                expands in place — the same recovery <code>title</code> was
+                reaching for, but available to everyone rather than to a mouse.
+                Rows stay one line until the reader asks.
+              </p>
+              <p class="cost">
+                Cost: a new interactive affordance nothing else on the site has,
+                on a surface that is otherwise inert — and #2529's tap-target
+                floor applies to it.
+              </p>
+            </div>
+          </article>
+
+          <!-- ================= Rd ================= -->
+          <article class="cand A">
+            <header>
+              <span class="id">OPTION d</span>
+              <span class="nm">Keep title, demoted to a desktop bonus</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag"
+                  >/ploegen — standings, mouse hovering row 4</span
+                >
+                <div class="stand-row">
+                  <span class="pos">4</span><span class="crest"></span
+                  ><span class="club" title="K Hoger Op Wolvertem Merchtem"
+                    >K Hoger Op Wolvertem Merchtem</span
+                  ><span class="num">12</span><span class="num">21</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">5</span><span class="crest"></span
+                  ><span class="club" title="SC City Pirates Antwerpen"
+                    >SC City Pirates Antwerpen</span
+                  ><span class="num">12</span><span class="num">19</span>
+                </div>
+                <div class="stand-row">
+                  <span class="pos">6</span><span class="crest"></span
+                  ><span class="club">KCVV Elewijt</span
+                  ><span class="num">12</span><span class="num">18</span>
+                </div>
+              </div>
+              <p class="why">
+                <b>Read <code>PRODUCT.md</code> narrowly.</b> It bans hover-only
+                <i>affordances</i> — things you must discover to use the site. A
+                <code>title</code> that reveals a name you can already mostly
+                read is a bonus, not an affordance. Extend it to all ten files
+                instead of deleting it from four.
+              </p>
+              <p class="cost">
+                Cost: the phone reader — the stated primary case — still gets
+                nothing, and the site keeps a mechanism it has to keep
+                justifying.
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap">
+        <h2>Round 4 — how many lines does a clamped card get?</h2>
+
+        <div class="lock">
+          <span class="stamp"
+            >★ Locked — 2026-08-12 — 3/2, headline three lines, lead two</span
+          >
+          <p>
+            <b>A clamped headline gets 3 lines, a clamped lead gets 2.</b> The
+            headline is the card's identity and the only thing that names the
+            article, so it renders whole — measured on production,
+            <code>/nieuws</code>
+            headlines run 76 / 65 / 56 / 56 / 55 characters, which is three
+            lines of 18px display italic on a 319px card. Any two-line rule
+            would cut most of the site's real headlines, which is what ruled out
+            2/2 and 2/3 on evidence. The lead gets 2 because it is a sample, not
+            a summary — the same reasoning round 1 used to let prose be cut at
+            all.
+          </p>
+          <p>
+            Rejected: 3/3 because a 177-character lead then renders almost
+            complete and the card competes with the article instead of pointing
+            at it. Accepted cost: three lines of display italic over two of body
+            is headline-heavy on a small card.
+          </p>
+        </div>
+
+        <p class="sub" style="margin-top: 22px">
+          The site ships three answers: <b>11× <code>line-clamp-2</code></b
+          >, <b>3× <code>-3</code></b
+          >, <b>2× <code>-1</code></b
+          >. The clearest contradiction is the same pair of fields on two routes
+          — <code>NewsCard</code> gives a headline <b>3</b> lines and its lead
+          <b>3</b>; <code>SearchResult</code> gives the identical headline
+          <b>2</b> and its lead <b>2</b>;
+          <code>MatchArticleLinkCard</code> gives the headline
+          <b>no cap at all</b> and its lead <b>2</b>. Same article, three
+          shapes. <br /><br />
+          Both cards below carry the same real headline (76 chars) and the same
+          real lead (177 chars) from
+          <code>/nieuws</code>, on the 343px track.
+        </p>
+
+        <div class="grid resolved">
+          <article class="cand N2">
+            <header>
+              <span class="id">OPTION 2/2</span
+              ><span class="nm">Two lines, everywhere</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">/nieuws card · /zoeken result</span>
+                <div class="news-card">
+                  <div class="ph"></div>
+                  <h4>
+                    Nillie en Julien: "slechtste verliezer en een klein beetje
+                    zagen".
+                  </h4>
+                  <p>
+                    KCVV Elewijt B kijkt met veel ambitie uit naar het nieuwe
+                    seizoen. Na enkele sterke jaren was het tijd om de volgende
+                    stap te zetten: een doordachte verjonging van onze kern.
+                  </p>
+                </div>
+              </div>
+              <p class="why">
+                <b>Today's majority made the rule</b> — 11 of the 16 clamps are
+                already 2. The tightest grid, the most cards above the fold, and
+                every card in a row is the same height without effort.
+              </p>
+              <p class="cost">
+                Cost: a 76-character headline — ordinary here — loses its last
+                third, and the lead becomes a teaser rather than a summary.
+              </p>
+            </div>
+          </article>
+
+          <article class="cand N3">
+            <header>
+              <span class="id">OPTION 3/3</span
+              ><span class="nm">Three lines, everywhere</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">/nieuws card · /zoeken result</span>
+                <div class="news-card">
+                  <div class="ph"></div>
+                  <h4>
+                    Nillie en Julien: "slechtste verliezer en een klein beetje
+                    zagen".
+                  </h4>
+                  <p>
+                    KCVV Elewijt B kijkt met veel ambitie uit naar het nieuwe
+                    seizoen. Na enkele sterke jaren was het tijd om de volgende
+                    stap te zetten: een doordachte verjonging van onze kern.
+                  </p>
+                </div>
+              </div>
+              <p class="why">
+                <b>The most-read card wins.</b> <code>NewsCard</code> is 3/3
+                today and it is the card the site shows most. Nearly every real
+                headline fits whole, and the lead reads as a summary.
+              </p>
+              <p class="cost">
+                Cost: taller cards, so fewer reach the fold on a phone — and the
+                two <code>line-clamp-1</code> meta rows still sit outside the
+                rule.
+              </p>
+            </div>
+          </article>
+
+          <article class="cand N23">
+            <header>
+              <span class="id">OPTION 2/3</span
+              ><span class="nm">Headline 2, lead 3</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">/nieuws card · /zoeken result</span>
+                <div class="news-card">
+                  <div class="ph"></div>
+                  <h4>
+                    Nillie en Julien: "slechtste verliezer en een klein beetje
+                    zagen".
+                  </h4>
+                  <p>
+                    KCVV Elewijt B kijkt met veel ambitie uit naar het nieuwe
+                    seizoen. Na enkele sterke jaren was het tijd om de volgende
+                    stap te zetten: een doordachte verjonging van onze kern.
+                  </p>
+                </div>
+              </div>
+              <p class="why">
+                <b>N follows the field's job.</b> A headline is a promise and
+                should be short enough to land in two lines — if it needs three,
+                that is an editorial problem, not a layout one. The lead is the
+                sample, so it gets the room.
+              </p>
+              <p class="cost">
+                Cost: the site's own headlines routinely run past two lines, so
+                the rule would be quietly broken by the CMS from day one.
+              </p>
+            </div>
+          </article>
+
+          <article class="cand N32">
+            <header>
+              <span class="id">OPTION 3/2</span
+              ><span class="nm">Headline 3, lead 2</span>
+            </header>
+            <div class="body">
+              <div class="phone">
+                <span class="tag">/nieuws card · /zoeken result</span>
+                <div class="news-card">
+                  <div class="ph"></div>
+                  <h4>
+                    Nillie en Julien: "slechtste verliezer en een klein beetje
+                    zagen".
+                  </h4>
+                  <p>
+                    KCVV Elewijt B kijkt met veel ambitie uit naar het nieuwe
+                    seizoen. Na enkele sterke jaren was het tijd om de volgende
+                    stap te zetten: een doordachte verjonging van onze kern.
+                  </p>
+                </div>
+              </div>
+              <p class="why">
+                <b
+                  >The headline is the card's identity, the lead is
+                  expendable.</b
+                >
+                Give the thing that names the article the room it needs, and cut
+                the sample instead — it is the part that already promises there
+                is more.
+              </p>
+              <p class="cost">
+                Cost: the headline is display italic, so three lines of it
+                dominates a small card and the lead reads as an afterthought.
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Round 5 — where does hyphenation belong?</h2>
+
+        <div class="lock">
+          <span class="stamp"
+            >★ Locked — 2026-08-12 — Option a, delete all eight and write the
+            rule</span
+          >
+          <p>
+            <b>No slot carries a hyphenation declaration.</b> The six
+            <code>hyphens-auto</code> declarations and the two
+            <code>break-words</code> declarations are removed — all eight are
+            provably inert on the site's real content, so this is a deletion of
+            dead declarations, and it leaves the site uniform by construction
+            rather than with an arbitrary six.
+            <b>Count corrected during resolution:</b> the drill said nine + two,
+            which counted docblock lines as sites; the real figure is six + two
+            across eight files.
+          </p>
+          <p>
+            <b>The rule moves to DESIGN.md</b>, where it outlives the two
+            components currently carrying it as comments:
+            <i
+              >if a slot ever needs hyphenation, <code>hyphens-auto</code> goes
+              in alone, never paired with <code>break-words</code></i
+            >
+            (#2269 — the emergency per-character breaks out-compete the
+            hyphenator and produce hyphen-less mid-word clips). Accepted risk,
+            on the record: if content or a breakpoint ever produces a word wider
+            than its slot, it clips rather than hyphenates, guarded only by that
+            written rule.
+          </p>
+        </div>
+
+        <p class="sub" style="margin-top: 22px">
+          <b
+            >There is no visual comparison to make here, and that is the
+            finding.</b
+          >
+          Four panels were built and rendered identically — not a mockup bug, a
+          measurement. Every real string on this site, at every real slot width,
+          breaks in exactly the same place with <code>hyphens: auto</code> on,
+          off, or replaced by <code>break-words</code>. Measured in Chrome
+          against the loaded Typekit faces, reconstructing the rendered line
+          boxes character by character.
+        </p>
+
+        <div class="measure">
+          <h3 style="margin-top: 0">
+            Why it never fires: every long word already fits its slot
+          </h3>
+          <table>
+            <tr>
+              <th>Word</th>
+              <th>Where it renders</th>
+              <th>Word width</th>
+              <th>Slot width</th>
+              <th>Fits alone?</th>
+            </tr>
+            <tr>
+              <td>doorzettingsvermogen</td>
+              <td>/nieuws headline, 18px display</td>
+              <td>150px</td>
+              <td>319px</td>
+              <td>yes</td>
+            </tr>
+            <tr>
+              <td>
+                Voorbeschouwing <span class="hint">(the #2269 word)</span>
+              </td>
+              <td>/nieuws headline, 18px display</td>
+              <td>119px</td>
+              <td>319px</td>
+              <td>yes</td>
+            </tr>
+            <tr>
+              <td>VERANTWOORDELIJKE</td>
+              <td>/hulp role, 11px mono</td>
+              <td>124px</td>
+              <td>126px</td>
+              <td>yes, barely</td>
+            </tr>
+            <tr>
+              <td>Braspenninckx <span class="hint">(real surname)</span></td>
+              <td>squad card 2-up, 14px display</td>
+              <td>81px</td>
+              <td>148px</td>
+              <td>yes</td>
+            </tr>
+            <tr>
+              <td>doorzettingsvermogen</td>
+              <td>squad card 2-up, 14px display</td>
+              <td>117px</td>
+              <td>148px</td>
+              <td>yes</td>
+            </tr>
+          </table>
+          <p class="note" style="margin-top: 14px">
+            A browser only hyphenates a word that cannot fit the
+            <i>remaining</i> space on a line. Since every one of these fits a
+            whole line on its own, the hyphenator is never consulted. Rendered
+            lines came out byte-identical in all three configurations — e.g.
+            <code>SPORTIEF / VERANTWOORDELIJKE</code> and
+            <code
+              >MAX BREUGELMANS: "Drive, passie, / doorzettingsvermogen".</code
+            >
+          </p>
+        </div>
+
+        <div class="measure" style="margin-top: 18px">
+          <h3 style="margin-top: 0">So the decision is not aesthetic</h3>
+          <p style="margin: 0 0 10px">
+            <b>a — Delete them all, write the rule instead.</b> Six
+            <code>hyphens-auto</code> plus two <code>break-words</code>, all
+            provably inert. The #2269 knowledge moves from a code comment into
+            DESIGN.md, where it survives the components. Uniform by
+            construction: zero sites carry it.
+            <span class="hint"
+              >Risk: a future longer word clips instead of hyphenating,
+              unguarded.</span
+            >
+          </p>
+          <p style="margin: 0 0 10px">
+            <b>b — One rule, applied to every clamped slot.</b>
+            <code>hyphens-auto</code>, alone, never with
+            <code>break-words</code>. Costs nothing at runtime and is correct
+            the day content outgrows a slot.
+            <span class="hint"
+              >Risk: adds a class to ~10 more sites for zero present
+              effect.</span
+            >
+          </p>
+          <p style="margin: 0">
+            <b
+              >c — Keep the nine, delete only the two
+              <code>break-words</code>.</b
+            >
+            Ratifies what ships and removes the one declaration #2269 identifies
+            as harmful.
+            <span class="hint"
+              >Risk: nine arbitrary sites carry it and the rest do not — which
+              is not a decision.</span
+            >
+          </p>
+        </div>
+
+        <p class="note">
+          Hyphenation only works where the language is declared — this page and
+          the site are both
+          <code>&lt;html lang="nl"&gt;</code>, so the measurement is live rather
+          than theoretical. Safari also needs <code>-webkit-hyphens</code>,
+          which this file now sets; adding it changed no result.
+        </p>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap">
+        <h2>Round 6 — does 3/2 fit every card?</h2>
+
+        <div class="lock">
+          <span class="stamp"
+            >★ Locked — 2026-08-12 — the type size picks the pair</span
+          >
+          <p>
+            <b
+              >Normal type takes headline 3 / lead 2 / meta 1. Small type
+              (≤12px) takes 2 / 1 / 1.</b
+            >
+            It keys on the same idea round 2 locked — there the
+            <i>register</i> named the bucket, here the <i>size</i> names the
+            pair — so it is one idea applied twice rather than two unrelated
+            rules, and it needs no maintained list of "compact" components. It
+            ratifies all six small-type slots exactly as they ship today, so the
+            change lands only on the full cards, which is where the
+            contradiction actually was. The meta line gets the value it already
+            has everywhere: 1.
+          </p>
+        </div>
+
+        <p class="sub" style="margin-top: 22px">
+          Round 4 locked <b>headline 3, lead 2</b> against a full-width
+          <code>/nieuws</code> card. But lock 1 made <i>every</i> non-row slot a
+          card, and some of them are tiny: a <code>CalendarMonth</code> day cell
+          at 11px, a <code>HubSearch</code> dropdown row at 12px, a
+          <code>SpotlightNodeCard</code> at 12px. Giving an event title three
+          lines inside a month-grid cell is not the same decision as giving a
+          news headline three lines. <br /><br />
+          There is also a <b>third field</b> the 3/2 pair never named: the meta
+          line. <code>SearchRelated:46</code> and
+          <code>HubSearch:197</code> both clamp it to <b>1</b> today, and
+          nothing in the locks says what it should be.
+        </p>
+
+        <div class="measure">
+          <h3 style="margin-top: 0">What the compact slots ship today</h3>
+          <table>
+            <tr>
+              <th>Site</th>
+              <th>Field</th>
+              <th>Type size</th>
+              <th>Clamp today</th>
+            </tr>
+            <tr>
+              <td>NewsCard</td>
+              <td>headline / lead</td>
+              <td>18px display</td>
+              <td>3 / 3</td>
+            </tr>
+            <tr>
+              <td>SearchResult</td>
+              <td>headline / lead</td>
+              <td>17px display</td>
+              <td>2 / 2</td>
+            </tr>
+            <tr>
+              <td>EditorialHubCard</td>
+              <td>headline</td>
+              <td>18px display</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>CalendarWeek</td>
+              <td>event title</td>
+              <td>12px</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>CalendarMonth</td>
+              <td>event title</td>
+              <td>11px</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>SpotlightNodeCard</td>
+              <td>node name</td>
+              <td>12px display</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>HubSearch</td>
+              <td>meta line</td>
+              <td>12px</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>SearchRelated</td>
+              <td>meta line</td>
+              <td>11.5px</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>Sponsor tiles ×3</td>
+              <td>wordmark fallback</td>
+              <td>14–20px display</td>
+              <td>2</td>
+            </tr>
+          </table>
+          <p class="note" style="margin-top: 14px">
+            The pattern in the existing values is not random:
+            <b>every slot at 12px or below already clamps lower</b>
+            than the full cards do. Nobody decided that — but the site has been
+            doing it consistently.
+          </p>
+        </div>
+
+        <p class="note">
+          The remaining item from the ticket needs no round: under locks 1 and
+          2, <code>PlayerCard</code> and <code>TeamStaff</code> — which clamp
+          nothing today — are display type in a card, so they clamp like any
+          other card headline. Measured, it is moot in practice:
+          <code>Christopher Louis Veka</code> is one line at 148px.
+        </p>
+      </div>
+    </section>
+  </body>
+</html>

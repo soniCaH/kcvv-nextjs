@@ -1,0 +1,1758 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      #2444 — Horizontal scroller chrome: 4 candidates × every scrolling surface
+    </title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey: #009c5b;
+        --jersey-deep: #008755;
+        --jersey-deep-dark: #133d28;
+        --warm: #f0c264;
+        --paper-edge: #d9d2bd;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --shadow-paper-md: 6px 6px 0 0 var(--ink);
+        --text-label: 0.6875rem;
+        --container-wide: 1040px;
+        --filter-photo-newsprint: sepia(0.06) saturate(0.94) hue-rotate(-4deg);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      /* ============ prototype chrome — NOT part of the design ============ */
+      .proto {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 28px 24px 26px;
+      }
+      .proto-inner {
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+      .proto-kicker {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin: 0 0 8px;
+      }
+      .proto h1 {
+        font-family: var(--font-big);
+        font-size: clamp(1.6rem, 1.1rem + 2vw, 2.4rem);
+        line-height: 1.08;
+        margin: 0 0 14px;
+        font-weight: 400;
+      }
+      .proto p {
+        margin: 0 0 10px;
+        max-width: 76ch;
+        color: #d8d3c4;
+        font-size: 0.95rem;
+      }
+      .proto strong {
+        color: var(--cream);
+      }
+      .proto code,
+      .proto-inner code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: #262626;
+        padding: 1px 5px;
+        color: var(--warm);
+      }
+      table.idioms {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 16px 0 4px;
+        font-size: 0.8rem;
+      }
+      table.idioms th,
+      table.idioms td {
+        border: 1px solid #3a3a3a;
+        padding: 6px 9px;
+        text-align: left;
+        vertical-align: top;
+        color: #d8d3c4;
+      }
+      table.idioms th {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--warm);
+        background: #1a1a1a;
+      }
+      table.idioms td.none {
+        color: #ff8a6b;
+      }
+      .scrollx {
+        overflow-x: auto;
+      }
+
+      .readout {
+        position: fixed;
+        top: 0;
+        right: 0;
+        z-index: 90;
+        background: var(--ink);
+        color: var(--cream);
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        line-height: 1.5;
+        padding: 7px 10px;
+        border-left: 2px solid var(--warm);
+        border-bottom: 2px solid var(--warm);
+        max-width: 220px;
+      }
+      .readout b {
+        color: var(--warm);
+      }
+      .readout .bad {
+        color: #ff8a6b;
+      }
+      .readout .ok {
+        color: #7fd6a4;
+      }
+
+      .switcher {
+        position: fixed;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        display: flex;
+        background: var(--ink);
+        border: 2px solid var(--warm);
+        box-shadow: 6px 6px 0 0 rgb(0 0 0 / 0.35);
+      }
+      .switcher button {
+        appearance: none;
+        background: var(--ink);
+        color: var(--cream);
+        border: 0;
+        font-family: var(--font-mono);
+        font-size: 15px;
+        padding: 10px 15px;
+        cursor: pointer;
+        line-height: 1;
+      }
+      .switcher button:hover {
+        background: var(--jersey-deep);
+      }
+      .switcher .label {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 10px 14px;
+        border-left: 2px solid #3a3a3a;
+        border-right: 2px solid #3a3a3a;
+        min-width: 250px;
+        text-align: center;
+        align-self: center;
+      }
+      .switcher .label b {
+        color: var(--warm);
+      }
+      .countToggle {
+        position: fixed;
+        bottom: 18px;
+        right: 18px;
+        z-index: 100;
+        display: flex;
+        background: var(--ink);
+        border: 2px solid var(--warm);
+      }
+      .countToggle button {
+        appearance: none;
+        background: var(--ink);
+        color: #a8a29a;
+        border: 0;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 10px 11px;
+        cursor: pointer;
+      }
+      .countToggle button[aria-pressed="true"] {
+        background: var(--warm);
+        color: var(--ink);
+        font-weight: 700;
+      }
+
+      .variant-head {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 34px 24px 0;
+      }
+      .variant-head .vk {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 8px;
+      }
+      .variant-head h2 {
+        font-family: var(--font-big);
+        font-weight: 400;
+        font-size: clamp(1.4rem, 1rem + 1.6vw, 2rem);
+        line-height: 1.1;
+        margin: 0 0 8px;
+      }
+      .variant-head p {
+        margin: 0 0 6px;
+        max-width: 80ch;
+        color: var(--ink-soft);
+        font-size: 0.95rem;
+      }
+      .variant-head .verdictline {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 10px;
+      }
+
+      .archHead {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 34px 24px 0;
+      }
+      .archHead .an {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink);
+        border-bottom: 2px solid var(--ink);
+        display: inline-block;
+        padding-bottom: 3px;
+      }
+      .archHead .ships {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--ink-muted);
+        margin-top: 7px;
+      }
+      .stage {
+        margin: 14px 0 0;
+        background: var(--cream);
+        border-top: 2px solid var(--ink);
+        border-bottom: 2px solid var(--ink);
+        /* deliberately NOT `overflow: hidden` — the real page does not clip
+           here, so a variant that overhangs past the gutter must be allowed
+           to push the document. That 4px is the defect; clipping it would
+           make this page lie. The readout reports it. */
+      }
+
+      /* ============ the real page frame ============ */
+      .row {
+        background: var(--cream);
+        width: 100%;
+        padding: 30px 16px 34px;
+      }
+      .rowInner {
+        margin: 0 auto;
+        width: 100%;
+        max-width: var(--container-wide);
+      }
+      .rowHeading {
+        font-family: var(--font-big);
+        font-weight: 400;
+        font-size: clamp(1.4rem, 1rem + 1.6vw, 1.9rem);
+        line-height: 1.15;
+        margin: 0 0 30px;
+        color: var(--ink);
+      }
+      .rowHeading em {
+        font-style: italic;
+        color: var(--jersey-deep);
+      }
+      .surfaceLabel {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 0 0 12px;
+      }
+
+      /* ---- shared track ---- */
+      .track {
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+      }
+      .track::-webkit-scrollbar {
+        display: none;
+      }
+      .track.nativeBar {
+        scrollbar-width: auto;
+      }
+      .track.nativeBar::-webkit-scrollbar {
+        display: block;
+        height: 11px;
+      }
+
+      /* ---- NewsCard, faithful to aspectRatio="landscape-16-9" ---- */
+      .rail {
+        display: flex;
+        min-width: max-content;
+        gap: 24px;
+      }
+      @media (min-width: 768px) {
+        .rail {
+          gap: 32px;
+        }
+      }
+      .slot {
+        flex: 0 0 auto;
+        width: 288px;
+        padding-top: 16px;
+      }
+      @media (min-width: 768px) {
+        .slot {
+          width: 320px;
+        }
+      }
+      .card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-md);
+        transition:
+          transform 0.3s,
+          box-shadow 0.3s;
+        text-decoration: none;
+        color: inherit;
+        rotate: var(--card-rot, 0deg);
+      }
+      .card:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+      .tape {
+        position: absolute;
+        top: 0;
+        left: 12%;
+        width: 64px;
+        height: 16px;
+        background: var(--jersey);
+        transform: translateY(-50%) rotate(var(--tape-rot, -0.5deg));
+        z-index: 2;
+      }
+      .cardImg {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background: var(--cream-deep);
+      }
+      .cardImg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        filter: var(--filter-photo-newsprint);
+      }
+      .cardImg.noPhoto::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.3;
+        background-image: repeating-linear-gradient(
+          135deg,
+          transparent 0,
+          transparent 12px,
+          var(--jersey-deep) 12px,
+          var(--jersey-deep) 13px
+        );
+      }
+      .cardMeta {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        gap: 16px;
+        border-top: 1px solid var(--ink);
+        padding: 20px;
+      }
+      .badge {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .cardTitle {
+        font-family: var(--font-display);
+        font-size: clamp(1.25rem, 1rem + 1vw, 1.5rem);
+        line-height: 1.3;
+        font-weight: 600;
+        margin: 0;
+        hyphens: auto;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .cardFoot {
+        margin-top: auto;
+        display: flex;
+        justify-content: flex-end;
+        border-top: 2px solid var(--paper-edge);
+        padding-top: 12px;
+      }
+      .cta {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .card:hover .cta {
+        opacity: 1;
+      }
+
+      /* ---- FilterTabs chips, faithful to size="sm" as /nieuws ships ---- */
+      .chipRail {
+        display: flex;
+        min-width: max-content;
+        gap: 12px;
+      }
+      .chip {
+        appearance: none;
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: 8px;
+        min-height: 32px;
+        padding: 5px 9px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        line-height: 1.6;
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        color: var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        cursor: pointer;
+        transition: all 0.3s;
+        white-space: nowrap;
+      }
+      .chip:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+      .chip[aria-selected="true"] {
+        background: var(--ink);
+        color: var(--cream);
+        box-shadow: 4px 4px 0 0 rgb(10 10 10 / 0.35);
+      }
+
+      /* ---- data table, faithful to StandingsTable + HtmlTableBlock ---- */
+      .tableShell {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-md);
+        position: relative;
+      }
+      table.dt {
+        width: 100%;
+        min-width: 760px;
+        border-collapse: collapse;
+        font-family: var(--font-mono);
+        font-size: 13px;
+      }
+      table.dt thead {
+        background: var(--jersey-deep);
+      }
+      table.dt thead th {
+        color: #fff;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        text-align: left;
+        padding: 10px 12px;
+        white-space: nowrap;
+      }
+      table.dt thead th:not(:first-child) {
+        border-left: 1px dotted rgb(245 241 230 / 0.3);
+      }
+      table.dt tbody td {
+        padding: 8px 12px;
+        border-top: 1px dotted var(--ink-muted);
+        white-space: nowrap;
+      }
+      table.dt tbody td:not(:first-child) {
+        border-left: 1px dotted var(--ink-muted);
+      }
+      table.dt tbody td:first-child {
+        font-family: var(--font-display);
+        font-size: 15px;
+        font-weight: 600;
+        font-style: italic;
+      }
+      table.dt tbody tr:nth-child(even) td {
+        background: rgb(0 0 0 / 0.025);
+      }
+      /* the sticky first column HtmlTableBlock ships and StandingsTable does not */
+      .sticky1 table.dt tbody td:first-child,
+      .sticky1 table.dt thead th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        box-shadow: 2px 0 4px -1px rgb(0 0 0 / 0.12);
+      }
+      .sticky1 table.dt tbody tr:nth-child(odd) td:first-child {
+        background: var(--cream);
+      }
+      .sticky1 table.dt tbody tr:nth-child(even) td:first-child {
+        background: rgb(232 224 200 / 0.7);
+      }
+      .sticky1 table.dt thead th:first-child {
+        background: var(--jersey-deep);
+        z-index: 20;
+      }
+
+      /* ---- text nav strip, faithful to TeamSectionNav + organigram trail -- */
+      .navStrip {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-width: max-content;
+      }
+      .navStrip a {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink);
+        text-decoration: none;
+        padding: 4px 12px;
+        white-space: nowrap;
+        transition:
+          background 0.2s,
+          color 0.2s;
+      }
+      .navStrip a:hover {
+        background: var(--jersey-deep);
+        color: var(--cream);
+      }
+      .navStrip .sep {
+        color: var(--ink-muted);
+        font-size: 11px;
+      }
+      .navShell {
+        border-bottom: 2px solid var(--ink);
+        background: var(--cream);
+      }
+
+      /* ---- wide diagram, faithful to VolledigOrganigram ---- */
+      .orgTree {
+        display: flex;
+        gap: 18px;
+        min-width: max-content;
+        padding: 10px 0 16px;
+        align-items: flex-start;
+      }
+      .orgBox {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 9px 13px;
+        min-width: 148px;
+      }
+      .orgBox .r {
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+      }
+      .orgBox .n {
+        font-family: var(--font-display);
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      /* ===================== VARIANT 0 — CURRENT (ships today) ============ */
+      .v0 .rel {
+        position: relative;
+      }
+      .v0 .arrow {
+        position: absolute;
+        inset-block: 0;
+        margin-block: auto;
+        z-index: 10;
+      }
+      /* cards: 48px, overhung −20px */
+      .v0 .a-cards .arrow.left {
+        left: -20px;
+      }
+      .v0 .a-cards .arrow.right {
+        right: -20px;
+      }
+      .v0 .a-cards .track[data-fade="both"] {
+        mask-image: linear-gradient(
+          to right,
+          transparent 0,
+          black 24px,
+          black calc(100% - 24px),
+          transparent 100%
+        );
+      }
+      .v0 .a-cards .track[data-fade="right"] {
+        mask-image: linear-gradient(
+          to right,
+          black calc(100% - 24px),
+          transparent 100%
+        );
+      }
+      .v0 .a-cards .track[data-fade="left"] {
+        mask-image: linear-gradient(to right, transparent 0, black 24px);
+      }
+      /* chips: 32px, flush at the edge, conditional 40px padding */
+      .v0 .a-chips .arrow.left {
+        left: 0;
+      }
+      .v0 .a-chips .arrow.right {
+        right: 0;
+      }
+      /* table: no arrow, a right-side gradient overlay, sticky first column */
+      .v0 .a-table .fadeOverlay {
+        position: absolute;
+        inset-block: 0;
+        right: 0;
+        width: 40px;
+        pointer-events: none;
+        background: linear-gradient(to left, var(--cream), transparent);
+      }
+
+      /* ===================== VARIANT A — CONTROLS ON THE HEADER LINE ====== */
+      .vA .headRow {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 18px;
+      }
+      .vA .headRow .rowHeading,
+      .vA .headRow .surfaceLabel {
+        margin: 0;
+      }
+      .vA .headControls {
+        display: flex;
+        gap: 10px;
+        flex: 0 0 auto;
+      }
+      .vA .track[data-fade="both"],
+      .vA .track[data-fade="right"] {
+        mask-image: linear-gradient(
+          to right,
+          black calc(100% - 32px),
+          transparent 100%
+        );
+      }
+      @media (hover: none), (max-width: 599px) {
+        .vA .headControls {
+          display: none;
+        }
+      }
+
+      /* ---- generic rail + header-line layouts, shared by the hybrids ---- */
+      .railed {
+        display: flex;
+        align-items: center;
+      }
+      .railed > .gutter {
+        flex: 0 0 40px;
+        display: flex;
+        justify-content: center;
+      }
+      .railed > .track {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      @media (max-width: 767px) {
+        .railed > .gutter {
+          display: none;
+        }
+      }
+      .headRow {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 18px;
+      }
+      .headRow .rowHeading,
+      .headRow .surfaceLabel {
+        margin: 0;
+      }
+      .headControls {
+        display: flex;
+        gap: 10px;
+        flex: 0 0 auto;
+      }
+      @media (hover: none), (max-width: 599px) {
+        .headControls {
+          display: none;
+        }
+      }
+      .rel {
+        position: relative;
+      }
+      /* Vertical centring via auto margins, not translate, so `transform` stays
+         free for the press-down hover — same reason as ScrollArrowButton. */
+      .rel > .arrow {
+        position: absolute;
+        inset-block: 0;
+        margin-block: auto;
+        z-index: 10;
+      }
+      .rel > .arrow.left {
+        left: 0;
+      }
+      .rel > .arrow.right {
+        right: 0;
+      }
+      .fadeR .track[data-fade="both"],
+      .fadeR .track[data-fade="right"] {
+        mask-image: linear-gradient(
+          to right,
+          black calc(100% - 24px),
+          transparent 100%
+        );
+      }
+      .fadeR .track[data-fade="left"] {
+        mask-image: linear-gradient(to right, transparent 0, black 24px);
+      }
+      .fadeBoth .track[data-fade="both"] {
+        mask-image: linear-gradient(
+          to right,
+          transparent 0,
+          black 24px,
+          black calc(100% - 24px),
+          transparent 100%
+        );
+      }
+      .fadeBoth .track[data-fade="right"] {
+        mask-image: linear-gradient(
+          to right,
+          black calc(100% - 24px),
+          transparent 100%
+        );
+      }
+      .fadeBoth .track[data-fade="left"] {
+        mask-image: linear-gradient(to right, transparent 0, black 24px);
+      }
+
+      /* ===================== VARIANT B — RESERVED RAILS =================== */
+      .vB .railed {
+        display: flex;
+        align-items: center;
+      }
+      .vB .gutter {
+        flex: 0 0 56px;
+        display: flex;
+        justify-content: center;
+      }
+      .vB .a-chips .gutter,
+      .vB .a-nav .gutter {
+        flex-basis: 40px;
+      }
+      .vB .track {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      @media (max-width: 767px) {
+        .vB .gutter {
+          display: none;
+        }
+      }
+
+      /* ===================== VARIANT C — NO BUTTONS, EDGE + RULE ========== */
+      .vC .bleed {
+        margin-right: calc(
+          -1 * max(0px, (100vw - 32px - var(--container-wide)) / 2)
+        );
+      }
+      .vC .track {
+        padding-right: 16px;
+      }
+      .vC .discrete .track {
+        scroll-snap-type: x mandatory;
+      }
+      .vC .discrete .slot,
+      .vC .discrete .chip,
+      .vC .discrete .navStrip a {
+        scroll-snap-align: start;
+      }
+      .vC .track[data-fade="both"],
+      .vC .track[data-fade="right"] {
+        mask-image: linear-gradient(
+          to right,
+          black calc(100% - 32px),
+          transparent 100%
+        );
+      }
+      .vC .progressWrap {
+        margin-top: 16px;
+        max-width: 300px;
+        cursor: grab;
+      }
+      .vC .progressTrack {
+        position: relative;
+        height: 2px;
+        background: var(--paper-edge);
+      }
+      .vC .progressThumb {
+        position: absolute;
+        top: -3px;
+        left: 0;
+        height: 8px;
+        background: var(--ink);
+        width: 40%;
+      }
+      .vC .progressLabel {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 7px;
+      }
+
+      /* ---- the paper arrow ---- */
+      .arrow {
+        appearance: none;
+        width: 48px;
+        height: 48px;
+        flex: 0 0 auto;
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 22px;
+        line-height: 1;
+        padding-bottom: 1px;
+        color: var(--ink);
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .arrow:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+      .arrow[disabled] {
+        opacity: 0.28;
+        cursor: default;
+        box-shadow: none;
+      }
+      .arrow[disabled]:hover {
+        transform: none;
+      }
+      /* the 32px arrow FilterTabs actually ships at size="sm" */
+      .arrow.sm {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+      }
+
+      /* ---- the small arrow, redrawn so it cannot read as a chip ---- */
+      /* skin: bare glyph — typography, not an object. Nothing to mistake for
+         a chip because there is no box at all. */
+      .arrow.glyph {
+        border: 0;
+        background: none;
+        box-shadow: none;
+        width: 30px;
+        height: 32px;
+        font-size: 24px;
+        color: var(--ink);
+      }
+      .arrow.glyph:hover {
+        transform: translate(3px, 0);
+        box-shadow: none;
+        color: var(--jersey-deep);
+      }
+      .arrow.glyph[disabled] {
+        opacity: 0.22;
+      }
+      /* skin: jersey-deep control — keeps the paper object but takes a fill no
+         chip can wear (inactive chips are cream-soft, active are ink), so the
+         colour alone says "control", not "filter state". */
+      .arrow.jersey {
+        background: var(--jersey-deep);
+        color: var(--cream);
+        border-color: var(--ink);
+      }
+      /* skin: seam marker — taller than wide and shadowless, so it reads as a
+         boundary of the track rather than an item in it. */
+      .arrow.seam {
+        width: 22px;
+        height: 40px;
+        font-size: 17px;
+        box-shadow: none;
+        background: var(--cream-deep);
+      }
+      .arrow.seam:hover {
+        transform: none;
+        background: var(--ink);
+        color: var(--cream);
+      }
+      /* the card slider's overhang, pulled from −20px to −16px so the arrow's
+         outer edge lands exactly on PageContainer's 16px gutter instead of 4px
+         past it. Visually indistinguishable; removes the page overflow. */
+      .ov16 .arrow.left {
+        left: -16px;
+      }
+      .ov16 .arrow.right {
+        right: -16px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+      footer.notes {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 40px 24px 150px;
+      }
+      footer.notes h3 {
+        font-family: var(--font-big);
+        font-weight: 400;
+        font-size: 1.35rem;
+        margin: 26px 0 8px;
+      }
+      footer.notes li {
+        margin-bottom: 9px;
+        color: var(--ink-soft);
+        font-size: 0.94rem;
+      }
+      footer.notes code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="readout" id="readout"></div>
+
+    <header class="proto">
+      <div class="proto-inner">
+        <p class="proto-kicker">#2444 · prototype · wayfinder map #2425</p>
+        <h1>Resolved — two arrow registers, chosen by the content</h1>
+        <p>
+          <strong>Round 1 verdict.</strong> The card slider's chrome is right as
+          it ships. On the filter row the same arrow
+          <em
+            >"is clashing with the filters themselves — it almost looks like one
+            of the filters."</em
+          >
+          The swipe-only candidate is out.
+        </p>
+        <p>
+          <strong>Why it clashes.</strong> The arrow and the chip are the same
+          object: cream fill, 2px ink border, 4px offset paper shadow, sharp
+          corners, mono glyph. Beside a 320px card that skin reads as chrome
+          because the scale gap does the work. Beside a 32px chip, at 32px, it
+          can only read as a peer. So the variable is not <em>where</em> the
+          arrow sits — it is <strong>what it is made of</strong>. That is the
+          axis round 1 never tested: it moved the arrow four ways and never
+          redrew it.
+        </p>
+        <p>
+          <strong>The rule under test:</strong> the arrow wears paper only where
+          the content is not itself paper. All four hybrids below keep the card
+          slider exactly as it ships and differ only in the small arrow's skin.
+          Each is still applied to <strong>all five archetypes</strong>, so a
+          pick is a pick for the whole site.
+        </p>
+        <p>
+          One correction rides along in every hybrid: the card overhang moves
+          <strong>−20px → −16px</strong>, so the arrow's outer edge lands on
+          <code>PageContainer</code>'s 16px gutter instead of 4px past it.
+          Visually indistinguishable, and it removes the measured page overflow.
+        </p>
+        <p>
+          <strong>Resize the window</strong> — the chrome's whole behaviour
+          turns on viewport width, and two of these surfaces never overflow at
+          desktop at all. The badge top-right reports live overflow per surface
+          and whether the chrome is even alive. Content is real production data
+          pulled 2026-08-11; <em>standings figures are illustrative</em> — the
+          senior teams have no division data, so that table renders nothing
+          today.
+        </p>
+
+        <div class="scrollx">
+          <table class="idioms">
+            <thead>
+              <tr>
+                <th>Surface</th>
+                <th>Where</th>
+                <th>Arrow</th>
+                <th>Edge cue</th>
+                <th>Keyboard</th>
+                <th>Scrollbar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>HorizontalSlider</code></td>
+                <td>VerderLezenRow → 4 routes (7 post-#2443)</td>
+                <td><strong>48×48</strong>, overhung −20px, mounts/unmounts</td>
+                <td><code>mask-image</code> fade, 24px, both edges</td>
+                <td class="none">none</td>
+                <td>hidden</td>
+              </tr>
+              <tr>
+                <td><code>FilterTabs</code></td>
+                <td>/nieuws, /zoeken</td>
+                <td><strong>32×32</strong>, flush at edge, mounts/unmounts</td>
+                <td class="none">none — 40px padding that eats the scroll</td>
+                <td class="none">none</td>
+                <td>hidden</td>
+              </tr>
+              <tr>
+                <td><code>HtmlTableBlock</code></td>
+                <td>article bodies</td>
+                <td class="none">none</td>
+                <td>gradient overlay, 40px, right only + sticky 1st col</td>
+                <td><strong>tabIndex 0</strong></td>
+                <td>native</td>
+              </tr>
+              <tr>
+                <td><code>StandingsTable</code></td>
+                <td>/ploegen/[slug], /wedstrijd/[matchId]</td>
+                <td class="none">none</td>
+                <td class="none">none — and no sticky column</td>
+                <td class="none">none (has role=region, no tabIndex)</td>
+                <td>native</td>
+              </tr>
+              <tr>
+                <td><code>TeamSectionNav</code></td>
+                <td>/ploegen/[slug]</td>
+                <td class="none">none</td>
+                <td class="none">none</td>
+                <td class="none">none</td>
+                <td>native</td>
+              </tr>
+              <tr>
+                <td>Organigram trail</td>
+                <td>/club/organigram</td>
+                <td class="none">none</td>
+                <td class="none">none</td>
+                <td class="none">none</td>
+                <td>native, on ink</td>
+              </tr>
+              <tr>
+                <td>Organigram stage</td>
+                <td>/club/organigram</td>
+                <td class="none">none</td>
+                <td class="none">none</td>
+                <td class="none">none</td>
+                <td>native, both axes</td>
+              </tr>
+              <tr>
+                <td><code>VolledigOrganigram</code></td>
+                <td>/club/organigram</td>
+                <td class="none">none</td>
+                <td class="none">none</td>
+                <td class="none">none</td>
+                <td>native</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size: 0.86rem; margin-top: 12px">
+          Three different "there is more to the right" cues · two arrow sizes
+          from one component whose docblock calls itself
+          <em>"the single canonical 48 × 48 paper button"</em> · one of eight is
+          keyboard-scrollable · one of two data tables has a sticky first
+          column.
+        </p>
+      </div>
+    </header>
+
+    <main id="stages"></main>
+
+    <footer class="notes">
+      <h3>Measured on production, 2026-08-11</h3>
+      <ul>
+        <li>
+          <strong>At desktop the card slider never slides.</strong> Production
+          ships 3 related items on 11 of 12 sampled articles. 3 × 320 + 2 × 32 =
+          1024 inside a 1040 track → <code>overflowsBy: 0</code> at 1440, 1280
+          <em>and</em> 1080. No arrow and no fade render above ~1072px. #2443's
+          8-item cap wakes it up (2784px, 2.7 screens), which is why the count
+          toggle exists.
+        </li>
+        <li>
+          <strong>The same is true of <code>TeamSectionNav</code>:</strong> it
+          ships three items (<code>Wedstrijden · Spelers · Staf</code>), so its
+          <code>overflow-x-auto</code> is inert at every width above a phone.
+        </li>
+        <li>
+          <strong>The slider's −20px overhang pushes the page.</strong>
+          <code>pageOverflow: 4px</code> measured at 600px and on iPhone 13 —
+          the overhang is 20px against <code>PageContainer</code>'s 16px gutter.
+          Once scrolled the left arrow sits at <strong>x = −4</strong>.
+        </li>
+        <li>
+          <strong
+            >The slider's fade and its arrow occupy the same strip.</strong
+          >
+          The fade is 24px from the edge; the arrow spans −20 → +28. The
+          condition that turns the fade on is the same one that renders a 48px
+          opaque button over its middle.
+        </li>
+        <li>
+          <strong>The slider's arrow lands mid-card, over the title.</strong>
+          <code>my-auto</code> centres it on a 416px track while the 16:9 photo
+          is only the top ~180px — which is the geometry behind the
+          cream-on-cream complaint that bumped the overhang from −8 to −20. The
+          fix moved a button horizontally whose problem was vertical.
+        </li>
+        <li>
+          <strong
+            ><code>FilterTabs</code>'s padding absorbs the first 40px of
+            scroll.</strong
+          >
+          <code>pl-0 → pl-10</code> mounts with the left arrow, so scrolling
+          40px moves the chips exactly 0px: measured on /nieuws at 1440, 900,
+          620 and 390, the first chip stays at the same viewport x while
+          <code>scrollLeft</code> goes 0 → 40. Scroll back and it jumps. This is
+          the same jank that got the flex-sibling fix rejected in #2429 —
+          already shipped, by a different mechanism.
+        </li>
+      </ul>
+
+      <h3>Two inherited claims that did not survive the check</h3>
+      <ul>
+        <li>
+          <strong>#2448 does not affect <code>HorizontalSlider</code>.</strong>
+          It never imports <code>useScrollHint</code> — it carries its own
+          <code>checkScroll</code>, differing four ways: no
+          <code>ResizeObserver</code> at all (the hook has one), no
+          <code>DEAD_ZONE</code> (the hook uses 10px), an extra
+          <code>children</code>-change effect (the hook has none), and
+          <code>clientWidth * 0.8</code> per click against the hook's fixed
+          200px. Two scroll-position detectors exist; the shared machinery is
+          only the button.
+        </li>
+        <li>
+          <strong
+            >#2447's mechanism is <code>FilterTabs</code>'s, not the
+            slider's.</strong
+          >
+          The "padding on a scroll track does not reserve a gutter" diagnosis is
+          <code>FilterTabs</code> lines 104/110. The slider pads nothing — it
+          overhangs. The overlap is real but arrives by a different route: 28px
+          of the leftmost card sits under the button.
+        </li>
+        <li>
+          <strong
+            >Two of the slider's five props are dead in production.</strong
+          >
+          <code>title</code> is never passed (the row renders its own
+          <code>EditorialHeading</code>), so its internal
+          <code>&lt;h3 class="mb-3 text-lg font-bold"&gt;</code> — raw Tailwind,
+          off the type ramp — never renders. <code>theme="dark"</code> has no
+          consumer. Only <code>trackClassName</code> is used, and only to
+          override the default <code>gap-3</code>, so that never ships either.
+        </li>
+        <li>
+          <strong>Unrelated, but visible in the chip row above:</strong>
+          <code>A-Ploeg</code> and <code>A-ploeg</code> are both live Sanity
+          categories and render as two separate chips on /nieuws.
+        </li>
+      </ul>
+    </footer>
+
+    <div class="switcher" role="group" aria-label="Variant switcher">
+      <button type="button" id="prev" aria-label="Previous variant">←</button>
+      <span class="label" id="vlabel"></span>
+      <button type="button" id="next" aria-label="Next variant">→</button>
+    </div>
+    <div class="countToggle" role="group" aria-label="Card count">
+      <button type="button" data-count="3" aria-pressed="true">
+        3 cards · today
+      </button>
+      <button type="button" data-count="8" aria-pressed="false">
+        8 · #2443 cap
+      </button>
+    </div>
+
+    <script>
+      /* ---------------- real production content, 2026-08-11 ---------------- */
+      const S = "https://cdn.sanity.io/images/vhb33jaz/production/";
+      const Q = "?w=720&h=405&fit=crop&auto=format";
+      const ARTICLES = [
+        [
+          "Wijzigingen sportieve staff.",
+          "NIEUWS",
+          "ab860db53523e30f409b3f9ae11e2675ee450e0e-1979x1319.jpg",
+        ],
+        [
+          "KCVV volgend seizoen zonder Wim D'hondt.",
+          "NIEUWS",
+          "fe20967a27d5553f5ae62db77a8b3f173be0544a-1841x1098.jpg",
+        ],
+        [
+          "De “ideale” voetbal(groot)ouder.",
+          "NIEUWS",
+          "a8b4dcc6d19b431bf4084667cb9b4a2e5c35c415-1536x1024.jpg",
+        ],
+        [
+          "Stijn Baudet: “Hier op Elewijt voel je zo'n clubliefde, dit is 'next level'”.",
+          "NIEUWS",
+          "fac694faa175f8368c0038c6e382298eca30bf79-4686x3136.jpg",
+        ],
+        [
+          "Word trainer bij de plezantste compagnie!",
+          "NIEUWS",
+          "ce178196c5d365d74e5984dbc690da8fb91165ef-1500x750.jpg",
+        ],
+        ["Word vrijwilliger.", "PAGINA", null],
+        [
+          "Thuiswedstrijd Mazenzele-Opwijk achter gesloten deuren.",
+          "NIEUWS",
+          "2b8e3fac497c9db574b981726244d95c73bf7645-1920x1080.jpg",
+        ],
+        [
+          "COVID-19: Wedstrijden opnieuw toegelaten vanaf 14 augustus.",
+          "NIEUWS",
+          "e2c5e31f22ad590fbf8f71a5c56c45b09b831aaf-1920x970.jpg",
+        ],
+      ];
+      // the 13 live Sanity categories on /nieuws, in order
+      const CHIPS = [
+        "Alles",
+        "A-Ploeg",
+        "A-ploeg",
+        "B-ploeg",
+        "Beker Van Brabant",
+        "Beker Van Zemst",
+        "Clubinfo",
+        "Corona",
+        "Evenement",
+        "Football Manager",
+        "Jeugd",
+        "Sponsor",
+        "Transfernieuws",
+      ];
+      // StandingsTable's real columns; figures illustrative
+      const T_HEAD = ["Ploeg", "M", "W", "G", "V", "DV", "DT", "+/-", "Ptn"];
+      const T_ROWS = [
+        ["KCVV Elewijt", 22, 14, 5, 3, 48, 24, "+24", 47],
+        ["Mazenzele-Opwijk", 22, 13, 4, 5, 41, 27, "+14", 43],
+        ["FC Perk", 22, 12, 6, 4, 39, 28, "+11", 42],
+        ["KV Zemst", 22, 11, 5, 6, 35, 30, "+5", 38],
+        ["Rapide Wezemaal", 22, 9, 7, 6, 33, 31, "+2", 34],
+        ["VC Hever-Schiplaken", 22, 8, 5, 9, 29, 34, "−5", 29],
+      ];
+      const NAV = ["Wedstrijden", "Spelers", "Staf"];
+      const TRAIL = [
+        "KCVV Elewijt",
+        "Sportief",
+        "Jeugdwerking",
+        "Onderbouw",
+        "U8",
+        "Trainer",
+      ];
+      const ORG = [
+        ["Voorzitter", "Raad van bestuur"],
+        ["Sportief", "Jeugdwerking"],
+        ["Bovenbouw", "U17 – U21"],
+        ["Middenbouw", "U12 – U15"],
+        ["Onderbouw", "U6 – U11"],
+        ["Secretariaat", "Administratie"],
+        ["Kantine", "Evenementen"],
+      ];
+
+      const ROT = ["-0.5deg", "-0.25deg", "0.25deg", "0deg"];
+      const TROT = ["-0.5deg", "0.25deg", "-0.25deg", "0.5deg"];
+
+      const cards = (n) =>
+        `<div class="rail">` +
+        ARTICLES.slice(0, n)
+          .map(
+            ([title, badge, img], i) => `<div class="slot">
+          <a class="card" href="#" style="--card-rot:${ROT[i % 4]}">
+            <span class="tape" style="--tape-rot:${TROT[i % 4]}"></span>
+            <div class="cardImg${img ? "" : " noPhoto"}">${img ? `<img src="${S}${img}${Q}" alt="" loading="lazy" />` : ""}</div>
+            <div class="cardMeta">
+              <span class="badge">${badge}</span>
+              <h3 class="cardTitle">${title}</h3>
+              <div class="cardFoot"><span class="cta">Lees verder →</span></div>
+            </div>
+          </a></div>`,
+          )
+          .join("") +
+        `</div>`;
+
+      const chips = () =>
+        `<div class="chipRail">` +
+        CHIPS.map(
+          (c, i) =>
+            `<button class="chip" aria-selected="${i === 0}">${c}</button>`,
+        ).join("") +
+        `</div>`;
+
+      const table = (sticky) =>
+        `<table class="dt"><thead><tr>${T_HEAD.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>` +
+        T_ROWS.map(
+          (r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`,
+        ).join("") +
+        `</tbody></table>`;
+
+      const nav = () =>
+        `<div class="navStrip">` +
+        TRAIL.map(
+          (t, i) =>
+            `${i ? '<span class="sep">▸</span>' : ""}<a href="#">${t}</a>`,
+        ).join("") +
+        NAV.map((t) => `<span class="sep">▸</span><a href="#">${t}</a>`).join(
+          "",
+        ) +
+        `</div>`;
+
+      const org = () =>
+        `<div class="orgTree">` +
+        ORG.map(
+          ([r, n]) =>
+            `<div class="orgBox"><div class="r">${r}</div><div class="n">${n}</div></div>`,
+        ).join("") +
+        `</div>`;
+
+      /* ---------------- the five archetypes ---------------- */
+      const ARCHETYPES = [
+        {
+          id: "cards",
+          name: "Card slider",
+          kind: "discrete",
+          ships:
+            "HorizontalSlider → VerderLezenRow · /nieuws/[slug], /spelers/[slug], /staf/[slug], /ploegen/[slug] (+3 post-#2443)",
+          heading: `<em>Blijf</em> nog even hangen.`,
+          body: (n) => cards(n),
+        },
+        {
+          id: "chips",
+          name: "Chip row",
+          kind: "discrete",
+          ships: "FilterTabs → /nieuws, /zoeken",
+          label: "Filter op categorie",
+          body: () => chips(),
+          small: true,
+        },
+        {
+          id: "table",
+          name: "Data table",
+          kind: "continuous",
+          ships:
+            "HtmlTableBlock → article bodies · StandingsTable → /ploegen/[slug], /wedstrijd/[matchId]",
+          label: "Klassement",
+          body: () => table(),
+          shell: "table",
+        },
+        {
+          id: "nav",
+          name: "Text nav strip",
+          kind: "discrete",
+          ships:
+            "TeamSectionNav → /ploegen/[slug] · organigram trail → /club/organigram",
+          label: "Sectienavigatie",
+          body: () => nav(),
+          small: true,
+        },
+        {
+          id: "diagram",
+          name: "Wide diagram",
+          kind: "continuous",
+          ships: "VolledigOrganigram chart + explorer stage → /club/organigram",
+          label: "Organisatiestructuur",
+          body: () => org(),
+        },
+      ];
+
+      const smallArrow = (a) => (a.small ? " sm" : "");
+
+      /* ---------------- the four chrome idioms ---------------- */
+      const VARIANTS = [
+        {
+          key: "0",
+          name: "Current — ships today",
+          blurb:
+            "Every surface exactly as it ships. This is the exhibit, not a candidate: five idioms side by side. The card slider gets 48px arrows overhung −20px plus a mask fade the arrow then covers; the chip row gets 32px arrows flush at the edge plus 40px of padding that absorbs the scroll; the table gets no arrow but a gradient overlay and a sticky first column; the nav strip and the diagram get nothing at all but the native scrollbar.",
+          verdict:
+            "the divergence, rendered — three edge cues, two arrow sizes, one keyboard-reachable surface",
+          chrome: (a, inner, n) => {
+            if (a.id === "cards")
+              return `<div class="rel a-cards">
+                <button class="arrow left" data-dir="-1" aria-label="Scroll left">←</button>
+                <div class="track" data-fade>${inner}</div>
+                <button class="arrow right" data-dir="1" aria-label="Scroll right">→</button></div>`;
+            if (a.id === "chips")
+              return `<div class="rel a-chips">
+                <button class="arrow sm left" data-dir="-1" aria-label="Scroll left">←</button>
+                <div class="track" data-padjump style="padding-bottom:6px">${inner}</div>
+                <button class="arrow sm right" data-dir="1" aria-label="Scroll right">→</button></div>`;
+            if (a.id === "table")
+              return `<div class="tableShell rel a-table sticky1">
+                <div class="track nativeBar" tabindex="0">${inner}</div>
+                <div class="fadeOverlay"></div></div>`;
+            if (a.id === "nav")
+              return `<div class="navShell"><div class="track nativeBar">${inner}</div></div>`;
+            return `<div class="track nativeBar">${inner}</div>`;
+          },
+        },
+        /* ---------- the hybrids ----------
+           All four keep the card slider exactly as it ships (the owner's pick),
+           with one correction: the overhang moves −20px → −16px so the arrow's
+           outer edge lands on PageContainer's gutter instead of 4px past it.
+           They differ only in what the SMALL arrow is made of, because that is
+           where the clash lives: a 32px cream-filled, ink-bordered, offset-
+           shadowed square beside a row of 32px cream-filled, ink-bordered,
+           offset-shadowed squares can only read as another chip. */
+        {
+          key: "H1",
+          name: "H1 — Hybrid: paper square in a rail",
+          blurb:
+            "The hybrid as proposed: variant 0's overhung paper arrow on the card slider, variant B's reserved 40px rail everywhere else. The small arrow keeps the paper skin unchanged — separation alone is asked to do the work. Judge whether 40px of gutter is enough to stop a paper square reading as a chip that drifted out of the row, or whether the skin itself has to change.",
+          verdict:
+            "the proposal, unmodified · tests whether distance alone resolves the clash",
+          layout: (a) =>
+            a.id === "cards"
+              ? { pos: "overhang", skin: "" }
+              : { pos: "rail", skin: "sm" },
+        },
+        {
+          key: "H2",
+          name: "H2 — Hybrid: bare glyph in a rail",
+          blurb:
+            "Same hybrid, but the small arrow loses its box entirely: just the italic Freight caret in ink, no border, no fill, no shadow, in the reserved rail. It is typography rather than an object, so there is nothing left to mistake for a chip. Hover slides it and turns it jersey-deep instead of pressing down — a glyph has no paper to press. The card slider keeps its full paper button, which is exactly the point: the arrow wears paper only where the content is not itself paper.",
+          verdict:
+            "cleanest separation of the two registers · a 30px glyph is a smaller visual target than a 32px box",
+          layout: (a) =>
+            a.id === "cards"
+              ? { pos: "overhang", skin: "" }
+              : { pos: "rail", skin: "glyph" },
+        },
+        {
+          key: "H3",
+          name: "H3 — Hybrid: jersey-deep control in a rail",
+          blurb:
+            'Same hybrid, but the small arrow keeps the paper object and takes a fill no chip can wear. Inactive chips are cream-soft, active chips are ink — jersey-deep is neither, and it is already the site\'s interactive colour. So the colour alone says "control", not "filter state", while border, shadow and press-down hover stay intact. The arrow stays a 32px tap target rather than shrinking to a glyph.',
+          verdict:
+            "keeps the tap target and the press-down idiom · adds a third fill to a row that had two",
+          layout: (a) =>
+            a.id === "cards"
+              ? { pos: "overhang", skin: "" }
+              : { pos: "rail", skin: "sm jersey" },
+        },
+        {
+          key: "H4",
+          name: "H4 — Hybrid: small arrows leave the row",
+          blurb:
+            "Same hybrid, but the small arrow is not adjacent to the content at all — the pair moves up to the surface's own label line, well clear of the chips. Nothing can clash because nothing is next to anything. The skin can stay paper, since at that distance it is plainly chrome. Costs a header line on every small surface, and the table and the diagram have to be given one.",
+          verdict:
+            "clash impossible by distance · needs a label line on every surface, and two of five lack one",
+          layout: (a) =>
+            a.id === "cards"
+              ? { pos: "overhang", skin: "" }
+              : { pos: "label", skin: "sm" },
+        },
+        {
+          key: "A",
+          name: "A — Controls on the header line (reference)",
+          blurb:
+            "The arrows leave the track on every surface and pair at the right end of that surface's own header line — the headline for the card row, the mono label for the others. Nothing ever overlaps content, no overhang, no page overflow, and the container's left edge is untouched everywhere. One 32px fade marks the cut edge. Under a coarse pointer the pair is dropped: swipe is the gesture. Note what this asks of the two surfaces that have no header today — the diagram and the table get one invented for them.",
+          verdict:
+            "cheapest · kills #2447 everywhere · needs a header line on every surface, and two of five lack one",
+          chrome: (a, inner) => `<div class="track" data-fade>${inner}</div>`,
+          head: (a) => `<div class="headControls">
+              <button class="arrow${smallArrow(a)}" data-dir="-1" aria-label="Scroll left">←</button>
+              <button class="arrow${smallArrow(a)}" data-dir="1" aria-label="Scroll right">→</button></div>`,
+        },
+        {
+          key: "B",
+          name: "B — Reserved rails",
+          blurb:
+            "Every scroller gets shoulders: a rail reserved on each side at ≥768px whether or not an arrow is showing, so the track never reflows and content never passes under a button. 56px for cards and the diagram, 40px for chips and the nav strip. No fade anywhere — content clips cleanly at the rail. The cost is width, on every surface, at every viewport: 112px out of the card row's 1040 leaves two cards and 224 of the third. Below 768px the rails collapse to a plain swipe track.",
+          verdict:
+            "always-live chrome, identical everywhere · spends width on every surface · breaks the container's left edge",
+          chrome: (a, inner) => {
+            const cls = a.id === "table" ? "tableShell " : "";
+            return `<div class="railed ${a.id === "chips" ? "a-chips" : a.id === "nav" ? "a-nav" : ""}">
+              <div class="gutter"><button class="arrow${smallArrow(a)}" data-dir="-1" aria-label="Scroll left">←</button></div>
+              <div class="${cls}track${a.id === "table" ? " nativeBar sticky1" : ""}" ${a.id === "table" ? 'tabindex="0"' : ""}>${inner}</div>
+              <div class="gutter"><button class="arrow${smallArrow(a)}" data-dir="1" aria-label="Scroll right">→</button></div></div>`;
+          },
+        },
+      ];
+
+      /* Generic chrome builder for the hybrids: position × skin.
+         `overhang` = the card slider's absolutely-positioned paper button, now
+         at −16px. `rail` = a reserved 40px gutter that never reflows the track.
+         `label` = the pair lifted onto the surface's own label line. */
+      function buildChrome(v, a, inner) {
+        const { pos, skin } = v.layout(a);
+        const isTable = a.id === "table";
+        const shell = isTable ? "tableShell sticky1 " : "";
+        const tab = isTable ? 'tabindex="0"' : "";
+        const track = (extra = "") =>
+          `<div class="${shell}track${isTable ? " nativeBar" : ""}" data-fade ${tab} ${extra}>${inner}</div>`;
+
+        if (pos === "overhang") {
+          return `<div class="rel ov16 fadeBoth">
+            <button class="arrow left" data-dir="-1" aria-label="Scroll left">←</button>
+            ${track()}
+            <button class="arrow right" data-dir="1" aria-label="Scroll right">→</button></div>`;
+        }
+        if (pos === "rail") {
+          return `<div class="railed fadeR">
+            <div class="gutter"><button class="arrow ${skin}" data-dir="-1" aria-label="Scroll left">←</button></div>
+            ${track()}
+            <div class="gutter"><button class="arrow ${skin}" data-dir="1" aria-label="Scroll right">→</button></div></div>`;
+        }
+        return `<div class="fadeR">${track()}</div>`;
+      }
+
+      function buildHead(v, a) {
+        if (!v.layout) return v.head ? v.head(a) : "";
+        const { pos, skin } = v.layout(a);
+        if (pos !== "label") return "";
+        return `<div class="headControls">
+            <button class="arrow ${skin}" data-dir="-1" aria-label="Scroll left">←</button>
+            <button class="arrow ${skin}" data-dir="1" aria-label="Scroll right">→</button></div>`;
+      }
+
+      /* ---------------- switcher ---------------- */
+      const params = new URLSearchParams(location.search);
+      let vi = Math.max(
+        0,
+        VARIANTS.findIndex((v) => v.key === (params.get("variant") ?? "H3")),
+      );
+      let count = Number(params.get("count") ?? 3);
+      const stages = document.getElementById("stages");
+
+      function render() {
+        const v = VARIANTS[vi];
+        let html = `<div class="variant-head">
+            <p class="vk">Variant ${v.key}</p>
+            <h2>${v.name}</h2>
+            <p>${v.blurb}</p>
+            <p class="verdictline">${v.verdict}</p>
+          </div>`;
+
+        for (const a of ARCHETYPES) {
+          const inner = a.body(count);
+          const controls = buildHead(v, a);
+          const title = a.heading
+            ? `<h2 class="rowHeading">${a.heading}</h2>`
+            : `<p class="surfaceLabel">${a.label}</p>`;
+          const headBlock = controls
+            ? `<div class="headRow">${title}${controls}</div>`
+            : title;
+          html += `<div class="archHead">
+              <span class="an">${a.name}</span>
+              <div class="ships">${a.ships}</div>
+            </div>
+            <div class="stage">
+              <div class="row v${v.key} a-${a.id}" data-arch="${a.id}">
+                <div class="rowInner">${headBlock}${v.layout ? buildChrome(v, a, inner) : v.chrome(a, inner, count)}</div>
+              </div>
+            </div>`;
+        }
+        stages.innerHTML = html;
+
+        document.getElementById("vlabel").innerHTML =
+          `<b>${v.key}</b> — ${v.name.replace(/^([0A-C] — )/, "")}`;
+        const u = new URL(location);
+        u.searchParams.set("variant", v.key);
+        u.searchParams.set("count", count);
+        history.replaceState({}, "", u);
+        document
+          .querySelectorAll(".countToggle button")
+          .forEach((b) =>
+            b.setAttribute(
+              "aria-pressed",
+              String(Number(b.dataset.count) === count),
+            ),
+          );
+        stages.querySelectorAll(".row").forEach(wire);
+        readout();
+      }
+
+      function wire(row) {
+        const track = row.querySelector(".track");
+        if (!track) return;
+        const arrows = [...row.querySelectorAll(".arrow")];
+        // A reserved rail exists precisely so the track never reflows when the
+        // arrow comes and goes, so there the arrow disables in place. Everywhere
+        // else (overhung, or up on a label line) absence costs no layout, so the
+        // control is removed rather than shown dead.
+        const unmounts = !row.querySelector(".railed");
+
+        const sync = () => {
+          const max = track.scrollWidth - track.clientWidth;
+          const l = track.scrollLeft > 1;
+          const r = track.scrollLeft < max - 1;
+          arrows.forEach((a) => {
+            const live = Number(a.dataset.dir) < 0 ? l : r;
+            if (unmounts) a.classList.toggle("hidden", !live);
+            else a.disabled = !live;
+          });
+          if (track.hasAttribute("data-fade")) {
+            track.dataset.fade =
+              l && r ? "both" : r ? "right" : l ? "left" : "";
+          }
+          // reproduce FilterTabs' conditional scroll padding, which is what
+          // absorbs the first 40px of scroll
+          if (track.hasAttribute("data-padjump")) {
+            track.style.paddingLeft = l ? "40px" : "0px";
+            track.style.paddingRight = r ? "40px" : "0px";
+          }
+          const thumb = row.querySelector(".progressThumb");
+          if (thumb) {
+            row
+              .querySelector(".progressWrap")
+              .classList.toggle("hidden", max <= 0);
+            const frac = max > 0 ? track.clientWidth / track.scrollWidth : 1;
+            thumb.style.width = Math.max(12, frac * 100) + "%";
+            thumb.style.left =
+              (max > 0 ? (track.scrollLeft / max) * (100 - frac * 100) : 0) +
+              "%";
+          }
+          readout();
+        };
+
+        arrows.forEach((a) =>
+          a.addEventListener("click", () =>
+            track.scrollBy({
+              left: Number(a.dataset.dir) * track.clientWidth * 0.8,
+              behavior: "smooth",
+            }),
+          ),
+        );
+        track.addEventListener("scroll", sync);
+        new ResizeObserver(sync).observe(track);
+        if (track.firstElementChild) {
+          [...track.firstElementChild.children].forEach((c) =>
+            new ResizeObserver(sync).observe(c),
+          );
+        }
+        document.fonts?.ready.then(sync).catch(() => {});
+        window.addEventListener("resize", sync);
+
+        const wrap = row.querySelector(".progressWrap");
+        if (wrap) {
+          const drag = (e) => {
+            const r = wrap.getBoundingClientRect();
+            const x = (e.touches?.[0]?.clientX ?? e.clientX) - r.left;
+            track.scrollLeft =
+              (x / r.width) * (track.scrollWidth - track.clientWidth);
+          };
+          const stop = () => {
+            window.removeEventListener("pointermove", drag);
+            window.removeEventListener("pointerup", stop);
+          };
+          wrap.addEventListener("pointerdown", (e) => {
+            drag(e);
+            window.addEventListener("pointermove", drag);
+            window.addEventListener("pointerup", stop);
+          });
+        }
+        sync();
+      }
+
+      function readout() {
+        const rows = [...stages.querySelectorAll(".row")].map((row) => {
+          const t = row.querySelector(".track");
+          const max = t ? t.scrollWidth - t.clientWidth : 0;
+          return `${row.dataset.arch.padEnd(8, " ")} <span class="${max > 0 ? "ok" : "bad"}">${max > 0 ? Math.round(max) + "px" : "DEAD"}</span>`;
+        });
+        const pageOver =
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth;
+        document.getElementById("readout").innerHTML =
+          `viewport <b>${window.innerWidth}px</b><br />overflow per surface:<br />` +
+          rows.join("<br />") +
+          `<br />page overflow <span class="${pageOver > 0 ? "bad" : "ok"}">${pageOver}px</span>`;
+      }
+
+      document.getElementById("prev").addEventListener("click", () => {
+        vi = (vi - 1 + VARIANTS.length) % VARIANTS.length;
+        render();
+      });
+      document.getElementById("next").addEventListener("click", () => {
+        vi = (vi + 1) % VARIANTS.length;
+        render();
+      });
+      document.querySelectorAll(".countToggle button").forEach((b) =>
+        b.addEventListener("click", () => {
+          count = Number(b.dataset.count);
+          render();
+        }),
+      );
+      window.addEventListener("keydown", (e) => {
+        if (
+          /^(INPUT|TEXTAREA)$/.test(e.target.tagName) ||
+          e.target.isContentEditable
+        )
+          return;
+        if (e.key === "ArrowLeft") document.getElementById("prev").click();
+        if (e.key === "ArrowRight") document.getElementById("next").click();
+      });
+
+      render();
+      window.addEventListener("resize", readout);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2515 — hoe rendert een citaat?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --jersey-deep-dark: #00603c;
+        --paper-edge: #d9d2bd;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --shadow-paper-md: 6px 6px 0 0 var(--ink);
+        --shadow-paper-sm-soft: 4px 4px 0 0 var(--ink-muted);
+        /* --text-display-sm + lh, straight from globals.css */
+        --display-sm: clamp(1.25rem, 1rem + 1vw, 1.5rem);
+        --display-sm-lh: 1.3;
+        --label: 0.6875rem;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        line-height: 1.5;
+      }
+      .wrap {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 40px 16px 140px;
+      }
+      @media (min-width: 768px) {
+        .wrap {
+          padding: 40px 32px 140px;
+        }
+      }
+      h1 {
+        font-family: var(--font-big);
+        font-size: clamp(30px, 5vw, 46px);
+        line-height: 1.02;
+        margin: 0 0 10px;
+        font-weight: 900;
+      }
+      h2 {
+        font-family: var(--font-big);
+        font-size: clamp(22px, 3vw, 30px);
+        line-height: 1.05;
+        margin: 64px 0 6px;
+        font-weight: 900;
+      }
+      h3 {
+        font-family: var(--font-big);
+        font-size: 19px;
+        line-height: 1.15;
+        margin: 0 0 4px;
+        font-weight: 900;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        font-weight: 600;
+        margin: 0 0 6px;
+      }
+      .lede {
+        max-width: 680px;
+        font-size: 17px;
+        color: var(--ink-soft);
+      }
+      .note {
+        max-width: 680px;
+        font-size: 15px;
+        color: var(--ink-muted);
+        margin: 6px 0 0;
+      }
+      .rule {
+        border: 0;
+        border-top: 2px solid var(--ink);
+        margin: 10px 0 26px;
+      }
+
+      /* ---------- shared paper-card chrome (TapedCard) ---------- */
+      .card {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-md);
+        padding: 32px; /* p-8 */
+        position: relative;
+      }
+      .card.ink {
+        background: var(--ink);
+        color: var(--cream);
+        box-shadow: var(--shadow-paper-sm-soft);
+        border-color: var(--paper-edge);
+      }
+      .card.jersey {
+        background: var(--jersey-deep);
+        color: var(--cream);
+        border-color: var(--paper-edge);
+        box-shadow: var(--shadow-paper-sm-soft);
+      }
+      .card.softcream {
+        background: var(--cream-soft);
+      }
+      .tape {
+        position: absolute;
+        top: -11px;
+        left: 50%;
+        width: 92px;
+        height: 22px;
+        transform: translateX(-50%) rotate(-2deg);
+        background: rgba(217, 210, 189, 0.85);
+        border: 1px solid rgba(10, 10, 10, 0.18);
+      }
+
+      /* ---------- PullQuote internals ---------- */
+      .pq {
+        display: flex;
+        flex-direction: column;
+        gap: 16px; /* gap-4 */
+      }
+      .qmark {
+        font-family: var(--font-body);
+        font-size: 4.5rem;
+        line-height: 0.5;
+        font-weight: 900;
+        letter-spacing: -0.05em;
+        margin-bottom: -0.3em;
+        color: var(--jersey-deep);
+        display: block;
+        user-select: none;
+      }
+      .card.ink .qmark,
+      .card.jersey .qmark {
+        color: var(--jersey-deep);
+      }
+      .card.ink .qmark {
+        color: #2f9d68;
+      }
+      .pq q,
+      .pq .body {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: var(--display-sm);
+        line-height: var(--display-sm-lh);
+        display: block;
+      }
+      .attrib {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 8px;
+      }
+      .attrib span {
+        font-family: var(--font-mono);
+        font-size: var(--label);
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .card.ink .attrib span,
+      .card.jersey .attrib span {
+        color: var(--cream);
+      }
+
+      /* ---------- BodyQuote ---------- */
+      .bodyquote {
+        margin: 40px auto;
+        max-width: 40rem; /* 640 — the raw value in the file today */
+      }
+      .dotted {
+        border: 0;
+        border-top: 2px dotted var(--ink);
+        margin: 0;
+      }
+      .bodyquote blockquote {
+        font-family: var(--font-display);
+        font-style: italic;
+        color: var(--ink);
+        padding: 24px 0;
+        text-align: center;
+        font-size: 24px;
+        line-height: 1.375;
+        margin: 0;
+      }
+
+      /* ---------- JeugdVisie hand-composed ---------- */
+      .visie {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 24px;
+      }
+      .monorow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .monorow span {
+        font-family: var(--font-mono);
+        font-size: var(--label);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 500;
+        color: var(--ink-muted);
+      }
+      .monorow span + span::before {
+        content: "·";
+        margin-right: 8px;
+      }
+
+      /* ---------- layout helpers ---------- */
+      .grid2 {
+        display: grid;
+        gap: 40px;
+        margin-top: 24px;
+      }
+      @media (min-width: 900px) {
+        .grid2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .stage {
+        background: var(--cream);
+        padding: 28px;
+        border: 1px dashed var(--paper-edge);
+      }
+      .stage.dark {
+        background: var(--ink-soft);
+      }
+      .meta {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 10px 0 0;
+      }
+      .flag {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 700;
+        background: var(--card-red);
+        color: var(--cream);
+        padding: 3px 7px;
+        margin-bottom: 8px;
+      }
+      .flag.ok {
+        background: var(--jersey-deep);
+      }
+      .flag.neutral {
+        background: var(--ink-muted);
+      }
+      .measure {
+        position: relative;
+        border-left: 2px solid var(--card-red);
+        border-right: 2px solid var(--card-red);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 18px;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border-bottom: 1px solid var(--paper-edge);
+        text-align: left;
+        padding: 8px 10px;
+        vertical-align: top;
+      }
+      th {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.88em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      .ghost {
+        outline: 2px dashed var(--card-red);
+        outline-offset: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="kicker">Wayfinder #2425 · ticket #2515</p>
+      <h1>Hoe rendert een citaat?</h1>
+      <hr class="rule" />
+      <p class="lede">
+        Vier behandelingen, 8 routes, 11 render-plekken. De primitive die er
+        drie van bezit vraagt een <code>attribution</code> die
+        <strong>4 van de 9 aanroepen niet hebben</strong> en met een lege string
+        vervalsen. Deze pagina toont eerst wat er <em>vandaag</em> staat, dan
+        vier kandidaten voor de kernvraag.
+      </p>
+
+      <!-- ================= VANDAAG ================= -->
+      <h2>Vandaag — de vier behandelingen</h2>
+      <p class="note">
+        Alles hieronder is met de echte tokens getekend:
+        <code>p-8</code>, <code>border-2</code>, <code>shadow-paper-md</code>,
+        <code>--text-display-sm</code> = clamp(1.25rem, 1rem + 1vw, 1.5rem),
+        <code>--text-label</code> = 0.6875rem.
+      </p>
+
+      <div class="grid2">
+        <div>
+          <h3>1 · <code>&lt;PullQuote&gt;</code> — met naam</h3>
+          <p class="meta">9 aanroepen · 7 routes · merk bóven de tekst</p>
+          <div class="stage">
+            <div class="card">
+              <div class="tape"></div>
+              <div class="pq">
+                <span class="qmark" aria-hidden="true">&rdquo;</span>
+                <q
+                  >Bij KCVV Elewijt staat plezier op één. Wie graag speelt,
+                  leert vanzelf.</q
+                >
+                <div class="attrib"><span>Sportpark Elewijt</span></div>
+              </div>
+            </div>
+          </div>
+          <p class="meta">
+            /club · tone=ink is hier cream getekend voor leesbaarheid
+          </p>
+        </div>
+
+        <div>
+          <h3>2 · <code>&lt;BodyQuote&gt;</code> — zonder naam</h3>
+          <p class="meta">
+            1 aanroep · Sanity <code>blockquote</code> · geen kaart, geen merk
+          </p>
+          <div class="stage">
+            <figure class="bodyquote">
+              <hr class="dotted" />
+              <blockquote>
+                Bij KCVV Elewijt staat plezier op één. Wie graag speelt, leert
+                vanzelf.
+              </blockquote>
+              <hr class="dotted" />
+            </figure>
+          </div>
+          <p class="meta">/nieuws/[slug] · /club/[slug]</p>
+        </div>
+
+        <div>
+          <h3>3 · <code>JeugdVisie</code> — met de hand samengesteld</h3>
+          <p class="meta">
+            1 aanroep · merk erná<strong>st</strong>, niet erboven
+          </p>
+          <div class="stage">
+            <div class="card softcream">
+              <div class="visie">
+                <span class="qmark" aria-hidden="true">&rdquo;</span>
+                <div>
+                  <p class="body" style="margin: 0 0 12px">
+                    Bij KCVV Elewijt staat plezier op één. Wie graag speelt,
+                    leert vanzelf.
+                  </p>
+                  <div class="monorow">
+                    <span>Plezier</span><span>Techniek</span
+                    ><span>Respect</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="meta">
+            /jeugd · weigert <code>&lt;PullQuote&gt;</code> expliciet
+          </p>
+        </div>
+
+        <div>
+          <h3>4 · <code>&lt;PullQuote&gt;</code> — met lege naam</h3>
+          <p class="flag">4 van de 9 aanroepen</p>
+          <div class="stage">
+            <div class="card jersey">
+              <div class="tape"></div>
+              <div class="pq">
+                <span class="qmark" aria-hidden="true">&rdquo;</span>
+                <q
+                  >Bij KCVV Elewijt staat plezier op één. Wie graag speelt,
+                  leert vanzelf.</q
+                >
+                <div class="attrib ghost"><span></span></div>
+              </div>
+            </div>
+          </div>
+          <p class="meta">
+            De rode stippellijn is de lege attributierij.
+            <code>TeamEditorial</code>, <code>ArticleBody:429</code>,
+            <code>QuotesBlock</code>, <code>BioBlock</code>
+          </p>
+        </div>
+      </div>
+
+      <!-- ================= TWEE GEMETEN FEITEN ================= -->
+      <h2>Twee dingen die vandaag al meeliften</h2>
+
+      <div class="grid2">
+        <div>
+          <h3>A · Elk citaat draagt twee sets aanhalingstekens</h3>
+          <p class="note">
+            <code>&lt;PullQuote&gt;</code> zet de tekst in een
+            <code>&lt;q&gt;</code>. Niets in <code>globals.css</code> reset
+            <code>q::before</code>/<code>::after</code>, dus de browser voegt
+            zijn eigen aanhalingstekens toe — bovenop het grote
+            <code>&rdquo;</code>-merk. Op <code>lang="nl"</code>.
+          </p>
+          <p class="meta">Hieronder rendert de browser dit live:</p>
+          <div class="stage">
+            <div class="card">
+              <div class="pq">
+                <span class="qmark" aria-hidden="true">&rdquo;</span>
+                <q
+                  >Kijk naar de tekst hieronder — de tekens ervoor en erna komen
+                  van de browser, niet van ons.</q
+                >
+                <div class="attrib"><span>Live in deze pagina</span></div>
+              </div>
+            </div>
+          </div>
+          <p class="meta">
+            <code>&lt;BodyQuote&gt;</code> gebruikt
+            <code>&lt;blockquote&gt;</code> (geen automatische tekens) en
+            <code>JeugdVisie</code> een gewone <code>&lt;p&gt;</code>. De drie
+            behandelingen zijn het dus óók oneens over of de tekst überhaupt
+            tussen aanhalingstekens staat.
+          </p>
+        </div>
+
+        <div>
+          <h3>B · De lege attributierij laat 16px staan</h3>
+          <p class="note">
+            De kaart is <code>flex flex-col gap-4</code>. Bij een lege naam
+            rendert de rij een lege <code>&lt;span&gt;</code> met
+            <code>leading-none</code> — 0px hoog, maar de <code>gap-4</code>
+            eronder blijft. Vier aanroepen dragen dus 16px dode ruimte onderaan.
+          </p>
+          <div class="stage">
+            <div class="card" style="margin-bottom: 20px">
+              <div class="pq">
+                <span class="qmark" aria-hidden="true">&rdquo;</span>
+                <span class="body">Mét naam — de rij draagt iets.</span>
+                <div class="attrib"><span>Kevin Schutijser</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="pq">
+                <span class="qmark" aria-hidden="true">&rdquo;</span>
+                <span class="body">Zónder naam — 16px onder deze zin.</span>
+                <div class="attrib ghost"><span></span></div>
+              </div>
+            </div>
+          </div>
+          <p class="meta">
+            Dit is precies wat de docblock van <code>&lt;BodyQuote&gt;</code>
+            "reads as a half-set card" noemt — het is meetbaar, geen gevoel.
+          </p>
+        </div>
+      </div>
+
+      <!-- ================= KANDIDATEN ================= -->
+      <h2>Kandidaten — wat is een citaat zónder spreker?</h2>
+      <p class="lede">
+        Dit is de kernvraag: als hij eenmaal beantwoord is, volgen
+        merk-plaatsing, toon en maat er grotendeels uit. Vier richtingen, bewust
+        ver uit elkaar.
+      </p>
+
+      <div class="grid2">
+        <!-- A -->
+        <div>
+          <h3>A · <code>&lt;BodyQuote&gt;</code> slikt ze allemaal op</h3>
+          <p class="flag neutral">2 primitives blijven, scherpe grens</p>
+          <p class="note">
+            Geen naam ⇒ nooit een kaart. <code>attribution</code> blijft
+            verplicht en wordt eindelijk waar. De vier vervalste aanroepen
+            verhuizen naar de stippellijn-figuur.
+          </p>
+          <div class="stage">
+            <figure class="bodyquote" style="margin: 0 auto">
+              <hr class="dotted" />
+              <blockquote>
+                Bij KCVV Elewijt staat plezier op één. Wie graag speelt, leert
+                vanzelf.
+              </blockquote>
+              <hr class="dotted" />
+            </figure>
+          </div>
+          <p class="meta">
+            Kost: de jersey-kaart in <code>TeamEditorial</code> en
+            <code>BioBlock</code> verdwijnt — daar is het citaat nu juist het
+            visuele accent naast de lopende tekst.
+          </p>
+        </div>
+
+        <!-- B -->
+        <div>
+          <h3>B · De kaart laat de rij vallen</h3>
+          <p class="flag ok">1 primitive, 2 toestanden</p>
+          <p class="note">
+            <code>attribution</code> wordt optioneel. Zonder naam: merk + tekst,
+            geen rij, geen fantoom-gap. <code>&lt;BodyQuote&gt;</code> kan
+            verdwijnen.
+          </p>
+          <div class="stage">
+            <div class="card jersey">
+              <div class="tape"></div>
+              <div class="pq" style="gap: 16px">
+                <span class="qmark" aria-hidden="true">&rdquo;</span>
+                <span class="body"
+                  >Bij KCVV Elewijt staat plezier op één. Wie graag speelt,
+                  leert vanzelf.</span
+                >
+              </div>
+            </div>
+          </div>
+          <p class="meta">
+            Kost: het onderscheid tussen "iemand zei dit" en "dit staat er"
+            verdwijnt uit de vorm — alleen de aanwezigheid van een naam verraadt
+            het nog.
+          </p>
+        </div>
+
+        <!-- C -->
+        <div>
+          <h3>C · Het merk verhuist naar opzij</h3>
+          <p class="flag neutral">
+            JeugdVisie wordt de regel, niet de uitzondering
+          </p>
+          <p class="note">
+            Met naam: merk bóven, kaart, attributierij. Zónder naam: merk
+            ernáást, en de kaart draagt context-labels in plaats van een naam.
+            De vorm zegt zelf welke van de twee het is.
+          </p>
+          <div class="stage">
+            <div class="card softcream">
+              <div class="visie">
+                <span class="qmark" aria-hidden="true">&rdquo;</span>
+                <div>
+                  <p class="body" style="margin: 0 0 12px">
+                    Bij KCVV Elewijt staat plezier op één. Wie graag speelt,
+                    leert vanzelf.
+                  </p>
+                  <div class="monorow">
+                    <span>Jeugdvisie</span><span>2026</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="meta">
+            Kost: <code>ArticleBody</code>'s naamloze citaat moet labels vinden
+            die de redacteur nooit invoert.
+          </p>
+        </div>
+
+        <!-- D -->
+        <div>
+          <h3>D · Zonder spreker is het geen citaat</h3>
+          <p class="flag neutral">het wordt nadruk</p>
+          <p class="note">
+            Een tekst zonder spreker is geen aanhaling maar een uitvergroting
+            van de lopende tekst. Geen kaart, geen merk, geen aanhalingstekens —
+            de display-italic en de highlighter doen het werk.
+            <code>TeamEditorial</code>'s eigen docblock zegt al "same text, two
+            places".
+          </p>
+          <div class="stage">
+            <div style="max-width: 40rem; margin: 0 auto">
+              <p class="body" style="margin: 0; text-align: left">
+                Bij KCVV Elewijt staat
+                <span
+                  style="
+                    background: linear-gradient(
+                      transparent 58%,
+                      rgba(0, 124, 70, 0.28) 58%
+                    );
+                  "
+                  >plezier op één</span
+                >. Wie graag speelt, leert vanzelf.
+              </p>
+            </div>
+          </div>
+          <p class="meta">
+            Kost: het naamloze citaat verliest elke kaart-status — op
+            <code>/ploegen/[slug]</code> was dat juist het enige visuele accent
+            in een lange lap tekst.
+          </p>
+        </div>
+      </div>
+
+      <!-- ================= GEVOLG VAN B ================= -->
+      <h2>Gevolg van B — wat wordt een blockquote in een artikel?</h2>
+      <p class="lede">
+        <code>&lt;BodyQuote&gt;</code> is wat de Sanity
+        <code>blockquote</code>-decorator rendert, midden in lopende tekst
+        (<code>ArticleBody.tsx:610</code>). Als hij verdwijnt, moet die plek
+        iets anders worden. Drie mogelijkheden, in echte artikelcontext.
+      </p>
+
+      <div class="grid2">
+        <div>
+          <h3>B1 · De volle kaart, ook in de tekst</h3>
+          <p class="flag neutral">één register, geen uitzonderingen</p>
+          <div class="stage">
+            <div style="max-width: 680px; margin: 0 auto">
+              <p style="margin: 0 0 20px; font-size: 17px">
+                De ploeg speelde een sterke tweede helft en kwam op voorsprong
+                via een treffer van Goovaerts. De trainer bleef nuchter na
+                afloop.
+              </p>
+              <div class="card" style="margin: 0 0 20px">
+                <div class="tape"></div>
+                <div class="pq">
+                  <span class="qmark" aria-hidden="true">&rdquo;</span>
+                  <span class="body"
+                    >We hebben nog niets gewonnen. Volgende week telt pas
+                    echt.</span
+                  >
+                </div>
+              </div>
+              <p style="margin: 0; font-size: 17px">
+                Volgende week wacht de uitwedstrijd tegen de rechtstreekse
+                concurrent, opnieuw op zaterdagavond.
+              </p>
+            </div>
+          </div>
+          <p class="meta">
+            De redacteur plaatst hiermee ongemerkt een kaart met tape en
+            slagschaduw midden in zijn lap tekst.
+          </p>
+        </div>
+
+        <div>
+          <h3>B2 · De kaart, maar uitgekleed in de tekst</h3>
+          <p class="flag neutral">geen tape, geen schaduw, geen rotatie</p>
+          <div class="stage">
+            <div style="max-width: 680px; margin: 0 auto">
+              <p style="margin: 0 0 20px; font-size: 17px">
+                De ploeg speelde een sterke tweede helft en kwam op voorsprong
+                via een treffer van Goovaerts. De trainer bleef nuchter na
+                afloop.
+              </p>
+              <div
+                style="
+                  border: 2px solid var(--ink);
+                  background: var(--cream);
+                  padding: 32px;
+                  margin: 0 0 20px;
+                "
+              >
+                <div class="pq">
+                  <span class="qmark" aria-hidden="true">&rdquo;</span>
+                  <span class="body"
+                    >We hebben nog niets gewonnen. Volgende week telt pas
+                    echt.</span
+                  >
+                </div>
+              </div>
+              <p style="margin: 0; font-size: 17px">
+                Volgende week wacht de uitwedstrijd tegen de rechtstreekse
+                concurrent, opnieuw op zaterdagavond.
+              </p>
+            </div>
+          </div>
+          <p class="meta">
+            Zelfde primitive, een <code>flat</code>-stand. De kaart blijft een
+            kaart maar houdt zich in tussen paragrafen.
+          </p>
+        </div>
+
+        <div>
+          <h3>B3 · Vlak in de tekst — de stippellijnen blijven</h3>
+          <p class="flag">BodyQuote overleeft toch, onder een andere naam</p>
+          <div class="stage">
+            <div style="max-width: 680px; margin: 0 auto">
+              <p style="margin: 0 0 8px; font-size: 17px">
+                De ploeg speelde een sterke tweede helft en kwam op voorsprong
+                via een treffer van Goovaerts. De trainer bleef nuchter na
+                afloop.
+              </p>
+              <figure class="bodyquote" style="max-width: 100%">
+                <hr class="dotted" />
+                <blockquote>
+                  We hebben nog niets gewonnen. Volgende week telt pas echt.
+                </blockquote>
+                <hr class="dotted" />
+              </figure>
+              <p style="margin: 0; font-size: 17px">
+                Volgende week wacht de uitwedstrijd tegen de rechtstreekse
+                concurrent, opnieuw op zaterdagavond.
+              </p>
+            </div>
+          </div>
+          <p class="meta">
+            Eerlijk gezegd: dit is B niet helemaal. Het houdt twee registers in
+            leven — maar wel op een as die je kunt opschrijven (in de tekst /
+            naast de tekst) in plaats van (naam / geen naam).
+          </p>
+        </div>
+
+        <div>
+          <h3>Waar de kaart wél onbetwist is</h3>
+          <p class="flag ok">ongewijzigd in alle drie</p>
+          <div class="stage">
+            <div style="max-width: 420px">
+              <div class="card jersey">
+                <div class="tape"></div>
+                <div class="pq">
+                  <span class="qmark" aria-hidden="true">&rdquo;</span>
+                  <span class="body"
+                    >Bij KCVV Elewijt staat plezier op één.</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="meta">
+            Handgeplaatste citaten op ontworpen pagina's —
+            <code>TeamEditorial</code>, <code>BioBlock</code>,
+            <code>/club</code>, <code>/club/ultras</code>. Hier is de kaart het
+            accent en niemand betwist hem.
+          </p>
+        </div>
+      </div>
+
+      <!-- ================= AANHALINGSTEKENS ================= -->
+      <h2>Eén register betekent één gebaar — welk?</h2>
+      <p class="lede">
+        Nu alles dezelfde kaart wordt, draagt élk citaat op de site het grote
+        <code>&rdquo;</code>-merk én de aanhalingstekens die de browser om de
+        <code>&lt;q&gt;</code> zet. Dat is nooit besloten; het is een
+        ontbrekende reset. Drie manieren om er één gebaar van te maken.
+      </p>
+
+      <div class="grid2">
+        <div>
+          <h3>M1 · Alleen het merk</h3>
+          <p class="note">
+            <code>q { quotes: none }</code>, of geen
+            <code>&lt;q&gt;</code> meer. Het grote merk is het hele gebaar.
+          </p>
+          <div class="stage">
+            <div class="card">
+              <div class="tape"></div>
+              <div class="pq">
+                <span class="qmark" aria-hidden="true">&rdquo;</span>
+                <span class="body"
+                  >We hebben nog niets gewonnen. Volgende week telt pas
+                  echt.</span
+                >
+                <div class="attrib"><span>Jens Van Ransbeeck</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3>M2 · Alleen echte aanhalingstekens</h3>
+          <p class="note">
+            Het decoratieve merk verdwijnt; de tekst staat gewoon tussen
+            aanhalingstekens, zoals in een krant.
+          </p>
+          <div class="stage">
+            <div class="card">
+              <div class="tape"></div>
+              <div class="pq" style="gap: 16px">
+                <span class="body"
+                  >&ldquo;We hebben nog niets gewonnen. Volgende week telt pas
+                  echt.&rdquo;</span
+                >
+                <div class="attrib"><span>Jens Van Ransbeeck</span></div>
+              </div>
+            </div>
+          </div>
+          <p class="meta">
+            Kost: <code>&lt;QuoteMark&gt;</code> verliest zijn enige rol in
+            <code>&lt;PullQuote&gt;</code>.
+          </p>
+        </div>
+
+        <div>
+          <h3>M3 · Allebei, maar dan bewust</h3>
+          <p class="note">
+            Het merk is ornament, de tekens zijn interpunctie. Vandaag gebeurt
+            dit al — alleen per ongeluk.
+          </p>
+          <div class="stage">
+            <div class="card">
+              <div class="tape"></div>
+              <div class="pq">
+                <span class="qmark" aria-hidden="true">&rdquo;</span>
+                <q class="body"
+                  >We hebben nog niets gewonnen. Volgende week telt pas echt.</q
+                >
+                <div class="attrib"><span>Jens Van Ransbeeck</span></div>
+              </div>
+            </div>
+          </div>
+          <p class="meta">
+            Dit is de huidige render, live door de browser gezet.
+          </p>
+        </div>
+
+        <div>
+          <h3>Waarom dit nu telt</h3>
+          <p class="note">
+            Onder B1 gaat dit gebaar van 9 plekken naar <strong>alle</strong>
+            citaten op de site, inclusief elke blockquote die een redacteur ooit
+            typt. Het is de goedkoopste beslissing op deze pagina en de enige
+            die elk citaat raakt.
+          </p>
+          <p class="meta">
+            Niets in <code>globals.css</code> reset <code>q</code>. De enige
+            <code>quotes:</code>-regel in de gecompileerde CSS is die van
+            <code>@tailwindcss/typography</code>, en die geldt alleen voor
+            <code>.prose blockquote</code>.
+          </p>
+        </div>
+      </div>
+
+      <!-- ================= MAAT ================= -->
+      <h2>En één losse maat</h2>
+      <p class="note">
+        <code>BodyQuote.tsx:25</code> klemt op <code>max-w-[40rem]</code> —
+        640px, een ruwe waarde, op een route waar #2436 de lopende tekst op
+        <code>var(--container-prose)</code> = 680 heeft vastgelegd. Hieronder
+        staan ze op elkaar; de rode lijnen zijn 640.
+      </p>
+      <div class="stage" style="margin-top: 18px">
+        <div style="max-width: 680px; margin: 0 auto">
+          <p class="meta" style="margin: 0 0 6px">
+            680 — de vastgelegde leesmaat
+          </p>
+          <p style="margin: 0 0 26px; font-size: 17px">
+            Bij KCVV Elewijt staat plezier op één. Wie graag speelt, leert
+            vanzelf — techniek, teamspirit en respect groeien mee. Deze regel
+            loopt tot 680 pixels, de maat die #2436 heeft vastgelegd voor alle
+            lopende tekst op de site.
+          </p>
+          <div class="measure" style="max-width: 640px; margin: 0 auto">
+            <figure class="bodyquote" style="margin: 0 auto; max-width: 100%">
+              <hr class="dotted" />
+              <blockquote>
+                En dit citaat klemt op 640, 40 pixels smaller, zonder dat iets
+                dat opschrijft.
+              </blockquote>
+              <hr class="dotted" />
+            </figure>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= INVENTARIS ================= -->
+      <h2>De inventaris</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>route</th>
+            <th>plek</th>
+            <th>behandeling</th>
+            <th>toon</th>
+            <th>naam?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>/club</td>
+            <td><code>club/page.tsx:64</code></td>
+            <td>PullQuote</td>
+            <td>ink</td>
+            <td>Sportpark Elewijt</td>
+          </tr>
+          <tr>
+            <td>/club/ultras</td>
+            <td><code>ultras/page.tsx:97</code></td>
+            <td>PullQuote</td>
+            <td>cream</td>
+            <td>KCVV Ultra's 55</td>
+          </tr>
+          <tr>
+            <td>/ploegen/[slug]</td>
+            <td><code>TeamEditorial.tsx:104</code></td>
+            <td>PullQuote</td>
+            <td>jersey</td>
+            <td><strong>leeg</strong></td>
+          </tr>
+          <tr>
+            <td>/spelers/[slug] · /staf/[slug]</td>
+            <td><code>BioBlock.tsx:92</code></td>
+            <td>PullQuote</td>
+            <td>jersey</td>
+            <td><strong>?? ""</strong></td>
+          </tr>
+          <tr>
+            <td>/spelers/[slug] · /staf/[slug]</td>
+            <td><code>QuotesBlock.tsx:62</code></td>
+            <td>PullQuote</td>
+            <td>ink</td>
+            <td><strong>?? ""</strong></td>
+          </tr>
+          <tr>
+            <td>/nieuws/[slug] · /club/[slug]</td>
+            <td><code>ArticleBody.tsx:395,417</code></td>
+            <td>PullQuote</td>
+            <td>doorgegeven</td>
+            <td>uit Sanity</td>
+          </tr>
+          <tr>
+            <td>/nieuws/[slug] · /club/[slug]</td>
+            <td><code>ArticleBody.tsx:429</code></td>
+            <td>PullQuote</td>
+            <td>doorgegeven</td>
+            <td><strong>leeg</strong></td>
+          </tr>
+          <tr>
+            <td>/nieuws/[slug] · /club/[slug]</td>
+            <td><code>QaBlock.tsx:213,245</code></td>
+            <td>PullQuote</td>
+            <td>doorgegeven</td>
+            <td>de vraag</td>
+          </tr>
+          <tr>
+            <td>/nieuws/[slug] · /club/[slug]</td>
+            <td><code>ArticleBody.tsx:610</code></td>
+            <td>BodyQuote</td>
+            <td>—</td>
+            <td>n.v.t.</td>
+          </tr>
+          <tr>
+            <td>/jeugd</td>
+            <td><code>JeugdVisie.tsx:38</code></td>
+            <td>hand-composed</td>
+            <td>cream-soft</td>
+            <td>labels</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="meta">
+        Twee ervan staan op dezelfde pagina: /spelers/[slug] draagt een jersey
+        PullQuote (BioBlock) én een ink PullQuote (QuotesBlock), uit dezelfde
+        bio.
+      </p>
+    </div>
+  </body>
+</html>

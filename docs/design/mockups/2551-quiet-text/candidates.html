@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2551 — how text goes quiet, on cream and on dark</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --paper-edge: #d9d2bd;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --ink-mid: #494949; /* proposed real middle step, ~7.98:1 on cream */
+        --jersey-deep: #007c46;
+        --jersey-deep-dark: #133d28;
+        --warm: #f0c264;
+        --alert: #b84a3a;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --text-label: 0.6875rem;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 34px 0 30px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin: 0 0 10px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: 2.2rem;
+        line-height: 1.1;
+        margin: 0 0 12px;
+        font-weight: 400;
+      }
+      header.top p {
+        margin: 0 0 8px;
+        max-width: 86ch;
+        color: rgb(245 241 230 / 0.85);
+        font-size: 0.95rem;
+      }
+      header.top strong {
+        color: var(--warm);
+        font-weight: 600;
+      }
+
+      section.panel {
+        padding: 44px 0 8px;
+      }
+      section.panel > .wrap > h2 {
+        font-family: var(--font-big);
+        font-size: 1.6rem;
+        font-weight: 400;
+        margin: 0 0 6px;
+        line-height: 1.15;
+      }
+      .panel-note {
+        margin: 0 0 26px;
+        max-width: 88ch;
+        color: var(--ink-muted);
+        font-size: 0.92rem;
+      }
+      .panel-note code,
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.86em;
+      }
+
+      .cols {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+      .card {
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: 4px 4px 0 0 var(--ink);
+        padding: 22px 22px 26px;
+      }
+      .card.dark {
+        background: var(--jersey-deep-dark);
+        border-color: var(--ink);
+      }
+      .card.deepgreen {
+        background: var(--jersey-deep);
+        border-color: var(--ink);
+      }
+      .card h3 {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin: 0 0 4px;
+      }
+      .card .verdict {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin: 0 0 18px;
+        color: var(--ink-muted);
+      }
+      .card.dark h3,
+      .card.deepgreen h3 {
+        color: var(--warm);
+      }
+      .card.dark .verdict,
+      .card.deepgreen .verdict {
+        color: rgb(245 241 230 / 0.7);
+      }
+
+      .sample-h {
+        font-family: var(--font-big);
+        font-size: 1.45rem;
+        font-weight: 700;
+        line-height: 1.1;
+        margin: 0 0 10px;
+        color: var(--ink);
+      }
+      .lead {
+        font-size: 1.0625rem;
+        line-height: 1.55;
+        margin: 0 0 14px;
+        max-width: 60ch;
+      }
+      .dek {
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin: 0 0 14px;
+      }
+      .meta {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 0;
+      }
+      .t-ink {
+        color: var(--ink);
+      }
+      .t-soft {
+        color: var(--ink-soft);
+      }
+      .t-mid {
+        color: var(--ink-mid);
+      }
+      .t-muted {
+        color: var(--ink-muted);
+      }
+
+      .ratio {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        color: var(--ink-muted);
+        display: block;
+        margin-top: 3px;
+        text-transform: none;
+      }
+      .card.dark .ratio,
+      .card.deepgreen .ratio {
+        color: rgb(245 241 230 / 0.55);
+      }
+
+      /* dark swatch rows */
+      .alpharow {
+        margin: 0 0 13px;
+      }
+      .alpharow p {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.45;
+      }
+      .alpharow .tag {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        color: rgb(245 241 230 / 0.5);
+        display: block;
+        margin-bottom: 1px;
+      }
+
+      table.chart {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.86rem;
+        margin: 0 0 8px;
+      }
+      table.chart th,
+      table.chart td {
+        border-bottom: 1px solid var(--paper-edge);
+        padding: 7px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      table.chart th {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        border-bottom: 2px solid var(--ink);
+      }
+      table.chart td.num {
+        font-family: var(--font-mono);
+        white-space: nowrap;
+      }
+      .strike {
+        text-decoration: line-through;
+        color: var(--ink-muted);
+      }
+      .flag {
+        color: var(--alert);
+        font-weight: 600;
+      }
+
+      blockquote.rule {
+        margin: 0 0 20px;
+        padding: 16px 20px;
+        background: var(--cream-deep);
+        border: 2px solid var(--ink);
+        box-shadow: 4px 4px 0 0 var(--ink);
+        font-family: var(--font-big);
+        font-size: 1.02rem;
+        line-height: 1.5;
+        font-style: italic;
+      }
+      blockquote.rule cite {
+        display: block;
+        margin-top: 8px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-style: normal;
+        color: var(--ink-muted);
+      }
+      .receipts {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .receipts li {
+        border-bottom: 1px solid var(--paper-edge);
+        padding: 9px 0 13px;
+        margin-bottom: 12px;
+        font-size: 0.88rem;
+      }
+      .receipts li:last-child {
+        border-bottom: 0;
+      }
+      .receipts code {
+        color: var(--ink);
+      }
+      footer.bot {
+        background: var(--ink);
+        color: rgb(245 241 230 / 0.8);
+        padding: 26px 0;
+        margin-top: 44px;
+        font-size: 0.86rem;
+      }
+      footer.bot .wrap > p {
+        margin: 0 0 6px;
+        max-width: 92ch;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="kicker">#2551 · wayfinder map #2425 · sweep six</p>
+        <h1>How text goes quiet, on cream and on dark</h1>
+        <p>
+          Rendered because
+          <strong>1.20:1 cannot be judged from the number.</strong> Everything
+          below uses the real tokens and real site copy. Typekit faces load from
+          the live kit, so the type is the shipping type.
+        </p>
+        <p>
+          Two corrections to the ticket's chart are marked in place: the
+          cream-alpha family is
+          <strong>19 render sites, not 21</strong> (two are docblocks recording
+          the opposite decision), and the dark side
+          <strong>already has a written rule</strong> the ticket did not see.
+        </p>
+      </div>
+    </header>
+
+    <!-- ============ PANEL A ============ -->
+    <section class="panel">
+      <div class="wrap">
+        <h2>A · On cream: two tiers, or three?</h2>
+        <p class="panel-note">
+          The same real block in three schemes: a page lead, a card dek, a
+          byline. As shipped, the site runs three tiers and the middle one sits
+          <code>1.20:1</code> from the first. Read these at arm's length, not by
+          leaning in — that is the test.
+        </p>
+        <div class="cols">
+          <div class="card">
+            <h3>A1 · As shipped</h3>
+            <p class="verdict">ink → ink-soft → ink-muted · 40 + 128 sites</p>
+            <p class="sample-h">De luidste hoek</p>
+            <p class="lead t-soft">
+              Positief aanmoedigen van onze ploeg — vocaal, met trommels, met
+              sfeermateriaal.
+              <span class="ratio">text-ink-soft #1f1f1f · 14.60:1</span>
+            </p>
+            <p class="dek t-soft">
+              Elke thuiswedstrijd verzamelen we een uur voor aftrap achter het
+              doel.
+            </p>
+            <p class="meta t-muted">
+              12 augustus 2026 · A-ploeg
+              <span class="ratio">text-ink-muted #6b6b6b · 4.72:1</span>
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>A2 · Two tiers</h3>
+            <p class="verdict">ink → ink-muted · ink-soft collapses into ink</p>
+            <p class="sample-h">De luidste hoek</p>
+            <p class="lead t-ink">
+              Positief aanmoedigen van onze ploeg — vocaal, met trommels, met
+              sfeermateriaal.
+              <span class="ratio">text-ink #0a0a0a · 17.54:1</span>
+            </p>
+            <p class="dek t-ink">
+              Elke thuiswedstrijd verzamelen we een uur voor aftrap achter het
+              doel.
+            </p>
+            <p class="meta t-muted">
+              12 augustus 2026 · A-ploeg
+              <span class="ratio">text-ink-muted #6b6b6b · 4.72:1</span>
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>A3 · Three tiers, real middle</h3>
+            <p class="verdict">
+              ink → <em>#494949</em> → ink-muted · a step you can see
+            </p>
+            <p class="sample-h">De luidste hoek</p>
+            <p class="lead t-mid">
+              Positief aanmoedigen van onze ploeg — vocaal, met trommels, met
+              sfeermateriaal.
+              <span class="ratio">proposed #494949 · 7.98:1</span>
+            </p>
+            <p class="dek t-mid">
+              Elke thuiswedstrijd verzamelen we een uur voor aftrap achter het
+              doel.
+            </p>
+            <p class="meta t-muted">
+              12 augustus 2026 · A-ploeg
+              <span class="ratio">text-ink-muted #6b6b6b · 4.72:1</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANEL B ============ -->
+    <section class="panel">
+      <div class="wrap">
+        <h2>B · The emphasis gesture built on the invisible step</h2>
+        <p class="panel-note">
+          Two files step <code>&lt;strong&gt;</code> back <em>up</em> from
+          ink-soft to full ink — <code>UltrasSection.tsx:48</code> and
+          <code>privacy/page.tsx:59</code>. The ticket called this "an emphasis
+          gesture built on a 1.20:1 step". <strong>Correction:</strong> both
+          also carry <code>font-semibold</code>. So the weight is doing all the
+          work and the colour half is a no-op — #2549's
+          <em>inert mechanism</em>, exactly.
+        </p>
+        <div class="cols">
+          <div class="card">
+            <h3>B1 · As shipped</h3>
+            <p class="verdict">ink-soft body + semibold ink strong</p>
+            <p class="lead t-soft" style="margin-bottom: 0">
+              Wij verwerken je gegevens
+              <strong style="color: var(--ink); font-weight: 600"
+                >alleen voor het lidmaatschap</strong
+              >
+              en houden ze niet langer bij dan nodig.
+            </p>
+          </div>
+          <div class="card">
+            <h3>B2 · Colour half removed</h3>
+            <p class="verdict">ink-soft body + semibold ink-soft strong</p>
+            <p class="lead t-soft" style="margin-bottom: 0">
+              Wij verwerken je gegevens
+              <strong style="font-weight: 600"
+                >alleen voor het lidmaatschap</strong
+              >
+              en houden ze niet langer bij dan nodig.
+            </p>
+          </div>
+          <div class="card">
+            <h3>B3 · Two-tier world</h3>
+            <p class="verdict">ink body + semibold ink strong</p>
+            <p class="lead t-ink" style="margin-bottom: 0">
+              Wij verwerken je gegevens
+              <strong style="font-weight: 600"
+                >alleen voor het lidmaatschap</strong
+              >
+              en houden ze niet langer bij dan nodig.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANEL C ============ -->
+    <section class="panel">
+      <div class="wrap">
+        <h2>C · The dark side already has a rule — the ticket missed it</h2>
+        <blockquote class="rule">
+          "Cream on a jersey-deep surface is cream, never a fraction of it.
+          <code>text-cream/90</code> costs more contrast than a whole shade step
+          of green does, so the fraction is always the worse trade. Scoped to
+          jersey-deep: on <code>jersey-deep-dark</code> (~10.9:1) and ink
+          (17.5:1) cream has contrast to spare and a fraction is harmless."
+          <cite
+            >apps/web/DESIGN.md — "The Whole-Cream Rule", ~40 lines below the
+            token list the ticket quoted</cite
+          >
+        </blockquote>
+        <p class="panel-note">
+          So the dark question is not "the site has never named one". It is:
+          <strong
+            >the rule is surface-scoped and settled at the jersey-deep boundary,
+            and says nothing about the spread inside the zone it
+            permits.</strong
+          >
+          Six alphas live in that permitted zone. Three files already carry the
+          rule's receipts in code:
+        </p>
+        <ul class="receipts">
+          <li>
+            <code>MonoLabel.tsx:37–44</code> — a docblock recording that
+            <code>text-cream/85</code> was <strong>tried and rejected</strong>,
+            citing the rule by name, and prescribing the workaround (wrap the
+            parent, don't bake it into the token).
+            <em>Counted by the ticket as a divergence site.</em>
+          </li>
+          <li>
+            <code>NewsCard.tsx:332–334</code> — "Full-opacity cream on dark
+            surfaces — opacity-reduced cream (e.g. <code>text-cream/85</code>)
+            trips axe contrast on bg-jersey-deep."
+            <em>Also counted as a divergence site.</em>
+          </li>
+          <li>
+            <code>RaffleCallout.tsx:20</code> — "Full cream — DESIGN.md 'The
+            Whole-Cream Rule'" on the <code>&lt;p&gt;</code>… while the two
+            <code>&lt;NumberDisplay tone="cream"&gt;</code> beneath it still
+            render <code>text-cream/70</code> labels.
+            <span class="flag"
+              >The rule was applied by hand and escaped through the
+              primitive</span
+            >
+            — which is the exception DESIGN.md itself names as still shipping.
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ PANEL D ============ -->
+    <section class="panel">
+      <div class="wrap">
+        <h2>D · The six alphas, on the surface the rule permits</h2>
+        <p class="panel-note">
+          All on <code>jersey-deep-dark #133d28</code>. Every one of these is
+          <em>sanctioned</em> by the Whole-Cream Rule. The question the rule
+          leaves open is whether a permitted zone should still carry one value.
+          <code>/85</code> is the de-facto convention seven files reached
+          independently.
+        </p>
+        <div class="cols">
+          <div class="card dark">
+            <h3>D1 · As shipped — six alphas</h3>
+            <p class="verdict">19 render sites / 10 files</p>
+            <div class="alpharow">
+              <span class="tag">text-cream · 100% · 10.9:1</span>
+              <p style="color: var(--cream)">
+                Positief aanmoedigen van onze ploeg.
+              </p>
+            </div>
+            <div class="alpharow">
+              <span class="tag">/90 · CtaBand · 9.04:1</span>
+              <p style="color: rgb(245 241 230 / 0.9)">
+                Positief aanmoedigen van onze ploeg.
+              </p>
+            </div>
+            <div class="alpharow">
+              <span class="tag"
+                >/85 · 7 files, de-facto convention · 8.25:1</span
+              >
+              <p style="color: rgb(245 241 230 / 0.85)">
+                Positief aanmoedigen van onze ploeg.
+              </p>
+            </div>
+            <div class="alpharow">
+              <span class="tag">/80 · 3 files · 7.50:1</span>
+              <p style="color: rgb(245 241 230 / 0.8)">
+                Positief aanmoedigen van onze ploeg.
+              </p>
+            </div>
+            <div class="alpharow">
+              <span class="tag">/75 · OrganigramExplorer ×2 · 6.78:1</span>
+              <p style="color: rgb(245 241 230 / 0.75)">
+                Positief aanmoedigen van onze ploeg.
+              </p>
+            </div>
+            <div class="alpharow">
+              <span class="tag">/70 · 4 files · 6.13:1</span>
+              <p style="color: rgb(245 241 230 / 0.7)">
+                Positief aanmoedigen van onze ploeg.
+              </p>
+            </div>
+            <div class="alpharow" style="margin-bottom: 0">
+              <span class="tag">/40 · OrganigramExplorer ×2 · 3.05:1</span>
+              <p style="color: rgb(245 241 230 / 0.4)">
+                Positief aanmoedigen van onze ploeg.
+              </p>
+            </div>
+          </div>
+
+          <div class="card dark">
+            <h3>D2 · Two tiers on dark</h3>
+            <p class="verdict">mirrors A2 — cream + one quiet step</p>
+            <p
+              class="sample-h"
+              style="color: var(--cream); font-family: var(--font-big)"
+            >
+              De luidste hoek
+            </p>
+            <p class="lead" style="color: var(--cream)">
+              Positief aanmoedigen van onze ploeg — vocaal, met trommels, met
+              sfeermateriaal.
+              <span class="ratio">text-cream · 10.9:1</span>
+            </p>
+            <p class="dek" style="color: var(--cream)">
+              Elke thuiswedstrijd verzamelen we een uur voor aftrap achter het
+              doel.
+            </p>
+            <p class="meta" style="color: rgb(245 241 230 / 0.7)">
+              12 augustus 2026 · A-ploeg
+              <span class="ratio"
+                >the dark counterpart of ink-muted · /70 · 6.13:1</span
+              >
+            </p>
+          </div>
+
+          <div class="card dark">
+            <h3>D3 · One sanctioned alpha</h3>
+            <p class="verdict">everything quiet is /85, nothing else exists</p>
+            <p
+              class="sample-h"
+              style="color: var(--cream); font-family: var(--font-big)"
+            >
+              De luidste hoek
+            </p>
+            <p class="lead" style="color: rgb(245 241 230 / 0.85)">
+              Positief aanmoedigen van onze ploeg — vocaal, met trommels, met
+              sfeermateriaal.
+              <span class="ratio">/85 · 8.25:1</span>
+            </p>
+            <p class="dek" style="color: rgb(245 241 230 / 0.85)">
+              Elke thuiswedstrijd verzamelen we een uur voor aftrap achter het
+              doel.
+            </p>
+            <p class="meta" style="color: rgb(245 241 230 / 0.85)">
+              12 augustus 2026 · A-ploeg
+              <span class="ratio">/85 · 8.25:1 — no third step</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANEL E ============ -->
+    <section class="panel">
+      <div class="wrap">
+        <h2>E · What the rule bans, and where it is still being broken</h2>
+        <p class="panel-note">
+          The same alphas on <code>jersey-deep #007c46</code> — the surface the
+          Whole-Cream Rule explicitly forbids a fraction on. Full cream is only
+          4.05:1 here, so every step down is expensive.
+        </p>
+        <div class="cols">
+          <div class="card deepgreen">
+            <h3>E1 · jersey-deep · the banned case</h3>
+            <p class="verdict">why the rule exists</p>
+            <div class="alpharow">
+              <span class="tag">text-cream · 100% · 4.05:1</span>
+              <p style="color: var(--cream)">
+                Positief aanmoedigen van onze ploeg.
+              </p>
+            </div>
+            <div class="alpharow">
+              <span class="tag">/85 · 3.44:1</span>
+              <p style="color: rgb(245 241 230 / 0.85)">
+                Positief aanmoedigen van onze ploeg.
+              </p>
+            </div>
+            <div class="alpharow" style="margin-bottom: 0">
+              <span class="tag">/70 · 2.84:1</span>
+              <p style="color: rgb(245 241 230 / 0.7)">
+                Positief aanmoedigen van onze ploeg.
+              </p>
+            </div>
+          </div>
+          <div class="card deepgreen">
+            <h3>E2 · The live exception</h3>
+            <p class="verdict">
+              NumberDisplay tone="cream" · label hardcodes /70
+            </p>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                padding: 10px 0;
+              "
+            >
+              <span
+                style="
+                  font-family: var(--font-big);
+                  font-size: 3.2rem;
+                  line-height: 1;
+                  font-weight: 700;
+                  color: var(--cream);
+                "
+                >500</span
+              >
+              <span
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 11px;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: rgb(245 241 230 / 0.7);
+                "
+                >lotjes — allemaal verkocht</span
+              >
+            </div>
+            <p
+              style="
+                margin: 6px 0 0;
+                font-size: 0.82rem;
+                color: rgb(245 241 230 / 0.8);
+              "
+            >
+              DESIGN.md names this as the one known live exception.
+              <code>/club/ultras</code> ships it today.
+            </p>
+          </div>
+          <div class="card deepgreen">
+            <h3>E3 · Corrected</h3>
+            <p class="verdict">label at full cream</p>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                padding: 10px 0;
+              "
+            >
+              <span
+                style="
+                  font-family: var(--font-big);
+                  font-size: 3.2rem;
+                  line-height: 1;
+                  font-weight: 700;
+                  color: var(--cream);
+                "
+                >500</span
+              >
+              <span
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 11px;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: var(--cream);
+                "
+                >lotjes — allemaal verkocht</span
+              >
+            </div>
+            <p
+              style="
+                margin: 6px 0 0;
+                font-size: 0.82rem;
+                color: rgb(245 241 230 / 0.8);
+              "
+            >
+              The mono label is 11px. At that size the fraction is the most
+              expensive it ever gets.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANEL F ============ -->
+    <section class="panel">
+      <div class="wrap">
+        <h2>F · Re-measured against <code>main</code> @ e19f8235</h2>
+        <p class="panel-note">
+          The ticket's counts hold — a first for this map. Two corrections only,
+          both marked.
+        </p>
+        <table class="chart">
+          <thead>
+            <tr>
+              <th>family</th>
+              <th>ticket said</th>
+              <th>measured</th>
+              <th>note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>text-ink-soft</code></td>
+              <td class="num">40 / 32</td>
+              <td class="num">40 / 32</td>
+              <td>
+                holds. Overwhelmingly leads and deks —
+                <code>mt-3 max-w-[60ch] leading-relaxed</code>,
+                <code>line-clamp-2 text-sm</code>. It is the
+                <em>secondary voice</em> tier in practice, not a surface.
+              </td>
+            </tr>
+            <tr>
+              <td><code>text-ink-muted</code></td>
+              <td class="num">128 / 64</td>
+              <td class="num">128 / 64</td>
+              <td>
+                holds. Plus <code>border-ink-muted</code> ×8 and the soft shadow
+                offset.
+              </td>
+            </tr>
+            <tr>
+              <td><code>bg-ink-soft</code></td>
+              <td class="num">0 anywhere</td>
+              <td class="num">
+                0 prod · <span class="flag">5 in Storybook</span>
+              </td>
+              <td>
+                <span class="flag">Corrected.</span> <code>Spinner</code>,
+                <code>HorizontalSlider</code>,
+                <code>ScrollArrowButton</code> stories use it as the dark
+                backdrop — i.e.
+                <strong
+                  >its documented job, used only where someone read
+                  DESIGN.md</strong
+                >. Plus one CSS consumer:
+                <code>.kcvv-spinner-scarf--white</code>.
+              </td>
+            </tr>
+            <tr>
+              <td><code>text-cream/NN</code></td>
+              <td class="num">21 / 12</td>
+              <td class="num"><span class="flag">19 / 10</span></td>
+              <td>
+                <span class="flag">Corrected.</span>
+                <code>NewsCard:334</code> and <code>MonoLabel:40</code> are
+                <strong>docblocks</strong>, and both record the
+                <em>opposite</em> decision. Same error as #2549's
+                <code>hyphens-auto</code> count (9 charted, 6 real).
+              </td>
+            </tr>
+            <tr>
+              <td><code>text-ink/NN</code></td>
+              <td class="num">17 / 11</td>
+              <td class="num">17 / 11</td>
+              <td>
+                holds. 11 occurrences are form chrome (parked behind #2530); 6
+                are content — <code>MatchHero</code> /75,
+                <code>MatchEvents</code> ×2 /70, <code>MatchLineup</code> ×2
+                /70, <code>SponsorTile</code> /80.
+              </td>
+            </tr>
+            <tr>
+              <td><code>text-cream-soft</code> / <code>-deep</code></td>
+              <td class="num">0 / 0</td>
+              <td class="num">0 / 0</td>
+              <td>
+                holds — but they are <em>surface</em> tokens and doing their
+                job: <code>bg-cream-soft</code> ships on 180 sites,
+                <code>bg-cream-deep</code> on 27.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ PANEL G ============ -->
+    <section class="panel">
+      <div class="wrap">
+        <h2>
+          G · Round 2 — is <code>/85</code> the dark side's
+          <code>ink-soft</code>?
+        </h2>
+        <p class="panel-note">
+          Cream settled at two tiers, dark mirrors it. So dark needs exactly one
+          quiet value. <code>/85</code> is the de-facto convention seven files
+          reached independently — but it drops only <strong>1.32×</strong> from
+          full cream, where <code>ink-muted</code> drops
+          <strong>3.72×</strong> from ink. Read these three the way you read
+          Panel A: at arm's length.
+        </p>
+        <div class="cols">
+          <div class="card dark">
+            <h3>G1 · quiet = /85</h3>
+            <p class="verdict">10.9 → 8.25:1 · a 1.32× drop</p>
+            <p
+              class="sample-h"
+              style="color: var(--cream); font-family: var(--font-big)"
+            >
+              De luidste hoek
+            </p>
+            <p class="lead" style="color: var(--cream)">
+              Positief aanmoedigen van onze ploeg — vocaal, met trommels, met
+              sfeermateriaal.
+            </p>
+            <p class="meta" style="color: rgb(245 241 230 / 0.85)">
+              12 augustus 2026 · A-ploeg
+              <span class="ratio">quiet tier · /85</span>
+            </p>
+          </div>
+          <div class="card dark">
+            <h3>G2 · quiet = /70</h3>
+            <p class="verdict">10.9 → 6.13:1 · a 1.78× drop</p>
+            <p
+              class="sample-h"
+              style="color: var(--cream); font-family: var(--font-big)"
+            >
+              De luidste hoek
+            </p>
+            <p class="lead" style="color: var(--cream)">
+              Positief aanmoedigen van onze ploeg — vocaal, met trommels, met
+              sfeermateriaal.
+            </p>
+            <p class="meta" style="color: rgb(245 241 230 / 0.7)">
+              12 augustus 2026 · A-ploeg
+              <span class="ratio">quiet tier · /70</span>
+            </p>
+          </div>
+          <div class="card">
+            <h3>G3 · the cream original, for scale</h3>
+            <p class="verdict">17.54 → 4.72:1 · a 3.72× drop</p>
+            <p class="sample-h">De luidste hoek</p>
+            <p class="lead t-ink">
+              Positief aanmoedigen van onze ploeg — vocaal, met trommels, met
+              sfeermateriaal.
+            </p>
+            <p class="meta t-muted">
+              12 augustus 2026 · A-ploeg
+              <span class="ratio">quiet tier · ink-muted</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="bot">
+      <div class="wrap">
+        <p>
+          <strong style="color: var(--warm)">The reframe.</strong> The ticket
+          asks what the dark answer is, given that none has ever been named. One
+          exists, it is named, and it is scoped by surface rather than by role —
+          which is a different shape from every cream tier this ticket proposes.
+        </p>
+        <p>
+          The open questions are therefore: (1) how many tiers on cream, given
+          the middle one is invisible; (2) whether the dark answer should stay
+          <em>surface-scoped</em> or be restated as <em>role-scoped</em> to
+          mirror cream; (3) what happens to the six-alpha spread inside the zone
+          the rule already permits.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

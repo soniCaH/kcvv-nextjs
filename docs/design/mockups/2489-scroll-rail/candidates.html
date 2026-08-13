@@ -1,0 +1,1299 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2489 — overleeft de gereserveerde rail van de scrollpijl?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --jersey-deep-dark: #00603c;
+        --paper-edge: #d9d2bd;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 var(--ink);
+        --shadow-paper-sm-soft: 4px 4px 0 rgba(10, 10, 10, 0.45);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        line-height: 1.5;
+      }
+      .wrap {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 40px 16px 140px;
+      }
+      @media (min-width: 768px) {
+        .wrap {
+          padding: 40px 32px 140px;
+        }
+      }
+      h1 {
+        font-family: var(--font-big);
+        font-size: clamp(30px, 5vw, 46px);
+        line-height: 1.02;
+        margin: 0 0 10px;
+        font-weight: 900;
+      }
+      h2 {
+        font-family: var(--font-big);
+        font-size: clamp(22px, 3vw, 30px);
+        line-height: 1.05;
+        margin: 56px 0 4px;
+        font-weight: 900;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        font-weight: 700;
+        margin: 0 0 6px;
+      }
+      .lede {
+        font-size: 17px;
+        max-width: 680px;
+        margin: 0 0 8px;
+      }
+      .lede strong {
+        font-weight: 700;
+      }
+      em.acc {
+        font-family: var(--font-display);
+        font-style: italic;
+        color: var(--jersey-deep);
+        font-weight: 600;
+      }
+
+      /* ---------- measurement table ---------- */
+      table.m {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        margin: 18px 0 8px;
+      }
+      table.m th,
+      table.m td {
+        text-align: left;
+        padding: 7px 10px 7px 0;
+        border-bottom: 1px solid var(--paper-edge);
+        vertical-align: top;
+      }
+      table.m th {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        font-weight: 600;
+      }
+      table.m td.num {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        white-space: nowrap;
+      }
+      .yes {
+        color: var(--card-red);
+        font-weight: 700;
+      }
+      .no {
+        color: var(--jersey-deep);
+        font-weight: 700;
+      }
+      .scroll-x {
+        overflow-x: auto;
+      }
+
+      /* ---------- candidate panel ---------- */
+      /* the candidate panels escape the 1040 prose wrap so a 1216 track is real */
+      #cands,
+      #relock {
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        padding: 0 16px;
+      }
+      #cands .cand,
+      #relock .cand {
+        max-width: 1280px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .cand {
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 18px 18px 22px;
+        margin: 20px 0 34px;
+      }
+      .cand > h3 {
+        font-family: var(--font-display);
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 2px;
+      }
+      .cand > p.note {
+        font-size: 14.5px;
+        margin: 0 0 16px;
+        color: var(--ink-soft);
+        max-width: 720px;
+      }
+      .verdict {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 14px 0 0;
+        padding-top: 10px;
+        border-top: 1px dashed var(--paper-edge);
+      }
+      .verdict b {
+        color: var(--card-red);
+      }
+      .verdict b.ok {
+        color: var(--jersey-deep);
+      }
+
+      .caselabel {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 14px 0 6px;
+        font-weight: 600;
+      }
+
+      /* ---------- the chip row ---------- */
+      .rowbox {
+        position: relative;
+        background: var(--cream);
+        border: 1px dashed var(--paper-edge);
+      }
+      .track {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        padding-bottom: 6px;
+        scrollbar-width: none;
+      }
+      .track::-webkit-scrollbar {
+        display: none;
+      }
+      .chip {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        color: var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        font-family: var(--font-mono);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 10px;
+        padding: 5px 9px;
+        white-space: nowrap;
+      }
+      .chip.active {
+        background: var(--ink);
+        color: var(--cream);
+        box-shadow: var(--shadow-paper-sm-soft);
+      }
+      .arrow {
+        position: absolute;
+        inset-block: 0;
+        margin-block: auto;
+        z-index: 10;
+        width: 32px;
+        height: 32px;
+        border: 2px solid var(--ink);
+        background: var(--jersey-deep);
+        color: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0 0 1px;
+      }
+      .arrow.l {
+        left: 0;
+      }
+      .arrow.r {
+        right: 0;
+      }
+      .arrow[disabled] {
+        opacity: 0.32;
+        cursor: default;
+      }
+      .arrow.hidden {
+        display: none;
+      }
+
+      /* the held-space marker — shows where a rule spends track width */
+      .rowbox.showrail::before,
+      .rowbox.showrail::after {
+        content: "";
+        position: absolute;
+        inset-block: 0;
+        width: var(--rail, 0px);
+        background: repeating-linear-gradient(
+          135deg,
+          rgba(201, 63, 28, 0.14) 0 5px,
+          transparent 5px 10px
+        );
+        pointer-events: none;
+        z-index: 1;
+      }
+      .rowbox.showrail::before {
+        left: 0;
+        width: var(--rail-l, 0px);
+      }
+      .rowbox.showrail::after {
+        right: 0;
+        width: var(--rail-r, 0px);
+      }
+
+      .readout {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-muted);
+        margin: 6px 0 0;
+      }
+      .readout b {
+        color: var(--ink);
+      }
+      .widthctl {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 24px 0 0;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .widthctl button {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+        padding: 5px 9px;
+        cursor: pointer;
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .widthctl button[aria-pressed="true"] {
+        background: var(--ink);
+        color: var(--cream);
+      }
+      .stage {
+        margin: 10px 0 0;
+        border-left: 1px solid var(--paper-edge);
+        border-right: 1px solid var(--paper-edge);
+      }
+      .legend {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--ink-muted);
+        letter-spacing: 0.05em;
+        margin: 12px 0 0;
+      }
+      .swatch {
+        display: inline-block;
+        width: 22px;
+        height: 10px;
+        vertical-align: -1px;
+        background: repeating-linear-gradient(
+          135deg,
+          rgba(201, 63, 28, 0.3) 0 5px,
+          transparent 5px 10px
+        );
+        border: 1px solid var(--paper-edge);
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      .locked {
+        border: 2px dashed var(--paper-edge);
+        background: var(--cream-soft);
+        padding: 16px 18px;
+        margin: 40px 0 8px;
+        max-width: 760px;
+      }
+      .locked p {
+        font-size: 15px;
+        margin: 0 0 10px;
+      }
+      .lockhead {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        font-weight: 700;
+      }
+      /* TeamSectionNav — plain mono links on a bordered sticky bar, as shipped */
+      .navtrack {
+        gap: 4px;
+        align-items: center;
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+      .rowbox:has(.navtrack) {
+        border: none;
+        border-bottom: 2px solid var(--ink);
+        background: var(--cream);
+      }
+      .navitem {
+        flex-shrink: 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink);
+        padding: 4px 12px;
+        white-space: nowrap;
+      }
+      .tabletrack {
+        gap: 0;
+        align-items: stretch;
+      }
+      .cell {
+        flex-shrink: 0;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--ink);
+        padding: 8px 14px;
+        white-space: nowrap;
+        border-right: 1px solid var(--paper-edge);
+      }
+      .cell:first-child {
+        font-family: var(--font-display);
+        font-style: italic;
+      }
+      button.mini {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+        padding: 4px 8px;
+        cursor: pointer;
+        box-shadow: var(--shadow-paper-sm);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="kicker">#2489 · scrollpijl</p>
+      <h1>Overleeft de gereserveerde rail?</h1>
+      <p class="lede">
+        #2444 gaf elke scroller een pijl in een
+        <strong>gereserveerde rail van 40px, altijd aanwezig vanaf 768px</strong
+        >, zodat een chiprij niet verspringt wanneer de pijl verschijnt. Drie
+        van de acht scrollers zijn sindsdien uit die regel geamendeerd.
+        Hieronder eerst de meting van de vijf die nooit getest zijn, dan vier
+        kandidaat-regels op de échte <code>/nieuws</code>-chiprij.
+      </p>
+
+      <h2>Wat de meting zegt</h2>
+      <p class="lede">
+        Gemeten op productie (<code>kcvv-nextjs.vercel.app</code>) op 320 / 375
+        / 430 / 768 / 1024 / 1280 / 1440. De vraag is:
+        <em class="acc"
+          >verschijnt de pijl überhaupt op een breedte waar de rail gereserveerd
+          wordt?</em
+        >
+      </p>
+      <div class="scroll-x">
+        <table class="m">
+          <thead>
+            <tr>
+              <th>Scroller</th>
+              <th>Overloop&nbsp;@1440</th>
+              <th>@1280</th>
+              <th>@1024</th>
+              <th>@768</th>
+              <th>@375</th>
+              <th>Pijl @≥768?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <code>FilterTabs</code> — /nieuws<br /><span
+                  style="color: var(--ink-muted); font-size: 13px"
+                  >13 categorieën, spoor 1309px</span
+                >
+              </td>
+              <td class="num">+93</td>
+              <td class="num">+93</td>
+              <td class="num">+349</td>
+              <td class="num">+605</td>
+              <td class="num">+966</td>
+              <td class="yes">altijd</td>
+            </tr>
+            <tr>
+              <td>
+                <code>FilterTabs</code> — /zoeken<br /><span
+                  style="color: var(--ink-muted); font-size: 13px"
+                  >5 tabs</span
+                >
+              </td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="num">+68</td>
+              <td class="no">nooit</td>
+            </tr>
+            <tr>
+              <td>
+                Verkenner-broodkruimel<br /><span
+                  style="color: var(--ink-muted); font-size: 13px"
+                  >diepste spoor, 6 niveaus = 801px</span
+                >
+              </td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="num">+37</td>
+              <td class="num">+430</td>
+              <td class="no">alleen 768</td>
+            </tr>
+            <tr>
+              <td>
+                Verkenner-podium<br /><span
+                  style="color: var(--ink-muted); font-size: 13px"
+                  >twee assen; boom is <code>max-w-60rem</code></span
+                >
+              </td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="no">nooit</td>
+            </tr>
+            <tr>
+              <td>
+                <code>VolledigOrganigram</code><br /><span
+                  style="color: var(--ink-muted); font-size: 13px"
+                  >diagram, intrinsiek 2391px</span
+                >
+              </td>
+              <td class="num">+1175</td>
+              <td class="num">+1175</td>
+              <td class="num">+1431</td>
+              <td class="num">+1687</td>
+              <td class="num">+2048</td>
+              <td class="yes">altijd</td>
+            </tr>
+            <tr>
+              <td>
+                Kaartslider<br /><span
+                  style="color: var(--ink-muted); font-size: 13px"
+                  >2 kaarten = 601px</span
+                >
+              </td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+              <td class="num">+258</td>
+              <td class="no">nooit</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="lede" style="margin-top: 14px">
+        Vier van de zes halen de pijl <strong>nooit</strong> op een breedte waar
+        de rail gereserveerd is — daar houdt de rail 40px leeg voor iets dat er
+        niet kan komen. De twee die hem wél halen, halen hem op
+        <strong>élke</strong> breedte — daar verschijnt en verdwijnt de pijl
+        nooit bij een resize, dus de rail beschermt tegen niets.
+      </p>
+      <p class="lede">
+        En de structurele vondst: <code>ScrollArrowButton</code> is
+        <code>position: absolute</code> — hij heeft
+        <em class="acc">nergens ooit ruimte in de flow ingenomen</em>. De
+        verspringing die #2444 wilde voorkomen komt niet van de pijl maar van
+        <code>FilterTabs</code>' eigen <code>pl-0 ↔ pl-10</code> /
+        <code>pr-0 ↔ pr-10</code>, die omschakelt
+        <strong>tijdens het scrollen</strong>, niet op een breekpunt. De rail
+        loste een breedteprobleem op dat een scrollprobleem is.
+      </p>
+
+      <div class="locked">
+        <p class="lockhead">★ Vergrendeld — 2026-08-12 · Q1 + Q2</p>
+        <p>
+          <strong>C — de gehouden ruimte volgt de échte overloop.</strong> Loopt
+          het spoor op deze breedte over, dan wordt links én rechts 40px
+          gehouden en verschijnt de pijl. Loopt het niet over, dan is er geen
+          ruimte en geen pijl. Eén conditie,
+          <em class="acc">geen breekpunt in de regel</em>, geen verspringing en
+          geen afgedekte chip.
+        </p>
+        <p>
+          De weg ernaartoe staat er bewust bij: eerst viel de keuze op D (#2444
+          ongewijzigd), toen op D3 (de rail loopt door onder 768). Bij Q3 bleek
+          wat “altijd aanwezig” letterlijk betekent —
+          <strong>80px dode spoorbreedte en twee gedeactiveerde pijlen</strong>
+          op een rij die nergens overloopt, op vijf van de zeven scrollers. Dat
+          is exact de klacht waarmee #2476 de tabellen eruit haalde, en daarop
+          is teruggekomen. <strong>C is D3 zonder de dode pijlen</strong>:
+          overal waar wél gescrold wordt, gedragen ze zich identiek.
+        </p>
+        <p style="margin-bottom: 0">
+          Wat hier nooit in het geding was: de pijl zelf — jersey-deep, 32px,
+          press-down — en het papieren 48px-register van de kaartslider. #2444
+          legde die vast en Q1 heeft ze niet heropend.
+        </p>
+        <p style="margin: 10px 0 0">
+          <button type="button" id="toggleq1" class="mini">
+            Toon de afgewezen opties
+          </button>
+          <button type="button" id="toggleq2" class="mini">Toon Q2</button>
+        </p>
+      </div>
+
+      <div id="q1" hidden>
+        <h2>
+          De vier kandidaten
+          <span style="font-weight: 400; font-size: 0.6em">(afgewezen)</span>
+        </h2>
+        <p class="lede">
+          Elk paneel is de échte <code>/nieuws</code>-rij: 13 chips, 1309px
+          spoor, twee keer getoond — <strong>in rust</strong> en
+          <strong>ná één scroll naar rechts</strong>. Dat tweede exemplaar is
+          nodig:
+          <em class="acc"
+            >A en B zijn in rust niet van elkaar te onderscheiden</em
+          >, het verschil bestaat alleen in beweging. De
+          <span class="swatch"></span> arcering markeert spoorbreedte die de
+          regel permanent opgeeft.
+        </p>
+        <p class="lede">
+          <strong>De kaartslider staat hier bewust niet bij.</strong> Die hangt
+          zijn pijl −16px <em class="acc">buiten</em> het spoor, in de gutter
+          van <code>PageContainer</code>, en heeft daarom nooit padding nodig —
+          pad-of-overlap is een vraag die zich daar niet stelt. Een chiprij kan
+          dat niet: op mobiel is de gutter 16px en zou een pijl van 32px half
+          buiten beeld hangen. Dát is waarom filters en de kaartslider een ander
+          register hebben, en #2444's keuze daarover wordt hier niet heropend.
+          <code>TapedCardGrid</code> scrollt sowieso niet — die breekt af.
+        </p>
+
+        <div class="widthctl">
+          <span>Spoorbreedte:</span>
+          <button type="button" data-w="1216" aria-pressed="true">
+            1216 (@1280+)
+          </button>
+          <button type="button" data-w="960" aria-pressed="false">
+            960 (@1024)
+          </button>
+          <button type="button" data-w="704" aria-pressed="false">
+            704 (@768)
+          </button>
+          <button type="button" data-w="343" aria-pressed="false">
+            343 (@375)
+          </button>
+        </div>
+
+        <div id="cands"></div>
+
+        <p class="legend">
+          <span class="swatch"></span> = spoorbreedte die permanent gereserveerd
+          wordt · de pijl is de 32px jersey-deep knop uit #2444's
+          controleregister, ongewijzigd.
+        </p>
+      </div>
+
+      <div id="q2" hidden>
+        <h2>
+          Q2 — en onder 768px?
+          <span style="font-weight: 400; font-size: 0.6em">(afgewezen)</span>
+        </h2>
+        <p class="lede">
+          #2444 zegt <em class="acc">“altijd aanwezig vanaf 768px”</em> en
+          zwijgt over alles daaronder. Dat is precies de breedte waar deze rijen
+          écht scrollen: <code>/nieuws</code> loopt <strong>966px</strong> over
+          op 375 tegen <strong>93px</strong> op 1440. Vandaag geldt onder 768
+          nog steeds de conditionele padding, dus de verspringing die de rail
+          boven 768 wegneemt, staat eronder gewoon overeind.
+        </p>
+        <p class="lede">
+          Alle vier de panelen hieronder staan op een spoor van
+          <strong>343px</strong> (@375). Elk toont de rij in rust en ná één
+          scroll. Op dit spoor is 80px gehouden ruimte <strong>23%</strong> van
+          de rij — dat is de prijs die de vraag echt stelt.
+        </p>
+
+        <div id="cands2"></div>
+
+        <p class="legend">
+          <span class="swatch"></span> = spoorbreedte die permanent gereserveerd
+          wordt.
+        </p>
+      </div>
+
+      <h2>Her-lock — waarom D en D3 zijn teruggedraaid</h2>
+      <p class="lede">
+        Ja. <strong>“Altijd aanwezig” betekent letterlijk altijd:</strong> #2444
+        schrijft
+        <em class="acc"
+          >“een gereserveerde rail van 40px, altijd aanwezig, die ter plaatse
+          deactiveert in plaats van te verdwijnen”</em
+        >, en D3 rekt “altijd” op tot elke breedte. Een rij die niet overloopt
+        houdt dus 80px vast en toont twee grijze pijlen.
+      </p>
+      <p class="lede">
+        Dat raakt <strong>vijf van de zeven</strong> scrollers — elke rij
+        waarvan de overloop met de breedte verandert: <code>/zoeken</code>,
+        <code>TeamSectionNav</code>, de broodkruimel en beide tabellen. Het is
+        exact de klacht die #2476 maakte:
+        <em class="acc"
+          >“twee gedeactiveerde pijlen op desktop waar niets scrollt, en geen
+          enkele op mobiel waar het wél scrollt.”</em
+        >
+      </p>
+      <p class="lede">
+        Het alternatief is <strong>C</strong> uit Q1, en het kost niets van wat
+        Q2 opleverde: C is al breedte-onafhankelijk —
+        <em class="acc"
+          >loopt het over, hou 80px; loopt het niet over, hou niets</em
+        >
+        — dus het breekpunt verlaat de regel nog steeds.
+        <strong>C is D3 zonder de dode pijlen</strong>, met dezelfde
+        geen-verspringing en geen-afgedekte-chip.
+      </p>
+      <h3
+        style="
+          font-family: var(--font-display);
+          font-size: 19px;
+          margin: 34px 0 4px;
+        "
+      >
+        <code>/zoeken</code> @1280 — vijf tabs, past ruim
+      </h3>
+      <div id="relock"></div>
+
+      <div class="locked">
+        <p class="lockhead">★ Vergrendeld — 2026-08-12 · Q3</p>
+        <p style="margin-bottom: 0">
+          <strong>H2 — alleen een rij losse dingen houdt ruimte.</strong> De
+          eigenschap is <em class="acc">wat er onder de pijl verdwijnt</em>: een
+          chip is een tikdoel, en bedekt betekent onbereikbaar. Een tabelcel en
+          een diagram zijn inhoud waar je langs scrollt — daar mount de pijl
+          bovenop. Dat houdt #2476 heel en geeft die uitzondering een genoemde
+          reden.
+        </p>
+      </div>
+
+      <h2>Q3 — geldt de gehouden ruimte voor élke scroller?</h2>
+      <p class="lede">
+        C beantwoordt <em class="acc">wanneer</em> er ruimte gehouden wordt (bij
+        echte overloop) en <em class="acc">hoeveel</em> (40px, beide zijden).
+        Het beantwoordt niet <strong>waarvoor</strong>. Er is geen
+        onvoorwaardelijke rail meer om een uitzondering op te zijn — de regel
+        beantwoordt zichzelf per breedte — dus wat overblijft is één vraag:
+        krijgt élk overlopend oppervlak die 40px, of alleen een rij losse
+        dingen?
+      </p>
+      <p class="lede">
+        Merk op wat C al gratis oplost. <code>TeamSectionNav</code> krijgt op
+        1440 niets, want daar loopt niets over — #2478's
+        <em class="acc">klacht</em> is daarmee ingewilligd zonder dat #2478's
+        <em class="acc">conclusie</em> nodig is. Het podium krijgt nergens iets,
+        want het loopt nergens over. En #2476's klacht — twee dode pijlen op
+        desktop, geen op mobiel — is precies wat C omdraait. Geen van drieën
+        hoeft nog als uitzondering opgeschreven te worden.
+      </p>
+      <p class="lede">
+        Wat wél een beslissing blijft: een tabel en een diagram lopen op sommige
+        breedtes écht over. Krijgen die dan ook 40px inspringing, of mount de
+        pijl daar gewoon bovenop de inhoud? #2476 heeft daar al
+        <em class="acc">“geen gereserveerde rail op een tabel”</em> over gezegd
+        — de vraag is of dat een eigenschap is of een uitzondering.
+      </p>
+
+      <div id="q3rules"></div>
+
+      <h3
+        style="
+          font-family: var(--font-display);
+          font-size: 19px;
+          margin: 40px 0 4px;
+        "
+      >
+        De zichtbare inzet: een tabel die écht overloopt
+      </h3>
+      <p class="lede" style="font-size: 15px">
+        Een klassementsrij op een spoor van 343px. H1 laat de tabel inspringen,
+        H2 en H3 laten de pijl er bovenop komen. Een chiprij krijgt onder alle
+        drie de regels de 40px — daar is niets te kiezen.
+      </p>
+      <div id="cands3"></div>
+
+      <div class="locked">
+        <p class="lockhead">★ Vergrendeld — 2026-08-12 · Q4</p>
+        <p style="margin-bottom: 0">
+          <strong>I2 — de uitgeputte pijl blijft staan, gedeactiveerd.</strong>
+          De ruimte wordt toch gehouden, dus een leeg gat van 40px aan het begin
+          van elke scrollbare rij verklaart zichzelf niet. Een doffe knop doet
+          dat wel, en wordt levend zodra je scrollt.
+        </p>
+      </div>
+
+      <h2>Q4 — wat doet de uitgeputte richting?</h2>
+      <p class="lede">
+        #2444 schreef
+        <em class="acc"
+          >“deactiveert ter plaatse in plaats van te verdwijnen”</em
+        >, en dat was de tegenhanger van “altijd aanwezig”: de pijl bleef staan
+        om de gereserveerde rail bezet te houden. Die rail is nu voorwaardelijk,
+        dus die reden is weg.
+      </p>
+      <p class="lede">
+        Dit is <strong>niet</strong> de dode knop die bij de her-lock sneuvelde.
+        Daar kón de rij helemaal niet scrollen. Hier scrollt hij wél — de ruimte
+        wordt hoe dan ook gehouden, en alleen één richting is op. De vraag is of
+        dat gat een grijze knop toont of niets.
+      </p>
+      <div id="cands4"></div>
+    </div>
+
+    <script>
+      const CHIPS = [
+        ["Alles", true],
+        ["A-Ploeg", false],
+        ["A-ploeg", false],
+        ["B-ploeg", false],
+        ["Beker Van Brabant", false],
+        ["Beker Van Zemst", false],
+        ["Clubinfo", false],
+        ["Corona", false],
+        ["Evenement", false],
+        ["Football Manager", false],
+        ["Jeugd", false],
+        ["Sponsor", false],
+        ["Transfernieuws", false],
+      ];
+
+      const CANDIDATES = [
+        {
+          id: "A",
+          title: "A — Geen gehouden ruimte. Punt.",
+          note: "De pijl overlapt de chips en er wordt nooit padding gehouden. Mount-on-overflow in zijn puurste vorm: geen rail, geen breekpunt, geen conditie behalve “loopt dit over?”. Kijk naar de tweede rij: de ← pijl verschijnt bovenop de chip die daar toevallig staat en dekt hem af. De rij zelf beweegt niet.",
+          rail: () => [0, 0],
+          pad: () => [0, 0],
+          verdict:
+            "Geen verspringing, geen dode ruimte — maar de pijl dekt de chip die eronder ligt af, en de actieve chip is de eerste.",
+          bad: true,
+        },
+        {
+          id: "B",
+          title: "B — Padding volgt de pijlrichting (vandaag)",
+          note: "Wat er nu staat: pl-10 zodra je naar rechts kunt scrollen, pr-10 zodra je naar links kunt. Beide schakelen midden in de scroll om. In rust is dit niet te onderscheiden van A — het verschil ontstaat pas in beweging: in de tweede rij is de hele rij 40px opzij gesprongen om onder de pijl vandaan te komen.",
+          rail: (o, l, r) => [l ? 40 : 0, r ? 40 : 0],
+          pad: (o, l, r) => [l ? 40 : 0, r ? 40 : 0],
+          verdict:
+            "40px verspringing bij de eerste scroll — scrollLeft 0→40 laat de eerste chip op dezelfde viewport-x staan. Dezelfde reflow-jank die in #2429 werd afgewezen, via een ander mechanisme al verscheept.",
+          bad: true,
+        },
+        {
+          id: "C",
+          title: "C — Padding volgt de overloop, beide zijden, elke breedte",
+          note: "Één conditie in plaats van twee: loopt het spoor überhaupt over, dan wordt links én rechts 40px gehouden — op elke breedte, ook op mobiel. Loopt het niet over, dan niets. Geen breekpunt in de regel.",
+          rail: (o) => (o ? [40, 40] : [0, 0]),
+          pad: (o) => (o ? [40, 40] : [0, 0]),
+          verdict:
+            "Geen verspringing, geen dode ruimte op een rij die niet scrollt. Kost 80px spoor op de rijen die wél scrollen — en het breekpunt van #2444 verdwijnt.",
+          ok: true,
+        },
+        {
+          id: "D",
+          title: "D — #2444 zoals geschreven: 40px rail, altijd, vanaf 768px",
+          note: "De rail is altijd aanwezig vanaf 768px en de pijl deactiveert ter plaatse in plaats van te verdwijnen. Onder 768px geen rail. Zet de spoorbreedte op 343 om te zien wat er op mobiel gebeurt.",
+          rail: (o, l, r, w) => (w >= 704 ? [40, 40] : [0, 0]),
+          pad: (o, l, r, w) => (w >= 704 ? [40, 40] : [0, 0]),
+          disable: true,
+          verdict:
+            "Op /zoeken, het podium, de kaartslider en de broodkruimel houdt dit 80px leeg voor een pijl die daar nooit verschijnt — en op mobiel, waar die rijen wél scrollen, houdt het niets.",
+          bad: true,
+        },
+      ];
+
+      // Q2 — what happens under #2444's 768px gate. Track is pinned to 343px (@375).
+      const CANDIDATES_Q2 = [
+        {
+          id: "D1",
+          title: "D1 — Onder 768 blijft alles zoals het nu is",
+          note: "De rail stopt bij 768; daaronder geldt de conditionele padding van vandaag. Dat is de kleinste verandering — maar de verspringing die de rail boven 768 wegneemt, blijft staan op de breedte waar de rij 966px overloopt in plaats van 93px.",
+          rail: (o, l, r) => [l ? 40 : 0, r ? 40 : 0],
+          pad: (o, l, r) => [l ? 40 : 0, r ? 40 : 0],
+          verdict:
+            "De regel wordt op één site twee dingen: geen verspringing op desktop, wél op mobiel — en mobiel is waar hij scrollt.",
+          bad: true,
+        },
+        {
+          id: "D2",
+          title: "D2 — Onder 768 geen gehouden ruimte",
+          note: "De rail stopt bij 768 en daaronder wordt niets gehouden: de pijl overlapt gewoon de chip die aan de rand staat. Niets beweegt ooit, maar op een spoor van 343px dekt een pijl van 32px een aanzienlijk deel van de zichtbare rij af.",
+          rail: () => [0, 0],
+          pad: () => [0, 0],
+          verdict:
+            "Geen verspringing, maar op mobiel dekt de pijl een chip af op de rij die de meeste chips buiten beeld heeft.",
+          bad: true,
+        },
+        {
+          id: "D3",
+          title: "D3 — De rail loopt door onder 768",
+          note: "Dezelfde 40px links en rechts op élke breedte: het breekpunt verdwijnt uit de regel, niet de rail. Eén regel om te onthouden in plaats van twee, en de rij gedraagt zich op mobiel exact zoals op desktop.",
+          rail: () => [40, 40],
+          pad: () => [40, 40],
+          disable: true,
+          verdict:
+            "Geen verspringing, geen afgedekte chip, één regel op elke breedte — maar 80px van een spoor van 343px is 23% van de rij.",
+          ok: true,
+        },
+        {
+          id: "D4",
+          title: "D4 — Onder 768 geen pijl",
+          note: "Op aanraking veeg je; de pijl is een aanwijzer-affordance. Hij verdwijnt onder 768 en de afgesneden chip aan de rand is de enige hint dat er meer is. Nul gehouden ruimte, nul verspringing, nul afgedekte chips — en één tik minder die 200px opschuift op een rij die er 966 heeft.",
+          rail: () => [0, 0],
+          pad: () => [0, 0],
+          noArrow: true,
+          verdict:
+            "De volle 343px gaat naar chips. Maar FilterTabs heeft géén fade of gradient — de afgesneden chip is dan de énige aanwijzing dat de rij scrollt.",
+        },
+      ];
+
+      // Q3 — which surfaces carry the rail. Each rule decides all seven
+      // rail-eligible scrollers (the card slider is the paper register, settled by #2444).
+      const SURFACES = [
+        ["FilterTabs (6 rijen na #2429)", "rij chips", "elke breedte"],
+        ["TeamSectionNav", "rij chips", "≤430"],
+        ["Verkenner-broodkruimel", "rij kruimels", "≤768"],
+        ["VolledigOrganigram", "diagram", "elke breedte"],
+        ["Verkenner-podium", "diagram, 2 assen", "nooit"],
+        ["HtmlTableBlock", "tabel", "mobiel"],
+        ["StandingsTable", "tabel", "320 (8px)"],
+      ];
+
+      const RULES = [
+        {
+          id: "H1",
+          title: "H1 — Élk overlopend oppervlak krijgt de 40px",
+          note: "Eén regel, geen lijst, geen eigenschap om te beoordelen. Loopt het over, dan springt het 40px in — chiprij, kruimelrij, tabel, diagram, alles hetzelfde. Het podium krijgt nog steeds niets, want dat loopt nergens over.",
+          rail: [true, true, true, true, false, true, true],
+          cost: "Amendeert #2476's “geen gereserveerde rail op een tabel” — al is dat alleen op de breedtes waar de tabel echt overloopt. Op 343px kost het 80px van de leesbreedte van een tabel.",
+        },
+        {
+          id: "H2",
+          title: "H2 — Alleen een rij losse dingen",
+          note: "De eigenschap is wat er onder de pijl verdwijnt. Een chip is een tikdoel: raakt hij bedekt, dan is hij onbereikbaar. Een tabelcel en een diagram zijn inhoud waar je langs scrollt — de pijl legt zich er even overheen en je scrollt verder.",
+          rail: [true, true, true, false, false, false, false],
+          cost: "Houdt #2476 heel en geeft die uitzondering eindelijk een genoemde reden in plaats van “het is een tabel”. Een link in een tabelcel kan kort onder de pijl liggen.",
+          ok: true,
+        },
+        {
+          id: "H3",
+          title: "H3 — Een rij losse dingen, plus alles wat aanklikbaar is",
+          note: "Als H2, maar een tabel die links in zijn cellen draagt (#2476 regel 6) telt mee als tikdoel en krijgt de inspringing ook. Een diagram en een tabel zonder links niet.",
+          rail: [true, true, true, false, false, true, false],
+          cost: "De regel wordt afhankelijk van de inhoud van een cel: dezelfde tabelcomponent springt wél of niet in, afhankelijk van wat de redacteur erin zet.",
+        },
+      ];
+
+      function buildRules() {
+        const host = document.getElementById("q3rules");
+        host.innerHTML = "";
+        for (const r of RULES) {
+          const el = document.createElement("div");
+          el.className = "cand";
+          let rows = "";
+          SURFACES.forEach(([name, kind, when], i) => {
+            rows +=
+              "<tr><td>" +
+              name +
+              "</td><td style='color:var(--ink-muted)'>" +
+              kind +
+              "</td><td class='num' style='color:var(--ink-muted)'>" +
+              when +
+              "</td><td class='" +
+              (r.rail[i] ? "yes" : "no") +
+              "'>" +
+              (r.rail[i] ? "rail" : "geen rail") +
+              "</td></tr>";
+          });
+          el.innerHTML =
+            "<h3>" +
+            r.title +
+            "</h3><p class='note'>" +
+            r.note +
+            "</p><div class='scroll-x'><table class='m'><thead><tr><th>Scroller</th><th>Wat je scrollt</th><th>Loopt over</th><th>Onder deze regel</th></tr></thead><tbody>" +
+            rows +
+            "</tbody></table></div><p class='verdict'><b class='" +
+            (r.ok ? "ok" : "") +
+            "'>" +
+            (r.ok ? "✓" : "✗") +
+            "</b> " +
+            r.cost +
+            "</p>";
+          host.appendChild(el);
+        }
+      }
+
+      const CANDIDATES_Q3 = [
+        {
+          id: "inset",
+          title: "H1 — de tabel springt 40px in",
+          note: "De pijl raakt geen enkele cel, maar 80px van 343px gaat naar lege marge in plaats van naar kolommen.",
+          rail: () => [40, 40],
+          pad: () => [40, 40],
+          chips: "table",
+          rowName: "StandingsTable @320",
+          verdict: "Niets bedekt · 263px voor de tabel zelf.",
+        },
+        {
+          id: "overlay",
+          title: "H2 · H3 — de pijl legt zich over de cel",
+          note: "Volle 343px voor kolommen. De pijl bedekt tijdelijk de cel aan de rand — bij een klassement is dat de kolom # of de puntenkolom.",
+          rail: () => [0, 0],
+          pad: () => [0, 0],
+          chips: "table",
+          rowName: "StandingsTable @320",
+          verdict: "Volle leesbreedte · de randcel ligt onder de pijl.",
+          ok: true,
+        },
+      ];
+
+      const TABLE_ROW = [
+        ["#", false],
+        ["Ploeg", false],
+        ["M", false],
+        ["W", false],
+        ["G", false],
+        ["V", false],
+        ["DV", false],
+        ["DT", false],
+        ["Ptn", false],
+      ];
+
+      const ZOEKEN_TABS = [
+        ["Alles 41", true],
+        ["Nieuws 24", false],
+        ["Spelers 11", false],
+        ["Staf 4", false],
+        ["Ploegen 2", false],
+      ];
+
+      const RELOCK = [
+        {
+          id: "D-relock",
+          title: "D + D3 — rail altijd aanwezig",
+          note: "Vijf tabs die ruim passen, en toch 80px vastgehouden met twee grijze pijlen die niets kunnen doen. Er valt hier nooit iets te scrollen, op geen enkele desktopbreedte.",
+          rail: () => [40, 40],
+          pad: () => [40, 40],
+          disable: true,
+          chips: "zoeken",
+          single: true,
+          verdict:
+            "80px dode spoorbreedte en twee dode knoppen op een rij die nergens boven 430px overloopt.",
+          bad: true,
+        },
+        {
+          id: "C-relock",
+          title: "C — ruimte alleen als er echt iets overloopt",
+          note: "Dezelfde regel, één conditie erbij: loopt het over? Nee, dus geen rail en geen pijl. Op mobiel, waar deze rij wél overloopt, gedraagt hij zich identiek aan D3 — 80px, geen verspringing, geen afgedekte chip.",
+          rail: (o) => (o ? [40, 40] : [0, 0]),
+          pad: (o) => (o ? [40, 40] : [0, 0]),
+          chips: "zoeken",
+          single: true,
+          verdict:
+            "Volle spoorbreedte waar niets scrollt, identiek aan D3 waar wél iets scrollt.",
+          ok: true,
+        },
+      ];
+
+      const CANDIDATES_Q4 = [
+        {
+          id: "unmount",
+          title: "I1 — de uitgeputte pijl verdwijnt",
+          note: "Wat FilterTabs en de kaartslider vandaag doen. Aan het begin van de rij staat links 40px gehouden ruimte zonder knop erin.",
+          rail: () => [40, 40],
+          pad: () => [40, 40],
+          chips: "chips",
+          rowName: "/nieuws @375",
+          single: true,
+          verdict:
+            "Geen dode knop · maar 40px gehouden leegte zonder zichtbare reden.",
+        },
+        {
+          id: "disable",
+          title: "I2 — de uitgeputte pijl blijft staan, gedeactiveerd",
+          note: "#2444's formulering, nu binnen ruimte die alleen gehouden wordt als er echt gescrold kan worden. De grijze knop verklaart waar het gat voor dient en wordt levend zodra je scrollt.",
+          rail: () => [40, 40],
+          pad: () => [40, 40],
+          disable: true,
+          chips: "chips",
+          rowName: "/nieuws @375",
+          single: true,
+          verdict:
+            "Het gat is zelfverklarend · de knop is dof zolang die richting op is.",
+          ok: true,
+        },
+      ];
+
+      const NAV_ITEMS = [
+        ["Klassement", false],
+        ["Wedstrijden", false],
+        ["Spelers", false],
+        ["Staf", false],
+        ["Info", false],
+      ];
+
+      let TRACK_W = 1216;
+
+      function build() {
+        buildGroup("cands", CANDIDATES, () => TRACK_W);
+      }
+
+      function buildGroup(hostId, list, widthOf) {
+        const host = document.getElementById(hostId);
+        host.innerHTML = "";
+        for (const c of list) {
+          const panel = document.createElement("div");
+          panel.className = "cand";
+          panel.innerHTML =
+            "<h3>" + c.title + "</h3><p class='note'>" + c.note + "</p>";
+          host.appendChild(panel);
+
+          // Two instances of the same row: at rest, and after one scroll right.
+          // A and B are byte-identical at rest — the difference is only in motion,
+          // so showing rest alone is what made them look the same.
+          const cases = c.single
+            ? [["", 0]]
+            : [
+                [(c.rowName || "/nieuws") + " — in rust", 0],
+                [
+                  (c.rowName || "/nieuws") +
+                    " — ná één scroll naar rechts (200px)",
+                  200,
+                ],
+              ];
+          for (const [caseLabel, preScroll] of cases) {
+            if (caseLabel) {
+              const cl = document.createElement("p");
+              cl.className = "caselabel";
+              cl.textContent = caseLabel;
+              panel.appendChild(cl);
+            }
+
+            const stage = document.createElement("div");
+            stage.className = "stage";
+            stage.style.maxWidth = widthOf() + "px";
+
+            const box = document.createElement("div");
+            box.className = "rowbox showrail";
+
+            const track = document.createElement("div");
+            track.className =
+              "track" +
+              (c.chips === "nav" ? " navtrack" : "") +
+              (c.chips === "table" ? " tabletrack" : "");
+            const source =
+              c.chips === "nav"
+                ? NAV_ITEMS
+                : c.chips === "zoeken"
+                  ? ZOEKEN_TABS
+                  : c.chips === "table"
+                    ? TABLE_ROW
+                    : CHIPS;
+            for (const [label, active] of source) {
+              const chip = document.createElement("span");
+              chip.className =
+                c.chips === "nav"
+                  ? "navitem"
+                  : c.chips === "table"
+                    ? "cell"
+                    : "chip" + (active ? " active" : "");
+              chip.textContent = label;
+              track.appendChild(chip);
+            }
+
+            const al = document.createElement("button");
+            al.type = "button";
+            al.className = "arrow l";
+            al.textContent = "←";
+            const ar = document.createElement("button");
+            ar.type = "button";
+            ar.className = "arrow r";
+            ar.textContent = "→";
+            al.addEventListener("click", () =>
+              track.scrollTo({
+                left: track.scrollLeft - 200,
+                behavior: "smooth",
+              }),
+            );
+            ar.addEventListener("click", () =>
+              track.scrollTo({
+                left: track.scrollLeft + 200,
+                behavior: "smooth",
+              }),
+            );
+
+            box.appendChild(al);
+            box.appendChild(track);
+            box.appendChild(ar);
+
+            const readout = document.createElement("p");
+            readout.className = "readout";
+
+            stage.appendChild(box);
+            panel.appendChild(stage);
+            panel.appendChild(readout);
+
+            const sync = () => {
+              const overflows = track.scrollWidth - track.clientWidth > 0;
+              const canL = track.scrollLeft > 10;
+              const canR =
+                track.scrollLeft < track.scrollWidth - track.clientWidth - 10;
+              const [rl, rr] = c.rail(overflows, canL, canR, widthOf());
+              const [pl, pr] = c.pad(overflows, canL, canR, widthOf());
+              box.style.setProperty("--rail-l", rl + "px");
+              box.style.setProperty("--rail-r", rr + "px");
+              track.style.paddingLeft = pl + "px";
+              track.style.paddingRight = pr + "px";
+
+              if (c.noArrow) {
+                al.classList.add("hidden");
+                ar.classList.add("hidden");
+              } else if (c.disable) {
+                al.classList.toggle("hidden", rl === 0 && !canL);
+                ar.classList.toggle("hidden", rr === 0 && !canR);
+                al.disabled = !canL;
+                ar.disabled = !canR;
+              } else {
+                al.classList.toggle("hidden", !canL);
+                ar.classList.toggle("hidden", !canR);
+                al.disabled = false;
+                ar.disabled = false;
+              }
+
+              readout.innerHTML =
+                "spoor <b>" +
+                track.clientWidth +
+                "px</b> · inhoud <b>" +
+                track.scrollWidth +
+                "px</b> · gehouden <b>" +
+                (rl + rr) +
+                "px</b> · scrollLeft <b>" +
+                Math.round(track.scrollLeft) +
+                "px</b> · eerste chip op x=<b>" +
+                Math.round(
+                  track.firstElementChild.getBoundingClientRect().left -
+                    track.getBoundingClientRect().left,
+                ) +
+                "px</b>";
+            };
+
+            track.addEventListener("scroll", sync);
+            new ResizeObserver(sync).observe(track);
+            sync();
+            if (preScroll) {
+              track.scrollLeft = preScroll;
+              sync();
+            }
+          }
+
+          const v = document.createElement("p");
+          v.className = "verdict";
+          v.innerHTML =
+            "<b class='" +
+            (c.ok ? "ok" : "") +
+            "'>" +
+            (c.ok ? "✓" : "✗") +
+            "</b> " +
+            c.verdict;
+          panel.appendChild(v);
+        }
+      }
+
+      document.querySelectorAll(".widthctl button").forEach((b) => {
+        b.addEventListener("click", () => {
+          TRACK_W = Number(b.dataset.w);
+          document
+            .querySelectorAll(".widthctl button")
+            .forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+          build();
+        });
+      });
+
+      document.getElementById("toggleq1").addEventListener("click", (e) => {
+        const q1 = document.getElementById("q1");
+        q1.hidden = !q1.hidden;
+        e.target.textContent = q1.hidden
+          ? "Toon de afgewezen opties"
+          : "Verberg de afgewezen opties";
+        if (!q1.hidden) build();
+      });
+
+      document.getElementById("toggleq2").addEventListener("click", (e) => {
+        const q2 = document.getElementById("q2");
+        q2.hidden = !q2.hidden;
+        e.target.textContent = q2.hidden
+          ? "Toon de afgewezen opties"
+          : "Verberg de afgewezen opties";
+        if (!q2.hidden) buildGroup("cands2", CANDIDATES_Q2, () => 343);
+      });
+
+      build();
+      buildGroup("relock", RELOCK, () => 1216);
+      buildRules();
+      buildGroup("cands3", CANDIDATES_Q3, () => 343);
+      buildGroup("cands4", CANDIDATES_Q4, () => 343);
+    </script>
+  </body>
+</html>
