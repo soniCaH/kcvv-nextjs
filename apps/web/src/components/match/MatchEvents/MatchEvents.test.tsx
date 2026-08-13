@@ -80,16 +80,29 @@ describe("MatchEvents", () => {
 
     it("renders a team-logo chip per event row in chronological mode", () => {
       render(<MatchEvents {...defaultProps} />);
-      // The default fixture has 5 home events + 4 away events = 9 total.
-      // The typographic-shield fallback renders a "K" chip for KCVV and a
-      // "K" chip for KFC. Both teams' names start with K, so just look for
-      // the aria-label = full team name.
+      // Both branches of the chip are silent (#2559 rules 3 + 4) — the row
+      // carries the team name instead, see the test below. `data-team` is the
+      // inert hook that keeps the two teams distinguishable here: both names
+      // start with "K", so the rendered initial cannot tell them apart.
       expect(
-        screen.getAllByLabelText("KCVV Elewijt").length,
+        document.querySelectorAll('[data-team="KCVV Elewijt"]').length,
       ).toBeGreaterThanOrEqual(1);
       expect(
-        screen.getAllByLabelText("KFC Turnhout").length,
+        document.querySelectorAll('[data-team="KFC Turnhout"]').length,
       ).toBeGreaterThanOrEqual(1);
+      expect(screen.queryByLabelText("KCVV Elewijt")).not.toBeInTheDocument();
+    });
+
+    it("still names the scoring team to a screen reader", () => {
+      // The chip went silent, and in chronological mode the team is otherwise
+      // conveyed only by which of the two name columns is filled — a purely
+      // visual signal. The row carries the name instead (#2559 rule 1).
+      const { container } = render(<MatchEvents {...defaultProps} />);
+      const srNames = Array.from(container.querySelectorAll(".sr-only")).map(
+        (n) => n.textContent,
+      );
+      expect(srNames).toContain("KCVV Elewijt");
+      expect(srNames).toContain("KFC Turnhout");
     });
   });
 

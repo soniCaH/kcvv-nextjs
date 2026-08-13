@@ -32,7 +32,6 @@ export const Default: Story = {
     title: "3-1 tegen Zemst — de beelden",
     href: "/galerij/zemst-derby",
     coverUrl: fixtureImage("match-action", 0),
-    coverAlt: "Spelmoment",
     imageCount: 24,
     date: "15 januari 2025",
   },

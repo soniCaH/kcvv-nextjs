@@ -93,7 +93,6 @@ export default async function DynamicClubPage({ params }: Props) {
           kicker="Club"
           headline={page.title}
           image={page.heroImageUrl ?? undefined}
-          imageAlt={page.title}
         />
       </PageContainer>
 

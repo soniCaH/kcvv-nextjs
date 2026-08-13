@@ -235,7 +235,7 @@ export function PlayerHero({
           {hasPhoto ? (
             <Image
               src={photoUrl}
-              alt={`${firstName} ${lastName}`}
+              alt=""
               width={400}
               height={533}
               unoptimized

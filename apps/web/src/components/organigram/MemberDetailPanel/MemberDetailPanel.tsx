@@ -428,7 +428,7 @@ function HeaderAvatar({
       {src !== "" ? (
         <Image
           src={src}
-          alt={name}
+          alt=""
           width={54}
           height={54}
           unoptimized

@@ -60,9 +60,8 @@ export const event = defineType({
           name: 'alt',
           title: 'Alt text',
           type: 'string',
-          description: 'Beschrijf de afbeelding voor toegankelijkheid (schermlezers) en SEO.',
-          validation: (r) =>
-            r.required().warning('Geef een beschrijvende alt-tekst voor toegankelijkheid.'),
+          description:
+            'Beschrijf de afbeelding voor de deelkaart (social media) en SEO. Op de pagina zelf is deze foto decoratief: de titel erboven benoemt het evenement al, dus daar krijgt ze een lege alt-tekst.',
         }),
       ],
     }),

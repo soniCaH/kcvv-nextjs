@@ -66,7 +66,6 @@ const mockHeroProps: EditorialHeroProps = {
   date: "3 mei 2026",
   coverImage: {
     url: fixtureImage("article-hero-generic", 0),
-    alt: "Spelers vieren de titel",
   },
 };
 
@@ -75,7 +74,6 @@ const mockUitgelichtArticles: UitgelichtArticle[] = [
     href: "/nieuws/voorbeschouwing-seizoen-26-27",
     title: "Voorbeschouwing op de competitiestart van seizoen 26-27",
     imageUrl: fixtureImage("article-hero-generic", 1),
-    imageAlt: "Trainingssessie",
     date: "14 mei 2026",
     articleType: "interview",
     badge: "Interview",
@@ -84,7 +82,6 @@ const mockUitgelichtArticles: UitgelichtArticle[] = [
     href: "/nieuws/welkom-aaron-daniels",
     title: "Welkom Aaron Daniels: 26-jarige spits versterkt de aanval",
     imageUrl: fixtureImage("article-hero-generic", 2),
-    imageAlt: "Aaron Daniels",
     date: "15 mei 2026",
     articleType: "transfer",
     badge: "Transfer",
@@ -93,7 +90,6 @@ const mockUitgelichtArticles: UitgelichtArticle[] = [
     href: "/nieuws/spelerstornooi-u13",
     title: "Spelerstornooi U13 zaterdag 15 juni — kom supporteren!",
     imageUrl: fixtureImage("article-hero-jeugd", 0),
-    imageAlt: "U13 toernooi",
     date: "16 mei 2026",
     articleType: "event",
     badge: "Evenement",
@@ -108,6 +104,8 @@ const mockFeaturedEvent: FeaturedEventBandEvent = {
   location: "Sportpark Driesput, Elewijt",
   coverImage: {
     url: fixtureImage("event-cover", 0),
+    // `<FeaturedEventBand>` is a homepage surface — #2402 owns applying the
+    // image rule there, so its cover still carries an alt for now.
     alt: "Sponsoravond cover",
   },
   externalLink: { url: "/evenementen/sponsoravond-2026", label: null },
@@ -118,7 +116,6 @@ const mockNewsGridArticles: NewsGridArticle[] = [
     href: "/nieuws/2025-06-20-definitieve-reeksindeling-3e-nationale-bis",
     title: "Definitieve reeksindeling 3e Nationale BIS",
     imageUrl: fixtureImage("article-hero-generic", 3),
-    imageAlt: "Reeksindeling 3e nationale",
     date: "20 juni 2025",
     tags: [{ name: "A-Ploeg" }],
   },
@@ -126,7 +123,6 @@ const mockNewsGridArticles: NewsGridArticle[] = [
     href: "/nieuws/2025-03-25-overlijden-jean-lepage",
     title: "Overlijden Jean Lepage",
     imageUrl: fixtureImage("article-hero-generic", 4),
-    imageAlt: "Jean Lepage tribute",
     date: "25 maart 2025",
     tags: [{ name: "Clubinfo" }],
   },
@@ -134,7 +130,6 @@ const mockNewsGridArticles: NewsGridArticle[] = [
     href: "/nieuws/2025-01-15-winterstage-spanje",
     title: "Winterstage in Spanje: voorbereiding op play-offs",
     imageUrl: fixtureImage("article-hero-generic", 5),
-    imageAlt: "Winterstage",
     date: "15 januari 2025",
     tags: [{ name: "A-Ploeg" }, { name: "Training" }],
   },
@@ -142,7 +137,6 @@ const mockNewsGridArticles: NewsGridArticle[] = [
     href: "/nieuws/2025-01-10-jeugdwerking-uitbreiding",
     title: "Jeugdwerking breidt uit met nieuwe trainers",
     imageUrl: fixtureImage("article-hero-jeugd", 1),
-    imageAlt: "Jeugdtraining",
     date: "10 januari 2025",
     tags: [{ name: "Jeugd" }],
   },
@@ -150,7 +144,6 @@ const mockNewsGridArticles: NewsGridArticle[] = [
     href: "/nieuws/2025-01-05-nieuwe-sponsor",
     title: "Nieuwe hoofdsponsor voor seizoen 2025-2026",
     imageUrl: fixtureImage("article-hero-generic", 6),
-    imageAlt: "Sponsorcontract",
     date: "5 januari 2025",
     tags: [{ name: "Sponsoring" }],
   },
@@ -158,7 +151,6 @@ const mockNewsGridArticles: NewsGridArticle[] = [
     href: "/nieuws/2024-12-15-jaaroverzicht",
     title: "Jaaroverzicht 2024: hoogtepunten van de A-ploeg",
     imageUrl: fixtureImage("article-hero-generic", 7),
-    imageAlt: "Jaaroverzicht 2024",
     date: "15 december 2024",
     tags: [{ name: "A-Ploeg" }],
   },

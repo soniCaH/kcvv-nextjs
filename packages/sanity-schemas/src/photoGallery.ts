@@ -97,7 +97,7 @@ export const photoGallery = defineType({
               title: 'Alt text',
               type: 'string',
               description:
-                'Beschrijf de foto voor toegankelijkheid (schermlezers) en SEO. Niet hetzelfde als het onderschrift. Laat je dit leeg, dan gebruikt de site het onderschrift als alt-tekst.',
+                'Beschrijf de foto voor toegankelijkheid (schermlezers) en SEO. Niet hetzelfde als het onderschrift — dat staat er zichtbaar bij en wordt niet meer als alt-tekst hergebruikt. Laat je dit leeg, dan zegt de foto haar positie in de reeks ("Foto 12 van 55").',
               validation: (r) =>
                 r.required().warning('Geef een beschrijvende alt-tekst voor toegankelijkheid.'),
             }),

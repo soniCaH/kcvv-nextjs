@@ -25,7 +25,6 @@ export interface NewsCardProps {
   /** Optional — cards without href are non-interactive. */
   href?: string;
   imageUrl?: string;
-  imageAlt?: string;
   /**
    * Sanity `metadata.lqip` data-URI for a `next/image` blur placeholder.
    * Omitted → no placeholder (the historical default). Used by gallery cards
@@ -165,7 +164,6 @@ export const NewsCard = ({
   title,
   href,
   imageUrl,
-  imageAlt,
   imageLqip,
   badge,
   typeLabel,
@@ -253,7 +251,7 @@ export const NewsCard = ({
         {imageUrl ? (
           <Image
             src={imageUrl}
-            alt={imageAlt ?? title}
+            alt=""
             fill
             className="object-cover"
             style={{ filter: "var(--filter-photo-newsprint)" }}

@@ -8,6 +8,7 @@
 The component is **decorative only**. Originally master design §5.1 step 9 placed `<JerseyShirt>` inside the WebshopStrip as a 4-up product row — that is now scoped out. Real product photography is required to drive webshop conversions; illustrations don't sell shirts.
 
 Remaining use case (master design §5.1 step 8 — YouthBlock):
+
 - A single decorative jersey tile on a `<TapedCard>`, sitting inside the full-bleed jersey-bg youth-block band.
 - An optional `letterOverlay` (e.g. `"U11"`, `"A"`) painted across the chest in display 900.
 
@@ -52,10 +53,10 @@ The torso silhouette must be **byte-identical** to the path used in `option-b-st
 type JerseyShirtProps = {
   /** Optional editor-supplied letter overlay (e.g. "U11", "A"). Rendered in Freight Display 900 over the chest. */
   letterOverlay?: string;
-  /** Optional accessible label, e.g. "U11 jersey". Defaults to "KCVV jersey". */
-  ariaLabel?: string;
 };
 ```
+
+The `ariaLabel` prop was removed by [#2559](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2559), which made this doc's own "purely decorative" claim binding: the shirt is one drawing standing in for everybody, so it identifies nobody and takes `aria-hidden` rather than a name.
 
 No variants, no kit selector, no sponsor slot.
 
@@ -65,9 +66,9 @@ No variants, no kit selector, no sponsor slot.
 
 ## A11y
 
-- Wrap the SVG composition in `<figure aria-label={ariaLabel}>` so assistive tech reads the illustration as a labelled figure.
+- Wrap the SVG composition in `<figure aria-hidden="true">`. Superseded by [#2559](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2559): the figure was originally `aria-label={ariaLabel}`, but one drawing standing in for everybody identifies nobody, so the whole illustration is hidden from assistive tech rather than labelled.
 - Underprint and overprint SVGs are decorative — `aria-hidden="true"`.
-- Letter overlay is decorative when it duplicates surrounding context (e.g. the YouthBlock kicker already says `U11`); if used standalone, the `ariaLabel` prop must include the letter (`ariaLabel="U11 jersey"`).
+- The letter overlay is always decorative. Whatever it stands for is named by the surrounding context (the YouthBlock kicker already says `U11`, the error page's mono code line already says `404`); a standalone consumer names it in the surface, not on the shirt.
 
 ## Reference renders
 
@@ -88,6 +89,6 @@ No variants, no kit selector, no sponsor slot.
 - [ ] Torso path + V-collar + stripe positions reused **verbatim** from `option-b-stamped-block-print.html` `#player-figure` markup. Implementation extracts paths to a shared module.
 - [ ] Optional `letterOverlay` prop, no Sanity field; calling page supplies the value.
 - [ ] No sponsors, no Celtic green/white stripes, no photo-realism.
-- [ ] `<figure>` wrapper with `aria-label`; SVGs `aria-hidden`.
+- [ ] `<figure>` wrapper and SVGs all `aria-hidden` (amended by #2559 — was `aria-label` on the figure).
 
 Reply "approved" — Checkpoint A is then fully locked.

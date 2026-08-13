@@ -22,7 +22,6 @@ const sampleArticle = (
   href: "/nieuws/test",
   title: "Test artikel",
   imageUrl: "/test.jpg",
-  imageAlt: "Test image",
   date: "14 mei 2026",
   ...over,
 });

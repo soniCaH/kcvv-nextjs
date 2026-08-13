@@ -42,7 +42,7 @@ export function toEditorialHeroProps(article: ArticleVM): EditorialHeroProps {
     // way the detail page does rather than render an empty dek slot.
     lead: article.lead?.trim() || undefined,
     coverImage: article.coverImageUrl
-      ? { url: article.coverImageUrl, alt: article.title }
+      ? { url: article.coverImageUrl }
       : undefined,
     date: article.publishedAt
       ? formatArticleDate(article.publishedAt)

@@ -240,10 +240,7 @@ describe("<QARow>", () => {
       fullName: "Julien & Niels",
       role: "Unaniem",
       answer: "Het moment dat we samen besloten door te gaan.",
-      cluster: [
-        { firstName: "Julien", fullName: "Julien Verschaeve" },
-        { firstName: "Niels", fullName: "Niels Peeters" },
-      ],
+      cluster: [{ firstName: "Julien" }, { firstName: "Niels" }],
     });
 
     it("renders an overlapping monogram cluster instead of a single avatar", () => {

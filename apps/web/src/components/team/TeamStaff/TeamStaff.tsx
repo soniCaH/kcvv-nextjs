@@ -84,7 +84,7 @@ function StaffCard({ member }: { member: TeamStaffMemberData }) {
         {hasPhoto ? (
           <Image
             src={imageUrl}
-            alt={`${member.firstName} ${member.lastName}`}
+            alt=""
             width={64}
             height={64}
             unoptimized

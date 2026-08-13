@@ -18,7 +18,6 @@ const makeArticle = (
   href: `/nieuws/article-${n}`,
   title: `Article ${n}`,
   imageUrl: `/images/article-${n}.jpg`,
-  imageAlt: `Article ${n} image`,
   date: `${n} januari 2025`,
   tags: [{ name: `Tag${n}` }],
   ...over,

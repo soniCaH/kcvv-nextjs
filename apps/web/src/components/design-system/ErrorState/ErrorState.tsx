@@ -130,13 +130,9 @@ export function ErrorState({
           tape={{ color: "warm", length: "md" }}
           className="mb-7"
         >
-          <JerseyShirt
-            letterOverlay={code}
-            // Generic label — the code itself is already announced by the mono
-            // code line, so the decorative shirt avoids re-announcing it.
-            ariaLabel="KCVV-shirt"
-            className="h-40 w-40"
-          />
+          {/* The shirt is a silent artefact (#2559 rule 4); the code it
+              carries is already announced by the mono code line below. */}
+          <JerseyShirt letterOverlay={code} className="h-40 w-40" />
         </TapedCard>
 
         <p className={CODE_LINE_CLASS}>{codeLine}</p>

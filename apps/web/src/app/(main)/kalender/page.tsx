@@ -177,7 +177,6 @@ export default async function CalendarPage() {
           headline="Wedstrijdkalender"
           lead="Bekijk alle wedstrijden en activiteiten van KCVV Elewijt."
           image="/images/youth-trainers.jpg"
-          imageAlt="KCVV jeugdtraining"
         />
       </PageContainer>
 

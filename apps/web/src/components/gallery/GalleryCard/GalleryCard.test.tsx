@@ -40,10 +40,9 @@ describe("GalleryCard", () => {
   });
 
   it("renders the cover image when provided", () => {
-    render(
-      <GalleryCard {...defaultProps} coverUrl="/cover.webp" coverAlt="Cover" />,
-    );
-    expect(screen.getByAltText("Cover")).toBeInTheDocument();
+    render(<GalleryCard {...defaultProps} coverUrl="/cover.webp" />);
+    // The card title names the cover in the same section (#2559 rule 1).
+    expect(document.querySelector("img")).toHaveAttribute("alt", "");
     expect(
       screen.queryByTestId("newscard-image-fallback"),
     ).not.toBeInTheDocument();

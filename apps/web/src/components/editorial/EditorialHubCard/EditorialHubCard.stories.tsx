@@ -54,7 +54,6 @@ export const News: Story = {
     title: "U15 wint in stijl tegen Wolvertem",
     arrowText: "Lees meer",
     imageUrl: "/images/youth-trainers.jpg",
-    imageAlt: "U15-spelers vieren een doelpunt",
   },
 };
 

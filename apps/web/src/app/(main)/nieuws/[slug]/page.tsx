@@ -119,7 +119,7 @@ function renderArticleHero({
   // become `undefined` so the hero skips the figure rather than rendering a
   // broken image.
   const landscape = article.coverImageUrl?.trim() || undefined;
-  const landscapeCover = landscape ? { url: landscape, alt: title } : undefined;
+  const landscapeCover = landscape ? { url: landscape } : undefined;
 
   switch (article.articleType) {
     case "interview":

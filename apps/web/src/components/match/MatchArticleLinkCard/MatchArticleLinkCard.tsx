@@ -110,7 +110,7 @@ export function MatchArticleLinkCard({
           {article.coverImageUrl ? (
             <Image
               src={article.coverImageUrl}
-              alt={article.title}
+              alt=""
               fill
               className="object-cover"
               sizes="(max-width: 1040px) 100vw, 1040px"

@@ -151,10 +151,7 @@ export const UnanimousRespondent: Story = {
         firstName: "Julien",
         fullName: "Julien & Niels",
         role: "Unaniem",
-        cluster: [
-          { firstName: "Julien", fullName: "Julien Verschaeve" },
-          { firstName: "Niels", fullName: "Niels Peeters" },
-        ],
+        cluster: [{ firstName: "Julien" }, { firstName: "Niels" }],
         answer:
           "Het moment dat we samen besloten door te gaan, ondanks de tegenslagen. Vanaf dan trokken we aan hetzelfde zeel.",
       },

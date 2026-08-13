@@ -55,25 +55,24 @@ describe("EditorialHero — shell + placement", () => {
         {...SHARED}
         coverImage={{
           url: "https://example.com/cover.jpg",
-          alt: "Spelers vieren een doelpunt",
         }}
       />,
     );
-    expect(
-      screen.getByAltText("Spelers vieren een doelpunt"),
-    ).toBeInTheDocument();
+    // #2559 rule 1: the hero's own <h1> names the article, so the cover is
+    // decorative and drops out of the accessibility tree.
+    expect(document.querySelector("img")).toHaveAttribute("alt", "");
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
   it("eager-loads the cover image when priority is set (PERF-1), else lazy-loads", () => {
     const cover = {
       url: "https://example.com/cover.jpg",
-      alt: "Cover",
     };
     const { rerender } = render(
       <EditorialHero variant="announcement" {...SHARED} coverImage={cover} />,
     );
     // Default: below-fold consumers keep next/image's lazy-loading.
-    expect(screen.getByAltText("Cover")).toHaveAttribute("loading", "lazy");
+    expect(document.querySelector("img")).toHaveAttribute("loading", "lazy");
 
     rerender(
       <EditorialHero
@@ -84,7 +83,10 @@ describe("EditorialHero — shell + placement", () => {
       />,
     );
     // priority → next/image drops lazy-loading for the LCP hero.
-    expect(screen.getByAltText("Cover")).not.toHaveAttribute("loading", "lazy");
+    expect(document.querySelector("img")).not.toHaveAttribute(
+      "loading",
+      "lazy",
+    );
   });
 
   it("wraps the hero in an <a href='/nieuws/{slug}'> for placement='homepage'", () => {
@@ -150,7 +152,6 @@ describe("EditorialHero — shell + placement", () => {
         slug="zomer-2026"
         coverImage={{
           url: "/test-cover.jpg",
-          alt: "Spelers vieren een doelpunt",
         }}
       />,
     );
@@ -270,7 +271,7 @@ describe("EditorialHero — event variant", () => {
       <EditorialHero
         variant="event"
         {...SHARED}
-        coverImage={{ url: "https://x.com/cover.jpg", alt: "Cover" }}
+        coverImage={{ url: "https://x.com/cover.jpg" }}
         feature={{ date: "2026-06-15", title: "Tornooi" }}
       />,
     );
@@ -441,7 +442,7 @@ describe("EditorialHero — transfer variant", () => {
 // ─── Match variant (5.d-mat H3 score-forward hero) ──────────────────────────
 
 describe("EditorialHero — match variant", () => {
-  const COVER = { url: "/cover.jpg", alt: "Cover" };
+  const COVER = { url: "/cover.jpg" };
   const RECAP_MATCH = {
     homeTeam: { name: "KCVV Elewijt" },
     awayTeam: { name: "Racing Mechelen" },

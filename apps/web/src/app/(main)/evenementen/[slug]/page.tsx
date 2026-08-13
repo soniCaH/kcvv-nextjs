@@ -149,7 +149,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
             event.coverImageUrl ? (
               <Image
                 src={event.coverImageUrl}
-                alt={event.coverImageAlt || event.title}
+                alt=""
                 fill
                 priority
                 sizes="(min-width: 768px) 760px, 100vw"

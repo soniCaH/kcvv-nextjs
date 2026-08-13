@@ -11,7 +11,6 @@ import { SubjectAvatar } from "../SubjectAvatar";
 // to `<PullQuote>`.
 interface AvatarStoryArgs extends Omit<PullQuoteProps, "avatarSlot"> {
   avatarFirstName: string;
-  avatarFullName?: string;
   avatarPhotoUrl?: string;
 }
 
@@ -35,7 +34,6 @@ type AvatarStory = StoryObj<AvatarStoryArgs>;
 
 function renderWithAvatar({
   avatarFirstName,
-  avatarFullName,
   avatarPhotoUrl,
   ...pullQuoteProps
 }: AvatarStoryArgs) {
@@ -45,7 +43,6 @@ function renderWithAvatar({
       avatarSlot={
         <SubjectAvatar
           firstName={avatarFirstName}
-          fullName={avatarFullName}
           photoUrl={avatarPhotoUrl}
           scale="attribution"
         />
@@ -125,7 +122,6 @@ export const WithSubjectAvatar: AvatarStory = {
     attribution: { name: "Maxim Breugelmans", role: "A-PLOEG" },
     children: "Een tribune die zingt is meer waard dan welke aanwinst dan ook.",
     avatarFirstName: "Maxim",
-    avatarFullName: "Maxim Breugelmans",
     avatarPhotoUrl: fixtureImage("player-portrait", 0),
   },
   render: renderWithAvatar,
@@ -140,7 +136,6 @@ export const WithSubjectAvatarMonogramFallback: AvatarStory = {
     children:
       "We bouwen geen succesverhaal in één seizoen — we bouwen een club voor de volgende vijftig jaar.",
     avatarFirstName: "Anouk",
-    avatarFullName: "Anouk De Wit",
   },
   render: renderWithAvatar,
 };
@@ -159,7 +154,6 @@ export const WithSubjectAvatarToneInk: AvatarStory = {
     children:
       "We hebben de kleedkamer in de derde minuut weer wakker gekregen.",
     avatarFirstName: "Wim",
-    avatarFullName: "Wim Govaerts",
     avatarPhotoUrl: fixtureImage("staff-portrait", 0),
   },
   render: renderWithAvatar,

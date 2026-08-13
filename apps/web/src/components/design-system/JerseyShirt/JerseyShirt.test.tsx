@@ -3,16 +3,14 @@ import { describe, expect, it } from "vitest";
 import { JerseyShirt } from "./JerseyShirt";
 
 describe("JerseyShirt", () => {
-  it("renders a <figure> with the default aria-label", () => {
-    render(<JerseyShirt />);
-    const figure = screen.getByRole("figure");
-    expect(figure).toHaveAttribute("aria-label", "KCVV jersey");
-  });
-
-  it("respects a custom aria-label", () => {
-    render(<JerseyShirt ariaLabel="U11 jersey" letterOverlay="U11" />);
-    const figure = screen.getByRole("figure");
-    expect(figure).toHaveAttribute("aria-label", "U11 jersey");
+  it("is silent — an artefact is not a likeness (#2559 rule 4)", () => {
+    // The same drawing stands in for all 294 players, so it identifies nobody.
+    // It takes no accessible name and there is no prop to give it one.
+    const { container } = render(<JerseyShirt />);
+    const figure = container.querySelector("figure");
+    expect(figure).toHaveAttribute("aria-hidden", "true");
+    expect(figure).not.toHaveAttribute("aria-label");
+    expect(screen.queryByRole("figure")).not.toBeInTheDocument();
   });
 
   it("does not render the letter overlay when letterOverlay is omitted", () => {
@@ -26,16 +24,17 @@ describe("JerseyShirt", () => {
   });
 
   it("renders the letter overlay when supplied, marked aria-hidden", () => {
-    render(<JerseyShirt letterOverlay="U11" ariaLabel="U11 jersey" />);
+    render(<JerseyShirt letterOverlay="U11" />);
     const overlay = screen.getByText("U11");
     expect(overlay).toHaveAttribute("aria-hidden", "true");
   });
 
-  it("marks both print-pass layers as aria-hidden so AT only sees the figure label", () => {
+  it("marks the figure and both print-pass layers as aria-hidden", () => {
     const { container } = render(<JerseyShirt />);
     const hiddenLayers = container.querySelectorAll('[aria-hidden="true"]');
-    // 2 print passes (underprint + overprint); no overlay in default render.
-    expect(hiddenLayers).toHaveLength(2);
+    // The figure itself + 2 print passes (underprint + overprint); no overlay
+    // in the default render.
+    expect(hiddenLayers).toHaveLength(3);
   });
 
   it("renders all stripe + collar + outline paths verbatim from the shared paths module", () => {

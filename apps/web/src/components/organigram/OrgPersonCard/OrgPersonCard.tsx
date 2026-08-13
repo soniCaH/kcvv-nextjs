@@ -181,7 +181,7 @@ function SingleAvatar({
       {hasPhoto ? (
         <Image
           src={src}
-          alt={name}
+          alt=""
           width={cfg.avatarPx}
           height={cfg.avatarPx}
           unoptimized
@@ -226,7 +226,7 @@ function DualAvatar({
         {hasPhoto ? (
           <Image
             src={src}
-            alt={member?.name ?? ""}
+            alt=""
             width={cfg.dualCirclePx}
             height={cfg.dualCirclePx}
             unoptimized

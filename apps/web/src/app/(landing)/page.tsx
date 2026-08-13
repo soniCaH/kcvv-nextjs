@@ -132,7 +132,6 @@ function toUitgelichtArticle(article: ArticleVM): UitgelichtArticle {
     href: `/nieuws/${article.slug}`,
     title: article.title,
     imageUrl: article.coverImageUrl ?? undefined,
-    imageAlt: article.title,
     date: article.publishedAt ? formatArticleDate(article.publishedAt) : "",
     articleType: toUitgelichtArticleType(article.articleType),
     badge: article.tags[0],

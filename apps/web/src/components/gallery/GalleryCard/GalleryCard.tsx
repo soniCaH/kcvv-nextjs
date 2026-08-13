@@ -15,7 +15,6 @@ export interface GalleryCardProps {
   href: string;
   /** Cover = first gallery image. Absent → striped fallback. */
   coverUrl?: string | null;
-  coverAlt?: string;
   /** Sanity `metadata.lqip` data-URI for the blur placeholder. */
   coverLqip?: string | null;
   imageCount: number;
@@ -37,7 +36,6 @@ export const GalleryCard = ({
   title,
   href,
   coverUrl,
-  coverAlt,
   coverLqip,
   imageCount,
   date,
@@ -50,7 +48,6 @@ export const GalleryCard = ({
     title={title}
     href={href}
     imageUrl={coverUrl ?? undefined}
-    imageAlt={coverAlt ?? title}
     imageLqip={coverLqip}
     badge={formatImageCount(imageCount)}
     date={date}

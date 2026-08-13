@@ -12,7 +12,6 @@ const GALLERIES: GalleryCardVM[] = [
     imageCount: 24,
     coverUrl: fixtureImage("match-action", 0),
     coverLqip: null,
-    coverAlt: "Spelmoment",
   },
   {
     id: "2",
@@ -22,7 +21,6 @@ const GALLERIES: GalleryCardVM[] = [
     imageCount: 42,
     coverUrl: fixtureImage("team-group", 0),
     coverLqip: null,
-    coverAlt: "Ploegfoto",
   },
   {
     id: "3",
@@ -32,7 +30,6 @@ const GALLERIES: GalleryCardVM[] = [
     imageCount: 58,
     coverUrl: fixtureImage("event-cover", 1),
     coverLqip: null,
-    coverAlt: "Sfeerbeeld",
   },
   {
     id: "4",
@@ -42,7 +39,6 @@ const GALLERIES: GalleryCardVM[] = [
     imageCount: 9,
     coverUrl: fixtureImage("training", 0),
     coverLqip: null,
-    coverAlt: "Training",
   },
   {
     id: "5",
@@ -52,7 +48,6 @@ const GALLERIES: GalleryCardVM[] = [
     imageCount: 31,
     coverUrl: fixtureImage("crowd-atmosphere", 0),
     coverLqip: null,
-    coverAlt: "Supporters",
   },
 ];
 

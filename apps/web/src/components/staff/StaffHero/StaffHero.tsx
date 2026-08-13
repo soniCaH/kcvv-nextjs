@@ -77,7 +77,6 @@ export function StaffHero({
 }: StaffHeroProps) {
   const photoUrl = imageUrl?.trim() ?? "";
   const hasPhoto = photoUrl !== "";
-  const fullName = `${firstName} ${lastName}`.trim();
   const showContact = Boolean(email || phone);
 
   return (
@@ -100,7 +99,7 @@ export function StaffHero({
           {hasPhoto ? (
             <Image
               src={photoUrl}
-              alt={fullName}
+              alt=""
               width={400}
               height={533}
               unoptimized

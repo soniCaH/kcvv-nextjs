@@ -31,20 +31,14 @@ export const Playground: Story = {
   args: {
     scale: "row",
     max: 3,
-    members: [
-      { firstName: "Julien", fullName: "Julien Verschaeve" },
-      { firstName: "Niels", fullName: "Niels Peeters" },
-    ],
+    members: [{ firstName: "Julien" }, { firstName: "Niels" }],
   },
 };
 
 // Duo — the canonical "beide spelers, één antwoord" case.
 export const Duo: Story = {
   args: {
-    members: [
-      { firstName: "Julien", fullName: "Julien Verschaeve" },
-      { firstName: "Niels", fullName: "Niels Peeters" },
-    ],
+    members: [{ firstName: "Julien" }, { firstName: "Niels" }],
   },
 };
 
@@ -52,9 +46,9 @@ export const Duo: Story = {
 export const Trio: Story = {
   args: {
     members: [
-      { firstName: "Julien", fullName: "Julien Verschaeve" },
-      { firstName: "Niels", fullName: "Niels Peeters" },
-      { firstName: "Lars", fullName: "Lars Janssens" },
+      { firstName: "Julien" },
+      { firstName: "Niels" },
+      { firstName: "Lars" },
     ],
   },
 };
@@ -63,11 +57,11 @@ export const Trio: Story = {
 export const Overflow: Story = {
   args: {
     members: [
-      { firstName: "Julien", fullName: "Julien Verschaeve" },
-      { firstName: "Niels", fullName: "Niels Peeters" },
-      { firstName: "Lars", fullName: "Lars Janssens" },
-      { firstName: "Tom", fullName: "Tom De Smet" },
-      { firstName: "Wim", fullName: "Wim Govaerts" },
+      { firstName: "Julien" },
+      { firstName: "Niels" },
+      { firstName: "Lars" },
+      { firstName: "Tom" },
+      { firstName: "Wim" },
     ],
   },
 };
@@ -77,9 +71,6 @@ export const Overflow: Story = {
 export const AttributionScale: Story = {
   args: {
     scale: "attribution",
-    members: [
-      { firstName: "Julien", fullName: "Julien Verschaeve" },
-      { firstName: "Niels", fullName: "Niels Peeters" },
-    ],
+    members: [{ firstName: "Julien" }, { firstName: "Niels" }],
   },
 };

@@ -75,7 +75,6 @@ export const TeamEnrolmentCta = ({
         className="pointer-events-none absolute top-5 right-6 z-0 hidden sm:block"
       >
         <JerseyShirt
-          ariaLabel=""
           letterOverlay={ageGroup}
           className="h-35 w-35 rotate-[4deg]"
         />

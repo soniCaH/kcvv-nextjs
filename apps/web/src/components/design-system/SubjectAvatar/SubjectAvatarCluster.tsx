@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils/cn";
  */
 export interface SubjectAvatarClusterMember {
   firstName: string;
-  fullName?: string;
 }
 
 export interface SubjectAvatarClusterProps {
@@ -47,20 +46,11 @@ export function SubjectAvatarCluster({
   const visible = members.slice(0, max);
   const overflow = members.length - visible.length;
 
-  // Announce the cluster once, as a single labelled image, rather than as N
-  // separate avatars. The `role="img"` container carries the whole group's
-  // name; the discs + overflow counter are decorative reinforcement, hidden
-  // from assistive tech.
-  const names = visible.map((m) => m.fullName ?? m.firstName);
-  const groupLabel =
-    overflow > 0 ? `${names.join(", ")} +${overflow}` : names.join(", ");
-
   return (
     <div
       data-subject-avatar-cluster="true"
       data-count={members.length}
-      role="img"
-      aria-label={groupLabel}
+      aria-hidden="true"
       className={cn("inline-flex items-center", className)}
     >
       <span aria-hidden="true" className="contents">
@@ -68,7 +58,6 @@ export function SubjectAvatarCluster({
           <SubjectAvatar
             key={`${m.firstName}-${i}`}
             firstName={m.firstName}
-            fullName={m.fullName}
             scale={scale}
             className={cn("ring-cream ring-2", i > 0 && OVERLAP[scale])}
           />

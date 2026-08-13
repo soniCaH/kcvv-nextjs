@@ -53,6 +53,8 @@ describe("SearchNoResultsCard", () => {
     render(<SearchNoResultsCard query="elewijt" />);
 
     // <JerseyShirt> renders a labelled <figure>.
-    expect(screen.getByLabelText("KCVV jersey")).toBeInTheDocument();
+    // The jersey artefact is silent (#2559 rule 4) — assert the drawing,
+    // not a label it no longer carries.
+    expect(document.querySelector("figure[aria-hidden]")).toBeInTheDocument();
   });
 });

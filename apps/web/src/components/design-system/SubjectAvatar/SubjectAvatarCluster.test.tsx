@@ -2,10 +2,7 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SubjectAvatarCluster } from "./SubjectAvatarCluster";
 
-const members = [
-  { firstName: "Julien", fullName: "Julien V" },
-  { firstName: "Niels", fullName: "Niels P" },
-];
+const members = [{ firstName: "Julien" }, { firstName: "Niels" }];
 
 describe("<SubjectAvatarCluster>", () => {
   it("renders one monogram disc per member", () => {
@@ -28,11 +25,7 @@ describe("<SubjectAvatarCluster>", () => {
   });
 
   it("collapses the tail into a +N counter past the cap", () => {
-    const four = [
-      ...members,
-      { firstName: "Lars", fullName: "Lars J" },
-      { firstName: "Tom", fullName: "Tom D" },
-    ];
+    const four = [...members, { firstName: "Lars" }, { firstName: "Tom" }];
     const { container } = render(
       <SubjectAvatarCluster members={four} max={3} />,
     );
@@ -53,26 +46,24 @@ describe("<SubjectAvatarCluster>", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("announces the cluster once via a group label, with the discs hidden from AT", () => {
+  it("says nothing at all — QARow renders the joined names beside it", () => {
+    // #2559 rule 4: monograms are not likenesses. The cluster used to announce
+    // a group label, duplicating the visible speaker tag next to it.
     const { container } = render(<SubjectAvatarCluster members={members} />);
     const root = container.firstElementChild as HTMLElement;
-    expect(root.getAttribute("role")).toBe("img");
-    expect(root.getAttribute("aria-label")).toBe("Julien V, Niels P");
-    // The individual discs live under an aria-hidden wrapper.
-    expect(container.querySelector('[aria-hidden="true"]')).not.toBeNull();
+    expect(root.getAttribute("aria-hidden")).toBe("true");
+    expect(root.getAttribute("role")).toBeNull();
+    expect(root.getAttribute("aria-label")).toBeNull();
   });
 
-  it("includes the overflow count in the group label", () => {
-    const four = [
-      ...members,
-      { firstName: "Lars", fullName: "Lars J" },
-      { firstName: "Tom", fullName: "Tom D" },
-    ];
+  it("still collapses the tail into a +N counter", () => {
+    const four = [...members, { firstName: "Lars" }, { firstName: "Tom" }];
     const { container } = render(
       <SubjectAvatarCluster members={four} max={3} />,
     );
     expect(
-      (container.firstElementChild as HTMLElement).getAttribute("aria-label"),
-    ).toBe("Julien V, Niels P, Lars J +1");
+      container.querySelector('[data-subject-avatar-cluster="overflow"]')
+        ?.textContent,
+    ).toBe("+1");
   });
 });

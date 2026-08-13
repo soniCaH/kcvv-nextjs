@@ -63,6 +63,11 @@ function FootballGlyph() {
  * 20px team-logo chip rendered at the right edge of each event row. Mirrors
  * the typographic-shield fallback used by `<MatchHero>` when no `logo` URL
  * is supplied — keeps the row identifiable even with missing PSD assets.
+ *
+ * Both branches are silent (#2559 rule 3 + 4): the crest and the monogram are
+ * two fills of one slot, so they get one verdict, and the scorer's team is
+ * named in the row either way. `data-team` carries the name for tests and
+ * styling — it is inert to assistive tech, which is the point.
  */
 function TeamLogoChip({
   name,
@@ -75,7 +80,8 @@ function TeamLogoChip({
     return (
       <Image
         src={logo}
-        alt={name}
+        alt=""
+        data-team={name}
         width={20}
         height={20}
         unoptimized
@@ -86,7 +92,8 @@ function TeamLogoChip({
   const initial = name.trim().charAt(0).toLocaleUpperCase("nl-BE") || "·";
   return (
     <span
-      aria-label={name}
+      aria-hidden="true"
+      data-team={name}
       className="border-ink bg-cream-soft text-ink font-display inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] text-[11px] leading-none font-black italic"
     >
       {initial}
@@ -441,6 +448,14 @@ function EventRow({
       <span className="flex items-center justify-center">
         {showIcon && !isHome && <EventGlyph type={event.type} />}
       </span>
+
+      {/* The row names the scoring team (#2559 rule 1). Sighted readers get
+          this from which of the two name columns is filled — a purely visual
+          signal, and this row's ONLY carrier of it once the chip below went
+          silent. Without this the row reads "12' Jan Janssens" with no side.
+          `SingleSideEventRow` needs no equivalent: its whole column is one
+          team, announced by the heading above it. */}
+      <span className="sr-only">{teamName}</span>
 
       {/* Team logo chip at the row's right edge. */}
       <TeamLogoChip name={teamName} logo={teamLogo} />

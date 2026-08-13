@@ -39,7 +39,7 @@ export function PlayerCard({
         {hasPhoto ? (
           <Image
             src={photoUrl!}
-            alt={`${firstName} ${lastName}`}
+            alt=""
             width={300}
             height={400}
             unoptimized
