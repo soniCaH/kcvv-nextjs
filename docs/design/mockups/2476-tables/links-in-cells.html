@@ -369,9 +369,9 @@
       <p>
         Echte pagina, echte data:
         <code>/nieuws/2019-12-20-transferoverzicht-2020-2021</code>. De tabel
-        draagt in Sanity <b>16 links</b>; de sanitizer wist ze allemaal.
-        Hieronder staan ze terug, in vier behandelingen. Het skin is dat uit
-        prototype 1.
+        draagt in Sanity <b>16 links</b> over <b>8 rijen</b>; de sanitizer wist
+        ze allemaal. Hieronder staan de <b>eerste 6 van die 8 rijen</b> terug,
+        in vier behandelingen. Het skin is dat uit prototype 1.
       </p>
     </div>
 
@@ -444,7 +444,8 @@
     </nav>
 
     <script>
-      // Echte rijen uit de gepubliceerde tabel. `dead` = gemeten tegen productie
+      // Echte rijen uit de gepubliceerde tabel (eerste 6 van 8 rijen).
+      // `dead` = gemeten tegen productie
       // op 2026-08-11: /player/<slug> geeft 404 of 308.
       const rows = [
         [
@@ -531,7 +532,7 @@
             ? ` · vandaag: <b>16 links weg</b>, "Facebook" is dode tekst`
             : ``) +
           (document.body.dataset.dead === "on"
-            ? ` · <b>4 van 6</b> spelerslinks in deze tabel geven 404`
+            ? ` · <b>4 van 6</b> spelerslinks in dit fragment geven 404`
             : ``);
       }
 

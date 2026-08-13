@@ -20,7 +20,7 @@
         --ink-soft: #1f1f1f;
         --ink-muted: #6b6b6b;
         --jersey-deep: #007c46;
-        --jersey-deep-dark: #00603c;
+        --jersey-deep-dark: #133d28;
         --paper-edge: #d9d2bd;
         --card-red: #c93f1c;
         --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
@@ -1283,9 +1283,7 @@
       document.getElementById("toggleq2").addEventListener("click", (e) => {
         const q2 = document.getElementById("q2");
         q2.hidden = !q2.hidden;
-        e.target.textContent = q2.hidden
-          ? "Toon de afgewezen opties"
-          : "Verberg de afgewezen opties";
+        e.target.textContent = q2.hidden ? "Toon Q2" : "Verberg Q2";
         if (!q2.hidden) buildGroup("cands2", CANDIDATES_Q2, () => 343);
       });
 

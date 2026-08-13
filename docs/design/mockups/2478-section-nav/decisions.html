@@ -96,6 +96,8 @@
 
       /* ── the resolved bar ───────────────────────────────────────── */
       .demo {
+        /* offsetParent voor .sec — anders meet offsetTop tegen <body> */
+        position: relative;
         border: 2px solid var(--ink);
         margin-top: 20px;
         height: 520px;

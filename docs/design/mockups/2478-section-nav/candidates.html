@@ -20,7 +20,7 @@
         --ink-soft: #1f1f1f;
         --ink-muted: #6b6b6b;
         --jersey-deep: #008755;
-        --jersey-deep-dark: #00603c;
+        --jersey-deep-dark: #133d28;
         --paper-edge: #d9d2bd;
         --card-red: #c93f1c;
         --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
@@ -734,11 +734,13 @@
         </div>
         <div class="bar a" id="stagebar">
           <div class="bar-inner" id="stagebarinner">
-            <a class="it" data-t="klassement">Klassement</a>
-            <a class="it" data-t="wedstrijden">Wedstrijden</a>
-            <a class="it" data-t="spelers">Spelers</a>
-            <a class="it" data-t="staf">Staf</a>
-            <a class="it" data-t="info">Info</a>
+            <a class="it" href="#klassement" data-t="klassement">Klassement</a>
+            <a class="it" href="#wedstrijden" data-t="wedstrijden"
+              >Wedstrijden</a
+            >
+            <a class="it" href="#spelers" data-t="spelers">Spelers</a>
+            <a class="it" href="#staf" data-t="staf">Staf</a>
+            <a class="it" href="#info" data-t="info">Info</a>
           </div>
         </div>
         <div class="stage-body">
@@ -800,7 +802,8 @@
       });
 
       items.forEach((a) =>
-        a.addEventListener("click", () => {
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
           const el = document.getElementById(a.dataset.t);
           stage.scrollTo({
             top: el.offsetTop - 64 - bar.offsetHeight,

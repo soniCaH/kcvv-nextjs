@@ -854,7 +854,8 @@
           const total = sc.scrollWidth - sc.clientWidth;
           // Wat er rechts nog te scrollen valt, nú.
           const remaining = Math.max(0, total - Math.round(sc.scrollLeft));
-          tw.classList.toggle("scrolls", remaining > 2);
+          // Overflow bestaat of niet — dat verandert niet door te scrollen.
+          tw.classList.toggle("scrolls", total > 2);
           // #2476: de fade is nooit breder dan wat er echt is afgesneden.
           tw.querySelector(".fade").style.width =
             Math.min(24, remaining) + "px";

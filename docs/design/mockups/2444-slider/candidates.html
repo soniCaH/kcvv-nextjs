@@ -1582,7 +1582,13 @@
       let count = Number(params.get("count") ?? 3);
       const stages = document.getElementById("stages");
 
+      // Teardown for the rows the previous render() left behind: the window
+      // resize listener would otherwise outlive every detached row.
+      let live;
+
       function render() {
+        live?.abort();
+        live = new AbortController();
         const v = VARIANTS[vi];
         let html = `<div class="variant-head">
             <p class="vk">Variant ${v.key}</p>
@@ -1681,15 +1687,16 @@
             }),
           ),
         );
-        track.addEventListener("scroll", sync);
-        new ResizeObserver(sync).observe(track);
+        const { signal } = live;
+        const ro = new ResizeObserver(sync);
+        signal.addEventListener("abort", () => ro.disconnect(), { once: true });
+        track.addEventListener("scroll", sync, { signal });
+        ro.observe(track);
         if (track.firstElementChild) {
-          [...track.firstElementChild.children].forEach((c) =>
-            new ResizeObserver(sync).observe(c),
-          );
+          [...track.firstElementChild.children].forEach((c) => ro.observe(c));
         }
         document.fonts?.ready.then(sync).catch(() => {});
-        window.addEventListener("resize", sync);
+        window.addEventListener("resize", sync, { signal });
 
         const wrap = row.querySelector(".progressWrap");
         if (wrap) {

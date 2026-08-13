@@ -611,11 +611,13 @@
         let selected = "all";
 
         function renderRow() {
+          const x = row.scrollLeft;
           row.replaceChildren(
             ...tabs.map((t, i) =>
               chipEl(t, t.v === selected, cand.pin && i === 0),
             ),
           );
+          row.scrollLeft = x;
         }
 
         function renderList() {
