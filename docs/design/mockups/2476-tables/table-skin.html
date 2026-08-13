@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2476 — één tafelskin? (echte pagina's)</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #008755;
+        --jersey-deep-dark: #133d28;
+        --jersey-link: #007c46;
+        --warm: #f0c264;
+        --paper-edge: #d9d2bd;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --shadow-paper-md: 6px 6px 0 0 var(--ink);
+        --text-label: 0.6875rem;
+        --container-prose: 680px;
+        --container-wide: 1040px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #c9c2ae;
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+        padding-bottom: 120px;
+      }
+
+      /* ── prototype chrome (not part of the design) ───────────────────── */
+      .proto-head {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 28px 24px 24px;
+      }
+      .proto-head .k {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin: 0 0 8px;
+      }
+      .proto-head h1 {
+        font-family: var(--font-big);
+        font-weight: 400;
+        font-size: 2rem;
+        line-height: 1.1;
+        margin: 0 0 10px;
+      }
+      .proto-head p {
+        margin: 0;
+        max-width: 78ch;
+        font-size: 0.94rem;
+        color: rgb(245 241 230 / 0.82);
+      }
+      .proto-head code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        color: var(--warm);
+      }
+
+      .bar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 50;
+        background: var(--ink);
+        color: var(--cream);
+        border-top: 2px solid var(--warm);
+        padding: 12px 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: center;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .bar .grp {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .bar .lbl {
+        color: var(--warm);
+        font-weight: 700;
+      }
+      .bar button {
+        font: inherit;
+        letter-spacing: inherit;
+        text-transform: inherit;
+        background: transparent;
+        color: var(--cream);
+        border: 1.5px solid rgb(245 241 230 / 0.45);
+        padding: 6px 11px;
+        cursor: pointer;
+      }
+      .bar button[aria-pressed="true"] {
+        background: var(--warm);
+        border-color: var(--warm);
+        color: var(--ink);
+        font-weight: 700;
+      }
+
+      .note {
+        max-width: 78ch;
+        margin: 0 auto 0;
+        padding: 14px 18px;
+        background: var(--ink-soft);
+        color: rgb(245 241 230 / 0.9);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        line-height: 1.7;
+        letter-spacing: 0.02em;
+      }
+      .note b {
+        color: var(--warm);
+      }
+
+      /* ── the stage: a real page canvas ───────────────────────────────── */
+      .stage {
+        width: var(--canvas, 1040px);
+        max-width: 100%;
+        margin: 0 auto;
+        background: var(--cream);
+        container-type: inline-size;
+        box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
+      }
+      .pc {
+        /* <PageContainer> — px-4 md:px-8 */
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      @container (min-width: 768px) {
+        .pc {
+          padding-left: 32px;
+          padding-right: 32px;
+        }
+      }
+      .prose {
+        max-width: var(--container-prose);
+        margin: 0 auto;
+      }
+
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink);
+        margin: 0 0 12px;
+      }
+      h2.ed {
+        font-family: var(--font-big);
+        font-weight: 400;
+        font-style: italic;
+        font-size: clamp(1.9rem, 1rem + 3vw, 2.6rem);
+        line-height: 1.05;
+        margin: 0 0 32px;
+      }
+      h2.ed em {
+        font-style: italic;
+        color: var(--jersey-deep);
+        font-style: normal;
+      }
+      .sect {
+        padding-top: 44px;
+        padding-bottom: 56px;
+      }
+      .lede {
+        font-family: var(--font-body);
+        font-size: 1.05rem;
+        line-height: 1.7;
+        color: var(--ink-soft);
+        margin: 0 0 22px;
+      }
+
+      /* ── TABLE — shared mechanics (Q2, settled) ──────────────────────── */
+      .tw {
+        position: relative;
+      }
+      /* De ploegnaam truncate't in het echte component (`min-w-0 truncate`),
+         dus de kolom is zo breed als de langste naam en wikkelt nooit. Zonder
+         dit meet het prototype 14px te optimistisch op 375px. */
+      .tw .team {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 22ch;
+      }
+      .tscroll {
+        overflow-x: auto;
+      }
+      .tscroll:focus-visible {
+        outline: 2px solid var(--jersey-deep);
+        outline-offset: 2px;
+      }
+      .tw table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      /* #2476 amendeert #2444 hier. #2444 reserveert een 40px-rail die altijd
+         aanwezig is vanaf 768px, zodat een chiprij niet verspringt als de pijl
+         verschijnt. Een tabel is `width: 100%` en verspringt nooit — dus de
+         rail levert alleen twee dode pijlen op waar niets te scrollen valt,
+         terwijl er op mobiel, waar het wél schuift, geen pijl staat.
+         Daarom: geen rail, de pijl ligt óver de rand en verschijnt alleen bij
+         echt overschot. Onder 768px blijft #2444's swipe-spoor. */
+      .arrow {
+        display: none;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        cursor: pointer;
+        background: var(--jersey-deep);
+        color: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        font-family: var(--font-mono);
+        font-size: 15px;
+        line-height: 1;
+        align-items: center;
+        justify-content: center;
+      }
+      @container (min-width: 768px) {
+        .tw.scrolls .arrow {
+          display: flex;
+        }
+      }
+      .arrow.l {
+        left: 0;
+      }
+      .arrow.r {
+        right: 0;
+      }
+      .arrow:hover:not(:disabled) {
+        transform: translate(4px, calc(-50% + 4px));
+        box-shadow: none;
+      }
+      .arrow.r:hover:not(:disabled) {
+        transform: translate(-4px, calc(-50% + 4px));
+        box-shadow: none;
+      }
+      /* #2444: disables in place, never unmounts — that is what the rail is for. */
+      .arrow:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+
+      /* #2444: a 24px fade marks the cut edge. #2476 adds the cap — the fade may
+         never be wider than the scroll that is actually left, or it veils more
+         than it hides. At 14px of overflow a 40px fade manufactures 26px of
+         unreadable column. */
+      .fade {
+        display: none;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 24px;
+        pointer-events: none;
+        background: linear-gradient(to left, var(--cream), transparent);
+      }
+      .tw.scrolls .fade {
+        display: block;
+      }
+
+      /* #2476 kandidaat — de laatste kolom pint mee, zoals de eerste. */
+      .tw.pin-last .tscroll td:last-child,
+      .tw.pin-last .tscroll th:last-child {
+        position: sticky;
+        right: 0;
+        z-index: 2;
+        box-shadow: -2px 0 4px -1px rgb(0 0 0 / 0.12);
+      }
+      .tw.pin-last.skin-quiet .tscroll td:last-child,
+      .tw.pin-last.skin-quiet .tscroll th:last-child {
+        background: var(--cream);
+      }
+      .tw.pin-last.skin-quiet .tscroll tr.kcvv td:last-child {
+        background: color-mix(in srgb, var(--jersey-deep) 12%, var(--cream));
+      }
+      .tw.pin-last.skin-card .tscroll th:last-child {
+        background: var(--jersey-deep);
+        z-index: 3;
+      }
+      .tw.pin-last.skin-card .tscroll tbody tr:nth-child(odd) td:last-child {
+        background: var(--cream);
+      }
+      .tw.pin-last.skin-card .tscroll tbody tr:nth-child(even) td:last-child {
+        background: #e8e0c8b3;
+      }
+
+      /* ── SKIN A — "stil" (vandaag: StandingsTable) ───────────────────── */
+      .skin-quiet table {
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+      .skin-quiet thead tr {
+        border-bottom: 2px solid var(--ink);
+      }
+      .skin-quiet th {
+        color: var(--ink-muted);
+        padding: 8px 8px;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 400;
+      }
+      .skin-quiet td {
+        padding: 8px 8px;
+        color: var(--ink);
+      }
+      .skin-quiet tbody tr {
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      .skin-quiet .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .skin-quiet th.num {
+        text-align: right;
+      }
+      .skin-quiet .team {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 13px;
+      }
+      .skin-quiet .pts {
+        font-family: var(--font-big);
+        font-weight: 900;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .skin-quiet tr.kcvv {
+        background: color-mix(in srgb, var(--jersey-deep) 12%, var(--cream));
+        box-shadow: inset 3px 0 0 var(--jersey-deep);
+      }
+      .skin-quiet tr.kcvv .team {
+        font-style: normal;
+        font-weight: 600;
+      }
+
+      /* ── SKIN B — "kaart" (vandaag: HtmlTableBlock) ──────────────────── */
+      .skin-card {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-md);
+      }
+      .skin-card table {
+        font-size: 14px;
+      }
+      .skin-card thead {
+        background: var(--jersey-deep);
+      }
+      .skin-card th {
+        color: #fff;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        text-align: left;
+        padding: 10px 12px;
+      }
+      .skin-card th + th {
+        border-left: 1px dotted rgb(245 241 230 / 0.3);
+      }
+      .skin-card td {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        padding: 8px 12px;
+        vertical-align: top;
+        color: var(--ink);
+        border-top: 1px dotted var(--ink-muted);
+      }
+      .skin-card td + td {
+        border-left: 1px dotted var(--ink-muted);
+      }
+      .skin-card tbody tr:nth-child(even) td {
+        background: rgb(0 0 0 / 0.025);
+      }
+      .skin-card td:first-child {
+        font-family: var(--font-display);
+        font-size: 15px;
+        font-weight: 600;
+        font-style: italic;
+      }
+      .skin-card .num,
+      .skin-card th.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .skin-card .pts {
+        font-family: var(--font-big);
+        font-weight: 900;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .skin-card tr.kcvv td {
+        background: color-mix(in srgb, var(--jersey-deep) 12%, var(--cream));
+      }
+      .skin-card tr.kcvv td:first-child {
+        box-shadow: inset 3px 0 0 var(--jersey-deep);
+      }
+      .skin-card tr.kcvv .team {
+        font-weight: 700;
+        font-style: normal;
+      }
+
+      /* ── ANKER LINKS ─────────────────────────────────────────────────────
+         Vandaag pint `td:first-child`, positioneel. Dat is meetbaar fout:
+         10 van 21 gepubliceerde tabellen hebben een LEGE eerste kolomkop en
+         één emoji per cel (🔄/🤝/❌) — die kolom wordt vastgezet terwijl
+         "Naam" wegschuift. En het klassement pint `#`, niet "Ploeg".
+         Hier is het anker een groep van 1 of 2 leidende kolommen, en het
+         aantal wordt gedeclareerd — niet uit de positie afgeleid. */
+      .tw.scrolls[data-anchor="1"] .tscroll :is(td, th):nth-child(1),
+      .tw.scrolls[data-anchor="2"] .tscroll :is(td, th):nth-child(1),
+      .tw.scrolls[data-anchor="2"] .tscroll :is(td, th):nth-child(2) {
+        position: sticky;
+        z-index: 2;
+      }
+      .tw.scrolls[data-anchor] .tscroll :is(td, th):nth-child(1) {
+        left: 0;
+      }
+      .tw.scrolls[data-anchor="2"] .tscroll :is(td, th):nth-child(2) {
+        left: var(--c1, 0px);
+      }
+      /* de schaduw hoort op de laatste kolom van de ankergroep */
+      .tw.scrolls[data-anchor="1"] .tscroll :is(td, th):nth-child(1),
+      .tw.scrolls[data-anchor="2"] .tscroll :is(td, th):nth-child(2) {
+        box-shadow: 2px 0 4px -1px rgb(0 0 0 / 0.12);
+      }
+      .tw.scrolls.skin-quiet[data-anchor]
+        .tscroll
+        :is(td, th):nth-child(-n + 2) {
+        background: var(--cream);
+      }
+      .tw.scrolls.skin-quiet[data-anchor]
+        .tscroll
+        tr.kcvv
+        :is(td):nth-child(-n + 2) {
+        background: color-mix(in srgb, var(--jersey-deep) 12%, var(--cream));
+      }
+      .tw.scrolls.skin-card[data-anchor] .tscroll th:nth-child(-n + 2) {
+        background: var(--jersey-deep);
+        z-index: 3;
+      }
+      .tw.scrolls.skin-card[data-anchor]
+        .tscroll
+        tbody
+        tr:nth-child(odd)
+        td:nth-child(-n + 2) {
+        background: var(--cream);
+      }
+      .tw.scrolls.skin-card[data-anchor]
+        .tscroll
+        tbody
+        tr:nth-child(even)
+        td:nth-child(-n + 2) {
+        background: #e8e0c8b3;
+      }
+
+      caption {
+        caption-side: top;
+        text-align: left;
+      }
+
+      .meas {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 10px 0 0;
+      }
+      .meas b {
+        color: var(--jersey-deep);
+      }
+      .seam {
+        height: 10px;
+        background: repeating-linear-gradient(
+          135deg,
+          var(--jersey-deep) 0 10px,
+          var(--cream) 10px 20px,
+          var(--ink) 20px 30px,
+          var(--cream) 30px 40px
+        );
+      }
+    </style>
+  </head>
+  <body data-skin="today" data-canvas="1040">
+    <div class="proto-head">
+      <p class="k">Wegwijzer #2476 · prototype 1 van 2</p>
+      <h1>Eén tafelskin, of twee?</h1>
+      <p>
+        Twee echte pagina's, echte productiedata. Boven:
+        <code>/ploegen/eerste-elftallen-a</code> — het klassement (14-ploegen
+        reeks, KCVV zesde). Onder:
+        <code>/nieuws/2020-07-08-wedstrijdkalender-2020-2021</code> — een
+        gepubliceerde tabel in de leeskolom. Wissel het skin en de breedte
+        onderaan.
+      </p>
+    </div>
+
+    <div class="note">
+      <b>Ronde 2.</b> Skin staat op <b>Eén — stil</b> (jouw keuze) en de breedte
+      op <b>375</b>.<br />
+      Wat er veranderd is sinds ronde 1: de rand-affordance komt nu van
+      <b>#2444</b>, dat <code>StandingsTable</code> én
+      <code>HtmlTableBlock</code> al toewees — <b>24px</b> fade in plaats van
+      40, plus een gereserveerde 40px-rail met een 32px jersey-deep pijl vanaf
+      768px, die op zijn plaats uitschakelt. Daarbovenop één nieuwe regel van
+      dit ticket:
+      <b>de fade is nooit breder dan wat er nog écht te scrollen valt</b>. Bij
+      14px overschot maakte een 40px fade 26px onleesbare kolom die niet eens
+      afgesneden was — dat is wat de punten wegvaagde. Scroll de tabel: de fade
+      krimpt mee en verdwijnt op het einde.<br />
+      Nog open: zet <b>Ptn vastzetten</b> op <b>Ja</b>. Dan pint de laatste
+      kolom net als de eerste, en scrolt alleen het midden (M/W/G/V/+−). Punten
+      zijn dan altijd leesbaar, zonder scrollen.
+    </div>
+
+    <!-- ══════════ PAGINA 1 — /ploegen/eerste-elftallen-a ══════════ -->
+    <div class="stage">
+      <div class="seam"></div>
+      <section class="sect pc">
+        <p class="kicker">Klassement</p>
+        <h2 class="ed">In de stand<em>.</em></h2>
+
+        <div class="tw skin-quiet" id="tw-standings" data-anchor="1">
+          <div
+            class="tscroll"
+            tabindex="0"
+            role="region"
+            aria-label="Klassement"
+          >
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Ploeg</th>
+                  <th class="num">M</th>
+                  <th class="num">W</th>
+                  <th class="num">G</th>
+                  <th class="num">V</th>
+                  <th class="num">+/-</th>
+                  <th class="num">Ptn</th>
+                </tr>
+              </thead>
+              <tbody id="standings-body"></tbody>
+            </table>
+          </div>
+          <button class="arrow l" aria-label="Naar links">‹</button>
+          <button class="arrow r" aria-label="Naar rechts">›</button>
+          <div class="fade"></div>
+        </div>
+        <p class="meas" id="meas-standings"></p>
+      </section>
+    </div>
+
+    <!-- ══════════ PAGINA 2 — /nieuws/[slug] ══════════ -->
+    <div class="stage">
+      <div class="seam"></div>
+      <section class="sect pc">
+        <div class="prose">
+          <p class="kicker">Eerste ploeg</p>
+          <h2 class="ed">De kalender is er<em>.</em></h2>
+          <p class="lede">
+            Hieronder de volledige kalender van de A-ploeg voor het seizoen
+            2020–2021, zoals de reeksindeling ze heeft opgeleverd.
+            Thuiswedstrijden worden op zondag om 15u gespeeld, uitwedstrijden
+            meestal op zaterdagavond.
+          </p>
+
+          <div class="tw skin-card" id="tw-article" data-anchor="1">
+            <div
+              class="tscroll"
+              tabindex="0"
+              role="region"
+              aria-label="Wedstrijdkalender"
+            >
+              <table>
+                <thead>
+                  <tr>
+                    <th>Dag</th>
+                    <th>Datum</th>
+                    <th>Uur</th>
+                    <th>Thuisploeg</th>
+                    <th></th>
+                    <th>Uitploeg</th>
+                  </tr>
+                </thead>
+                <tbody id="fixtures-body"></tbody>
+              </table>
+            </div>
+            <button class="arrow l" aria-label="Naar links">‹</button>
+            <button class="arrow r" aria-label="Naar rechts">›</button>
+            <div class="fade"></div>
+          </div>
+          <p class="meas" id="meas-article"></p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="bar" aria-label="Prototype-instellingen">
+      <span class="grp">
+        <span class="lbl">Skin</span>
+        <button data-skin-btn="quiet" aria-pressed="true">Eén — stil ✓</button>
+        <button data-skin-btn="today" aria-pressed="false">
+          Vandaag (twee)
+        </button>
+        <button data-skin-btn="card" aria-pressed="false">Eén — kaart</button>
+      </span>
+      <span class="grp">
+        <span class="lbl">Anker links</span>
+        <button data-anchor-btn="0" aria-pressed="false">Geen</button>
+        <button data-anchor-btn="1" aria-pressed="true">
+          1 kolom (vandaag)
+        </button>
+        <button data-anchor-btn="2" aria-pressed="false">2 kolommen</button>
+      </span>
+      <span class="grp">
+        <span class="lbl">Ptn vast</span>
+        <button data-pin-btn="off" aria-pressed="true">Nee</button>
+        <button data-pin-btn="on" aria-pressed="false">Ja</button>
+      </span>
+      <span class="grp">
+        <span class="lbl">Breedte</span>
+        <button data-canvas-btn="1040" aria-pressed="false">
+          1040 desktop
+        </button>
+        <button data-canvas-btn="768" aria-pressed="false">768 tablet</button>
+        <button data-canvas-btn="390" aria-pressed="false">390 mobiel</button>
+        <button data-canvas-btn="375" aria-pressed="true">375 smal</button>
+        <button data-canvas-btn="320" aria-pressed="false">
+          320 zeer smal
+        </button>
+      </span>
+    </nav>
+
+    <script>
+      // Echte reeks — de fixture uit StandingsTable.stories.tsx (14 ploegen).
+      const standings = [
+        [1, "KSK Kampenhout", 18, 13, 3, 2, 41, 17, 42],
+        [2, "FC Perk", 18, 12, 4, 2, 38, 19, 40],
+        [3, "VK Weerde", 18, 11, 3, 4, 35, 22, 36],
+        [4, "Eppegem B", 18, 9, 5, 4, 30, 24, 32],
+        [5, "SK Kampenhout B", 18, 8, 6, 4, 28, 23, 30],
+        [6, "KCVV Elewijt", 18, 8, 4, 6, 27, 25, 28],
+        [7, "Hofstade VV", 18, 7, 5, 6, 26, 26, 26],
+        [8, "KSV Schoonbeek-Beverst A", 18, 6, 6, 6, 24, 27, 24],
+        [9, "FC Mollem", 18, 6, 4, 8, 22, 28, 22],
+        [10, "SK Relegem", 18, 5, 5, 8, 21, 30, 20],
+        [11, "Racing Gent B", 18, 5, 3, 10, 19, 33, 18],
+        [12, "VK Humbeek", 18, 4, 4, 10, 18, 35, 16],
+        [13, "KFC Kapelle-op-den-Bos", 18, 3, 4, 11, 15, 38, 13],
+        [14, "SC Steenokkerzeel", 18, 2, 3, 13, 12, 42, 9],
+      ];
+      document.getElementById("standings-body").innerHTML = standings
+        .map(([p, n, m, w, g, v, gf, ga, pts]) => {
+          const gd = gf - ga;
+          const kcvv = n === "KCVV Elewijt";
+          return `<tr class="${kcvv ? "kcvv" : ""}">
+            <td class="num">${p}</td>
+            <td class="team">${n}</td>
+            <td class="num">${m}</td><td class="num">${w}</td>
+            <td class="num">${g}</td><td class="num">${v}</td>
+            <td class="num">${gd > 0 ? "+" + gd : gd}</td>
+            <td class="pts">${pts}</td></tr>`;
+        })
+        .join("");
+
+      // Echte gepubliceerde kalendertabel (eerste 14 van 30 rijen).
+      const fixtures = [
+        [
+          "Zondag",
+          "6 september 2020",
+          "15:00",
+          "KCVV Elewijt A",
+          "SNA Keiberg A",
+        ],
+        [
+          "Zaterdag",
+          "12 september 2020",
+          "20:30",
+          "VK Holsbeek A",
+          "KCVV Elewijt A",
+        ],
+        [
+          "Zondag",
+          "20 september 2020",
+          "15:00",
+          "KCVV Elewijt A",
+          "KFC Baal A",
+        ],
+        [
+          "Zaterdag",
+          "26 september 2020",
+          "19:00",
+          "ERC Hoeilaart A",
+          "KCVV Elewijt A",
+        ],
+        [
+          "Zondag",
+          "4 oktober 2020",
+          "15:00",
+          "KCVV Elewijt A",
+          "SK Nossegem A",
+        ],
+        [
+          "Zaterdag",
+          "10 oktober 2020",
+          "20:15",
+          "KVC Kessel-Lo 2000 A",
+          "KCVV Elewijt A",
+        ],
+        ["Zondag", "18 oktober 2020", "15:00", "KCVV Elewijt A", "FC Geetbets"],
+        [
+          "Zaterdag",
+          "24 oktober 2020",
+          "20:15",
+          "Sp. Rotselaar A",
+          "KCVV Elewijt A",
+        ],
+        [
+          "Zondag",
+          "1 november 2020",
+          "15:00",
+          "KCVV Elewijt A",
+          "FC Averbode-Okselaar A",
+        ],
+        [
+          "Zaterdag",
+          "7 november 2020",
+          "19:45",
+          "KFC Herent A",
+          "KCVV Elewijt A",
+        ],
+        [
+          "Zondag",
+          "15 november 2020",
+          "15:00",
+          "KCVV Elewijt A",
+          "Tielt-Winge 3000 A",
+        ],
+        [
+          "Zaterdag",
+          "21 november 2020",
+          "19:30",
+          "KFC Wezemaal A",
+          "KCVV Elewijt A",
+        ],
+        [
+          "Zondag",
+          "29 november 2020",
+          "15:00",
+          "KCVV Elewijt A",
+          "VK Linden A",
+        ],
+        [
+          "Zaterdag",
+          "5 december 2020",
+          "20:00",
+          "KVK Wemmel A",
+          "KCVV Elewijt A",
+        ],
+      ];
+      document.getElementById("fixtures-body").innerHTML = fixtures
+        .map(
+          ([d, dt, u, th, ui]) =>
+            `<tr><td>${d}</td><td>${dt}</td><td>${u}</td><td>${th}</td><td>-</td><td>${ui}</td></tr>`,
+        )
+        .join("");
+
+      const SKINS = {
+        today: { standings: "skin-quiet", article: "skin-card" },
+        card: { standings: "skin-card", article: "skin-card" },
+        quiet: { standings: "skin-quiet", article: "skin-quiet" },
+      };
+
+      function applySkin(mode) {
+        document.body.dataset.skin = mode;
+        const map = SKINS[mode];
+        for (const [key, cls] of Object.entries(map)) {
+          const el = document.getElementById("tw-" + key);
+          el.classList.remove("skin-quiet", "skin-card");
+          el.classList.add(cls);
+        }
+        document
+          .querySelectorAll("[data-skin-btn]")
+          .forEach((b) =>
+            b.setAttribute("aria-pressed", String(b.dataset.skinBtn === mode)),
+          );
+        measure();
+      }
+
+      function applyCanvas(w) {
+        document.body.dataset.canvas = w;
+        document
+          .querySelectorAll(".stage")
+          .forEach((s) => s.style.setProperty("--canvas", w + "px"));
+        document
+          .querySelectorAll("[data-canvas-btn]")
+          .forEach((b) =>
+            b.setAttribute("aria-pressed", String(b.dataset.canvasBtn === w)),
+          );
+        measure();
+      }
+
+      function measure() {
+        for (const [key, label] of [
+          ["standings", "Klassement"],
+          ["article", "Kalendertabel"],
+        ]) {
+          const tw = document.getElementById("tw-" + key);
+          const sc = tw.querySelector(".tscroll");
+          // kolom 2 pint op de breedte van kolom 1
+          const c1 = tw.querySelector("thead th:nth-child(1)");
+          if (c1)
+            tw.style.setProperty(
+              "--c1",
+              c1.getBoundingClientRect().width + "px",
+            );
+          const total = sc.scrollWidth - sc.clientWidth;
+          // Wat er rechts nog te scrollen valt, nú.
+          const remaining = Math.max(0, total - Math.round(sc.scrollLeft));
+          // Overflow bestaat of niet — dat verandert niet door te scrollen.
+          tw.classList.toggle("scrolls", total > 2);
+          // #2476: de fade is nooit breder dan wat er echt is afgesneden.
+          tw.querySelector(".fade").style.width =
+            Math.min(24, remaining) + "px";
+          tw.querySelector(".arrow.l").disabled = sc.scrollLeft <= 2;
+          tw.querySelector(".arrow.r").disabled = remaining <= 2;
+          document.getElementById("meas-" + key).innerHTML =
+            `${label} — kolombreedte <b>${sc.scrollWidth}px</b> in <b>${sc.clientWidth}px</b> · ` +
+            (total > 2
+              ? `schuift <b>${total}px</b> · nog <b>${remaining}px</b> rechts — fade <b>${Math.min(24, remaining)}px</b>`
+              : `<b>past</b> — geen scroll, geen fade`);
+        }
+      }
+
+      document.querySelectorAll(".tw").forEach((tw) => {
+        const sc = tw.querySelector(".tscroll");
+        sc.addEventListener("scroll", measure, { passive: true });
+        tw.querySelector(".arrow.l").addEventListener("click", () =>
+          sc.scrollBy({
+            left: -Math.round(sc.clientWidth * 0.7),
+            behavior: "smooth",
+          }),
+        );
+        tw.querySelector(".arrow.r").addEventListener("click", () =>
+          sc.scrollBy({
+            left: Math.round(sc.clientWidth * 0.7),
+            behavior: "smooth",
+          }),
+        );
+      });
+
+      // Ptn vastzetten geldt alleen voor het klassement — een getypte tabel weet
+      // welke kolom besluit. Een geschreven tabel weet dat niet.
+      document.querySelectorAll("[data-pin-btn]").forEach((b) =>
+        b.addEventListener("click", () => {
+          document
+            .getElementById("tw-standings")
+            .classList.toggle("pin-last", b.dataset.pinBtn === "on");
+          document
+            .querySelectorAll("[data-pin-btn]")
+            .forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          measure();
+        }),
+      );
+
+      document.querySelectorAll("[data-anchor-btn]").forEach((b) =>
+        b.addEventListener("click", () => {
+          const v = b.dataset.anchorBtn;
+          document.querySelectorAll(".tw").forEach((tw) => {
+            if (v === "0") tw.removeAttribute("data-anchor");
+            else tw.setAttribute("data-anchor", v);
+          });
+          document
+            .querySelectorAll("[data-anchor-btn]")
+            .forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          measure();
+        }),
+      );
+
+      document
+        .querySelectorAll("[data-skin-btn]")
+        .forEach((b) =>
+          b.addEventListener("click", () => applySkin(b.dataset.skinBtn)),
+        );
+      document
+        .querySelectorAll("[data-canvas-btn]")
+        .forEach((b) =>
+          b.addEventListener("click", () => applyCanvas(b.dataset.canvasBtn)),
+        );
+
+      applyCanvas("375");
+      applySkin("quiet");
+      window.addEventListener("resize", measure);
+      document.fonts?.ready.then(measure);
+    </script>
+  </body>
+</html>

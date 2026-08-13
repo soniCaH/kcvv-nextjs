@@ -1,0 +1,1154 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2547 — what marks a link that leaves the site</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #008755;
+        --jersey-link: #007c46;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --text-label: 0.6875rem;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 34px 0 30px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin: 0 0 10px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: 2.2rem;
+        line-height: 1.1;
+        margin: 0 0 12px;
+        font-weight: 400;
+      }
+      header.top p {
+        margin: 0 0 8px;
+        max-width: 78ch;
+        color: rgb(245 241 230 / 0.85);
+        font-size: 0.95rem;
+      }
+      header.top .locked {
+        border-top: 1px solid rgb(240 194 100 / 0.4);
+        padding-top: 16px;
+        margin-top: 20px;
+      }
+      header.top .locked p {
+        margin: 0 0 6px;
+      }
+      header.top strong {
+        color: var(--warm);
+      }
+
+      section {
+        padding: 46px 0;
+        border-bottom: 2px solid var(--ink);
+      }
+      section.alt {
+        background: var(--cream);
+      }
+      h2 {
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        font-weight: 400;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      h3 {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 30px 0 12px;
+      }
+      .sub {
+        color: var(--ink-soft);
+        margin: 0 0 26px;
+        max-width: 78ch;
+        font-size: 0.96rem;
+      }
+      .note {
+        font-size: 0.86rem;
+        color: var(--ink-muted);
+        max-width: 78ch;
+        margin: 10px 0 0;
+      }
+
+      /* ---- candidate card ---- */
+      .cand {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        margin-bottom: 22px;
+      }
+      .cand > header {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 10px 16px;
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .cand > header .id {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        color: var(--warm);
+      }
+      .cand > header .nm {
+        font-family: var(--font-big);
+        font-size: 1.15rem;
+      }
+      .cand > header .tag {
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgb(245 241 230 / 0.6);
+      }
+      .cand .body {
+        padding: 22px 20px 20px;
+      }
+      .cand .why {
+        font-size: 0.88rem;
+        color: var(--ink-soft);
+        margin: 16px 0 0;
+        padding-top: 14px;
+        border-top: 1px dashed var(--cream-deep);
+        max-width: 80ch;
+      }
+      .cand .why b {
+        font-weight: 600;
+      }
+
+      /* ---- prose specimen ---- */
+      .prose {
+        font-size: 17px;
+        line-height: 1.65;
+        max-width: 620px;
+      }
+      .prose p {
+        margin: 0 0 12px;
+      }
+      .plink {
+        color: var(--jersey-link);
+        text-decoration: none;
+        font-weight: 500;
+        padding-inline: 4px;
+        margin-inline: -4px;
+        background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 0 4.7 L 50 4.3 L 100 4.0 L 100 10.8 L 50 11.1 L 0 11.0 Z' fill='%23007c46' fill-opacity='0.4'/></svg>");
+        background-repeat: no-repeat;
+        background-position: 0 100%;
+        background-size: 0% 0.42em;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+        transition: background-size 0.3s ease;
+      }
+      .plink:hover {
+        background-size: 100% 0.42em;
+      }
+      .plink .g {
+        margin-left: 2px;
+        display: inline-block;
+        vertical-align: baseline;
+        opacity: 0.6;
+      }
+      .host {
+        font-family: var(--font-mono);
+        font-size: 0.72em;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--ink-muted);
+        margin-left: 5px;
+        white-space: nowrap;
+      }
+      .breakurl {
+        word-break: break-all;
+      }
+
+      /* ---- controls ---- */
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        align-items: flex-start;
+      }
+      .ctl-wrap {
+      }
+      .ctl-cap {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 0 0 7px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        text-decoration: none;
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-weight: 500;
+        font-size: 1rem;
+        padding: 12px 32px;
+        cursor: pointer;
+        transition:
+          transform 0.3s,
+          box-shadow 0.3s;
+      }
+      .btn:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+      .btn.primary {
+        background: var(--jersey-deep);
+        color: var(--cream);
+      }
+      .btn.secondary {
+        background: var(--cream-soft);
+      }
+      .btn.cta {
+        background: var(--warm);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 12px 18px;
+      }
+      .ilink {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--jersey-link);
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .ilink:hover {
+        text-decoration: underline;
+      }
+      .ctl-host {
+        font-family: var(--font-mono);
+        font-size: 0.72em;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        opacity: 0.72;
+      }
+
+      /* ---- table ---- */
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.86rem;
+        margin-top: 8px;
+      }
+      th,
+      td {
+        border: 1px solid var(--cream-deep);
+        padding: 7px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--ink);
+        color: var(--cream);
+        font-family: var(--font-mono);
+        font-size: 0.64rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-weight: 600;
+        border-color: var(--ink);
+      }
+      td code {
+        font-family: var(--font-mono);
+        font-size: 0.82em;
+      }
+      tr.bare td {
+        color: var(--ink-muted);
+      }
+      .pill {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 2px 7px;
+        border: 1px solid var(--ink);
+        white-space: nowrap;
+      }
+      .pill.y {
+        background: var(--jersey-deep);
+        color: var(--cream);
+        border-color: var(--jersey-deep);
+      }
+      .pill.n {
+        background: transparent;
+        color: var(--ink-muted);
+        border-color: var(--cream-deep);
+      }
+
+      .warn {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 14px 16px;
+        margin: 24px 0 4px;
+        max-width: 78ch;
+        font-size: 0.9rem;
+      }
+      .warn strong {
+        color: var(--card-red);
+      }
+      footer.foot {
+        padding: 34px 0 46px;
+        font-size: 0.84rem;
+        color: var(--ink-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="kicker">#2547 · cross-page consistency walk</p>
+        <h1>What marks a link that leaves the site</h1>
+        <p>
+          Two rules are already locked. This page only asks what the mark
+          <em>is</em>, in the two places the rules leave it.
+        </p>
+        <div class="locked">
+          <p>
+            <strong>Rule 1.</strong> The mark rides the sentence, not the
+            control. A card, tile or button whose visible content
+            <em>is</em> the destination gets nothing.
+          </p>
+          <p>
+            <strong>Rule 2.</strong> A verb-labelled control gets the mark only
+            when the act itself happens off-site — when the visitor is handed to
+            a third party.
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <section>
+      <div class="wrap">
+        <h2>Where the mark now lands</h2>
+        <p class="sub">
+          Every <code>target="_blank"</code> link in scope, classified by the
+          two locked rules. Six get a mark, eight do not. Five of the six are
+          controls, so whatever is chosen has to work in mono caps on a warm
+          fill as well as inline at 17px.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>site</th>
+              <th>route</th>
+              <th>label</th>
+              <th>today</th>
+              <th>mark?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="mark">
+              <td><code>ArticleBody:735</code></td>
+              <td>every Sanity body</td>
+              <td>inline prose link</td>
+              <td><code>ArrowSquareOut</code></td>
+              <td><span class="pill y">yes — prose</span></td>
+            </tr>
+            <tr class="mark">
+              <td><code>EventDetailCtas:110</code></td>
+              <td><code>/evenementen/[slug]</code></td>
+              <td>Reserveer</td>
+              <td>literal <code>↗</code></td>
+              <td><span class="pill y">yes — off-site act</span></td>
+            </tr>
+            <tr class="mark">
+              <td><code>EventDetailBlock:445</code></td>
+              <td>Sanity bodies</td>
+              <td>ticketLabel</td>
+              <td>literal <code>→</code></td>
+              <td><span class="pill y">yes — off-site act</span></td>
+            </tr>
+            <tr class="mark">
+              <td><code>EventDetailBlock:452</code></td>
+              <td>Sanity bodies</td>
+              <td>Zet in agenda</td>
+              <td><em>nothing</em></td>
+              <td><span class="pill y">yes — Google Calendar</span></td>
+            </tr>
+            <tr class="mark">
+              <td><code>EventFactInline:234</code></td>
+              <td>Sanity bodies</td>
+              <td>ticketLabel</td>
+              <td>literal <code>→</code></td>
+              <td><span class="pill y">yes — off-site act</span></td>
+            </tr>
+            <tr class="mark">
+              <td><code>ContactPage:229</code></td>
+              <td><code>/club/contact</code></td>
+              <td>Routebeschrijving</td>
+              <td><code>ArrowRight</code></td>
+              <td><span class="pill y">yes — Google Maps</span></td>
+            </tr>
+            <tr class="bare">
+              <td><code>UltrasHero:75</code></td>
+              <td><code>/club/ultras</code></td>
+              <td>Word lid via Facebook</td>
+              <td>literal <code>↗</code></td>
+              <td><span class="pill n">no — names it</span></td>
+            </tr>
+            <tr class="bare">
+              <td><code>club/ultras/page:164</code></td>
+              <td><code>/club/ultras</code></td>
+              <td>facebook.com/KCVV.ULTRAS.55</td>
+              <td>literal <code>↗</code></td>
+              <td><span class="pill n">no — names it</span></td>
+            </tr>
+            <tr class="bare">
+              <td><code>FeaturedSponsorCard:68</code></td>
+              <td><code>/sponsors</code></td>
+              <td>Bezoek website</td>
+              <td>literal <code>↗</code></td>
+              <td><span class="pill n">no — card names it</span></td>
+            </tr>
+            <tr class="bare">
+              <td><code>SponsorTile:73</code></td>
+              <td><code>/sponsors</code>, <code>/ploegen/[slug]</code></td>
+              <td>the logo</td>
+              <td><em>nothing</em></td>
+              <td><span class="pill n">no — already right</span></td>
+            </tr>
+            <tr class="bare">
+              <td><code>HoofdSponsorTile:59</code></td>
+              <td><code>/sponsors</code></td>
+              <td>the logo</td>
+              <td><em>nothing</em></td>
+              <td><span class="pill n">no — already right</span></td>
+            </tr>
+            <tr class="bare">
+              <td><code>ArticleMetadata:133</code></td>
+              <td><code>/nieuws/[slug]</code></td>
+              <td>Facebook logo</td>
+              <td><em>nothing</em></td>
+              <td><span class="pill n">no — logo names it</span></td>
+            </tr>
+            <tr class="bare">
+              <td><code>ArticleBody:706</code></td>
+              <td>Sanity bodies</td>
+              <td>social brand link</td>
+              <td>brand icon</td>
+              <td><span class="pill n">no — icon names it</span></td>
+            </tr>
+            <tr class="bare">
+              <td><code>DownloadButton:172</code></td>
+              <td>articles, events</td>
+              <td>the attachment</td>
+              <td>paper stamp</td>
+              <td><span class="pill n">no — locked, 6e5 §3.5</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="warn">
+          <strong>Three marks change hands rather than disappear.</strong> Both
+          ticket CTAs currently use <code>→</code>, the glyph that means
+          <em>stay on the site</em> on twenty other in-scope sites.
+          <code>Routebeschrijving</code> uses the same one. Whatever is chosen
+          below has to be visibly not-<code>→</code>.
+        </div>
+        <p class="note">
+          <strong>Not reopened:</strong> the <code>mailto:</code> /
+          <code>tel:</code> family (<code>ContactPage</code>,
+          <code>ContactCard</code>, <code>MemberDetailPanel</code>,
+          <code>StaffHero</code>) carries no <code>target="_blank"</code> at all
+          and was already decided by #2474 rule 4. It is outside this ticket's
+          population.
+        </p>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap">
+        <h2>A — in prose</h2>
+        <p class="sub">
+          Real production copy from
+          <code>/nieuws/2024-03-25-kopzorgen-het-voetbal</code> and
+          <code
+            >/nieuws/2025-06-20-definitieve-reeksindeling-3e-nationale-bis</code
+          >. Note the shape editors actually write:
+          <strong
+            >four of the six external body links on the site have a bare URL as
+            their link text.</strong
+          >
+          The highlighter marker is a hover reveal (<code
+            >background-size: 0%</code
+          >
+          at rest), so <em>at rest the mark is the only cue there is</em>. Hover
+          a link to see the marker arrive under it.
+        </p>
+
+        <div class="cand">
+          <header>
+            <span class="id">A1</span><span class="nm">ArrowSquareOut</span
+            ><span class="tag">what ships today</span>
+          </header>
+          <div class="body">
+            <div class="prose">
+              <p>
+                De volledige reportage van Pano is te bekijken via VRT MAX:
+                <a class="plink breakurl" href="#"
+                  >https://www.vrt.be/vrtmax/a-z/pano/2024/pano-s2024a5/<svg
+                    class="g"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="0.75em"
+                    height="0.75em"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M192,136v72a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V80A16,16,0,0,1,48,64h72a8,8,0,0,1,0,16H48V208H176V136a8,8,0,0,1,16,0Zm32-96a8,8,0,0,0-8-8H152a8,8,0,0,0-5.66,13.66L172.69,72l-42.35,42.34a8,8,0,0,0,11.32,11.32L184,83.31l26.34,26.35A8,8,0,0,0,224,104Z"
+                    ></path></svg
+                ></a>
+              </p>
+              <p>
+                De reeksindeling werd bevestigd in de
+                <a class="plink" href="#"
+                  >communicatie van Voetbal Vlaanderen<svg
+                    class="g"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="0.75em"
+                    height="0.75em"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M192,136v72a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V80A16,16,0,0,1,48,64h72a8,8,0,0,1,0,16H48V208H176V136a8,8,0,0,1,16,0Zm32-96a8,8,0,0,0-8-8H152a8,8,0,0,0-5.66,13.66L172.69,72l-42.35,42.34a8,8,0,0,0,11.32,11.32L184,83.31l26.34,26.35A8,8,0,0,0,224,104Z"
+                    ></path></svg
+                ></a>
+                van 20 juni.
+              </p>
+            </div>
+            <p class="why">
+              <b>For:</b> already shipping, unambiguous, a box-with-arrow is the
+              web's most literate "new window" idiom. <b>Against:</b> it is a
+              <em>box</em> at 0.75em beside 17px letterforms — at reading size
+              it reads as a smudge, and on the bare-URL case it arrives at the
+              end of a 52-character string nobody finished reading.
+            </p>
+          </div>
+        </div>
+
+        <div class="cand">
+          <header>
+            <span class="id">A2</span><span class="nm">ArrowUpRight</span
+            ><span class="tag">same family as →</span>
+          </header>
+          <div class="body">
+            <div class="prose">
+              <p>
+                De volledige reportage van Pano is te bekijken via VRT MAX:
+                <a class="plink breakurl" href="#"
+                  >https://www.vrt.be/vrtmax/a-z/pano/2024/pano-s2024a5/<svg
+                    class="g"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="0.8em"
+                    height="0.8em"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                    ></path></svg
+                ></a>
+              </p>
+              <p>
+                De reeksindeling werd bevestigd in de
+                <a class="plink" href="#"
+                  >communicatie van Voetbal Vlaanderen<svg
+                    class="g"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="0.8em"
+                    height="0.8em"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                    ></path></svg
+                ></a>
+                van 20 juni.
+              </p>
+            </div>
+            <p class="why">
+              <b>For:</b> one stroke, so it survives 0.8em; it is
+              <code>→</code> rotated, which makes the site's two arrows read as
+              one vocabulary — <em>along</em> vs <em>away</em> — and that is a
+              distinction a reader can learn once. It is also the Phosphor
+              component version of the <code>↗</code> already hand-typed in six
+              places, so it retires the character without changing what anyone
+              sees there. <b>Against:</b> a bare diagonal is one rotation away
+              from the glyph that means "stay", which is either the whole point
+              or the whole problem.
+            </p>
+          </div>
+        </div>
+
+        <div class="cand">
+          <header>
+            <span class="id">A3</span><span class="nm">The host, no glyph</span
+            ><span class="tag">rule 1's own logic</span>
+          </header>
+          <div class="body">
+            <div class="prose">
+              <p>
+                De volledige reportage van Pano is te bekijken via
+                <a class="plink" href="#"
+                  >VRT MAX<span class="host">vrt.be</span></a
+                >
+              </p>
+              <p>
+                De reeksindeling werd bevestigd in de
+                <a class="plink" href="#"
+                  >communicatie van Voetbal Vlaanderen<span class="host"
+                    >voetbalvlaanderen.be</span
+                  ></a
+                >
+                van 20 juni.
+              </p>
+            </div>
+            <p class="why">
+              <b>For:</b> this is rule 1 applied to prose rather than abandoned
+              at the paragraph edge — a sponsor tile needs no mark
+              <em>because the logo names the destination</em>, and here the host
+              does the same job. It says <em>where</em>, not merely
+              <em>away</em>, and it is the only candidate that improves the
+              bare-URL case instead of decorating it: the 52-character URL
+              collapses to <code>vrt.be</code>. <b>Against:</b> it is a content
+              transform, not a mark — it changes what the link says, and an
+              editor who wrote the full URL on purpose loses it. It also puts a
+              mono run inside body copy, which is a type decision #2417 owns.
+            </p>
+          </div>
+        </div>
+
+        <div class="cand">
+          <header>
+            <span class="id">A4</span><span class="nm">Host + diagonal</span
+            ><span class="tag">both</span>
+          </header>
+          <div class="body">
+            <div class="prose">
+              <p>
+                De volledige reportage van Pano is te bekijken via
+                <a class="plink" href="#"
+                  >VRT MAX<span class="host"
+                    >vrt.be<svg
+                      class="g"
+                      style="opacity: 1; margin-left: 3px"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="0.85em"
+                      height="0.85em"
+                      fill="currentColor"
+                      viewBox="0 0 256 256"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                      ></path></svg></span
+                ></a>
+              </p>
+              <p>
+                De reeksindeling werd bevestigd in de
+                <a class="plink" href="#"
+                  >communicatie van Voetbal Vlaanderen<span class="host"
+                    >voetbalvlaanderen.be<svg
+                      class="g"
+                      style="opacity: 1; margin-left: 3px"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="0.85em"
+                      height="0.85em"
+                      fill="currentColor"
+                      viewBox="0 0 256 256"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                      ></path></svg></span
+                ></a>
+                van 20 juni.
+              </p>
+            </div>
+            <p class="why">
+              <b>For:</b> the arrow says <em>away</em>, the host says
+              <em>where</em>; nothing is left to infer. <b>Against:</b> two
+              marks for one fact, and in a paragraph with three links it is a
+              lot of furniture. Also the widest — on a 320px measure it forces
+              more wraps than any other candidate.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>B — on a verb control</h2>
+        <p class="sub">
+          The five off-site acts in their real skins — four of them, because
+          <code>EventFactInline:234</code> and
+          <code>EventDetailBlock:445</code> are the same
+          <code>ticketLabel</code> button. The warm <code>CTA_BASE</code> on
+          <code>/evenementen/[slug]</code>, the primary and secondary paper
+          buttons inside a Sanity body, and <code>ContactPage</code>'s inline
+          link (drawn <em>post-#2474</em>, which gives it the marker). This is
+          where A3 has to prove it can carry mono caps.
+        </p>
+
+        <h3>B1 · ArrowSquareOut</h3>
+        <div class="controls">
+          <div class="ctl-wrap">
+            <p class="ctl-cap">/evenementen/[slug]</p>
+            <a class="btn cta" href="#"
+              >Reserveer
+              <svg
+                width="13"
+                height="13"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M192,136v72a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V80A16,16,0,0,1,48,64h72a8,8,0,0,1,0,16H48V208H176V136a8,8,0,0,1,16,0Zm32-96a8,8,0,0,0-8-8H152a8,8,0,0,0-5.66,13.66L172.69,72l-42.35,42.34a8,8,0,0,0,11.32,11.32L184,83.31l26.34,26.35A8,8,0,0,0,224,104Z"
+                ></path></svg
+            ></a>
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">article body</p>
+            <a class="btn primary" href="#"
+              >Koop tickets
+              <svg
+                width="15"
+                height="15"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M192,136v72a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V80A16,16,0,0,1,48,64h72a8,8,0,0,1,0,16H48V208H176V136a8,8,0,0,1,16,0Zm32-96a8,8,0,0,0-8-8H152a8,8,0,0,0-5.66,13.66L172.69,72l-42.35,42.34a8,8,0,0,0,11.32,11.32L184,83.31l26.34,26.35A8,8,0,0,0,224,104Z"
+                ></path></svg
+            ></a>
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">article body</p>
+            <a class="btn secondary" href="#"
+              >Zet in agenda
+              <svg
+                width="15"
+                height="15"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M192,136v72a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V80A16,16,0,0,1,48,64h72a8,8,0,0,1,0,16H48V208H176V136a8,8,0,0,1,16,0Zm32-96a8,8,0,0,0-8-8H152a8,8,0,0,0-5.66,13.66L172.69,72l-42.35,42.34a8,8,0,0,0,11.32,11.32L184,83.31l26.34,26.35A8,8,0,0,0,224,104Z"
+                ></path></svg
+            ></a>
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">/club/contact</p>
+            <a class="ilink" href="#"
+              >Routebeschrijving
+              <svg
+                width="13"
+                height="13"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M192,136v72a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V80A16,16,0,0,1,48,64h72a8,8,0,0,1,0,16H48V208H176V136a8,8,0,0,1,16,0Zm32-96a8,8,0,0,0-8-8H152a8,8,0,0,0-5.66,13.66L172.69,72l-42.35,42.34a8,8,0,0,0,11.32,11.32L184,83.31l26.34,26.35A8,8,0,0,0,224,104Z"
+                ></path></svg
+            ></a>
+          </div>
+        </div>
+
+        <h3>B2 · ArrowUpRight</h3>
+        <div class="controls">
+          <div class="ctl-wrap">
+            <p class="ctl-cap">/evenementen/[slug]</p>
+            <a class="btn cta" href="#"
+              >Reserveer
+              <svg
+                width="13"
+                height="13"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                ></path></svg
+            ></a>
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">article body</p>
+            <a class="btn primary" href="#"
+              >Koop tickets
+              <svg
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                ></path></svg
+            ></a>
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">article body</p>
+            <a class="btn secondary" href="#"
+              >Zet in agenda
+              <svg
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                ></path></svg
+            ></a>
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">/club/contact</p>
+            <a class="ilink" href="#"
+              >Routebeschrijving
+              <svg
+                width="14"
+                height="14"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                ></path></svg
+            ></a>
+          </div>
+        </div>
+        <p class="note">
+          For contrast, the glyph these two must not be confused with — the
+          internal onward arrow on the same skin:
+          <a
+            class="btn secondary"
+            style="
+              margin-left: 10px;
+              transform: none;
+              box-shadow: var(--shadow-paper-sm);
+            "
+            href="#"
+            >Lees verder
+            <svg
+              width="16"
+              height="16"
+              fill="currentColor"
+              viewBox="0 0 256 256"
+              aria-hidden="true"
+            >
+              <path
+                d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"
+              ></path></svg
+          ></a>
+        </p>
+
+        <h3>B3 · The host, no glyph</h3>
+        <div class="controls">
+          <div class="ctl-wrap">
+            <p class="ctl-cap">/evenementen/[slug]</p>
+            <a class="btn cta" href="#"
+              >Reserveer <span class="ctl-host">· eventbrite.be</span></a
+            >
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">article body</p>
+            <a class="btn primary" href="#"
+              >Koop tickets <span class="ctl-host">· eventbrite.be</span></a
+            >
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">article body</p>
+            <a class="btn secondary" href="#"
+              >Zet in agenda <span class="ctl-host">· google.com</span></a
+            >
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">/club/contact</p>
+            <a class="ilink" href="#"
+              >Routebeschrijving
+              <span class="ctl-host">· maps.google.com</span></a
+            >
+          </div>
+        </div>
+        <p
+          class="why"
+          style="
+            border-top: 1px dashed var(--cream-deep);
+            padding-top: 14px;
+            margin-top: 20px;
+          "
+        >
+          <b>This is where A3 is tested hardest.</b> It answers rule 2's premise
+          directly — the objection was that a verb says nothing about where you
+          land, and this says it in words. But
+          <em>"Zet in agenda · google.com"</em> also reads as a confession, and
+          the host is supplied by whatever URL an editor pasted, so the button's
+          width is content the club does not control.
+        </p>
+
+        <h3>B4 · Host + diagonal</h3>
+        <div class="controls">
+          <div class="ctl-wrap">
+            <p class="ctl-cap">/evenementen/[slug]</p>
+            <a class="btn cta" href="#"
+              >Reserveer <span class="ctl-host">· eventbrite.be</span>
+              <svg
+                width="13"
+                height="13"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                ></path></svg
+            ></a>
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">article body</p>
+            <a class="btn primary" href="#"
+              >Koop tickets <span class="ctl-host">· eventbrite.be</span>
+              <svg
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                ></path></svg
+            ></a>
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">article body</p>
+            <a class="btn secondary" href="#"
+              >Zet in agenda <span class="ctl-host">· google.com</span>
+              <svg
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                ></path></svg
+            ></a>
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">/club/contact</p>
+            <a class="ilink" href="#"
+              >Routebeschrijving <span class="ctl-host">· maps.google.com</span>
+              <svg
+                width="14"
+                height="14"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+              >
+                <path
+                  d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"
+                ></path></svg
+            ></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap">
+        <h2>C — what stays bare, for contrast</h2>
+        <p class="sub">
+          Rule 1's other half. Nothing below changes except the deletion of a
+          literal <code>↗</code>. If any of these looks under-marked next to the
+          candidates above, rule 1 is wrong.
+        </p>
+        <div class="controls" style="align-items: center">
+          <div class="ctl-wrap">
+            <p class="ctl-cap">/club/ultras — was “Word lid via Facebook ↗”</p>
+            <a class="btn" style="background: var(--warm)" href="#"
+              >Word lid via Facebook</a
+            >
+          </div>
+          <div class="ctl-wrap">
+            <p class="ctl-cap">/club/ultras — was “facebook.com/… ↗”</p>
+            <a class="btn primary" href="#">facebook.com/KCVV.ULTRAS.55</a>
+          </div>
+        </div>
+        <div
+          style="
+            margin-top: 24px;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+          "
+        >
+          <div>
+            <p class="ctl-cap">
+              /sponsors, /ploegen/[slug] — 43 of these, unchanged
+            </p>
+            <div style="display: flex; gap: 10px">
+              <div
+                style="
+                  background: var(--cream-soft);
+                  min-height: 70px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 8px 14px;
+                  width: 150px;
+                  font-family: var(--font-big);
+                  font-style: italic;
+                  color: rgb(10 10 10 / 0.8);
+                  font-size: 0.9rem;
+                "
+              >
+                All4Sun
+              </div>
+              <div
+                style="
+                  background: var(--cream-soft);
+                  min-height: 70px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 8px 14px;
+                  width: 150px;
+                  font-family: var(--font-big);
+                  font-style: italic;
+                  color: rgb(10 10 10 / 0.8);
+                  font-size: 0.9rem;
+                "
+              >
+                Alupoort
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Still open after this page</h2>
+        <p class="sub">Two questions the visual choice does not answer.</p>
+        <table>
+          <tbody>
+            <tr>
+              <td style="width: 32%">
+                <strong>What a screen reader hears</strong>
+              </td>
+              <td>
+                <code>sr-only " (opens in new tab)"</code> exists in exactly two
+                places, both in <code>ArticleBody</code>, and it is
+                <strong
+                  >English on a page whose <code>lang</code> is
+                  <code>nl</code></strong
+                >. One rule, in Dutch, everywhere the mark lands — or nowhere.
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Does an internal link ever open a new tab</strong>
+              </td>
+              <td>
+                <code>MembershipForm:439</code> links <code>/privacy</code> with
+                <code>target="_blank"</code> and no cue of any kind. It is the
+                one inversion the two locked rules cannot classify, because it
+                is not off-site at all.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <div class="wrap">
+        #2547 · candidates only — nothing here is a decision. Glyph paths are
+        Phosphor
+        <code>ArrowSquareOut</code> / <code>ArrowUpRight</code> /
+        <code>ArrowRight</code>, fill weight. Prose specimens are verbatim
+        production copy. Mono renders here as IBM Plex Mono only if it is
+        installed locally — see #2520.
+      </div>
+    </footer>
+  </body>
+</html>

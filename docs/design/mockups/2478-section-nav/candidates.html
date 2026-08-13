@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2478 — wat is een sticky sectienavigatie?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #008755;
+        --jersey-deep-dark: #133d28;
+        --paper-edge: #d9d2bd;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        line-height: 1.5;
+      }
+      .wrap {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 40px 16px 120px;
+      }
+      @media (min-width: 768px) {
+        .wrap {
+          padding: 40px 32px 120px;
+        }
+      }
+      h1 {
+        font-family: var(--font-big);
+        font-size: clamp(30px, 5vw, 46px);
+        line-height: 1.02;
+        margin: 0 0 8px;
+        font-weight: 900;
+      }
+      h2 {
+        font-family: var(--font-big);
+        font-size: clamp(22px, 3vw, 30px);
+        line-height: 1.05;
+        margin: 48px 0 4px;
+        font-weight: 900;
+      }
+      h3 {
+        font-family: var(--font-display);
+        font-size: 18px;
+        margin: 0 0 6px;
+        font-weight: 600;
+      }
+      p {
+        margin: 0 0 12px;
+        max-width: 680px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 6px;
+      }
+      .note {
+        font-size: 14px;
+        color: var(--ink-soft);
+        max-width: 680px;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.86em;
+        background: var(--cream-soft);
+        padding: 1px 4px;
+      }
+      hr {
+        border: 0;
+        border-top: 2px solid var(--ink);
+        margin: 56px 0 0;
+      }
+
+      /* ── measured facts table ───────────────────────────────────── */
+      table.facts {
+        border-collapse: collapse;
+        font-size: 14px;
+        margin: 16px 0 0;
+        width: 100%;
+      }
+      table.facts th,
+      table.facts td {
+        text-align: left;
+        padding: 6px 10px 6px 0;
+        border-bottom: 1px solid var(--paper-edge);
+        vertical-align: top;
+      }
+      table.facts th {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .bad {
+        color: var(--card-red);
+        font-weight: 600;
+      }
+
+      /* ── the five item skins ────────────────────────────────────── */
+      .skins {
+        display: grid;
+        gap: 0;
+        margin-top: 24px;
+        border: 2px solid var(--ink);
+      }
+      .skin {
+        border-bottom: 2px solid var(--ink);
+        padding: 0;
+      }
+      .skin:last-child {
+        border-bottom: 0;
+      }
+      .skin-head {
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+        padding: 14px 16px 10px;
+      }
+      .skin-letter {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        background: var(--ink);
+        color: var(--cream);
+        padding: 2px 7px;
+      }
+      .skin-name {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 17px;
+      }
+      .skin-sub {
+        font-size: 13px;
+        color: var(--ink-muted);
+      }
+      .skin-body {
+        padding: 0 0 16px;
+      }
+      /* the bar the items live in — mirrors the real <nav> */
+      .bar {
+        border-bottom: 2px solid var(--ink);
+        background: var(--cream);
+      }
+      .bar--deep {
+        background: var(--cream-deep);
+      }
+      .bar-inner {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 16px;
+        max-width: 1040px;
+        margin: 0 auto;
+      }
+      .bar-inner--gap8 {
+        gap: 8px;
+      }
+
+      /* base item type — identical across every candidate */
+      .it {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 19.25px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: var(--ink);
+        white-space: nowrap;
+        display: inline-block;
+        transition: all 0.15s;
+        cursor: pointer;
+      }
+
+      /* A — bare link (today's /ploegen/[slug]) */
+      .a .it {
+        padding: 4px 12px;
+      }
+      .a .it:hover {
+        background: var(--jersey-deep);
+        color: var(--cream);
+      }
+      .a .it[aria-current] {
+        /* no signal — that is the candidate */
+      }
+
+      /* B — bare link + active rule under the item */
+      .b .it {
+        padding: 4px 12px 6px;
+        border-bottom: 3px solid transparent;
+      }
+      .b .it:hover {
+        color: var(--jersey-deep);
+      }
+      .b .it[aria-current] {
+        border-bottom-color: var(--jersey-deep);
+        font-weight: 600;
+      }
+
+      /* C — filter chip (the /hulp nav today = #2429's FilterTabs skin) */
+      .c .it {
+        padding: 6px 12px;
+        border: 1px solid var(--ink);
+        background: var(--cream);
+        letter-spacing: 0.06em;
+        font-weight: 600;
+        box-shadow: 1px 1px 0 0 var(--ink);
+      }
+      .c .it:hover {
+        background: var(--cream-soft);
+      }
+      .c .it[aria-current] {
+        background: var(--jersey-deep);
+        color: var(--cream);
+        box-shadow: 1px 1px 0 0 var(--ink);
+      }
+
+      /* D — bare link, active in jersey-deep, no rule */
+      .d .it {
+        padding: 4px 12px;
+        color: var(--ink-muted);
+      }
+      .d .it:hover {
+        color: var(--ink);
+      }
+      .d .it[aria-current] {
+        color: var(--jersey-deep);
+        font-weight: 700;
+      }
+
+      /* E — filing tab hanging off the bar's own bottom rule */
+      .e .bar-inner {
+        padding-bottom: 0;
+        gap: 0;
+        align-items: flex-end;
+      }
+      .e .it {
+        padding: 5px 14px 6px;
+        border: 2px solid var(--ink);
+        border-bottom: 0;
+        background: var(--cream-soft);
+        margin-right: -2px;
+        position: relative;
+        top: 2px;
+      }
+      .e .it:hover {
+        background: var(--cream);
+      }
+      .e .it[aria-current] {
+        background: var(--cream);
+        font-weight: 700;
+        /* the active tab breaks the bar's rule — it is the page below */
+        box-shadow: 0 2px 0 0 var(--cream);
+      }
+
+      /* ── the live scroll frame ──────────────────────────────────── */
+      .stage {
+        border: 2px solid var(--ink);
+        margin-top: 24px;
+        height: 560px;
+        overflow-y: auto;
+        background: var(--cream);
+        position: relative;
+      }
+      .fake-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        height: 65px;
+        background: var(--cream);
+        border-bottom: 1px solid var(--paper-edge);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 18px;
+      }
+      .fake-header .logo {
+        font-family: var(--font-big);
+        font-weight: 900;
+        font-size: 20px;
+      }
+      .fake-header .mi {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+      .stage .bar {
+        position: sticky;
+        top: 64px;
+        z-index: 20;
+      }
+      .stage-body {
+        padding: 0 16px 400px;
+      }
+      .stage-sec {
+        padding: 40px 0;
+        border-bottom: 1px dashed var(--paper-edge);
+      }
+      .stage-sec h4 {
+        font-family: var(--font-big);
+        font-size: 26px;
+        font-weight: 900;
+        margin: 0 0 8px;
+      }
+      .stage-sec p {
+        font-size: 15px;
+        color: var(--ink-soft);
+      }
+      .switch {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 20px 0 0;
+      }
+      .switch button {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 600;
+        padding: 6px 12px;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 3px 3px 0 0 var(--ink);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .switch button:hover {
+        transform: translate(3px, 3px);
+        box-shadow: none;
+      }
+      .switch button[aria-pressed="true"] {
+        background: var(--ink);
+        color: var(--cream);
+      }
+
+      /* ── collision panel ────────────────────────────────────────── */
+      .collide {
+        border: 2px solid var(--ink);
+        margin-top: 20px;
+        background: var(--cream);
+      }
+      .collide .lbl {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        padding: 10px 16px 0;
+      }
+      .finder-row {
+        display: flex;
+        gap: 8px;
+        padding: 8px 16px 18px;
+        flex-wrap: wrap;
+      }
+      /* the real post-#2429 FilterTabs chip: border-2, 4px shadow, press-down */
+      .ftab {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+        padding: 8px 12px;
+        display: inline-flex;
+        align-items: center;
+        border: 2px solid var(--ink);
+        color: var(--ink);
+        background: var(--cream-soft);
+        box-shadow: 4px 4px 0 0 var(--ink);
+        transition: all 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .ftab:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+      .ftab.on {
+        background: var(--ink);
+        color: var(--cream);
+        box-shadow: 4px 4px 0 0 var(--ink-muted);
+      }
+      /* same weight, jersey-deep active — the "one object" version */
+      .ftab--nav.on {
+        background: var(--jersey-deep);
+        color: var(--cream);
+        box-shadow: 4px 4px 0 0 var(--ink-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="kicker">#2478 · prototype</p>
+      <h1>Wat is een sticky sectienavigatie?</h1>
+      <p class="note">
+        Twee routes dragen er één, onafhankelijk gebouwd. Ze delen de positie
+        (<code>sticky top-16</code>, <code>border-b-2</code>) en verschillen op
+        élke andere as — inclusief of het item een <em>kale link</em> of een
+        <em>omrand chipje</em> is. De vraag: mag een sectie-item een filterchip
+        zijn, een link, of is het een derde ding?
+      </p>
+
+      <h2>Gemeten op productie — 2026-08-12</h2>
+      <p class="note">
+        <code>kcvv-nextjs.vercel.app</code>, Playwright,
+        320/375/390/430/768/1440.
+      </p>
+      <table class="facts">
+        <tr>
+          <th></th>
+          <th><code>TeamSectionNav</code> · /ploegen/[slug]</th>
+          <th><code>OrganigramSectionNav</code> · /hulp</th>
+        </tr>
+        <tr>
+          <td>Balkhoogte</td>
+          <td>47,3px</td>
+          <td>
+            60,8px desktop · <span class="bad">106px @375</span> (zoekveld
+            wrapt)
+          </td>
+        </tr>
+        <tr>
+          <td>Item</td>
+          <td>kale link, 27,3px hoog</td>
+          <td>omrand chipje, 33,3px hoog</td>
+        </tr>
+        <tr>
+          <td>Actief</td>
+          <td>geen</td>
+          <td>
+            <code>bg-jersey-deep</code> + <code>aria-current</code>, scroll-spy
+          </td>
+        </tr>
+        <tr>
+          <td>Achtergrond / z</td>
+          <td><code>cream</code> / 20</td>
+          <td><code>cream-deep</code> / 30</td>
+        </tr>
+        <tr>
+          <td>Past niet →</td>
+          <td>horizontaal scrollen</td>
+          <td>wrappen</td>
+        </tr>
+        <tr>
+          <td>Anker-offset</td>
+          <td>
+            104px, balk eindigt op 111,3px →
+            <span class="bad">6,5–7,5px onder de balk</span>
+          </td>
+          <td>
+            128px @1440 (ok) · <span class="bad">42px te weinig @375</span>
+          </td>
+        </tr>
+        <tr>
+          <td>Focus na klik</td>
+          <td>
+            <span class="bad">blijft op <code>body</code></span>
+          </td>
+          <td>springt de sectie in</td>
+        </tr>
+        <tr>
+          <td>Component</td>
+          <td>server, 49 regels, geen JS</td>
+          <td>client, 142 regels, 2× IntersectionObserver</td>
+        </tr>
+      </table>
+
+      <p class="note" style="margin-top: 16px">
+        <strong>Beide</strong> pinnen op <code>top-16</code> = 64px, maar de
+        header is <strong>65px</strong> (64 + 1px rand) — dus beide balken
+        zitten 1px achter de header. Eén gedeelde bug, geen verschil.
+      </p>
+
+      <h2>Chipgewicht — de as die overblijft</h2>
+      <p class="note">
+        De chip is gekozen. Maar er zijn er <strong>twee</strong>, en ze zijn
+        nooit tegen elkaar gelegd. Na #2429 staan ze op /hulp op één pagina,
+        ~40px uit elkaar.
+      </p>
+      <table class="facts">
+        <tr>
+          <th></th>
+          <th>
+            Sectienav-chip <span style="font-weight: 400">(/hulp vandaag)</span>
+          </th>
+          <th>
+            Filterchip
+            <span style="font-weight: 400"
+              >(<code>FilterTabs</code>, na #2429)</span
+            >
+          </th>
+        </tr>
+        <tr>
+          <td>Rand</td>
+          <td>1px ink</td>
+          <td>2px ink</td>
+        </tr>
+        <tr>
+          <td>Schaduw</td>
+          <td>1px 1px</td>
+          <td>4px 4px (<code>--shadow-paper-sm</code>)</td>
+        </tr>
+        <tr>
+          <td>Hover</td>
+          <td>vulling wisselt</td>
+          <td>press-down, 4px verschuiving</td>
+        </tr>
+        <tr>
+          <td>Actief</td>
+          <td><code>bg-jersey-deep</code></td>
+          <td><code>bg-ink</code></td>
+        </tr>
+        <tr>
+          <td>Rug</td>
+          <td><code>bg-cream</code></td>
+          <td><code>bg-cream-soft</code></td>
+        </tr>
+        <tr>
+          <td>Hoogte</td>
+          <td>33,3px</td>
+          <td>~35px + <code>pb-1.5</code> ruimte voor de schaduw</td>
+        </tr>
+      </table>
+      <p class="note" style="margin-top: 14px">
+        <strong>Dat laatste is geen detail.</strong> <code>FilterTabs</code> zet
+        <code>pb-1.5</code> op de rij omdat de 4px-schaduw anders wegvalt. In
+        een sticky balk van 47px met een harde <code>border-b-2</code> botst die
+        schaduw op de regel. De lichte chip heeft dat probleem niet.
+      </p>
+
+      <div class="collide">
+        <div class="lbl">Sticky sectienav — “je bent hier”</div>
+        <div class="bar bar--deep c" style="border-bottom-width: 2px">
+          <div class="bar-inner bar-inner--gap8">
+            <a class="it" aria-current="location">Hulp</a>
+            <a class="it">Structuur</a>
+          </div>
+        </div>
+        <div class="lbl" style="padding-top: 18px">
+          HulpFinder-categorieën na #2429 — “dit filter staat aan”
+        </div>
+        <div class="finder-row">
+          <button class="ftab on">Alles</button>
+          <button class="ftab">Lidmaatschap</button>
+          <button class="ftab">Medisch</button>
+          <button class="ftab">Wedstrijden</button>
+        </div>
+      </div>
+
+      <p class="note" style="margin-top: 20px">
+        En hetzelfde, maar met de sectienav op vól filterchip-gewicht — één
+        object op één pagina, twee betekenissen:
+      </p>
+      <div class="collide">
+        <div class="lbl">
+          Sticky sectienav op <code>FilterTabs</code>-gewicht
+        </div>
+        <div class="bar bar--deep" style="border-bottom-width: 2px">
+          <div class="finder-row" style="padding: 10px 16px 14px">
+            <a class="ftab ftab--nav">Hulp</a>
+            <a class="ftab on ftab--nav">Structuur</a>
+          </div>
+        </div>
+        <div class="lbl" style="padding-top: 18px">
+          HulpFinder-categorieën na #2429
+        </div>
+        <div class="finder-row">
+          <button class="ftab on">Alles</button>
+          <button class="ftab">Lidmaatschap</button>
+          <button class="ftab">Medisch</button>
+          <button class="ftab">Wedstrijden</button>
+        </div>
+      </div>
+
+      <h2>De vijf items</h2>
+      <p class="note">
+        Zelfde balk, zelfde type, zelfde labels. Het middelste item is actief.
+        Hover om het gedrag te zien.
+      </p>
+
+      <div class="skins">
+        <div class="skin a">
+          <div class="skin-head">
+            <span class="skin-letter">A</span>
+            <span class="skin-name">Kale link, geen actieve staat</span>
+            <span class="skin-sub">= /ploegen/[slug] vandaag</span>
+          </div>
+          <div class="skin-body">
+            <div class="bar">
+              <div class="bar-inner">
+                <a class="it">Klassement</a>
+                <a class="it" aria-current="location">Wedstrijden</a>
+                <a class="it">Spelers</a>
+                <a class="it">Staf</a>
+                <a class="it">Info</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="skin b">
+          <div class="skin-head">
+            <span class="skin-letter">B</span>
+            <span class="skin-name"
+              >Kale link + regel onder het actieve item</span
+            >
+            <span class="skin-sub"
+              >nieuw — het enige gebaar dat nog vrij is</span
+            >
+          </div>
+          <div class="skin-body">
+            <div class="bar">
+              <div class="bar-inner">
+                <a class="it">Klassement</a>
+                <a class="it" aria-current="location">Wedstrijden</a>
+                <a class="it">Spelers</a>
+                <a class="it">Staf</a>
+                <a class="it">Info</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="skin c">
+          <div class="skin-head">
+            <span class="skin-letter">C</span>
+            <span class="skin-name">Filterchip</span>
+            <span class="skin-sub">= /hulp vandaag · = #2429's FilterTabs</span>
+          </div>
+          <div class="skin-body">
+            <div class="bar bar--deep">
+              <div class="bar-inner bar-inner--gap8">
+                <a class="it">Klassement</a>
+                <a class="it" aria-current="location">Wedstrijden</a>
+                <a class="it">Spelers</a>
+                <a class="it">Staf</a>
+                <a class="it">Info</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="skin d">
+          <div class="skin-head">
+            <span class="skin-letter">D</span>
+            <span class="skin-name">Kale link, actief alleen in kleur</span>
+            <span class="skin-sub"
+              >rustigste optie — maar groen = linkkleur</span
+            >
+          </div>
+          <div class="skin-body">
+            <div class="bar">
+              <div class="bar-inner">
+                <a class="it">Klassement</a>
+                <a class="it" aria-current="location">Wedstrijden</a>
+                <a class="it">Spelers</a>
+                <a class="it">Staf</a>
+                <a class="it">Info</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="skin e">
+          <div class="skin-head">
+            <span class="skin-letter">E</span>
+            <span class="skin-name">Tabblad dat aan de onderregel hangt</span>
+            <span class="skin-sub">het actieve tabblad breekt de regel</span>
+          </div>
+          <div class="skin-body">
+            <div class="bar">
+              <div class="bar-inner">
+                <a class="it">Klassement</a>
+                <a class="it" aria-current="location">Wedstrijden</a>
+                <a class="it">Spelers</a>
+                <a class="it">Staf</a>
+                <a class="it">Info</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Scrollen — want een sticky balk beoordeel je in beweging</h2>
+      <p class="note">
+        Echte header (65px), echte balk (<code>top: 64px</code>), vijf secties.
+        Wissel van kandidaat en scroll.
+      </p>
+      <div class="switch" id="switch">
+        <button data-k="a" aria-pressed="true">A · kale link</button>
+        <button data-k="b" aria-pressed="false">B · regel</button>
+        <button data-k="c" aria-pressed="false">C · chip</button>
+        <button data-k="d" aria-pressed="false">D · kleur</button>
+        <button data-k="e" aria-pressed="false">E · tab</button>
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="fake-header">
+          <span class="logo">KCVV</span>
+          <span class="mi">Nieuws</span>
+          <span class="mi">Ploegen</span>
+          <span class="mi">Kalender</span>
+          <span class="mi">De club</span>
+        </div>
+        <div class="bar a" id="stagebar">
+          <div class="bar-inner" id="stagebarinner">
+            <a class="it" href="#klassement" data-t="klassement">Klassement</a>
+            <a class="it" href="#wedstrijden" data-t="wedstrijden"
+              >Wedstrijden</a
+            >
+            <a class="it" href="#spelers" data-t="spelers">Spelers</a>
+            <a class="it" href="#staf" data-t="staf">Staf</a>
+            <a class="it" href="#info" data-t="info">Info</a>
+          </div>
+        </div>
+        <div class="stage-body">
+          <div class="stage-sec" id="klassement">
+            <h4>Klassement</h4>
+            <p>
+              Rangschikking van de reeks. Op productie rendert dit vandaag
+              nergens — het is voorseizoen.
+            </p>
+          </div>
+          <div class="stage-sec" id="wedstrijden">
+            <h4>Wedstrijden</h4>
+            <p>De volledige kalender van deze ploeg, thuis en uit.</p>
+          </div>
+          <div class="stage-sec" id="spelers">
+            <h4>Spelers</h4>
+            <p>De kern, gegroepeerd per positie.</p>
+          </div>
+          <div class="stage-sec" id="staf">
+            <h4>Staf</h4>
+            <p>Trainer, afgevaardigde, verzorger.</p>
+          </div>
+          <div class="stage-sec" id="info">
+            <h4>Info</h4>
+            <p>
+              Trainingsuren, contact, en wat de ploeg over zichzelf schrijft.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <hr />
+      <p class="note" style="margin-top: 20px">
+        <strong>Niet hier beslist:</strong> de anker-ids zijn een contract — het
+        hoofdmenu deeplinkt naar <code>#spelers</code>,
+        <code>#wedstrijden</code>, <code>#klassement</code> en
+        <code>/hulp#structuur</code>. Ze mogen niet hernoemd worden.
+      </p>
+    </div>
+
+    <script>
+      const stage = document.getElementById("stage");
+      const bar = document.getElementById("stagebar");
+      const inner = document.getElementById("stagebarinner");
+      const items = [...inner.querySelectorAll(".it")];
+      const KEYS = ["a", "b", "c", "d", "e"];
+
+      document.getElementById("switch").addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const k = btn.dataset.k;
+        [...e.currentTarget.querySelectorAll("button")].forEach((b) =>
+          b.setAttribute("aria-pressed", String(b === btn)),
+        );
+        bar.classList.remove(...KEYS, "bar--deep");
+        bar.classList.add(k);
+        if (k === "c") bar.classList.add("bar--deep");
+        inner.classList.toggle("bar-inner--gap8", k === "c");
+      });
+
+      items.forEach((a) =>
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          const el = document.getElementById(a.dataset.t);
+          stage.scrollTo({
+            top: el.offsetTop - 64 - bar.offsetHeight,
+            behavior: "smooth",
+          });
+        }),
+      );
+
+      // scroll-spy inside the stage — candidate A ignores it visually
+      stage.addEventListener("scroll", () => {
+        const line = stage.scrollTop + 64 + bar.offsetHeight + 8;
+        let cur = items[0];
+        items.forEach((a) => {
+          const el = document.getElementById(a.dataset.t);
+          if (el.offsetTop <= line) cur = a;
+        });
+        items.forEach((a) =>
+          a === cur
+            ? a.setAttribute("aria-current", "location")
+            : a.removeAttribute("aria-current"),
+        );
+      });
+    </script>
+  </body>
+</html>

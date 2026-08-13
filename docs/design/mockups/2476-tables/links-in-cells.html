@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2476 — een link in een tabelcel (echte pagina)</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #008755;
+        --jersey-link: #007c46;
+        --warm: #f0c264;
+        --paper-edge: #d9d2bd;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-md: 6px 6px 0 0 var(--ink);
+        --text-label: 0.6875rem;
+        --container-prose: 680px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #c9c2ae;
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+        padding-bottom: 120px;
+      }
+
+      .proto-head {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 28px 24px 24px;
+      }
+      .proto-head .k {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin: 0 0 8px;
+      }
+      .proto-head h1 {
+        font-family: var(--font-big);
+        font-weight: 400;
+        font-size: 2rem;
+        line-height: 1.1;
+        margin: 0 0 10px;
+      }
+      .proto-head p {
+        margin: 0;
+        max-width: 78ch;
+        font-size: 0.94rem;
+        color: rgb(245 241 230 / 0.82);
+      }
+      .proto-head code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        color: var(--warm);
+      }
+
+      .note {
+        padding: 14px 24px;
+        background: var(--ink-soft);
+        color: rgb(245 241 230 / 0.9);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        line-height: 1.7;
+      }
+      .note b {
+        color: var(--warm);
+      }
+
+      .bar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 50;
+        background: var(--ink);
+        color: var(--cream);
+        border-top: 2px solid var(--warm);
+        padding: 12px 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: center;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .bar .grp {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .bar .lbl {
+        color: var(--warm);
+        font-weight: 700;
+      }
+      .bar button {
+        font: inherit;
+        letter-spacing: inherit;
+        text-transform: inherit;
+        background: transparent;
+        color: var(--cream);
+        border: 1.5px solid rgb(245 241 230 / 0.45);
+        padding: 6px 11px;
+        cursor: pointer;
+      }
+      .bar button[aria-pressed="true"] {
+        background: var(--warm);
+        border-color: var(--warm);
+        color: var(--ink);
+        font-weight: 700;
+      }
+
+      .stage {
+        width: var(--canvas, 1040px);
+        max-width: 100%;
+        margin: 0 auto;
+        background: var(--cream);
+        container-type: inline-size;
+        box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
+      }
+      .pc {
+        padding: 44px 16px 60px;
+      }
+      @container (min-width: 768px) {
+        .pc {
+          padding-left: 32px;
+          padding-right: 32px;
+        }
+      }
+      .prose {
+        max-width: var(--container-prose);
+        margin: 0 auto;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin: 0 0 12px;
+      }
+      h2.ed {
+        font-family: var(--font-big);
+        font-weight: 400;
+        font-style: italic;
+        font-size: clamp(1.9rem, 1rem + 3vw, 2.6rem);
+        line-height: 1.05;
+        margin: 0 0 24px;
+      }
+      h2.ed em {
+        color: var(--jersey-deep);
+        font-style: normal;
+      }
+      .lede {
+        font-size: 1.05rem;
+        line-height: 1.7;
+        color: var(--ink-soft);
+        margin: 0 0 24px;
+      }
+
+      /* ── de tabel — het kaart-skin uit prototype 1 ─────────────────── */
+      .tw {
+        position: relative;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-md);
+        margin: 24px 0;
+      }
+      .tscroll {
+        overflow-x: auto;
+      }
+      .tscroll:focus-visible {
+        outline: 2px solid var(--jersey-deep);
+        outline-offset: 2px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead {
+        background: var(--jersey-deep);
+      }
+      th {
+        color: #fff;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        text-align: left;
+        padding: 10px 12px;
+        white-space: nowrap;
+      }
+      th + th {
+        border-left: 1px dotted rgb(245 241 230 / 0.3);
+      }
+      td {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        padding: 9px 12px;
+        vertical-align: top;
+        border-top: 1px dotted var(--ink-muted);
+        white-space: nowrap;
+      }
+      td + td {
+        border-left: 1px dotted var(--ink-muted);
+      }
+      tbody tr:nth-child(even) td {
+        background: rgb(0 0 0 / 0.025);
+      }
+      td:first-child {
+        font-family: var(--font-display);
+        font-size: 15px;
+        font-weight: 600;
+        font-style: italic;
+      }
+      .fade {
+        display: none;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 40px;
+        pointer-events: none;
+        background: linear-gradient(to left, var(--cream), transparent);
+      }
+      .tw.scrolls .fade {
+        display: block;
+      }
+      .tw.scrolls td:first-child,
+      .tw.scrolls th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        box-shadow: 2px 0 4px -1px rgb(0 0 0 / 0.12);
+      }
+      .tw.scrolls th:first-child {
+        background: var(--jersey-deep);
+        z-index: 3;
+      }
+      .tw.scrolls tbody tr:nth-child(odd) td:first-child {
+        background: var(--cream);
+      }
+      .tw.scrolls tbody tr:nth-child(even) td:first-child {
+        background: #e8e0c8b3;
+      }
+
+      /* ── LINKBEHANDELINGEN ───────────────────────────────────────────── */
+      /* 1 — gestript: wat de sanitizer vandaag doet. */
+      body[data-link="stripped"] td a {
+        color: inherit;
+        text-decoration: none;
+        pointer-events: none;
+        font: inherit;
+      }
+
+      /* 2 — .prose-link: exact de regel uit globals.css (marker op hover). */
+      body[data-link="prose"] td a {
+        color: var(--jersey-link);
+        text-decoration: none;
+        font-weight: 500;
+        padding-inline: 4px;
+        margin-inline: -4px;
+        background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'><path d='M 0 4.7 L 50 4.3 L 100 4.0 L 100 10.8 L 50 11.1 L 0 11.0 Z' fill='%23008755' fill-opacity='0.4'/></svg>");
+        background-repeat: no-repeat;
+        background-position: 0 100%;
+        background-size: 0% 0.42em;
+        transition: background-size 0.28s ease;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+      }
+      body[data-link="prose"] td a:hover,
+      body[data-link="prose"] td a:focus-visible {
+        background-size: 100% 0.42em;
+      }
+
+      /* 3 — stil groen: kleur alleen, geen marker. */
+      body[data-link="quiet"] td a {
+        color: var(--jersey-link);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      body[data-link="quiet"] td a:hover {
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      /* 4 — inkt + onderlijnd: de link draagt geen kleur, alleen een streep. */
+      body[data-link="ink"] td a {
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+        text-decoration-color: var(--jersey-deep);
+      }
+      body[data-link="ink"] td a:hover {
+        text-decoration-thickness: 2px;
+      }
+
+      /* dode links zichtbaar maken (los van de behandeling) */
+      body[data-dead="on"] td a[data-dead="1"] {
+        background-image: none;
+        color: var(--card-red) !important;
+        text-decoration: line-through;
+        text-decoration-color: var(--card-red);
+      }
+      body[data-dead="on"] td a[data-dead="1"]::after {
+        content: " 404";
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.12em;
+        vertical-align: super;
+      }
+
+      .meas {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 12px 0 0;
+      }
+      .meas b {
+        color: var(--jersey-deep);
+      }
+      .meas.warn b {
+        color: var(--card-red);
+      }
+      .seam {
+        height: 10px;
+        background: repeating-linear-gradient(
+          135deg,
+          var(--jersey-deep) 0 10px,
+          var(--cream) 10px 20px,
+          var(--ink) 20px 30px,
+          var(--cream) 30px 40px
+        );
+      }
+    </style>
+  </head>
+  <body data-link="stripped" data-dead="off">
+    <div class="proto-head">
+      <p class="k">Wegwijzer #2476 · prototype 2 van 2</p>
+      <h1>Een link in een tabelcel.</h1>
+      <p>
+        Echte pagina, echte data:
+        <code>/nieuws/2019-12-20-transferoverzicht-2020-2021</code>. De tabel
+        draagt in Sanity <b>16 links</b> over <b>8 rijen</b>; de sanitizer wist
+        ze allemaal. Hieronder staan de <b>eerste 6 van die 8 rijen</b> terug,
+        in vier behandelingen. Het skin is dat uit prototype 1.
+      </p>
+    </div>
+
+    <div class="note">
+      Over de hele site: <b>109 links</b> in 21 gepubliceerde tabellen worden
+      gestript — 56 naar <code>/player/&lt;naam&gt;</code>, 53 naar Facebook.
+      Van de 37 unieke spelerslinks <b>leven er nog 12</b>;
+      <b>25 geven een 404</b>. Zet "Dode links" aan om te zien wat terugzetten
+      oplevert.
+    </div>
+
+    <div class="stage">
+      <div class="seam"></div>
+      <section class="pc">
+        <div class="prose">
+          <p class="kicker">Transfers</p>
+          <h2 class="ed">Wie vertrekt er<em>?</em></h2>
+          <p class="lede">
+            De kern voor volgend seizoen krijgt stilaan vorm. Deze spelers
+            verlaten Elewijt — met dank voor de jaren, en veel succes bij de
+            nieuwe club.
+          </p>
+
+          <div class="tw" id="tw">
+            <div
+              class="tscroll"
+              tabindex="0"
+              role="region"
+              aria-label="Vertrekkende spelers"
+            >
+              <table>
+                <thead>
+                  <tr>
+                    <th>Naam</th>
+                    <th>Positie</th>
+                    <th>Club 2019/2020</th>
+                    <th>Meer info</th>
+                  </tr>
+                </thead>
+                <tbody id="body"></tbody>
+              </table>
+            </div>
+            <div class="fade"></div>
+          </div>
+          <p class="meas" id="meas"></p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="bar" aria-label="Prototype-instellingen">
+      <span class="grp">
+        <span class="lbl">Link</span>
+        <button data-link-btn="stripped" aria-pressed="true">
+          Gestript (vandaag)
+        </button>
+        <button data-link-btn="prose" aria-pressed="false">.prose-link</button>
+        <button data-link-btn="quiet" aria-pressed="false">Stil groen</button>
+        <button data-link-btn="ink" aria-pressed="false">Inkt + streep</button>
+      </span>
+      <span class="grp">
+        <span class="lbl">Dode links</span>
+        <button data-dead-btn="off" aria-pressed="true">Verbergen</button>
+        <button data-dead-btn="on" aria-pressed="false">Tonen</button>
+      </span>
+      <span class="grp">
+        <span class="lbl">Breedte</span>
+        <button data-canvas-btn="1040" aria-pressed="true">1040</button>
+        <button data-canvas-btn="375" aria-pressed="false">375</button>
+      </span>
+    </nav>
+
+    <script>
+      // Echte rijen uit de gepubliceerde tabel (eerste 6 van 8 rijen).
+      // `dead` = gemeten tegen productie
+      // op 2026-08-11: /player/<slug> geeft 404 of 308.
+      const rows = [
+        [
+          "Stijn Baudet",
+          "stijn-baudet",
+          1,
+          "Aanvaller",
+          "VK Holsbeek A",
+          "3581875398519479",
+        ],
+        [
+          "Fabio de Vito",
+          "fabio-de-vito",
+          1,
+          "Middenvelder",
+          "KCS Machelen A",
+          "3611202945586724",
+        ],
+        [
+          "Arnout De Weerdt",
+          "arnout-de-weerdt",
+          0,
+          "Verdediger",
+          "KFC Meise",
+          "3627187483988270",
+        ],
+        [
+          "Maarten Tordoir",
+          "maarten-tordoir",
+          1,
+          "Verdediger",
+          "KFC Meise",
+          "3627187483988270",
+        ],
+        [
+          "Luka De Backker",
+          "luka-de-backker",
+          1,
+          "Middenvelder",
+          "HO Veltem",
+          "3646199552087063",
+        ],
+        [
+          "Glenn Breugelmans",
+          "glenn-breugelmans",
+          0,
+          "Middenvelder",
+          "SK Londerzeel",
+          "3646199552087063",
+        ],
+      ];
+      document.getElementById("body").innerHTML = rows
+        .map(
+          ([naam, slug, dead, pos, club, fb]) => `<tr>
+            <td><a href="https://www.kcvvelewijt.be/player/${slug}" data-dead="${dead}">${naam}</a></td>
+            <td>${pos}</td>
+            <td>${club}</td>
+            <td><a href="https://www.facebook.com/KCVVElewijt/posts/${fb}" target="_blank" rel="noopener" data-dead="0">Facebook</a></td>
+          </tr>`,
+        )
+        .join("");
+
+      function press(attr, val) {
+        document
+          .querySelectorAll("[data-" + attr + "-btn]")
+          .forEach((b) =>
+            b.setAttribute(
+              "aria-pressed",
+              String(b.dataset[attr + "Btn"] === val),
+            ),
+          );
+      }
+      function measure() {
+        const sc = document.querySelector(".tscroll");
+        const by = sc.scrollWidth - sc.clientWidth;
+        document.getElementById("tw").classList.toggle("scrolls", by > 2);
+        const el = document.getElementById("meas");
+        const mode = document.body.dataset.link;
+        el.classList.toggle("warn", document.body.dataset.dead === "on");
+        el.innerHTML =
+          `Kolombreedte <b>${sc.scrollWidth}px</b> in <b>${sc.clientWidth}px</b> · ` +
+          (by > 2 ? `schuift <b>${by}px</b>` : `<b>past</b>`) +
+          (mode === "stripped"
+            ? ` · vandaag: <b>16 links weg</b>, "Facebook" is dode tekst`
+            : ``) +
+          (document.body.dataset.dead === "on"
+            ? ` · <b>4 van 6</b> spelerslinks in dit fragment geven 404`
+            : ``);
+      }
+
+      document.querySelectorAll("[data-link-btn]").forEach((b) =>
+        b.addEventListener("click", () => {
+          document.body.dataset.link = b.dataset.linkBtn;
+          press("link", b.dataset.linkBtn);
+          measure();
+        }),
+      );
+      document.querySelectorAll("[data-dead-btn]").forEach((b) =>
+        b.addEventListener("click", () => {
+          document.body.dataset.dead = b.dataset.deadBtn;
+          press("dead", b.dataset.deadBtn);
+          measure();
+        }),
+      );
+      document.querySelectorAll("[data-canvas-btn]").forEach((b) =>
+        b.addEventListener("click", () => {
+          document
+            .querySelectorAll(".stage")
+            .forEach((s) =>
+              s.style.setProperty("--canvas", b.dataset.canvasBtn + "px"),
+            );
+          press("canvas", b.dataset.canvasBtn);
+          measure();
+        }),
+      );
+
+      measure();
+      window.addEventListener("resize", measure);
+      document.fonts?.ready.then(measure);
+    </script>
+  </body>
+</html>

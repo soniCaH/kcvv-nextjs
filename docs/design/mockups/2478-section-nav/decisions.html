@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2478 — beslist: de sticky sectienavigatie</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #008755;
+        --paper-edge: #d9d2bd;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --sticky-header-h: 65px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        line-height: 1.5;
+      }
+      .wrap {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 40px 16px 120px;
+      }
+      @media (min-width: 768px) {
+        .wrap {
+          padding: 40px 32px 120px;
+        }
+      }
+      h1 {
+        font-family: var(--font-big);
+        font-size: clamp(30px, 5vw, 46px);
+        line-height: 1.02;
+        margin: 0 0 8px;
+        font-weight: 900;
+      }
+      h2 {
+        font-family: var(--font-big);
+        font-size: clamp(22px, 3vw, 30px);
+        line-height: 1.05;
+        margin: 48px 0 8px;
+        font-weight: 900;
+      }
+      p {
+        margin: 0 0 12px;
+        max-width: 680px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 6px;
+      }
+      .note {
+        font-size: 14px;
+        color: var(--ink-soft);
+        max-width: 680px;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.86em;
+        background: var(--cream-soft);
+        padding: 1px 4px;
+      }
+      ol.rules {
+        max-width: 680px;
+        padding-left: 20px;
+      }
+      ol.rules li {
+        margin-bottom: 10px;
+        font-size: 15px;
+      }
+
+      /* ── the resolved bar ───────────────────────────────────────── */
+      .demo {
+        /* offsetParent voor .sec — anders meet offsetTop tegen <body> */
+        position: relative;
+        border: 2px solid var(--ink);
+        margin-top: 20px;
+        height: 520px;
+        overflow-y: auto;
+        background: var(--cream);
+        scroll-padding-top: 116px;
+      }
+      .hdr {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        height: 65px;
+        background: var(--cream);
+        border-bottom: 1px solid var(--paper-edge);
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 0 16px;
+      }
+      .hdr .logo {
+        font-family: var(--font-big);
+        font-weight: 900;
+        font-size: 20px;
+      }
+      .hdr span.mi {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      /* THE BAR — cream-deep, 2px ink bottom rule, z-30, pinned at 65px */
+      .snav {
+        position: sticky;
+        top: 65px;
+        z-index: 30;
+        background: var(--cream-deep);
+        border-bottom: 2px solid var(--ink);
+      }
+      .snav-inner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 8px 16px;
+      }
+      /* the chip row scrolls; the trailing slot wraps to its own line */
+      .snav-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        min-width: 0;
+      }
+      .snav-row::-webkit-scrollbar {
+        display: none;
+      }
+      /* THE CHIP — 1px border, 1px shadow, no press-down */
+      .snav-chip {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 19.25px;
+        letter-spacing: 0.06em;
+        font-weight: 600;
+        text-transform: uppercase;
+        text-decoration: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+        display: inline-block;
+        padding: 6px 12px;
+        border: 1px solid var(--ink);
+        background: var(--cream);
+        color: var(--ink);
+        box-shadow: 1px 1px 0 0 var(--ink);
+        transition: all 0.15s;
+        cursor: pointer;
+      }
+      .snav-chip:hover {
+        background: var(--cream-soft);
+      }
+      .snav-chip[aria-current] {
+        background: var(--jersey-deep);
+        color: var(--cream);
+      }
+      /* the trailing slot — /hulp's search is its only occupant */
+      .snav-slot {
+        margin-left: auto;
+        min-width: 0;
+      }
+      /* Rule 4: the slot wears the chip's own paper weight — same 1px rand,
+         same 1px shadow. `appearance: none` first, or the UA stylesheet paints
+         its own heavier border over it and the row stops reading as one row. */
+      .snav-slot input {
+        appearance: none;
+        -webkit-appearance: none;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 19.25px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 6px 12px;
+        border: 1px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 1px 1px 0 0 var(--ink);
+        color: var(--ink);
+        width: 240px;
+        max-width: 100%;
+      }
+      .snav-slot input::placeholder {
+        color: var(--ink-muted);
+        text-transform: uppercase;
+      }
+      .demo-body {
+        padding: 0 16px 380px;
+      }
+      .sec {
+        padding: 40px 0;
+        border-bottom: 1px dashed var(--paper-edge);
+      }
+      .sec h4 {
+        font-family: var(--font-big);
+        font-size: 26px;
+        font-weight: 900;
+        margin: 0 0 8px;
+      }
+      .sec p {
+        font-size: 15px;
+        color: var(--ink-soft);
+      }
+      .toggle {
+        display: flex;
+        gap: 8px;
+        margin: 18px 0 0;
+      }
+      .toggle button {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 600;
+        padding: 6px 12px;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 3px 3px 0 0 var(--ink);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .toggle button:hover {
+        transform: translate(3px, 3px);
+        box-shadow: none;
+      }
+      .toggle button[aria-pressed="true"] {
+        background: var(--ink);
+        color: var(--cream);
+      }
+      table.facts {
+        border-collapse: collapse;
+        font-size: 14px;
+        width: 100%;
+        margin-top: 12px;
+      }
+      table.facts th,
+      table.facts td {
+        text-align: left;
+        padding: 6px 10px 6px 0;
+        border-bottom: 1px solid var(--paper-edge);
+        vertical-align: top;
+      }
+      table.facts th {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .ok {
+        color: var(--jersey-deep);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="kicker">#2478 · beslist 2026-08-12</p>
+      <h1>De sticky sectienavigatie</h1>
+      <p class="note">
+        Eén balk, één chip, één offset — en de offset is
+        <strong>afgeleid, niet ingetypt</strong>. Wat hieronder staat is geen
+        van de vijf kandidaten zoals getekend: het is kandidaat C op licht
+        gewicht, met scroll-spy en een optionele sleuf achteraan.
+      </p>
+
+      <h2>De regels</h2>
+      <ol class="rules">
+        <li>
+          Een sectie-item is een <strong>lichte chip</strong> — 1px rand, 1px
+          schaduw, géén press-down. Bewust stiller dan de filterchip
+          (<code>border-2</code>, 4px schaduw): een sticky balk is chrome, geen
+          inhoud.
+        </li>
+        <li>
+          Actief is <code>bg-jersey-deep</code> +
+          <code>aria-current="location"</code>, gedreven door
+          <strong>scroll-spy op elke route</strong>. De vulling betekent altijd
+          “de sectie die je nú leest”.
+        </li>
+        <li>
+          De balk is <code>bg-cream-deep</code>,
+          <code>border-b-2 border-ink</code>, <code>z-30</code>, gepind op
+          <code>var(--sticky-header-h)</code> = <strong>65px</strong> — de
+          gemeten hoogte van de header, niet <code>top-16</code>.
+        </li>
+        <li>
+          De balk mag één <strong>sleuf achteraan</strong> dragen. De zoekbalk
+          van /hulp is de enige bewoner; de sleuf wrapt naar een eigen regel, de
+          chiprij niet. Wat in de sleuf zit draagt
+          <strong>exact het chipgewicht</strong> — 1px rand, 1px schaduw, zelfde
+          mono-caps. Eén rij, één soort object; een zwaardere rand of schaduw
+          breekt dat meteen.
+        </li>
+        <li>
+          Past de chiprij niet, dan <strong>scrollt ze</strong>. De pijl komt
+          alleen bij échte overflow — geen gereserveerde rail.
+        </li>
+        <li>
+          De ankeroffset is <code>scroll-padding-top</code> op
+          <code>&lt;html&gt;</code>, door de balk gezet op header + eigen
+          gemeten hoogte. Alle 11 handgeschreven
+          <code>scroll-mt-*</code> verdwijnen.
+        </li>
+        <li>
+          Klikken verplaatst de focus de sectie in (<code>tabIndex={-1}</code>)
+          — /hulp deed dit al, /ploegen niet.
+        </li>
+      </ol>
+
+      <h2>Gemeten na de fix</h2>
+      <p class="note">
+        <code>scroll-padding-top</code> geïnjecteerd op productie, alle
+        <code>scroll-mt</code> gestript, daarna elke anker-sprong gemeten:
+      </p>
+      <table class="facts">
+        <tr>
+          <th>Route</th>
+          <th>Balkhoogte</th>
+          <th><code>scroll-padding-top</code></th>
+          <th>Landt onder de balk</th>
+        </tr>
+        <tr>
+          <td>/ploegen @375</td>
+          <td>47,3px</td>
+          <td>112,25px</td>
+          <td class="ok">+0,7 … +1,4px</td>
+        </tr>
+        <tr>
+          <td>/ploegen @1440</td>
+          <td>47,3px</td>
+          <td>112,25px</td>
+          <td class="ok">+0,5 … +1,3px</td>
+        </tr>
+        <tr>
+          <td>/hulp @1440 (zoek zichtbaar)</td>
+          <td>60,8px</td>
+          <td>125,75px</td>
+          <td class="ok">+1,2px</td>
+        </tr>
+        <tr>
+          <td>/hulp @375 (zoek gewrapt)</td>
+          <td>106px</td>
+          <td>171px</td>
+          <td class="ok">+1,0px</td>
+        </tr>
+      </table>
+      <p class="note" style="margin-top: 12px">
+        Vóór de fix: /ploegen landde <strong>6,5–7,5px achter</strong> de balk,
+        /hulp @375 <strong>42px te kort</strong>. De afgeleide offset is correct
+        in élke staat, dus de sleuf achteraan kost niets.
+      </p>
+
+      <h2>De balk, scrollend</h2>
+      <div class="toggle" id="toggle">
+        <button data-v="team" aria-pressed="true">/ploegen — 5 secties</button>
+        <button data-v="hulp" aria-pressed="false">
+          /hulp — 2 deuren + sleuf
+        </button>
+      </div>
+      <div class="demo" id="demo">
+        <div class="hdr">
+          <span class="logo">KCVV</span>
+          <span class="mi">Nieuws</span>
+          <span class="mi">Ploegen</span>
+          <span class="mi">Kalender</span>
+          <span class="mi">De club</span>
+        </div>
+        <nav class="snav" id="snav" aria-label="Sectienavigatie">
+          <div class="snav-inner">
+            <div class="snav-row" id="row"></div>
+            <div class="snav-slot" id="slot" hidden>
+              <input type="search" placeholder="Zoek…" aria-label="Zoek" />
+            </div>
+          </div>
+        </nav>
+        <div class="demo-body" id="body"></div>
+      </div>
+      <p class="note" style="margin-top: 12px">
+        Scroll en let op de groene vulling; klik een chip en zie waar de kop
+        landt. De offset wordt live uit de balkhoogte gelezen, dus hij klopt ook
+        als de zoeksleuf de balk hoger maakt.
+      </p>
+    </div>
+
+    <script>
+      const SETS = {
+        team: {
+          slot: false,
+          items: [
+            ["klassement", "Klassement"],
+            ["wedstrijden", "Wedstrijden"],
+            ["spelers", "Spelers"],
+            ["staf", "Staf"],
+            ["info", "Info"],
+          ],
+          copy: {
+            klassement: "Rangschikking van de reeks.",
+            wedstrijden: "De volledige kalender, thuis en uit.",
+            spelers: "De kern, gegroepeerd per positie.",
+            staf: "Trainer, afgevaardigde, verzorger.",
+            info: "Trainingsuren, contact, en wat de ploeg over zichzelf schrijft.",
+          },
+        },
+        hulp: {
+          slot: true,
+          items: [
+            ["hulp", "Hulp"],
+            ["structuur", "Structuur"],
+          ],
+          copy: {
+            hulp: "Kies je rol of een categorie en blader door de antwoorden.",
+            structuur: "Het organigram — wie-is-wie.",
+          },
+        },
+      };
+
+      const demo = document.getElementById("demo");
+      const snav = document.getElementById("snav");
+      const row = document.getElementById("row");
+      const slot = document.getElementById("slot");
+      const bodyEl = document.getElementById("body");
+
+      // Rule 6: the offset is derived from the bar, never typed.
+      const syncOffset = () => {
+        const h = 65 + snav.getBoundingClientRect().height;
+        demo.style.scrollPaddingTop = h + "px";
+      };
+
+      function render(key) {
+        const set = SETS[key];
+        row.innerHTML = "";
+        bodyEl.innerHTML = "";
+        slot.hidden = !set.slot;
+        set.items.forEach(([id, label]) => {
+          const a = document.createElement("a");
+          a.className = "snav-chip";
+          a.href = "#" + id;
+          a.dataset.t = id;
+          a.textContent = label;
+          a.addEventListener("click", (e) => {
+            e.preventDefault();
+            const el = document.getElementById(id);
+            demo.scrollTo({
+              top: el.offsetTop - 65 - snav.getBoundingClientRect().height,
+              behavior: "smooth",
+            });
+            el.focus({ preventScroll: true });
+          });
+          row.appendChild(a);
+          const sec = document.createElement("div");
+          sec.className = "sec";
+          sec.id = id;
+          sec.tabIndex = -1;
+          sec.innerHTML = `<h4>${label}</h4><p>${set.copy[id]}</p>`;
+          bodyEl.appendChild(sec);
+        });
+        syncOffset();
+        spy();
+      }
+
+      function spy() {
+        const line =
+          demo.scrollTop + 65 + snav.getBoundingClientRect().height + 8;
+        const chips = [...row.querySelectorAll(".snav-chip")];
+        let cur = chips[0];
+        chips.forEach((a) => {
+          const el = document.getElementById(a.dataset.t);
+          if (el && el.offsetTop <= line) cur = a;
+        });
+        chips.forEach((a) =>
+          a === cur
+            ? a.setAttribute("aria-current", "location")
+            : a.removeAttribute("aria-current"),
+        );
+      }
+
+      demo.addEventListener("scroll", spy);
+      new ResizeObserver(syncOffset).observe(snav);
+      document.getElementById("toggle").addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        [...e.currentTarget.querySelectorAll("button")].forEach((b) =>
+          b.setAttribute("aria-pressed", String(b === btn)),
+        );
+        demo.scrollTop = 0;
+        render(btn.dataset.v);
+      });
+
+      render("team");
+    </script>
+  </body>
+</html>

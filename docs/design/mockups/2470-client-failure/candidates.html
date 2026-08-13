@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2470 — what a client-initiated action shows when it fails</title>
+    <style>
+      /* ---- tokens lifted verbatim from apps/web/src/app/globals.css ---- */
+      :root {
+        --color-cream: #f5f1e6;
+        --color-cream-soft: #ede8da;
+        --color-cream-deep: #e1d7bf;
+        --color-ink: #0a0a0a;
+        --color-ink-soft: #1f1f1f;
+        --color-ink-muted: #6b6b6b;
+        --color-jersey-deep: #008755;
+        --color-jersey-deep-dark: #133d28;
+        --color-warm: #f0c264;
+        --color-paper-edge: #d9d2bd;
+        --color-alert: #b84a3a;
+        --color-alert-soft: #e8d5cf;
+        --color-card-red: #c93f1c;
+        --shadow-paper-sm: 4px 4px 0 0 var(--color-ink);
+        --text-body-md: 1rem;
+        --text-label: 0.6875rem;
+        --container-prose: 680px;
+        --font-display:
+          "freight-display-pro", georgia, "Times New Roman", serif;
+        --font-body:
+          "freight-sans-pro", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #ffffff;
+        color: var(--color-ink);
+        font-family: var(--font-body);
+        line-height: 1.55;
+      }
+
+      /* ---- page chrome (deliberately neutral, not the site's) ---- */
+      .wrap {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 40px 24px 96px;
+      }
+      header.doc {
+        border-bottom: 2px solid var(--color-ink);
+        padding-bottom: 24px;
+        margin-bottom: 12px;
+      }
+      header.doc h1 {
+        font-family: var(--font-display);
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.05;
+        margin: 0 0 12px;
+        font-weight: 700;
+      }
+      header.doc p {
+        margin: 0;
+        max-width: var(--container-prose);
+        color: var(--color-ink-soft);
+      }
+      .meta {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--color-ink-muted);
+        margin-bottom: 10px;
+      }
+
+      .ctx {
+        margin-top: 64px;
+      }
+      .ctx > h2 {
+        font-family: var(--font-display);
+        font-size: 30px;
+        margin: 0 0 6px;
+        font-weight: 700;
+      }
+      .ctx > p.lede {
+        margin: 0 0 28px;
+        max-width: var(--container-prose);
+        color: var(--color-ink-soft);
+      }
+
+      .grid {
+        display: grid;
+        gap: 28px;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 1100px) {
+        .grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      .cand {
+        border: 1px solid var(--color-paper-edge);
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .cand > h3 {
+        margin: 0;
+        padding: 10px 14px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        border-bottom: 1px solid var(--color-paper-edge);
+        background: #fafafa;
+      }
+      .cand.is-today > h3 {
+        background: var(--color-ink);
+        color: var(--color-cream);
+      }
+      .cand.is-b > h3 {
+        background: var(--color-jersey-deep);
+        color: #fff;
+      }
+      .stage {
+        background: var(--color-cream);
+        padding: 22px 18px;
+        flex: 1;
+      }
+      .note {
+        border-top: 1px dashed var(--color-paper-edge);
+        padding: 12px 14px;
+        font-size: 12.5px;
+        color: var(--color-ink-muted);
+        background: #fcfcfc;
+      }
+      .note code {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: var(--color-ink-soft);
+      }
+
+      /* ---------- shared site primitives ---------- */
+      .paper {
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream);
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .mono-label {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-weight: 600;
+      }
+
+      /* ---------- <Alert variant="error"> — Alert.tsx ---------- */
+      .alert {
+        display: grid;
+        grid-template-columns: 72px 1fr;
+        align-items: stretch;
+        overflow: hidden;
+        border: 2px solid var(--color-ink);
+        box-shadow: var(--shadow-paper-sm);
+        background: var(--color-alert-soft);
+      }
+      .alert__stub {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 16px;
+        background: var(--color-alert-soft);
+        position: relative;
+        border-right: 2px dashed var(--color-ink);
+        -webkit-mask-image:
+          radial-gradient(circle at 100% 6px, transparent 0 5px, #000 5.5px),
+          radial-gradient(circle at 100% 18px, transparent 0 5px, #000 5.5px);
+        -webkit-mask-size: 100% 24px;
+        -webkit-mask-repeat: repeat-y;
+        mask-image:
+          radial-gradient(circle at 100% 6px, transparent 0 5px, #000 5.5px),
+          radial-gradient(circle at 100% 18px, transparent 0 5px, #000 5.5px);
+        mask-size: 100% 24px;
+        mask-repeat: repeat-y;
+      }
+      .alert__icon {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--color-alert);
+        color: var(--color-cream);
+      }
+      .alert__body {
+        padding: 16px 20px;
+      }
+      .alert__kicker {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-alert);
+      }
+      .alert__title {
+        font-family: var(--font-display);
+        font-size: 22px;
+        line-height: 1.15;
+        font-weight: 700;
+        font-style: italic;
+        margin: 2px 0 0;
+      }
+      .alert__text {
+        margin: 4px 0 0;
+        font-size: 15px;
+        line-height: 1.55;
+      }
+
+      /* ---------- #2427 Tier 1 — SearchNoResultsCard register ---------- */
+      .tier1 {
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream-soft);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 28px;
+      }
+      .tier1__row {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        text-align: center;
+      }
+      @media (min-width: 640px) {
+        .tier1__row {
+          flex-direction: row;
+          gap: 28px;
+          text-align: left;
+        }
+        .tier1__copy {
+          text-align: left;
+        }
+      }
+      .artefact {
+        position: relative;
+        display: inline-block;
+        flex-shrink: 0;
+      }
+      .artefact svg {
+        width: 112px;
+        height: 112px;
+        transform: rotate(-3deg);
+        display: block;
+      }
+      .tape {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%) rotate(-4deg);
+        width: 74px;
+        height: 22px;
+        background: var(--color-warm);
+        opacity: 0.9;
+        z-index: 2;
+      }
+      .tier1__h {
+        font-family: var(--font-display);
+        font-size: clamp(1.5rem, 1rem + 1.5vw, 2rem);
+        line-height: 1.2;
+        font-weight: 700;
+        margin: 0;
+      }
+      .tier1__p {
+        margin: 12px 0 0;
+        max-width: 52ch;
+        font-size: 14.5px;
+        line-height: 1.625;
+        color: var(--color-ink-soft);
+      }
+
+      /* ---------- #2427 Tier 2 — held-open frame, cream half (#2469) ---------- */
+      .tier2 {
+        border: 2px dashed rgba(10, 10, 10, 0.3);
+        text-align: center;
+        padding: 32px 16px;
+      }
+      .tier2 p {
+        margin: 0;
+        font-size: var(--text-body-md);
+        color: var(--color-ink-soft);
+      }
+
+      /* ---------- #2469 accent: display italic + jersey-deep ---------- */
+      .accent {
+        font-family: var(--font-display);
+        font-style: italic;
+        color: var(--color-jersey-deep);
+        font-weight: 700;
+      }
+
+      /* ---------- action row ---------- */
+      .actions {
+        margin-top: 18px;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .tier1 .actions {
+        justify-content: flex-start;
+      }
+      @media (max-width: 639px) {
+        .tier1 .actions {
+          justify-content: center;
+        }
+      }
+      .btn {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 9px 16px;
+        cursor: pointer;
+        color: var(--color-ink);
+        transition:
+          transform 0.12s,
+          box-shadow 0.12s;
+      }
+      .btn:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+
+      /* ---------- today's bespoke treatments ---------- */
+      .today-news {
+        padding: 16px 0;
+        text-align: center;
+      }
+      .today-news p {
+        margin: 0 0 8px;
+        color: #f87171; /* text-red-400, raw Tailwind */
+      }
+      .today-news button {
+        background: none;
+        border: 0;
+        padding: 0;
+        font-size: 14px;
+        color: var(--color-jersey-deep);
+        text-decoration: underline;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .today-form-msg {
+        margin: 20px 0 0;
+        color: var(--color-alert);
+        font-size: var(--text-body-md);
+      }
+
+      /* ---------- surrounding page furniture (context) ---------- */
+      .cardgrid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .minicard {
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream);
+        box-shadow: 3px 3px 0 0 var(--color-ink);
+        padding: 10px;
+      }
+      .minicard .ph {
+        background: var(--color-cream-deep);
+        height: 46px;
+        margin-bottom: 8px;
+      }
+      .minicard .l1,
+      .minicard .l2 {
+        height: 7px;
+        background: var(--color-paper-edge);
+        margin-bottom: 5px;
+      }
+      .minicard .l2 {
+        width: 62%;
+      }
+      .searchfield {
+        border: 2px solid var(--color-ink);
+        background: #fff;
+        padding: 11px 14px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--color-ink-muted);
+        margin-bottom: 18px;
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .formfields {
+        margin-bottom: 4px;
+      }
+      .field {
+        margin-bottom: 12px;
+      }
+      .field span {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--color-ink-muted);
+        margin-bottom: 4px;
+      }
+      .field i {
+        display: block;
+        border: 2px solid var(--color-ink);
+        background: #fff;
+        height: 34px;
+      }
+      .submitrow {
+        margin-top: 20px;
+        border-top: 1px dashed var(--color-paper-edge);
+        padding-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .submitrow .cap {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--color-ink-muted);
+      }
+
+      .verdict {
+        margin-top: 72px;
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream);
+        padding: 26px 28px;
+      }
+      .verdict h2 {
+        font-family: var(--font-display);
+        margin: 0 0 12px;
+        font-size: 26px;
+      }
+      .verdict ul {
+        margin: 0;
+        padding-left: 20px;
+        max-width: 900px;
+      }
+      .verdict li {
+        margin-bottom: 9px;
+      }
+      .verdict code {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="doc">
+        <div class="meta">
+          #2470 · wayfinder map #2425 · candidates for Q2 — the register
+        </div>
+        <h1>What a client-initiated action shows when it fails</h1>
+        <p>
+          Three contexts, three candidates each. <strong>Today</strong> is what
+          currently ships, drawn from source. <strong>A</strong> spreads the
+          existing <code>&lt;Alert&gt;</code> to every site.
+          <strong>B</strong> uses #2427's two tiers carrying #2469's
+          serif-italic accent — no new primitive. Every colour, border, shadow
+          and type value below is lifted from <code>globals.css</code> and the
+          components themselves.
+        </p>
+      </header>
+
+      <!-- ===================== CONTEXT 1 ===================== -->
+      <section class="ctx">
+        <h2>Context 1 — the whole surface is lost</h2>
+        <p class="lede">
+          <code>/zoeken</code>: the search ran and failed, so the results slot
+          is empty. Nothing else is on the page. The search field above is still
+          there, so re-submitting is possible without any new control.
+        </p>
+
+        <div class="grid">
+          <!-- TODAY -->
+          <article class="cand is-today">
+            <h3>Today — SearchInterface.tsx:318</h3>
+            <div class="stage">
+              <div class="searchfield">jeugdploegen&nbsp;|</div>
+              <div class="alert" role="alert">
+                <div class="alert__stub">
+                  <span class="alert__icon">
+                    <svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24Zm-8 56a8 8 0 0 1 16 0v56a8 8 0 0 1-16 0Zm8 104a12 12 0 1 1 12-12 12 12 0 0 1-12 12Z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="alert__body">
+                  <span class="alert__kicker">! FOUT</span>
+                  <h3 class="alert__title">Zoeken mislukt</h3>
+                  <p class="alert__text">
+                    Er ging iets mis bij het zoeken — probeer opnieuw.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="note">
+              The only <code>&lt;Alert&gt;</code> consumer in the entire app.
+              Note what sits one line below it in the same slot: when the query
+              simply finds nothing, this becomes
+              <code>SearchNoResultsCard</code> — the cream paper card in
+              candidate B. Two objects, one slot.
+            </div>
+          </article>
+
+          <!-- A -->
+          <article class="cand">
+            <h3>A — &lt;Alert&gt; everywhere</h3>
+            <div class="stage">
+              <div class="searchfield">jeugdploegen&nbsp;|</div>
+              <div class="alert" role="alert">
+                <div class="alert__stub">
+                  <span class="alert__icon">
+                    <svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24Zm-8 56a8 8 0 0 1 16 0v56a8 8 0 0 1-16 0Zm8 104a12 12 0 1 1 12-12 12 12 0 0 1-12 12Z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="alert__body">
+                  <span class="alert__kicker">! FOUT</span>
+                  <h3 class="alert__title">Zoeken mislukt</h3>
+                  <p class="alert__text">Probeer opnieuw.</p>
+                </div>
+              </div>
+            </div>
+            <div class="note">
+              Unchanged here — <code>/zoeken</code> is where
+              <code>&lt;Alert&gt;</code> already lives. The cost of A shows up
+              in contexts 2 and 3.
+            </div>
+          </article>
+
+          <!-- B -->
+          <article class="cand is-b">
+            <h3>B — #2427 Tier 1 + #2469 accent</h3>
+            <div class="stage">
+              <div class="searchfield">jeugdploegen&nbsp;|</div>
+              <section class="tier1">
+                <div class="tier1__row">
+                  <div class="artefact">
+                    <span class="tape"></span>
+                    <svg viewBox="0 120 220 180" aria-hidden="true">
+                      <path
+                        d="M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300 Z"
+                        fill="var(--color-ink)"
+                      />
+                      <path
+                        d="M 92 132 L 110 156 L 128 132"
+                        fill="none"
+                        stroke="var(--color-cream-soft)"
+                        stroke-width="7"
+                      />
+                    </svg>
+                  </div>
+                  <div class="tier1__copy">
+                    <h2 class="tier1__h">
+                      Zoeken <span class="accent">mislukt.</span>
+                    </h2>
+                    <p class="tier1__p">
+                      We konden je zoekopdracht niet uitvoeren. Probeer het
+                      opnieuw — of spring meteen naar nieuws, ploegen of
+                      evenementen.
+                    </p>
+                    <div class="actions">
+                      <button class="btn" type="button">Probeer opnieuw</button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+            <div class="note">
+              Same object as the no-results card one line below — the visitor
+              meets one thing in this slot, not two. Tier 1's
+              <strong>optional action row</strong> already existed in #2427, so
+              the live retry costs no new vocabulary.
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ===================== CONTEXT 2 ===================== -->
+      <section class="ctx">
+        <h2>Context 2 — a slot is lost, the page survives</h2>
+        <p class="lede">
+          <code>/nieuws</code>: articles are already on screen; the
+          <em>next</em> batch failed. Measured fact —
+          <code>{hasMore &amp;&amp; !isLoading &amp;&amp; !error}</code> means
+          the “Meer nieuws laden” button is <strong>hidden</strong> while the
+          error shows, so whatever appears here <em>replaces</em> the primary
+          control rather than joining it.
+        </p>
+
+        <div class="grid">
+          <!-- TODAY -->
+          <article class="cand is-today">
+            <h3>Today — NewsListingClient.tsx:255</h3>
+            <div class="stage">
+              <div class="cardgrid">
+                <div class="minicard">
+                  <div class="ph"></div>
+                  <div class="l1"></div>
+                  <div class="l2"></div>
+                </div>
+                <div class="minicard">
+                  <div class="ph"></div>
+                  <div class="l1"></div>
+                  <div class="l2"></div>
+                </div>
+              </div>
+              <div class="today-news">
+                <p>Artikelen laden mislukt.</p>
+                <button type="button">Opnieuw proberen</button>
+              </div>
+            </div>
+            <div class="note">
+              <code>text-red-400</code> — a raw Tailwind grey-red that is not a
+              token here (retired by #2433 rule 11). The retry is an underlined
+              text button well under the 24px target #2394 sets.
+            </div>
+          </article>
+
+          <!-- A -->
+          <article class="cand">
+            <h3>A — &lt;Alert&gt; everywhere</h3>
+            <div class="stage">
+              <div class="cardgrid">
+                <div class="minicard">
+                  <div class="ph"></div>
+                  <div class="l1"></div>
+                  <div class="l2"></div>
+                </div>
+                <div class="minicard">
+                  <div class="ph"></div>
+                  <div class="l1"></div>
+                  <div class="l2"></div>
+                </div>
+              </div>
+              <div class="alert" role="alert">
+                <div class="alert__stub">
+                  <span class="alert__icon">
+                    <svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24Zm-8 56a8 8 0 0 1 16 0v56a8 8 0 0 1-16 0Zm8 104a12 12 0 1 1 12-12 12 12 0 0 1-12 12Z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="alert__body">
+                  <span class="alert__kicker">! FOUT</span>
+                  <h3 class="alert__title">Artikelen laden mislukt</h3>
+                  <p class="alert__text">Probeer opnieuw.</p>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn" type="button">Probeer opnieuw</button>
+              </div>
+            </div>
+            <div class="note">
+              A framed, shadowed, kicker-and-title <em>document</em> announcing
+              that a pagination click failed. It outweighs the two cards above
+              it, and <code>&lt;Alert&gt;</code> has no action slot — so the
+              retry has to be bolted on below, giving the failure two objects.
+            </div>
+          </article>
+
+          <!-- B -->
+          <article class="cand is-b">
+            <h3>B — #2427 Tier 2 + #2469 accent</h3>
+            <div class="stage">
+              <div class="cardgrid">
+                <div class="minicard">
+                  <div class="ph"></div>
+                  <div class="l1"></div>
+                  <div class="l2"></div>
+                </div>
+                <div class="minicard">
+                  <div class="ph"></div>
+                  <div class="l1"></div>
+                  <div class="l2"></div>
+                </div>
+              </div>
+              <div class="tier2">
+                <p>Meer artikelen laden <span class="accent">mislukt.</span></p>
+                <div class="actions">
+                  <button class="btn" type="button">Probeer opnieuw</button>
+                </div>
+              </div>
+            </div>
+            <div class="note">
+              The dashed frame <strong>holds the shape of the slot</strong> that
+              failed — exactly what #2427 says Tier 2 is for. Frame is
+              <code>border-2 border-dashed border-ink/30</code>, the cream half
+              #2469 drew. <strong>Open question (Q6):</strong> #2427 says Tier 2
+              carries <em>no action</em> — but here the retry is real and the
+              load-more button is hidden. The button shown is the exception this
+              ticket would have to grant.
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ===================== CONTEXT 3 ===================== -->
+      <section class="ctx">
+        <h2>Context 3 — a form whose own control is the retry</h2>
+        <p class="lede">
+          <code>/club/word-lid</code>, transport failure only (the
+          <code>catch</code>, not the 400 — you ruled the rejection path out in
+          Q5). The submit button is still on screen and still works, so no new
+          action is needed anywhere in this context.
+        </p>
+
+        <div class="grid">
+          <!-- TODAY -->
+          <article class="cand is-today">
+            <h3>Today — MembershipForm.tsx:450</h3>
+            <div class="stage">
+              <div class="formfields">
+                <div class="field"><span>E-mail</span><i></i></div>
+                <div class="field"><span>Geboortedatum</span><i></i></div>
+              </div>
+              <p class="today-form-msg" role="alert">
+                Verzenden mislukt. Controleer je internetverbinding en probeer
+                opnieuw.
+              </p>
+              <div class="submitrow">
+                <span class="cap">Word lid van KCVV</span>
+                <button class="btn" type="button">Verstuur</button>
+              </div>
+            </div>
+            <div class="note">
+              Uses the <code>text-alert</code> token (correct), body-md, no
+              frame, no added action. The defect is not the treatment — it is
+              that the <em>server-rejection</em> path renders the same sentence
+              in the same place, which Q5 now separates out.
+            </div>
+          </article>
+
+          <!-- A -->
+          <article class="cand">
+            <h3>A — &lt;Alert&gt; everywhere</h3>
+            <div class="stage">
+              <div class="formfields">
+                <div class="field"><span>E-mail</span><i></i></div>
+                <div class="field"><span>Geboortedatum</span><i></i></div>
+              </div>
+              <div class="alert" role="alert" style="margin-top: 20px">
+                <div class="alert__stub">
+                  <span class="alert__icon">
+                    <svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24Zm-8 56a8 8 0 0 1 16 0v56a8 8 0 0 1-16 0Zm8 104a12 12 0 1 1 12-12 12 12 0 0 1-12 12Z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="alert__body">
+                  <span class="alert__kicker">! FOUT</span>
+                  <h3 class="alert__title">Verzenden mislukt</h3>
+                  <p class="alert__text">
+                    Controleer je internetverbinding en probeer opnieuw.
+                  </p>
+                </div>
+              </div>
+              <div class="submitrow">
+                <span class="cap">Word lid van KCVV</span>
+                <button class="btn" type="button">Verstuur</button>
+              </div>
+            </div>
+            <div class="note">
+              Here A is at its strongest — a form is the one place a framed,
+              titled alert is idiomatic. But note the collision: the fields
+              above use <code>&lt;AlertBadge&gt;</code> for their own errors, so
+              the form would carry <em>two</em> different alert objects from the
+              same design-system folder.
+            </div>
+          </article>
+
+          <!-- B -->
+          <article class="cand is-b">
+            <h3>B — #2427 Tier 2 + #2469 accent</h3>
+            <div class="stage">
+              <div class="formfields">
+                <div class="field"><span>E-mail</span><i></i></div>
+                <div class="field"><span>Geboortedatum</span><i></i></div>
+              </div>
+              <div class="tier2" style="margin-top: 20px; padding: 18px 16px">
+                <p>
+                  Verzenden <span class="accent">mislukt.</span> Controleer je
+                  internetverbinding en probeer opnieuw.
+                </p>
+              </div>
+              <div class="submitrow">
+                <span class="cap">Word lid van KCVV</span>
+                <button class="btn" type="button">Verstuur</button>
+              </div>
+            </div>
+            <div class="note">
+              No action row — the submit button below <em>is</em> the retry, so
+              Tier 2's “no action” rule holds unmodified here. The dashed frame
+              distinguishes a transport failure from the per-field
+              <code>&lt;AlertBadge&gt;</code> validation above it.
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="verdict">
+        <h2>What the three contexts expose</h2>
+        <ul>
+          <li>
+            <strong>A's real cost is context 2.</strong>
+            <code>&lt;Alert&gt;</code> is a document with a kicker, a title and
+            a drop shadow. Announcing a failed pagination click, it outweighs
+            the content that survived — and because it has no action slot, the
+            retry becomes a second object beside it.
+          </li>
+          <li>
+            <strong>B removes an object rather than adding one.</strong> On
+            <code>/zoeken</code> the empty and failed states stop being two
+            different things in the same slot. Nothing new is invented: Tier 1,
+            Tier 2 and the accent are all already decided.
+          </li>
+          <li>
+            <strong>B makes the tier carry the meaning.</strong> Tier 1 = your
+            whole surface is gone. Tier 2 = one slot is gone, the page is
+            intact. That is the same distinction #2427 already draws for
+            emptiness, so a visitor learns it once.
+          </li>
+          <li>
+            <strong>The one thing B must decide (Q6):</strong> #2427's Tier 2
+            carries no action. Context 2 needs one, because the control it
+            replaced is hidden. Context 3 does not, because the submit button
+            survives. That suggests the rule is not “Tier 2 has no action” but
+            <em
+              >“the failure adds an action only when the control it replaced is
+              gone”</em
+            >
+            — which is measurable per site, not a matter of taste.
+          </li>
+          <li>
+            <strong
+              >Either way <code>&lt;Alert&gt;</code> ends up with zero
+              consumers</strong
+            >
+            if B wins, since <code>/zoeken</code> is its only one. That is a
+            deletion to decide on deliberately, not a side effect.
+          </li>
+        </ul>
+      </section>
+    </div>
+  </body>
+</html>
