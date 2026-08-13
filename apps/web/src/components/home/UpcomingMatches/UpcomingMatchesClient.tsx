@@ -192,8 +192,17 @@ export const UpcomingMatchesClient = ({
  *   MonoLabel and delete this rather than making a fourth copy.
  * - `<MatchVenueTag>` (`components/calendar/calendar-tags.tsx`) already renders
  *   these two words as a mono pill, but uppercase, glyph-less, and in
- *   `/kalender`'s `card-red` colour language. Reconciling the two colour
- *   languages is #2404's job, not this ticket's.
+ *   `/kalender`'s `card-red` colour language.
+ *
+ * #2404 reconciled those two colour languages — as far as they can be. The hues
+ * cannot merge: `card-red` on `/kalender` does not mean "thuis", it means
+ * "Wedstrijden", the match category set against the per-type event fills, and
+ * that is owner-locked (6d1/#1992, `6d-kalender-locked.md`). What the two
+ * surfaces genuinely disagreed about was the *grammar*: `/kalender` says thuis
+ * with a fill and uit with an outline, while this badge said it with two
+ * different fills, so "uit" arrived as a solid ink block — as heavy as the home
+ * state and, on a page of green, louder. Both now read filled = thuis, outlined
+ * = uit, each in its own surface's hue.
  *
  * The wording itself comes from `HOME_AWAY_WORD` so no surface holds its own
  * copy of the words.
@@ -208,14 +217,19 @@ const HomeAwayBadge = ({ side }: { side: KcvvSide }) => {
   return (
     <span
       className={cn(
-        // px-2.5/py-1.5 not MonoLabel's px-2/py-1: this badge has no border, so
-        // it absorbs the 2px the bordered pills spend on their edge and lands
-        // at the same outer size.
-        "inline-flex shrink-0 items-center gap-1.5 px-2.5 py-1.5",
+        // Both states carry the border now, so the padding is MonoLabel's `sm`
+        // pill verbatim rather than the +2px this badge used to spend standing
+        // in for one. Keeping the border on the filled state too is what stops
+        // the two states changing size as a row flips thuis/uit.
+        "inline-flex shrink-0 items-center gap-1.5 border px-2 py-1",
         "text-label font-mono leading-none font-medium",
         // jersey-deep, never the bright jersey — the redesign's ink-adjacent
-        // green is the only one that carries white text safely.
-        isHome ? "bg-jersey-deep text-white" : "bg-ink text-cream",
+        // green is the only one that carries white text safely. `uit` keeps the
+        // same green on its edge instead of switching hue: the outline is what
+        // marks it as the lesser state (see the docblock).
+        isHome
+          ? "border-jersey-deep bg-jersey-deep text-white"
+          : "border-jersey-deep/45 text-ink bg-transparent",
       )}
     >
       <Icon size={12} aria-hidden="true" />

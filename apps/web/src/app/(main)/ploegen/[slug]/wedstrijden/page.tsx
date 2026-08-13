@@ -200,6 +200,17 @@ export default async function WedstrijdenPage({
                         match={m}
                         kcvvTeamId={psdTeamId}
                         featured={nextMatch?.id === m.id}
+                        // One green row inside a month list headed only by
+                        // "September '26" — unlike `<TeamMatchesSection>`, this
+                        // page has no "Eerstvolgende" heading to say what the
+                        // colour means, so the row says it (#2404).
+                        //
+                        // Only the featured row needs the *slot* word: the rest
+                        // sit in date order with scorelines, so "Uitslag" on
+                        // each would be noise. Their outcome is a separate
+                        // claim and the row names it on its own — the win/loss
+                        // tint is not gated by this prop.
+                        kind={nextMatch?.id === m.id ? "fixture" : undefined}
                       />
                     </div>
                   ))}

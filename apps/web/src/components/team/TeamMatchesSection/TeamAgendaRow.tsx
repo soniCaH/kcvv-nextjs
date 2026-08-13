@@ -14,6 +14,7 @@
  *
  * Design lock: docs/design/mockups/phase-6-team/detail-ia-locked.md §3
  */
+import { Fragment } from "react";
 import Link from "next/link";
 import { DateTime } from "luxon";
 import { Crest, PRESS_DOWN_CLASSES } from "@/components/design-system";
@@ -24,7 +25,11 @@ import {
   isExceptionalMatchStatus,
   isPlayedMatch,
   isSettledMatch,
+  MATCH_KIND_WORD,
   OUTCOME_UNDERLINE,
+  OUTCOME_WORD,
+  type MatchOutcome,
+  type MatchRowKind,
 } from "@/lib/utils/match-display";
 import { matchStatusWording } from "@/components/match/MatchStatusBadge";
 import { House, Bus } from "@/lib/icons.redesign";
@@ -68,10 +73,30 @@ export interface TeamAgendaRowProps {
    * next fixture's start time matters.
    */
   upcomingLabel?: string;
+  /**
+   * Which slot this row is filling, when the surface needs the row to say so
+   * (#2404).
+   *
+   * On the desktop scoreboard this is what decides whether the row is named at
+   * all — the layout prints both clubs either side of the score, so it can
+   * speak for itself and stays quiet unless asked. The mobile column shows the
+   * opponent alone and always names a settled match's outcome, asked or not.
+   * See `desktopKindWord` / `mobileKindWord` below.
+   *
+   * It is the *caller's* answer, never derived from `match.status` — see
+   * `MatchRowKind`. Omitted by default, because most host surfaces already
+   * answer it in their own chrome and would otherwise say it twice:
+   * `<TeamMatchesSection>` heads its featured row "Eerstvolgende",
+   * `/kalender` groups rows under a date where "Volgende" would be a lie for
+   * any day but today's, and `/ploegen/<slug>/wedstrijden` bands its rows by
+   * month in date order. The homepage `<FirstTeamsBlock>` is the surface with
+   * two colour-coded columns and no words anywhere.
+   */
+  kind?: MatchRowKind;
   className?: string;
 }
 
-type Outcome = "win" | "draw" | "loss" | null;
+type Outcome = MatchOutcome | null;
 
 function computeOutcome(
   match: ScheduleMatch,
@@ -174,6 +199,7 @@ export function TeamAgendaRow({
   onNavigate,
   captionLabel,
   upcomingLabel,
+  kind,
   className,
 }: TeamAgendaRowProps) {
   // Prefer match.is_home (provided by BFF); fall back to comparing kcvvTeamId
@@ -199,11 +225,14 @@ export function TeamAgendaRow({
   // a finished match with missing scores on the kickoff time rather than wrongly
   // reading "Gepland".
   const showUpcomingLabel = !isPlayed && upcomingLabel != null;
+  // Once, not twice: the score slot and the accessible name both want it on a
+  // scheduled row.
+  const kickoff = formatKickoff(match);
   const scoreOrTime = hasScoreline
     ? `${match.homeScore} – ${match.awayScore}`
     : showUpcomingLabel
       ? upcomingLabel
-      : formatKickoff(match);
+      : kickoff;
 
   // Scorelines and kickoff times use the big display face; the "Gepland" label
   // drops to the mono caption register (cf. the mockup `.score.sched`).
@@ -235,8 +264,6 @@ export function TeamAgendaRow({
   const day = formatDay(match.date);
   const month = formatMonth(match.date);
 
-  const matchLabel = `${match.homeTeam.name} – ${match.awayTeam.name}, ${day} ${month}`;
-
   // A status the layout can't speak for on its own — a forfeit otherwise reads
   // as a bare scoreline, an `afgelast` match as a kickoff to turn up for. The
   // wording comes from `<MatchStatusBadge>`'s table so "Forfait" is spelled the
@@ -246,44 +273,115 @@ export function TeamAgendaRow({
     ? matchStatusWording(match.status)
     : null;
 
-  // Caption (P2) shared by both layouts: an optional status marker, then an
+  // The word the caption opens with, resolved most-informative-first. A
+  // settled match names its outcome; a status the layout can't speak for is
+  // left to `statusWording` ("Volgende · AFG" would argue with itself); a
+  // surface that asked for its rows to be named gets the slot word.
+  const outcomeWord = outcome ? OUTCOME_WORD[outcome] : null;
+  const slotWord = statusWording ? null : kind ? MATCH_KIND_WORD[kind] : null;
+
+  // The two layouts do not need the same amount of help, so they do not get
+  // the same caption.
+  //
+  // The desktop scoreboard prints both clubs either side of the score, in
+  // home–away order, with KCVV among them — "K Lyra-Lierse 4 – 0 KCVV Elewijt"
+  // already says who lost. Adding "VERLIES" there restates the row, and down a
+  // season of results it stacks into a column of the same word. So desktop
+  // names a row only when the host surface asked it to, via `kind`.
+  //
+  // The mobile column shows the opponent alone. The same scoreline arrives as
+  // "4 – 0" beside "K Lyra-Lierse" and a bus glyph, and reading KCVV's 0 out of
+  // it means knowing the score is home–away *and* decoding the glyph first.
+  // That is where the word does real work, so it is not gated there.
+  const desktopKindWord = kind ? (outcomeWord ?? slotWord) : null;
+  const mobileKindWord = outcomeWord ?? slotWord;
+
+  // The `aria-label` replaces the row's contents as its accessible name, so
+  // anything not spelled out here is unreachable by a screen reader tabbing the
+  // links — and until #2404 that included the scoreline itself. Stated
+  // side-by-side with each name, the way `<MatchStripView>`'s ledger rows do it,
+  // since "3 – 1" alone does not say whose goals are whose.
+  const scoreboardLabel = hasScoreline
+    ? `${match.homeTeam.name} ${match.homeScore} – ${match.awayTeam.name} ${match.awayScore}`
+    : `${match.homeTeam.name} – ${match.awayTeam.name}`;
+  const matchLabel = [
+    // The more informative of the two — an accessible name has no layout to
+    // restate, so the desktop scoreboard's argument for staying quiet does not
+    // apply to it.
+    mobileKindWord ? `${mobileKindWord}: ` : "",
+    scoreboardLabel,
+    `, ${day} ${month}`,
+    // `scheduled`, not merely `!isPlayed`: a postponed or cancelled match is
+    // also not played, and announcing its kickoff would tell a screen-reader
+    // user to turn up for a match that is off — the same failure the visible
+    // `statusWording` marker exists to prevent (#2423). A `upcomingLabel`
+    // surface ("Gepland") has deliberately dropped the precise time.
+    match.status === "scheduled" && !showUpcomingLabel ? ` om ${kickoff}` : "",
+    // And the status itself has to reach the name, not just the caption: the
+    // label replaces the row's contents, so a forfeit otherwise announces as a
+    // plain win. Long form here — there is no width to save in a string.
+    statusWording ? ` — ${statusWording.longForm}` : "",
+  ].join("");
+
+  // Caption (P2): the optional kind word, an optional status marker, then an
   // optional jersey-deep squad label (e.g. "A-Ploeg"), then the competition.
-  // Rendered once, reused below.
-  const captionContent =
-    statusWording || captionLabel || match.competition ? (
+  // Built twice — the two layouts differ only in whether the kind word leads
+  // it; everything after is shared.
+  //
+  // Built as a list and interleaved once rather than as a ladder of `a && (b ||
+  // c || d) ? " · "` separators — each of those has to name every later segment,
+  // so a fourth entry (#2404's kind word) meant a third separator and a re-read
+  // of the two before it. A missed tail-check shows up as a stray or swallowed
+  // separator, which nothing here would fail on.
+  //
+  // On jersey-deep every emphasised segment collapses to `warm`; only the cream
+  // side gives each one its own tone.
+  const emphasis = (creamTone: string) =>
+    cn("font-semibold", featured ? "text-warm" : creamTone);
+
+  const buildCaption = (leadWord: string | null) => {
+    const parts = [
+      leadWord ? (
+        <span className={emphasis("text-ink")}>{leadWord}</span>
+      ) : null,
+      statusWording ? (
+        // Abbreviation, not the long form: this caption shares a fixed-width
+        // centre column with the scoreline, so every extra character is taken
+        // straight off the team names either side — "FORFAIT · BEKER VAN
+        // VLAAMS-BRABANT" truncated them to "SK No…" / "KCV…". `FF` / `AFG`
+        // are the same short forms `<MatchStatusBadge>` renders, and `<abbr>`
+        // carries the long form for hover and assistive tech.
+        <abbr
+          title={statusWording.longForm}
+          className={cn(emphasis("text-alert"), "no-underline")}
+        >
+          {statusWording.abbreviation}
+        </abbr>
+      ) : null,
+      captionLabel ? (
+        <span className={emphasis("text-jersey-deep")}>{captionLabel}</span>
+      ) : null,
+      // `||` not `??` — an empty-string competition must drop out, not render a
+      // trailing separator.
+      match.competition || null,
+    ].filter(Boolean);
+
+    return parts.length ? (
       <>
-        {statusWording ? (
-          // Abbreviation, not the long form: this caption shares a fixed-width
-          // centre column with the scoreline, so every extra character is taken
-          // straight off the team names either side — "FORFAIT · BEKER VAN
-          // VLAAMS-BRABANT" truncated them to "SK No…" / "KCV…". `FF` / `AFG`
-          // are the same short forms `<MatchStatusBadge>` renders, and `<abbr>`
-          // carries the long form for hover and assistive tech.
-          <abbr
-            title={statusWording.longForm}
-            className={cn(
-              "font-semibold no-underline",
-              featured ? "text-warm" : "text-alert",
-            )}
-          >
-            {statusWording.abbreviation}
-          </abbr>
-        ) : null}
-        {statusWording && (captionLabel || match.competition) ? " · " : null}
-        {captionLabel ? (
-          <span
-            className={cn(
-              "font-semibold",
-              featured ? "text-warm" : "text-jersey-deep",
-            )}
-          >
-            {captionLabel}
-          </span>
-        ) : null}
-        {captionLabel && match.competition ? " · " : null}
-        {match.competition}
+        {parts.map((part, i) => (
+          // `<Fragment>` adds no DOM node, so the caption's text content and its
+          // pixels are unchanged by the interleave.
+          <Fragment key={i}>
+            {i > 0 ? " · " : null}
+            {part}
+          </Fragment>
+        ))}
       </>
     ) : null;
+  };
+
+  const desktopCaption = buildCaption(desktopKindWord);
+  const mobileCaption = buildCaption(mobileKindWord);
 
   return (
     <Link
@@ -336,7 +434,10 @@ export function TeamAgendaRow({
           ("BEKER VAN BRABANT" → "SK Noss…" / "KCVV Ele…"). Being visually below
           the score never mattered; they shared a box.
         */}
-        <div className="hidden w-full flex-col justify-center px-3 py-2 sm:flex">
+        <div
+          data-layout="desktop"
+          className="hidden w-full flex-col justify-center px-3 py-2 sm:flex"
+        >
           <div className="flex w-full items-center gap-2">
             {/* Home side */}
             <div
@@ -384,20 +485,23 @@ export function TeamAgendaRow({
             </div>
           </div>
 
-          {captionContent ? (
+          {desktopCaption ? (
             <span
               className={cn(
                 "mt-0.5 text-center font-mono text-[9px] tracking-wider uppercase",
                 monoClass,
               )}
             >
-              {captionContent}
+              {desktopCaption}
             </span>
           ) : null}
         </div>
 
         {/* Mobile layout: KCVV-centric column */}
-        <div className="flex w-full items-center gap-2 px-3 py-2 sm:hidden">
+        <div
+          data-layout="mobile"
+          className="flex w-full items-center gap-2 px-3 py-2 sm:hidden"
+        >
           {/* Opponent crest + name + competition */}
           {(() => {
             const opponent = isHome ? match.awayTeam : match.homeTeam;
@@ -407,14 +511,14 @@ export function TeamAgendaRow({
                 <Crest name={opponent.name} logo={opponent.logo} />
                 <div className="min-w-0 flex-1" title={opponent.name}>
                   <TeamName team={opponent} featured={featured} bold />
-                  {captionContent ? (
+                  {mobileCaption ? (
                     <span
                       className={cn(
                         "font-mono text-[9px] tracking-wider uppercase",
                         monoClass,
                       )}
                     >
-                      {captionContent}
+                      {mobileCaption}
                     </span>
                   ) : null}
                 </div>

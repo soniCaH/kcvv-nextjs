@@ -37,6 +37,13 @@ export function FirstTeamAgendaRow({
     <TeamAgendaRow
       match={match}
       featured={featured}
+      // The block's two columns are distinguished only by cream-vs-green and by
+      // which side they sit on, and it has no per-column heading to carry the
+      // words — so the row says them itself (#2404). The slot has to come from
+      // here, not from `match.status`: `pickLastResult` hands the result column
+      // a kicked-off match PSD still calls `scheduled`, which a status-derived
+      // row would label "Volgende" right beside the actual fixture.
+      kind={kind}
       onNavigate={() =>
         trackFirstTeamsCardClick({ teamSlug, matchId: match.id, kind })
       }

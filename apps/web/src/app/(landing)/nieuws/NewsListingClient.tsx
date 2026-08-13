@@ -9,7 +9,7 @@ import {
   PageContainer,
 } from "@/components/design-system";
 import { formatArticleDate } from "@/lib/utils/dates";
-import { matchTypeCardLabel } from "@/lib/utils/article-type-label";
+import { articleTypeCardLabel } from "@/lib/utils/article-type-label";
 import type { PaginatedArticles } from "./utils";
 import { deduplicateById } from "./utils";
 import { BATCH_SIZE, INITIAL_TOTAL } from "./constants";
@@ -180,7 +180,7 @@ export function NewsListingClient({
       imageUrl={article.coverImageUrl ?? undefined}
       imageAlt={article.title}
       badge={article.tags[0] ?? undefined}
-      typeLabel={matchTypeCardLabel(article.articleType)}
+      typeLabel={articleTypeCardLabel(article.articleType)}
       // Featured row uses the medium `md` tape (mirroring
       // <FeaturedUitgelichtRow>) so the corner strip doesn't dominate the
       // photo at 1/3-width; standard grid cards keep their `md` default.

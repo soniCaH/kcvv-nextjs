@@ -1,6 +1,10 @@
 // apps/web/src/components/home/FeaturedUitgelichtRow/FeaturedUitgelichtRow.tsx
 import { EditorialHeading } from "@/components/design-system";
 import { NewsCard } from "@/components/article/NewsCard";
+import {
+  articleTypeCardLabel,
+  type ArticleType,
+} from "@/lib/utils/article-type-label";
 import type { NewsCardBg } from "@/components/article/NewsCard/NewsCard";
 
 /**
@@ -27,17 +31,18 @@ export interface UitgelichtArticle {
 }
 
 /**
- * The subset of `articleType` values the homepage spine handles
- * today. Mirrored from `card-semantics-locked.md` R3.B; widened to
- * the literal union here so the lookup stays exhaustive.
+ * The `articleType` values the homepage spine handles, re-exported so the two
+ * barrels above this file (`FeaturedUitgelichtRow/index.ts`, `home/index.ts`)
+ * and `app/(landing)/page.tsx`'s exhaustive `toUitgelichtArticleType` guard
+ * keep their import path.
+ *
+ * It is the canonical union now, not a local mirror: `BG_BY_TYPE` below and
+ * `articleTypeCardLabel` are two halves of one per-type decision, and while the
+ * union was spelled once here and once in `<NewsGrid>` they could disagree
+ * about which types exist — which is how a type got a background with no word
+ * to explain it (#2404).
  */
-export type ArticleType =
-  | "transfer"
-  | "interview"
-  | "announcement"
-  | "event"
-  | "matchPreview"
-  | "matchRecap";
+export type { ArticleType } from "@/lib/utils/article-type-label";
 
 // R3.B (`card-semantics-locked.md`) — per-type background. Transfer
 // articles get the jersey-deep "green = transfer" semantic; all other
@@ -125,6 +130,10 @@ export const FeaturedUitgelichtRow = ({
                 imageUrl={article.imageUrl}
                 imageAlt={article.imageAlt}
                 badge={article.badge}
+                // Same reason as `<NewsGrid>`'s (#2404): this row applies the
+                // same `BG_BY_TYPE`, so an unlabelled green card here would sit
+                // directly above a labelled one in the grid below.
+                typeLabel={articleTypeCardLabel(article.articleType)}
                 date={article.date}
                 dek={article.dek}
                 aspectRatio="landscape-16-9"

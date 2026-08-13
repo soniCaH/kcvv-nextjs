@@ -1,27 +1,18 @@
 // apps/web/src/components/home/NewsGrid/NewsGrid.tsx
 import { SectionHeader } from "@/components/design-system";
 import { NewsCard } from "@/components/article/NewsCard";
-import { matchTypeCardLabel } from "@/lib/utils/article-type-label";
+// One `ArticleType` for the colour and the word, from the module that owns the
+// label lookup: `BG_BY_TYPE` below and `articleTypeCardLabel` are two halves of
+// the same per-type decision, and a union spelled twice lets them disagree
+// about which types exist (#2404).
+import {
+  articleTypeCardLabel,
+  type ArticleType,
+} from "@/lib/utils/article-type-label";
 import type {
   NewsCardBg,
   NewsCardRotation,
 } from "@/components/article/NewsCard/NewsCard";
-
-/**
- * Article-type union surfaced by `ARTICLES_QUERY`. Kept inline rather
- * than imported from the repository layer so `<NewsGrid>` doesn't
- * couple to GROQ result types — the home barrel pattern already
- * established by `<NewsGridArticle>` / `<UitgelichtArticle>`. Future
- * `matchPreview` / `matchRecap` types (per `card-semantics-locked.md`
- * §"Open follow-ups") slot in here when they land.
- */
-type ArticleType =
-  | "transfer"
-  | "interview"
-  | "announcement"
-  | "event"
-  | "matchPreview"
-  | "matchRecap";
 
 export interface NewsGridArticle {
   href: string;
@@ -58,6 +49,11 @@ export interface NewsGridProps {
 // run with 3–4 transfers in the grid will read heavy. See
 // `card-semantics-locked.md` for the rationale that retired the
 // previous slot-rhythm cycle.
+//
+// The green is a shorthand for readers who have learned it, not the signal
+// itself: `articleTypeCardLabel` names the type in the card's mono meta row
+// below, which is what the same lock's "Card meta row" section always
+// specified and #2404 restored.
 const BG_BY_TYPE: Record<ArticleType, NewsCardBg> = {
   transfer: "jersey-deep",
   interview: "cream",
@@ -123,7 +119,7 @@ export const NewsGrid = ({
                 imageUrl={article.imageUrl}
                 imageAlt={article.imageAlt}
                 badge={article.tags?.[0]?.name}
-                typeLabel={matchTypeCardLabel(article.articleType)}
+                typeLabel={articleTypeCardLabel(article.articleType)}
                 date={article.date}
                 aspectRatio="landscape-16-9"
                 rotation={SLOT_ROTATIONS[idx]}

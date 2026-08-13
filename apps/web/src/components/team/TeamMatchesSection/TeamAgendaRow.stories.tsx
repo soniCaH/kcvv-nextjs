@@ -128,6 +128,51 @@ export const Stopped: Story = {
 };
 
 /**
+ * `kind` on a settled result — the caption opens with the outcome word, so
+ * a win is legible without reading the jersey-deep underline behind the score.
+ * Used by the homepage `<FirstTeamsBlock>`, whose two columns have no headings
+ * of their own (#2404).
+ */
+export const KindLabelledResult: Story = {
+  args: { match: win, kind: "result" },
+};
+
+/** `kind` on a draw — the one outcome the underline cannot draw at all. */
+export const KindLabelledDraw: Story = {
+  args: { match: draw, kind: "result" },
+};
+
+/**
+ * `kind` in the fixture slot, featured — the word drops to `warm`, the same
+ * switch the forfeit marker makes, because ink on jersey-deep does not read.
+ */
+export const KindLabelledFixture: Story = {
+  args: { match: upcoming, featured: true, kind: "fixture" },
+};
+
+/**
+ * The case that makes `kind` a caller's answer rather than a derived one: a
+ * match that has kicked off while PSD still calls it `scheduled`, sitting in
+ * the *result* slot because `pickLastResult` puts it there. Deriving from
+ * status would label this "Volgende" — beside the real fixture, also
+ * "Volgende". The slot says "Uitslag" and waits for the score.
+ */
+export const KindLabelledAwaitingScore: Story = {
+  args: { match: { ...upcoming, id: 10 }, kind: "result" },
+};
+
+/**
+ * `kind` on a postponed match — the status marker wins and no kind word is
+ * added. "Volgende · PP" would argue with itself.
+ */
+export const KindLabelledPostponed: Story = {
+  args: {
+    match: { ...upcoming, id: 11, status: "postponed" },
+    kind: "fixture",
+  },
+};
+
+/**
  * Opponent fields a non-first team — the "U23" designation (from PSD's
  * `awayTeam` code) is pinned beside the club name. The KCVV side carries its
  * numeric squad code and shows no suffix.

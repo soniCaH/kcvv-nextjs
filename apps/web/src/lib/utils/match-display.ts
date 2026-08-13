@@ -61,11 +61,18 @@ export function getScoreDisplay(match: HasScoreMatch): ScoreDisplay {
   return { type: "vs" };
 }
 
+/**
+ * A settled match's result from KCVV's side. Named once here so the tint
+ * (`OUTCOME_UNDERLINE`) and the word (`OUTCOME_WORD`) that decodes it are keyed
+ * off the same union rather than two hand-spelled copies.
+ */
+export type MatchOutcome = "win" | "draw" | "loss";
+
 export function getResultColor(
   homeScore: number,
   awayScore: number,
   isHome: boolean,
-): "win" | "draw" | "loss" {
+): MatchOutcome {
   if (homeScore === awayScore) return "draw";
   const homeWins = homeScore > awayScore;
   return homeWins === isHome ? "win" : "loss";
@@ -103,14 +110,61 @@ export function isExceptionalMatchStatus(status: MatchStatus): boolean {
  * the shared match row used on team pages, `/kalender`, and the homepage
  * `<FirstTeamsBlock>` (#2301) — so the outcome colour can't drift between them.
  */
-export const OUTCOME_UNDERLINE: Record<
-  "win" | "draw" | "loss",
-  string | undefined
-> = {
+export const OUTCOME_UNDERLINE: Record<MatchOutcome, string | undefined> = {
   win: "inset 0 -9px 0 color-mix(in srgb, var(--color-jersey-deep) 34%, var(--color-cream))",
   draw: undefined,
   loss: "inset 0 -9px 0 color-mix(in srgb, var(--color-alert) 38%, var(--color-cream))",
 };
+
+/**
+ * The word for a settled match's outcome, KCVV-perspective — the label register
+ * that names what `OUTCOME_UNDERLINE` above tints. The tint alone is meaning by
+ * colour: a win and a loss differ only in hue, and a draw is the absence of one
+ * (#2404). Every surface that renders the underline should be able to reach for
+ * the word from here rather than inventing its own.
+ *
+ * Nouns, not the share card's verbs. `resolveResultMood`
+ * (`components/share/shared/theme.ts`) says "Gewonnen" / "Verloren" because
+ * there the word is a display headline standing on its own; here it prefixes a
+ * 9px mono caption and has to read as a label. "Gelijkspel" is deliberately
+ * spelled the same on both.
+ *
+ * Known gap, named rather than papered over: `<CalendarAgenda>` renders the
+ * tint from its own local `OUTCOME_UNDERLINE` copy — which has already drifted
+ * from the one above (`-4px` solid vs `-9px` `color-mix`) — and carries no word
+ * at all. Pointing it here would change `/kalender`'s pixels, so #2404 left it;
+ * the underline's "so the outcome colour can't drift between them" claim above
+ * is aspirational until it lands.
+ */
+export const OUTCOME_WORD: Record<MatchOutcome, string> = {
+  win: "Winst",
+  draw: "Gelijkspel",
+  loss: "Verlies",
+};
+
+/**
+ * The word for the slot a match row is filling, used when no outcome word
+ * applies — see `MatchRowKind` below for why the slot is given, not derived.
+ *
+ * `result` is the fallback rather than the norm: a settled match uses
+ * `OUTCOME_WORD` above, which says strictly more. See `<TeamAgendaRow>`'s
+ * `kind` prop for the full resolution order.
+ */
+export const MATCH_KIND_WORD = {
+  result: "Uitslag",
+  fixture: "Volgende",
+} as const;
+
+/**
+ * Which slot a match row is filling — the *surface's* answer, not the match's.
+ *
+ * These cannot be derived from `status`, and a row that tries gets it wrong:
+ * `pickLastResult` (`first-teams.ts`) deliberately hands the result slot a match
+ * whose kickoff has passed while PSD still says `scheduled`, so status-derivation
+ * labels the homepage's result column "Volgende" — the same word as the fixture
+ * card beside it (#2404). The column knows; the row has to be told.
+ */
+export type MatchRowKind = keyof typeof MATCH_KIND_WORD;
 
 /**
  * The one home/away vocabulary (#2398 AC4). Four surfaces state this same fact
@@ -125,9 +179,12 @@ export const OUTCOME_UNDERLINE: Record<
  * has room for; the short form is for surfaces that also show the glyph, the
  * long form for glyph-only surfaces where it is the accessible name.
  *
- * Colour is deliberately NOT unified here: `/kalender` fills home with
- * `card-red` while the homepage badge uses `jersey-deep`. That reconcile is
- * #2404's, not this one's.
+ * Colour is deliberately NOT unified here, and #2404 confirmed it should not be:
+ * `/kalender`'s `card-red` is the locked colour of the *Wedstrijden* category
+ * (6d1/#1992), not of "thuis", so moving it would break a different system than
+ * the one it appears to belong to. What #2404 did unify is the grammar — filled
+ * = thuis, outlined = uit on both surfaces. See `<HomeAwayBadge>` in
+ * `<UpcomingMatchesClient>`.
  */
 export const HOME_AWAY_WORD = {
   home: "Thuis",

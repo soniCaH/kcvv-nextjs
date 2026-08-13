@@ -28,6 +28,49 @@ Homepage spine (`app/(landing)/page.tsx`), in a new section **immediately after 
   opponent crest/name + home/away + kickoff time.
 - **Two independent press targets per row** (not one row group) — links split per the owner decision.
 
+## Outcome word — amended by #2404
+
+The lock called for an **outcome word** on the result card. The #2301 unification onto the
+shared `<TeamAgendaRow>` dropped it, leaving the two cards told apart only by cream-vs-green
+and by which column they sat in, and the win/loss tint carried by hue alone.
+
+It is back, in the row's mono caption rather than beside the scoreline — the caption already
+renders there, so it costs no height, and the centre column stays free for the score (#2397).
+`<TeamAgendaRow>` resolves it most-informative-first:
+
+| state                               | caption opens with                                         |
+| ----------------------------------- | ---------------------------------------------------------- |
+| settled (`finished` / `forfeited`)  | `Winst` / `Gelijkspel` / `Verlies`                         |
+| a status the layout can't speak for | nothing — the `PP` / `AFG` / `STOP` marker already says it |
+| otherwise, if a slot was given      | the slot's own word: `Uitslag` / `Volgende`                |
+
+The words live in `OUTCOME_WORD` / `MATCH_KIND_WORD` (`lib/utils/match-display.ts`), beside the
+`OUTCOME_UNDERLINE` they de-colour.
+
+**The two layouts are named differently, because they need different amounts of help.**
+
+The **desktop scoreboard** prints both clubs either side of the score, in home–away order, with
+KCVV among them — "K Lyra-Lierse 4 – 0 KCVV Elewijt" already says who lost. A word there restates
+the row, and down a season of results it stacks into a column of the same word. So desktop names a
+row only when the host surface asks, via `kind`. Owner call, 2026-08-13: the labels were tried on
+every agenda surface first and read as noise.
+
+The **mobile column** shows the opponent alone. The same scoreline arrives as "4 – 0" beside
+"K Lyra-Lierse" and a bus glyph, so reading KCVV's 0 out of it means knowing the score is
+home–away _and_ decoding the glyph. There the outcome word is not gated.
+
+The accessible name always carries the more informative of the two: it has no layout to restate,
+so the desktop argument for staying quiet does not apply to it.
+
+The `kind` prop stays opt-in either way — `<TeamMatchesSection>` heads its featured row
+"Eerstvolgende", `/kalender` groups rows under a date, and `/ploegen/<slug>/wedstrijden` bands its
+rows by month, so all three would otherwise say it twice.
+
+**The slot is the caller's answer, never derived from `match.status`.** `pickLastResult` puts a
+match whose kickoff has passed into the result column even while PSD still calls it `scheduled` —
+the `AwaitingResult` state this lock's "graceful skip" section already anticipates. A status-derived
+word labelled that column "Volgende", the same word as the fixture card beside it.
+
 ## Scoreline orientation
 
 Official **home–away** (matches `TeamAgendaRow` site convention), KCVV bolded wherever it sits.
