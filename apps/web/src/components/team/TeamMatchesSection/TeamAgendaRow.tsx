@@ -16,9 +16,9 @@
  */
 import { Fragment } from "react";
 import Link from "next/link";
-import { DateTime } from "luxon";
 import { Crest, PRESS_DOWN_CLASSES } from "@/components/design-system";
 import { cn } from "@/lib/utils/cn";
+import { toMatchDisplayZone } from "@/lib/utils/dates";
 import {
   getResultColor,
   HOME_AWAY_A11Y_NAME,
@@ -117,13 +117,17 @@ function computeOutcome(
   return getResultColor(match.homeScore, match.awayScore, isHome);
 }
 
+// `"use client"`: every date below renders twice, once on the UTC host and once
+// in the visitor's browser, so an unpinned parse is a React text mismatch and
+// not merely a wrong time. A BFF match date carries Belgian wall-clock in its
+// UTC fields — `toMatchDisplayZone` is the parse that reads it (#2601).
+
 function formatDay(date: Date): string {
-  return DateTime.fromJSDate(date).setLocale("nl").toFormat("d");
+  return toMatchDisplayZone(date).toFormat("d");
 }
 
 function formatMonth(date: Date): string {
-  return DateTime.fromJSDate(date)
-    .setLocale("nl")
+  return toMatchDisplayZone(date)
     .toFormat("MMM")
     .replace(/\.$/, "")
     .toLowerCase();
@@ -131,7 +135,7 @@ function formatMonth(date: Date): string {
 
 function formatKickoff(match: ScheduleMatch): string {
   if (match.time) return match.time;
-  return DateTime.fromJSDate(match.date).setLocale("nl").toFormat("HH:mm");
+  return toMatchDisplayZone(match.date).toFormat("HH:mm");
 }
 
 /**

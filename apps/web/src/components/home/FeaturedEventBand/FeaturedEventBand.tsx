@@ -1,7 +1,7 @@
 // apps/web/src/components/home/FeaturedEventBand/FeaturedEventBand.tsx
 import Image from "next/image";
 import { DateTime } from "luxon";
-import { toDisplayZone } from "@/lib/utils/dates";
+import { CLUB_TIMEZONE, toDisplayZone } from "@/lib/utils/dates";
 import {
   EditorialHeading,
   LinkButton,
@@ -44,7 +44,7 @@ export interface FeaturedEventBandEvent {
 
 export interface FeaturedEventBandProps {
   event: FeaturedEventBandEvent | null;
-  /** Render reference time. Defaults to `DateTime.now()`. Tests override
+  /** Render reference time. Defaults to now in the club's zone. Tests override
    *  to make the past/future split deterministic without freezing `Date`. */
   now?: DateTime;
 }
@@ -83,7 +83,10 @@ function formatDateTime(dateStart: string, dateEnd?: string | null): string {
 
 export const FeaturedEventBand = ({
   event,
-  now = DateTime.now(),
+  // Zone-pinned like every other date this file reads. The comparison below is
+  // between instants, so the zone cannot change the outcome — it is stated so
+  // the file holds no unpinned parse for the next reader to copy.
+  now = DateTime.now().setZone(CLUB_TIMEZONE),
 }: FeaturedEventBandProps) => {
   // Drop-if-empty per locked spec: null event, missing cover image, or
   // start time already past — caller doesn't have to filter upstream.

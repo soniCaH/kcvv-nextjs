@@ -12,7 +12,11 @@ import {
 import type { MatchStatus, ScheduleMatch } from "@/components/match/types";
 import { getScoreDisplay, type ScoreDisplay } from "@/lib/utils/match-display";
 import { capitalize } from "@/lib/utils/capitalize";
-import { CLUB_TIMEZONE, toDisplayZone } from "@/lib/utils/dates";
+import {
+  CLUB_TIMEZONE,
+  toDisplayZone,
+  toMatchDisplayZone,
+} from "@/lib/utils/dates";
 import type { ItemListEntry } from "@/lib/seo/jsonld";
 export type { ScoreDisplay } from "@/lib/utils/match-display";
 
@@ -265,8 +269,9 @@ function ensureDayFeed(map: Map<string, DayFeed>, day: string): DayFeed {
  * span (same semantics as `getEventsForDay`); buckets are time-sorted to match
  * the per-day helpers. Consumers `useMemo` this on `[matches, events]`.
  *
- * Matches bucket through `toDisplayZone` too, not `toMatchDisplayZone`; the two
- * only disagree for a kickoff at/after 22:00, which the PSD feed does not carry.
+ * Matches bucket through `toMatchDisplayZone` and events through
+ * `toDisplayZone` — the two sources carry opposite conventions, and a match
+ * bucketed as an instant lands on the wrong day for any kickoff at/after 22:00.
  */
 export function groupFeedByDay(
   matches: CalendarMatch[],
@@ -275,7 +280,7 @@ export function groupFeedByDay(
   const map = new Map<string, DayFeed>();
 
   for (const match of matches) {
-    const dt = toDisplayZone(match.date);
+    const dt = toMatchDisplayZone(match.date);
     if (!dt.isValid) continue;
     ensureDayFeed(map, dt.toISODate()!).matches.push(match);
   }
@@ -461,6 +466,20 @@ export function formatWeekRangeLabel(weekStart: string): string {
  */
 export function formatEventTime(iso: string): string | null {
   const dt = toDisplayZone(iso);
+  if (!dt.isValid) return null;
+  const time = dt.toFormat("HH:mm");
+  return time === "00:00" ? null : time;
+}
+
+/**
+ * The same rule over a *match* date, which is wall-clock rather than an
+ * instant. Split from `formatEventTime` rather than sharing it: put through the
+ * instant parse, a 15:00 kickoff read "17:00" and a fixture the feed sends with
+ * no time at all read "02:00" — a made-up kickoff where the agenda should show
+ * none (#2601).
+ */
+export function formatMatchTime(iso: string): string | null {
+  const dt = toMatchDisplayZone(iso);
   if (!dt.isValid) return null;
   const time = dt.toFormat("HH:mm");
   return time === "00:00" ? null : time;

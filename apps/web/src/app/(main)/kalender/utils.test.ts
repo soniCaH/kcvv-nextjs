@@ -14,6 +14,8 @@ import {
   buildMonthAgenda,
   groupFeedByDay,
   buildKalenderItemListEntries,
+  formatEventTime,
+  formatMatchTime,
 } from "./utils";
 import type { Match } from "@/lib/effect/schemas/match.schema";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
@@ -544,6 +546,42 @@ describe("groupFeedByDay", () => {
     const map = groupFeedByDay(matches, events);
     expect(map.get("2026-09-12")!.matches.map((m) => m.id)).toEqual([2, 1]);
     expect(map.get("2026-09-12")!.events.map((e) => e.id)).toEqual(["e1"]);
+  });
+
+  /**
+   * A match date is wall-clock and an event datetime is an instant, so the two
+   * sources bucket through different parses. Read as an instant, a late kickoff
+   * lands on tomorrow's day in the grid and disappears from the day the
+   * supporter is actually looking at (#2601).
+   */
+  it("buckets a 22:00 kickoff on its own day, where an event at 22:00 rolls over", () => {
+    const map = groupFeedByDay(
+      [makeCalendarMatch({ id: 1, date: "2026-09-12T22:00:00" })],
+      [makeCalendarEvent({ id: "e1", dateStart: "2026-09-12T22:00:00" })],
+    );
+
+    expect(map.get("2026-09-12")!.matches.map((m) => m.id)).toEqual([1]);
+    expect(map.get("2026-09-13")!.events.map((e) => e.id)).toEqual(["e1"]);
+  });
+});
+
+// ── formatMatchTime ───────────────────────────────────────────────────────
+
+describe("formatMatchTime", () => {
+  it("reads the kickoff's own wall clock rather than converting it", () => {
+    expect(formatMatchTime("2026-09-12T15:00:00")).toBe("15:00");
+    // The instant parse is the defect it replaces — two hours late in summer.
+    expect(formatEventTime("2026-09-12T15:00:00")).toBe("17:00");
+  });
+
+  it("shows no time for a fixture the feed sends without one", () => {
+    // A timeless fixture arrives as midnight. Converted it read "02:00" — a
+    // kickoff the club never announced.
+    expect(formatMatchTime("2026-09-12T00:00:00")).toBeNull();
+  });
+
+  it("returns null for an unparseable date", () => {
+    expect(formatMatchTime("not-a-date")).toBeNull();
   });
 });
 

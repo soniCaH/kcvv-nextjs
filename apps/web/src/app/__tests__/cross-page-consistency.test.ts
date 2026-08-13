@@ -139,3 +139,58 @@ describe("the club timezone has one home (#2430)", () => {
     },
   );
 });
+
+// ---------------------------------------------------------------------------
+// Rule 3 (#2601) — no date is parsed in whatever zone the code happens to run in
+// ---------------------------------------------------------------------------
+
+/**
+ * This is the rule that makes rule 2 load-bearing. Pinning the zone to one
+ * constant achieves nothing while half the site's parses never name a zone at
+ * all: those take the *runtime's*, which is UTC on Vercel, the visitor's in the
+ * browser, and the machine's in CI. On a client component that is a hydration
+ * mismatch rather than merely a wrong time, and it shipped as one — a fixture
+ * without a kickoff time printed 15:00 on the server and 17:00 in a Belgian
+ * browser (#2601).
+ *
+ * The two banned shapes:
+ *
+ * - **A parse with no options object.** A `DateTime.from…(value)` call whose
+ *   only argument is the value has no `{ zone }`, so it lands in the runtime
+ *   zone. The site's two parses — `toDisplayZone` for a stored instant,
+ *   `toMatchDisplayZone` for a BFF match date's wall clock — both live in
+ *   `dates.ts`, and a caller reaching past them is the drift this catches.
+ * - **`DateTime.now()` / `DateTime.local(…)`** unless immediately re-zoned.
+ *
+ * Deliberately conservative in one direction: a single argument containing a
+ * nested call (`fromISO(build())`) is not matched, because a regex that reached
+ * through the inner `)` would flag `fromISO(iso.trim(), { zone })` — a false
+ * positive on a correctly zoned call, which is the failure mode that gets a
+ * guard deleted. Zoning is checked by shape, not by which zone is named: `{
+ * zone: "utc" }` is a legitimate answer for stored data, and rule 2 already
+ * holds the club zone to one home.
+ *
+ * **What it cannot see:** a parse that names a zone and names the wrong one.
+ * The worst defect #2601 fixed was of that kind — the ICS feed converted a
+ * match date it should have read, so it was zoned, pinned, and two hours late.
+ * Choosing between the two parses stays a reading decision, held by
+ * `toMatchDisplayZone`'s docblock and by tests, not by this rule.
+ */
+const UNZONED_PARSE =
+  /\bDateTime\.(?:fromJSDate|fromISO|fromMillis|fromSeconds|fromFormat|fromObject|fromHTTP|fromRFC2822|fromSQL)\s*\([^,()]*\)/;
+const UNPINNED_NOW =
+  /\bDateTime\.(?:now|local)\s*\([^()]*\)(?!\s*\.setZone\s*\()/;
+
+/** The two parses' home, and the only file allowed to reach for either shape. */
+const DATE_PARSE_HOME = "lib/utils/dates.ts";
+
+describe("no date is parsed in the runtime zone (#2601)", () => {
+  it.each(productionSources.filter((f) => f !== DATE_PARSE_HOME))(
+    "%s — every Luxon parse names a zone",
+    (relPath) => {
+      const source = code.get(relPath)!;
+      expect(UNZONED_PARSE.test(source)).toBe(false);
+      expect(UNPINNED_NOW.test(source)).toBe(false);
+    },
+  );
+});

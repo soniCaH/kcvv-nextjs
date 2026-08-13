@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { DateTime } from "luxon";
+import { toMatchDisplayZone } from "@/lib/utils/dates";
 import { runPromise } from "@/lib/effect/runtime";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { BffService } from "@/lib/effect/services/BffService";
@@ -66,7 +66,7 @@ function groupByMonth(matches: ScheduleMatch[]): MonthGroup[] {
   const grouped = new Map<string, MonthGroup>();
 
   for (const m of sorted) {
-    const dt = DateTime.fromJSDate(m.date).setLocale("nl");
+    const dt = toMatchDisplayZone(m.date);
     const key = dt.toFormat("yyyy-MM");
     if (!grouped.has(key)) {
       const monthName =

@@ -6,7 +6,7 @@
 import type { MatchDetail } from "@kcvv/api-contract";
 import type { HeroMatchData } from "@/components/article/EditorialHero";
 import { KCVV_CLUB_ID } from "@/lib/constants";
-import { formatWidgetDate } from "@/lib/utils/dates";
+import { formatMatchWidgetDate } from "@/lib/utils/dates";
 import { extractMatchTime } from "@/lib/utils/match-time";
 
 /**
@@ -55,6 +55,6 @@ export function toHeroMatchData(match: MatchDetail): HeroMatchData {
     kickoffTime: extractMatchTime(match),
     status: match.status,
     competition: match.competition,
-    matchDate: formatWidgetDate(match.date),
+    matchDate: formatMatchWidgetDate(match.date),
   };
 }
