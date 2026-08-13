@@ -21,17 +21,18 @@
  */
 
 import { DateTime } from "luxon";
+import { toDisplayZone } from "@/lib/utils/dates";
+import { capitalize } from "@/lib/utils/capitalize";
 import { PageContainer } from "@/components/design-system";
 import { PrintButton } from "./PrintButton";
 import { PrintDate } from "./PrintDate";
 
-// KCVV is in Belgium — pin date/week derivation to Europe/Brussels so the
-// weekday, day-of-month, and ISO-week bucket are stable across server/DST.
-const TZ = "Europe/Brussels";
-
 export interface ScheurkalenderMatch {
   id: number;
-  /** ISO calendar date (`YYYY-MM-DD`); kickoff time lives in `time`. */
+  /**
+   * ISO calendar date (`YYYY-MM-DD`); kickoff time lives in `time`. The route
+   * already read the day off the match Date's UTC fields (`toMatchDisplayZone`).
+   */
   date: string;
   /** Kickoff time as `HH:MM`. */
   time?: string;
@@ -73,7 +74,7 @@ function groupByWeekend(matches: ScheurkalenderMatch[]): Weekend[] {
   const order: string[] = [];
   const buckets = new Map<string, ScheurkalenderMatch[]>();
   for (const match of matches) {
-    const dt = DateTime.fromISO(match.date, { zone: TZ });
+    const dt = toDisplayZone(match.date);
     const key = `${dt.weekYear}-W${String(dt.weekNumber).padStart(2, "0")}`;
     let bucket = buckets.get(key);
     if (!bucket) {
@@ -87,9 +88,7 @@ function groupByWeekend(matches: ScheurkalenderMatch[]): Weekend[] {
     const bucket = buckets.get(key)!;
     // Anchor on the weekend's Saturday so a Sat/Sun pair never straddles two
     // month headings (e.g. 31 Jan + 1 Feb both belong to January).
-    const monday = DateTime.fromISO(bucket[0]!.date, { zone: TZ }).startOf(
-      "week",
-    );
+    const monday = toDisplayZone(bucket[0]!.date).startOf("week");
     return { key, saturday: monday.plus({ days: 5 }), matches: bucket };
   });
 }
@@ -104,10 +103,9 @@ function groupByMonth(weekends: Weekend[]): MonthGroup[] {
       last.weekends.push(weekend);
       continue;
     }
-    const monthName = weekend.saturday.setLocale("nl").toFormat("LLLL");
     groups.push({
       key,
-      monthName: monthName.charAt(0).toUpperCase() + monthName.slice(1),
+      monthName: capitalize(weekend.saturday.toFormat("LLLL")),
       yearSuffix: `’${weekend.saturday.toFormat("yy")}`,
       weekends: [weekend],
     });
@@ -129,7 +127,7 @@ function splitByYear(weekends: Weekend[]): Weekend[][] {
 }
 
 function FixtureRow({ match }: { match: ScheurkalenderMatch }) {
-  const dt = DateTime.fromISO(match.date, { zone: TZ });
+  const dt = toDisplayZone(match.date);
   const kcvvName = (
     <>
       KCVV Elewijt <span className="text-jersey-deep">{match.kcvvLabel}</span>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { DateTime } from "luxon";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
+import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { PRESS_DOWN_CLASSES } from "@/components/design-system/press-down";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { EVENT_TYPE_FILL } from "@/components/event/event-type-style";
@@ -97,7 +97,7 @@ export function CalendarWeek({
     () => groupFeedByDay(matches, events),
     [matches, events],
   );
-  const today = DateTime.now().toISODate()!;
+  const today = clubToday();
 
   return (
     <div
@@ -105,7 +105,7 @@ export function CalendarWeek({
       data-testid="week-grid"
     >
       {days.map((day, i) => {
-        const dt = DateTime.fromISO(day);
+        const dt = toDisplayZone(day);
         const { matches: dayMatches, events: dayEvents } =
           byDay.get(day) ?? EMPTY_DAY_FEED;
         const isToday = day === today;

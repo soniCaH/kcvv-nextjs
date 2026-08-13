@@ -12,6 +12,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { SearchResult as SearchResultType } from "./SearchInterface";
 import { MonoLabel, StampBadge } from "@/components/design-system";
+import { toDisplayZone } from "@/lib/utils/dates";
 
 export interface SearchResultProps {
   /**
@@ -32,15 +33,8 @@ const typeLabels = {
   team: "Team",
 } as const;
 
-const formatDate = (date: string) =>
-  new Date(date).toLocaleDateString("nl-BE", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    // Pin to the club's zone so a date renders identically on the UTC
-    // SSR/build host and a Belgian client (no off-by-one / hydration drift).
-    timeZone: "Europe/Brussels",
-  });
+/** `12 sep 2026` — one consumer, so the shape stays local (#2430 rule 2). */
+const formatDate = (date: string) => toDisplayZone(date).toFormat("d MMM yyyy");
 
 /**
  * Individual search result row — postmark-stamp paper card (8s2-redux).

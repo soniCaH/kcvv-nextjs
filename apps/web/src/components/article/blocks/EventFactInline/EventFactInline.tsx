@@ -6,11 +6,11 @@ import { cn } from "@/lib/utils/cn";
 import { capitalize } from "@/lib/utils/capitalize";
 import {
   DEFAULT_TICKET_LABEL,
-  formatTimeRange,
   resolveEventRange,
   type EventFactValue,
   type ResolvedEventRange,
 } from "../EventFact/types";
+import { formatTimeRange } from "../EventFact/format-time-range";
 
 export interface EventFactInlineProps {
   value: EventFactValue;

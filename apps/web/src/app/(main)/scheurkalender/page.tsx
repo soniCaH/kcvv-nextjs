@@ -9,7 +9,6 @@
 
 import type { Metadata } from "next";
 import { Effect } from "effect";
-import { DateTime } from "luxon";
 import { runPromise } from "@/lib/effect/runtime";
 import {
   BffService,
@@ -18,6 +17,11 @@ import {
 import { TeamRepository } from "@/lib/repositories/team.repository";
 import type { Match } from "@/lib/effect/schemas/match.schema";
 import { KCVV_CLUB_ID } from "@/lib/constants";
+import {
+  clubToday,
+  toDisplayZone,
+  toMatchDisplayZone,
+} from "@/lib/utils/dates";
 import {
   ScheurkalenderPage,
   type ScheurkalenderMatch,
@@ -31,8 +35,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const TZ = "Europe/Brussels";
-
 interface ScheurkalenderData {
   matches: ScheurkalenderMatch[];
   season: string;
@@ -45,7 +47,7 @@ function squadLabel(name: string): "A" | "B" {
 
 /** Belgian season label (e.g. "25/26") for the calendar day in `isoDate`. */
 function seasonLabel(isoDate: string): string {
-  const dt = DateTime.fromISO(isoDate, { zone: TZ });
+  const dt = toDisplayZone(isoDate);
   const startYear = dt.month >= 7 ? dt.year : dt.year - 1;
   const twoDigit = (year: number) => String(year % 100).padStart(2, "0");
   return `${twoDigit(startYear)}/${twoDigit(startYear + 1)}`;
@@ -61,10 +63,10 @@ function toScheurkalenderMatch(
   const opponent = kcvvIsHome ? match.away_team.name : match.home_team.name;
   return {
     id: match.id,
-    // The BFF encodes the local kickoff wall-clock into the Date's UTC fields,
-    // so read the calendar day off UTC — re-zoning a late kickoff (≥22:00)
+    // `toMatchDisplayZone` reads the calendar day off UTC, which is where the
+    // BFF put the local kickoff wall-clock; re-zoning a late kickoff (≥22:00)
     // to Brussels would roll it to the next day (and possibly next weekend).
-    date: DateTime.fromJSDate(match.date, { zone: "utc" }).toISODate() ?? "",
+    date: toMatchDisplayZone(match.date).toISODate() ?? "",
     ...(match.time ? { time: match.time } : {}),
     opponent,
     kcvvLabel: label,
@@ -123,9 +125,7 @@ async function fetchScheurkalenderData(): Promise<ScheurkalenderData> {
           (a.time ?? "").localeCompare(b.time ?? ""),
       );
 
-      const season = seasonLabel(
-        matches[0]?.date ?? DateTime.now().setZone(TZ).toISODate()!,
-      );
+      const season = seasonLabel(matches[0]?.date ?? clubToday());
 
       return { matches, season };
     }),

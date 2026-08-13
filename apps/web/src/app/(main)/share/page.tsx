@@ -7,6 +7,8 @@ import { runPromise } from "@/lib/effect/runtime";
 import { BffService } from "@/lib/effect/services/BffService";
 import { PlayerRepository } from "@/lib/repositories/player.repository";
 import type { Match } from "@/lib/effect/schemas/match.schema";
+import { toMatchDisplayZone } from "@/lib/utils/dates";
+import { capitalize } from "@/lib/utils/capitalize";
 import { SharePage } from "@/components/share/SharePage/SharePage";
 import type {
   MatchOption,
@@ -18,13 +20,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/** `Zaterdag · 15:00` — one consumer, so the shape stays local (#2430 rule 2). */
 function formatDateTime(match: Match): string | undefined {
-  const weekday = new Date(match.date).toLocaleDateString("nl-BE", {
-    weekday: "long",
-    timeZone: "Europe/Brussels",
-  });
-  const capitalised = weekday.charAt(0).toUpperCase() + weekday.slice(1);
-  return match.time ? `${capitalised} · ${match.time}` : capitalised;
+  const weekday = capitalize(toMatchDisplayZone(match.date).toFormat("cccc"));
+  return match.time ? `${weekday} · ${match.time}` : weekday;
 }
 
 function toMatchOption(match: Match): MatchOption {

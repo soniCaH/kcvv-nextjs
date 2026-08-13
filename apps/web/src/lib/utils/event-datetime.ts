@@ -1,23 +1,19 @@
-import { DateTime } from "luxon";
-
-/**
- * KCVV is in Belgium and Sanity stores `event` datetimes in UTC. Pin all event
- * date/time presentation to Europe/Brussels so the weekday, day, month, start
- * time, and all-day (local-midnight) detection use Belgian wall-clock —
- * independent of the server timezone (Vercel runs UTC). Mirrors the zone
- * pinning already in `FeaturedEventBand` and `kalender/utils`.
- */
-export const EVENT_TIMEZONE = "Europe/Brussels";
+import type { DateTime } from "luxon";
+import { toDisplayZone } from "./dates";
 
 /**
  * Parse a (UTC) ISO event datetime into a Brussels-zoned, nl-locale DateTime.
- * `{ zone: "utc" }` interprets offset-less inputs as UTC (the stored contract)
- * rather than the runtime-local zone, so the result is environment-independent;
- * for the usual `Z`-suffixed Sanity values the explicit offset already wins, so
- * this is a no-op there.
+ *
+ * The event domain's name for the site's one date parse — Sanity stores `event`
+ * datetimes as real UTC instants, which is exactly `toDisplayZone`'s contract
+ * (offset-less input read as UTC, never the runtime zone). It delegates rather
+ * than re-deriving, so the zone lives in one place (#2430); the wrapper stays
+ * because `parseEventDateTime(event.dateStart)` is what reads right at the
+ * event call sites.
+ *
+ * Do **not** reach for this on a BFF `Match` date — that one is Belgian
+ * wall-clock already, see `toMatchDisplayZone` in `./dates`.
  */
 export function parseEventDateTime(iso: string): DateTime {
-  return DateTime.fromISO(iso, { zone: "utc" })
-    .setZone(EVENT_TIMEZONE)
-    .setLocale("nl");
+  return toDisplayZone(iso);
 }

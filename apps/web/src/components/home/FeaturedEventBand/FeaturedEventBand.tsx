@@ -1,6 +1,7 @@
 // apps/web/src/components/home/FeaturedEventBand/FeaturedEventBand.tsx
 import Image from "next/image";
 import { DateTime } from "luxon";
+import { toDisplayZone } from "@/lib/utils/dates";
 import {
   EditorialHeading,
   LinkButton,
@@ -48,12 +49,6 @@ export interface FeaturedEventBandProps {
   now?: DateTime;
 }
 
-const LOCALE = "nl";
-// KCVV is in Belgium — pin formatting to Europe/Brussels so DST and TZ
-// drift in deploy / CI / test environments doesn't change the rendered
-// "when" line. Sanity stores event datetimes in UTC; readers are in BE.
-const TZ = "Europe/Brussels";
-
 /**
  * Formats the "when" line per locked spec:
  *  - Same day, with time:    "26 apr · 19:00–21:00" or "26 apr · 19:00"
@@ -61,10 +56,10 @@ const TZ = "Europe/Brussels";
  *  - Multi-day:               "26 apr 10:00 – 28 apr 12:00" (no separator dot)
  */
 function formatDateTime(dateStart: string, dateEnd?: string | null): string {
-  const start = DateTime.fromISO(dateStart).setZone(TZ).setLocale(LOCALE);
-  const end = dateEnd
-    ? DateTime.fromISO(dateEnd).setZone(TZ).setLocale(LOCALE)
-    : null;
+  // Belgian wall-clock and nl locale both come from the shared parse — the
+  // rendered "when" line must not drift with the deploy/CI/test timezone.
+  const start = toDisplayZone(dateStart);
+  const end = dateEnd ? toDisplayZone(dateEnd) : null;
 
   const sameDay =
     !end || end.startOf("day").valueOf() === start.startOf("day").valueOf();
@@ -93,7 +88,7 @@ export const FeaturedEventBand = ({
   // Drop-if-empty per locked spec: null event, missing cover image, or
   // start time already past — caller doesn't have to filter upstream.
   if (!event || !event.coverImage) return null;
-  const start = DateTime.fromISO(event.dateStart);
+  const start = toDisplayZone(event.dateStart);
   if (!start.isValid || start < now) return null;
 
   const location = event.location?.trim() || "Kantine";

@@ -1,9 +1,9 @@
 export {
   resolveEventDate,
   resolveEventRange,
-  formatTimeRange,
   DEFAULT_TICKET_LABEL,
 } from "./types";
+export { formatTimeRange } from "./format-time-range";
 export type {
   EventFactValue,
   EventFactSession,
