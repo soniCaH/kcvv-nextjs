@@ -69,3 +69,11 @@ export {
   PSD_PLACEHOLDER_ASSET_REF,
 } from './unset-player-placeholder-psd-image'
 export type {PlayerWithPsdImageDoc as UnsetPlayerPlaceholderPsdImageDoc} from './unset-player-placeholder-psd-image'
+
+export {
+  default as normalizeArticleTagCasingMigration,
+  migrateNormalizeArticleTagCasing,
+  canonicaliseTags,
+  CANONICAL_TAGS,
+} from './normalize-article-tag-casing'
+export type {TaggedArticleDoc as NormalizeArticleTagCasingDoc} from './normalize-article-tag-casing'
