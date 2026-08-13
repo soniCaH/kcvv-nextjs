@@ -93,16 +93,31 @@ describe("MatchEvents", () => {
       expect(screen.queryByLabelText("KCVV Elewijt")).not.toBeInTheDocument();
     });
 
-    it("still names the scoring team to a screen reader", () => {
+    it("names each row's own team to a screen reader", () => {
       // The chip went silent, and in chronological mode the team is otherwise
       // conveyed only by which of the two name columns is filled — a purely
-      // visual signal. The row carries the name instead (#2559 rule 1).
+      // visual signal. Each row carries its own team name (#2559 rule 1).
+      //
+      // Asserted per row against the event's `team`, not as a set: a component
+      // that stamped the same name on every row would satisfy "both teams
+      // appear somewhere" while telling a screen-reader user the wrong side.
+      const expected = [...events]
+        .sort((a, b) => a.minute - b.minute)
+        .map((e) =>
+          e.team === "home"
+            ? defaultProps.homeTeamName
+            : defaultProps.awayTeamName,
+        );
+      // Guards the fixture itself — per-row mapping only proves anything while
+      // both sides are represented.
+      expect(new Set(expected).size).toBe(2);
+
       const { container } = render(<MatchEvents {...defaultProps} />);
-      const srNames = Array.from(container.querySelectorAll(".sr-only")).map(
-        (n) => n.textContent,
-      );
-      expect(srNames).toContain("KCVV Elewijt");
-      expect(srNames).toContain("KFC Turnhout");
+      const rows = Array.from(container.querySelectorAll("ol > li"));
+      expect(rows).toHaveLength(expected.length);
+      expect(
+        rows.map((row) => row.querySelector(".sr-only")?.textContent),
+      ).toEqual(expected);
     });
   });
 
