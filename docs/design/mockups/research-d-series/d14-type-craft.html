@@ -274,9 +274,16 @@
         border-left: 2px solid var(--ink);
         padding-left: 16px;
       }
+      /* The two must be mutually exclusive or the quote hangs twice — the
+         negative indent is the fallback, and native support cancels it. */
       .quote.hang {
-        hanging-punctuation: first last;
         text-indent: -0.42em;
+      }
+      @supports (hanging-punctuation: first last) {
+        .quote.hang {
+          hanging-punctuation: first last;
+          text-indent: 0;
+        }
       }
       .measureline {
         border-left: 1px dashed var(--card-red);

@@ -3,7 +3,7 @@
 > Filed as [#2536](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2536), tickets [#2537–#2544](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2536). **The issue is canonical — update it there, not here.** Source: `/impeccable critique` on `src/app/(main)/ploegen`, dual-agent run, scored **15/36 ("Poor", 42%)** with heuristic 10 `n/a`. Snapshot at `apps/web/.impeccable/critique/2026-08-12T12-56-34Z__src-app-main-ploegen.md`.
 
 
-Working notes: `docs/design/ploegen-wayfinder-map.md`. Critique snapshot: `apps/web/.impeccable/critique/2026-08-12T12-56-34Z__src-app-main-ploegen.md`. **Both are uncommitted local files**; this issue is canonical.
+Working notes: `docs/design/ploegen-wayfinder-map.md` (committed). Critique snapshot: `apps/web/.impeccable/critique/2026-08-12T12-56-34Z__src-app-main-ploegen.md` — **generated and not committed**, so it may not exist in a fresh checkout. This issue is canonical.
 
 Baseline measured 2026-08-12 against `main` at `e19f8235`. Source: `/impeccable critique` on `src/app/(main)/ploegen`, dual-agent run, scored **15/36 ("Poor", 42%)** with heuristic 10 `n/a`. Live evidence from `kcvv-nextjs.vercel.app` across all 18 team routes plus the two `/wedstrijden` sub-routes, spanning the shape range: the flagship senior side (368KB, standings + matches + squad + staff), the reserves, and the sparsest youth pages (U6, U9, U10P with an empty squad).
 
@@ -129,7 +129,7 @@ Browser-measured numbers — tap sizes, the 31px overflow, computed fonts, headi
 <!-- one line per closed ticket -->
 
 See the canonical issue — #2537 and #2538 (research) and **#2539 (naming rule)** are closed as of 2026-08-13.
-#2539: one helper `teamDisplayName(team)` = a new editorial `displayName` field ?? a slug-derived label, for `<h1>`,
+**#2539:** one helper `teamDisplayName(team)` = a new editorial `displayName` field ?? a slug-derived label, for `<h1>`,
 `<title>`, OG, description, alt, the homepage row and the directory caption; JSON-LD keeps the registered `name`.
 
 ## Not yet specified

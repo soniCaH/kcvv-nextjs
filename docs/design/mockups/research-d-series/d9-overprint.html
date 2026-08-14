@@ -263,10 +263,27 @@
           </p>
           <p>
             <b>Its own cited source has the right operator.</b> The note beside it says Stripe Press
-            uses <code>mix-blend-mode: lighten</code> — and lighten is exactly the shadow-only
-            operator: every pixel darker than the plate colour is clamped up to the plate, every pixel
-            lighter passes through untouched. Shadows go green, highlights keep their colour. That is
-            columns B and C.
+            uses <code>mix-blend-mode: lighten</code>, which is the shadow-weighted operator. Stated
+            precisely, because the loose version misleads: lighten takes the
+            <b>per-channel maximum</b> against the plate. It does not classify whole pixels. A pixel
+            keeps every channel already above the plate and has only its lower channels raised — so a
+            pixel brighter than the plate in all three channels passes through untouched, and a
+            near-neutral dark one lands on the plate.
+          </p>
+          <p>
+            <b>The consequence that matters, and the limit of the claim.</b> A <i>saturated</i> dark
+            colour has some channels clamped and others not, which shifts its hue rather than
+            preserving it: against #133d28 a dark red kit
+            <code>#6b1010</code> becomes <code>#6b3d28</code> (red toward brown) and a deep navy
+            <code>#101a3a</code> becomes <code>#133d3a</code> (navy toward teal). So "highlights keep
+            their colour" holds for anything above the plate but not for dark saturated kit — worth
+            knowing, since dark kit is one of the things this technique is aimed at.
+          </p>
+          <p>
+            <b>What the decision actually rests on is unaffected.</b> On the skin-tone test both mid
+            and shadowed skin (<code>#c98a6b</code>, <code>#8a5f47</code>) sit above the plate in all
+            three channels and pass through with no channel clamped at all. Faces stay recognisable.
+            That is columns B and C.
           </p>
         </div>
       </div>

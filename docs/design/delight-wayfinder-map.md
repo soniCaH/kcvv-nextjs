@@ -69,7 +69,7 @@ The homepage's own `(landing)/loading.tsx` is **clean** — 8 uses, all `motion-
 
 `.kcvv-spinner-scarf` (`globals.css:40–168`) is a barber-pole club scarf: a `-45°`-rotated repeating stripe scrolling a clean 80px per 1.5s cycle to dodge sub-pixel seams, in four sizes, three colourways, with `prefers-reduced-motion` handled at `:165`. It is the most product-specific object in the entire CSS file.
 
-`<Spinner>` is mounted at **exactly one** non-test site site-wide: `search/SearchInterface.tsx:312`.
+`<Spinner>` is mounted at **exactly one** non-test call site, site-wide: `search/SearchInterface.tsx:312`.
 
 Meanwhile every `loading.tsx` in the app — including the homepage's — waits with Tailwind's default. The club built a scarf and puts it on the search box.
 
@@ -154,7 +154,7 @@ Per the #2425 lesson — charted measurements go stale, so re-run rather than tr
 
 ```bash
 # animate-pulse: total, and the unguarded subset (the 113 / 69)
-grep -rn "animate-pulse" src --include='*.tsx' | grep -vE '\.(test|stories)' | wc -l
+grep -ro "animate-pulse" src --include='*.tsx' | grep -vE '\.(test|stories)' | wc -l
 for f in $(grep -rl "animate-pulse" src --include='*.tsx' | grep -vE '\.(test|stories)'); do
   t=$(grep -o "animate-pulse" "$f" | wc -l); g=$(grep -o "motion-safe:animate-pulse" "$f" | wc -l)
   [ $((t-g)) -gt 0 ] && printf "%-58s %3d %3d %3d\n" "$f" "$t" "$g" "$((t-g))"

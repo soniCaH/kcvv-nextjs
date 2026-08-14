@@ -218,8 +218,9 @@ labelled **`Matchcenter`**. News items carry a **`909 keer gelezen`** read count
 
 - `/pages/inschrijven.php` instructs visitors to email **`info@eendrachtbuggenhout.com`** — a *different*
   Kicksite club
-- `/pages/helperslijst.php` names **"Vrijwilligercoördinator: Anne de Vries"** at
-  **`vrijwilligers@fcnoordwind.nl`** — a Dutch address on a Belgian club, referencing the Dutch "VOG"
+- `/pages/helperslijst.php` names a volunteer coordinator (name redacted — a private individual, and
+  the leak is evidenced without it) at **`vrijwilligers@fcnoordwind.nl`** — a Dutch address on a
+  Belgian club, referencing the Dutch "VOG"
 
 Kicksite's own `functies.php` emits a live PHP notice: `Warning : Undefined variable $paginaTitel …`.
 
