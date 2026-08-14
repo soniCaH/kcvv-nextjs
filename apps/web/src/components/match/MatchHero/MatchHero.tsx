@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { DateTime } from "luxon";
+import { toMatchDisplayZone } from "@/lib/utils/dates";
 import { TapedCard } from "@/components/design-system/TapedCard";
 import { cn } from "@/lib/utils/cn";
 import type { MatchStatus } from "../types";
@@ -51,7 +51,7 @@ interface StubDateParts {
 }
 
 function formatStubDate(date: Date): StubDateParts {
-  const dt = DateTime.fromJSDate(date).setLocale("nl");
+  const dt = toMatchDisplayZone(date);
   return {
     weekday: dt.toFormat("ccc").replace(/\.$/, "").toUpperCase(),
     day: dt.toFormat("d"),
@@ -60,7 +60,7 @@ function formatStubDate(date: Date): StubDateParts {
 }
 
 function formatSeasonLabel(date: Date): string {
-  const dt = DateTime.fromJSDate(date);
+  const dt = toMatchDisplayZone(date);
   const startYear = dt.month >= 7 ? dt.year : dt.year - 1;
   const endYear = startYear + 1;
   const tail = (y: number) => y.toString().slice(-2).padStart(2, "0");

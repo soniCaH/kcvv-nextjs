@@ -139,6 +139,57 @@ describe("generateIcal", () => {
     expect(output).toContain("DTSTART;TZID=Europe/Brussels:20250715T150000");
   });
 
+  /**
+   * The `time`-less branch. A BFF match date carries Belgian wall-clock in its
+   * UTC fields, so converting it to Brussels adds a phantom +1/+2h — and this
+   * feed is *subscribed*, so a wrong DTSTART follows people into their calendar
+   * app until they unsubscribe. The branch shipped untested (#2601).
+   */
+  describe("a fixture with no kickoff time", () => {
+    it("emits the date's own wall clock rather than converting it", () => {
+      const match = makeMatch({
+        date: new Date(Date.UTC(2025, 2, 22, 15, 0)),
+        time: undefined,
+      });
+      const output = generateIcal([match]);
+
+      expect(output).toContain("DTSTART;TZID=Europe/Brussels:20250322T150000");
+    });
+
+    it("keeps a midnight fixture at midnight, in winter too", () => {
+      const match = makeMatch({
+        date: new Date(Date.UTC(2025, 0, 15, 0, 0)),
+        time: undefined,
+      });
+      const output = generateIcal([match]);
+
+      expect(output).toContain("DTSTART;TZID=Europe/Brussels:20250115T000000");
+    });
+
+    it("agrees with the same kickoff spelled out in `time`", () => {
+      const date = new Date(Date.UTC(2025, 6, 15, 15, 0));
+      const implicit = generateIcal([makeMatch({ date, time: undefined })]);
+      const explicit = generateIcal([makeMatch({ date, time: "15:00" })]);
+
+      // The event's own DTSTART, not the VTIMEZONE transition rules above it —
+      // those are identical whatever the fixture, so a looser match passes
+      // while the two branches disagree by two hours.
+      const dtstart = (ics: string) => /^DTSTART;TZID=.*$/m.exec(ics)?.[0];
+      expect(dtstart(implicit)).toBe(dtstart(explicit));
+      expect(dtstart(implicit)).toBeDefined();
+    });
+
+    it("keeps a 22:00 kickoff on its own day", () => {
+      const match = makeMatch({
+        date: new Date(Date.UTC(2025, 7, 3, 22, 0)),
+        time: undefined,
+      });
+      const output = generateIcal([match]);
+
+      expect(output).toContain("DTSTART;TZID=Europe/Brussels:20250803T220000");
+    });
+  });
+
   it("sorts matches by date", () => {
     const earlier = makeMatch({
       id: 1,

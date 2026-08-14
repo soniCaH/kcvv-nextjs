@@ -13,7 +13,7 @@ import {
   type MatchRowKind,
 } from "@/lib/utils/match-display";
 import { KCVV_CLUB_ID } from "@/lib/constants";
-import { formatWidgetDate, formatDayMonth } from "@/lib/utils/dates";
+import { formatMatchWidgetDate, formatMatchDayMonth } from "@/lib/utils/dates";
 import type { MatchStripData } from "@/lib/server/match-data";
 import type { ScheduleMatch, ScheduleTeam } from "@/components/match/types";
 
@@ -193,7 +193,7 @@ function Score({
  * is the trade #2388's own note proposed.
  */
 function StripDate({ date, kind }: { date: Date; kind: MatchRowKind }) {
-  const { day, month } = formatDayMonth(date);
+  const { day, month } = formatMatchDayMonth(date);
   return (
     <span className="text-ink text-mono-sm w-14 shrink-0 font-mono font-bold whitespace-nowrap tabular-nums">
       {day}{" "}
@@ -224,7 +224,7 @@ function LedgerLinkRow({
 }) {
   const home = isKcvvHome(match);
   const opponent = opponentOf(match);
-  const dateLabel = formatWidgetDate(match.date);
+  const dateLabel = formatMatchWidgetDate(match.date);
   // The `aria-label` replaces the row's contents as its accessible name, so the
   // score has to be spelled out here or a screen-reader user never hears it.
   // Stated KCVV-first and side-by-side with each name, since "3-1" alone does
@@ -364,7 +364,7 @@ function DesktopSlider({
         {/* No venue glyph: both teams render in scoreboard order here, so the
             layout already says who was at home. */}
         <div className="text-ink text-mono-sm mt-1.5 text-center font-mono font-semibold">
-          {formatWidgetDate(showing.date)}
+          {formatMatchWidgetDate(showing.date)}
           {!isResultSlide && showing.time ? ` · ${showing.time}` : ""}
           {showing.competition ? ` · ${showing.competition}` : ""}
         </div>

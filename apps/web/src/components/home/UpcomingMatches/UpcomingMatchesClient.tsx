@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
-import { formatWidgetDate } from "@/lib/utils/dates";
+import { formatMatchWidgetDate } from "@/lib/utils/dates";
 import { FilterTabs, type FilterTab } from "@/components/design-system";
 import { House, Bus } from "@/lib/icons.redesign";
 import { HOME_AWAY_WORD } from "@/lib/utils/match-display";
@@ -259,7 +259,7 @@ const MatchRow = ({ match, kcvvTeamId }: MatchRowProps) => {
     : awayIsKcvv
       ? "away"
       : undefined;
-  const dateLabel = formatWidgetDate(match.date);
+  const dateLabel = formatMatchWidgetDate(match.date);
   const when = [dateLabel, match.time].filter(Boolean).join(" · ");
   // Venue last, and only when present. PSD supplies no venue field today —
   // `apps/api/src/psd/transforms.ts` hardcodes `undefined` — so in production

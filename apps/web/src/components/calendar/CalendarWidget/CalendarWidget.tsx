@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { DateTime } from "luxon";
 import { cn } from "@/lib/utils/cn";
 import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { trackEvent } from "@/lib/analytics/track-event";
@@ -130,7 +129,7 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
   }
 
   function stepPeriod(direction: 1 | -1) {
-    const next = DateTime.fromISO(cursor).plus(
+    const next = toDisplayZone(cursor).plus(
       view === "week" ? { weeks: direction } : { months: direction },
     );
     setCursor(next.toISODate()!);

@@ -15,6 +15,7 @@ import {
   formatDayDetailHeading,
   formatItemCount,
   formatEventTime,
+  formatMatchTime,
   formatMonthNavLabel,
   getMatchDotType,
   type AgendaDayGroup,
@@ -43,7 +44,7 @@ const OUTCOME_UNDERLINE: Record<"win" | "draw" | "loss", string | undefined> = {
  */
 function AgendaMatchRow({ match }: { match: CalendarMatch }) {
   const isHome = match.isHome ?? getMatchDotType(match) === "home";
-  const when = match.time ?? formatEventTime(match.date) ?? "";
+  const when = match.time ?? formatMatchTime(match.date) ?? "";
   const isPlayed = isPlayedMatch(match.status);
   const hasScore =
     typeof match.homeScore === "number" && typeof match.awayScore === "number";

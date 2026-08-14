@@ -49,11 +49,30 @@ export function toDisplayZone(date: Date | string): DateTime {
  * either way, but the returned DateTime is now a *correct instant* too — so
  * `toISO()`, `toMillis()` and a comparison against `Date.now()` all mean what
  * they say, which matters the moment one of these feeds an ICS or JSON-LD.
+ *
+ * Accepts the serialised form as well, because `/kalender` carries its matches
+ * as `date.toISOString()` — reading that back through `toDisplayZone` is the
+ * same defect one `JSON.stringify` later.
+ *
+ * **Why this is a docblock and not a branded type.** Weighed and declined in
+ * #2601. A brand on `Match.date` in `@kcvv/api-contract` would have to survive
+ * the trip to the surface that renders it, and it does not: `ScheduleMatch`,
+ * `UpcomingMatch` and `MatchHeroProps` would each have to adopt it,
+ * `CalendarMatch` cannot — it carries its date as a `string` — and the very
+ * first mapper drops it anyway (`components/match/transform.ts` assigns
+ * `date: match.date` straight across, silently widening the brand away). So the
+ * brand would guard the one place already holding the invariant and none of the
+ * places that lose it. What holds it instead: two differently-*named* parses,
+ * formatters named after the source they read, and rule 3 of
+ * `src/app/__tests__/cross-page-consistency.test.ts`, which fails any parse
+ * that names no zone at all.
  */
-export function toMatchDisplayZone(date: Date): DateTime {
-  return DateTime.fromJSDate(date, { zone: "utc" })
-    .setZone(CLUB_TIMEZONE, { keepLocalTime: true })
-    .setLocale("nl");
+export function toMatchDisplayZone(date: Date | string): DateTime {
+  const dt =
+    typeof date === "string"
+      ? DateTime.fromISO(date, { zone: "utc" })
+      : DateTime.fromJSDate(date, { zone: "utc" });
+  return dt.setZone(CLUB_TIMEZONE, { keepLocalTime: true }).setLocale("nl");
 }
 
 /** Today's calendar date in the club's zone — `YYYY-MM-DD`. */
@@ -72,28 +91,47 @@ export const formatArticleDate = (date: Date | string): string => {
 };
 
 /**
+ * The widget shape is rendered over both sources — a Sanity datetime, which is
+ * an instant, and a BFF match date, which is wall-clock — so it is written once
+ * and given one entry point per parse. The fork is at the *parse*, never at the
+ * format, so a caller picking the wrong one is picking a wrong *name* rather
+ * than passing a silently-off-by-two-hours argument.
+ *
+ * Locale-pinned through Luxon like every other formatter here — `toLocale*`
+ * would resolve the month and weekday names from whatever ICU data the runtime
+ * happens to ship, which differs between Node, the browser and CI and would
+ * surface as visual-regression drift.
+ * `src/app/__tests__/cross-page-consistency.test.ts` holds that ban site-wide.
+ */
+const widgetShape = (dt: DateTime): string =>
+  dt.isValid ? capitalize(dt.toFormat("ccc d MMMM")) : "";
+
+/**
  * Format date in compact widget format (e.g., "Za 22 maart")
  * Uses abbreviated weekday with capitalised first letter, no year.
  */
-export const formatWidgetDate = (date: Date | string): string => {
-  const dt = toDisplayZone(date);
-  if (!dt.isValid) return "";
-  return capitalize(dt.toFormat("ccc d MMMM"));
-};
+export const formatWidgetDate = (date: Date | string): string =>
+  widgetShape(toDisplayZone(date));
+
+/** Same shape for a BFF match date — see `toMatchDisplayZone`. */
+export const formatMatchWidgetDate = (date: Date | string): string =>
+  widgetShape(toMatchDisplayZone(date));
 
 /**
  * Compact day + abbreviated month, e.g. `{ day: "3", month: "aug" }`.
  *
- * Locale-pinned through Luxon like every other formatter here — `toLocale*`
- * would resolve the month name from whatever ICU data the runtime happens to
- * ship, which differs between Node, the browser and CI and would surface as
- * visual-regression drift. `src/app/__tests__/cross-page-consistency.test.ts`
- * holds that ban site-wide.
+ * Match-only, and so not split in two like the widget shape above:
+ * `<MatchStrip>`'s date stub is the one surface that renders it, and it renders
+ * a fixture. The instant-parse twin was deleted with its last caller (#2601)
+ * rather than left standing as the easier import to reach for — the whole
+ * defect class this file guards against is a caller picking whichever parse
+ * happens to be in scope.
  */
-export const formatDayMonth = (
+export const formatMatchDayMonth = (
   date: Date | string,
 ): { day: string; month: string } => {
-  const dt = toDisplayZone(date);
-  if (!dt.isValid) return { day: "", month: "" };
-  return { day: dt.toFormat("d"), month: dt.toFormat("MMM") };
+  const dt = toMatchDisplayZone(date);
+  return dt.isValid
+    ? { day: dt.toFormat("d"), month: dt.toFormat("MMM") }
+    : { day: "", month: "" };
 };

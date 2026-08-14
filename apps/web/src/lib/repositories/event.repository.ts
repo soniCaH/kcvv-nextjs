@@ -214,7 +214,9 @@ export function mergeEventFeed(
   // rather than poisoning the comparator with NaN; `<EventMonthList>` then drops
   // it when grouping.
   const sortKey = (iso: string): number => {
-    const ms = DateTime.fromISO(iso).toMillis();
+    // Offset-less input reads as UTC — the stored contract — rather than as
+    // whatever zone the render happens to run in.
+    const ms = DateTime.fromISO(iso, { zone: "utc" }).toMillis();
     return Number.isNaN(ms) ? Number.POSITIVE_INFINITY : ms;
   };
   return [...fromEvents, ...fromArticles].sort(

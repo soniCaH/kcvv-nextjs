@@ -4,7 +4,7 @@ import { DateTime } from "luxon";
 import type { Match } from "@kcvv/api-contract";
 // Doubles as the calendar's `TZID` — an iCal protocol value, not only a display
 // pin — so it is read from the one home rather than restated.
-import { CLUB_TIMEZONE as TIMEZONE } from "./dates";
+import { CLUB_TIMEZONE as TIMEZONE, toMatchDisplayZone } from "./dates";
 
 const HOME_VENUE_FALLBACK = "Sportpark Elewijt, Elewijt, België";
 
@@ -40,22 +40,23 @@ function buildLocation(match: Match): string | undefined {
   return undefined;
 }
 
+/**
+ * The fixture's kickoff as a Brussels wall-clock DateTime, which is what a
+ * `DTSTART;TZID=Europe/Brussels` line means.
+ *
+ * A BFF match date is not an instant — its UTC fields already *are* Belgian
+ * wall-clock — so `toMatchDisplayZone` reads it and `match.time`, when the feed
+ * carries one, only overrides the hour and minute. Converting instead (the
+ * pre-#2601 `time`-less branch) put every such fixture in the subscribed feed
+ * one or two hours late, and rolled a 22:00 kickoff onto the next day.
+ */
 function buildStartDateTime(match: Match): DateTime {
-  const d = new Date(match.date);
-  if (match.time) {
-    const [hours, minutes] = match.time.split(":").map(Number);
-    return DateTime.fromObject(
-      {
-        year: d.getUTCFullYear(),
-        month: d.getUTCMonth() + 1,
-        day: d.getUTCDate(),
-        hour: hours,
-        minute: minutes,
-      },
-      { zone: TIMEZONE },
-    );
-  }
-  return DateTime.fromJSDate(d, { zone: TIMEZONE });
+  // Minute precision, as the pre-#2601 `fromObject` call implicitly had: PSD
+  // never sends seconds, and a stray one would land in a DTSTART line.
+  const start = toMatchDisplayZone(match.date).startOf("minute");
+  if (!match.time) return start;
+  const [hours, minutes] = match.time.split(":").map(Number);
+  return start.set({ hour: hours, minute: minutes });
 }
 
 export function normalizeCacheKey(

@@ -12,7 +12,11 @@ import {
 import type { MatchStatus, ScheduleMatch } from "@/components/match/types";
 import { getScoreDisplay, type ScoreDisplay } from "@/lib/utils/match-display";
 import { capitalize } from "@/lib/utils/capitalize";
-import { CLUB_TIMEZONE, toDisplayZone } from "@/lib/utils/dates";
+import {
+  CLUB_TIMEZONE,
+  toDisplayZone,
+  toMatchDisplayZone,
+} from "@/lib/utils/dates";
 import type { ItemListEntry } from "@/lib/seo/jsonld";
 export type { ScoreDisplay } from "@/lib/utils/match-display";
 
@@ -150,15 +154,27 @@ export type CalendarFeedItem =
     };
 
 /**
- * ISO → epoch ms sort key; an unparseable date sorts to the end (not NaN).
+ * Feed item → epoch ms sort key; an unparseable date sorts to the end (not
+ * NaN). Keyed per item rather than per comparison — the comparator runs
+ * O(n log n) times and a Luxon parse is ~1.5µs, which a full season of fixtures
+ * turns into tens of milliseconds on a `force-dynamic` route.
  *
- * Deliberately *not* `toDisplayZone`: the result is an instant, and neither a
- * zone nor a locale can change one. Reading the input as UTC is the same
- * offset-less contract the shared parse uses, without paying for a zone
- * resolution per comparison.
+ * The two sources need different reads to produce the *same* kind of number.
+ * An event's `dateStart` is already an instant, so reading it as UTC is the
+ * stored contract and no zone can change the result. A match's is wall-clock in
+ * its UTC fields, so the same read is two hours out — which is a real ordering
+ * bug, not a cosmetic one: it interleaved a 15:00 kickoff *after* a 16:00
+ * Brussels event in the page's `ItemList` JSON-LD, and kept a match "upcoming"
+ * for two hours past kickoff in the `>= nowMs` cutoff below (#2601).
+ * `toMatchDisplayZone` returns a correct instant, so `toMillis()` is comparable
+ * with the event key.
  */
-function toFeedSortKey(iso: string): number {
-  const ms = DateTime.fromISO(iso, { zone: "utc" }).toMillis();
+function toFeedSortKey(item: CalendarFeedItem): number {
+  const dt =
+    item.source === "match"
+      ? toMatchDisplayZone(item.dateStart)
+      : DateTime.fromISO(item.dateStart, { zone: "utc" });
+  const ms = dt.toMillis();
   return Number.isNaN(ms) ? Number.POSITIVE_INFINITY : ms;
 }
 
@@ -205,11 +221,9 @@ export function buildCalendarFeed(
     }),
   );
 
-  // Key once per item, not twice per comparison — the comparator runs
-  // O(n log n) times and a Luxon parse is ~1.5µs, which a full season of
-  // fixtures turns into tens of milliseconds on a `force-dynamic` route.
+  // Key once per item, not twice per comparison — see `toFeedSortKey`.
   return [...matchItems, ...eventItems]
-    .map((item) => ({ item, key: toFeedSortKey(item.dateStart) }))
+    .map((item) => ({ item, key: toFeedSortKey(item) }))
     .sort((a, b) => a.key - b.key)
     .map(({ item }) => item);
 }
@@ -230,7 +244,7 @@ export function buildKalenderItemListEntries(
   const nowMs = options.nowMs ?? Date.now();
   const limit = options.limit ?? 30;
   return feed
-    .filter((item) => toFeedSortKey(item.dateStart) >= nowMs)
+    .filter((item) => toFeedSortKey(item) >= nowMs)
     .slice(0, limit)
     .map((item) =>
       item.source === "match"
@@ -265,8 +279,9 @@ function ensureDayFeed(map: Map<string, DayFeed>, day: string): DayFeed {
  * span (same semantics as `getEventsForDay`); buckets are time-sorted to match
  * the per-day helpers. Consumers `useMemo` this on `[matches, events]`.
  *
- * Matches bucket through `toDisplayZone` too, not `toMatchDisplayZone`; the two
- * only disagree for a kickoff at/after 22:00, which the PSD feed does not carry.
+ * Matches bucket through `toMatchDisplayZone` and events through
+ * `toDisplayZone` — the two sources carry opposite conventions, and a match
+ * bucketed as an instant lands on the wrong day for any kickoff at/after 22:00.
  */
 export function groupFeedByDay(
   matches: CalendarMatch[],
@@ -275,7 +290,7 @@ export function groupFeedByDay(
   const map = new Map<string, DayFeed>();
 
   for (const match of matches) {
-    const dt = toDisplayZone(match.date);
+    const dt = toMatchDisplayZone(match.date);
     if (!dt.isValid) continue;
     ensureDayFeed(map, dt.toISODate()!).matches.push(match);
   }
@@ -459,11 +474,25 @@ export function formatWeekRangeLabel(weekStart: string): string {
  * item (`00:00`) — mirrors `<TicketStub>`'s rule so an all-day event shows no
  * spurious midnight time.
  */
-export function formatEventTime(iso: string): string | null {
-  const dt = toDisplayZone(iso);
+const clockShape = (dt: DateTime): string | null => {
   if (!dt.isValid) return null;
   const time = dt.toFormat("HH:mm");
   return time === "00:00" ? null : time;
+};
+
+export function formatEventTime(iso: string): string | null {
+  return clockShape(toDisplayZone(iso));
+}
+
+/**
+ * The same rule over a *match* date, which is wall-clock rather than an
+ * instant. Put through the instant parse, a 15:00 kickoff read "17:00" and a
+ * fixture the feed sends with no time at all read "02:00" — a made-up kickoff
+ * where the agenda should show none (#2601). As in `@/lib/utils/dates`, the
+ * fork is at the parse and the shape is written once.
+ */
+export function formatMatchTime(iso: string): string | null {
+  return clockShape(toMatchDisplayZone(iso));
 }
 
 /** One day's worth of feed items in the agenda's labelled wall. */

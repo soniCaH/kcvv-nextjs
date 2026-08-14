@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { toMatchDisplayZone } from "./dates";
 
 /** A football season spanning roughly Aug→May (e.g. 2025–2026). */
 export interface Season {
@@ -23,9 +23,14 @@ function twoDigit(year: number): string {
  * runs roughly August→May, with cup fixtures already in July, so the boundary
  * is month ≥ 7 (July) → the *new* season: an August Beker match lands in the
  * upcoming season rather than the one that just ended.
+ *
+ * Every caller groups *matches*, whose dates carry Belgian wall-clock in their
+ * UTC fields — so the month is read through `toMatchDisplayZone`. Unpinned, a
+ * 30 June evening kickoff read in a browser east of UTC crossed into July and
+ * moved a whole season boundary.
  */
 function deriveSeason(date: Date): Season {
-  const { year, month } = DateTime.fromJSDate(date);
+  const { year, month } = toMatchDisplayZone(date);
   const startYear = month >= 7 ? year : year - 1;
   const endYear = startYear + 1;
   return {

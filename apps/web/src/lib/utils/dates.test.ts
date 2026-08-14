@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   formatArticleDate,
   formatWidgetDate,
-  formatDayMonth,
+  formatMatchDayMonth,
+  formatMatchWidgetDate,
   toDisplayZone,
   toMatchDisplayZone,
 } from "./dates";
@@ -14,44 +15,37 @@ import {
  * would render one calendar date on the server and the next after hydration.
  */
 describe("Belgian display zone", () => {
-  it("rolls a late CEST kickoff onto the next Belgian day", () => {
+  it("rolls a late CEST publish onto the next Belgian day", () => {
     // 22:30 UTC is 00:30 the following day in Brussels (summer, +02:00).
-    const late = "2026-08-03T22:30:00Z";
-    expect(formatWidgetDate(late)).toBe("Di 4 augustus");
-    expect(formatDayMonth(late)).toEqual({ day: "4", month: "aug" });
+    expect(formatWidgetDate("2026-08-03T22:30:00Z")).toBe("Di 4 augustus");
   });
 
-  it("rolls a late CET kickoff onto the next Belgian day", () => {
+  it("rolls a late CET publish onto the next Belgian day", () => {
     // 23:30 UTC is 00:30 the following day in Brussels (winter, +01:00).
-    const late = "2026-01-15T23:30:00Z";
-    expect(formatWidgetDate(late)).toBe("Vr 16 januari");
-    expect(formatDayMonth(late)).toEqual({ day: "16", month: "jan" });
+    expect(formatWidgetDate("2026-01-15T23:30:00Z")).toBe("Vr 16 januari");
   });
 
   it("treats a Date instance the same as the equivalent ISO string", () => {
     const iso = "2026-08-03T22:30:00Z";
-    expect(formatDayMonth(new Date(iso))).toEqual(formatDayMonth(iso));
     expect(formatWidgetDate(new Date(iso))).toBe(formatWidgetDate(iso));
+    expect(toDisplayZone(new Date(iso)).toISO()).toBe(
+      toDisplayZone(iso).toISO(),
+    );
   });
 
-  it("leaves an ordinary afternoon kickoff on its own day", () => {
-    const kickoff = "2026-08-08T16:00:00Z";
-    expect(formatDayMonth(kickoff)).toEqual({ day: "8", month: "aug" });
+  it("leaves an ordinary afternoon on its own day", () => {
+    expect(formatWidgetDate("2026-08-08T16:00:00Z")).toBe("Za 8 augustus");
   });
 
   it("returns empty output for an invalid date", () => {
     expect(formatWidgetDate("not-a-date")).toBe("");
-    expect(formatDayMonth("not-a-date")).toEqual({ day: "", month: "" });
   });
 
   it("reads offset-less input as UTC, not as the runtime's zone", () => {
     // The stored contract. Read as UTC this is 23:30 → 01:30 Brussels on the
     // 4th; read as runtime-local on a UTC host it would be the same, which is
     // exactly why the bug survived — assert the Brussels day, not the host's.
-    expect(formatDayMonth("2026-08-03T23:30:00")).toEqual({
-      day: "4",
-      month: "aug",
-    });
+    expect(formatWidgetDate("2026-08-03T23:30:00")).toBe("Di 4 augustus");
   });
 });
 
@@ -112,5 +106,51 @@ describe("toMatchDisplayZone", () => {
     expect(toMatchDisplayZone(kickoff).toFormat("cccc d MMMM yyyy")).toBe(
       "zaterdag 12 september 2026",
     );
+  });
+
+  /**
+   * `/kalender` carries its matches as ISO strings (`CalendarMatch.date` is
+   * `match.date.toISOString()`), so the wall-clock parse has to accept the
+   * serialised form of the same value or that route is forced back onto the
+   * instant parse.
+   */
+  it("reads a serialised match date the same as the Date it came from", () => {
+    const kickoff = new Date(Date.UTC(2026, 7, 3, 22, 0));
+    expect(toMatchDisplayZone(kickoff.toISOString()).toISO()).toBe(
+      toMatchDisplayZone(kickoff).toISO(),
+    );
+  });
+
+  it("reads an offset-less serialised match date as wall-clock too", () => {
+    expect(toMatchDisplayZone("2026-08-03T22:00:00").toFormat("HH:mm")).toBe(
+      "22:00",
+    );
+  });
+});
+
+/**
+ * The widget and day/month shapes over the match parse. `<MatchStrip>`,
+ * `<UpcomingMatches>` and an article's match block all render one of them for a
+ * fixture, while `<EventDetailBlock>` renders the widget shape for a Sanity
+ * datetime — so the fork is at the parse and not at the format.
+ */
+describe("match-date formatters", () => {
+  it("keeps a 22:00 kickoff on its own day where the instant parse would not", () => {
+    const kickoff = new Date(Date.UTC(2026, 7, 3, 22, 0));
+    expect(formatMatchDayMonth(kickoff)).toEqual({ day: "3", month: "aug" });
+    expect(formatMatchWidgetDate(kickoff)).toBe("Ma 3 augustus");
+    // The disagreement is the point — the instant parse rolls it over.
+    expect(formatWidgetDate(kickoff)).toBe("Di 4 augustus");
+  });
+
+  it("renders an ordinary afternoon kickoff identically to the instant parse", () => {
+    const kickoff = new Date(Date.UTC(2026, 7, 8, 15, 0));
+    expect(formatMatchWidgetDate(kickoff)).toBe(formatWidgetDate(kickoff));
+    expect(formatMatchDayMonth(kickoff)).toEqual({ day: "8", month: "aug" });
+  });
+
+  it("returns empty output for an invalid date", () => {
+    expect(formatMatchWidgetDate(new Date(NaN))).toBe("");
+    expect(formatMatchDayMonth(new Date(NaN))).toEqual({ day: "", month: "" });
   });
 });

@@ -12,7 +12,7 @@
  *  - Symmetric scoreboard: both sides keep an even split (score stays centred)
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TeamAgendaRow } from "./TeamAgendaRow";
@@ -103,6 +103,65 @@ describe("TeamAgendaRow", () => {
       expect(screen.queryByLabelText("15 aug")).not.toBeInTheDocument();
       // the row itself still renders.
       expect(screen.getByTestId("team-agenda-row")).toBeInTheDocument();
+    });
+  });
+
+  /**
+   * The row is a client component, so every date it formats is rendered twice —
+   * once on Vercel (UTC) and once in the visitor's browser. A BFF match date
+   * carries Belgian wall-clock in its UTC fields, so reading it in the runtime
+   * zone printed 22:00 on the server and 18:00 in New York: a React text
+   * mismatch on every fixture the feed sends without a `time` (#2601).
+   *
+   * `process.env.TZ` moves Luxon's system zone live, which is what makes the
+   * two halves of the mismatch reachable from one process. Restored, never
+   * deleted — an adjacent block reads the same variable.
+   */
+  describe("Runtime-zone independence", () => {
+    const TIMELESS: ScheduleMatch = {
+      ...BASE,
+      // 22:00 Belgian kickoff, as the BFF spells it. Late enough that a
+      // converting parse rolls it into the next day.
+      date: new Date(Date.UTC(2026, 7, 3, 22, 0)),
+      time: undefined,
+    };
+
+    let savedTz: string | undefined;
+    beforeEach(() => {
+      savedTz = process.env.TZ;
+    });
+    afterEach(() => {
+      if (savedTz !== undefined) process.env.TZ = savedTz;
+      else delete process.env.TZ;
+    });
+
+    /** The row's rendered kickoff, day and month under one runtime zone. */
+    function renderIn(tz: string): string {
+      process.env.TZ = tz;
+      const { unmount } = render(<TeamAgendaRow match={TIMELESS} />);
+      const text = screen.getByTestId("team-agenda-row").textContent ?? "";
+      const stub = screen
+        .getByTestId("team-agenda-row")
+        .querySelector("[aria-label]");
+      unmount();
+      return `${text}|${stub?.getAttribute("aria-label")}`;
+    }
+
+    it("renders identically on a UTC host and in a far-off browser zone", () => {
+      expect(renderIn("America/New_York")).toBe(renderIn("UTC"));
+    });
+
+    it("renders identically on a UTC host and in the visitor's own zone", () => {
+      expect(renderIn("Europe/Brussels")).toBe(renderIn("UTC"));
+    });
+
+    it("prints the fixture's own wall clock, not a converted one", () => {
+      process.env.TZ = "America/New_York";
+      render(<TeamAgendaRow match={TIMELESS} />);
+      expect(screen.getByTestId("team-agenda-row").textContent).toContain(
+        "22:00",
+      );
+      expect(screen.getByLabelText("3 aug")).toBeInTheDocument();
     });
   });
 
