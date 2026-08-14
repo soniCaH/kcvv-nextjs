@@ -22,11 +22,8 @@ import { EventRepository } from "@/lib/repositories/event.repository";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import {
-  EditorialHeading,
-  MonoLabel,
-  PageContainer,
-} from "@/components/design-system";
+import { PageContainer } from "@/components/design-system";
+import { PageHero } from "@/components/layout/PageHero";
 import { EventsBrowser } from "@/components/event/EventsBrowser";
 
 export const metadata = buildPageMetadata({
@@ -66,19 +63,16 @@ export default async function EvenementenPage() {
           { name: "Evenementen", url: `${SITE_CONFIG.siteUrl}/evenementen` },
         ])}
       />
-      <PageContainer as="header" width="index" className="pt-12 pb-8">
-        <MonoLabel tone="cream">KCVV Elewijt · Agenda</MonoLabel>
-        <EditorialHeading
-          level={1}
-          size="display-xl"
-          tone="cream"
-          className="mt-2"
-        >
-          Evenementen
-        </EditorialHeading>
-      </PageContainer>
-
-      <PageContainer as="main" width="index" className="flex-1 pb-16">
+      {/* The opening and the listing are ONE padded section, not two stacked on
+          the same colour (#2479 rule 3) — the dark field runs from the kicker to
+          the last ticket without an internal seam. */}
+      <PageContainer as="main" width="index" className="flex-1 py-12 sm:py-16">
+        <PageHero
+          register="minimal"
+          tone="dark"
+          kicker="KCVV Elewijt · Agenda"
+          headline="Evenementen"
+        />
         <EventsBrowser events={events} />
       </PageContainer>
     </div>

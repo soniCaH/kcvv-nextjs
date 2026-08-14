@@ -18,11 +18,8 @@ import { PhotoGalleryRepository } from "@/lib/repositories/photoGallery.reposito
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
-import {
-  EditorialHeading,
-  MonoLabel,
-  PageContainer,
-} from "@/components/design-system";
+import { MonoLabel, PageContainer } from "@/components/design-system";
+import { PageHero } from "@/components/layout/PageHero";
 import { formatArticleDate } from "@/lib/utils/dates";
 import { GalleryLightbox } from "@/components/gallery/GalleryLightbox/GalleryLightbox";
 import { GalleryOpenTracker } from "@/components/gallery/GalleryOpenTracker/GalleryOpenTracker";
@@ -146,17 +143,12 @@ export default async function GalleryDetailPage({ params }: GalleryPageProps) {
         imageCount={images.length}
       />
 
-      <PageContainer as="main" className="py-12">
-        <header className="mb-8">
-          <MonoLabel tone="ink">KCVV Elewijt · Beelden</MonoLabel>
-          <EditorialHeading
-            level={1}
-            size="display-xl"
-            tone="ink"
-            className="mt-2"
-          >
-            {gallery.title}
-          </EditorialHeading>
+      <PageContainer as="main" className="py-12 sm:py-16">
+        <PageHero
+          register="minimal"
+          kicker="KCVV Elewijt · Beelden"
+          headline={gallery.title}
+        >
           {gallery.publishedAt && (
             <p className="mt-3">
               <MonoLabel tone="ink">
@@ -172,7 +164,7 @@ export default async function GalleryDetailPage({ params }: GalleryPageProps) {
               />
             </div>
           )}
-        </header>
+        </PageHero>
 
         <GalleryLightbox gallerySlug={gallery.slug} images={images} />
       </PageContainer>

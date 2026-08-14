@@ -16,9 +16,8 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { PageViewTracker } from "@/components/analytics";
-import { MonoLabel } from "@/components/design-system/MonoLabel";
-import { EditorialHeading } from "@/components/design-system/EditorialHeading";
 import { PageContainer } from "@/components/design-system/PageContainer";
+import { PageHero } from "@/components/layout/PageHero";
 import { TeamFlagship } from "@/components/team/TeamFlagship";
 import { YouthDirectory } from "@/components/team/YouthDirectory";
 
@@ -60,23 +59,13 @@ export default async function TeamsPage() {
       />
       <PageViewTracker eventName="team_list_view" />
 
-      <PageContainer width="index" className="py-10 sm:py-14">
-        {/* Page header */}
-        <header className="mb-10 flex flex-col gap-3">
-          <span>
-            <MonoLabel variant="plain">KCVV Elewijt</MonoLabel>
-          </span>
-          <EditorialHeading
-            level={1}
-            size="display-2xl"
-            emphasis={{ text: "." }}
-          >
-            Onze ploegen
-          </EditorialHeading>
-          <p className="font-display text-ink-muted text-display-sm italic">
-            Van de eerste ploeg tot de allerkleinsten — één plezante compagnie.
-          </p>
-        </header>
+      <PageContainer width="index" className="py-12 sm:py-16">
+        <PageHero
+          register="minimal"
+          kicker="KCVV Elewijt"
+          headline={PLOEGEN_TITLE}
+          lead="Van de eerste ploeg tot de allerkleinsten — één plezante compagnie."
+        />
 
         {/* A + B paired flagships (larger gap between the siblings) */}
         <div className="flex flex-col gap-10 sm:gap-16">

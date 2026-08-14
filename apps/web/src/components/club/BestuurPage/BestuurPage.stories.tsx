@@ -55,7 +55,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Board page spine: <BoardHero> (dark group photo) → <StripedSeam> → editorial description → 'De leden' <TeamStaff> → organigram <BoardCtaBand>.",
+          "Board page spine: the shared opening's dark register (group photo) → <StripedSeam> → editorial description → 'De leden' <TeamStaff> → organigram <BoardCtaBand>.",
       },
     },
   },

@@ -103,16 +103,29 @@ function ScoreRegion({
     case "postponed":
     case "cancelled":
     case "stopped": {
-      const homeLabel = typeof homeScore === "number" ? homeScore : "—";
-      const awayLabel = typeof awayScore === "number" ? awayScore : "—";
+      // The scoreline is inside the page's <h1> (#2555), so what it contributes
+      // to the accessible name matters. A postponed or scoreless match paints
+      // three em dashes, which read as "em dash em dash em dash" — so the
+      // placeholders go silent and a hidden "vs" carries the name instead. That
+      // is the rule the retired `formatMatchTitle` applied: the score form only
+      // when both scores are actually numbers, otherwise "A vs B".
+      const hasScores =
+        typeof homeScore === "number" && typeof awayScore === "number";
       return (
         <div
           data-score-state="numeric"
           className="font-display-big text-ink flex items-baseline gap-2 text-[34px] leading-none font-black tabular-nums"
         >
-          <span>{homeLabel}</span>
-          <span className="text-ink-muted">{"—"}</span>
-          <span>{awayLabel}</span>
+          {hasScores ? null : <span className="sr-only">vs</span>}
+          <span aria-hidden={!hasScores}>
+            {typeof homeScore === "number" ? homeScore : "—"}
+          </span>
+          <span aria-hidden="true" className="text-ink-muted">
+            {"—"}
+          </span>
+          <span aria-hidden={!hasScores}>
+            {typeof awayScore === "number" ? awayScore : "—"}
+          </span>
         </div>
       );
     }
@@ -226,7 +239,16 @@ export function MatchHero({
             {kicker}
           </div>
 
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 md:gap-6">
+          {/* The scoreline IS the page's headline, so it owns the <h1> —
+              following `<PlayerHero>`'s pattern of wrapping an already-visible
+              identity rather than shipping an `sr-only` duplicate beside it
+              (#2426 rule 3). The accessible name assembles from the three
+              slots: "KCVV Elewijt vs KFC Turnhout" before kickoff,
+              "KCVV Elewijt 3 — 1 KFC Turnhout" after it. */}
+          {/* `font-normal` because the base `h1` rule is bold and the slots
+              inside set their own weight — without it the two club names, which
+              carry no explicit weight, would thicken on this one route. */}
+          <h1 className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 font-normal md:gap-6">
             <TeamSlot team={homeTeam} align="start" />
             <div className="flex items-center justify-center">
               <ScoreRegion
@@ -236,7 +258,7 @@ export function MatchHero({
               />
             </div>
             <TeamSlot team={awayTeam} align="end" />
-          </div>
+          </h1>
 
           <div className="border-ink border-t pt-3">
             <div className="text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase">

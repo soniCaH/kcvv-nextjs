@@ -20,12 +20,15 @@ import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { PageContainer, StripedSeam } from "@/components/design-system";
 import { PageViewTracker } from "@/components/analytics/PageViewTracker";
-import { JeugdHero } from "@/components/jeugd/JeugdHero/JeugdHero";
+import { PageHero } from "@/components/layout/PageHero";
 import { JeugdVisie } from "@/components/jeugd/JeugdVisie/JeugdVisie";
 import { JeugdEditorialGrid } from "@/components/jeugd/JeugdEditorialGrid/JeugdEditorialGrid";
 import { EditorialHubAnalytics } from "@/components/editorial/EditorialHubAnalytics/EditorialHubAnalytics";
 import { JeugdCtaBand } from "@/components/jeugd/JeugdCtaBand/JeugdCtaBand";
 import { YouthDirectory } from "@/components/team/YouthDirectory";
+
+/** Committed youth asset — also the homepage `<YouthSection>` backdrop. */
+const YOUTH_PHOTO = "/images/youth-trainers.jpg";
 
 export const metadata = buildPageMetadata({
   title: "Jeugdopleiding",
@@ -76,8 +79,10 @@ async function fetchEditorialConfig(): Promise<EditorialCardConfig[] | null> {
 }
 
 /**
- * `/jeugd` — Phase 7 redesign (PRD redesign-phase-7-jeugd). The route renders
- * on the cream vocabulary: `<JeugdHero>` (photo) → `<StripedSeam>` →
+ * `/jeugd` — Phase 7 redesign (PRD redesign-phase-7-jeugd). The route opens on
+ * the shared opening's dark register — a page whose subject is a group of
+ * people opens with their photograph (#2426) — then returns to the cream
+ * vocabulary: `<PageHero register="band" tone="dark">` → `<StripedSeam>` →
  * `<JeugdVisie>` (the `#visie` filosofie block) → the `<JeugdEditorialGrid>`
  * nav hub → the 6.C `<YouthDirectory>` division grid → the full-bleed
  * `<JeugdCtaBand>`. Empty states: no youth teams → `<YouthDirectory>` drops the
@@ -104,17 +109,22 @@ export default async function JeugdPage() {
         ])}
       />
 
-      <PageContainer width="index" className="pt-10 sm:pt-14">
-        <JeugdHero />
-      </PageContainer>
+      <PageHero
+        register="band"
+        tone="dark"
+        width="index"
+        kicker="De jeugdopleiding · U6 tot U21"
+        headline="Beter worden begint met plezier"
+        lead="Een doordachte opleiding van Onderbouw tot Bovenbouw, met gediplomeerde trainers en plezier als motor. Want wie graag speelt, groeit vanzelf — op en naast het veld."
+        image={YOUTH_PHOTO}
+      />
 
       {/* Full-bleed seam — a sibling of the container (not wrapped) so it spans
-          the viewport like the seams elsewhere on the site. */}
-      <div className="my-10 sm:my-12">
-        <StripedSeam colorPair="ink-cream" height="md" />
-      </div>
+          the viewport like the seams elsewhere on the site. The dark band paints
+          its own field down to the seam, so the seam carries no margin here. */}
+      <StripedSeam colorPair="ink-cream" height="md" />
 
-      <PageContainer width="index" className="pb-10 sm:pb-14">
+      <PageContainer width="index" className="py-12 sm:py-16">
         <JeugdVisie />
 
         <EditorialHubAnalytics eventName="jeugd_card_click" className="mt-16">

@@ -4,6 +4,7 @@
  */
 
 import { PageContainer } from "@/components/design-system";
+import { PageHeroSkeleton } from "@/components/layout/PageHero";
 
 function FlagshipSkeleton() {
   return (
@@ -21,12 +22,8 @@ function FlagshipSkeleton() {
 
 export default function TeamsLoading() {
   return (
-    <PageContainer width="index" className="py-10 sm:py-14">
-      <div className="mb-10 flex animate-pulse flex-col gap-3">
-        <div className="bg-paper-edge h-3 w-24" />
-        <div className="bg-paper-edge h-12 w-72" />
-        <div className="bg-paper-edge h-4 w-96 max-w-full" />
-      </div>
+    <PageContainer width="index" className="py-12 sm:py-16">
+      <PageHeroSkeleton register="minimal" lead />
 
       <div className="flex flex-col gap-10 sm:gap-16">
         <FlagshipSkeleton />

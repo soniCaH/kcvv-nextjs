@@ -310,7 +310,6 @@ export default async function MatchPage({ params }: MatchPageProps) {
   return (
     <>
       <PageViewTracker eventName="match_detail_view" params={analyticsParams} />
-      <h1 className="sr-only">{matchLabel}</h1>
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },

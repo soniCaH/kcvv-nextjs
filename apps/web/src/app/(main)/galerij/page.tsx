@@ -16,11 +16,8 @@ import { PhotoGalleryRepository } from "@/lib/repositories/photoGallery.reposito
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import {
-  EditorialHeading,
-  MonoLabel,
-  PageContainer,
-} from "@/components/design-system";
+import { PageContainer } from "@/components/design-system";
+import { PageHero } from "@/components/layout/PageHero";
 import { GalleryCardGrid } from "@/components/gallery/GalleryCardGrid/GalleryCardGrid";
 
 export const metadata = buildPageMetadata({
@@ -52,19 +49,14 @@ export default async function GalerijPage() {
           { name: "Galerij", url: `${SITE_CONFIG.siteUrl}/galerij` },
         ])}
       />
-      <PageContainer as="header" width="index" className="pt-12 pb-8">
-        <MonoLabel tone="ink">KCVV Elewijt · Beelden</MonoLabel>
-        <EditorialHeading
-          level={1}
-          size="display-xl"
-          tone="ink"
-          className="mt-2"
-        >
-          Fotogalerij
-        </EditorialHeading>
-      </PageContainer>
-
-      <PageContainer as="main" width="index" className="flex-1 pb-16">
+      {/* The opening and the listing are ONE padded section, not two stacked on
+          the same colour (#2479 rule 3). */}
+      <PageContainer as="main" width="index" className="flex-1 py-12 sm:py-16">
+        <PageHero
+          register="minimal"
+          kicker="KCVV Elewijt · Beelden"
+          headline="Fotogalerij"
+        />
         {galleries.length === 0 ? (
           <p className="text-body-md text-ink-soft">
             Er zijn nog geen fotogalerijen gepubliceerd.

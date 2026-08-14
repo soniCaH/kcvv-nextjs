@@ -1,21 +1,17 @@
 /**
  * Privacy Policy Page
  *
- * GDPR-compliant privacy policy for KCVV Elewijt. Phase 8 (8p1) reskin:
- * cream-minimal — no hero band. A mono kicker + serif `<EditorialHeading>`
- * title + mono last-updated line + Freight Display intro lead introduce a
- * single cream/ink prose column with a `<DottedDivider>` between H2 sections.
- * Replaces the legacy `<InteriorPageHero>` + `<SectionStack>` diagonal +
- * typography-plugin prose composition (master design §7 line 587).
+ * GDPR-compliant privacy policy for KCVV Elewijt. A legal / text page, so it
+ * opens on the shared opening's quiet register (`<PageHero register="minimal">`,
+ * #2426) — the treatment this page hand-rolled and documented as "cream-minimal
+ * — no hero band" before the register existed. It introduces a single cream/ink
+ * prose column with a `<DottedDivider>` between H2 sections.
  */
 
 import Link from "next/link";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import {
-  EditorialHeading,
-  DottedDivider,
-  PageContainer,
-} from "@/components/design-system";
+import { DottedDivider, PageContainer } from "@/components/design-system";
+import { PageHero } from "@/components/layout/PageHero";
 
 /**
  * Last updated date for the privacy policy.
@@ -61,36 +57,21 @@ const proseClasses = [
 
 export default function PrivacyPage() {
   return (
-    <div className="bg-cream py-16 md:py-20">
+    <div className="bg-cream py-12 sm:py-16">
       <PageContainer width="prose">
-        <header className="flex flex-col">
-          {/* Raw styled span rather than <MonoLabel>: the 8p1 lock calls for a
-              jersey-deep kicker, but MonoLabel's `plain` variant only supports
-              ink/cream tones. Reuses the canonical label-token kicker vocabulary
-              (cf. EditorialHubCard / MatchArticleLinkCard). */}
-          <span className="text-jersey-deep text-label font-mono font-semibold uppercase">
-            Juridisch
-          </span>
-          <EditorialHeading
-            level={1}
-            size="display-xl"
-            emphasis={{ text: "verklaring." }}
-            className="mt-3 mb-0 hyphens-auto"
-          >
-            Privacyverklaring
-          </EditorialHeading>
-          <p className="text-ink-muted text-mono-sm mt-3.5 font-mono tracking-[0.04em]">
+        <PageHero
+          register="minimal"
+          kicker="Juridisch"
+          headline="Privacyverklaring"
+          accent="verklaring"
+          lead="KCVV Elewijt, gevestigd aan Driesstraat 32, 1982 Elewijt, respecteert je privacy en behandelt je persoonsgegevens vertrouwelijk. Deze privacyverklaring legt uit welke gegevens we verzamelen, waarom we dat doen en welke rechten je hebt."
+        >
+          <p className="text-ink-muted text-mono-sm mt-4 font-mono tracking-[0.04em]">
             Laatst bijgewerkt · {LAST_UPDATED}
           </p>
-          <p className="text-ink-soft font-display text-body-lg mt-5 max-w-[60ch]">
-            KCVV Elewijt, gevestigd aan Driesstraat 32, 1982 Elewijt,
-            respecteert je privacy en behandelt je persoonsgegevens
-            vertrouwelijk. Deze privacyverklaring legt uit welke gegevens we
-            verzamelen, waarom we dat doen en welke rechten je hebt.
-          </p>
-        </header>
+        </PageHero>
 
-        <div className={`mt-10 ${proseClasses}`}>
+        <div className={proseClasses}>
           <DottedDivider color="paper-edge" />
           <h2>Contactgegevens</h2>
           <p>

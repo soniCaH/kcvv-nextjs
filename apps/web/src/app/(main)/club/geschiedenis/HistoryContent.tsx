@@ -559,9 +559,7 @@ export function HistoryContent() {
 
       <HeritageHero />
 
-      <div className="mt-8">
-        <StripedSeam />
-      </div>
+      <StripedSeam />
 
       <TimelineReveal>
         <TimelineContent />

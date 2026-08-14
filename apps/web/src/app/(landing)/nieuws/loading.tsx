@@ -9,6 +9,7 @@
  */
 
 import { PageContainer } from "@/components/design-system";
+import { PageHeroSkeleton } from "@/components/layout/PageHero";
 
 /** A flush-image card footprint — image atop a border-2 ink body. */
 function NewsCardSkeleton() {
@@ -36,6 +37,11 @@ export default function NewsLoading() {
       >
         Nieuws laden...
       </span>
+
+      {/* The opening — kicker + headline, above the sticky bar. */}
+      <PageContainer width="index" className="pt-12 sm:pt-16">
+        <PageHeroSkeleton register="minimal" />
+      </PageContainer>
 
       {/* Sticky filter bar — mirrors the page's dark category-filter band. */}
       <div className="bg-ink/95 sticky top-0 z-30 border-b border-white/10 py-3 backdrop-blur-sm">

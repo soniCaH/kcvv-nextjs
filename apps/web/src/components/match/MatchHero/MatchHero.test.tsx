@@ -11,6 +11,75 @@ const scheduledMatchDate = new Date("2025-06-14T13:30:00Z");
 const finishedMatchDate = new Date("2025-09-13T13:30:00Z");
 
 describe("MatchHero", () => {
+  describe("page headline (#2555)", () => {
+    it("owns the route's only <h1> — the scoreline itself", () => {
+      render(
+        <MatchHero
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          date={scheduledMatchDate}
+          time="14:30"
+          status="scheduled"
+        />,
+      );
+      const headings = screen.getAllByRole("heading", { level: 1 });
+      expect(headings).toHaveLength(1);
+      // The name is assembled from sibling elements, so the separators between
+      // them are layout, not text — match tolerantly rather than asserting a
+      // spacing jsdom does not compute.
+      expect(headings[0]).toHaveTextContent(/KCVV Elewijt\s*vs\s*RC Mechelen/);
+    });
+
+    it("reads the scoreline once the match is played", () => {
+      render(
+        <MatchHero
+          homeTeam={{ ...homeTeam, score: 3 }}
+          awayTeam={{ ...awayTeam, score: 1 }}
+          date={finishedMatchDate}
+          time="14:30"
+          status="finished"
+        />,
+      );
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+        /KCVV Elewijt\s*3\s*—\s*1\s*RC Mechelen/,
+      );
+    });
+
+    it.each(["postponed", "cancelled", "stopped", "finished"] as const)(
+      "falls back to 'vs' in the name when %s carries no score",
+      (status) => {
+        render(
+          <MatchHero
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+            date={finishedMatchDate}
+            status={status}
+          />,
+        );
+        // The em-dash placeholders still paint — `textContent` keeps them — so
+        // this asserts the accessible NAME, which is what `aria-hidden` moves.
+        const heading = screen.getByRole("heading", { level: 1 });
+        expect(heading.textContent).toContain("—");
+        expect(heading).toHaveAccessibleName(/KCVV Elewijt\s*vs\s*RC Mechelen/);
+      },
+    );
+
+    it("keeps the crests out of the name — they are decorative", () => {
+      render(
+        <MatchHero
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          date={scheduledMatchDate}
+          status="scheduled"
+        />,
+      );
+      const heading = screen.getByRole("heading", { level: 1 });
+      for (const img of heading.querySelectorAll("img")) {
+        expect(img).toHaveAttribute("alt", "");
+      }
+    });
+  });
+
   describe("kicker copy", () => {
     it("renders VOORBESCHOUWING for scheduled matches", () => {
       render(

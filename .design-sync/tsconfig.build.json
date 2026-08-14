@@ -70,9 +70,6 @@
       "@/components/club/BoardCtaBand": [
         "../apps/web/src/components/club/BoardCtaBand/index.ts"
       ],
-      "@/components/club/BoardHero": [
-        "../apps/web/src/components/club/BoardHero/index.ts"
-      ],
       "@/components/design-system": [
         "../apps/web/src/components/design-system/index.ts"
       ],

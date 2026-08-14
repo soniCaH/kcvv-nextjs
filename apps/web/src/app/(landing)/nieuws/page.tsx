@@ -15,6 +15,8 @@ import { SITE_CONFIG } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
+import { PageContainer } from "@/components/design-system";
+import { PageHero } from "@/components/layout/PageHero";
 import { NewsListingClient } from "./NewsListingClient";
 import { fetchArticlesAction } from "./actions";
 import { INITIAL_TOTAL } from "./constants";
@@ -72,7 +74,16 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
 
   return (
     <>
-      <h1 className="sr-only">Nieuwsarchief</h1>
+      {/* The index announces itself. It shipped an `sr-only` <h1> as its only
+          announcement until #2555 — the one route on the site with no visible
+          opening at all. */}
+      <PageContainer width="index" className="pt-12 sm:pt-16">
+        <PageHero
+          register="minimal"
+          kicker="KCVV Elewijt · Nieuws"
+          headline="Nieuwsarchief"
+        />
+      </PageContainer>
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },

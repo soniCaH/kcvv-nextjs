@@ -396,3 +396,131 @@ describe("rule 3 catches what it claims to (#2601)", () => {
     ).toHaveLength(3);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Rule 4 (#2555) — exactly one visible page headline, and the opening owns it
+// ---------------------------------------------------------------------------
+
+/**
+ * #2426 rule 3: every public route announces itself with exactly one visible
+ * `<h1>`, and the page's opening owns it. Two halves of that are decidable from
+ * one file each, and both are the shapes #2555 actually removed:
+ *
+ * - **No route ships an `sr-only` `<h1>`.** `/nieuws` had one as its *only*
+ *   announcement — the news index did not announce itself at all to anyone
+ *   looking at it — and `/wedstrijd/[matchId]` had one duplicating a scoreline
+ *   that was already on screen. An invisible heading is what a page writes
+ *   instead of an opening, which is why banning it is a design rule and not
+ *   only an accessibility one.
+ * - **A route file does not announce the page itself.** `page.tsx` composes; a
+ *   heading in it is a route re-inventing an opening it should have delegated,
+ *   which is exactly how the site ended up with thirteen of them. The rule
+ *   covers `level={1}` as well as `<h1>` — `<EditorialHeading level={1}>`
+ *   renders the tag, and a literal-`<h1>` grep is what undercounted the
+ *   openings by seven in the first place (#2426).
+ *
+ * **Three things it cannot see, named so nobody reads it as more than it is:**
+ *
+ * - **The same route announcing itself twice across two files.**
+ *   `(main)/club/loading.tsx` renders an opening for *all six* `/club/*`
+ *   children, so their streamed HTML carries two `<h1>`s and a loading board
+ *   page announces itself as the `/club` index. Reaching that needs the import
+ *   graph; the fix is #2432's (moving segment `loading.tsx` files into route
+ *   groups), not a regex's.
+ * - **A route with no opening at all.** The second arm is satisfied by absence,
+ *   so deleting a route's `<PageHero>` leaves it green — which is `/nieuws`'
+ *   original defect exactly. Twelve route files legitimately hold no heading
+ *   because they delegate, and nothing here tells the two apart.
+ * - **An opening hand-rolled in a colocated file.** Seven of the eight routes
+ *   #2555 collapsed did it inside `page.tsx` and would have been caught; the
+ *   other one, plus `<BoardHero>` and `<JeugdHero>`, lived a file away and
+ *   would not have been.
+ *
+ * The positive form — every route reaches exactly one opening from a named
+ * allowlist — is the rule worth having, and it needs the render tree rather
+ * than a regex. Filed as the next candidate on the map's parked enforcement
+ * patch rather than approximated here.
+ */
+
+/**
+ * The homepage. Out of scope for #2555 and owned by #2402, and its two `<h1>`s
+ * sit in mutually exclusive branches — an empty-state early return, and an
+ * `sr-only` fallback emitted only when no featured article gives
+ * `<EditorialHero>` a heading to render. A regex sees two headings; the browser
+ * never receives more than one. Exempted deliberately rather than by a rule
+ * loose enough to let a real second heading through.
+ */
+const HOMEPAGE = "app/(landing)/page.tsx";
+
+/** Every opening tag of a level-1 heading, with its attributes. */
+const H1_TAG = /<h1\b[^>]*>/g;
+
+/** `<EditorialHeading level={1}>` renders an `<h1>`; a tag grep misses it. */
+const RENDERS_LEVEL_ONE = /<h1\b|\blevel=\{1\}/;
+
+/** Everything either arm may scan — the homepage is exempted for both. */
+const openingSources = productionSources.filter((f) => f !== HOMEPAGE);
+
+/** Route files — the ones that should compose an opening, not be one. */
+const routeFiles = openingSources.filter((relPath) =>
+  /(^|\/)page\.tsx$/.test(relPath),
+);
+
+describe("no page announces itself invisibly (#2555)", () => {
+  it.each(openingSources)("%s — no `sr-only` level-1 heading", (relPath) => {
+    const srOnly = [...code.get(relPath)!.matchAll(H1_TAG)].filter((tag) =>
+      tag[0].includes("sr-only"),
+    );
+    expect(srOnly.map((tag) => tag[0])).toEqual([]);
+  });
+});
+
+describe("the opening owns the headline, not the route (#2555)", () => {
+  it.each(routeFiles)(
+    "%s — no page-level heading in the route file",
+    (relPath) => {
+      expect(RENDERS_LEVEL_ONE.test(code.get(relPath)!)).toBe(false);
+    },
+  );
+});
+
+/**
+ * Both rules asserted against the shapes they exist to catch and the near-misses
+ * they must leave alone — the same coverage check rule 3 carries, for the same
+ * reason: an arm that silently matches nothing reads like coverage.
+ */
+describe("rule 4 catches what it claims to (#2555)", () => {
+  it.each([
+    ['<h1 className="sr-only">Nieuwsarchief</h1>'],
+    ['<h1 className="sr-only">{matchLabel}</h1>'],
+    ['<h1 className={cn("sr-only", extra)}>x</h1>'],
+  ])("flags %s", (snippet) => {
+    expect(
+      [...snippet.matchAll(H1_TAG)].filter((t) => t[0].includes("sr-only")),
+    ).toHaveLength(1);
+  });
+
+  it.each([
+    ['<h1 className="grid grid-cols-[1fr_auto_1fr]">'],
+    ["<h1>"],
+    ['<p className="sr-only">Laden…</p>'],
+  ])("leaves %s alone", (snippet) => {
+    expect(
+      [...snippet.matchAll(H1_TAG)].filter((t) => t[0].includes("sr-only")),
+    ).toEqual([]);
+  });
+
+  it.each([["<h1>Wedstrijden</h1>"], ["<EditorialHeading level={1}>x"]])(
+    "sees %s as a page-level heading",
+    (snippet) => {
+      expect(RENDERS_LEVEL_ONE.test(snippet)).toBe(true);
+    },
+  );
+
+  it.each([["<EditorialHeading level={2}>x"], ["<h2>Uitgelicht</h2>"]])(
+    "does not read %s as a page-level heading",
+    (snippet) => {
+      expect(RENDERS_LEVEL_ONE.test(snippet)).toBe(false);
+    },
+  );
+});

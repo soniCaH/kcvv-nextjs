@@ -2,7 +2,8 @@
  * Events List Page — Loading Skeleton.
  *
  * Mirrors `EvenementenPage` (`/evenementen`):
- *   jersey-deep-dark header band (mono kicker + display headline)
+ *   the shared opening's quiet register on the dark field (mono kicker +
+ *   display headline), sharing one padded section with
  *     → <EventsBrowser>: colour-coded filter chip row above a single-column,
  *       month-grouped `<TicketStub>` list (each month: display heading + ticket
  *       rows)
@@ -13,6 +14,7 @@
  */
 
 import { PageContainer } from "@/components/design-system";
+import { PageHeroSkeleton } from "@/components/layout/PageHero";
 
 export default function EvenementenLoading() {
   return (
@@ -26,18 +28,10 @@ export default function EvenementenLoading() {
         Evenementen laden...
       </span>
 
-      {/* Header band — mono kicker + display headline. */}
-      <PageContainer
-        as="header"
-        width="index"
-        className="pt-12 pb-8 motion-safe:animate-pulse"
-        aria-hidden="true"
-      >
-        <div className="bg-cream/20 h-3 w-44" />
-        <div className="bg-cream/25 mt-2 h-12 w-72 max-w-full" />
-      </PageContainer>
+      {/* The opening and the listing are one padded section, as on the page. */}
+      <PageContainer width="index" className="flex-1 py-12 sm:py-16">
+        <PageHeroSkeleton register="minimal" tone="dark" />
 
-      <PageContainer width="index" className="flex-1 pb-16">
         <div className="flex flex-col gap-8 motion-safe:animate-pulse">
           {/* Filter chip row. */}
           <div className="flex flex-wrap gap-2">

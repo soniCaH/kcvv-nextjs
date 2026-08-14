@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 import { MonoLabel } from "@/components/design-system/MonoLabel";
-import { EditorialHeading } from "@/components/design-system/EditorialHeading";
 import { PageContainer } from "@/components/design-system/PageContainer";
 import { TapedCard } from "@/components/design-system/TapedCard";
 import { TapedFigure } from "@/components/design-system/TapedFigure";
+import { PageHero } from "@/components/layout/PageHero";
 
 /**
  * Presentational primitives for the `/club/geschiedenis` chronicle, reskinned
@@ -18,28 +18,18 @@ import { TapedFigure } from "@/components/design-system/TapedFigure";
  */
 
 /**
- * Heritage sibling hero — kicker + display headline + italic lead, composed
- * from design-system primitives on the cream page surface (no
- * `<InteriorPageHero>` / `<EditorialHero>`). Mirrors the `/ploegen` page header.
+ * The chronicle's opening. A text page you read top to bottom, so it takes the
+ * shared opening's quiet register (#2426) rather than a hero band of its own.
  */
 export function HeritageHero() {
   return (
-    <PageContainer as="header" className="flex flex-col gap-3 pt-10 sm:pt-14">
-      <span>
-        <MonoLabel variant="plain">De club · sinds 1909</MonoLabel>
-      </span>
-      <EditorialHeading
-        level={1}
-        size="display-2xl"
-        emphasis={{ text: "." }}
-        className="mb-0"
-      >
-        Meer dan een eeuw
-      </EditorialHeading>
-      <p className="font-display text-ink-muted text-display-sm italic">
-        Van de Jonge Footbalclub in 1909 tot het nationale voetbal vandaag — de
-        rijke geschiedenis van één plezante compagnie.
-      </p>
+    <PageContainer className="pt-12 sm:pt-16">
+      <PageHero
+        register="minimal"
+        kicker="De club · sinds 1909"
+        headline="Meer dan een eeuw"
+        lead="Van de Jonge Footbalclub in 1909 tot het nationale voetbal vandaag — de rijke geschiedenis van één plezante compagnie."
+      />
     </PageContainer>
   );
 }
