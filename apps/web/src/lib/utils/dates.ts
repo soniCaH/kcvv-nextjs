@@ -55,16 +55,15 @@ export function toDisplayZone(date: Date | string): DateTime {
  * same defect one `JSON.stringify` later.
  *
  * **Why this is a docblock and not a branded type.** Weighed and declined in
- * #2601. A brand on `Match.date` in `@kcvv/api-contract` would not by itself
- * make the wrong choice a compile error: a branded `Date` is a *subtype* of
- * `Date`, so `toDisplayZone` keeps accepting it, and turning that into an error
- * means negatively typing every Sanity date to exclude the brand. The brand
- * would also have to be threaded through `ScheduleMatch`, `UpcomingMatch`,
- * `MatchHeroProps` and `CalendarMatch` — where it dies outright, that one
- * carries its date as a `string` — or it is lost at the first mapper
- * (`components/match/transform.ts` assigns `date: match.date` straight across).
- * What holds the invariant instead: two differently-*named* parses, formatters
- * named after the source they read, and rule 3 of
+ * #2601. A brand on `Match.date` in `@kcvv/api-contract` would have to survive
+ * the trip to the surface that renders it, and it does not: `ScheduleMatch`,
+ * `UpcomingMatch` and `MatchHeroProps` would each have to adopt it,
+ * `CalendarMatch` cannot — it carries its date as a `string` — and the very
+ * first mapper drops it anyway (`components/match/transform.ts` assigns
+ * `date: match.date` straight across, silently widening the brand away). So the
+ * brand would guard the one place already holding the invariant and none of the
+ * places that lose it. What holds it instead: two differently-*named* parses,
+ * formatters named after the source they read, and rule 3 of
  * `src/app/__tests__/cross-page-consistency.test.ts`, which fails any parse
  * that names no zone at all.
  */
@@ -92,9 +91,9 @@ export const formatArticleDate = (date: Date | string): string => {
 };
 
 /**
- * The compact shapes below are written once and given one entry point per
- * parse, because both are rendered over a Sanity datetime (an instant) and over
- * a BFF match date (wall-clock). The fork is at the *parse*, never at the
+ * The widget shape is rendered over both sources — a Sanity datetime, which is
+ * an instant, and a BFF match date, which is wall-clock — so it is written once
+ * and given one entry point per parse. The fork is at the *parse*, never at the
  * format, so a caller picking the wrong one is picking a wrong *name* rather
  * than passing a silently-off-by-two-hours argument.
  *
@@ -106,11 +105,6 @@ export const formatArticleDate = (date: Date | string): string => {
  */
 const widgetShape = (dt: DateTime): string =>
   dt.isValid ? capitalize(dt.toFormat("ccc d MMMM")) : "";
-
-const dayMonthShape = (dt: DateTime): { day: string; month: string } =>
-  dt.isValid
-    ? { day: dt.toFormat("d"), month: dt.toFormat("MMM") }
-    : { day: "", month: "" };
 
 /**
  * Format date in compact widget format (e.g., "Za 22 maart")
@@ -126,12 +120,18 @@ export const formatMatchWidgetDate = (date: Date | string): string =>
 /**
  * Compact day + abbreviated month, e.g. `{ day: "3", month: "aug" }`.
  *
- * Match-only: `<MatchStrip>`'s date stub is the one surface that renders this
- * shape, and it renders a fixture. The instant-parse twin was deleted with the
- * last caller (#2601) rather than left standing as the easier import to reach
- * for — the whole defect class this file guards against is a caller picking the
- * parse that happens to be in scope.
+ * Match-only, and so not split in two like the widget shape above:
+ * `<MatchStrip>`'s date stub is the one surface that renders it, and it renders
+ * a fixture. The instant-parse twin was deleted with its last caller (#2601)
+ * rather than left standing as the easier import to reach for — the whole
+ * defect class this file guards against is a caller picking whichever parse
+ * happens to be in scope.
  */
 export const formatMatchDayMonth = (
   date: Date | string,
-): { day: string; month: string } => dayMonthShape(toMatchDisplayZone(date));
+): { day: string; month: string } => {
+  const dt = toMatchDisplayZone(date);
+  return dt.isValid
+    ? { day: dt.toFormat("d"), month: dt.toFormat("MMM") }
+    : { day: "", month: "" };
+};

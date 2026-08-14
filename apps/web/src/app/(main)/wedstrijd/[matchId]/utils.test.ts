@@ -2,7 +2,7 @@
  * Match Detail Page Utils Tests
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   transformHomeTeam,
   transformAwayTeam,
@@ -144,34 +144,70 @@ describe("transformLineupPlayer", () => {
   });
 });
 
+/**
+ * Kickoffs are spelled the way the BFF spells them — `Date.UTC(…)`, because
+ * `parseDateString` builds a match date from PSD's Belgian local string without
+ * converting, so its UTC fields *are* the wall clock. These fixtures previously
+ * used `new Date("…T15:30:00")`, which Node reads as *local* time: a shape no
+ * source emits, and the reason reading the date with `getHours()` looked
+ * correct (#2601).
+ */
 describe("extractMatchTime", () => {
+  const at = (hour: number, minute = 0) =>
+    new Date(Date.UTC(2025, 11, 7, hour, minute));
+
   it("returns provided time if available", () => {
     const match = createMatchDetail({ time: "15:00" });
     expect(extractMatchTime(match)).toBe("15:00");
   });
 
   it("extracts time from date when time not provided", () => {
-    const match = createMatchDetail({
-      date: new Date("2025-12-07T15:30:00"),
-      time: undefined,
-    });
+    const match = createMatchDetail({ date: at(15, 30), time: undefined });
     expect(extractMatchTime(match)).toBe("15:30");
   });
 
   it("returns undefined for midnight time (likely no time set)", () => {
-    const match = createMatchDetail({
-      date: new Date("2025-12-07T00:00:00"),
-      time: undefined,
-    });
+    const match = createMatchDetail({ date: at(0, 0), time: undefined });
     expect(extractMatchTime(match)).toBeUndefined();
   });
 
   it("handles single digit hours and minutes", () => {
-    const match = createMatchDetail({
-      date: new Date("2025-12-07T09:05:00"),
-      time: undefined,
-    });
+    const match = createMatchDetail({ date: at(9, 5), time: undefined });
     expect(extractMatchTime(match)).toBe("09:05");
+  });
+
+  it("returns undefined rather than 'NaN:NaN' for an unparseable date", () => {
+    const match = createMatchDetail({ date: new Date(NaN), time: undefined });
+    expect(extractMatchTime(match)).toBeUndefined();
+  });
+
+  describe("across runtime zones", () => {
+    let savedTz: string | undefined;
+    beforeEach(() => {
+      savedTz = process.env.TZ;
+    });
+    afterEach(() => {
+      if (savedTz !== undefined) process.env.TZ = savedTz;
+      else delete process.env.TZ;
+    });
+
+    it.each(["UTC", "Europe/Brussels", "America/New_York"])(
+      "reads the kickoff off the date's own wall clock under TZ=%s",
+      (tz) => {
+        process.env.TZ = tz;
+        const match = createMatchDetail({ date: at(15, 30), time: undefined });
+        expect(extractMatchTime(match)).toBe("15:30");
+      },
+    );
+
+    it.each(["UTC", "Europe/Brussels", "America/New_York"])(
+      "still reads a timeless fixture as no kickoff under TZ=%s",
+      (tz) => {
+        process.env.TZ = tz;
+        const match = createMatchDetail({ date: at(0, 0), time: undefined });
+        expect(extractMatchTime(match)).toBeUndefined();
+      },
+    );
   });
 });
 

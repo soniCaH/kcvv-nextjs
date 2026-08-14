@@ -162,24 +162,68 @@ describe("the club timezone has one home (#2430)", () => {
  *   `dates.ts`, and a caller reaching past them is the drift this catches.
  * - **`DateTime.now()` / `DateTime.local(…)`** unless immediately re-zoned.
  *
- * Deliberately conservative in one direction: a single argument containing a
- * nested call (`fromISO(build())`) is not matched, because a regex that reached
- * through the inner `)` would flag `fromISO(iso.trim(), { zone })` — a false
- * positive on a correctly zoned call, which is the failure mode that gets a
- * guard deleted. Zoning is checked by shape, not by which zone is named: `{
- * zone: "utc" }` is a legitimate answer for stored data, and rule 2 already
- * holds the club zone to one home.
+ * **A later `.setZone` rescues some of these and not others**, which is why the
+ * constructors are split into two lists rather than one.
+ *
+ * - `fromJSDate` / `fromMillis` / `fromSeconds` take an **instant**. The
+ *   parse-time zone cannot change which moment they denote, so
+ *   `fromJSDate(d).setZone(z)` really is zone-correct — it is `toDisplayZone`'s
+ *   own body. Flagging it would make the rule fail a correct helper, and the
+ *   cheap fix for that is deleting the rule.
+ * - `fromISO` / `fromSQL` / `fromHTTP` / `fromRFC2822` / `fromFormat` /
+ *   `fromObject` take **text or parts**. An offset-less input has already been
+ *   read in the runtime zone by the time `setZone` runs, so no later call can
+ *   recover it and there is no escape hatch.
+ * - `now()` / `local(…)` have no input to misread, so `.setZone` settles them.
+ *
+ * Deliberately conservative in one known way, stated because a rule whose reach
+ * is unstated reads as broader coverage than it has: a single argument
+ * containing a **nested call** (`fromISO(build())`) is not matched. A regex that
+ * reached through the inner `)` would flag `fromISO(iso.trim(), { zone })` — a
+ * false positive on a correctly zoned call, the failure mode that gets a guard
+ * deleted.
+ *
+ * `fromObject` and `fromFormat` get their own arms rather than riding the
+ * one-argument pattern, which cannot reach them: a comma inside `{ year, month
+ * }` ends the match, and `fromFormat`'s format argument is mandatory — so on
+ * the shared pattern the `fromObject` arm fired only for a single-key object
+ * and the `fromFormat` arm could never fire at all. `fromObject({…})` is
+ * exactly the shape this ticket deleted from `ical.ts`.
+ *
+ * Zoning is checked by shape, not by which zone is named: `{ zone: "utc" }` is
+ * a legitimate answer for stored data, and rule 2 already holds the club zone
+ * to one home.
  *
  * **What it cannot see:** a parse that names a zone and names the wrong one.
  * The worst defect #2601 fixed was of that kind — the ICS feed converted a
  * match date it should have read, so it was zoned, pinned, and two hours late.
- * Choosing between the two parses stays a reading decision, held by
- * `toMatchDisplayZone`'s docblock and by tests, not by this rule.
+ * Nor can it see a date read without Luxon at all (`date.getHours()`, which is
+ * how `lib/utils/match-time.ts` drifted). Choosing between the two parses stays
+ * a reading decision, held by `toMatchDisplayZone`'s docblock and by tests.
  */
-const UNZONED_PARSE =
-  /\bDateTime\.(?:fromJSDate|fromISO|fromMillis|fromSeconds|fromFormat|fromObject|fromHTTP|fromRFC2822|fromSQL)\s*\([^,()]*\)/;
+
+/** Instant input — a later `.setZone` is a genuine fix, so it is accepted. */
+const UNZONED_INSTANT_PARSE =
+  /\bDateTime\.(?:fromJSDate|fromMillis|fromSeconds)\s*\([^,()]*\)(?!\s*\.setZone\s*\()/;
+
+/** Text input — the zone must be named at read time; no escape hatch. */
+const UNZONED_TEXT_PARSE =
+  /\bDateTime\.(?:fromISO|fromHTTP|fromRFC2822|fromSQL)\s*\([^,()]*\)/;
+
+/** Parts/format input, whose own commas put them out of the patterns above. */
+const UNZONED_FROM_OBJECT = /\bDateTime\.fromObject\s*\(\s*\{[^{}]*\}\s*\)/;
+const UNZONED_FROM_FORMAT = /\bDateTime\.fromFormat\s*\([^,()]*,[^,()]*\)/;
+
 const UNPINNED_NOW =
   /\bDateTime\.(?:now|local)\s*\([^()]*\)(?!\s*\.setZone\s*\()/;
+
+const RUNTIME_ZONE_PARSES = [
+  UNZONED_INSTANT_PARSE,
+  UNZONED_TEXT_PARSE,
+  UNZONED_FROM_OBJECT,
+  UNZONED_FROM_FORMAT,
+  UNPINNED_NOW,
+];
 
 /** The two parses' home, and the only file allowed to reach for either shape. */
 const DATE_PARSE_HOME = "lib/utils/dates.ts";
@@ -189,8 +233,46 @@ describe("no date is parsed in the runtime zone (#2601)", () => {
     "%s — every Luxon parse names a zone",
     (relPath) => {
       const source = code.get(relPath)!;
-      expect(UNZONED_PARSE.test(source)).toBe(false);
-      expect(UNPINNED_NOW.test(source)).toBe(false);
+      for (const pattern of RUNTIME_ZONE_PARSES) {
+        expect(pattern.exec(source)?.[0]).toBeUndefined();
+      }
     },
   );
+});
+
+/**
+ * The rule's own coverage, asserted against the shapes it exists to catch and
+ * the near-misses it must leave alone. Without this, the regexes above are five
+ * claims nothing checks — and two of them silently matched nothing when first
+ * written, which reads like coverage while providing none.
+ */
+describe("rule 3 catches what it claims to (#2601)", () => {
+  it.each([
+    ["DateTime.fromJSDate(date)", true],
+    ["DateTime.fromISO(iso)", true],
+    ["DateTime.fromISO(cursor).plus({ months: 1 })", true],
+    ["DateTime.now()", true],
+    ["DateTime.local(2026, 8, 3)", true],
+    ["DateTime.fromObject({ year, month, day: 1 })", true],
+    ["DateTime.fromObject({ year: 2026 })", true],
+    ['DateTime.fromFormat(psd, "yyyy-MM-dd HH:mm")', true],
+    ["DateTime.fromSQL(row.kickoff)", true],
+    ["DateTime.fromMillis(ms)", true],
+  ])("flags %s", (snippet) => {
+    expect(RUNTIME_ZONE_PARSES.some((p) => p.test(snippet))).toBe(true);
+  });
+
+  it.each([
+    ['DateTime.fromISO(iso, { zone: "utc" })', false],
+    ['DateTime.fromISO(iso.trim(), { zone: "utc" })', false],
+    ["DateTime.fromJSDate(d, { zone: CLUB_TIMEZONE })", false],
+    // Instant input: a later re-zone is a real fix, so it must not be flagged.
+    ["DateTime.fromJSDate(d).setZone(CLUB_TIMEZONE)", false],
+    ["DateTime.fromMillis(ms).setZone(CLUB_TIMEZONE)", false],
+    ["DateTime.now().setZone(CLUB_TIMEZONE)", false],
+    ["DateTime.fromObject({ year, month }, { zone: CLUB_TIMEZONE })", false],
+    ['DateTime.fromFormat(psd, "yyyy-MM-dd", { zone: CLUB_TIMEZONE })', false],
+  ])("leaves %s alone", (snippet) => {
+    expect(RUNTIME_ZONE_PARSES.some((p) => p.test(snippet))).toBe(false);
+  });
 });

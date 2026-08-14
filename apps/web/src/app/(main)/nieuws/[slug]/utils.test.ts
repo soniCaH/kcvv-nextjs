@@ -84,11 +84,15 @@ describe("toHeroMatchData", () => {
     expect(toHeroMatchData(makeMatch()).matchDate).toBe("Zo 13 september");
   });
 
+  // Spelled `Date.UTC(…)`, the way the BFF builds a match date from PSD's
+  // Belgian local kickoff string — an offset-less `new Date("…T19:45:00")` is
+  // read as *local* time, a shape no source emits, and it is exactly what made
+  // reading the date with `getHours()` look correct (#2601).
   it("derives kickoff from the date when `time` is absent (shared extractMatchTime)", () => {
     const data = toHeroMatchData(
       makeMatch({
         time: undefined,
-        date: new Date("2026-09-13T19:45:00"),
+        date: new Date(Date.UTC(2026, 8, 13, 19, 45)),
       }),
     );
     expect(data.kickoffTime).toBe("19:45");
@@ -98,7 +102,7 @@ describe("toHeroMatchData", () => {
     const data = toHeroMatchData(
       makeMatch({
         time: undefined,
-        date: new Date("2026-09-13T00:00:00"),
+        date: new Date(Date.UTC(2026, 8, 13, 0, 0)),
       }),
     );
     expect(data.kickoffTime).toBeUndefined();
