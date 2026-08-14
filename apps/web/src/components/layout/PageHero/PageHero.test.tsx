@@ -173,6 +173,119 @@ describe("PageHero", () => {
     expect(warmTapes).toHaveLength(2);
   });
 
+  describe("register / tone", () => {
+    it("defaults to band · cream so no existing call site changes", () => {
+      render(<PageHero {...defaultProps} />);
+      const root = screen.getByTestId("page-hero");
+      expect(root).toHaveAttribute("data-register", "band");
+      expect(root).toHaveAttribute("data-tone", "cream");
+    });
+
+    it("band · dark paints the dark field and keeps the photo decorative", () => {
+      const { container } = render(
+        <PageHero
+          {...defaultProps}
+          tone="dark"
+          image="/images/youth-trainers.jpg"
+        />,
+      );
+      const root = screen.getByTestId("page-hero");
+      expect(root).toHaveAttribute("data-tone", "dark");
+      expect(root).toHaveClass("bg-jersey-deep-dark");
+      expect(container.querySelector("img")).toHaveAttribute("alt", "");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveAttribute(
+        "data-size",
+        "display-2xl",
+      );
+    });
+
+    it("band · dark drops the photo column when the page has no portrait", () => {
+      const { container } = render(<PageHero {...defaultProps} tone="dark" />);
+      expect(container.querySelector("img")).not.toBeInTheDocument();
+      expect(screen.getByTestId("page-hero")).toHaveAttribute(
+        "data-state",
+        "typographic",
+      );
+    });
+
+    it("minimal renders the words only — no band, no photo, no divider", () => {
+      const { container } = render(
+        <PageHero
+          {...defaultProps}
+          register="minimal"
+          image="/images/youth-trainers.jpg"
+        />,
+      );
+      const root = screen.getByTestId("page-hero");
+      expect(root).toHaveAttribute("data-register", "minimal");
+      expect(root.tagName).toBe("HEADER");
+      expect(container.querySelector("img")).not.toBeInTheDocument();
+      expect(
+        container.querySelector('[role="separator"]'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+        /wedstrijdkalender/i,
+      );
+    });
+
+    it("minimal owns the gap to the content below it", () => {
+      // The nine routes that hand-rolled this opening each picked their own
+      // (mb-10 / mb-8 / pb-8 / mt-10). One value, held here, is the point.
+      render(<PageHero {...defaultProps} register="minimal" />);
+      expect(screen.getByTestId("page-hero")).toHaveClass("mb-10");
+    });
+
+    it("minimal on a dark field flips the heading and lead to cream", () => {
+      render(<PageHero {...defaultProps} register="minimal" tone="dark" />);
+      expect(screen.getByRole("heading", { level: 1 })).toHaveClass(
+        "text-cream",
+      );
+      expect(screen.getByText(/Alle wedstrijden en activiteiten/)).toHaveClass(
+        "text-cream/85",
+      );
+    });
+
+    it("takes the accent warm on dark — jersey-deep would disappear there", () => {
+      const { container } = render(
+        <PageHero
+          kicker="De club"
+          headline="Beter worden begint met plezier"
+          accent="plezier"
+          tone="dark"
+        />,
+      );
+      const accent = container.querySelector("em.text-warm");
+      expect(accent).toHaveTextContent("plezier");
+      expect(container.querySelector("em.text-jersey-deep")).toBeNull();
+    });
+
+    it("adds no terminator to a headline that ends in ? or !", () => {
+      // EditorialHeading only appends the "." when the headline is not already
+      // terminated, so asking for one warns on every render and emphasises
+      // nothing. A CMS gallery title is the live path.
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { container } = render(
+        <PageHero
+          register="minimal"
+          kicker="KCVV Elewijt · Beelden"
+          headline="Wie speelt er mee?"
+        />,
+      );
+      expect(container.querySelector("em")).toBeNull();
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    it("minimal renders trailing opening content in place", () => {
+      render(
+        <PageHero {...defaultProps} register="minimal">
+          <p>Laatst bijgewerkt · juni 2026</p>
+        </PageHero>,
+      );
+      expect(screen.getByText(/Laatst bijgewerkt/)).toBeInTheDocument();
+    });
+  });
+
   it("does not render any legacy gradient, font-title, or kcvv-* classes", () => {
     const { container } = render(
       <PageHero {...defaultProps} image="/images/x.jpg" />,

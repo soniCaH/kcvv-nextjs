@@ -10,85 +10,372 @@ import {
 } from "@/components/design-system/EditorialHeading";
 import { DottedDivider } from "@/components/design-system/Divider";
 import { LinkButton } from "@/components/design-system/LinkButton";
+import { MonoLabel } from "@/components/design-system/MonoLabel";
+import {
+  PageContainer,
+  type PageContainerWidth,
+} from "@/components/design-system/PageContainer";
 
 /**
- * `<PageHero>` — the redesigned generic page-hero for non-article interior
- * surfaces (kalender, club index, club CMS pages, scheurkalender). Reclaims
- * the retired legacy `<PageHero>` name and replaces the dark-gradient
- * `<InteriorPageHero>` placeholder.
+ * `<PageHero>` — **the shared page opening**, of which `band` is one register.
+ *
+ * The name is the one it shipped under and it keeps it (#2555): the primitive
+ * keeps its 10h5 design lock, its Storybook id and its VR baselines, and a
+ * rename would have churned thirteen routes for a word.
+ *
+ * ## When a page may depart from it (#2426)
+ *
+ * A page uses this opening **unless its opening carries something only that
+ * page has**:
+ *
+ *   - **a control** — the opening *is* the tool (a search field, a structure index)
+ *   - **live domain data** — a score, a crest, a jersey number, a ticket, or a
+ *     live content module
+ *   - **a composition this opening cannot express** — a full-bleed background
+ *     photo under a jersey-stripe overlay, say
+ *
+ * **Re-skinning kicker + headline + lead + photo is not a reason.** That is
+ * exactly what the retired `<BoardHero>` and `<JeugdHero>` did, and why eight
+ * further routes each hand-rolled a ninth variation of the same thing.
+ *
+ * The eleven routes that qualify are enumerated on #2426, deliberately not
+ * here: a component list in a docblock is a cross-reference no compiler holds,
+ * and this very refactor had to hand-correct one that had gone stale.
+ *
+ * ## Three registers
+ *
+ * | `register` · `tone` | Gets it | Shell |
+ * | --- | --- | --- |
+ * | `band` · `cream` | a section's front door — the page you arrive at | cream `<TapedCard>`, wrapped by the caller's `<PageContainer>` |
+ * | `band` · `dark` | a front door whose opening carries **a group portrait of the people the page is about** | full-bleed `jersey-deep-dark` field — owns its own container, never wrap it |
+ * | `minimal` | a listing you scroll, or a text / legal page | no band at all; content starts immediately |
+ *
+ * "Of the people the page is about" is load-bearing: `/kalender` shows a people
+ * photo too, but it is decorative stock, so `/kalender` stays cream.
+ *
+ * `tone` follows the field, and the kicker follows the tone — jersey-deep mono
+ * on cream, cream `<MonoLabel>` on dark. `minimal` inherits the page's own
+ * field rather than painting one, which is how `/evenementen` keeps its opening
+ * and its listing inside a single dark section (#2479).
  *
  * **The hero image is decorative and takes `alt=""`. This is a decision, not a
  * default** (#2559 / #2548 rule 1): the image sits in the same section as the
- * `<h1>` this hero renders, so the heading already names the subject and the
- * photograph would only repeat it. The hero therefore takes no alt parameter —
- * there is nothing a caller could correctly pass. Every route adopting this
- * opening inherits that rule rather than a parameter default nobody chose.
+ * `<h1>` this opening renders, so the heading already names the subject and the
+ * photograph would only repeat it. The opening therefore takes no alt parameter
+ * — there is nothing a caller could correctly pass.
  *
  * Composes existing retro-terrace-fanzine primitives only — no new vocabulary:
- *   - Shell  → `<TapedCard bg="cream">` + one warm `<TapeStrip>` (top-left).
+ *   - Shell  → `<TapedCard bg="cream">` + one warm `<TapeStrip>` (band · cream).
  *   - Kicker → jersey-deep raw label-token mono span (MonoLabel plain only
  *     renders ink/cream — see `reference_jersey_deep_kicker_pattern`).
  *   - Headline → `<EditorialHeading level={1}>` Freight upright with an
- *     optional one-word italic jersey-deep `accent`; a warm "." terminator
- *     when no accent word is present.
+ *     optional one-word italic `accent`; a warm "." terminator when no accent
+ *     word is present.
  *   - Lead → italic `font-display`, auto-hides when absent.
- *   - Image → `<TapedFigure aspect="landscape-16-9">` newsprint (colour) in
- *     the right column on desktop, stacked below the words on mobile.
- *     Absent (or `size="compact"`) → typographic state: the headline owns the
- *     card and a `<DottedDivider>` adds texture.
+ *   - Image → `<TapedFigure>` newsprint (colour) beside the words on desktop,
+ *     stacked below them on mobile. Absent (or `size="compact"`, or
+ *     `register="minimal"`) → typographic state.
  *   - CTA → optional `<LinkButton>` slot (legacy parity).
  *
  * Design lock: `docs/design/mockups/phase-10-page-hero/10h5-locked.html` (#2120).
  */
 
 export type PageHeroSize = "default" | "compact";
+export type PageHeroRegister = "band" | "minimal";
+export type PageHeroTone = "cream" | "dark";
 
 export interface PageHeroProps {
-  /** Mono kicker above the headline (jersey-deep). */
+  /** Mono kicker above the headline. */
   kicker: string;
   /** Headline text. Rendered upright Freight via `<EditorialHeading>`. */
   headline: string;
   /**
-   * Optional one-word (or short phrase) accent rendered italic + jersey-deep.
-   * Must be a substring of `headline`. When present, the warm "." terminator
-   * is dropped in favour of the accent emphasis (a single EditorialHeading
-   * emphasis span can carry one or the other, not both).
+   * Optional one-word (or short phrase) accent rendered italic and coloured —
+   * jersey-deep on a cream field, warm on a dark one, because jersey-deep
+   * italic on `jersey-deep-dark` is the one pairing that disappears. Must be a
+   * substring of `headline`. When present, the "." terminator is dropped in
+   * favour of the accent emphasis (a single EditorialHeading emphasis span can
+   * carry one or the other, not both).
    */
   accent?: string;
   /** Optional italic display lead. Auto-hides when empty. */
   lead?: string;
-  /** Optional landscape hero image URL. Suppressed when `size="compact"`. */
+  /**
+   * Optional hero photograph. Suppressed by `size="compact"` and by
+   * `register="minimal"` — the quiet register is words only.
+   */
   image?: string;
-  /** Optional CTA rendered as a primary `<LinkButton>`. */
+  /**
+   * Which shell the opening wears. `"band"` (default) is a front door;
+   * `"minimal"` is a listing you scroll or a text page.
+   */
+  register?: PageHeroRegister;
+  /**
+   * Which field the opening sits on. `"cream"` (default) is ink on paper;
+   * `"dark"` is cream on `jersey-deep-dark`. `band` paints the field itself,
+   * `minimal` inherits the page's.
+   */
+  tone?: PageHeroTone;
+  /**
+   * Body width. **`band` · `dark` only** — it is the one register that owns its
+   * own container, so it is the one register that has a width to set. The board
+   * pages are detail surfaces at the 1040 default; `/jeugd` is an index page and
+   * passes `"index"` so its opening lines up with the grids below it.
+   */
+  width?: PageContainerWidth;
+  /**
+   * Trailing opening content — a published date, a sibling link, an intro
+   * paragraph. `minimal` only: the band registers are a locked composition.
+   */
+  children?: ReactNode;
+  /** Optional CTA rendered as a primary `<LinkButton>`. Band · cream only. */
   cta?: { label: string; href: string };
   /**
    * Optional adornment rendered beside the kicker + headline (e.g. an opponent
    * `<Crest>` on the `/tegenstander` hero). Sits left of the heading block in a
    * centred flex row; the lead and divider stay full-width below. Primarily for
    * the typographic state — pairs uneasily with an `image` and no consumer
-   * combines the two.
+   * combines the two. Band · cream only.
    */
   adornment?: ReactNode;
   /**
    * `"default"` — full hero with optional image.
    * `"compact"` — tighter padding, smaller headline, image suppressed.
-   *   Used by loading skeletons and bare utility pages.
+   *   Used by loading skeletons and bare utility pages. Band · cream only.
    */
   size?: PageHeroSize;
   className?: string;
 }
 
-export function PageHero({
+/**
+ * A single EditorialHeading emphasis span carries either the accent word OR the
+ * "." terminator — not both. Accent wins when it is actually present in the
+ * headline; otherwise the period gets the warm tone.
+ *
+ * The period rides on EditorialHeading's appended terminator, matched via
+ * `indexOf(".")` — so suppress it when the headline already contains a period
+ * (e.g. an un-curated CMS title like "3de Prov. B"), otherwise the warm styling
+ * would land on the internal period rather than the terminator.
+ *
+ * On a dark field the accent goes warm too: jersey-deep italic on
+ * `jersey-deep-dark` is the one pairing that disappears.
+ */
+function headlineEmphasis(
+  headline: string,
+  accent: string | undefined,
+  tone: PageHeroTone,
+): EditorialHeadingEmphasis | undefined {
+  if (accent && headline.includes(accent)) {
+    return { text: accent, tone: tone === "dark" ? "warm" : "jersey-deep" };
+  }
+  // Ask the same question `ensureTrailingPeriod` asks: a headline already ended
+  // by sentence punctuation gets no terminator appended, so there is nothing for
+  // the emphasis to match and EditorialHeading warns on every render. A CMS
+  // gallery title ending in "?" is the live path.
+  const terminated = /[.?!]$/.test(headline.trimEnd());
+  return terminated || headline.includes(".")
+    ? undefined
+    : { text: ".", tone: "warm" };
+}
+
+/**
+ * The kicker follows the field: a jersey-deep raw label-token span on cream
+ * (MonoLabel's plain variant only renders ink/cream tone), a cream `<MonoLabel>`
+ * on dark. `tracking-[0.18em]` is the 10h5 lock value, intentionally wider than
+ * the `--text-label--tracking` (0.08em) token used by inline label rows.
+ */
+function Kicker({ children, tone }: { children: string; tone: PageHeroTone }) {
+  if (tone === "dark") {
+    return (
+      <span data-testid="page-hero-kicker">
+        <MonoLabel variant="plain" tone="cream">
+          {children}
+        </MonoLabel>
+      </span>
+    );
+  }
+  return (
+    <span
+      data-testid="page-hero-kicker"
+      className="text-jersey-deep text-label font-mono font-semibold tracking-[0.18em] uppercase"
+    >
+      {children}
+    </span>
+  );
+}
+
+/**
+ * The lead's colour follows the field, and both registers that can sit on dark
+ * read it from here — two definitions of `text-cream/85` is how a tone drifts.
+ */
+const LEAD_TONE_CLASS: Record<PageHeroTone, string> = {
+  cream: "text-ink-soft",
+  dark: "text-cream/85",
+};
+
+/** `register="minimal"` — no band, no photo. Content starts immediately. */
+function MinimalOpening({
+  kicker,
+  headline,
+  accent,
+  lead,
+  tone,
+  children,
+  className,
+}: Pick<
+  PageHeroProps,
+  "kicker" | "headline" | "accent" | "lead" | "children" | "className"
+> & {
+  tone: PageHeroTone;
+}) {
+  return (
+    <header
+      data-testid="page-hero"
+      data-register="minimal"
+      data-tone={tone}
+      // The opening owns its own bottom air. Putting it here rather than at nine
+      // call sites is the whole point of the register — that gap is exactly what
+      // drifted (mb-10 / mb-8 / pb-8 / mt-10) while every route hand-rolled it.
+      className={cn("mb-10 flex flex-col", className)}
+    >
+      <Kicker tone={tone}>{kicker}</Kicker>
+
+      {/* `hyphens-auto` because this register is the one that runs in a prose
+          column: "Privacyverklaring" is 17 characters and needs ~400px at
+          display-xl, while `width="prose"` offers 328px on a 360px screen — it
+          overflowed and pushed horizontal scroll. `globals.css` already tunes
+          `hyphenate-limit-chars` for it. Alone, never with `break-words`. */}
+      <EditorialHeading
+        level={1}
+        size="display-xl"
+        tone={tone === "dark" ? "cream" : "ink"}
+        emphasis={headlineEmphasis(headline, accent, tone)}
+        className="mt-2 mb-0 hyphens-auto"
+      >
+        {headline}
+      </EditorialHeading>
+
+      {lead ? (
+        // The reading measure is `--container-prose`, never a hand-picked `ch`
+        // value — an opening that invents its own is how the site ended up with
+        // several.
+        <p
+          className={cn(
+            "font-display text-display-sm mt-4 max-w-[var(--container-prose)] italic",
+            LEAD_TONE_CLASS[tone],
+          )}
+        >
+          {lead}
+        </p>
+      ) : null}
+
+      {children}
+    </header>
+  );
+}
+
+/**
+ * `register="band"` · `tone="dark"` — the group-portrait front door. Full-bleed
+ * by nature (it paints the field), so it owns its `<PageContainer>` and must
+ * NOT be wrapped in one. Ported from the retired `<BoardHero>` unchanged, which
+ * is why the three board routes are a pixel-stable component swap.
+ */
+function DarkBand({
   kicker,
   headline,
   accent,
   lead,
   image,
-  cta,
-  adornment,
-  size = "default",
+  width,
   className,
-}: PageHeroProps) {
+}: Pick<
+  PageHeroProps,
+  "kicker" | "headline" | "accent" | "lead" | "image" | "width" | "className"
+>) {
+  return (
+    <header
+      data-testid="page-hero"
+      data-register="band"
+      data-tone="dark"
+      data-state={image ? "image" : "typographic"}
+      className={cn("bg-jersey-deep-dark", className)}
+    >
+      <PageContainer
+        width={width}
+        className="grid gap-8 py-14 sm:py-20 md:grid-cols-[1fr_auto] md:items-center"
+      >
+        <div className="flex flex-col gap-4">
+          <Kicker tone="dark">{kicker}</Kicker>
+          <EditorialHeading
+            level={1}
+            size="display-2xl"
+            tone="cream"
+            emphasis={headlineEmphasis(headline, accent, "dark")}
+            className="mb-0"
+          >
+            {headline}
+          </EditorialHeading>
+          {lead ? (
+            <p
+              className={cn(
+                "font-display text-display-sm italic",
+                LEAD_TONE_CLASS.dark,
+              )}
+            >
+              {lead}
+            </p>
+          ) : null}
+        </div>
+
+        {image ? (
+          <TapedFigure
+            aspect="landscape-3-2"
+            bg="cream-soft"
+            tint="newsprint"
+            rotation="b"
+            tape={{
+              color: "warm",
+              length: "md",
+              position: "left",
+              rotation: "a",
+            }}
+            className="w-full md:w-[24rem]"
+          >
+            <Image
+              src={image}
+              alt=""
+              fill
+              sizes="(min-width: 768px) 24rem, 100vw"
+              className="object-cover"
+            />
+          </TapedFigure>
+        ) : null}
+      </PageContainer>
+    </header>
+  );
+}
+
+export function PageHero(props: PageHeroProps) {
+  const { register = "band", tone = "cream" } = props;
+
+  // Each register takes the whole prop bag and reads the slice its `Pick<>`
+  // names — forwarding by hand meant three lists to keep in step every time a
+  // prop was added.
+  if (register === "minimal") return <MinimalOpening {...props} tone={tone} />;
+  if (tone === "dark") return <DarkBand {...props} />;
+
+  const {
+    kicker,
+    headline,
+    accent,
+    lead,
+    image,
+    cta,
+    adornment,
+    size = "default",
+    className,
+  } = props;
+
   const isCompact = size === "compact";
   // Compact suppresses the image regardless of whether one was supplied.
   const showImage = Boolean(image) && !isCompact;
@@ -100,32 +387,9 @@ export function PageHero({
       ? "display-lg"
       : "display-xl";
 
-  // A single EditorialHeading emphasis span carries either the jersey-deep
-  // accent word OR the warm "." terminator — not both. Accent wins when it is
-  // actually present in the headline; otherwise the period gets the warm tone.
-  // The warm period rides on EditorialHeading's appended terminator, matched via
-  // `indexOf(".")` — so suppress it when the headline already contains a period
-  // (e.g. an un-curated CMS title like "3de Prov. B"), otherwise the warm
-  // styling would land on the internal period rather than the terminator.
-  const accentFound = Boolean(accent && headline.includes(accent));
-  const emphasis: EditorialHeadingEmphasis | undefined = accentFound
-    ? { text: accent! }
-    : headline.includes(".")
-      ? undefined
-      : { text: ".", tone: "warm" };
-
   const headingBlock = (
     <div>
-      {/* Jersey-deep mono kicker as a raw label-token span — MonoLabel's plain
-          variant only renders ink/cream tone. `tracking-[0.18em]` is the 10h5
-          lock value, intentionally wider than the `--text-label--tracking`
-          (0.08em) token used by inline label rows. */}
-      <span
-        data-testid="page-hero-kicker"
-        className="text-jersey-deep text-label font-mono font-semibold tracking-[0.18em] uppercase"
-      >
-        {kicker}
-      </span>
+      <Kicker tone="cream">{kicker}</Kicker>
 
       {/* `mb-0` neutralises the global base `h1–h6 { margin-bottom: 1em }`,
           which at display-xl is ~72px of dead space — the hero owns its own
@@ -133,7 +397,7 @@ export function PageHero({
       <EditorialHeading
         level={1}
         size={headingSize}
-        emphasis={emphasis}
+        emphasis={headlineEmphasis(headline, accent, "cream")}
         className="mt-2 mb-0"
       >
         {headline}
@@ -188,6 +452,8 @@ export function PageHero({
       tape={{ color: "warm", position: "left", length: "lg" }}
       dataAttrs={{
         "data-testid": "page-hero",
+        "data-register": "band",
+        "data-tone": "cream",
         "data-size": size,
         "data-state": showImage ? "image" : "typographic",
       }}

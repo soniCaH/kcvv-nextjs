@@ -47,9 +47,11 @@ export type TapedFigureTint = "newsprint" | "none";
  *   whose alt was byte-identical to the caption's first line, while the caption
  *   itself named every person in the frame.
  * - **`caption` absent** → the child image's `alt` is the sole carrier and must
- *   describe the moment, not name the thing beside it. `/club/ultras` and
- *   `<JeugdHero>` are the worked examples: their headings say only *Ultras* /
- *   *Jeugd*, so the alt says *"op de kampioenenmatch in 3e provinciale"*.
+ *   describe the moment, not name the thing beside it. `/club/ultras` is the
+ *   worked example: its heading says only *Ultras*, so the alt says *"op de
+ *   kampioenenmatch in 3e provinciale"*. (`<JeugdHero>` was the second one
+ *   until #2555 folded it into `<PageHero>`, whose photograph is decorative
+ *   because the opening's own `<h1>` sits beside it.)
  *
  * There is no `alt` prop here. One existed as a documentation-only prop that
  * rendered nothing, which is precisely the shape that lets a caller believe an

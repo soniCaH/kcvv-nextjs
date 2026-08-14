@@ -3,7 +3,7 @@
  * (`/club/bestuur`, `/club/angels`, `/club/jeugdbestuur`).
  *
  * Mirrors `BestuurPage` (the shared shell for all three routes):
- *   <BoardHero> (jersey-deep-dark band: kicker + headline + group photo)
+ *   <PageHero register="band" tone="dark"> (kicker + headline + group photo)
  *     → <StripedSeam>
  *     → "De leden" — <TeamStaff> grid (auto-fill minmax(150px,1fr), border-2
  *       ink cards)
@@ -18,6 +18,7 @@
  */
 
 import { PageContainer, StripedSeam } from "@/components/design-system";
+import { PageHeroSkeleton } from "@/components/layout/PageHero";
 
 export function BoardPageLoading({ label }: { label: string }) {
   return (
@@ -31,17 +32,7 @@ export function BoardPageLoading({ label }: { label: string }) {
         {label}
       </span>
 
-      {/* BoardHero — jersey-deep-dark band: kicker + headline beside group photo. */}
-      <header aria-hidden="true" className="bg-jersey-deep-dark">
-        <PageContainer className="grid animate-pulse gap-8 py-14 sm:py-20 md:grid-cols-[1fr_auto] md:items-center">
-          <div className="flex flex-col gap-4">
-            <div className="bg-cream/20 h-3 w-24" />
-            <div className="bg-cream/25 h-12 w-2/3" />
-            <div className="bg-cream/15 h-5 w-1/2" />
-          </div>
-          <div className="border-ink bg-cream-soft shadow-paper-md aspect-[3/2] w-full border-2 md:w-[24rem]" />
-        </PageContainer>
-      </header>
+      <PageHeroSkeleton register="band" tone="dark" image lead />
 
       <StripedSeam colorPair="ink-cream" height="md" />
 

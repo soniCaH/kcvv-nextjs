@@ -11,6 +11,7 @@
  */
 
 import { PageContainer } from "@/components/design-system";
+import { PageHeroSkeleton } from "@/components/layout/PageHero";
 
 export default function WedstrijdenLoading() {
   return (
@@ -24,12 +25,8 @@ export default function WedstrijdenLoading() {
         Wedstrijden laden...
       </span>
 
-      <PageContainer className="py-8 motion-safe:animate-pulse sm:py-12">
-        {/* Editorial header — mono kicker + display heading. */}
-        <div className="mb-8">
-          <div className="bg-paper-edge h-3 w-40" />
-          <div className="bg-paper-edge mt-3 h-12 w-64" />
-        </div>
+      <PageContainer className="py-12 motion-safe:animate-pulse sm:py-16">
+        <PageHeroSkeleton register="minimal" />
 
         {/* Month bands — display-big heading + agenda rows. */}
         <div className="flex flex-col gap-10">

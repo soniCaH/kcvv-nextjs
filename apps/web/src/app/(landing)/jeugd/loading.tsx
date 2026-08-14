@@ -1,30 +1,20 @@
 /**
- * `/jeugd` loading skeleton — mirrors the Phase 7 composition on cream
- * (split hero → seam → filosofie/visie block → editorial nav grid →
- * youth-directory division grid). Replaces the legacy dark
- * `SectionStack`/`getJeugdSections` envelope.
+ * `/jeugd` loading skeleton — mirrors the composition: the shared opening's
+ * dark register (group photo beside the words, #2555) → seam → filosofie/visie
+ * block → editorial nav grid → youth-directory division grid.
  */
 
-import { PageContainer } from "@/components/design-system";
+import { PageContainer, StripedSeam } from "@/components/design-system";
+import { PageHeroSkeleton } from "@/components/layout/PageHero";
 
 export default function JeugdLoading() {
   return (
     <>
-      <PageContainer width="index" className="py-10 sm:py-14">
-        {/* Split hero — text column + photo */}
-        <div className="grid animate-pulse items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
-          <div className="flex flex-col gap-4">
-            <div className="bg-paper-edge h-3 w-48" />
-            <div className="bg-paper-edge h-14 w-80 max-w-full" />
-            <div className="bg-paper-edge h-16 w-full max-w-[28rem]" />
-            <div className="bg-paper-edge h-3 w-64" />
-          </div>
-          <div className="bg-paper-edge aspect-[3/2] w-full" />
-        </div>
+      <PageHeroSkeleton register="band" tone="dark" width="index" image lead />
 
-        {/* Seam */}
-        <div className="bg-paper-edge my-10 h-[18px] w-full animate-pulse sm:my-12" />
+      <StripedSeam colorPair="ink-cream" height="md" />
 
+      <PageContainer width="index" className="py-12 sm:py-16">
         {/* Filosofie / visie block */}
         <div className="animate-pulse">
           <div className="bg-paper-edge mb-4 h-3 w-40" />

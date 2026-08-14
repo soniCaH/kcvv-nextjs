@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Crest } from "@/components/design-system";
+import { cn } from "@/lib/utils/cn";
 import { PageHero } from "./PageHero";
 
 const meta = {
@@ -10,13 +11,30 @@ const meta = {
   },
   tags: ["autodocs", "vr"],
   decorators: [
-    (Story) => (
-      <div className="bg-cream min-h-screen px-4 py-10 md:px-10">
-        <div className="mx-auto max-w-5xl">
-          <Story />
+    (Story, context) => {
+      const dark = context.args.tone === "dark";
+      // The dark band is full-bleed — it paints its own field and owns its
+      // container, so wrapping it in the page frame would misrepresent it.
+      if (dark && context.args.register !== "minimal") {
+        return (
+          <div className="min-h-screen">
+            <Story />
+          </div>
+        );
+      }
+      return (
+        <div
+          className={cn(
+            "min-h-screen px-4 py-10 md:px-10",
+            dark ? "bg-jersey-deep-dark" : "bg-cream",
+          )}
+        >
+          <div className="mx-auto max-w-5xl">
+            <Story />
+          </div>
         </div>
-      </div>
-    ),
+      );
+    },
   ],
   argTypes: {
     kicker: { control: "text", description: "Mono kicker above the headline" },
@@ -26,10 +44,21 @@ const meta = {
     },
     accent: {
       control: "text",
-      description: "One-word italic jersey-deep accent (substring of headline)",
+      description:
+        "One-word italic accent (substring of headline) — jersey-deep on cream, warm on dark",
     },
     lead: { control: "text", description: "Italic display lead (auto-hides)" },
-    image: { control: "text", description: "Landscape hero image URL" },
+    image: { control: "text", description: "Hero photograph URL" },
+    register: {
+      control: "inline-radio",
+      options: ["band", "minimal"],
+      description: "Front door (band) vs listing / text page (minimal)",
+    },
+    tone: {
+      control: "inline-radio",
+      options: ["cream", "dark"],
+      description: "Which field the opening sits on",
+    },
     size: {
       control: "select",
       options: ["default", "compact"],
@@ -104,6 +133,56 @@ export const WithAdornment: Story = {
         className="border-ink bg-cream-soft shadow-paper-sm rounded-full border-2"
       />
     ),
+  },
+};
+
+/**
+ * band · dark — `/club/bestuur`, `/club/angels`, `/club/jeugdbestuur`,
+ * `/jeugd`. A page whose subject is a group of people opens with their
+ * photograph; the cream `<TapedFigure>` is built to pop on the dark field.
+ */
+export const BandDark: Story = {
+  args: {
+    register: "band",
+    tone: "dark",
+    kicker: "De club",
+    headline: "Bestuur",
+    lead: "De mensen achter KCVV Elewijt",
+    image: "/images/youth-trainers.jpg",
+  },
+};
+
+/** band · dark with no photo — the team carries no group portrait yet. */
+export const BandDarkNoPhoto: Story = {
+  args: {
+    register: "band",
+    tone: "dark",
+    kicker: "De club",
+    headline: "Angels",
+    lead: "De mensen achter KCVV Elewijt",
+  },
+};
+
+/**
+ * minimal — `/privacy`, `/ploegen`, `/galerij`, `/nieuws` and five more. A
+ * listing you scroll or a text page: no band, content starts immediately.
+ */
+export const Minimal: Story = {
+  args: {
+    register: "minimal",
+    kicker: "KCVV Elewijt",
+    headline: "Onze ploegen",
+    lead: "Van de eerste ploeg tot de allerkleinsten — één plezante compagnie.",
+  },
+};
+
+/** minimal on a dark field — `/evenementen`, whose whole listing runs dark. */
+export const MinimalDark: Story = {
+  args: {
+    register: "minimal",
+    tone: "dark",
+    kicker: "KCVV Elewijt · Agenda",
+    headline: "Evenementen",
   },
 };
 

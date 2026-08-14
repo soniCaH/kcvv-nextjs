@@ -124,18 +124,17 @@ describe("loading.tsx envelope drift guard", () => {
     {
       name: "/jeugd",
       Loading: JeugdLoading,
-      // Phase 7 (#2038): cream tracer composition (header + nav grid + youth
-      // directory), no SectionStack envelope. Outer container is a
-      // `<PageContainer width="index">` (matches the page's index width).
-      expectedRootClass:
-        "mx-auto w-full px-4 md:px-8 max-w-[var(--container-index)] py-10 sm:py-14",
+      // #2555: the route now opens on the shared opening's dark register, so
+      // the skeleton leads with the same full-bleed `bg-jersey-deep-dark`
+      // band the page paints — the container starts below the seam.
+      expectedRootClass: "bg-jersey-deep-dark",
     },
     {
       name: "/ploegen",
       Loading: PloegenLoading,
       // Outer container is a `<PageContainer width="index">` (page's index width).
       expectedRootClass:
-        "mx-auto w-full px-4 md:px-8 max-w-[var(--container-index)] py-10 sm:py-14",
+        "mx-auto w-full px-4 md:px-8 max-w-[var(--container-index)] py-12 sm:py-16",
     },
     {
       name: "/sponsors",
@@ -211,7 +210,7 @@ describe("loading.tsx envelope drift guard", () => {
     {
       name: "/privacy",
       Loading: PrivacyLoading,
-      expectedRootClass: "bg-cream py-16 md:py-20",
+      expectedRootClass: "bg-cream py-12 sm:py-16",
     },
     {
       name: "/share",

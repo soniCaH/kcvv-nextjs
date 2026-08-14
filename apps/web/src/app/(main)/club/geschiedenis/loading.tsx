@@ -11,6 +11,7 @@
  */
 
 import { PageContainer, StripedSeam } from "@/components/design-system";
+import { PageHeroSkeleton } from "@/components/layout/PageHero";
 
 /** A timeline TapedCard footprint on one side of the centre line. */
 function TimelineItemSkeleton({ side }: { side: "left" | "right" }) {
@@ -50,20 +51,11 @@ export default function HistoryLoading() {
         Geschiedenis laden...
       </span>
 
-      {/* HeritageHero — kicker + display headline + italic lead. */}
-      <PageContainer
-        as="header"
-        className="flex flex-col gap-3 pt-10 motion-safe:animate-pulse sm:pt-14"
-        aria-hidden="true"
-      >
-        <div className="bg-paper-edge h-3 w-40" />
-        <div className="bg-paper-edge h-12 w-2/3" />
-        <div className="bg-paper-edge h-5 w-3/4" />
+      <PageContainer className="pt-12 sm:pt-16">
+        <PageHeroSkeleton register="minimal" lead />
       </PageContainer>
 
-      <div className="mt-8">
-        <StripedSeam colorPair="ink-cream" height="md" />
-      </div>
+      <StripedSeam colorPair="ink-cream" height="md" />
 
       {/* Timeline — alternating paper cards on a dashed ink centre line. */}
       <PageContainer className="py-8 motion-safe:animate-pulse">

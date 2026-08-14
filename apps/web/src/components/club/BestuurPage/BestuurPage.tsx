@@ -2,7 +2,7 @@
  * BestuurPage — board pages (`/club/bestuur`, `/club/jeugdbestuur`,
  * `/club/angels`) on the Phase 7 redesign spine (design contract 7b1 + 7b2):
  *
- *   <BoardHero> (jersey-deep-dark, group photo, warm "." accent)
+ *   <PageHero register="band" tone="dark"> (group photo, warm "." accent)
  *     → <StripedSeam>
  *     → editorial description ("Over het …", team.body, jersey-deep left rule)
  *     → "De leden" — <TeamStaff> (6.C, staff-by-role)
@@ -27,8 +27,11 @@ import {
   type TeamStaffMemberData,
 } from "@/components/team/TeamStaff";
 import { hasRenderableBioContent } from "@/lib/portable-text/findPullquoteText";
-import { BoardHero } from "@/components/club/BoardHero";
+import { PageHero } from "@/components/layout/PageHero";
 import { BoardCtaBand } from "@/components/club/BoardCtaBand";
+
+/** Lead shown when the team carries no tagline of its own. */
+const BOARD_LEAD_FALLBACK = "De mensen achter KCVV Elewijt";
 
 // Board descriptions are plain editorial prose; the `pullquote` decorator (used
 // on player/team bodies) renders inline here with no special treatment.
@@ -41,7 +44,7 @@ const bodyComponents: PortableTextComponents = {
 export interface BestuurPageHeader {
   /** Team name (rendered as the hero headline). */
   name: string;
-  /** Team tagline (hero lead — falls back to a default in <BoardHero>). */
+  /** Team tagline (the opening's lead — falls back to `BOARD_LEAD_FALLBACK`). */
   tagline?: string;
   /** Team / group photo URL — the hero photo. */
   imageUrl?: string;
@@ -65,10 +68,13 @@ export function BestuurPage({ header, body, staff = [] }: BestuurPageProps) {
 
   return (
     <>
-      <BoardHero
-        name={header.name}
-        tagline={header.tagline}
-        imageUrl={header.imageUrl}
+      <PageHero
+        register="band"
+        tone="dark"
+        kicker="De club"
+        headline={header.name}
+        lead={header.tagline?.trim() || BOARD_LEAD_FALLBACK}
+        image={header.imageUrl}
       />
 
       <StripedSeam colorPair="ink-cream" height="md" />

@@ -12,7 +12,8 @@ import { SITE_CONFIG } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import { EditorialHeading, PageContainer } from "@/components/design-system";
+import { PageContainer } from "@/components/design-system";
+import { PageHero } from "@/components/layout/PageHero";
 import { MembershipForm } from "@/components/club/MembershipForm/MembershipForm";
 
 export const metadata = buildPageMetadata({
@@ -37,7 +38,7 @@ export const metadata = buildPageMetadata({
 
 export default function WordLidPage() {
   return (
-    <div className="bg-cream py-16 md:py-20">
+    <div className="bg-cream py-12 sm:py-16">
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },
@@ -46,30 +47,19 @@ export default function WordLidPage() {
         ])}
       />
       <PageContainer width="prose">
-        <header className="mb-10 flex flex-col">
-          <span className="text-jersey-deep text-label font-mono font-semibold uppercase">
-            Sluit je aan
-          </span>
-          <EditorialHeading
-            level={1}
-            size="display-xl"
-            emphasis={{ text: "mee." }}
-            className="mt-3 mb-0"
-          >
-            Doe
-          </EditorialHeading>
-          <p className="text-ink-soft font-display text-body-lg mt-5 max-w-[60ch]">
-            Speler, jeugdspeler, vrijwilliger, trainer of scheidsrechter — vul
-            het formulier in en we nemen binnenkort contact met je op. Dit is
-            een aanvraag: sommige ploegen zitten vol, dus een plekje is niet
-            altijd gegarandeerd.
-          </p>
+        <PageHero
+          register="minimal"
+          kicker="Sluit je aan"
+          headline="Doe mee"
+          accent="mee"
+          lead="Speler, jeugdspeler, vrijwilliger, trainer of scheidsrechter — vul het formulier in en we nemen binnenkort contact met je op. Dit is een aanvraag: sommige ploegen zitten vol, dus een plekje is niet altijd gegarandeerd."
+        >
           <p className="text-body-md mt-4">
             <Link href="/club/praktische-informatie" className="prose-link">
               Praktische info →
             </Link>
           </p>
-        </header>
+        </PageHero>
 
         <MembershipForm />
       </PageContainer>

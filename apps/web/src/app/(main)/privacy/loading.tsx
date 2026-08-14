@@ -14,7 +14,7 @@ import { DottedDivider, PageContainer } from "@/components/design-system";
 
 export default function PrivacyLoading() {
   return (
-    <div className="bg-cream py-16 md:py-20">
+    <div className="bg-cream py-12 sm:py-16">
       <span
         role="status"
         aria-busy="true"
