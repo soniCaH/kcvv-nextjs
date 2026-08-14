@@ -80,6 +80,22 @@ jobs:
 
           # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
           # queries: security-extended,security-and-quality
+          # `docs/` holds design mockups — standalone HTML comparison pages that
+          # are never built, served or imported. Their inline scripts write DOM
+          # text through `innerHTML`, sourced from a JSON island the page itself
+          # ships: no network, no URL params, no user input, opened from disk.
+          # CodeQL reads that as XSS, correctly for shipped code and meaninglessly
+          # here. The repo commits a mockup set per design issue, so without this
+          # every design PR fails the scan on a finding with no attacker and no
+          # user. Scanned surface stays `apps/` and `packages/`.
+          #
+          # The trade, stated plainly: a genuine XSS in a future `docs/` file
+          # goes unflagged. Acceptable only while nothing in `docs/` executes
+          # anywhere but a designer's local browser — if that ever changes, this
+          # exclusion has to go with it.
+          config: |
+            paths-ignore:
+              - docs/**
 
       # If the analyze step fails for one of the languages you are analyzing with
       # "We were unable to automatically build your code", modify the matrix above

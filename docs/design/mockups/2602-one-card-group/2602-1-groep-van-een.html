@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Groep van één</title>
+</head>
+<body>
+<style>
+  :root {
+    --color-cream: #f5f1e6;
+    --color-cream-soft: #ede8da;
+    --color-cream-deep: #e1d7bf;
+    --color-ink: #0a0a0a;
+    --color-ink-soft: #1f1f1f;
+    --color-ink-muted: #6b6b6b;
+    --color-jersey-deep: #007c46;
+    --color-paper-edge: #d9d2bd;
+    --color-warm: #f0c264;
+    --tape-warm: color-mix(in srgb, var(--color-warm) 85%, transparent);
+    --shadow-paper-md: 6px 6px 0 0 var(--color-ink);
+    --filter-photo-newsprint: sepia(0.06) saturate(0.94) hue-rotate(-4deg);
+    --content: 1216px;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 1360px; margin: 0 auto; padding: 40px 24px 120px; }
+
+  h1 {
+    font-size: 40px; line-height: 1.05; margin: 0 0 8px;
+    font-weight: 900; letter-spacing: -0.01em;
+  }
+  h1 em { font-style: normal; color: var(--color-jersey-deep); }
+
+  .lede { max-width: 680px; font-size: 17px; line-height: 1.6; color: var(--color-ink-soft); margin: 0 0 28px; }
+  .lede code, code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.88em; background: var(--color-cream-deep); padding: 1px 4px; }
+
+  .facts {
+    border: 1px solid var(--color-ink); background: var(--color-cream-soft);
+    padding: 18px 20px; margin: 0 0 44px; max-width: 860px;
+  }
+  .facts h2 { font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-ink-muted); margin: 0 0 12px; font-weight: 400; }
+  table { border-collapse: collapse; font-family: ui-monospace, Menlo, monospace; font-size: 12px; width: 100%; }
+  th, td { text-align: left; padding: 4px 14px 4px 0; border-bottom: 1px solid var(--color-paper-edge); }
+  th { color: var(--color-ink-muted); font-weight: 400; text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; }
+  td.num { text-align: right; padding-right: 24px; }
+  .bad { color: #a8320f; font-weight: 700; }
+
+  /* ---- variant frame ---- */
+  .variant { margin: 0 0 72px; }
+  .variant > header { margin: 0 0 6px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .tag {
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; background: var(--color-ink); color: var(--color-cream);
+    padding: 3px 8px;
+  }
+  .variant h2 { font-size: 25px; margin: 0; font-weight: 900; letter-spacing: -0.01em; }
+  .variant .note { max-width: 780px; font-size: 15px; line-height: 1.55; color: var(--color-ink-soft); margin: 6px 0 20px; }
+  .verdict { display: inline-block; font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border: 1px solid currentColor; }
+  .verdict.no { color: #a8320f; }
+  .verdict.now { color: var(--color-ink-muted); }
+  .verdict.opt { color: var(--color-jersey-deep); }
+
+  .scroller { overflow-x: auto; padding: 24px 0 8px; }
+  .frame {
+    width: var(--content); position: relative;
+    outline: 1px dashed var(--color-paper-edge); outline-offset: 14px;
+  }
+  .frame::after {
+    content: "1216px — PageContainer width=\"index\" (1280 − 2×32 padding)";
+    position: absolute; top: -30px; left: 0;
+    font-family: ui-monospace, Menlo, monospace; font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-ink-muted);
+  }
+
+  /* ---- directory ---- */
+  .group { margin-bottom: 40px; }
+  .grouphead {
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--color-ink-muted);
+    border-bottom: 1px solid var(--color-paper-edge);
+    padding-bottom: 6px; margin: 0 0 20px; font-weight: 400;
+  }
+  .grid { display: grid; gap: 28px 16px; }
+  .g-fill { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .g-fit  { grid-template-columns: repeat(auto-fit,  minmax(150px, 1fr)); }
+  .g-cap  { grid-template-columns: repeat(auto-fill, 200px); justify-content: start; }
+
+  /* taped card */
+  .card {
+    display: block; text-decoration: none; color: inherit;
+    background: var(--color-cream); border: 1px solid var(--color-ink);
+    box-shadow: var(--shadow-paper-md); padding: 8px; position: relative;
+  }
+  .card .tape {
+    position: absolute; top: -7px; width: 44px; height: 14px;
+    background: var(--tape-warm); z-index: 2;
+  }
+  .card .tape.l { left: 14px; transform: rotate(-0.5deg); }
+  .card .tape.r { right: 14px; transform: rotate(-0.5deg); }
+  .photo {
+    position: relative; aspect-ratio: 4/3; width: 100%; overflow: hidden;
+    border: 1px solid var(--color-ink); background: var(--color-cream-soft);
+  }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; filter: var(--filter-photo-newsprint); }
+  .photo .jersey { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; }
+  .photo .jersey svg { height: 84%; width: auto; display: block; }
+  .photo .jersey .letter {
+    position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%);
+    font-weight: 900; color: var(--color-cream); font-size: 30px; line-height: 1;
+    text-shadow: 2px 2px 0 var(--color-ink), -1px -1px 0 var(--color-ink), 1px -1px 0 var(--color-ink), -1px 1px 0 var(--color-ink);
+  }
+  .cap { margin: 8px 0 0; text-align: center; font-size: 24px; font-weight: 900; color: var(--color-jersey-deep); line-height: 1.1; }
+  .sub { margin: 2px 0 0; text-align: center; font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-ink-soft); line-height: 1.2; }
+
+  /* variant D — rule follows the cards */
+  .d .grouphead { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+  .d .rulewrap { display: grid; gap: 0 16px; margin-bottom: 20px; }
+  .d .rule { border-bottom: 1px solid var(--color-paper-edge); height: 6px; }
+
+  /* variant E — inline one-card group */
+  .e-inline { display: flex; align-items: flex-start; gap: 24px; }
+  .e-inline .said { flex: 1; max-width: 460px; padding-top: 2px; }
+  .e-inline .said p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--color-ink-soft); }
+
+  .ghost { outline: 1px dashed rgba(168,50,15,0.45); outline-offset: -1px; }
+  .legend { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--color-ink-muted); margin-top: 14px; }
+</style>
+
+<div class="page">
+
+  <h1>Een groep van <em>één</em>.</h1>
+  <p class="lede">
+    <strong>#2602</strong> — wat doet het jeugdrooster met een groep die één kaart bevat?
+    Gemeten op <code>kcvv-nextjs.vercel.app</code>, 2026-08-14. Beide routes
+    (<code>/ploegen</code> en <code>/jeugd</code>) renderen dezelfde component in dezelfde
+    container — <code>PageContainer width="index"</code>, inhoudsbreedte <strong>1216px</strong>.
+  </p>
+
+  <div class="facts">
+    <h2>Wat er echt staat — 4 groepen, 7 kolommen</h2>
+    <table>
+      <thead>
+        <tr><th>Groep</th><th class="num">Kaarten</th><th class="num">Lege sporen</th><th class="num">Lege breedte</th><th>Foto's</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Reserven</td><td class="num bad">1</td><td class="num bad">6</td><td class="num bad">1056px</td><td>0 van 1</td></tr>
+        <tr><td>Bovenbouw · U17–U21</td><td class="num">4</td><td class="num">3</td><td class="num">528px</td><td>2 van 4</td></tr>
+        <tr><td>Middenbouw · U12–U16</td><td class="num">4</td><td class="num">3</td><td class="num">528px</td><td>4 van 4</td></tr>
+        <tr><td>Onderbouw · U6–U11</td><td class="num">7</td><td class="num">0</td><td class="num">0px</td><td>3 van 7</td></tr>
+      </tbody>
+    </table>
+    <p class="legend">
+      Kolomtelling = <code>floor((1216 + 16) / (150 + 16))</code> = <strong>7</strong>, spoorbreedte <strong>160px</strong>.
+      Over het hele bereik meet een kaart 150–216px — <code>1fr</code> rekt nauwelijks.
+      Rood gestippeld hieronder = de lege sporen.
+    </p>
+  </div>
+
+  <!-- ============ A ============ -->
+  <section class="variant">
+    <header>
+      <span class="tag">A</span>
+      <h2>Vandaag — <code>auto-fill</code></h2>
+      <span class="verdict now">huidige staat</span>
+    </header>
+    <p class="note">
+      Zeven sporen, de kaart houdt 160px. De lege sporen zijn onzichtbaar crème — wat de leegte
+      <em>tekent</em> is de kopregel: een streep over de volle 1216px met één kaart van 160px eronder.
+      Bovenbouw en Middenbouw doen op deze breedte hetzelfde, alleen minder erg.
+    </p>
+    <div class="scroller"><div class="frame" data-grid="g-fill"></div></div>
+  </section>
+
+  <!-- ============ B ============ -->
+  <section class="variant">
+    <header>
+      <span class="tag">B</span>
+      <h2><code>auto-fit</code> — de kaart vult de rij</h2>
+      <span class="verdict no">valt af</span>
+    </header>
+    <p class="note">
+      Lege sporen klappen dicht, dus de enige kaart rekt naar 1216px — een fotokader van
+      1216 × 912px. Dat breekt de polaroid (designslot 7j5) en maakt van Reserven de grootste
+      kaart van de pagina. Ook Bovenbouw en Middenbouw groeien naar 4 kaarten van 292px,
+      breder dan elke kaart in Onderbouw.
+    </p>
+    <div class="scroller"><div class="frame" data-grid="g-fit"></div></div>
+  </section>
+
+  <!-- ============ C ============ -->
+  <section class="variant">
+    <header>
+      <span class="tag">C</span>
+      <h2>Vast spoor — <code>repeat(auto-fill, 200px)</code></h2>
+      <span class="verdict no">valt af</span>
+    </header>
+    <p class="note">
+      "Maak de kaart gewoon een vaste maat." Elke kaart wordt 200px en pakt links aan, overal.
+      Het helpt Reserven <em>niets</em> — één kaart van 200px, 1016px leeg — en het breekt
+      Onderbouw, dat zijn perfect gevulde rij van zeven verliest en naar 5 + 2 valt.
+      <strong>Let op de valstrik:</strong> <code>minmax(150px, 200px)</code> — de voor de hand
+      liggende schrijfwijze — verandert op 1216px <em>helemaal niets</em>. <code>auto-fill</code>
+      telt de sporen met het minimum (7), en die groeien dan tot 160px, ruim onder het plafond.
+      Het plafond bijt alleen rond 480px, waar de kaart vandaag naar 216px piekt.
+    </p>
+    <div class="scroller"><div class="frame" data-grid="g-cap"></div></div>
+  </section>
+
+  <!-- ============ D ============ -->
+  <section class="variant d">
+    <header>
+      <span class="tag">D</span>
+      <h2>De kopregel volgt de kaarten</h2>
+      <span class="verdict opt">optie</span>
+    </header>
+    <p class="note">
+      Het raster verandert niet. Alleen de streep onder de groepsnaam loopt niet langer tot
+      1216px maar tot waar de kaarten staan. Reserven krijgt een streep van 160px, Onderbouw
+      houdt de volle breedte. Niets rekt, niets verspringt — de leegte wordt gewoon niet meer omkaderd.
+    </p>
+    <div class="scroller"><div class="frame" data-variant="d"></div></div>
+  </section>
+
+  <!-- ============ E ============ -->
+  <section class="variant">
+    <header>
+      <span class="tag">E</span>
+      <h2>Een groep van één zegt wat ze is</h2>
+      <span class="verdict opt">optie</span>
+    </header>
+    <p class="note">
+      De rij blijft 1216px, maar staat niet leeg: naast de kaart komt de zin die #2544 al
+      besloot — Reserven zit voorbij het einde van de jeugdladder. Vult de breedte met de
+      enige inhoud die de club hier echt heeft. Duurder: het is copy, en copy veroudert.
+    </p>
+    <div class="scroller"><div class="frame" data-variant="e"></div></div>
+  </section>
+
+</div>
+
+<script>
+  const JERSEY = `<svg viewBox="0 120 220 180" preserveAspectRatio="xMidYMid meet">
+    <path d="M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300 Z" fill="#0a0a0a" opacity="0.95"/>
+    <g fill="none" stroke="#007c46" stroke-width="3" stroke-linejoin="miter" stroke-linecap="square" transform="translate(1.5,-2)">
+      <path d="M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300"/>
+      <path d="M 92 132 L 110 156 L 128 132"/>
+      <path d="M 70 168 L 70 300" stroke-width="2"/>
+      <path d="M 88 158 L 88 300" stroke-width="2"/>
+      <path d="M 132 158 L 132 300" stroke-width="2"/>
+      <path d="M 150 168 L 150 300" stroke-width="2"/>
+    </g>
+  </svg>`;
+
+  const CDN = "https://cdn.sanity.io/images/vhb33jaz/production/";
+  // Live data, /ploegen, 2026-08-14. photo = null → <JerseyShirt> fallback.
+  const GROUPS = [
+    { label: "Reserven", range: null, teams: [
+      { cap: "Reserven", sub: "Reserven VV AH", mark: "R", photo: null },
+    ]},
+    { label: "Bovenbouw", range: "U17–U21", teams: [
+      { cap: "U21", sub: "KCVVE U21", mark: "U21", photo: "14729fbf60a99c7576ea7ca75f0684c39ae07444-1966x951.jpg?w=1200&h=800&q=80" },
+      { cap: "U19", sub: "KCVVE U19", mark: "U19", photo: "e21e9752ebbfec870179c6709d0f046d37893f4f-1961x911.jpg?w=1200&h=800&q=80" },
+      { cap: "U17", sub: "KCVVE U17", mark: "U17", photo: null },
+      { cap: "U17", sub: "KCVVE U16", mark: "U17", photo: null },
+    ]},
+    { label: "Middenbouw", range: "U12–U16", teams: [
+      { cap: "U15", sub: "KCVVE  U15", mark: "U15", photo: "e0ca4200a5f7a0f97dd02e843b318e793430d7ff-3001x2092.jpg?w=1200&h=800&q=80" },
+      { cap: "U14", sub: "KCVVE U14", mark: "U14", photo: "9f61b4e27265dffd677d1201b236f483e4763099-3008x2000.jpg?w=1200&h=800&q=80" },
+      { cap: "U13", sub: "KCVVE  U13", mark: "U13", photo: "1d02a9847f745963de0557337c70a947f045bd85-2818x1583.jpg?w=1200&h=800&q=80" },
+      { cap: "U12", sub: "KCVVE U12", mark: "U12", photo: "6630644c428e78514b160bbfca707b242c24cb11-2016x1512.jpg?w=1200&h=800&q=80" },
+    ]},
+    { label: "Onderbouw", range: "U6–U11", teams: [
+      { cap: "U11", sub: "KCVVE  U11", mark: "U11", photo: "d79e023d165ced6b6e60ad8a688ac50be77e4f38-3757x2818.jpg?w=1200&h=800&q=80" },
+      { cap: "U10", sub: "KCVVE U10", mark: "U10", photo: "7fc1d6c18c9a5a36a411b4636bbae8fc576ee6fe-1280x851.jpg?w=1200&h=800&q=80" },
+      { cap: "U10", sub: "KCVVE U10P", mark: "U10", photo: "a8313f0cfab907f1f9e12e6d7562029bf84bdc5f-2500x1236.jpg?w=1200&h=800&q=80" },
+      { cap: "U9",  sub: "KCVVE  U9",  mark: "U9",  photo: null },
+      { cap: "U8",  sub: "KCVVE U8",   mark: "U8",  photo: null },
+      { cap: "U7",  sub: "KCVVE U7",   mark: "U7",  photo: null },
+      { cap: "U6",  sub: "KCVVE  U6",  mark: "U6",  photo: null },
+    ]},
+  ];
+
+  const ROT = [-1.1, 0.7, -0.5];
+
+  function cardHtml(t, i) {
+    const inner = t.photo
+      ? `<img src="${CDN}${t.photo}" alt="">`
+      : `<div class="jersey">${JERSEY}<span class="letter">${t.mark}</span></div>`;
+    return `<a class="card" style="transform: rotate(${ROT[i % 3]}deg)">
+        <span class="tape ${i % 2 === 0 ? "l" : "r"}"></span>
+        <div class="photo">${inner}</div>
+        <p class="cap">${t.cap}</p>
+        <p class="sub">${t.sub}</p>
+      </a>`;
+  }
+
+  // ghost cells so the empty tracks are visible
+  function ghosts(n) {
+    return Array.from({ length: n }, () => `<div class="ghost" style="min-height:100%"></div>`).join("");
+  }
+
+  function renderGrid(gridClass) {
+    return GROUPS.map((g) => {
+      const cards = g.teams.map(cardHtml).join("");
+      // 7 tracks at 1216px for auto-fill; auto-fit collapses; cap gives 6
+      const tracks = gridClass === "g-cap" ? 5 : 7;
+      const empty = gridClass === "g-fit" ? 0 : Math.max(0, tracks - (g.teams.length % tracks || tracks));
+      return `<div class="group">
+          <h3 class="grouphead">${g.label}${g.range ? " · " + g.range : ""}</h3>
+          <div class="grid ${gridClass}">${cards}${ghosts(empty)}</div>
+        </div>`;
+    }).join("");
+  }
+
+  function renderD() {
+    return GROUPS.map((g) => {
+      const cards = g.teams.map(cardHtml).join("");
+      const n = Math.min(g.teams.length, 7);
+      // the rule spans exactly the occupied tracks
+      const rule = `<div class="rulewrap" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));">
+          <div class="rule" style="grid-column: span ${n};"></div>
+          ${7 - n > 0 ? `<div style="grid-column: span ${7 - n};"></div>` : ""}
+        </div>`;
+      return `<div class="group">
+          <h3 class="grouphead">${g.label}${g.range ? " · " + g.range : ""}</h3>
+          ${rule}
+          <div class="grid g-fill">${cards}${ghosts(Math.max(0, 7 - (g.teams.length % 7 || 7)))}</div>
+        </div>`;
+    }).join("");
+  }
+
+  function renderE() {
+    return GROUPS.map((g) => {
+      const cards = g.teams.map(cardHtml).join("");
+      if (g.teams.length === 1) {
+        return `<div class="group">
+            <h3 class="grouphead">${g.label}</h3>
+            <div class="e-inline">
+              <div style="width:160px; flex:0 0 160px;">${cardHtml(g.teams[0], 0)}</div>
+              <div class="said"><p>De enige ploeg voorbij het einde van de jeugdladder — een eigen kern,
+              geen doorschuifbank voor de A- en B-ploeg.</p></div>
+            </div>
+          </div>`;
+      }
+      return `<div class="group">
+          <h3 class="grouphead">${g.label}${g.range ? " · " + g.range : ""}</h3>
+          <div class="grid g-fill">${cards}${ghosts(Math.max(0, 7 - (g.teams.length % 7 || 7)))}</div>
+        </div>`;
+    }).join("");
+  }
+
+  document.querySelectorAll(".frame").forEach((f) => {
+    if (f.dataset.variant === "d") f.innerHTML = renderD();
+    else if (f.dataset.variant === "e") f.innerHTML = renderE();
+    else f.innerHTML = renderGrid(f.dataset.grid);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2540 · 2540-2 — Spreekt de pagina over de gaten van de club zelf?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey: #4acf52;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --brick: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --font-display: "Fraunces", georgia, serif;
+        --font-body: "Archivo", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.92em;
+      }
+      .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
+      header.page {
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 20px;
+        margin-bottom: 12px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      h1.page {
+        font-family: var(--font-display);
+        font-size: 40px;
+        line-height: 1.1;
+        margin: 10px 0 0;
+      }
+      .lede {
+        max-width: 680px;
+        font-size: 16px;
+        line-height: 1.55;
+        color: var(--ink-soft);
+      }
+      .locked {
+        max-width: 680px;
+        background: var(--cream-soft);
+        border: 1px dashed var(--ink-muted);
+        padding: 14px 18px;
+        margin: 24px 0 0;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .locked b {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 6px;
+        color: var(--jersey-deep);
+      }
+      .locked p {
+        margin: 0 0 8px;
+      }
+      .locked p:last-child {
+        margin-bottom: 0;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        margin-top: 40px;
+      }
+      @media (max-width: 1000px) {
+        .cols {
+          grid-template-columns: 1fr;
+        }
+      }
+      .panel {
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        display: flex;
+        flex-direction: column;
+      }
+      .panel > h2 {
+        font-family: var(--font-display);
+        font-size: 21px;
+        margin: 0;
+        padding: 14px 16px 12px;
+        border-bottom: 2px solid var(--ink);
+        background: var(--cream-deep);
+      }
+      .panel > h2 span.tag {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .panel > .why {
+        padding: 12px 16px;
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--ink-soft);
+        border-bottom: 1px dashed var(--paper-edge);
+        margin: 0;
+      }
+      .page-frag {
+        background: var(--cream);
+        margin: 12px;
+        border: 1px solid var(--paper-edge);
+        flex: 1;
+      }
+      .nav {
+        display: flex;
+        border-bottom: 2px solid var(--ink);
+      }
+      .nav a {
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 8px 8px;
+        color: var(--ink-soft);
+        text-decoration: none;
+        border-right: 1px solid var(--paper-edge);
+        white-space: nowrap;
+      }
+      .nav a.on {
+        background: var(--ink);
+        color: var(--cream);
+      }
+      .seam {
+        height: 9px;
+        background: repeating-linear-gradient(
+          -45deg,
+          var(--ink) 0 5px,
+          var(--cream) 5px 10px
+        );
+      }
+      .sect {
+        padding: 14px 13px 16px;
+      }
+      .sect h3 {
+        font-family: var(--font-display);
+        font-size: 18px;
+        margin: 0 0 9px;
+      }
+      .sect h3 .dot {
+        color: var(--jersey-deep);
+      }
+      .staff {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 7px;
+      }
+      .sc {
+        border: 1px solid var(--paper-edge);
+        background: var(--cream-soft);
+        padding: 7px 6px;
+        text-align: center;
+      }
+      .sc .av {
+        width: 30px;
+        height: 30px;
+        margin: 0 auto 5px;
+        background: var(--cream-deep);
+        border: 1px solid var(--paper-edge);
+      }
+      .sc .nm {
+        font-size: 10.5px;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+      .sc .fn {
+        font-family: var(--font-mono);
+        font-size: 8.5px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 3px;
+      }
+      .empty {
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: var(--ink-soft);
+        border: 1px dashed var(--ink-muted);
+        padding: 10px 12px;
+        margin: 0;
+        background: var(--cream-soft);
+      }
+      .empty a {
+        color: var(--jersey-deep);
+        font-weight: 600;
+      }
+      .empty em {
+        font-style: normal;
+        color: var(--ink-muted);
+        display: block;
+        font-size: 11px;
+        margin-top: 4px;
+      }
+      .cta {
+        background: var(--jersey-deep);
+        color: #fff;
+        padding: 16px 12px;
+        text-align: center;
+      }
+      .cta .k {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        opacity: 0.8;
+      }
+      .cta b {
+        font-family: var(--font-display);
+        font-size: 20px;
+        display: block;
+        margin-top: 5px;
+        line-height: 1.15;
+      }
+      .gone {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        text-align: center;
+        padding: 14px 10px;
+        border-top: 1px dashed var(--paper-edge);
+        border-bottom: 1px dashed var(--paper-edge);
+        background: var(--cream-soft);
+      }
+      .verdict {
+        padding: 11px 16px 15px;
+        font-size: 12.5px;
+        line-height: 1.5;
+        border-top: 1px dashed var(--paper-edge);
+        color: var(--ink-soft);
+        margin: 0;
+      }
+      .verdict b {
+        color: var(--brick);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="page">
+        <span class="kicker">Wayfinder #2536 · ticket #2540 · drill 2540-2</span>
+        <h1 class="page">Spreekt de pagina over de gaten van de club zélf?</h1>
+      </header>
+
+      <p class="lede">
+        Twee soorten leegte, en ze zijn niet hetzelfde. De bond die nog niets
+        publiceerde is <em>extern en blameloos</em>. Maar
+        <code>body</code>, <code>trainingSchedule</code> en
+        <code>contactInfo</code> staan leeg op <strong>alle 26</strong>
+        ploegdocumenten — dat is de club die het nooit invulde. Publiceert de
+        pagina dat, of zwijgt ze erover?
+      </p>
+
+      <div class="locked">
+        <b>★ Locked — 2026-08-13 · Q1–Q3</b>
+        <p>
+          Puur reactief op de feed · vóór publicatie één melding voor het hele
+          competitieblok · daarna <strong>twee aparte secties</strong>, elk met
+          eigen <code>&lt;h2&gt;</code>, eigen seam en eigen nav-item, elk met
+          een eigen lege toestand.
+        </p>
+      </div>
+
+      <p class="lede" style="margin-top: 24px">
+        Alle drie de panelen tonen dezelfde staart van
+        <code>/ploegen/kcvve-u8</code> — de pagina van Wendy's kind. Vandaag
+        eindigt die op <em>Staf</em> met twee kaarten die
+        <code>STAF</code> heten, en dan de wervingsband. Ze vertrok met niets.
+      </p>
+
+      <div class="cols">
+        <!-- ══ OPTIE A ══ -->
+        <section class="panel">
+          <h2>
+            <span class="tag">Optie A</span>
+            Elk gat spreekt
+          </h2>
+          <p class="why">
+            Eén regel voor alles: elke sectie meldt haar eigen leegte, of die nu
+            van de bond of van de club komt.
+          </p>
+          <div class="page-frag">
+            <nav class="nav">
+              <a href="#">Spelers</a><a href="#">Staf</a
+              ><a class="on" href="#">Info</a>
+            </nav>
+            <div class="sect">
+              <h3>Staf<span class="dot">.</span></h3>
+              <div class="staff">
+                <div class="sc">
+                  <div class="av"></div>
+                  <div class="nm">Jan P.</div>
+                  <div class="fn">Staf</div>
+                </div>
+                <div class="sc">
+                  <div class="av"></div>
+                  <div class="nm">Els V.</div>
+                  <div class="fn">Staf</div>
+                </div>
+                <div class="sc">
+                  <div class="av"></div>
+                  <div class="nm">Tom D.</div>
+                  <div class="fn">TVJO</div>
+                </div>
+              </div>
+            </div>
+            <div class="seam"></div>
+            <div class="sect">
+              <h3>Info<span class="dot">.</span></h3>
+              <p class="empty">
+                Trainingsuren en contactgegevens voor deze ploeg staan nog niet
+                online.
+              </p>
+            </div>
+            <div class="cta">
+              <span class="k">Word lid</span>
+              <b>Sluit je aan bij de jeugd van Elewijt</b>
+            </div>
+          </div>
+          <p class="verdict">
+            <b>Kost:</b> de club adverteert haar eigen gat op
+            <strong>18 pagina's tegelijk</strong>, en de melding helpt Wendy
+            geen stap vooruit. <b>Wint:</b> één regel, geen uitzonderingen.
+          </p>
+        </section>
+
+        <!-- ══ OPTIE B ══ -->
+        <section class="panel">
+          <h2>
+            <span class="tag">Optie B</span>
+            Alleen externe leegte spreekt
+          </h2>
+          <p class="why">
+            De bond mag genoemd worden, de eigen redactie niet. Een ongevuld
+            CMS-veld blijft onzichtbaar — de huidige situatie.
+          </p>
+          <div class="page-frag">
+            <nav class="nav">
+              <a href="#">Spelers</a><a class="on" href="#">Staf</a>
+            </nav>
+            <div class="sect">
+              <h3>Staf<span class="dot">.</span></h3>
+              <div class="staff">
+                <div class="sc">
+                  <div class="av"></div>
+                  <div class="nm">Jan P.</div>
+                  <div class="fn">Staf</div>
+                </div>
+                <div class="sc">
+                  <div class="av"></div>
+                  <div class="nm">Els V.</div>
+                  <div class="fn">Staf</div>
+                </div>
+                <div class="sc">
+                  <div class="av"></div>
+                  <div class="nm">Tom D.</div>
+                  <div class="fn">TVJO</div>
+                </div>
+              </div>
+            </div>
+            <div class="gone">— geen info-sectie —</div>
+            <div class="cta">
+              <span class="k">Word lid</span>
+              <b>Sluit je aan bij de jeugd van Elewijt</b>
+            </div>
+          </div>
+          <p class="verdict">
+            <b>Kost:</b> exact wat vandaag draait. Wendy krijgt geen
+            trainingsuur, geen naam, geen telefoonnummer — en als grootste blok
+            een lidmaatschap dat ze al heeft. <b>Wint:</b> geen enkel gat
+            zichtbaar; nul werk.
+          </p>
+        </section>
+
+        <!-- ══ OPTIE C ══ -->
+        <section class="panel">
+          <h2>
+            <span class="tag">Optie C</span>
+            Spreken waar het de bezoeker iets kost
+          </h2>
+          <p class="why">
+            Een gat spreekt alleen als het zwijgen de bezoeker iets ontneemt —
+            en dan verontschuldigt het zich niet, het <em>wijst een weg</em>.
+          </p>
+          <div class="page-frag">
+            <nav class="nav">
+              <a href="#">Spelers</a><a href="#">Staf</a
+              ><a class="on" href="#">Info</a>
+            </nav>
+            <div class="sect">
+              <h3>Staf<span class="dot">.</span></h3>
+              <div class="staff">
+                <div class="sc">
+                  <div class="av"></div>
+                  <div class="nm">Jan P.</div>
+                  <div class="fn">Staf</div>
+                </div>
+                <div class="sc">
+                  <div class="av"></div>
+                  <div class="nm">Els V.</div>
+                  <div class="fn">Staf</div>
+                </div>
+                <div class="sc">
+                  <div class="av"></div>
+                  <div class="nm">Tom D.</div>
+                  <div class="fn">TVJO</div>
+                </div>
+              </div>
+            </div>
+            <div class="seam"></div>
+            <div class="sect">
+              <h3>Trainingen &amp; contact<span class="dot">.</span></h3>
+              <p class="empty">
+                De trainingsuren van U8 staan nog niet op de site. Je vindt ze
+                in
+                <a href="https://kcvv.prosoccerdata.com/dashboard"
+                  >ProSoccerData</a
+                >.
+                <em
+                  >Verdwijnt vanzelf zodra de trainingsuren zijn ingevuld.</em
+                >
+              </p>
+            </div>
+            <div class="cta">
+              <span class="k">Word lid</span>
+              <b>Sluit je aan bij de jeugd van Elewijt</b>
+            </div>
+          </div>
+          <p class="verdict">
+            <b>★ Gekozen — 2026-08-13.</b> Route = <strong>ProSoccerData</strong>,
+            geen e-mail. Wendy heeft al een PSD-account: haar kind speelt er.
+            <code>SITE_CONFIG.psdDashboard</code> bestaat al in
+            <code>constants.ts:49</code> en wordt <em>nergens</em> gebruikt —
+            dit is de eerste plek die hem inzet. Uitzondering op de regel:
+            <code>#spelers</code> zwijgt wél als het leeg is, want een lege
+            spelerslijst ontneemt niemand iets.
+          </p>
+        </section>
+      </div>
+
+      <p
+        class="verdict"
+        style="max-width: 680px; border: none; padding-left: 0; margin-top: 32px"
+      >
+        <b>Alle drie laten één ding onaangeroerd:</b> de wervingsband blijft het
+        grootste blok op de pagina van een kind dat vorig seizoen al aansloot.
+        Dat is ticket
+        <a href="https://github.com/soniCaH/www.kcvvelewijt.be/issues/2543"
+          >#2543 — Decide what the end of a youth team page is for</a
+        >, niet deze. En <code>#spelers</code> staat leeg op
+        <code>kcvve-u10p</code>, <code>kcvve-u5</code> en
+        <code>kcvve-u7-wit</code> — nul spelers in Sanity.
+      </p>
+    </div>
+  </body>
+</html>

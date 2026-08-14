@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D1 — how far does the two-ink fiction reach?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey: #4acf52;
+        --jersey-deep: #007c46;
+        --jersey-deep-dark: #133d28;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --shadow-paper-md: 6px 6px 0 0 var(--ink);
+        --plate: 2px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      /* ---------- page chrome ---------- */
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top p {
+        max-width: 62ch;
+        margin: 0 0 8px;
+        color: var(--cream);
+      }
+      header.top em {
+        font-style: italic;
+        color: var(--jersey);
+      }
+
+      section.block {
+        padding: 44px 0 8px;
+      }
+      h2.sec {
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      .lede {
+        max-width: 74ch;
+        margin: 0 0 26px;
+        color: var(--ink-soft);
+      }
+
+      /* ---------- corrections ---------- */
+      .corr {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 18px;
+        margin-bottom: 10px;
+      }
+      .corr > div {
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        padding: 18px 20px 20px;
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .corr h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 8px;
+      }
+      .corr p {
+        margin: 0 0 8px;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+      }
+      .corr p:last-child {
+        margin-bottom: 0;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+
+      /* ---------- option grid ---------- */
+      .opts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+        gap: 26px;
+        align-items: start;
+      }
+      .opt {
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-md);
+      }
+      .opt > .hd {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .opt > .hd .name {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .opt > .hd .cost {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+      }
+      .opt > .ft {
+        border-top: 2px solid var(--ink);
+        padding: 14px 16px 16px;
+        font-size: 0.875rem;
+        line-height: 1.45;
+      }
+      .opt > .ft ul {
+        margin: 6px 0 0;
+        padding-left: 18px;
+      }
+      .opt > .ft li {
+        margin-bottom: 4px;
+      }
+
+      /* ---------- the fragment being compared ---------- */
+      .frag {
+        padding: 0;
+      }
+      .frag .band {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 18px 16px 16px;
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .crestbox {
+        position: relative;
+        isolation: isolate;
+        width: 56px;
+        height: 56px;
+        flex: none;
+      }
+      .crestbox img {
+        position: relative;
+        display: block;
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+        z-index: 1;
+      }
+      .crestbox .plate {
+        position: absolute;
+        inset: 0;
+        background: var(--jersey-deep);
+        -webkit-mask: url("../../../../apps/web/public/images/logos/kcvv-crest-retro-cream.png")
+          center / contain no-repeat;
+        mask: url("../../../../apps/web/public/images/logos/kcvv-crest-retro-cream.png")
+          center / contain no-repeat;
+        translate: var(--plate) var(--plate);
+        z-index: 0;
+        pointer-events: none;
+      }
+      .band .who {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+        line-height: 1.7;
+      }
+      .band .who b {
+        display: block;
+        color: var(--cream);
+        font-weight: 600;
+      }
+
+      .seamwrap {
+        position: relative;
+        isolation: isolate;
+        height: 18px;
+      }
+      .seamwrap svg {
+        display: block;
+        width: 100%;
+        height: 18px;
+        position: relative;
+        z-index: 1;
+      }
+      .seamwrap .seamplate {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        translate: var(--plate) var(--plate);
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+      .seamwrap .seamplate svg {
+        z-index: 0;
+      }
+
+      .body {
+        padding: 20px 16px 22px;
+        background: var(--cream);
+      }
+      .kick {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 8px;
+      }
+      .hl {
+        font-family: var(--font-big);
+        font-size: 2rem;
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      .hl em {
+        font-style: italic;
+        color: var(--jersey-deep);
+      }
+      /* text plate: a second ink, offset, multiplied */
+      .plated {
+        position: relative;
+        isolation: isolate;
+        display: inline-block;
+      }
+      .plated::before {
+        content: attr(data-plate);
+        position: absolute;
+        inset: 0;
+        translate: var(--plate) var(--plate);
+        color: var(--jersey-deep);
+        mix-blend-mode: multiply;
+        z-index: -1;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      .body p {
+        margin: 0 0 14px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .stamprow {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .stamp {
+        position: relative;
+        isolation: isolate;
+        display: inline-block;
+        border: 2px solid var(--card-red);
+        color: var(--card-red);
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-weight: 700;
+        padding: 5px 9px;
+        rotate: -2deg;
+      }
+      .stamp[data-plated="1"]::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border: 2px solid var(--jersey-deep);
+        translate: var(--plate) var(--plate);
+        mix-blend-mode: multiply;
+        z-index: -1;
+      }
+      .card {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        padding: 12px 14px;
+        position: relative;
+        isolation: isolate;
+        margin-top: 16px;
+      }
+      .card[data-plated="1"]::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border: 2px solid var(--jersey-deep);
+        translate: var(--plate) var(--plate);
+        mix-blend-mode: multiply;
+        z-index: -1;
+      }
+      .card .l {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-bottom: 3px;
+      }
+      .card .v {
+        font-family: var(--font-big);
+        font-size: 1.5rem;
+        line-height: 1;
+        font-weight: 700;
+      }
+
+      /* ---------- ladder ---------- */
+      .ladder {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-md);
+      }
+      .ladder > div {
+        padding: 26px 16px 20px;
+        text-align: center;
+        border-right: 1px solid var(--paper-edge);
+      }
+      .ladder > div:last-child {
+        border-right: 0;
+      }
+      .ladder .n {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-bottom: 16px;
+      }
+      .ladder .w {
+        font-family: var(--font-big);
+        font-size: 2.25rem;
+        line-height: 1;
+        font-weight: 700;
+        font-style: italic;
+      }
+      .ladder .note {
+        margin-top: 16px;
+        font-size: 0.8125rem;
+        color: var(--ink-soft);
+        line-height: 1.4;
+      }
+
+      /* ---------- real size ---------- */
+      .realsize {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-md);
+        padding: 0;
+        max-width: 390px;
+      }
+      .realsize .rs-hd {
+        background: var(--ink);
+        color: var(--warm);
+        padding: 8px 12px;
+      }
+      .realsize .rs-body {
+        padding: 14px 12px 16px;
+      }
+      .realsize .hl {
+        font-size: 1.5rem;
+      }
+      .realsize .crestbox,
+      .realsize .crestbox img {
+        width: 40px;
+        height: 40px;
+      }
+
+      .foot {
+        margin: 46px 0 60px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        max-width: 80ch;
+      }
+      .foot b {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D1 · §5A + T1 + §1 move 3</p>
+        <h1>How far does the <em>two-ink fiction</em> reach?</h1>
+        <p>
+          The proposal: commit to the story that this site is printed in exactly two inks — ink black
+          and jersey green, on cream stock — and then let the registration be imperfect on purpose.
+          Where green crosses black in <code>multiply</code>, you get a third darker value for free,
+          which is what actually happens on paper.
+        </p>
+        <p>
+          Everything below is rendered live in the real tokens and the real typefaces. The plate
+          offset is <b>2px</b> everywhere on this page; the offset itself is the next question, not
+          this one.
+        </p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">Read this first — three things the research doc assumed wrong</h2>
+        <p class="lede">
+          These change what is actually on the table, so they belong before the choice rather than
+          after it.
+        </p>
+        <div class="corr">
+          <div>
+            <h3>1 — There is no single crest</h3>
+            <p>
+              <code>kcvv-crest-retro.png</code> is a monochrome retro mark (footer, 80–96px). It
+              plates cleanly — the green layer is a mask of its alpha, which is what you see in
+              options C and D.
+            </p>
+            <p>
+              <code>kcvv-logo.png</code> is the <b>full-colour</b> club crest, and it is the one in
+              the header and the match strip. A colour mark cannot carry a second plate; masking it
+              gives a green halo, not registration. So "the crest gets a plate" is only ever true of
+              the retro crest.
+            </p>
+          </div>
+          <div>
+            <h3>2 — 1.5px is not available</h3>
+            <p>
+              §5A proposes 1.5px and then flags the problem itself: on a 1× display a half pixel
+              lands between device pixels and renders soft. Soft edges are the one thing this design
+              language forbids outright.
+            </p>
+            <p>
+              So the real ladder is <b>1 / 2 / 3px</b>, whole pixels only. No
+              <code>min-resolution</code> branch — that would ship two different designs to two
+              different people.
+            </p>
+          </div>
+          <div>
+            <h3>3 — #2598 constrains where this can be tested</h3>
+            <p>
+              The homepage overflow's widest offender is a chain ending in
+              <code>SPAN.font-display.text-cream.text-2xl</code> — a display span in an ink band,
+              constant at 402px across every viewport.
+            </p>
+            <p>
+              A text plate is <code>position: absolute</code> and adds no layout width, so it is
+              overflow-neutral by construction. But it must not be prototyped on the homepage
+              headline until #2598's root cause is isolated, or the two will be confused.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">The four options</h2>
+        <p class="lede">
+          Identical content in all four. The only variable is how many surfaces carry a second plate.
+        </p>
+
+        <div class="opts">
+          <!-- ===================== A ===================== -->
+          <div class="opt">
+            <div class="hd">
+              <span class="name">A — none (today)</span>
+              <span class="cost">0 days</span>
+            </div>
+            <div class="frag">
+              <div class="band">
+                <div class="crestbox">
+                  <img
+                    src="../../../../apps/web/public/images/logos/kcvv-crest-retro-cream.png"
+                    alt=""
+                  />
+                </div>
+                <div class="who">
+                  <b>KCVV Elewijt</b>
+                  Zaterdag 12 april · De Dries
+                </div>
+              </div>
+              <div class="seamwrap">
+                <svg role="presentation" aria-hidden="true" width="100%" height="18">
+                  <defs>
+                    <pattern
+                      id="sA"
+                      patternUnits="userSpaceOnUse"
+                      width="16"
+                      height="16"
+                      patternTransform="rotate(-45)"
+                    >
+                      <rect x="0" y="0" width="8" height="16" fill="#0a0a0a" />
+                      <rect x="8" y="0" width="8" height="16" fill="#f5f1e6" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#sA)" />
+                </svg>
+              </div>
+              <div class="body">
+                <p class="kick">A-ploeg · Verslag</p>
+                <h3 class="hl">KCVV pakt de <em>drie punten</em> op de Dries</h3>
+                <p>
+                  Een tweede helft die niemand had zien aankomen. De bezoekers kwamen nog terug tot
+                  op één, maar de laatste tien minuten waren van ons.
+                </p>
+                <div class="stamprow"><span class="stamp">Uitslag</span></div>
+                <div class="card">
+                  <div class="l">Eindstand</div>
+                  <div class="v">3 — 2</div>
+                </div>
+              </div>
+            </div>
+            <div class="ft">
+              <b>Touches nothing.</b>
+              <ul>
+                <li>The texture gap in §2 stays open — zero misregistration, zero overprint.</li>
+                <li>T4 (ink bleed on the seam) and §5B move 4 both fall with it.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ===================== B ===================== -->
+          <div class="opt">
+            <div class="hd">
+              <span class="name">B — seam + heading accent</span>
+              <span class="cost">S · 2 files</span>
+            </div>
+            <div class="frag">
+              <div class="band">
+                <div class="crestbox">
+                  <img
+                    src="../../../../apps/web/public/images/logos/kcvv-crest-retro-cream.png"
+                    alt=""
+                  />
+                </div>
+                <div class="who">
+                  <b>KCVV Elewijt</b>
+                  Zaterdag 12 april · De Dries
+                </div>
+              </div>
+              <div class="seamwrap">
+                <div class="seamplate">
+                  <svg role="presentation" aria-hidden="true" width="100%" height="18">
+                    <defs>
+                      <pattern
+                        id="sBp"
+                        patternUnits="userSpaceOnUse"
+                        width="16"
+                        height="16"
+                        patternTransform="rotate(-45)"
+                      >
+                        <rect x="0" y="0" width="8" height="16" fill="#007c46" />
+                        <rect x="8" y="0" width="8" height="16" fill="#f5f1e6" />
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#sBp)" />
+                  </svg>
+                </div>
+                <svg role="presentation" aria-hidden="true" width="100%" height="18">
+                  <defs>
+                    <pattern
+                      id="sB"
+                      patternUnits="userSpaceOnUse"
+                      width="16"
+                      height="16"
+                      patternTransform="rotate(-45)"
+                    >
+                      <rect x="0" y="0" width="8" height="16" fill="#0a0a0a" />
+                      <rect x="8" y="0" width="8" height="16" fill="transparent" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#sB)" />
+                </svg>
+              </div>
+              <div class="body">
+                <p class="kick">A-ploeg · Verslag</p>
+                <h3 class="hl">
+                  KCVV pakt de
+                  <em class="plated" data-plate="drie punten">drie punten</em> op de Dries
+                </h3>
+                <p>
+                  Een tweede helft die niemand had zien aankomen. De bezoekers kwamen nog terug tot
+                  op één, maar de laatste tien minuten waren van ons.
+                </p>
+                <div class="stamprow"><span class="stamp">Uitslag</span></div>
+                <div class="card">
+                  <div class="l">Eindstand</div>
+                  <div class="v">3 — 2</div>
+                </div>
+              </div>
+            </div>
+            <div class="ft">
+              <b>Two surfaces, both already green-bearing.</b>
+              <ul>
+                <li>
+                  <code>StripedSeam</code> + the <code>EditorialHeading</code> accent
+                  <code>&lt;em&gt;</code>. No new green appears anywhere it wasn't already.
+                </li>
+                <li>
+                  One CSS utility. Nothing on a list, so the compositing cost stays bounded by
+                  construction.
+                </li>
+                <li>Costs the crest, which is the piece people actually look at.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ===================== C ===================== -->
+          <div class="opt">
+            <div class="hd">
+              <span class="name">C — §5A as written</span>
+              <span class="cost">M · 4 sites</span>
+            </div>
+            <div class="frag">
+              <div class="band">
+                <div class="crestbox">
+                  <span class="plate"></span>
+                  <img
+                    src="../../../../apps/web/public/images/logos/kcvv-crest-retro-cream.png"
+                    alt=""
+                  />
+                </div>
+                <div class="who">
+                  <b>KCVV Elewijt</b>
+                  Zaterdag 12 april · De Dries
+                </div>
+              </div>
+              <div class="seamwrap">
+                <div class="seamplate">
+                  <svg role="presentation" aria-hidden="true" width="100%" height="18">
+                    <defs>
+                      <pattern
+                        id="sCp"
+                        patternUnits="userSpaceOnUse"
+                        width="16"
+                        height="16"
+                        patternTransform="rotate(-45)"
+                      >
+                        <rect x="0" y="0" width="8" height="16" fill="#007c46" />
+                        <rect x="8" y="0" width="8" height="16" fill="#f5f1e6" />
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#sCp)" />
+                  </svg>
+                </div>
+                <svg role="presentation" aria-hidden="true" width="100%" height="18">
+                  <defs>
+                    <pattern
+                      id="sC"
+                      patternUnits="userSpaceOnUse"
+                      width="16"
+                      height="16"
+                      patternTransform="rotate(-45)"
+                    >
+                      <rect x="0" y="0" width="8" height="16" fill="#0a0a0a" />
+                      <rect x="8" y="0" width="8" height="16" fill="transparent" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#sC)" />
+                </svg>
+              </div>
+              <div class="body">
+                <p class="kick">A-ploeg · Verslag</p>
+                <h3 class="hl">
+                  KCVV pakt de
+                  <em class="plated" data-plate="drie punten">drie punten</em> op de Dries
+                </h3>
+                <p>
+                  Een tweede helft die niemand had zien aankomen. De bezoekers kwamen nog terug tot
+                  op één, maar de laatste tien minuten waren van ons.
+                </p>
+                <div class="stamprow"><span class="stamp" data-plated="1">Uitslag</span></div>
+                <div class="card">
+                  <div class="l">Eindstand</div>
+                  <div class="v">3 — 2</div>
+                </div>
+              </div>
+            </div>
+            <div class="ft">
+              <b>Crest · seam · heading accent · stamp.</b>
+              <ul>
+                <li>
+                  The crest plate is the loudest single signal, and it is the one that reads as
+                  "riso" rather than as "a shadow".
+                </li>
+                <li>
+                  Only the <b>retro</b> crest can do this — the header's colour logo is excluded, so
+                  the mark is plated in the footer and heroes and clean in the nav.
+                </li>
+                <li>That split is either a nice register shift or an inconsistency. That is the call.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ===================== D ===================== -->
+          <div class="opt">
+            <div class="hd">
+              <span class="name">D — everything with an edge</span>
+              <span class="cost">M+ · site-wide</span>
+            </div>
+            <div class="frag">
+              <div class="band">
+                <div class="crestbox">
+                  <span class="plate"></span>
+                  <img
+                    src="../../../../apps/web/public/images/logos/kcvv-crest-retro-cream.png"
+                    alt=""
+                  />
+                </div>
+                <div class="who">
+                  <b>KCVV Elewijt</b>
+                  Zaterdag 12 april · De Dries
+                </div>
+              </div>
+              <div class="seamwrap">
+                <div class="seamplate">
+                  <svg role="presentation" aria-hidden="true" width="100%" height="18">
+                    <defs>
+                      <pattern
+                        id="sDp"
+                        patternUnits="userSpaceOnUse"
+                        width="16"
+                        height="16"
+                        patternTransform="rotate(-45)"
+                      >
+                        <rect x="0" y="0" width="8" height="16" fill="#007c46" />
+                        <rect x="8" y="0" width="8" height="16" fill="#f5f1e6" />
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#sDp)" />
+                  </svg>
+                </div>
+                <svg role="presentation" aria-hidden="true" width="100%" height="18">
+                  <defs>
+                    <pattern
+                      id="sD"
+                      patternUnits="userSpaceOnUse"
+                      width="16"
+                      height="16"
+                      patternTransform="rotate(-45)"
+                    >
+                      <rect x="0" y="0" width="8" height="16" fill="#0a0a0a" />
+                      <rect x="8" y="0" width="8" height="16" fill="transparent" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#sD)" />
+                </svg>
+              </div>
+              <div class="body">
+                <p class="kick">A-ploeg · Verslag</p>
+                <h3 class="hl">
+                  <span class="plated" data-plate="KCVV pakt de">KCVV pakt de</span>
+                  <em class="plated" data-plate="drie punten">drie punten</em>
+                  <span class="plated" data-plate="op de Dries">op de Dries</span>
+                </h3>
+                <p>
+                  Een tweede helft die niemand had zien aankomen. De bezoekers kwamen nog terug tot
+                  op één, maar de laatste tien minuten waren van ons.
+                </p>
+                <div class="stamprow"><span class="stamp" data-plated="1">Uitslag</span></div>
+                <div class="card" data-plated="1">
+                  <div class="l">Eindstand</div>
+                  <div class="v">3 — 2</div>
+                </div>
+              </div>
+            </div>
+            <div class="ft">
+              <b>Add the full headline and every card border.</b>
+              <ul>
+                <li>
+                  This is where the fiction stops being an accent and becomes the design. It is also
+                  where it starts reading as a rendering fault rather than a print artefact.
+                </li>
+                <li>
+                  Every card border is a <code>mix-blend-mode</code> layer — on a fixture list or a
+                  team grid that is dozens of promoted compositing layers on a phone.
+                </li>
+                <li>Shown so the ceiling is visible, not because it is recommended.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">The offset ladder — reference only</h2>
+        <p class="lede">
+          This is the <b>next</b> question, not this one. It is here so the scope answer can be given
+          with the size in view, since the two interact: a wider scope wants a smaller offset.
+        </p>
+        <div class="ladder">
+          <div>
+            <div class="n">0px — today</div>
+            <div class="w"><span>Elewijt</span></div>
+            <div class="note">No second ink.</div>
+          </div>
+          <div>
+            <div class="n">1px</div>
+            <div class="w">
+              <span class="plated" data-plate="Elewijt" style="--plate: 1px">Elewijt</span>
+            </div>
+            <div class="note">Reads as anti-aliasing, or as a display fault. Deniable.</div>
+          </div>
+          <div>
+            <div class="n">2px</div>
+            <div class="w">
+              <span class="plated" data-plate="Elewijt" style="--plate: 2px">Elewijt</span>
+            </div>
+            <div class="note">Legible as intent. The doc's own recommendation, rounded to a whole pixel.</div>
+          </div>
+          <div>
+            <div class="n">3px</div>
+            <div class="w">
+              <span class="plated" data-plate="Elewijt" style="--plate: 3px">Elewijt</span>
+            </div>
+            <div class="note">Confident, and starts to read as a green drop shadow rather than a plate.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">Option C at real phone size</h2>
+        <p class="lede">
+          The primary scene is a phone outdoors. At 390px the crest is 40px and the headline is 24px
+          — an effect that only works at desktop scale does not work.
+        </p>
+        <div class="realsize">
+          <div class="rs-hd mono">390 × phone</div>
+          <div class="band">
+            <div class="crestbox">
+              <span class="plate"></span>
+              <img src="../../../../apps/web/public/images/logos/kcvv-crest-retro-cream.png" alt="" />
+            </div>
+            <div class="who">
+              <b>KCVV Elewijt</b>
+              Zaterdag 12 april · De Dries
+            </div>
+          </div>
+          <div class="seamwrap">
+            <div class="seamplate">
+              <svg role="presentation" aria-hidden="true" width="100%" height="18">
+                <defs>
+                  <pattern
+                    id="sRp"
+                    patternUnits="userSpaceOnUse"
+                    width="16"
+                    height="16"
+                    patternTransform="rotate(-45)"
+                  >
+                    <rect x="0" y="0" width="8" height="16" fill="#007c46" />
+                    <rect x="8" y="0" width="8" height="16" fill="#f5f1e6" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#sRp)" />
+              </svg>
+            </div>
+            <svg role="presentation" aria-hidden="true" width="100%" height="18">
+              <defs>
+                <pattern
+                  id="sR"
+                  patternUnits="userSpaceOnUse"
+                  width="16"
+                  height="16"
+                  patternTransform="rotate(-45)"
+                >
+                  <rect x="0" y="0" width="8" height="16" fill="#0a0a0a" />
+                  <rect x="8" y="0" width="8" height="16" fill="transparent" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#sR)" />
+            </svg>
+          </div>
+          <div class="rs-body">
+            <p class="kick">A-ploeg · Verslag</p>
+            <h3 class="hl">
+              KCVV pakt de <em class="plated" data-plate="drie punten">drie punten</em> op de Dries
+            </h3>
+            <div class="stamprow"><span class="stamp" data-plated="1">Uitslag</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>What this decision unlocks or kills downstream.</b> T4 (ink bleed on the seam edge) only
+        makes sense once the seam carries two plates — it is a refinement of B, not an independent
+        idea. §5B's match-day register lists "the crest gets its misregistration plate, today only"
+        as one of five switches; if the answer here is A, that switch is gone and §5B loses a fifth
+        of its content. T5 (photocopy degradation on a decorative crest) is a different technique on
+        the same asset and would compete with the plate rather than combine with it.
+      </p>
+    </div>
+  </body>
+</html>

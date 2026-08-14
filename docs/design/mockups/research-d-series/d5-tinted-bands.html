@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D5 — a fifth band ground?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --jersey-deep-dark: #133d28;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --alert: #b84a3a;
+        --alert-soft: #e8d5cf;
+        --warning: #c68b2c;
+        --warning-soft: #ecddb8;
+        --success-soft: #d8e7d0;
+        /* candidate non-semantic copy-paper tints (new tokens) */
+        --copy-manila: #f0e4c4;
+        --copy-salmon: #f6dccd;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top h1 em {
+        font-style: italic;
+        color: var(--warm);
+      }
+      header.top p {
+        max-width: 68ch;
+        margin: 0 0 8px;
+      }
+      section.block {
+        padding: 44px 0 8px;
+      }
+      h2.sec {
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      .lede {
+        max-width: 78ch;
+        margin: 0 0 24px;
+        color: var(--ink-soft);
+      }
+      .note {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        padding: 20px 22px 22px;
+        max-width: 94ch;
+        margin-bottom: 30px;
+      }
+      .note h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 10px;
+      }
+      .note p {
+        margin: 0 0 10px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .note p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* ---------- the collision demo ---------- */
+      .collide {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        overflow: hidden;
+        margin-bottom: 26px;
+        max-width: 760px;
+      }
+      .alertstub {
+        background: var(--success-soft);
+        border-bottom: 2px solid var(--ink);
+        padding: 14px 18px;
+        display: flex;
+        gap: 12px;
+        align-items: baseline;
+      }
+      .alertstub .t {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-weight: 700;
+        flex: none;
+      }
+      .alertstub .d {
+        font-size: 0.875rem;
+        line-height: 1.4;
+      }
+      .collide .sect {
+        background: var(--success-soft);
+        padding: 22px 18px 24px;
+      }
+      .collide .sect .k {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 6px;
+      }
+      .collide .sect h3 {
+        font-family: var(--font-big);
+        font-size: 1.5rem;
+        line-height: 1.1;
+        margin: 0 0 6px;
+        font-weight: 700;
+      }
+      .collide .sect p {
+        margin: 0;
+        font-size: 0.875rem;
+      }
+      .collide .cap {
+        background: var(--ink);
+        color: var(--warm);
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 9px 18px;
+      }
+
+      /* ---------- page stacks ---------- */
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 26px;
+        align-items: start;
+      }
+      .v {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        overflow: hidden;
+      }
+      .v > .hd {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 11px 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .v > .hd .n {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .v > .hd .c {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+      }
+      .v > .ft {
+        border-top: 2px solid var(--ink);
+        padding: 13px 16px 15px;
+        font-size: 0.875rem;
+        line-height: 1.45;
+      }
+      .s {
+        padding: 18px 16px 20px;
+      }
+      .s .k {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 0 0 6px;
+        color: var(--jersey-deep);
+      }
+      .s h4 {
+        font-family: var(--font-big);
+        font-size: 1.25rem;
+        line-height: 1.1;
+        margin: 0 0 6px;
+        font-weight: 700;
+      }
+      .s p {
+        margin: 0;
+        font-size: 0.8125rem;
+        line-height: 1.45;
+      }
+      .s.ink {
+        background: var(--ink);
+        color: var(--cream);
+      }
+      .s.ink .k {
+        color: var(--warm);
+      }
+      .s.creamsoft {
+        background: var(--cream-soft);
+      }
+      .s.jersey {
+        background: var(--jersey-deep);
+        color: var(--cream);
+      }
+      .s.jersey .k {
+        color: var(--warm);
+      }
+      .s.warnsoft {
+        background: var(--warning-soft);
+      }
+      .s.manila {
+        background: var(--copy-manila);
+      }
+      .seam {
+        height: 14px;
+        background: repeating-linear-gradient(-45deg, var(--ink) 0 8px, var(--cream) 8px 16px);
+      }
+
+      .foot {
+        margin: 44px 0 60px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        max-width: 88ch;
+      }
+      .foot b {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D5 · T6</p>
+        <h1>A fifth band ground — <em>coloured copy paper</em>?</h1>
+        <p>
+          Today a section stands on one of four grounds: cream, cream-soft, ink, jersey-deep. §4.1
+          proposes a fifth — a saturated-pastel stock with plain ink type on it, so a page gets
+          chapters without spending green.
+        </p>
+        <p>
+          It names our three aged status tints as the candidates. That is where the problem starts.
+        </p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="note">
+          <h3>Those three tints are already spoken for</h3>
+          <p>
+            <code>--color-alert-soft</code>, <code>--color-warning-soft</code> and
+            <code>--color-success-soft</code> are <b>semantic</b>. The comment above them in
+            <code>globals.css</code> says so outright: they exist to give
+            <i>"the three Alert variants visually-balanced soft bodies"</i>, introduced for the Phase
+            2.A.5 Alert ticket-stub.
+          </p>
+          <p>
+            So a section band in <code>success-soft</code> is the same colour as "this went well",
+            and one in <code>alert-soft</code> is the same colour as "something is wrong". Below:
+            an actual Alert sitting directly above a section band on the same tint.
+          </p>
+        </div>
+        <div class="collide">
+          <div class="cap">The collision, at full size</div>
+          <div class="alertstub">
+            <span class="t">Gelukt</span>
+            <span class="d">Je inschrijving is verstuurd. Je krijgt binnen twee dagen antwoord.</span>
+          </div>
+          <div class="sect">
+            <p class="k">Jeugd</p>
+            <h3>Negentien ploegen, van U6 tot U21</h3>
+            <p>Elke zaterdag staan er meer dan tweehonderd kinderen op de Dries.</p>
+          </div>
+          <div class="cap">Above: an Alert. Below: a section. Same token.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">Three ways a page could stack</h2>
+        <p class="lede">
+          The same four sections, in sequence, on each option's grounds. §4.1's own rule is one
+          tinted band per page maximum.
+        </p>
+        <div class="cols">
+          <div class="v">
+            <div class="hd"><span class="n">A — four grounds</span><span class="c">shipped today</span></div>
+            <div class="s">
+              <p class="k">Nieuws</p>
+              <h4>KCVV pakt de drie punten</h4>
+              <p>Een tweede helft die niemand had zien aankomen.</p>
+            </div>
+            <div class="s creamsoft">
+              <p class="k">Kalender</p>
+              <h4>Wat er dit weekend gespeeld wordt</h4>
+              <p>Negentien ploegen, verspreid over twee terreinen.</p>
+            </div>
+            <div class="seam"></div>
+            <div class="s ink">
+              <p class="k">Jeugd</p>
+              <h4>Van U6 tot U21</h4>
+              <p>Meer dan tweehonderd kinderen, elke zaterdag.</p>
+            </div>
+            <div class="s jersey">
+              <p class="k">Sponsors</p>
+              <h4>Wie de club draaiende houdt</h4>
+              <p>Drieëndertig bedrijven uit Elewijt en omstreken.</p>
+            </div>
+            <div class="ft">
+              <b>Cream · cream-soft · ink · jersey-deep.</b> The step-down surface is cream-soft; the
+              two dark bands carry the weight. Nothing on the page is ambiguous about what it means.
+            </div>
+          </div>
+
+          <div class="v">
+            <div class="hd">
+              <span class="n">B — status tint as ground</span><span class="c">0 new tokens</span>
+            </div>
+            <div class="s">
+              <p class="k">Nieuws</p>
+              <h4>KCVV pakt de drie punten</h4>
+              <p>Een tweede helft die niemand had zien aankomen.</p>
+            </div>
+            <div class="s warnsoft">
+              <p class="k">Kalender</p>
+              <h4>Wat er dit weekend gespeeld wordt</h4>
+              <p>Negentien ploegen, verspreid over twee terreinen.</p>
+            </div>
+            <div class="seam"></div>
+            <div class="s ink">
+              <p class="k">Jeugd</p>
+              <h4>Van U6 tot U21</h4>
+              <p>Meer dan tweehonderd kinderen, elke zaterdag.</p>
+            </div>
+            <div class="s jersey">
+              <p class="k">Sponsors</p>
+              <h4>Wie de club draaiende houdt</h4>
+              <p>Drieëndertig bedrijven uit Elewijt en omstreken.</p>
+            </div>
+            <div class="ft">
+              <b>Free, and ambiguous.</b> <code>warning-soft</code> is the mustard an Alert uses to
+              say "let op". Reused as a ground it says nothing — which is exactly the problem: the
+              same colour now means two things depending on what it is under.
+            </div>
+          </div>
+
+          <div class="v">
+            <div class="hd">
+              <span class="n">C — a real copy-paper tint</span><span class="c">1 new token</span>
+            </div>
+            <div class="s">
+              <p class="k">Nieuws</p>
+              <h4>KCVV pakt de drie punten</h4>
+              <p>Een tweede helft die niemand had zien aankomen.</p>
+            </div>
+            <div class="s manila">
+              <p class="k">Kalender</p>
+              <h4>Wat er dit weekend gespeeld wordt</h4>
+              <p>Negentien ploegen, verspreid over twee terreinen.</p>
+            </div>
+            <div class="seam"></div>
+            <div class="s ink">
+              <p class="k">Jeugd</p>
+              <h4>Van U6 tot U21</h4>
+              <p>Meer dan tweehonderd kinderen, elke zaterdag.</p>
+            </div>
+            <div class="s jersey">
+              <p class="k">Sponsors</p>
+              <h4>Wie de club draaiende houdt</h4>
+              <p>Drieëndertig bedrijven uit Elewijt en omstreken.</p>
+            </div>
+            <div class="ft">
+              <b>A manila stock that means nothing but "different sheet".</b>
+              <code>#f0e4c4</code> — warmer and more saturated than cream-deep, no semantic history,
+              no Alert to collide with. Costs one token and a <code>SectionBg</code> option.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>The prior question is whether cream-soft already does this job.</b> It is the documented
+        step-down ground, and in option A it is doing exactly what T6 asks for — separating the
+        calendar from the news — just quietly. T6 is really a claim that the step-down is
+        <i>too</i> quiet to chapter a long page. That is a legitimate claim on the homepage and a
+        weak one on a detail page, so if a tint ships, its rule is probably "index pages only, once",
+        not "any page, once".
+      </p>
+    </div>
+  </body>
+</html>

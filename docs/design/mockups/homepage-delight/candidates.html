@@ -1,0 +1,1174 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Homepage delight — waar mag de club karakter tonen?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --paper-edge: #d9d2bd;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey: #4acf52;
+        --jersey-deep: #007c46;
+        --jersey-deep-dark: #133d28;
+        --warm: #f0c264;
+        --alert: #b84a3a;
+        --alert-soft: #e8d5cf;
+        --card-red: #c93f1c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 var(--ink);
+        --shadow-paper-md: 6px 6px 0 var(--ink);
+        --shadow-paper-sm-soft: 4px 4px 0 var(--ink-muted);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        line-height: 1.5;
+      }
+      .wrap {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 40px 16px 120px;
+      }
+      @media (min-width: 768px) {
+        .wrap {
+          padding: 48px 32px 120px;
+        }
+      }
+
+      h1 {
+        font-family: var(--font-big);
+        font-size: clamp(32px, 5vw, 50px);
+        line-height: 1.02;
+        margin: 0 0 12px;
+        font-weight: 900;
+        letter-spacing: -0.025em;
+      }
+      h1 em {
+        font-family: var(--font-display);
+        font-style: italic;
+        color: var(--jersey-deep);
+        font-weight: 700;
+      }
+      h2 {
+        font-family: var(--font-big);
+        font-size: clamp(24px, 3.4vw, 34px);
+        line-height: 1.05;
+        margin: 0 0 6px;
+        font-weight: 900;
+        letter-spacing: -0.025em;
+      }
+      h3 {
+        font-family: var(--font-display);
+        font-size: 19px;
+        line-height: 1.2;
+        margin: 0 0 4px;
+        font-weight: 700;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        font-weight: 700;
+        margin: 0 0 8px;
+      }
+      .lede {
+        font-size: 17px;
+        max-width: 680px;
+        margin: 0 0 10px;
+      }
+      p {
+        max-width: 680px;
+      }
+      .muted {
+        color: var(--ink-muted);
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.86em;
+        background: var(--cream-soft);
+        border: 1px solid var(--paper-edge);
+        padding: 1px 4px;
+      }
+
+      /* ---- moment shell ---------------------------------------------- */
+      .moment {
+        margin: 72px 0 0;
+        border-top: 2px solid var(--ink);
+        padding-top: 28px;
+      }
+      .q {
+        font-family: var(--font-display);
+        font-size: 20px;
+        font-style: italic;
+        max-width: 680px;
+        margin: 12px 0 18px;
+        padding-left: 14px;
+        border-left: 2px solid var(--jersey-deep);
+      }
+      .evidence {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 1.6;
+        background: var(--cream-soft);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 12px 14px;
+        max-width: 680px;
+        margin: 0 0 28px;
+      }
+      .evidence b {
+        color: var(--jersey-deep);
+      }
+
+      /* ---- candidate grid -------------------------------------------- */
+      .cands {
+        display: grid;
+        gap: 22px;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 860px) {
+        .cands.three {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      .cand {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .cand > .tag {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .cand.base > .tag {
+        color: var(--card-red);
+      }
+      .cost {
+        font-size: 13.5px;
+        color: var(--ink-muted);
+        margin: 0;
+      }
+      .cost b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      /* the framed viewport every candidate renders inside */
+      .stage {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-md);
+        overflow: hidden;
+      }
+
+      /* ---- shared page furniture ------------------------------------- */
+      .seam {
+        height: 14px;
+        background-image: repeating-linear-gradient(
+          45deg,
+          var(--jersey-deep) 0 8px,
+          var(--cream) 8px 16px
+        );
+      }
+      .seam.flip {
+        background-image: repeating-linear-gradient(
+          -45deg,
+          var(--jersey-deep) 0 8px,
+          var(--cream) 8px 16px
+        );
+      }
+      .bar {
+        background: var(--paper-edge);
+      }
+      .bar.on-dark {
+        background: rgba(245, 241, 230, 0.2);
+      }
+      .band-dark {
+        background: var(--jersey-deep-dark);
+        padding: 16px 14px;
+      }
+      .pad {
+        padding: 16px 14px;
+      }
+
+      /* ---- moment 1: live loading variants --------------------------- */
+      .switch {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin: 0 0 18px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .switch button {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        color: var(--ink);
+        padding: 6px 11px;
+        cursor: pointer;
+        box-shadow: var(--shadow-paper-sm);
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s;
+      }
+      .switch button:hover {
+        transform: translate(1px, 1px);
+        box-shadow: none;
+      }
+      .switch button[aria-pressed="true"] {
+        background: var(--ink);
+        color: var(--cream);
+        box-shadow: var(--shadow-paper-sm-soft);
+      }
+      .switch .hint {
+        color: var(--ink-muted);
+        letter-spacing: 0.04em;
+        text-transform: none;
+        font-size: 12px;
+      }
+
+      .spine .bar {
+        border-radius: 0;
+      }
+      /* A — Tailwind's animate-pulse, reproduced exactly */
+      @keyframes tw-pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .spine[data-v="a"] .pulses {
+        animation: tw-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      /* B — the club scarf carries the wait; bars hold still */
+      .scarfwrap {
+        display: none;
+        padding: 18px 14px 4px;
+      }
+      .spine[data-v="b"] .scarfwrap {
+        display: block;
+      }
+      .scarf {
+        position: relative;
+        display: inline-block;
+        overflow: hidden;
+        width: 180px;
+        height: 28px;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .scarf::before {
+        content: "";
+        position: absolute;
+        inset: -200px;
+        transform: rotate(-45deg);
+        animation: scarf-scroll 1.5s linear infinite;
+        background: repeating-linear-gradient(
+          90deg,
+          var(--jersey) 0px,
+          var(--jersey) 20px,
+          var(--cream) 20px,
+          var(--cream) 40px,
+          var(--ink) 40px,
+          var(--ink) 60px,
+          var(--cream) 60px,
+          var(--cream) 80px
+        );
+      }
+      @keyframes scarf-scroll {
+        0% {
+          background-position: 0 0;
+        }
+        100% {
+          background-position: 80px 0;
+        }
+      }
+
+      /* C — the section rules themselves run; bars hold still */
+      @keyframes seam-run {
+        0% {
+          background-position: 0 0;
+        }
+        100% {
+          background-position: 45.25px 0;
+        }
+      }
+      .spine[data-v="c"] .seam {
+        animation: seam-run 1.4s linear infinite;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .spine[data-v="a"] .pulses,
+        .scarf::before,
+        .spine[data-v="c"] .seam {
+          animation: none !important;
+        }
+      }
+
+      /* ---- moment 2: empty-band candidates --------------------------- */
+      .held {
+        border: 2px dashed rgba(245, 241, 230, 0.4);
+        color: rgba(245, 241, 230, 0.8);
+        text-align: center;
+        padding: 20px 12px;
+        font-size: 14px;
+      }
+      .bandhead {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .bandkick {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--warm);
+        display: block;
+        margin-bottom: 5px;
+      }
+      .bandtitle {
+        font-family: var(--font-big);
+        font-weight: 900;
+        font-size: 26px;
+        line-height: 1;
+        color: var(--cream);
+        letter-spacing: -0.025em;
+        margin: 0;
+      }
+      .bandlink {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+        white-space: nowrap;
+        text-decoration: none;
+      }
+      .slotrow {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 1fr 1fr;
+      }
+      .slot {
+        border: 2px solid var(--cream);
+        background: var(--cream);
+        color: var(--ink);
+        padding: 10px 11px;
+      }
+      .slot .op {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 15px;
+        line-height: 1.15;
+      }
+      .slot .meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 3px;
+      }
+      .slot .score {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 17px;
+      }
+
+      /* ---- moment 3: sponsor tiles ----------------------------------- */
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+      }
+      .tile {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+        aspect-ratio: 3/2;
+        display: grid;
+        place-items: center;
+        padding: 8px;
+      }
+      /* stand-in "logos": flat two-colour marks, not real sponsor art */
+      .logo {
+        width: 100%;
+        height: 100%;
+        filter: grayscale(1);
+        transition: filter 0.3s ease-out;
+      }
+      .tile:hover .logo {
+        filter: grayscale(0);
+      }
+      /* candidate B — colour on coarse pointers (simulated by a class) */
+      .coarse .m3-b .logo {
+        filter: grayscale(0);
+      }
+      /* candidate C — main tier keeps colour always, the rest greyscale */
+      .m3-c .tile:first-child .logo {
+        filter: grayscale(0);
+      }
+      .coarsectl {
+        margin: 0 0 20px;
+      }
+
+      /* ---- moment 4: the win ----------------------------------------- */
+      .resultrow {
+        position: relative;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 11px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 10px 12px 14px;
+      }
+      /* the real OUTCOME_UNDERLINE, values copied from match-display.ts */
+      .resultrow.win {
+        box-shadow:
+          var(--shadow-paper-sm),
+          inset 0 -9px 0
+            color-mix(in srgb, var(--jersey-deep) 34%, var(--cream));
+      }
+      .resultrow.draw {
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .stamp {
+        position: absolute;
+        top: -13px;
+        right: 22px;
+        transform: rotate(-2.2deg);
+        background: var(--jersey-deep);
+        color: var(--cream);
+        border: 1.5px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 4px 10px;
+      }
+      .seam.won {
+        background-image: repeating-linear-gradient(
+          45deg,
+          var(--jersey) 0 8px,
+          var(--cream) 8px 16px
+        );
+      }
+
+      /* ---- verdict --------------------------------------------------- */
+      .verdict {
+        margin-top: 76px;
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        box-shadow: var(--shadow-paper-md);
+        padding: 22px 22px 8px;
+      }
+      .verdict h2 {
+        margin-top: 0;
+      }
+      .verdict ol {
+        max-width: 680px;
+        padding-left: 20px;
+      }
+      .verdict li {
+        margin-bottom: 12px;
+      }
+      .rule {
+        border: 0;
+        border-top: 2px solid var(--ink);
+        margin: 18px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="kicker">Prototype · weggooicode · homepage</p>
+      <h1>Waar mag deze club <em>karakter</em> tonen?</h1>
+      <p class="lede">
+        Vier momenten op de homepage waar delight iets kan toevoegen, elk met
+        drie kandidaten. Kandidaat <b>A is altijd wat er vandaag draait</b> —
+        geen voorstel, de nulmeting. Dit blad beslist niets; het is het
+        instrument waarmee de wayfinder-map beslist.
+      </p>
+      <p class="q" style="border-left-color: var(--card-red)">
+        De spanning die alles hier stuurt: productprincipe 6 zegt dat de
+        homepage géén primaire sectie aanwijst — de banden staan bewust op één
+        gewicht. Delight ís nadruk. Dus elke vorm van karakter die op de
+        <em>inhoud</em> van één band landt, herrangschikt de pagina. Wat
+        overblijft zijn de
+        <b>toestanden waar de pagina doorheen gaat</b> (wachten, leegte,
+        storing) en het <b>bindweefsel</b> (naden, chroom, papier). Daar gaan
+        alle vier de momenten over.
+      </p>
+
+      <!-- ================= MOMENT 1 ================= -->
+      <section class="moment">
+        <p class="kicker">Moment 1 — de wacht</p>
+        <h2>De club heeft een sjaal en gebruikt hem niet.</h2>
+        <p class="q">
+          Wat doet de voordeur terwijl hij laadt, op een telefoon met slecht
+          bereik langs de lijn?
+        </p>
+        <div class="evidence">
+          <code>.kcvv-spinner-scarf</code> staat in
+          <code>globals.css:40–160</code>: een barber-pole clubsjaal, 4 maten, 3
+          kleurstellingen, <code>prefers-reduced-motion</code> afgehandeld. Hij
+          wordt site-breed op <b>één</b> plek gemount —
+          <code>SearchInterface.tsx:312</code>.<br />
+          De homepage wacht ondertussen met
+          <code>motion-safe:animate-pulse</code>, <b>8×</b>. Site-breed:
+          <b>113</b> keer <code>animate-pulse</code> in 32 bestanden, waarvan
+          <b>69</b> zónder <code>motion-safe:</code>-poort.
+        </div>
+
+        <div class="switch" role="group" aria-label="Laadvariant">
+          <span>Variant:</span>
+          <button data-v="a" aria-pressed="true">A · pulse</button>
+          <button data-v="b" aria-pressed="false">B · sjaal</button>
+          <button data-v="c" aria-pressed="false">C · naden</button>
+          <span class="hint">← → werken ook</span>
+        </div>
+
+        <div class="stage" style="max-width: 620px">
+          <div class="spine" data-v="a" id="spine">
+            <div class="scarfwrap">
+              <div class="scarf" aria-hidden="true"></div>
+            </div>
+            <div class="pad pulses">
+              <div class="bar" style="height: 10px; width: 30%"></div>
+              <div
+                class="bar"
+                style="height: 34px; width: 92%; margin-top: 10px"
+              ></div>
+              <div
+                class="bar"
+                style="height: 34px; width: 64%; margin-top: 7px"
+              ></div>
+            </div>
+            <div class="seam"></div>
+            <div class="band-dark pulses">
+              <div class="bar on-dark" style="height: 9px; width: 26%"></div>
+              <div
+                class="bar on-dark"
+                style="height: 22px; width: 46%; margin-top: 9px"
+              ></div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 1fr 1fr;
+                  gap: 9px;
+                  margin-top: 14px;
+                "
+              >
+                <div class="bar on-dark" style="height: 44px"></div>
+                <div class="bar on-dark" style="height: 44px"></div>
+              </div>
+            </div>
+            <div class="seam flip"></div>
+            <div class="pad pulses">
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(3, 1fr);
+                  gap: 9px;
+                "
+              >
+                <div class="bar" style="height: 62px"></div>
+                <div class="bar" style="height: 62px"></div>
+                <div class="bar" style="height: 62px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cands three" style="margin-top: 20px">
+          <div class="cand base">
+            <span class="tag">A · nulmeting</span>
+            <h3>De generieke pulse</h3>
+            <p class="cost">
+              Tailwind's default-ademhaling. <b>Kost:</b> niets — hij draait al.
+              <b>Prijs:</b> het is de enige plek waar de SaaS-anti-referentie
+              binnenkomt via een kanaal dat het systeem nooit heeft gereset, en
+              69 van de 113 gebruiken zijn onbewaakt.
+            </p>
+          </div>
+          <div class="cand">
+            <span class="tag">B · het clubobject</span>
+            <h3>De sjaal wacht</h3>
+            <p class="cost">
+              Eén sjaal bovenaan; de balken staan stil. <b>Kost:</b> nul nieuwe
+              CSS — de component bestaat. <b>Prijs:</b> een tweede bewegingsbron
+              bovenop de skeletvorm; de sjaal moet de index-breedte aankunnen
+              zonder poster te worden.
+            </p>
+          </div>
+          <div class="cand">
+            <span class="tag">C · het bindweefsel</span>
+            <h3>De naden lopen</h3>
+            <p class="cost">
+              <code>&lt;StripedSeam&gt;</code> is al een 45°-band; tijdens het
+              laden schuift hij. Geen nieuw element. <b>Kost:</b> één keyframe.
+              <b>Prijs:</b> de naad is een structuurregel — hem laten bewegen
+              leent hem betekenis die hij daarna moet loslaten.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= MOMENT 2 ================= -->
+      <section class="moment">
+        <p class="kicker">Moment 2 — de lange leegte</p>
+        <h2>Dit was al opgelost. De helft is verwijderd.</h2>
+        <p class="q">
+          Een redacteur kan vandaag in Studio "Aftrap nieuw seizoen" en een
+          mededeling invullen en publiceren. Er gebeurt niets. Waar zetten we
+          die stekker weer in?
+        </p>
+        <div class="evidence">
+          <b
+            >Dit is geen ontbrekend ontwerp maar een halfverwijderde feature.</b
+          >
+          #1349 leverde <code>&lt;MatchesSliderEmptyState&gt;</code> (201
+          regels) met een <code>decisionRule.ts</code> van <b>vier modi</b> —
+          TUSSENSEIZOEN · NIEUW SEIZOEN + aftelling · vandaag · MEDEDELING —
+          plus 117 regels tests.<br />
+          <code>aeed5e41</code> (#1922) verwijderde de renderer tijdens de
+          redesign. <b>Alles wat de redacteur ziet, bleef staan:</b> het schema
+          <code>matchesSliderPlaceholder</code> ("Placeholder wedstrijdenblok
+          (tussenseizoen)"), de registratie in beide studio's, de GROQ-query én
+          <code>getPlaceholder()</code>. Die laatste wordt
+          <b>nergens aangeroepen</b>.<br />
+          Extra: <code>upcomingMatchesSection</code> wordt <code>null</code> bij
+          een lege lijst (<code>page.tsx:370-379</code>), dus buiten het seizoen
+          <b>verdwijnt die band helemaal</b> — precies wat #2399 voor
+          <code>&lt;FirstTeamsBlock&gt;</code> repareerde en bij de buur nooit
+          is toegepast.
+        </div>
+
+        <div class="cands three">
+          <div class="cand base">
+            <span class="tag">A · nulmeting</span>
+            <div class="stage">
+              <div class="seam"></div>
+              <div class="band-dark">
+                <div class="bandhead">
+                  <div>
+                    <span class="bandkick">Eerste ploegen</span>
+                    <p class="bandtitle">Volgende wedstrijd.</p>
+                  </div>
+                  <a class="bandlink" href="#">Kalender →</a>
+                </div>
+                <p class="held" style="margin: 0">
+                  Nog geen wedstrijden ingepland.
+                </p>
+              </div>
+              <div class="seam flip"></div>
+            </div>
+            <p class="cost">
+              Wat de redacteur intikt komt hier niet aan. <b>Prijs:</b> leest
+              als een gat, en de invoer die het zou vullen doet niets.
+            </p>
+          </div>
+
+          <div class="cand">
+            <span class="tag">B · alleen herbekabelen</span>
+            <div class="stage">
+              <div class="seam"></div>
+              <div class="band-dark">
+                <div class="bandhead">
+                  <div>
+                    <span class="bandkick">Eerste ploegen</span>
+                    <p class="bandtitle">Tussenseizoen.</p>
+                  </div>
+                  <a class="bandlink" href="#">Kalender →</a>
+                </div>
+                <p class="held" style="margin: 0">
+                  Aftrap nieuw seizoen op 9 augustus. Kalender 25–26 volgende
+                  week online.
+                </p>
+              </div>
+              <div class="seam flip"></div>
+            </div>
+            <p class="cost">
+              Dezelfde <code>held-open</code>-lijst van #2427, maar kop en tekst
+              komen uit <code>getPlaceholder()</code>. <b>Kost:</b> één fetch +
+              twee velden; de renderer blijft weg. <b>Prijs:</b> de aftelling
+              uit de oude decision-rule gaat verloren.
+            </p>
+          </div>
+
+          <div class="cand">
+            <span class="tag">C · herstel de vier modi</span>
+            <div class="stage">
+              <div class="seam"></div>
+              <div class="band-dark">
+                <div class="bandhead">
+                  <div>
+                    <span class="bandkick">Nieuw seizoen</span>
+                    <p class="bandtitle">Nog 23 dagen.</p>
+                  </div>
+                  <a class="bandlink" href="#">Kalender →</a>
+                </div>
+                <div class="slotrow">
+                  <div class="slot">
+                    <div class="op">Aftrap</div>
+                    <div class="meta">zaterdag 9 augustus</div>
+                  </div>
+                  <div class="slot">
+                    <div class="op">Mededeling</div>
+                    <div
+                      class="meta"
+                      style="text-transform: none; letter-spacing: 0"
+                    >
+                      Kalender 25–26 volgende week online
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="seam flip"></div>
+            </div>
+            <p class="cost">
+              <code>decisionRule.ts</code> bestaat nog in
+              <code>git show 8103b710</code> — vier modi, getest, Brussel-zone
+              correct voor een Sanity-datum. <b>Kost:</b> 201 regels
+              pre-redesign markup herskinnen, niet terugplakken.
+              <b>Prijs:</b> de zwaarste optie, en de aftelling is een claim die
+              alleen klopt zolang de redacteur de datum onderhoudt.
+            </p>
+          </div>
+        </div>
+        <p class="cost" style="margin-top: 14px; max-width: 680px">
+          <b>Een vierde uitkomst is niet te mocken:</b> schema, registratie,
+          query en view-model wéghalen en het tussenseizoen aan
+          <code>&lt;BannerSlot&gt;</code> overlaten. Dat ziet er uit als A. Het
+          is een geldige keuze — <b>maar het moet een keuze zijn</b>, want niets
+          doen is de enige optie die dat niet is.
+        </p>
+      </section>
+
+      <!-- ================= MOMENT 3 ================= -->
+      <section class="moment">
+        <p class="kicker">Moment 3 — de commerciële verplichting</p>
+        <h2>Op een telefoon wordt een sponsorlogo nooit kleur.</h2>
+        <p class="q">
+          DESIGN.md staat greyscale-tot-hover toe voor sponsorlogo's. PRODUCT.md
+          zegt dat het echte scherm een telefoon is. Wie wint?
+        </p>
+        <div class="evidence">
+          Alle drie de tegels (<code>SponsorTile</code>,
+          <code>HoofdSponsorTile</code>, <code>FeaturedSponsorCard</code>)
+          renderen <code>grayscale … group-hover:grayscale-0</code>. Op een
+          aanraakscherm vuurt geen van beide.
+          <code>group-focus-visible</code> ook niet.<br />
+          DESIGN.md verbiedt elders letterlijk:
+          <b
+            >"Don't rely on hover to reveal anything necessary — the primary
+            usage scene is a phone, outdoors."</b
+          >
+          Productprincipe 4:
+          <b>"Sponsors get real estate, not decoration."</b> Twee regels uit
+          hetzelfde document spreken elkaar tegen en niemand heeft beslist welke
+          wint.
+        </div>
+
+        <div class="switch coarsectl" role="group" aria-label="Aanwijzer">
+          <span>Simuleer:</span>
+          <button id="ptr-fine" aria-pressed="true">Muis (hover)</button>
+          <button id="ptr-coarse" aria-pressed="false">
+            Telefoon (geen hover)
+          </button>
+          <span class="hint">bij muis: zweef over een tegel</span>
+        </div>
+
+        <div class="cands three" id="m3">
+          <div class="cand base">
+            <span class="tag">A · nulmeting</span>
+            <div class="stage pad m3-a">
+              <div class="tiles">
+                <div class="tile">
+                  <svg class="logo" viewBox="0 0 90 60" aria-hidden="true">
+                    <rect width="90" height="60" fill="#f5f1e6" />
+                    <circle cx="28" cy="30" r="16" fill="#b84a3a" />
+                    <rect x="46" y="18" width="30" height="24" fill="#007c46" />
+                  </svg>
+                </div>
+                <div class="tile">
+                  <svg class="logo" viewBox="0 0 90 60" aria-hidden="true">
+                    <rect width="90" height="60" fill="#f5f1e6" />
+                    <path d="M14 44 L45 14 L76 44 Z" fill="#c68b2c" />
+                    <rect x="38" y="30" width="14" height="14" fill="#0a0a0a" />
+                  </svg>
+                </div>
+                <div class="tile">
+                  <svg class="logo" viewBox="0 0 90 60" aria-hidden="true">
+                    <rect width="90" height="60" fill="#f5f1e6" />
+                    <rect x="16" y="20" width="58" height="8" fill="#007c46" />
+                    <rect x="16" y="34" width="38" height="8" fill="#b84a3a" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <p class="cost">
+              Grijs tot hover. <b>Prijs:</b> op het primaire toestel is dat
+              permanent grijs — de betalende partij krijgt de mindere versie.
+            </p>
+          </div>
+
+          <div class="cand">
+            <span class="tag">B · aanwijzer beslist</span>
+            <div class="stage pad m3-b">
+              <div class="tiles">
+                <div class="tile">
+                  <svg class="logo" viewBox="0 0 90 60" aria-hidden="true">
+                    <rect width="90" height="60" fill="#f5f1e6" />
+                    <circle cx="28" cy="30" r="16" fill="#b84a3a" />
+                    <rect x="46" y="18" width="30" height="24" fill="#007c46" />
+                  </svg>
+                </div>
+                <div class="tile">
+                  <svg class="logo" viewBox="0 0 90 60" aria-hidden="true">
+                    <rect width="90" height="60" fill="#f5f1e6" />
+                    <path d="M14 44 L45 14 L76 44 Z" fill="#c68b2c" />
+                    <rect x="38" y="30" width="14" height="14" fill="#0a0a0a" />
+                  </svg>
+                </div>
+                <div class="tile">
+                  <svg class="logo" viewBox="0 0 90 60" aria-hidden="true">
+                    <rect width="90" height="60" fill="#f5f1e6" />
+                    <rect x="16" y="20" width="58" height="8" fill="#007c46" />
+                    <rect x="16" y="34" width="38" height="8" fill="#b84a3a" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <p class="cost">
+              <code>@media (pointer: coarse)</code> → altijd kleur; de muis
+              houdt de onthulling. <b>Kost:</b> één media-query.
+              <b>Prijs:</b> hetzelfde blad ziet er anders uit per toestel.
+            </p>
+          </div>
+
+          <div class="cand">
+            <span class="tag">C · rang beslist</span>
+            <div class="stage pad m3-c">
+              <div class="tiles">
+                <div class="tile">
+                  <svg class="logo" viewBox="0 0 90 60" aria-hidden="true">
+                    <rect width="90" height="60" fill="#f5f1e6" />
+                    <circle cx="28" cy="30" r="16" fill="#b84a3a" />
+                    <rect x="46" y="18" width="30" height="24" fill="#007c46" />
+                  </svg>
+                </div>
+                <div class="tile">
+                  <svg class="logo" viewBox="0 0 90 60" aria-hidden="true">
+                    <rect width="90" height="60" fill="#f5f1e6" />
+                    <path d="M14 44 L45 14 L76 44 Z" fill="#c68b2c" />
+                    <rect x="38" y="30" width="14" height="14" fill="#0a0a0a" />
+                  </svg>
+                </div>
+                <div class="tile">
+                  <svg class="logo" viewBox="0 0 90 60" aria-hidden="true">
+                    <rect width="90" height="60" fill="#f5f1e6" />
+                    <rect x="16" y="20" width="58" height="8" fill="#007c46" />
+                    <rect x="16" y="34" width="38" height="8" fill="#b84a3a" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <p class="cost">
+              Hoofdsponsor altijd in kleur, de rest grijs-tot-hover.
+              <b>Kost:</b> een tier-tak. <b>Prijs:</b> maakt van een stijlregel
+              een prijslijst — dat is een clubbeslissing, geen
+              ontwerpbeslissing.
+            </p>
+          </div>
+        </div>
+        <p class="cost" style="margin-top: 14px; max-width: 680px">
+          De merken hierboven zijn <b>verzonnen vormen</b>, geen echte
+          sponsorlogo's — dit blad test het gedrag van de tegel, niet de kunst
+          erin.
+        </p>
+      </section>
+
+      <!-- ================= MOMENT 4 ================= -->
+      <section class="moment">
+        <p class="kicker">Moment 4 — het emotionele moment</p>
+        <h2>Een gelijkspel krijgt niets.</h2>
+        <p class="q">
+          De uitslag is het meest geladen dat er die week op deze pagina staat.
+          Mag de pagina dat merken — zonder de band te promoveren?
+        </p>
+        <div class="evidence">
+          <code>OUTCOME_UNDERLINE</code>
+          (<code>lib/utils/match-display.ts:106</code>) is het hele antwoord op
+          een uitslag: een <b>9px inzet-band</b> onderaan de rij,
+          <code>jersey-deep</code> op <b>34%</b> gemengd met cream bij winst,
+          <code>alert</code> op 38% bij verlies — en
+          <code>draw: undefined</code>, dus
+          <b>een gelijkspel krijgt geen enkel teken</b>.<br />
+          Op 34% is die band een bleke waas; het scherm waarvoor PRODUCT.md
+          ontwerpt is een telefoon in de zon.<br />
+          Productprincipe 1 waarschuwt tegelijk expliciet: de uitslag is een
+          <b>leesbaarheidseis, geen rangorde-eis</b>, en mag nooit worden
+          aangehaald om de rest van de pagina te verdringen. Elke kandidaat
+          hieronder moet daar langs.
+        </div>
+
+        <div class="cands three">
+          <div class="cand base">
+            <span class="tag">A · nulmeting</span>
+            <div class="stage">
+              <div class="seam"></div>
+              <div class="band-dark" style="padding-bottom: 4px">
+                <span class="bandkick">Eerste ploegen</span>
+                <p class="bandtitle" style="margin-bottom: 4px">Dit weekend.</p>
+              </div>
+              <div
+                style="background: var(--jersey-deep-dark); padding-bottom: 2px"
+              >
+                <div class="resultrow win">
+                  <span
+                    class="op"
+                    style="font-family: var(--font-display); font-weight: 700"
+                    >KCVV — Kampenhout</span
+                  >
+                  <span class="score">3 – 1</span>
+                </div>
+                <div class="resultrow draw">
+                  <span
+                    class="op"
+                    style="font-family: var(--font-display); font-weight: 700"
+                    >Zemst — KCVV</span
+                  >
+                  <span class="score">2 – 2</span>
+                </div>
+              </div>
+              <div class="seam flip"></div>
+            </div>
+            <p class="cost">
+              Boven een winst (34% waas), onder een gelijkspel —
+              <b>geen teken</b>. <b>Prijs:</b> de twee rijen zijn op een
+              telefoon in de zon nauwelijks uit elkaar te houden.
+            </p>
+          </div>
+
+          <div class="cand">
+            <span class="tag">B · de stempel</span>
+            <div class="stage">
+              <div class="seam"></div>
+              <div class="band-dark" style="padding-bottom: 4px">
+                <span class="bandkick">Eerste ploegen</span>
+                <p class="bandtitle" style="margin-bottom: 4px">Dit weekend.</p>
+              </div>
+              <div
+                style="background: var(--jersey-deep-dark); padding: 8px 0 2px"
+              >
+                <div class="resultrow win">
+                  <span class="stamp">Winst</span>
+                  <span
+                    class="op"
+                    style="font-family: var(--font-display); font-weight: 700"
+                    >KCVV — Kampenhout</span
+                  >
+                  <span class="score">3 – 1</span>
+                </div>
+              </div>
+              <div class="seam flip"></div>
+            </div>
+            <p class="cost">
+              <code>&lt;StampBadge&gt;</code> bestaat al, staat al ~2° scheef.
+              <b>Kost:</b> een conditionele child. <b>Prijs:</b> herhaling — hij
+              staat er elke week, dus hij moet na de honderdste keer nog
+              kloppen. En verlies? Een stempel voor verlies is wreed, géén
+              stempel voor verlies is oneerlijk.
+            </p>
+          </div>
+
+          <div class="cand">
+            <span class="tag">C · de naad draagt het</span>
+            <div class="stage">
+              <div class="seam won"></div>
+              <div class="band-dark" style="padding-bottom: 4px">
+                <span class="bandkick">Eerste ploegen</span>
+                <p class="bandtitle" style="margin-bottom: 4px">Dit weekend.</p>
+              </div>
+              <div
+                style="background: var(--jersey-deep-dark); padding-bottom: 2px"
+              >
+                <div class="resultrow win">
+                  <span
+                    class="op"
+                    style="font-family: var(--font-display); font-weight: 700"
+                    >KCVV — Kampenhout</span
+                  >
+                  <span class="score">3 – 1</span>
+                </div>
+              </div>
+              <div class="seam won flip"></div>
+            </div>
+            <p class="cost">
+              De naden van de band gaan naar <code>jersey</code> bij winst. De
+              data verandert niet, de rangorde niet, alleen de toon.
+              <b>Kost:</b> een prop op <code>&lt;StripedSeam&gt;</code>.
+              <b>Prijs:</b> <code>jersey</code> is decoratief-only — dit is
+              precies waar hij mag, maar het botst met "green is an event, never
+              a wash" zodra beide naden aan staan.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VERDICT ================= -->
+      <section class="verdict">
+        <p class="kicker">Wat dit blad wél al beslist</p>
+        <h2>Drie dingen staan vast vóór er iemand kiest.</h2>
+        <ol>
+          <li>
+            <b
+              >Moment 2 is geen ontwerpvraag maar een defect, en het enige item
+              hier dat vandaag al schade doet.</b
+            >
+            Een redacteur kan een tussenseizoen-mededeling publiceren die
+            nergens verschijnt. PRODUCT.md noemt die kost bij naam:
+            <em
+              >"Authoring friction is a real product constraint, not a
+              nicety."</em
+            >
+            Herstellen, herbekabelen of weghalen — alle drie zijn goed, stil
+            laten staan is de enige verkeerde.
+          </li>
+          <li>
+            <b
+              >Moment 1 is geen smaakvraag zolang 69 van de 113
+              <code>animate-pulse</code>-gebruiken onbewaakt zijn.</b
+            >
+            Dat is een toegankelijkheidsdefect, geen delight-kans. Het gaat vóór
+            elke kandidaat hier — en het maakt de kandidaatkeuze goedkoper, want
+            de bestanden gaan toch al open.
+          </li>
+          <li>
+            <b
+              >Moment 3 is geen ontwerpvraag maar een tegenspraak in
+              DESIGN.md.</b
+            >
+            Twee regels in hetzelfde document geven een ander antwoord. Die moet
+            je uitpraten, niet mocken — de kandidaten hierboven tonen alleen wat
+            elke uitkomst kost.
+          </li>
+          <li>
+            <b
+              >Moment 4 kandidaat B stelt een vraag die het mockup niet kan
+              beantwoorden:</b
+            >
+            wat doet dit blad bij verlies? Elke oplossing die alleen winst
+            markeert, maakt van de rij een scorebord met een stemming. Beslis
+            eerst de verliesregel, dan pas de vorm.
+          </li>
+        </ol>
+        <hr class="rule" />
+        <p class="cost" style="margin-bottom: 20px">
+          <b>Weggooicode.</b> Dit blad hoort bij de wayfinder-map en gaat niet
+          naar productie. Geen echte data, geen echte sponsorlogo's, geen
+          component uit <code>src/</code> geïmporteerd — alles hier is met de
+          hand nagebouwd zodat het los te openen is.
+        </p>
+      </section>
+    </div>
+
+    <script>
+      // ---- moment 1: variant switcher (URL-stable, arrow keys) ----------
+      const spine = document.getElementById("spine");
+      const btns = [...document.querySelectorAll(".switch [data-v]")];
+      const keys = btns.map((b) => b.dataset.v);
+
+      function setVariant(v) {
+        if (!keys.includes(v)) v = "a";
+        spine.dataset.v = v;
+        btns.forEach((b) =>
+          b.setAttribute("aria-pressed", String(b.dataset.v === v)),
+        );
+        const url = new URL(location.href);
+        url.searchParams.set("variant", v);
+        history.replaceState(null, "", url);
+      }
+
+      btns.forEach((b) =>
+        b.addEventListener("click", () => setVariant(b.dataset.v)),
+      );
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        const t = e.target;
+        if (t && /^(INPUT|TEXTAREA)$/.test(t.tagName)) return;
+        const i = keys.indexOf(spine.dataset.v);
+        const next = e.key === "ArrowRight" ? i + 1 : i - 1;
+        setVariant(keys[(next + keys.length) % keys.length]);
+      });
+
+      setVariant(new URL(location.href).searchParams.get("variant") || "a");
+
+      // ---- moment 3: pointer simulation --------------------------------
+      const fine = document.getElementById("ptr-fine");
+      const coarse = document.getElementById("ptr-coarse");
+      function setPointer(isCoarse) {
+        document.body.classList.toggle("coarse", isCoarse);
+        fine.setAttribute("aria-pressed", String(!isCoarse));
+        coarse.setAttribute("aria-pressed", String(isCoarse));
+      }
+      fine.addEventListener("click", () => setPointer(false));
+      coarse.addEventListener("click", () => setPointer(true));
+      // start honest: if this machine has no hover, say so
+      setPointer(window.matchMedia("(pointer: coarse)").matches);
+    </script>
+  </body>
+</html>

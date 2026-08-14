@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D3b — what kind of edge?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top h1 em {
+        font-style: italic;
+        color: var(--warm);
+      }
+      header.top p {
+        max-width: 68ch;
+        margin: 0 0 8px;
+      }
+      section.block {
+        padding: 44px 0 8px;
+      }
+      h2.sec {
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      .lede {
+        max-width: 78ch;
+        margin: 0 0 24px;
+        color: var(--ink-soft);
+      }
+      .note {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        padding: 20px 22px 22px;
+        max-width: 92ch;
+        margin-bottom: 30px;
+      }
+      .note h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 10px;
+      }
+      .note p {
+        margin: 0 0 10px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .note p:last-child {
+        margin-bottom: 0;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(430px, 1fr));
+        gap: 26px;
+        align-items: start;
+      }
+      .v {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        overflow: hidden;
+      }
+      .v > .hd {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 11px 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .v > .hd .n {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .v > .hd .c {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+      }
+      .v > .hd.dead .c {
+        color: var(--card-red);
+      }
+      .v > .ft {
+        border-top: 2px solid var(--ink);
+        padding: 13px 16px 15px;
+        font-size: 0.875rem;
+        line-height: 1.45;
+      }
+
+      .scene {
+        background: var(--cream);
+      }
+      .band {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 24px 22px 46px;
+      }
+      .band .k {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin: 0 0 8px;
+      }
+      .band h3 {
+        font-family: var(--font-big);
+        font-size: 1.5rem;
+        line-height: 1.1;
+        margin: 0 0 8px;
+        font-weight: 700;
+      }
+      .band p {
+        margin: 0;
+        font-size: 0.875rem;
+        line-height: 1.5;
+      }
+      .after {
+        padding: 18px 22px 24px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .after .kick {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 6px;
+      }
+
+      /* ---- edge treatments. B/C/D tile at a fixed width so tooth size
+             never scales with the viewport — that was a defect of A. ---- */
+      .band.a {
+        -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120' preserveAspectRatio='none'><path fill='white' d='M0,0 H400 V101 L391,109 L379,100 L367,111 L353,102 L339,112 L323,103 L307,113 L290,104 L272,114 L254,105 L236,115 L218,105 L200,114 L183,106 L166,115 L149,105 L131,113 L113,104 L96,114 L79,105 L61,112 L45,103 L29,111 L13,102 L0,110 Z'/></svg>");
+        mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120' preserveAspectRatio='none'><path fill='white' d='M0,0 H400 V101 L391,109 L379,100 L367,111 L353,102 L339,112 L323,103 L307,113 L290,104 L272,114 L254,105 L236,115 L218,105 L200,114 L183,106 L166,115 L149,105 L131,113 L113,104 L96,114 L79,105 L61,112 L45,103 L29,111 L13,102 L0,110 Z'/></svg>");
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+      }
+      .band.b {
+        -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 120' preserveAspectRatio='none'><path fill='white' d='M0,0 H600 V110 C574,113 548,108 521,111 C494,114 470,109 444,112 C417,115 392,110 366,112 C339,115 314,109 288,112 C261,115 236,110 210,113 C183,116 158,110 132,113 C105,116 80,111 54,113 C36,115 18,112 0,114 Z'/></svg>");
+        mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 120' preserveAspectRatio='none'><path fill='white' d='M0,0 H600 V110 C574,113 548,108 521,111 C494,114 470,109 444,112 C417,115 392,110 366,112 C339,115 314,109 288,112 C261,115 236,110 210,113 C183,116 158,110 132,113 C105,116 80,111 54,113 C36,115 18,112 0,114 Z'/></svg>");
+        -webkit-mask-size: 600px 100%;
+        mask-size: 600px 100%;
+        -webkit-mask-repeat: repeat-x;
+        mask-repeat: repeat-x;
+      }
+      .band.c {
+        -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 120'><filter id='r' x='-5%25' y='-5%25' width='110%25' height='115%25'><feTurbulence type='fractalNoise' baseFrequency='0.028 0.09' numOctaves='3' seed='11' result='t'/><feDisplacementMap in='SourceGraphic' in2='t' scale='11' xChannelSelector='R' yChannelSelector='G'/></filter><rect x='-30' y='-30' width='660' height='142' fill='white' filter='url(%23r)'/></svg>");
+        mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 120'><filter id='r' x='-5%25' y='-5%25' width='110%25' height='115%25'><feTurbulence type='fractalNoise' baseFrequency='0.028 0.09' numOctaves='3' seed='11' result='t'/><feDisplacementMap in='SourceGraphic' in2='t' scale='11' xChannelSelector='R' yChannelSelector='G'/></filter><rect x='-30' y='-30' width='660' height='142' fill='white' filter='url(%23r)'/></svg>");
+        -webkit-mask-size: 600px 100%;
+        mask-size: 600px 100%;
+        -webkit-mask-repeat: repeat-x;
+        mask-repeat: repeat-x;
+      }
+      .band.d {
+        -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 120' preserveAspectRatio='none'><path fill='white' d='M0,0 H600 V114 L566,114 L563,117 L560,114 L455,114 L452,113 L449,114 L361,115 L357,118 L354,115 L248,114 L245,113 L242,114 L146,115 L143,117 L140,115 L58,114 L55,113 L52,114 L0,115 Z'/></svg>");
+        mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 120' preserveAspectRatio='none'><path fill='white' d='M0,0 H600 V114 L566,114 L563,117 L560,114 L455,114 L452,113 L449,114 L361,115 L357,118 L354,115 L248,114 L245,113 L242,114 L146,115 L143,117 L140,115 L58,114 L55,113 L52,114 L0,115 Z'/></svg>");
+        -webkit-mask-size: 600px 100%;
+        mask-size: 600px 100%;
+        -webkit-mask-repeat: repeat-x;
+        mask-repeat: repeat-x;
+      }
+
+      .zoomrow {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 0;
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        overflow: hidden;
+      }
+      .zoomrow > div {
+        border-right: 1px solid var(--paper-edge);
+        padding: 0 0 16px;
+      }
+      .zoomrow > div:last-child {
+        border-right: 0;
+      }
+      .zoomrow .zl {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        padding: 12px 14px 10px;
+      }
+      .zoomrow .zb {
+        height: 90px;
+        background: var(--ink);
+      }
+      .foot {
+        margin: 44px 0 60px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        max-width: 88ch;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D3b · T7 execution</p>
+        <h1>Torn, <em>deckled</em>, or just trimmed?</h1>
+        <p>
+          The zigzag was scissors, not tearing — one amplitude, one period, teeth you can count. Paper
+          does not fail regularly. Three alternatives below, all with lower amplitude and no
+          countable teeth.
+        </p>
+        <p>
+          Second fix applied to B, C and D: the mask now <b>tiles at a fixed 600px</b> instead of
+          stretching to the element, so the tooth size is identical on a phone and on a desktop.
+          Panel A still stretches, which is the other half of why it read badly.
+        </p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="note">
+          <h3>Still true regardless of which wins</h3>
+          <p>
+            <b>The band needs bottom padding it does not have today</b> — every panel here carries an
+            extra ~24px so the edge eats paper rather than the last line of type. That is a real
+            layout change, not a decoration.
+          </p>
+          <p>
+            <b><code>StripedSeam</code> already says "this section is taped to the page".</b> A torn
+            edge is a second answer to the same question. They can coexist only if they take
+            different jobs — e.g. seam for a section that continues, tear for a section that ends.
+            Otherwise one of the two wins.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">The edge alone, at the same scale</h2>
+        <p class="lede">Ignore the content for a second and just look at the four edges side by side.</p>
+        <div class="zoomrow">
+          <div><div class="zl">A — zigzag · rejected</div><div class="zb band a"></div></div>
+          <div><div class="zl">B — deckle</div><div class="zb band b"></div></div>
+          <div><div class="zl">C — turbulence</div><div class="zb band c"></div></div>
+          <div><div class="zl">D — trimmed</div><div class="zb band d"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">In place, with a section under it</h2>
+        <div class="grid">
+          <div class="v">
+            <div class="hd dead"><span class="n">A — zigzag</span><span class="c">rejected</span></div>
+            <div class="scene">
+              <div class="band a">
+                <p class="k">Jeugd</p>
+                <h3>Negentien ploegen, van U6 tot U21</h3>
+                <p>Elke zaterdag staan er meer dan tweehonderd kinderen op de Dries.</p>
+              </div>
+              <div class="after">
+                <p class="kick">Volgende sectie</p>
+                De volgende sectie begint hier, op dezelfde crème.
+              </div>
+            </div>
+            <div class="ft">
+              Even teeth, one amplitude, and the mask stretches — so the teeth get coarser as the
+              viewport widens.
+            </div>
+          </div>
+
+          <div class="v">
+            <div class="hd"><span class="n">B — deckle</span><span class="c">mould-made edge</span></div>
+            <div class="scene">
+              <div class="band b">
+                <p class="k">Jeugd</p>
+                <h3>Negentien ploegen, van U6 tot U21</h3>
+                <p>Elke zaterdag staan er meer dan tweehonderd kinderen op de Dries.</p>
+              </div>
+              <div class="after">
+                <p class="kick">Volgende sectie</p>
+                De volgende sectie begint hier, op dezelfde crème.
+              </div>
+            </div>
+            <div class="ft">
+              A soft irregular wave, ~5px, no teeth at all. This is the edge of good paper rather
+              than the edge of a rip — quieter, and it survives repetition because nothing about it
+              is distinctive enough to notice twice.
+            </div>
+          </div>
+
+          <div class="v">
+            <div class="hd"><span class="n">C — turbulence</span><span class="c">actually torn</span></div>
+            <div class="scene">
+              <div class="band c">
+                <p class="k">Jeugd</p>
+                <h3>Negentien ploegen, van U6 tot U21</h3>
+                <p>Elke zaterdag staan er meer dan tweehonderd kinderen op de Dries.</p>
+              </div>
+              <div class="after">
+                <p class="kick">Volgende sectie</p>
+                De volgende sectie begint hier, op dezelfde crème.
+              </div>
+            </div>
+            <div class="ft">
+              No hand-drawn path at all — a straight edge displaced by noise, so the irregularity is
+              genuinely irregular. Closest to a real tear. Costs an SVG filter in the mask, which is
+              rasterised, so it wants a short band and a low frequency.
+            </div>
+          </div>
+
+          <div class="v">
+            <div class="hd"><span class="n">D — trimmed</span><span class="c">guillotine + nicks</span></div>
+            <div class="scene">
+              <div class="band d">
+                <p class="k">Jeugd</p>
+                <h3>Negentien ploegen, van U6 tot U21</h3>
+                <p>Elke zaterdag staan er meer dan tweehonderd kinderen op de Dries.</p>
+              </div>
+              <div class="after">
+                <p class="kick">Volgende sectie</p>
+                De volgende sectie begint hier, op dezelfde crème.
+              </div>
+            </div>
+            <div class="ft">
+              Effectively straight, with three or four 3px nicks across 600px. The claim it makes is
+              "this was cut by a machine that has cut a lot of paper" — the smallest possible version
+              of the idea, and the easiest to defend as not-decoration.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>All four are one CSS rule plus padding.</b> The differences that matter are amplitude and
+        whether the irregularity is authored (B, D — a path someone drew, which means someone has to
+        draw it well) or generated (C — noise, which is never twice the same and never needs
+        redrawing). If none of these clears the bar, T7 closes and section boundaries stay ruled.
+      </p>
+    </div>
+  </body>
+</html>

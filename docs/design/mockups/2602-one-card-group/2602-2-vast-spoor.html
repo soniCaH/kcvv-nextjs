@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vast spoor</title>
+</head>
+<body>
+<style>
+  :root {
+    --color-cream: #f5f1e6;
+    --color-cream-soft: #ede8da;
+    --color-cream-deep: #e1d7bf;
+    --color-ink: #0a0a0a;
+    --color-ink-soft: #1f1f1f;
+    --color-ink-muted: #6b6b6b;
+    --color-jersey-deep: #007c46;
+    --color-paper-edge: #d9d2bd;
+    --color-warm: #f0c264;
+    --tape-warm: color-mix(in srgb, var(--color-warm) 85%, transparent);
+    --shadow-paper-md: 6px 6px 0 0 var(--color-ink);
+    --filter-photo-newsprint: sepia(0.06) saturate(0.94) hue-rotate(-4deg);
+  }
+  body { margin: 0; background: var(--color-cream); color: var(--color-ink); font-family: Georgia, "Times New Roman", serif; }
+  .page { max-width: 1400px; margin: 0 auto; padding: 40px 24px 120px; }
+  h1 { font-size: 40px; line-height: 1.05; margin: 0 0 8px; font-weight: 900; letter-spacing: -0.01em; }
+  h1 em { font-style: normal; color: var(--color-jersey-deep); }
+  .lede { max-width: 720px; font-size: 17px; line-height: 1.6; color: var(--color-ink-soft); margin: 0 0 28px; }
+  code { font-family: ui-monospace, Menlo, monospace; font-size: 0.88em; background: var(--color-cream-deep); padding: 1px 4px; }
+
+  .facts { border: 1px solid var(--color-ink); background: var(--color-cream-soft); padding: 18px 20px; margin: 0 0 48px; }
+  .facts h2 { font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-ink-muted); margin: 0 0 12px; font-weight: 400; }
+  table { border-collapse: collapse; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+  th, td { text-align: left; padding: 5px 20px 5px 0; border-bottom: 1px solid var(--color-paper-edge); white-space: nowrap; }
+  th { color: var(--color-ink-muted); font-weight: 400; text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; }
+  .bad { color: #a8320f; font-weight: 700; }
+  .ok { color: var(--color-jersey-deep); font-weight: 700; }
+
+  .row { display: flex; gap: 48px; align-items: flex-start; margin: 0 0 64px; flex-wrap: wrap; }
+  .col > h3 { font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-ink-muted); margin: 0 0 4px; font-weight: 400; }
+  .col > .impl { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--color-ink-soft); margin: 0 0 16px; }
+
+  .variant { margin: 0 0 20px; }
+  .variant > header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .tag { font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; background: var(--color-ink); color: var(--color-cream); padding: 3px 8px; }
+  .variant h2 { font-size: 25px; margin: 0; font-weight: 900; letter-spacing: -0.01em; }
+  .verdict { font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border: 1px solid currentColor; }
+  .verdict.no { color: #a8320f; }
+  .verdict.now { color: var(--color-ink-muted); }
+  .verdict.opt { color: var(--color-jersey-deep); }
+  .note { max-width: 820px; font-size: 15px; line-height: 1.55; color: var(--color-ink-soft); margin: 6px 0 22px; }
+
+  /* device frames */
+  .phone { width: 390px; flex: 0 0 390px; }
+  .desk { width: 700px; flex: 1 1 700px; min-width: 0; }
+  .screen { border: 1px solid var(--color-ink); background: var(--color-cream); position: relative; overflow: hidden; }
+  .phone .screen { height: 620px; overflow-y: auto; }
+  .inner-phone { padding: 0 16px; }
+  .inner-desk { padding: 0 32px; width: 1280px; transform-origin: top left; }
+  .desk .screen { height: 560px; overflow: hidden; }
+  .scaled { transform: scale(0.546); width: 1280px; } /* 700 / 1280 */
+  .caplabel { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-ink-muted); margin-top: 8px; }
+
+  .grouphead { font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-ink-muted); border-bottom: 1px solid var(--color-paper-edge); padding-bottom: 6px; margin: 20px 0 20px; font-weight: 400; }
+  .grid { display: grid; gap: 28px 16px; }
+  .g-today { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .g-c1    { grid-template-columns: repeat(auto-fill, 200px); justify-content: start; }
+  .g-c2    { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .g-c3    { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .inner-desk .g-c3 { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+
+  .card { display: block; background: var(--color-cream); border: 1px solid var(--color-ink); box-shadow: var(--shadow-paper-md); padding: 8px; position: relative; }
+  .card .tape { position: absolute; top: -7px; width: 44px; height: 14px; background: var(--tape-warm); z-index: 2; }
+  .card .tape.l { left: 14px; transform: rotate(-0.5deg); }
+  .card .tape.r { right: 14px; transform: rotate(-0.5deg); }
+  .photo { position: relative; aspect-ratio: 4/3; width: 100%; overflow: hidden; border: 1px solid var(--color-ink); background: var(--color-cream-soft); }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; filter: var(--filter-photo-newsprint); }
+  .photo .jersey { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; }
+  .photo .jersey svg { height: 84%; width: auto; display: block; }
+  .photo .jersey .letter { position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; color: var(--color-cream); font-size: 30px; line-height: 1; text-shadow: 2px 2px 0 var(--color-ink), -1px -1px 0 var(--color-ink), 1px -1px 0 var(--color-ink), -1px 1px 0 var(--color-ink); }
+  .cap { margin: 8px 0 0; text-align: center; font-size: 24px; font-weight: 900; color: var(--color-jersey-deep); line-height: 1.1; }
+  .sub { margin: 2px 0 0; text-align: center; font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-ink-soft); line-height: 1.2; }
+  .gutter { position: absolute; top: 0; bottom: 0; right: 0; background: repeating-linear-gradient(45deg, rgba(168,50,15,0.10) 0 6px, transparent 6px 12px); border-left: 1px dashed rgba(168,50,15,0.5); pointer-events: none; }
+</style>
+
+<div class="page">
+  <h1>Vast spoor — <em>wat het de telefoon kost</em>.</h1>
+  <p class="lede">
+    Vervolg op <code>2602-1</code>. Variant C maakt de kaart groter door het <em>minimum</em> van het
+    spoor op te trekken. Dat is precies wat het kolomaantal bepaalt — en boven <strong>171px</strong>
+    valt de telefoon van twee kolommen naar één. Links de telefoon (390px), rechts het bureaublad
+    (1280px, geschaald). Zelfde data, zelfde kaart.
+  </p>
+
+  <div class="facts">
+    <h2>Kolommen en rijen — 16 kaarten in het rooster</h2>
+    <table>
+      <thead><tr>
+        <th>Variant</th><th>358px telefoon</th><th>704px md</th><th>1216px bureaublad</th><th>Rijen op telefoon</th><th>Scrollhoogte</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Vandaag <code>minmax(150,1fr)</code></td><td class="ok">2 × 171px</td><td>4 × 164px</td><td>7 × 160px</td><td class="ok">8</td><td class="ok">~1750px</td></tr>
+        <tr><td>C <code>200px</code> vast</td><td class="bad">1 × 200px <span style="opacity:.7">+158 leeg</span></td><td>3 × 200px <span style="opacity:.7">+72 leeg</span></td><td>5 × 200px <span class="bad">+152 leeg</span></td><td class="bad">16</td><td class="bad">~3900px</td></tr>
+        <tr><td>C2 <code>minmax(200,1fr)</code></td><td class="bad">1 × 358px</td><td>3 × 224px</td><td class="ok">5 × 230px</td><td class="bad">16</td><td class="bad">~5700px</td></tr>
+        <tr><td>C3 <code>md:</code>-breekpunt</td><td class="ok">2 × 171px</td><td>3 × 224px</td><td class="ok">5 × 230px</td><td class="ok">8</td><td class="ok">~1750px</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TODAY -->
+  <section class="variant">
+    <header><span class="tag">Vandaag</span><h2><code>minmax(150px, 1fr)</code></h2><span class="verdict now">huidige staat</span></header>
+    <p class="note">Twee kolommen op de telefoon, zeven op het bureaublad. De kaart meet overal 150–216px.</p>
+    <div class="row" data-variant="g-today"></div>
+  </section>
+
+  <!-- C1 -->
+  <section class="variant">
+    <header><span class="tag">C</span><h2><code>repeat(auto-fill, 200px)</code> — zoals gerenderd</h2><span class="verdict no">breekt de telefoon</span></header>
+    <p class="note">
+      De kaart staat vast op 200px en pakt links aan. Op het bureaublad blijft er een <strong>vaste
+      strook van 152px</strong> rechts liggen — bij <em>elke</em> groep, op elke pagina — terwijl de
+      kopregel wél tot 1216px doorloopt. Op de telefoon: één kolom van 200px in 358px, met 158px
+      naast de kaart. De kaart wordt daar niet groter, alleen eenzamer.
+    </p>
+    <div class="row" data-variant="g-c1"></div>
+  </section>
+
+  <!-- C2 -->
+  <section class="variant">
+    <header><span class="tag">C2</span><h2><code>minmax(200px, 1fr)</code></h2><span class="verdict no">breekt de telefoon</span></header>
+    <p class="note">
+      Geen reststrook: vijf sporen van 230px vullen de rij exact. Dat is de nette versie van C — en
+      op het bureaublad de mooiste van de vier. Maar hetzelfde minimum werkt door naar beneden:
+      één polaroid van 358px per rij, zestien rijen, ruim drie keer zoveel scrollen.
+    </p>
+    <div class="row" data-variant="g-c2"></div>
+  </section>
+
+  <!-- C3 -->
+  <section class="variant">
+    <header><span class="tag">C3</span><h2>C met een <code>md:</code>-breekpunt</h2><span class="verdict opt">de enige C die niets breekt</span></header>
+    <p class="note">
+      <code>minmax(150px,1fr)</code> onder <code>md</code>, <code>minmax(200px,1fr)</code> erboven.
+      De telefoon blijft exact zoals vandaag; het bureaublad krijgt de vijf grote kaarten waar C voor
+      bedoeld is. Kost één breekpunt — de enige plek in de component waar er een staat.
+    </p>
+    <div class="row" data-variant="g-c3"></div>
+  </section>
+</div>
+
+<script>
+  const JERSEY = `<svg viewBox="0 120 220 180" preserveAspectRatio="xMidYMid meet">
+    <path d="M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300 Z" fill="#0a0a0a" opacity="0.95"/>
+    <g fill="none" stroke="#007c46" stroke-width="3" stroke-linejoin="miter" stroke-linecap="square" transform="translate(1.5,-2)">
+      <path d="M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300"/>
+      <path d="M 92 132 L 110 156 L 128 132"/>
+      <path d="M 70 168 L 70 300" stroke-width="2"/><path d="M 88 158 L 88 300" stroke-width="2"/>
+      <path d="M 132 158 L 132 300" stroke-width="2"/><path d="M 150 168 L 150 300" stroke-width="2"/>
+    </g></svg>`;
+
+  const CDN = "https://cdn.sanity.io/images/vhb33jaz/production/";
+  const GROUPS = [
+    { label: "Reserven", range: null, teams: [{ cap: "Reserven", sub: "Reserven VV AH", mark: "R", photo: null }] },
+    { label: "Bovenbouw", range: "U17–U21", teams: [
+      { cap: "U21", sub: "KCVVE U21", mark: "U21", photo: "14729fbf60a99c7576ea7ca75f0684c39ae07444-1966x951.jpg?w=1200&h=800&q=80" },
+      { cap: "U19", sub: "KCVVE U19", mark: "U19", photo: "e21e9752ebbfec870179c6709d0f046d37893f4f-1961x911.jpg?w=1200&h=800&q=80" },
+      { cap: "U17", sub: "KCVVE U17", mark: "U17", photo: null },
+      { cap: "U17", sub: "KCVVE U16", mark: "U17", photo: null }]},
+    { label: "Middenbouw", range: "U12–U16", teams: [
+      { cap: "U15", sub: "KCVVE  U15", mark: "U15", photo: "e0ca4200a5f7a0f97dd02e843b318e793430d7ff-3001x2092.jpg?w=1200&h=800&q=80" },
+      { cap: "U14", sub: "KCVVE U14", mark: "U14", photo: "9f61b4e27265dffd677d1201b236f483e4763099-3008x2000.jpg?w=1200&h=800&q=80" },
+      { cap: "U13", sub: "KCVVE  U13", mark: "U13", photo: "1d02a9847f745963de0557337c70a947f045bd85-2818x1583.jpg?w=1200&h=800&q=80" },
+      { cap: "U12", sub: "KCVVE U12", mark: "U12", photo: "6630644c428e78514b160bbfca707b242c24cb11-2016x1512.jpg?w=1200&h=800&q=80" }]},
+    { label: "Onderbouw", range: "U6–U11", teams: [
+      { cap: "U11", sub: "KCVVE  U11", mark: "U11", photo: "d79e023d165ced6b6e60ad8a688ac50be77e4f38-3757x2818.jpg?w=1200&h=800&q=80" },
+      { cap: "U10", sub: "KCVVE U10", mark: "U10", photo: "7fc1d6c18c9a5a36a411b4636bbae8fc576ee6fe-1280x851.jpg?w=1200&h=800&q=80" },
+      { cap: "U10", sub: "KCVVE U10P", mark: "U10", photo: "a8313f0cfab907f1f9e12e6d7562029bf84bdc5f-2500x1236.jpg?w=1200&h=800&q=80" },
+      { cap: "U9", sub: "KCVVE  U9", mark: "U9", photo: null }, { cap: "U8", sub: "KCVVE U8", mark: "U8", photo: null },
+      { cap: "U7", sub: "KCVVE U7", mark: "U7", photo: null }, { cap: "U6", sub: "KCVVE  U6", mark: "U6", photo: null }]},
+  ];
+  const ROT = [-1.1, 0.7, -0.5];
+
+  const card = (t, i) => `<div class="card" style="transform: rotate(${ROT[i % 3]}deg)">
+      <span class="tape ${i % 2 === 0 ? "l" : "r"}"></span>
+      <div class="photo">${t.photo ? `<img src="${CDN}${t.photo}" alt="">`
+        : `<div class="jersey">${JERSEY}<span class="letter">${t.mark}</span></div>`}</div>
+      <p class="cap">${t.cap}</p><p class="sub">${t.sub}</p></div>`;
+
+  const directory = (gridClass) => GROUPS.map((g) =>
+    `<h3 class="grouphead">${g.label}${g.range ? " · " + g.range : ""}</h3>
+     <div class="grid ${gridClass}">${g.teams.map(card).join("")}</div>`).join("");
+
+  document.querySelectorAll(".row").forEach((row) => {
+    const gc = row.dataset.variant;
+    // C1 leaves a fixed right gutter on the desktop frame — mark it.
+    const gutter = gc === "g-c1" ? `<div class="gutter" style="width:152px; right:32px;"></div>` : "";
+    row.innerHTML = `
+      <div class="col phone">
+        <h3>Telefoon — 390px</h3><p class="impl">inhoud 358px · scrollbaar</p>
+        <div class="screen"><div class="inner-phone">${directory(gc)}</div></div>
+        <p class="caplabel">scroll om alle 16 kaarten te zien</p>
+      </div>
+      <div class="col desk">
+        <h3>Bureaublad — 1280px</h3><p class="impl">inhoud 1216px · geschaald 0.55×</p>
+        <div class="screen">${gutter}<div class="inner-desk scaled">${directory(gc)}</div></div>
+        <p class="caplabel">bovenste twee groepen</p>
+      </div>`;
+  });
+</script>
+
+</body>
+</html>

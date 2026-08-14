@@ -89,6 +89,20 @@ The type of tournament a match belongs to. Stored on `Match.competition`.
 
 **Open:** PSD also returns `competitionType.name` (e.g. "Beker van Brabant"). This should be mapped to a Dutch display label. See PRD.
 
+### Reeks
+
+The specific division a team is placed in for a competition — `3de Afdeling Voetb Vl A`, `Gewestelijke U13`. Distinct from [Competition](#competition), which is the *kind* of tournament.
+
+A reeks is named in **two vocabularies** and both are correct: the federation's (PSD `competition.name`, prefixed `Voetbal : <bond> - `) and the club's (Sanity `divisionFull`). `3de Afdeling Voetb Vl A` and `3e Nationale VV A` are the same reeks. The club's name wins on anything a human reads; PSD's fills the gap where no editorial value is set (#2589).
+
+**Only PSD carries a reeks per competition.** A match carries none — the fixture feed knows only `OFFICIAL`/`CUP`/`FRIENDLY`. Sanity carries one per *team*, which cannot name two phases.
+
+### Competition Phase
+
+A youth season is split in two by the winter break, and **the second half is frequently a different reeks with different opponents** — not a return round. Measured over 2025-2026: U13 shared **0 of 7** opponents between its phases, U17 shared 4 of 7, and U7 had no autumn competition at all. Senior teams do not have this: the A-team plays one continuous home-and-away league (14 of 15 opponents shared).
+
+**Consequences:** a team can hold more than one ranking table in a single season, so a table is identified by PSD `competition_id`, never by its name or its position in the array. Phases are named `Najaar` and `Voorjaar`, and only when the fixtures prove the ordering — see #2589. PSD exposes no phase field; the association's own convention encodes it in the reeks *code* (`G15BS` → a `2` appears in the second phase), which is not a contract and is not parsed.
+
 ---
 
 ## Team & Squad
@@ -109,10 +123,27 @@ A KCVV team registered with the club and (usually) with the football federation.
 - `age` — Age group: `"A"` (seniors) or `"U{N}"` (youth, e.g. `"U17"`)
 - `gender` — `"mannen"` or `"mixed"`
 - `footbelId` — Federation registration (null for unregistered youth teams)
-- `division` / `divisionFull` — Editorial subdivision label (e.g. "U9 - Wit", "Eerste Elftal A - 3e Nationale A")
+- `division` / `divisionFull` — The club's own name for the team's [Reeks](#reeks): short code and long form (`3 VV A` / `3e Nationale VV A`). Measured in production 2026-08-13: set on **exactly the 3 senior docs**, null on all 16 youth. Not a team-variant label — a "U9 - Wit" style distinction lives in the team's own name.
 - `showInNavigation` — Single visibility flag: controls nav, team listings, **and** match widget inclusion
 
 **Removed fields:** `league`, `leagueId` — dead fields, never synced, never rendered.
+
+### Team Display Name
+
+What a team is **called** on any surface a human reads — the page heading, the browser tab, the share card, a listing row. Distinct from `name`, which is the team's registered identity as PSD holds it.
+
+| Code                | Dutch          | Notes                                             |
+| ------------------- | -------------- | ------------------------------------------------- |
+| `displayName`       | Weergavenaam   | Editorial override on the Team document; optional |
+| `teamDisplayName()` | —              | The single helper every human-facing surface uses |
+
+**Resolution order:** `displayName` → a label derived from the team's slug → `name`.
+
+**Why an editorial field and not `name`:** `name` is PSD-owned. It is `readOnly` in the Studio and re-patched on every sync, so an edit there does not survive. Renaming in PSD works but the **slug is derived from the name**, so a reword moves the team's URL.
+
+**Not used for:** JSON-LD. `SportsTeam.name` is a machine-readable claim about a federation-registered entity and stays on `name`.
+
+**Vocabulary rule:** an Age Group is never a display name — see below.
 
 ### Squad
 
@@ -134,7 +165,9 @@ A display label identifying which KCVV team a match belongs to. Shown in match w
 | ------------ | ------------- | ----------------------------------------------- |
 | `squadLabel` | Ploeg (label) | Derived from team name, e.g. "A-ploeg", "U15 A" |
 
-**Replaces:** the misnamed `round` field. Currently hardcoded (`teamId 1 → "A-ploeg"`); should derive from Sanity team name.
+**Replaces:** the misnamed `round` field. Currently hardcoded (`teamId 1 → "A-ploeg"`).
+
+**Should resolve via [Team Display Name](#team-display-name)** — it is the same question ("what is this team called?") asked in a match context, and answering it twice is how the naming rules drifted apart in the first place (#2539).
 
 ### Age Group
 
@@ -145,7 +178,9 @@ The age category of a team, from PSD.
 | `"A"`                           | Seniors (eerste elftal) |
 | `"U21"`, `"U17"`, `"U15"`, etc. | Youth (jeugd)           |
 
-Multiple teams can share the same age group (e.g. three U9 teams distinguished by `division`).
+Multiple teams can share the same age group (e.g. three U9 teams distinguished by `division`). Measured in production 2026-08-13: `A` is shared by four teams, `U17` by two, `U10` by two.
+
+**An age group is a competition band, not an identity.** It answers "which competition does this team play in?", never "which team is this?". Using it as a display name is what published three team pages under another team's heading (#2539) — the data was correct throughout. Anything a human reads resolves through [Team Display Name](#team-display-name).
 
 ### Youth Division (Afdeling)
 

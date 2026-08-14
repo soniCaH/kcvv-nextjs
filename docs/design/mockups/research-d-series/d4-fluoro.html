@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D4 — is there a job for a fluoro ink?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --fluoro: #ff3300;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top h1 em {
+        font-style: italic;
+        color: #ff5a2b;
+      }
+      header.top p {
+        max-width: 68ch;
+        margin: 0 0 8px;
+      }
+      section.block {
+        padding: 44px 0 8px;
+      }
+      h2.sec {
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      .lede {
+        max-width: 78ch;
+        margin: 0 0 24px;
+        color: var(--ink-soft);
+      }
+      .note {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        padding: 20px 22px 22px;
+        max-width: 94ch;
+        margin-bottom: 30px;
+      }
+      .note h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 10px;
+      }
+      .note p {
+        margin: 0 0 10px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .note p:last-child {
+        margin-bottom: 0;
+      }
+      .note ol {
+        margin: 0 0 10px;
+        padding-left: 20px;
+        font-size: 0.9375rem;
+      }
+      .note li {
+        margin-bottom: 5px;
+      }
+
+      /* ---------- swatch adjacency ---------- */
+      .sw {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        margin-bottom: 26px;
+      }
+      .sw > div {
+        padding: 18px 14px 16px;
+        border-right: 1px solid var(--paper-edge);
+      }
+      .sw > div:last-child {
+        border-right: 0;
+      }
+      .sw .chip {
+        height: 62px;
+        border: 2px solid var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.16em;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .sw .lbl {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 10px;
+        line-height: 1.5;
+      }
+
+      /* ---------- fixture list ---------- */
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+        gap: 26px;
+        align-items: start;
+      }
+      .v {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+      }
+      .v > .hd {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 11px 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .v > .hd .n {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .v > .hd .c {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+      }
+      .v > .ft {
+        border-top: 2px solid var(--ink);
+        padding: 13px 16px 15px;
+        font-size: 0.875rem;
+        line-height: 1.45;
+      }
+      .rows {
+        padding: 4px 0;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      .row:last-child {
+        border-bottom: 0;
+      }
+      .row .when {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        width: 62px;
+        flex: none;
+        line-height: 1.4;
+      }
+      .row .teams {
+        flex: 1;
+        font-size: 0.9375rem;
+        line-height: 1.3;
+        min-width: 0;
+      }
+      .row .teams b {
+        font-weight: 600;
+      }
+      .badge {
+        display: inline-block;
+        border: 2px solid var(--ink);
+        box-shadow: 4px 4px 0 0 var(--ink);
+        padding: 5px 8px;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.625rem;
+        letter-spacing: 0.16em;
+        line-height: 1;
+        flex: none;
+      }
+      .b-canc {
+        background: var(--card-red);
+        color: var(--cream);
+      }
+      .b-fluoro-cream {
+        background: var(--fluoro);
+        color: var(--cream);
+      }
+      .b-fluoro-ink {
+        background: var(--fluoro);
+        color: var(--ink);
+      }
+      .b-ft {
+        background: var(--cream);
+        color: var(--ink);
+      }
+      .b-pp {
+        background: var(--cream-deep);
+        color: var(--ink);
+      }
+      .b-stop {
+        background: var(--warm);
+        color: var(--ink);
+      }
+      .clubwide {
+        background: var(--fluoro);
+        color: var(--ink);
+        border-top: 2px solid var(--ink);
+        border-bottom: 2px solid var(--ink);
+        padding: 12px 16px;
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .clubwide .t {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-weight: 700;
+        flex: none;
+      }
+      .clubwide .d {
+        font-size: 0.875rem;
+        line-height: 1.35;
+      }
+
+      .foot {
+        margin: 44px 0 60px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        max-width: 88ch;
+      }
+      .foot b {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D4 · C1</p>
+        <h1>Is there a job for a <em>fluoro</em> ink?</h1>
+        <p>
+          Riso's punch comes from one fluorescent ink used once per sheet. §4.3 proposes a
+          <code>--color-fluoro</code> rationed harder than green — at most once per page, on the
+          genuinely urgent thing.
+        </p>
+        <p>
+          The problem is not the colour. It is that the three jobs C1 names are already taken or
+          already forbidden.
+        </p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="note">
+          <h3>C1's three use cases, checked against the code</h3>
+          <ol>
+            <li>
+              <b>"Cancelled match" — occupied.</b>
+              <code>MatchStatusBadge</code> already ships it:
+              <code>cancelled → bg-card-red text-cream</code>, abbreviation <code>CANC</code>. The
+              loud tier exists and has a colour.
+            </li>
+            <li>
+              <b>"Live score" — forbidden.</b> <code>PRODUCT.md:56</code> lists
+              <i>live in-play scores</i> among the things this site "does not have, and must not be
+              designed as if it did".
+            </li>
+            <li>
+              <b>"An alert stamp" — <code>card-red</code> again.</b> Same colour, same weight, same
+              slot.
+            </li>
+          </ol>
+          <p>
+            So a fluoro cannot simply be <i>added</i>. It either replaces <code>card-red</code>, or
+            it needs a job that <code>card-red</code> genuinely does not do — and there is exactly
+            one candidate for that, shown as option C below.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">The two-reds problem, adjacent</h2>
+        <p class="lede">
+          The question a supporter would have to answer without being told: do these mean different
+          things, or is one of them just brighter?
+        </p>
+        <div class="sw">
+          <div>
+            <div class="chip" style="background: #c93f1c; color: #f5f1e6">card-red</div>
+            <div class="lbl">#c93f1c · shipped<br />cream text · 4.4 : 1</div>
+          </div>
+          <div>
+            <div class="chip" style="background: #ff3300; color: #f5f1e6">fluoro</div>
+            <div class="lbl">#ff3300 · Risotto<br />cream text · <b>3.3 : 1</b></div>
+          </div>
+          <div>
+            <div class="chip" style="background: #ff3300; color: #0a0a0a">fluoro</div>
+            <div class="lbl">#ff3300<br />ink text · 5.4 : 1</div>
+          </div>
+          <div>
+            <div class="chip" style="background: #ff1919; color: #0a0a0a">fluoro red</div>
+            <div class="lbl">#ff1919 · Letterform<br />ink text</div>
+          </div>
+          <div>
+            <div class="chip" style="background: #ff9de9; color: #0a0a0a">fluoro pink</div>
+            <div class="lbl">#ff9de9 · Risotto<br />ink text</div>
+          </div>
+        </div>
+        <div class="note">
+          <h3>A fluoro badge cannot keep cream type</h3>
+          <p>
+            Cream on <code>#ff3300</code> lands at 3.3 : 1, below the shipped badge's 4.4 : 1, and
+            it is thin mono caps at 10px. Ink on fluoro reads at 5.4 : 1 — better than what ships
+            today. But that flip changes what the badge <i>is</i>: cream-on-red is a stamp; ink-on
+            fluoro is a highlighter. Both are in our vocabulary, and they are not the same gesture.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">Three ways it could land</h2>
+        <p class="lede">
+          A real fixture list. The status badge appears once in each — which is already the "once per
+          page" discipline C1 asks for.
+        </p>
+        <div class="cols">
+          <!-- A -->
+          <div class="v">
+            <div class="hd"><span class="n">A — no fluoro</span><span class="c">shipped today</span></div>
+            <div class="rows">
+              <div class="row">
+                <span class="when">Za 12·04<br />15:00</span>
+                <span class="teams"><b>KCVV Elewijt</b> — KFC Hofstade</span>
+                <span class="badge b-ft">FT 3—2</span>
+              </div>
+              <div class="row">
+                <span class="when">Zo 20·04<br />14:30</span>
+                <span class="teams">VC Muizen — <b>KCVV Elewijt</b></span>
+                <span class="badge b-canc">Canc</span>
+              </div>
+              <div class="row">
+                <span class="when">Za 26·04<br />15:00</span>
+                <span class="teams"><b>KCVV Elewijt</b> — KV Kampenhout</span>
+                <span class="badge b-pp">PP</span>
+              </div>
+            </div>
+            <div class="ft">
+              <b>The ladder already reads.</b> Cream, cream-deep, warm, card-red — four steps of
+              increasing loudness, all in the existing palette, none of them grey.
+            </div>
+          </div>
+
+          <!-- B -->
+          <div class="v">
+            <div class="hd">
+              <span class="n">B — fluoro replaces card-red</span><span class="c">1 token swap</span>
+            </div>
+            <div class="rows">
+              <div class="row">
+                <span class="when">Za 12·04<br />15:00</span>
+                <span class="teams"><b>KCVV Elewijt</b> — KFC Hofstade</span>
+                <span class="badge b-ft">FT 3—2</span>
+              </div>
+              <div class="row">
+                <span class="when">Zo 20·04<br />14:30</span>
+                <span class="teams">VC Muizen — <b>KCVV Elewijt</b></span>
+                <span class="badge b-fluoro-ink">Canc</span>
+              </div>
+              <div class="row">
+                <span class="when">Za 26·04<br />15:00</span>
+                <span class="teams"><b>KCVV Elewijt</b> — KV Kampenhout</span>
+                <span class="badge b-pp">PP</span>
+              </div>
+            </div>
+            <div class="ft">
+              <b>No new colour, a louder one.</b> Keeps the palette at its current size — but
+              <code>card-red</code> is used elsewhere too, so this is either a badge-only override
+              (two reds after all) or a genuine token replacement with a much wider blast radius.
+            </div>
+          </div>
+
+          <!-- C -->
+          <div class="v">
+            <div class="hd">
+              <span class="n">C — fluoro above card-red</span><span class="c">a job card-red lacks</span>
+            </div>
+            <div class="clubwide">
+              <span class="t">Alles afgelast</span>
+              <span class="d">Alle wedstrijden van dit weekend gaan niet door — onbespeelbaar terrein.</span>
+            </div>
+            <div class="rows">
+              <div class="row">
+                <span class="when">Za 12·04<br />15:00</span>
+                <span class="teams"><b>KCVV Elewijt</b> — KFC Hofstade</span>
+                <span class="badge b-ft">FT 3—2</span>
+              </div>
+              <div class="row">
+                <span class="when">Zo 20·04<br />14:30</span>
+                <span class="teams">VC Muizen — <b>KCVV Elewijt</b></span>
+                <span class="badge b-canc">Canc</span>
+              </div>
+              <div class="row">
+                <span class="when">Za 26·04<br />15:00</span>
+                <span class="teams"><b>KCVV Elewijt</b> — KV Kampenhout</span>
+                <span class="badge b-pp">PP</span>
+              </div>
+            </div>
+            <div class="ft">
+              <b>The one thing card-red genuinely cannot say.</b> A per-match badge cannot express
+              "the whole weekend is off" — that is club-wide, it outranks every row, and it is the
+              real thing a parent checks the site for on a wet Saturday morning. Fluoro as a band,
+              never as a badge, appearing perhaps six times a season.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>Two constraints on whatever wins.</b> The per-match badge lives on the fixture row, so
+        anything touching it is gated on <b>#2599</b> — that row's geometry is still unsettled and a
+        status marker's position moves with it. And option C is not purely a design choice: a
+        club-wide cancellation band needs a source of truth. The six-state machine in
+        <code>api-contract</code> is per match, so "all off" is either derived (every match this
+        weekend is <code>cancelled</code> or <code>postponed</code>) or authored in Sanity. Derived
+        is honest and free; authored is faster to publish and can carry a reason. That is a separate
+        question, and it only gets asked if C wins.
+      </p>
+    </div>
+  </body>
+</html>

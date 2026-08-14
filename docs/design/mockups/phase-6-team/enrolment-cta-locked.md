@@ -2,7 +2,7 @@
 
 **Decision:** A youth-only "Word lid" recruitment ad — a standalone fanzine
 section on `/ploegen/[slug]`, between `<SquadGrid>` and `<TeamStaff>`, linking
-to the static `/club/inschrijven` route. Drilled 2026-06-01 → 2026-06-02 across
+to the static `/club/word-lid` route. Drilled 2026-06-01 → 2026-06-02 across
 3 rounds (placement → copy → visual) plus a 2-fix design review. Issue #1949.
 
 Drill artefact: `6cd7-enrolment-cta/visual-compare.html` (V1/V2/V3 side-by-side
@@ -16,7 +16,7 @@ in true tokens + real `<JerseyShirt>` paths). Out-of-PRD addition (not in
 - Renders **only when `team.teamType === "youth"`**; returns `null` for senior
   (A/B-ploeg). Computed in `team.repository.ts` (`computeTeamType`: age `u*` /
   `jeugd` → youth). Senior recruitment runs via trials/contact, and
-  `/club/inschrijven` is in practice the **youth** enrolment route (target of
+  `/club/word-lid` is in practice the **youth** enrolment route (target of
   `/jeugd`, the homepage `YouthSection`, `JeugdEditorialGrid`,
   `ResponsibilityBlock`).
 - Must render correctly on a **thin youth page** (hero + squad + staff only;
@@ -34,6 +34,20 @@ height="md">` precedes it, exactly like every other section. Reuses the page
 - Rejected: A (inline in `<TeamHero>` — touches the locked hero); C (sticky
   mobile footer band — competes with the sticky section-nav + MatchStrip, and
   leaves desktop with no CTA).
+
+### SUPERSEDED 2026-08-13 (#2543, caused by #2540)
+
+The section now mounts **after `#info`**, before `<VerderLezenRow>` — the last
+content moment on the page. Round 1 chose B to put the CTA at the end of the
+content; in June that *was* "between squad and staff", because `#info` rendered
+on **0 of 16** team pages. [#2540](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2540)
+makes `#info` (*Trainingen & contact*) render on 18 of 18, which left the locked
+slot in the middle of the page and made the CTA the **first `<h2>`** a youth
+page emits — ahead of the coach and the training times. Moving it follows round
+1's reasoning rather than overturning it; A and C stay rejected.
+
+Unchanged by this: the youth-only gate (§1), the copy (§3), the visual (§4),
+and the no-`<TeamSectionNav>`-anchor rule.
 
 ## 3. Copy (round 2 → **v1, club-motto warm**)
 
@@ -71,7 +85,7 @@ height="md">` precedes it, exactly like every other section. Reuses the page
   inset + gap) so they never run behind the corner motif (review fix #1).
 - **Lead:** cream body text, **full-width** (no `max-width`) — it sits below the
   motif's bottom edge, so no gutter (review fix #3).
-- **CTA:** `<LinkButton variant="inverted" withArrow href="/club/inschrijven">`
+- **CTA:** `<LinkButton variant="inverted" withArrow href="/club/word-lid">`
   — cream fill / ink text, the page's only interactive element here. Canonical
   press-down hover comes from `<LinkButton>` itself.
 - **Motif:** corner `<JerseyShirt letterOverlay={ageGroup}>`, ~138px,
@@ -115,6 +129,14 @@ in the PR body.
   (added in #1945). Per the owner's workflow the trigger regex is the only
   manual GTM step; new params need no DLV/custom-dimension work. Confirm + note
   in the PR body.
+- **Added 2026-08-13 (#2543):** in-view event **`team_enrolment_cta_in_view`**
+  via a `<TrackInView>` wrapper on the page's section — mirroring
+  `team_standings_in_view` / `team_matches_in_view` / `team_squad_in_view`, with
+  the same `analyticsParams`. The wrapper belongs to `page.tsx`, not to this
+  component. Without it only the click fires, so view→click is uncomputable and
+  the band's weight — kept at full weight by the #2543 owner call — cannot be
+  argued from evidence. Still **no GTM change**: the `team_` regex already
+  matches.
 
 ## 6. Scope / non-goals
 
