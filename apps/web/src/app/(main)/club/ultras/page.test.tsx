@@ -22,6 +22,19 @@ describe("/club/ultras page", () => {
     expect(screen.getByText("Lid worden")).toBeInTheDocument();
   });
 
+  it("measures its running text at the prose token, leaving media at container width", () => {
+    render(<UltrasPage />);
+
+    // #2436: only direct-child <p> clamp to the prose token. jsdom does not
+    // resolve the arbitrary variant, so assert both halves of what makes it
+    // apply — the copy is a <p>, and its direct parent carries the clamp.
+    const paragraph = screen.getByText(/De naam KCVV Ultras werd/);
+    expect(paragraph.tagName).toBe("P");
+    expect(paragraph.parentElement?.className).toContain(
+      "[&>p]:max-w-[var(--container-prose)]",
+    );
+  });
+
   it("renders the raffle callout stats", () => {
     render(<UltrasPage />);
 
