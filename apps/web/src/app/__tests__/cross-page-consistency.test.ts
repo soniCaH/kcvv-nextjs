@@ -176,23 +176,27 @@ describe("the club timezone has one home (#2430)", () => {
  *   recover it and there is no escape hatch.
  * - `now()` / `local(…)` have no input to misread, so `.setZone` settles them.
  *
- * Deliberately conservative in one known way, stated because a rule whose reach
- * is unstated reads as broader coverage than it has: a single argument
- * containing a **nested call** (`fromISO(build())`) is not matched. A regex that
- * reached through the inner `)` would flag `fromISO(iso.trim(), { zone })` — a
- * false positive on a correctly zoned call, the failure mode that gets a guard
- * deleted.
+ * **Arguments are split by a balanced scan, not by a regex.** The first version
+ * of this rule matched the argument list with `[^,()]*`, which cannot span a
+ * nested call — so `fromISO(value.trim())` and `fromJSDate(getDate())` were
+ * silently unreachable, and `fromFormat`'s arm could never fire at all because
+ * its format argument is mandatory. Widening the character class instead would
+ * have flagged `fromISO(iso.trim(), { zone })`, a false positive on correct
+ * code, which is the failure mode that gets a guard deleted. Counting *real*
+ * arguments is the only version that gets both right, and it is a dozen lines.
  *
- * `fromObject` and `fromFormat` get their own arms rather than riding the
- * one-argument pattern, which cannot reach them: a comma inside `{ year, month
- * }` ends the match, and `fromFormat`'s format argument is mandatory — so on
- * the shared pattern the `fromObject` arm fired only for a single-key object
- * and the `fromFormat` arm could never fire at all. `fromObject({…})` is
- * exactly the shape this ticket deleted from `ical.ts`.
+ * The scan skips string and template literals, so a comma inside a format
+ * string (`fromFormat(psd, "dd, MM yyyy")`) does not read as an extra argument
+ * and hide an unzoned call.
  *
- * Zoning is checked by shape, not by which zone is named: `{ zone: "utc" }` is
- * a legitimate answer for stored data, and rule 2 already holds the club zone
- * to one home.
+ * An options argument that is an **object literal** must actually mention
+ * `zone`: `fromISO(iso, { locale: "nl" })` names an option but not a zone, and
+ * parses in the runtime zone exactly like the bare call. An options argument
+ * passed as an identifier is accepted — the rule cannot see inside it, and
+ * guessing would be the false positive again.
+ *
+ * Which zone is named is not checked: `{ zone: "utc" }` is a legitimate answer
+ * for stored data, and rule 2 already holds the club zone to one home.
  *
  * **What it cannot see:** a parse that names a zone and names the wrong one.
  * The worst defect #2601 fixed was of that kind — the ICS feed converted a
@@ -202,28 +206,123 @@ describe("the club timezone has one home (#2430)", () => {
  * a reading decision, held by `toMatchDisplayZone`'s docblock and by tests.
  */
 
-/** Instant input — a later `.setZone` is a genuine fix, so it is accepted. */
-const UNZONED_INSTANT_PARSE =
-  /\bDateTime\.(?:fromJSDate|fromMillis|fromSeconds)\s*\([^,()]*\)(?!\s*\.setZone\s*\()/;
+/** Every Luxon entry point that can land a value in the runtime zone. */
+const PARSE_CALL =
+  /\bDateTime\.(fromJSDate|fromISO|fromMillis|fromSeconds|fromFormat|fromObject|fromHTTP|fromRFC2822|fromSQL|now|local)\s*\(/g;
 
-/** Text input — the zone must be named at read time; no escape hatch. */
-const UNZONED_TEXT_PARSE =
-  /\bDateTime\.(?:fromISO|fromHTTP|fromRFC2822|fromSQL)\s*\([^,()]*\)/;
+/**
+ * Instant input: the parse-time zone cannot change which moment these denote,
+ * so a later `.setZone` is a genuine fix — `fromJSDate(d).setZone(z)` is
+ * `toDisplayZone`'s own body. Text and parts input get no such hatch, because
+ * an offset-less value has already been read in the runtime zone by then.
+ */
+const RE_ZONABLE = new Set([
+  "fromJSDate",
+  "fromMillis",
+  "fromSeconds",
+  "now",
+  "local",
+]);
 
-/** Parts/format input, whose own commas put them out of the patterns above. */
-const UNZONED_FROM_OBJECT = /\bDateTime\.fromObject\s*\(\s*\{[^{}]*\}\s*\)/;
-const UNZONED_FROM_FORMAT = /\bDateTime\.fromFormat\s*\([^,()]*,[^,()]*\)/;
+/** `fromFormat(text, format, opts?)` — its options sit one place further along. */
+const OPTIONS_INDEX: Record<string, number> = { fromFormat: 2 };
 
-const UNPINNED_NOW =
-  /\bDateTime\.(?:now|local)\s*\([^()]*\)(?!\s*\.setZone\s*\()/;
+/**
+ * `now()` and `local(y, m, d, …)` read the clock rather than an input, and take
+ * their options *last* rather than at a fixed slot — so their options argument
+ * is found by looking for a trailing object literal, not by counting.
+ */
+const CLOCK_READS = new Set(["now", "local"]);
 
-const RUNTIME_ZONE_PARSES = [
-  UNZONED_INSTANT_PARSE,
-  UNZONED_TEXT_PARSE,
-  UNZONED_FROM_OBJECT,
-  UNZONED_FROM_FORMAT,
-  UNPINNED_NOW,
-];
+function optionsArg(method: string, args: string[]): string | undefined {
+  if (!CLOCK_READS.has(method)) return args[OPTIONS_INDEX[method] ?? 1];
+  const last = args.at(-1)?.trim();
+  return last?.startsWith("{") ? last : undefined;
+}
+
+/**
+ * Split a call's arguments at depth 0, honouring nesting and string literals.
+ * `open` is the index of the call's `(`. Returns `null` for an unterminated
+ * call, which a truncated or unparseable file can produce — treated as "not a
+ * finding" rather than crashing the run.
+ */
+function topLevelArgs(source: string, open: number): string[] | null {
+  const args: string[] = [];
+  let depth = 0;
+  let start = open + 1;
+  let quote: string | null = null;
+
+  for (let i = open; i < source.length; i++) {
+    const ch = source[i]!;
+    if (quote) {
+      if (ch === "\\") i++;
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") quote = ch;
+    else if (ch === "(" || ch === "[" || ch === "{") depth++;
+    else if (ch === ")" || ch === "]" || ch === "}") {
+      if (--depth > 0) continue;
+      args.push(source.slice(start, i));
+      // A zero-argument call reads as one empty argument; report none.
+      return args.length === 1 && args[0]!.trim() === "" ? [] : args;
+    } else if (ch === "," && depth === 1) {
+      args.push(source.slice(start, i));
+      start = i + 1;
+    }
+  }
+  return null;
+}
+
+/** An options argument counts only if it could carry a zone. */
+function namesZone(arg: string | undefined): boolean {
+  if (arg === undefined) return false;
+  const trimmed = arg.trim();
+  // An object literal is readable, so read it. Anything else — an identifier, a
+  // spread, a call — is opaque, and accepted rather than guessed at.
+  return trimmed.startsWith("{") ? /\bzone\b/.test(trimmed) : true;
+}
+
+/** Every unzoned parse in one file, as the source text that produced it. */
+function findRuntimeZoneParses(source: string): string[] {
+  const found: string[] = [];
+  for (const match of source.matchAll(PARSE_CALL)) {
+    const method = match[1]!;
+    const open = match.index + match[0].length - 1;
+    const args = topLevelArgs(source, open);
+    if (args === null) continue;
+
+    if (namesZone(optionsArg(method, args))) continue;
+    if (
+      RE_ZONABLE.has(method) &&
+      /^\s*\.setZone\s*\(/.test(source.slice(open + rest(source, open)))
+    ) {
+      continue;
+    }
+    found.push(match[0]);
+  }
+  return found;
+}
+
+/** Offset from a call's `(` to just past its matching `)`. */
+function rest(source: string, open: number): number {
+  let depth = 0;
+  let quote: string | null = null;
+  for (let i = open; i < source.length; i++) {
+    const ch = source[i]!;
+    if (quote) {
+      if (ch === "\\") i++;
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") quote = ch;
+    else if (ch === "(" || ch === "[" || ch === "{") depth++;
+    else if (ch === ")" || ch === "]" || ch === "}") {
+      if (--depth === 0) return i - open + 1;
+    }
+  }
+  return source.length - open;
+}
 
 /** The two parses' home, and the only file allowed to reach for either shape. */
 const DATE_PARSE_HOME = "lib/utils/dates.ts";
@@ -232,47 +331,68 @@ describe("no date is parsed in the runtime zone (#2601)", () => {
   it.each(productionSources.filter((f) => f !== DATE_PARSE_HOME))(
     "%s — every Luxon parse names a zone",
     (relPath) => {
-      const source = code.get(relPath)!;
-      for (const pattern of RUNTIME_ZONE_PARSES) {
-        expect(pattern.exec(source)?.[0]).toBeUndefined();
-      }
+      expect(findRuntimeZoneParses(code.get(relPath)!)).toEqual([]);
     },
   );
 });
 
 /**
  * The rule's own coverage, asserted against the shapes it exists to catch and
- * the near-misses it must leave alone. Without this, the regexes above are five
- * claims nothing checks — and two of them silently matched nothing when first
+ * the near-misses it must leave alone. Without this the detector is a claim
+ * nothing checks — and two of its arms silently matched nothing when first
  * written, which reads like coverage while providing none.
  */
 describe("rule 3 catches what it claims to (#2601)", () => {
   it.each([
-    ["DateTime.fromJSDate(date)", true],
-    ["DateTime.fromISO(iso)", true],
-    ["DateTime.fromISO(cursor).plus({ months: 1 })", true],
-    ["DateTime.now()", true],
-    ["DateTime.local(2026, 8, 3)", true],
-    ["DateTime.fromObject({ year, month, day: 1 })", true],
-    ["DateTime.fromObject({ year: 2026 })", true],
-    ['DateTime.fromFormat(psd, "yyyy-MM-dd HH:mm")', true],
-    ["DateTime.fromSQL(row.kickoff)", true],
-    ["DateTime.fromMillis(ms)", true],
+    ["DateTime.fromJSDate(date)"],
+    ["DateTime.fromISO(iso)"],
+    ["DateTime.fromISO(cursor).plus({ months: 1 })"],
+    ["DateTime.now()"],
+    ["DateTime.local(2026, 8, 3)"],
+    ["DateTime.fromObject({ year, month, day: 1 })"],
+    ["DateTime.fromObject({ year: 2026 })"],
+    ['DateTime.fromFormat(psd, "yyyy-MM-dd HH:mm")'],
+    ["DateTime.fromSQL(row.kickoff)"],
+    ["DateTime.fromMillis(ms)"],
+    // Nested calls — unreachable under the original `[^,()]*` argument match.
+    ["DateTime.fromISO(value.trim())"],
+    ["DateTime.fromJSDate(getDate())"],
+    ['DateTime.fromFormat(value.trim(), "yyyy-MM-dd")'],
+    ["DateTime.fromISO(build(a, b))"],
+    // A comma inside the format string must not read as an options argument.
+    ['DateTime.fromFormat(psd, "dd, MM yyyy")'],
+    // Options present, but not a zone among them.
+    ['DateTime.fromISO(iso, { locale: "nl" })'],
+    // A parse's zone must be named at read time; `.setZone` comes too late.
+    ["DateTime.fromISO(iso).setZone(CLUB_TIMEZONE)"],
   ])("flags %s", (snippet) => {
-    expect(RUNTIME_ZONE_PARSES.some((p) => p.test(snippet))).toBe(true);
+    expect(findRuntimeZoneParses(snippet)).toHaveLength(1);
   });
 
   it.each([
-    ['DateTime.fromISO(iso, { zone: "utc" })', false],
-    ['DateTime.fromISO(iso.trim(), { zone: "utc" })', false],
-    ["DateTime.fromJSDate(d, { zone: CLUB_TIMEZONE })", false],
+    ['DateTime.fromISO(iso, { zone: "utc" })'],
+    ['DateTime.fromISO(iso.trim(), { zone: "utc" })'],
+    ["DateTime.fromJSDate(d, { zone: CLUB_TIMEZONE })"],
     // Instant input: a later re-zone is a real fix, so it must not be flagged.
-    ["DateTime.fromJSDate(d).setZone(CLUB_TIMEZONE)", false],
-    ["DateTime.fromMillis(ms).setZone(CLUB_TIMEZONE)", false],
-    ["DateTime.now().setZone(CLUB_TIMEZONE)", false],
-    ["DateTime.fromObject({ year, month }, { zone: CLUB_TIMEZONE })", false],
-    ['DateTime.fromFormat(psd, "yyyy-MM-dd", { zone: CLUB_TIMEZONE })', false],
+    ["DateTime.fromJSDate(d).setZone(CLUB_TIMEZONE)"],
+    ["DateTime.fromMillis(ms).setZone(CLUB_TIMEZONE)"],
+    ["DateTime.now().setZone(CLUB_TIMEZONE)"],
+    ["DateTime.fromJSDate(getDate()).setZone(CLUB_TIMEZONE)"],
+    ['DateTime.local(2026, 8, 3, { zone: "utc" })'],
+    ["DateTime.fromObject({ year, month }, { zone: CLUB_TIMEZONE })"],
+    ['DateTime.fromFormat(psd, "yyyy-MM-dd", { zone: CLUB_TIMEZONE })'],
+    // Opaque options are accepted rather than guessed at.
+    ["DateTime.fromISO(iso, opts)"],
+    ["DateTime.utc(2026, 8, 3)"],
   ])("leaves %s alone", (snippet) => {
-    expect(RUNTIME_ZONE_PARSES.some((p) => p.test(snippet))).toBe(false);
+    expect(findRuntimeZoneParses(snippet)).toEqual([]);
+  });
+
+  it("reports every offender in a file, not just the first", () => {
+    expect(
+      findRuntimeZoneParses(
+        "DateTime.fromISO(a); DateTime.fromJSDate(b); DateTime.now();",
+      ),
+    ).toHaveLength(3);
   });
 });
