@@ -45,7 +45,9 @@ export function UltrasSection({
           {heading}
         </EditorialHeading>
       </header>
-      <div className="text-body-md text-ink-soft [&_strong]:text-ink flex flex-col gap-5 leading-relaxed [&_strong]:font-semibold">
+      {/* #2436: only <p> children clamp to the prose token — the embedded
+          <TapedFigure>/<PullQuote> blocks keep the container's full width. */}
+      <div className="text-body-md text-ink-soft [&_strong]:text-ink flex flex-col gap-5 leading-relaxed [&_strong]:font-semibold [&>p]:max-w-[var(--container-prose)]">
         {children}
       </div>
     </section>

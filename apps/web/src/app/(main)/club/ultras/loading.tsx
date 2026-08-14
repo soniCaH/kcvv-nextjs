@@ -21,7 +21,9 @@ function SectionSkeleton({ withImage = false }: { withImage?: boolean }) {
         <div className="bg-paper-edge h-3 w-28" />
         <div className="bg-paper-edge h-8 w-56" />
       </div>
-      <div className="space-y-3">
+      {/* Paragraph bars take the prose token like the real copy (#2436); the
+          figure below keeps the container's full width. */}
+      <div className="max-w-[var(--container-prose)] space-y-3">
         <div className="bg-paper-edge h-4 w-full" />
         <div className="bg-paper-edge h-4 w-full" />
         <div className="bg-paper-edge h-4 w-5/6" />
