@@ -151,7 +151,7 @@ export default async function HulpHubPage() {
             <div className="mt-8">
               <Suspense
                 fallback={
-                  <div className="border-ink bg-cream h-40 animate-pulse border-2 shadow-[3px_3px_0_0_var(--color-ink)]" />
+                  <div className="border-ink bg-cream h-40 border-2 shadow-[3px_3px_0_0_var(--color-ink)] motion-safe:animate-pulse" />
                 }
               >
                 <HulpFinder responsibilityPaths={responsibilityPaths} />

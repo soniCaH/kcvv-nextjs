@@ -18,7 +18,10 @@ export default function StaffDetailLoading() {
 
       <div aria-hidden="true">
         {/* Hero footprint — figure left, text right (mirrors PlayerHero). */}
-        <PageContainer as="section" className="animate-pulse py-12 lg:py-16">
+        <PageContainer
+          as="section"
+          className="py-12 motion-safe:animate-pulse lg:py-16"
+        >
           <div className="grid grid-cols-1 items-start gap-x-10 gap-y-8 sm:grid-cols-[minmax(220px,320px)_1fr]">
             <div className="bg-paper-edge aspect-[3/4] w-full max-w-[320px] justify-self-start" />
             <div className="flex flex-col gap-5">
@@ -42,7 +45,7 @@ export default function StaffDetailLoading() {
         {/* Bio footprint — cream band. */}
         <PageContainer
           as="section"
-          className="bg-cream animate-pulse py-12 lg:py-16"
+          className="bg-cream py-12 motion-safe:animate-pulse lg:py-16"
         >
           <div className="space-y-3">
             <div className="bg-paper-edge h-4 w-full" />

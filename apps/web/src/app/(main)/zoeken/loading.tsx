@@ -19,7 +19,7 @@ export default function SearchLoading() {
 
       <PageContainer width="index" className="py-12">
         {/* Filter chips */}
-        <div className="flex animate-pulse gap-2">
+        <div className="flex gap-2 motion-safe:animate-pulse">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
@@ -29,7 +29,7 @@ export default function SearchLoading() {
         </div>
 
         {/* Result rows */}
-        <div className="mt-8 animate-pulse space-y-4">
+        <div className="mt-8 space-y-4 motion-safe:animate-pulse">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}

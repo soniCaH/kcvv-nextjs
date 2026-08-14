@@ -38,8 +38,8 @@ export function BoardPageLoading({ label }: { label: string }) {
 
       {/* "De leden" — staff grid: auto-fill minmax(150px,1fr), border-2 ink cards. */}
       <PageContainer as="section" className="py-12">
-        <div className="bg-paper-edge mb-6 h-9 w-40 animate-pulse" />
-        <div className="grid animate-pulse grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
+        <div className="bg-paper-edge mb-6 h-9 w-40 motion-safe:animate-pulse" />
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4 motion-safe:animate-pulse">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
@@ -59,7 +59,7 @@ export function BoardPageLoading({ label }: { label: string }) {
         aria-hidden="true"
         className="bg-jersey-deep-dark border-ink border-y-2"
       >
-        <PageContainer className="animate-pulse py-12 text-center sm:py-16">
+        <PageContainer className="py-12 text-center motion-safe:animate-pulse sm:py-16">
           <div className="bg-cream/25 mx-auto mb-4 h-9 w-64" />
           <div className="bg-cream/15 mx-auto mb-7 h-4 w-80 max-w-full" />
           <div className="bg-warm/60 mx-auto h-11 w-48" />

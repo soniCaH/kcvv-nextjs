@@ -238,10 +238,10 @@ export function MatchEvents({
       <div className={cn("space-y-3", className)}>
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4">
-            <div className="bg-cream-soft h-6 w-10 animate-pulse" />
-            <div className="bg-cream-soft h-[22px] w-[22px] animate-pulse" />
-            <div className="bg-cream-soft h-5 flex-1 animate-pulse" />
-            <div className="bg-cream-soft h-4 w-12 animate-pulse" />
+            <div className="bg-cream-soft h-6 w-10 motion-safe:animate-pulse" />
+            <div className="bg-cream-soft h-[22px] w-[22px] motion-safe:animate-pulse" />
+            <div className="bg-cream-soft h-5 flex-1 motion-safe:animate-pulse" />
+            <div className="bg-cream-soft h-4 w-12 motion-safe:animate-pulse" />
           </div>
         ))}
       </div>

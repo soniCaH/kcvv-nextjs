@@ -13,7 +13,10 @@ import { PageContainer } from "@/components/design-system";
 export default function PlayerDetailLoading() {
   return (
     <div className="min-h-screen" aria-hidden="true">
-      <PageContainer as="section" className="animate-pulse py-12 lg:py-16">
+      <PageContainer
+        as="section"
+        className="py-12 motion-safe:animate-pulse lg:py-16"
+      >
         <div className="grid grid-cols-1 items-start gap-x-10 gap-y-8 sm:grid-cols-[1fr_minmax(220px,320px)]">
           <div className="flex flex-col gap-5">
             <div className="bg-paper-edge h-4 w-24" />
@@ -31,7 +34,7 @@ export default function PlayerDetailLoading() {
       <div className="bg-paper-edge h-[18px] w-full" />
       <PageContainer
         as="section"
-        className="bg-cream animate-pulse py-12 lg:py-16"
+        className="bg-cream py-12 motion-safe:animate-pulse lg:py-16"
       >
         <div className="space-y-3">
           <div className="bg-paper-edge h-4 w-full" />

@@ -38,7 +38,7 @@ export default function CalendarLoading() {
             {["w-16", "w-28", "w-24", "w-44", "w-28", "w-20"].map((w, i) => (
               <div
                 key={i}
-                className={`${w} border-paper-edge bg-cream-soft h-[32px] animate-pulse rounded-none border-2`}
+                className={`${w} border-paper-edge bg-cream-soft h-[32px] rounded-none border-2 motion-safe:animate-pulse`}
                 data-testid="skeleton-pill"
               />
             ))}
@@ -53,7 +53,7 @@ export default function CalendarLoading() {
             >
               {/* 3-way view toggle */}
               <div
-                className="border-ink inline-flex animate-pulse overflow-hidden border-2"
+                className="border-ink inline-flex overflow-hidden border-2 motion-safe:animate-pulse"
                 data-testid="calendar-skeleton-view-toggle"
               >
                 <div className="bg-cream-soft h-[31px] w-16" />
@@ -62,7 +62,7 @@ export default function CalendarLoading() {
               </div>
 
               {/* Shared period nav */}
-              <div className="flex animate-pulse items-center gap-2">
+              <div className="flex items-center gap-2 motion-safe:animate-pulse">
                 <div className="border-ink bg-cream h-8 w-8 border-2" />
                 <div className="bg-cream-soft h-6 w-32" />
                 <div className="border-ink bg-cream h-8 w-8 border-2" />
@@ -70,13 +70,13 @@ export default function CalendarLoading() {
 
               {/* Subscribe button */}
               <div
-                className="border-ink bg-cream-soft h-[34px] w-28 animate-pulse border-2"
+                className="border-ink bg-cream-soft h-[34px] w-28 border-2 motion-safe:animate-pulse"
                 data-testid="calendar-skeleton-subscribe"
               />
             </div>
 
             {/* Month grid skeleton — 7 columns */}
-            <div className="animate-pulse p-4">
+            <div className="p-4 motion-safe:animate-pulse">
               <div className="border-paper-edge mb-1 grid grid-cols-7 border-b border-dashed">
                 {Array.from({ length: 7 }).map((_, i) => (
                   <div key={i} className="flex justify-center py-2">

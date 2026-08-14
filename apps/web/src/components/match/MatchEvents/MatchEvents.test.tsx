@@ -336,7 +336,7 @@ describe("MatchEvents", () => {
     it("renders skeleton when loading", () => {
       const { container } = render(<MatchEvents {...defaultProps} isLoading />);
       expect(
-        container.querySelectorAll(".animate-pulse").length,
+        container.querySelectorAll('[class*="animate-pulse"]').length,
       ).toBeGreaterThan(0);
     });
 
