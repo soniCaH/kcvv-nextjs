@@ -316,7 +316,7 @@ was chasing nothing.
 | D3 | Internal consistency | One match-row vocabulary (`TeamAgendaRow`) shared across homepage, `/ploegen/[slug]` and `/kalender` — real system thinking. Against that: **four parallel type ramps** on both size and line-height axes ([#2490](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2490)), a stray `#6b7280` neutral grey shipping at `DownloadButton.tsx:49` against the No-Grey-UI rule plus seven undocumented file-type colours, the same date rendered three times in two casings on an article, and **"A-PLOEG" appearing twice in the `/nieuws` filter row** (the Sanity title-case / GROQ case-sensitivity trap). | **PARTIAL.** Excellent at the primitive level, drifting at the token level. |
 | D4 | Recognition over recall | Nav exposes 9 items; footer exposes 17 including the roles-based paths ("Als speler", "Als vrijwilliger", "Als sponsor"). Search exists at `/zoeken`. | **PASS.** |
 | D5 | Help and documentation | `/hulp` is a real answer to this heuristic — FAQ + a full organigram (Hoofdbestuur 5 functies, Jeugdbestuur 7, Algemeen 20) + a "Niemand gevonden?" fallback. 6 JSON-LD blocks on that page. | **PASS — above the tier.** Very few clubs at any level ship a help page. |
-| D6 | Key actions ≤2 clicks | Fixtures: 1 click (`Wedstrijden`). Team squad: 2 (`A-ploeg`). Youth: 1. Membership: 2 (footer `Als speler` / `De club → word-lid`). News: 1. **How to get to the ground: not reachable at all** — there is no such page. | **PASS on everything that exists; FAIL on the one thing that doesn't.** |
+| D6 | Key actions ≤2 clicks | Fixtures: 1 click (`Wedstrijden`). Team squad: 2 (`A-ploeg`). Youth: 1. Membership: 2 (footer `Als speler` / `De club → word-lid`). News: 1. **How to get to the ground: 2 clicks** (`De club → Contact`), **corrected 2026-08-14** — `/club/contact`'s "Kom naar ons." section carries the maps route, parking, prices, kantine hours and accessibility. What is not reachable at any depth is the *travel* half: train, bus, bike, minutes-on-foot. | **PASS.** The original read "not reachable at all — there is no such page", which was wrong; the arrival information is two clicks deep. The travel gap is real but is a content gap on an existing page, not a routing one. |
 | D7 | Hover-only affordances | Every read-more affordance on the homepage is hover-only, on a touch-first product where hover does not exist. | **FAIL.** PRODUCT.md explicitly names this failure mode: "no interaction that must be discovered (hover-only affordances, hidden gestures, unlabelled icons)". We violate our own stated rule. |
 
 ### 3.5 Design / identity
@@ -335,7 +335,7 @@ was chasing nothing.
 | F1 | Automatic federation fixture/result feeds | PSD sync feeds fixtures, results, standings, squads, opponent crests (`dfaozfi7c7f3s.cloudfront.net/logos/...`). This is the exact thing Mortimer FC was nominated for ("direct feeds from the FA website and API and GotFootball"), and we do it more completely. | **PASS — we beat the nominee.** |
 | F2 | Real news section | 24 `<article>` on `/nieuws`, spanning 2023 to 2026, with genuine long-form (a 1,279-word interview with 11 Q&A pairs). Bylined previews wired to `matchId`. | **PASS.** |
 | F3 | Photo galleries | `/galerij` + `/galerij/[slug]` exist. | **PASS.** |
-| F4 | How to get to the club | **Does not exist.** `/club/contact` gives an address (Driesstraat 32, 1982 Elewijt), not a journey. No parking, no bus, no station, no walk time, no gate. | **FAIL — and this is the single most-corroborated gap in the entire research programme.** It is cited verbatim in the Berkshire award nomination, and independently as the #1 or #2 recommendation in three of the six sibling files. Six independent lines of evidence converge on one missing page. |
+| F4 | How to get to the club | **Partly exists — corrected 2026-08-14 against `ContactPage.tsx`.** `/club/contact` carries a "Kom naar ons." section: a `Routebeschrijving` maps link to Driesstraat 32, parking guidance (at the pitch and around the Van Innis sportpark), an Inkom price table (Jeugd €3 · B-ploeg €5 · A-ploeg €10), kantine opening days and hours, and accessibility — wheelchair-accessible with 2 reserved spaces. **What is genuinely absent: public transport (no bus, no station), minutes-on-foot from any option, and the gate.** The detailed parking plan is a pointer to the gemeente Zemst site, whose URL is still a `TODO` in the component. | **PARTIAL, not FAIL.** The original verdict said "does not exist" and was wrong — it was read off the route file rather than the component that renders the page. **The travel half of the gap is real** and remains the most-corroborated single recommendation in the corpus; the arrival half is already built, so any `/club/bereikbaarheid` proposal must extend `/club/contact` rather than duplicate it. |
 | F5 | Every team/age band visible on the homepage | Binfield runs four separate news streams on its homepage (First Team / U23 / Youth and Junior / Women and Girls). Ours runs one undifferentiated "Laatste nieuws" plus A- and B-team fixture blocks. Youth gets one band ("De toekomst van Elewijt"). | **FAIL, softly.** We out-design Binfield everywhere and lose to it here. A youth parent does not see their child's age band on the homepage; a Binfield parent does. This is editorial architecture, not styling. |
 
 ### 3.7 Scorecard summary
@@ -347,10 +347,10 @@ Revised after the live browser pass.
 | A. Accessibility floor (10) | 7 | 3 | — |
 | B. Performance (5) | 2 (TTFB, CLS) | 1 (article hero) | 2 (LCP, INP) |
 | C. Responsive (2) | 2 | 0 | — |
-| D. Usability (7) | 4 | 1 | 2 partial |
+| D. Usability (7) | 5 | 0 | 2 partial |
 | E. Design/identity (4) | 3 | 0 | 1 |
-| F. Content completeness (5) | 3 | 2 | — |
-| **Total (33)** | **21** | **7** | **5** |
+| F. Content completeness (5) | 3 | 1 | 1 partial (F4) |
+| **Total (33)** | **22** | **5** | **6** |
 
 **Blunt overall verdict.** This is a site that would win the only real amateur club-website award on
 record without much trouble, and still has a usability gap on a phone — though a materially smaller
@@ -358,7 +358,7 @@ one than the first draft of this file claimed. The identity work is genuinely fi
 accessibility scanner floor beats 95.9% of the web; **CLS of 0.0007 and warm TTFB of 22–135ms are
 excellent**; and 320px reflow passes cleanly. What remains is real but bounded: **16×16 share
 controls and a 27px footer nav**, 63 type sites below the legibility floor, one lazy article hero,
-and no page telling a visiting supporter how to reach the ground.
+and nothing telling a visiting supporter how to *travel* to the ground — no train, bus, bike or minutes-on-foot. **Corrected 2026-08-14:** the arrival half is built. `/club/contact` already carries the route link, parking, entry prices, kantine hours and accessibility, so this is a content gap on an existing page rather than a missing one.
 
 The honest summary is that **we are winning the 40% (Design) and the engineering fundamentals, and
 losing on target size, type floor and one missing page.** The first draft framed this as

@@ -557,12 +557,12 @@ anything comparable.
 
 | Pattern | Best example seen | Ours today |
 |---|---|---|
-| Kantine opening rule in one sentence | *"Geopend tijdens alle activiteiten van de club (trainingen, wedstrijden, ...)"* — [KSCW Hofstade](https://www.kscwhofstade.be/over-ons/kantine) | none |
+| Kantine opening rule in one sentence | *"Geopend tijdens alle activiteiten van de club (trainingen, wedstrijden, ...)"* — [KSCW Hofstade](https://www.kscwhofstade.be/over-ons/kantine) | **have it** — `/club/contact` states the kantine is open on training days, with hours |
 | Accepted payment methods in the kantine | KSCW Hofstade kantine page (payment logos) | none |
 | Kantine phone number published | *"02 269 70 15"* — [KFC Meise](https://www.kfcmeise.be/) | none |
 | Pitch inventory named by role | *"Terrein 1 (A- en B-ploeg)"* … *"Terrein 4 (jeugd)"* — [Eizeringen](https://www.sporting-eizeringen.be/club/accommodatie/) | none |
 | Surface and changing-room counts | *"Er is een A-veld in natuurlijk gras en een B-veld en twee jeugdvelden in kunstgras."* / 12 kleedkamers incl. 2 for referees — [KFC Muizen](https://www.kfcmuizen.be/accommodatie) | none |
-| Parking: the approved route **and** the forbidden one | Graanweg-only access, overflow lot, ban on verge parking — [KFC Nijlen](https://nijlen.voetbalassist.be/206/locatie-en-accomodatie/) | none |
+| Parking: the approved route **and** the forbidden one | Graanweg-only access, overflow lot, ban on verge parking — [KFC Nijlen](https://nijlen.voetbalassist.be/206/locatie-en-accomodatie/) | **half** — `/club/contact` says where to park (pitch and Van Innis sportpark); nothing says where *not* to, and the detailed plan is a pointer to the gemeente Zemst site whose URL is still a `TODO` |
 | Shared parking disclosure | *"een grote parking die samen met de tennisclub gebruikt wordt"* — KFC Muizen | none |
 | Which campus / which ground today | PSV 1820's two campuses; FC Hofstade's temporary Weerde ground | none |
 | Kantine / hall rental as an offer | Eppegem's Feestzaal Het Assebroek; Katelijne's Club 99; Muizen's *Verhuur accommodatie*; Kampenhout's *Accomodatie huren?* | none |
