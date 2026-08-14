@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2540 · 2540-1 — Wat zegt het competitieblok als er niets is?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey: #4acf52;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --brick: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --font-display: "Fraunces", georgia, serif;
+        --font-body: "Archivo", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.92em;
+      }
+      .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
+      header.page {
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 20px;
+        margin-bottom: 12px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      h1.page {
+        font-family: var(--font-display);
+        font-size: 40px;
+        line-height: 1.1;
+        margin: 10px 0 0;
+      }
+      .lede {
+        max-width: 680px;
+        font-size: 16px;
+        line-height: 1.55;
+        color: var(--ink-soft);
+      }
+      .locked {
+        max-width: 680px;
+        background: var(--cream-soft);
+        border: 1px dashed var(--ink-muted);
+        padding: 14px 18px;
+        margin: 24px 0 0;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .locked b {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 6px;
+        color: var(--jersey-deep);
+      }
+      .locked p {
+        margin: 0 0 8px;
+      }
+      .locked p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* ── panel ─────────────────────────────────────────────── */
+      .panel {
+        margin-top: 56px;
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+      }
+      .panel > h2 {
+        font-family: var(--font-display);
+        font-size: 26px;
+        margin: 0;
+        padding: 16px 20px 14px;
+        border-bottom: 2px solid var(--ink);
+        background: var(--cream-deep);
+      }
+      .panel > h2 span.tag {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .panel > .why {
+        padding: 14px 20px;
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--ink-soft);
+        border-bottom: 1px dashed var(--paper-edge);
+        margin: 0;
+      }
+
+      /* ── stage grid: three moments in one season ───────────── */
+      .stages {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+      }
+      @media (max-width: 1000px) {
+        .stages {
+          grid-template-columns: 1fr;
+        }
+      }
+      .stage {
+        border-right: 1px dashed var(--paper-edge);
+        padding: 0 0 18px;
+      }
+      .stage:last-child {
+        border-right: none;
+      }
+      .stage > .when {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        padding: 12px 16px 10px;
+        border-bottom: 1px solid var(--paper-edge);
+        margin: 0 0 14px;
+      }
+      .stage > .when b {
+        color: var(--brick);
+      }
+
+      /* ── the fake page ─────────────────────────────────────── */
+      .page-frag {
+        background: var(--cream);
+        margin: 0 12px;
+        border: 1px solid var(--paper-edge);
+      }
+      .nav {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid var(--ink);
+        background: var(--cream);
+        overflow: hidden;
+      }
+      .nav a {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 9px 10px;
+        color: var(--ink-soft);
+        text-decoration: none;
+        border-right: 1px solid var(--paper-edge);
+        white-space: nowrap;
+      }
+      .nav a.on {
+        background: var(--ink);
+        color: var(--cream);
+      }
+      .seam {
+        height: 10px;
+        background: repeating-linear-gradient(
+          -45deg,
+          var(--ink) 0 6px,
+          var(--cream) 6px 12px
+        );
+      }
+      .sect {
+        padding: 16px 14px 18px;
+      }
+      .sect h3 {
+        font-family: var(--font-display);
+        font-size: 20px;
+        margin: 0 0 10px;
+      }
+      .sect h3 .dot {
+        color: var(--jersey-deep);
+      }
+      .empty {
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--ink-soft);
+        border: 1px dashed var(--ink-muted);
+        padding: 10px 12px;
+        margin: 0;
+        background: var(--cream-soft);
+      }
+      .empty em {
+        font-style: normal;
+        color: var(--ink-muted);
+        display: block;
+        font-size: 11.5px;
+        margin-top: 4px;
+      }
+      table.rank {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      table.rank th {
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-align: left;
+        color: var(--ink-muted);
+        border-bottom: 1px solid var(--ink);
+        padding: 4px 5px;
+      }
+      table.rank td {
+        padding: 5px;
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      table.rank tr.us td {
+        background: var(--warm);
+        font-weight: 700;
+      }
+      table.rank td.n {
+        font-family: var(--font-mono);
+        text-align: right;
+      }
+      .fx {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid var(--paper-edge);
+        padding: 7px 0;
+        font-size: 12px;
+      }
+      .fx .d {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--ink-muted);
+        width: 54px;
+        flex: none;
+      }
+      .fx .t {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .fx .s {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-muted);
+        flex: none;
+      }
+      .ghost {
+        opacity: 0.42;
+      }
+      .cta {
+        background: var(--jersey-deep);
+        color: #fff;
+        padding: 14px;
+        text-align: center;
+      }
+      .cta b {
+        font-family: var(--font-display);
+        font-size: 17px;
+        display: block;
+      }
+      .verdict {
+        padding: 12px 20px 16px;
+        font-size: 13px;
+        line-height: 1.5;
+        border-top: 1px dashed var(--paper-edge);
+        color: var(--ink-soft);
+        margin: 0;
+      }
+      .verdict b {
+        color: var(--brick);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="page">
+        <span class="kicker">Wayfinder #2536 · ticket #2540 · drill 2540-1</span>
+        <h1 class="page">Wat zegt het competitieblok als er niets is?</h1>
+      </header>
+
+      <p class="lede">
+        Vandaag verdwijnt een lege sectie <em>volledig</em> — kop, inhoud,
+        <code>StripedSeam</code> én het item in de sticky nav. Gemeten op
+        13&nbsp;aug&nbsp;2026: <code>#klassement</code> staat op
+        <strong>0 van 18</strong> pagina's, <code>#wedstrijden</code> op 4.
+      </p>
+
+      <div class="locked">
+        <b>★ Locked — 2026-08-13 · Q1 + Q2</b>
+        <p>
+          <strong>Puur reactief op de feed.</strong> Geen leeftijdsregels, geen
+          afleiding uit vorig seizoen, nooit een voorspelling — de fasevorm kan
+          per ploeg elk half jaar verschuiven. De pagina meldt alleen wat de
+          feed <em>nu</em> bevat.
+        </p>
+        <p>
+          <strong>Vóór publicatie: één melding voor het hele competitieblok</strong>
+          — niet twee lege secties. Poort =
+          <code>≥1 OFFICIAL-wedstrijd in het huidige PSD-seizoen</code>, een
+          signaal dat aantoonbaar vóór het klassement aankomt: de A-ploeg heeft
+          vandaag 30 wedstrijden gepubliceerd en <code>teams: 0</code>.
+        </p>
+      </div>
+
+      <p class="lede" style="margin-top: 26px">
+        Open dan de vraag: <strong>wat gebeurt er daarna?</strong> Alle drie de
+        panelen tonen dezelfde ploeg — <code>/ploegen/eerste-elftallen-a</code> —
+        op drie echte momenten van dit seizoen. De data is echt: eerste
+        competitiewedstrijd <strong>zo 30 aug, KCVV&nbsp;Elewijt – KSC
+        Blankenberge</strong>.
+      </p>
+
+      <!-- ══ OPTIE A ══════════════════════════════════════════ -->
+      <section class="panel">
+        <h2>
+          <span class="tag">Optie A</span>
+          Eén competitieblok — nav krijgt één item
+        </h2>
+        <p class="why">
+          <code>#klassement</code> en <code>#wedstrijden</code> smelten samen tot
+          één sectie <em>Competitie</em>. Eén kop, één seam, één nav-item, van
+          leeg tot vol. Het blok beschrijft zijn eigen toestand.
+        </p>
+        <div class="stages">
+          <div class="stage">
+            <p class="when">Nu · 13 aug — <b>niets gepubliceerd</b></p>
+            <div class="page-frag">
+              <nav class="nav">
+                <a class="on" href="#">Competitie</a><a href="#">Spelers</a
+                ><a href="#">Staf</a>
+              </nav>
+              <div class="seam"></div>
+              <div class="sect">
+                <h3>Competitie<span class="dot">.</span></h3>
+                <p class="empty">
+                  De kalender voor dit seizoen is nog niet bekendgemaakt.
+                  <em>Zodra de bond publiceert, verschijnen hier de
+                    wedstrijden en het klassement.</em>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="stage">
+            <p class="when">Vanaf nu · kalender uit, <b>tabel nog leeg</b></p>
+            <div class="page-frag">
+              <nav class="nav">
+                <a class="on" href="#">Competitie</a><a href="#">Spelers</a
+                ><a href="#">Staf</a>
+              </nav>
+              <div class="seam"></div>
+              <div class="sect">
+                <h3>Competitie<span class="dot">.</span></h3>
+                <p class="empty" style="margin-bottom: 12px">
+                  Het klassement start bij de eerste competitiewedstrijd.
+                </p>
+                <div class="fx">
+                  <span class="d">zo 30/08</span
+                  ><span class="t">KCVV Elewijt – KSC Blankenberge</span
+                  ><span class="s">15:00</span>
+                </div>
+                <div class="fx">
+                  <span class="d">za 05/09</span
+                  ><span class="t">KSV Rumbeke – KCVV Elewijt</span
+                  ><span class="s">19:30</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stage">
+            <p class="when">Vanaf 30 aug · <b>tabel én kalender</b></p>
+            <div class="page-frag">
+              <nav class="nav">
+                <a class="on" href="#">Competitie</a><a href="#">Spelers</a
+                ><a href="#">Staf</a>
+              </nav>
+              <div class="seam"></div>
+              <div class="sect">
+                <h3>Competitie<span class="dot">.</span></h3>
+                <table class="rank">
+                  <tr>
+                    <th>#</th>
+                    <th>Ploeg</th>
+                    <th style="text-align: right">Pt</th>
+                  </tr>
+                  <tr class="us">
+                    <td class="n">1</td>
+                    <td>KCVV Elewijt</td>
+                    <td class="n">3</td>
+                  </tr>
+                  <tr>
+                    <td class="n">2</td>
+                    <td>KSC Blankenberge</td>
+                    <td class="n">0</td>
+                  </tr>
+                </table>
+                <div class="fx" style="margin-top: 10px">
+                  <span class="d">za 05/09</span
+                  ><span class="t">KSV Rumbeke – KCVV Elewijt</span
+                  ><span class="s">19:30</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="verdict">
+          <b>Kost:</b> twee bestaande secties worden er één — de sticky nav
+          verliest een ingang en <code>#klassement</code> als anker verdwijnt
+          (bestaande links breken). <b>Wint:</b> de pagina heeft altijd dezelfde
+          vorm, en er is precies één plek die "nog niets" zegt.
+        </p>
+      </section>
+
+      <!-- ══ OPTIE B ══════════════════════════════════════════ -->
+      <section class="panel">
+        <h2>
+          <span class="tag">Optie B</span>
+          Twee secties, elk met een eigen lege toestand
+        </h2>
+        <p class="why">
+          <code>#klassement</code> en <code>#wedstrijden</code> blijven apart.
+          Zodra de ploeg in competitie is, staan ze er allebei — elk met eigen
+          <code>&lt;h2&gt;</code>, eigen seam, eigen nav-item — en zegt elk voor
+          zich wat er scheelt.
+        </p>
+        <div class="stages">
+          <div class="stage">
+            <p class="when">Nu · 13 aug — <b>niets gepubliceerd</b></p>
+            <div class="page-frag">
+              <nav class="nav">
+                <a href="#">Spelers</a><a href="#">Staf</a>
+              </nav>
+              <div class="seam"></div>
+              <div class="sect">
+                <p class="empty">
+                  De kalender voor dit seizoen is nog niet bekendgemaakt.
+                  <em>Eén melding — er is nog geen sectie om te tonen.</em>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="stage">
+            <p class="when">Vanaf nu · kalender uit, <b>tabel nog leeg</b></p>
+            <div class="page-frag">
+              <nav class="nav">
+                <a class="on" href="#">Klassement</a><a href="#">Wedstrijden</a
+                ><a href="#">Spelers</a><a href="#">Staf</a>
+              </nav>
+              <div class="seam"></div>
+              <div class="sect">
+                <h3>Klassement<span class="dot">.</span></h3>
+                <p class="empty">
+                  Start bij de eerste competitiewedstrijd op zondag 30 augustus.
+                </p>
+              </div>
+              <div class="seam"></div>
+              <div class="sect">
+                <h3>Wedstrijden<span class="dot">.</span></h3>
+                <div class="fx">
+                  <span class="d">zo 30/08</span
+                  ><span class="t">KCVV Elewijt – KSC Blankenberge</span
+                  ><span class="s">15:00</span>
+                </div>
+                <div class="fx">
+                  <span class="d">za 05/09</span
+                  ><span class="t">KSV Rumbeke – KCVV Elewijt</span
+                  ><span class="s">19:30</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stage">
+            <p class="when">Vanaf 30 aug · <b>tabel én kalender</b></p>
+            <div class="page-frag">
+              <nav class="nav">
+                <a class="on" href="#">Klassement</a><a href="#">Wedstrijden</a
+                ><a href="#">Spelers</a><a href="#">Staf</a>
+              </nav>
+              <div class="seam"></div>
+              <div class="sect">
+                <h3>Klassement<span class="dot">.</span></h3>
+                <table class="rank">
+                  <tr>
+                    <th>#</th>
+                    <th>Ploeg</th>
+                    <th style="text-align: right">Pt</th>
+                  </tr>
+                  <tr class="us">
+                    <td class="n">1</td>
+                    <td>KCVV Elewijt</td>
+                    <td class="n">3</td>
+                  </tr>
+                  <tr>
+                    <td class="n">2</td>
+                    <td>KSC Blankenberge</td>
+                    <td class="n">0</td>
+                  </tr>
+                </table>
+              </div>
+              <div class="seam"></div>
+              <div class="sect">
+                <h3>Wedstrijden<span class="dot">.</span></h3>
+                <div class="fx">
+                  <span class="d">za 05/09</span
+                  ><span class="t">KSV Rumbeke – KCVV Elewijt</span
+                  ><span class="s">19:30</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="verdict">
+          <b>Kost:</b> de pagina verandert twee keer per seizoen van vorm — nav
+          springt van 2 naar 4 items. <b>Wint:</b> ankers en nav blijven zoals
+          ze zijn, elke sectie krijgt eindelijk een echte
+          <code>&lt;h2&gt;</code>, en het klassement kan een <em>eigen</em>
+          reden geven die los staat van de kalender.
+        </p>
+      </section>
+
+      <!-- ══ OPTIE C ══════════════════════════════════════════ -->
+      <section class="panel">
+        <h2>
+          <span class="tag">Optie C</span>
+          Twee secties — maar leeg klassement blijft stil
+        </h2>
+        <p class="why">
+          Als B, met één verschil: een leeg <code>#klassement</code> zegt niets
+          en verschijnt niet. Alleen de <em>pre-publicatie</em>-melding bestaat;
+          daarna toont de pagina uitsluitend wat er echt is.
+        </p>
+        <div class="stages">
+          <div class="stage">
+            <p class="when">Nu · 13 aug — <b>niets gepubliceerd</b></p>
+            <div class="page-frag">
+              <nav class="nav">
+                <a href="#">Spelers</a><a href="#">Staf</a>
+              </nav>
+              <div class="seam"></div>
+              <div class="sect">
+                <p class="empty">
+                  De kalender voor dit seizoen is nog niet bekendgemaakt.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="stage">
+            <p class="when">Vanaf nu · kalender uit, <b>tabel nog leeg</b></p>
+            <div class="page-frag">
+              <nav class="nav">
+                <a class="on" href="#">Wedstrijden</a><a href="#">Spelers</a
+                ><a href="#">Staf</a>
+              </nav>
+              <div class="seam"></div>
+              <div class="sect ghost" style="padding-bottom: 4px">
+                <h3 style="text-decoration: line-through">
+                  Klassement<span class="dot">.</span>
+                </h3>
+                <p class="empty" style="border-color: var(--paper-edge)">
+                  <em>— niet gerenderd —</em>
+                </p>
+              </div>
+              <div class="sect">
+                <h3>Wedstrijden<span class="dot">.</span></h3>
+                <div class="fx">
+                  <span class="d">zo 30/08</span
+                  ><span class="t">KCVV Elewijt – KSC Blankenberge</span
+                  ><span class="s">15:00</span>
+                </div>
+                <div class="fx">
+                  <span class="d">za 05/09</span
+                  ><span class="t">KSV Rumbeke – KCVV Elewijt</span
+                  ><span class="s">19:30</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stage">
+            <p class="when">Vanaf 30 aug · <b>tabel én kalender</b></p>
+            <div class="page-frag">
+              <nav class="nav">
+                <a class="on" href="#">Klassement</a><a href="#">Wedstrijden</a
+                ><a href="#">Spelers</a><a href="#">Staf</a>
+              </nav>
+              <div class="seam"></div>
+              <div class="sect">
+                <h3>Klassement<span class="dot">.</span></h3>
+                <table class="rank">
+                  <tr>
+                    <th>#</th>
+                    <th>Ploeg</th>
+                    <th style="text-align: right">Pt</th>
+                  </tr>
+                  <tr class="us">
+                    <td class="n">1</td>
+                    <td>KCVV Elewijt</td>
+                    <td class="n">3</td>
+                  </tr>
+                  <tr>
+                    <td class="n">2</td>
+                    <td>KSC Blankenberge</td>
+                    <td class="n">0</td>
+                  </tr>
+                </table>
+              </div>
+              <div class="seam"></div>
+              <div class="sect">
+                <h3>Wedstrijden<span class="dot">.</span></h3>
+                <div class="fx">
+                  <span class="d">za 05/09</span
+                  ><span class="t">KSV Rumbeke – KCVV Elewijt</span
+                  ><span class="s">19:30</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="verdict">
+          <b>Kost:</b> de pagina verandert <em>drie</em> keer van vorm (2 → 3 →
+          4 nav-items), en in de middelste fase is er geen enkel spoor van een
+          klassement — precies de toestand die vandaag als "kapot" leest.
+          <b>Wint:</b> geen enkele lege sectie ooit; het minste werk.
+        </p>
+      </section>
+
+      <p class="verdict" style="max-width: 680px; border: none; padding-left: 0">
+        <b>Let op — de winterstop raakt alle drie.</b> Voor de jeugd is fase 2
+        een <em>andere reeks</em>: U13 deelde vorig seizoen
+        <strong>0 van 7</strong> tegenstanders tussen fase 1 en fase 2 (U17: 4
+        van 7). Tussen 17 dec en 10 jan is fase 1 voorbij en fase 2 nog niet
+        gepubliceerd — dezelfde lege toestand als nu, maar dan midden in het
+        seizoen. De A-ploeg heeft dit niet: één doorlopende reeks, 14 van 15
+        tegenstanders gedeeld.
+      </p>
+    </div>
+  </body>
+</html>

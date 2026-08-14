@@ -1,0 +1,1220 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2541 · 2541-1 — Wat staat er onder de naam van iemand die de data niet indeelt?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey: #4acf52;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --brick: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --font-display: "Fraunces", georgia, serif;
+        --font-body: "Archivo", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.92em;
+      }
+      .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
+      header.page {
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 20px;
+        margin-bottom: 12px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      h1.page {
+        font-family: var(--font-display);
+        font-size: 40px;
+        line-height: 1.1;
+        margin: 10px 0 0;
+      }
+      .lede {
+        max-width: 680px;
+        font-size: 16px;
+        line-height: 1.55;
+        color: var(--ink-soft);
+      }
+      .locked {
+        max-width: 680px;
+        background: var(--cream-soft);
+        border: 1px dashed var(--ink-muted);
+        padding: 14px 18px;
+        margin: 24px 0 0;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .locked b {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 6px;
+        color: var(--jersey-deep);
+      }
+      .facts {
+        max-width: 900px;
+        margin: 22px 0 0;
+        border-collapse: collapse;
+        font-size: 13.5px;
+      }
+      .facts th,
+      .facts td {
+        text-align: left;
+        padding: 6px 14px 6px 0;
+        border-bottom: 1px solid var(--paper-edge);
+        vertical-align: top;
+      }
+      .facts th {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        font-weight: 500;
+      }
+      .facts td b {
+        font-variant-numeric: lining-nums;
+      }
+
+      /* ---- panels ---- */
+      .panel {
+        margin-top: 56px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+      }
+      .panel > h2 {
+        font-family: var(--font-display);
+        font-size: 27px;
+        margin: 6px 0 4px;
+      }
+      .panel .verdict {
+        max-width: 720px;
+        font-size: 14.5px;
+        line-height: 1.55;
+        color: var(--ink-soft);
+        margin: 0 0 22px;
+      }
+      .panel .verdict em {
+        font-style: normal;
+        background: linear-gradient(transparent 62%, var(--warm) 62%);
+      }
+      .stage {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 28px;
+        background: var(--cream);
+        border: 1px solid var(--paper-edge);
+        padding: 26px 24px 30px;
+      }
+      @media (min-width: 900px) {
+        .stage {
+          grid-template-columns: 1.45fr 1fr;
+        }
+      }
+      .stage h3.route {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 0 0 14px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      .grouphead {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        border-bottom: 1px solid var(--paper-edge);
+        padding-bottom: 6px;
+        margin: 0 0 12px;
+      }
+      .grouphead + .grouphead {
+        margin-top: 22px;
+      }
+      .squad {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(122px, 1fr));
+        gap: 14px;
+      }
+
+      /* TapedCard, cream, sharp corners, sm shadow */
+      .card {
+        position: relative;
+        background: var(--cream);
+        border: 1.5px solid var(--ink);
+        box-shadow: 3px 3px 0 rgba(10, 10, 10, 0.16);
+        padding: 8px 8px 12px;
+      }
+      .card::before {
+        content: "";
+        position: absolute;
+        top: -7px;
+        left: 50%;
+        width: 46px;
+        height: 14px;
+        transform: translateX(-50%) rotate(-1.6deg);
+        background: rgba(240, 194, 100, 0.5);
+        border: 1px solid rgba(10, 10, 10, 0.14);
+      }
+      .photo {
+        aspect-ratio: 3/4;
+        background: var(--cream-deep);
+        border: 1px solid var(--paper-edge);
+        display: grid;
+        place-items: center;
+      }
+      .photo svg {
+        width: 46%;
+        opacity: 0.34;
+      }
+      .pname {
+        font-family: var(--font-display);
+        font-size: 14.5px;
+        line-height: 1.05;
+        margin: 8px 0 0;
+      }
+      .pname span {
+        font-weight: 600;
+      }
+      .pname em {
+        font-weight: 400;
+      }
+      .plabel {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 4px 0 0;
+        min-height: 12px;
+      }
+      .plabel.leak {
+        color: var(--brick);
+        font-weight: 600;
+      }
+      .plabel.dim {
+        opacity: 0.55;
+      }
+      .plabel.gone {
+        display: none;
+      }
+
+      /* staff */
+      .staffrow {
+        display: grid;
+        gap: 12px;
+      }
+      .scard {
+        display: grid;
+        grid-template-columns: 44px 1fr;
+        gap: 12px;
+        align-items: center;
+        background: var(--cream);
+        border: 1.5px solid var(--ink);
+        box-shadow: 3px 3px 0 rgba(10, 10, 10, 0.16);
+        padding: 10px 12px;
+      }
+      .mono-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--cream-deep);
+        border: 1.5px solid var(--ink);
+        display: grid;
+        place-items: center;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 15px;
+      }
+      .sname {
+        font-family: var(--font-display);
+        font-size: 15.5px;
+        line-height: 1.1;
+      }
+      .sname span {
+        font-weight: 600;
+      }
+      .sname em {
+        font-weight: 400;
+      }
+      .sfunc {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 3px;
+        min-height: 13px;
+      }
+      .sfunc.weak {
+        color: var(--brick);
+        font-weight: 600;
+      }
+      .sfunc.gone {
+        display: none;
+      }
+      .sectionline {
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: var(--ink-soft);
+        border-left: 3px solid var(--jersey-deep);
+        padding: 4px 0 4px 12px;
+        margin: 14px 0 0;
+        max-width: 46ch;
+      }
+      .tally {
+        margin-top: 16px;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.05em;
+        color: var(--ink-muted);
+        border-top: 1px dashed var(--paper-edge);
+        padding-top: 10px;
+      }
+      .tally b {
+        color: var(--ink);
+      }
+      footer.page {
+        margin-top: 64px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        max-width: 720px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--ink-soft);
+      }
+      footer.page h4 {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="page">
+        <p class="kicker">#2541 · ronde 1 · ploegen-map #2536</p>
+        <h1 class="page">Wat staat er onder de naam van iemand die de data niet indeelt?</h1>
+      </header>
+
+      <p class="lede">
+        Eén regel, twee kaarten. Onder elke spelersnaam staat een positie, onder elke stafnaam een
+        functie. Voor 183 van 230 spelers en 42 van 77 stafleden heeft de club die waarde niet. Deze
+        ronde beslist alleen <b>wat die regel zegt als de waarde ontbreekt</b> — niet hoe de spelers
+        gegroepeerd worden (ronde 2), niet de foto's (#2542).
+      </p>
+
+      <table class="facts">
+        <tr>
+          <th>Spelers</th>
+          <td>
+            <b>183 van 230</b> hebben geen positie → nu <code>Speler</code> ·
+            <b>35</b> krijgen de ruwe Engelse PSD-waarde → nu <code>DEFENDER</code> /
+            <code>attacker</code> · <b>12</b> zijn keeper (de enige tak die werkt)
+          </td>
+        </tr>
+        <tr>
+          <th>Staf</th>
+          <td>
+            <b>42 van 77</b> hebben geen functie → nu <code>STAF</code>. Volledig een jeugdgat: de
+            drie seniorenploegen labelen élk staflid. Op <code>kcvve-u9</code> zijn dat 3 van 5 — en
+            de trainer zit ertussen.
+          </td>
+        </tr>
+        <tr>
+          <th>Bron</th>
+          <td>
+            Sanity-velden, gevuld door de nachtelijke PSD-sync. Het Nederlandse overschrijfveld
+            <code>position</code> staat op <b>0 van 230</b> spelers, <code>role</code> op
+            <b>0 van 77</b> stafleden. Gemeten 2026-08-13 (#2538).
+          </td>
+        </tr>
+      </table>
+
+      <div class="locked">
+        <b>★ Geërfde lock — #2540, 2026-08-13</b>
+        Een sectie rapporteert de staat van haar eigen bron, en spreekt alleen als zwijgen de
+        bezoeker iets kost. Die regel gold voor secties; deze ronde vraagt of hij ook voor een
+        losse kaartregel geldt.
+      </div>
+
+      <!-- ============================ A ============================ -->
+      <section class="panel">
+        <p class="kicker">Optie A</p>
+        <h2>Laten staan — wat er vandaag gebeurt</h2>
+        <p class="verdict">
+          De huidige val-door-keten <code>position ?? positionPsd ?? "Speler"</code>. Elke kaart
+          heeft een regel; als de club niets weet, verzint de pagina er iets bij.
+          <em>Zes identieke regels op U9, en het Engels lekt door op de A-ploeg.</em>
+        </p>
+        <div class="stage">
+          <div>
+            <h3 class="route">/ploegen/kcvve-u9 · #spelers</h3>
+            <p class="grouphead">Spelers</p>
+            <div class="squad">
+              <!-- U9 A -->
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Vigo</span> <em>De Roye</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Taher</span> <em>Guerouaoui</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Marcus</span> <em>Knevels</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Ruben</span> <em>Mouro</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Leandro</span> <em>Santos</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Otis</span> <em>Zimmer</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+            </div>
+
+            <h3 class="route" style="margin-top: 28px">/ploegen/eerste-elftallen-a · #spelers</h3>
+            <p class="grouphead">Doelmannen</p>
+            <div class="squad">
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Levi</span> <em>Antonissen</em></p>
+                <p class="plabel">Keeper</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Rik</span> <em>Corthout</em></p>
+                <p class="plabel">Keeper</p>
+              </article>
+            </div>
+            <p class="grouphead">Spelers</p>
+            <div class="squad">
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Gregory</span> <em>Boudart</em></p>
+                <p class="plabel leak">Defender</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Jalal</span> <em>Azzaoui</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Jannes</span> <em>Bautmans</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Alexander</span> <em>Bell</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="route">/ploegen/kcvve-u9 · #staf</h3>
+            <div class="staffrow">
+              <article class="scard">
+                <div class="mono-avatar">MK</div>
+                <div>
+                  <p class="sname"><span>Matthias</span> <em>Knevels</em></p>
+                  <p class="sfunc">Jeugdvoorzitter</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RL</div>
+                <div>
+                  <p class="sname"><span>Ruben</span> <em>Lebrun</em></p>
+                  <p class="sfunc weak">Staf</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RS</div>
+                <div>
+                  <p class="sname"><span>Rémy</span> <em>Santos</em></p>
+                  <p class="sfunc weak">Staf</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">KS</div>
+                <div>
+                  <p class="sname"><span>Kevin</span> <em>Schutijser</em></p>
+                  <p class="sfunc">Jeugdcoördinator</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RT</div>
+                <div>
+                  <p class="sname"><span>Remco</span> <em>Talboom</em></p>
+                  <p class="sfunc weak">Staf</p>
+                </div>
+              </article>
+            </div>
+            <p class="tally">
+              Wendy zoekt de trainer. Drie kaarten zeggen <b>STAF</b>; één van hen is het.
+              De pagina wijst niet aan wie.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ B ============================ -->
+      <section class="panel">
+        <p class="kicker">Optie B</p>
+        <h2>Vertalen, generiek behouden</h2>
+        <p class="verdict">
+          Een mapping van 4 regels (<code>defender → Verdediger</code>, hoofdletterongevoelig) vóór
+          de val-door-keten; onbekend blijft <code>Speler</code> / <code>Staf</code>.
+          <em>Het Engels is weg — 35 kaarten opgelost, 225 kaarten onveranderd.</em>
+        </p>
+        <div class="stage">
+          <div>
+            <h3 class="route">/ploegen/kcvve-u9 · #spelers</h3>
+            <p class="grouphead">Spelers</p>
+            <div class="squad">
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Vigo</span> <em>De Roye</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Taher</span> <em>Guerouaoui</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Marcus</span> <em>Knevels</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Ruben</span> <em>Mouro</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Leandro</span> <em>Santos</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Otis</span> <em>Zimmer</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+            </div>
+
+            <h3 class="route" style="margin-top: 28px">/ploegen/eerste-elftallen-a · #spelers</h3>
+            <p class="grouphead">Doelmannen</p>
+            <div class="squad">
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Levi</span> <em>Antonissen</em></p>
+                <p class="plabel">Keeper</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Rik</span> <em>Corthout</em></p>
+                <p class="plabel">Keeper</p>
+              </article>
+            </div>
+            <p class="grouphead">Spelers</p>
+            <div class="squad">
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Gregory</span> <em>Boudart</em></p>
+                <p class="plabel">Verdediger</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Jalal</span> <em>Azzaoui</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Jannes</span> <em>Bautmans</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Alexander</span> <em>Bell</em></p>
+                <p class="plabel">Speler</p>
+              </article>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="route">/ploegen/kcvve-u9 · #staf</h3>
+            <div class="staffrow">
+              <article class="scard">
+                <div class="mono-avatar">MK</div>
+                <div>
+                  <p class="sname"><span>Matthias</span> <em>Knevels</em></p>
+                  <p class="sfunc">Jeugdvoorzitter</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RL</div>
+                <div>
+                  <p class="sname"><span>Ruben</span> <em>Lebrun</em></p>
+                  <p class="sfunc weak">Staf</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RS</div>
+                <div>
+                  <p class="sname"><span>Rémy</span> <em>Santos</em></p>
+                  <p class="sfunc weak">Staf</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">KS</div>
+                <div>
+                  <p class="sname"><span>Kevin</span> <em>Schutijser</em></p>
+                  <p class="sfunc">Jeugdcoördinator</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RT</div>
+                <div>
+                  <p class="sname"><span>Remco</span> <em>Talboom</em></p>
+                  <p class="sfunc weak">Staf</p>
+                </div>
+              </article>
+            </div>
+            <p class="tally">
+              De staf verandert <b>niet</b> — er is geen Engelse code om te vertalen, er is
+              helemaal niets. B lost 35 spelerskaarten op en <b>0</b> stafkaarten.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ C ============================ -->
+      <section class="panel">
+        <p class="kicker">Optie C</p>
+        <h2>Zwijgen als je het niet weet</h2>
+        <p class="verdict">
+          De regel van #2540, doorgetrokken naar de kaart: het label verschijnt alleen als het
+          echt is. Vertaal de 4 PSD-waarden, toon niets waar de waarde ontbreekt.
+          <em>De naam wordt weer het onderwerp van de kaart</em> — en de twee stafleden die de club
+          wél benoemd heeft, springen er nu uit.
+        </p>
+        <div class="stage">
+          <div>
+            <h3 class="route">/ploegen/kcvve-u9 · #spelers</h3>
+            <p class="grouphead">Spelers</p>
+            <div class="squad">
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Vigo</span> <em>De Roye</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Taher</span> <em>Guerouaoui</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Marcus</span> <em>Knevels</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Ruben</span> <em>Mouro</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Leandro</span> <em>Santos</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Otis</span> <em>Zimmer</em></p>
+                <p class="plabel gone"></p>
+              </article>
+            </div>
+
+            <h3 class="route" style="margin-top: 28px">/ploegen/eerste-elftallen-a · #spelers</h3>
+            <p class="grouphead">Doelmannen</p>
+            <div class="squad">
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Levi</span> <em>Antonissen</em></p>
+                <p class="plabel">Keeper</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Rik</span> <em>Corthout</em></p>
+                <p class="plabel">Keeper</p>
+              </article>
+            </div>
+            <p class="grouphead">Spelers</p>
+            <div class="squad">
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Gregory</span> <em>Boudart</em></p>
+                <p class="plabel">Verdediger</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Jalal</span> <em>Azzaoui</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Jannes</span> <em>Bautmans</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Alexander</span> <em>Bell</em></p>
+                <p class="plabel gone"></p>
+              </article>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="route">/ploegen/kcvve-u9 · #staf</h3>
+            <div class="staffrow">
+              <article class="scard">
+                <div class="mono-avatar">MK</div>
+                <div>
+                  <p class="sname"><span>Matthias</span> <em>Knevels</em></p>
+                  <p class="sfunc">Jeugdvoorzitter</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RL</div>
+                <div>
+                  <p class="sname"><span>Ruben</span> <em>Lebrun</em></p>
+                  <p class="sfunc gone"></p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RS</div>
+                <div>
+                  <p class="sname"><span>Rémy</span> <em>Santos</em></p>
+                  <p class="sfunc gone"></p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">KS</div>
+                <div>
+                  <p class="sname"><span>Kevin</span> <em>Schutijser</em></p>
+                  <p class="sfunc">Jeugdcoördinator</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RT</div>
+                <div>
+                  <p class="sname"><span>Remco</span> <em>Talboom</em></p>
+                  <p class="sfunc gone"></p>
+                </div>
+              </article>
+            </div>
+            <p class="tally">
+              Wendy ziet nu twee benoemde mensen en drie namen. Ze weet nog steeds niet wie de
+              trainer is — maar de pagina <b>beweert het ook niet meer</b>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ D ============================ -->
+      <section class="panel">
+        <p class="kicker">Optie D</p>
+        <h2>Zwijgen op de kaart, één eerlijke regel bij de sectie</h2>
+        <p class="verdict">
+          C, plus de sectie-vertaling van #2540: waar het gat systematisch is, zegt de
+          <em>sectie</em> het één keer in plaats van elke kaart afzonderlijk. Bij de spelers kost
+          zwijgen niets (een U9-ouder zoekt geen posities); bij de staf kost het wél iets, dus daar
+          staat één regel die zegt wat de bezoeker kan doen.
+        </p>
+        <div class="stage">
+          <div>
+            <h3 class="route">/ploegen/kcvve-u9 · #spelers</h3>
+            <p class="grouphead">Spelers</p>
+            <div class="squad">
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Vigo</span> <em>De Roye</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Taher</span> <em>Guerouaoui</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Marcus</span> <em>Knevels</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Ruben</span> <em>Mouro</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Leandro</span> <em>Santos</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Otis</span> <em>Zimmer</em></p>
+                <p class="plabel gone"></p>
+              </article>
+            </div>
+
+            <h3 class="route" style="margin-top: 28px">/ploegen/eerste-elftallen-a · #spelers</h3>
+            <p class="grouphead">Doelmannen</p>
+            <div class="squad">
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Levi</span> <em>Antonissen</em></p>
+                <p class="plabel">Keeper</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Rik</span> <em>Corthout</em></p>
+                <p class="plabel">Keeper</p>
+              </article>
+            </div>
+            <p class="grouphead">Spelers</p>
+            <div class="squad">
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Gregory</span> <em>Boudart</em></p>
+                <p class="plabel">Verdediger</p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Jalal</span> <em>Azzaoui</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Jannes</span> <em>Bautmans</em></p>
+                <p class="plabel gone"></p>
+              </article>
+              <article class="card">
+                <div class="photo">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"
+                    />
+                  </svg>
+                </div>
+                <p class="pname"><span>Alexander</span> <em>Bell</em></p>
+                <p class="plabel gone"></p>
+              </article>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="route">/ploegen/kcvve-u9 · #staf</h3>
+            <div class="staffrow">
+              <article class="scard">
+                <div class="mono-avatar">MK</div>
+                <div>
+                  <p class="sname"><span>Matthias</span> <em>Knevels</em></p>
+                  <p class="sfunc">Jeugdvoorzitter</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">KS</div>
+                <div>
+                  <p class="sname"><span>Kevin</span> <em>Schutijser</em></p>
+                  <p class="sfunc">Jeugdcoördinator</p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RL</div>
+                <div>
+                  <p class="sname"><span>Ruben</span> <em>Lebrun</em></p>
+                  <p class="sfunc gone"></p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RS</div>
+                <div>
+                  <p class="sname"><span>Rémy</span> <em>Santos</em></p>
+                  <p class="sfunc gone"></p>
+                </div>
+              </article>
+              <article class="scard">
+                <div class="mono-avatar">RT</div>
+                <div>
+                  <p class="sname"><span>Remco</span> <em>Talboom</em></p>
+                  <p class="sfunc gone"></p>
+                </div>
+              </article>
+            </div>
+            <p class="sectionline">
+              Niet elke functie is ingevuld. Wie welke rol heeft, weet je zeker via
+              <b>ProSoccerData</b>.
+            </p>
+            <p class="tally">
+              Benoemde mensen eerst, de rest daaronder. Eén regel voor de sectie in plaats van
+              <b>42×</b> STAF clubbreed. De sectieregel is een <b>toestand</b>, geen excuus — hij
+              verdwijnt zodra de club de functies invult.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <footer class="page">
+        <h4>Wat deze ronde níet beslist</h4>
+        <p>
+          De <b>groepering</b> (blijven de vier positiebakken bestaan, of vervalt de kop
+          <code>Spelers</code> als er maar één groep is?) is ronde 2 — daarom staat de groepering in
+          alle vier de panelen identiek. De <b>foto's</b> zijn #2542. De <b>plaats</b> van de
+          mapping (repository of component) volgt zodra we weten of er nog iets te mappen valt. En
+          <code>T1 - A-team</code> blijft van #2495.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

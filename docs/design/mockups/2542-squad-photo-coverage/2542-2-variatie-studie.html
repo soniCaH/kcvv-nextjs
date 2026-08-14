@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2542 · 2542-2 — Hoeveel variatie verdraagt de jerseytekening?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --ink: #0a0a0a;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --paper-edge: #d9d2bd;
+        --brick: #c93f1c;
+        --font-display: "Fraunces", georgia, serif;
+        --font-body: "Archivo", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --newsprint: sepia(0.06) saturate(0.94) hue-rotate(-4deg) contrast(1.02)
+          brightness(1.01);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.92em;
+      }
+      .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
+      header.page {
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 20px;
+        margin-bottom: 28px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      h1 {
+        font-family: var(--font-display);
+        font-size: 40px;
+        line-height: 1.02;
+        margin: 10px 0 0;
+        font-weight: 600;
+      }
+      h1 em {
+        font-weight: 400;
+      }
+      .lede {
+        max-width: 680px;
+        margin: 14px 0 0;
+        font-size: 16px;
+        line-height: 1.55;
+      }
+      section.panel {
+        margin: 0 0 52px;
+        border-top: 2px solid var(--ink);
+        padding-top: 20px;
+      }
+      section.panel > h2 {
+        font-family: var(--font-display);
+        font-size: 27px;
+        margin: 4px 0 0;
+        font-weight: 600;
+        line-height: 1.1;
+      }
+      section.panel > h2 em {
+        font-weight: 400;
+      }
+      .rule {
+        max-width: 720px;
+        font-size: 15px;
+        line-height: 1.55;
+        margin: 10px 0 0;
+      }
+      .cost {
+        max-width: 720px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 1.6;
+        color: var(--ink-muted);
+        margin: 10px 0 0;
+        letter-spacing: 0.02em;
+      }
+      .route {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 32px 0 0;
+        font-weight: 500;
+      }
+      .page-frame {
+        width: 976px;
+        max-width: 100%;
+        border: 1px dashed var(--paper-edge);
+        padding: 20px;
+        margin-top: 18px;
+        background: var(--cream);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 16px;
+      }
+      .c-card {
+        padding: 0 4px 10px;
+      }
+      .c-fig {
+        position: relative;
+        aspect-ratio: 3 / 4;
+        overflow: hidden;
+      }
+      .c-fig svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .c-fig img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: bottom;
+        filter: var(--newsprint);
+        mix-blend-mode: multiply;
+        transform: scale(1.3);
+        transform-origin: bottom center;
+      }
+      .nm {
+        font-family: var(--font-display);
+        line-height: 1.05;
+        margin: 0;
+        font-size: 16px;
+        border-top: 2px solid var(--ink);
+        padding-top: 6px;
+      }
+      .nm b {
+        font-weight: 600;
+      }
+      .nm em {
+        font-weight: 400;
+        font-style: italic;
+      }
+      .pos {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 4px 0 0;
+        min-height: 11px;
+      }
+      /* framed variant, for the in-kader comparison */
+      .framed .c-card {
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 8px 8px 12px;
+      }
+      .framed .c-fig {
+        border: 1px solid var(--paper-edge);
+        background: var(--cream-soft);
+      }
+      .framed .nm {
+        border-top: none;
+        padding-top: 0;
+        margin-top: 8px;
+      }
+      .note {
+        max-width: 720px;
+        font-size: 14px;
+        line-height: 1.55;
+        margin: 20px 0 0;
+        padding: 14px 16px;
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .note.warn {
+        border-color: var(--brick);
+      }
+      .lever {
+        max-width: 720px;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 12px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .lever li {
+        padding: 5px 0 5px 0;
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      .lever b {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        display: inline-block;
+        min-width: 168px;
+        color: var(--ink-muted);
+        font-weight: 500;
+      }
+      .lever .on {
+        color: var(--jersey-deep);
+        font-weight: 600;
+      }
+      footer.page {
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        margin-top: 24px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-muted);
+        letter-spacing: 0.04em;
+        line-height: 1.7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="page">
+        <p class="kicker">#2542 · prototype 2 · variatiestudie · 2026-08-13</p>
+        <h1>Hoeveel variatie<br /><em>verdraagt de jerseytekening?</em></h1>
+        <p class="lede">
+          Vier niveaus op dezelfde échte A-ploeg (29 spelers, 3 foto's), telkens
+          zonder kader op cream. Elke tekening is <b>deterministisch</b> afgeleid
+          van de naam van de speler: dezelfde speler krijgt altijd dezelfde
+          tekening, seizoen na seizoen. Niets is willekeurig per render.
+        </p>
+        <p class="lede">
+          De vraag is niet <em>of</em> er variatie moet zijn, maar waar ze stopt
+          voordat het ophoudt één illustrator te zijn.
+        </p>
+      </header>
+
+      <section class="panel">
+        <p class="kicker">Niveau 0 · nulmeting</p>
+        <h2>Eén tekening, 26 keer — <em>wat er vandaag staat</em></h2>
+        <p class="cost">geen variatie · JerseyIllustration zoals hij nu draait</p>
+        <div class="page-frame" data-level="0"></div>
+      </section>
+
+      <section class="panel">
+        <p class="kicker">Niveau 1 · vier drukgangen</p>
+        <h2>Vier standen — <em>wat prototype 1 liet zien</em></h2>
+        <ul class="lever">
+          <li><b class="on">schaal</b> 0.94 – 1.06</li>
+          <li><b class="on">papierstand</b> ±0.6°</li>
+          <li><b class="on">inkttoon</b> opaciteit 0.82 – 1.0</li>
+          <li><b class="on">positie</b> ±5px</li>
+        </ul>
+        <p class="cost">vier vaste standen, cyclisch verdeeld over de selectie</p>
+        <div class="page-frame" data-level="1"></div>
+      </section>
+
+      <section class="panel">
+        <p class="kicker">Niveau 2 · de pers loopt niet zuiver</p>
+        <h2>Registratiedrift — <em>variatie uit het drukprocedé zelf</em></h2>
+        <p class="rule">
+          De tekening is een tweeslagsdruk: een groene ondergrond met een
+          inktcontour eroverheen, nu met een vaste versprong van 2/1px. Op een
+          échte pers zwerft die versprong. Hier zwerft hij per speler mee — in
+          beide richtingen, soms strak, soms 4px mis — samen met de inktdekking
+          en de plaats van de figuur op het papier. Geen twee kaarten drukken
+          gelijk, maar het is onmiskenbaar dezelfde plaat.
+        </p>
+        <ul class="lever">
+          <li><b class="on">registratie</b> versprong −3px … +4px, x én y</li>
+          <li><b class="on">inktdekking</b> ondergrond 0.74 – 1.0, contour 0.82 – 1.0</li>
+          <li><b class="on">schaal</b> 0.90 – 1.10</li>
+          <li><b class="on">papierstand</b> ±0.9°</li>
+          <li><b class="on">positie</b> ±9px horizontaal, ±7px verticaal</li>
+        </ul>
+        <p class="cost">
+          één deterministische hash op de spelersnaam · geen nieuwe geometrie ·
+          geen assetwerk
+        </p>
+        <div class="page-frame" data-level="2"></div>
+      </section>
+
+      <section class="panel">
+        <p class="kicker">Niveau 3 · de plaat zelf verandert</p>
+        <h2>Andere spelers — <em>zover als het kan gaan</em></h2>
+        <p class="rule">
+          Bovenop niveau 2 verandert nu de figuur: hij kijkt naar links of naar
+          rechts, het hoofd staat schuin, de schouders zijn breder of smaller,
+          en het shirt draagt 3, 4 of 5 banen. Dit zijn geen 26 afdrukken van
+          één speler meer — het zijn 26 spelers, getekend door dezelfde hand.
+        </p>
+        <ul class="lever">
+          <li><b class="on">spiegeling</b> figuur kijkt links of rechts</li>
+          <li><b class="on">hoofdstand</b> ±5° kanteling, hoogte ±6px</li>
+          <li><b class="on">schouderbreedte</b> 0.88 – 1.12</li>
+          <li><b class="on">shirtbanen</b> 3, 4 of 5</li>
+          <li><b>+ alles van niveau 2</b></li>
+        </ul>
+        <p class="cost">
+          parametrisering van _jersey-paths · de canonieke geometrie blijft de
+          basis, maar is niet langer byte-identiek per instantie
+        </p>
+        <div class="page-frame" data-level="3"></div>
+        <p class="note warn">
+          <b>De prijs van niveau 3.</b> <code>_jersey-paths.ts</code> is
+          uitdrukkelijk vastgelegd als "één illustrator's hand" en wordt gedeeld
+          met <code>&lt;JerseyShirt&gt;</code> en <code>&lt;PlayerHero&gt;</code>.
+          Parametriseren raakt die afspraak: de paden blijven de bron, maar de
+          gerenderde figuur is niet meer overal dezelfde. Dat is een bewuste
+          wijziging aan een vastgelegd primitief, geen detail.
+        </p>
+      </section>
+
+      <section class="panel">
+        <p class="kicker">Niveau 4b · gekozen</p>
+        <h2>Houding, bouw, mouw — <em>het kledingstuk, niet de persoon</em></h2>
+        <p class="rule">
+          Bovenop niveau 3: korte of lange mouwen, een smallere of bredere
+          bouw, een lichte helling in de houding, en een uitsnede die de ene
+          speler op borsthoogte afsnijdt en de andere volledig toont. Het shirt
+          draagt banen, ringen, stippen of niets — de club rijdt echt met een
+          gestreept eerste-elftalshirt en een gestipt jeugdshirt, dus dat zijn
+          geen verzonnen kleren.
+        </p>
+        <p class="rule">
+          <b>Haar is geprobeerd en geschrapt.</b> Vier soorten haar bovenop het
+          hoofd lazen niet als haar maar als een muts: het silhouet is vlak en
+          heeft geen gezicht om iets aan op te hangen, dus een gesloten
+          inktvorm op de bol wordt hoofddeksel. Dit is de grens van de
+          tweeslagsdruk — hij kan een <em>kledingstuk</em> beschrijven, want dat
+          is zelf een vlakke vorm, maar geen persoon.
+        </p>
+        <ul class="lever">
+          <li>
+            <b style="color: #c93f1c">haar — geschrapt</b> op een vlak
+            hoofdsilhouet leest een gesloten inktvorm als een muts, niet als
+            haar
+          </li>
+          <li><b class="on">mouw</b> kort of lang (45% lang)</li>
+          <li><b class="on">bouw</b> romp 0.86 – 1.14 breed</li>
+          <li><b class="on">houding</b> helling ±3°</li>
+          <li><b class="on">uitsnede</b> schaal 0.84 – 1.16, hoogte −14 … +16px</li>
+          <li><b class="on">shirt</b> banen · ringen · stippen · effen</li>
+          <li><b>+ alles van niveau 2 en 3</b></li>
+        </ul>
+        <p class="cost">
+          nieuwe geometrie bovenop _jersey-paths · lange mouwen en de drie
+          shirtpatronen bestaan vandaag nergens in het design system
+        </p>
+        <div class="page-frame" data-level="4"></div>
+        <p class="note warn">
+          <b>Wat dit kost aan "één illustrator's hand".</b> Niveau 2 gebruikt
+          alleen wat de tweeslagsdruk al kan. Niveau 3 rekt de bestaande vormen
+          op. Niveau 4b voegt tekenwerk toe dat
+          <code>&lt;JerseyShirt&gt;</code> en <code>&lt;PlayerHero&gt;</code>
+          niet hebben — vanaf hier is de tekening een eigen primitief met een
+          eigen onderhoudslast, en zullen die twee ofwel meemoeten ofwel
+          zichtbaar afwijken. Dat is een bewuste wijziging aan een vastgelegd
+          primitief, geen detail.
+        </p>
+      </section>
+
+      <section class="panel">
+        <p class="kicker">Controle · variant B</p>
+        <h2>Terug in het kader — <em>de gekozen kaartvorm</em></h2>
+        <p class="rule">
+          Variant B is gekozen: het 3:4 kader met rand blijft staan en de foto
+          verliest zijn witte matte. Hieronder eerst niveau 2 in dat kader, dan
+          niveau 4. Dit is de échte vergelijking — alle variatie hierboven stond
+          op open cream, maar de kaart die gebouwd wordt heeft een rand.
+        </p>
+        <p class="route" style="margin-top: 24px">Niveau 2 · in het kader</p>
+        <div class="page-frame framed" data-level="2"></div>
+        <p class="route" style="margin-top: 24px">Niveau 4 · in het kader</p>
+        <div class="page-frame framed" data-level="4"></div>
+      </section>
+
+      <footer class="page">
+        #2542 · onderdeel van #2536 (Team pages walk) · A-ploeg live gemeten uit
+        Sanity <code>production</code> op 2026-08-13 · variatie deterministisch
+        uit de spelersnaam · wegwerpmateriaal, geen designbron
+      </footer>
+    </div>
+
+    <script id="squads" type="application/json">
+      {"eerste-elftallen-a":[{"f":"Levi","l":"Antonissen","n":null,"pos":"Keeper","img":null},{"f":"Jalal","l":"Azzaoui","n":null,"pos":null,"img":null},{"f":"Jannes","l":"Bautmans","n":null,"pos":null,"img":null},{"f":"Alexander","l":"Bell","n":null,"pos":null,"img":null},{"f":"Amirgan","l":"Bouakhounov","n":null,"pos":null,"img":null},{"f":"Gregory","l":"Boudart","n":null,"pos":"defender","img":"https://cdn.sanity.io/images/vhb33jaz/production/788e1ca241a17519b3ed2f95b45f92fab13f3aba-350x350.jpg"},{"f":"Arno","l":"Braspenninckx","n":null,"pos":null,"img":null},{"f":"Mylan","l":"Carrasco","n":null,"pos":null,"img":null},{"f":"Bixente","l":"Ceusters","n":null,"pos":null,"img":null},{"f":"Rik","l":"Corthout","n":null,"pos":"Keeper","img":"https://cdn.sanity.io/images/vhb33jaz/production/2cb1223bd748881abcd41a80a9f24e4bdf90fcdc-350x350.jpg"},{"f":"Kevin","l":"De Jonge","n":null,"pos":null,"img":null},{"f":"Michiel","l":"De Looze","n":null,"pos":null,"img":null},{"f":"Stef","l":"De Reys","n":null,"pos":"Keeper","img":null},{"f":"Adil","l":"El Attabi","n":null,"pos":null,"img":null},{"f":"Bilal","l":"El Bouhadifi","n":null,"pos":null,"img":null},{"f":"Lucas","l":"Goovaerts","n":null,"pos":null,"img":"https://cdn.sanity.io/images/vhb33jaz/production/ef634eea038b2dabeb68bfe78100edba00bad0a4-350x350.jpg"},{"f":"Walid","l":"Houssane","n":null,"pos":null,"img":null},{"f":"Tiglat","l":"Kriakos","n":null,"pos":null,"img":null},{"f":"Bangali","l":"Kromah","n":null,"pos":null,"img":null},{"f":"Derrick","l":"Kyere","n":null,"pos":null,"img":null},{"f":"Omar","l":"Lekhechine","n":null,"pos":null,"img":null},{"f":"Wout","l":"Merckaert","n":null,"pos":null,"img":null},{"f":"Alec","l":"Mertens","n":null,"pos":null,"img":null},{"f":"Beau","l":"Ndiaye","n":null,"pos":null,"img":null},{"f":"Fahd","l":"Sakande","n":null,"pos":null,"img":null},{"f":"Younes","l":"Touzani","n":null,"pos":null,"img":null},{"f":"Jannes","l":"Van Hof","n":null,"pos":"Keeper","img":null},{"f":"Marnicqo","l":"Vantomme","n":null,"pos":null,"img":null},{"f":"Christopher Louis","l":"Veka","n":null,"pos":null,"img":null}],"kcvve-u6":[{"f":"Vik","l":"De Bondt","n":null,"pos":null,"img":null},{"f":"Jakob","l":"Degryse","n":null,"pos":null,"img":"https://cdn.sanity.io/images/vhb33jaz/production/97ce5394493fb77b1e0c5e650c9726bc040aa514-350x350.jpg"},{"f":"Vince","l":"Delande-aerts","n":null,"pos":null,"img":"https://cdn.sanity.io/images/vhb33jaz/production/d0123c260f006fbd034fb2a9013f6680b34f6005-350x350.jpg"},{"f":"Rayan","l":"El Yaghmouri","n":null,"pos":null,"img":null},{"f":"Noah","l":"Gieraerts","n":null,"pos":null,"img":null},{"f":"Mattia","l":"Laplace","n":null,"pos":null,"img":null},{"f":"Viktor","l":"Loosen","n":null,"pos":null,"img":null},{"f":"Emile","l":"Meuwis","n":null,"pos":null,"img":"https://cdn.sanity.io/images/vhb33jaz/production/e9dd163f7e18922017e2dbd18e8ac542bd87b81c-350x350.jpg"},{"f":"Luca","l":"Minnen","n":null,"pos":null,"img":null},{"f":"Lirian","l":"Zumberaj","n":null,"pos":null,"img":"https://cdn.sanity.io/images/vhb33jaz/production/799a60d2222b965ca56e382f8a7cbd83540e67fb-350x350.jpg"}],"kcvve-u17":[{"f":"Leon","l":"Bertens","n":null,"pos":null,"img":null},{"f":"Arno","l":"Brabant","n":null,"pos":"midfielder","img":"https://cdn.sanity.io/images/vhb33jaz/production/ee514ed7c5ef36176076ebf864c63cff575f0811-350x350.jpg"},{"f":"Lowie","l":"De Block","n":null,"pos":"defender","img":"https://cdn.sanity.io/images/vhb33jaz/production/668f8d619144612bb18e258ee5ef9330cef87773-350x350.jpg"},{"f":"Simon","l":"De Cuyper","n":null,"pos":"attacker","img":"https://cdn.sanity.io/images/vhb33jaz/production/bfccb364ff31c55563305ef2df46651b8683c170-350x350.jpg"},{"f":"Nathan","l":"De Keyzer","n":null,"pos":"midfielder","img":"https://cdn.sanity.io/images/vhb33jaz/production/26f08bd784a77a847d6f18e0bbc31e035739aadc-350x350.jpg"},{"f":"Emiel","l":"Dehairs","n":null,"pos":null,"img":null},{"f":"Toon","l":"Depreitere","n":null,"pos":"attacker","img":"https://cdn.sanity.io/images/vhb33jaz/production/b8743f916e1471ca9408beaa6a28ca8be15e1e36-350x350.jpg"},{"f":"Warre","l":"Dooms","n":null,"pos":"defender","img":"https://cdn.sanity.io/images/vhb33jaz/production/a20f54eb179df3a3c8493b7dad3babc0343161af-350x350.jpg"},{"f":"Quinten Roger","l":"Gettinby","n":null,"pos":"defender","img":"https://cdn.sanity.io/images/vhb33jaz/production/fd7f39534c7fe3b843ab26b6838615c37e16c878-350x350.jpg"},{"f":"Zen","l":"Huysmans","n":null,"pos":null,"img":"https://cdn.sanity.io/images/vhb33jaz/production/86669ea533db0cbd210a4e619dd04412e79716c4-350x350.jpg"},{"f":"Mhico Rein","l":"Ignacio","n":null,"pos":"attacker","img":null},{"f":"Nathan Alexandre","l":"Lippens","n":null,"pos":"attacker","img":"https://cdn.sanity.io/images/vhb33jaz/production/3c3ed4d68ca4a489cf79cf7b71a0918642c6954b-350x350.jpg"},{"f":"Jules","l":"Parmentier","n":null,"pos":"midfielder","img":null},{"f":"Felix","l":"Peeters","n":null,"pos":"midfielder","img":"https://cdn.sanity.io/images/vhb33jaz/production/c569776cb8756b6e17f0310a5c4d7f688da7d60f-350x350.jpg"},{"f":"Senne","l":"Roobaert","n":null,"pos":"attacker","img":"https://cdn.sanity.io/images/vhb33jaz/production/ae887328af7c2b57e3a91d126b96dc8d0a8a4322-350x350.jpg"},{"f":"Arno","l":"Van Noten","n":null,"pos":"defender","img":"https://cdn.sanity.io/images/vhb33jaz/production/474bffd0cd4b143549b6b84be42cdd43c3ed05c6-350x350.jpg"},{"f":"Arne","l":"Vandenbussche","n":null,"pos":"defender","img":"https://cdn.sanity.io/images/vhb33jaz/production/55df67c783481e2221b14ba3a8755e1aba2cdf4b-350x350.jpg"},{"f":"Mori","l":"Verbesselt","n":null,"pos":"attacker","img":null},{"f":"Victor Willy","l":"Verdonck","n":null,"pos":"defender","img":"https://cdn.sanity.io/images/vhb33jaz/production/b001105bb3ab2d62782b5d9261e6ebede6de0128-350x350.jpg"},{"f":"Arjan","l":"Weber","n":null,"pos":"attacker","img":"https://cdn.sanity.io/images/vhb33jaz/production/f9174165e4ec50c9c740f232d682c8f9e8c8e236-350x350.jpg"}]}
+    </script>
+    <script>
+      const DATA = JSON.parse(document.getElementById("squads").textContent);
+      const SQUAD = DATA["eerste-elftallen-a"];
+
+      const NL = {
+        goalkeeper: "Doelman",
+        defender: "Verdediger",
+        midfielder: "Middenvelder",
+        attacker: "Aanvaller",
+      };
+      const label = (p) =>
+        p.pos ? (NL[String(p.pos).toLowerCase()] ?? p.pos) : null;
+
+      // deterministic per-player seed — djb2 over the full name
+      function seed(s) {
+        let h = 5381;
+        for (let i = 0; i < s.length; i++) h = (h * 33) ^ s.charCodeAt(i);
+        return h >>> 0;
+      }
+      // stable pseudo-random stream from one seed
+      function stream(sd) {
+        let x = sd || 1;
+        return () => {
+          x ^= x << 13;
+          x >>>= 0;
+          x ^= x >> 17;
+          x ^= x << 5;
+          x >>>= 0;
+          return x / 4294967296;
+        };
+      }
+      const span = (r, lo, hi) => lo + r() * (hi - lo);
+
+      // Canonical geometry — verbatim from _jersey-paths.ts
+      const HEAD = { cx: 110, cy: 78, rx: 44, ry: 48 };
+      const TORSO_FILL =
+        "M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300 Z";
+      const TORSO_OUTLINE =
+        "M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300";
+      const COLLAR = "M 92 132 L 110 156 L 128 132";
+      const STRIPES = [
+        "M 70 168 L 70 300",
+        "M 88 158 L 88 300",
+        "M 132 158 L 132 300",
+        "M 150 168 L 150 300",
+      ];
+      const BUMP_L = "M 52 168 L 70 162 L 72 196 L 54 200 Z";
+      const BUMP_R = "M 168 168 L 150 162 L 148 196 L 166 200 Z";
+
+      // stripe sets for level 3 — 3, 4 (canonical) or 5 bands
+      const STRIPE_SETS = [
+        ["M 79 163 L 79 300", "M 110 158 L 110 300", "M 141 163 L 141 300"],
+        STRIPES,
+        [
+          "M 64 170 L 64 300",
+          "M 87 160 L 87 300",
+          "M 110 157 L 110 300",
+          "M 133 160 L 133 300",
+          "M 156 170 L 156 300",
+        ],
+      ];
+
+      // ── level 4 vocabulary ─────────────────────────────────────────
+      // long sleeves: the shoulder bump grows into an arm down the torso
+      const SLEEVE_L = "M 52 168 L 70 162 L 74 258 L 50 262 Z";
+      const SLEEVE_R = "M 168 168 L 150 162 L 146 258 L 170 262 Z";
+
+      // hair, drawn as an ink-filled cap over the head ellipse
+      function hair(kind, cy) {
+        const cx = HEAD.cx,
+          rx = HEAD.rx,
+          ry = HEAD.ry;
+        if (kind === 0) return ""; // shaved / none — today's figure
+        if (kind === 1)
+          // short crop
+          return `<path d="M ${cx - rx} ${cy - 6} Q ${cx - rx - 2} ${cy - ry - 10} ${cx} ${cy - ry - 7} Q ${cx + rx + 2} ${cy - ry - 10} ${cx + rx} ${cy - 6} Q ${cx + rx - 8} ${cy - ry + 18} ${cx} ${cy - ry + 12} Q ${cx - rx + 8} ${cy - ry + 18} ${cx - rx} ${cy - 6} Z"/>`;
+        if (kind === 2)
+          // curly — overlapping rounds along the crown
+          return [
+            [cx - 30, cy - ry + 6, 17],
+            [cx - 10, cy - ry - 4, 19],
+            [cx + 13, cy - ry - 1, 18],
+            [cx + 32, cy - ry + 10, 15],
+          ]
+            .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`)
+            .join("");
+        // fringe — a swept cap, heavier on one side
+        return `<path d="M ${cx - rx} ${cy - 2} Q ${cx - rx - 3} ${cy - ry - 12} ${cx + 4} ${cy - ry - 8} Q ${cx + rx + 4} ${cy - ry - 4} ${cx + rx} ${cy + 4} Q ${cx + rx - 14} ${cy - ry + 20} ${cx - 6} ${cy - ry + 22} Q ${cx - rx + 4} ${cy - ry + 16} ${cx - rx} ${cy - 2} Z"/>`;
+      }
+
+      // shirt pattern — the club really does run a striped senior kit and a
+      // dotted youth kit, so these are not invented garments
+      function pattern(kind, stripeSet) {
+        if (kind === 0)
+          return stripeSet.map((d) => `<path d="${d}"/>`).join("");
+        if (kind === 1)
+          // hoops
+          return [186, 212, 238, 264, 290]
+            .map((y) => `<path d="M ${44 + (y - 186) * 0.14} ${y} L ${176 - (y - 186) * 0.14} ${y}"/>`)
+            .join("");
+        if (kind === 2) {
+          // dots
+          let out = "";
+          for (let y = 180; y < 300; y += 22)
+            for (let x = 56; x < 186; x += 22)
+              out += `<circle cx="${x + ((y / 22) % 2) * 11}" cy="${y}" r="2.4" fill="#0a0a0a" stroke="none"/>`;
+          return out;
+        }
+        return ""; // plain
+      }
+
+      // ── containment guard ──────────────────────────────────────────
+      // The crop and scale levers can push the head above the viewBox. Rather
+      // than clip it (which would just hide the fault), fold the figure back
+      // inside analytically: shift first, and only shrink if it genuinely
+      // cannot fit. Deterministic — no DOM measurement, so the component can
+      // run the same maths server-side.
+      const mmul = (m, n) => ({
+        a: m.a * n.a + m.c * n.b,
+        b: m.b * n.a + m.d * n.b,
+        c: m.a * n.c + m.c * n.d,
+        d: m.b * n.c + m.d * n.d,
+        e: m.a * n.e + m.c * n.f + m.e,
+        f: m.b * n.e + m.d * n.f + m.f,
+      });
+      const mT = (x, y) => ({ a: 1, b: 0, c: 0, d: 1, e: x, f: y });
+      const mS = (x, y) => ({ a: x, b: 0, c: 0, d: y, e: 0, f: 0 });
+      const mR = (deg) => {
+        const r = (deg * Math.PI) / 180;
+        return {
+          a: Math.cos(r),
+          b: Math.sin(r),
+          c: -Math.sin(r),
+          d: Math.cos(r),
+          e: 0,
+          f: 0,
+        };
+      };
+      const mK = (deg) => ({
+        a: 1,
+        b: 0,
+        c: Math.tan((deg * Math.PI) / 180),
+        d: 1,
+        e: 0,
+        f: 0,
+      });
+      const mAt = (m, x, y) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
+
+      const STROKE = 2; // half of the 3px outline, plus a hair of slack
+
+      function figureBox(v) {
+        const M = [
+          mT(110 + v.dx, 150 + v.dy + v.drop),
+          mR(v.rot),
+          mK(v.lean),
+          mS(v.flip * v.scale, v.scale),
+          mT(-110, -150),
+        ].reduce(mmul);
+        // widest drawn element: torso half-width 80, sleeves 60, head 44 —
+        // each carried through the build and shoulder scales that sit inside
+        const halfW =
+          Math.max(80 * v.build, 60 * v.build * v.shoulder, 44) + STROKE;
+        // head ellipse top: cy(78) + headDy − ry(48); tilt rotates about its
+        // own centre so it stays within ry
+        const top = 78 + v.headDy - 48 - STROKE;
+        const bottom = 300 + STROKE;
+        const pts = [
+          [110 - halfW, top],
+          [110 + halfW, top],
+          [110 - halfW, bottom],
+          [110 + halfW, bottom],
+        ].map(([x, y]) => mAt(M, x, y));
+        const xs = pts.map((p) => p[0]);
+        const ys = pts.map((p) => p[1]);
+        return {
+          minX: Math.min(...xs),
+          maxX: Math.max(...xs),
+          minY: Math.min(...ys),
+        };
+      }
+
+      // The bottom edge is allowed to bleed — a torso running off the bottom of
+      // the frame is the crop lever working. The head and the shoulders are not.
+      function contain(v) {
+        const M = 4; // breathing room inside the 220-wide viewBox
+        for (let pass = 0; pass < 8; pass++) {
+          const b = figureBox(v);
+          const width = b.maxX - b.minX;
+          if (width > 220 - 2 * M + 0.5) {
+            v.scale *= (220 - 2 * M) / width;
+            continue;
+          }
+          let dx = 0;
+          if (b.minX < M) dx = M - b.minX;
+          else if (b.maxX > 220 - M) dx = 220 - M - b.maxX;
+          const dy = b.minY < M ? M - b.minY : 0;
+          if (Math.abs(dx) < 0.4 && dy < 0.4) break;
+          v.dx += dx;
+          v.drop += dy;
+        }
+        return v;
+      }
+
+      function figure(nameKey, level) {
+        const r = stream(seed(nameKey));
+        // level 0 — the shipped constant
+        let v = {
+          scale: 1,
+          dx: 0,
+          dy: 0,
+          rot: 0,
+          under: 0.95,
+          over: 0.9,
+          regX: 2,
+          regY: 1,
+          flip: 1,
+          headTilt: 0,
+          headDy: 0,
+          shoulder: 1,
+          stripes: 1,
+          hair: 0,
+          sleeve: 0,
+          build: 1,
+          lean: 0,
+          pattern: 0,
+          drop: 0,
+        };
+        if (level === 1) {
+          const i = seed(nameKey) % 4;
+          v = {
+            ...v,
+            ...[
+              { scale: 1, dx: 0, dy: 0, rot: 0, under: 0.95 },
+              { scale: 1.06, dx: -4, dy: 6, rot: -0.6, under: 0.88 },
+              { scale: 0.94, dx: 5, dy: -3, rot: 0.5, under: 1 },
+              { scale: 1.02, dx: 2, dy: 9, rot: 0.35, under: 0.82 },
+            ][i],
+          };
+        }
+        if (level >= 2) {
+          v = {
+            ...v,
+            scale: span(r, 0.9, 1.1),
+            dx: span(r, -9, 9),
+            dy: span(r, -7, 7),
+            rot: span(r, -0.9, 0.9),
+            under: span(r, 0.74, 1),
+            over: span(r, 0.82, 1),
+            regX: span(r, -3, 4),
+            regY: span(r, -3, 4),
+          };
+        }
+        if (level >= 3) {
+          v = {
+            ...v,
+            flip: r() < 0.5 ? -1 : 1,
+            headTilt: span(r, -5, 5),
+            headDy: span(r, -6, 6),
+            shoulder: span(r, 0.88, 1.12),
+            stripes: Math.floor(r() * 3),
+          };
+        }
+        if (level >= 4) {
+          v = {
+            ...v,
+            // hair was tried and dropped — on a flat head silhouette a solid
+            // ink cap reads as a beanie, not as hair. Level 4b keeps every
+            // other lever. Set to Math.floor(r() * 4) to see the rejected run.
+            hair: 0,
+            sleeve: r() < 0.45 ? 1 : 0,
+            build: span(r, 0.86, 1.14),
+            lean: span(r, -3, 3),
+            pattern: Math.floor(r() * 4),
+            // crop: some figures sit chest-up, some show the full torso
+            drop: span(r, -14, 16),
+            scale: span(r, 0.84, 1.16),
+          };
+        }
+
+        contain(v); // head and shoulders never leave the frame
+
+        const base = `translate(${110 + v.dx} ${150 + v.dy + v.drop}) rotate(${v.rot}) skewX(${v.lean}) scale(${v.flip * v.scale} ${v.scale}) translate(-110 -150)`;
+        const head = `translate(${HEAD.cx} ${HEAD.cy + v.headDy}) rotate(${v.headTilt}) translate(${-HEAD.cx} ${-HEAD.cy})`;
+        const sh = `translate(110 182) scale(${v.shoulder} 1) translate(-110 -182)`;
+        const body = `translate(110 220) scale(${v.build} 1) translate(-110 -220)`;
+        const armL = v.sleeve ? SLEEVE_L : BUMP_L;
+        const armR = v.sleeve ? SLEEVE_R : BUMP_R;
+        const marks = pattern(v.pattern, STRIPE_SETS[v.stripes]);
+
+        const plate = (mode) => {
+          const paint =
+            mode === "fill"
+              ? 'fill="#007c46"'
+              : 'fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"';
+          return `
+            <g ${paint}>
+              <g transform="${head}"><ellipse cx="${HEAD.cx}" cy="${HEAD.cy}" rx="${HEAD.rx}" ry="${HEAD.ry}"/></g>
+              <g transform="${body}">
+                <path d="${mode === "fill" ? TORSO_FILL : TORSO_OUTLINE}"/>
+                <g transform="${sh}"><path d="${armL}"/><path d="${armR}"/></g>
+              </g>
+            </g>`;
+        };
+
+        return `
+        <svg viewBox="0 0 220 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <g transform="${base}" opacity="${v.under}" style="mix-blend-mode:multiply">
+            ${plate("fill")}
+          </g>
+          <g transform="translate(${v.regX} ${v.regY})" opacity="${v.over}">
+            <g transform="${base}">
+              ${plate("stroke")}
+              <g transform="${head}" fill="#0a0a0a" opacity="0.92">
+                ${hair(v.hair, HEAD.cy)}
+              </g>
+              <g transform="${body}" fill="none" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round">
+                <path d="${COLLAR}"/>
+                ${marks}
+              </g>
+            </g>
+          </g>
+        </svg>`;
+      }
+
+      document.querySelectorAll("[data-level]").forEach((host) => {
+        const raw = host.dataset.level;
+        const level = parseInt(raw, 10);
+        host.innerHTML = `<div class="grid">${SQUAD.map((p) => {
+          const key = `${p.f} ${p.l}`;
+          const art = p.img
+            ? `<img src="${p.img}" alt="${key}">`
+            : figure(key, level);
+          return `<div class="c-card">
+            <div class="c-fig">${art}</div>
+            <p class="nm"><b>${p.f}</b> <em>${p.l}</em></p>
+            <p class="pos">${label(p) ?? ""}</p>
+          </div>`;
+        }).join("")}</div>`;
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2606 — de placeholder-rij in een echt wedstrijdschema</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --paper-edge: #d9d2bd;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey: #4acf52;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --alert: #b84a3a;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-display: "freight-display-pro", georgia, serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --shadow-paper-sm: 4px 4px 0 var(--ink);
+        --shadow-paper-md: 6px 6px 0 var(--ink);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        line-height: 1.5;
+      }
+      .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 16px 80px; }
+
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        font-weight: 600;
+      }
+      h1 {
+        font-family: var(--font-big);
+        font-size: 40px;
+        line-height: 1.05;
+        margin: 8px 0 16px;
+      }
+      h2 {
+        font-family: var(--font-display);
+        font-size: 26px;
+        margin: 0 0 4px;
+      }
+      .lede { max-width: 680px; margin-bottom: 8px; }
+      .muted { color: var(--ink-muted); }
+      .small { font-size: 14px; }
+
+      /* ---------- variant switcher ---------- */
+      .switcher {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: var(--cream);
+        border-bottom: 2px solid var(--ink);
+        padding: 10px 0;
+        margin-bottom: 28px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .switcher .lbl {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-right: 4px;
+      }
+      .switcher button {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 7px 12px;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        color: var(--ink);
+        cursor: pointer;
+        box-shadow: var(--shadow-paper-sm);
+        transition: none;
+      }
+      .switcher button:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+      .switcher button[aria-pressed="true"] {
+        background: var(--jersey-deep);
+        color: #fff;
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+
+      /* ---------- schedule ---------- */
+      .schedule { margin: 0 0 44px; }
+      .sched-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 6px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+      .sched-head .ctx {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .rows { display: flex; flex-direction: column; gap: 8px; }
+
+      .row {
+        display: flex;
+        align-items: stretch;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+        text-decoration: none;
+        color: inherit;
+      }
+      .stub {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 12px;
+        border-right: 2px solid var(--ink);
+        background: rgba(237, 232, 218, 0.3);
+        flex-shrink: 0;
+        min-width: 58px;
+      }
+      .stub .d {
+        font-family: var(--font-big);
+        font-size: 18px;
+        line-height: 1;
+      }
+      .stub .m {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 8px 12px;
+      }
+      .teams {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+      }
+      .side {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+      }
+      .side.away { flex-direction: row-reverse; }
+      .crest {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+        border: 1.5px solid var(--ink);
+        background: var(--cream-deep);
+        display: grid;
+        place-items: center;
+        font-family: var(--font-mono);
+        font-size: 8px;
+        font-weight: 700;
+      }
+      .crest.kcvv { background: var(--jersey-deep); color: #fff; border-color: var(--ink); }
+      .tname {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tname.b { font-weight: 700; }
+      .side.away .tname { text-align: right; }
+      .score {
+        flex-shrink: 0;
+        padding: 0 8px;
+        font-family: var(--font-big);
+        font-size: 18px;
+        line-height: 1;
+      }
+      .caption {
+        margin-top: 3px;
+        text-align: center;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+
+      /* the row under study */
+      .row.subject { position: relative; }
+      .row.subject::after {
+        content: "de rij in kwestie";
+        position: absolute;
+        top: -9px;
+        right: 10px;
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        background: var(--warm);
+        border: 1.5px solid var(--ink);
+        padding: 1px 6px;
+        color: var(--ink);
+      }
+
+      /* ---------- candidate B: stated placeholder ---------- */
+      .ph-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+      }
+      .ph-subject { font-size: 14px; font-weight: 700; }
+      .ph-reason {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 2px;
+      }
+      .ph-time {
+        flex-shrink: 0;
+        padding: 0 8px;
+        font-family: var(--font-big);
+        font-size: 18px;
+        line-height: 1;
+        color: var(--ink);
+      }
+
+      /* ---------- candidate C: note register ---------- */
+      .row.note {
+        background: var(--cream-soft);
+        box-shadow: none;
+        border-style: dashed;
+      }
+      .row.note .stub { background: transparent; border-right-style: dashed; }
+      .note-body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+      }
+      .note-txt { min-width: 0; }
+      .note-subject {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .note-reason { font-size: 13px; color: var(--ink-muted); }
+      .note-time {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      /* ---------- annotations ---------- */
+      .verdict {
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        padding: 14px 16px;
+        margin: 0 0 30px;
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .verdict h3 {
+        margin: 0 0 6px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .verdict p { margin: 0 0 8px; font-size: 14px; }
+      .verdict p:last-child { margin-bottom: 0; }
+      .pill {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border: 1.5px solid var(--ink);
+        padding: 1px 6px;
+        margin-right: 4px;
+      }
+      .pill.no { background: var(--alert); color: #fff; }
+      .pill.yes { background: var(--jersey); }
+      .link-note {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 6px;
+      }
+      hr.seam {
+        border: 0;
+        height: 0;
+        border-top: 2px solid var(--ink);
+        margin: 36px 0 28px;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.88em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="kicker">#2606 · prototype · weggooicode</p>
+      <h1>De placeholder-rij, in een écht schema</h1>
+      <p class="lede">
+        Beide schema's hieronder zijn <strong>echte PSD-data</strong>, ongewijzigd
+        overgenomen. De rij in kwestie staat telkens tussen zijn echte buren — dat
+        is het hele punt: de vraag is niet hoe de rij er los uitziet, maar of hij
+        naast een gewone wedstrijd nog leesbaar is.
+      </p>
+      <p class="lede small muted">
+        Let op de U8-lijst: <strong>drie van de vier tornooi-rijen hebben een echte
+        tegenstander</strong> (Steenhuffel, Blaasveld, Huldenberg). Tornooien renderen
+        dus prima. Alleen de rij waar beide kanten KCVV zijn, breekt — daarom kijkt
+        de detectie naar <code>homeClubId === awayClubId</code> en niet naar
+        <code>competitionType</code>.
+      </p>
+
+      <div class="switcher">
+        <span class="lbl">Variant</span>
+        <button data-v="a" aria-pressed="true">A · nu live</button>
+        <button data-v="b" aria-pressed="false">B · benoemde placeholder</button>
+        <button data-v="c" aria-pressed="false">C · notitie-register</button>
+      </div>
+
+      <div class="verdict" id="verdict"></div>
+
+      <!-- ============ SCHEDULE 1: A-ploeg ============ -->
+      <section class="schedule">
+        <div class="sched-head">
+          <h2>A-ploeg — augustus 2026</h2>
+          <span class="ctx">/ploegen/eerste-elftallen-a · echte data</span>
+        </div>
+        <div class="rows" id="sched-a"></div>
+        <p class="link-note">
+          Context: vijf bekermatchen in juli/augustus gaan hieraan vooraf. De rij van
+          22 augustus is een vastgehouden datum — of er gespeeld wordt hangt af van
+          de bekerdoortocht.
+        </p>
+      </section>
+
+      <hr class="seam" />
+
+      <!-- ============ SCHEDULE 2: U8 ============ -->
+      <section class="schedule">
+        <div class="sched-head">
+          <h2>U8 — mei 2026</h2>
+          <span class="ctx">/ploegen/kcvve-u8 · echte data</span>
+        </div>
+        <div class="rows" id="sched-u8"></div>
+        <p class="link-note">
+          Elk jaar opnieuw: in mei krijgen zeven à acht jeugdploegen tegelijk zo'n
+          rij.
+        </p>
+      </section>
+    </div>
+
+    <script>
+      // ---- real PSD rows (unmodified) --------------------------------------
+      const SCHED_A = [
+        { d: "19", m: "aug", home: "K Hoger Op Wolvertem", away: "KCVV Elewijt", kcvv: "away", score: "20:00", cap: "Vriendschappelijk" },
+        { d: "22", m: "aug", home: "KCVV Elewijt", away: "KCVV Elewijt", kcvv: "both", score: "19:00", cap: "Vriendschappelijk",
+          subject: true, kind: "Vriendschappelijke wedstrijd", reason: "Tegenstander nog niet bekend", time: "19:00" },
+        { d: "30", m: "aug", home: "KCVV Elewijt", away: "Ksc Blankenberge", kcvv: "home", score: "15:00", cap: "Competitie" },
+      ];
+      const SCHED_U8 = [
+        { d: "01", m: "mei", home: "Sk Steenhuffel", away: "KCVV Elewijt", kcvv: "away", score: "12:00", cap: "Tornooi" },
+        { d: "03", m: "mei", home: "Fc Blaasveld", away: "KCVV Elewijt", kcvv: "away", score: "10:00", cap: "Tornooi" },
+        { d: "09", m: "mei", home: "KCVV Elewijt", away: "KCVV Elewijt", kcvv: "both", score: "09:30", cap: "Tornooi",
+          subject: true, kind: "Tornooi", reason: "Tegenstanders nog niet bekend", time: "09:30" },
+        { d: "16", m: "mei", home: "Ohr Huldenberg", away: "KCVV Elewijt", kcvv: "away", score: "12:00", cap: "Tornooi" },
+      ];
+
+      const VERDICTS = {
+        a: {
+          h: "A · wat er vandaag live staat",
+          p: [
+            'Twee identieke KCVV-schilden, "KCVV Elewijt" aan beide kanten, en een score-plek die nooit gevuld raakt. De rij is klikbaar naar <code>/wedstrijd/{id}</code>, waar niets te tonen valt.',
+            '<span class="pill no">klikbaar</span> <span class="pill no">dubbel schild</span> <span class="pill no">lege score</span> — dit is de nulmeting, geen kandidaat.',
+          ],
+        },
+        b: {
+          h: "B · benoemde placeholder — GEKOZEN",
+          p: [
+            "Eén schild, het soort als onderwerp, het echte startuur rechts. Weg: het tweede schild, de tegenstandersnaam, het thuis/uit-icoon en de score-plek.",
+            '<strong>De reden-regel is na review geschrapt.</strong> De rij zegt alleen wat vaststaat — een tornooi, die dag, dat uur — en laat weg wat niet bekend is. Het ontbreken van een tegenstander <em>is</em> de boodschap; er is geen zin nodig om dat aan te kondigen. Dat is #2540 toegepast op een rij in plaats van een sectie.',
+            'Dat maakt een verkeerde PSD-invoer nog goedkoper: een als <code>FRIENDLY</code> ingevoerd tornooi leest als "Vriendschappelijke wedstrijd · 18:30" — een kale categorie, geen onware bewering. Dat was de eis uit Q14.',
+            '<span class="pill yes">niet klikbaar</span> <span class="pill yes">één schild</span> <span class="pill yes">uur behouden</span> <span class="pill yes">geen reden-regel</span>',
+          ],
+        },
+        c: {
+          h: "C · notitie-register — AFGEWEZEN",
+          p: [
+            "De rij stopt met eruitzien als een wedstrijdkaart: gestippelde rand, geen slagschaduw, teruggetrokken vulling. Hij leest als een aantekening in het schema in plaats van als een match.",
+            "Sterker gescheiden dan B — onmogelijk te verwarren met een fixture — maar het kost de rij ook zijn gewicht. Voor een ouder is dit wél de belangrijkste rij van die week, en C duwt hem naar achteren net wanneer hij het meest nodig is.",
+            '<em>Hier nog getoond zoals bij de vergelijking, inclusief de reden-regel die in B geschrapt werd.</em>',
+            '<span class="pill yes">niet klikbaar</span> <span class="pill no">minder gewicht</span>',
+          ],
+        },
+      };
+
+      function crest(label, isKcvv) {
+        return `<span class="crest ${isKcvv ? "kcvv" : ""}">${label}</span>`;
+      }
+      function abbr(name) {
+        if (name === "KCVV Elewijt") return "KE";
+        return name.replace(/[^A-Za-z ]/g, "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+      }
+
+      function renderRow(r, variant) {
+        const stub = `<div class="stub"><span class="d">${r.d}</span><span class="m">${r.m}</span></div>`;
+
+        // Non-subject rows always render as the real match row.
+        if (!r.subject || variant === "a") {
+          const isSub = r.subject ? " subject" : "";
+          return `
+            <a class="row${isSub}" href="#" onclick="return false;">
+              ${stub}
+              <div class="body">
+                <div class="teams">
+                  <div class="side">
+                    ${crest(abbr(r.home), r.home === "KCVV Elewijt")}
+                    <span class="tname ${r.kcvv === "home" || r.kcvv === "both" ? "b" : ""}">${r.home}</span>
+                  </div>
+                  <span class="score">${r.score}</span>
+                  <div class="side away">
+                    ${crest(abbr(r.away), r.away === "KCVV Elewijt")}
+                    <span class="tname ${r.kcvv === "away" || r.kcvv === "both" ? "b" : ""}">${r.away}</span>
+                  </div>
+                </div>
+                <span class="caption">${r.cap}</span>
+              </div>
+            </a>`;
+        }
+
+        if (variant === "b") {
+          return `
+            <div class="row subject">
+              ${stub}
+              <div class="body">
+                <div class="ph-line">
+                  ${crest("KE", true)}
+                  <div style="flex:1;min-width:0">
+                    <div class="ph-subject">${r.kind}</div>
+                  </div>
+                  <span class="ph-time">${r.time}</span>
+                </div>
+              </div>
+            </div>`;
+        }
+
+        // variant c
+        return `
+          <div class="row note subject">
+            ${stub}
+            <div class="note-body">
+              <div class="note-txt">
+                <div class="note-subject">${r.kind}</div>
+                <div class="note-reason">${r.reason}</div>
+              </div>
+              <span class="note-time">${r.time}</span>
+            </div>
+          </div>`;
+      }
+
+      function render(variant) {
+        document.getElementById("sched-a").innerHTML = SCHED_A.map((r) => renderRow(r, variant)).join("");
+        document.getElementById("sched-u8").innerHTML = SCHED_U8.map((r) => renderRow(r, variant)).join("");
+        const v = VERDICTS[variant];
+        document.getElementById("verdict").innerHTML =
+          `<h3>${v.h}</h3>` + v.p.map((x) => `<p>${x}</p>`).join("");
+        document.querySelectorAll(".switcher button").forEach((b) => {
+          b.setAttribute("aria-pressed", String(b.dataset.v === variant));
+        });
+        const url = new URL(location);
+        url.searchParams.set("v", variant);
+        history.replaceState(null, "", url);
+      }
+
+      document.querySelectorAll(".switcher button").forEach((b) => {
+        b.addEventListener("click", () => render(b.dataset.v));
+      });
+      render(new URL(location).searchParams.get("v") || "a");
+    </script>
+  </body>
+</html>

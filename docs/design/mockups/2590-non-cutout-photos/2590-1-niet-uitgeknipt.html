@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2590 · Wat doet het spelersraster met een foto die geen uitsnede is?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --ink: #0a0a0a;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --paper-edge: #d9d2bd;
+        --brick: #c93f1c;
+        --font-display: "Fraunces", georgia, serif;
+        --font-body: "Archivo", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", monospace;
+        --shadow-paper-sm: 4px 4px 0 0 var(--ink);
+        --newsprint: sepia(0.06) saturate(0.94) hue-rotate(-4deg) contrast(1.02)
+          brightness(1.01);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.92em;
+      }
+      .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
+      header.page {
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 20px;
+        margin-bottom: 28px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      h1 {
+        font-family: var(--font-display);
+        font-size: 40px;
+        line-height: 1.02;
+        margin: 10px 0 0;
+        font-weight: 600;
+      }
+      h1 em {
+        font-weight: 400;
+      }
+      .lede {
+        max-width: 680px;
+        margin: 14px 0 0;
+        font-size: 16px;
+        line-height: 1.55;
+      }
+      .truth {
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        padding: 18px 20px;
+        margin: 0 0 44px;
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .truth h2 {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin: 0 0 12px;
+        color: var(--ink-muted);
+      }
+      table {
+        border-collapse: collapse;
+        font-size: 14px;
+        width: 100%;
+        max-width: 680px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 5px 14px 5px 0;
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      th {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        font-weight: 500;
+      }
+      td.num {
+        font-family: var(--font-mono);
+        font-variant-numeric: lining-nums;
+      }
+      .bad {
+        color: var(--brick);
+        font-weight: 600;
+      }
+      .truth p {
+        max-width: 680px;
+        font-size: 14px;
+        line-height: 1.55;
+        margin: 14px 0 0;
+      }
+      section.opt {
+        margin: 0 0 56px;
+      }
+      section.opt > header {
+        border-top: 2px solid var(--ink);
+        padding-top: 12px;
+        margin-bottom: 18px;
+      }
+      section.opt h2 {
+        font-family: var(--font-display);
+        font-size: 26px;
+        margin: 6px 0 0;
+        font-weight: 600;
+      }
+      section.opt .note {
+        max-width: 680px;
+        font-size: 14px;
+        line-height: 1.55;
+        margin: 8px 0 0;
+        color: var(--ink-muted);
+      }
+      .verdict {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border: 1.5px solid var(--ink);
+        padding: 3px 8px;
+        margin-top: 10px;
+      }
+      .verdict.no {
+        background: var(--brick);
+        color: #fff;
+        border-color: var(--brick);
+      }
+      .verdict.ok {
+        background: var(--jersey-deep);
+        color: #fff;
+        border-color: var(--jersey-deep);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 16px;
+      }
+      /* De kaart zoals #2542 ze vastlegde: het kader blijft. 2px inktrand,
+         TapedCard-schaduw, en binnenin een 3:4 venster op cream-soft — de
+         witte matte blendt daar weg, dus niets binnen het kader is wit. */
+      .card {
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 8px 8px 12px;
+        transform: rotate(-0.25deg);
+      }
+      .fig {
+        position: relative;
+        aspect-ratio: 3 / 4;
+        overflow: hidden;
+        border: 1px solid var(--paper-edge);
+        background: var(--cream-soft);
+      }
+      .fig img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: var(--newsprint);
+      }
+      .fig svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      /* De #2542-regel, binnen datzelfde kader: contain + bottom + multiply.
+         De schaal is 4/3, niet 1.3. `contain` past een vierkante 350×350 in
+         een 3:4-venster op de bréédte, dus een derde van het venster blijft
+         leeg — en `bottom` zet die leegte bovenaan. Pas vanaf 4/3 is het
+         beeld even hoog als het venster. Bij een uitsnede is dat verschil
+         onzichtbaar (cream op cream), bij een foto mét achtergrond is het een
+         cream strook boven een harde beeldrand. Kost de uitsnede vrijwel
+         niets: de zijkant ging van 15% naar 16,7% bijsnede. */
+      .fig img.t-blend {
+        object-fit: contain;
+        object-position: bottom;
+        mix-blend-mode: multiply;
+        transform: scale(1.3334);
+        transform-origin: bottom center;
+      }
+      .nm {
+        font-family: var(--font-display);
+        line-height: 1.05;
+        margin: 8px 0 0;
+        font-size: 16px;
+      }
+      .nm b {
+        font-weight: 600;
+      }
+      .nm em {
+        font-weight: 400;
+        font-style: italic;
+      }
+      .pos {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 4px 0 0;
+        min-height: 11px;
+      }
+      #groundbar {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 9px 13px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+      .policy {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 1.9;
+        margin: 10px 0 0;
+        max-width: 680px;
+      }
+      .policy b {
+        display: inline-block;
+        min-width: 210px;
+        font-weight: 500;
+        color: var(--ink-muted);
+      }
+      .tag {
+        display: inline-block;
+        border: 1.5px solid var(--ink);
+        padding: 1px 6px;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .tag.draw { background: var(--jersey-deep); color: #fff; border-color: var(--jersey-deep); }
+      .tag.blend { background: var(--ink); color: var(--cream); }
+      .tag.cover { background: var(--cream-soft); }
+      .squadhead {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 26px 0 10px;
+        border-bottom: 1px solid var(--paper-edge);
+        padding-bottom: 5px;
+      }
+      /* soorten-strip */
+      .kinds {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 28px;
+      }
+      .kind h3 {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin: 0 0 4px;
+      }
+      .kind p {
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--ink-muted);
+        margin: 0 0 12px;
+        min-height: 58px;
+      }
+      .trio {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .trio .lbl {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 6px 0 0;
+      }
+      footer.page {
+        border-top: 2px solid var(--ink);
+        padding-top: 14px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-muted);
+        line-height: 1.7;
+      }
+    </style>
+  </head>
+  <body>
+    <label id="groundbar">
+      <input type="checkbox" id="ground" checked />
+      grondlijn voor de tekeningen
+    </label>
+    <div class="wrap">
+      <header class="page">
+        <p class="kicker">#2590 · onderdeel van #2536 · Team pages walk</p>
+        <h1>Zestien foto's zijn geen uitsnede — <em>en twaalf ervan staan in één ploeg.</em></h1>
+        <p class="lede">
+          De regel uit #2542 — <em>het kader blijft, en niets binnen het kader is
+          wit</em> — leunt op <code>mix-blend-mode: multiply</code>, dat alleen
+          werkt als de foto een uitsnede op zuiver wit is. Bij 131 van de 147 is
+          dat zo. Deze pagina toont wat er met de andere zestien gebeurt.
+        </p>
+      </header>
+
+      <div class="truth">
+        <h2>Gemeten — Sanity <code>production</code>, 2026-08-14</h2>
+        <table>
+          <tr>
+            <th>ploeg</th>
+            <th>kern</th>
+            <th>foto's</th>
+            <th>geen uitsnede</th>
+          </tr>
+          <tr>
+            <td>eerste-elftallen-b</td>
+            <td class="num">13</td>
+            <td class="num">12</td>
+            <td class="num bad">12 · 100%</td>
+          </tr>
+          <tr>
+            <td>kcvve-u12</td>
+            <td class="num">13</td>
+            <td class="num">6</td>
+            <td class="num bad">3 · 50%</td>
+          </tr>
+          <tr>
+            <td>eerste-elftallen-a</td>
+            <td class="num">29</td>
+            <td class="num">3</td>
+            <td class="num bad">1 · 33%</td>
+          </tr>
+          <tr>
+            <td>de zestien andere ploegen</td>
+            <td class="num">—</td>
+            <td class="num">141</td>
+            <td class="num">0</td>
+          </tr>
+        </table>
+        <p>
+          De zestien zijn dus niet verspreid: het is <b>de volledige fotoreeks
+          van de B-ploeg</b>, plus vier losse gevallen. De club heeft één
+          studiosessie gedraaid met 131 consistente uitsnedes als resultaat — de
+          B-ploeg zat daar niet in. Daarom is <em>"vervang de zestien door
+          uitsnedes uit dezelfde sessie"</em> geen uitweg: die opnames bestaan
+          niet, en ze alsnog maken is een nieuwe shoot (#2411, buiten scope).
+        </p>
+      </div>
+
+      <!-- ══ de drie renderingen ═══════════════════════════════════════ -->
+      <section class="opt">
+        <header>
+          <p class="kicker">Eerst dit · er zijn maar drie manieren waarop één kaart eruit kan zien</p>
+          <h2>Drie renderingen, drie soorten foto's</h2>
+          <p class="note">
+            <span class="tag cover">onbewerkt</span> vult het venster met
+            <code>cover</code>, zoals nu · <span class="tag blend">geblend</span>
+            is de #2542-regel: <code>contain + bottom + multiply</code> ·
+            <span class="tag draw">getekend</span> valt terug op de tekening.
+            De vier keuzes verderop zijn niets anders dan vier manieren om te
+            bepalen <em>welke foto welke rendering krijgt</em>.
+          </p>
+        </header>
+        <div class="kinds" id="kinds"></div>
+      </section>
+
+      <!-- ══ de vier keuzes ════════════════════════════════════════════ -->
+      <section class="opt">
+        <header>
+          <p class="kicker">Keuze 1</p>
+          <h2>Geen uitsnede = geen bruikbare foto</h2>
+          <p class="policy">
+            <b>uitsnede</b><span class="tag blend">geblend</span><br />
+            <b>alles wat dat niet is</b><span class="tag draw">getekend</span>
+          </p>
+          <p class="note">
+            Eén regel, automatisch te detecteren door de rand van de foto af te
+            tasten. Geen redactionele gewoonte nodig — nieuwe transfers vallen
+            vanzelf goed. De prijs staat rechts in de U12: drie echte foto's van
+            kinderen verdwijnen mee.
+          </p>
+        </header>
+        <p class="squadhead">B-ploeg · 13 spelers</p>
+        <div data-squad="eerste-elftallen-b" data-opt="1"></div>
+        <p class="squadhead">U12 · 13 spelers</p>
+        <div data-squad="kcvve-u12" data-opt="1"></div>
+      </section>
+
+      <section class="opt">
+        <header>
+          <p class="kicker">Keuze 2</p>
+          <h2>Alleen de reclame eruit</h2>
+          <p class="policy">
+            <b>uitsnede</b><span class="tag blend">geblend</span><br />
+            <b>aankondigingsbeeld</b><span class="tag draw">getekend</span><br />
+            <b>echte foto, geen uitsnede</b><span class="tag cover">onbewerkt</span>
+          </p>
+          <p class="note">
+            De B-ploeg is identiek aan keuze 1 — daar is elke foto reclame. Het
+            verschil zit volledig in de U12: de drie kiekjes blijven. Prijs: «is
+            dit reclame» is een menselijk oordeel, dus dit vraagt een vlag per
+            foto — en <code>transparentImage</code> staat sinds de invoering op
+            0 van 294.
+          </p>
+        </header>
+        <p class="squadhead">B-ploeg · 13 spelers</p>
+        <div data-squad="eerste-elftallen-b" data-opt="2"></div>
+        <p class="squadhead">U12 · 13 spelers — hier zit het verschil met keuze 1</p>
+        <div data-squad="kcvve-u12" data-opt="2"></div>
+      </section>
+
+      <section class="opt">
+        <header>
+          <p class="kicker">Keuze 3</p>
+          <h2>Tonen zoals ze zijn</h2>
+          <p class="policy">
+            <b>uitsnede</b><span class="tag blend">geblend</span><br />
+            <b>alles wat dat niet is</b><span class="tag cover">onbewerkt</span>
+          </p>
+          <p class="note">
+            Elk gezicht blijft en het kader is overal hetzelfde. Maar het venster
+            draagt dan twee registers naast elkaar, en de B-ploeg blijft een
+            sponsortelefoonnummer als portret publiceren. Dit is ook zo goed als
+            wat er vandaag live staat — het enige verschil met nu is dat de
+            uitsnedes wél blenden.
+          </p>
+        </header>
+        <p class="squadhead">B-ploeg · 13 spelers</p>
+        <div data-squad="eerste-elftallen-b" data-opt="3"></div>
+        <p class="squadhead">U12 · 13 spelers</p>
+        <div data-squad="kcvve-u12" data-opt="3"></div>
+      </section>
+
+      <section class="opt">
+        <header>
+          <p class="kicker">Keuze 4</p>
+          <h2>Alles blenden, één codepad</h2>
+          <p class="policy">
+            <b>elke foto</b><span class="tag blend">geblend</span>
+          </p>
+          <p class="note">
+            Geen detectie, geen veld, geen contentwerk. <code>multiply</code>
+            haalt geen achtergrond weg als er geen wit is — het vermenigvuldigt
+            het hele beeld met de cream en maakt het donkerder. Goedkoopst om te
+            bouwen, slechtst op de pagina.
+          </p>
+        </header>
+        <p class="squadhead">B-ploeg · 13 spelers</p>
+        <div data-squad="eerste-elftallen-b" data-opt="4"></div>
+        <p class="squadhead">U12 · 13 spelers</p>
+        <div data-squad="kcvve-u12" data-opt="4"></div>
+      </section>
+
+      <footer class="page">
+        #2590 · onderdeel van #2536 (Team pages walk) · kernen en foto's live
+        gemeten uit Sanity <code>production</code> op 2026-08-14 · kaart, blend
+        en tekening verbatim uit #2542 (djb2-seed op de spelersnaam, met
+        containment-guard) · wegwerpmateriaal, geen designbron — het ticket is
+        canoniek
+      </footer>
+    </div>
+
+    <script id="squads" type="application/json">
+      {"kcvve-u12":[{"f":"Arne","img":"https://cdn.sanity.io/images/vhb33jaz/production/f2f1baf5788d4010b9f2e40ae73eb5dd740966b9-350x350.jpg?w=350&h=350&fit=max","l":"Bautmans","pos":null,"bad":true},{"f":"Andrias","img":null,"l":"Butros","pos":null,"bad":false},{"f":"Luuk","img":null,"l":"Claes","pos":"goalkeeper","bad":false},{"f":"Kobe Viktor","img":null,"l":"De Greef","pos":null,"bad":false},{"f":"Tiebe","img":"https://cdn.sanity.io/images/vhb33jaz/production/5b9b3d7e6b9802908c92ce20d172321711f69b3f-350x350.jpg?w=350&h=350&fit=max","l":"De Keyser","pos":null,"bad":false},{"f":"Louis","img":null,"l":"Ghyselinck","pos":null,"bad":false},{"f":"Mathis","img":null,"l":"Gillabel","pos":null,"bad":false},{"f":"Maxim","img":"https://cdn.sanity.io/images/vhb33jaz/production/d01280f2630263c133490ed21b29c7a2443ec285-350x350.jpg?w=350&h=350&fit=max","l":"Huybrechts","pos":null,"bad":true},{"f":"Cian","img":"https://cdn.sanity.io/images/vhb33jaz/production/6120568bff0b42ed98670b94bbff58c79feb6f99-350x350.jpg?w=350&h=350&fit=max","l":"Jessen","pos":null,"bad":false},{"f":"Clyde","img":null,"l":"Jordens","pos":null,"bad":false},{"f":"Kian","img":null,"l":"Neven","pos":null,"bad":false},{"f":"Kato","img":"https://cdn.sanity.io/images/vhb33jaz/production/910934913629a06b6dc0c50e2b4b9c861dc81d2e-350x350.jpg?w=350&h=350&fit=max","l":"Schoevaerts","pos":null,"bad":true},{"f":"Diego","img":"https://cdn.sanity.io/images/vhb33jaz/production/7b8bf5d26da4e1dc20e335f774777dcd0d8a39d8-350x350.jpg?w=350&h=350&fit=max","l":"Symkens","pos":null,"bad":false}],"eerste-elftallen-b":[{"f":"Kobe","img":"https://cdn.sanity.io/images/vhb33jaz/production/c197b8869f164613ae98d800ac53973203933896-350x350.jpg?w=350&h=350&fit=max","l":"Crabs","pos":null,"bad":true},{"f":"Nils","img":null,"l":"Ferrante","pos":null,"bad":false},{"f":"Anthony","img":"https://cdn.sanity.io/images/vhb33jaz/production/5605cf9261cebd2b6eaffc64af0304b9ca1a31c3-350x350.jpg?w=350&h=350&fit=max","l":"Goossens","pos":"defender","bad":true},{"f":"Ruben","img":"https://cdn.sanity.io/images/vhb33jaz/production/b366a95c4f2e8e710ca4f74ace7b710d43e973c7-350x350.jpg?w=350&h=350&fit=max","l":"Lebrun","pos":null,"bad":true},{"f":"Mathiz","img":"https://cdn.sanity.io/images/vhb33jaz/production/ea87229ce5819ce70dd16cda398d03df6d5367cf-350x350.jpg?w=350&h=350&fit=max","l":"Matyn","pos":null,"bad":true},{"f":"Karsten Andy","img":"https://cdn.sanity.io/images/vhb33jaz/production/bedbb385081ffb3b1d94ec1e38e6102659793276-350x350.jpg?w=350&h=350&fit=max","l":"Roelandt","pos":null,"bad":true},{"f":"Lev","img":"https://cdn.sanity.io/images/vhb33jaz/production/b00c777983b6b2eb8a0a26b21b6f893c537c0d88-350x350.jpg?w=350&h=350&fit=max","l":"Roobaert","pos":null,"bad":true},{"f":"Tiziano","img":"https://cdn.sanity.io/images/vhb33jaz/production/f14369e5802b0bbb1705016f3997d51b8fb2f45a-350x350.jpg?w=350&h=350&fit=max","l":"Rowies","pos":null,"bad":true},{"f":"Luiz","img":"https://cdn.sanity.io/images/vhb33jaz/production/ca6bb9d5fd8336439c974d57680967fd902d3803-350x350.jpg?w=350&h=350&fit=max","l":"Spillebeen","pos":null,"bad":true},{"f":"Remco","img":"https://cdn.sanity.io/images/vhb33jaz/production/cabd7e4245220bfbf095d43d9c6901f020f4a91f-350x350.jpg?w=350&h=350&fit=max","l":"Talboom","pos":null,"bad":true},{"f":"Stijn","img":"https://cdn.sanity.io/images/vhb33jaz/production/84396150c13f4186c551a4f9037553fa8947dc23-350x350.jpg?w=350&h=350&fit=max","l":"Usewils","pos":null,"bad":true},{"f":"Max Julien","img":"https://cdn.sanity.io/images/vhb33jaz/production/d45b4a3aedab0aaeda910846e343e338d4cf7bde-350x350.jpg?w=350&h=350&fit=max","l":"Van De Ven","pos":null,"bad":true},{"f":"Dmytro","img":"https://cdn.sanity.io/images/vhb33jaz/production/e6fa310e5e26383700f394fafbc00b67e7df57d5-350x350.jpg?w=350&h=350&fit=max","l":"Varnavskyi","pos":null,"bad":true}]}
+    </script>
+    <script>
+      const DATA = JSON.parse(document.getElementById("squads").textContent);
+
+      const NL = {
+        goalkeeper: "Doelman",
+        defender: "Verdediger",
+        midfielder: "Middenvelder",
+        attacker: "Aanvaller",
+      };
+      const label = (p) =>
+        p.pos ? (NL[String(p.pos).toLowerCase()] ?? p.pos) : null;
+
+      // ── alles hieronder verbatim uit #2542 (2542-2-variatie-studie) ──
+
+      function seed(s) {
+        let h = 5381;
+        for (let i = 0; i < s.length; i++) h = (h * 33) ^ s.charCodeAt(i);
+        return h >>> 0;
+      }
+      function stream(sd) {
+        let x = sd || 1;
+        return () => {
+          x ^= x << 13;
+          x >>>= 0;
+          x ^= x >> 17;
+          x ^= x << 5;
+          x >>>= 0;
+          return x / 4294967296;
+        };
+      }
+      const span = (r, lo, hi) => lo + r() * (hi - lo);
+
+      const HEAD = { cx: 110, cy: 78, rx: 44, ry: 48 };
+      const TORSO_FILL =
+        "M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300 Z";
+      const TORSO_OUTLINE =
+        "M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300";
+      const COLLAR = "M 92 132 L 110 156 L 128 132";
+      const STRIPES = [
+        "M 70 168 L 70 300",
+        "M 88 158 L 88 300",
+        "M 132 158 L 132 300",
+        "M 150 168 L 150 300",
+      ];
+      const BUMP_L = "M 52 168 L 70 162 L 72 196 L 54 200 Z";
+      const BUMP_R = "M 168 168 L 150 162 L 148 196 L 166 200 Z";
+      const STRIPE_SETS = [
+        ["M 79 163 L 79 300", "M 110 158 L 110 300", "M 141 163 L 141 300"],
+        STRIPES,
+        [
+          "M 64 170 L 64 300",
+          "M 87 160 L 87 300",
+          "M 110 157 L 110 300",
+          "M 133 160 L 133 300",
+          "M 156 170 L 156 300",
+        ],
+      ];
+      const SLEEVE_L = "M 52 168 L 70 162 L 74 258 L 50 262 Z";
+      const SLEEVE_R = "M 168 168 L 150 162 L 146 258 L 170 262 Z";
+
+      function pattern(kind, stripeSet) {
+        if (kind === 0) return stripeSet.map((d) => `<path d="${d}"/>`).join("");
+        if (kind === 1)
+          return [186, 212, 238, 264, 290]
+            .map(
+              (y) =>
+                `<path d="M ${44 + (y - 186) * 0.14} ${y} L ${176 - (y - 186) * 0.14} ${y}"/>`,
+            )
+            .join("");
+        if (kind === 2) {
+          let out = "";
+          for (let y = 180; y < 300; y += 22)
+            for (let x = 56; x < 186; x += 22)
+              out += `<circle cx="${x + ((y / 22) % 2) * 11}" cy="${y}" r="2.4" fill="#0a0a0a" stroke="none"/>`;
+          return out;
+        }
+        return "";
+      }
+
+      const mmul = (m, n) => ({
+        a: m.a * n.a + m.c * n.b,
+        b: m.b * n.a + m.d * n.b,
+        c: m.a * n.c + m.c * n.d,
+        d: m.b * n.c + m.d * n.d,
+        e: m.a * n.e + m.c * n.f + m.e,
+        f: m.b * n.e + m.d * n.f + m.f,
+      });
+      const mT = (x, y) => ({ a: 1, b: 0, c: 0, d: 1, e: x, f: y });
+      const mS = (x, y) => ({ a: x, b: 0, c: 0, d: y, e: 0, f: 0 });
+      const mR = (deg) => {
+        const r = (deg * Math.PI) / 180;
+        return {
+          a: Math.cos(r),
+          b: Math.sin(r),
+          c: -Math.sin(r),
+          d: Math.cos(r),
+          e: 0,
+          f: 0,
+        };
+      };
+      const mK = (deg) => ({
+        a: 1,
+        b: 0,
+        c: Math.tan((deg * Math.PI) / 180),
+        d: 1,
+        e: 0,
+        f: 0,
+      });
+      const mAt = (m, x, y) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
+      const STROKE = 2;
+
+      function figureBox(v) {
+        const M = [
+          mT(110 + v.dx, 150 + v.dy + v.drop),
+          mR(v.rot),
+          mK(v.lean),
+          mS(v.flip * v.scale, v.scale),
+          mT(-110, -150),
+        ].reduce(mmul);
+        const halfW =
+          Math.max(80 * v.build, 60 * v.build * v.shoulder, 44) + STROKE;
+        const top = 78 + v.headDy - 48 - STROKE;
+        const bottom = 300 + STROKE;
+        const pts = [
+          [110 - halfW, top],
+          [110 + halfW, top],
+          [110 - halfW, bottom],
+          [110 + halfW, bottom],
+        ].map(([x, y]) => mAt(M, x, y));
+        const xs = pts.map((p) => p[0]);
+        const ys = pts.map((p) => p[1]);
+        return {
+          minX: Math.min(...xs),
+          maxX: Math.max(...xs),
+          minY: Math.min(...ys),
+          maxY: Math.max(...ys),
+        };
+      }
+
+      // `ground` = de grondlijn. De foto's staan altijd met hun onderrand op de
+      // onderrand van het venster (`object-position: bottom`), dus een tekening
+      // die door schaal of drop 8% te hoog eindigt, zweeft ernaast. Met de
+      // grondlijn mag de romp nog steeds ónder het kader doorlopen — hij mag
+      // alleen niet meer te kort stoppen. Alle andere variatie blijft.
+      function contain(v, ground) {
+        const M = 4;
+        for (let pass = 0; pass < 8; pass++) {
+          const b = figureBox(v);
+          const width = b.maxX - b.minX;
+          if (width > 220 - 2 * M + 0.5) {
+            v.scale *= (220 - 2 * M) / width;
+            continue;
+          }
+          let dx = 0;
+          if (b.minX < M) dx = M - b.minX;
+          else if (b.maxX > 220 - M) dx = 220 - M - b.maxX;
+          const dy = b.minY < M ? M - b.minY : 0;
+          if (Math.abs(dx) < 0.4 && dy < 0.4) break;
+          v.dx += dx;
+          v.drop += dy;
+        }
+        // Grondlijn, ná de guard: naar beneden schuiven kan de kop nooit uit
+        // het kader duwen, dus dit hoeft niet opnieuw gecontroleerd te worden.
+        if (ground) {
+          const b = figureBox(v);
+          if (b.maxY < 300) v.drop += 300 - b.maxY;
+        }
+        return v;
+      }
+
+      // niveau 4b — de variant die #2542 koos
+      function figure(nameKey, ground) {
+        const r = stream(seed(nameKey));
+        let v = {
+          scale: 1,
+          dx: 0,
+          dy: 0,
+          rot: 0,
+          under: 0.95,
+          over: 0.9,
+          regX: 2,
+          regY: 1,
+          flip: 1,
+          headTilt: 0,
+          headDy: 0,
+          shoulder: 1,
+          stripes: 1,
+          hair: 0,
+          sleeve: 0,
+          build: 1,
+          lean: 0,
+          pattern: 0,
+          drop: 0,
+        };
+        v = {
+          ...v,
+          scale: span(r, 0.9, 1.1),
+          dx: span(r, -9, 9),
+          dy: span(r, -7, 7),
+          rot: span(r, -0.9, 0.9),
+          under: span(r, 0.74, 1),
+          over: span(r, 0.82, 1),
+          regX: span(r, -3, 4),
+          regY: span(r, -3, 4),
+        };
+        v = {
+          ...v,
+          flip: r() < 0.5 ? -1 : 1,
+          headTilt: span(r, -5, 5),
+          headDy: span(r, -6, 6),
+          shoulder: span(r, 0.88, 1.12),
+          stripes: Math.floor(r() * 3),
+        };
+        v = {
+          ...v,
+          hair: 0,
+          sleeve: r() < 0.45 ? 1 : 0,
+          build: span(r, 0.86, 1.14),
+          lean: span(r, -3, 3),
+          pattern: Math.floor(r() * 4),
+          drop: span(r, -14, 16),
+          scale: span(r, 0.84, 1.16),
+        };
+        contain(v, ground);
+
+        const base = `translate(${110 + v.dx} ${150 + v.dy + v.drop}) rotate(${v.rot}) skewX(${v.lean}) scale(${v.flip * v.scale} ${v.scale}) translate(-110 -150)`;
+        const head = `translate(${HEAD.cx} ${HEAD.cy + v.headDy}) rotate(${v.headTilt}) translate(${-HEAD.cx} ${-HEAD.cy})`;
+        const sh = `translate(110 182) scale(${v.shoulder} 1) translate(-110 -182)`;
+        const body = `translate(110 220) scale(${v.build} 1) translate(-110 -220)`;
+        const armL = v.sleeve ? SLEEVE_L : BUMP_L;
+        const armR = v.sleeve ? SLEEVE_R : BUMP_R;
+        const marks = pattern(v.pattern, STRIPE_SETS[v.stripes]);
+
+        const plate = (mode) => {
+          const paint =
+            mode === "fill"
+              ? 'fill="#007c46"'
+              : 'fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"';
+          return `
+            <g ${paint}>
+              <g transform="${head}"><ellipse cx="${HEAD.cx}" cy="${HEAD.cy}" rx="${HEAD.rx}" ry="${HEAD.ry}"/></g>
+              <g transform="${body}">
+                <path d="${mode === "fill" ? TORSO_FILL : TORSO_OUTLINE}"/>
+                <g transform="${sh}"><path d="${armL}"/><path d="${armR}"/></g>
+              </g>
+            </g>`;
+        };
+
+        return `
+        <svg viewBox="0 0 220 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <g transform="${base}" opacity="${v.under}" style="mix-blend-mode:multiply">
+            ${plate("fill")}
+          </g>
+          <g transform="translate(${v.regX} ${v.regY})" opacity="${v.over}">
+            <g transform="${base}">
+              ${plate("stroke")}
+              <g transform="${body}" fill="none" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round">
+                <path d="${COLLAR}"/>
+                ${marks}
+              </g>
+            </g>
+          </g>
+        </svg>`;
+      }
+      // ── beleid → rendering ───────────────────────────────────────────
+      // De twaalf aankondigingsbeelden. De andere vier niet-uitsnedes zijn
+      // echte foto's zonder reclame: 3 telefoonkiekjes (U12) + 1 portret.
+      const AD = new Set([
+        "Kobe Crabs", "Anthony Goossens", "Ruben Lebrun", "Mathiz Matyn",
+        "Karsten Andy Roelandt", "Lev Roobaert", "Tiziano Rowies",
+        "Luiz Spillebeen", "Remco Talboom", "Stijn Usewils",
+        "Max Julien Van De Ven", "Dmytro Varnavskyi",
+      ]);
+
+      function rendering(p, opt) {
+        if (!p.img) return "draw";      // geen foto → altijd de tekening
+        if (!p.bad) return "blend";     // uitsnede → altijd de #2542-regel
+        if (opt === 1) return "draw";
+        if (opt === 2) return AD.has(`${p.f} ${p.l}`) ? "draw" : "cover";
+        if (opt === 3) return "cover";
+        return "blend";                 // keuze 4
+      }
+
+      function card(p, r) {
+        const key = `${p.f} ${p.l}`;
+        const art =
+          r === "draw"
+            ? figure(key, GROUND)
+            : `<img class="t-${r}" src="${p.img}" alt="${key}">`;
+        return `<div class="card">
+          <div class="fig">${art}</div>
+          <p class="nm"><b>${p.f}</b> <em>${p.l}</em></p>
+          <p class="pos">${label(p) ?? ""}</p>
+        </div>`;
+      }
+
+      let GROUND = true;
+      function renderSquads() {
+      document.querySelectorAll("[data-squad]").forEach((host) => {
+        const squad = DATA[host.dataset.squad];
+        const opt = parseInt(host.dataset.opt, 10);
+        const rs = squad.map((p) => rendering(p, opt));
+        const n = (k) => rs.filter((x) => x === k).length;
+        host.innerHTML =
+          `<div class="grid">${squad
+            .map((p, i) => card(p, rs[i]))
+            .join("")}</div>` +
+          `<p class="pos" style="margin-top:10px">${n("cover")} onbewerkt · ${n("blend")} geblend · ${n("draw")} getekend</p>`;
+      });
+      }
+      renderSquads();
+      document.getElementById("ground").addEventListener("change", (e) => {
+        GROUND = e.target.checked;
+        renderSquads();
+      });
+
+      // de drie soorten, elk in de drie renderingen
+      const KINDS = [
+        {
+          h: "1 · aankondigingsbeeld — 12 stuks, alle in de B-ploeg",
+          p: "Donkere stadioncompositie met «WIN 2-0», publiek en een sponsorshirt met telefoonnummer. Het grootste object op de kaart is reclame, niet de speler.",
+          who: ["eerste-elftallen-b", "Anthony Goossens"],
+        },
+        {
+          h: "2 · telefoonkiekje — 3 stuks, alle in de U12",
+          p: "Een echt kind op een echt veld: doel, gras, mist. Geen reclame, geen wit, wel een volledige achtergrond die niet weg te blenden is.",
+          who: ["kcvve-u12", "Arne Bautmans"],
+        },
+        {
+          h: "3 · portret op lichtgrijs — 1 stuk, in de A-ploeg",
+          p: "Lucas Goovaerts. Kop-en-schouders, strak bijgesneden, achtergrond bijna wit. Het enige van de zestien dat geblend bijna werkt — het wordt licht grijs, niet donker.",
+          who: ["eerste-elftallen-a", "Lucas Goovaerts"],
+        },
+      ];
+      const EXTRA = {
+        "Lucas Goovaerts": {
+          f: "Lucas", l: "Goovaerts", pos: null, bad: true,
+          img: "https://cdn.sanity.io/images/vhb33jaz/production/ef634eea038b2dabeb68bfe78100edba00bad0a4-350x350.jpg?w=350&h=350&fit=max",
+        },
+      };
+      document.getElementById("kinds").innerHTML = KINDS.map((k) => {
+        const [sq, nm] = k.who;
+        const p = (DATA[sq] || []).find((x) => `${x.f} ${x.l}` === nm) || EXTRA[nm];
+        return `<div class="kind">
+          <h3>${k.h}</h3>
+          <p>${k.p}</p>
+          <div class="trio">
+            <div>${card(p, "cover")}<p class="lbl">onbewerkt</p></div>
+            <div>${card(p, "blend")}<p class="lbl">geblend</p></div>
+            <div>${card(p, "draw")}<p class="lbl">getekend</p></div>
+          </div>
+        </div>`;
+      }).join("");
+    </script>
+  </body>
+</html>
