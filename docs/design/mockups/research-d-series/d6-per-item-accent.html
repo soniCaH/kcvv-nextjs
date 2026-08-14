@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D6 — a colour per team?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --jersey-deep-dark: #133d28;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --alert: #b84a3a;
+        --warning: #c68b2c;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top h1 em {
+        font-style: italic;
+        color: var(--warm);
+      }
+      header.top p {
+        max-width: 68ch;
+        margin: 0 0 8px;
+      }
+      section.block {
+        padding: 44px 0 8px;
+      }
+      h2.sec {
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      .lede {
+        max-width: 80ch;
+        margin: 0 0 24px;
+        color: var(--ink-soft);
+      }
+      .note {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        padding: 20px 22px 22px;
+        max-width: 94ch;
+        margin-bottom: 30px;
+      }
+      .note h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 10px;
+      }
+      .note p {
+        margin: 0 0 10px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .note p:last-child {
+        margin-bottom: 0;
+      }
+
+      .opt {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        margin-bottom: 30px;
+      }
+      .opt > .hd {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 12px 18px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: baseline;
+      }
+      .opt > .hd .n {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .opt > .hd .c {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+      }
+      .opt > .ft {
+        border-top: 2px solid var(--ink);
+        padding: 14px 18px 16px;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+      }
+      .teams {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0;
+      }
+      .team {
+        border-right: 1px solid var(--paper-edge);
+        border-bottom: 1px solid var(--paper-edge);
+        padding: 16px 16px 18px;
+      }
+      .team .k {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin: 0 0 6px;
+        color: var(--jersey-deep);
+      }
+      .team h4 {
+        font-family: var(--font-big);
+        font-size: 1.25rem;
+        line-height: 1.05;
+        margin: 0 0 5px;
+        font-weight: 700;
+      }
+      .team p {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .groupbar {
+        background: var(--cream-deep);
+        border-bottom: 1px solid var(--paper-edge);
+        padding: 9px 18px;
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .foot {
+        margin: 44px 0 60px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        max-width: 88ch;
+      }
+      .foot b {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D6 · C5</p>
+        <h1>One colour per team — <em>system, or ornament</em>?</h1>
+        <p>
+          §4.3 proposes a saturated tone per card, drawn from a closed list, on the kicker and nothing
+          else. It flags its own risk: it "risks looking like a category-colour system, which is
+          product UI".
+        </p>
+        <p>The sharper version of that risk is arithmetic.</p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="note">
+          <h3>26 teams, at most 4 tones</h3>
+          <p>
+            Production holds <b>26 team documents</b>. §4.3 caps the set at four "or it is product
+            UI". Four tones across twenty-six teams means the colour <b>repeats every fourth card</b>
+            — so it cannot identify a team, and a reader who tries to learn it will fail.
+          </p>
+          <p>
+            That is the whole decision: a colour that varies without meaning anything is ornament
+            wearing the clothes of a system, which is worse than either. The only way out is a set
+            that maps to something real — and we have one, because the youth department is already
+            divided into <b>Bovenbouw / Middenbouw / Onderbouw</b>, which with Senioren is exactly
+            four groups.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">The three states of /ploegen</h2>
+        <p class="lede">Eight of the twenty-six, enough for the cycle in B to become visible.</p>
+
+        <div class="opt">
+          <div class="hd"><span class="n">A — one accent, today</span><span class="c">shipped</span></div>
+          <div class="teams">
+            <div class="team"><p class="k">Senioren</p><h4>Eerste elftal A</h4><p>2e Prov. B</p></div>
+            <div class="team"><p class="k">Senioren</p><h4>Eerste elftal B</h4><p>4e Prov. C</p></div>
+            <div class="team"><p class="k">Senioren</p><h4>Reserven</h4><p>Reserve A</p></div>
+            <div class="team"><p class="k">Bovenbouw</p><h4>U21</h4><p>Gewestelijk</p></div>
+            <div class="team"><p class="k">Bovenbouw</p><h4>U17</h4><p>Gewestelijk</p></div>
+            <div class="team"><p class="k">Middenbouw</p><h4>U13</h4><p>Gewestelijk</p></div>
+            <div class="team"><p class="k">Middenbouw</p><h4>U11</h4><p>Gewestelijk</p></div>
+            <div class="team"><p class="k">Onderbouw</p><h4>U7</h4><p>Gewestelijk</p></div>
+          </div>
+          <div class="ft">
+            <b>Every kicker is jersey-deep.</b> The colour says "this is a link into the club", not
+            "this is team number four". The grouping is carried by the words, which is where it is
+            unambiguous.
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="hd">
+            <span class="n">B — §4.3 as written: one tone per card, cycling</span
+            ><span class="c">4 tones · 26 teams</span>
+          </div>
+          <div class="teams">
+            <div class="team"><p class="k" style="color: #007c46">Senioren</p><h4>Eerste elftal A</h4><p>2e Prov. B</p></div>
+            <div class="team"><p class="k" style="color: #b84a3a">Senioren</p><h4>Eerste elftal B</h4><p>4e Prov. C</p></div>
+            <div class="team"><p class="k" style="color: #c68b2c">Senioren</p><h4>Reserven</h4><p>Reserve A</p></div>
+            <div class="team"><p class="k" style="color: #133d28">Bovenbouw</p><h4>U21</h4><p>Gewestelijk</p></div>
+            <div class="team"><p class="k" style="color: #007c46">Bovenbouw</p><h4>U17</h4><p>Gewestelijk</p></div>
+            <div class="team"><p class="k" style="color: #b84a3a">Middenbouw</p><h4>U13</h4><p>Gewestelijk</p></div>
+            <div class="team"><p class="k" style="color: #c68b2c">Middenbouw</p><h4>U11</h4><p>Gewestelijk</p></div>
+            <div class="team"><p class="k" style="color: #133d28">Onderbouw</p><h4>U7</h4><p>Gewestelijk</p></div>
+          </div>
+          <div class="ft">
+            <b>The cycle is visible in eight cards.</b> Two Senioren teams have different colours;
+            two teams sharing a colour are in different age bands. It also spends green on decoration
+            — the Rare Green Rule says green is an event, not a rotation slot.
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="hd">
+            <span class="n">C — tone per age band</span><span class="c">4 tones · 4 real groups</span>
+          </div>
+          <div class="groupbar">Senioren</div>
+          <div class="teams">
+            <div class="team"><p class="k" style="color: #0a0a0a">Senioren</p><h4>Eerste elftal A</h4><p>2e Prov. B</p></div>
+            <div class="team"><p class="k" style="color: #0a0a0a">Senioren</p><h4>Eerste elftal B</h4><p>4e Prov. C</p></div>
+            <div class="team"><p class="k" style="color: #0a0a0a">Senioren</p><h4>Reserven</h4><p>Reserve A</p></div>
+          </div>
+          <div class="groupbar">Bovenbouw</div>
+          <div class="teams">
+            <div class="team"><p class="k" style="color: #007c46">Bovenbouw</p><h4>U21</h4><p>Gewestelijk</p></div>
+            <div class="team"><p class="k" style="color: #007c46">Bovenbouw</p><h4>U17</h4><p>Gewestelijk</p></div>
+          </div>
+          <div class="groupbar">Middenbouw</div>
+          <div class="teams">
+            <div class="team"><p class="k" style="color: #b84a3a">Middenbouw</p><h4>U13</h4><p>Gewestelijk</p></div>
+            <div class="team"><p class="k" style="color: #b84a3a">Middenbouw</p><h4>U11</h4><p>Gewestelijk</p></div>
+          </div>
+          <div class="groupbar">Onderbouw</div>
+          <div class="teams">
+            <div class="team"><p class="k" style="color: #c68b2c">Onderbouw</p><h4>U7</h4><p>Gewestelijk</p></div>
+          </div>
+          <div class="ft">
+            <b>Colour now carries information — and immediately duplicates the label.</b> Every card
+            already says "Bovenbouw", and the page already groups by it. Per the project rule, you
+            label what the layout hides; here the layout hides nothing, so the colour is a second
+            encoding of something already stated twice.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>The honest summary.</b> B is ornament pretending to be a system. C is a real system that
+        encodes what the words and the grouping already say, and spends two semantic tones
+        (<code>alert</code>, <code>warning</code>) plus green on a taxonomy. A is what ships, and its
+        weakness is real but small: <code>/ploegen</code> is a long undifferentiated grid. If that is
+        the actual complaint, the fix is more likely to be grouping and rhythm than colour — the
+        group bars in C do more work than the colours in C do.
+      </p>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D2 — is the ink neutral or warm?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+        --ink: #0a0a0a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: #0a0a0a;
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+
+      header.top {
+        background: #0a0a0a;
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top h1 em {
+        font-style: italic;
+        color: #f0c264;
+      }
+      header.top p {
+        max-width: 64ch;
+        margin: 0 0 8px;
+      }
+
+      section.block {
+        padding: 44px 0 8px;
+      }
+      h2.sec {
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      .lede {
+        max-width: 76ch;
+        margin: 0 0 26px;
+        color: #1f1f1f;
+      }
+
+      /* ---------- adjacency strip: the only honest test for a subtle colour ---------- */
+      .adj {
+        border: 2px solid #0a0a0a;
+        box-shadow: 6px 6px 0 0 #0a0a0a;
+        background: var(--cream);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .adj > div {
+        padding: 22px 18px 20px;
+      }
+      .adj .lbl {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        opacity: 0.7;
+      }
+      .adj .glyph {
+        font-family: var(--font-big);
+        font-size: 3.5rem;
+        line-height: 0.95;
+        font-weight: 700;
+      }
+      .adj .rule {
+        height: 0;
+        border-top: 2px solid currentColor;
+        margin: 14px 0 12px;
+      }
+      .adj .body {
+        font-size: 0.875rem;
+        line-height: 1.5;
+      }
+      .adj .swatch {
+        height: 44px;
+        margin-top: 14px;
+      }
+
+      /* ---------- full fragments ---------- */
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 26px;
+        align-items: start;
+      }
+      .col {
+        background: var(--cream);
+        border: 2px solid currentColor;
+        box-shadow: 6px 6px 0 0 currentColor;
+      }
+      .col > .hd {
+        background: currentColor;
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+      }
+      .col > .hd span {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--cream);
+      }
+      .col > .hd span.hex {
+        color: var(--warm);
+        font-size: 0.625rem;
+      }
+      .col .paper {
+        padding: 22px 18px 20px;
+      }
+      .kick {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 8px;
+      }
+      .hl {
+        font-family: var(--font-big);
+        font-size: 2rem;
+        line-height: 1.05;
+        margin: 0 0 12px;
+        font-weight: 700;
+      }
+      .hl em {
+        font-style: italic;
+        color: var(--jersey-deep);
+      }
+      .col p.txt {
+        margin: 0 0 16px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .metarow {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        border-top: 2px solid currentColor;
+        padding-top: 12px;
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .metarow .dot {
+        width: 6px;
+        height: 6px;
+        background: var(--card-red);
+      }
+      .minicard {
+        border: 2px solid currentColor;
+        box-shadow: 4px 4px 0 0 currentColor;
+        padding: 12px 14px;
+        margin: 18px 0 4px;
+        background: var(--cream);
+      }
+      .minicard .l {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .minicard .v {
+        font-family: var(--font-big);
+        font-size: 1.5rem;
+        line-height: 1;
+        font-weight: 700;
+        margin-top: 3px;
+      }
+      /* the inverted case — cream on ink */
+      .col .band {
+        background: currentColor;
+        padding: 20px 18px 22px;
+      }
+      .col .band .kick2 {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+        margin: 0 0 8px;
+      }
+      .col .band .h {
+        font-family: var(--font-big);
+        font-size: 1.5rem;
+        line-height: 1.1;
+        font-weight: 700;
+        color: var(--cream);
+        margin: 0 0 8px;
+      }
+      .col .band p {
+        margin: 0;
+        color: var(--cream);
+        font-size: 0.875rem;
+        line-height: 1.5;
+      }
+      .col > .ft {
+        border-top: 2px solid currentColor;
+        padding: 14px 16px 16px;
+        font-size: 0.875rem;
+        line-height: 1.45;
+        color: #1f1f1f;
+      }
+      .col > .ft b {
+        color: currentColor;
+      }
+
+      .note {
+        border: 2px solid #0a0a0a;
+        background: var(--cream);
+        box-shadow: 6px 6px 0 0 #0a0a0a;
+        padding: 20px 22px 22px;
+        max-width: 90ch;
+      }
+      .note h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 10px;
+      }
+      .note p {
+        margin: 0 0 10px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .note p:last-child {
+        margin-bottom: 0;
+      }
+      .foot {
+        margin: 46px 0 60px;
+        border-top: 2px solid #0a0a0a;
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: #1f1f1f;
+        max-width: 84ch;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D2 · C4</p>
+        <h1>Is the ink neutral, or does it sit on the paper <em>warm</em>?</h1>
+        <p>
+          <code>--color-ink: #0a0a0a</code> is neutral — it is a screen black on a warm paper. Stripe
+          Press runs <code>#201819</code>; most print-referencing sites pick an ink that shares a hue
+          with the stock. The claim is that a warm near-black reads as printed and a neutral one reads
+          as rendered.
+        </p>
+        <p>
+          This is one token, and it is the widest-blast-radius change in the whole D-series:
+          <code>--color-ink</code> is the glyph colour, the band ground,
+          <b>and the ink every <code>--shadow-paper-*</code> is drawn in.</b>
+        </p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">The adjacency test</h2>
+        <p class="lede">
+          A 6-point hue shift is invisible in isolation and obvious side by side, so judge it here
+          first. Same cream, same glyph, four inks touching. The fourth is the opposite direction —
+          included so the axis is legible, not as a candidate.
+        </p>
+        <div class="adj">
+          <div style="color: #0a0a0a">
+            <div class="lbl">Today · #0a0a0a</div>
+            <div class="glyph">Aa 3—2</div>
+            <div class="rule"></div>
+            <div class="body">Neutral. Zero hue, sits on cream as a hole in the paper.</div>
+            <div class="swatch" style="background: #0a0a0a"></div>
+          </div>
+          <div style="color: #14100e">
+            <div class="lbl">Subtle warm · #14100e</div>
+            <div class="glyph">Aa 3—2</div>
+            <div class="rule"></div>
+            <div class="body">A few points toward the stock. Deniable on its own; visible here.</div>
+            <div class="swatch" style="background: #14100e"></div>
+          </div>
+          <div style="color: #201819">
+            <div class="lbl">Stripe Press · #201819</div>
+            <div class="glyph">Aa 3—2</div>
+            <div class="rule"></div>
+            <div class="body">The reference value. Reads as ink; also visibly lighter than black.</div>
+            <div class="swatch" style="background: #201819"></div>
+          </div>
+          <div style="color: #1d2731">
+            <div class="lbl">Cool · #1d2731 · reference</div>
+            <div class="glyph">Aa 3—2</div>
+            <div class="rule"></div>
+            <div class="body">Public Domain Review's direction. On cream it goes cold immediately.</div>
+            <div class="swatch" style="background: #1d2731"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">The three candidates, doing all three jobs</h2>
+        <p class="lede">
+          Glyph, border and shadow on cream; then the same ink as a band ground carrying cream type.
+          The band is where a warm ink changes most — a warm ground makes cream look like paper laid
+          on ink rather than knocked out of it.
+        </p>
+        <div class="cols">
+          <!-- today -->
+          <div class="col" style="color: #0a0a0a">
+            <div class="hd"><span>A — today</span><span class="hex">#0a0a0a · neutral</span></div>
+            <div class="paper">
+              <p class="kick">A-ploeg · Verslag</p>
+              <h3 class="hl">KCVV pakt de <em>drie punten</em> op de Dries</h3>
+              <p class="txt">
+                Een tweede helft die niemand had zien aankomen. De bezoekers kwamen nog terug tot op
+                één, maar de laatste tien minuten waren van ons.
+              </p>
+              <div class="minicard">
+                <div class="l">Eindstand</div>
+                <div class="v">3 — 2</div>
+              </div>
+              <div class="metarow"><span class="dot"></span> Zaterdag 12 april · 15:00</div>
+            </div>
+            <div class="band">
+              <p class="kick2">Volgende wedstrijd</p>
+              <p class="h">KCVV Elewijt — KFC Hofstade</p>
+              <p>Zaterdag 19 april, 15:00 · De Dries</p>
+            </div>
+            <div class="ft">
+              <b>Nothing changes.</b> No VR baselines move, no risk. The ink stays a screen black on
+              a warm stock, which is the thing C4 says reads as rendered rather than printed.
+            </div>
+          </div>
+
+          <!-- subtle -->
+          <div class="col" style="color: #14100e">
+            <div class="hd"><span>B — a few points warm</span><span class="hex">#14100e</span></div>
+            <div class="paper">
+              <p class="kick">A-ploeg · Verslag</p>
+              <h3 class="hl">KCVV pakt de <em>drie punten</em> op de Dries</h3>
+              <p class="txt">
+                Een tweede helft die niemand had zien aankomen. De bezoekers kwamen nog terug tot op
+                één, maar de laatste tien minuten waren van ons.
+              </p>
+              <div class="minicard">
+                <div class="l">Eindstand</div>
+                <div class="v">3 — 2</div>
+              </div>
+              <div class="metarow"><span class="dot"></span> Zaterdag 12 april · 15:00</div>
+            </div>
+            <div class="band">
+              <p class="kick2">Volgende wedstrijd</p>
+              <p class="h">KCVV Elewijt — KFC Hofstade</p>
+              <p>Zaterdag 19 april, 15:00 · De Dries</p>
+            </div>
+            <div class="ft">
+              <b>Keeps the density, borrows the hue.</b> Almost as dark as today, so nothing gets
+              lighter or softer — the shift is hue only. The honest objection: if nobody can name the
+              difference, it bought a full VR re-baseline for nothing.
+            </div>
+          </div>
+
+          <!-- stripe -->
+          <div class="col" style="color: #201819">
+            <div class="hd"><span>C — Stripe Press value</span><span class="hex">#201819</span></div>
+            <div class="paper">
+              <p class="kick">A-ploeg · Verslag</p>
+              <h3 class="hl">KCVV pakt de <em>drie punten</em> op de Dries</h3>
+              <p class="txt">
+                Een tweede helft die niemand had zien aankomen. De bezoekers kwamen nog terug tot op
+                één, maar de laatste tien minuten waren van ons.
+              </p>
+              <div class="minicard">
+                <div class="l">Eindstand</div>
+                <div class="v">3 — 2</div>
+              </div>
+              <div class="metarow"><span class="dot"></span> Zaterdag 12 april · 15:00</div>
+            </div>
+            <div class="band">
+              <p class="kick2">Volgende wedstrijd</p>
+              <p class="h">KCVV Elewijt — KFC Hofstade</p>
+              <p>Zaterdag 19 april, 15:00 · De Dries</p>
+            </div>
+            <div class="ft">
+              <b>Legible as a decision.</b> Warm enough to name, and noticeably less dense than
+              today — which softens the 2px borders and every hard shadow at the same time. That
+              softening is the actual risk, not the hue.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">What it costs, stated plainly</h2>
+        <div class="note">
+          <h3>The blast radius is the argument, not the hue</h3>
+          <p>
+            <b>Every visual regression baseline in the repo moves.</b> This is a site-wide token
+            change, so a scoped local capture cannot cover it — the unscoped guard refuses it, which
+            makes this a bot-driven re-baseline of the entire suite. Nothing else in the D-series has
+            that property.
+          </p>
+          <p>
+            <b>The seven shadow tokens are drawn in ink.</b> <code>--shadow-paper-sm/md/lift</code>
+            all resolve to <code>var(--color-ink)</code>, so warming the ink warms every hard shadow
+            on the site simultaneously. That is arguably the point — a printed shadow is the same ink
+            as the type — but it means the change cannot be scoped to text.
+          </p>
+          <p>
+            <b>Contrast is not the tie-breaker here.</b> On cream: today 17.5:1, subtle warm 16.8:1,
+            Stripe value 15.4:1. All three are far past any threshold that would decide anything, so
+            this is a readability-by-eye call, which is the project's stated test anyway.
+          </p>
+          <p>
+            <b>It cannot be done twice.</b> Changing ink once is a re-baseline; changing it, living
+            with it, and changing it back is two. If it is going to be tried, it wants to be tried on
+            a branch with a full capture and looked at on a real phone in daylight before it merges.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>Interaction with the rest of the queue.</b> T3 (a real scanned-paper tile behind the page)
+        is the other half of the substrate question and is asked separately — but the two compound: a
+        warm ink on procedural noise is half a move, and a warm ink on real stock is the whole one.
+        If the answer here is A, T3 still stands on its own; if the answer here is B or C, T3 should
+        be decided in the same sitting so the substrate ships as one change rather than two
+        re-baselines.
+      </p>
+    </div>
+  </body>
+</html>

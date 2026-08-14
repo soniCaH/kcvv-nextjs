@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D7b — what ground does match day take?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --jersey-deep-dark: #133d28;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --alert: #b84a3a;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top h1 em {
+        font-style: italic;
+        color: #4acf52;
+      }
+      header.top p {
+        max-width: 70ch;
+        margin: 0 0 8px;
+      }
+      section.block {
+        padding: 40px 0 8px;
+      }
+      .note {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        padding: 20px 22px 22px;
+        max-width: 94ch;
+        margin-bottom: 28px;
+      }
+      .note h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 10px;
+      }
+      .note p {
+        margin: 0 0 10px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .note p:last-child {
+        margin-bottom: 0;
+      }
+
+      .stack {
+        display: grid;
+        gap: 26px;
+      }
+      .frame {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        overflow: hidden;
+      }
+      .frame > .cap {
+        background: var(--ink);
+        color: var(--warm);
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 10px 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .frame > .cap b {
+        color: var(--cream);
+      }
+      .frame > .ft {
+        border-top: 2px solid var(--ink);
+        padding: 13px 16px 15px;
+        font-size: 0.875rem;
+        line-height: 1.45;
+      }
+      .nav {
+        background: var(--cream);
+        border-bottom: 1px solid rgb(10 10 10 / 0.15);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 13px 18px;
+      }
+      .nav .brand {
+        font-family: var(--font-big);
+        font-weight: 900;
+        font-style: italic;
+        font-size: 1.25rem;
+        letter-spacing: -0.01em;
+      }
+      .nav .brand span {
+        color: var(--jersey-deep);
+      }
+      .nav ul {
+        display: flex;
+        gap: 16px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--ink-muted);
+      }
+      .strip {
+        border-top: 1px solid rgb(0 124 70 / 0.5);
+      }
+      .strip .row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 18px;
+        border-bottom: 1px solid rgb(245 241 230 / 0.18);
+      }
+      .strip .row:last-child {
+        border-bottom: 0;
+      }
+      .strip .lbl {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        width: 96px;
+        flex: none;
+        font-weight: 600;
+        color: var(--warm);
+      }
+      .strip .teams {
+        flex: 1;
+        font-size: 0.9375rem;
+        min-width: 0;
+        color: var(--cream);
+      }
+      .strip .teams b {
+        font-weight: 600;
+      }
+      .strip .sc {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 0.875rem;
+        letter-spacing: 0.04em;
+        color: var(--cream);
+      }
+      .strip .when {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgb(245 241 230 / 0.78);
+      }
+      .g-ink {
+        background: var(--ink);
+      }
+      .g-jersey {
+        background: var(--jersey-deep);
+      }
+      .g-jerseydark {
+        background: var(--jersey-deep-dark);
+      }
+      .g-red {
+        background: var(--alert);
+      }
+      .page {
+        padding: 24px 18px 28px;
+      }
+      .page .k {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 7px;
+      }
+      .page h3 {
+        font-family: var(--font-big);
+        font-size: 1.875rem;
+        line-height: 1.05;
+        margin: 0 0 8px;
+        font-weight: 700;
+      }
+      .page p {
+        margin: 0;
+        font-size: 0.9375rem;
+        max-width: 60ch;
+      }
+      .ratio {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .foot {
+        margin: 40px 0 60px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        max-width: 90ch;
+      }
+      .foot b {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D7b · match-day ground</p>
+        <h1>Green is an event. Is <em>this</em> the event?</h1>
+        <p>
+          Same band, same relabel, same slot. Only the ground changes. Each frame is the homepage on a
+          Saturday morning with kickoff at 15:00.
+        </p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="note">
+          <h3>Why green has the best claim here — and why red has the worst</h3>
+          <p>
+            <b>The Rare Green Rule says green is an event, not a surface treatment.</b> Match day is
+            the only genuinely recurring event this site has. If green is ever going to be spent on a
+            state rather than a link, this is the state — roughly thirty Saturdays a year, and
+            nothing else on the site competes for it.
+          </p>
+          <p>
+            <b>Red already means something, and it is bad news.</b>
+            <code>--color-alert</code> is the dusty brick that Alerts use, and
+            <code>--color-card-red</code> is what <code>MatchStatusBadge</code> paints
+            <code>CANC</code> in. A red band across the top of the homepage on a match morning is the
+            same colour as "afgelast" — the exact message it must not send.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="stack">
+          <!-- jersey-deep -->
+          <div class="frame">
+            <div class="cap"><b>Jersey-deep · #007c46</b><span class="ratio">cream 4.7 : 1</span></div>
+            <div class="nav">
+              <span class="brand">KCVV <span>Elewijt</span></span>
+              <ul>
+                <li>Nieuws</li>
+                <li>Ploegen</li>
+                <li>Kalender</li>
+                <li>Club</li>
+              </ul>
+            </div>
+            <div class="strip g-jersey">
+              <div class="row">
+                <span class="lbl">Uitslag</span>
+                <span class="teams"><b>KCVV Elewijt</b> — VC Muizen</span>
+                <span class="sc">2–1</span>
+              </div>
+              <div class="row">
+                <span class="lbl">Vandaag</span>
+                <span class="teams"><b>KCVV Elewijt</b> — KFC Hofstade</span>
+                <span class="when">15:00 · De Dries</span>
+              </div>
+            </div>
+            <div class="page">
+              <p class="k">Nieuws</p>
+              <h3>KCVV pakt de drie punten op de Dries</h3>
+              <p>De rest van de pagina is precies zoals op elke andere dag.</p>
+            </div>
+            <div class="ft">
+              <b>The club colour, spent on the club's event.</b> Loudest of the four, and the only one
+              that is unmistakably KCVV rather than generic chrome. It also puts a large green field
+              directly under a nav whose brand word is already green.
+            </div>
+          </div>
+
+          <!-- jersey-deep-dark -->
+          <div class="frame">
+            <div class="cap">
+              <b>Jersey-deep-dark · #133d28</b><span class="ratio">cream 10.8 : 1</span>
+            </div>
+            <div class="nav">
+              <span class="brand">KCVV <span>Elewijt</span></span>
+              <ul>
+                <li>Nieuws</li>
+                <li>Ploegen</li>
+                <li>Kalender</li>
+                <li>Club</li>
+              </ul>
+            </div>
+            <div class="strip g-jerseydark">
+              <div class="row">
+                <span class="lbl">Uitslag</span>
+                <span class="teams"><b>KCVV Elewijt</b> — VC Muizen</span>
+                <span class="sc">2–1</span>
+              </div>
+              <div class="row">
+                <span class="lbl">Vandaag</span>
+                <span class="teams"><b>KCVV Elewijt</b> — KFC Hofstade</span>
+                <span class="when">15:00 · De Dries</span>
+              </div>
+            </div>
+            <div class="page">
+              <p class="k">Nieuws</p>
+              <h3>KCVV pakt de drie punten op de Dries</h3>
+              <p>De rest van de pagina is precies zoals op elke andere dag.</p>
+            </div>
+            <div class="ft">
+              <b>Green, read as a ground rather than as a colour.</b> Reads closer to ink at a glance
+              and only declares itself as green on a second look — which is either the restraint the
+              Rare Green Rule wants, or a green nobody notices.
+            </div>
+          </div>
+
+          <!-- red -->
+          <div class="frame">
+            <div class="cap"><b>Alert · #b84a3a</b><span class="ratio">cream 4.6 : 1</span></div>
+            <div class="nav">
+              <span class="brand">KCVV <span>Elewijt</span></span>
+              <ul>
+                <li>Nieuws</li>
+                <li>Ploegen</li>
+                <li>Kalender</li>
+                <li>Club</li>
+              </ul>
+            </div>
+            <div class="strip g-red">
+              <div class="row">
+                <span class="lbl">Uitslag</span>
+                <span class="teams"><b>KCVV Elewijt</b> — VC Muizen</span>
+                <span class="sc">2–1</span>
+              </div>
+              <div class="row">
+                <span class="lbl">Vandaag</span>
+                <span class="teams"><b>KCVV Elewijt</b> — KFC Hofstade</span>
+                <span class="when">15:00 · De Dries</span>
+              </div>
+            </div>
+            <div class="page">
+              <p class="k">Nieuws</p>
+              <h3>KCVV pakt de drie punten op de Dries</h3>
+              <p>De rest van de pagina is precies zoals op elke andere dag.</p>
+            </div>
+            <div class="ft">
+              <b>Reads as a warning, because that is what it is elsewhere.</b> Same family as the
+              <code>CANC</code> badge and the Alert body. It is the loudest option and the one most
+              likely to be misread at a glance on the one morning misreading matters.
+            </div>
+          </div>
+
+          <!-- ink, for reference -->
+          <div class="frame">
+            <div class="cap"><b>Ink · #0a0a0a</b><span class="ratio">cream 17.5 : 1 · reference</span></div>
+            <div class="nav">
+              <span class="brand">KCVV <span>Elewijt</span></span>
+              <ul>
+                <li>Nieuws</li>
+                <li>Ploegen</li>
+                <li>Kalender</li>
+                <li>Club</li>
+              </ul>
+            </div>
+            <div class="strip g-ink">
+              <div class="row">
+                <span class="lbl">Uitslag</span>
+                <span class="teams"><b>KCVV Elewijt</b> — VC Muizen</span>
+                <span class="sc">2–1</span>
+              </div>
+              <div class="row">
+                <span class="lbl">Vandaag</span>
+                <span class="teams"><b>KCVV Elewijt</b> — KFC Hofstade</span>
+                <span class="when">15:00 · De Dries</span>
+              </div>
+            </div>
+            <div class="page">
+              <p class="k">Nieuws</p>
+              <h3>KCVV pakt de drie punten op de Dries</h3>
+              <p>De rest van de pagina is precies zoals op elke andere dag.</p>
+            </div>
+            <div class="ft">
+              What you saw in D7a. Unambiguous and neutral — it says "different today" without saying
+              what kind of different.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>One consequence whichever green wins.</b> Green currently means "this is a link" on cream
+        (<code>--color-jersey-link</code> is the same value as <code>jersey-deep</code>). Spending it
+        as a once-a-week ground does not break that — a full-bleed band is not mistakable for a link —
+        but it does mean green now carries two jobs, and the second one is temporal. That is worth one
+        line in <code>DESIGN.md</code> rather than being left implicit.
+      </p>
+    </div>
+  </body>
+</html>

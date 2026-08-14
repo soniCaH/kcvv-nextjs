@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D10 — how a section announces itself</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top h1 em {
+        font-style: italic;
+        color: var(--warm);
+      }
+      header.top p {
+        max-width: 70ch;
+        margin: 0 0 8px;
+      }
+      section.block {
+        padding: 40px 0 6px;
+      }
+      h2.sec {
+        font-family: var(--font-big);
+        font-size: 1.625rem;
+        line-height: 1.15;
+        margin: 0 0 4px;
+      }
+      h2.sec .tag {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        display: block;
+        margin-bottom: 6px;
+      }
+      .lede {
+        max-width: 82ch;
+        margin: 0 0 22px;
+        color: var(--ink-soft);
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 26px;
+        align-items: start;
+      }
+      .panel {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        overflow: hidden;
+      }
+      .panel > .hd {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 11px 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .panel > .hd .n {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .panel > .hd .c {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+      }
+      .panel > .ft {
+        border-top: 2px solid var(--ink);
+        padding: 13px 16px 15px;
+        font-size: 0.875rem;
+        line-height: 1.45;
+      }
+      .stage {
+        padding: 30px 24px 30px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* the shipped SectionHeader */
+      .sh {
+        margin-bottom: 32px;
+      }
+      .sh .kick {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 8px;
+      }
+      .sh h3 {
+        font-family: var(--font-big);
+        font-size: 2rem;
+        line-height: 1.1;
+        margin: 0;
+        font-weight: 700;
+      }
+      .sh h3 em {
+        font-style: italic;
+        color: var(--jersey-deep);
+      }
+
+      /* S2 — rule–heading–rule */
+      .sh.ruled {
+        text-align: center;
+      }
+      .sh.ruled .rowline {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .sh.ruled .rowline::before,
+      .sh.ruled .rowline::after {
+        content: "";
+        flex: 1;
+        border-top: 1px solid var(--ink);
+      }
+
+      /* Y3 — ghost numeral */
+      .ghost {
+        position: absolute;
+        top: -26px;
+        right: -18px;
+        font-family: var(--font-big);
+        font-size: 11rem;
+        line-height: 0.8;
+        font-weight: 700;
+        font-style: italic;
+        color: rgb(10 10 10 / 0.06);
+        pointer-events: none;
+        user-select: none;
+      }
+
+      /* S6 — one heavyweight frame */
+      .heavy {
+        border: 14px solid var(--ink);
+        padding: 0;
+      }
+      .heavy img {
+        display: block;
+        width: 100%;
+        height: 190px;
+        object-fit: cover;
+      }
+      .normalframe {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+      }
+      .normalframe img {
+        display: block;
+        width: 100%;
+        height: 190px;
+        object-fit: cover;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 14px;
+      }
+      .card {
+        border: 2px solid var(--ink);
+        box-shadow: 4px 4px 0 0 var(--ink);
+        background: var(--cream);
+        padding: 12px 12px 14px;
+      }
+      .card .k {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 5px;
+      }
+      .card h5 {
+        font-family: var(--font-big);
+        font-size: 1.125rem;
+        line-height: 1.05;
+        margin: 0;
+        font-weight: 700;
+      }
+      .note {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        padding: 18px 20px 20px;
+        max-width: 94ch;
+        margin: 20px 0 8px;
+      }
+      .note h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 9px;
+      }
+      .note p {
+        margin: 0 0 9px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .note p:last-child {
+        margin-bottom: 0;
+      }
+      .foot {
+        margin: 40px 0 60px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        max-width: 90ch;
+      }
+      .foot b {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D10 · S2 · Y3 · S6</p>
+        <h1>How a section <em>announces itself</em></h1>
+        <p>
+          Three independent devices for the same moment — the top of a section. Any combination is
+          coherent, including none. All three land on <code>SectionHeader</code>, which #2552 made the
+          owner of section-heading air.
+        </p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec"><span class="tag">S2 — rule–heading–rule</span>The title, flanked by hairlines</h2>
+        <p class="lede">
+          A centred section title with 1px rules running out to the column edges. Public Domain
+          Review's device, and the most conventional of the three.
+        </p>
+        <div class="pair">
+          <div class="panel">
+            <div class="hd"><span class="n">Today</span><span class="c">left-aligned</span></div>
+            <div class="stage">
+              <div class="sh">
+                <p class="kick">Jeugd</p>
+                <h3>Negentien ploegen, van <em>U6 tot U21</em></h3>
+              </div>
+              <div class="cards">
+                <div class="card"><p class="k">Bovenbouw</p><h5>U21</h5></div>
+                <div class="card"><p class="k">Bovenbouw</p><h5>U17</h5></div>
+                <div class="card"><p class="k">Middenbouw</p><h5>U13</h5></div>
+                <div class="card"><p class="k">Onderbouw</p><h5>U7</h5></div>
+              </div>
+            </div>
+            <div class="ft">Kicker over heading, ranged left. Every section on the site opens this way.</div>
+          </div>
+          <div class="panel">
+            <div class="hd"><span class="n">S2 — ruled</span><span class="c">S · SectionHeader variant</span></div>
+            <div class="stage">
+              <div class="sh ruled">
+                <p class="kick">Jeugd</p>
+                <div class="rowline">
+                  <h3>Negentien ploegen, van <em>U6 tot U21</em></h3>
+                </div>
+              </div>
+              <div class="cards">
+                <div class="card"><p class="k">Bovenbouw</p><h5>U21</h5></div>
+                <div class="card"><p class="k">Bovenbouw</p><h5>U17</h5></div>
+                <div class="card"><p class="k">Middenbouw</p><h5>U13</h5></div>
+                <div class="card"><p class="k">Onderbouw</p><h5>U7</h5></div>
+              </div>
+            </div>
+            <div class="ft">
+              <b>Centres the heading, which is a bigger change than the rules are.</b> It reads as
+              chapter furniture — and a long two-line heading centred between rules is markedly harder
+              to scan than a ranged-left one.
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          <h3>The owner is settled, the risk is not</h3>
+          <p>
+            #2552 put section-heading air in <code>SectionHeader</code>, so a <code>rule</code>
+            variant belongs there. <b>It must not go on <code>EditorialHeading</code></b> — that
+            breaks nine heroes, which is the same mistake #2552 exists to prevent.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec"><span class="tag">Y3 — ghost numerals</span>An index number at display scale, bled off the edge</h2>
+        <p class="lede">
+          The foundry-specimen device: a section's ordinal set enormous in <code>ink/6</code> and
+          clipped by the container. Decorative only, so <code>aria-hidden</code>.
+        </p>
+        <div class="pair">
+          <div class="panel">
+            <div class="hd"><span class="n">Today</span><span class="c">no numeral</span></div>
+            <div class="stage">
+              <div class="sh">
+                <p class="kick">Jeugd</p>
+                <h3>Negentien ploegen, van <em>U6 tot U21</em></h3>
+              </div>
+              <div class="cards">
+                <div class="card"><p class="k">Bovenbouw</p><h5>U21</h5></div>
+                <div class="card"><p class="k">Middenbouw</p><h5>U13</h5></div>
+                <div class="card"><p class="k">Onderbouw</p><h5>U7</h5></div>
+              </div>
+            </div>
+            <div class="ft">Sections are unnumbered. Nothing says where you are in the page.</div>
+          </div>
+          <div class="panel">
+            <div class="hd"><span class="n">Y3 — ghost numeral</span><span class="c">S · #2598 gated</span></div>
+            <div class="stage">
+              <span class="ghost" aria-hidden="true">03</span>
+              <div class="sh">
+                <p class="kick">Jeugd</p>
+                <h3>Negentien ploegen, van <em>U6 tot U21</em></h3>
+              </div>
+              <div class="cards">
+                <div class="card"><p class="k">Bovenbouw</p><h5>U21</h5></div>
+                <div class="card"><p class="k">Middenbouw</p><h5>U13</h5></div>
+                <div class="card"><p class="k">Onderbouw</p><h5>U7</h5></div>
+              </div>
+            </div>
+            <div class="ft">
+              <b>Gives the page a spine.</b> Two catches: the numbers have to <i>mean</i> something —
+              a homepage whose sections are conditional (a featured event that may not exist) would
+              renumber itself — and it depends on <code>overflow: hidden</code> holding, which is
+              precisely what #2598 is about.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec"><span class="tag">S6 — one heavy frame</span>A single very thick border, once per page</h2>
+        <p class="lede">
+          Against 2px structure everywhere else, one object per page gets a frame you cannot miss.
+          Fonts In Use runs 75px; 14px is enough at our scale.
+        </p>
+        <div class="pair">
+          <div class="panel">
+            <div class="hd"><span class="n">Today</span><span class="c">2px + offset shadow</span></div>
+            <div class="stage">
+              <div class="sh">
+                <p class="kick">Nieuws</p>
+                <h3>KCVV pakt de <em>drie punten</em></h3>
+              </div>
+              <div class="normalframe">
+                <img src="../../../../apps/web/public/images/ultras.jpg" alt="" />
+              </div>
+            </div>
+            <div class="ft">Same border weight as every card, chip and table on the site.</div>
+          </div>
+          <div class="panel">
+            <div class="hd"><span class="n">S6 — heavy frame</span><span class="c">S · once per page</span></div>
+            <div class="stage">
+              <div class="sh">
+                <p class="kick">Nieuws</p>
+                <h3>KCVV pakt de <em>drie punten</em></h3>
+              </div>
+              <div class="heavy">
+                <img src="../../../../apps/web/public/images/ultras.jpg" alt="" />
+              </div>
+            </div>
+            <div class="ft">
+              <b>Reads as a mounted print.</b> Note it drops the offset shadow — a 14px border and a
+              6px shadow fight each other, so this is a swap, not an addition. "Once per page" is the
+              whole rule: two is a pattern, three is noise.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>Two of the three are gated.</b> Y3 depends on a working <code>overflow: hidden</code> to
+        clip rather than overflow, and #2598's root cause is not yet isolated — so it must not be
+        prototyped against the live homepage until it is. S2 must land on
+        <code>SectionHeader</code> and never on <code>EditorialHeading</code>. S6 is ungated and is a
+        one-line variant on whichever figure gets it.
+      </p>
+    </div>
+  </body>
+</html>

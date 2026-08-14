@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D17 — rule weights and accent hairlines</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1300px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top h1 em {
+        font-style: italic;
+        color: var(--warm);
+      }
+      header.top p {
+        max-width: 72ch;
+        margin: 0 0 8px;
+      }
+      section.block {
+        padding: 38px 0 6px;
+      }
+      h2.sec {
+        font-family: var(--font-big);
+        font-size: 1.5rem;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      .lede {
+        max-width: 84ch;
+        margin: 0 0 20px;
+        color: var(--ink-soft);
+      }
+      .note {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        padding: 18px 20px 20px;
+        max-width: 94ch;
+        margin-bottom: 26px;
+      }
+      .note h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 9px;
+      }
+      .note p {
+        margin: 0 0 9px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .note p:last-child {
+        margin-bottom: 0;
+      }
+      .counts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        margin-bottom: 26px;
+      }
+      .counts > div {
+        padding: 16px 16px 18px;
+        border-right: 1px solid var(--paper-edge);
+      }
+      .counts > div:last-child {
+        border-right: 0;
+      }
+      .counts .l {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        line-height: 1.5;
+        margin-bottom: 8px;
+      }
+      .counts .n {
+        font-family: var(--font-big);
+        font-size: 2.25rem;
+        line-height: 1;
+        font-weight: 700;
+      }
+      .counts .n.big {
+        color: var(--jersey-deep);
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(370px, 1fr));
+        gap: 24px;
+        align-items: start;
+      }
+      .panel {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        overflow: hidden;
+      }
+      .panel > .hd {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 10px 15px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .panel > .hd .n {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .panel > .hd .c {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+      }
+      .panel > .ft {
+        border-top: 2px solid var(--ink);
+        padding: 12px 15px 14px;
+        font-size: 0.875rem;
+        line-height: 1.45;
+      }
+      .stage {
+        padding: 24px 20px 26px;
+      }
+      .kick {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 8px;
+      }
+      .sh {
+        font-family: var(--font-big);
+        font-size: 1.5rem;
+        line-height: 1.1;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      .lst .r {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 9px 0;
+        font-size: 0.9375rem;
+      }
+      .lst .r .m {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 14px;
+      }
+      .chip {
+        padding: 6px 9px;
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        line-height: 1;
+      }
+      /* ink hairlines — as shipped */
+      .inkline .r {
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      .inkline .r:last-of-type {
+        border-bottom: 0;
+      }
+      .inkline .chip {
+        border: 1px solid var(--paper-edge);
+      }
+      .inkline .divider {
+        border-top: 1px solid var(--paper-edge);
+        margin: 14px 0;
+      }
+      /* accent hairlines — C2 */
+      .accline .r {
+        border-bottom: 1px solid var(--jersey-deep);
+      }
+      .accline .r:last-of-type {
+        border-bottom: 0;
+      }
+      .accline .chip {
+        border: 1px solid var(--jersey-deep);
+        color: var(--jersey-deep);
+      }
+      .accline .divider {
+        border-top: 1px solid var(--jersey-deep);
+        margin: 14px 0;
+      }
+      .foot {
+        margin: 40px 0 60px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        max-width: 90ch;
+      }
+      .foot b {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D17 · C3 · C2</p>
+        <h1>The two-weight split <em>already won</em>. Nobody wrote it down.</h1>
+        <p>
+          §4.3 proposes adding a 1px listing rule beside the 2px object border, on the premise that
+          "our border is 2px everywhere". Counted in <code>apps/web/src</code>, that premise is
+          false — and by a wide margin.
+        </p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="counts">
+          <div>
+            <p class="l">1px hairline<br /><code>border-paper-edge</code></p>
+            <p class="n big">90</p>
+          </div>
+          <div>
+            <p class="l">1px alpha<br /><code>border-ink/15</code>, <code>/10</code></p>
+            <p class="n">13</p>
+          </div>
+          <div>
+            <p class="l">2px object border<br /><code>border-2 border-ink</code></p>
+            <p class="n">16</p>
+          </div>
+          <div>
+            <p class="l">Accent border<br /><code>border-jersey-deep</code></p>
+            <p class="n">22</p>
+          </div>
+        </div>
+        <div class="note">
+          <h3>C3 is not a design decision — it is a documentation debt</h3>
+          <p>
+            The 1px structural rule outnumbers the 2px object border <b>90 to 16</b>. The split
+            §4.3 asks for is what the codebase already does: hairlines separate rows and sections,
+            2px ink draws objects that cast a shadow. What is missing is the sentence in
+            <code>DESIGN.md</code> saying so — which is why the split is invisible to a reviewer and
+            one edit away from drifting.
+          </p>
+          <p>
+            The real risk §4.3 names still applies, just in reverse: <b>two weights must be
+            semantically split or it is drift.</b> Today they are split by habit. Writing the habit
+            down is the whole task.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">C2 — a section whose hairlines are drawn in green</h2>
+        <p class="lede">
+          Justseeds runs 41 instances of a 1px accent rule. The question is whether 1px of green
+          counts as spending green — the Rare Green Rule says green is an event, not a surface.
+        </p>
+        <div class="pair">
+          <div class="panel">
+            <div class="hd"><span class="n">Today</span><span class="c">paper-edge hairlines</span></div>
+            <div class="stage inkline">
+              <p class="kick">Sponsors</p>
+              <h3 class="sh">Wie de club draaiende houdt</h3>
+              <div class="lst">
+                <div class="r"><span>Hoofdsponsor</span><span class="m">1</span></div>
+                <div class="r"><span>Tweede ring</span><span class="m">4</span></div>
+                <div class="r"><span>Steunende partners</span><span class="m">28</span></div>
+              </div>
+              <div class="divider"></div>
+              <div class="chips">
+                <span class="chip">Matchbal</span><span class="chip">Onderleggers</span>
+                <span class="chip">Bordsponsor</span><span class="chip">Shirtsponsor</span>
+              </div>
+            </div>
+            <div class="ft">
+              Green appears once, on the kicker. Everything structural is paper-edge — the same
+              hairline used 90 times elsewhere.
+            </div>
+          </div>
+          <div class="panel">
+            <div class="hd"><span class="n">C2 — accent hairlines</span><span class="c">S · one section type</span></div>
+            <div class="stage accline">
+              <p class="kick">Sponsors</p>
+              <h3 class="sh">Wie de club draaiende houdt</h3>
+              <div class="lst">
+                <div class="r"><span>Hoofdsponsor</span><span class="m">1</span></div>
+                <div class="r"><span>Tweede ring</span><span class="m">4</span></div>
+                <div class="r"><span>Steunende partners</span><span class="m">28</span></div>
+              </div>
+              <div class="divider"></div>
+              <div class="chips">
+                <span class="chip">Matchbal</span><span class="chip">Onderleggers</span>
+                <span class="chip">Bordsponsor</span><span class="chip">Shirtsponsor</span>
+              </div>
+            </div>
+            <div class="ft">
+              <b>The whole section is now in the club's colour without a single filled shape.</b> The
+              honest read §4.3 itself offers: a 1px hairline is not a surface. The counter-read: at
+              this density it is a green section, whatever the pixel count says.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>Note the two questions are independent.</b> C3 gets documented whatever happens to C2 —
+        the split exists and describing it costs nothing. C2 is the only aesthetic call here, and it
+        is scoped: one section type, not a site-wide option, or the Rare Green Rule has no meaning
+        left.
+      </p>
+    </div>
+  </body>
+</html>

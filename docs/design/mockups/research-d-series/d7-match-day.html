@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D7 — does match day get its own register?</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --alert: #b84a3a;
+        --warning-soft: #ecddb8;
+        --alert-soft: #e8d5cf;
+        --success-soft: #d8e7d0;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top h1 em {
+        font-style: italic;
+        color: var(--warm);
+      }
+      header.top p {
+        max-width: 70ch;
+        margin: 0 0 8px;
+      }
+      section.block {
+        padding: 44px 0 8px;
+      }
+      h2.sec {
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      .lede {
+        max-width: 82ch;
+        margin: 0 0 24px;
+        color: var(--ink-soft);
+      }
+      .note {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        padding: 20px 22px 22px;
+        max-width: 96ch;
+        margin-bottom: 28px;
+      }
+      .note h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 10px;
+      }
+      .note p {
+        margin: 0 0 10px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .note p:last-child {
+        margin-bottom: 0;
+      }
+      .note ol {
+        margin: 0 0 10px;
+        padding-left: 20px;
+        font-size: 0.9375rem;
+      }
+      .note li {
+        margin-bottom: 6px;
+      }
+
+      /* ---------- the hour table ---------- */
+      .tablewrap {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        overflow-x: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 940px;
+      }
+      thead th {
+        background: var(--ink);
+        color: var(--cream);
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+        text-align: left;
+        padding: 11px 12px;
+        vertical-align: bottom;
+      }
+      thead th.hi {
+        color: var(--warm);
+      }
+      tbody td {
+        border-bottom: 1px solid var(--paper-edge);
+        padding: 10px 12px;
+        font-size: 0.8125rem;
+        line-height: 1.4;
+        vertical-align: top;
+      }
+      tbody tr:last-child td {
+        border-bottom: 0;
+      }
+      td.t {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        color: var(--ink-muted);
+        font-weight: 600;
+      }
+      td.st {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.06em;
+        white-space: nowrap;
+      }
+      tr.kick td {
+        background: var(--warning-soft);
+      }
+      tr.hazard td {
+        background: var(--alert-soft);
+      }
+      tr.done td {
+        background: var(--success-soft);
+      }
+      .bad {
+        color: var(--alert);
+        font-weight: 600;
+      }
+      .dim {
+        color: var(--ink-muted);
+      }
+
+      /* ---------- rendered bands ---------- */
+      .demo {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        margin-bottom: 26px;
+        overflow: hidden;
+      }
+      .demo > .cap {
+        background: var(--ink);
+        color: var(--warm);
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 10px 16px;
+      }
+      .wire {
+        display: flex;
+        gap: 0;
+        align-items: stretch;
+        border-bottom: 2px solid var(--ink);
+        background: var(--cream);
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .wire > span {
+        padding: 9px 12px;
+        border-right: 1px solid var(--paper-edge);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .wire > span:last-child {
+        border-right: 0;
+      }
+      .wire .num {
+        background: var(--ink);
+        color: var(--cream);
+        font-weight: 700;
+      }
+      .wire .today {
+        font-weight: 700;
+        color: var(--jersey-deep);
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        background: var(--alert);
+        display: inline-block;
+      }
+      .marquee {
+        background: var(--ink);
+        color: var(--cream);
+        overflow: hidden;
+        white-space: nowrap;
+        border-bottom: 2px solid var(--ink);
+      }
+      .marquee span {
+        display: inline-block;
+        font-family: var(--font-big);
+        font-style: italic;
+        font-weight: 700;
+        font-size: 1.5rem;
+        text-transform: uppercase;
+        padding: 8px 0;
+        animation: slide 18s linear infinite;
+      }
+      @keyframes slide {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .marquee span {
+          animation: none;
+        }
+      }
+      .pagebody {
+        padding: 20px 18px 22px;
+      }
+      .pagebody .k {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 6px;
+      }
+      .pagebody h3 {
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        line-height: 1.05;
+        margin: 0 0 10px;
+        font-weight: 700;
+      }
+      .pagebody p {
+        margin: 0;
+        font-size: 0.9375rem;
+      }
+      .foot {
+        margin: 44px 0 60px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        max-width: 90ch;
+      }
+      .foot b {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D7 · §5B · M2 · M3 · M10 · S7</p>
+        <h1>Does match day get its <em>own register</em>?</h1>
+        <p>
+          §5B proposes five elements that switch on together on the day of a match and vanish
+          otherwise. D1 already killed one of the five (the crest plate). Before the aesthetics, the
+          hour-by-hour table — because this is behaviour over time, and an option list cannot show a
+          band that is stuck on at 3 a.m.
+        </p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="note">
+          <h3>Four facts, checked against the code, that shrink the proposal</h3>
+          <ol>
+            <li>
+              <b>There is no "in progress" state — anywhere.</b>
+              <code>MATCH_STATUS_VALUES</code> in <code>packages/api-contract/src/schemas/match.ts</code>
+              is <code>scheduled · finished · forfeited · postponed · cancelled · stopped</code>. A
+              match being played right now is <code>scheduled</code>. <b>Nothing in the data can say
+              "live".</b> So §5B switch 3 (marching ants while in progress) and switch 5 (the
+              flickering live dot) have no source.
+            </li>
+            <li>
+              <b>PSD flips straight from <code>scheduled</code> to <code>finished</code> the moment a
+              goal exists.</b> The mapping is literally <i>0 (no goals) → scheduled, 0 (has goals) →
+              finished</i>. If any score reaches PSD before the whistle, the site says
+              <span class="bad">finished 1–0</span> during the second half.
+            </li>
+            <li>
+              <b><code>PRODUCT.md:56</code> forbids live in-play scores</b> outright. A
+              <code>● LIVE</code> marker promises coverage the product has decided not to have.
+            </li>
+            <li>
+              <b>The homepage is <code>revalidate = 900</code></b> —
+              <code>apps/web/src/app/(landing)/page.tsx:493</code>. Anything clock-derived is up to
+              <b>15 minutes wrong</b> in both directions, and a page cached mid-match serves that
+              state to everyone until it regenerates.
+            </li>
+          </ol>
+          <p>
+            There is also a duplication: <code>MatchStrip</code> already sits on the landing page with
+            the last result and the next fixture. A wire strip under the header would be a second
+            piece of match chrome, above the first.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">The hour-by-hour table</h2>
+        <p class="lede">
+          One home fixture, kickoff 15:00 Saturday, Belgian wall-clock. <b>B</b> is a date-derived
+          band that never claims a live state; <b>C</b> is §5B as written, with in-play inferred from
+          a client clock.
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 92px">Time</th>
+                <th style="width: 96px">BFF status</th>
+                <th style="width: 190px">What is actually true</th>
+                <th class="hi" style="width: 200px">B — date-derived band</th>
+                <th class="hi">C — §5B as written</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="t">Fri 18:00</td>
+                <td class="st">scheduled</td>
+                <td>Match is tomorrow.</td>
+                <td class="dim">Nothing.</td>
+                <td class="dim">Nothing.</td>
+              </tr>
+              <tr>
+                <td class="t">Sat 00:00</td>
+                <td class="st">scheduled</td>
+                <td>Match day begins.</td>
+                <td>Band appears — but only once the page regenerates, so <b>up to 15 min late</b>.</td>
+                <td>Same, plus marquee. <code>● LIVE</code> off.</td>
+              </tr>
+              <tr>
+                <td class="t">Sat 09:00</td>
+                <td class="st">scheduled</td>
+                <td>Pre-match. Somebody is checking whether it is on.</td>
+                <td><b>The band's whole job.</b> "Vandaag 15:00 · De Dries".</td>
+                <td>Band + marquee. Loudest thing on the site, five hours early.</td>
+              </tr>
+              <tr class="kick">
+                <td class="t">Sat 15:00</td>
+                <td class="st">scheduled</td>
+                <td>Kick-off.</td>
+                <td>Unchanged — the band never claimed a kickoff state.</td>
+                <td>
+                  <code>● LIVE</code> turns on <b>by clock, not by data</b>. Up to 15 min late for a
+                  cached visitor.
+                </td>
+              </tr>
+              <tr class="hazard">
+                <td class="t">Sat 15:20</td>
+                <td class="st">scheduled <span class="bad">or finished</span></td>
+                <td>1–0 after twenty minutes.</td>
+                <td>Unchanged.</td>
+                <td>
+                  <span class="bad">Contradiction.</span> Ants say in-play; the badge says
+                  <code>FT</code>. Two parts of the same band disagree.
+                </td>
+              </tr>
+              <tr>
+                <td class="t">Sat 16:45</td>
+                <td class="st">scheduled / finished</td>
+                <td>Full time. Nobody has entered anything yet.</td>
+                <td>Unchanged.</td>
+                <td>
+                  <code>● LIVE</code> must switch off <b>by clock</b> — kickoff + an assumed 105
+                  minutes. A match with a long injury break is wrong either way.
+                </td>
+              </tr>
+              <tr class="hazard">
+                <td class="t">Sat 17:05</td>
+                <td class="st">scheduled</td>
+                <td>Everyone is in the kantine.</td>
+                <td>Band still says "vandaag" — <b>true, and harmless</b>.</td>
+                <td>
+                  <span class="bad">The failure case.</span> A page cached at 16:50 serves
+                  <code>● LIVE</code> to every visitor until it regenerates.
+                </td>
+              </tr>
+              <tr class="done">
+                <td class="t">Sat 20:00</td>
+                <td class="st">finished <span class="dim">(if entered)</span></td>
+                <td>Result may or may not be in PSD. Amateur entry is often next-day.</td>
+                <td>Band shows the result if there is one, the fixture if not.</td>
+                <td>Same, once the clock has released the mode.</td>
+              </tr>
+              <tr>
+                <td class="t">Sun 00:00</td>
+                <td class="st">finished / scheduled</td>
+                <td>No longer match day.</td>
+                <td>Band disappears (≤15 min late).</td>
+                <td>Everything disappears (≤15 min late).</td>
+              </tr>
+              <tr>
+                <td class="t">Sun 09:00</td>
+                <td class="st"><span class="bad">still scheduled</span></td>
+                <td>Nobody entered the score. The match happened.</td>
+                <td>
+                  Band gone. The unreported result is the fixture list's problem, not the band's.
+                </td>
+                <td>Same — but the mode has spent a day claiming precision it never had.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">What B actually looks like</h2>
+        <p class="lede">
+          One hairline row, day-granular, no live claim, nothing that a 15-minute cache can make into
+          a lie.
+        </p>
+        <div class="demo">
+          <div class="cap">B — date-derived · Saturday, any hour</div>
+          <div class="wire">
+            <span class="num">Vandaag</span>
+            <span class="today">15:00</span>
+            <span>KCVV Elewijt — KFC Hofstade</span>
+            <span>2e Prov. B</span>
+            <span>De Dries</span>
+          </div>
+          <div class="pagebody">
+            <p class="k">Nieuws</p>
+            <h3>KCVV pakt de drie punten op de Dries</h3>
+            <p>De rest van de pagina is precies zoals op elke andere dag.</p>
+          </div>
+        </div>
+
+        <div class="demo">
+          <div class="cap">C — §5B as written · the same Saturday at 15:20</div>
+          <div class="wire">
+            <span class="num">Live</span>
+            <span><span class="dot"></span> Aan de gang</span>
+            <span>KCVV Elewijt — KFC Hofstade</span>
+            <span>2e Prov. B</span>
+            <span>De Dries</span>
+          </div>
+          <div class="marquee">
+            <span
+              >Vandaag op de Dries · KCVV Elewijt — KFC Hofstade · 15:00 · Vandaag op de Dries · KCVV
+              Elewijt — KFC Hofstade · 15:00 ·&nbsp;</span
+            >
+          </div>
+          <div class="pagebody">
+            <p class="k">Nieuws</p>
+            <h3>KCVV pakt de drie punten op de Dries</h3>
+            <p>De rest van de pagina is precies zoals op elke andere dag.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>What survives of §5B under each answer.</b> Under <b>B</b>: the wire strip, date-derived,
+        no dot and no ants — and the marquee becomes optional, since it says the same thing louder.
+        Under <b>C</b>: everything, plus a client clock that can only ever <i>remove</i> the band and
+        never add it, plus a shortened <code>revalidate</code> on the homepage, plus a rule for what
+        happens when the status flips to <code>finished</code> mid-match. Under <b>A</b>: §5B closes,
+        and M2, M3 and M10 close with it, since all three exist only inside this mode.
+        <b>Anything here that touches the fixture row is gated on #2599 regardless.</b>
+      </p>
+    </div>
+  </body>
+</html>

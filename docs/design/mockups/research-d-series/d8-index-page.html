@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D8 — /index, the contents page</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --alert-soft: #e8d5cf;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top h1 em {
+        font-style: italic;
+        color: var(--warm);
+      }
+      header.top p {
+        max-width: 70ch;
+        margin: 0 0 8px;
+      }
+      section.block {
+        padding: 40px 0 8px;
+      }
+      h2.sec {
+        font-family: var(--font-big);
+        font-size: 1.625rem;
+        line-height: 1.15;
+        margin: 0 0 6px;
+      }
+      .lede {
+        max-width: 82ch;
+        margin: 0 0 22px;
+        color: var(--ink-soft);
+      }
+      .note {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        padding: 20px 22px 22px;
+        max-width: 94ch;
+        margin-bottom: 26px;
+      }
+      .note h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 10px;
+      }
+      .note p {
+        margin: 0 0 10px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .note p:last-child {
+        margin-bottom: 0;
+      }
+      .note blockquote {
+        margin: 0 0 10px;
+        padding: 12px 14px;
+        background: var(--cream-deep);
+        border-top: 1px solid var(--ink);
+        border-bottom: 1px solid var(--ink);
+        font-size: 0.9375rem;
+        line-height: 1.5;
+      }
+
+      .frame {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        margin-bottom: 28px;
+        overflow: hidden;
+      }
+      .frame > .cap {
+        background: var(--ink);
+        color: var(--warm);
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 10px 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .frame > .cap b {
+        color: var(--cream);
+      }
+      .frame > .ft {
+        border-top: 2px solid var(--ink);
+        padding: 14px 16px 16px;
+        font-size: 0.875rem;
+        line-height: 1.45;
+      }
+
+      .idx {
+        padding: 30px 26px 32px;
+      }
+      .idx > h3 {
+        font-family: var(--font-big);
+        font-size: 2.25rem;
+        line-height: 1;
+        margin: 0 0 4px;
+        font-weight: 700;
+      }
+      .idx > .sub {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin: 0 0 26px;
+      }
+      .idxcols {
+        column-count: 3;
+        column-gap: 34px;
+      }
+      @media (max-width: 900px) {
+        .idxcols {
+          column-count: 2;
+        }
+      }
+      @media (max-width: 620px) {
+        .idxcols {
+          column-count: 1;
+        }
+      }
+      .grp {
+        break-inside: avoid;
+        margin-bottom: 24px;
+      }
+      .grp > h4 {
+        font-family: var(--font-big);
+        font-size: 1.125rem;
+        line-height: 1.1;
+        margin: 0 0 8px;
+        font-weight: 700;
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 5px;
+      }
+      .grp .cnt {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        color: var(--ink-muted);
+        font-weight: 400;
+        float: right;
+      }
+      .ln {
+        display: flex;
+        align-items: baseline;
+        gap: 0;
+        font-size: 0.8125rem;
+        line-height: 1.9;
+      }
+      .ln .a {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 74%;
+      }
+      .ln .fill {
+        flex: 1;
+        border-bottom: 1px dotted var(--ink-muted);
+        margin: 0 5px 4px;
+        min-width: 12px;
+      }
+      .ln .b {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        white-space: nowrap;
+      }
+      .dead {
+        background: var(--alert-soft);
+        padding: 10px 12px;
+        border: 2px solid var(--card-red);
+      }
+      .dead .why {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+      .dead p {
+        margin: 0;
+        font-size: 0.8125rem;
+        line-height: 1.45;
+      }
+      .foot {
+        margin: 40px 0 60px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        max-width: 90ch;
+      }
+      .foot b {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D8 · §5C · D6</p>
+        <h1>A printed <em>contents page</em> for the whole site?</h1>
+        <p>
+          One route, no images, listing everything: every team with its division, every player with
+          their team and number, every article with its date, every event, every club page. Display
+          serif section heads, mono entries, leader dots, three columns collapsing to one.
+        </p>
+        <p>Half of that list cannot be built, and the sheet already said so.</p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="note">
+          <h3>§5C contradicts A17's neighbour — A7 — and the data behind it</h3>
+          <blockquote>
+            <b>A7 — No <code>/spelers</code> index.</b> Players stay reachable via team pages. An
+            index of ~300 players U6–U21 has privacy implications (→ C12) and no demonstrated user
+            need. Treat the absence as deliberate.
+          </blockquote>
+          <p>
+            §5C proposes exactly that index, as a section of a bigger one. And C12 measured why it
+            could not be built even if it were wanted: <b>294 player documents, 0 with a slug</b> — so
+            there are no pages to link to — and <b>0 with a jersey number</b>, so the "with their team
+            and number" column would be empty on every row.
+          </p>
+          <p>
+            So the players section is impossible twice over: rejected on privacy, and unbuildable on
+            data. What is left is teams, articles, events and club pages.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec">B — the index that can actually exist</h2>
+        <p class="lede">
+          Everything derived from the CMS or the BFF, nothing authored. Counts are the real production
+          figures.
+        </p>
+        <div class="frame">
+          <div class="cap"><b>/index</b><span>teams · articles · events · club</span></div>
+          <div class="idx">
+            <h3>Index</h3>
+            <p class="sub">Alles wat op deze site staat · bijgewerkt automatisch</p>
+            <div class="idxcols">
+              <div class="grp">
+                <h4>Ploegen <span class="cnt">26</span></h4>
+                <div class="ln"><span class="a">Eerste elftal A</span><span class="fill"></span><span class="b">2e Prov. B</span></div>
+                <div class="ln"><span class="a">Eerste elftal B</span><span class="fill"></span><span class="b">4e Prov. C</span></div>
+                <div class="ln"><span class="a">Reserven</span><span class="fill"></span><span class="b">Reserve A</span></div>
+                <div class="ln"><span class="a">U21</span><span class="fill"></span><span class="b">Gewestelijk</span></div>
+                <div class="ln"><span class="a">U17</span><span class="fill"></span><span class="b">Gewestelijk</span></div>
+                <div class="ln"><span class="a">U15</span><span class="fill"></span><span class="b">Gewestelijk</span></div>
+                <div class="ln"><span class="a">U13</span><span class="fill"></span><span class="b">Gewestelijk</span></div>
+                <div class="ln"><span class="a">U11</span><span class="fill"></span><span class="b">Gewestelijk</span></div>
+                <div class="ln"><span class="a">U9</span><span class="fill"></span><span class="b">Gewestelijk</span></div>
+                <div class="ln"><span class="a">U7</span><span class="fill"></span><span class="b">Gewestelijk</span></div>
+              </div>
+              <div class="grp">
+                <h4>Nieuws <span class="cnt">125</span></h4>
+                <div class="ln"><span class="a">KCVV pakt de drie punten op de Dries</span><span class="fill"></span><span class="b">12·04</span></div>
+                <div class="ln"><span class="a">Transfernieuws: drie nieuwe namen</span><span class="fill"></span><span class="b">08·04</span></div>
+                <div class="ln"><span class="a">Interview met de nieuwe jeugdcoördinator</span><span class="fill"></span><span class="b">02·04</span></div>
+                <div class="ln"><span class="a">Mosselfestijn 2026 — schrijf je in</span><span class="fill"></span><span class="b">28·03</span></div>
+                <div class="ln"><span class="a">Terreinwerken afgerond</span><span class="fill"></span><span class="b">21·03</span></div>
+                <div class="ln"><span class="a">Verslag: een punt tegen Muizen</span><span class="fill"></span><span class="b">15·03</span></div>
+                <div class="ln"><span class="a">Nieuwe hoofdsponsor voor 2026</span><span class="fill"></span><span class="b">09·03</span></div>
+                <div class="ln"><span class="a">Jeugdtornooi: de kalender</span><span class="fill"></span><span class="b">01·03</span></div>
+              </div>
+              <div class="grp">
+                <h4>Evenementen <span class="cnt">80</span></h4>
+                <div class="ln"><span class="a">Mosselfestijn 2026</span><span class="fill"></span><span class="b">04·09·26</span></div>
+                <div class="ln"><span class="a">Kampioenenviering</span><span class="fill"></span><span class="b">14·06·26</span></div>
+                <div class="ln"><span class="a">Jeugdtornooi</span><span class="fill"></span><span class="b">23·05·26</span></div>
+                <div class="ln"><span class="a">Quiznight</span><span class="fill"></span><span class="b">18·04·26</span></div>
+                <div class="ln"><span class="a">Eetfestijn</span><span class="fill"></span><span class="b">07·02·26</span></div>
+              </div>
+              <div class="grp">
+                <h4>Club <span class="cnt">9</span></h4>
+                <div class="ln"><span class="a">Geschiedenis</span><span class="fill"></span><span class="b">/club</span></div>
+                <div class="ln"><span class="a">Bestuur</span><span class="fill"></span><span class="b">/club</span></div>
+                <div class="ln"><span class="a">Jeugdbestuur</span><span class="fill"></span><span class="b">/club</span></div>
+                <div class="ln"><span class="a">Angels</span><span class="fill"></span><span class="b">/club</span></div>
+                <div class="ln"><span class="a">Contact</span><span class="fill"></span><span class="b">/club</span></div>
+                <div class="ln"><span class="a">Sponsors</span><span class="fill"></span><span class="b">/sponsors</span></div>
+                <div class="ln"><span class="a">Jeugd</span><span class="fill"></span><span class="b">/jeugd</span></div>
+                <div class="ln"><span class="a">Hulp nodig?</span><span class="fill"></span><span class="b">/hulp</span></div>
+                <div class="ln"><span class="a">Privacy</span><span class="fill"></span><span class="b">/privacy</span></div>
+              </div>
+              <div class="grp">
+                <div class="dead">
+                  <div class="why">Spelers — cannot be built</div>
+                  <p>
+                    294 spelers · <b>0 met een slug</b> (geen pagina om naar te linken) ·
+                    <b>0 met een rugnummer</b>. En A7 heeft een spelersindex al afgewezen.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ft">
+            <b>About 240 rows.</b> The leader dots are §4.4's S5, which is asked separately in D10 —
+            they are used here because §5C specifies them, not because they are decided.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="note">
+          <h3>What already does this job</h3>
+          <p>
+            <b><code>/zoeken</code> exists</b> and is backed by a vector index — it answers "where is
+            the thing I am looking for" better than a list of 240 rows a reader has to scan.
+          </p>
+          <p>
+            <b>The nav is flat and each destination indexes its own children</b> — the four dropdowns
+            were deleted deliberately in #2409/#2415. <code>/ploegen</code> lists the teams,
+            <code>/nieuws</code> lists the articles, <code>/evenementen</code> lists the events. An
+            index is a fifth listing of things already listed four times.
+          </p>
+          <p>
+            <b>§5C's own warning applies to us specifically:</b> every entry must be derived, never
+            authored — and <code>llms.txt</code> has already drifted exactly this way once, shipping
+            <code>/club/organigram</code> long after the route was removed.
+          </p>
+          <p>
+            The honest case in favour: none of those surfaces shows the <i>whole</i> site at once, and
+            a contents page is the most fanzine-native object there is. It is a gesture, and gestures
+            are allowed — the question is whether this one earns a route.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>A cheaper shape, if the gesture is what appeals.</b> The same device could be a
+        <i>section</i> rather than a route — a contents block in the footer, or at the foot of
+        <code>/zoeken</code>, listing the four groups with counts and linking to the existing indexes.
+        It keeps the printed-contents gesture, costs no new route, and cannot drift because it lists
+        four things instead of 240.
+      </p>
+    </div>
+  </body>
+</html>

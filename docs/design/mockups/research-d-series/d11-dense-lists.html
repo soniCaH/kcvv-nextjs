@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D11 — devices for dense lists</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey-deep: #007c46;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+        --font-body: "freight-sans-pro", -apple-system, system-ui, sans-serif;
+        --font-big: "freight-big-pro", georgia, serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream-soft);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--cream-deep);
+        padding: 1px 4px;
+      }
+      header.top {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 40px 0 34px;
+      }
+      header.top .mono {
+        color: var(--warm);
+        margin-bottom: 12px;
+      }
+      header.top h1 {
+        font-family: var(--font-big);
+        font-size: clamp(2rem, 1.2rem + 3vw, 3rem);
+        line-height: 1.05;
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+      header.top h1 em {
+        font-style: italic;
+        color: var(--warm);
+      }
+      header.top p {
+        max-width: 70ch;
+        margin: 0 0 8px;
+      }
+      section.block {
+        padding: 40px 0 6px;
+      }
+      h2.sec {
+        font-family: var(--font-big);
+        font-size: 1.625rem;
+        line-height: 1.15;
+        margin: 0 0 4px;
+      }
+      h2.sec .tag {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        display: block;
+        margin-bottom: 6px;
+      }
+      .lede {
+        max-width: 82ch;
+        margin: 0 0 22px;
+        color: var(--ink-soft);
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 26px;
+        align-items: start;
+      }
+      .panel {
+        border: 2px solid var(--ink);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        background: var(--cream);
+        overflow: hidden;
+      }
+      .panel > .hd {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 11px 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .panel > .hd .n {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .panel > .hd .c {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--warm);
+      }
+      .panel > .ft {
+        border-top: 2px solid var(--ink);
+        padding: 13px 16px 15px;
+        font-size: 0.875rem;
+        line-height: 1.45;
+      }
+      .stage {
+        padding: 24px 20px 26px;
+      }
+
+      /* ---------- S5 leader dots ---------- */
+      .plain .r {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 0.9375rem;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--paper-edge);
+      }
+      .plain .r:last-child {
+        border-bottom: 0;
+      }
+      .plain .r .b {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        white-space: nowrap;
+      }
+      .dots .r {
+        display: flex;
+        align-items: baseline;
+        font-size: 0.9375rem;
+        line-height: 2.1;
+      }
+      .dots .r .a {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 72%;
+      }
+      .dots .r .fill {
+        flex: 1;
+        border-bottom: 1px dotted var(--ink-muted);
+        margin: 0 6px 4px;
+        min-width: 14px;
+      }
+      .dots .r .b {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        white-space: nowrap;
+      }
+
+      /* ---------- S4 chip wall ---------- */
+      .cardgrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .pcard {
+        border: 2px solid var(--ink);
+        box-shadow: 4px 4px 0 0 var(--ink);
+        background: var(--cream);
+        padding: 0 0 10px;
+        text-align: center;
+      }
+      .pcard .ph {
+        height: 84px;
+        background: var(--cream-deep);
+        border-bottom: 2px solid var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-big);
+        font-size: 1.75rem;
+        font-style: italic;
+        font-weight: 700;
+        color: var(--ink-muted);
+      }
+      .pcard .nm {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        margin-top: 8px;
+        padding: 0 6px;
+        line-height: 1.25;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+      .chip {
+        border: 1px solid var(--ink);
+        padding: 6px 9px;
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        line-height: 1;
+        background: var(--cream);
+      }
+
+      /* ---------- S1 spec table ---------- */
+      .heroplain h3,
+      .herospec h3 {
+        font-family: var(--font-big);
+        font-size: 2.5rem;
+        line-height: 1.02;
+        margin: 0;
+        font-weight: 700;
+      }
+      .heroplain .k,
+      .herospec .k {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--jersey-deep);
+        margin: 0 0 8px;
+      }
+      .heroplain .meta {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-top: 14px;
+      }
+      .herospec {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 26px;
+        align-items: end;
+      }
+      .spec {
+        min-width: 190px;
+      }
+      .spec .sr {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        border-bottom: 1px solid var(--ink);
+        padding: 5px 0 4px;
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .spec .sr:first-child {
+        border-top: 1px solid var(--ink);
+      }
+      .spec .sr .l {
+        color: var(--ink-muted);
+      }
+      .spec .sr .v {
+        font-weight: 700;
+        color: var(--jersey-deep);
+      }
+      @media (max-width: 640px) {
+        .herospec {
+          grid-template-columns: 1fr;
+          align-items: start;
+        }
+      }
+
+      .note {
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: 6px 6px 0 0 var(--ink);
+        padding: 18px 20px 20px;
+        max-width: 94ch;
+        margin: 20px 0 8px;
+      }
+      .note h3 {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--card-red);
+        margin: 0 0 9px;
+      }
+      .note p {
+        margin: 0 0 9px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+      .note p:last-child {
+        margin-bottom: 0;
+      }
+      .foot {
+        margin: 40px 0 60px;
+        border-top: 2px solid var(--ink);
+        padding-top: 18px;
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        max-width: 90ch;
+      }
+      .foot b {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <p class="mono">Design decision pass · D11 · S5 · S4 · S1</p>
+        <h1>Three devices for <em>dense lists</em></h1>
+        <p>
+          Where §2 says our layouts are "conventional": fixtures, standings and directories are card
+          grids and tables. These three make density itself the aesthetic. They are independent.
+        </p>
+      </div>
+    </header>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec"><span class="tag">S5 — leader dots</span>label · · · · · · value</h2>
+        <p class="lede">
+          The contents-page filler. A <code>flex</code> row with a dotted bottom border expanding
+          between label and value. Candidate surfaces: <code>/kalender</code> entries, the article
+          "in dit stuk" list, footer link columns, match facts — and <code>/inhoud</code>, which D8
+          just approved.
+        </p>
+        <div class="pair">
+          <div class="panel">
+            <div class="hd"><span class="n">Today</span><span class="c">space-between + hairline</span></div>
+            <div class="stage plain">
+              <div class="r"><span>Mosselfestijn 2026</span><span class="b">04·09·26</span></div>
+              <div class="r"><span>Kampioenenviering</span><span class="b">14·06·26</span></div>
+              <div class="r"><span>Jeugdtornooi</span><span class="b">23·05·26</span></div>
+              <div class="r"><span>Quiznight</span><span class="b">18·04·26</span></div>
+              <div class="r"><span>Eetfestijn</span><span class="b">07·02·26</span></div>
+            </div>
+            <div class="ft">Value pinned right, row separated by a rule. Perfectly legible.</div>
+          </div>
+          <div class="panel">
+            <div class="hd"><span class="n">S5 — leader dots</span><span class="c">S · no new primitive</span></div>
+            <div class="stage dots">
+              <div class="r"><span class="a">Mosselfestijn 2026</span><span class="fill"></span><span class="b">04·09·26</span></div>
+              <div class="r"><span class="a">Kampioenenviering</span><span class="fill"></span><span class="b">14·06·26</span></div>
+              <div class="r"><span class="a">Jeugdtornooi</span><span class="fill"></span><span class="b">23·05·26</span></div>
+              <div class="r"><span class="a">Quiznight</span><span class="fill"></span><span class="b">18·04·26</span></div>
+              <div class="r"><span class="a">Eetfestijn</span><span class="fill"></span><span class="b">07·02·26</span></div>
+            </div>
+            <div class="ft">
+              <b>The eye tracks label to value without a rule to separate rows.</b> The filler must be
+              <code>aria-hidden</code> — a screen reader announcing a run of dots between every label
+              and value is the failure mode.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec"><span class="tag">S4 — chip wall</span>Forty identical outlined names, no hierarchy</h2>
+        <p class="lede">
+          Justseeds' artist wall. Uppercase 10–11px, sharp, hairline-bordered, wrapping. Proposed for
+          staff, youth coaches, the sponsors index, and the squad list on a team page.
+        </p>
+        <div class="pair">
+          <div class="panel">
+            <div class="hd"><span class="n">Today — cards</span><span class="c">photo slot per person</span></div>
+            <div class="stage">
+              <div class="cardgrid">
+                <div class="pcard"><div class="ph">JM</div><div class="nm">Jonas Mertens</div></div>
+                <div class="pcard"><div class="ph">TV</div><div class="nm">Tom Van Doren</div></div>
+                <div class="pcard"><div class="ph">KD</div><div class="nm">Karel De Smet</div></div>
+                <div class="pcard"><div class="ph">SW</div><div class="nm">Sam Willems</div></div>
+                <div class="pcard"><div class="ph">RJ</div><div class="nm">Ruben Janssens</div></div>
+                <div class="pcard"><div class="ph">LP</div><div class="nm">Lars Peeters</div></div>
+              </div>
+            </div>
+            <div class="ft">
+              Every person gets a photo slot. Where there is no photo it falls back to a monogram —
+              so six people with no photos produce six monogram tiles.
+            </div>
+          </div>
+          <div class="panel">
+            <div class="hd"><span class="n">S4 — chip wall</span><span class="c">S · replaces the cards</span></div>
+            <div class="stage">
+              <div class="chips">
+                <span class="chip">Jonas Mertens</span><span class="chip">Tom Van Doren</span>
+                <span class="chip">Karel De Smet</span><span class="chip">Sam Willems</span>
+                <span class="chip">Ruben Janssens</span><span class="chip">Lars Peeters</span>
+                <span class="chip">Nick Vermeulen</span><span class="chip">Bram Cools</span>
+                <span class="chip">Dries Maes</span><span class="chip">Wout Claes</span>
+                <span class="chip">Milan Dockx</span><span class="chip">Senne Goossens</span>
+                <span class="chip">Arne Verhoeven</span><span class="chip">Jelle Wouters</span>
+                <span class="chip">Robbe Segers</span><span class="chip">Kobe Lauwers</span>
+                <span class="chip">Thibault Aerts</span><span class="chip">Stef Vandenberghe</span>
+              </div>
+            </div>
+            <div class="ft">
+              <b>Eighteen names in the height six cards took.</b> The gain is real on a full squad.
+              The cost is the photo slot — and photos are the thing the club actually has, unlike
+              slugs or numbers.
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          <h3>Where a chip wall is safe, and where it is not</h3>
+          <p>
+            <b>Sponsors is not a candidate.</b> Sponsor logos are the content — greyscale→hover is a
+            locked treatment and the logo is what a sponsor is paying for. A wall of sponsor names in
+            10px mono deletes the deliverable.
+          </p>
+          <p>
+            <b>Players are a candidate with a caveat:</b> 0 of 294 have a slug, so the chips link
+            nowhere today. A wall of unlinked names is still a better squad list than a wall of
+            monograms — but it means the chip must be styled as a label, not as a button, or it
+            promises a click it cannot honour.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <h2 class="sec"><span class="tag">S1 — spec table</span>A mono key/value block hung off the headline</h2>
+        <p class="lede">
+          Teenage Engineering's device, and §1's number-one ranked move: three to five mono rows
+          pinned to the right edge of a display heading, sharing its last baseline.
+        </p>
+        <div class="pair">
+          <div class="panel">
+            <div class="hd"><span class="n">Today</span><span class="c">meta under the heading</span></div>
+            <div class="stage heroplain">
+              <p class="k">Wedstrijd</p>
+              <h3>KCVV Elewijt — KFC Hofstade</h3>
+              <p class="meta">Za 12 april · 15:00 · De Dries · 2e Prov. B · Scheidsrechter M. Peeters</p>
+            </div>
+            <div class="ft">One mono line, wrapping. Everything is there; nothing is scannable.</div>
+          </div>
+          <div class="panel">
+            <div class="hd"><span class="n">S1 — spec table</span><span class="c">S · #2598 gated</span></div>
+            <div class="stage">
+              <div class="herospec">
+                <div>
+                  <p class="k">Wedstrijd</p>
+                  <h3>KCVV Elewijt — KFC Hofstade</h3>
+                </div>
+                <div class="spec">
+                  <div class="sr"><span class="l">Datum</span><span class="v">Za 12·04</span></div>
+                  <div class="sr"><span class="l">Aftrap</span><span class="v">15:00</span></div>
+                  <div class="sr"><span class="l">Terrein</span><span class="v">De Dries</span></div>
+                  <div class="sr"><span class="l">Reeks</span><span class="v">2e Prov. B</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="ft">
+              <b>Turns the hero into a spec sheet.</b> Each fact gets a label and a line of its own.
+              Below <code>sm</code> it stacks under the heading — it must be authored to stack, never
+              to shrink.
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          <h3>Two constraints S1 inherits</h3>
+          <p>
+            <b>#2598.</b> It adds width beside display type in a hero — the exact region whose
+            overflow root cause is unresolved. Not to be prototyped against a live page until it is.
+          </p>
+          <p>
+            <b>PRODUCT.md's data rule.</b> "Fields the upstream does not reliably provide — venue on a
+            match, some competition metadata, <code>is_home</code> on match detail — must never be
+            designed into a layout as guaranteed." A four-row spec table with an empty
+            <i>Terrein</i> row is a worse hero than one mono line. The rows have to be built from
+            what is present, not from a fixed template.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <p class="foot">
+        <b>S5 is the one with a decision already depending on it.</b> D8 approved
+        <code>/inhoud</code>, and a contents page without leader dots is just a list — so if S5 is
+        rejected, <code>/inhoud</code> ships in the plain row style shown on the left above.
+      </p>
+    </div>
+  </body>
+</html>
