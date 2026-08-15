@@ -12,16 +12,16 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@commitlint/cli": "21.0.2",
-    "@commitlint/config-conventional": "21.0.2",
+    "@commitlint/cli": "21.2.2",
+    "@commitlint/config-conventional": "21.2.2",
     "eslint": "9.39.5",
     "husky": "9.1.7",
-    "knip": "6.16.1",
-    "lint-staged": "17.0.7",
+    "knip": "6.32.2",
+    "lint-staged": "17.3.0",
     "playwright": "1.60.0",
-    "prettier": "3.8.4",
-    "prettier-plugin-tailwindcss": "0.8.0",
-    "turbo": "2.9.17"
+    "prettier": "3.9.6",
+    "prettier-plugin-tailwindcss": "0.8.1",
+    "turbo": "2.10.10"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

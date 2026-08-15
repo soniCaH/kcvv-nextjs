@@ -10,6 +10,6 @@
     "@sanity/client": "7.26.2"
   },
   "devDependencies": {
-    "tsx": "4.22.4"
+    "tsx": "4.23.12"
   }
 }

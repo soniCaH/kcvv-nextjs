@@ -22,12 +22,12 @@
     "effect": "3.22.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "4.20260609.1",
-    "@typescript/native-preview": "7.0.0-dev.20260610.1",
-    "@vitest/coverage-v8": "4.1.8",
+    "@cloudflare/workers-types": "4.20260702.1",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "@vitest/coverage-v8": "4.1.10",
     "typescript": "6.0.3",
     "typescript-eslint": "8.67.0",
-    "vitest": "4.1.8",
-    "wrangler": "4.99.0"
+    "vitest": "4.1.10",
+    "wrangler": "4.123.0"
   }
 }
