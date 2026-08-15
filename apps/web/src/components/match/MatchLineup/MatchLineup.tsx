@@ -267,12 +267,12 @@ function PlayerRow({ player }: { player: LineupPlayer }) {
 function LineupSkeleton() {
   return (
     <div>
-      <div className="border-ink bg-cream-soft mb-3 h-6 w-32 animate-pulse border-t" />
+      <div className="border-ink bg-cream-soft mb-3 h-6 w-32 border-t motion-safe:animate-pulse" />
       <div className="space-y-2">
         {Array.from({ length: 11 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3">
-            <div className="bg-cream-soft h-7 w-7 animate-pulse" />
-            <div className="bg-cream-soft h-4 flex-1 animate-pulse" />
+            <div className="bg-cream-soft h-7 w-7 motion-safe:animate-pulse" />
+            <div className="bg-cream-soft h-4 flex-1 motion-safe:animate-pulse" />
           </div>
         ))}
       </div>

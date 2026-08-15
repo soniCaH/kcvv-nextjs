@@ -262,7 +262,7 @@ describe("MatchLineup", () => {
     it("renders skeleton when loading", () => {
       const { container } = render(<MatchLineup {...defaultProps} isLoading />);
       expect(
-        container.querySelectorAll(".animate-pulse").length,
+        container.querySelectorAll('[class*="animate-pulse"]').length,
       ).toBeGreaterThan(0);
     });
 

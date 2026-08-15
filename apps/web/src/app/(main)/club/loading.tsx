@@ -25,10 +25,10 @@ export default function ClubLoading() {
 
       {/* Editorial nav hub — header + uniform 3-up grid. */}
       <PageContainer width="index" className="py-12">
-        <div className="bg-ink/10 mb-8 h-10 w-72 max-w-full animate-pulse" />
+        <div className="bg-ink/10 mb-8 h-10 w-72 max-w-full motion-safe:animate-pulse" />
         <div
           data-testid="club-hub-skeleton"
-          className="grid animate-pulse grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid grid-cols-1 gap-3.5 motion-safe:animate-pulse sm:grid-cols-2 lg:grid-cols-3"
         >
           {Array.from({ length: 9 }).map((_, i) => (
             <div

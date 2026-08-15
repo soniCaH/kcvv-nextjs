@@ -8,7 +8,7 @@ import { PageHeroSkeleton } from "@/components/layout/PageHero";
 
 function FlagshipSkeleton() {
   return (
-    <div className="border-ink grid animate-pulse grid-cols-1 border-2 sm:grid-cols-[1.25fr_1fr]">
+    <div className="border-ink grid grid-cols-1 border-2 motion-safe:animate-pulse sm:grid-cols-[1.25fr_1fr]">
       <div className="flex flex-col gap-4 p-6 sm:p-10">
         <div className="bg-paper-edge h-3 w-24" />
         <div className="bg-paper-edge h-10 w-48" />
@@ -30,7 +30,7 @@ export default function TeamsLoading() {
         <FlagshipSkeleton />
       </div>
 
-      <div className="mt-16 animate-pulse space-y-8">
+      <div className="mt-16 space-y-8 motion-safe:animate-pulse">
         <div className="bg-paper-edge h-8 w-48" />
         {Array.from({ length: 3 }).map((_, div) => (
           <div key={div} className="space-y-4">

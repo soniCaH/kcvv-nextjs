@@ -16,7 +16,10 @@ import { searchFieldShellClasses } from "./search-field-styles";
 export function SearchMastheadSkeleton() {
   return (
     <SearchMasthead>
-      <div aria-hidden className={`${searchFieldShellClasses} animate-pulse`}>
+      <div
+        aria-hidden
+        className={`${searchFieldShellClasses} motion-safe:animate-pulse`}
+      >
         {/* 3.625rem ≈ SearchForm's input height (py-4 + body-lg line box) so
             the skeleton reserves the same space as the real field. */}
         <div className="h-[3.625rem] flex-1" />

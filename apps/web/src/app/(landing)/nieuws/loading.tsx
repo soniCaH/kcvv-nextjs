@@ -45,7 +45,10 @@ export default function NewsLoading() {
 
       {/* Sticky filter bar — mirrors the page's dark category-filter band. */}
       <div className="bg-ink/95 sticky top-0 z-30 border-b border-white/10 py-3 backdrop-blur-sm">
-        <PageContainer width="index" className="flex animate-pulse gap-2">
+        <PageContainer
+          width="index"
+          className="flex gap-2 motion-safe:animate-pulse"
+        >
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="bg-cream/15 h-8 w-20" />
           ))}
@@ -55,8 +58,8 @@ export default function NewsLoading() {
       <PageContainer width="index" className="py-6">
         {/* Uitgelicht — uniform 3-up featured grid. */}
         <section className="mb-10">
-          <div className="bg-paper-edge mb-6 h-9 w-48 animate-pulse" />
-          <div className="grid animate-pulse grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="bg-paper-edge mb-6 h-9 w-48 motion-safe:animate-pulse" />
+          <div className="grid grid-cols-1 gap-6 motion-safe:animate-pulse md:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <NewsCardSkeleton key={i} />
             ))}
@@ -64,7 +67,7 @@ export default function NewsLoading() {
         </section>
 
         {/* Chronological listing — 3-column grid. */}
-        <section className="mb-6 grid animate-pulse grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <section className="mb-6 grid grid-cols-1 gap-6 motion-safe:animate-pulse md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <NewsCardSkeleton key={i} />
           ))}

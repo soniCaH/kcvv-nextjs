@@ -12,7 +12,7 @@ import { PageContainer } from "@/components/design-system";
 export default function SponsorsLoading() {
   return (
     <PageContainer width="index" className="py-10 sm:py-14">
-      <div className="mb-10 grid animate-pulse items-start gap-8 sm:mb-12 lg:grid-cols-[1fr_minmax(280px,360px)] lg:gap-12">
+      <div className="mb-10 grid items-start gap-8 motion-safe:animate-pulse sm:mb-12 lg:grid-cols-[1fr_minmax(280px,360px)] lg:gap-12">
         <div className="flex flex-col gap-3">
           <div className="bg-paper-edge h-3 w-24" />
           <div className="bg-paper-edge h-12 w-72 max-w-full" />
@@ -24,7 +24,7 @@ export default function SponsorsLoading() {
       <ul className={SPONSOR_TILE_GRID_CLASS}>
         {Array.from({ length: 10 }).map((_, i) => (
           <li key={i}>
-            <div className="bg-cream-soft min-h-[70px] animate-pulse" />
+            <div className="bg-cream-soft min-h-[70px] motion-safe:animate-pulse" />
           </li>
         ))}
       </ul>

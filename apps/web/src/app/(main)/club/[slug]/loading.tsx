@@ -20,7 +20,7 @@ export default function ClubPageLoading() {
           `--container-prose` reading column. */}
       <div className="bg-cream w-full px-4 py-12 lg:px-0 lg:py-16">
         <div
-          className="mx-auto w-full animate-pulse space-y-4"
+          className="mx-auto w-full space-y-4 motion-safe:animate-pulse"
           style={{ maxWidth: "var(--container-prose)" }}
         >
           <div className="bg-cream-soft h-5 w-full" />
