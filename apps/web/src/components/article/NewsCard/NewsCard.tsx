@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils/cn";
 import {
   TapedCard,
   type TapedCardBg,
+  type TapedCardRotation,
   type TapeStripColor,
   type TapeStripLength,
   type TapeStripProps,
@@ -16,7 +17,8 @@ import {
 } from "@/components/design-system";
 
 export type NewsCardAspectRatio = "landscape-16-9" | "square" | "portrait-3-4";
-export type NewsCardRotation = "a" | "b" | "c" | "d" | "none";
+/** `<TapedCard>`'s rotation union minus the free-form degree form. */
+export type NewsCardRotation = Exclude<TapedCardRotation, number>;
 export type NewsCardVariant = "standard" | "featured";
 export type NewsCardBg = TapedCardBg;
 
@@ -59,9 +61,13 @@ export interface NewsCardProps {
    */
   aspectRatio?: NewsCardAspectRatio;
   /**
-   * Phase 4 / NewsGrid — applies a small slot-deterministic rotation using
-   * the shared `--rotate-tape-{a,b,c,d}` tokens. Default `"none"` preserves
-   * un-rotated rendering.
+   * Applies a small slot-deterministic rotation using the shared
+   * `--rotate-tape-{a,b,c,d}` tokens, or — the default — `"auto"`, which reads
+   * the `--taped-card-rotation` slot variable a `<TapedCardGrid>` sets and
+   * falls back to `0deg` when there is no grid above it (#2569 / decision
+   * #2431). `"auto"` is what lets the shared grid own the angle instead of
+   * every consumer hand-rolling its own pool; a standalone card still renders
+   * flat.
    */
   rotation?: NewsCardRotation;
   /**
@@ -172,7 +178,7 @@ export const NewsCard = ({
   cta,
   variant = "standard",
   aspectRatio = "landscape-16-9",
-  rotation = "none",
+  rotation = "auto",
   bg = "cream",
   tapeColors = DEFAULT_TAPE_COLORS,
   tapeCount = 1,

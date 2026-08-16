@@ -5,6 +5,7 @@ import {
 } from "@/components/design-system";
 import type { GalleryCardVM } from "@/lib/repositories/photoGallery.repository";
 import { GalleryCardGrid } from "../GalleryCardGrid/GalleryCardGrid";
+import { toGalleryCardGridItems } from "../GalleryCardGrid/gallery-card-items";
 
 export interface GallerySectionProps {
   galleries: GalleryCardVM[];
@@ -40,7 +41,7 @@ export const GallerySection = ({
           {title}
         </EditorialHeading>
       </header>
-      <GalleryCardGrid galleries={galleries} />
+      <GalleryCardGrid galleries={toGalleryCardGridItems(galleries)} />
     </PageContainer>
   );
 };

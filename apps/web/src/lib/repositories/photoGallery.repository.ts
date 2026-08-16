@@ -21,8 +21,11 @@ import type {
 // the cover is decorative and takes `alt=""` (#2559 / #2548 rule 1). The
 // caption-then-title fallback this projection used to carry had exactly one
 // consumer, and that consumer now passes nothing.
+// Sliced: galleries never drop off the list, so `/galerij` is the one other
+// listing whose payload grows without a bound and it takes the same
+// 24 + 12 load-more contract as `/nieuws` (#2569 / decision #2431).
 export const GALLERIES_QUERY =
-  defineQuery(`*[_type == "photoGallery" && defined(slug.current)] | order(publishedAt desc) {
+  defineQuery(`*[_type == "photoGallery" && defined(slug.current)] | order(publishedAt desc) [$offset...$end] {
   "id": _id,
   "title": coalesce(title, ""),
   "slug": coalesce(slug.current, ""),
@@ -102,7 +105,10 @@ export type GalleryImageVM = NonNullable<GalleryDetailVM["images"]>[number];
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 export interface PhotoGalleryRepositoryInterface {
-  readonly findAll: () => Effect.Effect<GalleryCardVM[]>;
+  readonly findPaginated: (params: {
+    offset: number;
+    limit: number;
+  }) => Effect.Effect<GalleryCardVM[]>;
   readonly findBySlug: (slug: string) => Effect.Effect<GalleryDetailVM | null>;
   readonly findAllSlugs: () => Effect.Effect<GALLERY_SLUGS_QUERY_RESULT>;
   readonly findByLinkedMatch: (
@@ -120,11 +126,15 @@ export class PhotoGalleryRepository extends Context.Tag(
 export const PhotoGalleryRepositoryLive = Layer.succeed(
   PhotoGalleryRepository,
   {
-    findAll: () =>
-      fetchGroq<GALLERIES_QUERY_RESULT>(GALLERIES_QUERY, undefined, {
-        revalidate: SANITY_LIST_REVALIDATE,
-        tags: [SANITY_TAGS.galleries],
-      }),
+    findPaginated: ({ offset, limit }) =>
+      fetchGroq<GALLERIES_QUERY_RESULT>(
+        GALLERIES_QUERY,
+        { offset, end: offset + limit },
+        {
+          revalidate: SANITY_LIST_REVALIDATE,
+          tags: [SANITY_TAGS.galleries],
+        },
+      ),
     findBySlug: (slug) =>
       fetchGroq<GALLERY_BY_SLUG_QUERY_RESULT>(GALLERY_BY_SLUG_QUERY, {
         slug,

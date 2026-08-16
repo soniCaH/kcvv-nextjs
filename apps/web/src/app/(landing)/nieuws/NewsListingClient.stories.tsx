@@ -1,7 +1,7 @@
 /**
  * NewsListingClient Story
- * The redesigned /news page with a symmetric 3-up featured row, a 3-column
- * grid, a sticky category filter bar, and a load-more button.
+ * The /nieuws archive: one chronological 1 → 2 → 3 card grid, a sticky
+ * category filter bar, and a load-more button.
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
@@ -56,7 +56,7 @@ const mockCategories = [
   { id: "transfers", attributes: { name: "Transfers", slug: "transfers" } },
 ];
 
-const featuredArticles: ArticleVM[] = [
+const gridArticles: ArticleVM[] = [
   makeMockArticle(1, {
     title: "KCVV Elewijt wint belangrijke derby tegen rivaal",
     tags: ["Wedstrijdverslagen"],
@@ -69,16 +69,15 @@ const featuredArticles: ArticleVM[] = [
     title: "Jeugdwerking start zomerkamp 2025",
     tags: ["Jeugd"],
   }),
+  ...Array.from({ length: 6 }, (_, i) =>
+    makeMockArticle(i + 4, {
+      tags: [
+        mockCategories[i % mockCategories.length]?.attributes.name ??
+          "Clubnieuws",
+      ],
+    }),
+  ),
 ];
-
-const gridArticles: ArticleVM[] = Array.from({ length: 6 }, (_, i) =>
-  makeMockArticle(i + 4, {
-    tags: [
-      mockCategories[i % mockCategories.length]?.attributes.name ??
-        "Clubnieuws",
-    ],
-  }),
-);
 
 const extraBatch: ArticleVM[] = Array.from({ length: 6 }, (_, i) =>
   makeMockArticle(i + 10),
@@ -86,7 +85,7 @@ const extraBatch: ArticleVM[] = Array.from({ length: 6 }, (_, i) =>
 
 const noopFetch = fn()
   .mockName("fetchArticles")
-  .mockResolvedValue({ articles: [], hasMore: false });
+  .mockResolvedValue({ items: [], hasMore: false });
 
 const meta = {
   title: "Pages/NewsListing",
@@ -96,7 +95,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Redesigned news listing page with a symmetric 3-up featured row at top, a 3-column grid with a load-more button, and a sticky category filter bar.",
+          "The /nieuws archive: one chronological `<TapedCardGrid columns={3} gap=\"md\">` with a load-more button, under a sticky category filter bar. The 'Uitgelicht' row was `articles.slice(0, 3)` relabelled and went in #2569 — `Uitgelicht` survives on the homepage, where it is editorially chosen.",
       },
     },
   },
@@ -117,23 +116,21 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Full page with featured split + grid articles */
+/** Full archive grid with more to load */
 export const Default: Story = {
   args: {
-    featuredArticles,
     initialArticles: gridArticles,
     categories: mockCategories,
     hasMore: true,
     fetchArticles: fn()
       .mockName("fetchArticles")
-      .mockResolvedValue({ articles: extraBatch, hasMore: false }),
+      .mockResolvedValue({ items: extraBatch, hasMore: false }),
   },
 };
 
 /** With a category pre-selected */
 export const WithActiveCategory: Story = {
   args: {
-    featuredArticles,
     initialArticles: gridArticles.filter((a) =>
       a.tags.includes("Wedstrijdverslagen"),
     ),
@@ -146,7 +143,6 @@ export const WithActiveCategory: Story = {
 /** Empty state when no articles match */
 export const EmptyState: Story = {
   args: {
-    featuredArticles: [],
     initialArticles: [],
     categories: mockCategories,
     hasMore: false,
@@ -154,11 +150,10 @@ export const EmptyState: Story = {
   },
 };
 
-/** Only featured articles, no grid */
-export const FeaturedOnly: Story = {
+/** A single row — the ladder still reads 1 → 2 → 3 */
+export const SingleRow: Story = {
   args: {
-    featuredArticles,
-    initialArticles: [],
+    initialArticles: gridArticles.slice(0, 3),
     categories: mockCategories,
     hasMore: false,
   },
@@ -167,13 +162,12 @@ export const FeaturedOnly: Story = {
 /** Mobile viewport */
 export const Mobile: Story = {
   args: {
-    featuredArticles,
     initialArticles: gridArticles,
     categories: mockCategories,
     hasMore: true,
     fetchArticles: fn()
       .mockName("fetchArticles")
-      .mockResolvedValue({ articles: extraBatch, hasMore: false }),
+      .mockResolvedValue({ items: extraBatch, hasMore: false }),
   },
   globals: {
     viewport: { value: "mobile1" },

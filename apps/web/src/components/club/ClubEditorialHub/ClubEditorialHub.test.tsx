@@ -36,10 +36,15 @@ describe("ClubEditorialHub", () => {
     expect(heading).toBeInTheDocument();
   });
 
-  it("renders all twelve club nav-hub cards as links in the uniform grid", () => {
-    render(<ClubEditorialHub />);
+  it("renders all twelve club nav-hub cards as links in the shared grid", () => {
+    const { container } = render(<ClubEditorialHub />);
     expect(screen.getAllByRole("link")).toHaveLength(12);
-    expect(screen.getByTestId("club-editorial-hub").children).toHaveLength(12);
+    // `data-columns`/`data-gap` are `<TapedCardGrid>`'s published hooks; the
+    // breakpoint strings behind them are the primitive's own business.
+    const grid = container.querySelector("[data-columns]")!;
+    expect(grid.getAttribute("data-columns")).toBe("3");
+    expect(grid.getAttribute("data-gap")).toBe("sm");
+    expect(grid.children).toHaveLength(12);
   });
 
   it("links each card to its mapped /club destination", () => {

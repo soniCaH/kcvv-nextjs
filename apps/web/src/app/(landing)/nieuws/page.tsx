@@ -1,7 +1,7 @@
 /**
  * News Listing Page
- * Symmetric 3-up featured row at top, 3-column grid below with a load-more
- * button, sticky category filter bar.
+ * One chronological 1 → 2 → 3 card grid with a load-more button, under a
+ * sticky category filter bar.
  *
  * No route-segment `revalidate`: the page awaits `searchParams` for
  * `?categorie=`, so the segment is dynamic and a window would be inert (#2391).
@@ -17,9 +17,9 @@ import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { PageContainer } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
+import { LISTING_INITIAL_TOTAL } from "@/lib/constants";
 import { NewsListingClient } from "./NewsListingClient";
 import { fetchArticlesAction } from "./actions";
-import { INITIAL_TOTAL } from "./constants";
 
 interface NewsPageProps {
   searchParams: Promise<{ categorie?: string }>;
@@ -55,11 +55,11 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
     ),
     fetchArticlesAction({
       offset: 0,
-      limit: INITIAL_TOTAL,
+      limit: LISTING_INITIAL_TOTAL,
       category: categorySlug,
     }).catch((error) => {
       console.error("[NewsPage] Failed to fetch initial articles:", error);
-      return { articles: [], hasMore: false } as const;
+      return { items: [], hasMore: false };
     }),
   ]);
 
@@ -67,10 +67,6 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
     id: tag,
     attributes: { name: tag, slug: tag },
   }));
-
-  // Split initial batch: 3 featured + rest as grid
-  const featuredArticles = initialBatch.articles.slice(0, 3);
-  const gridArticles = initialBatch.articles.slice(3);
 
   return (
     <>
@@ -91,8 +87,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
         ])}
       />
       <NewsListingClient
-        featuredArticles={featuredArticles}
-        initialArticles={gridArticles}
+        initialArticles={initialBatch.items}
         categories={categories}
         hasMore={initialBatch.hasMore}
         initialCategory={categorySlug}

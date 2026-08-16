@@ -28,7 +28,7 @@ export default function ClubLoading() {
         <div className="bg-ink/10 mb-8 h-10 w-72 max-w-full motion-safe:animate-pulse" />
         <div
           data-testid="club-hub-skeleton"
-          className="grid grid-cols-1 gap-3.5 motion-safe:animate-pulse sm:grid-cols-2 lg:grid-cols-3"
+          className="grid grid-cols-1 gap-3 motion-safe:animate-pulse sm:grid-cols-2 lg:grid-cols-3"
         >
           {Array.from({ length: 9 }).map((_, i) => (
             <div

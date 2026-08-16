@@ -279,5 +279,9 @@ export type {
 export { Crest } from "./Crest";
 export type { CrestProps } from "./Crest";
 
+// LoadMoreFooter
+export { LoadMoreFooter } from "./LoadMoreFooter";
+export type { LoadMoreFooterProps } from "./LoadMoreFooter";
+
 // Press-down (canonical paper press-down hover)
 export { PRESS_DOWN_CLASSES } from "./press-down";

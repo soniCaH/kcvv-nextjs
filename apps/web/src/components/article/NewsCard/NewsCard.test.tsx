@@ -231,6 +231,15 @@ describe("NewsCard", () => {
       render(<NewsCard {...defaultProps} rotation="b" />);
       expect(screen.getByRole("link")).toHaveAttribute("data-rotation", "b");
     });
+
+    it("defaults to rotation='auto' so a <TapedCardGrid> owns the angle (#2569)", () => {
+      const { container } = render(<NewsCard {...defaultProps} />);
+      expect(screen.getByRole("link")).toHaveAttribute("data-rotation", "auto");
+      // Outside a grid the slot variable is unset, so the card stays flat.
+      expect(container.querySelector("article")!.getAttribute("style")).toMatch(
+        /var\(--taped-card-rotation, ?0deg\)/,
+      );
+    });
   });
 
   describe("Flush-edge structure (R10)", () => {

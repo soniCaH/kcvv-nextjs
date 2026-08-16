@@ -53,18 +53,15 @@ describe("NewsListingClient", () => {
   const clickLoadMore = () =>
     fireEvent.click(screen.getByRole("button", { name: "Meer nieuws laden" }));
 
-  it("renders featured articles in the top section", () => {
-    const featuredArticles = [
-      makeArticle({ id: "f1", title: "Featured One" }),
-      makeArticle({ id: "f2", title: "Featured Two" }),
-      makeArticle({ id: "f3", title: "Featured Three" }),
-    ];
-    const gridArticles = [makeArticle({ id: "g1", title: "Grid One" })];
-
+  it("renders every article in one chronological grid (#2569)", () => {
     render(
       <NewsListingClient
-        featuredArticles={featuredArticles}
-        initialArticles={gridArticles}
+        initialArticles={[
+          makeArticle({ id: "a1", title: "Article One" }),
+          makeArticle({ id: "a2", title: "Article Two" }),
+          makeArticle({ id: "a3", title: "Article Three" }),
+          makeArticle({ id: "a4", title: "Article Four" }),
+        ]}
         categories={categories}
         hasMore={false}
         fetchArticles={mockFetchArticles}
@@ -72,48 +69,79 @@ describe("NewsListingClient", () => {
     );
 
     // `<EditorialHeading>` appends a trailing period — match optional `.`.
-    expect(
-      screen.getByRole("heading", { name: /^Featured One\.?$/ }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: /^Featured Two\.?$/ }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: /^Featured Three\.?$/ }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: /^Grid One\.?$/ }),
-    ).toBeInTheDocument();
+    for (const title of [
+      "Article One",
+      "Article Two",
+      "Article Three",
+      "Article Four",
+    ]) {
+      expect(
+        screen.getByRole("heading", { name: new RegExp(`^${title}\\.?$`) }),
+      ).toBeInTheDocument();
+    }
   });
 
-  it("does not force an aspect override on the featured-split cards (#2027)", () => {
-    const featuredArticles = [
-      makeArticle({ id: "f1", title: "Featured One" }),
-      makeArticle({ id: "f2", title: "Featured Two" }),
-      makeArticle({ id: "f3", title: "Featured Three" }),
-    ];
-
+  it("drops the 'Uitgelicht' row — an archive is chronological (#2569)", () => {
     const { container } = render(
       <NewsListingClient
-        featuredArticles={featuredArticles}
-        initialArticles={[]}
+        initialArticles={[
+          makeArticle({ id: "a1", title: "Article One" }),
+          makeArticle({ id: "a2", title: "Article Two" }),
+        ]}
         categories={categories}
         hasMore={false}
         fetchArticles={mockFetchArticles}
       />,
     );
 
-    // Every NewsCard (rendered as `<article>`) must keep its locked aspect —
-    // the right-stack cards previously received `flex-1 aspect-auto`, which
-    // height-matched them to the featured card and broke the 16:9 image region.
+    expect(
+      screen.queryByRole("heading", { name: /uitgelicht/i }),
+    ).not.toBeInTheDocument();
+
+    // One grid, on the shared 1 → 2 → 3 ladder at the `md` gutter.
+    const grids = container.querySelectorAll("[data-columns]");
+    expect(grids).toHaveLength(1);
+    expect(grids[0]!.getAttribute("data-columns")).toBe("3");
+    expect(grids[0]!.getAttribute("data-gap")).toBe("md");
+  });
+
+  it("renders one uniform card size — no featured variant, no dek (#2569)", () => {
+    const { container } = render(
+      <NewsListingClient
+        initialArticles={[
+          makeArticle({
+            id: "a1",
+            title: "Article One",
+            lead: "Deze samenvatting hoort niet in de grid.",
+          }),
+          makeArticle({ id: "a2", title: "Article Two" }),
+          makeArticle({ id: "a3", title: "Article Three" }),
+        ]}
+        categories={categories}
+        hasMore={false}
+        fetchArticles={mockFetchArticles}
+      />,
+    );
+
+    expect(
+      screen.queryByText("Deze samenvatting hoort niet in de grid."),
+    ).not.toBeInTheDocument();
+
+    const links = container.querySelectorAll("a[data-variant]");
+    expect(links).toHaveLength(3);
+    for (const link of links) {
+      expect(link.getAttribute("data-variant")).toBe("standard");
+    }
+
+    // The locked 16:9 image region survives on every card, and no card is
+    // height-matched to a neighbour (the retired 2fr|1fr split's `flex-1
+    // aspect-auto`, #2027).
     const cards = container.querySelectorAll("article");
     expect(cards.length).toBe(3);
     for (const card of cards) {
       expect(card.className).not.toMatch(/\baspect-auto\b/);
       expect(card.className).not.toMatch(/\bflex-1\b/);
     }
-
-    // The locked 16:9 image region survives on every featured card.
     const imageRegions = container.querySelectorAll(
       '[data-testid="newscard-image-region"]',
     );
@@ -123,44 +151,9 @@ describe("NewsListingClient", () => {
     }
   });
 
-  it("renders the lead/dek on featured cards but not on grid cards (#2027)", () => {
-    const featuredArticles = [
-      makeArticle({
-        id: "f1",
-        title: "Featured With Lead",
-        lead: "Een korte samenvatting van het artikel.",
-      }),
-    ];
-    const gridArticles = [
-      makeArticle({
-        id: "g1",
-        title: "Grid With Lead",
-        lead: "Deze samenvatting hoort niet in de grid.",
-      }),
-    ];
-
-    render(
-      <NewsListingClient
-        featuredArticles={featuredArticles}
-        initialArticles={gridArticles}
-        categories={categories}
-        hasMore={false}
-        fetchArticles={mockFetchArticles}
-      />,
-    );
-
-    expect(
-      screen.getByText("Een korte samenvatting van het artikel."),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText("Deze samenvatting hoort niet in de grid."),
-    ).not.toBeInTheDocument();
-  });
-
   it("shows the load-more button only when there are more articles (NEWS-1)", () => {
     render(
       <NewsListingClient
-        featuredArticles={[makeArticle()]}
         initialArticles={[makeArticle({ id: "g1" })]}
         categories={categories}
         hasMore={true}
@@ -175,7 +168,6 @@ describe("NewsListingClient", () => {
 
     render(
       <NewsListingClient
-        featuredArticles={[makeArticle()]}
         initialArticles={[makeArticle({ id: "g1" })]}
         categories={categories}
         hasMore={false}
@@ -190,8 +182,7 @@ describe("NewsListingClient", () => {
   it("renders category filter tabs as buttons", () => {
     render(
       <NewsListingClient
-        featuredArticles={[makeArticle()]}
-        initialArticles={[]}
+        initialArticles={[makeArticle()]}
         categories={categories}
         hasMore={false}
         fetchArticles={mockFetchArticles}
@@ -206,11 +197,10 @@ describe("NewsListingClient", () => {
   });
 
   it("shows empty state when no articles match category", async () => {
-    mockFetchArticles.mockResolvedValue({ articles: [], hasMore: false });
+    mockFetchArticles.mockResolvedValue({ items: [], hasMore: false });
 
     render(
       <NewsListingClient
-        featuredArticles={[]}
         initialArticles={[]}
         categories={categories}
         hasMore={false}
@@ -226,13 +216,11 @@ describe("NewsListingClient", () => {
     });
   });
 
-  it("deduplicates articles returned by loadMore against featured and grid", async () => {
-    const featured = [
+  it("deduplicates articles returned by loadMore against the grid", async () => {
+    const initial = [
       makeArticle({ id: "a1", title: "Article One" }),
       makeArticle({ id: "a2", title: "Article Two" }),
       makeArticle({ id: "a3", title: "Article Three" }),
-    ];
-    const grid = [
       makeArticle({ id: "a4", title: "Article Four" }),
       makeArticle({ id: "a5", title: "Article Five" }),
       makeArticle({ id: "a6", title: "Article Six" }),
@@ -240,7 +228,7 @@ describe("NewsListingClient", () => {
 
     // loadMore returns a mix of duplicates (a3, a6) and new articles (a7, a8)
     mockFetchArticles.mockResolvedValue({
-      articles: [
+      items: [
         makeArticle({ id: "a3", title: "Article Three" }),
         makeArticle({ id: "a6", title: "Article Six" }),
         makeArticle({ id: "a7", title: "Article Seven" }),
@@ -251,8 +239,7 @@ describe("NewsListingClient", () => {
 
     render(
       <NewsListingClient
-        featuredArticles={featured}
-        initialArticles={grid}
+        initialArticles={initial}
         categories={categories}
         hasMore={true}
         fetchArticles={mockFetchArticles}
@@ -293,20 +280,10 @@ describe("NewsListingClient", () => {
   });
 
   it("deduplicates articles after category change", async () => {
-    const featured = [
-      makeArticle({ id: "a1", title: "First Article" }),
-      makeArticle({ id: "a2", title: "Second Article" }),
-      makeArticle({ id: "a3", title: "Third Article" }),
-    ];
-    const grid = [makeArticle({ id: "a4", title: "Fourth Article" })];
-
-    // Duplicate "c1" appears within the first three items so the pre-split
-    // dedup path (deduplicateById on the whole result before slicing into
-    // featured/grid) is exercised.
     mockFetchArticles.mockResolvedValue({
-      articles: [
+      items: [
         makeArticle({ id: "c1", title: "Cat One" }),
-        makeArticle({ id: "c1", title: "Cat One" }), // duplicate within featured slice
+        makeArticle({ id: "c1", title: "Cat One" }), // duplicate in the batch
         makeArticle({ id: "c2", title: "Cat Two" }),
         makeArticle({ id: "c3", title: "Cat Three" }),
         makeArticle({ id: "c4", title: "Cat Four" }),
@@ -316,8 +293,7 @@ describe("NewsListingClient", () => {
 
     render(
       <NewsListingClient
-        featuredArticles={featured}
-        initialArticles={grid}
+        initialArticles={[makeArticle({ id: "a1", title: "First Article" })]}
         categories={categories}
         hasMore={false}
         fetchArticles={mockFetchArticles}
@@ -332,7 +308,6 @@ describe("NewsListingClient", () => {
       ).toBeInTheDocument();
     });
 
-    // Cat One should appear exactly once (featured), not also in the grid
     expect(
       screen.getAllByRole("heading", { name: /^Cat One\.?$/ }),
     ).toHaveLength(1);
@@ -349,7 +324,6 @@ describe("NewsListingClient", () => {
 
     render(
       <NewsListingClient
-        featuredArticles={[makeArticle()]}
         initialArticles={[makeArticle({ id: "g1" })]}
         categories={categories}
         hasMore={true}
@@ -365,6 +339,6 @@ describe("NewsListingClient", () => {
     });
 
     // Resolve to prevent act warnings
-    resolvePromise!({ articles: [], hasMore: false });
+    resolvePromise!({ items: [], hasMore: false });
   });
 });
