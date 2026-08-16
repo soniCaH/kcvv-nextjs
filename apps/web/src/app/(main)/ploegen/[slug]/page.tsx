@@ -2,7 +2,7 @@
  * Team Detail Page — Phase 6.C single-scroll composition.
  *
  * SiteHeader → MatchStripSlot → TeamHero → sticky section-nav →
- * StandingsTable → TeamMatchesSection → SquadGrid → TeamStaff →
+ * StandingsSection → TeamMatchesSection → SquadGrid → TeamStaff →
  * TeamEditorial → VerderLezenRow → global SponsorsBlock → footer.
  * <StripedSeam> separates sections; every non-hero section auto-hides on
  * empty data (a U6 page degrades to hero + squad + staff).
@@ -17,7 +17,7 @@ import { degradeSection } from "@/lib/effect/degrade";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { BffService } from "@/lib/effect/services/BffService";
 import { ArticleRepository } from "@/lib/repositories/article.repository";
-import type { Match, RankingEntry } from "@kcvv/api-contract";
+import type { Match, RankingTable } from "@kcvv/api-contract";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd, buildSportsTeamJsonLd } from "@/lib/seo/jsonld";
 import { PageViewTracker, TrackInView } from "@/components/analytics";
@@ -26,7 +26,7 @@ import { getTeamMatches } from "@/lib/server/match-data";
 import { StripedSeam } from "@/components/design-system/StripedSeam";
 import { PageContainer } from "@/components/design-system/PageContainer";
 import { TeamHero } from "@/components/team/TeamHero";
-import { StandingsTable } from "@/components/team/StandingsTable";
+import { StandingsSection } from "@/components/team/StandingsSection";
 import { TeamMatchesSection } from "@/components/team/TeamMatchesSection";
 import { SquadGrid } from "@/components/team/SquadGrid";
 import { TeamEnrolmentCta } from "@/components/team/TeamEnrolmentCta";
@@ -84,7 +84,7 @@ export async function generateMetadata({
 
 interface BffData {
   matches: readonly Match[];
-  standings: readonly RankingEntry[];
+  standings: readonly RankingTable[];
   teamId: number;
 }
 
@@ -101,7 +101,7 @@ async function fetchBffData(psdTeamId: number): Promise<BffData | null> {
           const bff = yield* BffService;
           return yield* bff.getRanking(psdTeamId);
         }).pipe(
-          Effect.catchAll(() => Effect.succeed([] as readonly RankingEntry[])),
+          Effect.catchAll(() => Effect.succeed([] as readonly RankingTable[])),
         ),
       ),
     ]);
@@ -165,7 +165,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
   // Section render flags — keep the sticky nav in sync with each section's
   // own auto-hide so the nav never lists a section that doesn't render.
-  const showStandings = standings.length > 0;
+  // Rows, not tables — matches `<StandingsSection>`'s own guard, so the seam
+  // and the nav entry never appear around a section that renders nothing.
+  const showStandings = standings.some((table) => table.entries.length > 0);
   const showMatches = scheduleMatches.length > 0;
   const showSquad = team.players.length > 0;
   const showStaff = staff.length > 0;
@@ -232,8 +234,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
               id="klassement"
               className="scroll-mt-[6.5rem] py-10"
             >
-              <StandingsTable
-                entries={standings}
+              <StandingsSection
+                tables={standings}
+                divisionFull={team.divisionFull}
                 highlightTeamId={bffData?.teamId}
               />
             </PageContainer>

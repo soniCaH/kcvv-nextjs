@@ -56,8 +56,9 @@ describe("FootbalistoRankingArray", () => {
   it("decodes a ranking response", () => {
     const raw = [
       {
-        name: "3de Nationale A",
-        type: "LEAGUE",
+        id: 222464,
+        name: "Voetbal : Voetbal Vlaanderen - 3de Afdeling Voetb Vl A",
+        type: "OFFICIAL",
         teams: [
           {
             id: 1,
@@ -82,6 +83,8 @@ describe("FootbalistoRankingArray", () => {
       },
     ];
     const result = S.decodeUnknownSync(FootbalistoRankingArray)(raw);
+    // The competition id is the only stable key for a phase (#2589).
+    expect(result[0]?.id).toBe(222464);
     expect(result[0]?.teams).toHaveLength(1);
     // teams are unknown items — decode individually to verify shape
     const entry = S.decodeUnknownSync(FootbalistoRankingEntry)(

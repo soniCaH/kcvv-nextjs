@@ -5,24 +5,30 @@ import { PsdService, type PsdServiceInterface } from "../psd/service";
 import { KvCacheService, type KvCacheInterface } from "../cache/kv-cache";
 import { testEnvLayer } from "../test-helpers/env-layer";
 import { PsdGateTest } from "../psd/gate";
-import { RankingArray, type RankingEntry } from "@kcvv/api-contract";
+import { RankingTableArray, type RankingTable } from "@kcvv/api-contract";
 import { UpstreamUnavailableError } from "../psd/errors";
 
-const rankingEntries: readonly RankingEntry[] = [
+const rankingTables: readonly RankingTable[] = [
   {
-    position: 1,
-    team_id: 101,
-    team_name: "KCVV Elewijt",
-    team_logo: "https://cdn.example.com/extra_groot/123.png",
-    played: 20,
-    won: 15,
-    drawn: 3,
-    lost: 2,
-    goals_for: 45,
-    goals_against: 20,
-    goal_difference: 25,
-    points: 48,
-    form: undefined,
+    competition_id: 222464,
+    competition_name: "3de Afdeling Voetb Vl A",
+    entries: [
+      {
+        position: 1,
+        team_id: 101,
+        team_name: "KCVV Elewijt",
+        team_logo: "https://cdn.example.com/extra_groot/123.png",
+        played: 20,
+        won: 15,
+        drawn: 3,
+        lost: 2,
+        goals_for: 45,
+        goals_against: 20,
+        goal_difference: 25,
+        points: 48,
+        form: undefined,
+      },
+    ],
   },
 ];
 
@@ -34,7 +40,7 @@ function makeServiceMock(
     getNextMatches: () => Effect.fail(new Error("not needed") as never),
     getMatchesWindow: () => Effect.fail(new Error("not needed") as never),
     getMatchDetail: () => Effect.fail(new Error("not needed") as never),
-    getRanking: () => Effect.succeed(rankingEntries),
+    getRanking: () => Effect.succeed(rankingTables),
     getOpponentHistory: () => Effect.die("not needed"),
     getPlayerStats: () => Effect.die("not needed"),
     getCurrentSeasonId: () => Effect.succeed(123),
@@ -50,7 +56,7 @@ const cacheMock: KvCacheInterface = {
 };
 
 describe("getRankingHandler", () => {
-  it("yields PsdService and returns ranking entries", async () => {
+  it("yields PsdService and returns every ranking table", async () => {
     const result = await Effect.runPromise(
       getRankingHandler(1, "https://cdn.example.com").pipe(
         Effect.provide(Layer.succeed(PsdService, makeServiceMock())),
@@ -59,13 +65,15 @@ describe("getRankingHandler", () => {
         Effect.provide(testEnvLayer),
       ),
     );
-    expect(result[0]?.position).toBe(1);
-    expect(result[0]?.team_name).toBe("KCVV Elewijt");
-    expect(result[0]?.points).toBe(48);
-    expect(() => S.decodeUnknownSync(RankingArray)(result)).not.toThrow();
+    expect(result[0]?.competition_id).toBe(222464);
+    expect(result[0]?.competition_name).toBe("3de Afdeling Voetb Vl A");
+    expect(result[0]?.entries[0]?.position).toBe(1);
+    expect(result[0]?.entries[0]?.team_name).toBe("KCVV Elewijt");
+    expect(result[0]?.entries[0]?.points).toBe(48);
+    expect(() => S.decodeUnknownSync(RankingTableArray)(result)).not.toThrow();
   });
 
-  it("fails with ResourceNotFoundError when service returns empty ranking", async () => {
+  it("fails with ResourceNotFoundError when the team publishes no table", async () => {
     const result = await Effect.runPromise(
       Effect.either(
         getRankingHandler(1, "https://cdn.example.com").pipe(

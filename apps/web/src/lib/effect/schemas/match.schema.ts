@@ -9,7 +9,4 @@ export {
   MatchLineupPlayer,
   MatchStatus,
   MatchTeam,
-  RankingArray,
-  RankingEntry,
-  RankingResponse,
 } from "@kcvv/api-contract";

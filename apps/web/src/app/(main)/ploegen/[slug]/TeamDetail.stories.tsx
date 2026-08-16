@@ -2,7 +2,7 @@
  * Pages/* assembly story for `/ploegen/[slug]` — the Phase 6.C team detail
  * composition.
  *
- * Renders the visible page sections (TeamHero → StandingsTable →
+ * Renders the visible page sections (TeamHero → StandingsSection →
  * TeamMatchesSection → SquadGrid → TeamStaff → TeamEditorial) with fixture
  * data, mirroring the server `page.tsx` body but WITHOUT the server-only chrome
  * (`<MatchStripSlot>`, `<TeamSectionNav>`, `<PageViewTracker>`, `<TrackInView>`,
@@ -13,17 +13,17 @@
  *
  * Per `apps/web/CLAUDE.md`, Pages/* stories are NOT VR-tested. Add or change
  * visual baselines on the per-section stories
- * (`Features/Teams/TeamHero`, `…/StandingsTable`, `…/TeamMatchesSection`,
+ * (`Features/Teams/TeamHero`, `…/StandingsSection`, `…/TeamMatchesSection`,
  * `…/SquadGrid`, `…/TeamStaff`, `…/TeamEditorial`) instead.
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import type { PortableTextBlock } from "@portabletext/react";
-import type { RankingEntry } from "@kcvv/api-contract";
+import type { RankingEntry, RankingTable } from "@kcvv/api-contract";
 import type { PlayerVM } from "@/lib/repositories/player.repository";
 import type { ScheduleMatch } from "@/components/match/types";
 import { TeamHero } from "@/components/team/TeamHero";
-import { StandingsTable } from "@/components/team/StandingsTable";
+import { StandingsSection } from "@/components/team/StandingsSection";
 import { TeamMatchesSection } from "@/components/team/TeamMatchesSection";
 import { SquadGrid } from "@/components/team/SquadGrid";
 import { TeamStaff } from "@/components/team/TeamStaff";
@@ -61,15 +61,23 @@ function rankEntry(
   } as RankingEntry;
 }
 
-const standings: RankingEntry[] = [
-  rankEntry(1, 101, "KSK Kampenhout", 18, 13, 3, 2, 41, 17, 42),
-  rankEntry(2, 102, "FC Perk", 18, 12, 4, 2, 38, 19, 40),
-  rankEntry(3, 103, "VK Weerde", 18, 11, 3, 4, 35, 22, 36),
-  rankEntry(4, 104, "Eppegem B", 18, 9, 5, 4, 30, 24, 32),
-  rankEntry(5, 105, "SK Kampenhout B", 18, 8, 6, 4, 28, 23, 30),
-  rankEntry(6, KCVV_TEAM_ID, "KCVV Elewijt", 18, 8, 4, 6, 27, 25, 28),
-  rankEntry(7, 107, "Hofstade VV", 18, 7, 5, 6, 26, 26, 26),
-  rankEntry(8, 108, "FC Mollem", 18, 6, 4, 8, 22, 28, 22),
+// The A-team publishes exactly one official table; a youth side ends the
+// season with two (#2631).
+const standingsTables: RankingTable[] = [
+  {
+    competition_id: 222464,
+    competition_name: "3de Afdeling Voetb Vl A",
+    entries: [
+      rankEntry(1, 101, "KSK Kampenhout", 18, 13, 3, 2, 41, 17, 42),
+      rankEntry(2, 102, "FC Perk", 18, 12, 4, 2, 38, 19, 40),
+      rankEntry(3, 103, "VK Weerde", 18, 11, 3, 4, 35, 22, 36),
+      rankEntry(4, 104, "Eppegem B", 18, 9, 5, 4, 30, 24, 32),
+      rankEntry(5, 105, "SK Kampenhout B", 18, 8, 6, 4, 28, 23, 30),
+      rankEntry(6, KCVV_TEAM_ID, "KCVV Elewijt", 18, 8, 4, 6, 27, 25, 28),
+      rankEntry(7, 107, "Hofstade VV", 18, 7, 5, 6, 26, 26, 26),
+      rankEntry(8, 108, "FC Mollem", 18, 6, 4, 8, 22, 28, 22),
+    ],
+  } as RankingTable,
 ];
 
 const KCVV = { id: KCVV_TEAM_ID, name: "KCVV Elewijt" };
@@ -240,7 +248,11 @@ function TeamDetailAssembly() {
 
       <StripedSeam colorPair="ink-cream" height="md" />
       <PageContainer as="section" className="py-10">
-        <StandingsTable entries={standings} highlightTeamId={KCVV_TEAM_ID} />
+        <StandingsSection
+          tables={standingsTables}
+          divisionFull="Eerste Elftal A – 3e Nat. A"
+          highlightTeamId={KCVV_TEAM_ID}
+        />
       </PageContainer>
 
       <StripedSeam colorPair="ink-cream" height="md" />

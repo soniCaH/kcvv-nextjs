@@ -1,6 +1,10 @@
 import { Effect } from "effect";
 import { HttpApiBuilder } from "@effect/platform";
-import { PsdApi, RankingArray, type RankingEntry } from "@kcvv/api-contract";
+import {
+  PsdApi,
+  RankingTableArray,
+  type RankingTable,
+} from "@kcvv/api-contract";
 import { PsdService } from "../psd/service";
 import {
   shouldServeStale,
@@ -12,28 +16,28 @@ import { WorkerEnvTag } from "../env";
 import { PsdGateService } from "../psd/gate";
 import { withErrorMapping } from "./error-mapping";
 
-const rankingCache = TypedKvCache(RankingArray);
+const rankingCache = TypedKvCache(RankingTableArray);
 
 export const getRankingHandler = (
   teamId: number,
   logoCdnUrl: string,
 ): Effect.Effect<
-  readonly RankingEntry[],
+  readonly RankingTable[],
   BffError,
   PsdService | KvCacheService | WorkerEnvTag | PsdGateService
 > => {
   const cacheKey = `ranking:team:${teamId}`;
   const fetchRanking = Effect.gen(function* () {
     const service = yield* PsdService;
-    const entries = yield* service.getRanking(teamId, logoCdnUrl);
-    if (entries.length === 0) {
+    const tables = yield* service.getRanking(teamId, logoCdnUrl);
+    if (tables.length === 0) {
       return yield* new ResourceNotFoundError({
         message: "No ranking data found",
         resourceType: "ranking",
         resourceId: teamId,
       });
     }
-    return entries;
+    return tables;
   });
 
   return rankingCache.getOrFetch(

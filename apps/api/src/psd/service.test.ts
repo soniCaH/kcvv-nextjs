@@ -2,7 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Effect, Layer, Logger, Schema as S } from "effect";
 import { PsdService, PsdServiceLive } from "./service";
 import { PsdGateTest } from "./gate";
-import { Match, MatchDetail, RankingEntry } from "@kcvv/api-contract";
+import {
+  Match,
+  MatchDetail,
+  RankingEntry,
+  RankingTable,
+} from "@kcvv/api-contract";
 import { UpstreamUnavailableError, type BffError } from "./errors";
 import { WorkerEnvTag } from "../env";
 import { KvCacheService, type KvCacheInterface } from "../cache/kv-cache";
@@ -1011,68 +1016,66 @@ describe("PsdService.getMatchesWindow", () => {
   });
 });
 
+function rawRankingEntry(
+  id: number,
+  rank: number,
+  teamId: number,
+  clubId: number,
+  clubName: string,
+  points: number,
+) {
+  return {
+    id,
+    rank,
+    matchesPlayed: 20,
+    wins: 15,
+    draws: 3,
+    losses: 2,
+    goalsScored: 45,
+    goalsConceded: 12,
+    points,
+    team: {
+      id: teamId,
+      club: { id: clubId, localName: clubName, name: clubName },
+    },
+  };
+}
+
+// Shaped after the live `/teams/{id}/ranking` payload (re-measured 2026-08-16):
+// entries are grouped CUP -> FRIENDLY -> OFFICIAL and every name carries the
+// `Voetbal : <bond> - ` prefix.
 const rawRankingCompetitions = [
   {
-    name: "Beker van Brabant",
+    id: 216140,
+    name: "Voetbal : Nationale - Croky Cup - Hommes",
     type: "CUP",
+    teams: [rawRankingEntry(1, 1, 10, 100, "Cup Team", 7)],
+  },
+  {
+    id: 155356,
+    name: "Voetbal : Voetbal Vlaanderen - 1e Ploegen 3-4 Prov - Hommes",
+    type: "FRIENDLY",
+    teams: [rawRankingEntry(4, 1, 40, 400, "Friendly Team", 3)],
+  },
+  {
+    id: 222464,
+    name: "Voetbal : Voetbal Vlaanderen - 3de Afdeling Voetb Vl A",
+    type: "OFFICIAL",
     teams: [
-      {
-        id: 1,
-        rank: 1,
-        matchesPlayed: 3,
-        wins: 2,
-        draws: 1,
-        losses: 0,
-        goalsScored: 5,
-        goalsConceded: 2,
-        points: 7,
-        team: {
-          id: 10,
-          club: { id: 100, localName: "Cup Team", name: "Cup Team" },
-        },
-      },
+      rawRankingEntry(2, 1, 20, 200, "KCVV Elewijt", 48),
+      rawRankingEntry(3, 2, 30, 300, "Rival FC", 40),
     ],
   },
   {
-    name: "3de Nationale",
-    type: "LEAGUE",
-    teams: [
-      {
-        id: 2,
-        rank: 1,
-        matchesPlayed: 20,
-        wins: 15,
-        draws: 3,
-        losses: 2,
-        goalsScored: 45,
-        goalsConceded: 12,
-        points: 48,
-        team: {
-          id: 20,
-          club: { id: 200, localName: "KCVV Elewijt", name: "KCVV" },
-        },
-      },
-      {
-        id: 3,
-        rank: 2,
-        matchesPlayed: 20,
-        wins: 12,
-        draws: 4,
-        losses: 4,
-        goalsScored: 38,
-        goalsConceded: 18,
-        points: 40,
-        team: {
-          id: 30,
-          club: { id: 300, localName: "Rival FC", name: "Rival" },
-        },
-      },
-    ],
+    id: 217486,
+    name: "Voetbal : Voetbal Vlaanderen - Gewestelijk U13 BJ",
+    type: "OFFICIAL",
+    teams: [rawRankingEntry(5, 1, 50, 500, "Spring Poule FC", 12)],
   },
 ];
 
 describe("PsdService.getRanking", () => {
-  it("prefers non-CUP, non-FRIENDLY competition and returns transformed RankingEntry[]", async () => {
+  it("returns every OFFICIAL table in feed order and drops CUP and FRIENDLY", async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => rawRankingCompetitions,
@@ -1085,45 +1088,47 @@ describe("PsdService.getRanking", () => {
     expect(result._tag).toBe("Right");
     if (result._tag === "Right") {
       expect(result.right).toHaveLength(2);
-      expect(result.right[0]?.team_name).toBe("KCVV Elewijt");
-      expect(result.right[0]?.position).toBe(1);
-      expect(result.right[0]?.points).toBe(48);
-      expect(result.right[0]?.team_logo).toBe(
+      expect(result.right.map((t) => t.competition_id)).toEqual([
+        222464, 217486,
+      ]);
+      // The provider's bookkeeping prefix is stripped on the way out.
+      expect(result.right.map((t) => t.competition_name)).toEqual([
+        "3de Afdeling Voetb Vl A",
+        "Gewestelijk U13 BJ",
+      ]);
+
+      const first = result.right[0]!;
+      expect(first.entries).toHaveLength(2);
+      expect(first.entries[0]?.team_name).toBe("KCVV Elewijt");
+      expect(first.entries[0]?.position).toBe(1);
+      expect(first.entries[0]?.points).toBe(48);
+      expect(first.entries[0]?.team_logo).toBe(
         "https://cdn.example.com/extra_groot/200.png",
       );
       // Contract boundary: validate transform output against api-contract schema
-      for (const entry of result.right) {
-        expect(() => S.decodeUnknownSync(RankingEntry)(entry)).not.toThrow();
+      for (const table of result.right) {
+        expect(() => S.decodeUnknownSync(RankingTable)(table)).not.toThrow();
+        for (const entry of table.entries) {
+          expect(() => S.decodeUnknownSync(RankingEntry)(entry)).not.toThrow();
+        }
       }
     }
   });
-  it("falls back to CUP competition when no LEAGUE/other exists", async () => {
-    const cupOnly = [
+
+  it("accepts LEAGUE as a synonym for OFFICIAL", async () => {
+    // `resolveCompetitionType` treats both as league play. A feed that filed a
+    // poule as LEAGUE must not empty the klassement club-wide.
+    const asLeague = [
       {
-        name: "Beker van Brabant",
-        type: "CUP",
-        teams: [
-          {
-            id: 1,
-            rank: 1,
-            matchesPlayed: 3,
-            wins: 2,
-            draws: 1,
-            losses: 0,
-            goalsScored: 5,
-            goalsConceded: 2,
-            points: 7,
-            team: {
-              id: 10,
-              club: { id: 100, localName: "Cup Team", name: "Cup Team" },
-            },
-          },
-        ],
+        id: 222464,
+        name: "Voetbal : Voetbal Vlaanderen - 3de Afdeling Voetb Vl A",
+        type: "LEAGUE",
+        teams: [rawRankingEntry(2, 1, 20, 200, "KCVV Elewijt", 48)],
       },
     ];
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => cupOnly,
+      json: async () => asLeague,
     });
 
     const result = await runService((svc) =>
@@ -1133,12 +1138,33 @@ describe("PsdService.getRanking", () => {
     expect(result._tag).toBe("Right");
     if (result._tag === "Right") {
       expect(result.right).toHaveLength(1);
-      expect(result.right[0]?.team_name).toBe("Cup Team");
+      expect(result.right[0]?.competition_id).toBe(222464);
+    }
+  });
+
+  it("returns no table when only CUP and FRIENDLY competitions have rows", async () => {
+    const cupAndFriendlyOnly = rawRankingCompetitions.filter(
+      (c) => c.type !== "OFFICIAL",
+    );
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => cupAndFriendlyOnly,
+    });
+
+    const result = await runService((svc) =>
+      svc.getRanking(1, "https://cdn.example.com"),
+    );
+
+    expect(result._tag).toBe("Right");
+    if (result._tag === "Right") {
+      expect(result.right).toHaveLength(0);
     }
   });
 
   it("returns empty array when no competitions have teams", async () => {
-    const noTeams = [{ name: "Empty League", type: "LEAGUE", teams: [] }];
+    const noTeams = [
+      { id: 222464, name: "Empty League", type: "OFFICIAL", teams: [] },
+    ];
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => noTeams,
@@ -1169,9 +1195,13 @@ describe("PsdService.getRanking", () => {
     };
     const mixedRanking = [
       {
-        name: "3de Nationale",
-        type: "LEAGUE",
-        teams: [rawRankingCompetitions[1]!.teams[0], invalidEntry],
+        id: 222464,
+        name: "Voetbal : Voetbal Vlaanderen - 3de Afdeling Voetb Vl A",
+        type: "OFFICIAL",
+        teams: [
+          rawRankingEntry(2, 1, 20, 200, "KCVV Elewijt", 48),
+          invalidEntry,
+        ],
       },
     ];
 
@@ -1188,11 +1218,12 @@ describe("PsdService.getRanking", () => {
     if (result._tag === "Right") {
       // Should return only the valid entry, invalid one filtered out
       expect(result.right).toHaveLength(1);
-      expect(result.right[0]?.team_name).toBe("KCVV Elewijt");
+      expect(result.right[0]?.entries).toHaveLength(1);
+      expect(result.right[0]?.entries[0]?.team_name).toBe("KCVV Elewijt");
     }
   });
 
-  it("logs invalid ranking entries when some are filtered", async () => {
+  it("logs invalid ranking entries against the competition they came from", async () => {
     const invalidEntry = {
       id: 999,
       rank: 3,
@@ -1200,9 +1231,13 @@ describe("PsdService.getRanking", () => {
     };
     const mixedRanking = [
       {
-        name: "3de Nationale",
-        type: "LEAGUE",
-        teams: [rawRankingCompetitions[1]!.teams[0], invalidEntry],
+        id: 222464,
+        name: "Voetbal : Voetbal Vlaanderen - 3de Afdeling Voetb Vl A",
+        type: "OFFICIAL",
+        teams: [
+          rawRankingEntry(2, 1, 20, 200, "KCVV Elewijt", 48),
+          invalidEntry,
+        ],
       },
     ];
 
@@ -1231,34 +1266,49 @@ describe("PsdService.getRanking", () => {
     );
 
     expect(
-      messages.some((m) => m.includes("filtered") && m.includes("IDs: [999]")),
+      messages.some(
+        (m) =>
+          m.includes("competition 222464") &&
+          m.includes("filtered") &&
+          m.includes("IDs: [999]"),
+      ),
     ).toBe(true);
   });
 
-  it("fails with ResourceNotFoundError when all ranking entries are invalid", async () => {
-    const allInvalid = [
+  it("skips a table whose entries are all invalid and keeps the rest", async () => {
+    const oneRotten = [
       {
-        name: "3de Nationale",
-        type: "LEAGUE",
+        id: 222464,
+        name: "Voetbal : Voetbal Vlaanderen - 3de Afdeling Voetb Vl A",
+        type: "OFFICIAL",
         teams: [
           { id: 1, rank: 1, team: null }, // invalid
           { id: 2, rank: 2, team: null }, // invalid
         ],
       },
+      {
+        id: 217486,
+        name: "Voetbal : Voetbal Vlaanderen - Gewestelijk U13 BJ",
+        type: "OFFICIAL",
+        teams: [rawRankingEntry(5, 1, 50, 500, "Spring Poule FC", 12)],
+      },
     ];
 
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => allInvalid,
+      json: async () => oneRotten,
     });
 
     const result = await runService((svc) =>
       svc.getRanking(1, "https://cdn.example.com"),
     );
 
-    expect(result._tag).toBe("Left");
-    if (result._tag === "Left") {
-      expect(result.left._tag).toBe("ResourceNotFound");
+    // A table nobody can decode drops out; the sibling still renders. The
+    // handler is what turns "no table at all" into a 404.
+    expect(result._tag).toBe("Right");
+    if (result._tag === "Right") {
+      expect(result.right).toHaveLength(1);
+      expect(result.right[0]?.competition_id).toBe(217486);
     }
   });
 });
