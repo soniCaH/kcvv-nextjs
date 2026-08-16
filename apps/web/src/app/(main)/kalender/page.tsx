@@ -5,6 +5,7 @@
 
 import { Effect } from "effect";
 import { runPromise } from "@/lib/effect/runtime";
+import { degradeSection } from "@/lib/effect/degrade";
 import {
   BffService,
   BFF_FAN_OUT_CONCURRENCY,
@@ -64,6 +65,15 @@ interface CalendarData {
   teams: CalendarTeamInfo[];
 }
 
+/**
+ * The team list is this page's subject — without it there is no calendar to
+ * filter — so its failure is uncaught by design (#2433 rule 2/3) and takes the
+ * page down to the one global boundary. An empty feed would assert "the club
+ * plays nothing", which is the lie #2399 exists to stop telling. The reads
+ * *inside* are sections and stay caught — one team's fixtures failing must not
+ * cost the other twenty-seven, and the event feed is a second stream layered on
+ * the matches, not the calendar itself.
+ */
 async function fetchCalendarData(): Promise<CalendarData> {
   return runPromise(
     Effect.gen(function* () {
@@ -81,11 +91,11 @@ async function fetchCalendarData(): Promise<CalendarData> {
       const [allTeams, feedItems] = yield* Effect.all(
         [
           teamRepo.findAll(),
-          eventRepo
-            .findUpcomingForList()
-            .pipe(
-              Effect.catchAll(() => Effect.succeed([] as EventListItemVM[])),
-            ),
+          degradeSection(
+            eventRepo.findUpcomingForList(),
+            [] as EventListItemVM[],
+            "[Calendar] event-feed lookup failed; rendering matches only.",
+          ),
         ],
         { concurrency: "unbounded" },
       );
@@ -145,15 +155,7 @@ async function fetchCalendarData(): Promise<CalendarData> {
         feed,
         teams: teamInfos,
       };
-    }).pipe(
-      Effect.catchAll((error) => {
-        console.error("[Calendar] Failed to fetch calendar data:", error);
-        return Effect.succeed({
-          feed: [],
-          teams: [],
-        } as CalendarData);
-      }),
-    ),
+    }),
   );
 }
 

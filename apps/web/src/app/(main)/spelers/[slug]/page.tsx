@@ -36,6 +36,7 @@ import { runPromise } from "@/lib/effect/runtime";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { PlayerRepository } from "@/lib/repositories/player.repository";
 import { ArticleRepository } from "@/lib/repositories/article.repository";
+import { degradeSection } from "@/lib/effect/degrade";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd, buildPersonJsonLd } from "@/lib/seo/jsonld";
 import { BioBlock, PlayerHero, QuotesBlock } from "@/components/player";
@@ -129,11 +130,18 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
 
   if (!player) notFound();
 
+  // "Verder lezen." is a section, not the subject (#2433 rule 3), and its
+  // absence asserts nothing — the visitor was never promised a read-next row —
+  // so it auto-hides rather than announcing the failure (rule 4).
   const relatedArticles = await runPromise(
-    Effect.gen(function* () {
-      const repo = yield* ArticleRepository;
-      return yield* repo.findRelated(player.id);
-    }),
+    degradeSection(
+      Effect.gen(function* () {
+        const repo = yield* ArticleRepository;
+        return yield* repo.findRelated(player.id);
+      }),
+      [],
+      "[spelers/[slug]] related-articles lookup failed; rendering without the Verder lezen row.",
+    ),
   );
 
   const fullName = `${player.firstName} ${player.lastName}`.trim() || "Speler";
@@ -228,6 +236,14 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
   );
 }
 
-// 24h ISR — player data is PSD-synced + editor-published; on-demand
-// revalidation keeps it fresh via /api/revalidate (revalidateTag 'players').
-export const revalidate = 86400;
+// 15m ISR — player data is PSD-synced + editor-published and on-demand
+// revalidation keeps it fresh via /api/revalidate (revalidateTag 'players'),
+// so the window is not what keeps this page current.
+//
+// It is what bounds a failure. This route mounts `<MatchStripSlot>` inline, a
+// BFF read that degrades to no strip, and the "Verder lezen." row above now
+// degrades to nothing as well — both are then written into this page's ISR
+// entry for the whole window (#2433 rule 5, cap 900s). `/api/revalidate` busts
+// a profile on a `player` change only, never on an article publish, so nothing
+// else shortens it.
+export const revalidate = 900;

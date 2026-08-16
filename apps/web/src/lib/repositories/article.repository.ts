@@ -370,10 +370,18 @@ export const ArticleRepositoryLive = Layer.succeed(ArticleRepository, {
       revalidate: SANITY_LIST_REVALIDATE,
       tags: [SANITY_TAGS.articles],
     }),
+  // Tagged like `findAll` above rather than left to inherit the route segment's
+  // window (#2563): `/nieuws/[slug]` dropped from 86400 to 900 under #2433 rule
+  // 5, and an inherited Data-Cache entry would have taken every Sanity read on
+  // the prebuilt news corpus down with it — 96× the read volume to bound a
+  // failure the article body never had. Publishes still bust it on demand,
+  // `/api/revalidate` already fires `revalidateTag('articles')`.
   findBySlug: (slug) =>
-    fetchGroq<ARTICLE_BY_SLUG_QUERY_RESULT>(ARTICLE_BY_SLUG_QUERY, {
-      slug,
-    }).pipe(
+    fetchGroq<ARTICLE_BY_SLUG_QUERY_RESULT>(
+      ARTICLE_BY_SLUG_QUERY,
+      { slug },
+      { revalidate: SANITY_LIST_REVALIDATE, tags: [SANITY_TAGS.articles] },
+    ).pipe(
       Effect.map((row) => (row ? filterPublishedRelatedArticles(row) : null)),
     ),
   findPaginated: ({ offset, limit, category }) =>
@@ -383,10 +391,14 @@ export const ArticleRepositoryLive = Layer.succeed(ArticleRepository, {
       category: category ?? "",
     }).pipe(Effect.map((rows) => rows.map(widenToArticleVM))),
   findTags: () => fetchGroq<ARTICLE_TAGS_QUERY_RESULT>(ARTICLE_TAGS_QUERY),
+  // Tagged for the same reason as `findBySlug` — this one is read by four
+  // routes, three of which also had their window shortened by #2563.
   findRelated: (documentId) =>
-    fetchGroq<RELATED_ARTICLES_QUERY_RESULT>(RELATED_ARTICLES_QUERY, {
-      documentId,
-    }).pipe(Effect.map((rows) => rows.map(widenToArticleVM))),
+    fetchGroq<RELATED_ARTICLES_QUERY_RESULT>(
+      RELATED_ARTICLES_QUERY,
+      { documentId },
+      { revalidate: SANITY_LIST_REVALIDATE, tags: [SANITY_TAGS.articles] },
+    ).pipe(Effect.map((rows) => rows.map(widenToArticleVM))),
   findByLinkedMatch: (matchId) =>
     // The GROQ filter already constrains `articleType` to the two match
     // variants, but typegen widens it to the full article union. Narrow back

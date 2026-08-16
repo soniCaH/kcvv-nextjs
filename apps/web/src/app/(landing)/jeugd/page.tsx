@@ -14,6 +14,7 @@ import {
   groupTeamsForLanding,
   type TeamLandingItem,
 } from "@/lib/utils/group-teams";
+import { degradeSection } from "@/lib/effect/degrade";
 import { SITE_CONFIG } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
@@ -69,12 +70,21 @@ async function fetchJeugdArticles(): Promise<ArticleVM[]> {
   }
 }
 
+/**
+ * The nav hub is a section, not the page's subject (#2433 rule 3): a failed
+ * read drops it back to its pinned cards, which is what `null` already means
+ * here, rather than taking `/jeugd` down.
+ */
 async function fetchEditorialConfig(): Promise<EditorialCardConfig[] | null> {
   return runPromise(
-    Effect.gen(function* () {
-      const repo = yield* JeugdLandingPageRepository;
-      return yield* repo.getEditorialCards();
-    }).pipe(Effect.provide(JeugdLandingPageRepositoryLive)),
+    degradeSection(
+      Effect.gen(function* () {
+        const repo = yield* JeugdLandingPageRepository;
+        return yield* repo.getEditorialCards();
+      }).pipe(Effect.provide(JeugdLandingPageRepositoryLive)),
+      null,
+      "[jeugd] editorial-cards lookup failed; falling back to the pinned nav cards.",
+    ),
   );
 }
 
@@ -142,4 +152,7 @@ export default async function JeugdPage() {
   );
 }
 
-export const revalidate = 3600;
+// 15m ISR — capped by #2433 rule 5, not by content freshness: the `(landing)`
+// layout mounts `<MatchStripSlot>`, whose BFF read degrades to no strip and is
+// then cached in this page's ISR entry for the whole window.
+export const revalidate = 900;

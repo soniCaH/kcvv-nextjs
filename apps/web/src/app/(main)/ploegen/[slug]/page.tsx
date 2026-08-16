@@ -13,6 +13,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import type { PortableTextBlock } from "@portabletext/react";
 import { runPromise } from "@/lib/effect/runtime";
+import { degradeSection } from "@/lib/effect/degrade";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { BffService } from "@/lib/effect/services/BffService";
 import { ArticleRepository } from "@/lib/repositories/article.repository";
@@ -127,11 +128,18 @@ export default async function TeamPage({ params }: TeamPageProps) {
   // Both depend only on `team`, never on each other, so they share one wave
   // rather than serializing Sanity behind the BFF pair (#2441).
   const [relatedArticles, bffData] = await Promise.all([
+    // Same section, same verdict as `/spelers/[slug]` and `/staf/[slug]`
+    // (#2433 rule 3/4): "Verder lezen." is polish, and its absence asserts
+    // nothing, so it hides rather than taking the team page down.
     runPromise(
-      Effect.gen(function* () {
-        const repo = yield* ArticleRepository;
-        return yield* repo.findRelated(team.id);
-      }),
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* ArticleRepository;
+          return yield* repo.findRelated(team.id);
+        }),
+        [],
+        "[ploegen/[slug]] related-articles lookup failed; rendering without the Verder lezen row.",
+      ),
     ),
     Number.isFinite(psdTeamId) && psdTeamId > 0
       ? fetchBffData(psdTeamId)
