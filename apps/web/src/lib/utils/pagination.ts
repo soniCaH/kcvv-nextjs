@@ -18,18 +18,27 @@ export interface Paginated<T> {
  * are `"use server"`, so their params are public input: an unbounded `limit`
  * would slice the whole collection per request, and a negative `offset` flips
  * `[$offset...$end]` into GROQ's end-relative form.
+ *
+ * Non-finite input falls back rather than clamping — `Math.trunc(NaN)` is `NaN`
+ * and every comparison against it is false, so `Math.max`/`Math.min` would pass
+ * it straight through to the query.
  */
 export function clampListingWindow(params: { offset: number; limit: number }): {
   offset: number;
   limit: number;
 } {
   return {
-    offset: Math.max(0, Math.trunc(params.offset)),
+    offset: Math.max(0, toIndex(params.offset, 0)),
     limit: Math.min(
-      Math.max(1, Math.trunc(params.limit)),
+      Math.max(1, toIndex(params.limit, LISTING_INITIAL_TOTAL)),
       LISTING_INITIAL_TOTAL,
     ),
   };
+}
+
+/** A whole number, or `fallback` when the input is NaN or ±Infinity. */
+function toIndex(value: number, fallback: number): number {
+  return Number.isFinite(value) ? Math.trunc(value) : fallback;
 }
 
 /**

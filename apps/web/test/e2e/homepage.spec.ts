@@ -73,7 +73,12 @@ test.describe("/ homepage integration (Phase 4.5.C.1)", () => {
   test("upcoming matches: expand button reveals all matches", async ({
     page,
   }) => {
-    const expandButton = page.getByRole("button", {
+    // Scoped to the agenda block: `<FirstTeamsBlock>` carries its own,
+    // permanently visible "Volledige kalender" link, so a page-wide locator
+    // never reads 0 no matter what this block does.
+    const agenda = page.getByRole("region", { name: "Komende wedstrijden" });
+
+    const expandButton = agenda.getByRole("button", {
       name: /toon alle \d+ wedstrijden/i,
     });
     if ((await expandButton.count()) === 0) {
@@ -81,7 +86,7 @@ test.describe("/ homepage integration (Phase 4.5.C.1)", () => {
     }
 
     // The /kalender link is hidden in the collapsed state.
-    const kalenderLink = page.getByRole("link", {
+    const kalenderLink = agenda.getByRole("link", {
       name: /volledige kalender/i,
     });
     await expect(kalenderLink).toHaveCount(0);

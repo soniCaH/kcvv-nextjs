@@ -30,6 +30,29 @@ describe("clampListingWindow", () => {
       limit: 5,
     });
   });
+
+  // `Math.trunc(NaN)` is NaN and every comparison against NaN is false, so a
+  // bare Math.max/Math.min clamp hands it straight to GROQ.
+  it.each([NaN, Infinity, -Infinity])(
+    "falls back to a bounded window for a non-finite offset (%p)",
+    (offset) => {
+      const result = clampListingWindow({ offset, limit: 12 });
+      expect(Number.isInteger(result.offset)).toBe(true);
+      expect(result.offset).toBe(0);
+      expect(result.limit).toBe(12);
+    },
+  );
+
+  it.each([NaN, Infinity, -Infinity])(
+    "falls back to a bounded window for a non-finite limit (%p)",
+    (limit) => {
+      const result = clampListingWindow({ offset: 24, limit });
+      expect(Number.isInteger(result.limit)).toBe(true);
+      expect(result.limit).toBeGreaterThanOrEqual(1);
+      expect(result.limit).toBeLessThanOrEqual(24);
+      expect(result.offset).toBe(24);
+    },
+  );
 });
 
 describe("paginateResults", () => {
