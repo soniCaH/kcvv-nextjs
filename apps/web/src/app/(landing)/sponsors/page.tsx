@@ -39,16 +39,16 @@ function mapToSponsor(s: SponsorVM): Sponsor {
 }
 
 export default async function SponsorsPageRoute() {
+  // Uncaught by design (#2433 rule 2/3): the sponsor wall is this page's
+  // subject, and under ISR a caught failure *succeeds* — the empty wall would
+  // be written into the cache and hold for the full window below. A throw
+  // leaves the last good render in place, so the failure is a blip rather than
+  // a day of blank sponsor slots.
   const sponsors = await runPromise(
     Effect.gen(function* () {
       const repo = yield* SponsorRepository;
       return yield* repo.findAll();
-    }).pipe(
-      Effect.catchAll((error) => {
-        console.error("[SponsorsPage] Failed to fetch sponsors:", error);
-        return Effect.succeed([] as SponsorVM[]);
-      }),
-    ),
+    }),
   );
 
   const allSponsors = sponsors.map(mapToSponsor).sort(sortByTierThenName);
@@ -76,6 +76,13 @@ export default async function SponsorsPageRoute() {
   );
 }
 
-// 24h ISR — sponsor list changes rarely; editor publishes invalidate on
-// demand via /api/revalidate (revalidateTag 'sponsors').
-export const revalidate = 86400;
+// 15m ISR — the sponsor list itself changes rarely and editor publishes
+// invalidate it on demand via /api/revalidate (revalidateTag 'sponsors'), so
+// the window is not what keeps this page fresh.
+//
+// It is what bounds a failure. This route sits in the `(landing)` group, whose
+// layout mounts `<MatchStripSlot>` — a BFF read that degrades to no strip and
+// is then written into this page's ISR entry for the whole window (#2433 rule
+// 5, cap 900s). The audit behind #2563 counted BFF routes by what each page
+// file reads and so missed every route that inherits the strip from its layout.
+export const revalidate = 900;

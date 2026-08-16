@@ -524,3 +524,105 @@ describe("rule 4 catches what it claims to (#2555)", () => {
     },
   );
 });
+
+// ---------------------------------------------------------------------------
+// Rule 5 (#2563) — a BFF-fed route may not cache a failure for longer than 900s
+// ---------------------------------------------------------------------------
+
+/**
+ * #2433 rule 5: a section that failed to load keeps the page, and that render
+ * *succeeds* — so it is written into the ISR cache like any other, and the
+ * revalidate window is how long the site repeats it. A degraded render
+ * self-heals at the next window; at 86400 it outlives the blip that wrote it by
+ * a day. The cap is **900s**, which is what `/ploegen/[slug]` already runs.
+ * (The notice such a section is meant to carry is #2576's; today every degrade
+ * is silent, which makes the window the only thing bounding it.)
+ *
+ * Scoped to the BFF because the BFF is the read that fails: Sanity is
+ * webhook-fresh, and #2433 left long windows on Sanity-only routes deliberately
+ * — `/staf/[slug]` is the one route that degrades a Sanity section and keeps
+ * 86400, flagged there rather than silently capped here.
+ *
+ * **A route is BFF-fed if it or any layout above it reaches the BFF.** Scoping
+ * this to "the page file names `BffService`" is what let #2433 count 8 BFF
+ * routes: `(landing)/layout.tsx` mounts `<MatchStripSlot>` for the whole group,
+ * so `/sponsors` and `/jeugd` inherit a BFF read without naming one, and
+ * `/spelers/[slug]` mounts the same slot inline. Its read goes through a
+ * per-render `cache()`, not a TTL, so it lands in each page's ISR entry. The
+ * layout chain is walked here because it is the mechanism; the component graph
+ * below the page is not, so a *new* BFF-reading component would need its name
+ * added to `BFF_SIGNAL`.
+ *
+ * **Two deliberate imprecisions.** The `code` map strips comments but re-emits
+ * string literals, so an import path alone counts as a signal — over-inclusive,
+ * which is the safe direction for a cap. And a BFF-fed page that declares no
+ * window at all is skipped: today those are `force-dynamic` or await
+ * `searchParams` and cache nothing, and inferring the difference statically
+ * costs more than it catches.
+ */
+const REVALIDATE_CAP_SECONDS = 900;
+const BFF_SIGNAL =
+  /\b(BffService|MatchStripSlot|getTeamMatches|getFirstTeamStripData)\b/;
+const REVALIDATE_WINDOW = /\bexport const revalidate\s*=\s*(\d+)/;
+
+/** Every `layout.tsx` that wraps this route, root first. */
+const layoutChain = (relPath: string): string[] => {
+  const dirs = relPath.split("/").slice(0, -1);
+  return dirs
+    .map((_, i) => `${dirs.slice(0, i + 1).join("/")}/layout.tsx`)
+    .filter((layoutPath) => code.has(layoutPath));
+};
+
+/** The page's own source plus every layout it renders inside. */
+const reachesTheBff = (relPath: string): boolean =>
+  [relPath, ...layoutChain(relPath)].some((f) => BFF_SIGNAL.test(code.get(f)!));
+
+/** BFF-fed route files that declare a window — 9 today, never 0. */
+const bffFedRouteFiles = productionSources.filter(
+  (relPath) =>
+    /(^|\/)page\.tsx$/.test(relPath) &&
+    reachesTheBff(relPath) &&
+    REVALIDATE_WINDOW.test(code.get(relPath)!),
+);
+
+describe("a BFF-fed route caps its cache window (#2563)", () => {
+  it.each(bffFedRouteFiles)(
+    `%s — revalidate stays at or under ${REVALIDATE_CAP_SECONDS}s`,
+    (relPath) => {
+      const seconds = Number(REVALIDATE_WINDOW.exec(code.get(relPath)!)![1]);
+      expect(seconds).toBeLessThanOrEqual(REVALIDATE_CAP_SECONDS);
+    },
+  );
+});
+
+/**
+ * The list is derived, so an edit that empties it would read as a pass on every
+ * route. Pinned by name, and the layout-chain detector is asserted against the
+ * two routes that motivated it — one that inherits the strip and one that looks
+ * like it should but does not.
+ */
+describe("rule 5 checks the routes it claims to (#2563)", () => {
+  it.each([
+    ["app/(landing)/page.tsx"],
+    ["app/(landing)/jeugd/page.tsx"],
+    ["app/(landing)/sponsors/page.tsx"],
+    ["app/(main)/nieuws/[slug]/page.tsx"],
+    ["app/(main)/ploegen/[slug]/page.tsx"],
+    ["app/(main)/spelers/[slug]/page.tsx"],
+    ["app/(main)/wedstrijd/[matchId]/page.tsx"],
+  ])("covers %s", (relPath) => {
+    expect(bffFedRouteFiles).toContain(relPath);
+  });
+
+  it("sees a route that inherits the strip from its layout", () => {
+    const sponsors = "app/(landing)/sponsors/page.tsx";
+    expect(BFF_SIGNAL.test(code.get(sponsors)!)).toBe(false);
+    expect(layoutChain(sponsors)).toContain("app/(landing)/layout.tsx");
+    expect(reachesTheBff(sponsors)).toBe(true);
+  });
+
+  it("leaves a Sanity-only route alone", () => {
+    expect(reachesTheBff("app/(main)/staf/[slug]/page.tsx")).toBe(false);
+    expect(bffFedRouteFiles).not.toContain("app/(main)/staf/[slug]/page.tsx");
+  });
+});

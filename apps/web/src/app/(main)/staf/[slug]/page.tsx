@@ -17,6 +17,7 @@ import { runPromise } from "@/lib/effect/runtime";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { StaffRepository } from "@/lib/repositories/staff.repository";
 import { ArticleRepository } from "@/lib/repositories/article.repository";
+import { degradeSection } from "@/lib/effect/degrade";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd, buildPersonJsonLd } from "@/lib/seo/jsonld";
 import { VerderLezenRow } from "@/components/article/VerderLezenRow";
@@ -93,11 +94,18 @@ export default async function StafPage({ params }: StaffPageProps) {
 
   if (!member) notFound();
 
+  // "Verder lezen." is a section, not the subject (#2433 rule 3), and its
+  // absence asserts nothing — the visitor was never promised a read-next row —
+  // so it auto-hides rather than announcing the failure (rule 4).
   const relatedArticles = await runPromise(
-    Effect.gen(function* () {
-      const repo = yield* ArticleRepository;
-      return yield* repo.findRelated(member.id);
-    }),
+    degradeSection(
+      Effect.gen(function* () {
+        const repo = yield* ArticleRepository;
+        return yield* repo.findRelated(member.id);
+      }),
+      [],
+      "[staf/[slug]] related-articles lookup failed; rendering without the Verder lezen row.",
+    ),
   );
 
   const fullName = `${member.firstName} ${member.lastName}`.trim() || "Staf";

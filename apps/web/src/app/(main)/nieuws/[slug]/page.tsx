@@ -236,7 +236,8 @@ export async function generateStaticParams() {
     // Exclude matchPreview/matchRecap from the prebuild set: their hero +
     // Doelpunten require a per-article PSD fetch, so prebuilding them would
     // hammer the rate-limited BFF at build time. They render on-demand via
-    // ISR instead (revalidate stays 3600). See #1470 / feedback_no_psd_prerendering.
+    // ISR instead, on the route `revalidate` at the bottom of this file.
+    // See #1470 / feedback_no_psd_prerendering.
     return articles
       .filter(
         (a) =>
@@ -626,17 +627,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   );
 }
 
-// 24h ISR — article publishes invalidate on demand via /api/revalidate
-// (revalidatePath '/nieuws/<slug>' + revalidateTag 'articles').
+// 15m ISR — article publishes invalidate on demand via /api/revalidate
+// (revalidatePath '/nieuws/<slug>' + revalidateTag 'articles'), so the window
+// is not what keeps the editorial content fresh.
 //
-// Cache-freshness audit (#2330): this is a webhook-fresh Sanity surface, so the
-// route keeps its 24h ISR window. Match articles (matchPreview/matchRecap) embed
-// live PSD chrome via getMatchDetail, but they are excluded from
-// generateStaticParams (see its filter) and render on demand via ISR. The route
-// `revalidate` is static, not per-article, so aligning the embedded match to the
-// BFF window would force the whole news corpus to revalidate every 15 min —
-// contradicting "Sanity content is webhook-fresh and unaffected". The chrome is
-// post-hoc enhancement (recap scores are final; any BFF failure degrades to no
-// chrome) and the acute live-match surfaces (homepage, team pages, calendar) are
-// handled separately, so this timer stays.
-export const revalidate = 86400;
+// It is what bounds a failure. Two BFF-fed sections render here — the linked
+// match card and the auto related row — and both degrade to nothing rather than
+// throwing (#2433 rule 3/4). A degraded render *succeeds*, so it is written into
+// the cache and repeated for the whole window: at 24h a one-second blip cost a
+// day of missing match chrome. #2433 rule 5 caps any route carrying a BFF-fed
+// section at 900s, which is the window the section reads' own freshness
+// (`/ploegen/[slug]`, `<MatchStrip>`) already runs at.
+//
+// This overturns the #2330 cache-freshness audit, which kept 24h on the grounds
+// that Sanity is webhook-fresh and the PSD chrome is post-hoc enhancement. Both
+// remain true; what the audit did not weigh is that a *failed* enhancement is
+// cached exactly as long as a successful one.
+export const revalidate = 900;

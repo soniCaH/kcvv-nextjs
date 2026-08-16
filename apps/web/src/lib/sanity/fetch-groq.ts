@@ -9,6 +9,16 @@ export interface GroqCacheOptions {
   tags?: string[];
 }
 
+/**
+ * Every Sanity read in the app goes through here, and every one of them ends in
+ * `Effect.orDie` — so a repository method is typed `Effect<A>` with `E = never`
+ * and a failed read arrives at the caller as a **defect**, not a typed error.
+ *
+ * Consequence worth knowing before writing a handler: `Effect.catchAll` on a
+ * repository read type-checks, reads like a guard, and never runs. Degrade a
+ * section with `degradeSection` (`lib/effect/degrade.ts`), which catches the
+ * cause; leave a subject read bare so it takes the page down (#2433 rule 2/3).
+ */
 export const fetchGroq = <T>(
   query: string,
   params?: Record<string, unknown>,
