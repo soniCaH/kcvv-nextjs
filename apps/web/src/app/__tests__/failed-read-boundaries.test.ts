@@ -109,10 +109,12 @@ describe("a failed subject takes the page down (#2563)", () => {
 });
 
 describe("a failed section keeps the page (#2563)", () => {
-  // `/jeugd` logs both caught reads; the assertion is that the page survives
-  // them, not that it stays quiet.
+  // Every degrade here logs — `degradeSection` warns with the cause, `/jeugd`'s
+  // two `try/catch` fetchers use `console.error`. The assertion is that the page
+  // survives, not that it stays quiet, so both channels are silenced.
   beforeEach(() => {
     vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
   afterEach(() => {
     vi.restoreAllMocks();
