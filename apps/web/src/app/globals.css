@@ -233,22 +233,6 @@
   mix-blend-mode: multiply;
 }
 
-/* Fade In Animation (for result cards, modals, etc.) */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
-}
-
 /* Tailwind v4 Theme Configuration */
 @theme {
   /* ===== Color Palette ===== */
@@ -996,25 +980,6 @@
     var(--color-jersey) 10%,
     transparent
   );
-}
-
-/* ===== Carousel Progress Indicator ===== */
-@keyframes carousel-progress {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .carousel-progress-fill {
-    transform-origin: left center;
-    animation-name: carousel-progress;
-    animation-timing-function: linear;
-    animation-fill-mode: forwards;
-  }
 }
 
 /* ===== Smooth in-page anchor scrolling ===== */
