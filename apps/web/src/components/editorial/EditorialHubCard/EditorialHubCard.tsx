@@ -79,6 +79,9 @@ export function EditorialHubCard({
       data-article-id-hashed={articleIdHashed}
       className={cn(
         "group border-ink shadow-paper-sm bg-cream-soft flex h-full flex-col overflow-hidden border-2",
+        // Not a <TapedCard>, so it reads the slot angle a <TapedCardGrid> sets
+        // directly; `0deg` outside a grid keeps a standalone card flat (#2569).
+        "rotate-[var(--taped-card-rotation,0deg)]",
         // Canonical press-down on hover AND keyboard focus (parity with
         // <SponsorTile>): the card shifts into its shadow on both. The hover
         // translate is motion-safe-gated via PRESS_DOWN_CLASSES; the

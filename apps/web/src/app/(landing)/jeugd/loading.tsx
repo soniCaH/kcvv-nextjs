@@ -22,7 +22,7 @@ export default function JeugdLoading() {
         </div>
 
         {/* Editorial nav grid */}
-        <div className="mt-16 grid grid-cols-1 gap-5 motion-safe:animate-pulse md:grid-cols-3">
+        <div className="mt-16 grid grid-cols-1 gap-3 motion-safe:animate-pulse sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="bg-paper-edge aspect-[16/9]" />
           ))}

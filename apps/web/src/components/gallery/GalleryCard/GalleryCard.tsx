@@ -1,7 +1,6 @@
 import {
   NewsCard,
   type NewsCardBg,
-  type NewsCardRotation,
 } from "@/components/article/NewsCard/NewsCard";
 
 /** Dutch photo count — "1 foto" / "12 foto's". */
@@ -20,7 +19,6 @@ export interface GalleryCardProps {
   imageCount: number;
   /** Pre-formatted Dutch date (e.g. "15 januari 2025"). */
   date?: string;
-  rotation?: NewsCardRotation;
   bg?: NewsCardBg;
   as?: "h2" | "h3";
   className?: string;
@@ -39,7 +37,6 @@ export const GalleryCard = ({
   coverLqip,
   imageCount,
   date,
-  rotation = "none",
   bg = "cream",
   as = "h3",
   className,
@@ -52,7 +49,6 @@ export const GalleryCard = ({
     badge={formatImageCount(imageCount)}
     date={date}
     cta="Bekijk de foto's"
-    rotation={rotation}
     bg={bg}
     as={as}
     className={className}

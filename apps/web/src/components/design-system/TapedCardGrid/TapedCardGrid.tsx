@@ -2,7 +2,20 @@ import { Children, type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
 export type TapedCardGridColumns = 1 | 2 | 3 | 4;
+
+/**
+ * Gutter width. **The gutter follows the card, not the route** (#2569 /
+ * decision #2431):
+ *
+ * - `sm` — a door into a section (`<EditorialHubCard>`): no tape, so the cards
+ *   sit dense.
+ * - `md` — a dated artefact (`<NewsCard>`, `<GalleryCard>`): a `TapeStrip` sits
+ *   at `top-0` with `translateY(-50%)` and overhangs the card edge, so the card
+ *   needs air.
+ * - `lg` — reserved for grids of full editorial blocks.
+ */
 export type TapedCardGridGap = "sm" | "md" | "lg";
+
 export type TapedCardGridAs = "div" | "ol" | "ul";
 
 export interface TapedCardGridProps {
@@ -53,6 +66,24 @@ const TAPE_LEFT_POOL = ["4%", "7%", "10%", "12%"] as const;
 
 type StyleWithVars = CSSProperties & Record<`--${string}`, string | number>;
 
+/**
+ * The shared card grid. Every card grid on the site is one of these — a
+ * hand-rolled `grid-cols-*` ladder beside a card is the drift this primitive
+ * exists to remove (#2569 / decision #2431).
+ *
+ * **The slot contract.** Each child is wrapped in a slot element carrying three
+ * CSS variables, and a child opts in by reading them:
+ *
+ * - `--taped-card-rotation` — the card's own angle. `<TapedCard rotation="auto">`
+ *   reads it (so `<NewsCard>` does, by default); a card that is not a
+ *   `<TapedCard>` reads it directly, as `<EditorialHubCard>` does with
+ *   `rotate-[var(--taped-card-rotation,0deg)]`.
+ * - `--tape-rotation` / `--tape-left` — the tape strip's angle and inset,
+ *   read by `<TapeStrip>` unless the card passes its own pick.
+ *
+ * Every variable falls back to a flat, centred default, so a card outside a
+ * grid renders exactly as it did before.
+ */
 export function TapedCardGrid({
   columns = 3,
   gap = "md",

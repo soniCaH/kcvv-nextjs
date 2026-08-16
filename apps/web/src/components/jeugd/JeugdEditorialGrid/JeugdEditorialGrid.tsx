@@ -3,7 +3,7 @@ import {
   NavGlyph,
   type NavGlyphName,
 } from "@/components/editorial/NavGlyph/NavGlyph";
-import { SectionKicker } from "@/components/design-system";
+import { SectionKicker, TapedCardGrid } from "@/components/design-system";
 import { hashMemberId } from "@/lib/analytics/hash-member-id";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
 import type { EditorialCardConfig } from "@/lib/repositories/jeugd-landing-page.repository";
@@ -75,11 +75,6 @@ const NAV_CARDS: NavCardConfig[] = [
  */
 const DEFAULT_NAV_GLYPH: NavGlyphName = "House";
 
-type GridItem = {
-  key: string;
-  element: React.ReactNode;
-};
-
 function assertNever(value: never): never {
   throw new Error(`Unhandled editorialCards.cardType: ${String(value)}`);
 }
@@ -87,6 +82,7 @@ function assertNever(value: never): never {
 function renderNavCard(nav: NavCardConfig): React.ReactNode {
   return (
     <EditorialHubCard
+      key={`nav-${nav.tag.toLowerCase()}`}
       variant="nav"
       href={nav.href}
       tag={nav.tag}
@@ -100,6 +96,7 @@ function renderNavCard(nav: NavCardConfig): React.ReactNode {
 function renderArticleCard(article: ArticleVM): React.ReactNode {
   return (
     <EditorialHubCard
+      key={`article-${article.id}`}
       variant="news"
       href={`/nieuws/${article.slug}`}
       // News/article cards carry their own tag (7j3 data audit): the article's
@@ -120,8 +117,8 @@ function renderArticleCard(article: ArticleVM): React.ReactNode {
 function buildItemsFromConfig(
   config: EditorialCardConfig[],
   articles: ArticleVM[],
-): GridItem[] {
-  const items: GridItem[] = [];
+): React.ReactNode[] {
+  const items: React.ReactNode[] = [];
   let articleIdx = 0;
 
   for (let i = 0; i < config.length; i++) {
@@ -131,27 +128,22 @@ function buildItemsFromConfig(
       // Article slots bubble: fill with the latest Jeugd articles in order.
       const article = articles[articleIdx++];
       if (!article) continue;
-      items.push({
-        key: `article-${article.id}`,
-        element: renderArticleCard(article),
-      });
+      items.push(renderArticleCard(article));
     } else if (entry.cardType === "nav") {
       // Nav card — skip if required fields are missing.
       if (!entry.title || !entry.href) continue;
-      items.push({
-        key: `nav-sanity-${i}`,
-        element: (
-          <EditorialHubCard
-            variant="nav"
-            href={entry.href}
-            // Sanity nav cards: CMS `tag` when set, else an empty pill (7j3).
-            tag={entry.tag ?? ""}
-            title={entry.title}
-            arrowText={entry.arrowText ?? "Ontdek"}
-            icon={<NavGlyph name={DEFAULT_NAV_GLYPH} />}
-          />
-        ),
-      });
+      items.push(
+        <EditorialHubCard
+          key={`nav-sanity-${i}`}
+          variant="nav"
+          href={entry.href}
+          // Sanity nav cards: CMS `tag` when set, else an empty pill (7j3).
+          tag={entry.tag ?? ""}
+          title={entry.title}
+          arrowText={entry.arrowText ?? "Ontdek"}
+          icon={<NavGlyph name={DEFAULT_NAV_GLYPH} />}
+        />,
+      );
     } else {
       // Exhaustiveness guard — fails loudly if `cardType` gains a value the
       // render doesn't handle (schema drift).
@@ -162,45 +154,26 @@ function buildItemsFromConfig(
   return items;
 }
 
-function buildItemsFromHardcoded(articles: ArticleVM[]): GridItem[] {
+function buildItemsFromHardcoded(articles: ArticleVM[]): React.ReactNode[] {
   const [article0, article1, article2] = articles;
 
   // No articles: the hub collapses to the pinned nav cards only.
-  if (!article0) {
-    return NAV_CARDS.map((nav) => ({
-      key: `nav-${nav.tag.toLowerCase()}`,
-      element: renderNavCard(nav),
-    }));
-  }
+  if (!article0) return NAV_CARDS.map(renderNavCard);
 
   // Fixed template: articles bubble into slots 1 · 3 · 5; nav cards pinned.
-  const items: GridItem[] = [
-    { key: `article-${article0.id}`, element: renderArticleCard(article0) },
-    { key: "nav-aansluiten", element: renderNavCard(NAV_CARDS[0]) },
+  const items: React.ReactNode[] = [
+    renderArticleCard(article0),
+    renderNavCard(NAV_CARDS[0]),
   ];
 
-  if (article1) {
-    items.push({
-      key: `article-${article1.id}`,
-      element: renderArticleCard(article1),
-    });
-  }
-  items.push({ key: "nav-visie", element: renderNavCard(NAV_CARDS[1]) });
+  if (article1) items.push(renderArticleCard(article1));
+  items.push(renderNavCard(NAV_CARDS[1]));
 
-  if (article2) {
-    items.push({
-      key: `article-${article2.id}`,
-      element: renderArticleCard(article2),
-    });
-  }
-  items.push({ key: "nav-praktisch", element: renderNavCard(NAV_CARDS[2]) });
+  if (article2) items.push(renderArticleCard(article2));
+  items.push(renderNavCard(NAV_CARDS[2]));
 
   for (let i = 3; i < NAV_CARDS.length; i++) {
-    const nav = NAV_CARDS[i];
-    items.push({
-      key: `nav-${nav.tag.toLowerCase()}`,
-      element: renderNavCard(nav),
-    });
+    items.push(renderNavCard(NAV_CARDS[i]));
   }
 
   return items;
@@ -235,16 +208,9 @@ export function JeugdEditorialGrid({
   return (
     <div>
       <SectionKicker className="mb-8">Ontdek onze jeugd</SectionKicker>
-      <div
-        data-testid="jeugd-editorial-grid"
-        className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3"
-      >
-        {items.map((item) => (
-          <div key={item.key} className="h-full">
-            {item.element}
-          </div>
-        ))}
-      </div>
+      <TapedCardGrid columns={3} gap="sm">
+        {items}
+      </TapedCardGrid>
     </div>
   );
 }

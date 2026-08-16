@@ -1,14 +1,17 @@
 /**
  * News Listing Page — Loading Skeleton.
  *
- * Mirrors `NewsListingClient`: a sticky dark category-filter bar over a uniform
- * 3-up "Uitgelicht" featured grid (the old 2fr|1fr split was retired in #2027)
- * and a 3-column chronological listing grid. Index width (1280). Cards use the
+ * Mirrors `NewsListingClient`: a sticky dark category-filter bar over one
+ * chronological 1 → 2 → 3 listing grid. Index width (1280). Cards use the
  * canonical paper-register chrome (`border-2 border-ink`, square corners,
  * offset `shadow-paper-sm`, `cream-soft`/`paper-edge` fills).
+ *
+ * The "Uitgelicht" featured row #2432 wrote this skeleton against is gone —
+ * #2569 deleted it from the page, so shimmering it here would announce a shape
+ * that never arrives.
  */
 
-import { PageContainer } from "@/components/design-system";
+import { PageContainer, TapedCardGrid } from "@/components/design-system";
 import { PageHeroSkeleton } from "@/components/layout/PageHero";
 
 /** A flush-image card footprint — image atop a border-2 ink body. */
@@ -56,22 +59,17 @@ export default function NewsLoading() {
       </div>
 
       <PageContainer width="index" className="py-6">
-        {/* Uitgelicht — uniform 3-up featured grid. */}
-        <section className="mb-10">
-          <div className="bg-paper-edge mb-6 h-9 w-48 motion-safe:animate-pulse" />
-          <div className="grid grid-cols-1 gap-6 motion-safe:animate-pulse md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <NewsCardSkeleton key={i} />
-            ))}
-          </div>
-        </section>
-
-        {/* Chronological listing — 3-column grid. */}
-        <section className="mb-6 grid grid-cols-1 gap-6 motion-safe:animate-pulse md:grid-cols-2 lg:grid-cols-3">
+        {/* Chronological listing — the same primitive the page renders, so the
+            ladder and gutter cannot drift out of the loading state. */}
+        <TapedCardGrid
+          columns={3}
+          gap="md"
+          className="mb-6 motion-safe:animate-pulse"
+        >
           {Array.from({ length: 6 }).map((_, i) => (
             <NewsCardSkeleton key={i} />
           ))}
-        </section>
+        </TapedCardGrid>
       </PageContainer>
     </div>
   );

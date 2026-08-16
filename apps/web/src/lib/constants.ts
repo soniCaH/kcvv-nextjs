@@ -41,6 +41,16 @@ export const DEFAULT_OG_IMAGE = {
  */
 export const KCVV_CLUB_ID = 1235;
 
+/**
+ * The one listing pagination contract (#2569 / decision #2431). A listing gets
+ * a load-more only when its collection has no natural ceiling — `/nieuws` and
+ * `/galerij` are the two — and both paint `LISTING_INITIAL_TOTAL` cards, then
+ * append `LISTING_BATCH_SIZE` per click. Shared so the site never grows a
+ * second pagination idiom.
+ */
+export const LISTING_INITIAL_TOTAL = 24;
+export const LISTING_BATCH_SIZE = 12;
+
 // External Links
 export const EXTERNAL_LINKS = {
   /** Brandsfit-hosted club kledij shop. Renamed from `webshop` in

@@ -6,14 +6,19 @@ import {
   ArticleRepository,
   type ArticleVM,
 } from "@/lib/repositories/article.repository";
-import { paginateResults, type PaginatedArticles } from "./utils";
+import {
+  clampListingWindow,
+  paginateResults,
+  type Paginated,
+} from "@/lib/utils/pagination";
 
 export async function fetchArticlesAction(params: {
   offset: number;
   limit: number;
   category?: string;
-}): Promise<PaginatedArticles> {
-  const { offset, limit, category } = params;
+}): Promise<Paginated<ArticleVM>> {
+  // `"use server"` makes this a public endpoint — clamp before GROQ.
+  const { offset, limit } = clampListingWindow(params);
 
   const articles = await runPromise(
     Effect.gen(function* () {
@@ -21,7 +26,7 @@ export async function fetchArticlesAction(params: {
       return yield* repo.findPaginated({
         offset,
         limit: limit + 1,
-        category,
+        category: params.category,
       });
     }).pipe(
       Effect.catchAll((error) => {

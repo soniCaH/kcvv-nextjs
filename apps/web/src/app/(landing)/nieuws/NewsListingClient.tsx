@@ -4,15 +4,14 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
 import { NewsCard, CategoryFilters } from "@/components/article";
 import {
-  Button,
-  EditorialHeading,
+  LoadMoreFooter,
   PageContainer,
+  TapedCardGrid,
 } from "@/components/design-system";
 import { formatArticleDate } from "@/lib/utils/dates";
 import { articleTypeCardLabel } from "@/lib/utils/article-type-label";
-import type { PaginatedArticles } from "./utils";
-import { deduplicateById } from "./utils";
-import { BATCH_SIZE, INITIAL_TOTAL } from "./constants";
+import { LISTING_BATCH_SIZE, LISTING_INITIAL_TOTAL } from "@/lib/constants";
+import { deduplicateById, type Paginated } from "@/lib/utils/pagination";
 
 interface Category {
   id: string;
@@ -20,7 +19,6 @@ interface Category {
 }
 
 interface NewsListingClientProps {
-  featuredArticles: ArticleVM[];
   initialArticles: ArticleVM[];
   categories: Category[];
   hasMore: boolean;
@@ -29,11 +27,10 @@ interface NewsListingClientProps {
     offset: number;
     limit: number;
     category?: string;
-  }) => Promise<PaginatedArticles>;
+  }) => Promise<Paginated<ArticleVM>>;
 }
 
 export function NewsListingClient({
-  featuredArticles: initialFeatured,
   initialArticles,
   categories,
   hasMore: initialHasMore,
@@ -43,7 +40,6 @@ export function NewsListingClient({
   const [activeCategory, setActiveCategory] = useState(
     initialCategory ?? "all",
   );
-  const [featuredArticles, setFeaturedArticles] = useState(initialFeatured);
   const [gridArticles, setGridArticles] = useState(initialArticles);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,14 +49,9 @@ export function NewsListingClient({
   } | null>(null);
   const categoryRequestId = useRef(0);
   const isLoadingRef = useRef(false);
-  const featuredIdsRef = useRef(new Set(initialFeatured.map((a) => a.id)));
-  const nextOffsetRef = useRef(initialFeatured.length + initialArticles.length);
+  const nextOffsetRef = useRef(initialArticles.length);
   const loadMoreRef = useRef<() => void>(() => {});
   const handleCategoryChangeRef = useRef<(category: string) => void>(() => {});
-
-  useEffect(() => {
-    featuredIdsRef.current = new Set(featuredArticles.map((a) => a.id));
-  }, [featuredArticles]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || isLoadingRef.current) return;
@@ -75,7 +66,7 @@ export function NewsListingClient({
 
       const result = await fetchArticles({
         offset,
-        limit: BATCH_SIZE,
+        limit: LISTING_BATCH_SIZE,
         category,
       });
 
@@ -83,13 +74,10 @@ export function NewsListingClient({
       if (requestId !== categoryRequestId.current) return;
 
       setGridArticles((prev) => {
-        const existingIds = new Set([
-          ...featuredIdsRef.current,
-          ...prev.map((a) => a.id),
-        ]);
-        return [...prev, ...deduplicateById(result.articles, existingIds)];
+        const existingIds = new Set(prev.map((a) => a.id));
+        return [...prev, ...deduplicateById(result.items, existingIds)];
       });
-      nextOffsetRef.current += result.articles.length;
+      nextOffsetRef.current += result.items.length;
       setHasMore(result.hasMore);
     } catch (err) {
       if (requestId !== categoryRequestId.current) return;
@@ -124,20 +112,15 @@ export function NewsListingClient({
       try {
         const result = await fetchArticles({
           offset: 0,
-          limit: INITIAL_TOTAL,
+          limit: LISTING_INITIAL_TOTAL,
           category: categoryFilter,
         });
 
         // Ignore stale responses from superseded category switches
         if (requestId !== categoryRequestId.current) return;
 
-        const uniqueArticles = deduplicateById(result.articles, new Set());
-        const featured = uniqueArticles.slice(0, 3);
-        const grid = uniqueArticles.slice(3);
-
-        setFeaturedArticles(featured);
-        setGridArticles(grid);
-        nextOffsetRef.current = result.articles.length;
+        setGridArticles(deduplicateById(result.items, new Set()));
+        nextOffsetRef.current = result.items.length;
         setHasMore(result.hasMore);
 
         // Update URL and scroll only after successful fetch
@@ -171,32 +154,7 @@ export function NewsListingClient({
     handleCategoryChangeRef.current = handleCategoryChange;
   }, [loadMore, handleCategoryChange]);
 
-  const renderCard = (article: ArticleVM, variant: "featured" | "standard") => (
-    <NewsCard
-      key={article.id}
-      variant={variant}
-      title={article.title}
-      href={`/nieuws/${article.slug}`}
-      imageUrl={article.coverImageUrl ?? undefined}
-      badge={article.tags[0] ?? undefined}
-      typeLabel={articleTypeCardLabel(article.articleType)}
-      // Featured row uses the medium `md` tape (mirroring
-      // <FeaturedUitgelichtRow>) so the corner strip doesn't dominate the
-      // photo at 1/3-width; standard grid cards keep their `md` default.
-      tapeLength={variant === "featured" ? "md" : undefined}
-      // Lead/dek only on the featured row — keeps the chronological grid
-      // compact while the Uitgelicht cards carry a one-line summary (#2027).
-      dek={variant === "featured" ? article.lead || undefined : undefined}
-      date={
-        article.publishedAt
-          ? formatArticleDate(new Date(article.publishedAt))
-          : undefined
-      }
-    />
-  );
-
-  const isEmpty =
-    featuredArticles.length === 0 && gridArticles.length === 0 && !isLoading;
+  const isEmpty = gridArticles.length === 0 && !isLoading;
 
   return (
     <div className="w-full">
@@ -215,54 +173,30 @@ export function NewsListingClient({
       </div>
 
       <PageContainer width="index" className="py-6">
-        {/* Featured row — symmetrical 3-up of equal 16:9 featured cards,
-            mirroring the homepage <FeaturedUitgelichtRow> treatment (#2027).
-            Every card holds its locked 16:9 aspect; no height-matching (the
-            old 2fr|1fr split forced `flex-1 aspect-auto` on the right stack
-            and distorted the cards). */}
-        {featuredArticles.length > 0 && (
-          <section className="mb-10">
-            <EditorialHeading
-              level={2}
-              size="display-md"
-              tone="ink"
-              emphasis={{ text: "gelicht" }}
-              className="mb-6"
-            >
-              {/* EditorialHeading appends the trailing period; renders
-                  "Uitgelicht." with italic emphasis on "gelicht". */}
-              Uitgelicht
-            </EditorialHeading>
-            <ul className="grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-3">
-              {featuredArticles.slice(0, 3).map((article) => (
-                <li key={article.id} className="h-full">
-                  {renderCard(article, "featured")}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Grid of standard cards */}
-        {gridArticles.length > 0 && (
-          <section className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {gridArticles.map((article) => renderCard(article, "standard"))}
-          </section>
-        )}
-
-        {/* Error state with retry */}
-        {error && (
-          <div className="py-4 text-center">
-            <p className="mb-2 text-red-400">{error.message}</p>
-            <button
-              type="button"
-              className="text-jersey-deep text-sm underline hover:no-underline"
-              onClick={error.retry}
-            >
-              Opnieuw proberen
-            </button>
-          </div>
-        )}
+        {/* One chronological grid — an archive is chronological. The
+            "Uitgelicht." row this page used to open with was
+            `articles.slice(0, 3)` relabelled, so nothing curated it and the
+            same three headed the grid anyway; `Uitgelicht` survives on the
+            homepage, where it is editorially chosen (#2569 / decision #2431). */}
+        {/* The grid renders nothing of its own when the list is empty, so the
+            empty state below is the only branch this page needs. */}
+        <TapedCardGrid columns={3} gap="md" className="mb-6">
+          {gridArticles.map((article) => (
+            <NewsCard
+              key={article.id}
+              title={article.title}
+              href={`/nieuws/${article.slug}`}
+              imageUrl={article.coverImageUrl ?? undefined}
+              badge={article.tags[0] ?? undefined}
+              typeLabel={articleTypeCardLabel(article.articleType)}
+              date={
+                article.publishedAt
+                  ? formatArticleDate(new Date(article.publishedAt))
+                  : undefined
+              }
+            />
+          ))}
+        </TapedCardGrid>
 
         {/* Empty state */}
         {isEmpty && !error && (
@@ -271,24 +205,16 @@ export function NewsListingClient({
           </p>
         )}
 
-        {/* Loading indicator — shown while a load-more or category switch
-            is in flight. */}
-        {isLoading && (
-          <div className="flex justify-center py-8" role="status">
-            <div className="border-jersey-deep h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-            <span className="sr-only">Laden...</span>
-          </div>
-        )}
-
-        {/* Load-more button (NEWS-1, #2237) — replaces the old infinite
-            scroll. Appends BATCH_SIZE more articles per click. */}
-        {hasMore && !isLoading && !error && (
-          <div className="flex justify-center pt-2 pb-4">
-            <Button variant="secondary" size="md" onClick={loadMore}>
-              Meer nieuws laden
-            </Button>
-          </div>
-        )}
+        {/* Error retry · in-flight spinner · load-more (NEWS-1, #2237 —
+            replaces the old infinite scroll). Appends LISTING_BATCH_SIZE
+            more articles per click. */}
+        <LoadMoreFooter
+          label="Meer nieuws laden"
+          hasMore={hasMore}
+          isLoading={isLoading}
+          error={error?.message}
+          onLoadMore={error ? error.retry : loadMore}
+        />
       </PageContainer>
     </div>
   );

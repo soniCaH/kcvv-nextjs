@@ -1,30 +1,36 @@
-import type { NewsCardRotation } from "@/components/article/NewsCard/NewsCard";
 import type { GalleryCardVM } from "@/lib/repositories/photoGallery.repository";
-import { formatArticleDate } from "@/lib/utils/dates";
+import { TapedCardGrid } from "@/components/design-system";
 import { GalleryCard } from "../GalleryCard/GalleryCard";
 
-// Deterministic per-slot card rotation so the grid reads with paper-stamp
-// variety without a random seed (stable across renders / VR baselines).
-const ROTATION_POOL: readonly NewsCardRotation[] = ["a", "b", "c", "none"];
+export interface GalleryCardGridItem extends GalleryCardVM {
+  /**
+   * Pre-formatted Dutch date. Formatted by the server (see
+   * `toGalleryCardGridItems`) so the grid never drags Luxon into the client
+   * bundle when `<GalleryListingClient>` renders it.
+   */
+  date?: string;
+}
 
 export interface GalleryCardGridProps {
-  galleries: GalleryCardVM[];
+  galleries: GalleryCardGridItem[];
   /** Heading level for each card's title. Default `h3`. */
   as?: "h2" | "h3";
 }
 
 /**
- * Responsive 3-up grid of `<GalleryCard>`. Adapts the repository VM (formats
- * the date, derives the link + a slot-cycled rotation) so callers — the
- * `/galerij` list and the match/event detail sections — pass the raw query
- * result straight through.
+ * `<TapedCardGrid>` of `<GalleryCard>`s. Used by the `/galerij` list and the
+ * match/event detail sections.
+ *
+ * The grid owns the per-slot rotation (#2569): the local `ROTATION_POOL` this
+ * component used to cycle by hand was the drift `<TapedCardGrid>` exists to
+ * remove, and a dated artefact takes the `md` gutter its tape needs.
  */
 export const GalleryCardGrid = ({
   galleries,
   as = "h3",
 }: GalleryCardGridProps) => (
-  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    {galleries.map((gallery, i) => (
+  <TapedCardGrid columns={3} gap="md">
+    {galleries.map((gallery) => (
       <GalleryCard
         key={gallery.id}
         title={gallery.title}
@@ -32,14 +38,9 @@ export const GalleryCardGrid = ({
         coverUrl={gallery.coverUrl}
         coverLqip={gallery.coverLqip}
         imageCount={gallery.imageCount}
-        date={
-          gallery.publishedAt
-            ? formatArticleDate(gallery.publishedAt)
-            : undefined
-        }
-        rotation={ROTATION_POOL[i % ROTATION_POOL.length]}
+        date={gallery.date}
         as={as}
       />
     ))}
-  </div>
+  </TapedCardGrid>
 );

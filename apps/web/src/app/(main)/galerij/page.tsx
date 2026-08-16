@@ -1,24 +1,23 @@
 /**
  * Photo gallery list page (`/galerij`).
  *
- * Renders every published `photoGallery` (newest first) as retro-terrace
+ * Renders published `photoGallery` documents (newest first) as retro-terrace
  * `<GalleryCard>`s — cover in colour newsprint, photo count, title and date.
+ * Paints 24 and appends 12 per click: galleries never drop off, so this is the
+ * one listing besides `/nieuws` whose payload grows without a bound (#2569).
  * Galleries change rarely, so the page uses a long (24h) ISR revalidate;
  * publishing a gallery revalidates it immediately once the #1921 Scope E
  * webhook map lands (see PR notes).
  */
 
-import { Effect } from "effect";
-
-import { SITE_CONFIG } from "@/lib/constants";
-import { runPromise } from "@/lib/effect/runtime";
-import { PhotoGalleryRepository } from "@/lib/repositories/photoGallery.repository";
+import { LISTING_INITIAL_TOTAL, SITE_CONFIG } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { PageContainer } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
-import { GalleryCardGrid } from "@/components/gallery/GalleryCardGrid/GalleryCardGrid";
+import { fetchGalleriesAction } from "./actions";
+import { GalleryListingClient } from "./GalleryListingClient";
 
 export const metadata = buildPageMetadata({
   title: "Fotogalerij",
@@ -34,12 +33,10 @@ export const metadata = buildPageMetadata({
 export const revalidate = 86400;
 
 export default async function GalerijPage() {
-  const galleries = await runPromise(
-    Effect.gen(function* () {
-      const repo = yield* PhotoGalleryRepository;
-      return yield* repo.findAll();
-    }),
-  );
+  const initial = await fetchGalleriesAction({
+    offset: 0,
+    limit: LISTING_INITIAL_TOTAL,
+  });
 
   return (
     <div className="bg-cream flex min-h-screen flex-col">
@@ -57,12 +54,16 @@ export default async function GalerijPage() {
           kicker="KCVV Elewijt · Beelden"
           headline="Fotogalerij"
         />
-        {galleries.length === 0 ? (
+        {initial.items.length === 0 ? (
           <p className="text-body-md text-ink-soft">
             Er zijn nog geen fotogalerijen gepubliceerd.
           </p>
         ) : (
-          <GalleryCardGrid galleries={galleries} as="h2" />
+          <GalleryListingClient
+            initialGalleries={initial.items}
+            hasMore={initial.hasMore}
+            fetchGalleries={fetchGalleriesAction}
+          />
         )}
       </PageContainer>
     </div>

@@ -145,11 +145,14 @@ describe("JeugdEditorialGrid", () => {
     expect(screen.getByText("Bovenbouw")).toBeInTheDocument();
   });
 
-  it("renders a uniform responsive grid (not the legacy 12-col layout)", () => {
-    render(<JeugdEditorialGrid articles={[]} />);
+  it("renders the shared 3-up grid at the dense hub gutter (#2569)", () => {
+    const { container } = render(<JeugdEditorialGrid articles={[]} />);
 
-    const grid = screen.getByTestId("jeugd-editorial-grid");
-    expect(grid.className).toContain("lg:grid-cols-3");
+    // `data-columns`/`data-gap` are `<TapedCardGrid>`'s published hooks; the
+    // breakpoint strings behind them are the primitive's own business.
+    const grid = container.querySelector("[data-columns]")!;
+    expect(grid.getAttribute("data-columns")).toBe("3");
+    expect(grid.getAttribute("data-gap")).toBe("sm");
     expect(grid.className).not.toContain("grid-cols-12");
   });
 

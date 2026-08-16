@@ -3,7 +3,7 @@ import {
   NavGlyph,
   type NavGlyphName,
 } from "@/components/editorial/NavGlyph/NavGlyph";
-import { EditorialHeading } from "@/components/design-system";
+import { EditorialHeading, TapedCardGrid } from "@/components/design-system";
 import { HISTORY_24_25_CARD, ULTRAS_HEADER_CARD } from "@/lib/sanity/images";
 
 interface ClubHubNewsCard {
@@ -175,28 +175,24 @@ export function ClubEditorialHub({
       >
         Dit is KCVV
       </EditorialHeading>
-      <div
-        data-testid="club-editorial-hub"
-        className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3"
-      >
+      <TapedCardGrid columns={3} gap="sm">
         {cards.map((card) => (
-          <div key={card.href} className="h-full">
-            <EditorialHubCard
-              variant={card.variant}
-              href={card.href}
-              tag={card.tag}
-              title={card.title}
-              arrowText={card.arrowText}
-              imageUrl={card.variant === "news" ? card.imageUrl : undefined}
-              icon={
-                card.variant === "nav" ? (
-                  <NavGlyph name={card.iconName} />
-                ) : undefined
-              }
-            />
-          </div>
+          <EditorialHubCard
+            key={card.href}
+            variant={card.variant}
+            href={card.href}
+            tag={card.tag}
+            title={card.title}
+            arrowText={card.arrowText}
+            imageUrl={card.variant === "news" ? card.imageUrl : undefined}
+            icon={
+              card.variant === "nav" ? (
+                <NavGlyph name={card.iconName} />
+              ) : undefined
+            }
+          />
         ))}
-      </div>
+      </TapedCardGrid>
     </div>
   );
 }
