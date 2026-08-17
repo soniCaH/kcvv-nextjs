@@ -6,6 +6,7 @@ import {
   EditorialHeading,
   DashedDivider,
   Crest,
+  EmptyState,
 } from "@/components/design-system";
 import { getResultColor, isPlayedMatch } from "@/lib/utils/match-display";
 import { EventTypeTag, MatchVenueTag } from "../calendar-tags";
@@ -127,12 +128,16 @@ type AgendaItem =
 
 function mergeDayItems(group: AgendaDayGroup): AgendaItem[] {
   const items: AgendaItem[] = [
-    ...group.matches.map(
-      (match): AgendaItem => ({ kind: "match", iso: match.date, match }),
-    ),
-    ...group.events.map(
-      (event): AgendaItem => ({ kind: "event", iso: event.dateStart, event }),
-    ),
+    ...group.matches.map((match): AgendaItem => ({
+      kind: "match",
+      iso: match.date,
+      match,
+    })),
+    ...group.events.map((event): AgendaItem => ({
+      kind: "event",
+      iso: event.dateStart,
+      event,
+    })),
   ];
   return items.sort((a, b) => a.iso.localeCompare(b.iso));
 }
@@ -204,12 +209,15 @@ export function CalendarAgenda({
       <div className="border-ink mt-1 mb-2 border-t-2" />
 
       {groups.length === 0 ? (
-        <p
-          role="status"
-          className="text-ink-muted py-8 text-center font-mono text-sm"
+        // "Nog geen", not "Geen": a match or event can still be scheduled
+        // for the rest of this month (#2427).
+        <EmptyState
+          tier="surface"
+          heading="Nog geen wedstrijden of evenementen deze maand"
+          live
         >
-          Geen wedstrijden of evenementen deze maand.
-        </p>
+          Zodra er iets wordt ingepland voor deze maand, verschijnt het hier.
+        </EmptyState>
       ) : (
         <div className="space-y-5">
           {groups.map((group) => (
