@@ -103,6 +103,18 @@ A youth season is split in two by the winter break, and **the second half is fre
 
 **Consequences:** a team can hold more than one ranking table in a single season, so a table is identified by PSD `competition_id`, never by its name or its position in the array. Phases are named `Najaar` and `Voorjaar`, and only when the fixtures prove the ordering — see #2589. PSD exposes no phase field; the association's own convention encodes it in the reeks _code_ (`G15BS` → a `2` appears in the second phase), which is not a contract and is not parsed.
 
+### Season
+
+Which football year it currently is (e.g. "25/26"). **Not a datum any document stores.** Every season label the site renders is derived client-side from a date the surface already holds, never read from a stored "current season" field:
+
+| surface                                          | derives from         |
+| ------------------------------------------------ | -------------------- |
+| `MatchHero.formatSeasonLabel(date)`              | the match's own date |
+| `groupBySeason()` (`lib/utils/season.ts`)        | each match's date    |
+| `/scheurkalender` `seasonLabel(matches[0].date)` | the first fixture    |
+
+**Removed:** `team` used to carry a `season` field (`readOnly`, "gesynchroniseerd vanuit PSD"). It never had a writer — absent from `PsdTeam`, never written by `psd-sanity-sync.ts` — so it went dark on all 26 production documents and stayed that way through an entire redesign. Deleted in #2567 along with the four UI slots that read it (a `TeamHero` meta pill, a decorative `TeamHero` stub, and two `TeamFlagship` cards on `/ploegen`), none of which moved a pixel when it went. If a future feature needs "what season is it right now" as a genuine input (not derived from a date already in hand), it needs a real writer — PSD's own `/seasons` endpoint is an internal id-resolver, not a display source — before the field comes back. See **The Writer Rule** in `apps/web/CLAUDE.md` for the general principle this follows.
+
 ---
 
 ## Team & Squad
@@ -127,7 +139,7 @@ A KCVV team registered with the club and (usually) with the football federation.
 - `division` / `divisionFull` — The club's own name for the team's [Reeks](#reeks): short code and long form (`3 VV A` / `3e Nationale VV A`). Measured in production 2026-08-13: set on **exactly the 3 senior docs**, null on all 16 youth. Not a team-variant label — a "U9 - Wit" style distinction lives in the team's own name.
 - `showInNavigation` — Single visibility flag: controls nav, team listings, **and** match widget inclusion
 
-**Removed fields:** `league`, `leagueId` — dead fields, never synced, never rendered.
+**Removed fields:** `league`, `leagueId` — dead fields, never synced, never rendered. `season` — never had a writer; see [Season](#season) (#2567).
 
 ### Team Display Name
 
@@ -223,7 +235,9 @@ A player's playing position. Determined by fallback hierarchy:
 1. `keeper === true` → **Keeper**
 2. `position` (editorial, manual) → one of the enum values
 3. `positionPsd` (from PSD `bestPosition`) → free text
-4. Fallback → **Speler**
+4. Neither set → **absent**, not defaulted
+
+No generic literal (formerly `"Speler"`) fills an unset position — see **The Writer Rule** in `apps/web/CLAUDE.md`. Consumers (`PlayerHero`'s meta row, `PlayerCard`'s label, `SquadGrid`'s catch-all group) all render an unset position as absent, distinguishable from an authored one (#2567).
 
 | Code                | Dutch        |
 | ------------------- | ------------ |

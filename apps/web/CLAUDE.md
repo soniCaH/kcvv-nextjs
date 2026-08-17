@@ -100,6 +100,19 @@ Every page wraps its content in `<PageContainer>` (`@/components/design-system`)
 | Foundation docs   | `src/stories/foundation/`                                                     |
 | Design tokens     | `src/app/globals.css` (`@theme {}`)                                           |
 
+## The Writer Rule — dark slots, duplicated slots, generic-literal slots
+
+When a content slot is empty (a CMS field, a derived label), the fix depends on **whether the datum has a possible writer**, not on whether it happens to be empty today:
+
+> **Delete a slot whose datum has no possible writer. Keep a slot whose datum has a writer who simply has not written yet. Never fill either from a neighbour's value or from a generic literal.**
+
+- **No writer at all** (not in the sync payload, no editorial field, nothing can ever populate it) → delete the field and every slot that reads it. A slot with no possible supply is not "not yet filled," it is dead weight that survived by looking alive in a story or a stale fixture.
+- **A writer exists but hasn't written yet** → keep the field and the slot, and render its absence honestly (auto-hide, or an explicit empty state) rather than papering over it.
+- **Never synthesise from a neighbour.** A slot that falls back to an adjacent field's value (e.g. a tagline falling back to the division already shown in a pill two lines up) is worse than a dark slot — it duplicates content and makes the page look broken, not merely incomplete.
+- **Never default to a generic literal** (e.g. a position defaulting to `"Speler"`). An authored value and an unfilled one become indistinguishable, so nobody — content owner or code — can tell how far a content pass has actually got. Render the absence; let the consumer (a squad grouping, a card label, a meta description) degrade gracefully around it.
+
+Established in #2535/#2567 against three fields in one hero (`team.season` — deleted, no writer; `team.tagline` — kept, was duplicating `division`; `player.position` — kept, was defaulting to `"Speler"`). See `docs/ubiquitous-language.md` → **Season** and **Position** for the concrete before/after.
+
 ## Effect & Server Component Patterns
 
 - **Never wrap `runPromise` in try/catch in Server Components.** Effect errors must bubble to the Next.js error boundary. The only permitted exception is converting `HttpNotFound` to `notFound()` via `Effect.catchTag("HttpNotFound", () => Effect.sync(() => notFound()))`.
