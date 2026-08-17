@@ -25,7 +25,10 @@ A fresh shell here defaults to Node 16, which breaks commitlint and Playwright w
    Read the COMMENTS, not just the body. Parked decisions and scope changes live in comments in this repo.
 4. <the PRD the issue names, e.g. docs/prd/<name>.md — read it from the MAIN checkout path>
 5. docs/ubiquitous-language.md  (glossary — use these exact terms, do not drift to synonyms)
-6. <any ADR or design doc the issue calls out, e.g. docs/adr/…>
+6. /Users/kevinvanransbeeck/Sites/KCVV/www.kcvvelewijt.be/.claude/commands/tdd.md
+   The KCVV TDD loop — interface design questions, what to mock, red-green-refactor.
+   Read the file; you cannot invoke it as a slash command from here.
+7. <any ADR or design doc the issue calls out, e.g. docs/adr/…>
 
 Before writing code, re-validate the acceptance criteria against what is actually in the repo today. If a criterion is already satisfied, or contradicts current code, say so in the PR body rather than silently reinterpreting it.
 
@@ -63,7 +66,7 @@ Acceptance criteria from #<N>, verbatim:
 - [ ] <criterion 2>
 - [ ] …
 
-Work them one at a time, test-first. Prior art to mirror: <file:line references>.
+Work them one at a time, following the loop in `.claude/commands/tdd.md` from your read-list — the same loop `/ralph` uses, including its interface-design questions and its rules about what to mock. Answer those questions before your first test. Prior art to mirror: <file:line references>.
 
 Before writing any new file that lands in a folder with two or more existing peers (a JSON-LD builder, a `use*Analytics` hook, a repository, a story), grep the peers first and match their return type, import order, and how they omit optional fields. Peer-drift is the most-flagged class in review here.
 
