@@ -16,6 +16,7 @@ import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { EmptyState, PageContainer } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
+import { pendingEmptyBody } from "@/lib/utils/empty-state-copy";
 import { fetchGalleriesAction } from "./actions";
 import { GalleryListingClient } from "./GalleryListingClient";
 
@@ -56,7 +57,7 @@ export default async function GalerijPage() {
         />
         {initial.items.length === 0 ? (
           <EmptyState tier="surface" heading="Nog geen fotogalerijen">
-            Zodra we een fotogalerij publiceren, verschijnt ze hier.
+            {pendingEmptyBody("we een fotogalerij publiceren", "ze")}
           </EmptyState>
         ) : (
           <GalleryListingClient

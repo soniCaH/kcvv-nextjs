@@ -28,6 +28,7 @@ import { PageHero } from "@/components/layout/PageHero";
 import { TeamAgendaRow } from "@/components/team/TeamMatchesSection";
 import { transformMatchToSchedule } from "@/components/match";
 import { getResultColor } from "@/lib/utils/match-display";
+import { pendingEmptyBody } from "@/lib/utils/empty-state-copy";
 import { groupBySeason } from "@/lib/utils/season";
 import { OpponentSummaryCard } from "./OpponentSummaryCard";
 
@@ -232,15 +233,15 @@ export default async function OpponentPage({ params }: OpponentPageProps) {
         </EditorialHeading>
 
         {seasons.length === 0 ? (
-          // headingLevel={3}: the matchCountLabel h2 directly above already
-          // opens this section — a second consecutive h2 would be a
-          // collision, not a new section (#2562 review).
+          // as="h3": the matchCountLabel h2 directly above already opens
+          // this section — a second consecutive h2 would be a collision,
+          // not a new section (#2562 review).
           <EmptyState
             tier="surface"
             heading="Nog geen onderlinge duels gespeeld"
-            headingLevel={3}
+            as="h3"
           >
-            Zodra KCVV tegen deze ploeg speelt, verschijnt de wedstrijd hier.
+            {pendingEmptyBody("KCVV tegen deze ploeg speelt", "de wedstrijd")}
           </EmptyState>
         ) : (
           seasons.map((group) => (
