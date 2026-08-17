@@ -117,15 +117,15 @@ export function YouthDirectory({
                     {/* The reeks this team plays in, when the club has
                       published one — and nothing at all when it has not
                       (#2641). The slot used to fall back to `team.name`, which
-                      made it true on 1 card of 17: `divisionFull` is null on
-                      every youth team, so sixteen cards printed their own
-                      caption back at themselves, five of them with the
-                      double-space the federation name carries. The gate that
-                      remains is the same anti-echo one, now reading the only
-                      field it was ever about. */}
-                    {team.divisionFull &&
-                    team.divisionFull.toLowerCase() !==
-                      caption.toLowerCase() ? (
+                      made it true on 1 of the directory's 16 cards: measured on
+                      production, `divisionFull` is null on all fifteen youth
+                      teams and set only on Reserven, so fifteen cards printed
+                      their own caption back at themselves, five of them with
+                      the double space the federation name carries. No
+                      `?? division` either, unlike the surfaces that have room
+                      for it — that field is a code (`3NA`), which says nothing
+                      at 10px. */}
+                    {team.divisionFull ? (
                       <p className="text-ink-soft mt-0.5 text-center font-mono text-[10px] leading-tight tracking-[0.08em] uppercase">
                         {team.divisionFull}
                       </p>

@@ -112,12 +112,11 @@ export function groupTeamsForLanding(teams: TeamLandingItem[]): GroupedTeams {
       // Above U21 and below the B-ploeg — so it leads the directory, ahead of
       // Bovenbouw. `<YouthDirectory>` drops it when the roster has no Reserven.
       //
-      // The range says which of those two it is (#2641). Leading a directory of
-      // youth groups with a bare label read as the first of them, on both pages
-      // that render this list; A/B squad players never play here, so it is a
-      // side of its own that starts where the youth ladder ends — not an
-      // overflow bench, and not an age band, which is why the copy names a
-      // boundary rather than a span.
+      // A bare label at the head of a list of youth groups read as the first
+      // of them, so the range says otherwise (#2641). It names a boundary
+      // rather than a span because this is not an age band: A/B squad players
+      // never play here, so it is a side of its own that starts where the
+      // youth ladder ends, not an overflow bench.
       {
         label: RESERVEN_LABEL,
         range: "Voorbij U21",

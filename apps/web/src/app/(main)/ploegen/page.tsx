@@ -2,10 +2,10 @@
  * Team listing — Phase 6.C rebuild.
  *
  * Editorial page-header → A-ploeg flagship (jersey-deep) → B-ploeg flagship
- * (cream, mirrored) → the directory of everything they leave out (Reserven /
- * Bovenbouw / Middenbouw / Onderbouw) →
- * footer. Replaces the legacy InteriorPageHero + TeamFeaturedCard +
- * YouthTeamsDirectory composition (those components retire in #1947).
+ * (cream, mirrored) → the directory of everything those two leave out
+ * (Reserven / Bovenbouw / Middenbouw / Onderbouw) → footer. Replaces the legacy
+ * InteriorPageHero + TeamFeaturedCard + YouthTeamsDirectory composition (those
+ * components retire in #1947).
  */
 
 import { Effect } from "effect";
@@ -23,9 +23,10 @@ import { TeamFlagship } from "@/components/team/TeamFlagship";
 import { YouthDirectory } from "@/components/team/YouthDirectory";
 
 const PLOEGEN_TITLE = "Onze ploegen";
+// Names the reserves too: the page lists them, and leaving them out of the
+// description is the same mis-filing the section heading below used to make.
 const PLOEGEN_DESCRIPTION =
-  "Alle ploegen van KCVV Elewijt: eerste ploeg, tweede ploeg en jeugd van U6 tot U21.";
-const PLOEGEN_DIRECTORY_HEADING = "Alle andere ploegen";
+  "Alle ploegen van KCVV Elewijt: eerste ploeg, tweede ploeg, reserven en jeugd van U6 tot U21.";
 
 export const metadata = buildPageMetadata({
   title: PLOEGEN_TITLE,
@@ -96,12 +97,8 @@ export default async function TeamsPage() {
           ) : null}
         </div>
 
-        {/* Not `Jeugdwerking`, which `/jeugd` passes: here the same list sits
-            under the two flagships and holds everything they leave out —
-            Reserven included, which is a senior side with its own roster
-            (#2641). */}
         <YouthDirectory
-          heading={PLOEGEN_DIRECTORY_HEADING}
+          heading="Alle andere ploegen"
           divisions={youthByDivision}
           className="mt-16"
         />

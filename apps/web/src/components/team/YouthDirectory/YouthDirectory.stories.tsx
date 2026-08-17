@@ -63,18 +63,17 @@ export const FullDirectory: Story = {
 };
 
 /**
- * `/ploegen` — the same list under the heading that route passes. It holds
- * everything the two flagships above it leave out, so it cannot claim to be
- * the youth section: Reserven is a senior side (#2641).
+ * Sparse — one division with members, empty groups omitted.
+ *
+ * It also carries the heading `/ploegen` passes, where the list holds
+ * everything the two flagships above it leave out and so cannot claim to be
+ * the youth section (#2641). Both live headings are then in the baselines
+ * without a third story: the teams-index register is pixel-identical to
+ * `FullDirectory` apart from this string, which the unit tests assert.
  */
-export const TeamsIndexDirectory: Story = {
-  args: { heading: "Alle andere ploegen", divisions },
-};
-
-/** Sparse — one division with members, empty groups omitted. */
 export const SparseDirectory: Story = {
   args: {
-    heading: "Jeugdwerking",
+    heading: "Alle andere ploegen",
     divisions: [
       { label: "Reserven", range: "Voorbij U21", teams: [] },
       { label: "Bovenbouw", range: "U17–U21", teams: [] },

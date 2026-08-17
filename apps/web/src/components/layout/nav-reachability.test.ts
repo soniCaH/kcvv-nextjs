@@ -25,6 +25,13 @@
  * group claims, which #2414 deliberately left alone. Tracked as follow-up —
  * add the boundary team to `ROSTER` when that lands and this guard will hold
  * it.
+ *
+ * #2641 raised the stakes on that gap without changing it: `/ploegen` now
+ * heads the directory `Alle andere ploegen`, so an un-hidden out-of-band team
+ * (`KCVVE U5`, or a senior side whose name ends in neither A nor B — production
+ * holds `FC WEITSE GANS`) would be omitted from a section claiming to hold
+ * every team the flagships leave out. Both carry `showInNavigation: false`
+ * today, so the claim holds; it is the un-hiding that would break it.
  */
 
 import { describe, it, expect } from "vitest";
