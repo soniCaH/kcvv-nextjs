@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-17T20:24:42Z",
+  "generatedAt": "2026-08-17T20:42:59Z",
   "title": "Design System: KCVV Elewijt",
   "extensions": {
     "colorMeta": {
@@ -610,8 +610,8 @@
         "section": "shapes"
       },
       {
-        "name": "The Two Weights Rule",
-        "body": "A rectangle's border weight answers one question: does it cast a shadow? If yes, it is an object and its border is 2px ink. If no — it only separates content that already shares a surface — its border is a 1px hairline. That is the whole test a reviewer needs on a diff; nothing in between is legal. The split was never a decision, only a habit, until it was counted: measured in apps/web/src, the hairline (border-paper-edge) appears 93 times, plus 13 more as the alpha-ink steps, against 16 for the 2px ink object border. border-jersey-deep (21 uses) stays on the object side of the test, never the hairline side — it marks an active filter chip, a hovered link, a focused tab, always a thing and never a row. An accent-hairline variant was rendered and rejected on that evidence: at the density a divider actually renders — a stacked list, a run of section rules — a line of green hairlines stops reading as individual separators and starts reading as a green section, which is exactly what the Rare Green Rule exists to prevent.",
+        "name": "The Shadow Needs Ink Rule",
+        "body": "Measured order-independently in apps/web/src product code (Storybook and tests excluded, since a demo wrapper is not a shipped surface, and counted per class attribute so Tailwind's arbitrary ordering — or a cva() variant split across a base class and a state class — can't hide a match): a 2px ink border appears 163 times against a combined 96 for the three ways a 1px hairline is drawn (border-paper-edge 32, alpha-ink ink/10–ink/15 10, full-opacity border-ink 54). 2px ink is the more common weight, not the rarer one — the reverse of what an earlier draft of this rule stated, which counted only the literal adjacent string border-2 border-ink and so missed most real uses. The one direction that does hold: nothing that casts a shadow in this codebase uses a 1px hairline border — a shadow-casting surface takes 2px ink, or 1.5px on a stamp, badge or chip, with no exception found. The converse does not hold: a 2px ink border does not imply a shadow. Of the 163, only 71 also carry a shadow token; the other 92 are shadowless dividers, mostly loading-skeleton frames and border-t-2/border-b-2 section rules. So the test a reviewer can actually run is one-directional — giving a surface a shadow means giving it 2px ink (or 1.5px on a small badge) underneath; the absence of a shadow says nothing about the border weight.",
         "section": "shapes"
       },
       {
@@ -642,7 +642,7 @@
     ],
     "dos": [
       "Do set every rectangle's border radius to 0 and reserve curves for true circles.",
-      "Do reach for a 1px hairline (border-paper-edge) to separate rows and sections, and reserve the 2px ink border for a rectangle that also carries a shadow.",
+      "Do give a shadow-casting surface a 2px ink border, or 1.5px on a stamp, badge or chip — never a 1px hairline underneath a shadow. A shadowless divider may still be 2px ink; the implication runs one way only.",
       "Do use hard offset shadows with 0 blur, in exactly the seven documented tokens.",
       "Do press interactive surfaces into their shadow on hover (translate(1px, 1px) + shadow-none), gating only the translate behind motion-safe:.",
       "Do pick the right green: jersey decorative only, jersey-deep for anything carrying text (headings, CTAs, inline prose links), jersey-bright for green text on ink.",
@@ -658,7 +658,7 @@
       "Don't reintroduce a blurred shadow token. The pre-redesign family and the orphaned --shadow-photo-tape* pair were deleted from globals.css; re-adding one changes the design language.",
       "Don't put a radius on a loading skeleton. A skeleton must match the sharp shape of what it stands in for — 44 stray rounded / rounded-sm classes were removed from eight skeleton files for exactly this reason.",
       "Don't set jersey (#4acf52) as a text colour, and don't put it on cream.",
-      "Don't draw a hairline divider in green. Rendered and rejected: at divider density a run of green hairlines reads as a green section, which the Rare Green Rule forbids — hairlines stay ink or paper-edge.",
+      "Don't draw a new divider in green. Rendered and rejected (C2): at divider density a run of green hairlines reads as a green section, which the Rare Green Rule forbids. The convention already has two shipped exceptions (SiteFooter, HulpFinder) rather than a clean record — don't add a third.",
       "Don't wrap a striped seam or a coloured band in a max-width container.",
       "Don't invent a container width outside 680 / 1040 / 1280 (chrome's 1440 is header and footer only).",
       "Don't pin a Display-size heading's italic accent to a heavy weight — Freight Big Pro has no 900 italic.",
