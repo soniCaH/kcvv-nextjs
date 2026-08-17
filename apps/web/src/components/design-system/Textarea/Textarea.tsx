@@ -21,6 +21,7 @@ import {
 import { AlertBadge } from "@/components/design-system/Alert";
 import { TextareaCounter } from "@/components/design-system/TextareaCounter";
 import { cn } from "@/lib/utils/cn";
+import { FieldHint } from "../_internal/FieldHint";
 import { fieldChrome } from "../_internal/fieldChrome";
 
 export type TextareaResize = "none" | "vertical" | "both";
@@ -105,14 +106,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             {error}
           </AlertBadge>
         )}
-        {!error && hint && (
-          <p
-            id={helperId}
-            className="font-body text-ink/60 mt-2 text-sm italic"
-          >
-            {hint}
-          </p>
-        )}
+        {!error && hint && <FieldHint id={helperId}>{hint}</FieldHint>}
       </div>
     );
   },

@@ -45,6 +45,17 @@ export type {
   AlertBadgeSize,
 } from "./Alert";
 
+// BracketAffordance
+export {
+  BracketAffordance,
+  BRACKET_GLYPH,
+  bracketAffordanceHtml,
+} from "./BracketAffordance";
+export type {
+  BracketAffordanceProps,
+  BracketAffordanceGlyph,
+} from "./BracketAffordance";
+
 // SectionTransition
 export { SectionTransition } from "./SectionTransition";
 export type {

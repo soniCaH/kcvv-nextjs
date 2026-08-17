@@ -155,6 +155,23 @@ describe("Select", () => {
       const el = screen.getByText("Kies je ploeg.");
       expect(el).toHaveClass("italic", "text-ink/60");
     });
+
+    // Decision D4 (#2620) — see Input.test.tsx for the full contract.
+    it("opens with the mono [?] bracket", () => {
+      render(<Select hint="Kies je ploeg." />);
+      const hint = screen.getByText("Kies je ploeg.");
+      expect(hint.querySelector('[data-glyph="help"]')).toHaveAttribute(
+        "aria-hidden",
+        "true",
+      );
+    });
+
+    it("describes the field with the hint sentence alone", () => {
+      render(<Select hint="Kies je ploeg." data-testid="select" />);
+      expect(screen.getByTestId("select")).toHaveAccessibleDescription(
+        "Kies je ploeg.",
+      );
+    });
   });
 
   describe("Disabled state", () => {

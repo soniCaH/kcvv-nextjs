@@ -20,9 +20,16 @@
  * title, and an ink Inter body. Sharp corners; `<Alert>` overrides text
  * colour explicitly inside `panel--dusk` contexts so the tinted body
  * stays legible regardless of the surrounding theme.
+ *
+ * The dismiss control carries the Phosphor Fill `X` plus a mono `[×]`
+ * beside it — decision D4, unit 10 of #2608. The bracket is decoration:
+ * the button's accessible name stays "Sluit melding". Because the control
+ * is wider than the old icon-only square, the kicker and title take a
+ * `pr-9` gutter when `dismissible`; the body keeps its full measure.
  */
 
 import { forwardRef, type ReactNode } from "react";
+import { BracketAffordance } from "../BracketAffordance/BracketAffordance";
 import { MonoStar } from "../MonoStar/MonoStar";
 import { CheckCircle, Warning, WarningCircle, X } from "@/lib/icons.redesign";
 import { cn } from "@/lib/utils/cn";
@@ -174,30 +181,37 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
             onClick={() => onDismiss?.()}
             aria-label="Sluit melding"
             className={cn(
-              "absolute top-2 right-2 inline-flex h-6 w-6 items-center justify-center",
-              "rounded-none p-0.5 transition-colors duration-150",
+              "absolute top-2 right-2 inline-flex h-6 items-center justify-center gap-1",
+              "rounded-none px-1 py-0.5 transition-colors duration-150",
               "text-ink/60 hover:text-ink hover:bg-ink/5",
               "focus-visible:ring-jersey-deep focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
             )}
           >
             <X size={14} aria-hidden="true" />
+            <BracketAffordance glyph="close" />
           </button>
         )}
 
-        <span
-          className={cn(
-            "flex items-center gap-1 font-mono text-[10px] leading-none font-semibold tracking-[0.12em] uppercase",
-            config.kicker,
-          )}
-        >
-          {config.kickerLabel}
-        </span>
+        {/* The close control sits over the top-right corner and grew wider
+            with the bracket, so the header rows it overlaps share one gutter
+            — owned here, once, rather than repeated on each row. The body
+            below it keeps the full measure. */}
+        <div className={cn(dismissible && "pr-9")}>
+          <span
+            className={cn(
+              "flex items-center gap-1 font-mono text-[10px] leading-none font-semibold tracking-[0.12em] uppercase",
+              config.kicker,
+            )}
+          >
+            {config.kickerLabel}
+          </span>
 
-        {title && (
-          <h3 className="font-display text-ink mt-0.5 text-[22px] leading-[1.15] font-bold italic">
-            {title}
-          </h3>
-        )}
+          {title && (
+            <h3 className="font-display text-ink mt-0.5 text-[22px] leading-[1.15] font-bold italic">
+              {title}
+            </h3>
+          )}
+        </div>
 
         <div className="text-ink mt-1 text-[15px] leading-[1.55]">
           {children}
