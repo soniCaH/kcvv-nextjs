@@ -11,8 +11,6 @@ export type { Sponsor } from "./Sponsors";
 // prop); the Sanity fetch lives in the `<SponsorsSection>` homepage caller.
 export { SponsorsBlock } from "./SponsorsBlock";
 export type { SponsorsBlockProps } from "./SponsorsBlock";
-export { SponsorEmptyState } from "./SponsorEmptyState";
-export type { SponsorEmptyStateProps } from "./SponsorEmptyState";
 export { mockSponsors } from "./Sponsors.mocks";
 
 export { formatSponsorAlt } from "./formatSponsorAlt";

@@ -4,16 +4,18 @@
  * Split `<SponsorHero>` (Merci headline + "In de kijker" marquee) → `<StripedSeam>`
  * → `<SponsorTiers>` (labelled Hoofdsponsors grid + one unlabelled merged wall)
  * → `<SponsorCtaBand>` (jersey-deep-dark footer invitation). With zero sponsors
- * the body collapses to a gracious `<SponsorEmptyState>` between the
- * headline-only hero and the band. Replaces the legacy dark-header +
- * `SectionStack`/`diagonal` composition.
+ * the body collapses to a gracious tier-"surface" `<EmptyState>` (#2427 /
+ * #2562) between the headline-only hero and the band — inlined here rather
+ * than its own file: post-migration it was a 10-line pass-through with a
+ * `className` prop nobody passed, and its one caller is this page. The
+ * "Word sponsor" action lives in the band below, so this passes no `undo`.
+ * Replaces the legacy dark-header + `SectionStack`/`diagonal` composition.
  */
 
 import { StripedSeam } from "@/components/design-system/StripedSeam";
-import { PageContainer } from "@/components/design-system";
+import { EmptyState, PageContainer } from "@/components/design-system";
 import { SponsorHero } from "../SponsorHero";
 import { SponsorTiers } from "../SponsorTiers";
-import { SponsorEmptyState } from "../SponsorEmptyState";
 import { SponsorCtaBand } from "../SponsorCtaBand";
 import { SponsorsAnalytics } from "../SponsorsAnalytics";
 import { selectFeaturedSponsor } from "../selectFeaturedSponsor";
@@ -41,7 +43,10 @@ export function SponsorsPage({ sponsors }: SponsorsPageProps) {
             <SponsorTiers sponsors={sponsors} />
           </>
         ) : (
-          <SponsorEmptyState />
+          <EmptyState tier="surface" heading="Nog geen sponsors">
+            We zoeken partners die mee de plezantste compagnie willen dragen —
+            jouw zaak kan de eerste langs de lijn zijn.
+          </EmptyState>
         )}
       </PageContainer>
 
