@@ -98,7 +98,7 @@ Do not proceed to PR if any check fails.
 
 ## Step 5.5 — Pre-PR Review Gate (`/code-review` + `/simplify`)
 
-After quality checks pass, run **both** review skills on the branch diff (`git diff origin/main...HEAD`) before pushing. This is a **required gate on every Ralph issue**, not optional — it catches what CodeRabbitAI would otherwise flag.
+After quality checks pass, run **both** review skills on the branch diff (`git diff origin/main...HEAD`) before pushing. This is a **required gate on every Ralph issue**, not optional — it is the branch's **last gate** (`.claude/CLAUDE.md`), so a finding you skip here is a finding that ships.
 
 1. **`/code-review`** (high effort) — the full multi-agent correctness/bug hunt. Fix every confirmed finding; refute false positives with a one-line reason.
 2. **`/simplify`** — the 4 cleanup agents (reuse · simplification · efficiency · altitude). Apply the genuine wins; skip out-of-scope or false-positive findings with a brief reason.

@@ -2,6 +2,18 @@
 
 Implement the feature in this issue using strict Test-Driven Development.
 
+## Craft lives upstream — read it first
+
+This file is KCVV **policy**: which layer the code belongs in, what may be mocked here, how the loop runs against our commands, and what to do when implementation reveals work the issue never accounted for.
+
+It deliberately says nothing about what separates a test worth keeping from a test worth deleting. That is craft, it is not ours, and it improves without us. Read `/mattpocock-skills:tdd` for it — what a good test is, seams, anti-patterns, the rules of the loop — then come back here.
+
+Where the two disagree, this file wins: it knows the codebase, and upstream does not. Three places they already do:
+
+- **Seams.** Upstream says to confirm the seams with the user before writing a test. Under `/ralph-afk` there is no user to confirm with, and stopping to ask is the one thing the brief forbids. The issue's acceptance criteria and its PRD **are** the pre-agreed seams. Write down which ones you are testing at, put that list in the PR body, and keep going.
+- **Refactor.** Upstream puts refactoring in the review stage, outside the loop. Here it stays inside the loop, as REFACTOR below — our review stage runs against a pushed branch and is too late to reshape the code.
+- **Mocking.** Upstream's `mocking.md` is general guidance. The list under "What should be mocked?" below is the KCVV boundary and overrides it.
+
 ## Before the first test — interface design
 
 Read the issue body. Find the PRD at the path listed. Answer these before writing anything:

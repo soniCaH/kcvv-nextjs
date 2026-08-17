@@ -1,16 +1,18 @@
 ---
 name: ralph-afk
-description: Spawn a wave of parallel agents to implement unblocked `ready` issues, one git worktree each. Use for ralph afk, running a wave, or working the issue queue unattended.
+description: Spawn a wave of parallel agents to implement unblocked `ready` issues, one git worktree each, then review the branches they open. Use for ralph afk, running a wave, reviewing wave branches, or working the issue queue unattended.
 argument-hint: "[issue-number...]"
 ---
 
 # Ralph AFK
 
-Run the queue while the user is away. Pick the currently-unblocked `ready` issues, spawn one autonomous agent per issue in its own worktree (in parallel, in one message), and report PR URLs as they land.
+Run the queue while the user is away. Pick the currently-unblocked `ready` issues, spawn one autonomous agent per issue in its own worktree (in parallel, in one message), review the draft PRs they open, and report the URLs as they land.
 
 Sequential human-in-the-loop counterpart: `/ralph` (`.claude/commands/ralph.md`) and `scripts/ralph.sh`. Brief template: [AFK-BRIEF.md](AFK-BRIEF.md).
 
-This skill reuses `/ralph`'s conventions exactly — same labels, same `blockedBy` gate, same worktree paths, same quality gates. It only changes the shape: a parallel wave instead of one issue at a time. If a convention here ever disagrees with `.claude/commands/ralph.md`, that file wins.
+This skill follows `/ralph`'s conventions — same `blockedBy` gate, same worktree paths, same quality gate, same TDD loop — and where one here disagrees with `.claude/commands/ralph.md`, that file wins.
+
+Two things differ on purpose, because a wave is not one issue at a time. Both live in step 5: the last gate runs at the orchestrator instead of inside the worker, and agents leave the issue on `in-progress` for the orchestrator to flip. Keep this paragraph honest — a stale parity claim is worse than no claim.
 
 ## Process
 
@@ -95,13 +97,25 @@ Show the briefs (collapsed if many). Wait for "launch".
 
 ### 3. Spawn the wave in parallel
 
-In a **single message**, one `Agent()` call per issue:
+Open the wave board first — one task per issue, so a running wave is legible at a glance. `Agent()` has no name input: a spawned agent's name is its `subagent_type`, so all four read `kcvv-implementer` and the board is what carries the issue numbers.
+
+```text
+TaskCreate({ subject: "#<N> — <short title>",
+             activeForm: "#<N> <short title>",
+             description: "<the one-line scope from step 1>" })
+```
+
+Mark each task `in_progress` as you spawn its agent.
+
+Then, in a **single message**, one `Agent()` call per issue:
 
 ```text
 Agent({ description: "Issue <N> — <short title>",
-        subagent_type: "general-purpose",
+        subagent_type: "kcvv-implementer",
         prompt: "<self-contained brief from step 2>" })
 ```
+
+`kcvv-implementer` (`.claude/agents/kcvv-implementer.md`) pins the model, effort, and turn ceiling for wave work; `general-purpose` would inherit all three from your session instead. If wave agents compact mid-run or their branches come back rough, raise the tier in that file rather than editing this one. PR #2678 has the measurements behind the values.
 
 **Do not pass `isolation: "worktree"`.** The harness worktree does not follow this repo's `../kcvv-issue-<N>` + `feat/issue-<N>` convention and skips the KCVV bootstrap (corepack pnpm, api-contract build, `.env.local`). The brief has the agent create its own worktree the repo way, so `/ralph` and `scripts/ralph.sh` can find and clean up after it.
 
@@ -117,6 +131,7 @@ You are notified as each background agent completes. For each:
 
 - Capture the PR URL.
 - Note blockers it hit (the brief tells agents to comment-and-stop, never to work around a blocker).
+- Mark its board task `completed`, so the board tracks the wave rather than outliving it.
 
 If an agent finished **without** opening a PR, roll its label back so the queue stays truthful:
 
@@ -124,9 +139,33 @@ If an agent finished **without** opening a PR, roll its label back so the queue 
 gh issue edit <N> --remove-label "in-progress" --add-label "ready"
 ```
 
-When the wave is done, present a table: issue · PR URL · status (opened / blocked / failed) · what it skipped.
+When the wave is done, present a table: issue · PR URL · status (draft / blocked / failed) · what it skipped.
 
-### 5. Check the merge order before the user merges anything
+### 5. Review each branch — this part is yours
+
+Wave agents run on a cheaper tier than you do and stop at a **draft** PR, because `/code-review` pins no model of its own: run inside a wave agent it would inherit that agent's tier and grade its own homework. You are the Opus context in this pipeline, so the review sits here.
+
+Per branch, against `../kcvv-issue-<N>`:
+
+1. `/code-review high ../kcvv-issue-<N>`
+2. `/simplify ../kcvv-issue-<N>`
+
+Send the confirmed findings back to that issue's agent with `SendMessage` — it still holds the full context of its own change and applies fixes far more cheaply than you can re-derive them. Refute false positives with a one-line reason instead of forwarding them. Apply the fixes in the worktree yourself only when the agent is no longer reachable.
+
+When the fixes land and `check-all` passes again, release the PR:
+
+```bash
+gh pr ready <pr-url>
+gh issue edit <N> --remove-label "in-progress" --add-label "ready-for-review"
+```
+
+`gh pr ready` says the branch has been reviewed. Leave a PR in draft and say so if its findings are unresolved.
+
+This review is the wave's **last gate** (`.claude/CLAUDE.md`) — weigh that when you decide how hard to look and what to wave through as out of scope. Done when every finding on every branch is either applied or refuted in one line, and you can say which is which.
+
+You do control which branch spends CodeRabbitAI's one review an hour: whichever PR you mark ready first wins the race. Order them riskiest-first — the biggest diff, the one touching shared code, the one whose findings you were least sure about.
+
+### 6. Check the merge order before the user merges anything
 
 Every branch in the wave came off the same `origin/main`, so merging one can break the others. Run this and include its output with the table above:
 
@@ -138,7 +177,7 @@ It is read-only — no checkout, no working-tree change. It reports which branch
 
 Tell the user the safe merge order: everything that collides with nothing merges in any order, and each colliding pair gets one merged first, the other rebased after.
 
-### 6. Optional follow-up wave
+### 7. Optional follow-up wave
 
 After the user merges, "again" / "next wave" re-runs from step 0. Newly-unblocked issues become eligible.
 
