@@ -126,13 +126,13 @@ export type {
 // EmptyState
 export { EmptyState } from "./EmptyState";
 export type {
+  EmptyStateSurface,
   EmptyStateProps,
   EmptyStateSurfaceProps,
+  EmptyStateSurfacePendingProps,
+  EmptyStateSurfaceFilteredProps,
   EmptyStateSlotProps,
   EmptyStateAction,
-  EmptyStateLinkAction,
-  EmptyStateButtonAction,
-  EmptyStateActionVariant,
 } from "./EmptyState";
 
 // JerseyIllustration

@@ -23,11 +23,11 @@ import { EditorialHeading } from "../EditorialHeading";
 import { JerseyShirt } from "../JerseyShirt";
 import { LinkButton } from "../LinkButton";
 import { TapedCard } from "../TapedCard";
+import type { StateAction } from "../_internal/stateAction";
 
 export type ErrorStateActionVariant = "primary" | "ghost";
 
-interface ErrorStateActionBase {
-  label: string;
+interface ErrorStateActionExtra {
   variant?: ErrorStateActionVariant;
   /**
    * Stable analytics slug rendered as `data-error-action` (e.g. `"home"` /
@@ -39,22 +39,22 @@ interface ErrorStateActionBase {
 }
 
 /** A navigation action — renders a `<LinkButton>` to `href`. */
-export interface ErrorStateLinkAction extends ErrorStateActionBase {
-  href: string;
-  onClick?: never;
-}
+export type ErrorStateLinkAction = Extract<StateAction, { href: string }> &
+  ErrorStateActionExtra;
 
 /** A button action — renders a `<Button>` (e.g. the 500 `reset()`). */
-export interface ErrorStateButtonAction extends ErrorStateActionBase {
-  onClick: () => void;
-  href?: never;
-}
+export type ErrorStateButtonAction = Extract<
+  StateAction,
+  { onClick: () => void }
+> &
+  ErrorStateActionExtra;
 
 /**
  * A single call-to-action in the error page's action row. Exactly one of a
- * `href` (link) or an `onClick` (button) — the mutually-exclusive `never`
- * fields make "both" and "neither" compile errors, so the row can never render
- * a no-op button or silently drop an `onClick`.
+ * `href` (link) or an `onClick` (button) — the shared `StateAction`'s
+ * mutually-exclusive `never` fields make "both" and "neither" compile
+ * errors, so the row can never render a no-op button or silently drop an
+ * `onClick`. `<EmptyState>`'s `EmptyStateAction` extends the same base.
  */
 export type ErrorStateAction = ErrorStateLinkAction | ErrorStateButtonAction;
 

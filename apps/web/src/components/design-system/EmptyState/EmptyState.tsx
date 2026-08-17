@@ -7,65 +7,77 @@
  * - **Tier "surface"** — the whole surface is empty (`/sponsors`, `/galerij`,
  *   `/zoeken`, a filtered `/nieuws`). The `SearchNoResultsCard` register: a
  *   cream-soft paper card, a taped artefact (a defaulting slot — pass nothing
- *   and it ships the jersey), a display heading, a body line, and an optional
- *   action row for the mandatory filter undo.
+ *   and it ships the jersey), a display heading, a body line, and — only when
+ *   `reason: "filtered"` — the mandatory undo (#2427 rule 4). That case is
+ *   structural, not conventional: `undo` is a required field on that variant,
+ *   the same way tier "slot" has no `heading`/`artefact` prop at all rather
+ *   than trusting every host to remember one.
  * - **Tier "slot"** — one slot is empty inside an otherwise full page (a
  *   `MatchLineup` team column, a `MatchEvents` team list). A dashed
  *   `ink-muted` box that holds the slot's shape so the absence reads as a
  *   known gap rather than a render failure. No heading, no action, ever —
- *   the type system has no `heading`/`artefact`/`actions` prop on this tier.
+ *   the type system has no `heading`/`artefact`/`undo` prop on this tier.
+ *   `flex-1` by default so it fills a `flex flex-col` host column's
+ *   grid-stretched height instead of collapsing to one line — the host still
+ *   owns making that column `flex flex-col` in the first place; the
+ *   primitive cannot reach outside itself to do that part.
  *
  * **The copy is the tell.** Both tiers share one visual register; only the
  * words distinguish genuine emptiness ("Nog geen …") from a filter that
- * emptied the surface ("Geen … in <facet>.", with the undo action) from a
- * fruitless query (naming what was searched for). See the resolution comment
- * on #2427 for the five copy rules this primitive exists to carry.
+ * emptied the surface ("Geen … in <facet>.", with the undo) from a fruitless
+ * query (naming what was searched for). See the resolution comment on #2427
+ * for the five copy rules this primitive exists to carry.
  *
- * Sits beside `<ErrorState>` — same job at a different severity, same folder.
- * `EmptyStateAction`'s mutually-exclusive `href`/`onClick` shape mirrors
- * `ErrorStateAction` on purpose (peer-drift avoidance).
+ * The artefact is never `<TapedCard>` — that primitive has no frameless
+ * (`shadow: "none"`) or transparent-`bg` option today, and this slot needs
+ * both (a bare `<JerseyShirt>` beside a hand-placed `<TapeStrip>`, not a
+ * second nested card). Add those options to `<TapedCard>` before reaching
+ * for a third way to tape something.
+ *
+ * Sits beside `<ErrorState>` — same job at a different severity, same
+ * folder. `EmptyStateAction` shares its base shape with `ErrorStateAction`
+ * via `_internal/stateAction.ts`; see that file for why the two components'
+ * action *rows* stay separate rather than one shared render component.
  */
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "../Button";
 import {
   EditorialHeading,
-  type EditorialHeadingEmphasis,
   type EditorialHeadingLevel,
 } from "../EditorialHeading";
 import { JerseyShirt } from "../JerseyShirt";
-import { LinkButton } from "../LinkButton";
+import { MonoLabel } from "../MonoLabel";
 import { TapeStrip } from "../TapeStrip";
+import type { StateActionBase } from "../_internal/stateAction";
 
-export type EmptyStateActionVariant = "primary" | "ghost";
-
-interface EmptyStateActionBase {
-  label: string;
-  variant?: EmptyStateActionVariant;
-  /**
-   * Stable analytics slug rendered as `data-empty-state-action` (e.g.
-   * `"reset-filter"`). Omit it to render no marker.
-   */
-  analyticsAction?: string;
-}
-
-/** A navigation action — renders a `<LinkButton>` to `href`. */
-export interface EmptyStateLinkAction extends EmptyStateActionBase {
-  href: string;
-  onClick?: never;
-}
-
-/** A button action — renders a `<Button>` (e.g. a filter-reset "Toon alles"). */
-export interface EmptyStateButtonAction extends EmptyStateActionBase {
+/** An undo action — always a button (a filter reset never navigates). */
+export interface EmptyStateAction extends StateActionBase {
   onClick: () => void;
-  href?: never;
 }
 
 /**
- * A single call-to-action in the surface tier's action row. Exactly one of a
- * `href` (link) or an `onClick` (button) — mirrors `ErrorStateAction`.
+ * Chrome the tier-"surface" card draws around itself.
+ *
+ * - `"paper"` (default) — the full paper frame: border, hard shadow,
+ *   cream-soft fill. The standalone register (`/sponsors`, `/galerij`, …).
+ * - `"bare"` — no frame at all, for a host that already sits inside another
+ *   bordered/shadowed panel (`CalendarWidget`'s own shell, the
+ *   `ScheurkalenderPage` poster sheet). Framing twice nests two ink borders
+ *   with a shadow between them.
+ * - `"inverse"` — the paper frame with the muted-ink "soft" shadow instead
+ *   of the hard one, for a host on an ink or dark-green ground (`/evenementen`
+ *   on `bg-jersey-deep-dark`). The hard shadow is drawn in solid ink and the
+ *   dark field swallows it — DESIGN.md's rule that chrome on a dark ground
+ *   takes the soft shadow, not the hard paper one.
  */
-export type EmptyStateAction = EmptyStateLinkAction | EmptyStateButtonAction;
+export type EmptyStateSurface = "paper" | "bare" | "inverse";
+
+const SURFACE_CLASS: Record<EmptyStateSurface, string> = {
+  paper: "border-ink bg-cream-soft shadow-paper-sm border-2 p-7 sm:p-8",
+  bare: "py-2",
+  inverse: "border-ink bg-cream-soft shadow-paper-sm-soft border-2 p-7 sm:p-8",
+};
 
 interface EmptyStateSharedProps {
   /** Renders `role="status"` so assistive tech announces a client-side
@@ -75,25 +87,18 @@ interface EmptyStateSharedProps {
   className?: string;
 }
 
-export interface EmptyStateSurfaceProps extends EmptyStateSharedProps {
+interface EmptyStateSurfaceCommonProps extends EmptyStateSharedProps {
   tier: "surface";
-  /** Display-md heading. Auto-terminated with a period by `<EditorialHeading>`. */
+  /** Heading. Auto-terminated with a period by `<EditorialHeading>`, and
+   *  accented on the trailing period — the `SponsorEmptyState` /
+   *  `SearchNoResultsCard` convention. */
   heading: string;
-  /**
-   * Heading level, for a page that already has an adjacent `<h2>` this
-   * heading would otherwise collide with (e.g. a section heading directly
-   * above the empty branch). Defaults to `2`.
-   */
-  headingLevel?: EditorialHeadingLevel;
-  /**
-   * Accent emphasis on the heading. Defaults to accenting the trailing
-   * period (the `SponsorEmptyState` / `SearchNoResultsCard` convention).
-   * Pass `false` to render no emphasis at all.
-   */
-  headingEmphasis?: EditorialHeadingEmphasis | false;
+  /** Rendered heading tag, for a page that already has an adjacent `<h2>`
+   *  this heading would otherwise collide with. Default `"h2"`, matching
+   *  `<SectionHeader>`'s own `as` prop. */
+  as?: "h1" | "h2" | "h3";
   /** Body copy. May embed inline `<Link>`s directly (the way-forward idiom
-   *  used by `SearchNoResultsCard` and `HulpFinder`) — the `actions` row
-   *  below is for a discrete button, chiefly the mandatory filter undo. */
+   *  used by `SearchNoResultsCard` and `HulpFinder`). */
   children: ReactNode;
   /**
    * The taped artefact. A **defaulting slot**, not a hardcoded image —
@@ -102,21 +107,24 @@ export interface EmptyStateSurfaceProps extends EmptyStateSharedProps {
    * this component.
    */
   artefact?: ReactNode;
-  /**
-   * Optional action row below the body. This is where the mandatory undo
-   * lives for a filter that emptied the surface — "right where the results
-   * would have been" (#2562).
-   */
-  actions?: readonly EmptyStateAction[];
-  /**
-   * `true` (default) — draws its own paper frame (border + shadow +
-   * cream-soft fill). Pass `false` when the surface already sits inside
-   * another bordered/shadowed panel (e.g. `CalendarWidget`'s own
-   * `border-ink shadow-paper-md` shell) — framing twice nests two ink
-   * borders with a shadow between them, a register neither tier anticipates.
-   */
-  framed?: boolean;
+  surface?: EmptyStateSurface;
 }
+
+/** Genuine emptiness or a fruitless query — nothing to undo. */
+export interface EmptyStateSurfacePendingProps extends EmptyStateSurfaceCommonProps {
+  reason?: undefined;
+}
+
+/** A filter emptied the surface — the undo is mandatory, structurally: this
+ *  variant does not compile without one. "Right where the results would
+ *  have been" (#2427 rule 4). */
+export interface EmptyStateSurfaceFilteredProps extends EmptyStateSurfaceCommonProps {
+  reason: "filtered";
+  undo: EmptyStateAction;
+}
+
+export type EmptyStateSurfaceProps =
+  EmptyStateSurfacePendingProps | EmptyStateSurfaceFilteredProps;
 
 export interface EmptyStateSlotProps extends EmptyStateSharedProps {
   tier: "slot";
@@ -126,36 +134,23 @@ export interface EmptyStateSlotProps extends EmptyStateSharedProps {
 
 export type EmptyStateProps = EmptyStateSurfaceProps | EmptyStateSlotProps;
 
-function ActionRow({ actions }: { actions: readonly EmptyStateAction[] }) {
-  return (
-    <div className="mt-5 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
-      {actions.map((action) => {
-        const variant = action.variant ?? "ghost";
-        return action.href !== undefined ? (
-          <LinkButton
-            key={action.label}
-            href={action.href}
-            variant={variant}
-            size="sm"
-            data-empty-state-action={action.analyticsAction}
-          >
-            {action.label}
-          </LinkButton>
-        ) : (
-          <Button
-            key={action.label}
-            type="button"
-            variant={variant}
-            size="sm"
-            onClick={action.onClick}
-            data-empty-state-action={action.analyticsAction}
-          >
-            {action.label}
-          </Button>
-        );
-      })}
-    </div>
-  );
+function headingLevelFor(
+  as: EmptyStateSurfaceProps["as"],
+): EditorialHeadingLevel {
+  switch (as) {
+    case "h1":
+      return 1;
+    case "h3":
+      return 3;
+    case "h2":
+    case undefined:
+      return 2;
+    default: {
+      // Exhaustiveness check, mirroring <SectionHeader>'s headingLevelFor.
+      const _exhaustive: never = as;
+      throw new Error(`headingLevelFor: unhandled value ${_exhaustive}`);
+    }
+  }
 }
 
 function SlotEmptyState({ children, live, className }: EmptyStateSlotProps) {
@@ -163,38 +158,31 @@ function SlotEmptyState({ children, live, className }: EmptyStateSlotProps) {
     <div
       role={live ? "status" : undefined}
       className={cn(
-        "border-ink-muted flex min-h-full items-center justify-center border-2 border-dashed px-3 py-3 text-center",
+        "border-ink-muted flex flex-1 items-center justify-center border-2 border-dashed px-3 py-3 text-center",
         className,
       )}
     >
-      <span className="text-ink-muted font-mono text-xs tracking-[0.14em] uppercase">
-        {children}
-      </span>
+      <MonoLabel tone="muted">{children}</MonoLabel>
     </div>
   );
 }
 
-function SurfaceEmptyState({
-  heading,
-  headingLevel = 2,
-  headingEmphasis,
-  children,
-  artefact,
-  actions,
-  live,
-  className,
-  framed = true,
-}: EmptyStateSurfaceProps) {
-  const emphasis =
-    headingEmphasis === false ? undefined : (headingEmphasis ?? { text: "." });
+function SurfaceEmptyState(props: EmptyStateSurfaceProps) {
+  const {
+    heading,
+    as,
+    children,
+    artefact,
+    surface = "paper",
+    live,
+    className,
+  } = props;
 
   return (
     <section
       role={live ? "status" : undefined}
       className={cn(
-        framed
-          ? "border-ink bg-cream-soft shadow-paper-sm border-2 p-7 sm:p-8"
-          : "py-2",
+        SURFACE_CLASS[surface],
         "text-center sm:text-left",
         className,
       )}
@@ -214,9 +202,9 @@ function SurfaceEmptyState({
 
         <div className="order-1 sm:order-2">
           <EditorialHeading
-            level={headingLevel}
+            level={headingLevelFor(as)}
             size="display-md"
-            emphasis={emphasis}
+            emphasis={{ text: "." }}
           >
             {heading}
           </EditorialHeading>
@@ -225,7 +213,18 @@ function SurfaceEmptyState({
             {children}
           </div>
 
-          {actions && actions.length > 0 && <ActionRow actions={actions} />}
+          {props.reason === "filtered" && (
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={props.undo.onClick}
+              >
+                {props.undo.label}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </section>

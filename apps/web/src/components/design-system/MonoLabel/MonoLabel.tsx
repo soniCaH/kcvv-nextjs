@@ -1,9 +1,5 @@
 export type MonoLabelVariant =
-  | "plain"
-  | "pill-jersey"
-  | "pill-jersey-deep"
-  | "pill-ink"
-  | "pill-cream";
+  "plain" | "pill-jersey" | "pill-jersey-deep" | "pill-ink" | "pill-cream";
 export type MonoLabelSize = "sm" | "md";
 
 /**
@@ -13,8 +9,10 @@ export type MonoLabelSize = "sm" | "md";
  * - `ink` (default) — readable on cream / paper surfaces.
  * - `cream` — readable on jersey-deep / ink surfaces, e.g. the meta line
  *   above the editorial heading inside `<YouthBackdrop>` (#1675).
+ * - `muted` — `ink-muted`, for a de-emphasised label on a cream/paper
+ *   surface (e.g. `<EmptyState>`'s tier-"slot" held-open text, #2562).
  */
-export type MonoLabelTone = "ink" | "cream";
+export type MonoLabelTone = "ink" | "cream" | "muted";
 
 export interface MonoLabelProps {
   variant?: MonoLabelVariant;
@@ -46,6 +44,7 @@ const VARIANT_CLASS: Record<MonoLabelVariant, string> = {
 const PLAIN_TONE_CLASS: Record<MonoLabelTone, string> = {
   ink: "text-ink",
   cream: "text-cream",
+  muted: "text-ink-muted",
 };
 
 // Per-size font + spacing: pill variants need real vertical padding to read
