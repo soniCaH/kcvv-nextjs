@@ -5,6 +5,7 @@ import { useState } from "react";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { EmptyState } from "@/components/design-system";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
+import { filteredEmptyBody } from "@/lib/utils/empty-state-copy";
 import { EventMonthList } from "../EventMonthList";
 import { EventFilterBar, type EventFilterValue } from "../EventFilterBar";
 import { DEFAULT_EVENT_TYPE } from "../event-type-style";
@@ -27,15 +28,20 @@ export interface EventsBrowserProps {
  * colour-coded filter chips above the month-grouped `<TicketStub>` list, plus
  * the empty / filtered-to-zero states, both on the shared tier-"surface"
  * `<EmptyState>` (#2427 / #2562). Single-select, "Alles" default, on the
- * dark `jersey-deep-dark` page.
+ * dark `jersey-deep-dark` page — `surface="inverse"` so the card's shadow
+ * stays visible against the dark field (round 3 review, A1: the default
+ * hard ink shadow is invisible on this ground).
  *
  * - No upcoming events at all → "Nog geen evenementen gepland" (events can
- *   still arrive). The filter row stays visible — a structural special-case
- *   that hid it here was considered and rejected (#2427 rule 5): the filter
- *   chips are the same fixed five regardless of data, so hiding them bought
- *   nothing.
+ *   still arrive). The filter row hides — nothing to filter, and showing it
+ *   invited a dead-end loop: pick a chip against zero events, land on the
+ *   filtered-to-zero copy, undo back to the same emptiness (round 3 review,
+ *   C5). This restores the pre-round-2 guard; round 2's own fix (below)
+ *   stays independently correct for a facet seeded while the feed is empty
+ *   (e.g. a deep link), where the row IS visible on mount.
  * - A type with no upcoming events → names the active category, with the
- *   mandatory "Toon alles" undo.
+ *   mandatory "Toon alles" undo — `reason: "filtered"` on `<EmptyState>`,
+ *   which makes the undo a compile-time requirement, not a convention.
  *
  * Months whose tickets are all filtered out drop their header automatically —
  * `groupEventsByMonth` only buckets the events `<EventMonthList>` receives.
@@ -45,6 +51,7 @@ export function EventsBrowser({
   initialSelected = "all",
 }: EventsBrowserProps) {
   const [selected, setSelected] = useState<EventFilterValue>(initialSelected);
+  const isGenuinelyEmpty = events.length === 0;
 
   // Dedup guard: re-pressing the active chip is a no-op, so neither state nor
   // analytics fire twice for the same selection (repo analytics policy).
@@ -54,50 +61,48 @@ export function EventsBrowser({
     trackEvent("event_filter", { event_type: value });
   };
 
-  // Keyed on whether a facet is ACTIVE, not on whether the feed is empty —
-  // a visitor can select a chip against a genuinely empty feed (an off-season
-  // /evenementen with zero events), and the undo must still appear: the
-  // selection is theirs to reverse regardless of what "all" would also show
-  // (#2562 review).
+  // Keyed on whether a facet is ACTIVE, not on whether the computed list is
+  // empty — round 2's fix, kept: a facet can be active (e.g. seeded via
+  // `initialSelected`) while the raw feed is also empty, and the undo must
+  // still describe what's active. The filter row being hidden in that
+  // combination (above) makes it unreachable by click, but not by deep-link.
   const isFilterActive = selected !== "all";
-  const filtered =
-    events.length === 0
-      ? []
-      : isFilterActive
-        ? events.filter(
-            (event) => (event.eventType ?? DEFAULT_EVENT_TYPE) === selected,
-          )
-        : events;
+  const filtered = isGenuinelyEmpty
+    ? []
+    : isFilterActive
+      ? events.filter(
+          (event) => (event.eventType ?? DEFAULT_EVENT_TYPE) === selected,
+        )
+      : events;
 
   return (
     <div className="flex flex-col gap-8">
-      <EventFilterBar selected={selected} onSelect={handleSelect} />
+      {!isGenuinelyEmpty && (
+        <EventFilterBar selected={selected} onSelect={handleSelect} />
+      )}
 
       {filtered.length === 0 ? (
-        <EmptyState
-          tier="surface"
-          heading={
-            isFilterActive
-              ? `Geen evenementen in de categorie ${selected}`
-              : "Nog geen evenementen gepland"
-          }
-          live
-          actions={
-            isFilterActive
-              ? [
-                  {
-                    label: "Toon alles",
-                    onClick: () => handleSelect("all"),
-                    variant: "ghost",
-                  },
-                ]
-              : undefined
-          }
-        >
-          {isFilterActive
-            ? "Probeer een andere categorie, of bekijk alle evenementen."
-            : "Kom snel terug voor het volgende evenement."}
-        </EmptyState>
+        isFilterActive ? (
+          <EmptyState
+            tier="surface"
+            surface="inverse"
+            heading={`Geen evenementen in de categorie ${selected}`}
+            live
+            reason="filtered"
+            undo={{ label: "Toon alles", onClick: () => handleSelect("all") }}
+          >
+            {filteredEmptyBody("alle evenementen")}
+          </EmptyState>
+        ) : (
+          <EmptyState
+            tier="surface"
+            surface="inverse"
+            heading="Nog geen evenementen gepland"
+            live
+          >
+            Kom snel terug voor het volgende evenement.
+          </EmptyState>
+        )
       ) : (
         <EventMonthList events={filtered} />
       )}

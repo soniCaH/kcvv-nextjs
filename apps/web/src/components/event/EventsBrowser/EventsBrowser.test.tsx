@@ -43,30 +43,27 @@ describe("<EventsBrowser>", () => {
     vi.clearAllMocks();
   });
 
-  it("renders the genuine-empty state, filter row kept visible (#2427 rule 5)", () => {
+  it("renders the genuine-empty state with the filter row hidden (round 3 review, C5)", () => {
+    // Nothing to filter, and showing the row invited a dead-end loop (pick a
+    // chip against zero events, land on the same emptiness via undo) — the
+    // row hides again, restoring the pre-round-2 guard.
     render(<EventsBrowser events={[]} />);
 
     // "Nog geen" — events can still arrive.
     expect(
       screen.getByRole("heading", { name: /nog geen evenementen gepland/i }),
     ).toBeInTheDocument();
-    // The structural special-case that hid the filter row on a genuinely
-    // empty list was considered and rejected: the chips are a fixed set
-    // regardless of data, so hiding them here bought nothing.
     expect(
-      screen.getByRole("group", { name: /filter evenementen op type/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole("group", { name: /filter evenementen op type/i }),
+    ).not.toBeInTheDocument();
   });
 
-  it("offers the undo when a facet is selected against a genuinely empty feed", async () => {
-    // Off-season /evenementen: the feed is empty, but the filter row still
-    // renders (rule 5) and is interactive. Selecting a chip must still name
-    // the facet and offer the undo — the old branch, keyed on `events.length`
-    // rather than the active facet, rendered the genuine-empty copy with no
-    // action here (#2562 review).
-    render(<EventsBrowser events={[]} />);
-
-    await userEvent.click(screen.getByRole("button", { name: "Clubevent" }));
+  it("names the active facet and offers the undo when seeded against a genuinely empty feed", () => {
+    // A facet can be active while the raw feed is also empty (e.g. a deep
+    // link via `initialSelected`) even though the filter row itself is
+    // hidden in that state — round 2's isFilterActive fix stays correct for
+    // this case independent of the row's own visibility (#2562 review).
+    render(<EventsBrowser events={[]} initialSelected="Clubevent" />);
 
     expect(
       screen.getByRole("heading", {
@@ -76,13 +73,6 @@ describe("<EventsBrowser>", () => {
     expect(
       screen.getByRole("button", { name: "Toon alles" }),
     ).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole("button", { name: "Toon alles" }));
-
-    expect(
-      screen.getByRole("heading", { name: /nog geen evenementen gepland/i }),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Toon alles" })).toBeNull();
   });
 
   it("renders the filter row and every event by default", () => {
