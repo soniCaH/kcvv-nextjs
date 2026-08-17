@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 import { clubToday, toDisplayZone } from "@/lib/utils/dates";
+import { EmptyState } from "@/components/design-system";
 import { TeamAgendaRow } from "@/components/team/TeamMatchesSection/TeamAgendaRow";
 import { EVENT_TYPE_FILL } from "@/components/event/event-type-style";
 import { EventTypeTag } from "../calendar-tags";
@@ -133,9 +134,16 @@ function SelectedDayDetail({
       </h3>
 
       {dayMatches.length === 0 && dayEvents.length === 0 ? (
-        <p className="text-ink-muted font-mono text-sm">
-          Geen wedstrijden of activiteiten op deze dag.
-        </p>
+        // Tier "slot" (#2427 / #2562): one panel (the selected-day detail)
+        // is empty while the rest of the calendar (grid, chrome) is full.
+        // The day's own `<h3>` heading above already names the slot, so no
+        // heading is needed here either way. Distinct from the per-day grid
+        // CELLS, which stay a bare empty cell deliberately — a dashed box in
+        // most of ~35 cells on a real month would be clutter, not a held-open
+        // shape (see the PR body's open-question note).
+        <EmptyState tier="slot">
+          Geen wedstrijden of activiteiten op deze dag
+        </EmptyState>
       ) : (
         <div className="space-y-2">
           {dayMatches.map((match) => (

@@ -84,10 +84,10 @@ const baseProps = { currentMonth: 9, currentYear: 2026 };
 describe("CalendarAgenda", () => {
   it("renders the month header", () => {
     render(<CalendarAgenda {...baseProps} matches={[]} events={[]} />);
-    // Two level-2 headings render when the month is empty: the month header
-    // itself, then the tier-"surface" <EmptyState>'s own heading. The month
-    // header is always first in DOM order.
-    const heading = screen.getAllByRole("heading", { level: 2 })[0]!;
+    // The empty branch's own <EmptyState> heading renders at level 3 (not 2)
+    // specifically so it never collides with this one — see headingLevel={3}
+    // at its call site.
+    const heading = screen.getByRole("heading", { level: 2 });
     expect(heading.textContent).toContain("September");
     expect(heading.textContent).toContain("'26");
   });

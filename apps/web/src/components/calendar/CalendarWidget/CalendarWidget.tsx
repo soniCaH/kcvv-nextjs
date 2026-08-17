@@ -284,6 +284,10 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
               tier="surface"
               heading={emptyHeading}
               live
+              // Already inside the widget's own bordered/shadowed panel —
+              // a second frame here nested two ink borders with a shadow
+              // between them (#2562 review).
+              framed={false}
               actions={
                 activeTypeFilter !== "all"
                   ? [

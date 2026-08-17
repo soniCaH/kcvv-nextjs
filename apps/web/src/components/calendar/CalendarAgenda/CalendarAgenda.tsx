@@ -210,10 +210,14 @@ export function CalendarAgenda({
 
       {groups.length === 0 ? (
         // "Nog geen", not "Geen": a match or event can still be scheduled
-        // for the rest of this month (#2427).
+        // for the rest of this month (#2427). headingLevel={3}: the month
+        // heading directly above already opens this section — a second
+        // consecutive h2 would be a collision, not a new section (#2562
+        // review).
         <EmptyState
           tier="surface"
           heading="Nog geen wedstrijden of evenementen deze maand"
+          headingLevel={3}
           live
         >
           Zodra er iets wordt ingepland voor deze maand, verschijnt het hier.

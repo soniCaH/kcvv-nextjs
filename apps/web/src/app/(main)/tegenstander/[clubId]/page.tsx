@@ -232,9 +232,13 @@ export default async function OpponentPage({ params }: OpponentPageProps) {
         </EditorialHeading>
 
         {seasons.length === 0 ? (
+          // headingLevel={3}: the matchCountLabel h2 directly above already
+          // opens this section — a second consecutive h2 would be a
+          // collision, not a new section (#2562 review).
           <EmptyState
             tier="surface"
             heading="Nog geen onderlinge duels gespeeld"
+            headingLevel={3}
           >
             Zodra KCVV tegen deze ploeg speelt, verschijnt de wedstrijd hier.
           </EmptyState>
