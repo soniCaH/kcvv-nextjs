@@ -17,10 +17,8 @@ export type TeamLandingItem = {
 export type YouthDivisionGroup = {
   label: YouthDivisionName | typeof RESERVEN_LABEL;
   /**
-   * Where the group sits on the ladder — an age band on the three bouw groups
-   * ("U12–U16"), a position on Reserven ("Voorbij U21"). Optional because the
-   * type allows a group that can say neither; the directory heading then
-   * renders the label bare.
+   * The group's age band, e.g. "U12–U16". Absent on groups that are not an
+   * age band at all (Reserven), which the directory heading renders bare.
    */
   range?: string;
   teams: TeamLandingItem[];
@@ -112,14 +110,13 @@ export function groupTeamsForLanding(teams: TeamLandingItem[]): GroupedTeams {
       // Above U21 and below the B-ploeg — so it leads the directory, ahead of
       // Bovenbouw. `<YouthDirectory>` drops it when the roster has no Reserven.
       //
-      // A bare label at the head of a list of youth groups read as the first
-      // of them, so the range says otherwise (#2641). It names a boundary
-      // rather than a span because this is not an age band: A/B squad players
-      // never play here, so it is a side of its own that starts where the
-      // youth ladder ends, not an overflow bench.
+      // Deliberately rangeless. #2641 proposed a label saying where the side
+      // sits — A/B squad players never play here, so it is a side of its own
+      // that starts where the youth ladder ends, not an overflow bench — and
+      // the owner ruled against it: no label beats one generic enough to be
+      // worth the pixels. The section heading above carries the framing now.
       {
         label: RESERVEN_LABEL,
-        range: "Voorbij U21",
         teams: teams.filter((t) => t.psdId === RESERVEN_PSD_ID),
       },
       {

@@ -102,7 +102,7 @@ describe("/ploegen listing — Phase 6.C composition", () => {
     render(await TeamsPage());
 
     const directory = screen.getByTestId("youth-directory");
-    expect(directory).toHaveAttribute("aria-label", "Alle andere ploegen");
+    expect(directory).toHaveAttribute("aria-label", "Andere");
     expect(directory.textContent).not.toContain("Jeugdwerking");
   });
 

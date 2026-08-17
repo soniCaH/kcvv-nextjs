@@ -26,12 +26,13 @@
  * add the boundary team to `ROSTER` when that lands and this guard will hold
  * it.
  *
- * #2641 raised the stakes on that gap without changing it: `/ploegen` now
- * heads the directory `Alle andere ploegen`, so an un-hidden out-of-band team
- * (`KCVVE U5`, or a senior side whose name ends in neither A nor B — production
- * holds `FC WEITSE GANS`) would be omitted from a section claiming to hold
- * every team the flagships leave out. Both carry `showInNavigation: false`
- * today, so the claim holds; it is the un-hiding that would break it.
+ * #2641 brushed against that gap without changing it: `/ploegen` heads the
+ * directory `Andere`, so an un-hidden out-of-band team (`KCVVE U5`, or a
+ * senior side whose name ends in neither A nor B — production holds
+ * `FC WEITSE GANS`) would be absent from the one section on the page that
+ * could hold it. Both carry `showInNavigation: false` today. The heading
+ * claims less than the rejected `Alle andere ploegen` would have, so it does
+ * not over-state; the team would simply be unreachable from this page.
  */
 
 import { describe, it, expect } from "vitest";
@@ -137,10 +138,10 @@ describe("former `Jeugd` panel → /jeugd + /ploegen index parity", () => {
     const reservenGroup = youthByDivision.find((d) => d.label === "Reserven");
 
     expect(reservenGroup?.teams.map((t) => t.slug)).toEqual(["reserven"]);
-    // Its own group is only half the answer: leading a list of youth groups
-    // with a bare label read as the first of them. The range says where the
-    // side actually sits — a boundary, not an age band (#2641).
-    expect(reservenGroup?.range).toBe("Voorbij U21");
+    // Not an age band — the directory heading must not render a range for it.
+    // #2641 read the bare label as the first of the youth groups and proposed
+    // one; the owner ruled against it and fixed the section heading instead.
+    expect(reservenGroup?.range).toBeUndefined();
   });
 
   it("keeps the A and B sides out of the youth directory", () => {

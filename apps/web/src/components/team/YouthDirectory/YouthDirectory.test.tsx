@@ -90,23 +90,21 @@ describe("YouthDirectory", () => {
       // `/ploegen` renders the same list over every team its two flagships
       // leave out, Reserven included — so the youth heading was a claim the
       // section could not make on one of the two pages that render it.
-      renderDirectory(divisions, "Alle andere ploegen");
+      renderDirectory(divisions, "Andere");
 
       const h2 = screen.getByRole("heading", { level: 2 });
-      expect(h2).toHaveTextContent("Alle andere ploegen");
+      expect(h2).toHaveTextContent("Andere");
       expect(h2.textContent).not.toContain(HEADING);
       expect(screen.getByTestId("youth-directory")).toHaveAttribute(
         "aria-label",
-        "Alle andere ploegen",
+        "Andere",
       );
     });
   });
 
   describe("the division sub-line (#2641)", () => {
     it("prints the reeks when the club published one", () => {
-      renderDirectory([
-        { label: "Reserven", range: "Voorbij U21", teams: [reservenTeam()] },
-      ]);
+      renderDirectory([{ label: "Reserven", teams: [reservenTeam()] }]);
       const card = screen.getByTestId("youth-team-card");
       expect(within(card).getByText("Reserven VV AH")).toBeInTheDocument();
       expect(paragraphsIn(card)).toBe(2); // caption + sub-line
@@ -131,20 +129,14 @@ describe("YouthDirectory", () => {
 
   describe("the Reserven group", () => {
     const reserven: YouthDivisionGroup[] = [
-      { label: "Reserven", range: "Voorbij U21", teams: [reservenTeam()] },
+      { label: "Reserven", teams: [reservenTeam()] },
     ];
 
-    it("heads the group with where the side sits, not with an age band", () => {
+    it("renders the heading bare, with no ` · range` separator", () => {
+      // It is not an age band, and the owner ruled against a label saying so:
+      // no label beats one generic enough to be worth the pixels. The section
+      // heading above the groups carries that framing instead (#2641).
       renderDirectory(reserven);
-      expect(screen.getByRole("heading", { level: 3 })).toHaveTextContent(
-        "Reserven · Voorbij U21",
-      );
-    });
-
-    it("renders a rangeless group's heading bare (#2414)", () => {
-      // The range is optional on the type, so the bare heading stays a
-      // supported state even though no group ships without one today.
-      renderDirectory([{ label: "Reserven", teams: [reservenTeam()] }]);
       const heading = screen.getByRole("heading", { level: 3 });
       expect(heading).toHaveTextContent("Reserven");
       expect(heading.textContent).not.toContain("·");

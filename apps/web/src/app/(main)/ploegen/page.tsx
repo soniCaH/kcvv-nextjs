@@ -98,7 +98,7 @@ export default async function TeamsPage() {
         </div>
 
         <YouthDirectory
-          heading="Alle andere ploegen"
+          heading="Andere"
           divisions={youthByDivision}
           className="mt-16"
         />
