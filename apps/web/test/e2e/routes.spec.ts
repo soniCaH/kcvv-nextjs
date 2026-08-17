@@ -87,6 +87,10 @@ test.describe("static routes", () => {
   test("/privacy", async ({ page }) => {
     await smokeTest(page, { path: "/privacy" });
   });
+
+  test("/inhoud", async ({ page }) => {
+    await smokeTest(page, { path: "/inhoud" });
+  });
 });
 
 test.describe("dynamic routes", () => {

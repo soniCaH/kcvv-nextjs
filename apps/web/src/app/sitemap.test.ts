@@ -44,13 +44,13 @@ describe("sitemap.ts", () => {
 
     const result = await sitemap();
 
-    // Should contain all 19 static routes
+    // Should contain all 20 static routes
     const staticEntries = result.filter(
       (e) =>
         !e.url.includes("/nieuws/") ||
         e.url === "https://www.kcvvelewijt.be/nieuws",
     );
-    expect(staticEntries).toHaveLength(19);
+    expect(staticEntries).toHaveLength(20);
 
     // Verify homepage entry
     const homepage = result.find(
@@ -83,6 +83,15 @@ describe("sitemap.ts", () => {
     expect(galerij).toBeDefined();
     expect(galerij!.priority).toBe(0.6);
     expect(galerij!.changeFrequency).toBe("monthly");
+
+    // Verify the contents page (#2622) — it re-derives daily from the CMS,
+    // and the footer is its only link, so the sitemap is how a crawler finds it.
+    const inhoud = result.find(
+      (e) => e.url === "https://www.kcvvelewijt.be/inhoud",
+    );
+    expect(inhoud).toBeDefined();
+    expect(inhoud!.priority).toBe(0.4);
+    expect(inhoud!.changeFrequency).toBe("daily");
 
     // All entries should have lastModified as a Date
     for (const entry of result) {
@@ -126,6 +135,6 @@ describe("sitemap.ts", () => {
     const result = await sitemap();
 
     // Should still return static routes
-    expect(result).toHaveLength(19);
+    expect(result).toHaveLength(20);
   });
 });
