@@ -26,7 +26,6 @@ export default function PlayerDetailLoading() {
               <div className="bg-paper-edge h-10 w-2/3" />
             </div>
             <div className="bg-paper-edge h-3 w-48" />
-            <div className="bg-paper-edge h-7 w-40" />
           </div>
           <div className="bg-paper-edge aspect-[3/4] w-full max-w-[320px] justify-self-start sm:justify-self-end" />
         </div>

@@ -98,11 +98,16 @@ export async function generateMetadata({
     const fullName =
       `${player.firstName} ${player.lastName}`.trim() || "Speler";
     // Composed like the team page's metadata fallback (#2630): when no
-    // position is authored, the description drops the datum entirely rather
-    // than filling it with a generic literal (#2567).
+    // position is authored, the description drops that datum rather than
+    // filling it with a generic literal (#2567). Unlike the team page's
+    // `typeLabel` fallback (a category word, always known), a player has no
+    // always-known category word other than the position itself — so this
+    // falls to the team the player is on, and only then to the bare name.
     const description = player.position
       ? `${player.position} bij KCVV Elewijt`
-      : `${fullName} bij KCVV Elewijt`;
+      : player.teamLabel
+        ? `${player.teamLabel} bij KCVV Elewijt`
+        : `${fullName} bij KCVV Elewijt`;
 
     return {
       title: fullName,
@@ -204,7 +209,6 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
           birthDate={player.birthDate}
           jerseyNumber={player.number}
           teamLabel={player.teamLabel}
-          season={player.season}
         />
       </PageContainer>
       <StripedSeam colorPair="ink-cream" height="md" />

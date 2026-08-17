@@ -30,7 +30,7 @@ export const PLAYER_BY_PSD_ID_QUERY =
   "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",
   bio,
   "currentTeam": *[_type == "team" && archived != true && references(^._id)] | order(name asc)[0] {
-    name, displayName, "slug": slug.current, season
+    name, displayName, "slug": slug.current
   }
 }`);
 
@@ -58,8 +58,6 @@ export interface PlayerVM {
    * Multi-team disambiguation (PRD §7) — see `findByPsdId` GROQ.
    */
   teamLabel?: string;
-  /** Active-team season label (e.g. "26/27"). */
-  season?: string;
 }
 
 /** A PlayerVM that has a valid href (i.e. has a psdId) */
@@ -74,7 +72,6 @@ export function toPlayerVM(
       name?: string | null;
       displayName?: string | null;
       slug?: string | null;
-      season?: string | null;
     } | null;
   },
 ): PlayerVM {
@@ -103,7 +100,6 @@ export function toPlayerVM(
           name: row.currentTeam.name ?? "",
         })
       : undefined,
-    season: row.currentTeam?.season ?? undefined,
   };
 }
 

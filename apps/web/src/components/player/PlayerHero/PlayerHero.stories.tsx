@@ -50,7 +50,6 @@ const meta = {
     birthDate: { control: "text" },
     jerseyNumber: { control: "number" },
     teamLabel: { control: "text" },
-    season: { control: "text" },
   },
 } satisfies Meta<typeof PlayerHero>;
 
@@ -67,7 +66,6 @@ export const AdultWithPhoto: Story = {
     birthDate: "1999-03-14",
     jerseyNumber: 8,
     teamLabel: "A-Ploeg",
-    season: "26/27",
   },
 };
 
@@ -80,7 +78,6 @@ export const AdultIllustrationFallback: Story = {
     birthDate: "1996-11-02",
     jerseyNumber: 4,
     teamLabel: "A-Ploeg",
-    season: "26/27",
   },
 };
 
@@ -94,7 +91,6 @@ export const MinorU17WithPhoto: Story = {
     birthDate: "2009-09-12",
     jerseyNumber: 11,
     teamLabel: "U17",
-    season: "26/27",
   },
 };
 
@@ -107,7 +103,6 @@ export const MinorU8Illustration: Story = {
     birthDate: "2018-04-08",
     jerseyNumber: 7,
     teamLabel: "U8",
-    season: "26/27",
   },
 };
 
@@ -121,6 +116,5 @@ export const LongSurname: Story = {
     birthDate: "1998-07-22",
     jerseyNumber: 17,
     teamLabel: "A-Ploeg",
-    season: "26/27",
   },
 };

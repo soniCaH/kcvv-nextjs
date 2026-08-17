@@ -80,7 +80,6 @@ function PlayerProfileAssembly({
           birthDate={birthDate}
           jerseyNumber={8}
           teamLabel="A-Ploeg"
-          season="26/27"
         />
       </section>
       <StripedSeam colorPair="ink-cream" height="md" />

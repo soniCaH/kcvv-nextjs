@@ -33,12 +33,19 @@
  * `nameWeight="split"` prop on `<EditorialHeading>`.
  *
  * **Multi-team disambiguation (PRD §7 Q4, AC):** this component is
- * deliberately data-flat. The hero kicker / ticket-stub `teamLabel` is
- * supplied by the page (`/spelers/[slug]/page.tsx`), which already owns
- * the active-roster selection via the `currentTeam` GROQ projection on
+ * deliberately data-flat. The hero kicker `teamLabel` is supplied by the
+ * page (`/spelers/[slug]/page.tsx`), which already owns the active-roster
+ * selection via the `currentTeam` GROQ projection on
  * `PLAYER_BY_PSD_ID_QUERY` (first non-archived team that references the
  * player, ordered alphabetically by team name). `<PlayerHero>` does not
  * consume a `playerTeams` array; the page picks the team to render.
+ *
+ * **No ticket-stub (#2567):** this hero used to compose `teamLabel` with a
+ * `season` value into a bordered ticket-stub box. `team.season` never had a
+ * writer — it was deleted from the schema — so the stub is gone outright,
+ * not reduced to `teamLabel` alone: that would duplicate the up-link
+ * breadcrumb chip #2428/#2442 puts on this same page, one navigational and
+ * one inert (#2535).
  */
 
 import Image from "next/image";
@@ -66,8 +73,6 @@ export interface PlayerHeroProps {
   jerseyNumber?: number;
   /** Active-team label resolved by the page (e.g. "A-Ploeg", "U17"). */
   teamLabel?: string;
-  /** Season label (e.g. "26/27"). Combined with `teamLabel` into the ticket-stub. */
-  season?: string;
   className?: string;
 }
 
@@ -137,7 +142,6 @@ export function PlayerHero({
   birthDate,
   jerseyNumber,
   teamLabel,
-  season,
   className,
 }: PlayerHeroProps) {
   const hasPhoto = photoUrl !== undefined && photoUrl !== "";
@@ -154,12 +158,6 @@ export function PlayerHero({
       : undefined;
 
   const showMetaRow = hasPosition || formattedBirthDate !== undefined;
-
-  const showTicketStub =
-    teamLabel !== undefined &&
-    teamLabel !== "" &&
-    season !== undefined &&
-    season !== "";
 
   return (
     <section
@@ -215,17 +213,6 @@ export function PlayerHero({
               <span>{formattedBirthDate}</span>
             ) : null}
           </div>
-        ) : null}
-
-        {showTicketStub ? (
-          <span
-            data-testid="player-hero-ticket-stub"
-            className="border-ink bg-cream text-ink inline-flex w-fit items-center gap-2 border-2 px-3 py-1 font-mono text-xs tracking-[0.12em] uppercase shadow-[2px_2px_0_0_var(--color-ink)]"
-          >
-            <span>{teamLabel}</span>
-            <span aria-hidden="true">·</span>
-            <span>{season}</span>
-          </span>
         ) : null}
       </div>
 
