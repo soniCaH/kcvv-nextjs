@@ -370,6 +370,12 @@ export function deriveOwnClubId(games: PsdGame[]): number | undefined {
  * same club (#2606). Guarded so that both ids being null/undefined does not
  * collide into "true": two absent ids are proof of nothing, not proof of a
  * self-match.
+ *
+ * Accepted per #2606: this also matches a genuine internal fixture (KCVV A
+ * vs KCVV B), which would render as a placeholder too. The AC mandates the
+ * rule be computed from `homeClubId === awayClubId` and forbids keying on
+ * whose tournament it is, and #2606's census found no such row — so this is
+ * not a bug to fix, just a case worth a reader knowing was considered.
  */
 export function isSelfMatch(
   homeClubId: number | null | undefined,
