@@ -32,6 +32,7 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight } from "@/lib/icons.redesign";
+import { EmptyState } from "@/components/design-system";
 import { useResponsibilityAnalytics } from "@/hooks/useResponsibilityAnalytics";
 import { useHubMemberPanel } from "@/components/organigram/HubMemberPanel";
 import {
@@ -214,37 +215,60 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
   const renderContent = () => {
     if (responsibilityPaths.length === 0) {
       return (
-        <FinderEmpty>
-          Nog geen hulpvragen beschikbaar.{" "}
+        <EmptyState
+          tier="surface"
+          heading="Nog geen hulpvragen beschikbaar"
+          live
+        >
+          Heb je toch een vraag?{" "}
           <Link
             href="/club/contact"
             className="text-jersey-deep font-semibold underline"
           >
             Contacteer de club →
           </Link>
-        </FinderEmpty>
+        </EmptyState>
       );
     }
     if (audiencePaths.length === 0) {
       return (
-        <FinderEmpty>
-          Geen hulpvragen voor deze rol.{" "}
-          <FilterResetButton onClick={() => setAudience(null)}>
-            Toon alles
-          </FilterResetButton>
-        </FinderEmpty>
+        <EmptyState
+          tier="surface"
+          heading="Geen hulpvragen voor deze rol"
+          live
+          actions={[
+            {
+              label: "Toon alles",
+              onClick: () => setAudience(null),
+              variant: "ghost",
+            },
+          ]}
+        >
+          Er zijn voor deze rol geen hulpvragen beschikbaar.
+        </EmptyState>
       );
     }
     if (category !== "alles") {
       const all = grouped[category];
       if (all.length === 0) {
+        // Names the active category by label ("Medisch"), not the generic
+        // "deze categorie" — the copy is the tell (#2427 rule 5).
+        const meta = CATEGORY_META[category];
         return (
-          <FinderEmpty>
-            Geen hulpvragen in deze categorie{audience ? " voor deze rol" : ""}.{" "}
-            <FilterResetButton onClick={() => setCategory("alles")}>
-              Toon alle categorieën
-            </FilterResetButton>
-          </FinderEmpty>
+          <EmptyState
+            tier="surface"
+            heading={`Geen hulpvragen in ${meta.label}${audience ? " voor deze rol" : ""}`}
+            live
+            actions={[
+              {
+                label: "Toon alle categorieën",
+                onClick: () => setCategory("alles"),
+                variant: "ghost",
+              },
+            ]}
+          >
+            Probeer een andere categorie, of bekijk het volledige overzicht.
+          </EmptyState>
         );
       }
       return <div className="space-y-2.5">{all.map(renderCard)}</div>;
@@ -385,35 +409,5 @@ function CategoryPreview({
         </button>
       )}
     </section>
-  );
-}
-
-/** Inline text button that resets a filter inside an empty state. */
-function FilterResetButton({
-  onClick,
-  children,
-}: {
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="text-jersey-deep font-semibold underline"
-    >
-      {children}
-    </button>
-  );
-}
-
-function FinderEmpty({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      role="status"
-      className="border-ink bg-cream-soft text-ink-soft border-2 p-6 text-center text-sm shadow-[3px_3px_0_0_var(--color-ink)]"
-    >
-      {children}
-    </div>
   );
 }

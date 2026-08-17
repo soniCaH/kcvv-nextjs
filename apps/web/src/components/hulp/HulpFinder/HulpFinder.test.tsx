@@ -152,8 +152,10 @@ describe("HulpFinder", () => {
     render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
     // No medisch path is tagged 'supporter' → the category is empty for them.
     fireEvent.click(screen.getByRole("button", { name: "Medisch" }));
+    // Names the active category by label (#2427 rule 5 — the copy is the
+    // tell), not a generic "deze categorie".
     expect(screen.getByRole("status")).toHaveTextContent(
-      /geen hulpvragen in deze categorie/i,
+      /geen hulpvragen in medisch/i,
     );
   });
 
