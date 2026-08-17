@@ -44,8 +44,20 @@ export function FirstTeamAgendaRow({
       // a kicked-off match PSD still calls `scheduled`, which a status-derived
       // row would label "Volgende" right beside the actual fixture.
       kind={kind}
-      onNavigate={() =>
-        trackFirstTeamsCardClick({ teamSlug, matchId: match.id, kind })
+      // `match_card_click` is documented as "a homepage card clicked through
+      // to its match detail" — a placeholder reservation never clicks
+      // through (the row has no `<Link>`), so constructing this closure for
+      // one would inflate the event with clicks that reached no match page,
+      // invisibly: the event name is unchanged, so nothing downstream would
+      // ever flag it. `<TeamAgendaRow>` also never wires the click handler
+      // for a placeholder row, but the skip belongs here too — the caller is
+      // the one that knows this row is a reservation before it hands
+      // anything over.
+      onNavigate={
+        match.isPlaceholder
+          ? undefined
+          : () =>
+              trackFirstTeamsCardClick({ teamSlug, matchId: match.id, kind })
       }
     />
   );
