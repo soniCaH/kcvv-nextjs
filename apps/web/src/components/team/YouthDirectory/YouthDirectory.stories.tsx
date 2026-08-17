@@ -8,11 +8,14 @@ import { reservenTeam, youthTeam as team } from "./youth-directory.fixtures";
 const PHOTO = "/images/ultras.jpg";
 
 /**
- * The reserves — no age range, so the heading renders bare, and no age code, so
- * the card captions by name over an initialled jersey (#2414).
+ * The reserves — no age code, so the card captions by name over an initialled
+ * jersey (#2414), and no age band either: its range says where the side sits
+ * rather than which ages it holds (#2641). The one team of seventeen with a
+ * published reeks, so the only card that carries a sub-line.
  */
 const reserven: YouthDivisionGroup = {
   label: "Reserven",
+  range: "Voorbij U21",
   teams: [reservenTeam()],
 };
 
@@ -51,16 +54,29 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Full working — the reserves lead, then the three age divisions. */
+/**
+ * `/jeugd` — the reserves lead, then the three age divisions, under the youth
+ * heading that route passes.
+ */
 export const FullDirectory: Story = {
-  args: { divisions },
+  args: { heading: "Jeugdwerking", divisions },
+};
+
+/**
+ * `/ploegen` — the same list under the heading that route passes. It holds
+ * everything the two flagships above it leave out, so it cannot claim to be
+ * the youth section: Reserven is a senior side (#2641).
+ */
+export const TeamsIndexDirectory: Story = {
+  args: { heading: "Alle andere ploegen", divisions },
 };
 
 /** Sparse — one division with members, empty groups omitted. */
 export const SparseDirectory: Story = {
   args: {
+    heading: "Jeugdwerking",
     divisions: [
-      { label: "Reserven", teams: [] },
+      { label: "Reserven", range: "Voorbij U21", teams: [] },
       { label: "Bovenbouw", range: "U17–U21", teams: [] },
       { label: "Middenbouw", range: "U12–U16", teams: [team("U13")] },
       { label: "Onderbouw", range: "U6–U11", teams: [] },

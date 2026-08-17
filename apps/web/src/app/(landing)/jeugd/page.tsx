@@ -144,7 +144,11 @@ export default async function JeugdPage() {
           />
         </EditorialHubAnalytics>
 
-        <YouthDirectory divisions={youthByDivision} className="mt-16" />
+        <YouthDirectory
+          heading="Jeugdwerking"
+          divisions={youthByDivision}
+          className="mt-16"
+        />
       </PageContainer>
 
       <JeugdCtaBand />

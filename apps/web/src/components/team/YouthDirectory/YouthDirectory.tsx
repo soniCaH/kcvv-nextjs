@@ -7,6 +7,14 @@ import { JerseyShirt } from "@/components/design-system/JerseyShirt";
 import { isAgeCode, type YouthDivisionGroup } from "@/lib/utils/group-teams";
 
 export interface YouthDirectoryProps {
+  /**
+   * The section's own heading, and its landmark name. A prop rather than a
+   * constant because two routes render this list over two different sets of
+   * teams: on `/jeugd` it is the youth section, on `/ploegen` it is every team
+   * the two flagships above it leave out — including Reserven, which is not
+   * youth (#2641).
+   */
+  heading: string;
   divisions: readonly YouthDivisionGroup[];
   className?: string;
 }
@@ -16,27 +24,31 @@ export interface YouthDirectoryProps {
 const CARD_ROTATIONS = [-1.1, 0.7, -0.5];
 
 /**
- * Youth-team directory (`/jeugd` + `/ploegen`). Grouped Reserven / Bovenbouw /
+ * Team directory (`/jeugd` + `/ploegen`). Grouped Reserven / Bovenbouw /
  * Middenbouw / Onderbouw (per [[project_youth_divisions]]); each team is a taped
  * polaroid of its squad photo (`team.teamImageUrl`, backfilled in #2070)
  * captioned with the team's display name — design locks 7j4 (variant C) + 7j5
  * (age-code-only · subtle rotation · newsprint colour). Teams without a photo
  * fall back to the canonical `<JerseyShirt>` illustration. A group with no
  * `range` renders its heading bare (#2414). Empty groups are omitted; the whole
- * block hides when no youth teams exist.
+ * block hides when no group has teams.
  */
-export function YouthDirectory({ divisions, className }: YouthDirectoryProps) {
+export function YouthDirectory({
+  heading,
+  divisions,
+  className,
+}: YouthDirectoryProps) {
   const groups = divisions.filter((d) => d.teams.length > 0);
   if (groups.length === 0) return null;
 
   return (
     <section
       data-testid="youth-directory"
-      aria-label="Jeugdwerking"
+      aria-label={heading}
       className={cn("flex flex-col gap-10", className)}
     >
       <EditorialHeading level={2} size="display-md" emphasis={{ text: "." }}>
-        Jeugdwerking
+        {heading}
       </EditorialHeading>
 
       {groups.map((group) => (
@@ -102,13 +114,20 @@ export function YouthDirectory({ divisions, className }: YouthDirectoryProps) {
                     <p className="font-display-big text-jersey-deep mt-2 text-center text-2xl font-black tabular-nums">
                       {caption}
                     </p>
-                    {/* TEAMS-2 / JEUGD-1: same-age teams (U9 wit/groen/prov)
-                      need a distinguisher — show the full division/name when
-                      it adds detail beyond the caption. */}
-                    {(team.divisionFull ?? team.name).toLowerCase() !==
-                    caption.toLowerCase() ? (
+                    {/* The reeks this team plays in, when the club has
+                      published one — and nothing at all when it has not
+                      (#2641). The slot used to fall back to `team.name`, which
+                      made it true on 1 card of 17: `divisionFull` is null on
+                      every youth team, so sixteen cards printed their own
+                      caption back at themselves, five of them with the
+                      double-space the federation name carries. The gate that
+                      remains is the same anti-echo one, now reading the only
+                      field it was ever about. */}
+                    {team.divisionFull &&
+                    team.divisionFull.toLowerCase() !==
+                      caption.toLowerCase() ? (
                       <p className="text-ink-soft mt-0.5 text-center font-mono text-[10px] leading-tight tracking-[0.08em] uppercase">
-                        {team.divisionFull ?? team.name}
+                        {team.divisionFull}
                       </p>
                     ) : null}
                   </TapedCard>

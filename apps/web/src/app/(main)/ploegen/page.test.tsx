@@ -95,6 +95,17 @@ describe("/ploegen listing — Phase 6.C composition", () => {
     expect(flagships[1]?.textContent).toContain("B-kern");
   });
 
+  it("does not head the directory as the youth section", async () => {
+    // The same component fills `/jeugd`, where `Jeugdwerking` is true. Here it
+    // holds every team the two flagships above it leave out — Reserven among
+    // them, a senior side with its own roster (#2641).
+    render(await TeamsPage());
+
+    const directory = screen.getByTestId("youth-directory");
+    expect(directory).toHaveAttribute("aria-label", "Alle andere ploegen");
+    expect(directory.textContent).not.toContain("Jeugdwerking");
+  });
+
   it("captions the youth card with the team's display name", async () => {
     render(await TeamsPage());
     expect(screen.getByTestId("youth-directory")).toBeInTheDocument();

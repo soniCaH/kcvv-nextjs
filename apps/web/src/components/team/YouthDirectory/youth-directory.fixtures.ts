@@ -41,8 +41,11 @@ export function youthTeam(
 
 /**
  * The reserves — age "A" rather than an age code, so its slug resolves to the
- * plain name over an initialled jersey and its group heading carries no range
- * (#2414).
+ * plain name over an initialled jersey (#2414).
+ *
+ * `divisionFull` mirrors production, where Reserven is the one team of
+ * seventeen that has one. That is the whole reason the card's sub-line exists,
+ * so a fixture without it would show the slot only in its empty state (#2641).
  */
 export const reservenTeam = (): TeamLandingItem =>
   youthTeam("A", null, {
@@ -50,4 +53,5 @@ export const reservenTeam = (): TeamLandingItem =>
     name: RESERVEN_LABEL,
     slug: "reserven",
     psdId: RESERVEN_PSD_ID,
+    divisionFull: "Reserven VV AH",
   });

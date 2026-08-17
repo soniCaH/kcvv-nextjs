@@ -2,7 +2,8 @@
  * Team listing — Phase 6.C rebuild.
  *
  * Editorial page-header → A-ploeg flagship (jersey-deep) → B-ploeg flagship
- * (cream, mirrored) → youth directory (Bovenbouw / Middenbouw / Onderbouw) →
+ * (cream, mirrored) → the directory of everything they leave out (Reserven /
+ * Bovenbouw / Middenbouw / Onderbouw) →
  * footer. Replaces the legacy InteriorPageHero + TeamFeaturedCard +
  * YouthTeamsDirectory composition (those components retire in #1947).
  */
@@ -24,6 +25,7 @@ import { YouthDirectory } from "@/components/team/YouthDirectory";
 const PLOEGEN_TITLE = "Onze ploegen";
 const PLOEGEN_DESCRIPTION =
   "Alle ploegen van KCVV Elewijt: eerste ploeg, tweede ploeg en jeugd van U6 tot U21.";
+const PLOEGEN_DIRECTORY_HEADING = "Alle andere ploegen";
 
 export const metadata = buildPageMetadata({
   title: PLOEGEN_TITLE,
@@ -94,7 +96,15 @@ export default async function TeamsPage() {
           ) : null}
         </div>
 
-        <YouthDirectory divisions={youthByDivision} className="mt-16" />
+        {/* Not `Jeugdwerking`, which `/jeugd` passes: here the same list sits
+            under the two flagships and holds everything they leave out —
+            Reserven included, which is a senior side with its own roster
+            (#2641). */}
+        <YouthDirectory
+          heading={PLOEGEN_DIRECTORY_HEADING}
+          divisions={youthByDivision}
+          className="mt-16"
+        />
       </PageContainer>
     </>
   );
