@@ -77,3 +77,6 @@ export {
   CANONICAL_TAGS,
 } from './normalize-article-tag-casing'
 export type {TaggedArticleDoc as NormalizeArticleTagCasingDoc} from './normalize-article-tag-casing'
+
+export {default as dropTeamSeasonMigration, migrateDropTeamSeason} from './drop-team-season'
+export type {TeamWithSeasonDoc as DropTeamSeasonDoc} from './drop-team-season'
