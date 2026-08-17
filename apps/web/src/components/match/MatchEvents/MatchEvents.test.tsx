@@ -326,8 +326,13 @@ describe("MatchEvents", () => {
           events={[]}
         />,
       );
+      expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+        "Nog geen gebeurtenissen.",
+      );
       expect(
-        screen.getByText("Nog geen gebeurtenissen in deze wedstrijd."),
+        screen.getByText(
+          "Er zijn nog geen gebeurtenissen geregistreerd in deze wedstrijd.",
+        ),
       ).toBeInTheDocument();
     });
   });

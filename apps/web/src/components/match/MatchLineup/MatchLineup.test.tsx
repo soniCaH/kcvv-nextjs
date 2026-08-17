@@ -245,8 +245,13 @@ describe("MatchLineup", () => {
   describe("empty lineups", () => {
     it("shows message when both lineups are empty", () => {
       render(<MatchLineup {...defaultProps} homeLineup={[]} awayLineup={[]} />);
+      expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+        "Geen opstellingen beschikbaar.",
+      );
       expect(
-        screen.getByText("Geen opstellingen beschikbaar voor deze wedstrijd."),
+        screen.getByText(
+          "Er is voor deze wedstrijd geen opstelling geregistreerd.",
+        ),
       ).toBeInTheDocument();
     });
 

@@ -14,6 +14,7 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
 import { Swap } from "@/lib/icons.redesign";
+import { EmptyState } from "@/components/design-system";
 import { CardGlyph } from "../CardGlyph";
 
 function assertNever(value: never): never {
@@ -270,14 +271,19 @@ export function MatchEvents({
     return aTime - bTime;
   });
 
-  // Empty state
+  // Empty state — tier "surface" (#2427 / #2562): the whole timeline is
+  // empty. Events can still arrive (goals/cards get added as PSD reports
+  // them), so "Nog geen" holds.
   if (filteredEvents.length === 0) {
     return (
-      <div role="status" className={cn("py-8 text-center", className)}>
-        <p className="text-ink-muted font-mono text-sm tracking-[0.14em] uppercase">
-          Nog geen gebeurtenissen in deze wedstrijd.
-        </p>
-      </div>
+      <EmptyState
+        tier="surface"
+        heading="Nog geen gebeurtenissen"
+        live
+        className={className}
+      >
+        Er zijn nog geen gebeurtenissen geregistreerd in deze wedstrijd.
+      </EmptyState>
     );
   }
 
@@ -362,11 +368,9 @@ function EventList({
   highlightTeam?: "home" | "away";
 }) {
   if (events.length === 0) {
-    return (
-      <p className="text-ink-muted font-mono text-sm tracking-[0.14em] uppercase">
-        Geen gebeurtenissen
-      </p>
-    );
+    // Tier "slot" (#2427 / #2562): one team's column is empty while the
+    // other side of the grouped view is full.
+    return <EmptyState tier="slot">Geen gebeurtenissen</EmptyState>;
   }
 
   return (

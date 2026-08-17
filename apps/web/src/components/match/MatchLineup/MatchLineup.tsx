@@ -16,6 +16,7 @@
 import { cn } from "@/lib/utils/cn";
 import { ArrowUp, ArrowDown } from "@/lib/icons.redesign";
 import type { CardType } from "@/lib/effect/schemas/match.schema";
+import { EmptyState } from "@/components/design-system";
 import { CardGlyph } from "../CardGlyph";
 
 export interface LineupPlayer {
@@ -91,14 +92,18 @@ export function MatchLineup({
     );
   }
 
-  // No lineups available
+  // No lineups available — tier "surface" (#2427 / #2562). "Geen", not "Nog
+  // geen": PSD may never send a lineup for this match, and "Nog geen" would
+  // be a promise this surface can't keep.
   if (homeLineup.length === 0 && awayLineup.length === 0) {
     return (
-      <div className={cn("py-8 text-center", className)}>
-        <p className="text-ink-muted font-mono text-sm tracking-[0.14em] uppercase">
-          Geen opstellingen beschikbaar voor deze wedstrijd.
-        </p>
-      </div>
+      <EmptyState
+        tier="surface"
+        heading="Geen opstellingen beschikbaar"
+        className={className}
+      >
+        Er is voor deze wedstrijd geen opstelling geregistreerd.
+      </EmptyState>
     );
   }
 
@@ -152,7 +157,9 @@ function TeamLineup({
       </h3>
 
       {players.length === 0 ? (
-        <p className="text-ink-muted text-sm">Geen opstelling beschikbaar</p>
+        // Tier "slot" (#2427 / #2562): one team's column is empty while the
+        // other side of the two-column layout is full.
+        <EmptyState tier="slot">Geen opstelling beschikbaar</EmptyState>
       ) : (
         <div>
           {starters.length > 0 && (
