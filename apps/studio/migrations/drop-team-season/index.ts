@@ -7,10 +7,7 @@
  * schema (never had a writer; 0 of 26 production docs carry a value).
  * Idempotent — re-runs are safe.
  *
- * Run against production AFTER staging has been verified. Note: the current
- * Sanity CLI defaults `migration run` to dry mode even without `--dry-run` —
- * pass `--no-dry-run` (and `--no-confirm` for a non-interactive run) to
- * actually commit:
+ * Run against production AFTER staging has been verified:
  *   npx sanity@latest migration run drop-team-season --project vhb33jaz --dataset production --dry-run
  *   npx sanity@latest migration run drop-team-season --project vhb33jaz --dataset production --no-dry-run --no-confirm
  */

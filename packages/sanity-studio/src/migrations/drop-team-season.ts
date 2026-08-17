@@ -15,6 +15,12 @@ import {at, defineMigration, unset} from 'sanity/migrate'
  *
  * Exported separately from `defineMigration` so unit tests can exercise the
  * branching against synthetic documents without a Sanity dataset.
+ *
+ * Note: the Sanity CLI defaults `migration run` to dry mode even *without*
+ * `--dry-run` — pass `--no-dry-run` (and `--no-confirm` for a
+ * non-interactive run) to actually commit. See the production/staging
+ * wrapper facades (`apps/studio/migrations/drop-team-season/`,
+ * `apps/studio-staging/migrations/drop-team-season/`) for the commands.
  */
 export interface TeamWithSeasonDoc {
   _id?: string
