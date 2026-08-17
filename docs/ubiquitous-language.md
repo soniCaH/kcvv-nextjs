@@ -237,7 +237,7 @@ A player's playing position. Determined by fallback hierarchy:
 3. `positionPsd` (from PSD `bestPosition`) → free text
 4. Neither set → **absent**, not defaulted
 
-Code no longer fills an unset position with a generic literal — see **The Writer Rule** in `apps/web/CLAUDE.md`. Consumers (`PlayerHero`'s meta row, `PlayerCard`'s label, `SquadGrid`'s catch-all group) all render an unset position as absent, distinguishable from an authored one (#2567).
+Code no longer fills an unset position with a generic literal — see **The Writer Rule** in `apps/web/CLAUDE.md`. `PlayerHero`'s meta row and `PlayerCard`'s label both render an unset position as absent, distinguishable from an authored one (#2567). `SquadGrid`'s trailing group is different: its `"Spelers"` heading is a **UI label for "unmapped or unauthored"**, not a rendering of the datum itself, so a player who was deliberately authored `Speler` and a player with no position at all land under the identical heading — measured 2026-08-17, that catch-all holds 184 of 231 active players (80%). The rule's "distinguishable from an authored one" guarantee holds at the field and at the two labelled surfaces above; it does not extend to this grouping heading.
 
 `Speler` itself is **not removed from the dropdown** — it stays a deliberate, authored choice (`packages/sanity-schemas/src/player.ts`'s `position` enum), distinct from an unset field. It is the honest answer for U6–U9, where no finer position exists yet (#2535): an editor picking `Speler` for a young player and an editor never opening the field are now distinguishable, which is the whole point of removing the code-level default.
 

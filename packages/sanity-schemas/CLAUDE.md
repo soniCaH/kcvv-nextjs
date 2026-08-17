@@ -137,6 +137,10 @@ When adding a new schema:
 
 Keep `schemaTypes` order stable — reordering changes Studio sidebar ordering for editors.
 
+## A `readOnly` Field Needs a Named Writer
+
+Before declaring a field `readOnly: true` (typically described "gesynchroniseerd vanuit PSD"), confirm a named writer for it exists in `apps/api/src/sync/psd-sanity-sync.ts` and that the upstream PSD shape actually carries the value — do not declare a synced field speculatively, "for when the sync catches up." `team.season` shipped exactly that way and was never written by anything (#2535/#2567). See root `.claude/CLAUDE.md` → **A `readOnly` Field Needs a Named Writer** for the full rule.
+
 ## Migration Script Expectations
 
 When renaming or restructuring a field (not just adding a new optional one), a Sanity migration script is required:
