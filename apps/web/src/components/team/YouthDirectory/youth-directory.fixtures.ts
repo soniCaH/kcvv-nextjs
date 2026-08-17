@@ -30,13 +30,13 @@ export function youthTeam(
     staff: null,
     ...overrides,
   };
-  // Resolved *after* the overrides, the way the repository resolves it (#2630),
-  // so a fixture cannot caption a card with a string the real mapper would
-  // never produce — and an override of `slug`/`name` moves the caption with it.
-  return {
-    ...team,
-    displayName: overrides.displayName ?? teamDisplayName(team),
-  };
+  // Resolved *after* the overrides, through the same helper the repository
+  // uses (#2630) — `team` already carries any `displayName` override, so a
+  // blank or whitespace-only one falls back to the slug-derived label exactly
+  // as it would in production, and overriding `slug`/`name` moves the caption
+  // with it. Assigning an override straight through would let a fixture render
+  // a caption the real mapper can never produce.
+  return { ...team, displayName: teamDisplayName(team) };
 }
 
 /**

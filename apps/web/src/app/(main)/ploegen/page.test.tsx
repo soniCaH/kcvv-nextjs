@@ -3,11 +3,17 @@ import { render, screen } from "@testing-library/react";
 import type { TeamLandingItem } from "@/lib/utils/group-teams";
 
 // Mock the data layer — runPromise resolves the teams array the page maps.
+//
+// Every `displayName` here is deliberately NOT the label this page used to
+// hardcode ("A-ploeg" / "B-ploeg") nor the slug-derived fallback ("U13"). A
+// fixture that agrees with the old constant cannot tell you which one the page
+// rendered, so these are editorial overrides an editor could plausibly type
+// (#2630).
 const teams: TeamLandingItem[] = [
   {
     _id: "a",
     name: "Eerste Elftallen A",
-    displayName: "A-ploeg",
+    displayName: "A-kern",
     slug: "eerste-elftallen-a",
     psdId: null,
     age: "A",
@@ -21,7 +27,7 @@ const teams: TeamLandingItem[] = [
   {
     _id: "b",
     name: "Eerste Elftallen B",
-    displayName: "B-ploeg",
+    displayName: "B-kern",
     slug: "eerste-elftallen-b",
     psdId: null,
     age: "A",
@@ -35,7 +41,7 @@ const teams: TeamLandingItem[] = [
   {
     _id: "u13",
     name: "KCVV Elewijt U13",
-    displayName: "U13",
+    displayName: "U13 Groen",
     slug: "kcvv-elewijt-u13",
     psdId: null,
     age: "U13",
@@ -80,10 +86,23 @@ describe("/ploegen listing — Phase 6.C composition", () => {
     expect(flagships[1]?.getAttribute("data-variant")).toBe("b");
   });
 
-  it("renders the youth directory with the U13 card", async () => {
+  it("names each flagship from the team's display name, not a constant", async () => {
+    // The slot used to be labelled `category="A-ploeg"` inline, which meant an
+    // editor could rename the team and this page would keep the old word.
+    render(await TeamsPage());
+    const flagships = screen.getAllByTestId("team-flagship");
+    expect(flagships[0]?.textContent).toContain("A-kern");
+    expect(flagships[1]?.textContent).toContain("B-kern");
+  });
+
+  it("captions the youth card with the team's display name", async () => {
     render(await TeamsPage());
     expect(screen.getByTestId("youth-directory")).toBeInTheDocument();
     const youthCards = screen.getAllByTestId("youth-team-card");
-    expect(youthCards.some((c) => c.textContent?.includes("U13"))).toBe(true);
+    // "U13 Groen", not the bare age code — the caption used to come off `age`,
+    // which two teams can share (#2630).
+    expect(youthCards.some((c) => c.textContent?.includes("U13 Groen"))).toBe(
+      true,
+    );
   });
 });

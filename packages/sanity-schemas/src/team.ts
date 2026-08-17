@@ -141,7 +141,7 @@ export const team = defineType({
     }),
     defineField({
       name: 'displayName',
-      title: 'Display name',
+      title: 'Weergavenaam',
       type: 'string',
       group: 'identiteit',
       description:

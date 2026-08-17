@@ -99,6 +99,33 @@ describe("SiteHeader", () => {
     ]);
   });
 
+  it("labels a senior entry from the team's display name", () => {
+    // The nav used to re-derive its own label off `name` (`seniorNavLabel`), a
+    // second copy of the same rule — so an editorial rename reached the page
+    // heading and the share card but not the link a click earlier (#2630).
+    // The fixture's override is distinct from the slug-derived label on
+    // purpose: agreeing with it would prove nothing.
+    render(
+      <SiteHeader
+        seniorTeams={[
+          makeTeam({
+            slug: "kcvv-elewijt-a",
+            name: "KCVV Elewijt A",
+            displayName: "A-kern",
+          }),
+        ]}
+      />,
+    );
+    const nav = screen.getAllByRole("navigation", {
+      name: /hoofdnavigatie/i,
+    })[0]!;
+    const labels = Array.from(nav.querySelectorAll("a")).map(
+      (a) => a.textContent,
+    );
+    expect(labels).toContain("A-kern");
+    expect(labels).not.toContain("A-ploeg");
+  });
+
   it("has no dropdown triggers — every nav entry is a plain link", () => {
     render(<SiteHeader seniorTeams={seniorTeams} />);
     expect(document.querySelector("[aria-haspopup]")).toBeNull();
