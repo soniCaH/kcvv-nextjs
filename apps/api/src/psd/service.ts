@@ -14,7 +14,7 @@ import type {
   Match,
   MatchDetail,
   CompetitionType,
-  RankingEntry,
+  RankingTable,
   OpponentHistory,
   PlayerSeasonStats,
 } from "@kcvv/api-contract";
@@ -41,6 +41,7 @@ import {
   isSettledMatchStatus,
   transformFootbalistoMatchDetail,
   transformFootbalistoRankingEntry,
+  stripPsdName,
   extractId,
   computeOpponentSummary,
   psdGameToMs,
@@ -60,7 +61,7 @@ export interface PsdServiceInterface {
   readonly getRanking: (
     teamId: number,
     logoCdnUrl: string,
-  ) => Effect.Effect<readonly RankingEntry[], BffError>;
+  ) => Effect.Effect<readonly RankingTable[], BffError>;
   readonly getOpponentHistory: (
     teamId: number,
     clubId: number,
@@ -724,49 +725,52 @@ export const PsdServiceLive = Layer.effect(
             FootbalistoRankingArray,
           );
 
-          const competition =
-            competitions.find(
-              (c) =>
-                c.teams.length > 0 &&
-                c.type.toUpperCase() !== "CUP" &&
-                c.type.toUpperCase() !== "FRIENDLY",
-            ) ?? competitions.find((c) => c.teams.length > 0);
+          // Every OFFICIAL table with rows, in feed order — never one picked
+          // arbitrarily (#2589). CUP and FRIENDLY are dropped deliberately:
+          // the A-team carries two of each, and a cup table is worthless once
+          // the league starts. That cup run stays visible in `#wedstrijden`.
+          // `resolveCompetitionType` owns the PSD type → league/cup/friendly
+          // mapping, including `LEAGUE` as a forward-compat synonym for
+          // `OFFICIAL`. Comparing the raw string here instead would drop that
+          // synonym, and the day PSD switches strings the whole klassement
+          // would go empty club-wide rather than degrade.
+          const official = competitions.filter(
+            (c) => c.teams.length > 0 && resolveCompetitionType(c) === "league",
+          );
 
-          if (!competition || competition.teams.length === 0) {
-            return [] as readonly RankingEntry[];
-          }
+          const tables: RankingTable[] = [];
 
-          const [errors, entries] = yield* Effect.partition(
-            competition.teams,
-            (item) =>
-              S.decodeUnknown(FootbalistoRankingEntry)(item).pipe(
-                Effect.mapError((parseError) => ({
-                  id: extractId(item),
-                  parseError,
-                })),
+          for (const competition of official) {
+            const [errors, entries] = yield* Effect.partition(
+              competition.teams,
+              (item) =>
+                S.decodeUnknown(FootbalistoRankingEntry)(item).pipe(
+                  Effect.mapError((parseError) => ({
+                    id: extractId(item),
+                    parseError,
+                  })),
+                ),
+            );
+
+            if (errors.length > 0) {
+              const ids = errors.map((e) => e.id).join(", ");
+              yield* Effect.log(
+                `getRanking(${teamId}): competition ${competition.id} — filtered ${errors.length} invalid ranking entry(ies) — IDs: [${ids}]`,
+              );
+            }
+
+            if (entries.length === 0) continue;
+
+            tables.push({
+              competition_id: competition.id,
+              competition_name: stripPsdName(competition.name),
+              entries: entries.map((e) =>
+                transformFootbalistoRankingEntry(e, logoCdnUrl),
               ),
-          );
-
-          if (errors.length > 0) {
-            const ids = errors.map((e) => e.id).join(", ");
-            yield* Effect.log(
-              `getRanking(${teamId}): filtered ${errors.length} invalid ranking entry(ies) — IDs: [${ids}]`,
-            );
+            });
           }
 
-          if (entries.length === 0) {
-            return yield* Effect.fail(
-              new ResourceNotFoundError({
-                message: `getRanking(${teamId}): all ${competition.teams.length} entries were invalid after filtering`,
-                resourceType: "ranking",
-                resourceId: teamId,
-              }),
-            );
-          }
-
-          return entries.map((e) =>
-            transformFootbalistoRankingEntry(e, logoCdnUrl),
-          );
+          return tables;
         }),
 
       getOpponentHistory: (teamId: number, clubId: number) =>

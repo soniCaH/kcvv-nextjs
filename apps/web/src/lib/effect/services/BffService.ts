@@ -6,7 +6,7 @@ import {
   PsdApi,
   type Match,
   type MatchDetail,
-  type RankingEntry,
+  type RankingTable,
   type HttpServiceUnavailable,
   type HttpBadGateway,
   type HttpNotFound,
@@ -33,7 +33,7 @@ export class BffService extends Context.Tag("BffService")<
     getMatchDetail: (matchId: number) => Effect.Effect<MatchDetail, BffError>;
     getRanking: (
       teamId: number,
-    ) => Effect.Effect<readonly RankingEntry[], BffError>;
+    ) => Effect.Effect<readonly RankingTable[], BffError>;
     getRelated: (
       id: string,
       limit?: number,

@@ -665,6 +665,21 @@ export function transformFootbalistoMatchDetail(
 
 // ─── Ranking transforms ──────────────────────────────────────────────────────
 
+/**
+ * Strip the federation's bookkeeping off a competition name — the leading
+ * `Voetbal : <bond> - ` and a trailing ` - Hommes` / ` - Femmes` (#2589).
+ *
+ * Returns the input **unchanged** when neither pattern matches. The name is a
+ * federation string with no contract behind it, so the helper never blanks a
+ * name it does not recognise and never invents one.
+ */
+export function stripPsdName(name: string): string {
+  const stripped = name
+    .replace(/^Voetbal\s*:\s*[^-]*-\s*/, "")
+    .replace(/\s*-\s*(?:Hommes|Femmes)$/, "");
+  return stripped.length > 0 ? stripped : name;
+}
+
 export function transformFootbalistoRankingEntry(
   entry: FootbalistoRankingEntry,
   logoCdnUrl: string,

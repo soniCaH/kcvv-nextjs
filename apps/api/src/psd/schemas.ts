@@ -48,6 +48,7 @@ export class FootbalistoRankingEntry extends S.Class<FootbalistoRankingEntry>(
 export class FootbalistoRankingCompetition extends S.Class<FootbalistoRankingCompetition>(
   "FootbalistoRankingCompetition",
 )({
+  id: S.Number,
   name: S.String,
   type: S.String,
   teams: S.Array(S.Unknown),

@@ -10,6 +10,7 @@ import {
   transformPsdGame,
   transformFootbalistoMatchDetail,
   transformFootbalistoRankingEntry,
+  stripPsdName,
   normaliseClubName,
   psdGameToMs,
 } from "./transforms";
@@ -599,5 +600,54 @@ describe("transformPsdGame / …MatchDetail / …RankingEntry — club-name casi
       "https://cdn.example.com",
     );
     expect(withoutLocal.team_name).toBe("KSV Rumbeke");
+  });
+});
+
+describe("stripPsdName", () => {
+  // Every string below was read off `/teams/{id}/ranking` on 2026-08-16 —
+  // all 23 competitions the association publishes for this club today.
+  it.each([
+    [
+      "Voetbal : Voetbal Vlaanderen - 3de Afdeling Voetb Vl A",
+      "3de Afdeling Voetb Vl A",
+    ],
+    [
+      "Voetbal : Voetbal Vlaanderen - 4 Provinciaal Vl Brab C",
+      "4 Provinciaal Vl Brab C",
+    ],
+    [
+      "Voetbal : Voetbal Vlaanderen - Reserven Voetb Vl AH",
+      "Reserven Voetb Vl AH",
+    ],
+    ["Voetbal : Voetbal Vlaanderen - Gewestelijk U13 BJ", "Gewestelijk U13 BJ"],
+    // A different bond in the prefix.
+    ["Voetbal : Nationale - Croky Cup - Hommes", "Croky Cup"],
+    // Hyphens inside the reeks name survive — the prefix stops at the first one.
+    [
+      "Voetbal : Voetbal Vlaanderen - 1e Ploegen 3-4 Prov - Hommes",
+      "1e Ploegen 3-4 Prov",
+    ],
+    [
+      "Voetbal : Voetbal Vlaanderen - B v Brab Heren B-ploegen",
+      "B v Brab Heren B-ploegen",
+    ],
+    // Not observed yet, but the women's suffix is specced alongside Hommes.
+    [
+      "Voetbal : Voetbal Vlaanderen - Gewestelijk U13 BJ - Femmes",
+      "Gewestelijk U13 BJ",
+    ],
+  ])("strips %s", (raw, expected) => {
+    expect(stripPsdName(raw)).toBe(expected);
+  });
+
+  it("returns the input unchanged when neither pattern matches", () => {
+    expect(stripPsdName("3e Nationale VV A")).toBe("3e Nationale VV A");
+    expect(stripPsdName("Gewestelijk U13")).toBe("Gewestelijk U13");
+  });
+
+  it("never blanks a name — a bare prefix falls back to the raw string", () => {
+    expect(stripPsdName("Voetbal : Voetbal Vlaanderen - ")).toBe(
+      "Voetbal : Voetbal Vlaanderen - ",
+    );
   });
 });

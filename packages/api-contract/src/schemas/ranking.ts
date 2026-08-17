@@ -1,5 +1,4 @@
 import { Schema as S } from "effect";
-import { DateFromStringOrDate } from "./common";
 
 /** Normalized ranking entry for UI consumption */
 export class RankingEntry extends S.Class<RankingEntry>("RankingEntry")({
@@ -23,9 +22,24 @@ export class RankingEntry extends S.Class<RankingEntry>("RankingEntry")({
 
 export const RankingArray = S.Array(RankingEntry);
 
-export class RankingResponse extends S.Class<RankingResponse>("RankingResponse")({
-  ranking: RankingArray,
-  season: S.optional(S.String),
-  competition: S.optional(S.String),
-  last_updated: S.optional(DateFromStringOrDate),
+/**
+ * One published league table. A team can play more than one official
+ * competition in a season — every youth side gets a fresh poule at the winter
+ * break — so `#klassement` renders every table the association publishes
+ * rather than picking one (#2589).
+ *
+ * December adds an optional `period` and an `is_current` flag; both are
+ * additive under Effect Schema.
+ */
+export class RankingTable extends S.Class<RankingTable>("RankingTable")({
+  /** Provider competition id — the only stable key for a phase. Two same-named
+   * youth tables have no identity without it. */
+  competition_id: S.Number,
+  /** Provider name, prefix/suffix stripped. Consumers prefer the editorial
+   * `divisionFull` when Sanity carries one — the federation's name for a reeks
+   * is not the club's. */
+  competition_name: S.String,
+  entries: RankingArray,
 }) {}
+
+export const RankingTableArray = S.Array(RankingTable);

@@ -21,20 +21,26 @@ const sampleMatch = {
   squadLabel: undefined,
 };
 
-const sampleRankingEntry = {
-  position: 1,
-  team_id: 10,
-  team_name: "KCVV Elewijt",
-  team_logo: "https://example.com/logo.png",
-  played: 5,
-  won: 4,
-  drawn: 1,
-  lost: 0,
-  goals_for: 10,
-  goals_against: 3,
-  goal_difference: 7,
-  points: 13,
-  form: undefined,
+const sampleRankingTable = {
+  competition_id: 222464,
+  competition_name: "3de Afdeling Voetb Vl A",
+  entries: [
+    {
+      position: 1,
+      team_id: 10,
+      team_name: "KCVV Elewijt",
+      team_logo: "https://example.com/logo.png",
+      played: 5,
+      won: 4,
+      drawn: 1,
+      lost: 0,
+      goals_for: 10,
+      goals_against: 3,
+      goal_difference: 7,
+      points: 13,
+      form: undefined,
+    },
+  ],
 };
 
 function mockFetchWith(data: unknown, status = 200) {
@@ -138,8 +144,8 @@ describe("BffService", () => {
     expect(result.date).toBeInstanceOf(Date);
   });
 
-  it("getRanking calls /ranking/:teamId and returns decoded entries", async () => {
-    mockFetchWith([sampleRankingEntry]);
+  it("getRanking calls /ranking/:teamId and returns decoded tables", async () => {
+    mockFetchWith([sampleRankingTable]);
 
     const result = await Effect.runPromise(
       Effect.gen(function* () {
@@ -153,7 +159,8 @@ describe("BffService", () => {
       expect.any(Object),
     );
     expect(result).toHaveLength(1);
-    expect(result[0]?.team_name).toBe("KCVV Elewijt");
+    expect(result[0]?.competition_name).toBe("3de Afdeling Voetb Vl A");
+    expect(result[0]?.entries[0]?.team_name).toBe("KCVV Elewijt");
   });
 
   it("preserves the error's _tag, with exactly one BFF call", async () => {

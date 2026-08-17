@@ -1,4 +1,4 @@
-import { Crest } from "@/components/design-system";
+import { Crest, MonoLabel } from "@/components/design-system";
 import { cn } from "@/lib/utils/cn";
 import type { RankingEntry } from "@kcvv/api-contract";
 
@@ -6,11 +6,16 @@ export interface StandingsTableProps {
   entries: readonly RankingEntry[];
   /** PSD team_id of the KCVV team to highlight. */
   highlightTeamId?: number;
+  /** Name of the competition this table ranks. Also names the region, so a
+   * team playing two phases gets two distinct landmark names instead of two
+   * identical "Klassement" ones (#2631). */
+  caption?: string;
 }
 
 export function StandingsTable({
   entries,
   highlightTeamId,
+  caption,
 }: StandingsTableProps) {
   if (entries.length === 0) return null;
 
@@ -19,9 +24,14 @@ export function StandingsTable({
       data-testid="standings-table"
       className="w-full overflow-x-auto"
       role="region"
-      aria-label="Klassement"
+      aria-label={caption ?? "Klassement"}
     >
       <table className="w-full border-collapse font-mono text-xs">
+        {caption ? (
+          <caption className="pb-2 text-left">
+            <MonoLabel>{caption}</MonoLabel>
+          </caption>
+        ) : null}
         <thead>
           <tr className="border-ink border-b-2">
             <th

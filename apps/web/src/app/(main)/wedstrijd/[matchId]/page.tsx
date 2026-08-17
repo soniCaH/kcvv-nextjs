@@ -44,7 +44,12 @@ import {
   PhotoGalleryRepository,
   type GalleryCardVM,
 } from "@/lib/repositories/photoGallery.repository";
-import type { MatchDetail, MatchEvent, RankingEntry } from "@kcvv/api-contract";
+import type {
+  MatchDetail,
+  MatchEvent,
+  RankingEntry,
+  RankingTable,
+} from "@kcvv/api-contract";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   buildBreadcrumbJsonLd,
@@ -166,6 +171,11 @@ const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
  * a resolved `kcvv_team_id`; anything else triggers no ranking fetch at all.
  * Resilient: a BFF failure degrades to an empty table (auto-hidden), never a
  * 500 — mirrors the `/ploegen/[slug]` standings fetch.
+ *
+ * The BFF now hands back every official table this team plays in (#2631), so
+ * pick the one holding **both** sides of this match — a fixture belongs to
+ * exactly one phase. Flattening instead would double a club that appears in
+ * an autumn and a spring poule.
  */
 async function fetchStandings(
   match: MatchDetail,
@@ -174,16 +184,35 @@ async function fetchStandings(
     return [];
   }
   const standingsTeamId = match.kcvv_team_id;
-  return runPromise(
+  const tables = await runPromise(
     Effect.gen(function* () {
       const bff = yield* BffService;
       return yield* bff
         .getRanking(standingsTeamId)
         .pipe(
-          Effect.catchAll(() => Effect.succeed([] as readonly RankingEntry[])),
+          Effect.catchAll(() => Effect.succeed([] as readonly RankingTable[])),
         );
     }),
   );
+  const holds = (table: RankingTable, clubId: number) =>
+    table.entries.some((e) => e.club_id === clubId);
+
+  // Prefer the table holding both sides; fall back to one holding either, so a
+  // phase that has published only one of the two clubs still renders the row
+  // it has — what a single-table team got before this change.
+  //
+  // Ceiling: when two phases share both clubs, feed order decides and the
+  // autumn table can front a spring fixture. Resolving that needs the match to
+  // carry its own competition id, which the contract does not surface yet —
+  // it lands with the December phase work (#2589 decision 5).
+  const table =
+    tables.find(
+      (t) => holds(t, match.home_team.id) && holds(t, match.away_team.id),
+    ) ??
+    tables.find(
+      (t) => holds(t, match.home_team.id) || holds(t, match.away_team.id),
+    );
+  return table?.entries ?? [];
 }
 
 export default async function MatchPage({ params }: MatchPageProps) {
