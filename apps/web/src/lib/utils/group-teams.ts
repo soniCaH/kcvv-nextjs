@@ -1,6 +1,8 @@
 export type TeamLandingItem = {
   _id: string;
   name: string;
+  /** What the site calls this team, resolved at the repository boundary (#2630). */
+  displayName: string;
   slug: string;
   age: string;
   psdId: string | null;
@@ -85,7 +87,12 @@ function sortByAgeDesc(ageOrder: string[]) {
   };
 }
 
-/** Extract the trailing single letter from a team name, e.g. "Eerste Elftallen A" → "A" */
+/**
+ * Extract the trailing single letter from a team name, e.g. "Eerste Elftallen A" → "A".
+ *
+ * Selection only — this decides *which* team fills the A / B flagship slot, not
+ * what the slot is called. What it is called comes from `teamDisplayName`.
+ */
 function nameSuffix(name: string): string {
   return name.trim().split(/\s+/).at(-1) ?? "";
 }

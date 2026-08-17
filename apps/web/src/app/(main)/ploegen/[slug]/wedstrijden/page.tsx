@@ -32,8 +32,9 @@ export async function generateMetadata({
   );
   if (!team) return { title: "Team niet gevonden" };
 
-  const title = `Wedstrijden — ${team.name}`;
-  const description = `Volledig wedstrijdschema van ${team.name}.`;
+  const displayName = team.displayName;
+  const title = `Wedstrijden — ${displayName}`;
+  const description = `Volledig wedstrijdschema van ${displayName}.`;
   const url = `${SITE_CONFIG.siteUrl}/ploegen/${slug}/wedstrijden`;
 
   return {
@@ -46,7 +47,7 @@ export async function generateMetadata({
       url,
       type: "website",
       images: team.teamImageUrl
-        ? [{ url: team.teamImageUrl, alt: `${team.name} teamfoto` }]
+        ? [{ url: team.teamImageUrl, alt: `${displayName} teamfoto` }]
         : [DEFAULT_OG_IMAGE],
     },
   };
@@ -109,6 +110,7 @@ export default async function WedstrijdenPage({
 
   if (!team) notFound();
 
+  const displayName = team.displayName;
   const psdTeamId = team.psdId ? parseInt(team.psdId, 10) : NaN;
   const pageUrl = `${SITE_CONFIG.siteUrl}/ploegen/${slug}/wedstrijden`;
 
@@ -140,7 +142,7 @@ export default async function WedstrijdenPage({
           { name: "Home", url: SITE_CONFIG.siteUrl },
           { name: "Ploegen", url: `${SITE_CONFIG.siteUrl}/ploegen` },
           {
-            name: team.name,
+            name: displayName,
             url: `${SITE_CONFIG.siteUrl}/ploegen/${slug}`,
           },
           { name: "Wedstrijden", url: pageUrl },
@@ -153,7 +155,7 @@ export default async function WedstrijdenPage({
       <PageContainer className="py-12 sm:py-16">
         <PageHero
           register="minimal"
-          kicker={team.name}
+          kicker={displayName}
           headline="Wedstrijden"
         />
 

@@ -14,7 +14,6 @@ import {
 import {
   buildMenuItems,
   buildSeniorMenuItem,
-  seniorNavLabel,
   isMenuItemActive,
 } from "../menuItems";
 import { NavTakeover, NavTakeoverItem } from "../NavTakeover";
@@ -89,7 +88,7 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
   );
 
   const seniorMenuItems = (seniorTeams ?? []).map((t) =>
-    buildSeniorMenuItem(t, seniorNavLabel(t.name)),
+    buildSeniorMenuItem(t, t.displayName),
   );
   const menuItems = buildMenuItems(seniorMenuItems);
 

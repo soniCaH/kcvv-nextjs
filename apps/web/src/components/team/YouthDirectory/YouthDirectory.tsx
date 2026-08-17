@@ -18,13 +18,12 @@ const CARD_ROTATIONS = [-1.1, 0.7, -0.5];
 /**
  * Youth-team directory (`/jeugd` + `/ploegen`). Grouped Reserven / Bovenbouw /
  * Middenbouw / Onderbouw (per [[project_youth_divisions]]); each team is a taped
- * polaroid of its squad photo (`team.teamImageUrl`, backfilled in #2070) with
- * the age code as the caption — design locks 7j4 (variant C) + 7j5
+ * polaroid of its squad photo (`team.teamImageUrl`, backfilled in #2070)
+ * captioned with the team's display name — design locks 7j4 (variant C) + 7j5
  * (age-code-only · subtle rotation · newsprint colour). Teams without a photo
  * fall back to the canonical `<JerseyShirt>` illustration. A group with no
- * `range` renders its heading bare, and its teams — whose `age` is not an age
- * code — caption by name (#2414). Empty groups are omitted; the whole block
- * hides when no youth teams exist.
+ * `range` renders its heading bare (#2414). Empty groups are omitted; the whole
+ * block hides when no youth teams exist.
  */
 export function YouthDirectory({ divisions, className }: YouthDirectoryProps) {
   const groups = divisions.filter((d) => d.teams.length > 0);
@@ -48,20 +47,22 @@ export function YouthDirectory({ divisions, className }: YouthDirectoryProps) {
           </h3>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-4 gap-y-7">
             {group.teams.map((team, index) => {
-              // A real age code (U6…U21) captions the card and goes on the
-              // chest. Reserven's age is "A" — a senior code that reads as the
-              // A-ploeg in a youth grid — so non-age teams caption by name and
-              // wear its initial instead. The 56px overlay fits a letter, not
-              // a word, and an empty chest reads as a broken card.
+              // The caption is the team's one display name (#2630) — the same
+              // string its page heads itself with, so the click confirms
+              // itself. The chest keeps reading `age` directly: the 56px
+              // overlay fits a letter or an age code, not a word, and an empty
+              // chest reads as a broken card. Reserven's age is "A" — a senior
+              // code that reads as the A-ploeg in a youth grid — so non-age
+              // teams wear the caption's initial instead.
               const ageCode = isAgeCode(team.age) ? team.age : null;
-              const caption = ageCode ?? team.name;
-              const chestMark = ageCode ?? team.name.charAt(0).toUpperCase();
+              const caption = team.displayName;
+              const chestMark = ageCode ?? caption.charAt(0).toUpperCase();
               return (
                 <Link
                   key={team._id}
                   href={`/ploegen/${team.slug}`}
                   data-testid="youth-team-card"
-                  aria-label={`${team.name} — bekijk ploeg`}
+                  aria-label={`${caption} — bekijk ploeg`}
                   className="block"
                 >
                   <TapedCard

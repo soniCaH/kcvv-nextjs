@@ -7,6 +7,7 @@ import type {
   PLAYER_BY_PSD_ID_QUERY_RESULT,
 } from "../sanity/sanity.types";
 import type { SanityPlayerBase } from "../sanity/types";
+import { teamDisplayName } from "../utils/team-display-name";
 
 // ─── GROQ Queries ────────────────────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ export const PLAYER_BY_PSD_ID_QUERY =
   "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",
   bio,
   "currentTeam": *[_type == "team" && archived != true && references(^._id)] | order(name asc)[0] {
-    name, season
+    name, displayName, "slug": slug.current, season
   }
 }`);
 
@@ -62,7 +63,12 @@ export function toPlayerVM(
     celebrationImageUrl?: string | null;
     bio?: PLAYERS_QUERY_RESULT[number]["bio"] | null;
     birthDate?: string | null;
-    currentTeam?: { name?: string | null; season?: string | null } | null;
+    currentTeam?: {
+      name?: string | null;
+      displayName?: string | null;
+      slug?: string | null;
+      season?: string | null;
+    } | null;
   },
 ): PlayerVM {
   const position = row.keeper
@@ -80,7 +86,16 @@ export function toPlayerVM(
     href: row.psdId ? `/spelers/${row.psdId}` : undefined,
     bio: row.bio ?? undefined,
     birthDate: row.birthDate ?? undefined,
-    teamLabel: row.currentTeam?.name ?? undefined,
+    // The team's own name, resolved the same way its page resolves it — a
+    // profile that says `KCVVE  U15` beside a page headed `U15` is the drift
+    // #2630 closes.
+    teamLabel: row.currentTeam
+      ? teamDisplayName({
+          displayName: row.currentTeam.displayName,
+          slug: row.currentTeam.slug ?? "",
+          name: row.currentTeam.name ?? "",
+        })
+      : undefined,
     season: row.currentTeam?.season ?? undefined,
   };
 }

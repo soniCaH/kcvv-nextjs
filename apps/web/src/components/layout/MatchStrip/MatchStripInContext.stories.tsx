@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { MatchStripView } from "./MatchStripView";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import type { TeamNavVM } from "@/lib/repositories/team.repository";
+import { teamDisplayName } from "@/lib/utils/team-display-name";
 import type { ScheduleMatch } from "@/components/match/types";
 import type { MatchStripData } from "@/lib/server/match-data";
 
@@ -20,6 +21,9 @@ import type { MatchStripData } from "@/lib/server/match-data";
 const makeTeam = (over: Partial<TeamNavVM>): TeamNavVM => ({
   id: over.slug ?? "team",
   name: over.name ?? "Team",
+  displayName:
+    over.displayName ??
+    teamDisplayName({ slug: over.slug ?? "team", name: over.name ?? "Team" }),
   slug: over.slug ?? "team",
   age: over.age ?? null,
   psdId: null,

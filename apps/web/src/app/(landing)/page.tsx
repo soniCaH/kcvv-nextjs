@@ -58,7 +58,6 @@ import {
   UpcomingMatches,
   FirstTeamsBlock,
   deriveFirstTeamVM,
-  firstTeamLabel,
   firstTeamsHeading,
   selectSeniorTeams,
   ClubshopBanner,
@@ -221,7 +220,7 @@ export default async function HomePage() {
     const division = team.divisionFull ?? team.division ?? undefined;
     return deriveFirstTeamVM(
       {
-        label: firstTeamLabel(team.slug, team.name),
+        label: team.displayName,
         slug: team.slug,
         ...(division ? { division } : {}),
       },

@@ -37,6 +37,7 @@ function makeTeamRow(
     _id: "team-1",
     psdId: "100",
     name: "Eerste Elftallen A",
+    displayName: null,
     slug: "eerste-elftallen-a",
     age: "A",
     gender: "male",
@@ -67,6 +68,7 @@ describe("TeamRepository", () => {
       expect(t).toEqual<TeamNavVM>({
         id: "team-1",
         name: "Eerste Elftallen A",
+        displayName: "A-ploeg",
         slug: "eerste-elftallen-a",
         age: "A",
         psdId: "100",
@@ -120,6 +122,7 @@ describe("TeamRepository", () => {
         _id: "team-1",
         psdId: "100",
         name: "Eerste Elftallen A",
+        displayName: null,
         slug: "eerste-elftallen-a",
         age: "A",
         gender: "male",
@@ -275,8 +278,10 @@ describe("TeamRepository", () => {
       expect(team!.staff[0]?.href).toBeUndefined();
     });
 
-    it("computes tagline fallback: tagline → divisionFull → division", async () => {
-      // tagline null → falls back to divisionFull
+    it("leaves the tagline absent rather than repeating the division (#2630)", async () => {
+      // The tagline sits directly under the mono pill that already shows the
+      // division, so the old `?? divisionFull ?? division` chain made three
+      // senior pages print it twice. The slot is the club's line or nothing.
       mockFetch.mockResolvedValueOnce(makeDetailRow({ tagline: null }));
       const t1 = await runWithRepo(
         Effect.gen(function* () {
@@ -284,11 +289,12 @@ describe("TeamRepository", () => {
           return yield* repo.findBySlug("test");
         }),
       );
-      expect(t1!.tagline).toBe("3de Afdeling VFV A");
+      expect(t1!.divisionFull).toBe("3de Afdeling VFV A");
+      expect(t1!.tagline).toBeUndefined();
 
-      // tagline + divisionFull null → falls back to division
+      // An editorial line still comes through untouched.
       mockFetch.mockResolvedValueOnce(
-        makeDetailRow({ tagline: null, divisionFull: null }),
+        makeDetailRow({ tagline: "Er is maar één plezante compagnie" }),
       );
       const t2 = await runWithRepo(
         Effect.gen(function* () {
@@ -296,23 +302,7 @@ describe("TeamRepository", () => {
           return yield* repo.findBySlug("test");
         }),
       );
-      expect(t2!.tagline).toBe("3de Afdeling");
-
-      // all null → undefined
-      mockFetch.mockResolvedValueOnce(
-        makeDetailRow({
-          tagline: null,
-          divisionFull: null,
-          division: null,
-        }),
-      );
-      const t3 = await runWithRepo(
-        Effect.gen(function* () {
-          const repo = yield* TeamRepository;
-          return yield* repo.findBySlug("test");
-        }),
-      );
-      expect(t3!.tagline).toBeUndefined();
+      expect(t2!.tagline).toBe("Er is maar één plezante compagnie");
     });
 
     it("computes teamType: youth for U-ages, senior otherwise", async () => {
@@ -602,6 +592,7 @@ describe("TeamRepository", () => {
         _id: "team-1",
         psdId: "1",
         name: "Eerste Elftallen A",
+        displayName: null,
         slug: "eerste-elftallen-a",
         age: "A",
         division: "3de Afdeling",
@@ -638,6 +629,7 @@ describe("TeamRepository", () => {
         _id: "team-1",
         psdId: "1",
         name: "Eerste Elftallen A",
+        displayName: "A-ploeg",
         slug: "eerste-elftallen-a",
         age: "A",
         division: "3de Afdeling",

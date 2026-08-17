@@ -37,25 +37,6 @@ export const buildSeniorMenuItem = (
 ): MenuItem | null =>
   team?.slug ? { label, href: `/ploegen/${team.slug}` } : null;
 
-/**
- * "Eerste Elftallen A" → "A-ploeg". A name whose last word is not a single
- * capital has no short form, so it renders in full.
- *
- * Naming only — this deliberately does **not** cap the length. Senior labels
- * come from Sanity team names, so the nav's width is data-driven and needs
- * bounding (#2409), but the bound belongs at the desktop render site: it is
- * the desktop row that must fit one line at `lg`, and only the desktop row.
- * `SiteHeader` applies `NAV_LABEL_TRUNCATE` there. Capping the string here
- * instead would also chop the mobile drawer — full-width, 22px display type,
- * no width constraint at all — and would put the ellipsis into the link's
- * accessible name, which is the one place the full name must survive.
- */
-export const seniorNavLabel = (name: string): string => {
-  const trimmed = name.trim();
-  const lastWord = trimmed.split(/\s+/).at(-1) ?? trimmed;
-  return /^[A-Z]$/.test(lastWord) ? `${lastWord}-ploeg` : trimmed;
-};
-
 const isReserven = (t: TeamNavVM): boolean => t.psdId === RESERVEN_PSD_ID;
 
 /**

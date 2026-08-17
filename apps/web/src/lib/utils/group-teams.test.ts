@@ -11,6 +11,7 @@ const makeTeam = (
 ): TeamLandingItem => ({
   _id: overrides._id ?? "id-1",
   name: overrides.name ?? "Test Team",
+  displayName: overrides.displayName ?? overrides.name ?? "Test Team",
   slug: overrides.slug ?? "test-team",
   age: overrides.age ?? "A",
   psdId: overrides.psdId ?? null,

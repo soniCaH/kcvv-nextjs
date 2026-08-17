@@ -73,7 +73,7 @@ export default async function TeamsPage() {
             <TeamFlagship
               variant="a"
               kicker="Eerste elftal"
-              category="A-ploeg"
+              category={aTeam.displayName}
               division={aTeam.divisionFull ?? aTeam.division}
               season={aTeam.season}
               teamImageUrl={aTeam.teamImageUrl}
@@ -85,7 +85,7 @@ export default async function TeamsPage() {
             <TeamFlagship
               variant="b"
               kicker="Tweede elftal"
-              category="B-ploeg"
+              category={bTeam.displayName}
               division={bTeam.divisionFull ?? bTeam.division}
               season={bTeam.season}
               teamImageUrl={bTeam.teamImageUrl}

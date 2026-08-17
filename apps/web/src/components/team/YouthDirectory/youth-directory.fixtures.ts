@@ -3,6 +3,7 @@ import {
   RESERVEN_PSD_ID,
   type TeamLandingItem,
 } from "@/lib/utils/group-teams";
+import { teamDisplayName } from "@/lib/utils/team-display-name";
 
 /**
  * Build a youth `TeamLandingItem` from an age code (e.g. "U13"). Pass a
@@ -15,7 +16,7 @@ export function youthTeam(
   teamImageUrl: string | null = null,
   overrides: Partial<TeamLandingItem> = {},
 ): TeamLandingItem {
-  return {
+  const team = {
     _id: `t-${age}`,
     name: `KCVV Elewijt ${age}`,
     slug: `kcvv-elewijt-${age.toLowerCase()}`,
@@ -29,11 +30,19 @@ export function youthTeam(
     staff: null,
     ...overrides,
   };
+  // Resolved *after* the overrides, through the same helper the repository
+  // uses (#2630) — `team` already carries any `displayName` override, so a
+  // blank or whitespace-only one falls back to the slug-derived label exactly
+  // as it would in production, and overriding `slug`/`name` moves the caption
+  // with it. Assigning an override straight through would let a fixture render
+  // a caption the real mapper can never produce.
+  return { ...team, displayName: teamDisplayName(team) };
 }
 
 /**
- * The reserves — age "A" rather than an age code, so the card captions by name
- * over an initialled jersey and its group heading carries no range (#2414).
+ * The reserves — age "A" rather than an age code, so its slug resolves to the
+ * plain name over an initialled jersey and its group heading carries no range
+ * (#2414).
  */
 export const reservenTeam = (): TeamLandingItem =>
   youthTeam("A", null, {

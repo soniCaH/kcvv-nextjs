@@ -13,22 +13,26 @@
  */
 
 import { describe, it, expect } from "vitest";
-import {
-  buildMenuItems,
-  buildSeniorMenuItem,
-  seniorNavLabel,
-} from "../menuItems";
+import { buildMenuItems, buildSeniorMenuItem } from "../menuItems";
 import type { TeamNavVM } from "@/lib/repositories/team.repository";
 import { FOOTER_COLUMNS } from "./footerLinks";
 
 /** The two senior sides the nav renders in production. */
 const SENIOR_TEAMS = [
-  { slug: "eerste-elftallen-a", name: "Eerste Elftallen A" },
-  { slug: "eerste-elftallen-b", name: "Eerste Elftallen B" },
+  {
+    slug: "eerste-elftallen-a",
+    name: "Eerste Elftallen A",
+    displayName: "A-ploeg",
+  },
+  {
+    slug: "eerste-elftallen-b",
+    name: "Eerste Elftallen B",
+    displayName: "B-ploeg",
+  },
 ] as TeamNavVM[];
 
 const navHrefs = buildMenuItems(
-  SENIOR_TEAMS.map((t) => buildSeniorMenuItem(t, seniorNavLabel(t.name))),
+  SENIOR_TEAMS.map((t) => buildSeniorMenuItem(t, t.displayName)),
 ).map((i) => i.href);
 
 const footerHrefs = FOOTER_COLUMNS.flatMap((c) => c.links.map((l) => l.href));

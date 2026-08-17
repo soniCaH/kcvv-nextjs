@@ -7,6 +7,7 @@ import type {
   TEAM_BY_SLUG_QUERY_RESULT,
   TEAMS_LANDING_QUERY_RESULT,
 } from "../sanity/sanity.types";
+import { teamDisplayName } from "../utils/team-display-name";
 import { toPlayerVM, type PlayerVM } from "./player.repository";
 import type { TeamLandingItem } from "../utils/group-teams";
 import type { TeamStaffMember } from "../team-role-resolution";
@@ -15,14 +16,14 @@ import type { TeamStaffMember } from "../team-role-resolution";
 
 export const TEAMS_QUERY =
   defineQuery(`*[_type == "team" && archived != true && showInNavigation != false] | order(name asc) {
-  _id, psdId, name, "slug": slug.current, age, gender, footbelId, division, divisionFull,
+  _id, psdId, name, displayName, "slug": slug.current, age, gender, footbelId, division, divisionFull,
   tagline,
   "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5))
 }`);
 
 export const TEAM_BY_SLUG_QUERY =
   defineQuery(`*[_type == "team" && slug.current == $slug][0] {
-  _id, psdId, name, "slug": slug.current, age, gender, footbelId, division, divisionFull,
+  _id, psdId, name, displayName, "slug": slug.current, age, gender, footbelId, division, divisionFull,
   season,
   tagline, body[]{ ..., "fileUrl": file.asset->url }, contactInfo,
   "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),
@@ -43,7 +44,7 @@ export const YOUTH_TEAMS_CONTACT_QUERY =
 
 export const TEAMS_LANDING_QUERY =
   defineQuery(`*[_type == "team" && archived != true && showInNavigation != false && defined(age)] | order(name asc) {
-  _id, psdId, name, "slug": slug.current, age,
+  _id, psdId, name, displayName, "slug": slug.current, age,
   division, divisionFull, season, tagline,
   "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),
   staff[] { role, "member": member-> { firstName, lastName, functionTitle } }
@@ -80,6 +81,14 @@ export interface YouthTeamForContactVM {
 export interface TeamNavVM {
   id: string;
   name: string;
+  /**
+   * What the site calls this team, already resolved (#2630). Never the raw
+   * Sanity override — that is applied here, at the boundary, so no consumer can
+   * render `name` by accident. Read this, not `name`, on any human-facing
+   * surface; `name` is the federation-registered identity and belongs to
+   * JSON-LD.
+   */
+  displayName: string;
   slug: string;
   age: string | null;
   psdId: string | null;
@@ -108,6 +117,14 @@ export interface StaffMemberVM {
 export interface TeamDetailVM {
   id: string;
   name: string;
+  /**
+   * What the site calls this team, already resolved (#2630). Never the raw
+   * Sanity override — that is applied here, at the boundary, so no consumer can
+   * render `name` by accident. Read this, not `name`, on any human-facing
+   * surface; `name` is the federation-registered identity and belongs to
+   * JSON-LD.
+   */
+  displayName: string;
   slug: string;
   age: string | null;
   psdId: string | null;
@@ -132,10 +149,13 @@ type TEAM_BY_SLUG_DETAIL = Exclude<TEAM_BY_SLUG_QUERY_RESULT, null>;
 // ─── Transforms ──────────────────────────────────────────────────────────────
 
 export function toTeamNavVM(row: TEAMS_QUERY_RESULT[number]): TeamNavVM {
+  const name = row.name ?? "";
+  const slug = row.slug ?? "";
   return {
     id: row._id,
-    name: row.name ?? "",
-    slug: row.slug ?? "",
+    name,
+    displayName: teamDisplayName({ displayName: row.displayName, slug, name }),
+    slug,
     age: row.age,
     psdId: row.psdId,
     division: row.division,
@@ -143,10 +163,6 @@ export function toTeamNavVM(row: TEAMS_QUERY_RESULT[number]): TeamNavVM {
     tagline: row.tagline,
     teamImageUrl: row.teamImageUrl,
   };
-}
-
-function computeTagline(row: TEAM_BY_SLUG_DETAIL): string | undefined {
-  return row.tagline ?? row.divisionFull ?? row.division ?? undefined;
 }
 
 function computeTeamType(age: string | null): "youth" | "senior" {
@@ -184,17 +200,25 @@ function toStaffMemberVM(
 }
 
 function toTeamDetailVM(row: TEAM_BY_SLUG_DETAIL): TeamDetailVM {
+  const name = row.name ?? "";
+  const slug = row.slug ?? "";
   return {
     id: row._id,
-    name: row.name ?? "",
-    slug: row.slug ?? "",
+    name,
+    displayName: teamDisplayName({ displayName: row.displayName, slug, name }),
+    slug,
     age: row.age,
     psdId: row.psdId,
     footbelId: row.footbelId,
     division: row.division,
     divisionFull: row.divisionFull,
     season: row.season ?? null,
-    tagline: computeTagline(row),
+    // No `?? divisionFull ?? division` chain (#2630): the mono pill directly
+    // above the tagline already shows the division, so the fallback made three
+    // senior pages print it twice while the fifteen youth pages — where
+    // `divisionFull` is null — got nothing. The slot appears when the club
+    // writes a line and is absent otherwise.
+    tagline: row.tagline ?? undefined,
     teamType: computeTeamType(row.age),
     ageGroup: computeAgeGroup(row.age),
     teamImageUrl: row.teamImageUrl,
@@ -211,10 +235,13 @@ function toTeamDetailVM(row: TEAM_BY_SLUG_DETAIL): TeamDetailVM {
 function toTeamLandingItem(
   row: TEAMS_LANDING_QUERY_RESULT[number],
 ): TeamLandingItem {
+  const name = row.name ?? "";
+  const slug = row.slug ?? "";
   return {
     _id: row._id,
-    name: row.name ?? "",
-    slug: row.slug ?? "",
+    name,
+    displayName: teamDisplayName({ displayName: row.displayName, slug, name }),
+    slug,
     age: row.age ?? "",
     psdId: row.psdId,
     division: row.division,

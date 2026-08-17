@@ -193,13 +193,21 @@ const searchTeams = (query: string) =>
 
     const queryLower = query.toLowerCase();
 
+    // Matches on both names: the visitor may type what the site shows them
+    // ("A-ploeg", "U16") or what the federation registered ("Eerste Elftallen
+    // A"). Titles with the former, so the result names the page it opens
+    // (#2630).
     return teams
-      .filter((team) => team.name.toLowerCase().includes(queryLower))
+      .filter(
+        (team) =>
+          team.displayName.toLowerCase().includes(queryLower) ||
+          team.name.toLowerCase().includes(queryLower),
+      )
       .map(
         (team): SearchResult => ({
           id: team.id,
           type: "team",
-          title: team.name,
+          title: team.displayName,
           description: team.divisionFull ?? team.division ?? undefined,
           url: `/ploegen/${team.slug}`,
           imageUrl: team.teamImageUrl ?? undefined,

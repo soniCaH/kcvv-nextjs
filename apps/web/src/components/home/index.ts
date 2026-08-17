@@ -42,7 +42,6 @@ export type { UpcomingMatchesProps } from "./UpcomingMatches";
 export {
   FirstTeamsBlock,
   deriveFirstTeamVM,
-  firstTeamLabel,
   firstTeamsHeading,
   selectSeniorTeams,
 } from "./FirstTeamsBlock";

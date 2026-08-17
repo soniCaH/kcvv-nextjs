@@ -123,7 +123,7 @@ async function fetchCalendarData(): Promise<CalendarData> {
       // so we enrich from the Sanity team name here.
       const deduplicatedMatches = matchArrays
         .flatMap((matches, i) => {
-          const teamLabel = teamsWithPsd[i]!.name;
+          const teamLabel = teamsWithPsd[i]!.displayName;
           return matches.map((m) => ({
             ...transformMatchToCalendar(m),
             team: m.kcvv_team_label ?? teamLabel,
@@ -136,9 +136,9 @@ async function fetchCalendarData(): Promise<CalendarData> {
 
       const teamInfos: CalendarTeamInfo[] = teamsWithPsd.map((t) => ({
         id: t.id,
-        name: t.name,
+        name: t.displayName,
         psdId: Number(t.psdId),
-        label: t.name,
+        label: t.displayName,
       }));
 
       // Compose matches + the event feed into one chronological, discriminated

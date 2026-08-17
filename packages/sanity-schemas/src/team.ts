@@ -140,6 +140,14 @@ export const team = defineType({
         'Volledige competitienaam (bijv. "Eerste Elftal A - 3e Nationale A" of "U9 - Wit"). Redactioneel — getoond op de ploegpagina.',
     }),
     defineField({
+      name: 'displayName',
+      title: 'Weergavenaam',
+      type: 'string',
+      group: 'identiteit',
+      description:
+        'Naam zoals de site de ploeg toont (titel van de ploegpagina, kaartjes, deelkaart). Redactioneel — laat leeg en de naam wordt afgeleid uit de URL ("A-ploeg", "U13", "Reserven"). Vul enkel in wanneer dat niet volstaat, bijv. om twee U10-ploegen op kleur te onderscheiden.',
+    }),
+    defineField({
       name: 'showInNavigation',
       title: 'Show in navigation',
       type: 'boolean',

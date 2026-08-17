@@ -3,7 +3,6 @@ import {
   buildMenuItems,
   buildSeniorMenuItem,
   isMenuItemActive,
-  seniorNavLabel,
 } from "./menuItems";
 import type { MenuItem } from "./menuItems";
 import type { TeamNavVM } from "@/lib/repositories/team.repository";
@@ -88,29 +87,9 @@ describe("buildSeniorMenuItem", () => {
   });
 });
 
-describe("seniorNavLabel", () => {
-  it("shortens a trailing single capital to <X>-ploeg", () => {
-    expect(seniorNavLabel("Eerste Elftallen A")).toBe("A-ploeg");
-    expect(seniorNavLabel("KCVV Elewijt B")).toBe("B-ploeg");
-  });
-
-  it("passes a short name through untouched", () => {
-    expect(seniorNavLabel("Reserven")).toBe("Reserven");
-  });
-
-  it("returns a long name whole — width is bounded in CSS, not here", () => {
-    // The desktop row bounds itself with `NAV_LABEL_TRUNCATE` (max-w-[14ch]
-    // truncate). Truncating the string instead would also chop the mobile
-    // drawer, which has no width constraint, and would push the ellipsis into
-    // the link's accessible name.
-    const long = "Koninklijke Voetbalvereniging Elewijt";
-    expect(seniorNavLabel(long)).toBe(long);
-  });
-
-  it("trims surrounding whitespace before deciding", () => {
-    expect(seniorNavLabel("  Eerste Elftallen A  ")).toBe("A-ploeg");
-  });
-});
+// The label the nav renders is no longer derived here: `<SiteHeader>` reads the
+// team's resolved `displayName` (#2630), so the letter → `X-ploeg` rule lives in
+// exactly one place — `src/lib/utils/team-display-name.ts`, tested there.
 
 describe("isMenuItemActive", () => {
   it("marks an item active on its own page", () => {
