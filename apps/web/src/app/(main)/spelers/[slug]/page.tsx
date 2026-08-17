@@ -97,14 +97,20 @@ export async function generateMetadata({
 
     const fullName =
       `${player.firstName} ${player.lastName}`.trim() || "Speler";
+    // Composed like the team page's metadata fallback (#2630): when no
+    // position is authored, the description drops the datum entirely rather
+    // than filling it with a generic literal (#2567).
+    const description = player.position
+      ? `${player.position} bij KCVV Elewijt`
+      : `${fullName} bij KCVV Elewijt`;
 
     return {
       title: fullName,
-      description: `${player.position} bij KCVV Elewijt`,
+      description,
       alternates: { canonical: `${SITE_CONFIG.siteUrl}/spelers/${slug}` },
       openGraph: {
         title: fullName,
-        description: `${player.position} bij KCVV Elewijt`,
+        description,
         type: "profile",
         firstName: player.firstName,
         lastName: player.lastName,

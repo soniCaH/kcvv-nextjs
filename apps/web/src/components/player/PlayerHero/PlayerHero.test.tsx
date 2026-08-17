@@ -158,6 +158,24 @@ describe("PlayerHero", () => {
       expect(meta.textContent ?? "").not.toMatch(/\d{4}/);
       expect(meta.textContent ?? "").not.toContain("jaar");
     });
+
+    it("omits the position cell — not a placeholder — when position is absent (#2567)", () => {
+      render(
+        <PlayerHero
+          firstName="Maxim"
+          lastName="Breugelmans"
+          birthDate="1999-03-14"
+        />,
+      );
+      const meta = screen.getByTestId("player-hero-meta");
+      expect(meta.textContent).toContain("14·03·1999");
+      expect(meta.textContent).not.toContain("Speler");
+    });
+
+    it("hides the meta row entirely when both position and birthDate are absent", () => {
+      render(<PlayerHero firstName="Maxim" lastName="Breugelmans" />);
+      expect(screen.queryByTestId("player-hero-meta")).toBeNull();
+    });
   });
 
   describe("Numeric + ticket-stub composition", () => {

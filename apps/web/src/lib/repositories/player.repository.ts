@@ -38,7 +38,14 @@ export interface PlayerVM {
   id: string;
   firstName: string;
   lastName: string;
-  position: string;
+  /**
+   * Editorial position label. Absent when no editor has authored it and PSD's
+   * `bestPosition` is also empty (#2567) — never defaulted to a generic
+   * literal, so an unset position is distinguishable from an authored one on
+   * every consuming surface (`PlayerHero`'s meta row, `PlayerCard`'s label,
+   * `SquadGrid`'s grouping).
+   */
+  position?: string;
   number?: number;
   imageUrl?: string;
   celebrationImageUrl?: string;
@@ -73,7 +80,7 @@ export function toPlayerVM(
 ): PlayerVM {
   const position = row.keeper
     ? "Keeper"
-    : (row.position ?? row.positionPsd ?? "Speler");
+    : (row.position ?? row.positionPsd ?? undefined);
 
   return {
     id: row._id,

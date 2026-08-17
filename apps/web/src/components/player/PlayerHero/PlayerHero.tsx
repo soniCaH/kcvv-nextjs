@@ -53,8 +53,12 @@ const ADULT_AGE_THRESHOLD = 18;
 export interface PlayerHeroProps {
   firstName: string;
   lastName: string;
-  /** Editorial position label, sentence case (e.g. "Middenvelder"). */
-  position: string;
+  /**
+   * Editorial position label, sentence case (e.g. "Middenvelder"). Absent
+   * when no editor has authored one and PSD carries none either (#2567) —
+   * the meta row omits the cell rather than defaulting it.
+   */
+  position?: string;
   /** Resolved photo URL (typically `transparentImageUrl ?? psdImageUrl`). Missing → illustration fallback. */
   photoUrl?: string;
   /** ISO date string `YYYY-MM-DD`. Omitted → birthDate cell drops. */
@@ -141,11 +145,15 @@ export function PlayerHero({
     ? "photo"
     : "illustration";
 
+  const hasPosition = position !== undefined && position !== "";
+
   const now = new Date();
   const formattedBirthDate =
     birthDate !== undefined && birthDate !== ""
       ? formatAgeGradedBirthDate(birthDate, now)
       : undefined;
+
+  const showMetaRow = hasPosition || formattedBirthDate !== undefined;
 
   const showTicketStub =
     teamLabel !== undefined &&
@@ -194,18 +202,20 @@ export function PlayerHero({
           </span>
         </h1>
 
-        <div
-          data-testid="player-hero-meta"
-          className="text-ink-muted flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs tracking-[0.1em] uppercase"
-        >
-          <span>{position}</span>
-          {formattedBirthDate !== undefined ? (
-            <>
+        {showMetaRow ? (
+          <div
+            data-testid="player-hero-meta"
+            className="text-ink-muted flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs tracking-[0.1em] uppercase"
+          >
+            {hasPosition ? <span>{position}</span> : null}
+            {hasPosition && formattedBirthDate !== undefined ? (
               <span aria-hidden="true">·</span>
+            ) : null}
+            {formattedBirthDate !== undefined ? (
               <span>{formattedBirthDate}</span>
-            </>
-          ) : null}
-        </div>
+            ) : null}
+          </div>
+        ) : null}
 
         {showTicketStub ? (
           <span

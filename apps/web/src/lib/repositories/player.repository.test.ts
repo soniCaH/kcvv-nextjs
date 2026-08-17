@@ -97,7 +97,7 @@ describe("PlayerRepository", () => {
       expect(p.position).toBe("Keeper");
     });
 
-    it("position fallback: position → positionPsd → 'Speler'", async () => {
+    it("position fallback: position → positionPsd → undefined (#2567)", async () => {
       // When position is null, falls back to positionPsd
       mockFetch.mockResolvedValueOnce([
         makePlayerRow({
@@ -115,7 +115,7 @@ describe("PlayerRepository", () => {
       );
       expect(p1.position).toBe("Verdediger");
 
-      // When both null, falls back to "Speler"
+      // When both null, position is left undefined — never a generic literal.
       mockFetch.mockResolvedValueOnce([
         makePlayerRow({ keeper: false, position: null, positionPsd: null }),
       ]);
@@ -126,10 +126,10 @@ describe("PlayerRepository", () => {
           return yield* repo.findAll();
         }),
       );
-      expect(p2.position).toBe("Speler");
+      expect(p2.position).toBeUndefined();
     });
 
-    it("position fallback: keeper null treated as false", async () => {
+    it("position fallback: keeper null treated as false, unfilled position stays undefined", async () => {
       mockFetch.mockResolvedValueOnce([
         makePlayerRow({ keeper: null, position: null, positionPsd: null }),
       ]);
@@ -140,7 +140,7 @@ describe("PlayerRepository", () => {
           return yield* repo.findAll();
         }),
       );
-      expect(p.position).toBe("Speler");
+      expect(p.position).toBeUndefined();
     });
 
     it("imageUrl fallback: transparentImageUrl → psdImageUrl → undefined", async () => {
