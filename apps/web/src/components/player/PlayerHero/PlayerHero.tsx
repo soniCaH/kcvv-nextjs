@@ -48,6 +48,7 @@
  * one inert (#2535).
  */
 
+import { Fragment } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
 import { TapedFigure } from "@/components/design-system/TapedFigure";
@@ -149,15 +150,20 @@ export function PlayerHero({
     ? "photo"
     : "illustration";
 
-  const hasPosition = position !== undefined && position !== "";
-
   const now = new Date();
   const formattedBirthDate =
     birthDate !== undefined && birthDate !== ""
       ? formatAgeGradedBirthDate(birthDate, now)
       : undefined;
 
-  const showMetaRow = hasPosition || formattedBirthDate !== undefined;
+  // Same `part · part` pattern as MatchHero's `metaParts` — a list of
+  // present cells, dot-separated. `Fragment` (not a wrapping element) keeps
+  // each cell and its separator as direct children of the flex row below, so
+  // the existing `gap-x-2` spacing renders pixel-identical to the previous
+  // fixed position/·/birthDate markup.
+  const metaParts = [position, formattedBirthDate].filter(
+    (part): part is string => part !== undefined && part !== "",
+  );
 
   return (
     <section
@@ -200,18 +206,19 @@ export function PlayerHero({
           </span>
         </h1>
 
-        {showMetaRow ? (
+        {metaParts.length > 0 ? (
           <div
             data-testid="player-hero-meta"
             className="text-ink-muted flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs tracking-[0.1em] uppercase"
           >
-            {hasPosition ? <span>{position}</span> : null}
-            {hasPosition && formattedBirthDate !== undefined ? (
-              <span aria-hidden="true">·</span>
-            ) : null}
-            {formattedBirthDate !== undefined ? (
-              <span>{formattedBirthDate}</span>
-            ) : null}
+            {metaParts.map((part, index) => (
+              <Fragment key={`${part}-${index}`}>
+                <span>{part}</span>
+                {index < metaParts.length - 1 ? (
+                  <span aria-hidden="true">·</span>
+                ) : null}
+              </Fragment>
+            ))}
           </div>
         ) : null}
       </div>
