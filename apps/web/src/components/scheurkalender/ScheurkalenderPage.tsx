@@ -259,8 +259,15 @@ export function ScheurkalenderPage({
             </div>
           ) : (
             // "gevonden" is banned outside query surfaces (#2427 rule 3) — this
-            // is a data source, not a search.
-            <EmptyState tier="surface" heading="Geen competitiewedstrijden">
+            // is a data source, not a search. surface="bare": already inside
+            // the poster's own `border-ink` sheet frame — a second frame here
+            // nested two ink borders, and dropped a taped jersey into a print
+            // poster (#2562 review round 3).
+            <EmptyState
+              tier="surface"
+              heading="Geen competitiewedstrijden"
+              surface="bare"
+            >
               Er zijn geen competitiewedstrijden voor dit seizoen beschikbaar.
             </EmptyState>
           )}

@@ -6,6 +6,10 @@ import { cn } from "@/lib/utils/cn";
 import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { EmptyState } from "@/components/design-system";
+import {
+  filteredEmptyBody,
+  pendingEmptyBody,
+} from "@/lib/utils/empty-state-copy";
 import { CalendarMonth } from "../CalendarMonth";
 import { CalendarWeek } from "../CalendarWeek";
 import { CalendarAgenda } from "../CalendarAgenda";
@@ -187,21 +191,6 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
     return { filteredFeed: filtered, matches: matchList, events: eventList };
   }, [feed, activeTypeFilter]);
 
-  // Empty + filtered-to-zero copy. "all" + nothing = genuinely empty ("Nog
-  // geen" — a match or event can still be scheduled); a specific facet +
-  // nothing = the selection emptied the calendar (names the facet, gets the
-  // mandatory undo, never "Nog geen" — #2427 rule 5).
-  const emptyHeading =
-    activeTypeFilter === "all"
-      ? "Nog geen wedstrijden of evenementen gepland"
-      : activeTypeFilter === "Wedstrijden"
-        ? "Geen wedstrijden gepland"
-        : `Geen evenementen in de categorie ${activeTypeFilter}`;
-  const emptyBody =
-    activeTypeFilter === "all"
-      ? "Zodra er een wedstrijd of evenement gepland wordt, verschijnt het hier."
-      : "Probeer een andere categorie, of bekijk de volledige kalender.";
-
   return (
     <div className="space-y-4">
       {/* By-type filter chips (the row doubles as the colour legend) */}
@@ -280,28 +269,42 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
         {/* View content */}
         <div className="p-4">
           {filteredFeed.length === 0 ? (
-            <EmptyState
-              tier="surface"
-              heading={emptyHeading}
-              live
-              // Already inside the widget's own bordered/shadowed panel —
-              // a second frame here nested two ink borders with a shadow
-              // between them (#2562 review).
-              framed={false}
-              actions={
-                activeTypeFilter !== "all"
-                  ? [
-                      {
-                        label: "Toon alles",
-                        onClick: () => setType("all"),
-                        variant: "ghost",
-                      },
-                    ]
-                  : undefined
-              }
-            >
-              {emptyBody}
-            </EmptyState>
+            // "all" + nothing = genuinely empty ("Nog geen" — a match or
+            // event can still be scheduled); a specific facet + nothing =
+            // the selection emptied the calendar (names the facet, carries
+            // the mandatory undo via `reason="filtered"`, never "Nog geen"
+            // — #2427 rule 5). Computed only here, not on every render
+            // (round 3 review, D6). `surface="bare"`: already inside this
+            // panel's own bordered/shadowed shell — a second frame here
+            // nested two ink borders with a shadow between them.
+            activeTypeFilter === "all" ? (
+              <EmptyState
+                tier="surface"
+                heading="Nog geen wedstrijden of evenementen gepland"
+                live
+                surface="bare"
+              >
+                {pendingEmptyBody(
+                  "er een wedstrijd of evenement gepland wordt",
+                  "het",
+                )}
+              </EmptyState>
+            ) : (
+              <EmptyState
+                tier="surface"
+                heading={
+                  activeTypeFilter === "Wedstrijden"
+                    ? "Geen wedstrijden gepland"
+                    : `Geen evenementen in de categorie ${activeTypeFilter}`
+                }
+                live
+                surface="bare"
+                reason="filtered"
+                undo={{ label: "Toon alles", onClick: () => setType("all") }}
+              >
+                {filteredEmptyBody("de volledige kalender")}
+              </EmptyState>
+            )
           ) : view === "month" ? (
             <CalendarMonth
               matches={matches}
