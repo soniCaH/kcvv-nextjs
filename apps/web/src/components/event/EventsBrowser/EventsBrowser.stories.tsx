@@ -80,7 +80,11 @@ export const FilteredToZero: Story = {
   },
 };
 
-/** Empty list — no upcoming events at all: centred message, no filter row. */
+/**
+ * Empty list — no upcoming events at all: "Nog geen evenementen gepland" on
+ * the tier-"surface" `<EmptyState>`. The filter row stays visible (#2427
+ * rule 5) — the chips are a fixed set regardless of data.
+ */
 export const Empty: Story = {
   args: { events: [] },
 };

@@ -43,15 +43,19 @@ describe("<EventsBrowser>", () => {
     vi.clearAllMocks();
   });
 
-  it("renders the empty-list state with no filter row when there are no events", () => {
+  it("renders the genuine-empty state, filter row kept visible (#2427 rule 5)", () => {
     render(<EventsBrowser events={[]} />);
 
+    // "Nog geen" — events can still arrive.
     expect(
-      screen.getByText(/geen evenementen gepland — kom snel terug/i),
+      screen.getByRole("heading", { name: /nog geen evenementen gepland/i }),
     ).toBeInTheDocument();
+    // The structural special-case that hid the filter row on a genuinely
+    // empty list was considered and rejected: the chips are a fixed set
+    // regardless of data, so hiding them here bought nothing.
     expect(
-      screen.queryByRole("group", { name: /filter evenementen op type/i }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("group", { name: /filter evenementen op type/i }),
+    ).toBeInTheDocument();
   });
 
   it("renders the filter row and every event by default", () => {
@@ -109,7 +113,7 @@ describe("<EventsBrowser>", () => {
     // The message lives in a polite live region so screen readers announce it
     // when a filter selection empties the list (client-side state change).
     expect(screen.getByRole("status")).toHaveTextContent(
-      /geen evenementen in de categorie jeugdwerking gepland/i,
+      /geen evenementen in de categorie jeugdwerking/i,
     );
     // Filter row stays visible in the filtered-to-zero state.
     expect(
@@ -158,10 +162,8 @@ describe("<EventsBrowser>", () => {
     expect(
       within(group).getByRole("button", { name: "Jeugdwerking" }),
     ).toHaveAttribute("aria-pressed", "true");
-    expect(
-      screen.getByText(
-        /geen evenementen in de categorie jeugdwerking gepland/i,
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /geen evenementen in de categorie jeugdwerking/i,
+    );
   });
 });
