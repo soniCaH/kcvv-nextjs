@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2607 — Q4: what fills the space below the invariant opening?</title>
+    <style>
+      :root {
+        --color-cream: #f5f1e6;
+        --color-cream-soft: #ede8da;
+        --color-ink: #0a0a0a;
+        --color-paper-edge: #d9d2bd;
+        --color-jersey-deep: #007c46;
+        --font-display: Georgia, "Times New Roman", serif;
+        --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 32px 24px 80px;
+        background: var(--color-cream);
+        color: var(--color-ink);
+        font-family: var(--font-body);
+        line-height: 1.5;
+      }
+      .page-head,
+      .panel {
+        max-width: 1120px;
+        margin: 0 auto;
+      }
+      .page-head {
+        margin-bottom: 34px;
+      }
+      h1 {
+        font-family: var(--font-display);
+        font-size: 32px;
+        margin: 0 0 8px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--color-jersey-deep);
+        margin: 0 0 10px;
+      }
+      .lede {
+        max-width: 66ch;
+        font-size: 15px;
+        margin: 0 0 18px;
+      }
+
+      .locked {
+        border: 2px dashed var(--color-ink);
+        background: var(--color-cream-soft);
+        padding: 12px 16px;
+        font-size: 13px;
+        max-width: 760px;
+        margin-bottom: 8px;
+      }
+      .locked h3 {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin: 0 0 6px;
+      }
+      .locked p {
+        margin: 0 0 6px;
+      }
+      .locked p:last-child {
+        margin-bottom: 0;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+        background: rgba(0, 0, 0, 0.05);
+        padding: 0 3px;
+      }
+
+      .panel {
+        border-top: 2px solid var(--color-ink);
+        padding-top: 18px;
+        margin-bottom: 44px;
+      }
+      .panel-head {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+      .tag {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        background: var(--color-ink);
+        color: var(--color-cream);
+        padding: 2px 8px;
+      }
+      .panel h2 {
+        font-family: var(--font-display);
+        font-size: 22px;
+        margin: 0;
+      }
+      .panel .rule {
+        font-size: 14px;
+        max-width: 70ch;
+        margin: 6px 0 16px;
+      }
+      .row {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .col-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 6px;
+        color: #5a5347;
+      }
+      .mini {
+        width: 290px;
+        height: 470px;
+        overflow: hidden;
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream);
+        position: relative;
+      }
+      .mini-inner {
+        padding: 10px;
+      }
+      .bar {
+        background: var(--color-paper-edge);
+      }
+      .seam {
+        height: 10px;
+        background: repeating-linear-gradient(
+          -45deg,
+          var(--color-ink) 0 5px,
+          var(--color-cream) 5px 10px
+        );
+        margin: 8px -10px;
+      }
+      .navstrip {
+        border-bottom: 2px solid var(--color-ink);
+        margin: 8px -10px 0;
+        padding: 9px 10px;
+        background: var(--color-cream);
+      }
+      .heroblock {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .heroblock .words {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .figure {
+        width: 100px;
+        aspect-ratio: 3/2;
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream-soft);
+      }
+      .verdict {
+        margin-top: 14px;
+        font-size: 13.5px;
+        max-width: 76ch;
+        border-left: 3px solid var(--color-jersey-deep);
+        padding-left: 12px;
+      }
+      .verdict b {
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+      .r-kicker {
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-jersey-deep);
+      }
+      .r-h1 {
+        font-family: var(--font-display);
+        font-size: 28px;
+        line-height: 1;
+        margin: 3px 0 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-head">
+      <p class="kicker">#2607 · drill Q4 · 2026-08-14</p>
+      <h1>What fills the space below the invariant opening?</h1>
+
+      <div class="locked">
+        <h3>★ Locked — 2026-08-14</h3>
+        <p>
+          <b>Q1</b> — the rule governs all three files, including
+          <code>[slug]/wedstrijden/loading.tsx</code>, which the ticket omitted
+          and which is the only <code>force-dynamic</code> route on the surface.
+        </p>
+        <p>
+          <b>Q2 — rule D.</b> A skeleton draws its route's fixed opening at full
+          fidelity, then one content field. The test is
+          <b>"is this knowable before the fetch?"</b> Rule A (mirror) was ruled
+          <i>impossible</i>, not merely costly: <code>loading.tsx</code> accepts
+          no parameters, and every count is derived from the PSD fetch the
+          skeleton exists to cover.
+        </p>
+        <p>
+          <b>Q3</b> — hero-first streaming is decided and spun out as its own
+          ticket; not built here.
+        </p>
+      </div>
+
+      <p class="lede" style="margin-top: 18px">
+        What D fixes per route, mechanically: <b>[slug]</b> → hero + nav strip
+        (no pills; 2–5 is data, but the strip itself always renders since #2540
+        puts <code>#staf</code> and <code>#info</code> on 18 of 18, clearing
+        <code>TeamSectionNav</code>'s <code>length &lt;= 1</code> null-guard).
+        <b>/ploegen</b> → the editorial header only. Both flagship blocks are
+        gated at <code>page.tsx:83,95</code> (<code>{aTeam ? … : null}</code>),
+        so 0, 1 or 2 render and the count is not knowable — they fail D's test
+        exactly as the 1/4/4/7 youth groups do. Only
+        <code>Onze ploegen</code> and its tagline are hardcoded.
+        <b>/wedstrijden</b> → the editorial header. Everything below is this
+        question.
+      </p>
+    </div>
+
+    <!-- 1 -->
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">1</span>
+        <h2>Flat field</h2>
+      </div>
+      <p class="rule">
+        One <code>bg-paper-edge</code> slab holding the space the content will
+        occupy.
+      </p>
+      <div class="row">
+        <div>
+          <p class="col-label">/ploegen/[slug]</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="heroblock">
+                <div class="words">
+                  <div class="bar" style="height: 7px; width: 60%"></div>
+                  <div class="bar" style="height: 26px; width: 78%"></div>
+                  <div class="bar" style="height: 9px; width: 45%"></div>
+                </div>
+                <div class="figure"></div>
+              </div>
+              <div class="navstrip"></div>
+              <div class="seam"></div>
+              <div class="bar" style="height: 300px; width: 100%"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="col-label">/wedstrijden (force-dynamic)</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="bar" style="height: 7px; width: 45%"></div>
+              <div
+                class="bar"
+                style="height: 24px; width: 60%; margin: 6px 0 12px"
+              ></div>
+              <div class="bar" style="height: 340px; width: 100%"></div>
+            </div>
+          </div>
+        </div>
+        <p class="verdict" style="flex: 1; min-width: 280px">
+          Reserves the space, so nothing jumps when content lands. But a single
+          large flat rectangle is the one skeleton idiom this site has no
+          vocabulary for — every other surface is bars, borders and seams.
+          <b>It reads as a failed image, not as loading.</b>
+        </p>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">2</span>
+        <h2>Bordered empty box</h2>
+      </div>
+      <p class="rule">
+        A <code>border-2 border-ink</code> cream box — the paper register's own
+        framing device.
+      </p>
+      <div class="row">
+        <div>
+          <p class="col-label">/ploegen/[slug]</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="heroblock">
+                <div class="words">
+                  <div class="bar" style="height: 7px; width: 60%"></div>
+                  <div class="bar" style="height: 26px; width: 78%"></div>
+                  <div class="bar" style="height: 9px; width: 45%"></div>
+                </div>
+                <div class="figure"></div>
+              </div>
+              <div class="navstrip"></div>
+              <div class="seam"></div>
+              <div
+                style="
+                  height: 300px;
+                  border: 2px solid var(--color-ink);
+                  background: var(--color-cream);
+                "
+              ></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="col-label">/wedstrijden (force-dynamic)</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="bar" style="height: 7px; width: 45%"></div>
+              <div
+                class="bar"
+                style="height: 24px; width: 60%; margin: 6px 0 12px"
+              ></div>
+              <div
+                style="
+                  height: 340px;
+                  border: 2px solid var(--color-ink);
+                  background: var(--color-cream);
+                "
+              ></div>
+            </div>
+          </div>
+        </div>
+        <p class="verdict" style="flex: 1; min-width: 280px">
+          Native to the design language — but on this site an ink-bordered box
+          <i>is</i> a component: a card, a table, a flagship block.
+          <b>Drawing one promises a single framed element</b>, and what arrives
+          is a seam, three headings and a grid.
+        </p>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">3</span>
+        <h2>Nothing</h2>
+      </div>
+      <p class="rule">
+        The invariant opening, then cream. The page grows downward as content
+        arrives.
+      </p>
+      <div class="row">
+        <div>
+          <p class="col-label">/ploegen/[slug]</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="heroblock">
+                <div class="words">
+                  <div class="bar" style="height: 7px; width: 60%"></div>
+                  <div class="bar" style="height: 26px; width: 78%"></div>
+                  <div class="bar" style="height: 9px; width: 45%"></div>
+                </div>
+                <div class="figure"></div>
+              </div>
+              <div class="navstrip"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="col-label">/wedstrijden (force-dynamic)</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="bar" style="height: 7px; width: 45%"></div>
+              <div
+                class="bar"
+                style="height: 24px; width: 60%; margin: 6px 0 12px"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <p class="verdict" style="flex: 1; min-width: 280px">
+          Promises absolutely nothing, and is the least code. But
+          <code>/wedstrijden</code> shows this on <i>every</i> request, and a
+          bare header over empty cream is
+          <b>indistinguishable from the 14 teams whose fixture page is
+            genuinely empty</b> — the exact confusion #2540 was written to end.
+        </p>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">4</span>
+        <h2>Neutral bars</h2>
+      </div>
+      <p class="rule">
+        A seam, then a few <code>paper-edge</code> bars of varying width — the
+        vocabulary all three files already use for the hero. No boxes, no
+        cards, no borders: nothing that names a component or implies a count.
+      </p>
+      <div class="row">
+        <div>
+          <p class="col-label">/ploegen/[slug]</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="heroblock">
+                <div class="words">
+                  <div class="bar" style="height: 7px; width: 60%"></div>
+                  <div class="bar" style="height: 26px; width: 78%"></div>
+                  <div class="bar" style="height: 9px; width: 45%"></div>
+                </div>
+                <div class="figure"></div>
+              </div>
+              <div class="navstrip"></div>
+              <div class="seam"></div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <div class="bar" style="height: 14px; width: 42%"></div>
+                <div class="bar" style="height: 9px; width: 96%"></div>
+                <div class="bar" style="height: 9px; width: 88%"></div>
+                <div class="bar" style="height: 9px; width: 64%"></div>
+                <div
+                  class="bar"
+                  style="height: 14px; width: 34%; margin-top: 14px"
+                ></div>
+                <div class="bar" style="height: 9px; width: 92%"></div>
+                <div class="bar" style="height: 9px; width: 70%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="col-label">/wedstrijden (force-dynamic)</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="bar" style="height: 7px; width: 45%"></div>
+              <div
+                class="bar"
+                style="height: 24px; width: 60%; margin: 6px 0 14px"
+              ></div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <div class="bar" style="height: 14px; width: 42%"></div>
+                <div class="bar" style="height: 9px; width: 96%"></div>
+                <div class="bar" style="height: 9px; width: 88%"></div>
+                <div class="bar" style="height: 9px; width: 64%"></div>
+                <div
+                  class="bar"
+                  style="height: 14px; width: 34%; margin-top: 14px"
+                ></div>
+                <div class="bar" style="height: 9px; width: 92%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="verdict" style="flex: 1; min-width: 280px">
+          Says <i>something is coming and it is made of words</i> without naming
+          a component or a count. It reuses the bar vocabulary already in all
+          three files, so nothing new enters the design language, and it reads
+          as loading rather than as empty on the one route that shows it every
+          time.
+          <b>The bars are not countable the way cards are</b> — a reader does
+          not check whether four bars became four items.
+        </p>
+      </div>
+    </section>
+  </body>
+</html>
