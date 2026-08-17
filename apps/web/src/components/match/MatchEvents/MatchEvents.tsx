@@ -271,21 +271,15 @@ export function MatchEvents({
     return aTime - bTime;
   });
 
-  // Empty state — tier "surface" (#2427 / #2562): the whole timeline is
-  // empty. Events can still arrive (goals/cards get added as PSD reports
-  // them), so "Nog geen" holds.
-  if (filteredEvents.length === 0) {
-    return (
-      <EmptyState
-        tier="surface"
-        heading="Nog geen gebeurtenissen"
-        live
-        className={className}
-      >
-        Er zijn nog geen gebeurtenissen geregistreerd in deze wedstrijd.
-      </EmptyState>
-    );
-  }
+  // No tier-"surface" branch for the whole-timeline-empty case: both
+  // production callers (`MatchEventsSection`, which renders `<MatchEvents
+  // events={events} />` with the default `filter="all"`, and
+  // `MatchGoalsBlock`, which renders `<MatchEvents filter="goals">`) already
+  // guard their own "does this section earn its space" decision before
+  // mounting this component, so `filteredEvents.length === 0` is
+  // unreachable here. When both sides of a `groupBy="team"` render are
+  // empty, each side's own tier-"slot" box (below) covers it (#2562 review
+  // round 3 — see MatchEvents.test.tsx for the two guard sites this leans on).
 
   // Group by team if requested: each column is single-side, so the
   // left/right split idiom from the chronological mode doesn't apply.
@@ -373,13 +367,9 @@ function EventList({
 }) {
   if (events.length === 0) {
     // Tier "slot" (#2427 / #2562): one team's column is empty while the
-    // other side of the grouped view is full. `flex-1` holds the slot's
-    // shape by filling the rest of the stretched column.
-    return (
-      <EmptyState tier="slot" className="flex-1">
-        Geen gebeurtenissen
-      </EmptyState>
-    );
+    // other side of the grouped view is full. Fills the rest of the
+    // stretched column by default (`flex-1`).
+    return <EmptyState tier="slot">Geen gebeurtenissen</EmptyState>;
   }
 
   return (

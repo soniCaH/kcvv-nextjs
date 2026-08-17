@@ -243,18 +243,12 @@ describe("MatchLineup", () => {
   });
 
   describe("empty lineups", () => {
-    it("shows message when both lineups are empty", () => {
-      render(<MatchLineup {...defaultProps} homeLineup={[]} awayLineup={[]} />);
-      expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
-        "Geen opstellingen beschikbaar.",
-      );
-      expect(
-        screen.getByText(
-          "Er is voor deze wedstrijd geen opstelling geregistreerd.",
-        ),
-      ).toBeInTheDocument();
-    });
-
+    // No "both lineups empty" coverage here (round 3 review, C4): the
+    // whole-lineup tier-"surface" branch was removed as dead code —
+    // `MatchLineupSection`, the one production caller, already returns
+    // `null` before ever mounting <MatchLineup> with both sides empty, so
+    // the branch could never execute. Each side's own tier-"slot" box
+    // (below) still covers the render directly.
     it("shows message for empty team lineup", () => {
       render(<MatchLineup {...defaultProps} homeLineup={[]} />);
       expect(

@@ -365,16 +365,8 @@ export const WithOwnGoal: Story = {
   },
 };
 
-/**
- * Empty - No events yet
- */
-export const Empty: Story = {
-  args: {
-    homeTeamName: "KCVV Elewijt",
-    awayTeamName: "KFC Turnhout",
-    events: [],
-  },
-};
+// No "Empty" story here (round 3 review, C4): the whole-timeline empty
+// branch this covered was removed as dead code — see MatchEvents.tsx.
 
 /**
  * Loading state

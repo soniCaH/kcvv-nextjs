@@ -58,11 +58,12 @@ export interface MatchLineupProps {
 }
 
 /**
- * Render the match lineups for the home and away teams, including loading and empty states.
+ * Render the match lineups for the home and away teams, including loading and per-side states.
  *
  * Renders two team lineup panels side-by-side on large screens (stacked on small screens). If
- * `isLoading` is true, two skeleton cards are rendered. If both `homeLineup` and `awayLineup`
- * are empty, a centered Dutch message indicating no lineups is shown.
+ * `isLoading` is true, two skeleton cards are rendered. A side with no players renders its own
+ * tier-"slot" held-open box (see `TeamLineup`) — the both-sides-empty case is guarded out one
+ * level up, by `MatchLineupSection`.
  *
  * @param homeTeamName - Display name of the home team
  * @param awayTeamName - Display name of the away team
@@ -70,7 +71,7 @@ export interface MatchLineupProps {
  * @param awayLineup - Array of `LineupPlayer` entries for the away team
  * @param isLoading - If true, render loading skeletons instead of lineup data
  * @param className - Additional CSS class names to apply to the root container
- * @returns The rendered lineup UI (team panels, loading skeletons, or empty-state message)
+ * @returns The rendered lineup UI (team panels or loading skeletons)
  */
 export function MatchLineup({
   homeTeamName,
@@ -92,20 +93,12 @@ export function MatchLineup({
     );
   }
 
-  // No lineups available — tier "surface" (#2427 / #2562). "Geen", not "Nog
-  // geen": PSD may never send a lineup for this match, and "Nog geen" would
-  // be a promise this surface can't keep.
-  if (homeLineup.length === 0 && awayLineup.length === 0) {
-    return (
-      <EmptyState
-        tier="surface"
-        heading="Geen opstellingen beschikbaar"
-        className={className}
-      >
-        Er is voor deze wedstrijd geen opstelling geregistreerd.
-      </EmptyState>
-    );
-  }
+  // No tier-"surface" branch for the both-lineups-empty case:
+  // `MatchLineupSection`, the one production caller, already returns `null`
+  // before mounting this component when `homeLineup.length === 0 &&
+  // awayLineup.length === 0` — so that condition is unreachable here. Each
+  // side's own tier-"slot" box (below) covers the render directly (#2562
+  // review round 3 — see MatchLineup.test.tsx for the guard this leans on).
 
   return (
     <div
@@ -162,11 +155,9 @@ function TeamLineup({
 
       {players.length === 0 ? (
         // Tier "slot" (#2427 / #2562): one team's column is empty while the
-        // other side of the two-column layout is full. `flex-1` holds the
-        // slot's shape by filling the rest of the stretched column.
-        <EmptyState tier="slot" className="flex-1">
-          Geen opstelling beschikbaar
-        </EmptyState>
+        // other side of the two-column layout is full. Fills the rest of
+        // the stretched column by default (`flex-1`).
+        <EmptyState tier="slot">Geen opstelling beschikbaar</EmptyState>
       ) : (
         <div>
           {starters.length > 0 && (
