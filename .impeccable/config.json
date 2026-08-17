@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "fraunces",
+        "createdAt": "2026-08-13T10:34:02.147Z",
+        "reason": "Google stand-in for freight-display-pro in mockup files"
+      }
+    ]
+  }
+}
