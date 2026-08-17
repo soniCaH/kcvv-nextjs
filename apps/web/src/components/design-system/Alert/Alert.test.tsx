@@ -183,6 +183,40 @@ describe("Alert", () => {
     });
   });
 
+  // Decision D4 (#2620): `[×]` rides beside the Phosphor Fill X, never
+  // instead of it, and never instead of the accessible name.
+  describe("Bracket affordance (D4)", () => {
+    it("renders the mono [×] bracket in the dismiss control", () => {
+      render(<Alert dismissible>Melding</Alert>);
+      const button = screen.getByRole("button", { name: /sluit melding/i });
+      const bracket = button.querySelector('[data-glyph="close"]');
+      expect(bracket).not.toBeNull();
+      expect(bracket).toHaveTextContent("[×]");
+      expect(bracket?.className).toContain("font-mono");
+    });
+
+    it("keeps the Phosphor X icon — the bracket does not replace it", () => {
+      render(<Alert dismissible>Melding</Alert>);
+      const button = screen.getByRole("button", { name: /sluit melding/i });
+      expect(button.querySelector("svg")).not.toBeNull();
+    });
+
+    it("hides the bracket from assistive tech, so the name stays the action", () => {
+      render(<Alert dismissible>Melding</Alert>);
+      const button = screen.getByRole("button", { name: /sluit melding/i });
+      expect(button.querySelector('[data-glyph="close"]')).toHaveAttribute(
+        "aria-hidden",
+        "true",
+      );
+      expect(button).toHaveAccessibleName("Sluit melding");
+    });
+
+    it("does not render a bracket when the alert is not dismissible", () => {
+      const { container } = render(<Alert>Melding</Alert>);
+      expect(container.querySelector("[data-glyph]")).toBeNull();
+    });
+  });
+
   describe("Accessibility", () => {
     it("notch column is hidden from accessibility tree", () => {
       const { container } = render(<Alert>x</Alert>);
