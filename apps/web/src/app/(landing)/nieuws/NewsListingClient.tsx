@@ -159,11 +159,17 @@ export function NewsListingClient({
   // Names the active facet by label ("Jeugd"), not a generic "deze
   // categorie" — the copy is the tell (#2427 rule 5). `null` for "all",
   // which is genuine emptiness, not a filter having emptied the surface.
+  // `activeCategory` holds a SLUG (`CategoryFilters` builds its tab values
+  // from `category.attributes.slug`, and `initialCategory` comes from the
+  // `?categorie=` slug) — match on slug, not `id`. The two look
+  // interchangeable today only because `nieuws/page.tsx` currently
+  // synthesises `{ id: tag, attributes: { name: tag, slug: tag } }` (#2562
+  // review).
   const activeCategoryLabel =
     activeCategory === "all"
       ? null
-      : (categories.find((c) => c.id === activeCategory)?.attributes.name ??
-        activeCategory);
+      : (categories.find((c) => c.attributes.slug === activeCategory)
+          ?.attributes.name ?? activeCategory);
 
   return (
     <div className="w-full">

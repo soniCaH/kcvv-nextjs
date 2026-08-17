@@ -216,6 +216,34 @@ describe("NewsListingClient", () => {
     });
   });
 
+  it("names the facet by name even when id, slug and name diverge", async () => {
+    // `CategoryFilters` builds tab values from `attributes.slug` (matching
+    // `?categorie=`), never `id` — a fixture where the three strings differ
+    // guards against matching the empty-state facet name on the wrong field
+    // (#2562 review).
+    mockFetchArticles.mockResolvedValue({ items: [], hasMore: false });
+    const divergentCategories = [
+      { id: "cat-42", attributes: { name: "Jeugdwerking", slug: "jeugd" } },
+    ];
+
+    render(
+      <NewsListingClient
+        initialArticles={[]}
+        categories={divergentCategories}
+        hasMore={false}
+        fetchArticles={mockFetchArticles}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Jeugdwerking" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/geen artikelen in jeugdwerking/i),
+      ).toBeInTheDocument();
+    });
+  });
+
   it("deduplicates articles returned by loadMore against the grid", async () => {
     const initial = [
       makeArticle({ id: "a1", title: "Article One" }),
