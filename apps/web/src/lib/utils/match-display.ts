@@ -47,8 +47,7 @@ export function hasScore(
 }
 
 export type ScoreDisplay =
-  | { type: "score"; home: number; away: number }
-  | { type: "vs" };
+  { type: "score"; home: number; away: number } | { type: "vs" };
 
 export function getScoreDisplay(match: HasScoreMatch): ScoreDisplay {
   if (hasScore(match)) {
@@ -196,3 +195,14 @@ export const HOME_AWAY_A11Y_NAME = {
   home: "Thuiswedstrijd",
   away: "Uitwedstrijd",
 } as const;
+
+/**
+ * `<TeamAgendaRow>`'s placeholder subject when a pitch-reservation fixture
+ * (#2606) carries no competition label at all — not observed in production
+ * (every one of the census's 17 rows carries a `TOURNAMENT`/`FRIENDLY`
+ * type), but the row still needs a non-empty subject for the defensive case.
+ * Lives here, not inline, for the same reason `OUTCOME_WORD`/
+ * `MATCH_KIND_WORD`/`HOME_AWAY_WORD` do: this file is the one place the
+ * row's shared vocabulary is declared.
+ */
+export const RESERVATION_SUBJECT_FALLBACK = "Gereserveerd";
