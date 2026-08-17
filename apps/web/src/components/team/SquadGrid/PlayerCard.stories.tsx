@@ -18,11 +18,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * Photo state — newsprint-treated psdImage, filling the 3:4 window and
- * multiplied onto the card so the studio cutout's white matte drops out to
- * cream (#2633). Number disc top-left.
- */
+/** Photo state — newsprint-treated psdImage, blended onto the card's cream, with number disc top-left. */
 export const WithPhoto: Story = {
   args: {
     firstName: "Maxim",

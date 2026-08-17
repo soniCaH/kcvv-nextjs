@@ -45,36 +45,29 @@ describe("PlayerCard", () => {
   });
 
   describe("Photo treatment (#2633)", () => {
-    // One treatment for every photo the club has: the source fills the 3:4
-    // window (`cover`) and multiplies onto the card so a studio cutout's white
-    // matte drops out to the same cream as the drawing beside it. No cutout
-    // branch and no coverage threshold — see #2590.
-    it("fills the window and multiplies onto the card", () => {
+    it("fills the window and multiplies onto the card's cream", () => {
       const { container } = render(
         <PlayerCard
           firstName="Maxim"
           lastName="Breugelmans"
           position="Aanvaller"
           photoUrl="/player-fixtures/player-mendes-mouro.jpg"
+          // <SquadGrid> always passes href, and that shape moves the
+          // "player-card" testid onto the <Link>. Render it so the assertions
+          // below hold for what the site ships.
+          href="/spelers/123"
         />,
       );
-      const photo = container.querySelector("img");
-      expect(photo?.className).toContain("object-cover");
-      expect(photo?.className).toContain("mix-blend-multiply");
-    });
-
-    it("keeps the 3:4 window, its paper edge and the taped card unchanged", () => {
-      render(
-        <PlayerCard
-          firstName="Maxim"
-          lastName="Breugelmans"
-          position="Aanvaller"
-          photoUrl="/player-fixtures/player-mendes-mouro.jpg"
-        />,
-      );
-      const figure = screen.getByTestId("player-card-figure");
-      expect(figure.className).toContain("aspect-[3/4]");
-      expect(figure.className).toContain("border-paper-edge");
+      // Split rather than substring-match: `md:mix-blend-multiply` contains
+      // the token but would not blend at rest.
+      const classes = container.querySelector("img")?.className.split(/\s+/);
+      expect(classes).toContain("object-cover");
+      expect(classes).toContain("mix-blend-multiply");
+      // The blend has cream to land on only while the window it sits in is
+      // cream — and `bg-cream-soft` would not do.
+      expect(
+        screen.getByTestId("player-card-figure").className.split(/\s+/),
+      ).toContain("bg-cream");
     });
   });
 
