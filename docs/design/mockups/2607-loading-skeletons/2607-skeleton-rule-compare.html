@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2607 — Q2: what does a loading skeleton draw?</title>
+    <style>
+      :root {
+        --color-cream: #f5f1e6;
+        --color-cream-soft: #ede8da;
+        --color-ink: #0a0a0a;
+        --color-paper-edge: #d9d2bd;
+        --color-jersey-deep: #007c46;
+        /* Stand-in faces: freight-big-pro / freight-sans-pro / IBM Plex Mono
+           are Typekit-served and not available offline. Shapes are what this
+           drill compares, not the faces. */
+        --font-display: Georgia, "Times New Roman", serif;
+        --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px 24px 80px;
+        background: var(--color-cream);
+        color: var(--color-ink);
+        font-family: var(--font-body);
+        line-height: 1.5;
+      }
+
+      .page-head {
+        max-width: 1080px;
+        margin: 0 auto 40px;
+      }
+
+      h1 {
+        font-family: var(--font-display);
+        font-size: 34px;
+        margin: 0 0 8px;
+        letter-spacing: -0.01em;
+      }
+
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--color-jersey-deep);
+        margin: 0 0 10px;
+      }
+
+      .lede {
+        max-width: 62ch;
+        font-size: 15px;
+        margin: 0 0 16px;
+      }
+
+      .facts {
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream-soft);
+        padding: 14px 18px;
+        max-width: 720px;
+        font-size: 13px;
+      }
+
+      .facts b {
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+
+      .facts ul {
+        margin: 8px 0 0;
+        padding-left: 18px;
+      }
+
+      .facts li {
+        margin-bottom: 4px;
+      }
+
+      /* ---- panels ---- */
+      .panel {
+        max-width: 1080px;
+        margin: 0 auto 56px;
+        border-top: 2px solid var(--color-ink);
+        padding-top: 20px;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 4px;
+      }
+
+      .tag {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        background: var(--color-ink);
+        color: var(--color-cream);
+        padding: 2px 8px;
+      }
+
+      .panel h2 {
+        font-family: var(--font-display);
+        font-size: 24px;
+        margin: 0;
+      }
+
+      .panel .rule {
+        font-size: 14px;
+        max-width: 66ch;
+        margin: 6px 0 18px;
+      }
+
+      .row {
+        display: flex;
+        gap: 22px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .col {
+        width: 300px;
+      }
+
+      .col-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 6px;
+        color: #5a5347;
+      }
+
+      .col-label.now {
+        color: var(--color-jersey-deep);
+        font-weight: 700;
+      }
+
+      /* mini page frame */
+      .mini {
+        width: 300px;
+        height: 560px;
+        overflow: hidden;
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream);
+        position: relative;
+      }
+
+      .mini::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0 0;
+        height: 46px;
+        background: linear-gradient(transparent, var(--color-cream));
+      }
+
+      .mini-inner {
+        padding: 10px;
+      }
+
+      /* skeleton primitives */
+      .bar {
+        background: var(--color-paper-edge);
+      }
+      .seam {
+        height: 10px;
+        background: repeating-linear-gradient(
+          -45deg,
+          var(--color-ink) 0 5px,
+          var(--color-cream) 5px 10px
+        );
+        margin: 8px -10px;
+      }
+      .navstrip {
+        border-bottom: 2px solid var(--color-ink);
+        margin: 8px -10px 0;
+        padding: 6px 10px;
+        display: flex;
+        gap: 6px;
+        background: var(--color-cream);
+      }
+      .pill {
+        height: 11px;
+        width: 44px;
+        background: var(--color-paper-edge);
+      }
+      .pill.real {
+        background: none;
+        border: none;
+        font-family: var(--font-mono);
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        width: auto;
+        height: auto;
+        padding: 1px 0;
+        color: var(--color-ink);
+      }
+      .heroblock {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .heroblock .words {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .figure {
+        width: 104px;
+        aspect-ratio: 3/2;
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream-soft);
+      }
+      .figure.taped {
+        position: relative;
+      }
+      .figure.taped::before {
+        content: "";
+        position: absolute;
+        top: -6px;
+        left: 26px;
+        width: 42px;
+        height: 12px;
+        background: rgba(217, 210, 189, 0.9);
+        transform: rotate(-3deg);
+      }
+
+      .card {
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream);
+        aspect-ratio: 3/4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 4px;
+        gap: 3px;
+      }
+      .card .ph {
+        flex: 1;
+        width: 100%;
+        background: var(--color-cream-soft);
+      }
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+      }
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+      }
+      .agendarow {
+        border: 2px solid var(--color-ink);
+        background: var(--color-cream);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 6px;
+        margin-bottom: 4px;
+      }
+
+      /* real-page type */
+      .r-kicker {
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-jersey-deep);
+      }
+      .r-h1 {
+        font-family: var(--font-display);
+        font-size: 30px;
+        line-height: 1;
+        margin: 3px 0 5px;
+      }
+      .r-h2 {
+        font-family: var(--font-display);
+        font-size: 15px;
+        margin: 0 0 5px;
+      }
+      .r-body {
+        font-size: 9px;
+        line-height: 1.35;
+        color: #3a352c;
+      }
+      .r-status {
+        font-family: var(--font-mono);
+        font-size: 8.5px;
+        line-height: 1.4;
+        color: #5a5347;
+        border-left: 2px solid var(--color-paper-edge);
+        padding-left: 6px;
+      }
+      .r-name {
+        font-size: 8px;
+        text-align: center;
+        line-height: 1.2;
+      }
+
+      .verdict {
+        margin-top: 14px;
+        font-size: 13.5px;
+        max-width: 74ch;
+        border-left: 3px solid var(--color-jersey-deep);
+        padding-left: 12px;
+      }
+      .verdict b {
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+      .cost {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        border: 1px solid var(--color-ink);
+        padding: 1px 6px;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-head">
+      <p class="kicker">#2607 · drill Q2 · 2026-08-14</p>
+      <h1>What does a team-page loading skeleton draw?</h1>
+      <p class="lede">
+        One skeleton per route has to serve every team on it. The two extremes
+        below are the same file: a U9 page with 3 nav pills and 6 squad cards,
+        and the A-team with 5 pills and 29 cards. Each panel is a candidate
+        rule, shown as the skeleton and then what it actually resolves into.
+      </p>
+      <div class="facts">
+        <b>Fixed before this question</b>
+        <ul>
+          <li>
+            <b>#2540</b> — the competitive block has four states. A team with no
+            fixtures gets one unheaded status line and
+            <b>no #klassement / #wedstrijden sections and no nav entries</b>.
+            With fixtures, both sections render with their own h2 and seam.
+          </li>
+          <li>
+            <b>The loaded shape moves during the season.</b> Every youth page is
+            3 pills today (0 fixtures for season 9) and becomes 5 the week the
+            reeksen publish. The skeleton cannot be pinned to one of them.
+          </li>
+          <li>
+            <b>#2541</b> — a squad that partitions into one group renders with
+            no heading; U9 is one group of 6, the A-team is 4 + 1 + 24.
+          </li>
+          <li>
+            <b>#2602</b> — youth directory groups are 1 / 4 / 4 / 7, cards 230px
+            desktop.
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ================= A ================= -->
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">A</span>
+        <h2>Mirror — the skeleton previews the composition</h2>
+      </div>
+      <p class="rule">
+        The skeleton reproduces the loaded page section for section with a
+        representative count: hero, nav pills, section shells, a grid of cards.
+        This is what all three files attempt today.
+      </p>
+      <div class="row">
+        <div class="col">
+          <p class="col-label">Skeleton</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="heroblock">
+                <div class="words">
+                  <div class="bar" style="height: 7px; width: 60%"></div>
+                  <div class="bar" style="height: 26px; width: 78%"></div>
+                  <div class="bar" style="height: 9px; width: 45%"></div>
+                </div>
+                <div class="figure"></div>
+              </div>
+              <div class="navstrip">
+                <div class="pill"></div>
+                <div class="pill"></div>
+                <div class="pill"></div>
+                <div class="pill"></div>
+                <div class="pill"></div>
+              </div>
+              <div class="seam"></div>
+              <div class="bar" style="height: 12px; width: 40%"></div>
+              <div
+                class="bar"
+                style="height: 64px; width: 100%; margin-top: 6px"
+              ></div>
+              <div class="seam"></div>
+              <div
+                class="bar"
+                style="height: 12px; width: 34%; margin-bottom: 6px"
+              ></div>
+              <div class="grid4">
+                <div class="card"><div class="ph"></div></div>
+                <div class="card"><div class="ph"></div></div>
+                <div class="card"><div class="ph"></div></div>
+                <div class="card"><div class="ph"></div></div>
+                <div class="card"><div class="ph"></div></div>
+                <div class="card"><div class="ph"></div></div>
+                <div class="card"><div class="ph"></div></div>
+                <div class="card"><div class="ph"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col">
+          <p class="col-label now">Loads as → /ploegen/kcvve-u9</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="heroblock">
+                <div class="words">
+                  <p class="r-kicker">Jeugd · Onderbouw</p>
+                  <p class="r-h1">U9.</p>
+                  <p class="r-body">Seizoen 2026–2027</p>
+                </div>
+                <div class="figure taped"></div>
+              </div>
+              <div class="navstrip">
+                <span class="pill real">Spelers</span>
+                <span class="pill real">Staf</span>
+                <span class="pill real">Info</span>
+              </div>
+              <div class="seam"></div>
+              <p class="r-status">
+                Deze ploeg speelt dit seizoen nog geen officiële wedstrijden.
+              </p>
+              <div class="seam"></div>
+              <div class="grid3" style="margin-top: 4px">
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Lars V.</p>
+                </div>
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Vic D.</p>
+                </div>
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Noah P.</p>
+                </div>
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Elias M.</p>
+                </div>
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Jef K.</p>
+                </div>
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Milan S.</p>
+                </div>
+              </div>
+              <div class="seam"></div>
+              <p class="r-h2">Staf.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col">
+          <p class="col-label now">Loads as → /ploegen/eerste-elftallen-a</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="heroblock">
+                <div class="words">
+                  <p class="r-kicker">Senioren</p>
+                  <p class="r-h1">A-ploeg.</p>
+                  <p class="r-body">3e Nationale · Seizoen 2026–2027</p>
+                </div>
+                <div class="figure taped"></div>
+              </div>
+              <div class="navstrip">
+                <span class="pill real">Klassement</span>
+                <span class="pill real">Wedstrijden</span>
+                <span class="pill real">Spelers</span>
+                <span class="pill real">Staf</span>
+              </div>
+              <div class="seam"></div>
+              <p class="r-h2">Klassement.</p>
+              <div
+                style="
+                  border: 2px solid var(--color-ink);
+                  padding: 4px;
+                  font-size: 8px;
+                "
+              >
+                <div style="display: flex; justify-content: space-between">
+                  <span>1. Grimbergen</span><span>30</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    background: var(--color-cream-soft);
+                  "
+                >
+                  <span>2. KCVV Elewijt</span><span>28</span>
+                </div>
+                <div style="display: flex; justify-content: space-between">
+                  <span>3. Kampenhout</span><span>25</span>
+                </div>
+              </div>
+              <div class="seam"></div>
+              <p class="r-h2">Wedstrijden.</p>
+              <div class="agendarow">
+                <div class="bar" style="height: 7px; width: 26px"></div>
+                <div style="flex: 1; font-size: 8px">Elewijt — Wolvertem</div>
+              </div>
+              <div class="agendarow">
+                <div class="bar" style="height: 7px; width: 26px"></div>
+                <div style="flex: 1; font-size: 8px">Kampenhout — Elewijt</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="verdict">
+        The skeleton promises <b>5 pills, a table and 8 cards</b>. The U9 page
+        delivers 3 pills, no table, no card grid at that position — the reader
+        watches two whole sections evaporate. On the A-team it under-promises
+        instead: 8 cards become 29. <b>A mirror can only be right for one team</b>,
+        and the map has eighteen.
+        <span class="cost">mispromises 17 of 18 pages</span>
+      </p>
+    </section>
+
+    <!-- ================= B ================= -->
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">B</span>
+        <h2>Structure without quantity</h2>
+      </div>
+      <p class="rule">
+        The skeleton draws only what is invariant on every team page — the hero
+        and the nav strip as an empty bar — then one undifferentiated content
+        field. No pill count, no section shells, no card grid: nothing that
+        implies how much is coming.
+      </p>
+      <div class="row">
+        <div class="col">
+          <p class="col-label">Skeleton</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="heroblock">
+                <div class="words">
+                  <div class="bar" style="height: 7px; width: 60%"></div>
+                  <div class="bar" style="height: 26px; width: 78%"></div>
+                  <div class="bar" style="height: 9px; width: 45%"></div>
+                </div>
+                <div class="figure"></div>
+              </div>
+              <div class="navstrip"></div>
+              <div class="seam"></div>
+              <div
+                class="bar"
+                style="height: 200px; width: 100%; margin-top: 6px"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <p class="col-label now">Loads as → /ploegen/kcvve-u9</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="heroblock">
+                <div class="words">
+                  <p class="r-kicker">Jeugd · Onderbouw</p>
+                  <p class="r-h1">U9.</p>
+                  <p class="r-body">Seizoen 2026–2027</p>
+                </div>
+                <div class="figure taped"></div>
+              </div>
+              <div class="navstrip">
+                <span class="pill real">Spelers</span>
+                <span class="pill real">Staf</span>
+                <span class="pill real">Info</span>
+              </div>
+              <div class="seam"></div>
+              <p class="r-status">
+                Deze ploeg speelt dit seizoen nog geen officiële wedstrijden.
+              </p>
+              <div class="seam"></div>
+              <div class="grid3" style="margin-top: 4px">
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Lars V.</p>
+                </div>
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Vic D.</p>
+                </div>
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Noah P.</p>
+                </div>
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Elias M.</p>
+                </div>
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Jef K.</p>
+                </div>
+                <div class="card">
+                  <div class="ph"></div>
+                  <p class="r-name">Milan S.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <p class="col-label now">Loads as → /ploegen/eerste-elftallen-a</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="mini-inner" style="padding: 0">
+                <div class="heroblock">
+                  <div class="words">
+                    <p class="r-kicker">Senioren</p>
+                    <p class="r-h1">A-ploeg.</p>
+                    <p class="r-body">3e Nationale · Seizoen 2026–2027</p>
+                  </div>
+                  <div class="figure taped"></div>
+                </div>
+                <div class="navstrip">
+                  <span class="pill real">Klassement</span>
+                  <span class="pill real">Wedstrijden</span>
+                  <span class="pill real">Spelers</span>
+                  <span class="pill real">Staf</span>
+                </div>
+                <div class="seam"></div>
+                <p class="r-h2">Klassement.</p>
+                <div
+                  style="
+                    border: 2px solid var(--color-ink);
+                    padding: 4px;
+                    font-size: 8px;
+                  "
+                >
+                  <div style="display: flex; justify-content: space-between">
+                    <span>1. Grimbergen</span><span>30</span>
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      background: var(--color-cream-soft);
+                    "
+                  >
+                    <span>2. KCVV Elewijt</span><span>28</span>
+                  </div>
+                </div>
+                <div class="seam"></div>
+                <p class="r-h2">Wedstrijden.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="verdict">
+        Nothing the skeleton draws is contradicted by either page. The hero
+        geometry is genuinely identical on all eighteen, so the h1 and the taped
+        figure land where they were promised — the part of the transition a
+        reader actually tracks. Below the nav it commits to
+        <b>occupied space, not to what occupies it</b>.
+        <span class="cost">wrong on 0 of 18 · loses the section preview</span>
+      </p>
+    </section>
+
+    <!-- ================= C ================= -->
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">C</span>
+        <h2>Hero only — the skeleton stops at the fold</h2>
+      </div>
+      <p class="rule">
+        Only the invariant hero is drawn. No nav strip, no content field. The
+        page below the hero appears when it appears.
+      </p>
+      <div class="row">
+        <div class="col">
+          <p class="col-label">Skeleton</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="heroblock">
+                <div class="words">
+                  <div class="bar" style="height: 7px; width: 60%"></div>
+                  <div class="bar" style="height: 26px; width: 78%"></div>
+                  <div class="bar" style="height: 9px; width: 45%"></div>
+                </div>
+                <div class="figure"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <p class="col-label now">Loads as → /ploegen/kcvve-u9</p>
+          <div class="mini">
+            <div class="mini-inner">
+              <div class="heroblock">
+                <div class="words">
+                  <p class="r-kicker">Jeugd · Onderbouw</p>
+                  <p class="r-h1">U9.</p>
+                  <p class="r-body">Seizoen 2026–2027</p>
+                </div>
+                <div class="figure taped"></div>
+              </div>
+              <div class="navstrip">
+                <span class="pill real">Spelers</span>
+                <span class="pill real">Staf</span>
+                <span class="pill real">Info</span>
+              </div>
+              <div class="seam"></div>
+              <p class="r-status">
+                Deze ploeg speelt dit seizoen nog geen officiële wedstrijden.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <p class="col-label">Cost</p>
+          <div
+            class="mini"
+            style="
+              height: auto;
+              min-height: 120px;
+              border-style: dashed;
+              padding: 12px;
+            "
+          >
+            <p class="r-body" style="font-size: 11px">
+              On <b>/ploegen/[slug]/wedstrijden</b> — the one route that is
+              <code>force-dynamic</code> and therefore renders this skeleton on
+              <i>every</i> request — there is no hero. Rule C leaves that page
+              with an empty screen for the whole fetch.
+            </p>
+          </div>
+        </div>
+      </div>
+      <p class="verdict">
+        Honest, and cheapest to maintain — but it under-serves exactly the route
+        that shows a skeleton most often. A rule for this surface has to survive
+        the fixtures page, which opens with an editorial header rather than a
+        hero.
+        <span class="cost">wrong on 0 of 18 · blank on the most-seen route</span>
+      </p>
+    </section>
+
+    <!-- ================= D ================= -->
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">D</span>
+        <h2>Invariant-only, per route</h2>
+      </div>
+      <p class="rule">
+        Same discipline as B, but the invariant is computed per route rather
+        than assumed to be the hero: each skeleton draws its own route's fixed
+        opening at full fidelity, then one content field. For
+        <code>[slug]</code> that is hero + nav strip; for
+        <code>wedstrijden</code> the editorial header; for
+        <code>/ploegen</code> the header plus the two flagship blocks, which are
+        the only genuinely fixed count on the surface (always exactly two).
+      </p>
+      <div class="row">
+        <div class="col">
+          <p class="col-label">/ploegen skeleton</p>
+          <div class="mini" style="height: 400px">
+            <div class="mini-inner">
+              <div class="bar" style="height: 7px; width: 40%"></div>
+              <div
+                class="bar"
+                style="height: 24px; width: 70%; margin: 6px 0"
+              ></div>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <div
+                  style="
+                    border: 2px solid var(--color-ink);
+                    display: grid;
+                    grid-template-columns: 1.25fr 1fr;
+                    height: 76px;
+                  "
+                >
+                  <div style="padding: 8px">
+                    <div class="bar" style="height: 6px; width: 50%"></div>
+                    <div
+                      class="bar"
+                      style="height: 16px; width: 70%; margin-top: 6px"
+                    ></div>
+                  </div>
+                  <div style="background: var(--color-cream-soft)"></div>
+                </div>
+                <div
+                  style="
+                    border: 2px solid var(--color-ink);
+                    display: grid;
+                    grid-template-columns: 1.25fr 1fr;
+                    height: 76px;
+                  "
+                >
+                  <div style="padding: 8px">
+                    <div class="bar" style="height: 6px; width: 50%"></div>
+                    <div
+                      class="bar"
+                      style="height: 16px; width: 70%; margin-top: 6px"
+                    ></div>
+                  </div>
+                  <div style="background: var(--color-cream-soft)"></div>
+                </div>
+              </div>
+              <div
+                class="bar"
+                style="height: 90px; width: 100%; margin-top: 10px"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <p class="col-label now">Loads as → /ploegen</p>
+          <div class="mini" style="height: 400px">
+            <div class="mini-inner">
+              <p class="r-kicker">De club</p>
+              <p class="r-h1" style="font-size: 22px">Ploegen.</p>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <div
+                  style="
+                    border: 2px solid var(--color-ink);
+                    display: grid;
+                    grid-template-columns: 1.25fr 1fr;
+                    height: 76px;
+                  "
+                >
+                  <div style="padding: 8px">
+                    <p class="r-kicker">Senioren</p>
+                    <p class="r-h2" style="font-size: 13px">A-ploeg.</p>
+                  </div>
+                  <div style="background: var(--color-cream-soft)"></div>
+                </div>
+                <div
+                  style="
+                    border: 2px solid var(--color-ink);
+                    display: grid;
+                    grid-template-columns: 1.25fr 1fr;
+                    height: 76px;
+                  "
+                >
+                  <div style="padding: 8px">
+                    <p class="r-kicker">Senioren</p>
+                    <p class="r-h2" style="font-size: 13px">B-ploeg.</p>
+                  </div>
+                  <div style="background: var(--color-cream-soft)"></div>
+                </div>
+              </div>
+              <p class="r-h2" style="margin-top: 10px">Jeugd.</p>
+              <p class="r-body" style="font-size: 8px">
+                Bovenbouw — 4 · Middenbouw — 4 · Onderbouw — 7 · Reserven — 1
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <p class="col-label">wedstrijden skeleton</p>
+          <div class="mini" style="height: 400px">
+            <div class="mini-inner">
+              <div class="bar" style="height: 7px; width: 50%"></div>
+              <div
+                class="bar"
+                style="height: 24px; width: 62%; margin: 6px 0 10px"
+              ></div>
+              <div class="bar" style="height: 150px; width: 100%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="verdict">
+        Identical to B on <code>[slug]</code>, and it gives the other two routes
+        a rule instead of an exception.
+        <b>The test is not "does the page have this section" but "is the count
+        knowable before the fetch".</b>
+        <span class="cost">wrong on 0 of 18 · one rule, three files</span>
+      </p>
+      <p
+        class="verdict"
+        style="border-left-color: var(--color-ink); margin-top: 10px"
+      >
+        <b>Correction — 2026-08-14, after the rule was locked.</b> The
+        <code>/ploegen</code> panel above draws two flagship blocks on the claim
+        that two is structural. <b>It is not.</b>
+        <code>page.tsx:83,95</code> gates each one —
+        <code>{aTeam ? … : null}</code> and <code>{bTeam ? … : null}</code> — so
+        0, 1 or 2 can render, and the count comes from the same Sanity fetch the
+        skeleton covers. Under D's own test the flagships are
+        <b>not drawn</b>; the invariant on that route is the editorial header
+        alone (<code>Onze ploegen</code> and its tagline are hardcoded copy).
+        The rendering above is left in place rather than deleted so the mistake
+        stays legible.
+      </p>
+    </section>
+  </body>
+</html>

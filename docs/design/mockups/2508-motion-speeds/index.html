@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#2508 — the five speeds, in a natural environment</title>
+    <link rel="stylesheet" href="https://use.typekit.net/cvo5raz.css" />
+    <style>
+      /* ==========================================================
+         Real tokens, copied from apps/web/src/app/globals.css.
+         Do not invent values here — this page is a measuring tool.
+         ========================================================== */
+      :root {
+        --cream: #f5f1e6;
+        --cream-soft: #ede8da;
+        --cream-deep: #e1d7bf;
+        --ink: #0a0a0a;
+        --ink-soft: #1f1f1f;
+        --ink-muted: #6b6b6b;
+        --jersey: #4acf52;
+        --jersey-deep: #007c46;
+        --jersey-bright: #22c55e;
+        --warm: #f0c264;
+        --card-red: #c93f1c;
+        --paper-edge: #d9d2bd;
+
+        --shadow-paper-sm: 4px 4px 0 0 #0a0a0a;
+        --shadow-paper-md: 6px 6px 0 0 #0a0a0a;
+        --shadow-paper-lift: 8px 8px 0 0 #0a0a0a;
+        --shadow-paper-sm-soft: 4px 4px 0 0 #6b6b6b;
+
+        --font-body:
+          "freight-sans-pro", -apple-system, system-ui, "Segoe UI", Roboto,
+          sans-serif;
+        --font-display:
+          "freight-big-pro", georgia, "Times New Roman", serif;
+
+        /* Q2 picked one ease-out curve. Round 1 pinned it to the site's
+           reveal curve, cubic-bezier(0.22, 1, 0.36, 1) — easeOutQuint.
+           That curve front-loads ~90% of the travel into the first
+           quarter of the time, so on a 4px move it HIDES duration.
+           SETTLED (Q5): plain ease-out. Duration reads through it, and it
+           responds instantly to the pointer. Quint is REJECTED; it stays on
+           the switcher only as evidence. */
+        --ease: cubic-bezier(0, 0, 0.58, 1);
+
+        /* Q1 is what this page is for. The switcher writes here. */
+        --speed: 300ms;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 17px;
+        line-height: 1.5;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--font-display);
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.05;
+      }
+      p {
+        margin: 0 0 1em;
+      }
+      .wrap {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .mono {
+        font-family: "Consolas", "Liberation Mono", monospace;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      /* ---------- sticky switcher ---------- */
+      .bar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: var(--ink);
+        color: var(--cream);
+        border-bottom: 2px solid var(--ink);
+      }
+      .bar .wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        padding-top: 14px;
+        padding-bottom: 14px;
+      }
+      .bar .mono {
+        color: var(--cream-deep);
+      }
+      .speeds {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .speeds button {
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 7px 14px;
+        border: 2px solid var(--cream);
+        border-radius: 0;
+        background: transparent;
+        color: var(--cream);
+        transition: background-color 150ms var(--ease), color 150ms var(--ease);
+      }
+      .speeds button:hover {
+        background: var(--cream);
+        color: var(--ink);
+      }
+      .speeds button[aria-pressed="true"] {
+        background: var(--jersey-deep);
+        border-color: var(--jersey-deep);
+        color: #fff;
+      }
+
+      /* ---------- page furniture ---------- */
+      header.intro {
+        padding: 48px 0 32px;
+      }
+      header.intro h1 {
+        font-size: clamp(34px, 5vw, 54px);
+        margin-bottom: 14px;
+      }
+      header.intro p,
+      header.intro ul {
+        max-width: 680px;
+        color: var(--ink-soft);
+      }
+      header.intro ul {
+        padding-left: 20px;
+        margin: 0 0 1em;
+      }
+      header.intro li {
+        margin-bottom: 6px;
+      }
+      code {
+        font-family: "Consolas", "Liberation Mono", monospace;
+        font-size: 0.88em;
+        background: var(--cream-deep);
+        padding: 1px 5px;
+      }
+      section {
+        padding: 40px 0 56px;
+        border-top: 2px solid var(--ink);
+      }
+      .sec-head {
+        margin-bottom: 28px;
+      }
+      .sec-head h2 {
+        font-size: 30px;
+        margin-bottom: 8px;
+      }
+      .sec-head p {
+        max-width: 680px;
+        color: var(--ink-soft);
+        margin: 0;
+      }
+      .kicker {
+        color: var(--jersey-deep);
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      /* ==========================================================
+         §1  NATURAL ENVIRONMENT
+         Everything below runs at var(--speed).
+         ========================================================== */
+      .env {
+        position: relative;
+        overflow: hidden;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-md);
+      }
+
+      /* ---- the drawer: 320px of real travel ----
+         Small moves cannot show duration. This one can. */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        background: rgba(10, 10, 10, 0.55);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--speed) var(--ease);
+      }
+      .env.open .scrim {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .drawer {
+        position: absolute;
+        z-index: 6;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(320px, 82%);
+        padding: 26px 24px;
+        background: var(--cream);
+        border-left: 2px solid var(--ink);
+        transform: translateX(100%);
+        transition: transform var(--speed) var(--ease);
+      }
+      .env.open .drawer {
+        transform: translateX(0);
+      }
+      .drawer h3 {
+        font-size: 24px;
+        margin-bottom: 18px;
+      }
+      .drawer a {
+        display: block;
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 19px;
+        padding: 9px 0;
+        border-bottom: 2px solid var(--paper-edge);
+      }
+      .menu-btn {
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 7px 13px;
+        border: 2px solid var(--cream);
+        background: transparent;
+        color: var(--cream);
+        cursor: pointer;
+        border-radius: 0;
+      }
+
+      /* site nav — the 150ms chrome job */
+      .env-nav {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        padding: 16px 22px;
+        background: var(--ink);
+        flex-wrap: wrap;
+      }
+      .env-nav .brand {
+        font-family: var(--font-display);
+        color: var(--cream);
+        font-size: 20px;
+        font-weight: 700;
+        margin-right: auto;
+      }
+      .env-nav a {
+        color: var(--cream-deep);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 15px;
+        border-bottom: 2px solid transparent;
+        padding-bottom: 2px;
+        transition:
+          color var(--speed) var(--ease),
+          border-color var(--speed) var(--ease);
+      }
+      .env-nav a:hover {
+        color: #fff;
+        border-bottom-color: var(--jersey);
+      }
+
+      .env-body {
+        padding: 26px 22px 32px;
+      }
+
+      /* chips — the other 150ms chrome job */
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 26px;
+      }
+      .chip {
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 6px 13px;
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        color: var(--ink);
+        cursor: pointer;
+        border-radius: 0;
+        transition:
+          background-color var(--speed) var(--ease),
+          color var(--speed) var(--ease);
+      }
+      .chip:hover,
+      .chip[aria-pressed="true"] {
+        background: var(--jersey-deep);
+        color: #fff;
+      }
+
+      /* news cards — the 300ms press-down job */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 22px;
+        margin-bottom: 34px;
+      }
+      .card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        background: var(--cream-soft);
+        border: 2px solid var(--ink);
+        box-shadow: var(--shadow-paper-md);
+        padding: 0 0 18px;
+        /* THE PRESS-DOWN — PRESS_DOWN_CLASSES, at var(--speed) */
+        transition:
+          transform var(--speed) var(--ease),
+          box-shadow var(--speed) var(--ease);
+      }
+      .card:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+      .card .photo {
+        height: 132px;
+        border-bottom: 2px solid var(--ink);
+        background: repeating-linear-gradient(
+          135deg,
+          var(--cream-deep) 0 12px,
+          var(--paper-edge) 12px 24px
+        );
+      }
+      .card .meta {
+        padding: 14px 16px 0;
+      }
+      .card h3 {
+        font-size: 21px;
+        margin: 6px 0 0;
+      }
+
+      /* timeline reveal — the 500ms entering job */
+      .reveal-head {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .replay {
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 7px 14px;
+        border: 2px solid var(--ink);
+        background: var(--warm);
+        color: var(--ink);
+        cursor: pointer;
+        border-radius: 0;
+        box-shadow: var(--shadow-paper-sm);
+        transition:
+          transform 150ms var(--ease),
+          box-shadow 150ms var(--ease);
+      }
+      .replay:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+      .timeline {
+        border-left: 2px solid var(--ink);
+        padding-left: 26px;
+        display: grid;
+        gap: 18px;
+      }
+      .t-row {
+        position: relative;
+        opacity: 0;
+        transition: opacity var(--speed) var(--ease);
+      }
+      .t-row .bullet {
+        position: absolute;
+        left: -34px;
+        top: 12px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        transition: background-color var(--speed) var(--ease);
+      }
+      .t-card {
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 13px 16px;
+        transform: translateX(-22px);
+        transition: transform var(--speed) var(--ease);
+      }
+      .t-row.in {
+        opacity: 1;
+      }
+      .t-row.in .t-card {
+        transform: translateX(0);
+      }
+      .t-row.in .bullet {
+        background: var(--jersey-deep);
+      }
+      .t-row:nth-child(2) .t-card,
+      .t-row:nth-child(2) {
+        transition-delay: 90ms;
+      }
+      .t-row:nth-child(3) .t-card,
+      .t-row:nth-child(3) {
+        transition-delay: 180ms;
+      }
+      .t-row:nth-child(4) .t-card,
+      .t-row:nth-child(4) {
+        transition-delay: 270ms;
+      }
+
+      /* ==========================================================
+         §2  SIDE BY SIDE — same card, all five speeds at once
+         ========================================================== */
+      .rail {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+        gap: 20px;
+      }
+      .lane {
+        display: grid;
+        gap: 10px;
+        align-content: start;
+      }
+      .lane-label {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .lane-label .n {
+        font-family: var(--font-display);
+        font-size: 27px;
+        font-weight: 700;
+      }
+      .lane-label .who {
+        color: var(--ink-muted);
+        font-size: 12px;
+        line-height: 1.25;
+      }
+      .swatch {
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        box-shadow: var(--shadow-paper-md);
+        padding: 16px;
+        min-height: 108px;
+        cursor: pointer;
+        transition:
+          transform var(--d) var(--ease),
+          box-shadow var(--d) var(--ease),
+          background-color var(--d) var(--ease);
+      }
+      .swatch:hover {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+        background: var(--warm);
+      }
+      .swatch strong {
+        font-family: var(--font-display);
+        font-size: 19px;
+        display: block;
+      }
+      .swatch span {
+        color: var(--ink-muted);
+        font-size: 13px;
+      }
+      .lane[data-today] .swatch {
+        border-style: dashed;
+      }
+
+      /* ==========================================================
+         §3  LOOPS — reference only. Q3 is settled.
+         ========================================================== */
+      .loops {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 26px;
+      }
+      .loop-card {
+        border: 2px solid var(--ink);
+        background: var(--cream-soft);
+        box-shadow: var(--shadow-paper-sm);
+        padding: 20px;
+      }
+      .loop-card .mono {
+        color: var(--ink-muted);
+        display: block;
+        margin-bottom: 14px;
+      }
+
+      @keyframes kcvv-scarf-scroll {
+        0% {
+          background-position: 0 0;
+        }
+        100% {
+          background-position: 80px 0;
+        }
+      }
+      .scarf {
+        position: relative;
+        display: inline-block;
+        overflow: hidden;
+        width: 180px;
+        height: 28px;
+        border: 2px solid var(--ink);
+        background: var(--cream);
+        box-shadow: var(--shadow-paper-sm);
+      }
+      .scarf::before {
+        content: "";
+        position: absolute;
+        inset: -200px;
+        transform: rotate(-45deg);
+        animation: kcvv-scarf-scroll 1.5s linear infinite;
+        background: repeating-linear-gradient(
+          90deg,
+          var(--jersey) 0px,
+          var(--jersey) 20px,
+          var(--cream) 20px,
+          var(--cream) 40px,
+          var(--ink) 40px,
+          var(--ink) 60px,
+          var(--cream) 60px,
+          var(--cream) 80px
+        );
+      }
+
+      @keyframes kcvv-spinner-dot-pulse {
+        0%,
+        80%,
+        100% {
+          opacity: 0.2;
+          transform: scale(0.85);
+        }
+        40% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .dots {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .dots span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--jersey-deep);
+        animation: kcvv-spinner-dot-pulse 1.2s ease-in-out infinite;
+      }
+      .dots span:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+      .dots span:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      @keyframes tw-pulse {
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .skel {
+        display: grid;
+        gap: 9px;
+      }
+      .skel i {
+        display: block;
+        height: 13px;
+        background: var(--cream-deep);
+        border: 2px solid var(--paper-edge);
+        animation: tw-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      .skel i:nth-child(2) {
+        width: 82%;
+      }
+      .skel i:nth-child(3) {
+        width: 61%;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .scarf::before,
+        .dots span,
+        .skel i {
+          animation: none;
+        }
+      }
+
+      /* ---------- verdict box ---------- */
+      .verdict {
+        border: 2px solid var(--ink);
+        background: var(--warm);
+        box-shadow: var(--shadow-paper-md);
+        padding: 24px 26px;
+        margin-bottom: 8px;
+      }
+      .verdict h2 {
+        font-size: 25px;
+        margin-bottom: 12px;
+      }
+      .verdict ol {
+        margin: 0;
+        padding-left: 22px;
+      }
+      .verdict li {
+        margin-bottom: 7px;
+      }
+      footer {
+        border-top: 2px solid var(--ink);
+        padding: 26px 0 60px;
+        color: var(--ink-muted);
+        font-size: 14px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="bar">
+      <div class="wrap">
+        <span class="mono">Speed</span>
+        <div class="speeds" id="speeds">
+          <button data-speed="150ms">150</button>
+          <button data-speed="240ms">240</button>
+          <button data-speed="300ms" aria-pressed="true">300</button>
+          <button data-speed="500ms">500</button>
+          <button data-speed="mixed">as today</button>
+        </div>
+        <span class="mono">Curve</span>
+        <div class="speeds" id="curves">
+          <button data-ease="linear">linear</button>
+          <button data-ease="cubic-bezier(0, 0, 0.58, 1)" aria-pressed="true">
+            ease-out ✓
+          </button>
+          <button data-ease="cubic-bezier(0.22, 1, 0.36, 1)">
+            quint (rejected)
+          </button>
+        </div>
+        <span class="mono" id="readout" style="color: var(--warm)"
+          >300ms · ease-out</span
+        >
+      </div>
+    </div>
+
+    <div class="wrap">
+      <header class="intro">
+        <span class="mono kicker">#2508 · Q1 · one page, five speeds</span>
+        <h1>How fast should this site move?</h1>
+        <p>
+          The site uses five speeds today and writes none of them down. Change
+          the speed at the top. Then hover the nav, hover a card, press a chip,
+          and replay the timeline. Judge how it <em>feels</em>, not what the
+          number says.
+        </p>
+        <p>
+          <strong>Round 2 fix.</strong> The first version of this page locked
+          the curve to <code>cubic-bezier(0.22, 1, 0.36, 1)</code> — the Q2
+          pick. Every speed felt the same, and that was the page's fault: that
+          curve puts about 90% of the travel in the first quarter of the time,
+          so on a 4px press-down the rest is invisible. Two things are new:
+        </p>
+        <ul>
+          <li>
+            <strong>A curve switch</strong>, top right. Try
+            <code>linear</code> first — speed becomes obvious. Then switch back
+            to <code>quint</code> and watch it disappear again.
+          </li>
+          <li>
+            <strong>A drawer</strong> in the strip below (the
+            <em>Menu ▸</em> button). It travels 320px, not 4px. Duration is
+            unmissable there.
+          </li>
+        </ul>
+        <p>
+          If speed only reads on the drawer and never on a hover, that is not a
+          broken test — that is the answer.
+        </p>
+      </header>
+    </div>
+
+    <!-- ================= §1 NATURAL ENVIRONMENT ================= -->
+    <section>
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="mono kicker">§1 — natural environment</span>
+          <h2>A page, not a swatch</h2>
+          <p>
+            Four real jobs on one strip: nav links (chrome), filter chips
+            (chrome), news cards (the press-down), and a timeline (something
+            entering the screen). All of them run at the speed you picked above.
+          </p>
+        </div>
+
+        <div class="env">
+          <nav class="env-nav">
+            <span class="brand">KCVV ELEWIJT</span>
+            <a href="#">Nieuws</a>
+            <a href="#">Ploegen</a>
+            <a href="#">Kalender</a>
+            <a href="#">Club</a>
+            <button class="menu-btn" id="menu-open">Menu ▸</button>
+          </nav>
+
+          <div class="scrim" id="scrim"></div>
+          <aside class="drawer">
+            <h3>Menu</h3>
+            <a href="#">Nieuws</a>
+            <a href="#">Ploegen</a>
+            <a href="#">Kalender</a>
+            <a href="#">Club</a>
+            <a href="#">Sponsors</a>
+            <button
+              class="replay"
+              id="menu-close"
+              style="margin-top: 20px; background: var(--cream-deep)"
+            >
+              Sluiten ✕
+            </button>
+          </aside>
+
+          <div class="env-body">
+            <div class="chips">
+              <button class="chip" aria-pressed="true">Alles</button>
+              <button class="chip">Eerste elftal</button>
+              <button class="chip">Jeugd</button>
+              <button class="chip">Club</button>
+            </div>
+
+            <div class="cards">
+              <a class="card" href="#">
+                <div class="photo"></div>
+                <div class="meta">
+                  <span class="mono" style="color: var(--jersey-deep)"
+                    >Wedstrijdverslag</span
+                  >
+                  <h3>Drie punten in de slotminuut</h3>
+                </div>
+              </a>
+              <a class="card" href="#">
+                <div class="photo"></div>
+                <div class="meta">
+                  <span class="mono" style="color: var(--jersey-deep)"
+                    >Jeugd</span
+                  >
+                  <h3>U15 wint de derby</h3>
+                </div>
+              </a>
+              <a class="card" href="#">
+                <div class="photo"></div>
+                <div class="meta">
+                  <span class="mono" style="color: var(--jersey-deep)"
+                    >Club</span
+                  >
+                  <h3>Kantine krijgt nieuwe toog</h3>
+                </div>
+              </a>
+            </div>
+
+            <div class="reveal-head">
+              <span class="mono">Timeline — something entering the screen</span>
+              <button class="replay" id="replay">Replay ↻</button>
+            </div>
+            <div class="timeline" id="timeline">
+              <div class="t-row">
+                <span class="bullet"></span>
+                <div class="t-card"><strong>1909</strong> — de eerste ploeg</div>
+              </div>
+              <div class="t-row">
+                <span class="bullet"></span>
+                <div class="t-card"><strong>1966</strong> — eigen terrein</div>
+              </div>
+              <div class="t-row">
+                <span class="bullet"></span>
+                <div class="t-card"><strong>1994</strong> — de fusie</div>
+              </div>
+              <div class="t-row">
+                <span class="bullet"></span>
+                <div class="t-card"><strong>2018</strong> — nieuwe kantine</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= §2 SIDE BY SIDE ================= -->
+    <section>
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="mono kicker">§2 — side by side</span>
+          <h2>The same card, five speeds at once</h2>
+          <p>
+            Drag your pointer across all five without stopping. The switcher
+            above does not touch this row — each lane is pinned to its own
+            speed. The dashed lane is what the site does today.
+          </p>
+        </div>
+
+        <div class="rail">
+          <div class="lane" style="--d: 150ms">
+            <div class="lane-label">
+              <span class="n">150</span
+              ><span class="who">chrome<br />9 uses</span>
+            </div>
+            <div class="swatch">
+              <strong>Hover me</strong><span>150ms</span>
+            </div>
+          </div>
+          <div class="lane" style="--d: 240ms">
+            <div class="lane-label">
+              <span class="n">240</span
+              ><span class="who">organigram<br />2 uses</span>
+            </div>
+            <div class="swatch">
+              <strong>Hover me</strong><span>240ms</span>
+            </div>
+          </div>
+          <div class="lane" style="--d: 300ms">
+            <div class="lane-label">
+              <span class="n">300</span
+              ><span class="who">the press-down<br />44 uses</span>
+            </div>
+            <div class="swatch">
+              <strong>Hover me</strong><span>300ms</span>
+            </div>
+          </div>
+          <div class="lane" style="--d: 500ms">
+            <div class="lane-label">
+              <span class="n">500</span
+              ><span class="who">scroll reveals<br />4 uses</span>
+            </div>
+            <div class="swatch">
+              <strong>Hover me</strong><span>500ms</span>
+            </div>
+          </div>
+          <div class="lane" data-today style="--d: 150ms">
+            <div class="lane-label">
+              <span class="n">?</span
+              ><span class="who"
+                >no duration set<br />67 of 121 transitions</span
+              >
+            </div>
+            <div class="swatch">
+              <strong>Hover me</strong
+              ><span>Tailwind default — 150ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= §3 LOOPS ================= -->
+    <section>
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="mono kicker">§3 — loops · already settled (Q3)</span>
+          <h2>The three things that loop</h2>
+          <p>
+            Not a choice — shown so the speed you pick sits next to what already
+            runs forever. All three mean the same thing: the system is busy.
+          </p>
+        </div>
+
+        <div class="loops">
+          <div class="loop-card">
+            <span class="mono">Scarf · 1.5s · linear</span>
+            <div class="scarf"></div>
+          </div>
+          <div class="loop-card">
+            <span class="mono">Dots · 1.2s · ease-in-out</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="loop-card">
+            <span class="mono">Skeleton · 2s · Tailwind default · 109 uses</span>
+            <div class="skel"><i></i><i></i><i></i></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VERDICT ================= -->
+    <section>
+      <div class="wrap">
+        <div class="verdict">
+          <h2>What to look for — in this order</h2>
+          <ol>
+            <li>
+              Set curve to <strong>linear</strong>. Open the
+              <strong>drawer</strong> at 150ms, then at 500ms. That is the full
+              range this site could ever use.
+            </li>
+            <li>
+              Stay on <strong>linear</strong>. Now hover a card at 150ms and at
+              500ms. Can you feel it on a 4px move?
+            </li>
+            <li>
+              Switch back to <strong>quint</strong>. Repeat both. How much of
+              the difference survives the curve?
+            </li>
+            <li>
+              Last: can you tell <strong>240 from 300</strong> anywhere at all?
+              If not, 240 does not deserve a name.
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        Working file for
+        <strong
+          >#2508 — Write DESIGN.md's Motion section</strong
+        >, under map #2506. Tokens copied from
+        <code>apps/web/src/app/globals.css</code>. Not a shipped page.
+      </div>
+    </footer>
+
+    <script>
+      // ---- speed switcher ----
+      const MIXED = {
+        nav: "150ms",
+        chip: "150ms",
+        card: "300ms",
+        reveal: "500ms",
+      };
+      const readout = document.getElementById("readout");
+      let curSpeed = "300ms";
+      let curCurve = "ease-out";
+      const say = () => (readout.textContent = curSpeed + " · " + curCurve);
+
+      // ---- curve switcher (this is the real finding) ----
+      const curves = document.getElementById("curves");
+      curves.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-ease]");
+        if (!btn) return;
+        for (const b of curves.querySelectorAll("button"))
+          b.setAttribute("aria-pressed", String(b === btn));
+        document.documentElement.style.setProperty("--ease", btn.dataset.ease);
+        curCurve = btn.textContent.trim().split(" ")[0];
+        say();
+        replay();
+      });
+
+      // ---- drawer: 320px of travel, where duration is unmissable ----
+      const env = document.querySelector(".env");
+      document
+        .getElementById("menu-open")
+        .addEventListener("click", () => env.classList.add("open"));
+      for (const id of ["menu-close", "scrim"])
+        document
+          .getElementById(id)
+          .addEventListener("click", () => env.classList.remove("open"));
+
+      const speeds = document.getElementById("speeds");
+      speeds.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-speed]");
+        if (!btn) return;
+        for (const b of speeds.querySelectorAll("button"))
+          b.setAttribute("aria-pressed", String(b === btn));
+        const v = btn.dataset.speed;
+        curSpeed = v === "mixed" ? "mixed" : v;
+        say();
+        if (v === "mixed") {
+          // each job back on its real, current value
+          env.style.setProperty("--speed", MIXED.card);
+          env.querySelector(".env-nav").style.setProperty("--speed", MIXED.nav);
+          env.querySelector(".chips").style.setProperty("--speed", MIXED.chip);
+          env
+            .querySelector(".timeline")
+            .style.setProperty("--speed", MIXED.reveal);
+        } else {
+          env.style.setProperty("--speed", v);
+          for (const el of env.querySelectorAll(".env-nav, .chips, .timeline"))
+            el.style.removeProperty("--speed");
+        }
+        replay();
+      });
+
+      // ---- timeline reveal: on scroll, and on demand ----
+      const timeline = document.getElementById("timeline");
+      const rows = [...timeline.querySelectorAll(".t-row")];
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const en of entries)
+            if (en.isIntersecting) en.target.classList.add("in");
+        },
+        { threshold: 0.4 },
+      );
+      for (const r of rows) io.observe(r);
+
+      function replay() {
+        for (const r of rows) r.classList.remove("in");
+        // one frame later so the browser re-runs the transition
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            for (const r of rows) r.classList.add("in");
+          }),
+        );
+      }
+      document.getElementById("replay").addEventListener("click", replay);
+    </script>
+  </body>
+</html>
