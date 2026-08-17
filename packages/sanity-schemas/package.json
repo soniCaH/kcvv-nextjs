@@ -18,9 +18,9 @@
     "sanity": "6.1.0"
   },
   "devDependencies": {
-    "@sanity/icons": "3.7.4",
-    "@typescript/native-preview": "7.0.0-dev.20260610.1",
-    "sanity": "6.1.0",
+    "@sanity/icons": "3.8.0",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "sanity": "6.9.2",
     "typescript": "6.0.3"
   }
 }

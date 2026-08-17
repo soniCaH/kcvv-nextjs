@@ -34,6 +34,10 @@ const config: StorybookConfig = {
     cfg.resolve ??= {};
     cfg.resolve.alias = {
       ...(cfg.resolve.alias as Record<string, string> | undefined),
+      // Vite stopped applying the tsconfig `@/*` path to `.mdx` importers in
+      // 8.1, so `SpacingAndIcons.mdx` fails to resolve `@/lib/icons.redesign`.
+      // Declaring it here is version-proof either way.
+      "@": resolve(__dirname, "../src"),
       "@test-fixtures": resolve(__dirname, "../test/fixtures"),
     };
     return cfg;
