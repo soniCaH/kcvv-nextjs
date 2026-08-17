@@ -12,6 +12,14 @@
  * ellipsises — it never borrows from the other side, because a score that moves
  * between rows reads as a broken table (#2397).
  *
+ * A third state — `match.isPlaceholder` (#2606) — replaces both layouts' body
+ * with one crest, the competition label in the caption's mono-uppercase
+ * register, and the real kickoff time. It sheds the second crest, the
+ * opponent name, the home/away icon, the score slot, and the row's own
+ * `<Link>`: a self-match (`homeClubId === awayClubId`) is a pitch-reservation
+ * the club holds before an opponent or programme is known, not a match to
+ * navigate to.
+ *
  * Design lock: docs/design/mockups/phase-6-team/detail-ia-locked.md §3
  */
 import { Fragment } from "react";
@@ -212,13 +220,142 @@ export function TeamAgendaRow({
     match.isHome ??
     (kcvvTeamId !== undefined ? kcvvTeamId === match.homeTeam.id : undefined);
 
-  const outcome = computeOutcome(match, isHome);
-  const isPlayed = isPlayedMatch(match.status);
+  // A pitch-reservation placeholder (#2606) — both sides are the same club.
+  // Never derived here from `competition`/`competitionType`: the club uses
+  // the same device for external tournaments too, so the BFF-computed flag
+  // is the only reliable detector.
+  const isPlaceholder = match.isPlaceholder === true;
 
   // White on jersey-deep, inherited from the pre-#2395 green when cream missed
   // AA there. Both clear it now (white 5.29:1, cream 4.69:1) — see DESIGN.md
   // "Chips / Labels" for the open reconcile-to-cream question.
   const monoClass = featured ? "text-white" : "text-ink-muted";
+
+  const cardBase = cn(
+    "flex items-stretch gap-0",
+    "border-2",
+    // A placeholder row carries no link and no navigate handler, so it does
+    // not get the paper press-down hover affordance either — there is
+    // nothing underneath it to press down onto.
+    !isPlaceholder && PRESS_DOWN_CLASSES,
+    featured
+      ? // Soft ink-muted offset (the design-system dark-card shadow, cf.
+        // `--shadow-paper-sm-soft`) — a cream shadow vanished against the cream
+        // page, and a dark-green one would blend into the jersey-deep body.
+        "bg-jersey-deep border-jersey-deep text-white shadow-[2px_2px_0_0_var(--color-ink-muted)]"
+      : "bg-cream border-ink text-ink shadow-[2px_2px_0_0_var(--color-ink)]",
+    className,
+  );
+
+  const stubBorder = featured
+    ? "border-r-2 border-dashed border-cream/40"
+    : "border-r-2 border-dashed border-ink/30";
+
+  const day = formatDay(match.date);
+  const month = formatMonth(match.date);
+
+  const dateStub = showDateStub ? (
+    <div
+      className={cn(
+        "flex shrink-0 flex-col items-center justify-center gap-0 px-3 py-3",
+        stubBorder,
+        featured ? "bg-jersey-deep" : "bg-cream-soft/30",
+      )}
+      aria-label={`${day} ${month}`}
+    >
+      <span
+        className={cn(
+          "font-display-big text-[18px] leading-none",
+          featured ? "text-white" : "text-ink",
+        )}
+      >
+        {day}
+      </span>
+      <span
+        className={cn(
+          "font-mono text-[11px] tracking-widest uppercase",
+          monoClass,
+        )}
+      >
+        {month}
+      </span>
+    </div>
+  ) : null;
+
+  if (isPlaceholder) {
+    // Real per #2606's census (09:30–19:00 across all 17 rows) — "hele dag"
+    // would be wrong, so the row keeps the actual kickoff.
+    const kickoff = formatKickoff(match);
+    // The competition label IS the placeholder's subject ("Tornooi" /
+    // "Vriendschappelijk"), rendered in the row's existing mono-uppercase
+    // caption register rather than as bold body text — this is the one
+    // deliberate departure from the prototype. It also sidesteps PSD sending
+    // one competition name lowercase: the caption's CSS uppercase transform
+    // handles it, so the string is never re-cased here. `||`, not `??`: an
+    // empty-string competition has to fall back too.
+    const subject = match.competition || "Gereserveerd";
+    // No reason line — "Tegenstander nog niet bekend" was prototyped and
+    // cut. The accessible name states only what the row itself states: the
+    // subject, the date, the time — never why the opponent is missing.
+    const placeholderLabel = `${subject}, ${day} ${month} om ${kickoff}`;
+    const subjectClass = cn(
+      "min-w-0 flex-1 font-mono text-[9px] font-semibold tracking-wider uppercase",
+      monoClass,
+    );
+
+    return (
+      <article
+        data-testid="team-agenda-row"
+        data-featured={featured}
+        data-placeholder="true"
+        aria-label={placeholderLabel}
+        className={cardBase}
+      >
+        {dateStub}
+
+        {/* Desktop layout (sm+) */}
+        <div
+          data-layout="desktop"
+          className="hidden w-full items-center gap-2 px-3 py-2 sm:flex"
+        >
+          <Crest name={match.homeTeam.name} logo={match.homeTeam.logo} />
+          <span className={subjectClass}>{subject}</span>
+          <span
+            className={cn(
+              "font-display-big shrink-0 text-[18px] leading-none tabular-nums",
+              featured ? "text-white" : "text-ink",
+            )}
+            style={{ padding: "0 8px" }}
+          >
+            {kickoff}
+          </span>
+        </div>
+
+        {/* Mobile layout — its own branch, not a fallthrough: deriving an
+            "opponent" from `isHome` (as the normal mobile layout does)
+            resolves to KCVV for a self-match. */}
+        <div
+          data-layout="mobile"
+          className="flex w-full items-center gap-2 px-3 py-2 sm:hidden"
+        >
+          <Crest name={match.homeTeam.name} logo={match.homeTeam.logo} />
+          <span className={subjectClass}>{subject}</span>
+          <span
+            className={cn(
+              "font-display-big shrink-0 text-[16px] leading-none tabular-nums",
+              featured ? "text-white" : "text-ink",
+            )}
+            style={{ padding: "0 6px" }}
+          >
+            {kickoff}
+          </span>
+        </div>
+      </article>
+    );
+  }
+
+  const outcome = computeOutcome(match, isHome);
+  const isPlayed = isPlayedMatch(match.status);
 
   const hasScoreline =
     isPlayed &&
@@ -247,26 +384,6 @@ export function TeamAgendaRow({
       : "text-ink";
 
   const outlineShadow = outcome ? OUTCOME_UNDERLINE[outcome] : undefined;
-
-  const cardBase = cn(
-    "flex items-stretch gap-0",
-    "border-2",
-    PRESS_DOWN_CLASSES,
-    featured
-      ? // Soft ink-muted offset (the design-system dark-card shadow, cf.
-        // `--shadow-paper-sm-soft`) — a cream shadow vanished against the cream
-        // page, and a dark-green one would blend into the jersey-deep body.
-        "bg-jersey-deep border-jersey-deep text-white shadow-[2px_2px_0_0_var(--color-ink-muted)]"
-      : "bg-cream border-ink text-ink shadow-[2px_2px_0_0_var(--color-ink)]",
-    className,
-  );
-
-  const stubBorder = featured
-    ? "border-r-2 border-dashed border-cream/40"
-    : "border-r-2 border-dashed border-ink/30";
-
-  const day = formatDay(match.date);
-  const month = formatMonth(match.date);
 
   // A status the layout can't speak for on its own — a forfeit otherwise reads
   // as a bare scoreline, an `afgelast` match as a kickoff to turn up for. The
@@ -400,33 +517,7 @@ export function TeamAgendaRow({
         className={cardBase}
       >
         {/* Date stub */}
-        {showDateStub ? (
-          <div
-            className={cn(
-              "flex shrink-0 flex-col items-center justify-center gap-0 px-3 py-3",
-              stubBorder,
-              featured ? "bg-jersey-deep" : "bg-cream-soft/30",
-            )}
-            aria-label={`${day} ${month}`}
-          >
-            <span
-              className={cn(
-                "font-display-big text-[18px] leading-none",
-                featured ? "text-white" : "text-ink",
-              )}
-            >
-              {day}
-            </span>
-            <span
-              className={cn(
-                "font-mono text-[11px] tracking-widest uppercase",
-                monoClass,
-              )}
-            >
-              {month}
-            </span>
-          </div>
-        ) : null}
+        {dateStub}
 
         {/* Desktop layout (sm+): symmetric scoreboard */}
         {/*

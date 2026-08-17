@@ -659,4 +659,118 @@ describe("TeamAgendaRow", () => {
       expect(onNavigate).toHaveBeenCalledTimes(1);
     });
   });
+
+  /**
+   * Placeholder fixture (#2606) — both sides are the same club, a
+   * pitch-reservation the club enters when a team has something on the
+   * calendar but the opponent and programme aren't settled yet.
+   */
+  describe("Placeholder fixture (#2606)", () => {
+    const desktopLayout = (container: HTMLElement) =>
+      container.querySelector('[data-layout="desktop"]');
+    const mobileLayout = (container: HTMLElement) =>
+      container.querySelector('[data-layout="mobile"]');
+
+    const PLACEHOLDER: ScheduleMatch = {
+      id: 99,
+      date: new Date("2026-05-09T09:30:00.000Z"),
+      time: "09:30",
+      homeTeam: { id: 1235, name: "KCVV Elewijt" },
+      awayTeam: { id: 1235, name: "KCVV Elewijt" },
+      status: "scheduled",
+      competition: "Tornooi",
+      isHome: true,
+      isPlaceholder: true,
+    };
+
+    it("keeps the date stub", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      expect(screen.getByLabelText("9 mei")).toBeInTheDocument();
+    });
+
+    it("keeps the real kickoff time on both layouts — never 'hele dag'", () => {
+      const { container } = render(<TeamAgendaRow match={PLACEHOLDER} />);
+      expect(desktopLayout(container)?.textContent).toContain("09:30");
+      expect(mobileLayout(container)?.textContent).toContain("09:30");
+      expect(screen.queryByText(/hele dag/i)).toBeNull();
+    });
+
+    it("renders the competition label verbatim in the mono-uppercase caption register (casing gotcha)", () => {
+      // PSD sends this competition name lowercase; the fix must lean on the
+      // caption's CSS uppercase transform rather than normalising the string.
+      const { container } = render(
+        <TeamAgendaRow
+          match={{ ...PLACEHOLDER, competition: "vriendschappelijk" }}
+        />,
+      );
+      const subjects = Array.from(
+        container.querySelectorAll(".font-mono.uppercase"),
+      ).filter((el) => el.textContent === "vriendschappelijk");
+      expect(subjects.length).toBeGreaterThan(0);
+    });
+
+    it("renders exactly one crest, not two, on each layout", () => {
+      const { container } = render(<TeamAgendaRow match={PLACEHOLDER} />);
+      const crestCount = (layout: Element | null) =>
+        layout?.querySelectorAll('img, span[aria-hidden="true"]').length ?? 0;
+      expect(crestCount(desktopLayout(container))).toBe(1);
+      expect(crestCount(mobileLayout(container))).toBe(1);
+    });
+
+    it("sheds the home/away venue icon on both layouts", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      expect(screen.queryByLabelText("Thuiswedstrijd")).toBeNull();
+      expect(screen.queryByLabelText("Uitwedstrijd")).toBeNull();
+    });
+
+    it("sheds the score slot even if the feed carried a scoreline", () => {
+      render(
+        <TeamAgendaRow
+          match={{
+            ...PLACEHOLDER,
+            status: "finished",
+            homeScore: 0,
+            awayScore: 0,
+          }}
+        />,
+      );
+      expect(screen.getByTestId("team-agenda-row").textContent).not.toMatch(
+        /0\s*[–—-]\s*0/,
+      );
+    });
+
+    it("is not a link — no <Link> wrapper, no navigate handler", async () => {
+      const user = userEvent.setup();
+      const onNavigate = vi.fn();
+      render(<TeamAgendaRow match={PLACEHOLDER} onNavigate={onNavigate} />);
+      expect(screen.queryByRole("link")).toBeNull();
+      await user.click(screen.getByTestId("team-agenda-row"));
+      expect(onNavigate).not.toHaveBeenCalled();
+    });
+
+    it("gives the row its own accessible label naming the subject, not both teams", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      const label = screen
+        .getByTestId("team-agenda-row")
+        .getAttribute("aria-label");
+      expect(label).toBe("Tornooi, 9 mei om 09:30");
+      expect(label).not.toContain("KCVV Elewijt");
+    });
+
+    it("never announces a reason for the missing opponent", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      expect(screen.getByTestId("team-agenda-row").textContent).not.toMatch(
+        /tegenstander/i,
+      );
+    });
+
+    it("falls back to a generic subject when the competition label is absent", () => {
+      render(
+        <TeamAgendaRow match={{ ...PLACEHOLDER, competition: undefined }} />,
+      );
+      expect(screen.getByTestId("team-agenda-row").textContent).toContain(
+        "Gereserveerd",
+      );
+    });
+  });
 });

@@ -73,3 +73,26 @@ export const SeasonStart: Story = {
 export const Empty: Story = {
   args: { matches: [] },
 };
+
+/**
+ * A youth team's next fixture is a pitch-reservation placeholder (#2606) —
+ * a tournament with the opponents not yet known, the seasonal pattern that
+ * hits seven or eight youth pages at once every May. The featured
+ * "Eerstvolgende" slot renders it with the reduced placeholder content
+ * (one crest, competition label, real kickoff), not the two-sided
+ * scoreboard, and it is not a link.
+ */
+export const PlaceholderNextMatch: Story = {
+  args: {
+    matches: [
+      m(2, -14, "finished", [1, 1], true, OPP_C),
+      m(3, -7, "finished", [3, 0], true, OPP_B),
+      {
+        ...m(20, 10, "scheduled", undefined, true, KCVV),
+        time: "09:30",
+        competition: "Tornooi",
+        isPlaceholder: true,
+      },
+    ],
+  },
+};
