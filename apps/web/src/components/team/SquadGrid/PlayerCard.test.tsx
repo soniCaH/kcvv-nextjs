@@ -3,6 +3,7 @@
  *
  * Covers:
  *  - Photo state vs illustration fallback (data-state)
+ *  - Photo treatment: cover + multiply, unconditionally (#2633)
  *  - Number disc renders when jerseyNumber present, hidden when absent
  *  - Name rhythm: first semibold + last italic
  *  - Position label rendered
@@ -40,6 +41,33 @@ describe("PlayerCard", () => {
       expect(
         screen.getByTestId("player-card-illustration"),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe("Photo treatment (#2633)", () => {
+    it("fills the window and multiplies onto the card's cream", () => {
+      const { container } = render(
+        <PlayerCard
+          firstName="Maxim"
+          lastName="Breugelmans"
+          position="Aanvaller"
+          photoUrl="/player-fixtures/player-mendes-mouro.jpg"
+          // <SquadGrid> always passes href, and that shape moves the
+          // "player-card" testid onto the <Link>. Render it so the assertions
+          // below hold for what the site ships.
+          href="/spelers/123"
+        />,
+      );
+      // Split rather than substring-match: `md:mix-blend-multiply` contains
+      // the token but would not blend at rest.
+      const classes = container.querySelector("img")?.className.split(/\s+/);
+      expect(classes).toContain("object-cover");
+      expect(classes).toContain("mix-blend-multiply");
+      // The blend has cream to land on only while the window it sits in is
+      // cream — and `bg-cream-soft` would not do.
+      expect(
+        screen.getByTestId("player-card-figure").className.split(/\s+/),
+      ).toContain("bg-cream");
     });
   });
 

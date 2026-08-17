@@ -18,7 +18,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Photo state — newsprint-treated psdImage with number disc top-left. */
+/** Photo state — newsprint-treated psdImage, blended onto the card's cream, with number disc top-left. */
 export const WithPhoto: Story = {
   args: {
     firstName: "Maxim",

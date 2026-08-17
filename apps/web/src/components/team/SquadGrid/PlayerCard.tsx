@@ -30,20 +30,26 @@ export function PlayerCard({
 
   const inner = (
     <>
-      {/* 3:4 photo / illustration with number disc overlay */}
+      {/* 3:4 photo / illustration with number disc overlay. `bg-cream` is the
+          backdrop the photo multiplies against — the same token the card
+          already paints, so nothing moves, but the blend stops depending
+          silently on <TapedCard> painting cream two levels up. */}
       <div
         data-testid="player-card-figure"
         data-state={hasPhoto ? "photo" : "illustration"}
-        className="border-paper-edge relative aspect-[3/4] overflow-hidden border"
+        className="border-paper-edge bg-cream relative aspect-[3/4] overflow-hidden border"
       >
         {hasPhoto ? (
+          /* Every photo this card renders blends: multiply drops a studio
+             cutout's white matte onto the card's cream. No cutout branch and
+             no coverage threshold (#2633, deciding #2590). */
           <Image
             src={photoUrl!}
             alt=""
             width={300}
             height={400}
             unoptimized
-            className="block h-full w-full object-cover"
+            className="block h-full w-full object-cover mix-blend-multiply"
             style={{ filter: "var(--filter-photo-newsprint)" }}
           />
         ) : (
