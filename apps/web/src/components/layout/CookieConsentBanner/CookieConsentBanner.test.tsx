@@ -54,6 +54,30 @@ describe("CookieConsentBanner", () => {
     expect(config.language.translations.nl.consentModal.title).toBe("Koekjes?");
   });
 
+  // Decision D4 (#2620): the banner is third-party DOM built from
+  // `innerHTML`-assigned label strings, so the bracket rides in the string —
+  // aria-hidden, and never as the button's accessible name.
+  it("prefixes both dismissal labels with the aria-hidden mono bracket", () => {
+    render(<CookieConsentBanner />);
+    const { consentModal, preferencesModal } =
+      mockRun.mock.calls[0][0].language.translations.nl;
+    const bracketed = '<span aria-hidden="true">[×]</span> Alleen noodzakelijk';
+
+    expect(consentModal.acceptNecessaryBtn).toBe(bracketed);
+    expect(preferencesModal.acceptNecessaryBtn).toBe(bracketed);
+  });
+
+  it("leaves every non-dismissal label unbracketed", () => {
+    render(<CookieConsentBanner />);
+    const { consentModal, preferencesModal } =
+      mockRun.mock.calls[0][0].language.translations.nl;
+
+    expect(consentModal.acceptAllBtn).toBe("Alles accepteren");
+    expect(consentModal.showPreferencesBtn).toBe("Beheer voorkeuren");
+    expect(preferencesModal.acceptAllBtn).toBe("Alles accepteren");
+    expect(preferencesModal.savePreferencesBtn).toBe("Sla op");
+  });
+
   it("renders nothing visible", () => {
     const { container } = render(<CookieConsentBanner />);
     expect(container.firstChild).toBeNull();

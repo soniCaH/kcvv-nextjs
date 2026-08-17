@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { Decorator, Meta, StoryObj } from "@storybook/nextjs-vite";
+import { BRACKET_GLYPH } from "@/components/design-system/BracketAffordance";
 import { CookieConsentBanner } from "./CookieConsentBanner";
 
 /**
@@ -124,7 +125,11 @@ function MockBanner() {
           }}
         >
           <button style={primaryBtn}>Alles accepteren</button>
-          <button style={ghostBtn}>Alleen noodzakelijk</button>
+          {/* D4 bracket affordance (#2620) — mirrors the `acceptNecessaryBtn`
+              label markup the live config injects. */}
+          <button style={ghostBtn}>
+            <span aria-hidden>{BRACKET_GLYPH.close}</span> Alleen noodzakelijk
+          </button>
           <button style={linkBtn}>Beheer voorkeuren</button>
         </div>
       </div>
