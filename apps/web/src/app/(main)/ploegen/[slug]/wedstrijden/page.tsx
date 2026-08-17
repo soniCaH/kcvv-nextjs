@@ -8,6 +8,7 @@ import { BffService } from "@/lib/effect/services/BffService";
 import type { Match } from "@kcvv/api-contract";
 import { TeamRepository } from "@/lib/repositories/team.repository";
 import { TeamAgendaRow } from "@/components/team/TeamMatchesSection/TeamAgendaRow";
+import { EmptyState } from "@/components/design-system/EmptyState";
 import { PageContainer } from "@/components/design-system/PageContainer";
 import { PageHero } from "@/components/layout/PageHero";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -160,12 +161,15 @@ export default async function WedstrijdenPage({
         />
 
         {matches.length === 0 ? (
-          <p
-            data-testid="wedstrijden-empty"
-            className="text-ink-muted font-mono text-sm tracking-wider uppercase"
+          // "Nog geen", not "Geen": fixtures still arrive mid-season once the
+          // federation releases the calendar (#2427).
+          <EmptyState
+            tier="surface"
+            heading="Nog geen wedstrijden gepland"
+            testId="wedstrijden-empty"
           >
-            Geen wedstrijden gepland.
-          </p>
+            Zodra de kalender is vrijgegeven, verschijnen de wedstrijden hier.
+          </EmptyState>
         ) : (
           <div className="flex flex-col gap-10">
             {monthGroups.map((group) => (

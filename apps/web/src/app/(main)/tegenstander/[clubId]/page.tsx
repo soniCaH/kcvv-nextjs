@@ -20,6 +20,7 @@ import type { Match, OpponentHistory } from "@kcvv/api-contract";
 import {
   Crest,
   EditorialHeading,
+  EmptyState,
   PageContainer,
   StripedSeam,
 } from "@/components/design-system";
@@ -231,9 +232,12 @@ export default async function OpponentPage({ params }: OpponentPageProps) {
         </EditorialHeading>
 
         {seasons.length === 0 ? (
-          <p className="text-ink-muted font-display italic">
-            Nog geen onderlinge duels gespeeld.
-          </p>
+          <EmptyState
+            tier="surface"
+            heading="Nog geen onderlinge duels gespeeld"
+          >
+            Zodra KCVV tegen deze ploeg speelt, verschijnt de wedstrijd hier.
+          </EmptyState>
         ) : (
           seasons.map((group) => (
             <section

@@ -147,6 +147,15 @@ describe("EmptyState — tier: surface (Tier 1)", () => {
     );
   });
 
+  it("forwards testId as data-testid on the root", () => {
+    render(
+      <EmptyState tier="surface" heading="Nog geen sponsors" testId="foo">
+        Body.
+      </EmptyState>,
+    );
+    expect(screen.getByTestId("foo")).toBeInTheDocument();
+  });
+
   it("can suppress the accent emphasis on the heading", () => {
     const { container } = render(
       <EmptyState
@@ -195,5 +204,14 @@ describe("EmptyState — tier: slot (Tier 2)", () => {
     expect(
       within(status).getByText("Geen opstelling beschikbaar"),
     ).toBeInTheDocument();
+  });
+
+  it("forwards testId as data-testid on the root", () => {
+    render(
+      <EmptyState tier="slot" testId="bar">
+        Geen opstelling beschikbaar
+      </EmptyState>,
+    );
+    expect(screen.getByTestId("bar")).toBeInTheDocument();
   });
 });

@@ -14,7 +14,7 @@ import { LISTING_INITIAL_TOTAL, SITE_CONFIG } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import { PageContainer } from "@/components/design-system";
+import { EmptyState, PageContainer } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
 import { fetchGalleriesAction } from "./actions";
 import { GalleryListingClient } from "./GalleryListingClient";
@@ -55,9 +55,9 @@ export default async function GalerijPage() {
           headline="Fotogalerij"
         />
         {initial.items.length === 0 ? (
-          <p className="text-body-md text-ink-soft">
-            Er zijn nog geen fotogalerijen gepubliceerd.
-          </p>
+          <EmptyState tier="surface" heading="Nog geen fotogalerijen">
+            Zodra we een fotogalerij publiceren, verschijnt ze hier.
+          </EmptyState>
         ) : (
           <GalleryListingClient
             initialGalleries={initial.items}

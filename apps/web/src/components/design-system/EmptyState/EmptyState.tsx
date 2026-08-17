@@ -72,6 +72,9 @@ interface EmptyStateSharedProps {
    *  load). Omit for an empty state already present on first render. */
   live?: boolean;
   className?: string;
+  /** Forwarded as `data-testid` on the root element, for callers that need
+   *  a stable e2e/test hook on the empty branch itself. */
+  testId?: string;
 }
 
 export interface EmptyStateSurfaceProps extends EmptyStateSharedProps {
@@ -143,10 +146,16 @@ function ActionRow({ actions }: { actions: readonly EmptyStateAction[] }) {
   );
 }
 
-function SlotEmptyState({ children, live, className }: EmptyStateSlotProps) {
+function SlotEmptyState({
+  children,
+  live,
+  className,
+  testId,
+}: EmptyStateSlotProps) {
   return (
     <div
       role={live ? "status" : undefined}
+      data-testid={testId}
       className={cn(
         "border-ink-muted flex items-center justify-center border-2 border-dashed px-3 py-3 text-center",
         className,
@@ -167,6 +176,7 @@ function SurfaceEmptyState({
   actions,
   live,
   className,
+  testId,
 }: EmptyStateSurfaceProps) {
   const emphasis =
     headingEmphasis === false ? undefined : (headingEmphasis ?? { text: "." });
@@ -174,6 +184,7 @@ function SurfaceEmptyState({
   return (
     <section
       role={live ? "status" : undefined}
+      data-testid={testId}
       className={cn(
         "border-ink bg-cream-soft shadow-paper-sm border-2 p-7 text-center sm:p-8 sm:text-left",
         className,
