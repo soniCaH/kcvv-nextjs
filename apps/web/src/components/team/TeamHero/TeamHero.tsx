@@ -85,14 +85,11 @@ export function TeamHero({
         </EditorialHeading>
 
         {showBandPill ? (
-          <div
-            data-testid="team-hero-meta"
-            className="flex flex-wrap items-center gap-2"
-          >
+          <span data-testid="team-hero-meta">
             <MonoLabel variant="pill-ink" size="sm">
               {bandLabel}
             </MonoLabel>
-          </div>
+          </span>
         ) : null}
 
         {showTagline ? (
@@ -109,7 +106,7 @@ export function TeamHero({
       <div
         data-testid="team-hero-artefact"
         data-state={hasPhoto ? "photo" : "jersey"}
-        className="order-first flex w-full flex-col gap-3 justify-self-start sm:order-last sm:justify-self-end"
+        className="order-first w-full justify-self-start sm:order-last sm:justify-self-end"
       >
         <TapedFigure
           aspect="landscape-3-2"

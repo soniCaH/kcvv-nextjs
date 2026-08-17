@@ -35,6 +35,8 @@ export function TeamFlagship({
   const isA = variant === "a";
   const hasPhoto =
     teamImageUrl !== undefined && teamImageUrl !== null && teamImageUrl !== "";
+  const showDivision =
+    division !== undefined && division !== null && division !== "";
 
   // A is jersey-deep (white small text passes AA where cream would not);
   // B is cream (ink text). Big headline is large-text so cream/ink both pass.
@@ -94,7 +96,7 @@ export function TeamFlagship({
         {category}
       </EditorialHeading>
 
-      {division ? (
+      {showDivision ? (
         <p
           className={cn(
             "font-mono text-xs tracking-[0.08em] uppercase",

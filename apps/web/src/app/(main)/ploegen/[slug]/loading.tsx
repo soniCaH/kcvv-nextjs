@@ -36,9 +36,7 @@ export default function TeamDetailLoading() {
         <div className="order-last flex flex-col gap-4 sm:order-first">
           <div className="bg-paper-edge h-3 w-28" />
           <div className="bg-paper-edge h-12 w-48" />
-          <div className="flex gap-2">
-            <div className="bg-paper-edge h-6 w-24" />
-          </div>
+          <div className="bg-paper-edge h-6 w-24" />
           <div className="bg-paper-edge h-4 w-64 max-w-full" />
         </div>
         <div className="border-ink bg-cream-soft shadow-paper-md order-first aspect-[3/2] w-full border-2 sm:order-last" />
