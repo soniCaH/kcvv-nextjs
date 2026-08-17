@@ -314,7 +314,7 @@ Only three weights exist, plus a muted sibling for surfaces where black-on-black
 
 **Everything rectangular is sharp.** Border radius is `0` on cards, buttons, inputs, selects, textareas, pills, badges, modals, images and bands. The only curve in the system is a true circle (`rounded-full`) for avatars, timeline bullets, spinner dots and score circles. There is no small-radius softening step, and there is no "just 2px" exception.
 
-Borders are the primary structural device: a solid `2px` ink border defines nearly every surface, dropping to `1.5px` on stamps and `2px` at reduced opacity (`ink/30` → `ink/40` → `ink/60` → `ink`) to encode form-field state. Dividers on cream use paper-edge rather than ink.
+Borders are the primary structural device, split across two weights that each do a different job. A solid `2px` ink border draws an **object** — a card, a button, a stamp, a filter chip, anything with enough presence to also carry a hard offset shadow — dropping to `1.5px` on stamps and to `2px` at reduced opacity (`ink/30` → `ink/40` → `ink/60` → `ink`) to encode form-field state, itself a progression of the object border, not a third weight. A `1px` hairline — `border-paper-edge`, or the alpha-ink steps `ink/10`–`ink/15` where cream already carries enough contrast — **separates**: it marks a row boundary or a section edge that shares its surface with its neighbour and casts no shadow of its own.
 
 The ornament vocabulary is physical: **tape strips** (small solid rectangles anchored half-over a card edge at −0.5° to +0.5°, or −5°/+4° for polaroid compositions), **stamps** (rotated ~2°, mono uppercase, bordered and shadowed), **perforations** (a masked half-disc column with a dashed tear guide, on ticket-stub alerts), **striped seams** (45° two-tone SVG bands used as full-bleed section rules), and **highlighter strokes** (a hand-drawn SVG marker that sweeps left-to-right on hover behind inline links and heading accents).
 
@@ -325,6 +325,8 @@ Photographs get a newsprint treatment: a warm-tint filter (`sepia(0.06) saturate
 **The Sharp Corner Rule.** If it is a rectangle, its radius is `0`. Circles are circles. There is nothing in between.
 
 **The Sub-Degree Rule.** Grid card and tape rotations live in a −0.5° to +0.5° pool. Individual tilt should be barely perceptible; the effect is only that the grid stops being perfect. Steeper angles are reserved for explicitly named polaroid compositions.
+
+**The Two Weights Rule.** A rectangle's border weight answers one question: does it cast a shadow? If yes, it is an object and its border is `2px` ink. If no — it only separates content that already shares a surface — its border is a `1px` hairline. That is the whole test a reviewer needs on a diff; nothing in between is legal. The split was never a decision, only a habit, until it was counted: measured in `apps/web/src`, the hairline (`border-paper-edge`) appears 93 times, plus 13 more as the alpha-ink steps, against 16 for the 2px ink object border. `border-jersey-deep` (21 uses) stays on the object side of the test, never the hairline side — it marks an active filter chip, a hovered link, a focused tab, always a thing and never a row. An accent-hairline variant was rendered and rejected on that evidence: at the density a divider actually renders — a stacked list, a run of section rules — a line of green hairlines stops reading as individual separators and starts reading as a green section, which is exactly what the Rare Green Rule exists to prevent.
 
 ## Components
 
@@ -421,6 +423,7 @@ Decided on [#2548](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2548), b
 ### Do:
 
 - **Do** set every rectangle's border radius to `0` and reserve curves for true circles.
+- **Do** reach for a `1px` hairline (`border-paper-edge`) to separate rows and sections, and reserve the `2px` ink border for a rectangle that also carries a shadow.
 - **Do** use hard offset shadows with `0` blur, in exactly the seven documented tokens.
 - **Do** press interactive surfaces into their shadow on hover (`translate(1px, 1px)` + `shadow-none`), gating only the translate behind `motion-safe:`.
 - **Do** pick the right green: `jersey` decorative only, `jersey-deep` for anything carrying text (headings, CTAs, inline prose links), `jersey-bright` for green text on ink.
@@ -437,6 +440,7 @@ Decided on [#2548](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2548), b
 - **Don't** reintroduce a blurred shadow token. The pre-redesign family and the orphaned `--shadow-photo-tape*` pair were deleted from `globals.css`; re-adding one changes the design language.
 - **Don't** put a radius on a loading skeleton. A skeleton must match the sharp shape of what it stands in for — 44 stray `rounded` / `rounded-sm` classes were removed from eight skeleton files for exactly this reason.
 - **Don't** set `jersey` (`#4acf52`) as a text colour, and don't put it on cream.
+- **Don't** draw a hairline divider in green. Rendered and rejected: at divider density a run of green hairlines reads as a green section, which the Rare Green Rule forbids — hairlines stay ink or paper-edge.
 - **Don't** wrap a striped seam or a coloured band in a max-width container.
 - **Don't** invent a container width outside 680 / 1040 / 1280 (chrome's 1440 is header and footer only).
 - **Don't** pin a Display-size heading's italic accent to a heavy weight — Freight Big Pro has no 900 italic.
