@@ -76,7 +76,10 @@ for num in $CANDIDATES; do
 
   if [ "$open_blockers" = "0" ]; then
     echo "$num"
-    [ "$FIRST_ONLY" = true ] && exit 0
+    # break, not `exit 0` — fall through to the ANY_FAILED check below. A
+    # --first pick made after an earlier blocker query failed is not the first
+    # unblocked issue, only the first one we could confirm.
+    [ "$FIRST_ONLY" = true ] && break
   fi
 done
 
