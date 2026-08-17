@@ -14,6 +14,8 @@ This skill reuses `/ralph`'s conventions exactly — same labels, same `blockedB
 
 ## Process
 
+**You** run every step here, in the main checkout, as the orchestrator. Spawned agents run only what their brief tells them, inside their own worktree — they never call `unblocked-issues.sh` or `wave-check.sh`. Both scripts are repo-root-relative, so run them from the repository root; they need `gh` and `git` on PATH and nothing else.
+
 ### 0. Prune merged worktrees
 
 Prior runs leave worktrees behind. Garbage-collect the merged ones before computing the wave:
@@ -37,32 +39,22 @@ Leave worktrees whose PR is still open — those are under review. Report what y
 
 If the user passed explicit issue numbers, use those (still subject to the hard rules below). Otherwise build the wave automatically:
 
-1. Query the queue. Pass `--limit` — `gh` caps at 30 silently, and a capped list reads exactly like a complete one:
+1. Get the eligible set. Both gates — the `ready` label and zero open blockers — live in one script, which `scripts/ralph.sh` and `/ralph` use too:
 
    ```bash
-   gh issue list --label ready --state open --limit 200 --json number,title,milestone,labels
+   ./scripts/unblocked-issues.sh
    ```
 
-2. For each candidate, check GitHub's native blocking relationships — **not** a markdown section:
+   It prints every eligible issue number, ascending. A **nonzero exit** means a `blockedBy` query failed and the set is incomplete — report that and stop, rather than building a wave from a partial queue.
+
+2. Read the titles, so you can judge scope and collisions:
 
    ```bash
-   gh api graphql -f query='
-     query {
-       repository(owner: "soniCaH", name: "www.kcvvelewijt.be") {
-         issue(number: '"${N}"') {
-           blockedBy(first: 50) { nodes { number state } }
-         }
-       }
-     }' --jq '[.data.repository.issue.blockedBy.nodes[] | select(.state == "OPEN")] | length'
+   gh issue view <N> --json number,title,milestone --jq '"\(.number) · \(.title) · \(.milestone.title // "no milestone")"'
    ```
 
-   `0` = unblocked. If the GraphQL call **fails**, treat the issue as blocked and say so — never assume unblocked on an error.
-
-   Check **every** issue the query returns, not the first screenful — the wave is only correct if the blocker check is exhaustive.
-
-3. **Eligible** = `ready` label AND zero open blockers.
-4. **Mutually compatible** = drop pairs that would collide at merge. See "Collision classes" below.
-5. **Cap the wave.** Default **4** agents. The bottleneck is human PR review, not agent capacity — a wave of 12 just builds a review queue. Go wider only if the user asks.
+3. **Mutually compatible** = drop pairs that would collide at merge. See "Collision classes" below.
+4. **Cap the wave.** Default **4** agents. The bottleneck is human PR review, not agent capacity — a wave of 12 just builds a review queue. Go wider only if the user asks.
 
 Present the proposed wave as a numbered list: issue number · title · milestone · one-line scope · why it is compatible with the others. Ask: launch all / drop some / stop.
 
@@ -142,7 +134,7 @@ This skill is **stateless across invocations**. Every run re-queries GitHub, so 
 
 - **The orchestrator does not auto-loop.** When the wave's PRs are open, it stops. Downstream issues only unblock once blockers close, which needs merges the orchestrator cannot do.
 - **Hands-free continuation** — wrap in `/loop`, e.g. `/loop 45m /ralph-afk`. Each tick re-picks the latest unblocked wave; a tick with nothing eligible reports "no work" and exits. Use 45m+, not 5m — a wave takes far longer than that to produce reviewable PRs.
-- **Drained** = `gh issue list --label ready --state open --limit 200` is empty, or everything left is blocked. Say so explicitly.
+- **Drained** = `./scripts/unblocked-issues.sh` prints nothing on a zero exit. Say so explicitly, and distinguish it from a nonzero exit, which means the queue could not be read at all.
 
 ## Hard rules
 

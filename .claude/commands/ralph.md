@@ -27,29 +27,22 @@ Or target a specific label or issue:
 
 ## Step 1 — Propose Next Issue
 
-Fetch the backlog and propose:
+Both gates — the `ready` label and zero open blockers — live in one script. Use it rather than re-deriving them:
 
 ```bash
-gh issue list --label ready --state open --json number,title,labels,body \
-  --jq '.[] | "\(.number): \(.title)"' | head -10
+./scripts/unblocked-issues.sh                       # every workable issue, ascending
+./scripts/unblocked-issues.sh --milestone <name>    # one milestone only
 ```
 
-Check for blocking relationships before ranking. An issue with unresolved blockers should not be picked up:
+It exits nonzero when a `blockedBy` query fails, which means the blocker state is unknown. Stop there — an API failure is not the same as "nothing is blocked".
+
+Then read the titles of what it returned:
 
 ```bash
-# For each candidate, check if it has open blockers via GraphQL
-gh api graphql -f query='
-  query {
-    repository(owner: "soniCaH", name: "www.kcvvelewijt.be") {
-      issue(number: '"${CANDIDATE}"') {
-        blockedBy(first: 50) { nodes { number state } }
-      }
-    }
-  }' --jq '[.data.repository.issue.blockedBy.nodes[] | select(.state == "OPEN")] | length'
-# 0 = no open blockers → safe to pick up
+gh issue view <N> --json number,title,milestone --jq '"\(.number): \(.title)"'
 ```
 
-Present the top candidates ranked by: dependencies resolved → smallest scope → label priority.
+Present the top candidates ranked by: smallest scope → label priority.
 
 **Wait for human approval before proceeding.**
 
@@ -176,7 +169,7 @@ gh api graphql -f query="
 gh issue comment $ISSUE_NUM --body "Blocked by #${BLOCKER_NUM}. Blocking relationship set via API."
 ```
 
-When checking if an issue is still blocked, query its blockedBy relationships:
+To diagnose **one** issue — which blockers it has and what state each is in — query the relationship directly. (For the queue-level question, "what can be worked on now", use `./scripts/unblocked-issues.sh` from Step 1 instead of looping this query yourself.)
 
 ```bash
 # List blockers and their state

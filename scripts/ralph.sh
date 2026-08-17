@@ -34,75 +34,26 @@ pick_next_issue() {
     return
   fi
 
-  local args=(--label "ready" --state open --json number --jq 'sort_by(.number) | .[].number')
+  # "ready, and no open blockers" lives in exactly one place.
+  # --first stops at the first match instead of querying blockedBy for the
+  # whole queue, which matters because this runs once per loop iteration.
+  local args=(--first)
   if [ -n "$MILESTONE" ]; then
     args+=(--milestone "$MILESTONE")
   fi
-
-  local candidates
-  if ! candidates=$(gh issue list "${args[@]}" 2>&1); then
-    echo "❌ gh issue list failed: ${candidates}" >&2
-    return 1
+  local skip_list="${SKIPPED_ISSUES[*]+${SKIPPED_ISSUES[*]}}"
+  if [ -n "$skip_list" ]; then
+    args+=(--exclude "$skip_list")
   fi
 
-  if [ -z "$candidates" ]; then
-    echo ""
-    return
-  fi
-
-  # Filter out skipped issues
-  local filtered=""
-  for num in $candidates; do
-    local is_skipped=false
-    for s in ${SKIPPED_ISSUES[@]+"${SKIPPED_ISSUES[@]}"}; do
-      if [ "$num" = "$s" ]; then is_skipped=true; break; fi
-    done
-    if [ "$is_skipped" = false ]; then
-      filtered="${filtered:+$filtered$'\n'}$num"
-    fi
-  done
-  candidates="$filtered"
-
-  if [ -z "$candidates" ]; then
-    echo ""
-    return
-  fi
-
-  # Filter out issues with open blockers (checked via GraphQL blockedBy)
-  local any_graphql_failed=false
-  for num in $candidates; do
-    local open_blockers
-    if ! open_blockers=$(gh api graphql -f query="
-      query {
-        repository(owner: \"soniCaH\", name: \"www.kcvvelewijt.be\") {
-          issue(number: ${num}) {
-            blockedBy(first: 50) {
-              nodes { state }
-            }
-          }
-        }
-      }" --jq '[.data.repository.issue.blockedBy.nodes[] | select(.state == "OPEN")] | length' 2>&1); then
-      echo "⚠️  Warning: blockedBy query failed for issue #${num}, skipping: ${open_blockers}" >&2
-      any_graphql_failed=true
-      continue
-    fi
-
-    if [ "$open_blockers" = "0" ]; then
-      echo "$num"
-      return
-    fi
-  done
-
-  if [ "$any_graphql_failed" = true ]; then
-    echo "❌ One or more blockedBy GraphQL queries failed — cannot reliably determine ready issues." >&2
-    return 1
-  fi
-
-  echo ""
+  # A nonzero exit here means the blocker state is unknown, not that the queue
+  # is empty — the caller aborts rather than guessing.
+  "${REPO_ROOT}/scripts/unblocked-issues.sh" "${args[@]}"
 }
 
 count_ready() {
-  local args=(--label "ready" --state open --json number --jq 'length')
+  # --limit is required: gh caps at 30 silently.
+  local args=(--label "ready" --state open --limit 200 --json number --jq 'length')
   if [ -n "$MILESTONE" ]; then
     args+=(--milestone "$MILESTONE")
   fi
