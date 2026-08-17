@@ -96,8 +96,12 @@ Phase 6: SEO / sitemap / analytics / JSON-LD + retire legacy + VR baselines     
 - [ ] Colour-coded filter chips (Alles + 4 types) that **double as the legend** (no separate legend);
       selected = filled, unselected = dimmed outline; **single-select**, "Alles" default.
 - [ ] Filtering hides any month whose tickets are all filtered out (no empty month headers).
-- [ ] Empty list state (no upcoming events): centred message, no filter row / month headers.
-- [ ] Filtered-to-zero state: per-type message + "Toon alles" reset.
+- [x] Empty list state (no upcoming events): **superseded by #2427/#2562** — renders the shared
+      tier-"surface" `<EmptyState>` ("Nog geen evenementen gepland."). The filter row stays
+      **visible** here too; the "no filter row" special-case this line originally called for was
+      considered and rejected by #2427 rule 5 (the chips are a fixed set independent of the data).
+- [x] Filtered-to-zero state: also on the shared `<EmptyState>` — names the active category + the
+      mandatory "Toon alles" undo (#2427/#2562).
 - [ ] `event_filter` analytics fires with `event_type`; GTM tag + GA4 report updated.
 - [ ] Storybook: filter row (each selected state), empty, filtered-zero. VR baselines committed.
 - [ ] `pnpm --filter @kcvv/web check-all` passes.
@@ -163,8 +167,9 @@ typegen. Changes are confined to:
 - `[ ]` **iCal generation** — client-side `.ics` blob (recommended, no BFF) vs a BFF endpoint. — resolved
   in Phase 4; default client-side.
 - `[ ]` **Multi-select filters** — single-select locked for v1; revisit only if owner wants combinations.
-- `[ ]` **Dutch empty-state copy** — proposed: _"Geen evenementen gepland — kom snel terug."_ /
-  _"Geen [type] gepland."_ — owner to confirm final strings.
+- `[x]` **Dutch empty-state copy** — resolved by #2427: _"Nog geen evenementen gepland."_ (genuine
+  emptiness — events can still arrive) / _"Geen evenementen in de categorie [type]."_ + "Toon alles"
+  (a filter emptied the surface). The proposed strings above are superseded.
 - `[ ]` **Article-sourced ticket link target** (Phase 5) — confirmed `/nieuws/[slug]` for `articleType:event`
   articles vs a synthetic event page — assumed `/nieuws/[slug]`.
 
