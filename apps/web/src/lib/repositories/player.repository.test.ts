@@ -79,6 +79,7 @@ describe("PlayerRepository", () => {
         href: "/spelers/12345",
         bio: row.bio,
         birthDate: "1995-03-15",
+        metaLabel: "Aanvaller",
       });
     });
 

@@ -97,17 +97,13 @@ export async function generateMetadata({
 
     const fullName =
       `${player.firstName} ${player.lastName}`.trim() || "Speler";
-    // Composed like the team page's metadata fallback (#2630): when no
-    // position is authored, the description drops that datum rather than
-    // filling it with a generic literal (#2567). Unlike the team page's
-    // `typeLabel` fallback (a category word, always known), a player has no
-    // always-known category word other than the position itself — so this
-    // falls to the team the player is on, and only then to the bare name.
-    const description = player.position
-      ? `${player.position} bij KCVV Elewijt`
-      : player.teamLabel
-        ? `${player.teamLabel} bij KCVV Elewijt`
-        : `${fullName} bij KCVV Elewijt`;
+    // `metaLabel` (position, else team — #2567) is the same subject the OG
+    // share card's `meta` line uses, so the two surfaces in one share
+    // preview never disagree. The bare-name rung only fires when neither is
+    // known; "bij KCVV Elewijt" still adds the club affiliation beyond the
+    // title, so it's kept rather than an empty description.
+    const subject = player.metaLabel || fullName;
+    const description = `${subject} bij KCVV Elewijt`;
 
     return {
       title: fullName,

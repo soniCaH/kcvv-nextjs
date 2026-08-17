@@ -58,6 +58,13 @@ export interface PlayerVM {
    * Multi-team disambiguation (PRD §7) — see `findByPsdId` GROQ.
    */
   teamLabel?: string;
+  /**
+   * The most informative short label available for this player — position
+   * when authored, else the active-team label, else absent. Shared by the
+   * metadata description and the OG share card so the two surfaces in one
+   * share preview never disagree about what's known (#2567 review).
+   */
+  metaLabel?: string;
 }
 
 /** A PlayerVM that has a valid href (i.e. has a psdId) */
@@ -79,6 +86,17 @@ export function toPlayerVM(
     ? "Keeper"
     : (row.position ?? row.positionPsd ?? undefined);
 
+  // The team's own name, resolved the same way its page resolves it — a
+  // profile that says `KCVVE  U15` beside a page headed `U15` is the drift
+  // #2630 closes.
+  const teamLabel = row.currentTeam
+    ? teamDisplayName({
+        displayName: row.currentTeam.displayName,
+        slug: row.currentTeam.slug ?? "",
+        name: row.currentTeam.name ?? "",
+      })
+    : undefined;
+
   return {
     id: row._id,
     firstName: row.firstName ?? "",
@@ -90,16 +108,8 @@ export function toPlayerVM(
     href: row.psdId ? `/spelers/${row.psdId}` : undefined,
     bio: row.bio ?? undefined,
     birthDate: row.birthDate ?? undefined,
-    // The team's own name, resolved the same way its page resolves it — a
-    // profile that says `KCVVE  U15` beside a page headed `U15` is the drift
-    // #2630 closes.
-    teamLabel: row.currentTeam
-      ? teamDisplayName({
-          displayName: row.currentTeam.displayName,
-          slug: row.currentTeam.slug ?? "",
-          name: row.currentTeam.name ?? "",
-        })
-      : undefined,
+    teamLabel,
+    metaLabel: position ?? teamLabel,
   };
 }
 
