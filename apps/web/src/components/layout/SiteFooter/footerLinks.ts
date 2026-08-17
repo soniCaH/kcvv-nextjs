@@ -34,6 +34,10 @@ export const FOOTER_COLUMNS: ReadonlyArray<FooterColumn> = [
       // Reading about the club's sponsors is a different intent from offering
       // to become one, so `/sponsors` is reachable from both columns.
       { label: "Onze sponsors", href: "/sponsors" },
+      // `/inhoud` is reachable from here and nowhere else on purpose (#2622):
+      // it is the whole site listed on one page, which is a directory entry,
+      // not a nav concept. The nav is flat and stays flat (#2409 / #2415).
+      { label: "Alle inhoud", href: "/inhoud" },
     ],
   },
   {

@@ -14,21 +14,31 @@ De officiële website van KCVV Elewijt: https://www.kcvvelewijt.be
 
 ### Navigatie
 
+- /inhoud — Inhoudsopgave: alles wat op deze site staat, op één pagina
 - /nieuws — Clubnieuws en artikels
+- /nieuws/{slug} — Eén nieuwsartikel
 - /ploegen — Overzicht van alle seniorenploegen
+- /ploegen/{slug} — Ploegpagina met selectie, kalender en klassement
 - /jeugd — Overzicht van alle jeugdploegen
 - /kalender — Wedstrijdkalender met uitslagen en komende matchen
 - /spelers/{slug} — Spelersprofielen met statistieken
 - /staf/{slug} — Profielen van trainers en stafleden
 - /wedstrijd/{matchId} — Wedstrijddetails met opstelling en doelpunten
 - /sponsors — Overzicht van clubsponsors
+- /galerij — Fotogalerijen
+- /galerij/{slug} — Eén fotogalerij
 - /club — Informatie over de club
 - /club/geschiedenis — Clubgeschiedenis
-- /hulp — Hulp & wie-is-wie: clubmedewerkers en contactpersonen
+- /club/bestuur — Het clubbestuur
+- /club/jeugdbestuur — Het jeugdbestuur
+- /club/angels — KCVV Angels
+- /club/ultras — De supportersclub
 - /club/contact — Contactgegevens
 - /club/word-lid — Lid worden (online inschrijvingsformulier)
-- /club/praktische-informatie — Praktische info (lidgeld, terugbetalingen, ProSoccerData)
+- /club/{slug} — Redactionele clubpagina's, waaronder /club/praktische-informatie (lidgeld, terugbetalingen, ProSoccerData) en /club/vrijwilliger
+- /hulp — Hulp & wie-is-wie: clubmedewerkers en contactpersonen
 - /evenementen — Clubactiviteiten en evenementen
+- /evenementen/{slug} — Eén evenement
 - /zoeken — Zoeken op de website
 - /privacy — Privacybeleid
 
@@ -40,6 +50,7 @@ De officiële website van KCVV Elewijt: https://www.kcvvelewijt.be
 - Stafprofielen: trainers, afgevaardigden en bestuursleden
 - Ploegpagina's: selectie, kalender en resultaten per ploeg
 - Sponsoroverzicht: partners en sponsors van de club
+- Fotogalerijen: foto's van wedstrijden en clubactiviteiten
 
 ## Contact en socials
 

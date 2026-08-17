@@ -214,6 +214,10 @@ export type {
   TapedFigureBg,
 } from "./TapedFigure";
 
+// LeaderDotRow
+export { LeaderDotRow } from "./LeaderDotRow";
+export type { LeaderDotRowProps } from "./LeaderDotRow";
+
 // MonoLabelRow
 export { MonoLabelRow } from "./MonoLabelRow";
 export type {

@@ -41,11 +41,7 @@ export type MembershipApplication = {
   _updatedAt: string;
   _rev: string;
   role?:
-    | "speler"
-    | "jeugdspeler"
-    | "vrijwilliger"
-    | "trainer"
-    | "scheidsrechter";
+    "speler" | "jeugdspeler" | "vrijwilliger" | "trainer" | "scheidsrechter";
   firstName?: string;
   lastName?: string;
   birthDate?: string;
@@ -1311,10 +1307,7 @@ export type ARTICLES_QUERY_RESULT = Array<{
         _type: "eventFact";
         title?: string;
         eventType?:
-          | "Andere"
-          | "Clubevent"
-          | "Jeugdwerking"
-          | "Supportersactiviteit";
+          "Andere" | "Clubevent" | "Jeugdwerking" | "Supportersactiviteit";
         date?: string;
         endDate?: string;
         startTime?: string;
@@ -1727,10 +1720,7 @@ export type ARTICLE_BY_SLUG_QUERY_RESULT = {
         _type: "eventFact";
         title?: string;
         eventType?:
-          | "Andere"
-          | "Clubevent"
-          | "Jeugdwerking"
-          | "Supportersactiviteit";
+          "Andere" | "Clubevent" | "Jeugdwerking" | "Supportersactiviteit";
         date?: string;
         endDate?: string;
         startTime?: string;
@@ -2079,11 +2069,7 @@ export type EVENTS_QUERY_RESULT = Array<{
   title: string | "";
   slug: string | "";
   eventType:
-    | "Andere"
-    | "Clubevent"
-    | "Jeugdwerking"
-    | "Supportersactiviteit"
-    | null;
+    "Andere" | "Clubevent" | "Jeugdwerking" | "Supportersactiviteit" | null;
   dateStart: string | "";
   dateEnd: string | null;
   location: string | null;
@@ -2100,11 +2086,7 @@ export type NEXT_FEATURED_EVENT_QUERY_RESULT = {
   title: string | "";
   slug: string | "";
   eventType:
-    | "Andere"
-    | "Clubevent"
-    | "Jeugdwerking"
-    | "Supportersactiviteit"
-    | null;
+    "Andere" | "Clubevent" | "Jeugdwerking" | "Supportersactiviteit" | null;
   dateStart: string | "";
   dateEnd: string | null;
   location: string | null;
@@ -2122,11 +2104,7 @@ export type EVENT_BY_SLUG_QUERY_RESULT = {
   title: string | "";
   slug: string | "";
   eventType:
-    | "Andere"
-    | "Clubevent"
-    | "Jeugdwerking"
-    | "Supportersactiviteit"
-    | null;
+    "Andere" | "Clubevent" | "Jeugdwerking" | "Supportersactiviteit" | null;
   dateStart: string | "";
   dateEnd: string | null;
   location: string | null;
@@ -2159,11 +2137,7 @@ export type EVENT_ARTICLES_QUERY_RESULT = Array<{
     startTime: string | null;
     location: string | null;
     eventType:
-      | "Andere"
-      | "Clubevent"
-      | "Jeugdwerking"
-      | "Supportersactiviteit"
-      | null;
+      "Andere" | "Clubevent" | "Jeugdwerking" | "Supportersactiviteit" | null;
   } | null;
 }>;
 
@@ -2223,6 +2197,16 @@ export type JEUGD_LANDING_PAGE_QUERY_RESULT = {
     cardType: "article" | "nav" | null;
   }> | null;
 } | null;
+
+// Source: ../web/src/lib/repositories/page.repository.ts
+// Variable: PAGES_QUERY
+// Query: *[_type == "page" && defined(slug.current)] | order(title asc) {  "id": _id, "title": coalesce(title, ""), "slug": coalesce(slug.current, ""),  "updatedAt": _updatedAt}
+export type PAGES_QUERY_RESULT = Array<{
+  id: string;
+  title: string | "";
+  slug: string | "";
+  updatedAt: string;
+}>;
 
 // Source: ../web/src/lib/repositories/page.repository.ts
 // Variable: PAGE_BY_SLUG_QUERY
@@ -2399,12 +2383,7 @@ export type PLAYERS_QUERY_RESULT = Array<{
   keeper: boolean | null;
   positionPsd: string | null;
   position:
-    | "Aanvaller"
-    | "Keeper"
-    | "Middenvelder"
-    | "Speler"
-    | "Verdediger"
-    | null;
+    "Aanvaller" | "Keeper" | "Middenvelder" | "Speler" | "Verdediger" | null;
   birthDate: string | null;
   psdImageUrl: string | null;
   transparentImageUrl: string | null;
@@ -2441,12 +2420,7 @@ export type PLAYER_BY_PSD_ID_QUERY_RESULT = {
   keeper: boolean | null;
   positionPsd: string | null;
   position:
-    | "Aanvaller"
-    | "Keeper"
-    | "Middenvelder"
-    | "Speler"
-    | "Verdediger"
-    | null;
+    "Aanvaller" | "Keeper" | "Middenvelder" | "Speler" | "Verdediger" | null;
   birthDate: string | null;
   psdImageUrl: string | null;
   transparentImageUrl: string | null;
@@ -2735,12 +2709,7 @@ export type TEAM_BY_SLUG_QUERY_RESULT = {
     keeper: boolean | null;
     positionPsd: string | null;
     position:
-      | "Aanvaller"
-      | "Keeper"
-      | "Middenvelder"
-      | "Speler"
-      | "Verdediger"
-      | null;
+      "Aanvaller" | "Keeper" | "Middenvelder" | "Speler" | "Verdediger" | null;
     psdImageUrl: string | null;
     transparentImageUrl: string | null;
   }> | null;
@@ -2822,6 +2791,7 @@ declare module "@sanity/client" {
     '*[_type == "homePage"][0] {\n    "bannerSlotA": bannerSlotA-> {\n      "imageUrl": image.asset->url + "?w=1200&h=200&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(image.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(image.hotspot.y, 0.5)),\n      alt,\n      href\n    },\n    "bannerSlotB": bannerSlotB-> {\n      "imageUrl": image.asset->url + "?w=1200&h=200&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(image.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(image.hotspot.y, 0.5)),\n      alt,\n      href\n    },\n    "bannerSlotC": bannerSlotC-> {\n      "imageUrl": image.asset->url + "?w=1200&h=200&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(image.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(image.hotspot.y, 0.5)),\n      alt,\n      href\n    }\n  }': HOMEPAGE_BANNERS_QUERY_RESULT;
     '*[_type == "homePage"][0] {\n    "matchesSliderPlaceholder": matchesSliderPlaceholder {\n      nextSeasonKickoff,\n      announcementText,\n      announcementHref,\n      "highlightImage": highlightImage {\n        alt,\n        "asset": asset->{\n          _id,\n          url,\n          "lqip": metadata.lqip,\n          "dimensions": metadata.dimensions\n        }\n      }\n    }\n  }': HOMEPAGE_PLACEHOLDER_QUERY_RESULT;
     '*[_type == "jeugdLandingPage"][0] {\n  editorialCards[] {\n    tag, title, description, arrowText, href,\n    "imageUrl": image.asset->url + "?w=900&q=80&fm=webp",\n    position, cardType\n  }\n}': JEUGD_LANDING_PAGE_QUERY_RESULT;
+    '*[_type == "page" && defined(slug.current)] | order(title asc) {\n  "id": _id, "title": coalesce(title, ""), "slug": coalesce(slug.current, ""),\n  "updatedAt": _updatedAt\n}': PAGES_QUERY_RESULT;
     '*[_type == "page" && slug.current == $slug][0] {\n  "id": _id, "title": coalesce(title, ""), "slug": coalesce(slug.current, ""),\n  "heroImageUrl": heroImage.asset->url + "?w=1600&q=80&fm=webp&fit=max",\n  metaDescription,\n  "ogImageUrl": ogImage.asset->url + "?w=1200&h=630&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(ogImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(ogImage.hotspot.y, 0.5)),\n  body[]{ ..., "fileUrl": file.asset->url, "fileSize": file.asset->size, "fileMimeType": file.asset->mimeType, "fileOriginalFilename": file.asset->originalFilename, "asset": select(_type == "image" => asset->{ "url": url + "?w=800&q=80&fm=webp&fit=max", title, description, creditLine, metadata{dimensions, lqip} }, _type == "articleImage" => image.asset->{ "url": url + "?w=800&q=80&fm=webp&fit=max", title, description, creditLine, metadata{dimensions, lqip} }) }\n}': PAGE_BY_SLUG_QUERY_RESULT;
     '*[_type == "photoGallery" && defined(slug.current)] | order(publishedAt desc) [$offset...$end] {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip\n}': GALLERIES_QUERY_RESULT;
     '*[_type == "photoGallery" && slug.current == $slug][0] {\n  "id": _id,\n  "updatedAt": _updatedAt,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "descriptionText": pt::text(description),\n  "descriptionRich": description,\n  "images": images[]{\n    "url": asset->url,\n    "lqip": asset->metadata.lqip,\n    "alt": coalesce(alt, ""),\n    "caption": coalesce(caption, ""),\n    "credit": coalesce(credit, ^.defaultCredit, "")\n  }\n}': GALLERY_BY_SLUG_QUERY_RESULT;

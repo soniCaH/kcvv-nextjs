@@ -74,6 +74,14 @@ describe("footer covers every top-level nav concept", () => {
     expect(navHrefs).toContain("/club");
   });
 
+  it("indexes /inhoud from the footer and from nowhere in the nav (#2622)", () => {
+    // The contents page is the whole site on one page — a directory entry, not
+    // a top-level concept. It rides in the footer precisely so the nav can stay
+    // flat, so both halves of that are asserted.
+    expect(footerHrefs).toContain("/inhoud");
+    expect(navHrefs).not.toContain("/inhoud");
+  });
+
   it("reaches /sponsors from both discovery and conversion intents", () => {
     // Two links to one href, on purpose (#2415): reading about the club's
     // sponsors and offering to become one are different intents. Asserted so

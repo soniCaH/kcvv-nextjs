@@ -16,6 +16,7 @@ const staticRoutes: Array<{
   { path: "/kalender", priority: 0.8, changeFrequency: "daily" },
   { path: "/evenementen", priority: 0.7, changeFrequency: "weekly" },
   { path: "/zoeken", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/inhoud", priority: 0.4, changeFrequency: "daily" },
   { path: "/club", priority: 0.7, changeFrequency: "monthly" },
   { path: "/club/geschiedenis", priority: 0.6, changeFrequency: "yearly" },
   { path: "/club/ultras", priority: 0.6, changeFrequency: "monthly" },

@@ -21,6 +21,8 @@ vi.mock("next/navigation", () => ({
 
 const mockFindBySlug = vi.fn<(slug: string) => Effect.Effect<PageVM | null>>();
 const testLayer = Layer.succeed(PageRepository, {
+  // `/inhoud` reads the page list (#2622); this route never calls it.
+  findAll: () => Effect.succeed([]),
   findBySlug: (slug) => mockFindBySlug(slug),
 });
 

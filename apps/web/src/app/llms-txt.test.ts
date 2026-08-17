@@ -29,6 +29,10 @@ describe("llms.txt", () => {
     expect(llmsTxt).toContain("/kalender");
     expect(llmsTxt).toContain("/sponsors");
     expect(llmsTxt).toContain("/club");
+    expect(llmsTxt).toContain("/galerij");
+    // `/inhoud` is the derived twin of this hand-written list — the list that
+    // once shipped `/club/organigram` months after the route was deleted.
+    expect(llmsTxt).toContain("/inhoud");
   });
 
   it("contains content types", () => {

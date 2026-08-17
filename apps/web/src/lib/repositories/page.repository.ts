@@ -1,9 +1,31 @@
 import { Context, Effect, Layer } from "effect";
 import { defineQuery } from "groq";
 import { fetchGroq } from "../sanity/fetch-groq";
-import type { PAGE_BY_SLUG_QUERY_RESULT } from "../sanity/sanity.types";
+import type {
+  PAGES_QUERY_RESULT,
+  PAGE_BY_SLUG_QUERY_RESULT,
+} from "../sanity/sanity.types";
 
 // ─── GROQ Queries ────────────────────────────────────────────────────────────
+
+/**
+ * Every editorial club page, for the contents page at `/inhoud` (#2622).
+ *
+ * `page` carries no visibility flag, no ordering field and no publish date —
+ * the schema is title + slug + body — so every document is live the moment it
+ * exists and `title asc` is the only stable order available. `_updatedAt` is
+ * the one date a page has, and it is what `/inhoud` prints beside each row.
+ *
+ * Deliberately untagged: `SANITY_TAGS` has no `pages` key and the
+ * `/api/revalidate` webhook would have to grow one to match, so the read
+ * inherits the consuming route's `revalidate` instead — the same shape
+ * `TeamRepository.findAllForLanding` and the event lists use.
+ */
+export const PAGES_QUERY =
+  defineQuery(`*[_type == "page" && defined(slug.current)] | order(title asc) {
+  "id": _id, "title": coalesce(title, ""), "slug": coalesce(slug.current, ""),
+  "updatedAt": _updatedAt
+}`);
 
 export const PAGE_BY_SLUG_QUERY =
   defineQuery(`*[_type == "page" && slug.current == $slug][0] {
@@ -25,9 +47,19 @@ export type PageVM = Omit<PAGE_DETAIL, "title" | "slug"> & {
   slug: string;
 };
 
+/** One row of {@link PAGES_QUERY} — title, slug and when it last changed. */
+export type PageListItemVM = Omit<
+  PAGES_QUERY_RESULT[number],
+  "title" | "slug"
+> & {
+  title: string;
+  slug: string;
+};
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 export interface PageRepositoryInterface {
+  readonly findAll: () => Effect.Effect<PageListItemVM[]>;
   readonly findBySlug: (slug: string) => Effect.Effect<PageVM | null>;
 }
 
@@ -37,6 +69,7 @@ export class PageRepository extends Context.Tag("PageRepository")<
 >() {}
 
 export const PageRepositoryLive = Layer.succeed(PageRepository, {
+  findAll: () => fetchGroq<PAGES_QUERY_RESULT>(PAGES_QUERY),
   findBySlug: (slug) =>
     fetchGroq<PAGE_BY_SLUG_QUERY_RESULT>(PAGE_BY_SLUG_QUERY, { slug }).pipe(
       Effect.map((row) => row ?? null),

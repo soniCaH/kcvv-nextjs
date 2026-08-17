@@ -51,6 +51,11 @@ export const prefixes = [
   "membership_",
   "error_",
   "gallery_",
+  // `/inhoud`, the contents page (#2622). `inhoud_view` +
+  // `inhoud_entry_click`; the click reuses the already-registered `category`
+  // (which of the four groups) and `position` (rank inside it) dimensions, so
+  // this prefix is the whole taxonomy change — no new custom definitions.
+  "inhoud_",
 ];
 
 /** The canonical GTM Custom-Event trigger RegEx (prefixes joined with `|`). */
