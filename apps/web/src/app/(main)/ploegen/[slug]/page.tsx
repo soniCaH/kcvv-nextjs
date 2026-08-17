@@ -225,7 +225,6 @@ export default async function TeamPage({ params }: TeamPageProps) {
           ageGroup={team.ageGroup}
           division={team.division}
           divisionFull={team.divisionFull}
-          season={team.season}
           tagline={team.tagline}
           teamImageUrl={team.teamImageUrl}
           className="py-8 sm:py-12"

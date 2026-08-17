@@ -23,8 +23,6 @@ export interface TeamHeroProps {
   division?: string | null;
   /** Full division label (e.g. "Eerste Elftal A – 3e Nat. A"). */
   divisionFull?: string | null;
-  /** Season label (e.g. "25/26"). */
-  season?: string | null;
   /** Editorial tagline — renders as italic display lead. Auto-hides when absent. */
   tagline?: string | null;
   /** Squad photo URL (landscape newsprint photo). No photo → JerseyShirt fallback. */
@@ -38,7 +36,6 @@ export function TeamHero({
   ageGroup,
   division,
   divisionFull,
-  season,
   tagline,
   teamImageUrl,
   className,
@@ -48,15 +45,12 @@ export function TeamHero({
 
   const kicker = teamType === "youth" ? "KCVV Elewijt · Jeugd" : "KCVV Elewijt";
 
-  // Meta pills: senior = division + season; youth = youth band + season.
+  // Meta pill: senior = division; youth = youth band.
   const divisionLabel = divisionFull ?? division ?? null;
   const bandLabel =
     teamType === "youth" ? getYouthDivision(ageGroup) : divisionLabel;
 
   const showBandPill = bandLabel !== null && bandLabel !== "";
-  const showSeasonPill =
-    season !== null && season !== undefined && season !== "";
-  const showMeta = showBandPill || showSeasonPill;
 
   const showTagline =
     tagline !== null && tagline !== undefined && tagline !== "";
@@ -90,21 +84,14 @@ export function TeamHero({
           {displayName}
         </EditorialHeading>
 
-        {showMeta ? (
+        {showBandPill ? (
           <div
             data-testid="team-hero-meta"
             className="flex flex-wrap items-center gap-2"
           >
-            {showBandPill ? (
-              <MonoLabel variant="pill-ink" size="sm">
-                {bandLabel}
-              </MonoLabel>
-            ) : null}
-            {showSeasonPill ? (
-              <MonoLabel variant="pill-cream" size="sm">
-                {season}
-              </MonoLabel>
-            ) : null}
+            <MonoLabel variant="pill-ink" size="sm">
+              {bandLabel}
+            </MonoLabel>
           </div>
         ) : null}
 
@@ -150,22 +137,6 @@ export function TeamHero({
             </div>
           )}
         </TapedFigure>
-
-        {/* Season stub — decorative; season content is accessible via the meta pill above. */}
-        {showSeasonPill ? (
-          <div
-            data-testid="team-hero-season-stub"
-            aria-hidden="true"
-            className="border-ink bg-cream inline-flex w-fit translate-x-2 rotate-[0.5deg] items-center gap-2 border-2 border-dashed px-3 py-2 shadow-[2px_2px_0_0_var(--color-ink)]"
-          >
-            <MonoLabel variant="plain" size="sm">
-              Seizoen
-            </MonoLabel>
-            <span className="font-display-big text-ink text-display-sm leading-none">
-              {season}
-            </span>
-          </div>
-        ) : null}
       </div>
     </section>
   );

@@ -238,7 +238,6 @@ function TeamDetailAssembly() {
           teamType="senior"
           divisionFull="Eerste Elftal A – 3e Nat. A"
           division="3NA"
-          season="25/26"
           tagline="Sterk, gedreven, één ploeg."
           teamImageUrl={PHOTOS.a}
           className="py-8 sm:py-12"

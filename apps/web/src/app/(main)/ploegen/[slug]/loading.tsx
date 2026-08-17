@@ -38,7 +38,6 @@ export default function TeamDetailLoading() {
           <div className="bg-paper-edge h-12 w-48" />
           <div className="flex gap-2">
             <div className="bg-paper-edge h-6 w-24" />
-            <div className="bg-paper-edge h-6 w-16" />
           </div>
           <div className="bg-paper-edge h-4 w-64 max-w-full" />
         </div>

@@ -18,7 +18,6 @@ export const AVariantWithPhoto: Story = {
     kicker: "Eerste elftal",
     category: "A-ploeg",
     division: "Eerste Elftal A – 3e Nat. A",
-    season: "25/26",
     teamImageUrl: "/player-fixtures/player-mendes-mouro.jpg",
     href: "/ploegen/eerste-elftallen-a",
   },
@@ -31,7 +30,6 @@ export const AVariantNoPhoto: Story = {
     kicker: "Eerste elftal",
     category: "A-ploeg",
     division: "Eerste Elftal A – 3e Nat. A",
-    season: "25/26",
     href: "/ploegen/eerste-elftallen-a",
   },
 };
@@ -43,7 +41,6 @@ export const BVariantMirrored: Story = {
     kicker: "Tweede elftal",
     category: "B-ploeg",
     division: "Eerste Elftal B – 4e Prov.",
-    season: "25/26",
     teamImageUrl: "/player-fixtures/player-vartolomaios.jpg",
     href: "/ploegen/eerste-elftallen-b",
   },

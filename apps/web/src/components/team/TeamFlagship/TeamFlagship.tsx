@@ -16,7 +16,6 @@ export interface TeamFlagshipProps {
   /** Category headline without the period, e.g. "A-ploeg" / "B-ploeg". */
   category: string;
   division?: string | null;
-  season?: string | null;
   /** Squad photo URL (newsprint). No photo → JerseyShirt fallback. */
   teamImageUrl?: string | null;
   /** Detail-page href. */
@@ -29,7 +28,6 @@ export function TeamFlagship({
   kicker,
   category,
   division,
-  season,
   teamImageUrl,
   href,
   className,
@@ -37,8 +35,6 @@ export function TeamFlagship({
   const isA = variant === "a";
   const hasPhoto =
     teamImageUrl !== undefined && teamImageUrl !== null && teamImageUrl !== "";
-
-  const meta = [division, season].filter((v): v is string => Boolean(v));
 
   // A is jersey-deep (white small text passes AA where cream would not);
   // B is cream (ink text). Big headline is large-text so cream/ink both pass.
@@ -98,14 +94,14 @@ export function TeamFlagship({
         {category}
       </EditorialHeading>
 
-      {meta.length > 0 ? (
+      {division ? (
         <p
           className={cn(
             "font-mono text-xs tracking-[0.08em] uppercase",
             smallText,
           )}
         >
-          {meta.join(" · ")}
+          {division}
         </p>
       ) : null}
 

@@ -3,10 +3,13 @@
  *
  * Covers:
  *  - variant data-attribute (a / b)
- *  - kicker + category + meta (division · season) render
+ *  - kicker + category + division meta render
  *  - whole block links to href
  *  - photo state vs JerseyShirt fallback
- *  - meta omits empty division/season cleanly
+ *  - meta omits an absent division cleanly
+ *
+ * `season` was deleted from the schema and dropped from this component's
+ * props (#2567) — it never had a writer.
  */
 
 import { describe, it, expect } from "vitest";
@@ -21,7 +24,6 @@ describe("TeamFlagship", () => {
         kicker="Eerste elftal"
         category="A-ploeg"
         division="3e Nat. A"
-        season="25/26"
         href="/ploegen/eerste-elftallen-a"
       />,
     );
@@ -31,14 +33,13 @@ describe("TeamFlagship", () => {
     expect(flagship.getAttribute("href")).toBe("/ploegen/eerste-elftallen-a");
   });
 
-  it("renders kicker, category headline and division · season meta", () => {
+  it("renders kicker, category headline and division meta", () => {
     render(
       <TeamFlagship
         variant="a"
         kicker="Eerste elftal"
         category="A-ploeg"
         division="3e Nat. A"
-        season="25/26"
         href="/x"
       />,
     );
@@ -47,7 +48,7 @@ describe("TeamFlagship", () => {
     expect(screen.getByRole("heading", { level: 2 }).textContent).toBe(
       "A-ploeg.",
     );
-    expect(flagship.textContent).toContain("3e Nat. A · 25/26");
+    expect(flagship.textContent).toContain("3e Nat. A");
   });
 
   it("renders the B variant", () => {
@@ -93,7 +94,7 @@ describe("TeamFlagship", () => {
     ).toBe("jersey");
   });
 
-  it("omits the meta line when division and season are both absent", () => {
+  it("omits the meta line when division is absent", () => {
     render(
       <TeamFlagship
         variant="b"

@@ -4,11 +4,14 @@
  * Covers:
  *  - Kicker: "KCVV Elewijt" for senior, "KCVV Elewijt · Jeugd" for youth.
  *  - Headline: the display name, rendered verbatim — never derived here (#2630).
- *  - Meta row: division + season pills for senior; youth band + season for youth.
- *  - Meta auto-hide when both pills absent.
+ *  - Meta row: division pill for senior; youth band pill for youth.
+ *  - Meta auto-hide when the pill is absent.
  *  - Tagline renders and auto-hides.
  *  - Artefact state: "photo" when teamImageUrl present, "jersey" fallback when absent.
- *  - Season stub renders when season present, hides when absent.
+ *
+ * `season` was deleted from the schema and dropped from this component's
+ * props (#2567) — it never had a writer, so the meta pill and the decorative
+ * artefact-column stub that used to render it are both gone, not hidden.
  */
 
 import { describe, it, expect } from "vitest";
@@ -19,7 +22,6 @@ const BASE_SENIOR = {
   displayName: "A-ploeg",
   teamType: "senior" as const,
   divisionFull: "Eerste Elftal A – 3e Nat. A",
-  season: "25/26",
 };
 
 describe("TeamHero", () => {
@@ -32,14 +34,7 @@ describe("TeamHero", () => {
     });
 
     it("renders 'KCVV Elewijt · Jeugd' for a youth team", () => {
-      render(
-        <TeamHero
-          displayName="U13"
-          teamType="youth"
-          ageGroup="U13"
-          season="25/26"
-        />,
-      );
+      render(<TeamHero displayName="U13" teamType="youth" ageGroup="U13" />);
       expect(screen.getByTestId("team-hero-kicker").textContent).toBe(
         "KCVV Elewijt · Jeugd",
       );
@@ -71,70 +66,42 @@ describe("TeamHero", () => {
     });
   });
 
-  describe("Meta row (pills)", () => {
-    it("shows division and season pills for a senior team with data", () => {
+  describe("Meta row (pill)", () => {
+    it("shows the division pill for a senior team with data", () => {
       render(<TeamHero {...BASE_SENIOR} />);
       const meta = screen.getByTestId("team-hero-meta");
       expect(meta.textContent).toContain("Eerste Elftal A – 3e Nat. A");
-      expect(meta.textContent).toContain("25/26");
     });
 
     it("falls back to short division when divisionFull is absent", () => {
       render(
-        <TeamHero
-          displayName="A-ploeg"
-          teamType="senior"
-          division="3NA"
-          season="25/26"
-        />,
+        <TeamHero displayName="A-ploeg" teamType="senior" division="3NA" />,
       );
       const meta = screen.getByTestId("team-hero-meta");
       expect(meta.textContent).toContain("3NA");
     });
 
-    it("shows youth band and season for a youth team", () => {
-      render(
-        <TeamHero
-          displayName="U13"
-          teamType="youth"
-          ageGroup="U13"
-          season="25/26"
-        />,
-      );
+    it("shows the youth band for a youth team", () => {
+      render(<TeamHero displayName="U13" teamType="youth" ageGroup="U13" />);
       const meta = screen.getByTestId("team-hero-meta");
       expect(meta.textContent).toContain("Middenbouw");
-      expect(meta.textContent).toContain("25/26");
     });
 
     it("shows Bovenbouw band for U17", () => {
-      render(
-        <TeamHero
-          displayName="U17"
-          teamType="youth"
-          ageGroup="U17"
-          season="25/26"
-        />,
-      );
+      render(<TeamHero displayName="U17" teamType="youth" ageGroup="U17" />);
       expect(screen.getByTestId("team-hero-meta").textContent).toContain(
         "Bovenbouw",
       );
     });
 
     it("shows Onderbouw band for U9", () => {
-      render(
-        <TeamHero
-          displayName="U9"
-          teamType="youth"
-          ageGroup="U9"
-          season="25/26"
-        />,
-      );
+      render(<TeamHero displayName="U9" teamType="youth" ageGroup="U9" />);
       expect(screen.getByTestId("team-hero-meta").textContent).toContain(
         "Onderbouw",
       );
     });
 
-    it("auto-hides meta row when no division and no season", () => {
+    it("auto-hides meta row when no division and no youth band", () => {
       render(<TeamHero displayName="A-ploeg" teamType="senior" />);
       expect(screen.queryByTestId("team-hero-meta")).toBeNull();
     });
@@ -171,21 +138,6 @@ describe("TeamHero", () => {
       expect(
         screen.getByTestId("team-hero-artefact").getAttribute("data-state"),
       ).toBe("jersey");
-    });
-  });
-
-  describe("Season stub", () => {
-    it("renders the season stub when season is provided", () => {
-      render(<TeamHero {...BASE_SENIOR} />);
-      expect(screen.getByTestId("team-hero-season-stub")).toBeInTheDocument();
-      expect(screen.getByTestId("team-hero-season-stub").textContent).toContain(
-        "25/26",
-      );
-    });
-
-    it("hides the season stub when season is absent", () => {
-      render(<TeamHero displayName="A-ploeg" teamType="senior" />);
-      expect(screen.queryByTestId("team-hero-season-stub")).toBeNull();
     });
   });
 });
