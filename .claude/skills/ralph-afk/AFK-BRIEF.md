@@ -27,7 +27,7 @@ A fresh shell here defaults to Node 16, which breaks commitlint and Playwright w
 5. docs/ubiquitous-language.md  (glossary — use these exact terms, do not drift to synonyms)
 6. /Users/kevinvanransbeeck/Sites/KCVV/www.kcvvelewijt.be/.claude/commands/tdd.md
    The KCVV TDD loop — interface design questions, what to mock, red-green-refactor.
-   Read the file; you cannot invoke it as a slash command from here.
+   Read the file itself. Do not assume the `/tdd` shortcut resolves in your context.
 7. <any ADR or design doc the issue calls out, e.g. docs/adr/…>
 
 Before writing code, re-validate the acceptance criteria against what is actually in the repo today. If a criterion is already satisfied, or contradicts current code, say so in the PR body rather than silently reinterpreting it.
