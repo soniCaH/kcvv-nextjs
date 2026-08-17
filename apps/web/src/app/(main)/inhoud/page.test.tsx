@@ -52,15 +52,7 @@ const contents = {
   ],
 };
 
-const runPromise = vi.fn();
-
-vi.mock("@/lib/effect/runtime", () => ({
-  runPromise: (...args: unknown[]) => runPromise(...args),
-  TeamRepository: {},
-  ArticleRepository: {},
-  EventRepository: {},
-  PageRepository: {},
-}));
+vi.mock("@/lib/effect/runtime", () => ({ runPromise: vi.fn() }));
 
 vi.mock("@/lib/repositories/team.repository", () => ({ TeamRepository: {} }));
 vi.mock("@/lib/repositories/article.repository", () => ({
@@ -69,15 +61,17 @@ vi.mock("@/lib/repositories/article.repository", () => ({
 vi.mock("@/lib/repositories/event.repository", () => ({ EventRepository: {} }));
 vi.mock("@/lib/repositories/page.repository", () => ({ PageRepository: {} }));
 
-// Module scope, dynamic: a static import hoists above `contents`, which the
-// mock factories close over. See CLAUDE.md "Import the module under test at
+const { runPromise } = await import("@/lib/effect/runtime");
+const mockRunPromise = vi.mocked(runPromise);
+
+// Imported at module scope — see CLAUDE.md "Import the module under test at
 // module scope".
 const { default: InhoudPage, metadata } = await import("./page");
 
 describe("/inhoud", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    runPromise.mockResolvedValue(contents);
+    mockRunPromise.mockResolvedValue(contents);
   });
 
   it("announces itself with one visible heading from the shared opening", async () => {
@@ -113,7 +107,7 @@ describe("/inhoud", () => {
   });
 
   it("renders no rows at all when every repository is empty", async () => {
-    runPromise.mockResolvedValue({
+    mockRunPromise.mockResolvedValue({
       teams: [],
       articles: [],
       events: [],

@@ -1,25 +1,18 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
-export type LeaderDotRowAs = "div" | "li";
-
 export interface LeaderDotRowProps {
   /** Left-hand text — what the thing is called. Truncates before the leader does. */
-  label: ReactNode;
+  label: string;
   /**
    * Right-hand value the label is paired with. `null`, `undefined` and `""` all
-   * count as absent and render {@link LeaderDotRowProps.absentValueMarker}
-   * rather than collapsing the pair to a bare label.
+   * count as absent and render an em dash rather than collapsing the pair to a
+   * bare label.
    */
-  value?: ReactNode;
-  /** What stands in for an absent value. Default `"—"`. */
-  absentValueMarker?: string;
+  value?: string | null;
   /** Optional destination — the whole row becomes one link when set. */
   href?: string;
-  /** Element wrapping the row. `"li"` inside a `<ul>`/`<ol>`. Default `"div"`. */
-  as?: LeaderDotRowAs;
   className?: string;
 }
 
@@ -39,6 +32,10 @@ export interface LeaderDotRowProps {
  * between every label and every value is the failure mode the decision names.
  * The accessible name of a linked row is therefore exactly `label value`.
  *
+ * **One root element, always** — a `<div>`, or the `<Link>` itself when `href`
+ * is set. A list consumer supplies its own `<li>` around it, which it wants
+ * anyway for spacing or for the markers a delegated click listener reads.
+ *
  * Sizing follows the row, not the primitive: `label` inherits the consumer's
  * type, the value is mono at the 11px label step so a column of values aligns
  * (the Typekit faces have no `tnum`, so a numeric column goes mono or it does
@@ -47,13 +44,9 @@ export interface LeaderDotRowProps {
 export function LeaderDotRow({
   label,
   value,
-  absentValueMarker = "—",
   href,
-  as: Tag = "div",
   className,
 }: LeaderDotRowProps) {
-  const hasValue = value !== null && value !== undefined && value !== "";
-
   const contents = (
     <>
       <span className="min-w-0 truncate">{label}</span>
@@ -65,7 +58,7 @@ export function LeaderDotRow({
         data-leader-fill="true"
         className="border-ink-muted mx-1.5 mb-1 h-0 min-w-3 flex-1 border-b border-dotted"
       />
-      {hasValue ? (
+      {value ? (
         <span className="text-ink-muted text-label shrink-0 font-mono whitespace-nowrap">
           {value}
         </span>
@@ -79,7 +72,7 @@ export function LeaderDotRow({
           data-value-absent="true"
           className="text-ink-muted text-label shrink-0 font-mono"
         >
-          {absentValueMarker}
+          —
         </span>
       )}
     </>
@@ -88,20 +81,19 @@ export function LeaderDotRow({
   const rowClass = "flex items-baseline";
 
   if (!href) {
-    return <Tag className={cn(rowClass, className)}>{contents}</Tag>;
+    return <div className={cn(rowClass, className)}>{contents}</div>;
   }
 
   return (
-    <Tag className={cn(Tag === "li" && "list-none", className)}>
-      <Link
-        href={href}
-        className={cn(
-          rowClass,
-          "text-ink hover:text-jersey-deep focus-visible:text-jersey-deep transition-colors duration-150",
-        )}
-      >
-        {contents}
-      </Link>
-    </Tag>
+    <Link
+      href={href}
+      className={cn(
+        rowClass,
+        "text-ink hover:text-jersey-deep focus-visible:text-jersey-deep transition-colors duration-150",
+        className,
+      )}
+    >
+      {contents}
+    </Link>
   );
 }

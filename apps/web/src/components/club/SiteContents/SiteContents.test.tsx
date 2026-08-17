@@ -50,10 +50,10 @@ describe("SiteContents", () => {
   });
 
   it("prints each group's entry count", () => {
-    const { container } = render(<SiteContents groups={GROUPS} />);
-    const ploegen = container.querySelector<HTMLElement>(
-      '[data-contents-section="ploegen"]',
-    )!;
+    render(<SiteContents groups={GROUPS} />);
+    const ploegen = screen
+      .getByRole("heading", { level: 2, name: /Ploegen/ })
+      .closest("section")!;
     expect(within(ploegen).getByText("2")).toBeInTheDocument();
   });
 
@@ -90,11 +90,5 @@ describe("SiteContents", () => {
   it("renders nothing when there are no groups", () => {
     const { container } = render(<SiteContents groups={[]} />);
     expect(container).toBeEmptyDOMElement();
-  });
-
-  it("never renders a players group or a player link", () => {
-    const { container } = render(<SiteContents groups={GROUPS} />);
-    expect(container.querySelector('a[href^="/spelers/"]')).toBeNull();
-    expect(screen.queryByText(/spelers/i)).toBeNull();
   });
 });

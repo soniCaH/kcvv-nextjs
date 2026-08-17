@@ -5,7 +5,6 @@ import type { ContentsGroup } from "@/lib/utils/site-contents";
 export interface SiteContentsProps {
   /** The assembled contents view model — see `buildSiteContents`. */
   groups: ContentsGroup[];
-  className?: string;
 }
 
 /**
@@ -32,17 +31,16 @@ export interface SiteContentsProps {
  * from the content platform, so an empty site is an empty page rather than a
  * page of authored placeholders.
  */
-export function SiteContents({ groups, className }: SiteContentsProps) {
+export function SiteContents({ groups }: SiteContentsProps) {
   if (groups.length === 0) return null;
 
   return (
-    <div className={className}>
+    // Gap on the parent rather than a bottom margin per section: a
+    // `last:mb-0` would lose to `sm:mb-16` in the cascade and leave the last
+    // group carrying air the page container already supplies.
+    <div className="flex flex-col gap-12 sm:gap-16">
       {groups.map((group) => (
-        <section
-          key={group.id}
-          data-contents-section={group.id}
-          className="mb-12 last:mb-0 sm:mb-16"
-        >
+        <section key={group.id}>
           <div className="border-ink flex items-baseline justify-between gap-4 border-b-2 pb-2">
             <EditorialHeading level={2} size="display-sm">
               {group.title}

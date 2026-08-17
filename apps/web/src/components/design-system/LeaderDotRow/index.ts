@@ -1,5 +1,1 @@
-export {
-  LeaderDotRow,
-  type LeaderDotRowProps,
-  type LeaderDotRowAs,
-} from "./LeaderDotRow";
+export { LeaderDotRow, type LeaderDotRowProps } from "./LeaderDotRow";

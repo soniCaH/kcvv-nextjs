@@ -101,6 +101,16 @@ function contentsDate(value: string | null): string | null {
 }
 
 /**
+ * A blank editorial string is an absent value, not a value that happens to be
+ * empty — so `value: string | null` means what it says all the way through and
+ * not only once the row has rendered it.
+ */
+function present(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed === "" ? null : trimmed;
+}
+
+/**
  * The one group whose repository order is not its printed order.
  *
  * `TeamRepository.findAll` sorts on the PSD-registered `name`, but what the
@@ -114,20 +124,27 @@ function byDisplayName(a: ContentsTeamSource, b: ContentsTeamSource): number {
   return a.displayName.localeCompare(b.displayName, "nl", { numeric: true });
 }
 
-/** A group is only on the page when something is in it. */
-function group(
-  id: ContentsGroupId,
-  title: string,
-  entries: ContentsEntry[],
-): ContentsGroup[] {
-  return entries.length === 0 ? [] : [{ id, title, entries }];
+/**
+ * A row with no slug has no destination, so it is not a contents entry.
+ *
+ * The listing projections `coalesce(slug.current, "")`, and neither filters on
+ * `defined(slug.current)` — so a slug-less document would have produced a row
+ * linking to `/evenementen/`, which is a live 200 page: the reader clicks a
+ * named event and lands on the events index with nothing to tell them why.
+ * Production holds 77 events in exactly that state. This is the same rule that
+ * cut the players section — 0 of 294 carry a slug, so there was nothing to
+ * link to — applied to every group rather than argued once.
+ */
+function linkable<T extends { slug: string }>(row: T): boolean {
+  return row.slug.trim() !== "";
 }
 
 /**
  * Assemble the whole contents page from four repository reads.
  *
  * Given empty inputs the result is `[]` — there is no floor of hardcoded rows
- * and no authored entry anywhere in this function.
+ * and no authored entry anywhere in this function, and a group with nothing
+ * behind it does not appear.
  */
 export function buildSiteContents({
   teams,
@@ -135,44 +152,47 @@ export function buildSiteContents({
   events,
   pages,
 }: SiteContentsInput): ContentsGroup[] {
-  return [
-    ...group(
-      "ploegen",
-      "Ploegen",
-      [...teams].sort(byDisplayName).map((team) => ({
-        id: team.id,
-        label: team.displayName,
-        // Same fallback chain `/ploegen` uses. Null on the youth teams, which
-        // carry no editorial division — that absence is the honest answer, and
-        // the row shows it.
-        value: team.divisionFull ?? team.division,
-        href: `/ploegen/${team.slug}`,
-      })),
-    ),
-    ...group(
-      "nieuws",
-      "Nieuws",
-      articles.map((article) => ({
+  const groups: ContentsGroup[] = [
+    {
+      id: "ploegen",
+      title: "Ploegen",
+      entries: [...teams]
+        .filter(linkable)
+        .sort(byDisplayName)
+        .map((team) => ({
+          id: team.id,
+          label: team.displayName,
+          // Same fallback chain `/ploegen` uses. Null on the youth teams, which
+          // carry no editorial division — that absence is the honest answer,
+          // and the row shows it.
+          value: present(team.divisionFull) ?? present(team.division),
+          href: `/ploegen/${team.slug}`,
+        })),
+    },
+    {
+      id: "nieuws",
+      title: "Nieuws",
+      entries: articles.filter(linkable).map((article) => ({
         id: article.id,
         label: article.title,
         value: contentsDate(article.publishedAt),
         href: `/nieuws/${article.slug}`,
       })),
-    ),
-    ...group(
-      "evenementen",
-      "Evenementen",
-      events.map((event) => ({
+    },
+    {
+      id: "evenementen",
+      title: "Evenementen",
+      entries: events.filter(linkable).map((event) => ({
         id: event.id,
         label: event.title,
         value: contentsDate(event.dateStart),
         href: `/evenementen/${event.slug}`,
       })),
-    ),
-    ...group(
-      "clubpaginas",
-      "Clubpagina's",
-      pages.map((page) => ({
+    },
+    {
+      id: "clubpaginas",
+      title: "Clubpagina's",
+      entries: pages.filter(linkable).map((page) => ({
         id: page.id,
         label: page.title,
         // A club page has no date of its own and no reeks; what it does have is
@@ -181,9 +201,16 @@ export function buildSiteContents({
         // every one of these pages lives under `/club`, so that column would
         // have repeated one constant down the page and told the reader nothing
         // the link did not already carry.
+        //
+        // Known imprecision, recorded rather than hidden: `_updatedAt` is
+        // re-stamped by any bulk mutation, so a Sanity migration run against
+        // `page` documents will print the migration's date on every row as
+        // though the club had rewritten all of them that morning.
         value: contentsDate(page.updatedAt),
         href: `/club/${page.slug}`,
       })),
-    ),
+    },
   ];
+
+  return groups.filter((group) => group.entries.length > 0);
 }

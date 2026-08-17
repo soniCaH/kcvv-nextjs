@@ -76,28 +76,43 @@ async function fetchSiteContents() {
       const eventRepo = yield* EventRepository;
       const pageRepo = yield* PageRepository;
 
-      return yield* Effect.all({
-        teams: degradeSection(
-          teamRepo.findAll(),
-          [],
-          "[inhoud] teams unavailable — group omitted",
-        ),
-        articles: degradeSection(
-          articleRepo.findPaginated({ offset: 0, limit: ARTICLE_ROW_CEILING }),
-          [],
-          "[inhoud] articles unavailable — group omitted",
-        ),
-        events: degradeSection(
-          eventRepo.findAll(),
-          [],
-          "[inhoud] events unavailable — group omitted",
-        ),
-        pages: degradeSection(
-          pageRepo.findAll(),
-          [],
-          "[inhoud] club pages unavailable — group omitted",
-        ),
-      });
+      return yield* Effect.all(
+        {
+          teams: degradeSection(
+            teamRepo.findAll(),
+            [],
+            "[inhoud] teams unavailable — group omitted",
+          ),
+          articles: degradeSection(
+            articleRepo.findPaginated({
+              offset: 0,
+              limit: ARTICLE_ROW_CEILING,
+            }),
+            [],
+            "[inhoud] articles unavailable — group omitted",
+          ),
+          // `findAll` is date-gated to upcoming events, and stays that way:
+          // `/evenementen` and the sitemap gate identically, so lifting it
+          // here would make `/inhoud` the only surface on the site that
+          // publishes past events. The decision sheet budgeted 80 rows off the
+          // raw document count; production holds 81 event documents of which
+          // 77 carry no slug, so at most 4 were ever linkable.
+          events: degradeSection(
+            eventRepo.findAll(),
+            [],
+            "[inhoud] events unavailable — group omitted",
+          ),
+          pages: degradeSection(
+            pageRepo.findAll(),
+            [],
+            "[inhoud] club pages unavailable — group omitted",
+          ),
+        },
+        // Four independent Sanity reads. `Effect.all` is sequential by
+        // default, which would make each revalidation four round trips deep
+        // for no reason — `/kalender` runs its two the same way.
+        { concurrency: "unbounded" },
+      );
     }),
   );
 }
@@ -115,12 +130,13 @@ export default async function InhoudPage() {
       />
       <PageViewTracker eventName="inhoud_view" />
 
-      <PageContainer as="main" width="index" className="py-12 sm:py-16">
+      {/* No `as="main"`: the root layout already owns the `<main>` landmark. */}
+      <PageContainer width="index" className="py-12 sm:py-16">
         <PageHero
           register="minimal"
           kicker="KCVV Elewijt · Overzicht"
           headline={INHOUD_TITLE}
-          lead="Alles wat op deze site staat — automatisch bijgewerkt."
+          lead="Elke ploeg, elk artikel, elk evenement en elke clubpagina — automatisch bijgewerkt."
         />
 
         <SiteContentsAnalytics>

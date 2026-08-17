@@ -123,6 +123,17 @@ describe("buildSiteContents", () => {
       expect(entry?.value).toBe("2 PB");
     });
 
+    it("treats a blank reeks as absent, not as an empty value", () => {
+      const [entry] = groupById(
+        buildSiteContents({
+          ...EMPTY,
+          teams: [{ ...TEAM, divisionFull: "   ", division: "" }],
+        }),
+        "ploegen",
+      ).entries;
+      expect(entry?.value).toBeNull();
+    });
+
     it("carries a null reeks rather than dropping the entry", () => {
       const { entries } = groupById(
         buildSiteContents({ ...EMPTY, teams: [YOUTH_TEAM] }),
@@ -206,6 +217,30 @@ describe("buildSiteContents", () => {
       "evenementen",
     ).entries;
     expect(entry?.value).toBe("04·09·26");
+  });
+
+  it("drops a row with no slug, in every group", () => {
+    // A slug-less document has no detail page, so a row for it would link to
+    // the section index — a live 200 that silently is not what was clicked.
+    // Production holds 77 events in exactly that state.
+    const groups = buildSiteContents({
+      teams: [{ ...TEAM, slug: "" }],
+      articles: [{ ...ARTICLE, slug: "" }],
+      events: [{ ...EVENT, slug: "  " }],
+      pages: [{ ...PAGE, slug: "" }],
+    });
+    expect(groups).toEqual([]);
+  });
+
+  it("keeps the rows that do have a slug alongside the ones that do not", () => {
+    const { entries } = groupById(
+      buildSiteContents({
+        ...EMPTY,
+        events: [EVENT, { ...EVENT, id: "event-2", slug: "" }],
+      }),
+      "evenementen",
+    );
+    expect(entries.map((e) => e.id)).toEqual(["event-1"]);
   });
 
   it("prints ploegen alphabetically by the name it shows, not by the repository's sort key", () => {

@@ -216,7 +216,7 @@ export type {
 
 // LeaderDotRow
 export { LeaderDotRow } from "./LeaderDotRow";
-export type { LeaderDotRowProps, LeaderDotRowAs } from "./LeaderDotRow";
+export type { LeaderDotRowProps } from "./LeaderDotRow";
 
 // MonoLabelRow
 export { MonoLabelRow } from "./MonoLabelRow";

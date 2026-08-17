@@ -37,14 +37,13 @@ export function SiteContentsAnalytics({
       const group = row.dataset.contentsGroup;
       if (!group) return;
 
-      // `Number("")` is 0, not NaN — so the emptiness is checked before the
-      // parse, or a row with no marker would report itself as rank zero.
-      const rank = row.dataset.contentsPosition;
-      const position = rank ? Number(rank) : Number.NaN;
+      // Ranks are 1-based, so `> 0` rejects both `NaN` (no marker) and the 0
+      // that `Number("")` returns for an empty one.
+      const position = Number(row.dataset.contentsPosition);
 
       trackEvent("inhoud_entry_click", {
         category: group,
-        ...(Number.isFinite(position) ? { position } : {}),
+        ...(position > 0 ? { position } : {}),
       });
     },
   });

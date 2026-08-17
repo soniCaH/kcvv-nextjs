@@ -48,16 +48,25 @@ export const Linked: Story = {
   },
 };
 
-/** How the rows stack — the device only reads as a contents page in a run. */
+/**
+ * How the rows stack — the device only reads as a contents page in a run. The
+ * consumer owns the `<li>`; the row is one element inside it.
+ */
 export const AsAList: Story = {
   args: { label: "Mosselfestijn 2026", value: "04·09·26" },
   render: () => (
     <ul className="flex flex-col">
-      <LeaderDotRow as="li" label="Mosselfestijn 2026" value="04·09·26" />
-      <LeaderDotRow as="li" label="Kampioenenviering" value="14·06·26" />
-      <LeaderDotRow as="li" label="Jeugdtornooi" value="23·05·26" />
-      <LeaderDotRow as="li" label="Quiznight" value="18·04·26" />
-      <LeaderDotRow as="li" label="Eetfestijn" value={null} />
+      {[
+        ["Mosselfestijn 2026", "04·09·26"],
+        ["Kampioenenviering", "14·06·26"],
+        ["Jeugdtornooi", "23·05·26"],
+        ["Quiznight", "18·04·26"],
+        ["Eetfestijn", null],
+      ].map(([label, value]) => (
+        <li key={label}>
+          <LeaderDotRow label={label as string} value={value} />
+        </li>
+      ))}
     </ul>
   ),
 };

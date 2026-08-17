@@ -50,26 +50,16 @@ describe("LeaderDotRow", () => {
     expect(screen.getByRole("link")).toHaveAccessibleName("U15");
   });
 
-  it("accepts a custom absent marker", () => {
-    const { container } = render(
-      <LeaderDotRow label="U15" absentValueMarker="n.v.t." />,
-    );
-    expect(container.querySelector("[data-value-absent]")).toHaveTextContent(
-      "n.v.t.",
-    );
-  });
-
-  it("renders as a list item when asked", () => {
-    const { container } = render(
-      <ul>
-        <LeaderDotRow as="li" label="Quiznight" value="18·04·26" />
-      </ul>,
-    );
-    expect(container.querySelector("li")).not.toBeNull();
-  });
-
   it("renders no link when no href is given", () => {
     render(<LeaderDotRow label="Quiznight" value="18·04·26" />);
     expect(screen.queryByRole("link")).toBeNull();
+  });
+
+  it("renders one root element, so a list consumer owns its own <li>", () => {
+    const { container } = render(
+      <LeaderDotRow href="/evenementen/quiznight" label="Quiznight" />,
+    );
+    expect(container.children).toHaveLength(1);
+    expect(container.firstElementChild?.tagName).toBe("A");
   });
 });

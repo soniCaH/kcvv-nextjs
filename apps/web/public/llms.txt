@@ -33,10 +33,10 @@ De officiële website van KCVV Elewijt: https://www.kcvvelewijt.be
 - /club/jeugdbestuur — Het jeugdbestuur
 - /club/angels — KCVV Angels
 - /club/ultras — De supportersclub
-- /hulp — Hulp & wie-is-wie: clubmedewerkers en contactpersonen
 - /club/contact — Contactgegevens
 - /club/word-lid — Lid worden (online inschrijvingsformulier)
 - /club/{slug} — Redactionele clubpagina's, waaronder /club/praktische-informatie (lidgeld, terugbetalingen, ProSoccerData) en /club/vrijwilliger
+- /hulp — Hulp & wie-is-wie: clubmedewerkers en contactpersonen
 - /evenementen — Clubactiviteiten en evenementen
 - /evenementen/{slug} — Eén evenement
 - /zoeken — Zoeken op de website
