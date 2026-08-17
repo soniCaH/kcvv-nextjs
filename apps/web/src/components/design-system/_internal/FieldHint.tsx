@@ -5,19 +5,14 @@
  * carried three byte-identical copies of it before D4 gave the hint its
  * bracket (`docs/research/decision-sheet.md` §8, unit 10 of #2608).
  *
- * The line opens with the mono `[?]`. There is deliberately no icon here:
- * D4 is additive punctuation that rides *beside* an icon that already
- * exists, and a hint has never carried one — inventing a glyph so the
- * bracket has company is the inverse of the decision, and the surest way to
- * turn the brackets into the second icon language the ticket warns about.
- * The error line is where this field does have an icon, and that is
- * `<AlertBadge>`'s Phosphor Fill glyph, which the bracket must not touch.
+ * The line opens with the mono `[?]` and no icon — see the "no invented
+ * glyph" rule in `BracketAffordance.tsx`. The field's error line is the one
+ * that does carry an icon, and that is `<AlertBadge>`'s, which the bracket
+ * must not touch.
  *
- * The bracket is decoration: this `<p>` is the field's `aria-describedby`
- * target, so its accessible description must stay the hint sentence alone.
- * `<BracketAffordance>` is `aria-hidden`, and the hint text stays a direct
- * text-node child of the `<p>` — which is also what the atoms'
- * `getByText("…")` tests read.
+ * This `<p>` is the field's `aria-describedby` target, so the hint text
+ * stays a direct text-node child of it — that keeps the description the
+ * sentence alone, and is what the atoms' `getByText("…")` tests read.
  */
 
 import type { ReactNode } from "react";

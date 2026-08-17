@@ -193,28 +193,25 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
         )}
 
         {/* The close control sits over the top-right corner and grew wider
-            with the bracket, so the two rows it overlaps take a gutter. The
-            body below it keeps the full measure. */}
-        <span
-          className={cn(
-            "flex items-center gap-1 font-mono text-[10px] leading-none font-semibold tracking-[0.12em] uppercase",
-            dismissible && "pr-9",
-            config.kicker,
-          )}
-        >
-          {config.kickerLabel}
-        </span>
-
-        {title && (
-          <h3
+            with the bracket, so the header rows it overlaps share one gutter
+            — owned here, once, rather than repeated on each row. The body
+            below it keeps the full measure. */}
+        <div className={cn(dismissible && "pr-9")}>
+          <span
             className={cn(
-              "font-display text-ink mt-0.5 text-[22px] leading-[1.15] font-bold italic",
-              dismissible && "pr-9",
+              "flex items-center gap-1 font-mono text-[10px] leading-none font-semibold tracking-[0.12em] uppercase",
+              config.kicker,
             )}
           >
-            {title}
-          </h3>
-        )}
+            {config.kickerLabel}
+          </span>
+
+          {title && (
+            <h3 className="font-display text-ink mt-0.5 text-[22px] leading-[1.15] font-bold italic">
+              {title}
+            </h3>
+          )}
+        </div>
 
         <div className="text-ink mt-1 text-[15px] leading-[1.55]">
           {children}

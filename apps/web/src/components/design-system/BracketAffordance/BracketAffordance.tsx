@@ -48,26 +48,12 @@ export const BRACKET_GLYPH: Record<BracketAffordanceGlyph, string> = {
 };
 
 export interface BracketAffordanceProps {
-  /**
-   * `close` renders `[×]` (dismiss), `help` renders `[?]` (hint).
-   * Required (no default) so callers pick the affordance deliberately.
-   */
+  /** `close` renders `[×]` (dismiss), `help` renders `[?]` (hint). */
   glyph: BracketAffordanceGlyph;
   /** Additional CSS classes. Do not set a colour — see rule 2 above. */
   className?: string;
 }
 
-/**
- * BracketAffordance — mono `[×]` / `[?]` beside a Phosphor Fill icon.
- *
- * @example
- * ```tsx
- * <button type="button" aria-label="Sluit melding">
- *   <X size={14} aria-hidden="true" />
- *   <BracketAffordance glyph="close" />
- * </button>
- * ```
- */
 export function BracketAffordance({
   glyph,
   className,

@@ -41,10 +41,6 @@ export const Playground: Story = {
   args: { glyph: "close" },
 };
 
-export const Close: Story = {
-  args: { glyph: "close" },
-};
-
 export const Help: Story = {
   args: { glyph: "help" },
 };
