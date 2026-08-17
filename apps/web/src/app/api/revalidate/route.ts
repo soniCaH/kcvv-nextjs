@@ -25,6 +25,17 @@ interface WebhookBody {
 }
 
 /**
+ * The contents page (#2622) lists ploegen, nieuws, evenementen and the
+ * editorial clubpagina's, so all four of those types bust it.
+ *
+ * It is the one index that could not rely on its own `revalidate`: of its four
+ * reads only the teams list is tagged, so a deleted article would have left
+ * `/inhoud` pointing at a 404 for up to an hour — which is exactly the drift
+ * the route exists to prevent.
+ */
+const CONTENTS = "/inhoud";
+
+/**
  * Maps a document `_type` to the paths + content tags to revalidate. `slugs`
  * holds every slug to bust a detail page for (current + previous, so renames
  * and deletes clear the stale URL too).
@@ -38,7 +49,7 @@ function targets(
   switch (type) {
     case "article":
       return {
-        paths: ["/", "/nieuws", ...detail("/nieuws")],
+        paths: ["/", "/nieuws", CONTENTS, ...detail("/nieuws")],
         tags: [SANITY_TAGS.articles],
       };
     case "player":
@@ -49,7 +60,7 @@ function targets(
       };
     case "team":
       return {
-        paths: ["/ploegen", ...detail("/ploegen")],
+        paths: ["/ploegen", CONTENTS, ...detail("/ploegen")],
         tags: [SANITY_TAGS.teams],
       };
     case "staffMember":
@@ -66,10 +77,10 @@ function targets(
     case "banner":
       return { paths: ["/"], tags: [SANITY_TAGS.banners] };
     case "page":
-      return { paths: detail("/club"), tags: [] };
+      return { paths: [CONTENTS, ...detail("/club")], tags: [] };
     case "event":
       return {
-        paths: ["/evenementen", ...detail("/evenementen")],
+        paths: ["/evenementen", CONTENTS, ...detail("/evenementen")],
         tags: [],
       };
     case "photoGallery":

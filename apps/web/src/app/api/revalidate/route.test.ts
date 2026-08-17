@@ -86,6 +86,20 @@ describe("POST /api/revalidate", () => {
     expect(revalidateTag).toHaveBeenCalledWith("articles", "max");
   });
 
+  it.each([
+    ["article", { _type: "article", slug: "hello" }],
+    ["team", { _type: "team", slug: "kcvve-u15" }],
+    ["event", { _type: "event", slug: "quiznight" }],
+    ["page", { _type: "page", slug: "cashless" }],
+  ])("busts /inhoud when a %s changes (#2622)", async (_label, body) => {
+    // The contents page lists all four of these types, and only its teams read
+    // is tagged — without this it would keep a row for a deleted document for
+    // up to an hour.
+    const res = await POST(makeRequest(body));
+    expect(res.status).toBe(200);
+    expect(revalidatePath).toHaveBeenCalledWith("/inhoud");
+  });
+
   it("routes players by psdId, not slug", async () => {
     const res = await POST(makeRequest({ _type: "player", psdId: 42 }));
     expect(res.status).toBe(200);
