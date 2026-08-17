@@ -37,13 +37,19 @@ export function PlayerCard({
         className="border-paper-edge relative aspect-[3/4] overflow-hidden border"
       >
         {hasPhoto ? (
+          /* One treatment, every photo the club has (#2633, deciding #2590).
+             `cover` fills the 3:4 window from the 350×350 source PSD serves —
+             and stays right if it ever serves another shape. `multiply` drops
+             a studio cutout's white matte onto the card's cream, so the photo
+             stands on the same paper as the drawing beside it. No cutout
+             branch and no coverage threshold: one card at every ratio. */
           <Image
             src={photoUrl!}
             alt=""
             width={300}
             height={400}
             unoptimized
-            className="block h-full w-full object-cover"
+            className="block h-full w-full object-cover mix-blend-multiply"
             style={{ filter: "var(--filter-photo-newsprint)" }}
           />
         ) : (
