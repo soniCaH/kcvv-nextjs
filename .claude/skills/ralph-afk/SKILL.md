@@ -95,13 +95,25 @@ Show the briefs (collapsed if many). Wait for "launch".
 
 ### 3. Spawn the wave in parallel
 
-In a **single message**, one `Agent()` call per issue:
+Open the wave board first — one task per issue, so a running wave is legible at a glance. `Agent()` has no name input: a spawned agent's name is its `subagent_type`, so all four read `kcvv-implementer` and the board is what carries the issue numbers.
+
+```text
+TaskCreate({ subject: "#<N> — <short title>",
+             activeForm: "#<N> <short title>",
+             description: "<the one-line scope from step 1>" })
+```
+
+Mark each task `in_progress` as you spawn its agent.
+
+Then, in a **single message**, one `Agent()` call per issue:
 
 ```text
 Agent({ description: "Issue <N> — <short title>",
-        subagent_type: "general-purpose",
+        subagent_type: "kcvv-implementer",
         prompt: "<self-contained brief from step 2>" })
 ```
+
+`kcvv-implementer` (`.claude/agents/kcvv-implementer.md`) pins the model, effort, and turn ceiling for wave work; `general-purpose` inherits all three from your session, which is what put four Opus agents on `xhigh`. Measured on the 2026-08-17 wave: cache reads are ~63% of a wave's cost and thinking is under 2%, so the model is the dial that matters and effort is not. Wave agents peaked at 353k of context — if you see them compacting mid-run, raise the tier in that file rather than editing this one.
 
 **Do not pass `isolation: "worktree"`.** The harness worktree does not follow this repo's `../kcvv-issue-<N>` + `feat/issue-<N>` convention and skips the KCVV bootstrap (corepack pnpm, api-contract build, `.env.local`). The brief has the agent create its own worktree the repo way, so `/ralph` and `scripts/ralph.sh` can find and clean up after it.
 
@@ -117,6 +129,7 @@ You are notified as each background agent completes. For each:
 
 - Capture the PR URL.
 - Note blockers it hit (the brief tells agents to comment-and-stop, never to work around a blocker).
+- Mark its board task `completed`, so the board tracks the wave rather than outliving it.
 
 If an agent finished **without** opening a PR, roll its label back so the queue stays truthful:
 
