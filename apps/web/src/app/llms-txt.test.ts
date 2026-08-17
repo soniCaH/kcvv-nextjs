@@ -29,6 +29,15 @@ describe("llms.txt", () => {
     expect(llmsTxt).toContain("/kalender");
     expect(llmsTxt).toContain("/sponsors");
     expect(llmsTxt).toContain("/club");
+    expect(llmsTxt).toContain("/galerij");
+  });
+
+  // The file is hand-written, which is how it once shipped `/club/organigram`
+  // months after that route was deleted. `/inhoud` is the derived twin of this
+  // list, so the two are asserted to agree at least on their own existence
+  // (#2622).
+  it("lists the contents page", () => {
+    expect(llmsTxt).toContain("/inhoud");
   });
 
   it("contains content types", () => {
