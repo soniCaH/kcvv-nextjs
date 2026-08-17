@@ -159,6 +159,26 @@ describe("HulpFinder", () => {
     );
   });
 
+  it("names the active audience by label when it empties across every category", () => {
+    // No path in this subset is tagged 'speler' — the audience branch (not
+    // the per-category branch above) should fire, and should name the
+    // audience ("Speler"), not the generic "deze rol" (#2427 rule 5, #2562
+    // review — the category branch already did this, the audience branch
+    // hadn't). `audience` reads from the URL (`?audience=`), so it is seeded
+    // via `mockSearchParams`, matching the sibling audience test below.
+    mockSearchParams = new URLSearchParams("audience=speler");
+    const pathsWithoutSpelerRole = FINDER_FIXTURE_PATHS.filter(
+      (p) => !p.role.includes("speler"),
+    );
+    render(<HulpFinder responsibilityPaths={pathsWithoutSpelerRole} />);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /geen hulpvragen voor speler/i,
+    );
+    expect(
+      screen.getByRole("button", { name: "Toon alles" }),
+    ).toBeInTheDocument();
+  });
+
   it("filters by the ?audience param (hero deep-link)", () => {
     mockSearchParams = new URLSearchParams("audience=supporter");
     render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);

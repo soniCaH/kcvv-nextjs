@@ -231,10 +231,15 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
       );
     }
     if (audiencePaths.length === 0) {
+      // Names the active audience by label ("Ouder"), not the generic "deze
+      // rol" — same rule as the category branch below (#2427 rule 5).
+      const audienceLabel =
+        HUB_AUDIENCE_FILTERS.find((o) => o.value === audience)?.label ??
+        "deze rol";
       return (
         <EmptyState
           tier="surface"
-          heading="Geen hulpvragen voor deze rol"
+          heading={`Geen hulpvragen voor ${audienceLabel}`}
           live
           actions={[
             {
