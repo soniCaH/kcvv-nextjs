@@ -163,11 +163,7 @@ export default async function WedstrijdenPage({
         {matches.length === 0 ? (
           // "Nog geen", not "Geen": fixtures still arrive mid-season once the
           // federation releases the calendar (#2427).
-          <EmptyState
-            tier="surface"
-            heading="Nog geen wedstrijden gepland"
-            testId="wedstrijden-empty"
-          >
+          <EmptyState tier="surface" heading="Nog geen wedstrijden gepland">
             Zodra de kalender is vrijgegeven, verschijnen de wedstrijden hier.
           </EmptyState>
         ) : (
