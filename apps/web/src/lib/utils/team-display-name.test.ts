@@ -69,10 +69,10 @@ describe("teamDisplayName", () => {
   });
 
   // Scoped deliberately: this asserts the resolved *name* is clean, which is
-  // what the `<title>`, `<h1>`, OG card and directory caption render. The
-  // `<YouthDirectory>` distinguisher sub-line still prints `divisionFull ??
-  // name` verbatim and so still shows `KCVVE  U13` — that slot answers "which
-  // of the two U9s is this", not "what is this team called", and is #2540's.
+  // what the `<title>`, `<h1>`, OG card and directory caption render. The one
+  // surface that still leaked a federation name was the `<YouthDirectory>`
+  // sub-line, which fell back to `name` when no division was published; #2641
+  // deleted that fallback, so no rendered surface carries a double space now.
   it("resolves no name containing a double space — a slug cannot carry one", () => {
     const withDoubleSpace = ROSTER.map((t) => teamDisplayName(t)).filter((n) =>
       n.includes("  "),

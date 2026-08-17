@@ -25,6 +25,14 @@
  * group claims, which #2414 deliberately left alone. Tracked as follow-up —
  * add the boundary team to `ROSTER` when that lands and this guard will hold
  * it.
+ *
+ * #2641 brushed against that gap without changing it: `/ploegen` heads the
+ * directory `Andere`, so an un-hidden out-of-band team (`KCVVE U5`, or a
+ * senior side whose name ends in neither A nor B — production holds
+ * `FC WEITSE GANS`) would be absent from the one section on the page that
+ * could hold it. Both carry `showInNavigation: false` today. The heading
+ * claims less than the rejected `Alle andere ploegen` would have, so it does
+ * not over-state; the team would simply be unreachable from this page.
  */
 
 import { describe, it, expect } from "vitest";
@@ -131,6 +139,8 @@ describe("former `Jeugd` panel → /jeugd + /ploegen index parity", () => {
 
     expect(reservenGroup?.teams.map((t) => t.slug)).toEqual(["reserven"]);
     // Not an age band — the directory heading must not render a range for it.
+    // #2641 read the bare label as the first of the youth groups and proposed
+    // one; the owner ruled against it and fixed the section heading instead.
     expect(reservenGroup?.range).toBeUndefined();
   });
 

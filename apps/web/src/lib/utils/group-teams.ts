@@ -109,6 +109,12 @@ export function groupTeamsForLanding(teams: TeamLandingItem[]): GroupedTeams {
     youthByDivision: [
       // Above U21 and below the B-ploeg — so it leads the directory, ahead of
       // Bovenbouw. `<YouthDirectory>` drops it when the roster has no Reserven.
+      //
+      // Deliberately rangeless. #2641 proposed a label saying where the side
+      // sits — A/B squad players never play here, so it is a side of its own
+      // that starts where the youth ladder ends, not an overflow bench — and
+      // the owner ruled against it: no label beats one generic enough to be
+      // worth the pixels. The section heading above carries the framing now.
       {
         label: RESERVEN_LABEL,
         teams: teams.filter((t) => t.psdId === RESERVEN_PSD_ID),

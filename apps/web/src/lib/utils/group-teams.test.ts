@@ -99,6 +99,9 @@ describe("groupTeamsForLanding", () => {
     const reserven = divisionGroup(teams, "Reserven");
 
     expect(reserven.teams.map((t) => t.name)).toEqual(["Reserven"]);
+    // Not an age band like its three siblings, and the owner ruled against a
+    // label saying so — #2641 fixed the misreading at the section heading
+    // instead, which is where the group's context now comes from.
     expect(reserven.range).toBeUndefined();
     // The reserves are not the A-ploeg, despite sharing its age code.
     expect(groupTeamsForLanding(teams).aTeam?.name).toBe("Eerste Elftallen A");

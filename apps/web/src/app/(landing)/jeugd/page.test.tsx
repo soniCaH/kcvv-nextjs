@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import { youthTeam } from "@/components/team/YouthDirectory/youth-directory.fixtures";
+import { runPromise } from "@/lib/effect/runtime";
 
 const trackEvent = vi.fn();
 vi.mock("@/lib/analytics/track-event", () => ({
@@ -111,6 +113,25 @@ describe("/jeugd page — cream tracer composition", () => {
       "jeugd_card_click",
       expect.objectContaining({ card_type: "nav" }),
     );
+  });
+
+  it("keeps the youth heading on the directory it shares with /ploegen", async () => {
+    // The three reads resolve in `Promise.all` order — teams, articles,
+    // editorial config — so one `…Once` fills the directory and the rest fall
+    // through to the empty default.
+    vi.mocked(runPromise).mockResolvedValueOnce([youthTeam("U13")]);
+
+    render(await JeugdPage());
+
+    // `/ploegen` renders this same component over a wider set of teams and
+    // passes a different heading (#2641); this route stays the youth section.
+    expect(screen.getByTestId("youth-directory")).toHaveAttribute(
+      "aria-label",
+      "Jeugdwerking",
+    );
+    expect(
+      screen.getByRole("heading", { level: 2, name: /jeugdwerking/i }),
+    ).toBeInTheDocument();
   });
 
   it("empty data: drops the divisions section, keeps a nav-only hub + the CTA", async () => {
