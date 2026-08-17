@@ -101,6 +101,23 @@ describe("Textarea", () => {
       const el = screen.getByText("Maximaal 500 tekens.");
       expect(el).toHaveClass("italic", "text-ink/60");
     });
+
+    // Decision D4 (#2620) — see Input.test.tsx for the full contract.
+    it("opens with the mono [?] bracket", () => {
+      render(<Textarea hint="Maximaal 500 tekens." />);
+      const hint = screen.getByText("Maximaal 500 tekens.");
+      expect(hint.querySelector('[data-glyph="help"]')).toHaveAttribute(
+        "aria-hidden",
+        "true",
+      );
+    });
+
+    it("describes the field with the hint sentence alone", () => {
+      render(<Textarea hint="Maximaal 500 tekens." data-testid="textarea" />);
+      expect(screen.getByTestId("textarea")).toHaveAccessibleDescription(
+        "Maximaal 500 tekens.",
+      );
+    });
   });
 
   describe("Counter (controlled + maxLength)", () => {

@@ -16,6 +16,7 @@ import { forwardRef, useId, type SelectHTMLAttributes } from "react";
 import { AlertBadge } from "@/components/design-system/Alert";
 import { CaretDown } from "@/lib/icons.redesign";
 import { cn } from "@/lib/utils/cn";
+import { FieldHint } from "../_internal/FieldHint";
 import { fieldChrome } from "../_internal/fieldChrome";
 
 export type SelectSize = "sm" | "md" | "lg";
@@ -126,14 +127,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             {error}
           </AlertBadge>
         )}
-        {!error && hint && (
-          <p
-            id={helperId}
-            className="font-body text-ink/60 mt-2 text-sm italic"
-          >
-            {hint}
-          </p>
-        )}
+        {!error && hint && <FieldHint id={helperId}>{hint}</FieldHint>}
       </div>
     );
   },

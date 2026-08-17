@@ -17,6 +17,7 @@ import {
 } from "react";
 import { AlertBadge } from "@/components/design-system/Alert";
 import { cn } from "@/lib/utils/cn";
+import { FieldHint } from "../_internal/FieldHint";
 import { fieldChrome } from "../_internal/fieldChrome";
 
 export type InputSize = "sm" | "md" | "lg";
@@ -138,11 +139,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           {error}
         </AlertBadge>
       )}
-      {!error && hint && (
-        <p id={helperId} className="font-body text-ink/60 mt-2 text-sm italic">
-          {hint}
-        </p>
-      )}
+      {!error && hint && <FieldHint id={helperId}>{hint}</FieldHint>}
     </div>
   );
 });

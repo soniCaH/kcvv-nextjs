@@ -147,6 +147,23 @@ describe("Input", () => {
       const el = screen.getByText("Minimaal 2 tekens.");
       expect(el).toHaveClass("italic", "text-ink/60");
     });
+
+    // Decision D4 (#2620): the mono `[?]` opens the hint and must not leak
+    // into the field's accessible description.
+    it("opens with the mono [?] bracket", () => {
+      render(<Input hint="Minimaal 2 tekens." />);
+      const hint = screen.getByText("Minimaal 2 tekens.");
+      const bracket = hint.querySelector('[data-glyph="help"]');
+      expect(bracket).toHaveTextContent("[?]");
+      expect(bracket).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("describes the field with the hint sentence alone", () => {
+      render(<Input hint="Minimaal 2 tekens." data-testid="input" />);
+      expect(screen.getByTestId("input")).toHaveAccessibleDescription(
+        "Minimaal 2 tekens.",
+      );
+    });
   });
 
   describe("Icons", () => {
