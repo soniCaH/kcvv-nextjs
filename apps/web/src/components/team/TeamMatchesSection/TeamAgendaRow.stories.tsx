@@ -193,21 +193,19 @@ export const WithOpponentTeamLabel: Story = {
 // ─── Placeholder fixture (#2606) ────────────────────────────────────────────
 // A pitch-reservation the club enters when a team has something on the
 // calendar but the opponent and programme aren't settled yet — both sides of
-// the fixture are KCVV. Both `data-layout="desktop"` and `data-layout="mobile"`
-// render the same reduced content: one crest, the competition label in the
-// caption's mono-uppercase register, and the real kickoff time. No opponent,
-// no score slot, no home/away icon, and — unlike every other state on this
-// page — not a link.
+// the fixture are KCVV. One reduced tree at every viewport: one crest, the
+// competition label in the caption's mono-uppercase register, and the real
+// kickoff time. No opponent, no score slot, no home/away icon, and — unlike
+// every other state on this page — not a link.
 
 const placeholderTournament: ScheduleMatch = {
+  ...upcoming,
   id: 90,
   date: new Date("2026-05-09T09:30:00.000Z"),
   time: "09:30",
   homeTeam: KCVV,
   awayTeam: KCVV,
-  status: "scheduled",
   competition: "Tornooi",
-  isHome: true,
   isPlaceholder: true,
 };
 
