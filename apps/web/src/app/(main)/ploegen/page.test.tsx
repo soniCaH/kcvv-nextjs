@@ -7,6 +7,7 @@ const teams: TeamLandingItem[] = [
   {
     _id: "a",
     name: "Eerste Elftallen A",
+    displayName: "A-ploeg",
     slug: "eerste-elftallen-a",
     psdId: null,
     age: "A",
@@ -20,6 +21,7 @@ const teams: TeamLandingItem[] = [
   {
     _id: "b",
     name: "Eerste Elftallen B",
+    displayName: "B-ploeg",
     slug: "eerste-elftallen-b",
     psdId: null,
     age: "A",
@@ -33,6 +35,7 @@ const teams: TeamLandingItem[] = [
   {
     _id: "u13",
     name: "KCVV Elewijt U13",
+    displayName: "U13",
     slug: "kcvv-elewijt-u13",
     psdId: null,
     age: "U13",

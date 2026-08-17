@@ -91,17 +91,17 @@ The type of tournament a match belongs to. Stored on `Match.competition`.
 
 ### Reeks
 
-The specific division a team is placed in for a competition — `3de Afdeling Voetb Vl A`, `Gewestelijke U13`. Distinct from [Competition](#competition), which is the *kind* of tournament.
+The specific division a team is placed in for a competition — `3de Afdeling Voetb Vl A`, `Gewestelijke U13`. Distinct from [Competition](#competition), which is the _kind_ of tournament.
 
 A reeks is named in **two vocabularies** and both are correct: the federation's (PSD `competition.name`, prefixed `Voetbal : <bond> - `) and the club's (Sanity `divisionFull`). `3de Afdeling Voetb Vl A` and `3e Nationale VV A` are the same reeks. The club's name wins on anything a human reads; PSD's fills the gap where no editorial value is set (#2589).
 
-**Only PSD carries a reeks per competition.** A match carries none — the fixture feed knows only `OFFICIAL`/`CUP`/`FRIENDLY`. Sanity carries one per *team*, which cannot name two phases.
+**Only PSD carries a reeks per competition.** A match carries none — the fixture feed knows only `OFFICIAL`/`CUP`/`FRIENDLY`. Sanity carries one per _team_, which cannot name two phases.
 
 ### Competition Phase
 
 A youth season is split in two by the winter break, and **the second half is frequently a different reeks with different opponents** — not a return round. Measured over 2025-2026: U13 shared **0 of 7** opponents between its phases, U17 shared 4 of 7, and U7 had no autumn competition at all. Senior teams do not have this: the A-team plays one continuous home-and-away league (14 of 15 opponents shared).
 
-**Consequences:** a team can hold more than one ranking table in a single season, so a table is identified by PSD `competition_id`, never by its name or its position in the array. Phases are named `Najaar` and `Voorjaar`, and only when the fixtures prove the ordering — see #2589. PSD exposes no phase field; the association's own convention encodes it in the reeks *code* (`G15BS` → a `2` appears in the second phase), which is not a contract and is not parsed.
+**Consequences:** a team can hold more than one ranking table in a single season, so a table is identified by PSD `competition_id`, never by its name or its position in the array. Phases are named `Najaar` and `Voorjaar`, and only when the fixtures prove the ordering — see #2589. PSD exposes no phase field; the association's own convention encodes it in the reeks _code_ (`G15BS` → a `2` appears in the second phase), which is not a contract and is not parsed.
 
 ---
 
@@ -120,6 +120,7 @@ A KCVV team registered with the club and (usually) with the football federation.
 
 - `psdId` — PSD identifier
 - `name` — Official name (from PSD)
+- `displayName` — Editorial override for the [Team Display Name](#team-display-name). Optional; empty on all 18 teams, so every heading currently comes from the slug-derived fallback
 - `age` — Age group: `"A"` (seniors) or `"U{N}"` (youth, e.g. `"U17"`)
 - `gender` — `"mannen"` or `"mixed"`
 - `footbelId` — Federation registration (null for unregistered youth teams)
@@ -132,10 +133,10 @@ A KCVV team registered with the club and (usually) with the football federation.
 
 What a team is **called** on any surface a human reads — the page heading, the browser tab, the share card, a listing row. Distinct from `name`, which is the team's registered identity as PSD holds it.
 
-| Code                | Dutch          | Notes                                             |
-| ------------------- | -------------- | ------------------------------------------------- |
-| `displayName`       | Weergavenaam   | Editorial override on the Team document; optional |
-| `teamDisplayName()` | —              | The single helper every human-facing surface uses |
+| Code                | Dutch        | Notes                                             |
+| ------------------- | ------------ | ------------------------------------------------- |
+| `displayName`       | Weergavenaam | Editorial override on the Team document; optional |
+| `teamDisplayName()` | —            | The single helper every human-facing surface uses |
 
 **Resolution order:** `displayName` → a label derived from the team's slug → `name`.
 

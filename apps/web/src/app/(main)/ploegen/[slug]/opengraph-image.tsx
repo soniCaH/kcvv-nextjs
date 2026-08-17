@@ -45,11 +45,18 @@ export default async function Image({ params }: ImageProps) {
     Effect.gen(function* () {
       const repo = yield* TeamRepository;
       const team = yield* repo.findBySlug(slug);
-      if (!team?.name) return FALLBACK;
+      if (!team) return FALLBACK;
+      // Same helper as the `<h1>` and the `<title>` — the share card used to be
+      // the third of three names one team could go by (#2630).
+      const displayName = team.displayName;
+      if (displayName === "") return FALLBACK;
+      const meta = team.tagline ?? team.divisionFull ?? team.division;
       return {
         nameTop: "KCVV Elewijt",
-        nameBottom: team.name,
-        ...(team.tagline ? { meta: team.tagline } : {}),
+        nameBottom: displayName,
+        // Falls back to the division: the card has no mono pill of its own, so
+        // unlike the hero this slot is not a duplicate (#2630).
+        ...(meta ? { meta } : {}),
       } satisfies ShareCardProps;
     }).pipe(Effect.catchAll(() => Effect.succeed(FALLBACK))),
   );

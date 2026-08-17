@@ -4,29 +4,15 @@ import type { ScheduleMatch } from "@/components/match/types";
 import type { FirstTeamVM } from "./first-teams";
 import {
   deriveFirstTeamVM,
-  firstTeamLabel,
   firstTeamsHeading,
   selectSeniorTeams,
   SETTLED_LOOKAHEAD_MS,
 } from "./first-teams";
 import { RESERVEN_PSD_ID } from "@/lib/utils/group-teams";
 
-describe("firstTeamLabel", () => {
-  it("maps trailing-letter first-eleven slugs to X-ploeg", () => {
-    expect(firstTeamLabel("eerste-elftallen-a", "Eerste Elftallen A")).toBe(
-      "A-ploeg",
-    );
-    expect(firstTeamLabel("eerste-elftallen-b", "Eerste Elftallen B")).toBe(
-      "B-ploeg",
-    );
-  });
-
-  it("falls back to the CMS name when the slug has no trailing letter", () => {
-    expect(firstTeamLabel("fc-weitse-gans", "FC WEITSE GANS")).toBe(
-      "FC WEITSE GANS",
-    );
-  });
-});
+// The row label moved to `teamDisplayName` (#2630) — covered by
+// `src/lib/utils/team-display-name.test.ts`, which also guards the other
+// seventeen routes this block never saw.
 
 describe("selectSeniorTeams", () => {
   const A = { psdId: "1235", age: "A", slug: "eerste-elftallen-a" };

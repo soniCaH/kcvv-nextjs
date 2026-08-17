@@ -8,10 +8,14 @@ vi.mock("next/navigation", () => ({
 }));
 
 import type { TeamNavVM } from "@/lib/repositories/team.repository";
+import { teamDisplayName } from "@/lib/utils/team-display-name";
 
 const makeTeam = (over: Partial<TeamNavVM>): TeamNavVM => ({
   id: over.slug ?? "team",
   name: over.name ?? "Team",
+  displayName:
+    over.displayName ??
+    teamDisplayName({ slug: over.slug ?? "team", name: over.name ?? "Team" }),
   slug: over.slug ?? "team",
   age: over.age ?? null,
   psdId: null,

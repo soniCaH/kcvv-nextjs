@@ -226,8 +226,7 @@ function TeamDetailAssembly() {
     <>
       <PageContainer>
         <TeamHero
-          name="KCVV Elewijt A"
-          age="A"
+          displayName="A-ploeg"
           teamType="senior"
           divisionFull="Eerste Elftal A – 3e Nat. A"
           division="3NA"

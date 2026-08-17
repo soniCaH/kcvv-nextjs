@@ -31,7 +31,7 @@ import { hasScore, isSettledMatch } from "@/lib/utils/match-display";
 import { RESERVEN_PSD_ID } from "@/lib/utils/group-teams";
 
 export interface FirstTeamInput {
-  /** Display label, e.g. "A-ploeg". */
+  /** Display label, e.g. "A-ploeg" — from `teamDisplayName`, never re-derived here. */
   label: string;
   /** Team slug, e.g. "a-ploeg" (drives the team-matches deep link). */
   slug: string;
@@ -44,17 +44,6 @@ export interface FirstTeamVM extends FirstTeamInput {
   result?: ScheduleMatch;
   /** Next scheduled fixture — rendered as the featured jersey-deep `<TeamAgendaRow>`. */
   fixture?: ScheduleMatch;
-}
-
-/**
- * Short row label for a first team. The A/B sides carry a trailing single-letter
- * segment in their slug (`eerste-elftallen-a` → "A-ploeg"); anything else falls
- * back to the CMS `name`. Avoids title-casing the whole slug, which produced
- * "Eerste-elftallen-a".
- */
-export function firstTeamLabel(slug: string, name: string): string {
-  const tail = slug.split("-").pop() ?? "";
-  return /^[a-z]$/i.test(tail) ? `${tail.toUpperCase()}-ploeg` : name;
 }
 
 /** The fields senior-team selection reads — structural, so both call sites fit. */

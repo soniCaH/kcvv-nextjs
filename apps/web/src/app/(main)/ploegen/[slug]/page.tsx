@@ -62,21 +62,29 @@ export async function generateMetadata({
   );
   if (!team) return { title: "Team niet gevonden" };
 
+  // Tab, share card and heading all read the one resolved name, so a visitor is
+  // never shown three names for one team (#2630).
+  const displayName = team.displayName;
   const typeLabel = team.teamType === "youth" ? "Jeugdploeg" : "Ploeg";
-  const description = team.tagline
-    ? `${team.name} - ${team.tagline}`
-    : `${team.name} - KCVV Elewijt ${typeLabel}`;
+  // The division moved here from the tagline. Deleting `computeTagline`'s
+  // fallback was about the *hero*, where the mono pill already showed it — a
+  // search result has no pill, so dropping it there too would degrade three
+  // senior descriptions to a bare page type for no gain (#2630).
+  const subtitle = team.tagline ?? team.divisionFull ?? team.division;
+  const description = subtitle
+    ? `${displayName} - ${subtitle}`
+    : `${displayName} - KCVV Elewijt ${typeLabel}`;
 
   return {
-    title: team.name,
+    title: displayName,
     description,
     alternates: { canonical: `${SITE_CONFIG.siteUrl}/ploegen/${slug}` },
     openGraph: {
-      title: team.name,
+      title: displayName,
       description,
       type: "website",
       images: team.teamImageUrl
-        ? [{ url: team.teamImageUrl, alt: `${team.name} teamfoto` }]
+        ? [{ url: team.teamImageUrl, alt: `${displayName} teamfoto` }]
         : [DEFAULT_OG_IMAGE],
     },
   };
@@ -123,6 +131,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
   if (!team) notFound();
 
+  const displayName = team.displayName;
   const psdTeamId = team.psdId ? parseInt(team.psdId, 10) : NaN;
 
   // Both depend only on `team`, never on each other, so they share one wave
@@ -190,11 +199,15 @@ export default async function TeamPage({ params }: TeamPageProps) {
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },
           { name: "Ploegen", url: `${SITE_CONFIG.siteUrl}/ploegen` },
-          { name: team.name, url: `${SITE_CONFIG.siteUrl}/ploegen/${slug}` },
+          { name: displayName, url: `${SITE_CONFIG.siteUrl}/ploegen/${slug}` },
         ])}
       />
       <JsonLd
         data={buildSportsTeamJsonLd({
+          // Deliberately NOT the display name: `SportsTeam.name` is a
+          // machine-readable claim about a federation-registered entity, not a
+          // nickname. The breadcrumb above is a human-facing trail, so that one
+          // follows the heading (#2630).
           name: team.name,
           url: `${SITE_CONFIG.siteUrl}/ploegen/${slug}`,
         })}
@@ -205,8 +218,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
       <PageContainer>
         <TeamHero
-          name={team.name}
-          age={team.age}
+          displayName={displayName}
           teamType={team.teamType}
           ageGroup={team.ageGroup}
           division={team.division}

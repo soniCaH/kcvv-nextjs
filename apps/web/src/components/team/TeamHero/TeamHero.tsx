@@ -8,12 +8,13 @@ import { getYouthDivision } from "@/lib/utils/group-teams";
 
 export interface TeamHeroProps {
   /**
-   * Full team name from Sanity (e.g. "KCVV Elewijt A", "KCVV Elewijt U13").
-   * Used as the primary source for the category headline.
+   * What this team is called — the `<h1>`. Resolved by `teamDisplayName()`, the
+   * single helper every surface reads, so the heading, the tab and the share
+   * card cannot name the team three different ways. Never derived here: the
+   * heading used to come off `age`, a shared competition band, which is how
+   * `/ploegen/reserven` came to be headed `A-ploeg.` (#2630).
    */
-  name: string;
-  /** Team age code from Sanity (e.g. "A", "B", "U13"). Used as a fallback only. */
-  age: string | null;
+  displayName: string;
   /** "senior" or "youth" — drives kicker + meta pill logic. */
   teamType: "youth" | "senior";
   /** Age group extracted from `age` (e.g. "U13"). Computed by the repository. */
@@ -31,38 +32,8 @@ export interface TeamHeroProps {
   className?: string;
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unhandled teamType variant: ${String(value)}`);
-}
-
-function computeCategory(
-  name: string,
-  age: string | null,
-  teamType: "youth" | "senior",
-): string {
-  if (teamType === "youth") {
-    // age field is reliable for youth (U6, U8, U13, U17, …)
-    if (age) return age.toUpperCase();
-    return "Jeugd";
-  }
-  if (teamType === "senior") {
-    // Sanity name is the full PSD name (e.g. "KCVV Elewijt Eerste Elftallen A").
-    // The last word is the single-letter team suffix — more reliable than the age field,
-    // which PSD sometimes sends as "A" for both first and second teams.
-    const lastWord = name.trim().split(/\s+/).pop()?.toUpperCase() ?? "";
-    if (lastWord === "A") return "A-ploeg";
-    if (lastWord === "B") return "B-ploeg";
-    // Fallback to age field if name doesn't end in A/B (edge case)
-    if (age?.toUpperCase() === "A") return "A-ploeg";
-    if (age?.toUpperCase() === "B") return "B-ploeg";
-    return "Ploeg";
-  }
-  return assertNever(teamType);
-}
-
 export function TeamHero({
-  name,
-  age,
+  displayName,
   teamType,
   ageGroup,
   division,
@@ -74,7 +45,6 @@ export function TeamHero({
 }: TeamHeroProps) {
   const hasPhoto =
     teamImageUrl !== undefined && teamImageUrl !== null && teamImageUrl !== "";
-  const category = computeCategory(name, age, teamType);
 
   const kicker = teamType === "youth" ? "KCVV Elewijt · Jeugd" : "KCVV Elewijt";
 
@@ -91,14 +61,20 @@ export function TeamHero({
   const showTagline =
     tagline !== null && tagline !== undefined && tagline !== "";
 
-  // Chest letter on the JerseyShirt fallback: prefer the normalised ageGroup
-  // (e.g. "U13") over the raw age string (which may have a suffix like "U13A").
-  const jerseyLetter = (ageGroup ?? age)?.toUpperCase();
+  // Chest mark on the JerseyShirt fallback. A shirt carries the team's own
+  // name, so it reads the display name — not `age`, which is the shared
+  // competition band and would print `U17` on a page headed `U16.` and `A` on
+  // one headed `Reserven.` (#2630). The 56px overlay fits an age code or a
+  // letter, not a word, so anything longer wears its initial.
+  const jerseyLetter =
+    displayName.length <= 4
+      ? displayName.toUpperCase()
+      : displayName.charAt(0).toUpperCase();
 
   return (
     <section
       data-testid="team-hero"
-      aria-label={`${category} · ploegpagina`}
+      aria-label={`${displayName} · ploegpagina`}
       className={cn(
         "grid grid-cols-1 items-start gap-x-10 gap-y-8 overflow-x-clip sm:grid-cols-[1fr_minmax(300px,420px)]",
         className,
@@ -111,7 +87,7 @@ export function TeamHero({
         </span>
 
         <EditorialHeading level={1} size="display-xl" emphasis={{ text: "." }}>
-          {category}
+          {displayName}
         </EditorialHeading>
 
         {showMeta ? (

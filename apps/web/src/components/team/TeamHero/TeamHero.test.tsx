@@ -3,7 +3,7 @@
  *
  * Covers:
  *  - Kicker: "KCVV Elewijt" for senior, "KCVV Elewijt · Jeugd" for youth.
- *  - Headline: category derived from team name (A-ploeg. / B-ploeg. / U13.).
+ *  - Headline: the display name, rendered verbatim — never derived here (#2630).
  *  - Meta row: division + season pills for senior; youth band + season for youth.
  *  - Meta auto-hide when both pills absent.
  *  - Tagline renders and auto-hides.
@@ -16,8 +16,7 @@ import { render, screen } from "@testing-library/react";
 import { TeamHero } from "./TeamHero";
 
 const BASE_SENIOR = {
-  name: "KCVV Elewijt A",
-  age: "A" as const,
+  displayName: "A-ploeg",
   teamType: "senior" as const,
   divisionFull: "Eerste Elftal A – 3e Nat. A",
   season: "25/26",
@@ -35,8 +34,7 @@ describe("TeamHero", () => {
     it("renders 'KCVV Elewijt · Jeugd' for a youth team", () => {
       render(
         <TeamHero
-          name="KCVV Elewijt U13"
-          age="U13"
+          displayName="U13"
           teamType="youth"
           ageGroup="U13"
           season="25/26"
@@ -48,60 +46,28 @@ describe("TeamHero", () => {
     });
   });
 
-  describe("Headline / category (derived from team name)", () => {
-    it("renders 'A-ploeg.' from full PSD name 'KCVV Elewijt Eerste Elftallen A'", () => {
-      render(
-        <TeamHero {...BASE_SENIOR} name="KCVV Elewijt Eerste Elftallen A" />,
-      );
-      const h1 = screen.getByRole("heading", { level: 1 });
-      expect(h1.textContent).toBe("A-ploeg.");
-    });
-
-    it("renders 'A-ploeg.' from short name 'KCVV Elewijt A'", () => {
+  describe("Headline", () => {
+    it("renders the display name verbatim", () => {
       render(<TeamHero {...BASE_SENIOR} />);
       const h1 = screen.getByRole("heading", { level: 1 });
       expect(h1.textContent).toBe("A-ploeg.");
     });
 
-    it("renders 'B-ploeg.' from name ending in B, regardless of age field", () => {
-      render(
-        <TeamHero
-          name="KCVV Elewijt B"
-          age="A"
-          teamType="senior"
-          season="25/26"
-        />,
+    it("never re-derives the heading from the shared age band", () => {
+      // Reserven's `age` is the senior code "A" — the same band the A-ploeg
+      // carries. The hero used to head this page `A-ploeg.` (#2630). The band
+      // no longer reaches the heading at all; it is not even a prop.
+      render(<TeamHero displayName="Reserven" teamType="senior" />);
+      expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+        "Reserven.",
       );
-      const h1 = screen.getByRole("heading", { level: 1 });
-      expect(h1.textContent).toBe("B-ploeg.");
     });
 
-    it("renders 'U13.' from name 'KCVV Elewijt U13'", () => {
-      render(
-        <TeamHero
-          name="KCVV Elewijt U13"
-          age="U13"
-          teamType="youth"
-          ageGroup="U13"
-          season="25/26"
-        />,
+    it("names the section after the team it heads", () => {
+      render(<TeamHero displayName="U10P" teamType="youth" />);
+      expect(screen.getByTestId("team-hero").getAttribute("aria-label")).toBe(
+        "U10P · ploegpagina",
       );
-      const h1 = screen.getByRole("heading", { level: 1 });
-      expect(h1.textContent).toBe("U13.");
-    });
-
-    it("renders 'U17.' from name 'KCVV Elewijt U17'", () => {
-      render(
-        <TeamHero
-          name="KCVV Elewijt U17"
-          age="U17"
-          teamType="youth"
-          ageGroup="U17"
-          season="25/26"
-        />,
-      );
-      const h1 = screen.getByRole("heading", { level: 1 });
-      expect(h1.textContent).toBe("U17.");
     });
   });
 
@@ -116,8 +82,7 @@ describe("TeamHero", () => {
     it("falls back to short division when divisionFull is absent", () => {
       render(
         <TeamHero
-          name="KCVV Elewijt A"
-          age="A"
+          displayName="A-ploeg"
           teamType="senior"
           division="3NA"
           season="25/26"
@@ -130,8 +95,7 @@ describe("TeamHero", () => {
     it("shows youth band and season for a youth team", () => {
       render(
         <TeamHero
-          name="KCVV Elewijt U13"
-          age="U13"
+          displayName="U13"
           teamType="youth"
           ageGroup="U13"
           season="25/26"
@@ -145,8 +109,7 @@ describe("TeamHero", () => {
     it("shows Bovenbouw band for U17", () => {
       render(
         <TeamHero
-          name="KCVV Elewijt U17"
-          age="U17"
+          displayName="U17"
           teamType="youth"
           ageGroup="U17"
           season="25/26"
@@ -160,8 +123,7 @@ describe("TeamHero", () => {
     it("shows Onderbouw band for U9", () => {
       render(
         <TeamHero
-          name="KCVV Elewijt U9"
-          age="U9"
+          displayName="U9"
           teamType="youth"
           ageGroup="U9"
           season="25/26"
@@ -173,7 +135,7 @@ describe("TeamHero", () => {
     });
 
     it("auto-hides meta row when no division and no season", () => {
-      render(<TeamHero name="KCVV Elewijt A" age="A" teamType="senior" />);
+      render(<TeamHero displayName="A-ploeg" teamType="senior" />);
       expect(screen.queryByTestId("team-hero-meta")).toBeNull();
     });
   });
@@ -222,7 +184,7 @@ describe("TeamHero", () => {
     });
 
     it("hides the season stub when season is absent", () => {
-      render(<TeamHero name="KCVV Elewijt A" age="A" teamType="senior" />);
+      render(<TeamHero displayName="A-ploeg" teamType="senior" />);
       expect(screen.queryByTestId("team-hero-season-stub")).toBeNull();
     });
   });
