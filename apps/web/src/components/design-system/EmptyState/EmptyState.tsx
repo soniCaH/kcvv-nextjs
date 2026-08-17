@@ -31,6 +31,7 @@ import { Button } from "../Button";
 import {
   EditorialHeading,
   type EditorialHeadingEmphasis,
+  type EditorialHeadingLevel,
 } from "../EditorialHeading";
 import { JerseyShirt } from "../JerseyShirt";
 import { LinkButton } from "../LinkButton";
@@ -72,15 +73,18 @@ interface EmptyStateSharedProps {
    *  load). Omit for an empty state already present on first render. */
   live?: boolean;
   className?: string;
-  /** Forwarded as `data-testid` on the root element, for callers that need
-   *  a stable e2e/test hook on the empty branch itself. */
-  testId?: string;
 }
 
 export interface EmptyStateSurfaceProps extends EmptyStateSharedProps {
   tier: "surface";
   /** Display-md heading. Auto-terminated with a period by `<EditorialHeading>`. */
   heading: string;
+  /**
+   * Heading level, for a page that already has an adjacent `<h2>` this
+   * heading would otherwise collide with (e.g. a section heading directly
+   * above the empty branch). Defaults to `2`.
+   */
+  headingLevel?: EditorialHeadingLevel;
   /**
    * Accent emphasis on the heading. Defaults to accenting the trailing
    * period (the `SponsorEmptyState` / `SearchNoResultsCard` convention).
@@ -104,6 +108,14 @@ export interface EmptyStateSurfaceProps extends EmptyStateSharedProps {
    * would have been" (#2562).
    */
   actions?: readonly EmptyStateAction[];
+  /**
+   * `true` (default) — draws its own paper frame (border + shadow +
+   * cream-soft fill). Pass `false` when the surface already sits inside
+   * another bordered/shadowed panel (e.g. `CalendarWidget`'s own
+   * `border-ink shadow-paper-md` shell) — framing twice nests two ink
+   * borders with a shadow between them, a register neither tier anticipates.
+   */
+  framed?: boolean;
 }
 
 export interface EmptyStateSlotProps extends EmptyStateSharedProps {
@@ -146,18 +158,12 @@ function ActionRow({ actions }: { actions: readonly EmptyStateAction[] }) {
   );
 }
 
-function SlotEmptyState({
-  children,
-  live,
-  className,
-  testId,
-}: EmptyStateSlotProps) {
+function SlotEmptyState({ children, live, className }: EmptyStateSlotProps) {
   return (
     <div
       role={live ? "status" : undefined}
-      data-testid={testId}
       className={cn(
-        "border-ink-muted flex items-center justify-center border-2 border-dashed px-3 py-3 text-center",
+        "border-ink-muted flex min-h-full items-center justify-center border-2 border-dashed px-3 py-3 text-center",
         className,
       )}
     >
@@ -170,13 +176,14 @@ function SlotEmptyState({
 
 function SurfaceEmptyState({
   heading,
+  headingLevel = 2,
   headingEmphasis,
   children,
   artefact,
   actions,
   live,
   className,
-  testId,
+  framed = true,
 }: EmptyStateSurfaceProps) {
   const emphasis =
     headingEmphasis === false ? undefined : (headingEmphasis ?? { text: "." });
@@ -184,21 +191,33 @@ function SurfaceEmptyState({
   return (
     <section
       role={live ? "status" : undefined}
-      data-testid={testId}
       className={cn(
-        "border-ink bg-cream-soft shadow-paper-sm border-2 p-7 text-center sm:p-8 sm:text-left",
+        framed
+          ? "border-ink bg-cream-soft shadow-paper-sm border-2 p-7 sm:p-8"
+          : "py-2",
+        "text-center sm:text-left",
         className,
       )}
     >
       <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-7">
-        {/* Taped artefact — a defaulting slot, not a hardcoded image. */}
-        <div className="relative inline-block flex-shrink-0">
+        {/* Taped artefact — a defaulting slot, not a hardcoded image. Ordered
+            AFTER the text on mobile (rule 4: the undo belongs "right where
+            the results would have been" — a decorative artefact pushed below
+            the fold costs nothing; the heading/body/action row pushed below
+            it does). Row order on `sm+` is unaffected. */}
+        <div className="relative order-2 inline-block flex-shrink-0 sm:order-1">
           <TapeStrip color="warm" length="md" />
-          {artefact ?? <JerseyShirt className="h-28 w-28 -rotate-3" />}
+          {artefact ?? (
+            <JerseyShirt className="h-20 w-20 -rotate-3 sm:h-28 sm:w-28" />
+          )}
         </div>
 
-        <div>
-          <EditorialHeading level={2} size="display-md" emphasis={emphasis}>
+        <div className="order-1 sm:order-2">
+          <EditorialHeading
+            level={headingLevel}
+            size="display-md"
+            emphasis={emphasis}
+          >
             {heading}
           </EditorialHeading>
 

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
+import { SoccerBall } from "@/lib/icons.redesign";
 import { EmptyState } from "./EmptyState";
 
 /**
@@ -18,21 +19,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Controls baseline — tier 1, genuinely empty, default artefact. */
-export const Playground: Story = {
-  args: {
-    tier: "surface",
-    heading: "Nog geen sponsors",
-    children:
-      "We zoeken partners die mee de plezantste compagnie willen dragen — jouw zaak kan de eerste langs de lijn zijn.",
-  },
-};
-
 /**
- * Tier 1, the null path — nothing has arrived yet, no custom artefact, no
- * action row. "Nog geen" because sponsors can still arrive.
+ * Controls baseline, and tier 1's null path in one: nothing has arrived
+ * yet, no custom artefact, no action row. "Nog geen" because sponsors can
+ * still arrive.
  */
-export const SurfaceGenuine: Story = {
+export const Playground: Story = {
   name: "Tier 1 — genuine (null path)",
   args: {
     tier: "surface",
@@ -59,7 +51,9 @@ export const SurfaceFilterEmpty: Story = {
 
 /**
  * Tier 1 with a custom artefact — a surface with its own obvious mark (here,
- * a crest stand-in) can pass one without touching the primitive.
+ * a ball, for a fixtures surface) can pass one without touching the
+ * primitive. Sharp corners and a Phosphor Fill icon, matching the rest of
+ * the system's artefact vocabulary — never a rounded box, never an emoji.
  */
 export const SurfaceCustomArtefact: Story = {
   name: "Tier 1 — custom artefact",
@@ -69,9 +63,9 @@ export const SurfaceCustomArtefact: Story = {
     artefact: (
       <div
         aria-hidden="true"
-        className="border-ink bg-cream-soft flex h-28 w-28 items-center justify-center rounded-full border-2 text-4xl"
+        className="border-ink bg-cream-soft flex h-28 w-28 items-center justify-center border-2"
       >
-        ⚽
+        <SoccerBall size={48} />
       </div>
     ),
     children: "Er zijn nog geen wedstrijden geregistreerd tegen deze ploeg.",

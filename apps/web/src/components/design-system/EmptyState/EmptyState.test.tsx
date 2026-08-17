@@ -147,13 +147,49 @@ describe("EmptyState — tier: surface (Tier 1)", () => {
     );
   });
 
-  it("forwards testId as data-testid on the root", () => {
+  it("defaults the heading to level 2", () => {
     render(
-      <EmptyState tier="surface" heading="Nog geen sponsors" testId="foo">
+      <EmptyState tier="surface" heading="Nog geen sponsors">
         Body.
       </EmptyState>,
     );
-    expect(screen.getByTestId("foo")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2 })).toBeInTheDocument();
+  });
+
+  it("renders a different heading level when a page already has an adjacent h2", () => {
+    render(
+      <EmptyState tier="surface" heading="Geen artikelen" headingLevel={3}>
+        Body.
+      </EmptyState>,
+    );
+    expect(screen.getByRole("heading", { level: 3 })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 2 })).toBeNull();
+  });
+
+  it("draws its own paper frame by default", () => {
+    const { container } = render(
+      <EmptyState tier="surface" heading="Nog geen sponsors">
+        Body.
+      </EmptyState>,
+    );
+    expect(container.firstElementChild).toHaveClass(
+      "border-ink",
+      "shadow-paper-sm",
+    );
+  });
+
+  it("drops its own frame when already inside another bordered panel", () => {
+    const { container } = render(
+      <EmptyState
+        tier="surface"
+        heading="Geen wedstrijden gepland"
+        framed={false}
+      >
+        Body.
+      </EmptyState>,
+    );
+    expect(container.firstElementChild).not.toHaveClass("border-ink");
+    expect(container.firstElementChild).not.toHaveClass("shadow-paper-sm");
   });
 
   it("can suppress the accent emphasis on the heading", () => {
@@ -206,12 +242,10 @@ describe("EmptyState — tier: slot (Tier 2)", () => {
     ).toBeInTheDocument();
   });
 
-  it("forwards testId as data-testid on the root", () => {
-    render(
-      <EmptyState tier="slot" testId="bar">
-        Geen opstelling beschikbaar
-      </EmptyState>,
+  it("fills its parent's established height so it holds the slot's shape", () => {
+    const { container } = render(
+      <EmptyState tier="slot">Geen opstelling beschikbaar</EmptyState>,
     );
-    expect(screen.getByTestId("bar")).toBeInTheDocument();
+    expect(container.firstElementChild).toHaveClass("min-h-full");
   });
 });
