@@ -2,6 +2,14 @@
 
 Implement the feature in this issue using strict Test-Driven Development.
 
+## Craft lives upstream — read it first
+
+This file is KCVV **policy**: which layer the code belongs in, what may be mocked here, how the loop runs against our commands, and what to do when implementation reveals work the issue never accounted for.
+
+It deliberately says nothing about what separates a test worth keeping from a test worth deleting. That is craft, it is not ours, and it improves without us. Read `/mattpocock-skills:tdd` for it — what a good test is, seams, anti-patterns, the rules of the loop — then come back here.
+
+Where the two disagree, this file wins: it knows the codebase, and upstream does not.
+
 ## Before the first test — interface design
 
 Read the issue body. Find the PRD at the path listed. Answer these before writing anything:
