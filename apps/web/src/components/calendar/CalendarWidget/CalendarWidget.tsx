@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { trackEvent } from "@/lib/analytics/track-event";
+import { EmptyState } from "@/components/design-system";
 import { CalendarMonth } from "../CalendarMonth";
 import { CalendarWeek } from "../CalendarWeek";
 import { CalendarAgenda } from "../CalendarAgenda";
@@ -186,14 +187,20 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
     return { filteredFeed: filtered, matches: matchList, events: eventList };
   }, [feed, activeTypeFilter]);
 
-  // Empty + filtered-to-zero copy. "all" + nothing = genuinely empty; a specific
-  // facet + nothing = the selection emptied the calendar.
-  const zeroMessage =
+  // Empty + filtered-to-zero copy. "all" + nothing = genuinely empty ("Nog
+  // geen" — a match or event can still be scheduled); a specific facet +
+  // nothing = the selection emptied the calendar (names the facet, gets the
+  // mandatory undo, never "Nog geen" — #2427 rule 5).
+  const emptyHeading =
     activeTypeFilter === "all"
-      ? "Geen wedstrijden of evenementen gepland."
+      ? "Nog geen wedstrijden of evenementen gepland"
       : activeTypeFilter === "Wedstrijden"
-        ? "Geen wedstrijden gepland."
-        : `Geen evenementen in de categorie ${activeTypeFilter} gepland.`;
+        ? "Geen wedstrijden gepland"
+        : `Geen evenementen in de categorie ${activeTypeFilter}`;
+  const emptyBody =
+    activeTypeFilter === "all"
+      ? "Zodra er een wedstrijd of evenement gepland wordt, verschijnt het hier."
+      : "Probeer een andere categorie, of bekijk de volledige kalender.";
 
   return (
     <div className="space-y-4">
@@ -273,23 +280,24 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
         {/* View content */}
         <div className="p-4">
           {filteredFeed.length === 0 ? (
-            // role="status" so the message is announced when a filter selection
-            // empties the calendar (a client-side state change, not a page load).
-            <div
-              role="status"
-              className="text-ink-muted flex flex-col items-center gap-3 py-12 text-center"
+            <EmptyState
+              tier="surface"
+              heading={emptyHeading}
+              live
+              actions={
+                activeTypeFilter !== "all"
+                  ? [
+                      {
+                        label: "Toon alles",
+                        onClick: () => setType("all"),
+                        variant: "ghost",
+                      },
+                    ]
+                  : undefined
+              }
             >
-              <p className="font-mono font-medium">{zeroMessage}</p>
-              {activeTypeFilter !== "all" && (
-                <button
-                  type="button"
-                  onClick={() => setType("all")}
-                  className="border-ink bg-cream text-ink hover:bg-cream-soft border-2 px-4 py-2 font-mono text-sm font-medium transition-colors"
-                >
-                  Toon alles
-                </button>
-              )}
-            </div>
+              {emptyBody}
+            </EmptyState>
           ) : view === "month" ? (
             <CalendarMonth
               matches={matches}
