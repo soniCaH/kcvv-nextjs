@@ -149,7 +149,11 @@ function TeamLineup({
   );
 
   return (
-    <div>
+    // `flex flex-col` so an empty column's tier-"slot" box can grow to fill
+    // the grid row's stretched height (the grid item's own height is
+    // already the row height via the default `align-self: stretch`) rather
+    // than collapsing to one line beside a full column (#2562 review).
+    <div className="flex flex-col">
       {/* Team-column header: mono caps, ink top border. Stylistic seam between
           the section heading above and the player rows below. */}
       <h3 className="border-ink text-ink/70 border-t pt-2 pb-3 font-mono text-[10px] tracking-[0.16em] uppercase">
@@ -158,8 +162,11 @@ function TeamLineup({
 
       {players.length === 0 ? (
         // Tier "slot" (#2427 / #2562): one team's column is empty while the
-        // other side of the two-column layout is full.
-        <EmptyState tier="slot">Geen opstelling beschikbaar</EmptyState>
+        // other side of the two-column layout is full. `flex-1` holds the
+        // slot's shape by filling the rest of the stretched column.
+        <EmptyState tier="slot" className="flex-1">
+          Geen opstelling beschikbaar
+        </EmptyState>
       ) : (
         <div>
           {starters.length > 0 && (

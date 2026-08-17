@@ -295,7 +295,11 @@ export function MatchEvents({
 
     return (
       <div className={cn("grid grid-cols-1 gap-8 md:grid-cols-2", className)}>
-        <div>
+        {/* `flex flex-col` on each column so an empty side's tier-"slot" box
+            can grow (`flex-1`) to fill the grid row's stretched height
+            instead of collapsing to one line beside a full column
+            (#2562 review). */}
+        <div className="flex flex-col">
           <h3 className="border-ink text-ink/70 mb-2 border-t pt-2 pb-3 font-mono text-[10px] tracking-[0.16em] uppercase">
             {homeTeamName}
           </h3>
@@ -305,7 +309,7 @@ export function MatchEvents({
             highlightTeam={highlightTeam}
           />
         </div>
-        <div>
+        <div className="flex flex-col">
           <h3 className="border-ink text-ink/70 mb-2 border-t pt-2 pb-3 font-mono text-[10px] tracking-[0.16em] uppercase">
             {awayTeamName}
           </h3>
@@ -369,8 +373,13 @@ function EventList({
 }) {
   if (events.length === 0) {
     // Tier "slot" (#2427 / #2562): one team's column is empty while the
-    // other side of the grouped view is full.
-    return <EmptyState tier="slot">Geen gebeurtenissen</EmptyState>;
+    // other side of the grouped view is full. `flex-1` holds the slot's
+    // shape by filling the rest of the stretched column.
+    return (
+      <EmptyState tier="slot" className="flex-1">
+        Geen gebeurtenissen
+      </EmptyState>
+    );
   }
 
   return (
