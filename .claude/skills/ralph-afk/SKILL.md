@@ -26,7 +26,13 @@ git fetch --prune origin
 git worktree list
 ```
 
-For each `../kcvv-issue-<N>` whose PR is merged (`gh pr view --json state` on branch `feat/issue-<N>`):
+For each `../kcvv-issue-<N>`, name the branch explicitly — a bare `gh pr view` reads the _current_ branch, which here is whatever the main checkout is on, not the worktree's:
+
+```bash
+gh pr view "feat/issue-<N>" --json state,url --jq '.state'
+```
+
+When that prints `MERGED`:
 
 ```bash
 git worktree remove ../kcvv-issue-<N> --force
@@ -37,7 +43,15 @@ Leave worktrees whose PR is still open — those are under review. Report what y
 
 ### 1. Determine the wave
 
-If the user passed explicit issue numbers, use those (still subject to the hard rules below). Otherwise build the wave automatically:
+If the user passed explicit issue numbers, put each one through the same gate the automatic path uses — a named issue is not a pre-approved one:
+
+```bash
+gh issue view <N> --json state,labels --jq '"\(.state) \([.labels[].name] | join(","))"'
+```
+
+Keep it only when the state is `OPEN`, the labels include `ready`, and `./scripts/unblocked-issues.sh` lists it. Anything else stops with the reason, per the hard rules below.
+
+Otherwise build the wave automatically:
 
 1. Get the eligible set. Both gates — the `ready` label and zero open blockers — live in one script, which `scripts/ralph.sh` and `/ralph` use too:
 
