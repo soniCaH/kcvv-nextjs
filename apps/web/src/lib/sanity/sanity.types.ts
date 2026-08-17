@@ -815,7 +815,6 @@ export type Team = {
   age?: string;
   gender?: string;
   footbelId?: number;
-  season?: string;
   players?: Array<
     {
       _key: string;
@@ -2410,7 +2409,7 @@ export type PLAYERS_QUERY_RESULT = Array<{
 
 // Source: ../web/src/lib/repositories/player.repository.ts
 // Variable: PLAYER_BY_PSD_ID_QUERY
-// Query: *[_type == "player" && psdId == $psdId][0] {  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,  birthDate,  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",  bio,  "currentTeam": *[_type == "team" && archived != true && references(^._id)] | order(name asc)[0] {    name, displayName, "slug": slug.current, season  }}
+// Query: *[_type == "player" && psdId == $psdId][0] {  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,  birthDate,  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",  bio,  "currentTeam": *[_type == "team" && archived != true && references(^._id)] | order(name asc)[0] {    name, displayName, "slug": slug.current  }}
 export type PLAYER_BY_PSD_ID_QUERY_RESULT = {
   _id: string;
   psdId: string | null;
@@ -2447,7 +2446,6 @@ export type PLAYER_BY_PSD_ID_QUERY_RESULT = {
     name: string | null;
     displayName: string | null;
     slug: string | null;
-    season: string | null;
   } | null;
 } | null;
 
@@ -2643,7 +2641,7 @@ export type TEAMS_QUERY_RESULT = Array<{
 
 // Source: ../web/src/lib/repositories/team.repository.ts
 // Variable: TEAM_BY_SLUG_QUERY
-// Query: *[_type == "team" && slug.current == $slug][0] {  _id, psdId, name, displayName, "slug": slug.current, age, gender, footbelId, division, divisionFull,  season,  tagline, body[]{ ..., "fileUrl": file.asset->url }, contactInfo,  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),  trainingSchedule,  players[]-> {    _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,    "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",    "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max"  },  staff[] { role, "member": member-> { _id, psdId, archived, firstName, lastName, functionTitle, "photoUrl": photo.asset->url + "?w=200&q=80&fm=webp&fit=max", "hasBio": count(bio) > 0 } }}
+// Query: *[_type == "team" && slug.current == $slug][0] {  _id, psdId, name, displayName, "slug": slug.current, age, gender, footbelId, division, divisionFull,  tagline, body[]{ ..., "fileUrl": file.asset->url }, contactInfo,  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),  trainingSchedule,  players[]-> {    _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,    "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",    "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max"  },  staff[] { role, "member": member-> { _id, psdId, archived, firstName, lastName, functionTitle, "photoUrl": photo.asset->url + "?w=200&q=80&fm=webp&fit=max", "hasBio": count(bio) > 0 } }}
 export type TEAM_BY_SLUG_QUERY_RESULT = {
   _id: string;
   psdId: string | null;
@@ -2655,7 +2653,6 @@ export type TEAM_BY_SLUG_QUERY_RESULT = {
   footbelId: number | null;
   division: string | null;
   divisionFull: string | null;
-  season: string | null;
   tagline: string | null;
   body: Array<{
     children?: Array<{
@@ -2750,7 +2747,7 @@ export type YOUTH_TEAMS_CONTACT_QUERY_RESULT = Array<{
 
 // Source: ../web/src/lib/repositories/team.repository.ts
 // Variable: TEAMS_LANDING_QUERY
-// Query: *[_type == "team" && archived != true && showInNavigation != false && defined(age)] | order(name asc) {  _id, psdId, name, displayName, "slug": slug.current, age,  division, divisionFull, season, tagline,  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),  staff[] { role, "member": member-> { firstName, lastName, functionTitle } }}
+// Query: *[_type == "team" && archived != true && showInNavigation != false && defined(age)] | order(name asc) {  _id, psdId, name, displayName, "slug": slug.current, age,  division, divisionFull, tagline,  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),  staff[] { role, "member": member-> { firstName, lastName, functionTitle } }}
 export type TEAMS_LANDING_QUERY_RESULT = Array<{
   _id: string;
   psdId: string | null;
@@ -2760,7 +2757,6 @@ export type TEAMS_LANDING_QUERY_RESULT = Array<{
   age: string | null;
   division: string | null;
   divisionFull: string | null;
-  season: string | null;
   tagline: string | null;
   teamImageUrl: string | null;
   staff: Array<{
@@ -2799,7 +2795,7 @@ declare module "@sanity/client" {
     '*[_type == "photoGallery" && linkedMatch == $matchId && defined(slug.current)] | order(publishedAt asc) {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip\n}': GALLERIES_BY_MATCH_QUERY_RESULT;
     '*[_type == "photoGallery" && linkedEvent._ref == $eventId && defined(slug.current)] | order(publishedAt asc) {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip\n}': GALLERIES_BY_EVENT_QUERY_RESULT;
     '*[_type == "player" && archived != true] | order(lastName asc) {\n  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,\n  birthDate,\n  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",\n  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  bio\n}': PLAYERS_QUERY_RESULT;
-    '*[_type == "player" && psdId == $psdId][0] {\n  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,\n  birthDate,\n  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",\n  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  bio,\n  "currentTeam": *[_type == "team" && archived != true && references(^._id)] | order(name asc)[0] {\n    name, displayName, "slug": slug.current, season\n  }\n}': PLAYER_BY_PSD_ID_QUERY_RESULT;
+    '*[_type == "player" && psdId == $psdId][0] {\n  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,\n  birthDate,\n  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",\n  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  bio,\n  "currentTeam": *[_type == "team" && archived != true && references(^._id)] | order(name asc)[0] {\n    name, displayName, "slug": slug.current\n  }\n}': PLAYER_BY_PSD_ID_QUERY_RESULT;
     '*[_type == "player" && keeper == true && archived != true].psdId': KEEPER_PSD_IDS_QUERY_RESULT;
     '*[_type == "responsibility" && active == true] | order(title asc) {\n  "id": slug.current,\n  "role": audience,\n  question,\n  keywords,\n  summary,\n  category,\n  icon,\n  "primaryContact": primaryContact {\n    contactType,\n    teamRole,\n    teamRoleFallback,\n    "position": organigramNode->title,\n    "roleCode": organigramNode->roleCode,\n    "members": organigramNode->members[]->{\n      "id": _id,\n      "name": coalesce(firstName, "") + " " + coalesce(lastName, ""),\n      email, phone\n    },\n    "nodeId": organigramNode->_id,\n    "role": role,\n    "email": email,\n    "phone": phone,\n    "department": department\n  },\n  "steps": steps[] {\n    description,\n    link,\n    "contact": select(defined(contact) => contact {\n      contactType,\n      teamRole,\n      teamRoleFallback,\n      "position": organigramNode->title,\n      "roleCode": organigramNode->roleCode,\n      "members": organigramNode->members[]->{\n        "id": _id,\n        "name": coalesce(firstName, "") + " " + coalesce(lastName, ""),\n        email, phone\n      },\n      "nodeId": organigramNode->_id,\n      "role": role,\n      "email": email,\n      "phone": phone,\n      "department": department\n    }, null)\n  },\n  "relatedPaths": coalesce(relatedPaths[]->slug.current, [])\n}': RESPONSIBILITY_PATHS_QUERY_RESULT;
     '*[_type == "sponsor" && active == true] | order(name asc) {\n  "id": _id, "name": coalesce(name, ""), url, type, tier, "featured": coalesce(featured, false), description,\n  "logoUrl": logo.asset->url + "?w=400&q=80&fm=webp&fit=max"\n}': SPONSORS_QUERY_RESULT;
@@ -2808,8 +2804,8 @@ declare module "@sanity/client" {
     '*[_type == "staffMember" && psdId == $psdId && archived != true][0] {\n  _id, psdId, firstName, lastName, email, phone, bio,\n  "photoUrl": photo.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  "organigramPositions": *[_type == "organigramNode" && ^._id in members[]._ref && active == true] | order(title asc, _id asc) { _id, title, roleCode, department },\n  // Reverse lookup: find responsibilities where this staff member is referenced through organigramNode members.\n  // primaryContact branch: ^.^ = staffMember (parent of responsibility filter, parent of organigramNode filter).\n  // steps branch: ^.^.^ = staffMember (extra caret level because steps[] adds a scope).\n  "responsibilityPaths": *[_type == "responsibility" && active == true && defined(slug.current) && slug.current != "" && (primaryContact.organigramNode._ref in *[_type == "organigramNode" && ^.^._id in members[]._ref]._id || count(steps[defined(contact.organigramNode._ref) && contact.organigramNode._ref in *[_type == "organigramNode" && ^.^.^._id in members[]._ref]._id]) > 0)] | order(title asc, _id asc) { title, "slug": slug.current, category, icon }\n}': STAFF_MEMBER_BY_PSD_ID_QUERY_RESULT;
     '*[_type == "staffMember" && archived != true && defined(psdId) && psdId != ""] | order(lastName asc) {\n  _id, psdId\n}': STAFF_MEMBERS_PSDID_QUERY_RESULT;
     '*[_type == "team" && archived != true && showInNavigation != false] | order(name asc) {\n  _id, psdId, name, displayName, "slug": slug.current, age, gender, footbelId, division, divisionFull,\n  tagline,\n  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5))\n}': TEAMS_QUERY_RESULT;
-    '*[_type == "team" && slug.current == $slug][0] {\n  _id, psdId, name, displayName, "slug": slug.current, age, gender, footbelId, division, divisionFull,\n  season,\n  tagline, body[]{ ..., "fileUrl": file.asset->url }, contactInfo,\n  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),\n  trainingSchedule,\n  players[]-> {\n    _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,\n    "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",\n    "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max"\n  },\n  staff[] { role, "member": member-> { _id, psdId, archived, firstName, lastName, functionTitle, "photoUrl": photo.asset->url + "?w=200&q=80&fm=webp&fit=max", "hasBio": count(bio) > 0 } }\n}': TEAM_BY_SLUG_QUERY_RESULT;
+    '*[_type == "team" && slug.current == $slug][0] {\n  _id, psdId, name, displayName, "slug": slug.current, age, gender, footbelId, division, divisionFull,\n  tagline, body[]{ ..., "fileUrl": file.asset->url }, contactInfo,\n  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),\n  trainingSchedule,\n  players[]-> {\n    _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,\n    "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",\n    "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max"\n  },\n  staff[] { role, "member": member-> { _id, psdId, archived, firstName, lastName, functionTitle, "photoUrl": photo.asset->url + "?w=200&q=80&fm=webp&fit=max", "hasBio": count(bio) > 0 } }\n}': TEAM_BY_SLUG_QUERY_RESULT;
     '*[_type == "team" && archived != true && defined(age) && age match "U*"] | order(name asc) {\n  _id, name, "slug": slug.current, age,\n  staff[defined(member) && !member->archived] { role, "member": member-> { _id, firstName, lastName, email, phone } }\n}': YOUTH_TEAMS_CONTACT_QUERY_RESULT;
-    '*[_type == "team" && archived != true && showInNavigation != false && defined(age)] | order(name asc) {\n  _id, psdId, name, displayName, "slug": slug.current, age,\n  division, divisionFull, season, tagline,\n  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),\n  staff[] { role, "member": member-> { firstName, lastName, functionTitle } }\n}': TEAMS_LANDING_QUERY_RESULT;
+    '*[_type == "team" && archived != true && showInNavigation != false && defined(age)] | order(name asc) {\n  _id, psdId, name, displayName, "slug": slug.current, age,\n  division, divisionFull, tagline,\n  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),\n  staff[] { role, "member": member-> { firstName, lastName, functionTitle } }\n}': TEAMS_LANDING_QUERY_RESULT;
   }
 }

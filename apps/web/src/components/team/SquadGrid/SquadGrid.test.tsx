@@ -17,7 +17,7 @@ import { SquadGrid } from "./SquadGrid";
 function player(
   id: string,
   firstName: string,
-  position: string,
+  position: string | undefined,
   number?: number,
 ): PlayerVM {
   return {
@@ -76,5 +76,18 @@ describe("SquadGrid", () => {
   it("renders a card for every player", () => {
     render(<SquadGrid players={SQUAD} />);
     expect(screen.getAllByTestId("player-card")).toHaveLength(SQUAD.length);
+  });
+
+  it("places an unauthored (undefined) position in the trailing Spelers group too (#2567)", () => {
+    render(
+      <SquadGrid
+        players={[
+          player("1", "Jonas", "Keeper", 1),
+          player("7", "Onbekend", undefined, 21),
+        ]}
+      />,
+    );
+    const spelersSection = screen.getByRole("region", { name: "Spelers" });
+    expect(spelersSection.textContent).toContain("Onbekend");
   });
 });

@@ -78,7 +78,6 @@ export default async function TeamsPage() {
               kicker="Eerste elftal"
               category={aTeam.displayName}
               division={aTeam.divisionFull ?? aTeam.division}
-              season={aTeam.season}
               teamImageUrl={aTeam.teamImageUrl}
               href={`/ploegen/${aTeam.slug}`}
             />
@@ -90,7 +89,6 @@ export default async function TeamsPage() {
               kicker="Tweede elftal"
               category={bTeam.displayName}
               division={bTeam.divisionFull ?? bTeam.division}
-              season={bTeam.season}
               teamImageUrl={bTeam.teamImageUrl}
               href={`/ploegen/${bTeam.slug}`}
             />

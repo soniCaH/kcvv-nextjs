@@ -9,11 +9,12 @@ interface PositionGroup {
   /** Plural Dutch group heading. */
   label: string;
   /** Singular position value(s) that fall into this group. */
-  match: (position: string) => boolean;
+  match: (position: string | undefined) => boolean;
 }
 
-// Ordered front-to-back: keepers → defenders → midfielders → attackers,
-// with a trailing catch-all so no player is dropped (youth often "Speler").
+// Ordered front-to-back: keepers → defenders → midfielders → attackers, with
+// a trailing catch-all so no player is dropped — unmapped and unauthored
+// (#2567) positions both land there.
 const GROUPS: PositionGroup[] = [
   { label: "Doelmannen", match: (p) => p === "Keeper" },
   { label: "Verdedigers", match: (p) => p === "Verdediger" },

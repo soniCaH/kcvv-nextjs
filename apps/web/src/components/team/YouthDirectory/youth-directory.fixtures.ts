@@ -24,7 +24,6 @@ export function youthTeam(
     psdId: null,
     division: null,
     divisionFull: null,
-    season: "25/26",
     tagline: null,
     teamImageUrl,
     staff: null,

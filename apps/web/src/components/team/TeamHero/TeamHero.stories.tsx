@@ -19,7 +19,6 @@ const meta = {
     teamType: { control: "select", options: ["senior", "youth"] },
     division: { control: "text" },
     divisionFull: { control: "text" },
-    season: { control: "text" },
     tagline: { control: "text" },
     teamImageUrl: { control: "text" },
   },
@@ -35,7 +34,6 @@ export const ATeamWithPhoto: Story = {
     teamType: "senior",
     divisionFull: "Eerste Elftal A – 3e Nat. A",
     division: "3NA",
-    season: "25/26",
     tagline: "Sterk, gedreven, één ploeg.",
     teamImageUrl: "/player-fixtures/player-mendes-mouro.jpg",
   },
@@ -48,17 +46,15 @@ export const ATeamNoPhoto: Story = {
     teamType: "senior",
     divisionFull: "Eerste Elftal A – 3e Nat. A",
     division: "3NA",
-    season: "25/26",
     tagline: "Sterk, gedreven, één ploeg.",
   },
 };
 
-/** Youth U13 — degraded meta (youth band + season; no division), JerseyShirt fallback. */
+/** Youth U13 — degraded meta (youth band only; no division), JerseyShirt fallback. */
 export const YouthU13: Story = {
   args: {
     displayName: "U13",
     teamType: "youth",
     ageGroup: "U13",
-    season: "25/26",
   },
 };

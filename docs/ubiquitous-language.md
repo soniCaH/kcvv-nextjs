@@ -103,6 +103,18 @@ A youth season is split in two by the winter break, and **the second half is fre
 
 **Consequences:** a team can hold more than one ranking table in a single season, so a table is identified by PSD `competition_id`, never by its name or its position in the array. Phases are named `Najaar` and `Voorjaar`, and only when the fixtures prove the ordering — see #2589. PSD exposes no phase field; the association's own convention encodes it in the reeks _code_ (`G15BS` → a `2` appears in the second phase), which is not a contract and is not parsed.
 
+### Season
+
+Which football year it currently is (e.g. "25/26"). **Not a datum any document stores.** Every season label the site renders is derived client-side from a date the surface already holds, never read from a stored "current season" field:
+
+| surface                                          | derives from         |
+| ------------------------------------------------ | -------------------- |
+| `MatchHero.formatSeasonLabel(date)`              | the match's own date |
+| `groupBySeason()` (`lib/utils/season.ts`)        | each match's date    |
+| `/scheurkalender` `seasonLabel(matches[0].date)` | the first fixture    |
+
+**Removed:** `team` used to carry a `season` field (`readOnly`, "gesynchroniseerd vanuit PSD"). It never had a writer — absent from `PsdTeam`, never written by `psd-sanity-sync.ts` — so it went dark on all 26 production documents and stayed that way through an entire redesign. Deleted in #2567 along with every reader of it: a `TeamHero` meta pill, `TeamHero`'s decorative artefact-column stub, both `TeamFlagship` cards on `/ploegen`, `PlayerHero`'s ticket-stub on `/spelers/[slug]` (fed by `team.season` through the player query's `currentTeam` projection, not a player-owned field), and that GROQ projection itself. None of the five moved a pixel when the field went. If a future feature needs "what season is it right now" as a genuine input (not derived from a date already in hand), it needs a real writer — PSD's own `/seasons` endpoint is an internal id-resolver, not a display source — before the field comes back. See **The Writer Rule** in `apps/web/CLAUDE.md` for the general principle this follows.
+
 ---
 
 ## Team & Squad
@@ -127,7 +139,7 @@ A KCVV team registered with the club and (usually) with the football federation.
 - `division` / `divisionFull` — The club's own name for the team's [Reeks](#reeks): short code and long form (`3 VV A` / `3e Nationale VV A`). Measured in production 2026-08-13: set on **exactly the 3 senior docs**, null on all 16 youth. Not a team-variant label — a "U9 - Wit" style distinction lives in the team's own name.
 - `showInNavigation` — Single visibility flag: controls nav, team listings, **and** match widget inclusion
 
-**Removed fields:** `league`, `leagueId` — dead fields, never synced, never rendered.
+**Removed fields:** `league`, `leagueId` — dead fields, never synced, never rendered. `season` — never had a writer; see [Season](#season) (#2567).
 
 ### Team Display Name
 
@@ -221,17 +233,21 @@ An athlete registered with the club. Synced from PSD, editorially enriched in Sa
 A player's playing position. Determined by fallback hierarchy:
 
 1. `keeper === true` → **Keeper**
-2. `position` (editorial, manual) → one of the enum values
+2. `position` (editorial, manual) → one of the enum values, **including `Speler`**
 3. `positionPsd` (from PSD `bestPosition`) → free text
-4. Fallback → **Speler**
+4. Neither set → **absent**, not defaulted
 
-| Code                | Dutch        |
-| ------------------- | ------------ |
-| `goalkeeper`        | Keeper       |
-| `defender`          | Verdediger   |
-| `midfielder`        | Middenvelder |
-| `forward`           | Aanvaller    |
-| `player` (fallback) | Speler       |
+Code no longer fills an unset position with a generic literal — see **The Writer Rule** in `apps/web/CLAUDE.md`. `PlayerHero`'s meta row and `PlayerCard`'s label both render an unset position as absent, distinguishable from an authored one (#2567). `SquadGrid`'s trailing group is different: its `"Spelers"` heading is a **UI label for "unmapped or unauthored"**, not a rendering of the datum itself, so a player who was deliberately authored `Speler` and a player with no position at all land under the identical heading — measured 2026-08-17, that catch-all holds 184 of 231 active players (80%). The rule's "distinguishable from an authored one" guarantee holds at the field and at the two labelled surfaces above; it does not extend to this grouping heading.
+
+`Speler` itself is **not removed from the dropdown** — it stays a deliberate, authored choice (`packages/sanity-schemas/src/player.ts`'s `position` enum), distinct from an unset field. It is the honest answer for U6–U9, where no finer position exists yet (#2535): an editor picking `Speler` for a young player and an editor never opening the field are now distinguishable, which is the whole point of removing the code-level default.
+
+| Code                             | Dutch        |
+| -------------------------------- | ------------ |
+| `goalkeeper`                     | Keeper       |
+| `defender`                       | Verdediger   |
+| `midfielder`                     | Middenvelder |
+| `forward`                        | Aanvaller    |
+| `player` (editorial, e.g. U6–U9) | Speler       |
 
 ---
 

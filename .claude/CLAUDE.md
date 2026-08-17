@@ -57,6 +57,15 @@ After `git mv <nested-dir> <new-path>`:
 1. Verify `.gitignore` was not silently lost — nested dirs inherit parent's ignore rules, siblings do not. Copy from the peer studio.
 2. Check that auto-generated tooling dirs (`.sanity/runtime/`, `.turbo/`) are listed in the new `.gitignore` and already untracked (`git rm --cached -r <dir>` if needed).
 
+### A `readOnly` Field Needs a Named Writer
+
+Declaring a Sanity field `readOnly: true` with a description like "gesynchroniseerd vanuit PSD" is a claim that something writes it. Verify the claim **before** declaring the field, not after:
+
+- **A sync-owned field needs a named write site** in `apps/api/src/sync/psd-sanity-sync.ts` (or the equivalent sync module) — grep for the field name before adding it to a schema's read-only group, and confirm the upstream source (e.g. `PsdTeam`, `PsdMember`) actually carries the value.
+- **No write site exists → delete the field, don't declare it "for later."** `team.season` was invented this way during the redesign: `readOnly: true`, "gesynchroniseerd vanuit PSD", and nothing ever wrote it — it went dark on every document and survived a full redesign unnoticed (#2535/#2567).
+
+This is the **declaration-time** half of the Writer Rule. The **render-time** half (never fill a slot from a neighbour or a generic literal) lives in `apps/web/CLAUDE.md`; the concrete before/after lives in `docs/ubiquitous-language.md`.
+
 ### CLAUDE.md Is a Required Deliverable
 
 When a task changes the architecture described in CLAUDE.md (new packages, renamed paths, schema ownership), add a named "Update CLAUDE.md" step to the implementation plan before the final commit. Do not treat it as optional cleanup.

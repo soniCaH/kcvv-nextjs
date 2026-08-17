@@ -7,6 +7,7 @@
  *  - U17 minor with photo → age-graded meta row (`MinorU17WithPhoto`)
  *  - U8 minor without photo → minor + illustration combined (`MinorU8Illustration`)
  *  - Long Dutch surname stress (`LongSurname`)
+ *  - No authored/synced position → meta cell omitted, not defaulted (`NoPosition`, #2567)
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
@@ -50,7 +51,6 @@ const meta = {
     birthDate: { control: "text" },
     jerseyNumber: { control: "number" },
     teamLabel: { control: "text" },
-    season: { control: "text" },
   },
 } satisfies Meta<typeof PlayerHero>;
 
@@ -67,7 +67,6 @@ export const AdultWithPhoto: Story = {
     birthDate: "1999-03-14",
     jerseyNumber: 8,
     teamLabel: "A-Ploeg",
-    season: "26/27",
   },
 };
 
@@ -80,7 +79,6 @@ export const AdultIllustrationFallback: Story = {
     birthDate: "1996-11-02",
     jerseyNumber: 4,
     teamLabel: "A-Ploeg",
-    season: "26/27",
   },
 };
 
@@ -94,7 +92,6 @@ export const MinorU17WithPhoto: Story = {
     birthDate: "2009-09-12",
     jerseyNumber: 11,
     teamLabel: "U17",
-    season: "26/27",
   },
 };
 
@@ -107,7 +104,6 @@ export const MinorU8Illustration: Story = {
     birthDate: "2018-04-08",
     jerseyNumber: 7,
     teamLabel: "U8",
-    season: "26/27",
   },
 };
 
@@ -121,6 +117,22 @@ export const LongSurname: Story = {
     birthDate: "1998-07-22",
     jerseyNumber: 17,
     teamLabel: "A-Ploeg",
-    season: "26/27",
+  },
+};
+
+/**
+ * No authored position and no PSD-synced fallback — the majority case in
+ * production (184 of 231 active players, measured 2026-08-17). The meta row
+ * drops straight to the birthDate cell rather than defaulting to a
+ * placeholder (#2567).
+ */
+export const NoPosition: Story = {
+  args: {
+    firstName: "Ruben",
+    lastName: "Peeters",
+    photoUrl: REAL_PLAYER_PHOTOS.mendesMouro,
+    birthDate: "2001-06-10",
+    jerseyNumber: 5,
+    teamLabel: "A-Ploeg",
   },
 };

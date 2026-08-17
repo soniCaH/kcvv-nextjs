@@ -30,7 +30,7 @@ export const PLAYER_BY_PSD_ID_QUERY =
   "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",
   bio,
   "currentTeam": *[_type == "team" && archived != true && references(^._id)] | order(name asc)[0] {
-    name, displayName, "slug": slug.current, season
+    name, displayName, "slug": slug.current
   }
 }`);
 
@@ -38,7 +38,14 @@ export interface PlayerVM {
   id: string;
   firstName: string;
   lastName: string;
-  position: string;
+  /**
+   * Editorial position label. Absent when no editor has authored it and PSD's
+   * `bestPosition` is also empty (#2567) — never defaulted to a generic
+   * literal, so an unset position is distinguishable from an authored one on
+   * every consuming surface (`PlayerHero`'s meta row, `PlayerCard`'s label,
+   * `SquadGrid`'s grouping).
+   */
+  position?: string;
   number?: number;
   imageUrl?: string;
   celebrationImageUrl?: string;
@@ -51,8 +58,13 @@ export interface PlayerVM {
    * Multi-team disambiguation (PRD §7) — see `findByPsdId` GROQ.
    */
   teamLabel?: string;
-  /** Active-team season label (e.g. "26/27"). */
-  season?: string;
+  /**
+   * The most informative short label available for this player — position
+   * when authored, else the active-team label, else absent. Shared by the
+   * metadata description and the OG share card so the two surfaces in one
+   * share preview never disagree about what's known (#2567 review).
+   */
+  metaLabel?: string;
 }
 
 /** A PlayerVM that has a valid href (i.e. has a psdId) */
@@ -67,13 +79,23 @@ export function toPlayerVM(
       name?: string | null;
       displayName?: string | null;
       slug?: string | null;
-      season?: string | null;
     } | null;
   },
 ): PlayerVM {
   const position = row.keeper
     ? "Keeper"
-    : (row.position ?? row.positionPsd ?? "Speler");
+    : (row.position ?? row.positionPsd ?? undefined);
+
+  // The team's own name, resolved the same way its page resolves it — a
+  // profile that says `KCVVE  U15` beside a page headed `U15` is the drift
+  // #2630 closes.
+  const teamLabel = row.currentTeam
+    ? teamDisplayName({
+        displayName: row.currentTeam.displayName,
+        slug: row.currentTeam.slug ?? "",
+        name: row.currentTeam.name ?? "",
+      })
+    : undefined;
 
   return {
     id: row._id,
@@ -86,17 +108,8 @@ export function toPlayerVM(
     href: row.psdId ? `/spelers/${row.psdId}` : undefined,
     bio: row.bio ?? undefined,
     birthDate: row.birthDate ?? undefined,
-    // The team's own name, resolved the same way its page resolves it — a
-    // profile that says `KCVVE  U15` beside a page headed `U15` is the drift
-    // #2630 closes.
-    teamLabel: row.currentTeam
-      ? teamDisplayName({
-          displayName: row.currentTeam.displayName,
-          slug: row.currentTeam.slug ?? "",
-          name: row.currentTeam.name ?? "",
-        })
-      : undefined,
-    season: row.currentTeam?.season ?? undefined,
+    teamLabel,
+    metaLabel: position ?? teamLabel,
   };
 }
 

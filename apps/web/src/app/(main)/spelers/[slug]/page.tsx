@@ -97,14 +97,21 @@ export async function generateMetadata({
 
     const fullName =
       `${player.firstName} ${player.lastName}`.trim() || "Speler";
+    // `metaLabel` (position, else team — #2567) is the same subject the OG
+    // share card's `meta` line uses, so the two surfaces in one share
+    // preview never disagree. The bare-name rung only fires when neither is
+    // known; "bij KCVV Elewijt" still adds the club affiliation beyond the
+    // title, so it's kept rather than an empty description.
+    const subject = player.metaLabel || fullName;
+    const description = `${subject} bij KCVV Elewijt`;
 
     return {
       title: fullName,
-      description: `${player.position} bij KCVV Elewijt`,
+      description,
       alternates: { canonical: `${SITE_CONFIG.siteUrl}/spelers/${slug}` },
       openGraph: {
         title: fullName,
-        description: `${player.position} bij KCVV Elewijt`,
+        description,
         type: "profile",
         firstName: player.firstName,
         lastName: player.lastName,
@@ -198,7 +205,6 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
           birthDate={player.birthDate}
           jerseyNumber={player.number}
           teamLabel={player.teamLabel}
-          season={player.season}
         />
       </PageContainer>
       <StripedSeam colorPair="ink-cream" height="md" />

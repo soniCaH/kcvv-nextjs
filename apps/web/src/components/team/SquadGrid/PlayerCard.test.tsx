@@ -118,6 +118,11 @@ describe("PlayerCard", () => {
       );
       expect(screen.getByText("Aanvaller")).toBeInTheDocument();
     });
+
+    it("omits the position label — not a placeholder — when position is absent (#2567)", () => {
+      render(<PlayerCard firstName="Maxim" lastName="Breugelmans" />);
+      expect(screen.queryByText("Speler")).toBeNull();
+    });
   });
 
   describe("Linking", () => {
@@ -145,6 +150,13 @@ describe("PlayerCard", () => {
       );
       const card = screen.getByTestId("player-card");
       expect(card.tagName).toBe("DIV");
+    });
+
+    it("drops the position suffix from aria-label when position is absent", () => {
+      render(<PlayerCard firstName="Maxim" lastName="Breugelmans" href="/x" />);
+      expect(screen.getByTestId("player-card").getAttribute("aria-label")).toBe(
+        "Maxim Breugelmans",
+      );
     });
   });
 });

@@ -33,14 +33,22 @@
  * `nameWeight="split"` prop on `<EditorialHeading>`.
  *
  * **Multi-team disambiguation (PRD §7 Q4, AC):** this component is
- * deliberately data-flat. The hero kicker / ticket-stub `teamLabel` is
- * supplied by the page (`/spelers/[slug]/page.tsx`), which already owns
- * the active-roster selection via the `currentTeam` GROQ projection on
+ * deliberately data-flat. The hero kicker `teamLabel` is supplied by the
+ * page (`/spelers/[slug]/page.tsx`), which already owns the active-roster
+ * selection via the `currentTeam` GROQ projection on
  * `PLAYER_BY_PSD_ID_QUERY` (first non-archived team that references the
  * player, ordered alphabetically by team name). `<PlayerHero>` does not
  * consume a `playerTeams` array; the page picks the team to render.
+ *
+ * **No ticket-stub (#2567):** this hero used to compose `teamLabel` with a
+ * `season` value into a bordered ticket-stub box. `team.season` never had a
+ * writer — it was deleted from the schema — so the stub is gone outright,
+ * not reduced to `teamLabel` alone: that would duplicate the up-link
+ * breadcrumb chip #2428/#2442 puts on this same page, one navigational and
+ * one inert (#2535).
  */
 
+import { Fragment } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
 import { TapedFigure } from "@/components/design-system/TapedFigure";
@@ -53,8 +61,12 @@ const ADULT_AGE_THRESHOLD = 18;
 export interface PlayerHeroProps {
   firstName: string;
   lastName: string;
-  /** Editorial position label, sentence case (e.g. "Middenvelder"). */
-  position: string;
+  /**
+   * Editorial position label, sentence case (e.g. "Middenvelder"). Absent
+   * when no editor has authored one and PSD carries none either (#2567) —
+   * the meta row omits the cell rather than defaulting it.
+   */
+  position?: string;
   /** Resolved photo URL (typically `transparentImageUrl ?? psdImageUrl`). Missing → illustration fallback. */
   photoUrl?: string;
   /** ISO date string `YYYY-MM-DD`. Omitted → birthDate cell drops. */
@@ -62,8 +74,6 @@ export interface PlayerHeroProps {
   jerseyNumber?: number;
   /** Active-team label resolved by the page (e.g. "A-Ploeg", "U17"). */
   teamLabel?: string;
-  /** Season label (e.g. "26/27"). Combined with `teamLabel` into the ticket-stub. */
-  season?: string;
   className?: string;
 }
 
@@ -133,7 +143,6 @@ export function PlayerHero({
   birthDate,
   jerseyNumber,
   teamLabel,
-  season,
   className,
 }: PlayerHeroProps) {
   const hasPhoto = photoUrl !== undefined && photoUrl !== "";
@@ -147,11 +156,14 @@ export function PlayerHero({
       ? formatAgeGradedBirthDate(birthDate, now)
       : undefined;
 
-  const showTicketStub =
-    teamLabel !== undefined &&
-    teamLabel !== "" &&
-    season !== undefined &&
-    season !== "";
+  // Same `part · part` pattern as MatchHero's `metaParts` — a list of
+  // present cells, dot-separated. `Fragment` (not a wrapping element) keeps
+  // each cell and its separator as direct children of the flex row below, so
+  // the existing `gap-x-2` spacing renders pixel-identical to the previous
+  // fixed position/·/birthDate markup.
+  const metaParts = [position, formattedBirthDate].filter(
+    (part): part is string => part !== undefined && part !== "",
+  );
 
   return (
     <section
@@ -194,28 +206,20 @@ export function PlayerHero({
           </span>
         </h1>
 
-        <div
-          data-testid="player-hero-meta"
-          className="text-ink-muted flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs tracking-[0.1em] uppercase"
-        >
-          <span>{position}</span>
-          {formattedBirthDate !== undefined ? (
-            <>
-              <span aria-hidden="true">·</span>
-              <span>{formattedBirthDate}</span>
-            </>
-          ) : null}
-        </div>
-
-        {showTicketStub ? (
-          <span
-            data-testid="player-hero-ticket-stub"
-            className="border-ink bg-cream text-ink inline-flex w-fit items-center gap-2 border-2 px-3 py-1 font-mono text-xs tracking-[0.12em] uppercase shadow-[2px_2px_0_0_var(--color-ink)]"
+        {metaParts.length > 0 ? (
+          <div
+            data-testid="player-hero-meta"
+            className="text-ink-muted flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs tracking-[0.1em] uppercase"
           >
-            <span>{teamLabel}</span>
-            <span aria-hidden="true">·</span>
-            <span>{season}</span>
-          </span>
+            {metaParts.map((part, index) => (
+              <Fragment key={`${part}-${index}`}>
+                <span>{part}</span>
+                {index < metaParts.length - 1 ? (
+                  <span aria-hidden="true">·</span>
+                ) : null}
+              </Fragment>
+            ))}
+          </div>
         ) : null}
       </div>
 

@@ -24,7 +24,6 @@ export const TEAMS_QUERY =
 export const TEAM_BY_SLUG_QUERY =
   defineQuery(`*[_type == "team" && slug.current == $slug][0] {
   _id, psdId, name, displayName, "slug": slug.current, age, gender, footbelId, division, divisionFull,
-  season,
   tagline, body[]{ ..., "fileUrl": file.asset->url }, contactInfo,
   "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),
   trainingSchedule,
@@ -45,7 +44,7 @@ export const YOUTH_TEAMS_CONTACT_QUERY =
 export const TEAMS_LANDING_QUERY =
   defineQuery(`*[_type == "team" && archived != true && showInNavigation != false && defined(age)] | order(name asc) {
   _id, psdId, name, displayName, "slug": slug.current, age,
-  division, divisionFull, season, tagline,
+  division, divisionFull, tagline,
   "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),
   staff[] { role, "member": member-> { firstName, lastName, functionTitle } }
 }`);
@@ -131,7 +130,6 @@ export interface TeamDetailVM {
   footbelId: number | null;
   division: string | null;
   divisionFull: string | null;
-  season: string | null;
   tagline: string | undefined;
   teamType: "youth" | "senior";
   ageGroup: string | undefined;
@@ -212,7 +210,6 @@ function toTeamDetailVM(row: TEAM_BY_SLUG_DETAIL): TeamDetailVM {
     footbelId: row.footbelId,
     division: row.division,
     divisionFull: row.divisionFull,
-    season: row.season ?? null,
     // No `?? divisionFull ?? division` chain (#2630): the mono pill directly
     // above the tagline already shows the division, so the fallback made three
     // senior pages print it twice while the fifteen youth pages — where
@@ -246,7 +243,6 @@ function toTeamLandingItem(
     psdId: row.psdId,
     division: row.division,
     divisionFull: row.divisionFull,
-    season: row.season ?? null,
     tagline: row.tagline,
     teamImageUrl: row.teamImageUrl,
     staff:

@@ -50,7 +50,10 @@ export default async function Image({ params }: ImageProps) {
           : {}),
         nameTop: player.firstName,
         nameBottom: player.lastName,
-        ...(player.position ? { meta: player.position } : {}),
+        // Same subject as the metadata description (#2567 review): position
+        // when authored, else the active team, so the card and its caption
+        // never disagree about what's known.
+        ...(player.metaLabel ? { meta: player.metaLabel } : {}),
       } satisfies ShareCardProps;
     }).pipe(Effect.catchAll(() => Effect.succeed(FALLBACK))),
   );

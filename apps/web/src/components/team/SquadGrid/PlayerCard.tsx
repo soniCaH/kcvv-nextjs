@@ -7,8 +7,13 @@ import { JerseyIllustration } from "@/components/design-system/JerseyIllustratio
 export interface PlayerCardProps {
   firstName: string;
   lastName: string;
-  /** Resolved, sentence-case position label (e.g. "Middenvelder"). */
-  position: string;
+  /**
+   * Resolved, sentence-case position label (e.g. "Middenvelder"). Absent when
+   * no editor has authored one and PSD carries none either (#2567) — the
+   * label is omitted rather than defaulted, so an unfilled position is
+   * distinguishable from an authored one.
+   */
+  position?: string;
   jerseyNumber?: number;
   /** Resolved photo URL (transparentImageUrl ?? psdImageUrl). Missing → illustration. */
   photoUrl?: string;
@@ -27,6 +32,7 @@ export function PlayerCard({
   className,
 }: PlayerCardProps) {
   const hasPhoto = photoUrl !== undefined && photoUrl !== "";
+  const hasPosition = position !== undefined && position !== "";
 
   const inner = (
     <>
@@ -76,10 +82,12 @@ export function PlayerCard({
         <em className="font-normal italic">{lastName}</em>
       </p>
 
-      {/* Position */}
-      <p className="text-ink-muted mt-1 font-mono text-[9px] tracking-[0.06em] uppercase">
-        {position}
-      </p>
+      {/* Position — omitted, not defaulted, when unauthored (#2567). */}
+      {hasPosition ? (
+        <p className="text-ink-muted mt-1 font-mono text-[9px] tracking-[0.06em] uppercase">
+          {position}
+        </p>
+      ) : null}
     </>
   );
 
@@ -101,7 +109,11 @@ export function PlayerCard({
       <Link
         href={href}
         data-testid="player-card"
-        aria-label={`${firstName} ${lastName} — ${position}`}
+        aria-label={
+          hasPosition
+            ? `${firstName} ${lastName} — ${position}`
+            : `${firstName} ${lastName}`
+        }
         className="block h-full"
       >
         {card}

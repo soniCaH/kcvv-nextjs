@@ -17,7 +17,6 @@ const makeTeam = (
   psdId: overrides.psdId ?? null,
   division: overrides.division ?? null,
   divisionFull: overrides.divisionFull ?? null,
-  season: overrides.season ?? null,
   tagline: overrides.tagline ?? null,
   teamImageUrl: overrides.teamImageUrl ?? null,
   staff: overrides.staff ?? null,

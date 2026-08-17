@@ -100,6 +100,18 @@ Every page wraps its content in `<PageContainer>` (`@/components/design-system`)
 | Foundation docs   | `src/stories/foundation/`                                                     |
 | Design tokens     | `src/app/globals.css` (`@theme {}`)                                           |
 
+## The Writer Rule — rendering absence
+
+This is the **render-time** half of the Writer Rule; the **declaration-time** half (does a field have a real writer at all) lives in root `.claude/CLAUDE.md` → **A `readOnly` Field Needs a Named Writer**. Once a slot's field has cleared that bar and genuinely can be written, but hasn't been yet, render its absence honestly rather than papering over it:
+
+> **Keep a slot whose datum has a writer who simply has not written yet — auto-hide it or show an explicit empty state. Never fill a rendered page slot from a visibly adjacent neighbour's value, and never default it to a generic literal.**
+
+- **Never synthesise a rendered slot from a visibly adjacent neighbour.** A slot that falls back to an adjacent field's value on the _same rendered view_ (e.g. a tagline falling back to the division already shown in a pill two lines up) duplicates content and makes the page look broken, not merely incomplete.
+- **This does not reach metadata, OG cards, or JSON-LD.** Those aren't a second on-page rendering of a fact next to its source — they're a different surface (a search snippet, a share preview) that has no pill of its own to duplicate, so composing a fallback chain there is fine. #2630 established this for the team page (`generateMetadata` composes `tagline ?? divisionFull ?? division` even though the on-page hero never falls back); #2567 follows the same carve-out for the player page's metadata description and OG card, which additionally share one resolver (`PlayerVM.metaLabel`) so the two surfaces in a single share preview never disagree.
+- **Never default to a generic literal** (e.g. a position defaulting to `"Speler"`). An authored value and an unfilled one become indistinguishable, so nobody — content owner or code — can tell how far a content pass has actually got. Render the absence; let the consumer (a squad grouping, a card label) degrade gracefully around it. A last-resort fallback that adds genuinely new information (e.g. the player metadata description falling all the way to `"<name> bij KCVV Elewijt"`, which states the club affiliation the bare `title` doesn't) is not this failure mode — repeating the exact same string the title already carries would be.
+
+Established in #2535/#2567 against three fields across two heroes: `team.season` on `TeamHero` — deleted outright, no writer; `team.tagline` on `TeamHero` — kept, was duplicating `division` (fixed in #2630, which landed before this rule was written down); `player.position` on `PlayerHero` — kept, was defaulting to `"Speler"` (fixed in #2567, which added this rule). See `docs/ubiquitous-language.md` → **Season** and **Position** for the concrete before/after.
+
 ## Effect & Server Component Patterns
 
 - **Never wrap `runPromise` in try/catch in Server Components.** Effect errors must bubble to the Next.js error boundary. The only permitted exception is converting `HttpNotFound` to `notFound()` via `Effect.catchTag("HttpNotFound", () => Effect.sync(() => notFound()))`.

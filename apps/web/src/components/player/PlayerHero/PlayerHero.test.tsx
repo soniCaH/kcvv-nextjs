@@ -158,9 +158,27 @@ describe("PlayerHero", () => {
       expect(meta.textContent ?? "").not.toMatch(/\d{4}/);
       expect(meta.textContent ?? "").not.toContain("jaar");
     });
+
+    it("omits the position cell — not a placeholder — when position is absent (#2567)", () => {
+      render(
+        <PlayerHero
+          firstName="Maxim"
+          lastName="Breugelmans"
+          birthDate="1999-03-14"
+        />,
+      );
+      const meta = screen.getByTestId("player-hero-meta");
+      expect(meta.textContent).toContain("14·03·1999");
+      expect(meta.textContent).not.toContain("Speler");
+    });
+
+    it("hides the meta row entirely when both position and birthDate are absent", () => {
+      render(<PlayerHero firstName="Maxim" lastName="Breugelmans" />);
+      expect(screen.queryByTestId("player-hero-meta")).toBeNull();
+    });
   });
 
-  describe("Numeric + ticket-stub composition", () => {
+  describe("Numeric composition", () => {
     it("renders the jersey number when provided", () => {
       render(
         <PlayerHero
@@ -174,28 +192,19 @@ describe("PlayerHero", () => {
         "8",
       );
     });
+  });
 
-    it("renders the ticket-stub when team + season are provided", () => {
+  describe("No ticket-stub (#2567)", () => {
+    it("never renders a ticket-stub, even with a team label", () => {
+      // `team.season` was deleted (never had a writer); the stub isn't
+      // reduced to `teamLabel` alone — that would duplicate the up-link
+      // breadcrumb chip on this same page (#2535).
       render(
         <PlayerHero
           firstName="Maxim"
           lastName="Breugelmans"
           position="Middenvelder"
           teamLabel="A-Ploeg"
-          season="26/27"
-        />,
-      );
-      const stub = screen.getByTestId("player-hero-ticket-stub");
-      expect(stub.textContent).toContain("A-Ploeg");
-      expect(stub.textContent).toContain("26/27");
-    });
-
-    it("omits the ticket-stub when both team and season are missing", () => {
-      render(
-        <PlayerHero
-          firstName="Maxim"
-          lastName="Breugelmans"
-          position="Middenvelder"
         />,
       );
       expect(screen.queryByTestId("player-hero-ticket-stub")).toBeNull();

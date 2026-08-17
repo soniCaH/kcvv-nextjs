@@ -108,14 +108,6 @@ export const team = defineType({
       readOnly: true,
     }),
     defineField({
-      name: 'season',
-      title: 'Season',
-      type: 'string',
-      group: 'identiteit',
-      description: 'Seizoen, gesynchroniseerd vanuit PSD. Alleen-lezen.',
-      readOnly: true,
-    }),
-    defineField({
       name: 'players',
       title: 'Players',
       type: 'array',
