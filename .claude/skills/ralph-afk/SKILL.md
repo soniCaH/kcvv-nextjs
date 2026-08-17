@@ -157,7 +157,11 @@ gh pr ready <pr-url>
 gh issue edit <N> --remove-label "in-progress" --add-label "ready-for-review"
 ```
 
-`gh pr ready` is what releases the branch to CodeRabbit — draft PRs are not auto-reviewed, which is the whole reason agents open them as drafts. Leave a PR in draft and say so if its findings are unresolved.
+`gh pr ready` says the branch has been reviewed. Leave a PR in draft and say so if its findings are unresolved.
+
+**CodeRabbitAI is not a gate in a wave, and you must not plan around it.** The account gets one free review an hour, a wave opens four PRs at once, and the user does not wait out the reset — so at most one branch gets a second opinion and three get none. Your review here is the only automated read that reaches every branch. A finding you skip is a finding that ships. Weigh that when you decide how hard to look and what to wave through as out of scope.
+
+You do control which branch spends that one review: whichever PR you mark ready first wins the race. Order them riskiest-first — the biggest diff, the one touching shared code, the one whose findings you were least sure about.
 
 ### 6. Check the merge order before the user merges anything
 

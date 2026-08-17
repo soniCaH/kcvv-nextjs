@@ -119,7 +119,7 @@ Prefer several small commits over one large one. Never use --no-verify. Never se
   - <any manual verification>" \
     --label "ready-for-review"
 
-`--draft` is required. CodeRabbitAI does not auto-review a draft, which is what keeps its quota for the reviewed version of your branch rather than the first one.
+`--draft` is required. Your branch has not been reviewed when you open it, and draft is what says so. The orchestrator marks it ready once you have applied its findings. Do not count on CodeRabbitAI reading your PR at all — see the orchestrator's step 5.
 
 Use `Closes #<N>` only if this PR fully resolves the issue. If it is one part of a larger issue, use `Part of #<N>` instead — a stray "Closes" auto-closes work that is not done.
 
