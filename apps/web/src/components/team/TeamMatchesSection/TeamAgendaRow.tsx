@@ -13,12 +13,17 @@
  * between rows reads as a broken table (#2397).
  *
  * A third state — `match.isPlaceholder` (#2606) — replaces both layouts' body
- * with one crest, the competition label in the caption's mono-uppercase
- * register, and the real kickoff time. It sheds the second crest, the
- * opponent name, the home/away icon, the score slot, and the row's own
- * `<Link>`: a self-match (`homeClubId === awayClubId`) is a pitch-reservation
- * the club holds before an opponent or programme is known, not a match to
- * navigate to.
+ * with one crest, a subject line in the caption's mono-uppercase register
+ * (the competition label by default, `kind`/`captionLabel`/an exceptional
+ * status layered on via the same `buildCaption` the normal row uses), and
+ * the real kickoff time (or `upcomingLabel`, honoured the same as ever). It
+ * sheds the second crest, the opponent name, the home/away icon, the score
+ * slot, and the row's own `<Link>` — but not `onNavigate`, which still fires
+ * on click for a host surface's analytics: a self-match
+ * (`homeClubId === awayClubId`) is a pitch-reservation the club holds before
+ * an opponent or programme is known, not a match to navigate to, but this
+ * row is shared by the homepage and `/tegenstander` too and neither of those
+ * surfaces should silently lose their props (#2632 review).
  *
  * Design lock: docs/design/mockups/phase-6-team/detail-ia-locked.md §3
  */
@@ -282,78 +287,6 @@ export function TeamAgendaRow({
     </div>
   ) : null;
 
-  if (isPlaceholder) {
-    // Real per #2606's census (09:30–19:00 across all 17 rows) — "hele dag"
-    // would be wrong, so the row keeps the actual kickoff.
-    const kickoff = formatKickoff(match);
-    // The competition label IS the placeholder's subject ("Tornooi" /
-    // "Vriendschappelijk"), rendered in the row's existing mono-uppercase
-    // caption register rather than as bold body text — this is the one
-    // deliberate departure from the prototype. It also sidesteps PSD sending
-    // one competition name lowercase: the caption's CSS uppercase transform
-    // handles it, so the string is never re-cased here. `||`, not `??`: an
-    // empty-string competition has to fall back too.
-    const subject = match.competition || "Gereserveerd";
-    // No reason line — "Tegenstander nog niet bekend" was prototyped and
-    // cut. The accessible name states only what the row itself states: the
-    // subject, the date, the time — never why the opponent is missing.
-    const placeholderLabel = `${subject}, ${day} ${month} om ${kickoff}`;
-    const subjectClass = cn(
-      "min-w-0 flex-1 font-mono text-[9px] font-semibold tracking-wider uppercase",
-      monoClass,
-    );
-
-    return (
-      <article
-        data-testid="team-agenda-row"
-        data-featured={featured}
-        data-placeholder="true"
-        aria-label={placeholderLabel}
-        className={cardBase}
-      >
-        {dateStub}
-
-        {/* Desktop layout (sm+) */}
-        <div
-          data-layout="desktop"
-          className="hidden w-full items-center gap-2 px-3 py-2 sm:flex"
-        >
-          <Crest name={match.homeTeam.name} logo={match.homeTeam.logo} />
-          <span className={subjectClass}>{subject}</span>
-          <span
-            className={cn(
-              "font-display-big shrink-0 text-[18px] leading-none tabular-nums",
-              featured ? "text-white" : "text-ink",
-            )}
-            style={{ padding: "0 8px" }}
-          >
-            {kickoff}
-          </span>
-        </div>
-
-        {/* Mobile layout — its own branch, not a fallthrough: deriving an
-            "opponent" from `isHome` (as the normal mobile layout does)
-            resolves to KCVV for a self-match. */}
-        <div
-          data-layout="mobile"
-          className="flex w-full items-center gap-2 px-3 py-2 sm:hidden"
-        >
-          <Crest name={match.homeTeam.name} logo={match.homeTeam.logo} />
-          <span className={subjectClass}>{subject}</span>
-          <span
-            className={cn(
-              "font-display-big shrink-0 text-[16px] leading-none tabular-nums",
-              featured ? "text-white" : "text-ink",
-            )}
-            style={{ padding: "0 6px" }}
-          >
-            {kickoff}
-          </span>
-        </div>
-      </article>
-    );
-  }
-
   const outcome = computeOutcome(match, isHome);
   const isPlayed = isPlayedMatch(match.status);
 
@@ -376,7 +309,10 @@ export function TeamAgendaRow({
       : kickoff;
 
   // Scorelines and kickoff times use the big display face; the "Gepland" label
-  // drops to the mono caption register (cf. the mockup `.score.sched`).
+  // drops to the mono caption register (cf. the mockup `.score.sched`). Also
+  // the placeholder branch's time slot below — a placeholder row's kickoff
+  // deserves the exact same treatment as an ordinary row's, never a bespoke
+  // third one.
   const scoreToneClass = showUpcomingLabel
     ? monoClass
     : featured
@@ -389,7 +325,10 @@ export function TeamAgendaRow({
   // as a bare scoreline, an `afgelast` match as a kickoff to turn up for. The
   // wording comes from `<MatchStatusBadge>`'s table so "Forfait" is spelled the
   // same here as on the match hero; only the chrome differs, because the badge's
-  // bordered block would not survive this 9px caption line (#2423).
+  // bordered block would not survive this 9px caption line (#2423). Applies to
+  // a placeholder row too: the club can call off a reserved slot the same way
+  // it cancels a real fixture, and a bare "9 MEI · TORNOOI · 09:30" would tell
+  // a parent to turn up for something that is off.
   const statusWording = isExceptionalMatchStatus(match.status)
     ? matchStatusWording(match.status)
     : null;
@@ -414,40 +353,21 @@ export function TeamAgendaRow({
   // "4 – 0" beside "K Lyra-Lierse" and a bus glyph, and reading KCVV's 0 out of
   // it means knowing the score is home–away *and* decoding the glyph first.
   // That is where the word does real work, so it is not gated there.
+  //
+  // The placeholder branch below reuses `mobileKindWord` for BOTH its layouts:
+  // neither one prints two clubs either side of a score, so desktop's "stay
+  // quiet unless asked" reasoning never applied to it in the first place.
   const desktopKindWord = kind ? (outcomeWord ?? slotWord) : null;
   const mobileKindWord = outcomeWord ?? slotWord;
 
-  // The `aria-label` replaces the row's contents as its accessible name, so
-  // anything not spelled out here is unreachable by a screen reader tabbing the
-  // links — and until #2404 that included the scoreline itself. Stated
-  // side-by-side with each name, the way `<MatchStripView>`'s ledger rows do it,
-  // since "3 – 1" alone does not say whose goals are whose.
-  const scoreboardLabel = hasScoreline
-    ? `${match.homeTeam.name} ${match.homeScore} – ${match.awayTeam.name} ${match.awayScore}`
-    : `${match.homeTeam.name} – ${match.awayTeam.name}`;
-  const matchLabel = [
-    // The more informative of the two — an accessible name has no layout to
-    // restate, so the desktop scoreboard's argument for staying quiet does not
-    // apply to it.
-    mobileKindWord ? `${mobileKindWord}: ` : "",
-    scoreboardLabel,
-    `, ${day} ${month}`,
-    // `scheduled`, not merely `!isPlayed`: a postponed or cancelled match is
-    // also not played, and announcing its kickoff would tell a screen-reader
-    // user to turn up for a match that is off — the same failure the visible
-    // `statusWording` marker exists to prevent (#2423). A `upcomingLabel`
-    // surface ("Gepland") has deliberately dropped the precise time.
-    match.status === "scheduled" && !showUpcomingLabel ? ` om ${kickoff}` : "",
-    // And the status itself has to reach the name, not just the caption: the
-    // label replaces the row's contents, so a forfeit otherwise announces as a
-    // plain win. Long form here — there is no width to save in a string.
-    statusWording ? ` — ${statusWording.longForm}` : "",
-  ].join("");
-
   // Caption (P2): the optional kind word, an optional status marker, then an
   // optional jersey-deep squad label (e.g. "A-Ploeg"), then the competition.
-  // Built twice — the two layouts differ only in whether the kind word leads
-  // it; everything after is shared.
+  // Built twice for the normal row — the two layouts differ only in whether
+  // the kind word leads it; everything after is shared. The placeholder
+  // branch below calls it a third time, with `mobileKindWord` on both its
+  // layouts, so `kind`/`captionLabel` stay honoured on every surface this
+  // shared row renders on (#2632 review finding 1) instead of only the
+  // team-page default where neither prop is ever passed.
   //
   // Built as a list and interleaved once rather than as a ladder of `a && (b ||
   // c || d) ? " · "` separators — each of those has to name every later segment,
@@ -500,6 +420,139 @@ export function TeamAgendaRow({
       </>
     ) : null;
   };
+
+  if (isPlaceholder) {
+    // The upcoming-label override ("Gepland" on `/tegenstander`) applies here
+    // too; otherwise the real kickoff — per #2606's census (09:30–19:00 across
+    // all 17 rows) "hele dag" would be wrong.
+    const placeholderTime = showUpcomingLabel ? upcomingLabel : kickoff;
+
+    // The competition label is the placeholder's default subject ("Tornooi" /
+    // "Vriendschappelijk"), rendered in the row's existing mono-uppercase
+    // caption register rather than as bold body text — the one deliberate
+    // departure from the prototype. It also sidesteps PSD sending one
+    // competition name lowercase: the caption's CSS uppercase transform
+    // handles it, so the string is never re-cased here. `buildCaption` layers
+    // the exceptional-status marker, `kind` and `captionLabel` on top of it —
+    // the SAME combinator the normal rows use — so the team page (which
+    // passes neither) still renders a bare subject while the homepage and
+    // `/tegenstander` stay correct. `||`, not `??`: an empty-string
+    // competition has to fall back too.
+    const subject = match.competition || "Gereserveerd";
+    const placeholderCaption = buildCaption(mobileKindWord);
+    const subjectContent = placeholderCaption ?? subject;
+
+    // No reason line — "Tegenstander nog niet bekend" was prototyped and cut.
+    // The accessible name states only what the row itself states: the
+    // subject, the date, the time — never why the opponent is missing. Mirrors
+    // `matchLabel` below (minus the team-vs-team recitation, there being no
+    // opponent to name), including dropping "om <kickoff>" for a non-scheduled
+    // status so a cancelled reservation never tells a screen-reader user to
+    // turn up (#2423).
+    const placeholderLabel = [
+      mobileKindWord ? `${mobileKindWord}: ` : "",
+      subject,
+      `, ${day} ${month}`,
+      match.status === "scheduled" && !showUpcomingLabel
+        ? ` om ${kickoff}`
+        : "",
+      statusWording ? ` — ${statusWording.longForm}` : "",
+    ].join("");
+
+    const subjectClass = cn(
+      "min-w-0 flex-1 truncate font-mono text-[9px] font-semibold tracking-wider uppercase",
+      monoClass,
+    );
+    const timeClassBase = cn(
+      "shrink-0 leading-none",
+      showUpcomingLabel
+        ? "font-mono text-[11px] font-semibold tracking-wider uppercase"
+        : "font-display-big tabular-nums",
+      scoreToneClass,
+    );
+    const timeStyle = outlineShadow ? { boxShadow: outlineShadow } : undefined;
+
+    return (
+      <article
+        data-testid="team-agenda-row"
+        data-featured={featured}
+        data-placeholder="true"
+        aria-label={placeholderLabel}
+        className={cardBase}
+        onClick={onNavigate}
+      >
+        {dateStub}
+
+        {/* Desktop layout (sm+) — mirrors the normal row's [flex-1][shrink-0]
+            [flex-1] triple (an empty trailing spacer stands in for the away
+            side) so the time column stays in the SAME centred slot an
+            ordinary row uses, instead of drifting to the trailing edge
+            (#2397, #2632 review finding 2). */}
+        <div
+          data-layout="desktop"
+          className="hidden w-full items-center gap-2 px-3 py-2 sm:flex"
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <Crest name={match.homeTeam.name} logo={match.homeTeam.logo} />
+            <span className={subjectClass}>{subjectContent}</span>
+          </div>
+          <span
+            className={cn(timeClassBase, "text-[18px]")}
+            style={{ ...timeStyle, padding: "0 8px" }}
+          >
+            {placeholderTime}
+          </span>
+          <div className="min-w-0 flex-1" aria-hidden="true" />
+        </div>
+
+        {/* Mobile layout — its own branch, not a fallthrough: deriving an
+            "opponent" from `isHome` (as the normal mobile layout does)
+            resolves to KCVV for a self-match. Trailing-right time slot, same
+            as an ordinary mobile row — there is no second flanking side to
+            centre it against here. */}
+        <div
+          data-layout="mobile"
+          className="flex w-full items-center gap-2 px-3 py-2 sm:hidden"
+        >
+          <Crest name={match.homeTeam.name} logo={match.homeTeam.logo} />
+          <span className={subjectClass}>{subjectContent}</span>
+          <span
+            className={cn(timeClassBase, "text-[16px]")}
+            style={{ ...timeStyle, padding: "0 6px" }}
+          >
+            {placeholderTime}
+          </span>
+        </div>
+      </article>
+    );
+  }
+
+  // The `aria-label` replaces the row's contents as its accessible name, so
+  // anything not spelled out here is unreachable by a screen reader tabbing the
+  // links — and until #2404 that included the scoreline itself. Stated
+  // side-by-side with each name, the way `<MatchStripView>`'s ledger rows do it,
+  // since "3 – 1" alone does not say whose goals are whose.
+  const scoreboardLabel = hasScoreline
+    ? `${match.homeTeam.name} ${match.homeScore} – ${match.awayTeam.name} ${match.awayScore}`
+    : `${match.homeTeam.name} – ${match.awayTeam.name}`;
+  const matchLabel = [
+    // The more informative of the two — an accessible name has no layout to
+    // restate, so the desktop scoreboard's argument for staying quiet does not
+    // apply to it.
+    mobileKindWord ? `${mobileKindWord}: ` : "",
+    scoreboardLabel,
+    `, ${day} ${month}`,
+    // `scheduled`, not merely `!isPlayed`: a postponed or cancelled match is
+    // also not played, and announcing its kickoff would tell a screen-reader
+    // user to turn up for a match that is off — the same failure the visible
+    // `statusWording` marker exists to prevent (#2423). A `upcomingLabel`
+    // surface ("Gepland") has deliberately dropped the precise time.
+    match.status === "scheduled" && !showUpcomingLabel ? ` om ${kickoff}` : "",
+    // And the status itself has to reach the name, not just the caption: the
+    // label replaces the row's contents, so a forfeit otherwise announces as a
+    // plain win. Long form here — there is no width to save in a string.
+    statusWording ? ` — ${statusWording.longForm}` : "",
+  ].join("");
 
   const desktopCaption = buildCaption(desktopKindWord);
   const mobileCaption = buildCaption(mobileKindWord);

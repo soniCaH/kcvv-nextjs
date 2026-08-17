@@ -739,13 +739,22 @@ describe("TeamAgendaRow", () => {
       );
     });
 
-    it("is not a link — no <Link> wrapper, no navigate handler", async () => {
+    it("is not a link — no <Link> wrapper and no navigation on click", async () => {
+      const user = userEvent.setup();
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      expect(screen.queryByRole("link")).toBeNull();
+      const row = screen.getByTestId("team-agenda-row");
+      await user.click(row);
+      // No href anywhere on the row — nothing for a click to navigate to.
+      expect(row.closest("a")).toBeNull();
+    });
+
+    it("still fires onNavigate on click — the homepage's click analytics must not go silent (#2632 review finding 1)", async () => {
       const user = userEvent.setup();
       const onNavigate = vi.fn();
       render(<TeamAgendaRow match={PLACEHOLDER} onNavigate={onNavigate} />);
-      expect(screen.queryByRole("link")).toBeNull();
       await user.click(screen.getByTestId("team-agenda-row"));
-      expect(onNavigate).not.toHaveBeenCalled();
+      expect(onNavigate).toHaveBeenCalledTimes(1);
     });
 
     it("gives the row its own accessible label naming the subject, not both teams", () => {
@@ -771,6 +780,119 @@ describe("TeamAgendaRow", () => {
       expect(screen.getByTestId("team-agenda-row").textContent).toContain(
         "Gereserveerd",
       );
+    });
+
+    /**
+     * #2632 review finding 1 — the branch must not silently drop props other
+     * host surfaces rely on. `<TeamAgendaRow>` is shared by the homepage
+     * (`kind`, `onNavigate`) and `/tegenstander` (`captionLabel`,
+     * `upcomingLabel`), neither of which is in #2632's build scope, but both
+     * of which render this same component today.
+     */
+    describe("Honours host-surface props on a placeholder row (#2632 review finding 1)", () => {
+      it("prefixes the homepage's kind word onto the subject", () => {
+        render(<TeamAgendaRow match={PLACEHOLDER} kind="fixture" />);
+        expect(screen.getByTestId("team-agenda-row").textContent).toContain(
+          "Volgende",
+        );
+      });
+
+      it("prints the opponent-history page's squad captionLabel", () => {
+        render(<TeamAgendaRow match={PLACEHOLDER} captionLabel="A-Ploeg" />);
+        const row = screen.getByTestId("team-agenda-row");
+        expect(row.textContent).toContain("A-Ploeg");
+        expect(row.textContent).toContain("Tornooi");
+      });
+
+      it("shows upcomingLabel instead of the precise kickoff", () => {
+        render(<TeamAgendaRow match={PLACEHOLDER} upcomingLabel="Gepland" />);
+        const row = screen.getByTestId("team-agenda-row");
+        expect(row.textContent).toContain("Gepland");
+        expect(row.textContent).not.toContain("09:30");
+      });
+    });
+
+    /**
+     * #2632 review finding 2 — the kickoff must stay in the SAME centred
+     * slot an ordinary desktop row uses (#2397), not drift to the trailing
+     * edge. Asserted structurally: a trailing `flex-1` spacer balances the
+     * leading crest+subject `flex-1`, mirroring the normal row's
+     * [home][score][away] triple. jsdom has no layout; VR carries the pixels.
+     */
+    describe("Centred kickoff on desktop (#2632 review finding 2)", () => {
+      it("balances the leading side with a trailing flex-1 spacer", () => {
+        const { container } = render(<TeamAgendaRow match={PLACEHOLDER} />);
+        const desktop = desktopLayout(container);
+        // The leading crest+subject wrapper and the trailing spacer are both
+        // direct flex-1 children of the desktop layout row, flanking the
+        // shrink-0 time span the same way a normal row's home/away sides do.
+        const flexOneChildren = Array.from(desktop?.children ?? []).filter(
+          (el) => el.className.split(/\s+/).includes("flex-1"),
+        );
+        expect(flexOneChildren.length).toBe(2);
+      });
+    });
+
+    /**
+     * #2632 review finding 3 — an exceptional status must reach a placeholder
+     * row exactly as it reaches a normal one: the FF/AFG/CANC/STOP marker
+     * renders, and the accessible label drops "om <kickoff>" so a
+     * screen-reader user is never told to turn up for something that is off.
+     */
+    describe("Exceptional status on a placeholder row (#2632 review finding 3)", () => {
+      it.each([
+        ["postponed", "PP", "Uitgesteld"],
+        ["cancelled", "CANC", "Geannuleerd"],
+        ["forfeited", "FF", "Forfait"],
+        ["stopped", "STOP", "Gestopt"],
+      ] as const)(
+        "marks a %s placeholder with the <MatchStatusBadge> short form",
+        (status, abbreviation, _longForm) => {
+          render(<TeamAgendaRow match={{ ...PLACEHOLDER, status }} />);
+          const markers = screen.getAllByText(abbreviation);
+          expect(markers.length).toBeGreaterThan(0);
+        },
+      );
+
+      it("drops 'om <kickoff>' from the accessible label for a cancelled placeholder", () => {
+        render(
+          <TeamAgendaRow match={{ ...PLACEHOLDER, status: "cancelled" }} />,
+        );
+        const label = screen
+          .getByTestId("team-agenda-row")
+          .getAttribute("aria-label");
+        expect(label).not.toContain("om 09:30");
+        expect(label).toContain("Geannuleerd");
+      });
+
+      it("keeps 'om <kickoff>' in the accessible label for a scheduled placeholder", () => {
+        render(<TeamAgendaRow match={PLACEHOLDER} />);
+        expect(
+          screen.getByTestId("team-agenda-row").getAttribute("aria-label"),
+        ).toContain("om 09:30");
+      });
+    });
+
+    /**
+     * #2632 review finding 4 — a long competition label must ellipsis, not
+     * wrap onto a second line and grow the row taller than its neighbours.
+     */
+    it("truncates a long subject instead of wrapping (#2632 review finding 4)", () => {
+      const { container } = render(
+        <TeamAgendaRow
+          match={{
+            ...PLACEHOLDER,
+            competition: "Beker van Vlaams-Brabant",
+          }}
+        />,
+      );
+      const subjects = container.querySelectorAll(
+        '[data-layout] span[class*="truncate"]',
+      );
+      expect(subjects.length).toBeGreaterThan(0);
+      subjects.forEach((el) => {
+        expect(el.textContent).toBe("Beker van Vlaams-Brabant");
+      });
     });
   });
 });
