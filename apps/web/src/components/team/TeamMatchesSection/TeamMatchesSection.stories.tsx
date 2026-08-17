@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamMatchesSection } from "./TeamMatchesSection";
 import type { ScheduleMatch } from "@/components/match/types";
+import { VR_FROZEN_NOW_ISO } from "../../../../test/vr/frozen-clock";
 
 const KCVV = { id: 1235, name: "KCVV Elewijt" };
 const OPP_A = { id: 42, name: "KSV Schoonbeek-Beverst A" };
@@ -8,19 +9,14 @@ const OPP_B = { id: 43, name: "FC Mollem" };
 const OPP_C = { id: 44, name: "SK Relegem" };
 const OPP_D = { id: 45, name: "Racing Gent B" };
 
-// Anchored to the VR harness's FROZEN clock, not a real calendar date.
-// `apps/web/.storybook/test-runner.ts` stubs `Date`/`Date.now()` to a fixed
-// 2026-01-15T12:00:00.000Z for every story (`determinismInitScript`) so
-// baselines never churn with the real calendar — but that also means
-// `<TeamMatchesSection>`'s own `new Date()` (`findNextMatch`/
-// `recentResults`) sees THAT frozen instant during a VR capture, never the
-// real "today". A previous anchor picked relative to a real calendar date
-// (2026-09-15, then re-anchored to whatever day it was reviewed on) drifted
-// arbitrarily far from the frozen clock and silently dropped every "recent
-// result" row from the baseline without failing anything (#2632 review
-// finding 5). Anchoring here instead — permanently correct, never stale,
-// because the frozen instant never moves.
-const STORY_ANCHOR = "2026-01-15T12:00:00.000Z";
+// Anchored to the VR harness's FROZEN clock (`test-runner.ts`), not a real
+// calendar date — <TeamMatchesSection> filters past/future against that
+// frozen instant during a VR capture, never the real "today". Imported
+// rather than hand-copied so the two can never drift apart again: an anchor
+// picked relative to a real calendar date instead silently drops every
+// "recent result" row from the baseline without failing anything, as soon
+// as real time carries the anchor past the frozen clock.
+const STORY_ANCHOR = VR_FROZEN_NOW_ISO;
 
 function m(
   id: number,
