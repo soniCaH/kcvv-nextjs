@@ -83,6 +83,13 @@ const BaseMatchFields = {
    * the same `competitionType` without being a placeholder. Computed by the
    * BFF from `homeClubId === awayClubId`, guarded so both ids being absent
    * does not read as a placeholder.
+   *
+   * Accepted false positive: a genuine internal fixture (KCVV A vs KCVV B)
+   * also satisfies `homeClubId === awayClubId` and would render as a
+   * placeholder too. The AC mandates the rule be computed from club-id
+   * equality alone, forbidding any exception for whose tournament it is,
+   * and #2606's census found no such row in production — so this is
+   * accepted, not a bug to design around.
    */
   is_placeholder: S.optional(S.Boolean),
 };

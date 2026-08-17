@@ -190,6 +190,23 @@ describe("transformFootbalistoMatchDetail — strict date validation", () => {
     } as never);
     expect(detail.id).toBe(200);
     expect(detail.status).toBe("finished");
+    expect(detail.is_placeholder).toBeUndefined();
+  });
+
+  it("marks a self-match as a placeholder — the detail endpoint needs no team context, unlike is_home", () => {
+    const detail = transformFootbalistoMatchDetail({
+      general: {
+        id: 202,
+        date: "2026-03-15 15:00",
+        homeClub: club,
+        awayClub: club,
+        goalsHomeTeam: null,
+        goalsAwayTeam: null,
+        status: 0,
+        viewGameReport: false,
+      },
+    } as never);
+    expect(detail.is_placeholder).toBe(true);
   });
 
   it("throws on rolled-over date (Apr 31 → May 1)", () => {
@@ -291,25 +308,19 @@ describe("transformPsdGame — ownClubId fallback for is_home", () => {
 });
 
 describe("isSelfMatch (#2606)", () => {
-  it("returns true when both club ids are equal", () => {
-    expect(isSelfMatch(1235, 1235)).toBe(true);
-  });
-
-  it("returns false when the club ids differ", () => {
-    expect(isSelfMatch(1235, 456)).toBe(false);
-  });
-
-  it("guards against both ids being null — that must not read as a self-match", () => {
-    expect(isSelfMatch(null, null)).toBe(false);
-  });
-
-  it("guards against both ids being undefined — that must not read as a self-match", () => {
-    expect(isSelfMatch(undefined, undefined)).toBe(false);
-  });
-
-  it("returns false when only one id is present", () => {
-    expect(isSelfMatch(null, 1235)).toBe(false);
-    expect(isSelfMatch(1235, undefined)).toBe(false);
+  // The AC mandates the derivation be "guarded so that both ids being null
+  // or undefined does not read as a self-match" — kept even though
+  // `PsdGame`'s club ids are non-nullable at the type level, since the guard
+  // is the acceptance criterion, not a workaround for a type gap.
+  it.each([
+    [1235, 1235, true, "equal ids"],
+    [1235, 456, false, "different ids"],
+    [null, null, false, "both null"],
+    [undefined, undefined, false, "both undefined"],
+    [null, 1235, false, "only the away id present"],
+    [1235, undefined, false, "only the home id present"],
+  ] as const)("(%s, %s) → %s — %s", (home, away, expected, _label) => {
+    expect(isSelfMatch(home, away)).toBe(expected);
   });
 });
 
@@ -322,12 +333,12 @@ describe("transformPsdGame — is_placeholder (#2606)", () => {
     expect(transformPsdGame(game).is_placeholder).toBe(true);
   });
 
-  it("leaves a normal fixture unmarked", () => {
+  it("leaves is_placeholder undefined (not false) for a normal fixture, so the sparse JSON drops the key", () => {
     const game = makePsdGame({
       homeClub: { id: 1235, name: "KCVV Elewijt" },
       awayClub: { id: 456, name: "FC Other" },
     });
-    expect(transformPsdGame(game).is_placeholder).toBe(false);
+    expect(transformPsdGame(game).is_placeholder).toBeUndefined();
   });
 });
 

@@ -45,11 +45,9 @@ export interface ScheduleMatch {
   /** Whether the tracked team is playing at home. Provided by BFF via Match.is_home. */
   isHome?: boolean;
   /**
-   * Whether this fixture is a pitch-reservation placeholder — both sides are
-   * the same club (#2606). Provided by BFF via `Match.is_placeholder`. Not
-   * derivable from `competition`: the club uses the same device for external
-   * tournaments too, so a tournament label alone never tells the two cases
-   * apart.
+   * Whether this fixture is a pitch-reservation placeholder. Provided by BFF
+   * via `Match.is_placeholder` — see its doc in
+   * `packages/api-contract/src/schemas/match.ts` for full semantics.
    */
   isPlaceholder?: boolean;
 }
