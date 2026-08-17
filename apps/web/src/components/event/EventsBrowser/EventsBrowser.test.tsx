@@ -58,6 +58,33 @@ describe("<EventsBrowser>", () => {
     ).toBeInTheDocument();
   });
 
+  it("offers the undo when a facet is selected against a genuinely empty feed", async () => {
+    // Off-season /evenementen: the feed is empty, but the filter row still
+    // renders (rule 5) and is interactive. Selecting a chip must still name
+    // the facet and offer the undo — the old branch, keyed on `events.length`
+    // rather than the active facet, rendered the genuine-empty copy with no
+    // action here (#2562 review).
+    render(<EventsBrowser events={[]} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Clubevent" }));
+
+    expect(
+      screen.getByRole("heading", {
+        name: /geen evenementen in de categorie clubevent/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Toon alles" }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Toon alles" }));
+
+    expect(
+      screen.getByRole("heading", { name: /nog geen evenementen gepland/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Toon alles" })).toBeNull();
+  });
+
   it("renders the filter row and every event by default", () => {
     render(<EventsBrowser events={EVENTS} />);
 

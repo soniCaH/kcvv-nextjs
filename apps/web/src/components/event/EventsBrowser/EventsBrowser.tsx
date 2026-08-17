@@ -54,14 +54,20 @@ export function EventsBrowser({
     trackEvent("event_filter", { event_type: value });
   };
 
-  const isGenuinelyEmpty = events.length === 0;
-  const filtered = isGenuinelyEmpty
-    ? []
-    : selected === "all"
-      ? events
-      : events.filter(
-          (event) => (event.eventType ?? DEFAULT_EVENT_TYPE) === selected,
-        );
+  // Keyed on whether a facet is ACTIVE, not on whether the feed is empty —
+  // a visitor can select a chip against a genuinely empty feed (an off-season
+  // /evenementen with zero events), and the undo must still appear: the
+  // selection is theirs to reverse regardless of what "all" would also show
+  // (#2562 review).
+  const isFilterActive = selected !== "all";
+  const filtered =
+    events.length === 0
+      ? []
+      : isFilterActive
+        ? events.filter(
+            (event) => (event.eventType ?? DEFAULT_EVENT_TYPE) === selected,
+          )
+        : events;
 
   return (
     <div className="flex flex-col gap-8">
@@ -71,26 +77,26 @@ export function EventsBrowser({
         <EmptyState
           tier="surface"
           heading={
-            isGenuinelyEmpty
-              ? "Nog geen evenementen gepland"
-              : `Geen evenementen in de categorie ${selected}`
+            isFilterActive
+              ? `Geen evenementen in de categorie ${selected}`
+              : "Nog geen evenementen gepland"
           }
           live
           actions={
-            isGenuinelyEmpty
-              ? undefined
-              : [
+            isFilterActive
+              ? [
                   {
                     label: "Toon alles",
                     onClick: () => handleSelect("all"),
                     variant: "ghost",
                   },
                 ]
+              : undefined
           }
         >
-          {isGenuinelyEmpty
-            ? "Kom snel terug voor het volgende evenement."
-            : "Probeer een andere categorie, of bekijk alle evenementen."}
+          {isFilterActive
+            ? "Probeer een andere categorie, of bekijk alle evenementen."
+            : "Kom snel terug voor het volgende evenement."}
         </EmptyState>
       ) : (
         <EventMonthList events={filtered} />
