@@ -46,6 +46,12 @@ typography:
     fontWeight: 700
     lineHeight: 1.2
     letterSpacing: "-0.025em"
+  subtitle-sm:
+    fontFamily: "freight-display-pro, Freight Display Fallback, georgia, Times New Roman, serif"
+    fontSize: "clamp(1.25rem, 1rem + 1vw, 1.5rem)"
+    fontWeight: 600
+    lineHeight: 1.3
+    letterSpacing: "-0.025em"
   body:
     fontFamily: "freight-sans-pro, Freight Sans Fallback, -apple-system, system-ui, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
     fontSize: "1rem"
@@ -67,9 +73,20 @@ typography:
     fontSize: "0.875rem"
     fontWeight: 500
     lineHeight: 1.4
+  mono-sm:
+    fontFamily: "IBM Plex Mono, Consolas, Liberation Mono, Courier, monospace"
+    fontSize: "0.75rem"
+    fontWeight: 500
+    lineHeight: 1.4
   label:
     fontFamily: "IBM Plex Mono, Consolas, Liberation Mono, Courier, monospace"
     fontSize: "0.6875rem"
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: "0.08em"
+  label-sm:
+    fontFamily: "IBM Plex Mono, Consolas, Liberation Mono, Courier, monospace"
+    fontSize: "0.625rem"
     fontWeight: 500
     lineHeight: 1
     letterSpacing: "0.08em"
@@ -222,17 +239,21 @@ Status tones, tuned for print rather than for a dashboard. Each pairs a saturate
 
 ### Hierarchy
 
-- **Display** (900, `clamp(3.5rem, 1.5rem + 8vw, 6rem)`, lh 1): Freight Big Pro. Page-defining hero headings, one per page at most.
-- **Headline** (700, `clamp(2.75rem, 1.5rem + 5vw, 4.5rem)`, lh 1.05): Freight Display Pro. Section-opening editorial headings.
-- **Title** (700, `clamp(2rem, 1.25rem + 3vw, 3rem)`, lh 1.1): the default editorial heading size.
-- **Subtitle** (700, `clamp(1.5rem, 1rem + 1.5vw, 2rem)`, lh 1.2) and a **small** step (600, `clamp(1.25rem, 1rem + 1vw, 1.5rem)`, lh 1.3): card headings and sub-sections.
-- **Body** (400, 1rem, lh 1.6): all prose. Reading column capped at 680px.
-- **Body Large / Small** (400, 1.125rem lh 1.55 / 0.875rem lh 1.55): leads and captions.
-- **Mono** (500, 0.875rem, lh 1.4): scores, dates, stat values, inline data.
-- **Label** (500, 0.6875rem / 11px, lh 1, tracking 0.08em, uppercase): kickers, badges, pills, statuses, nav. The most-used non-body style in the system.
-- **Label Small** (500, 0.625rem / 10px, lh 1, tracking 0.08em, uppercase): a label attached directly above body text, where the 11px step would compete with it rather than introduce it.
+There are **twelve** steps. Each names its utility class, because the frontmatter above is keyed on the role word (`subtitle`) while the CSS is keyed on the token (`--text-display-md`) — four role words sit on the one `display-*` family, so the two cannot be joined by name alone. This list is the join.
 
-Every step above is a token with a utility class — `text-display-lg`, `text-body-md`, `text-label`. Reach for the class. **Never `text-[length:var(--text-display-lg)]`**: the arbitrary-value form sets font-size and silently drops the step's line-height and tracking, which is what produced the hand-applied `leading-*` sprawl the ramp was built to prevent (#2417).
+- **Display** — `text-display-2xl` (900, `clamp(3.5rem, 1.5rem + 8vw, 6rem)`, lh 1): Freight Big Pro. Page-defining hero headings, one per page at most.
+- **Headline** — `text-display-xl` (700, `clamp(2.75rem, 1.5rem + 5vw, 4.5rem)`, lh 1.05): Freight Display Pro. Section-opening editorial headings.
+- **Title** — `text-display-lg` (700, `clamp(2rem, 1.25rem + 3vw, 3rem)`, lh 1.1): the default editorial heading size.
+- **Subtitle** — `text-display-md` (700, `clamp(1.5rem, 1rem + 1.5vw, 2rem)`, lh 1.2): card headings and sub-sections.
+- **Subtitle Small** — `text-display-sm` (600, `clamp(1.25rem, 1rem + 1vw, 1.5rem)`, lh 1.3): the step below Subtitle. In practice this is the **italic standfirst** voice — a hero's or section's one-line lede, set `font-display` italic under the heading it follows.
+- **Body** — `text-body-md` (400, 1rem, lh 1.6): all prose. Reading column capped at 680px.
+- **Body Large / Small** — `text-body-lg` / `text-body-sm` (400, 1.125rem lh 1.55 / 0.875rem lh 1.55): leads and captions.
+- **Mono** — `text-mono-md` (500, 0.875rem, lh 1.4): scores, dates, stat values, inline data.
+- **Mono Small** — `text-mono-sm` (500, 0.75rem / 12px, lh 1.4): a 12px mono step. Note it is used almost entirely as a **third label size above `text-label`** — uppercase and tracked — yet unlike Label and Label Small it ships **no `letter-spacing`**, so all of its call sites set tracking by hand and have landed on five different values. Treat that as a known gap, not a licence to add a sixth.
+- **Label** — `text-label` (500, 0.6875rem / 11px, lh 1, tracking 0.08em, uppercase): kickers, badges, pills, statuses, nav. The most-used non-body style in the system.
+- **Label Small** — `text-label-sm` (500, 0.625rem / 10px, lh 1, tracking 0.08em, uppercase): a label attached directly above body text, where the 11px step would compete with it rather than introduce it.
+
+Reach for the class. **Never `text-[length:var(--text-display-lg)]`**: the arbitrary-value form sets font-size and silently drops the step's line-height and tracking, which is what produced the hand-applied `leading-*` sprawl the ramp was built to prevent (#2417).
 
 Navigation sits just outside the label token — uppercase mono, 600 weight, tracking 0.04em, scaling 11px → 13px → 14px across `xl` / `2xl`.
 
