@@ -33,6 +33,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight } from "@/lib/icons.redesign";
 import { EmptyState } from "@/components/design-system";
+import { filteredEmptyBody } from "@/lib/utils/empty-state-copy";
 import { useResponsibilityAnalytics } from "@/hooks/useResponsibilityAnalytics";
 import { useHubMemberPanel } from "@/components/organigram/HubMemberPanel";
 import {
@@ -233,6 +234,7 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
     if (audiencePaths.length === 0) {
       // Names the active audience by label ("Ouder"), not the generic "deze
       // rol" — same rule as the category branch below (#2427 rule 5).
+      // `reason="filtered"` makes the undo a compile-time requirement.
       const audienceLabel =
         HUB_AUDIENCE_FILTERS.find((o) => o.value === audience)?.label ??
         "deze rol";
@@ -241,13 +243,8 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
           tier="surface"
           heading={`Geen hulpvragen voor ${audienceLabel}`}
           live
-          actions={[
-            {
-              label: "Toon alles",
-              onClick: () => setAudience(null),
-              variant: "ghost",
-            },
-          ]}
+          reason="filtered"
+          undo={{ label: "Toon alles", onClick: () => setAudience(null) }}
         >
           Er zijn voor deze rol geen hulpvragen beschikbaar.
         </EmptyState>
@@ -264,15 +261,13 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
             tier="surface"
             heading={`Geen hulpvragen in ${meta.label}${audience ? " voor deze rol" : ""}`}
             live
-            actions={[
-              {
-                label: "Toon alle categorieën",
-                onClick: () => setCategory("alles"),
-                variant: "ghost",
-              },
-            ]}
+            reason="filtered"
+            undo={{
+              label: "Toon alle categorieën",
+              onClick: () => setCategory("alles"),
+            }}
           >
-            Probeer een andere categorie, of bekijk het volledige overzicht.
+            {filteredEmptyBody("het volledige overzicht")}
           </EmptyState>
         );
       }
