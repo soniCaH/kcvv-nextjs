@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
 import { NewsCard, CategoryFilters } from "@/components/article";
 import {
+  EmptyState,
   LoadMoreFooter,
   PageContainer,
   TapedCardGrid,
@@ -155,6 +156,14 @@ export function NewsListingClient({
   }, [loadMore, handleCategoryChange]);
 
   const isEmpty = gridArticles.length === 0 && !isLoading;
+  // Names the active facet by label ("Jeugd"), not a generic "deze
+  // categorie" — the copy is the tell (#2427 rule 5). `null` for "all",
+  // which is genuine emptiness, not a filter having emptied the surface.
+  const activeCategoryLabel =
+    activeCategory === "all"
+      ? null
+      : (categories.find((c) => c.id === activeCategory)?.attributes.name ??
+        activeCategory);
 
   return (
     <div className="w-full">
@@ -200,9 +209,31 @@ export function NewsListingClient({
 
         {/* Empty state */}
         {isEmpty && !error && (
-          <p className="py-12 text-center text-gray-400">
-            Geen artikelen gevonden voor deze categorie.
-          </p>
+          <EmptyState
+            tier="surface"
+            heading={
+              activeCategoryLabel
+                ? `Geen artikelen in ${activeCategoryLabel}`
+                : "Nog geen artikelen"
+            }
+            live
+            actions={
+              activeCategoryLabel
+                ? [
+                    {
+                      label: "Toon alles",
+                      onClick: () => handleCategoryChange("all"),
+                      variant: "ghost",
+                    },
+                  ]
+                : undefined
+            }
+            className="mb-6"
+          >
+            {activeCategoryLabel
+              ? "Probeer een andere categorie, of bekijk het volledige overzicht."
+              : "Zodra we een artikel publiceren, verschijnt het hier."}
+          </EmptyState>
         )}
 
         {/* Error retry · in-flight spinner · load-more (NEWS-1, #2237 —
