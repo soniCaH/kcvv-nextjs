@@ -8,10 +8,6 @@
  *  - Meta auto-hide when the pill is absent.
  *  - Tagline renders and auto-hides.
  *  - Artefact state: "photo" when teamImageUrl present, "jersey" fallback when absent.
- *
- * `season` was deleted from the schema and dropped from this component's
- * props (#2567) — it never had a writer, so the meta pill and the decorative
- * artefact-column stub that used to render it are both gone, not hidden.
  */
 
 import { describe, it, expect } from "vitest";

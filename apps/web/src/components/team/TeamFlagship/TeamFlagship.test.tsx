@@ -7,9 +7,6 @@
  *  - whole block links to href
  *  - photo state vs JerseyShirt fallback
  *  - meta omits an absent division cleanly
- *
- * `season` was deleted from the schema and dropped from this component's
- * props (#2567) — it never had a writer.
  */
 
 import { describe, it, expect } from "vitest";
