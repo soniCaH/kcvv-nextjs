@@ -51,3 +51,17 @@ export const NoNumber: Story = {
     href: "/spelers/125",
   },
 };
+
+/**
+ * No authored position and no PSD-synced fallback — the majority case in
+ * production (184 of 231 active players, measured 2026-08-17). The label
+ * row is omitted rather than defaulted to a placeholder (#2567).
+ */
+export const NoPosition: Story = {
+  args: {
+    firstName: "Ruben",
+    lastName: "Peeters",
+    jerseyNumber: 5,
+    href: "/spelers/126",
+  },
+};

@@ -7,6 +7,7 @@
  *  - U17 minor with photo → age-graded meta row (`MinorU17WithPhoto`)
  *  - U8 minor without photo → minor + illustration combined (`MinorU8Illustration`)
  *  - Long Dutch surname stress (`LongSurname`)
+ *  - No authored/synced position → meta cell omitted, not defaulted (`NoPosition`, #2567)
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
@@ -115,6 +116,23 @@ export const LongSurname: Story = {
     photoUrl: REAL_PLAYER_PHOTOS.vartolomaios,
     birthDate: "1998-07-22",
     jerseyNumber: 17,
+    teamLabel: "A-Ploeg",
+  },
+};
+
+/**
+ * No authored position and no PSD-synced fallback — the majority case in
+ * production (184 of 231 active players, measured 2026-08-17). The meta row
+ * drops straight to the birthDate cell rather than defaulting to a
+ * placeholder (#2567).
+ */
+export const NoPosition: Story = {
+  args: {
+    firstName: "Ruben",
+    lastName: "Peeters",
+    photoUrl: REAL_PLAYER_PHOTOS.mendesMouro,
+    birthDate: "2001-06-10",
+    jerseyNumber: 5,
     teamLabel: "A-Ploeg",
   },
 };
