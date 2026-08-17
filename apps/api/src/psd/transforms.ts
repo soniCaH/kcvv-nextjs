@@ -365,6 +365,19 @@ export function deriveOwnClubId(games: PsdGame[]): number | undefined {
   return first.awayClub.id;
 }
 
+/**
+ * Whether a fixture is a pitch-reservation placeholder — both sides are the
+ * same club (#2606). Guarded so that both ids being null/undefined does not
+ * collide into "true": two absent ids are proof of nothing, not proof of a
+ * self-match.
+ */
+export function isSelfMatch(
+  homeClubId: number | null | undefined,
+  awayClubId: number | null | undefined,
+): boolean {
+  return homeClubId != null && awayClubId != null && homeClubId === awayClubId;
+}
+
 // ─── PSD Game → Match ─────────────────────────────────────────────────────────
 
 export function transformPsdGame(
@@ -419,6 +432,7 @@ export function transformPsdGame(
     competitionType: resolveCompetitionType(game.competitionType),
     kcvv_team_id: game.teamId ?? undefined,
     is_home: isHome,
+    is_placeholder: isSelfMatch(game.homeClub.id, game.awayClub.id),
   };
 }
 
@@ -610,8 +624,7 @@ export function transformFootbalistoMatchDetail(
 
   // Resilient lineup decoding — invalid players are filtered, valid ones pass through
   let lineup:
-    | { home: MatchLineupPlayer[]; away: MatchLineupPlayer[] }
-    | undefined;
+    { home: MatchLineupPlayer[]; away: MatchLineupPlayer[] } | undefined;
   if (response.lineup || response.substitutes) {
     const rawHome = [
       ...(response.lineup?.home ?? []),

@@ -7,6 +7,7 @@ import {
   buildCompetitionLabelMap,
   deriveMatchTeamLabel,
   deriveOwnClubId,
+  isSelfMatch,
   transformPsdGame,
   transformFootbalistoMatchDetail,
   transformFootbalistoRankingEntry,
@@ -286,6 +287,47 @@ describe("transformPsdGame — ownClubId fallback for is_home", () => {
     const game = makePsdGame();
     const match = transformPsdGame(game);
     expect(match.is_home).toBeUndefined();
+  });
+});
+
+describe("isSelfMatch (#2606)", () => {
+  it("returns true when both club ids are equal", () => {
+    expect(isSelfMatch(1235, 1235)).toBe(true);
+  });
+
+  it("returns false when the club ids differ", () => {
+    expect(isSelfMatch(1235, 456)).toBe(false);
+  });
+
+  it("guards against both ids being null — that must not read as a self-match", () => {
+    expect(isSelfMatch(null, null)).toBe(false);
+  });
+
+  it("guards against both ids being undefined — that must not read as a self-match", () => {
+    expect(isSelfMatch(undefined, undefined)).toBe(false);
+  });
+
+  it("returns false when only one id is present", () => {
+    expect(isSelfMatch(null, 1235)).toBe(false);
+    expect(isSelfMatch(1235, undefined)).toBe(false);
+  });
+});
+
+describe("transformPsdGame — is_placeholder (#2606)", () => {
+  it("marks a self-match as a placeholder", () => {
+    const game = makePsdGame({
+      homeClub: { id: 1235, name: "KCVV Elewijt" },
+      awayClub: { id: 1235, name: "KCVV Elewijt" },
+    });
+    expect(transformPsdGame(game).is_placeholder).toBe(true);
+  });
+
+  it("leaves a normal fixture unmarked", () => {
+    const game = makePsdGame({
+      homeClub: { id: 1235, name: "KCVV Elewijt" },
+      awayClub: { id: 456, name: "FC Other" },
+    });
+    expect(transformPsdGame(game).is_placeholder).toBe(false);
   });
 });
 
