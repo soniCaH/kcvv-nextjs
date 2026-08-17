@@ -92,4 +92,17 @@ describe("transformMatchToSchedule", () => {
     const match = createMockMatch();
     expect(transformMatchToSchedule(match).isHome).toBeUndefined();
   });
+
+  it("passes is_placeholder through as isPlaceholder when present (#2606)", () => {
+    const placeholder = createMockMatch({ is_placeholder: true });
+    expect(transformMatchToSchedule(placeholder).isPlaceholder).toBe(true);
+
+    const normal = createMockMatch({ is_placeholder: false });
+    expect(transformMatchToSchedule(normal).isPlaceholder).toBe(false);
+  });
+
+  it("leaves isPlaceholder undefined when is_placeholder is absent", () => {
+    const match = createMockMatch();
+    expect(transformMatchToSchedule(match).isPlaceholder).toBeUndefined();
+  });
 });
