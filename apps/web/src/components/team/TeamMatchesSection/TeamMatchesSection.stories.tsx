@@ -8,6 +8,20 @@ const OPP_B = { id: 43, name: "FC Mollem" };
 const OPP_C = { id: 44, name: "SK Relegem" };
 const OPP_D = { id: 45, name: "Racing Gent B" };
 
+// Anchored to the VR harness's FROZEN clock, not a real calendar date.
+// `apps/web/.storybook/test-runner.ts` stubs `Date`/`Date.now()` to a fixed
+// 2026-01-15T12:00:00.000Z for every story (`determinismInitScript`) so
+// baselines never churn with the real calendar — but that also means
+// `<TeamMatchesSection>`'s own `new Date()` (`findNextMatch`/
+// `recentResults`) sees THAT frozen instant during a VR capture, never the
+// real "today". A previous anchor picked relative to a real calendar date
+// (2026-09-15, then re-anchored to whatever day it was reviewed on) drifted
+// arbitrarily far from the frozen clock and silently dropped every "recent
+// result" row from the baseline without failing anything (#2632 review
+// finding 5). Anchoring here instead — permanently correct, never stale,
+// because the frozen instant never moves.
+const STORY_ANCHOR = "2026-01-15T12:00:00.000Z";
+
 function m(
   id: number,
   daysOffset: number,
@@ -16,7 +30,7 @@ function m(
   isHome = true,
   opp = OPP_A,
 ): ScheduleMatch {
-  const date = new Date("2026-09-15T12:00:00.000Z");
+  const date = new Date(STORY_ANCHOR);
   date.setDate(date.getDate() + daysOffset);
   return {
     id,
