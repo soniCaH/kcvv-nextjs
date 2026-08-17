@@ -123,6 +123,18 @@ export type {
   ErrorStateActionVariant,
 } from "./ErrorState";
 
+// EmptyState
+export { EmptyState } from "./EmptyState";
+export type {
+  EmptyStateProps,
+  EmptyStateSurfaceProps,
+  EmptyStateSlotProps,
+  EmptyStateAction,
+  EmptyStateLinkAction,
+  EmptyStateButtonAction,
+  EmptyStateActionVariant,
+} from "./EmptyState";
+
 // JerseyIllustration
 export { JerseyIllustration } from "./JerseyIllustration";
 export type { JerseyIllustrationProps } from "./JerseyIllustration";
