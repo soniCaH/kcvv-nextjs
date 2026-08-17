@@ -130,8 +130,10 @@ describe("former `Jeugd` panel → /jeugd + /ploegen index parity", () => {
     const reservenGroup = youthByDivision.find((d) => d.label === "Reserven");
 
     expect(reservenGroup?.teams.map((t) => t.slug)).toEqual(["reserven"]);
-    // Not an age band — the directory heading must not render a range for it.
-    expect(reservenGroup?.range).toBeUndefined();
+    // Its own group is only half the answer: leading a list of youth groups
+    // with a bare label read as the first of them. The range says where the
+    // side actually sits — a boundary, not an age band (#2641).
+    expect(reservenGroup?.range).toBe("Voorbij U21");
   });
 
   it("keeps the A and B sides out of the youth directory", () => {

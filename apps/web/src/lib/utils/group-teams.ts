@@ -17,8 +17,10 @@ export type TeamLandingItem = {
 export type YouthDivisionGroup = {
   label: YouthDivisionName | typeof RESERVEN_LABEL;
   /**
-   * The group's age band, e.g. "U12–U16". Absent on groups that are not an
-   * age band at all (Reserven), which the directory heading renders bare.
+   * Where the group sits on the ladder — an age band on the three bouw groups
+   * ("U12–U16"), a position on Reserven ("Voorbij U21"). Optional because the
+   * type allows a group that can say neither; the directory heading then
+   * renders the label bare.
    */
   range?: string;
   teams: TeamLandingItem[];
@@ -109,8 +111,16 @@ export function groupTeamsForLanding(teams: TeamLandingItem[]): GroupedTeams {
     youthByDivision: [
       // Above U21 and below the B-ploeg — so it leads the directory, ahead of
       // Bovenbouw. `<YouthDirectory>` drops it when the roster has no Reserven.
+      //
+      // The range says which of those two it is (#2641). Leading a directory of
+      // youth groups with a bare label read as the first of them, on both pages
+      // that render this list; A/B squad players never play here, so it is a
+      // side of its own that starts where the youth ladder ends — not an
+      // overflow bench, and not an age band, which is why the copy names a
+      // boundary rather than a span.
       {
         label: RESERVEN_LABEL,
+        range: "Voorbij U21",
         teams: teams.filter((t) => t.psdId === RESERVEN_PSD_ID),
       },
       {

@@ -83,7 +83,7 @@ describe("groupTeamsForLanding", () => {
     ]);
   });
 
-  it("should group the reserves by psdId, with no age range", () => {
+  it("should group the reserves by psdId, ranged past the end of the youth ladder", () => {
     const teams = [
       makeTeam({ _id: "a", age: "A", name: "Eerste Elftallen A" }),
       makeTeam({
@@ -99,7 +99,10 @@ describe("groupTeamsForLanding", () => {
     const reserven = divisionGroup(teams, "Reserven");
 
     expect(reserven.teams.map((t) => t.name)).toEqual(["Reserven"]);
-    expect(reserven.range).toBeUndefined();
+    // Not an age band like its three siblings — a position on the ladder. The
+    // group led the directory with a bare heading until #2641, which read as
+    // the first of the youth groups on both pages that render it.
+    expect(reserven.range).toBe("Voorbij U21");
     // The reserves are not the A-ploeg, despite sharing its age code.
     expect(groupTeamsForLanding(teams).aTeam?.name).toBe("Eerste Elftallen A");
   });
