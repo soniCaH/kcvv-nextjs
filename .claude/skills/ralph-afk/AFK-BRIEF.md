@@ -1,0 +1,154 @@
+# AFK brief template
+
+The brief is what gets passed as the `prompt` to each spawned `Agent()`. The spawned agent does **not** see the orchestrator's conversation — the brief must be self-contained: read-list, acceptance criteria, bootstrap, verification, commit guidance, PR shape, hard rules.
+
+Fill in everything inside `<…>`. Quote acceptance criteria **verbatim** from the issue so the wording cannot drift between issue and PR.
+
+## Template
+
+````text
+You are implementing GitHub issue #<N> on the KCVV Elewijt codebase — a pnpm + Turborepo monorepo (Next.js on Vercel, Sanity Studio, a Cloudflare Workers BFF, TypeScript strict, Effect, Tailwind v4). This is a self-contained brief; you will not see any prior conversation. Work it end-to-end.
+
+You are running autonomously. Do NOT ask the user what to do. Do NOT stop to present options.
+
+## Shell rule — applies to EVERY bash call
+
+A fresh shell here defaults to Node 16, which breaks commitlint and Playwright with misleading errors. `nvm use` does not persist between calls. Prefix EVERY command:
+
+  source ~/.nvm/nvm.sh && nvm use >/dev/null 2>&1 && <your command>
+
+## Read first (in this order)
+
+1. /Users/kevinvanransbeeck/Sites/KCVV/www.kcvvelewijt.be/.claude/CLAUDE.md   (project-wide rules: git workflow, commit scopes, package conventions)
+2. /Users/kevinvanransbeeck/Sites/KCVV/www.kcvvelewijt.be/apps/web/CLAUDE.md  (web-app rules)
+3. gh issue view <N> --comments
+   Read the COMMENTS, not just the body. Parked decisions and scope changes live in comments in this repo.
+4. <the PRD the issue names, e.g. docs/prd/<name>.md — read it from the MAIN checkout path>
+5. docs/ubiquitous-language.md  (glossary — use these exact terms, do not drift to synonyms)
+6. <any ADR or design doc the issue calls out, e.g. docs/adr/…>
+
+Before writing code, re-validate the acceptance criteria against what is actually in the repo today. If a criterion is already satisfied, or contradicts current code, say so in the PR body rather than silently reinterpreting it.
+
+## Create and bootstrap your worktree
+
+Work ONLY inside your own worktree. Never edit the main checkout at
+/Users/kevinvanransbeeck/Sites/KCVV/www.kcvvelewijt.be — read from it, never write to it.
+
+  source ~/.nvm/nvm.sh && nvm use >/dev/null 2>&1
+  cd /Users/kevinvanransbeeck/Sites/KCVV/www.kcvvelewijt.be
+  git fetch origin main
+  git worktree add ../kcvv-issue-<N> -b feat/issue-<N> origin/main
+  cd ../kcvv-issue-<N>
+
+  # Install with corepack pnpm (pinned 10.34.3). NEVER the homebrew pnpm on PATH — it is 8.x
+  # and silently downgrades pnpm-lock.yaml from lockfileVersion 9.0 to 6.0 (a ~22k-line diff).
+  corepack pnpm install --frozen-lockfile
+
+  # Guard: the lockfile must be untouched. This must print nothing.
+  git status --short pnpm-lock.yaml
+  # If it is dirty: git checkout -- pnpm-lock.yaml && corepack pnpm install --frozen-lockfile
+
+  # Materialise packages/api-contract/dist/ — without this, check-all shows TS6305 errors
+  # that look real but are turbo cache-replay artifacts from a removed peer worktree.
+  corepack pnpm turbo build --filter=@kcvv/api-contract --force
+
+  # next build needs Sanity env vars; .env.local is gitignored so a fresh worktree has none.
+  /bin/cp -f /Users/kevinvanransbeeck/Sites/KCVV/www.kcvvelewijt.be/apps/web/.env.local apps/web/.env.local
+
+## Implement
+
+Acceptance criteria from #<N>, verbatim:
+
+- [ ] <criterion 1>
+- [ ] <criterion 2>
+- [ ] …
+
+Work them one at a time, test-first. Prior art to mirror: <file:line references>.
+
+Before writing any new file that lands in a folder with two or more existing peers (a JSON-LD builder, a `use*Analytics` hook, a repository, a story), grep the peers first and match their return type, import order, and how they omit optional fields. Peer-drift is the most-flagged class in review here.
+
+<Include only the lines below that this issue actually touches:>
+- New user-facing feature? It needs analytics — events, GTM, and GA4 — per the PRD requirement.
+- Schema change? Edit packages/sanity-schemas/src/<file>.ts only. Both studios consume it; there are no per-studio copies.
+- Adding or removing a dependency? Do NOT let pnpm rewrite the lockfile. Run the add once to resolve the version, then `git checkout origin/main -- pnpm-lock.yaml`, hand-insert the 3 blocks (importers / packages / snapshots) in prettier style at their alphabetical positions, and validate with `corepack pnpm install --frozen-lockfile` — it must print "Already up to date" without rewriting.
+- Visual change to a VR-tagged story? Capture the new baselines in THIS PR, scoped: `-u <story-id-prefix>`. Never run an unscoped update — it rewrites unrelated baselines.
+- Changed the architecture CLAUDE.md describes (new package, renamed path, schema ownership)? Update .claude/CLAUDE.md in this PR.
+- Renamed or removed a route, or changed a club fact? Re-verify apps/web/public/llms.txt against the live route tree.
+- Touched a plan or doc file? Re-read it and confirm its paths, script names, and snippets still match the tree.
+- New fenced code block in any .md? It needs a language identifier (```bash, ```typescript, ```text) or markdownlint MD040 fails.
+
+## Verify
+
+  source ~/.nvm/nvm.sh && nvm use >/dev/null 2>&1 && cd /Users/kevinvanransbeeck/Sites/KCVV/www.kcvvelewijt.be/../kcvv-issue-<N> && corepack pnpm --filter @kcvv/web lint:fix
+  source ~/.nvm/nvm.sh && nvm use >/dev/null 2>&1 && cd /Users/kevinvanransbeeck/Sites/KCVV/www.kcvvelewijt.be/../kcvv-issue-<N> && corepack pnpm --filter @kcvv/web check-all
+
+Both must pass before you go further. `check-all` exists only in apps/web and packages/sanity-studio — apps/api has none.
+
+## Pre-PR review gate — required, not optional
+
+After the quality gate passes, run BOTH against your branch diff (`git diff origin/main...HEAD`):
+
+1. `/code-review` at high effort — fix every confirmed finding; refute false positives with a one-line reason.
+2. `/simplify` — apply the genuine wins; skip out-of-scope findings with a brief reason.
+
+Then re-run the quality gate above. Note in the PR body what you applied and what you skipped. This gate exists to cut CodeRabbitAI round-trips; skipping it costs the reviewer more than it saves you.
+
+## Commit
+
+Conventional commits, in ENGLISH even though the issue may be Dutch. Lowercase subject.
+
+Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+Allowed scopes: news, matches, events, teams, players, sponsors, calendar, ranking, search, sync, analytics, studio, api, ui, schema, config, deps, deps-dev
+
+`club` and `seo` are NOT scopes — use `ui`. If your natural framing is "redesign", "design", "closeout", "cleanup" or "audit", pick the scope by the DOMAIN you touched, not by that word. The canonical list is commitlint.config.js — read it rather than learning it from a hook rejection.
+
+Prefer several small commits over one large one. Never use --no-verify. Never set ALLOW_MAIN_COMMIT.
+
+## Push and open the PR
+
+  git push -u origin feat/issue-<N>
+
+  gh pr create --base main \
+    --title "<type>(<scope>): <description> (#<N>)" \
+    --body "Closes #<N>
+
+  ## Changes
+
+  - …
+
+  ## Testing
+
+  - pnpm --filter @kcvv/web check-all passes
+  - /code-review + /simplify run; applied: … · skipped: …
+  - <any manual verification>" \
+    --label "ready-for-review"
+
+Use `Closes #<N>` only if this PR fully resolves the issue. If it is one part of a larger issue, use `Part of #<N>` instead — a stray "Closes" auto-closes work that is not done.
+
+Then flip the issue label. The PR's --label flag labels the PR, not the issue:
+
+  gh issue edit <N> --remove-label "in-progress" --add-label "ready-for-review"
+
+## Do NOT
+
+- Push to main, or commit in the main checkout.
+- Bypass hooks (--no-verify) or set ALLOW_MAIN_COMMIT=1.
+- Remove your worktree — the human reviews it before merge.
+- Merge your own PR.
+- Work around a blocker. If something blocks you — missing env, ambiguous criterion, an upstream bug, an AC that contradicts the code — comment on issue #<N>, prefix the comment with "> *This was generated by AI during AFK execution.*", and STOP. Report the comment URL.
+- Skip the quality gate or the review gate.
+
+## Report when done
+
+Report: the PR URL, the exact verification commands you ran and their result, anything you skipped or deferred and why, and any open question the reviewer should decide.
+````
+
+## Notes on filling the template
+
+- **Read-first list**: only what the agent needs to make decisions. A missing constraint costs a re-do; a dumped repo costs tokens. `gh issue view <N> --comments` is non-negotiable here — parked decisions live in comments.
+- **Acceptance criteria**: verbatim. Paraphrasing drifts the criteria between issue and PR, and then triage cannot tell whether the slice shipped what it promised.
+- **Prior art `file:line` references**: the single highest-leverage line in the brief. Peer-drift is this repo's most-flagged review class.
+- **Prune the conditional block**: delete the lines under "Implement" that this issue does not touch. A brief that warns about VR baselines on a docs-only issue teaches the agent to skim.
+- **Worktree path**: `../kcvv-issue-<N>` on branch `feat/issue-<N>`, always from `origin/main`. This matches `scripts/ralph.sh` so both tools can find and clean up the same worktrees.
+- **Do not hand the agent `isolation: "worktree"`** — see SKILL.md step 3. The brief creates the worktree the repo's way on purpose.
+- **AI-disclaimer on blocker comments**: matches the `/triage-issue` convention, so the tracker stays consistent about which comments came from an agent.
