@@ -26,10 +26,9 @@ A fresh shell here defaults to Node 16, which breaks commitlint and Playwright w
 4. <the PRD the issue names, e.g. docs/prd/<name>.md — read it from the MAIN checkout path>
 5. docs/ubiquitous-language.md  (glossary — use these exact terms, do not drift to synonyms)
 6. /Users/kevinvanransbeeck/Sites/KCVV/www.kcvvelewijt.be/.claude/commands/tdd.md
-   The KCVV TDD loop — interface design questions, what to mock, red-green-refactor.
-   Read the file itself. Do not assume the `/tdd` shortcut resolves in your context.
-   It opens by sending you to `mattpocock-skills:tdd` for test craft — that one is
-   a plugin skill, so invoke it with the Skill tool. Follow it; it is not optional.
+   The KCVV TDD loop. Read it as a file — the `/tdd` shortcut may not resolve here.
+   Then follow the `mattpocock-skills:tdd` skill it sends you to; invoke that one
+   with the Skill tool.
 7. <any ADR or design doc the issue calls out, e.g. docs/adr/…>
 
 Before writing code, re-validate the acceptance criteria against what is actually in the repo today. If a criterion is already satisfied, or contradicts current code, say so in the PR body rather than silently reinterpreting it.
@@ -124,7 +123,7 @@ Prefer several small commits over one large one. Never use --no-verify. Never se
   - <any manual verification>" \
     --label "ready-for-review"
 
-`--draft` is required. Your branch has not been reviewed when you open it, and draft is what says so. The orchestrator marks it ready once you have applied its findings. Do not count on CodeRabbitAI reading your PR at all — see the orchestrator's step 5.
+`--draft` is required. Your branch has not been reviewed when you open it, and draft is what says so. The orchestrator marks it ready once you have applied its findings.
 
 Use `Closes #<N>` only if this PR fully resolves the issue. If it is one part of a larger issue, use `Part of #<N>` instead — a stray "Closes" auto-closes work that is not done.
 

@@ -1,16 +1,18 @@
 ---
 name: ralph-afk
-description: Spawn a wave of parallel agents to implement unblocked `ready` issues, one git worktree each. Use for ralph afk, running a wave, or working the issue queue unattended.
+description: Spawn a wave of parallel agents to implement unblocked `ready` issues, one git worktree each, then review the branches they open. Use for ralph afk, running a wave, reviewing wave branches, or working the issue queue unattended.
 argument-hint: "[issue-number...]"
 ---
 
 # Ralph AFK
 
-Run the queue while the user is away. Pick the currently-unblocked `ready` issues, spawn one autonomous agent per issue in its own worktree (in parallel, in one message), and report PR URLs as they land.
+Run the queue while the user is away. Pick the currently-unblocked `ready` issues, spawn one autonomous agent per issue in its own worktree (in parallel, in one message), review the draft PRs they open, and report the URLs as they land.
 
 Sequential human-in-the-loop counterpart: `/ralph` (`.claude/commands/ralph.md`) and `scripts/ralph.sh`. Brief template: [AFK-BRIEF.md](AFK-BRIEF.md).
 
-This skill reuses `/ralph`'s conventions exactly — same labels, same `blockedBy` gate, same worktree paths, same quality gates. It only changes the shape: a parallel wave instead of one issue at a time. If a convention here ever disagrees with `.claude/commands/ralph.md`, that file wins.
+This skill follows `/ralph`'s conventions — same `blockedBy` gate, same worktree paths, same quality gate, same TDD loop — and where one here disagrees with `.claude/commands/ralph.md`, that file wins.
+
+Two things differ on purpose, because a wave is not one issue at a time. Both live in step 5: the last gate runs at the orchestrator instead of inside the worker, and agents leave the issue on `in-progress` for the orchestrator to flip. Keep this paragraph honest — a stale parity claim is worse than no claim.
 
 ## Process
 
@@ -113,7 +115,7 @@ Agent({ description: "Issue <N> — <short title>",
         prompt: "<self-contained brief from step 2>" })
 ```
 
-`kcvv-implementer` (`.claude/agents/kcvv-implementer.md`) pins the model, effort, and turn ceiling for wave work; `general-purpose` inherits all three from your session, which is what put four Opus agents on `xhigh`. Measured on the 2026-08-17 wave: cache reads are ~63% of a wave's cost and thinking is under 2%, so the model is the dial that matters and effort is not. Wave agents peaked at 353k of context — if you see them compacting mid-run, raise the tier in that file rather than editing this one.
+`kcvv-implementer` (`.claude/agents/kcvv-implementer.md`) pins the model, effort, and turn ceiling for wave work; `general-purpose` would inherit all three from your session instead. If wave agents compact mid-run or their branches come back rough, raise the tier in that file rather than editing this one. PR #2678 has the measurements behind the values.
 
 **Do not pass `isolation: "worktree"`.** The harness worktree does not follow this repo's `../kcvv-issue-<N>` + `feat/issue-<N>` convention and skips the KCVV bootstrap (corepack pnpm, api-contract build, `.env.local`). The brief has the agent create its own worktree the repo way, so `/ralph` and `scripts/ralph.sh` can find and clean up after it.
 
@@ -159,9 +161,9 @@ gh issue edit <N> --remove-label "in-progress" --add-label "ready-for-review"
 
 `gh pr ready` says the branch has been reviewed. Leave a PR in draft and say so if its findings are unresolved.
 
-**CodeRabbitAI is not a gate in a wave, and you must not plan around it.** The account gets one free review an hour, a wave opens four PRs at once, and the user does not wait out the reset — so at most one branch gets a second opinion and three get none. Your review here is the only automated read that reaches every branch. A finding you skip is a finding that ships. Weigh that when you decide how hard to look and what to wave through as out of scope.
+This review is the wave's **last gate** (`.claude/CLAUDE.md`) — weigh that when you decide how hard to look and what to wave through as out of scope. Done when every finding on every branch is either applied or refuted in one line, and you can say which is which.
 
-You do control which branch spends that one review: whichever PR you mark ready first wins the race. Order them riskiest-first — the biggest diff, the one touching shared code, the one whose findings you were least sure about.
+You do control which branch spends CodeRabbitAI's one review an hour: whichever PR you mark ready first wins the race. Order them riskiest-first — the biggest diff, the one touching shared code, the one whose findings you were least sure about.
 
 ### 6. Check the merge order before the user merges anything
 
