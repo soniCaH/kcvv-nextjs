@@ -1,6 +1,6 @@
 ---
 name: ralph-afk
-description: Spawn a parallel wave of autonomous agents to implement unblocked `ready` issues, one git worktree each. Use when the user wants to ralph afk, go AFK, run parallel agents, run a wave, or work the issue queue while away from keyboard.
+description: Spawn a wave of parallel agents to implement unblocked `ready` issues, one git worktree each. Use for ralph afk, running a wave, or working the issue queue unattended.
 argument-hint: "[issue-number...]"
 ---
 
@@ -37,10 +37,10 @@ Leave worktrees whose PR is still open — those are under review. Report what y
 
 If the user passed explicit issue numbers, use those (still subject to the hard rules below). Otherwise build the wave automatically:
 
-1. Query the queue:
+1. Query the queue. Pass `--limit` — `gh` caps at 30 silently, and a capped list reads exactly like a complete one:
 
    ```bash
-   gh issue list --label ready --state open --json number,title,milestone,labels
+   gh issue list --label ready --state open --limit 200 --json number,title,milestone,labels
    ```
 
 2. For each candidate, check GitHub's native blocking relationships — **not** a markdown section:
@@ -57,6 +57,8 @@ If the user passed explicit issue numbers, use those (still subject to the hard 
    ```
 
    `0` = unblocked. If the GraphQL call **fails**, treat the issue as blocked and say so — never assume unblocked on an error.
+
+   Check **every** issue the query returns, not the first screenful — the wave is only correct if the blocker check is exhaustive.
 
 3. **Eligible** = `ready` label AND zero open blockers.
 4. **Mutually compatible** = drop pairs that would collide at merge. See "Collision classes" below.
@@ -75,7 +77,7 @@ Separate worktrees mean agents never fight at run time, but they still collide a
 | `packages/api-contract/src/`             | Every downstream app type-checks against it; two concurrent contract changes break each other's build.   |
 | `packages/sanity-schemas/src/`           | Shared by both studios; concurrent schema edits conflict.                                                |
 | Design tokens / `DESIGN.md` / global CSS | Site-wide; two edits to the same token file conflict and both invalidate the whole VR suite.             |
-| The same route or component file         | Obvious. Check the issue's stated file list.                                                             |
+| The same route or component file         | Check the file list each issue states; two issues editing one file conflict line-for-line.               |
 
 When in doubt, keep both — but if two issues plausibly land in the same file, serialize them across waves. It is cheaper than a merge fight.
 
@@ -109,7 +111,6 @@ You are notified as each background agent completes. For each:
 
 - Capture the PR URL.
 - Note blockers it hit (the brief tells agents to comment-and-stop, never to work around a blocker).
-- Surface failures immediately — do not silently move on.
 
 If an agent finished **without** opening a PR, roll its label back so the queue stays truthful:
 
@@ -141,14 +142,13 @@ This skill is **stateless across invocations**. Every run re-queries GitHub, so 
 
 - **The orchestrator does not auto-loop.** When the wave's PRs are open, it stops. Downstream issues only unblock once blockers close, which needs merges the orchestrator cannot do.
 - **Hands-free continuation** — wrap in `/loop`, e.g. `/loop 45m /ralph-afk`. Each tick re-picks the latest unblocked wave; a tick with nothing eligible reports "no work" and exits. Use 45m+, not 5m — a wave takes far longer than that to produce reviewable PRs.
-- **Drained** = `gh issue list --label ready --state open` is empty, or everything left is blocked. Say so explicitly.
+- **Drained** = `gh issue list --label ready --state open --limit 200` is empty, or everything left is blocked. Say so explicitly.
 
 ## Hard rules
 
-- Never spawn for an issue without the `ready` label. Route the user to `/spec` instead.
-- Never spawn for an issue with open blockers, even if the user names it explicitly. Say which blocker is open and stop.
-- Never spawn two issues from the same collision class in one wave.
-- Never let an agent work in the main checkout. Every agent works only inside its `../kcvv-issue-<N>` worktree.
-- Never suggest `ALLOW_MAIN_COMMIT=1`. It is a human escape hatch, not an agent one. If a branch guard blocks an agent, the answer is the worktree.
-- Do not clean up a spawned agent's worktree — the human reviews it before merge.
-- If an agent fails or stalls, do not retry it autonomously. Surface it; the user decides whether to re-run it under `/ralph` for closer supervision.
+Step 1's gate is not a default the user can wave through. These bind even when the user names issues explicitly.
+
+- **Spawn only for an issue carrying `ready` with zero open blockers.** When the user names one that fails either test, say which test it failed — a missing label routes to `/spec`, an open blocker gets named — and stop.
+- **One issue per collision class per wave.** The table in step 1 is the list.
+- **Every agent works only inside its own `../kcvv-issue-<N>` worktree**, which survives until the human merges. The main checkout is theirs to read, never to write. When a branch guard blocks an agent, the fix is the worktree — `ALLOW_MAIN_COMMIT=1` is a human escape hatch and stays one.
+- **A failed or stalled agent goes back to the user, not back into the queue.** They decide whether to re-run it under `/ralph` for closer supervision.
