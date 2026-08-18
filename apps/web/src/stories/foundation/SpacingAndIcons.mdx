@@ -258,33 +258,36 @@ Every shadow here has a `0` blur radius: depth is drawn, not simulated. `--shado
 
 ### Motion
 
-Three motion tokens cover the redesign's interaction palette. Interactive
-motion previews live in `<TapedCard>` Storybook later in Phase 1 — this page
-documents the tokens only.
+Three speeds and one curve cover the redesign's interaction palette — no
+per-component motion tokens. `DESIGN.md` → **Motion** is the authority for
+the full rule set (loops, reduced motion, the waiting devices); this page
+documents the values only.
 
 <table>
   <thead>
     <tr>
-      <th>Token</th>
-      <th>Value</th>
+      <th>Duration</th>
+      <th>Curve</th>
       <th>Use</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><code>--motion-fast</code></td>
-      <td><code>150ms ease-out</code></td>
-      <td>Hover state changes — colour, opacity, underline</td>
+      <td><code>150ms</code></td>
+      <td><code>var(--ease-out)</code></td>
+      <td>Chrome — colour and border changes on hover (nav links, chips, text links, filter bars)</td>
     </tr>
     <tr>
-      <td><code>--motion-base</code></td>
-      <td><code>240ms cubic-bezier(0.2, 0.8, 0.2, 1)</code></td>
-      <td>Default UI motion — drawer/menu open, focus ring</td>
+      <td><code>300ms</code></td>
+      <td><code>var(--ease-out)</code></td>
+      <td>The press — the press-down on cards and buttons</td>
     </tr>
     <tr>
-      <td><code>--motion-tape</code></td>
-      <td><code>300ms ease-out</code></td>
-      <td>TapedCard rotation snap + lift animation</td>
+      <td><code>500ms</code></td>
+      <td><code>var(--ease-out)</code></td>
+      <td>Arrival — anything entering the screen (scroll reveals, drawers)</td>
     </tr>
   </tbody>
 </table>
+
+`--ease-out` resolves to `cubic-bezier(0, 0, 0.58, 1)` — the only curve anything that starts on demand may use. There is no fourth duration and no second curve.
