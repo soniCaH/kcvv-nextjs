@@ -211,6 +211,7 @@ function ReservationHero({
   venue,
   status,
   competition,
+  kcvvTeamLabel,
   className,
 }: {
   team: MatchHeroTeam;
@@ -219,6 +220,7 @@ function ReservationHero({
   venue?: string;
   status: MatchStatus;
   competition?: string;
+  kcvvTeamLabel?: string;
   className?: string;
 }) {
   const stubDate = formatStubDate(date);
@@ -274,15 +276,23 @@ function ReservationHero({
 
           <div className="border-ink border-t pt-3">
             <div className="text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase">
-              <span>{subject}</span>
-              {statusWording ? (
-                <>
-                  <span aria-hidden="true" className="text-ink-muted mx-2">
-                    ·
+              {/* The one useful fact a deliberately empty page still owes a
+                  visitor: which squad reserved the slot. Without it the page
+                  said only "KCVV Elewijt" and "TORNOOI" and never which team
+                  (a code-review finding on #2688's first draft — the normal
+                  hero's `buildCompetitionMeta` already carries this). */}
+              {[subject, kcvvTeamLabel, statusWording?.longForm]
+                .filter((part): part is string => Boolean(part))
+                .map((part, index) => (
+                  <span key={`${part}-${index}`}>
+                    {index > 0 && (
+                      <span aria-hidden="true" className="text-ink-muted mx-2">
+                        ·
+                      </span>
+                    )}
+                    {part}
                   </span>
-                  <span>{statusWording.longForm}</span>
-                </>
-              ) : null}
+                ))}
             </div>
           </div>
         </div>
@@ -317,6 +327,7 @@ export function MatchHero({
         venue={venue}
         status={status}
         competition={competition}
+        kcvvTeamLabel={kcvvTeamLabel}
         className={className}
       />
     );

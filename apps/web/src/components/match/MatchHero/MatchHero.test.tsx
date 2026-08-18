@@ -377,6 +377,21 @@ describe("MatchHero", () => {
       expect(screen.getByText("Tornooi")).toBeInTheDocument();
     });
 
+    it("names the squad that reserved the slot — the one useful fact this deliberately empty page owes a visitor", () => {
+      render(
+        <MatchHero
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          date={scheduledMatchDate}
+          status="scheduled"
+          competition="Tornooi"
+          kcvvTeamLabel="U13"
+          isPlaceholder
+        />,
+      );
+      expect(screen.getByText("U13")).toBeInTheDocument();
+    });
+
     it("falls back to the RESERVATION_SUBJECT_FALLBACK wording when no competition label is sent", () => {
       render(
         <MatchHero

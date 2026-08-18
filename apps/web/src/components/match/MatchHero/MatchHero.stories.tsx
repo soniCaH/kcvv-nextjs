@@ -165,6 +165,24 @@ export const ReservationFallbackSubject: Story = {
 };
 
 /**
+ * The one useful fact a deliberately empty page still owes a visitor: which
+ * squad reserved the slot (#2688 code-review finding — `kcvvTeamLabel` was
+ * received but never forwarded to the reservation branch).
+ */
+export const ReservationWithSquad: Story = {
+  args: {
+    homeTeam: defaultHomeTeam,
+    awayTeam: defaultHomeTeam,
+    date: upcomingDate,
+    time: "09:30",
+    competition: "Tornooi",
+    kcvvTeamLabel: "U13",
+    status: "scheduled",
+    isPlaceholder: true,
+  },
+};
+
+/**
  * Mobile collapse — at narrow widths the two-zone grid stacks vertically,
  * the divider rotates from vertical-right to horizontal-bottom, and the
  * status badge stays anchored to the card's top-right.
