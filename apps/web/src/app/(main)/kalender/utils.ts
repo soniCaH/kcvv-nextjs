@@ -411,6 +411,12 @@ export function calendarMatchToScheduleMatch(
         id: match.homeTeam.id,
         name: match.homeTeam.name,
         logo: match.homeTeam.logo,
+        // Same squad-context injection the non-placeholder branch below does
+        // for the KCVV side — without it, a parent on a mixed-squad day
+        // (crest + "TORNOOI" + time) cannot tell whether the reservation is
+        // U13's or U17's, while every neighbouring row says so
+        // (code-review finding on #2688's first draft).
+        teamLabel: match.team,
       },
       status: match.status,
       competition: match.competition,

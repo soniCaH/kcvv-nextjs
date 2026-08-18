@@ -150,6 +150,11 @@ describe("CalendarAgenda", () => {
     expect(row).toHaveTextContent("Tornooi");
     expect(row.textContent).not.toMatch(/KCVV Elewijt.*KCVV Elewijt/);
     expect(screen.queryByTestId("agenda-match-row")).toBeNull();
+    // The default fixture's squad ("U7") must still show — a mixed-squad day
+    // (`AgendaMatchRow` renders this chip for every real row) otherwise
+    // leaves a reservation indistinguishable from any other squad's
+    // (code-review finding on #2688's first draft).
+    expect(row).toHaveTextContent("U7");
   });
 
   it("interleaves matches and events by time within a day", () => {

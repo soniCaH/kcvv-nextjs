@@ -124,6 +124,24 @@ describe("CalendarWeek", () => {
     expect(saturdayColumn.querySelector("a")).toBeNull();
   });
 
+  it("marks a cancelled reservation with the same status badge a real match gets — a cancelled slot must not read as live (#2688)", () => {
+    const matches = [
+      makeMatch({
+        id: 91,
+        date: "2026-03-28T09:30:00",
+        time: "09:30",
+        homeTeam: { id: 1235, name: "KCVV Elewijt" },
+        awayTeam: { id: 1235, name: "KCVV Elewijt" },
+        competition: "Tornooi",
+        status: "cancelled",
+        isPlaceholder: true,
+      }),
+    ];
+    render(<CalendarWeek {...defaultProps} matches={matches} />);
+    const saturdayColumn = screen.getByTestId("week-col-2026-03-28");
+    expect(saturdayColumn).toHaveTextContent("CANC");
+  });
+
   it("renders an event in its day column", () => {
     const events = [makeEvent({ id: "e1", dateStart: "2026-03-25T10:00:00" })];
     render(<CalendarWeek {...defaultProps} events={events} />);

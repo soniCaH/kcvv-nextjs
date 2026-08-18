@@ -508,6 +508,10 @@ describe("calendarMatchToScheduleMatch", () => {
         id: 1235,
         name: "KCVV Elewijt",
         logo: undefined,
+        // Same squad-context injection the non-placeholder branch does for
+        // the KCVV side — without it, a parent on a mixed-squad day cannot
+        // tell whose reservation this is (#2688).
+        teamLabel: "A-ploeg",
       });
       expect(result.competition).toBe("Tornooi");
       expect("awayTeam" in result).toBe(false);

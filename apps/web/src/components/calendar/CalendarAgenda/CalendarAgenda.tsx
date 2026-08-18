@@ -70,6 +70,15 @@ function ReservationAgendaRow({ match }: { match: CalendarMatch }) {
           logo={match.homeTeam.logo}
           size={18}
         />
+        {/* Same squad chip `AgendaMatchRow` renders below — without it a
+            reservation among a mixed-squad day's other rows (crest + subject
+            + time) cannot be told apart from any other squad's reservation
+            (code-review finding on #2688's first draft). */}
+        {match.team && (
+          <span className="text-ink-muted shrink-0 font-mono text-[10px] font-semibold tracking-wide">
+            {match.team}
+          </span>
+        )}
         <span className="text-ink-muted min-w-0 truncate font-mono text-[11px] font-semibold tracking-wide uppercase">
           {subject}
         </span>

@@ -33,7 +33,7 @@ const SHORT_DAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
  * `WeekMatchCard` so it still reads as one system in the grid.
  */
 function ReservationWeekCard({ match }: { match: CalendarMatch }) {
-  const { subject } = reservationView(match);
+  const { subject, statusWording } = reservationView(match);
   return (
     <div className="border-ink bg-cream shadow-paper-sm block border-2 p-1.5">
       {match.team && (
@@ -50,11 +50,19 @@ function ReservationWeekCard({ match }: { match: CalendarMatch }) {
           {subject}
         </span>
       </div>
-      {match.time && (
-        <div className="text-ink-muted mt-0.5 font-mono text-[10px]">
-          {match.time}
-        </div>
-      )}
+      <div className="mt-0.5 flex items-center gap-1">
+        {match.time && (
+          <span className="text-ink-muted font-mono text-[10px]">
+            {match.time}
+          </span>
+        )}
+        {/* A reservation can be called off the same way a real fixture can
+            (#2606) — without this, a cancelled tournament reservation was
+            visually identical to a live one, telling a parent to turn up for
+            something that is off (a code-review finding on #2688's first
+            draft; `WeekMatchCard` above already had this for a real match). */}
+        {statusWording && <MatchStatusBadge status={match.status} />}
+      </div>
     </div>
   );
 }
