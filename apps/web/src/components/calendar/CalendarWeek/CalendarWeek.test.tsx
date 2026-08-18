@@ -122,6 +122,9 @@ describe("CalendarWeek", () => {
     expect(saturdayColumn).toHaveTextContent("Tornooi");
     expect(saturdayColumn).toHaveTextContent("09:30");
     expect(saturdayColumn.querySelector("a")).toBeNull();
+    // The whole point of the reduced card: the self-match's club name never
+    // reaches it, so the card cannot read as KCVV playing itself.
+    expect(saturdayColumn).not.toHaveTextContent("KCVV Elewijt");
   });
 
   it("marks a cancelled reservation with the same status badge a real match gets — a cancelled slot must not read as live (#2688)", () => {

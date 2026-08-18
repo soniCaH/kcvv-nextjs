@@ -140,5 +140,6 @@ describe("transformMatchToSchedule", () => {
     expect(result.competition).toBe("Tornooi");
     expect("awayTeam" in result).toBe(false);
     expect("homeScore" in result).toBe(false);
+    expect("awayScore" in result).toBe(false);
   });
 });

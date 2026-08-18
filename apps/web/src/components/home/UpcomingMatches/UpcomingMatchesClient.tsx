@@ -272,7 +272,15 @@ const ReservationMatchRow = ({ match }: { match: UpcomingReservation }) => {
     status: match.status,
     statusWording,
   });
-  const caption = [matchTeamLabel(match), subject, match.venue]
+  // `statusWording` rides the visible caption, not only the accessible name:
+  // a cancelled reservation that looks identical to a live one tells a parent
+  // to turn up for something that is off (#2688).
+  const caption = [
+    matchTeamLabel(match),
+    subject,
+    match.venue,
+    statusWording?.longForm,
+  ]
     .filter(Boolean)
     .join(" · ");
 

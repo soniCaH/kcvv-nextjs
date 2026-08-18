@@ -286,7 +286,11 @@ export function reservationRowLabel({
   status: MatchStatus;
   statusWording: { abbreviation: string; longForm: string } | null;
 }): string {
-  const kindWord = !statusWording && kind ? MATCH_KIND_WORD[kind] : null;
+  // Only the fixture word. A reservation is a booking with no score, so it
+  // never carries result vocabulary — "Uitslag: Tornooi" is a contradiction,
+  // and this label is the row's sole accessible content (#2688).
+  const kindWord =
+    !statusWording && kind === "fixture" ? MATCH_KIND_WORD.fixture : null;
   return [
     kindWord ? `${kindWord}: ` : "",
     subject,

@@ -174,6 +174,8 @@ describe("mapMatchToUpcomingMatch", () => {
     expect(result.competition).toBe("Tornooi");
     expect(result.kcvvTeamLabel).toBe("U13");
     expect("awayTeam" in result).toBe(false);
+    expect("homeScore" in result).toBe(false);
+    expect("awayScore" in result).toBe(false);
   });
 
   it("should handle stopped status", () => {

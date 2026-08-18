@@ -328,6 +328,15 @@ describe("UpcomingMatches", () => {
       expect(article).toHaveAttribute("data-placeholder", "true");
     });
 
+    it("prints the status wording on a cancelled reservation — a dead slot must not read as live", () => {
+      const cancelled = mockUpcomingWithReservation.map((m) =>
+        m.isPlaceholder ? { ...m, status: "cancelled" as const } : m,
+      );
+      render(<UpcomingMatches matches={cancelled} />);
+      const article = screen.getByRole("article", { name: /Tornooi/ });
+      expect(article).toHaveTextContent("Geannuleerd");
+    });
+
     it("still buckets the reservation under its own squad's filter chip", () => {
       render(<UpcomingMatches matches={mockUpcomingWithReservation} />);
       expect(chip(/U13/)).toBeInTheDocument();

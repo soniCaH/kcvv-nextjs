@@ -278,6 +278,17 @@ describe("MatchStripView", () => {
       expect(screen.queryByLabelText("Uitwedstrijd")).toBeNull();
     });
 
+    it("never speaks result vocabulary, even handed a reservation in the result slot", () => {
+      render(<MatchStripView data={{ result: reservation, fixture: null }} />);
+      // The strip's own slot heading says "Uitslag" — that is chrome and stays.
+      // What must never happen is the reservation row claiming that word: its
+      // aria-label is its sole accessible content, and a booking has no result.
+      expect(screen.queryByRole("article", { name: /Uitslag/i })).toBeNull();
+      expect(
+        screen.getByRole("article", { name: /Tornooi/ }),
+      ).toBeInTheDocument();
+    });
+
     it("falls back to RESERVATION_SUBJECT_FALLBACK when no competition label is sent", () => {
       render(
         <MatchStripView
