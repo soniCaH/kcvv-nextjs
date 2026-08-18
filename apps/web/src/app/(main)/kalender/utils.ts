@@ -10,7 +10,11 @@ import {
   type EventType,
 } from "@/components/event/event-type-style";
 import type { MatchStatus, ScheduleRow } from "@/components/match/types";
-import { getScoreDisplay, type ScoreDisplay } from "@/lib/utils/match-display";
+import {
+  getScoreDisplay,
+  reservationView,
+  type ScoreDisplay,
+} from "@/lib/utils/match-display";
 import { capitalize } from "@/lib/utils/capitalize";
 import {
   CLUB_TIMEZONE,
@@ -255,7 +259,14 @@ export function buildKalenderItemListEntries(
     .map((item) =>
       item.source === "match"
         ? {
-            name: `${item.match.homeTeam.name} — ${item.match.awayTeam.name}`,
+            // A reservation has no opponent to print "home — away" for
+            // (#2606) — unlike `SportsEvent` JSON-LD on `/wedstrijd/[matchId]`,
+            // this entry isn't dropped: an `ItemList` `name` is a label, not
+            // a fixture assertion, and the URL it points at is now a real
+            // reduced page (#2688).
+            name: item.match.isPlaceholder
+              ? reservationView(item.match).subject
+              : `${item.match.homeTeam.name} — ${item.match.awayTeam.name}`,
             url: `${siteUrl}/wedstrijd/${item.match.id}`,
           }
         : { name: item.event.title, url: `${siteUrl}${item.event.href}` },
@@ -368,9 +379,9 @@ export function getDaysInWeek(dateStr: string): string[] {
  * function doing) renders a reserved slot as an ordinary home fixture on the
  * month grid.
  */
-export function getMatchDotType(
-  match: CalendarMatch,
-): "home" | "away" | "reservation" {
+export type MatchDotType = "home" | "away" | "reservation";
+
+export function getMatchDotType(match: CalendarMatch): MatchDotType {
   if (match.isPlaceholder) return "reservation";
   if (match.isHome != null) {
     return match.isHome ? "home" : "away";
@@ -378,6 +389,24 @@ export function getMatchDotType(
   // Fallback for matches without BFF-computed isHome
   return match.homeTeam.name.toLowerCase().includes("kcvv") ? "home" : "away";
 }
+
+/**
+ * The visual treatment for a match-day pip/dot, keyed by `getMatchDotType`'s
+ * return — one map instead of two hand-copied ternary chains
+ * (`CalendarMonth`'s grid pip, `CalendarWeek`'s day-cell dot; the home/away
+ * pair was already duplicated between the two before #2688 added the third
+ * state to both copies). Deliberately excludes size: the two consumers draw
+ * their dot at different diameters, so each appends its own `h-*`/`w-*` via
+ * `cn()`.
+ */
+export const MATCH_DOT_CLASS: Record<MatchDotType, string> = {
+  home: "bg-card-red",
+  away: "border-card-red border-[1.5px] bg-transparent",
+  // A pitch-reservation placeholder has no side to claim (#2606) — a dashed
+  // ring keeps the "Wedstrijden" category red (#1992) without claiming home
+  // OR away.
+  reservation: "border-card-red border-[1.5px] border-dashed bg-transparent",
+};
 
 /**
  * Adapt a `CalendarMatch` (route VM, `date: string`) to the `ScheduleRow`
@@ -411,12 +440,6 @@ export function calendarMatchToScheduleMatch(
         id: match.homeTeam.id,
         name: match.homeTeam.name,
         logo: match.homeTeam.logo,
-        // Same squad-context injection the non-placeholder branch below does
-        // for the KCVV side — without it, a parent on a mixed-squad day
-        // (crest + "TORNOOI" + time) cannot tell whether the reservation is
-        // U13's or U17's, while every neighbouring row says so
-        // (code-review finding on #2688's first draft).
-        teamLabel: match.team,
       },
       status: match.status,
       competition: match.competition,

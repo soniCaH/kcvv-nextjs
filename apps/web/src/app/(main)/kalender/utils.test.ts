@@ -20,15 +20,7 @@ import {
 import type { Match } from "@/lib/effect/schemas/match.schema";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import type { CalendarMatch, CalendarEvent } from "./utils";
-import type { ScheduleMatch, ScheduleRow } from "@/components/match/types";
-
-/** Narrows a `ScheduleRow` to `ScheduleMatch` — every fixture in this file
- * that reaches for `homeTeam`/`awayTeam`/scores is deliberately a
- * non-placeholder match; the reservation branch has its own tests below. */
-function asMatch(row: ScheduleRow): ScheduleMatch {
-  if (row.isPlaceholder) throw new Error("expected a ScheduleMatch");
-  return row;
-}
+import { asNonPlaceholder } from "@/components/match/test-narrowing";
 
 function createMatch(overrides: Partial<Match> = {}): Match {
   return {
@@ -425,7 +417,7 @@ describe("buildCalendarFeed", () => {
 
 describe("calendarMatchToScheduleMatch", () => {
   it("maps the VM onto the ScheduleMatch shape (date string → Date)", () => {
-    const result = asMatch(
+    const result = asNonPlaceholder(
       calendarMatchToScheduleMatch(
         makeCalendarMatch({
           id: 7,
@@ -450,7 +442,7 @@ describe("calendarMatchToScheduleMatch", () => {
   });
 
   it("injects the KCVV squad label on the home side for a home match", () => {
-    const result = asMatch(
+    const result = asNonPlaceholder(
       calendarMatchToScheduleMatch(
         makeCalendarMatch({ id: 1, team: "U13", isHome: true }),
       ),
@@ -461,7 +453,7 @@ describe("calendarMatchToScheduleMatch", () => {
   });
 
   it("injects the KCVV squad label on the away side for an away match", () => {
-    const result = asMatch(
+    const result = asNonPlaceholder(
       calendarMatchToScheduleMatch(
         makeCalendarMatch({ id: 2, team: "U13", isHome: false }),
       ),
@@ -472,7 +464,7 @@ describe("calendarMatchToScheduleMatch", () => {
   });
 
   it("falls back to name-based home/away when isHome is absent", () => {
-    const result = asMatch(
+    const result = asNonPlaceholder(
       calendarMatchToScheduleMatch(
         makeCalendarMatch({
           id: 3,
@@ -508,10 +500,6 @@ describe("calendarMatchToScheduleMatch", () => {
         id: 1235,
         name: "KCVV Elewijt",
         logo: undefined,
-        // Same squad-context injection the non-placeholder branch does for
-        // the KCVV side — without it, a parent on a mixed-squad day cannot
-        // tell whose reservation this is (#2688).
-        teamLabel: "A-ploeg",
       });
       expect(result.competition).toBe("Tornooi");
       expect("awayTeam" in result).toBe(false);
@@ -692,6 +680,35 @@ describe("buildKalenderItemListEntries", () => {
       name: "Spaghetti-avond",
       url: "https://kcvvelewijt.be/evenementen/spaghetti-avond",
     });
+  });
+
+  it("names a pitch-reservation placeholder by its subject, never 'home — away' (#2606, #2688)", () => {
+    // The same bug this PR exists to remove, found live on a route its own
+    // body declared fixed — CalendarMatch's flat isPlaceholder boolean let
+    // this construction site compile clean without branching on it.
+    const feed = buildCalendarFeed(
+      [
+        makeCalendarMatch({
+          id: 90,
+          date: "2026-09-12T09:30:00.000Z",
+          isPlaceholder: true,
+          homeTeam: { id: 1235, name: "KCVV Elewijt" },
+          awayTeam: { id: 1235, name: "KCVV Elewijt" },
+          competition: "Tornooi",
+        }),
+      ],
+      [],
+    );
+
+    const entries = buildKalenderItemListEntries(feed, SITE, { nowMs: NOW });
+
+    expect(entries).toContainEqual({
+      name: "Tornooi",
+      url: "https://kcvvelewijt.be/wedstrijd/90",
+    });
+    expect(entries.some((e) => /KCVV Elewijt.*KCVV Elewijt/.test(e.name))).toBe(
+      false,
+    );
   });
 
   it("drops past items and caps at the limit", () => {
