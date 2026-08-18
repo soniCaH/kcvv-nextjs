@@ -235,7 +235,13 @@ export function TeamAgendaRow({
   // PROTOTYPE — #2693. Throwaway; remove with the branch.
   const protoVariant = useProtoVariant();
   if (protoVariant !== "off" && isProtoTournament(match)) {
-    return <ProtoTournamentRow match={match} variant={protoVariant} />;
+    return (
+      <ProtoTournamentRow
+        match={match}
+        variant={protoVariant}
+        featured={featured}
+      />
+    );
   }
 
   // Prefer match.is_home (provided by BFF); fall back to comparing kcvvTeamId
