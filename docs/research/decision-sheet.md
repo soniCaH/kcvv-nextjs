@@ -27,8 +27,8 @@ fixed-price, never negotiated, so nothing is lost by publishing them.
 
 **C2 — Wedstrijdbal / wedstrijdsponsor? YES, and it already exists on paper.**
 The club has a **full sponsor brochure with prices, in hardcopy**. This is not new inventory to invent —
-it is existing inventory that is invisible online. Kevin: *"we could promote the packages themselves a
-bit more."*
+it is existing inventory that is invisible online. Kevin: _"we could promote the packages themselves a
+bit more."_
 
 **C3 — Sponsor categories we would refuse? NONE so far.**
 The question has never come up. Closed — but see the note under C10 below.
@@ -38,7 +38,7 @@ The question has never come up. Closed — but see the note under C10 below.
 The two answers combine into one clean rule, and it happens to be the strongest commercial position
 available:
 
-> **Publish every package's *contents* publicly. Publish prices only where the price is fixed.**
+> **Publish every package's _contents_ publicly. Publish prices only where the price is fixed.**
 
 - The brochure's descriptions — what a sponsor actually gets — go on the site in full. That is the part
   that is currently invisible, and it costs nothing to reveal.
@@ -55,7 +55,7 @@ That is fine — it just means C10, if it happens, is about the club's character
 ethics. Don't let a drafted values page quietly imply a policy that doesn't exist.
 **C4 — Who writes sponsor descriptions? SPONSOR-ASSISTED — and the premise needed correcting.**
 
-Kevin asked back: *"where do we even show these texts? At this moment we never show them anywhere."*
+Kevin asked back: _"where do we even show these texts? At this moment we never show them anywhere."_
 Half right, and the half that isn't is the useful part.
 
 The surface **exists**:
@@ -66,15 +66,15 @@ The surface **exists**:
 
 Two things make it invisible in practice:
 
-1. **It only renders for `featured` sponsors.** The schema says so outright: *"Enkel zichtbaar wanneer de
-   sponsor uitgelicht is."* So even a filled-in description stays hidden for a non-featured sponsor.
+1. **It only renders for `featured` sponsors.** The schema says so outright: _"Enkel zichtbaar wanneer de
+   sponsor uitgelicht is."_ So even a filled-in description stays hidden for a non-featured sponsor.
 2. **Production: 33 sponsors, 0 with a description.** Nothing has ever been written into it.
 
 **Decision recorded:** ask the sponsor for a draft, club edits. Kevin's instinct is right and it also
 solves the effort problem that made me recommend club-written.
 
-**The field's own example is the giveaway:** the schema's placeholder text is *"Leverde de matchbal voor
-de wedstrijd van 12 april"* — this field was designed for precisely the matchbal package that C1 and C2
+**The field's own example is the giveaway:** the schema's placeholder text is _"Leverde de matchbal voor
+de wedstrijd van 12 april"_ — this field was designed for precisely the matchbal package that C1 and C2
 just decided to publish. The pieces were built to fit and never connected.
 
 **Follow-up:** decide whether description should render beyond `featured`. If the sponsor page is going
@@ -84,8 +84,8 @@ to carry brochure content (C2), a description that only appears in the spotlight
 
 **C5 — Publish lidgeld? DEFERRED, and the dependency is now explicit.**
 
-The board still has to decide, but Kevin has named what gates it: *"will probably be blocked by the
-detailed numbers of what a player costs us — as long as we don't have these details, we won't publish."*
+The board still has to decide, but Kevin has named what gates it: _"will probably be blocked by the
+detailed numbers of what a player costs us — as long as we don't have these details, we won't publish."_
 
 **So C5 is not waiting on willingness, it is waiting on F18** (what a youth player actually costs per
 season, opened by C9). That is a real dependency and it points the same way C9 already did: the
@@ -99,12 +99,12 @@ C6, a visible "last updated" stamp). Build that now; the numbers drop in later w
 **C6 — Hardship provision? IT ALREADY EXISTS — as split payment, not reduction.**
 
 The club already mentions this in the **pre-season letter sent via PSD**: not a discount, but a
-**gespreide betaling**. Crucial operating condition, in Kevin's words: it *"has to be asked upfront to
-prevent people just paying random amounts when they feel like it, like we had a lot in the past."*
+**gespreide betaling**. Crucial operating condition, in Kevin's words: it _"has to be asked upfront to
+prevent people just paying random amounts when they feel like it, like we had a lot in the past."_
 
 **This is publishable today and it needs no new policy.** It is a weaker offer than Víkingur's hardship
 clause but it is real, it is already club practice, and it answers the same question a parent is
-actually asking — *"what if I can't pay it all at once?"* Publish it with the upfront condition stated
+actually asking — _"what if I can't pay it all at once?"_ Publish it with the upfront condition stated
 plainly; the condition is not fine print, it is the thing that makes the arrangement work, and saying
 why (so the club can plan, and so nobody improvises) reads as honest rather than restrictive.
 
@@ -136,27 +136,27 @@ that matter.) Added as **F17**.
 
 **C8 — "Breng een sponsor" — the mechanism already exists, and it is unusual.**
 
-Also sent via PSD today. The actual mechanism, in Kevin's words: *"we add the lidgeld to the sponsor's
-invoice, so they get the taxes in return."* The sponsor pays, the club invoices it as sponsorship, and
+Also sent via PSD today. The actual mechanism, in Kevin's words: _"we add the lidgeld to the sponsor's
+invoice, so they get the taxes in return."_ The sponsor pays, the club invoices it as sponsorship, and
 the sponsor can treat it as a deductible business expense rather than a gift.
 
 **That is a genuinely clever arrangement and no researched club publishes anything like it.** Two things
 block a public page:
 
 1. **No minimum has ever been set.** Without a threshold the offer cannot be described — "bring a
-   sponsor and pay less" needs to say *how much less, from what amount*.
+   sponsor and pay less" needs to say _how much less, from what amount_.
 2. **Be careful with the tax framing.** Describe the mechanism factually (the club invoices the
    sponsorship; how the sponsor books it is between them and their accountant). **The club should not
    publish tax advice.** Get the wording past whoever does the club's bookkeeping.
 
 **C9 — Cost transparency: NOT YET, and the blocker is bookkeeping, not willingness.**
 
-Kevin: *"it would be awesome to have a complete picture of what one youth player costs on a season's
-base, but we simply don't have these numbers correctly at this point."*
+Kevin: _"it would be awesome to have a complete picture of what one youth player costs on a season's
+base, but we simply don't have these numbers correctly at this point."_
 
 **But the answer reframed the question, and this is the important part.** The reason to want that page
-is now specific and concrete: *"This is a lot of discussion every year. Parents blaming the club that
-all lidgeld for youth players goes to the first team wages."*
+is now specific and concrete: _"This is a lot of discussion every year. Parents blaming the club that
+all lidgeld for youth players goes to the first team wages."_
 
 So this is not "how transparent do we feel like being" — it is **a recurring accusation the club faces
 annually, which a single honest cost breakdown would settle.** That moves it from a nice-to-have
@@ -169,16 +169,16 @@ happens every year either way.
 
 ### Values, people and sensitive content
 
-| # | Decision | What the research says |
-|---|---|---|
-**C10 — Principles page? YES, but it has to be written.** Kevin suggests it may fall out of the
-**Double Pass audit**, which is the right instinct — those audits produce mission, vision and policy
-text as a by-product. **Action:** check whether the Double Pass material already contains publishable
-wording before anyone drafts from scratch. Added as **F20**. *(Also updates F10: we are evidently
-engaged with Double Pass, so the certification question is partly answered.)*
+| #                                                                                                     | Decision | What the research says |
+| ----------------------------------------------------------------------------------------------------- | -------- | ---------------------- |
+| **C10 — Principles page? YES, but it has to be written.** Kevin suggests it may fall out of the       |
+| **Double Pass audit**, which is the right instinct — those audits produce mission, vision and policy  |
+| text as a by-product. **Action:** check whether the Double Pass material already contains publishable |
+| wording before anyone drafts from scratch. Added as **F20**. *(Also updates F10: we are evidently     |
+| engaged with Double Pass, so the certification question is partly answered.)*                         |
 
-Register reminder: at our level the voice that works is Chemie Leipzig's — *"nooit op het allerhoogste
-niveau, meestal de underdog"* — not imported activism. And per C3, it cannot claim a stance on sponsors.
+Register reminder: at our level the voice that works is Chemie Leipzig's — _"nooit op het allerhoogste
+niveau, meestal de underdog"_ — not imported activism. And per C3, it cannot claim a stance on sponsors.
 
 **C11 — In memoriam page? YES ("would be awesome").**
 
@@ -189,16 +189,16 @@ Not a blocker to planning it — a blocker to publishing it.
 
 **C12 — Youth data: the machinery is already correct, and nothing is published today.**
 
-Kevin asked back: *"do we publish the number of games?"* Measured against production:
+Kevin asked back: _"do we publish the number of games?"_ Measured against production:
 
-| | |
-|---|---|
-| player documents | **294** |
-| with a full `birthDate` (read-only, synced from PSD) | **292** |
-| born 2008 or later (i.e. minors) | **231** |
-| **with a slug — i.e. with a public page** | **0** |
-| with a jersey number | **0** |
-| appearance counts rendered anywhere in the web app | **none** |
+|                                                      |          |
+| ---------------------------------------------------- | -------- |
+| player documents                                     | **294**  |
+| with a full `birthDate` (read-only, synced from PSD) | **292**  |
+| born 2008 or later (i.e. minors)                     | **231**  |
+| **with a slug — i.e. with a public page**            | **0**    |
+| with a jersey number                                 | **0**    |
+| appearance counts rendered anywhere in the web app   | **none** |
 
 So the answer to the question as asked: **no — we publish nothing about individual players at all right
 now.** `/spelers/[slug]` exists as a route and generates zero pages.
@@ -213,17 +213,17 @@ now.** `/spelers/[slug]` exists as a route and generates zero pages.
 
 That matches what Kevin described (year of birth only) and implements it more carefully than the
 description suggests. **Nothing to fix.** The remaining question is narrower than "what may we publish":
-it is whether an *appearance count* is acceptable for a minor — noting the federation already publishes
+it is whether an _appearance count_ is acceptable for a minor — noting the federation already publishes
 named youth squads with appearances and goals on `voetbalvlaanderen.be`, so that data is public
 regardless of what we do.
 
 **C13 + C14 — the technical objection is valid, and it is already solved.**
 
-Kevin: *"we don't have any editorial match data in Sanity, it's all read-sync from PSD — how would this
-even work?"*
+Kevin: _"we don't have any editorial match data in Sanity, it's all read-sync from PSD — how would this
+even work?"_
 
 **The editorial↔PSD join exists and is validated.** `packages/sanity-schemas/src/article.ts` carries a
-`matchId` field: *"PSD-wedstrijd-id — kopieer het uit de /wedstrijd/[matchId] URL"*, required (and
+`matchId` field: _"PSD-wedstrijd-id — kopieer het uit de /wedstrijd/[matchId] URL"_, required (and
 numeric-validated) when `articleType` is `matchPreview` or `matchRecap`, hidden otherwise. So an
 editorial document can already be bound to a specific PSD match.
 
@@ -236,7 +236,7 @@ only** (C13), and the same mechanism answers C14's poll, which would need a vote
 match binding.
 
 > **Correction to an earlier claim in this file and in `belgian-club-websites.md`.** Those said
-> `matchPreview` and `matchRecap` were *document types* with zero documents. They are not — they are
+> `matchPreview` and `matchRecap` were _document types_ with zero documents. They are not — they are
 > **values of `articleType` on `article`**. The count of `*[_type=="matchPreview"]` was therefore
 > measuring a type that has never existed, which returns 0 for the wrong reason. The conclusion happens
 > to survive — 0 articles carry a `matchId` — but the mechanism, and therefore the cost of using it, is
@@ -245,12 +245,12 @@ match binding.
 
 ### Editorial capacity — the constraint behind a third of the recommendations
 
-| # | Decision | What the research says |
-|---|---|---|
-**C15 — NO recurring format. This is the most clarifying answer of the whole exercise.**
+| #                                                                                        | Decision | What the research says |
+| ---------------------------------------------------------------------------------------- | -------- | ---------------------- |
+| **C15 — NO recurring format. This is the most clarifying answer of the whole exercise.** |
 
 There used to be **KCVV TV**; the reporter left the club. There are no volunteers for it now, let alone
-for something with a fixed cadence. In Kevin's words: *"It's all me myself and I for now"* — with the
+for something with a fixed cadence. In Kevin's words: _"It's all me myself and I for now"_ — with the
 hope of changing that.
 
 **This closes a large cluster outright**, and that is a good outcome rather than a disappointing one:
@@ -266,10 +266,10 @@ not need re-writing:
 2. **Content the system generates** — fixtures, results, standings, cancellations. Already synced from
    PSD, already normalised, needs no author at all.
 3. **One-off-per-subject content that accumulates** — the Criacao-style player questionnaire (ten
-   minutes per player, filled in *by the player*), a Detroit-style appearance archive that grows
+   minutes per player, filled in _by the player_), a Detroit-style appearance archive that grows
    algorithmically. A hundred pages of personality without one person writing a hundred pages.
 
-**Design consequence:** build so that adding a writer later is *additive*, not a rebuild. Nothing should
+**Design consequence:** build so that adding a writer later is _additive_, not a rebuild. Nothing should
 assume a cadence; nothing should break when one appears.
 
 **And it explains the five unused capabilities.** One person cannot feed match previews, recaps,
@@ -313,16 +313,16 @@ These block real pages. Most are one phone call or one look in PSD.
 
 - [ ] **F1 — Kantine:** actual opening hours (or is "open tijdens clubactiviteiten" the honest rule?), payment methods (Payconiq/card/cash), a publishable phone number, who runs it and are they nameable.
 - [ ] **F2 — Entry price** at the Dries for a home first-team match; does it include a drinkbon; youth match price; abonnementen; are under-12s free.
-- [ ] **F3 — Parking and access:** preferred route to Driesstraat 32 on a busy matchday, where people should *not* park, anything shared with a neighbouring club, and any neighbour sensitivities to address directly.
+- [ ] **F3 — Parking and access:** preferred route to Driesstraat 32 on a busy matchday, where people should _not_ park, anything shared with a neighbouring club, and any neighbour sensitivities to address directly.
 - [ ] **F4 — Which pitch:** post-renovation, how many, what they're called locally, which team plays where.
 - [ ] **F5 — API / vertrouwenspersoon:** who is it, will they be named with a direct contact route, and **is there a second** so a parent has a choice of who to approach.
-- [ ] **F6 — Volunteer coordinator:** is there a named human willing to have their email on the page, or does it route to the algemeen secretaris? *(A volunteer page with a generic inbox converts nobody.)*
+- [ ] **F6 — Volunteer coordinator:** is there a named human willing to have their email on the page, or does it route to the algemeen secretaris? _(A volunteer page with a generic inbox converts nobody.)_
 - [ ] **F7 — Open volunteer roles right now**, with an honest time commitment per role — "two hours, once a month, no experience needed" is the pattern that works.
 - [ ] **F8 — Referee recruitment:** does the club pay for the course? The page only works if the offer is concrete.
 - [ ] **F9 — Charters / gedragscodes:** do they exist in writing? If yes, publishing as HTML is small and high-trust. If no, writing them is a board job (→ C10).
-- [ ] **F10 — Certification:** do we hold Double Pass, Panathlon, or a Voetbal Vlaanderen quality label? *(The federation page already shows `Basic Quality label Gew`.)* If not, nothing should imply it.
+- [ ] **F10 — Certification:** do we hold Double Pass, Panathlon, or a Voetbal Vlaanderen quality label? _(The federation page already shows `Basic Quality label Gew`.)_ If not, nothing should imply it.
 - [ ] **F11 — Physical archive:** old clubbladen, programmaboekjes, scheurkalenders in a cupboard — and is anyone willing to scan? Worth one question to the oldest board member. Scope of the whole heritage idea depends on it.
-- [ ] **F12 — Honours records:** jubilarissen, 100/250-match milestones, past kampioenenvieringen. *"We don't have the records"* is a valid answer that closes the idea — `PRODUCT.md` forbids fabricating honours.
+- [ ] **F12 — Honours records:** jubilarissen, 100/250-match milestones, past kampioenenvieringen. _"We don't have the records"_ is a valid answer that closes the idea — `PRODUCT.md` forbids fabricating honours.
 - [ ] **F13 — Other teams:** veterans, wandelvoetbal, G-ploeg? Muizen runs walking football; Hofstade and Kampenhout run a G-ploeg. Our `/ploegen` tree surfaces none.
 - [ ] **F21 — Retag one article: `A-ploeg` → `A-Ploeg`.** 76 articles use the capitalised form, 1 uses lowercase. GROQ `in` is case-sensitive, so that article is invisible to any correctly-cased filter. Two-minute fix in the Studio.
 - [ ] **F20 — Does the Double Pass material already contain publishable wording?** (opened by C10). Mission, vision, youth policy, gedragscode. Check before anyone drafts a values page from scratch — and it may also answer F9 and F10 outright.
@@ -331,7 +331,7 @@ These block real pages. Most are one phone call or one look in PSD.
 - [ ] **F19 — Minimum amount for "breng een sponsor"** (opened by C8). Without a threshold the offer cannot be written down. Also: have the tax wording checked by whoever does the club's books.
 - [ ] **F15 — Matchbal and onderleggers prices** (opened by C1). The exact euro amounts, incl. or excl. btw, and what the sponsor gets for each. These are the only two figures going public, so they must be right.
 - [ ] **F16 — The sponsor brochure source file.** Who holds it, in what format (InDesign, Word, PDF-only?), and how often it changes. If the only copy is a printed booklet, the descriptions need retyping once — a one-off job that unlocks the whole sponsor section. Also: does it name the tiers the same way the site does (main / second / regular)?
-- [ ] **F14 — Elewijt idiom:** a local nickname or phrase members actually use, the way Bonheiden uses *"Bênaa"*. Cannot be researched from outside; it is the raw material for any voice work.
+- [ ] **F14 — Elewijt idiom:** a local nickname or phrase members actually use, the way Bonheiden uses _"Bênaa"_. Cannot be researched from outside; it is the raw material for any voice work.
 
 ---
 
@@ -351,9 +351,9 @@ It is the fanzine front-page splash and it is good. The legitimate concern is se
 screen-reader page identification — resolve that in `<title>` (which carries "KCVV Elewijt"), not by
 demoting the splash.
 
-**A3 — Standings are a *lookup*, not a comparison.** Our reader asks "where do we sit", not "compare
+**A3 — Standings are a _lookup_, not a comparison.** Our reader asks "where do we sit", not "compare
 row 4 to row 9". So: **stop hiding W/G/V**, keep every column, horizontal scroll with a sticky team
-column. That also fixes the live defect where columns are `display:none` *inside* an
+column. That also fixes the live defect where columns are `display:none` _inside_ an
 `overflow-x-auto` that consequently never scrolls.
 
 **A4 — The past/future seam: plain 2px ink rule + `VANDAAG` stamp.** Not `StripedSeam`, which is
@@ -362,7 +362,7 @@ idiomatic.
 
 **A5 — Zone colouring loses to the KCVV highlight bar.** `StandingsTable` already spends the
 inset-left-bar channel on "this is our row", and that is the more useful signal. If promotion and
-relegation zones are ever wanted, they take a different channel *and* a printed legend — FotMob always
+relegation zones are ever wanted, they take a different channel _and_ a printed legend — FotMob always
 ships one, which is also the answer to the colour-alone outcome underline.
 
 **A6 — Pair the outcome underline with wording.** It is currently colour-alone (green win / red
@@ -399,8 +399,8 @@ if anywhere.
 inline after a hairline pipe, so this is near-free, and the count pre-empts "is this empty or just
 filtered?" before the reader spends a tap.
 
-**A15 — Empty states get specific, factual copy.** "Geen statistieken" becomes *"in deze reeks worden
-geen individuele statistieken bijgehouden"* — same data, opposite emotional result, and more true. Add
+**A15 — Empty states get specific, factual copy.** "Geen statistieken" becomes _"in deze reeks worden
+geen individuele statistieken bijgehouden"_ — same data, opposite emotional result, and more true. Add
 the post-completion case the taxonomies miss: a team page in June is not missing fixtures, it is
 `SEIZOEN AFGELOPEN`.
 
@@ -410,8 +410,8 @@ anti-pattern so nobody cites Mobbin at us later.
 
 ### Deferred to the design owner, not decided here
 
-**A17 — Two-line match row.** *(Filed as [#2599](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2599) — needs a full prototype comparison, not a decision from a research doc.)* `AgendaMatchRow` renders `{home} — {away}` on one truncated line, which
-two long Belgian club names destroy. Sofascore's stacked row fixes it and is arguably *more* fanzine
+**A17 — Two-line match row.** _(Filed as [#2599](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2599) — needs a full prototype comparison, not a decision from a research doc.)_ `AgendaMatchRow` renders `{home} — {away}` on one truncated line, which
+two long Belgian club names destroy. Sofascore's stacked row fixes it and is arguably _more_ fanzine
 (a printed results grid stacks home over away). But it doubles row height, and the 6.D "labelled wall"
 density lock was a considered decision. **Instinct: responsive — stacked below `sm`, single-line
 above.** A research doc should not override a design lock; this needs your nod.
@@ -424,7 +424,7 @@ change. If any new route ships, it gets updated in the same PR.
 usability 30% first raises the score, and submitting now spends the shot early. Fix A1, then submit.
 
 **A20 — Don't invest further in `/galerij`.** One gallery exists in production and there is no
-photographer. Keep the surface, stop building image-dependent ones. *(Partly depends on C15.)*
+photographer. Keep the surface, stop building image-dependent ones. _(Partly depends on C15.)_
 
 **A21 — Publish the fee page even if lidgeld stays private.** Structure works without prices: what's
 included, sibling discount and where it stops, deadline, what happens if you miss it, hardship
@@ -437,50 +437,51 @@ clause, visible "last updated" stamp. Prices can be added later.
 ## 4. Technical investigations — results (run 2026-08-13)
 
 - [x] **T1 — Does PSD expose a cancelled/postponed status? YES — and richer than assumed.**
-  `packages/api-contract/src/schemas/match.ts` already normalises a **six-state** machine:
-  `scheduled · finished · forfeited · postponed · cancelled · stopped`. PSD code `2 (AFG)` maps to
-  `postponed` (afgelast, may be rescheduled), code `3 (STOP)` to `stopped` (ended prematurely), and a
-  PSD `cancelled` boolean overrides all numeric codes — `cancelled` meaning it will *not* be played.
-  **Afgelastingen is a rendering problem, not a data problem.** No manual Sanity flag needed. This
-  unblocks the question four separate research files arrived at independently. We also carry
-  `forfeited` and `stopped`, states essentially no club site displays.
+      `packages/api-contract/src/schemas/match.ts` already normalises a **six-state** machine:
+      `scheduled · finished · forfeited · postponed · cancelled · stopped`. PSD code `2 (AFG)` maps to
+      `postponed` (afgelast, may be rescheduled), code `3 (STOP)` to `stopped` (ended prematurely), and a
+      PSD `cancelled` boolean overrides all numeric codes — `cancelled` meaning it will _not_ be played.
+      **Afgelastingen is a rendering problem, not a data problem.** No manual Sanity flag needed. This
+      unblocks the question four separate research files arrived at independently. We also carry
+      `forfeited` and `stopped`, states essentially no club site displays.
 - [x] **T2 — Does the BFF distinguish "played, unreported" from "0-0"? YES.**
-  `score: S.optional(S.Number)` — `undefined` and `0` are different values. The printed-blank empty
-  state in A15 is buildable.
+      `score: S.optional(S.Number)` — `undefined` and `0` are different values. The printed-blank empty
+      state in A15 is buildable.
 - [x] **T3 — Per-competition stats availability: PARTIAL.** `competitionType` exists
-  (`OFFICIAL`/`LEAGUE` → `"league"`, `CUP` → `"cup"`) and there is a
-  `getPlayerStats` endpoint at `/statistics/player/:memberId` — but **no flag saying "this competition
-  publishes no individual statistics."** So A15's dignity copy needs either an emptiness-derived
-  heuristic (stats endpoint returns nothing for every player in the series) or a small authored field
-  in Sanity. Recommend the authored field: a heuristic cannot distinguish "not published" from "not
-  yet entered", which is exactly the distinction the copy depends on.
+      (`OFFICIAL`/`LEAGUE` → `"league"`, `CUP` → `"cup"`) and there is a
+      `getPlayerStats` endpoint at `/statistics/player/:memberId` — but **no flag saying "this competition
+      publishes no individual statistics."** So A15's dignity copy needs either an emptiness-derived
+      heuristic (stats endpoint returns nothing for every player in the series) or a small authored field
+      in Sanity. Recommend the authored field: a heuristic cannot distinguish "not published" from "not
+      yet entered", which is exactly the distinction the copy depends on.
 - [ ] **T4 — How far back does the PSD sync go?** Not yet run; needs a live PSD query via
-  `apps/api/.dev.vars`.
+      `apps/api/.dev.vars`.
 - [x] **T7 — LCP and INP: MEASURED, and the news is good.** Playwright + Chromium against
-  `kcvv-nextjs.vercel.app`, 5 routes × 3 viewports. LCP must be read through `PerformanceObserver`
-  with `buffered: true` — `getEntriesByType("largest-contentful-paint")` returns `[]` in Chromium,
-  which is what made the first probe look like another failure.
+      `kcvv-nextjs.vercel.app`, 5 routes × 3 viewports. LCP must be read through `PerformanceObserver`
+      with `buffered: true` — `getEntriesByType("largest-contentful-paint")` returns `[]` in Chromium,
+      which is what made the first probe look like another failure.
 
-  | | LCP | FCP | TTFB | CLS |
-  |---|---|---|---|---|
+  |                          | LCP           | FCP       | TTFB     | CLS            |
+  | ------------------------ | ------------- | --------- | -------- | -------------- |
   | range across all 15 runs | **96–756 ms** | 56–244 ms | 16–91 ms | **0 – 0.0163** |
-  | budget | 2500 ms | — | — | 0.1 |
+  | budget                   | 2500 ms       | —         | —        | 0.1            |
 
   **Nothing is over budget anywhere.** The LCP element is an `IMG` on 13 of 15 runs. The
   "lazy-loading is a guaranteed Core Web Vitals failure" claim is now definitively refuted — measured,
   not argued. Worst CLS is `/kalender` on desktop at 0.0163, still six times inside budget.
 
-  *(INP needs real interaction traces and cannot be synthesised meaningfully from a scripted load;
+  _(INP needs real interaction traces and cannot be synthesised meaningfully from a scripted load;
   field data via CrUX or a RUM beacon is the honest route. Not a blocker — INP problems would show as
-  main-thread stalls, and none appeared.)*
+  main-thread stalls, and none appeared.)_
+
 - [x] **T5 — Training schedules: ALREADY BUILT, ENTIRELY UNPOPULATED.**
-  `trainingSchedule` is a field on the `team` schema (`packages/sanity-schemas/src/team.ts:199`),
-  rendered on `/ploegen/[slug]` through `TeamEditorial`, with stories and tests covering it. In
-  production: **26 teams, 0 with a training schedule.** So this is not an S-sized build that PSD might
-  shortcut — **it is shipped code waiting on data entry.** The highest-value item in the professional
-  tier file costs zero engineering.
+      `trainingSchedule` is a field on the `team` schema (`packages/sanity-schemas/src/team.ts:199`),
+      rendered on `/ploegen/[slug]` through `TeamEditorial`, with stories and tests covering it. In
+      production: **26 teams, 0 with a training schedule.** So this is not an S-sized build that PSD might
+      shortcut — **it is shipped code waiting on data entry.** The highest-value item in the professional
+      tier file costs zero engineering.
 - [x] **T6 — ACFF → FFA: no drift.** No `ACFF` occurrences in `docs/ubiquitous-language.md`,
-  `apps/web/public/llms.txt`, or `packages/api-contract/src`. Nothing to fix.
+      `apps/web/public/llms.txt`, or `packages/api-contract/src`. Nothing to fix.
 
 ### What T1/T2/T5 mean together
 
@@ -490,15 +491,16 @@ states, the unreported-vs-nil-nil distinction, and per-team training times. Comb
 consistent enough to state plainly: **the gap between this site and the research recommendations is
 mostly content, not code.** That should reorder any spec — authoring paths and editor onboarding
 before new surfaces.
+
 - [ ] **T7 — Real LCP and INP** via Playwright + Chromium or Lighthouse. Unobtainable through the Chrome extension: `visibilityState` stays `hidden` when the window is occluded, so paint timing never fires. Not a flake — a hard limit.
-- [ ] **T8 — A scripted regression probe** for the six numbers that drifted during this research: 320px overflow, CLS, TTFB, tap-target percentages, heading structure, alt coverage. Every correction in the scorecard would have been caught automatically. *(Assert the page actually rendered — a blank iframe also reports 0px overflow.)*
+- [ ] **T8 — A scripted regression probe** for the six numbers that drifted during this research: 320px overflow, CLS, TTFB, tap-target percentages, heading structure, alt coverage. Every correction in the scorecard would have been caught automatically. _(Assert the page actually rendered — a blank iframe also reports 0px overflow.)_
 
 ---
 
 ## 5. Blocked on go-live
 
 - **B1 — What is the apex plan?** `www.kcvvelewijt.be` still serves Gatsby 5.16.0 and 404s every Next.js route. Every measurement in every research file describes a site the public cannot reach.
-- **B2 — Are match previews / recaps staged or stalled?** *(Corrected — see C13/C14 above. These are `articleType` values on `article`, not document types.)* Production holds 125 articles using only `announcement`, `interview` and `transfer`; **zero carry a `matchId`.** The surface is not publicly reachable yet, so "unadopted" and "not yet launched" remain indistinguishable. If stalled, the cause matters: editors don't know the type exists / the PSD match id is awkward to find / nobody owns writing them. **The authoring cost is far lower than "build a match report feature" implied — it is a normal article with a type and a pasted number.**
+- **B2 — Are match previews / recaps staged or stalled?** _(Corrected — see C13/C14 above. These are `articleType` values on `article`, not document types.)_ Production holds 125 articles using only `announcement`, `interview` and `transfer`; **zero carry a `matchId`.** The surface is not publicly reachable yet, so "unadopted" and "not yet launched" remain indistinguishable. If stalled, the cause matters: editors don't know the type exists / the PSD match id is awkward to find / nobody owns writing them. **The authoring cost is far lower than "build a match report feature" implied — it is a normal article with a type and a pasted number.**
 - **B3 — How do fixture postponements reach people today?** Presumably Facebook. The real current workflow determines whether a site-side afgelasting state helps or merely duplicates.
 
 ---
@@ -509,14 +511,14 @@ before new surfaces.
 2. **`StandingsTable`** — W/G/V unreachable below `sm` (→ A3).
 3. **`AgendaMatchRow`** — truncation (→ A17, pending your nod).
 4. **Footer nav tap targets** — 27px, the largest remaining volume driver (→ A1).
-5. **`/nieuws/[slug]` hero is `loading="lazy"`** — the article opens on an empty taped frame. *(Note: measured LCP is fine everywhere, so this is a perceived-quality fix, not a performance one.)*
+5. **`/nieuws/[slug]` hero is `loading="lazy"`** — the article opens on an empty taped frame. _(Note: measured LCP is fine everywhere, so this is a perceived-quality fix, not a performance one.)_
 6. **Homepage overflows horizontally on phones** — filed as [#2598](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2598) with full root-cause diagnosis. **Not fixed in this session** — deliberately kept as spec work rather than a mid-session bug fix.
    `document.scrollWidth` is a constant **418px** regardless of viewport, so:
 
    | viewport | overflow | offending elements |
-   |---|---|---|
-   | 390px | 28px | 14 |
-   | 320px | **98px** | 32 |
+   | -------- | -------- | ------------------ |
+   | 390px    | 28px     | 14                 |
+   | 320px    | **98px** | 32                 |
 
    Also affects `/ploegen/eerste-elftallen-a` (27px at 390, 31px at 320). **This contradicts the
    earlier "320px passes, zero overflow" finding** — that pass measured the article detail page and
@@ -556,13 +558,13 @@ ruled on in the abstract. Pages live in `docs/design/mockups/research-d-series/`
 All ten "highest-leverage moves" resolve to entries that already exist further down the same file.
 Triaging §1 separately would have counted every idea twice:
 
-| §1 move | Is | | §1 move | Is |
-|---|---|---|---|---|
-| 1 hairline table off headline | S1 | | 6 overprint duotone | T2 |
-| 2 persistent wire strip | S7 + §5B(1) | | 7 scroll ruler | M8 |
-| 3 riso misregistration | T1 + §5A | | 8 match-day marquee | M3 + §5B(2) |
-| 4 leader-dot index | S5 (+ D6 / §5C) | | 9 ghost numerals | Y3 |
-| 5 `::selection` | C6 | | 10 "verder op p. 4" | D1 |
+| §1 move                       | Is              |     | §1 move             | Is          |
+| ----------------------------- | --------------- | --- | ------------------- | ----------- |
+| 1 hairline table off headline | S1              |     | 6 overprint duotone | T2          |
+| 2 persistent wire strip       | S7 + §5B(1)     |     | 7 scroll ruler      | M8          |
+| 3 riso misregistration        | T1 + §5A        |     | 8 match-day marquee | M3 + §5B(2) |
+| 4 leader-dot index            | S5 (+ D6 / §5C) |     | 9 ghost numerals    | Y3          |
+| 5 `::selection`               | C6              |     | 10 "verder op p. 4" | D1          |
 
 So the real surface is **§4's 40 ideas plus §5's three signature moves**, with §1 read as a priority
 ordering over them.
@@ -577,7 +579,7 @@ fixture card), M7 (background-fill row hover on fixture lists), S3 (a 45° `AFGE
 S5 (leader dots on `/kalender` entries), C1 (fluoro on a cancelled match), D7 (self-demonstrating
 metadata on `MatchStatusBadge`), and all of §5B. **The row's own geometry is unsettled** — single-line
 vs stacked changes the available width, the hover target and where a status marker can sit. Any of
-these seven that is accepted must be sequenced *after* #2599 resolves, or it will be built twice.
+these seven that is accepted must be sequenced _after_ #2599 resolves, or it will be built twice.
 
 **[#2598](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2598) — homepage horizontal overflow.**
 Root cause not isolated; the widest offender is a chain ending in
@@ -591,30 +593,30 @@ no layout width by construction.
 
 ### Decisions
 
-| # | Question | Answer |
-|---|---|---|
-| D1 | Two-ink registration — scope (§5A / T1 / §1·3) | **A — none.** `d1-two-ink.html` |
-| D2 | Ink temperature (C4) | **A — `#0a0a0a` stays.** `d2-warm-ink.html` |
-| D3 | Which print artefacts survive (T3 / T5 / T7) | **T3 yes · T5 no · T7 yes.** `d3-print-artefacts.html` |
-| D3a | Mottle execution | **Broad noise, in ink, 9% multiply.** `d3a-mottle.html` |
-| D3b | Band-edge execution | **D — trimmed: guillotine + nicks.** `d3b-torn-edge.html` |
-| D4 | A fluoro accent (C1) | **A — no fluoro.** `d4-fluoro.html` |
-| D5 | A fifth band ground (T6) | **C — one new non-semantic tint.** `d5-tinted-bands.html` |
-| D6 | A colour per team (C5) | **C — tone per age band.** `d6-per-item-accent.html` |
-| D6a | Where the band tone lands | **C — group bar *and* card kicker.** `d6a-band-tones.html` |
-| D7 | Match day as a register (§5B) | **B — no new band; `MatchStrip` changes register.** `d7-match-day.html`, `d7a-one-band.html` |
-| D7b | The match-day ground | **`jersey-deep-dark` #133d28.** `d7b-matchday-ground.html` |
-| D7c | The desktop CTA on that ground | **`primary → inverted`; dark-ground variant of both layouts.** `d7c-desktop-cta.html` |
-| D8 | `/index`, the contents page (§5C) | **Build it, minus players, at `/inhoud`.** `d8-index-page.html` |
-| D9 | Overprint on photographs (T2) | **B — `lighten` clamp to `jersey-deep-dark`.** `d9-overprint.html` |
-| D10 | Section openers (S2 / Y3 / S6) | **S2 yes · Y3 yes · S6 no.** `d10-section-openers.html` |
-| D11 | Dense-list devices (S5 / S4 / S1) | **S5 yes · S4 no · S1 no.** `d11-dense-lists.html`, `d11a-newspaper-heads.html`, `d11b-deck-agate.html` |
-| D12 | Small delights, group one | **D4 yes · D8 no · D9 no.** `d12-small-delights.html` |
-| D13 | Small delights, group two | **D7 yes (lineups only) · D2 no · D5 no.** `d12-small-delights.html` |
-| D14 | Type ramp (Y1 / Y8 / Y2) | **Y1 yes · Y8 yes · Y2 no.** `d14-type-craft.html` |
-| D15 | Prose type (Y5 / Y6 / Y7) | **Y6 yes · Y5 no · Y7 no.** `d14-type-craft.html` |
-| D16 | Motion (M4 / M5 / M7 / M8) | **M4 yes · M7 yes · M5 no (occupied) · M8 no.** `d16-motion.html` |
-| D17 | Rule weights (C3 / C2) | **C3 = documentation debt, not a decision · C2 no.** `d17-rule-weights.html` |
+| #   | Question                                       | Answer                                                                                                  |
+| --- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| D1  | Two-ink registration — scope (§5A / T1 / §1·3) | **A — none.** `d1-two-ink.html`                                                                         |
+| D2  | Ink temperature (C4)                           | **A — `#0a0a0a` stays.** `d2-warm-ink.html`                                                             |
+| D3  | Which print artefacts survive (T3 / T5 / T7)   | **T3 yes · T5 no · T7 yes.** `d3-print-artefacts.html`                                                  |
+| D3a | Mottle execution                               | **Broad noise, in ink, 9% multiply.** `d3a-mottle.html`                                                 |
+| D3b | Band-edge execution                            | **D — trimmed: guillotine + nicks.** `d3b-torn-edge.html`                                               |
+| D4  | A fluoro accent (C1)                           | **A — no fluoro.** `d4-fluoro.html`                                                                     |
+| D5  | A fifth band ground (T6)                       | **C — one new non-semantic tint.** `d5-tinted-bands.html`                                               |
+| D6  | A colour per team (C5)                         | **C — tone per age band.** `d6-per-item-accent.html`                                                    |
+| D6a | Where the band tone lands                      | **C — group bar _and_ card kicker.** `d6a-band-tones.html`                                              |
+| D7  | Match day as a register (§5B)                  | **B — no new band; `MatchStrip` changes register.** `d7-match-day.html`, `d7a-one-band.html`            |
+| D7b | The match-day ground                           | **`jersey-deep-dark` #133d28.** `d7b-matchday-ground.html`                                              |
+| D7c | The desktop CTA on that ground                 | **`primary → inverted`; dark-ground variant of both layouts.** `d7c-desktop-cta.html`                   |
+| D8  | `/index`, the contents page (§5C)              | **Build it, minus players, at `/inhoud`.** `d8-index-page.html`                                         |
+| D9  | Overprint on photographs (T2)                  | **B — `lighten` clamp to `jersey-deep-dark`.** `d9-overprint.html`                                      |
+| D10 | Section openers (S2 / Y3 / S6)                 | **S2 yes · Y3 yes · S6 no.** `d10-section-openers.html`                                                 |
+| D11 | Dense-list devices (S5 / S4 / S1)              | **S5 yes · S4 no · S1 no.** `d11-dense-lists.html`, `d11a-newspaper-heads.html`, `d11b-deck-agate.html` |
+| D12 | Small delights, group one                      | **D4 yes · D8 no · D9 no.** `d12-small-delights.html`                                                   |
+| D13 | Small delights, group two                      | **D7 yes (lineups only) · D2 no · D5 no.** `d12-small-delights.html`                                    |
+| D14 | Type ramp (Y1 / Y8 / Y2)                       | **Y1 yes · Y8 yes · Y2 no.** `d14-type-craft.html`                                                      |
+| D15 | Prose type (Y5 / Y6 / Y7)                      | **Y6 yes · Y5 no · Y7 no.** `d14-type-craft.html`                                                       |
+| D16 | Motion (M4 / M5 / M7 / M8)                     | **M4 yes · M7 yes · M5 no (occupied) · M8 no.** `d16-motion.html`                                       |
+| D17 | Rule weights (C3 / C2)                         | **C3 = documentation debt, not a decision · C2 no.** `d17-rule-weights.html`                            |
 
 **D1 — no misregistration anywhere. Rejected, not deferred.**
 
@@ -685,7 +687,7 @@ paper a texture for the first time"**, and the speckle layer is as new as the mo
 
   **Still open, and it is a design question rather than a build one:** `StripedSeam` already says
   "this section is taped to the page". A cut edge is a second device answering the same question on
-  the same surface. Per the project's own rule — one treatment per *purpose*, not one treatment for
+  the same surface. Per the project's own rule — one treatment per _purpose_, not one treatment for
   everything — the two need different jobs before both ship. The natural split is seam for a section
   that continues and trim for a section that ends, but that is a proposal, not a decision.
 
@@ -696,7 +698,7 @@ three before the question is asked:
 
 1. **"Cancelled match" — occupied.** `MatchStatusBadge` ships `cancelled → bg-card-red text-cream`
    ("CANC"), alongside `postponed`, `forfeited` and `stopped`. The loud tier exists and has a colour.
-2. **"Live score" — forbidden.** `apps/web/PRODUCT.md:56` lists *live in-play scores* among the
+2. **"Live score" — forbidden.** `apps/web/PRODUCT.md:56` lists _live in-play scores_ among the
    things this site "does not have, and must not be designed as if it did".
 3. **"An alert stamp" — `card-red` again.**
 
@@ -713,8 +715,8 @@ new colour to exist. Not filed; noted here so it is findable.
 **D5 — a fifth ground, but not one of ours.**
 
 `--color-alert-soft`, `--color-warning-soft` and `--color-success-soft` are **semantic** — the
-comment above them in `globals.css` says they exist to give *"the three Alert variants
-visually-balanced soft bodies"* (Phase 2.A.5 ticket-stub). §4.1 proposed exactly those three as
+comment above them in `globals.css` says they exist to give _"the three Alert variants
+visually-balanced soft bodies"_ (Phase 2.A.5 ticket-stub). §4.1 proposed exactly those three as
 decorative section grounds, which makes a section band the same colour as "this went well" or
 "something is wrong". Rendered adjacently in `d5-tinted-bands.html`, it does not survive.
 
@@ -726,7 +728,7 @@ Two conditions recorded with it:
 - **Index pages only, once.** The chaptering argument is strong on a long homepage and weak on a
   detail page, so the rule is narrower than §4.1's "one per page maximum".
 - **`cream-soft` keeps its job.** It remains the documented step-down ground. The tint is a
-  *chapter*, not a step — if a section only needs to sit back, it still gets `cream-soft`.
+  _chapter_, not a step — if a section only needs to sit back, it still gets `cream-soft`.
 
 **D6 — a colour per age band, not per team. C5 survives, transformed.**
 
@@ -746,10 +748,10 @@ groups that are real and already modelled.
   no age parsing places it and it has its own group.
 - So the build is a four-entry map from an existing derived value to an existing token. **No schema
   change, no authoring, no new colours, no data migration.** The one edge to handle:
-  `getYouthDivision()` returns `null` for senior codes *and* for `U5`, so the map needs a null branch
+  `getYouthDivision()` returns `null` for senior codes _and_ for `U5`, so the map needs a null branch
   — which the Senioren tone already is.
 
-**D6a — the tone lands on the group bar *and* the card kicker.** Thirty coloured elements per page.
+**D6a — the tone lands on the group bar _and_ the card kicker.** Thirty coloured elements per page.
 The deciding argument is out-of-context: inside `/ploegen` the group heading is always visible and a
 per-card tone is redundant, but a team card lifted into a search hit or a related-teams strip has no
 heading, and the tone is then the only thing carrying its band.
@@ -761,7 +763,7 @@ Two tensions recorded rather than resolved, both for build time:
   full-bleed ground, and no Alert renders beside a team card. D6a's answer is the loudest of the
   three placements, so this is the version where that defence is thinnest — worth one look on the
   real page before it is locked.
-- **`jersey-deep` becomes the Bovenbouw tone.** Today *every* kicker on `/ploegen` is jersey-deep, so
+- **`jersey-deep` becomes the Bovenbouw tone.** Today _every_ kicker on `/ploegen` is jersey-deep, so
   after this change three of the four bands lose it and one keeps it. Since `jersey-deep` is also
   `--color-jersey-link`, Bovenbouw kickers will read as links in a way the other three no longer do.
   Whether green belongs in the set at all is the open half of this; the grouping decision does not
@@ -777,8 +779,8 @@ reached:
    `scheduled · finished · forfeited · postponed · cancelled · stopped`. A match being played right
    now is `scheduled`. **Nothing in the data can say "live"** — so §5B switch 3 (marching ants, M2)
    and switch 5 (the flickering live dot, M10) have no source and **close**.
-2. **PSD flips `scheduled → finished` the instant a goal exists** — the mapping is literally *0 (no
-   goals) → scheduled, 0 (has goals) → finished*. Any score reaching PSD before the whistle makes
+2. **PSD flips `scheduled → finished` the instant a goal exists** — the mapping is literally _0 (no
+   goals) → scheduled, 0 (has goals) → finished_. Any score reaching PSD before the whistle makes
    the site read `finished 1–0` during the second half.
 3. **`apps/web/PRODUCT.md:56` forbids live in-play scores.** A `● LIVE` marker promises coverage the
    product has decided not to have.
@@ -791,7 +793,7 @@ directly under the navigation on the homepage and every section index — under 
 (`docs/design/mockups/phase-3-c-header-and-matchstrip/matchstrip-locked.md`). §5B's wire strip was a
 second band stacked on a band that already carries the next fixture.
 
-**The real defect turned out to be one line wide:** `MatchStrip` has no concept of *today*. There is
+**The real defect turned out to be one line wide:** `MatchStrip` has no concept of _today_. There is
 no `isToday`, no "Vandaag", in `MatchStrip`, `dates.ts` or `match-display.ts` — a fixture eight days
 out and one in two hours render identically, so the reader does the date comparison themselves.
 That is precisely the work a match-day register was invented to remove.
@@ -804,7 +806,7 @@ That is precisely the work a match-day register was invented to remove.
   thirty Saturdays a year. Dark rather than `jersey-deep`: it reads as a ground and declares itself
   as green only on a second look. Red was rendered and rejected on the page — `--color-alert` is the
   Alert body and `--color-card-red` paints the `CANC` badge, so a red band on a match morning is the
-  same colour as *afgelast*.
+  same colour as _afgelast_.
 - **`isToday` must be computed in Europe/Brussels.** PSD match dates are Belgian wall-clock; a naive
   UTC comparison flips the label at the wrong hour. Day-granular, so `revalidate = 900` is harmless —
   worst case the label appears fifteen minutes after midnight.
@@ -815,8 +817,8 @@ arrows and a `Wedstrijddetails` CTA, all built on cream-ground assumptions. On `
 1.6 : 1 — both effectively invisible.
 
 The fix needs no new variant: `Button`'s **`inverted`** is already `bg-cream text-ink` with
-`shadow-paper-sm-soft`, and that shadow token exists in its own words for *"any chrome surface on a
-dark / ink panel"*. Cream on the ground reads 10.8 : 1; the soft offset 2.3 : 1.
+`shadow-paper-sm-soft`, and that shadow token exists in its own words for _"any chrome surface on a
+dark / ink panel"_. Cream on the ground reads 10.8 : 1; the soft offset 2.3 : 1.
 
 But it means the ground swap is **not one class on the `<aside>`** — it is a dark-ground variant of
 both layouts: CTA `primary → inverted`, arrows and dividers to cream alphas, team names and score to
@@ -827,8 +829,8 @@ Storybook story per ground, not as an edit.**
 **D8 — the contents page ships, without players, at `/inhoud`.**
 
 **§5C's player section is impossible twice over.** A7 in §3 of this sheet already rejected a player
-index — *"Players stay reachable via team pages… privacy implications (→ C12) and no demonstrated
-user need. Treat the absence as deliberate."* And C12 measured that it could not be built even if it
+index — _"Players stay reachable via team pages… privacy implications (→ C12) and no demonstrated
+user need. Treat the absence as deliberate."_ And C12 measured that it could not be built even if it
 were wanted: **294 player documents, 0 with a slug** (no pages to link to) and **0 with a jersey
 number** (§5C's "with their team and number" column would be empty on every row). Cut it.
 
@@ -838,7 +840,7 @@ warning applies to this repo specifically: `llms.txt` already drifted exactly th
 `/club/organigram` long after the route was removed.
 
 **The path is `/inhoud`, not `/index`.** Every route on this site is Dutch, so an English one would
-be the only exception. `index` is also the *default document name* a web server returns for a
+be the only exception. `index` is also the _default document name_ a web server returns for a
 directory — `/` already resolves to it — so a route of that name invites trailing-slash and
 static-normalisation surprises for no benefit. (It would work: the reserved-`index` behaviour was
 Pages Router, not App Router.) `/inhoudstafel` is the more characterful Flemish alternative and the
@@ -857,11 +859,11 @@ The leader dots in the mockup are **S5**, which is a separate question — they 
 **D9 — photographs get a second plate in the shadows only.**
 
 **T2's stated mechanism does the opposite of its stated intent, and its own source has the fix.**
-§4.1 specifies `background-blend-mode: multiply` against a jersey-deep→cream ramp *"so shadows go
-green and highlights stay paper"*. Multiply is `a × b`: a white highlight multiplied by green
+§4.1 specifies `background-blend-mode: multiply` against a jersey-deep→cream ramp _"so shadows go
+green and highlights stay paper"_. Multiply is `a × b`: a white highlight multiplied by green
 **becomes green**. Rendered as column D in `d9-overprint.html`, the whole frame goes green, which
 also brushes the photos-stay-in-colour rule. The note beside it records that Stripe Press uses
-`mix-blend-mode: lighten` — and lighten *is* the shadow-only operator: every pixel darker than the
+`mix-blend-mode: lighten` — and lighten _is_ the shadow-only operator: every pixel darker than the
 plate clamps up to it, every lighter pixel passes through untouched.
 
 **Decision: `mix-blend-mode: lighten` against a `--color-jersey-deep-dark` (#133d28) plate.** Only
@@ -913,15 +915,15 @@ an article hero; worth watching on a card grid.
 **First — the ancestor is wrong.** Asked how old newspapers solved this, the answer is that they
 never did it: a headline lived inside its column, so extra facts went **downward**. The 1912 NYT
 Titanic head was a "three-column" head — that was the whole width it got — and it still stacked
-further decks underneath. Multi-deck headlining exists *because* the measure was narrow. The
+further decks underneath. Multi-deck headlining exists _because_ the measure was narrow. The
 vocabulary:
 
-- **Deck** (drop head, bank) — a smaller headline below the main one that *adds* information;
+- **Deck** (drop head, bank) — a smaller headline below the main one that _adds_ information;
   craft rule is typographic contrast (bold main → lighter decks) and size contrast (36 → 18 → 14pt).
   Stacked decks became common during the Mexican-American War, 1846–48.
 - **Cut-off rule** — a 1–2pt horizontal rule separating stories, and separating one deck from the next.
-- **Agate** — 5.5pt (≈7pt relative to body) reserved for *statistical* matter: box scores, standings,
-  transactions. First rudimentary box score, *New York Morning News*, 1845. It sat in its own
+- **Agate** — 5.5pt (≈7pt relative to body) reserved for _statistical_ matter: box scores, standings,
+  transactions. First rudimentary box score, _New York Morning News_, 1845. It sat in its own
   tabulated block, **never attached to the headline**. **Our 11px Floor Rule forbids true agate** —
   which is why a modern spec-sheet device exists at all.
 
@@ -944,11 +946,11 @@ scorer stays a dash rather than a guess.
 
 **Third — and decisively — the slot is taken, three times over:**
 
-| §4.4's proposed home | What already renders there |
-|---|---|
+| §4.4's proposed home   | What already renders there                                                                                                                                                                                  |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/wedstrijd/[matchId]` | `MatchHero` — which already takes `date, time, venue, status, competition, kcvvTeamLabel`, i.e. the exact agate field set — plus `MatchLineupSection` and `MatchEventsSection` for lineups, goals and cards |
-| `/ploegen/[slug]` | `TeamHero` + `TeamSectionNav` + `StandingsTable` + `TeamMatchesSection` |
-| `/evenementen/[slug]` | `EventHero` (centred, variant D "Editoriaal") + `EventDetailCtas` |
+| `/ploegen/[slug]`      | `TeamHero` + `TeamSectionNav` + `StandingsTable` + `TeamMatchesSection`                                                                                                                                     |
+| `/evenementen/[slug]`  | `EventHero` (centred, variant D "Editoriaal") + `EventDetailCtas`                                                                                                                                           |
 
 **This is the second time in this pass a §1/§5 move turned out to be a second component on an
 occupied slot** (the first was §5B's wire strip over `MatchStrip`). Worth treating as a standing
@@ -961,8 +963,8 @@ that position.
 team–score–team row, hairline meta row of competition · team · season), with a rotated
 `MatchStatusBadge` as a corner stamp. Set against a newspaper deck stack, the question resolved to:
 **is a match hero a scoreboard or a headline? Answer: a scoreboard.** The three-column
-team–score–team row serves `PRODUCT.md` principle 1 — *"match data must read at a glance … on a
-phone, outdoors"* — in a way a centred headline stack does not. **`MatchHero` is unchanged.**
+team–score–team row serves `PRODUCT.md` principle 1 — _"match data must read at a glance … on a
+phone, outdoors"_ — in a way a centred headline stack does not. **`MatchHero` is unchanged.**
 
 **The provenance discipline survives S1 and `MatchHero` already implements it:** `time && (…)`,
 `venue && (…)`, and `buildCompetitionMeta()` filtering absent parts — render from present fields,
@@ -991,7 +993,7 @@ Ran the standing occupancy check before proposing anything, and it paid twice:
   "Verder lezen." row (a `HorizontalSlider` of `NewsCard`s, Phase 5 5.d4 lock), and `EndMark` already
   closes an article with `rule · ★ · LABEL · ★ · rule` under its own locked spec. Closed as occupied.
 - **S3 — 45° corner ribbon: already built.** `MatchHero` mounts `MatchStatusBadge` rotated 2° at the
-  top-right corner. That *is* the corner ribbon, and D4 already confirmed `card-red`/`CANC` as the
+  top-right corner. That _is_ the corner ribbon, and D4 already confirmed `card-red`/`CANC` as the
   cancelled treatment. Closed as occupied.
 
 **Accepted:**
@@ -1050,21 +1052,25 @@ has no gutter on a phone, so the device only exists in the minority scene).
 **D17 — C3 is a documentation debt; C2 is rejected.**
 
 **§4.3's premise is factually wrong about this codebase.** It proposes adding a 1px listing rule "our
-border is 2px everywhere". Counted in `apps/web/src`:
+border is 2px everywhere". Counted in `apps/web/src`, product code only, order-independent:
 
-| | uses |
-|---|---|
-| `border-paper-edge` (1px hairline) | **90** |
-| `border-ink/15` · `/10` (1px alpha) | 13 |
-| `border-2 border-ink` (2px object) | **16** |
-| `border-jersey-deep` | 22 |
+|                                        | uses    |
+| -------------------------------------- | ------- |
+| `border-2` ink, any order (2px object) | **163** |
+| `border-paper-edge` (1px hairline)     | 32      |
+| `border-ink/15` · `/10` (1px alpha)    | 10      |
+| `border-jersey-deep`                   | 12      |
 
-The 1px structural rule outnumbers the 2px object border **90 to 16**. The semantic split §4.3 asks
-for is what the code already does — hairlines separate rows and sections, 2px ink draws objects that
-cast a shadow. **What is missing is the sentence in `DESIGN.md` saying so**, which is why the split
-is invisible to a reviewer and one edit from drifting. §4.3's stated risk still applies, in reverse:
-two weights must be semantically split or it is drift — today they are split by habit, and writing
-the habit down is the entire task. **Not a design decision; file it as documentation.**
+**Correction (#2611 review, 2026-08):** the count originally shown here (90 / 13 / 16 / 22) matched
+only the literal adjacent string `border-2 border-ink`, which undercounted `2px` ink roughly tenfold.
+Measured correctly, the `2px` object border outnumbers the `1px` structural rule **163 to 96**
+combined — the reverse of the "90 to 16" this entry originally claimed, and closer to §4.3's own
+"2px everywhere" than to this entry's rebuttal of it. The semantic split §4.3 asks for is not the
+clean binary this entry assumed; see `DESIGN.md`'s Shapes section for the one-directional version the
+code actually supports. **What is missing is still the sentence in `DESIGN.md` recording the real
+pattern**, which is why the split was invisible to a reviewer and one edit from drifting. §4.3's
+stated risk still applies: an undocumented pattern drifts either way. **Not a design decision; file
+it as documentation.**
 
 **C2 — accent hairlines: no.** Green stays an event — the kicker, the link, the match-day ground. At
 the density rendered in `d17-rule-weights.html` a section drawn in green hairlines reads as a green
@@ -1075,15 +1081,15 @@ section whatever the pixel count says, which is what the Rare Green Rule exists 
 All 43 items in §1, §4 and §5 are ruled on. §1 needed no separate treatment (it is a ranking of §4
 and §5, as recorded above). §6's sixteen rejections were already reasoned and are untouched.
 
-| | Accepted | Rejected | Already built |
-|---|---|---|---|
-| §4.1 Texture | T3, T7 | T1, T2*, T4, T5, T6* | — |
-| §4.2 Motion | M1, M4, M6, M7, M9 | M2, M3, M8, M10 | M5 |
-| §4.3 Colour | C5, C6 | C1, C2, C4 | C3 (undocumented) |
-| §4.4 Shape | S2, S5, S8 | S1, S4, S6, S7 | S3 |
-| §4.5 Delights | D4, D6, D7 | D2, D5, D8, D9 | D1 |
-| §4.6 Type | Y1, Y4, Y6, Y8 | Y2, Y5, Y7 | — |
-| §5 Signatures | B (reduced), C (reduced) | A | — |
+|               | Accepted                 | Rejected             | Already built     |
+| ------------- | ------------------------ | -------------------- | ----------------- |
+| §4.1 Texture  | T3, T7                   | T1, T2*, T4, T5, T6* | —                 |
+| §4.2 Motion   | M1, M4, M6, M7, M9       | M2, M3, M8, M10      | M5                |
+| §4.3 Colour   | C5, C6                   | C1, C2, C4           | C3 (undocumented) |
+| §4.4 Shape    | S2, S5, S8               | S1, S4, S6, S7       | S3                |
+| §4.5 Delights | D4, D6, D7               | D2, D5, D8, D9       | D1                |
+| §4.6 Type     | Y1, Y4, Y6, Y8           | Y2, Y5, Y7           | —                 |
+| §5 Signatures | B (reduced), C (reduced) | A                    | —                 |
 
 \* T2 accepted in altered form (`lighten`, not `multiply`); T6 accepted with a new non-semantic
 token rather than the proposed status tints.
@@ -1112,8 +1118,8 @@ exists in the contract, and `PRODUCT.md:56` forbids live scores).
 
 - **#2598 (homepage overflow):** **Y3** depends on `overflow: hidden` clipping rather than
   overflowing. Do not prototype it against the live homepage until the root cause is isolated.
-  *(Y2 and S1 were the other two exposed moves; both are now rejected, so #2598's design blast radius
-  is down to one item.)*
+  _(Y2 and S1 were the other two exposed moves; both are now rejected, so #2598's design blast radius
+  is down to one item.)_
 - **#2599 (two-line match row):** nothing accepted here lands on the match row — M2, M3, M10, S3 and
   C1 all closed. **The gate is now clear.**
 - **M1 is a prerequisite, not a peer:** M4 and M7 are two gestures, not a vocabulary, until the

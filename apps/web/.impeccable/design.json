@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-04T00:00:00Z",
+  "generatedAt": "2026-08-17T22:09:39Z",
   "title": "Design System: KCVV Elewijt",
   "extensions": {
     "colorMeta": {
@@ -408,12 +408,30 @@
       }
     ],
     "breakpoints": [
-      { "name": "sm", "value": "640px" },
-      { "name": "md", "value": "768px" },
-      { "name": "desk", "value": "960px" },
-      { "name": "lg", "value": "1024px" },
-      { "name": "xl", "value": "1280px" },
-      { "name": "2xl", "value": "1536px" }
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "desk",
+        "value": "960px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      },
+      {
+        "name": "2xl",
+        "value": "1536px"
+      }
     ]
   },
   "components": [
@@ -506,7 +524,7 @@
       "Zero border radius on every rectangle; circles are the only curve",
       "Hard offset shadows (4px 4px 0 0 ink), never blur",
       "Press-down interaction: surfaces slide into their shadow instead of lifting",
-      "Serif display type at extreme scale against 11px uppercase mono labels — no middle register",
+      "Serif display type at extreme scale against 10–11px uppercase mono labels — no middle register",
       "Tape, stamps, perforations and hand-drawn strokes as the ornament vocabulary",
       "Green is rare and load-bearing, never a wash"
     ],
@@ -518,32 +536,42 @@
       },
       {
         "name": "The Two-Greens Rule",
-        "body": "`jersey` is decorative and never touches text; `jersey-deep` carries meaning and text. Inline body links use `jersey-link` and nothing else. Picking the wrong green is the single most common colour error in this system.",
+        "body": "There are exactly two greens on cream, split by one question — does it carry text? jersey decorates and never touches text; jersey-deep carries everything that does, inline prose links included. Until #2395 the rule named three greens and was not literally true; jersey-link has since been absorbed into jersey-deep. Picking the wrong green is the single most common colour error in this system.",
+        "section": "colors"
+      },
+      {
+        "name": "The Whole-Cream Rule",
+        "body": "Cream on a jersey-deep surface is cream, never a fraction of it. text-cream/90 costs more contrast than a whole shade step of green does (4.05 → 3.56, where the #2395 shade step bought 4.05 → 4.69), so the fraction is always the worse trade. Scoped to jersey-deep: on jersey-deep-dark (~10.9:1) and ink (17.5:1) cream has contrast to spare and a fraction is harmless. One known exception is still shipping — <NumberDisplay tone=\"cream\"> hardcodes text-cream/70 on its label, which lands on jersey-deep wherever the component sits in a jersey-deep <TapedCard>. Fixing it means touching a shared primitive whose other callers are all on dark surfaces, so it is tracked separately rather than swept here.",
         "section": "colors"
       },
       {
         "name": "The No-Grey-UI Rule",
-        "body": "There is no neutral grey in this system — not as a token, not as an option. A surface is cream, a step of cream, or ink. `gray-100` (#f3f4f6) was the last holdout, sitting under four homepage sections; #2342 deleted the token outright and reduced `SectionBg` to `jersey-deep | transparent`, so those sections now let the page cream through. If a section ever needs to step down from the page without going dark, add `cream-soft` to `SectionBg` — never reintroduce a grey.",
+        "body": "There is no neutral grey in this system — not as a token, not as an option. A surface is cream, a step of cream, or ink. gray-100 (#f3f4f6) was the last holdout, sitting under four homepage sections; #2342 deleted the token outright and reduced SectionBg to jersey-deep | transparent, so those sections now let the page cream through. If a section ever needs to step down from the page without going dark, add cream-soft to SectionBg — never reintroduce a grey.",
         "section": "colors"
       },
       {
         "name": "The Missing Italic Rule",
-        "body": "Freight Big Pro ships italic at 400 and 700 only — there is no 900 italic. So a Display-size heading with an accent word switches the `<em>` down to Freight Display Pro italic rather than faking a heavy italic. Never pin an accent `<em>` to `font-black`.",
+        "body": "Freight Big Pro ships italic at 400 and 700 only — there is no 900 italic. So a Display-size heading with an accent word switches the <em> down to Freight Display Pro italic rather than faking a heavy italic. Never pin an accent <em> to font-black.",
         "section": "typography"
       },
       {
         "name": "The One Emphasis Rule",
-        "body": "An editorial heading gets exactly one emphasis moment: an accent-coloured italic word or a highlighter stroke, never both, and never two accented words. Emphasis is authored as a Portable Text `accent` decorator, never as a separate \"accent word\" string field.",
+        "body": "An editorial heading gets exactly one emphasis moment: an accent-coloured italic word or a highlighter stroke, never both, and never two accented words. Emphasis is authored as a Portable Text accent decorator, never as a separate \"accent word\" string field.",
         "section": "typography"
       },
       {
         "name": "The Terminal Period Rule",
-        "body": "Editorial headings are auto-terminated with a period unless they already end in `.`, `?` or `!`. The period is part of the voice — declarative, printed, finished.",
+        "body": "Editorial headings are auto-terminated with a period unless they already end in ., ? or !. The period is part of the voice — declarative, printed, finished.",
         "section": "typography"
       },
       {
         "name": "The No Middle Register Rule",
-        "body": "There is display serif and there is 11px mono. Resist inventing a 16px semibold sans \"section label\" — that is product-UI language and it flattens the contrast the system runs on.",
+        "body": "There is display serif and there is small uppercase mono. Resist inventing a 16px semibold sans \"section label\" — that is product-UI language and it flattens the contrast the system runs on.",
+        "section": "typography"
+      },
+      {
+        "name": "The 11px Floor Rule",
+        "body": "Nothing sentence-case sets below 11px. Uppercase tracked mono is allowed exactly one step under it, at 10px (text-label-sm), and nothing goes lower. The exemption is not a loophole — it is a measurement. Caps fill the full cap-height where lowercase fills only the x-height, so 11px uppercase reads as equal in weight to 16px lowercase body rather than subordinate to it; a label sitting directly above a paragraph needs the 10px step to actually recede. Point size alone is the wrong metric for legibility here. Element sizing inside a diagram (VolledigOrganigram) is not type and is not governed by this rule.",
         "section": "typography"
       },
       {
@@ -558,46 +586,79 @@
       },
       {
         "name": "The No Blur Rule",
-        "body": "Every shadow in this system has a blur radius of `0`. A blurred shadow is from a different design language and does not belong here — no exceptions, including \"just a subtle one\".",
+        "body": "Every shadow in this system has a blur radius of 0. A blurred shadow is from a different design language and does not belong here — no exceptions, including \"just a subtle one\".",
         "section": "elevation"
       },
       {
         "name": "The Press-Down Rule",
-        "body": "Interactive paper does not rise on hover; it presses. The surface translates +1px, +1px (buttons and cards) or +1px/+2px (fields) and its shadow collapses to none, so it appears pushed flat against the page. The translate is gated behind `motion-safe:`; the shadow collapse is not, so reduced-motion users keep the affordance.",
+        "body": "Interactive paper does not rise on hover; it presses. The surface translates +1px, +1px (buttons and cards) or +1px/+2px (fields) and its shadow collapses to none, so it appears pushed flat against the page. The translate is gated behind motion-safe:; the shadow collapse is not, so reduced-motion users keep the affordance.",
         "section": "elevation"
       },
       {
         "name": "The Complete Vocabulary Rule",
-        "body": "The seven documented tokens are the entire shadow system — there is nothing else to reach for. The pre-redesign blurred family (--shadow-sm, --shadow-DEFAULT, --shadow-md, --shadow-lg, --shadow-card-hover, --shadow-input, --shadow-input-focus, --shadow-soft) and the orphaned asymmetric pair (--shadow-photo-tape, --shadow-photo-tape-lift) were removed from globals.css; all ten had zero consumers. Adding a blurred token back is a change to the design language, not a convenience.",
+        "body": "The seven tokens above are the entire shadow system — there is nothing else to reach for. The pre-redesign blurred family (--shadow-sm, --shadow-DEFAULT, --shadow-md, --shadow-lg, --shadow-card-hover, --shadow-input, --shadow-input-focus, --shadow-soft) and the orphaned asymmetric pair (--shadow-photo-tape, --shadow-photo-tape-lift) were removed from globals.css; all ten had zero consumers. Adding a blurred token back is a change to the design language, not a convenience.",
         "section": "elevation"
       },
       {
         "name": "The Sharp Corner Rule",
-        "body": "If it is a rectangle, its radius is `0`. Circles are circles. There is nothing in between.",
+        "body": "If it is a rectangle, its radius is 0. Circles are circles. There is nothing in between.",
         "section": "shapes"
       },
       {
         "name": "The Sub-Degree Rule",
         "body": "Grid card and tape rotations live in a −0.5° to +0.5° pool. Individual tilt should be barely perceptible; the effect is only that the grid stops being perfect. Steeper angles are reserved for explicitly named polaroid compositions.",
         "section": "shapes"
+      },
+      {
+        "name": "The Shadow Needs Ink Rule",
+        "body": "Measured order-independently in apps/web/src product code (Storybook and tests excluded, since a demo wrapper is not a shipped surface, and counted per class attribute so Tailwind's arbitrary ordering — or a cva() variant split across a base class and a state class — can't hide a match): a 2px ink border appears 163 times against a combined 96 for the three ways a 1px hairline is drawn (border-paper-edge 32, alpha-ink ink/10–ink/15 10, full-opacity border-ink 54). 2px ink is the more common weight, not the rarer one — the reverse of what an earlier draft of this rule stated, which counted only the literal adjacent string border-2 border-ink and so missed most real uses. The one direction that does hold: nothing that casts a shadow in this codebase uses a 1px hairline border — a shadow-casting surface takes 2px ink, or 1.5px on a stamp, badge or chip, with no exception found. The converse does not hold: a 2px ink border does not imply a shadow. Of the 163, only 71 also carry a shadow token; the other 92 are shadowless dividers, mostly loading-skeleton frames and border-t-2/border-b-2 section rules. So the test a reviewer can actually run is one-directional — giving a surface a shadow means giving it 2px ink (or 1.5px on a small badge) underneath; the absence of a shadow says nothing about the border weight.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Section Radius Rule",
+        "body": "An image describes at a radius of one section — not the control, and not the page. A card's title silences its own image; an <h1> silences its opening's photograph; a caption silences its own figure. A page-level heading does not silence a run of distinct photographs, which is the whole difference between one article hero and fifty-five gallery photos.",
+        "section": "imagery"
+      },
+      {
+        "name": "The Slot, Not The Tag Rule",
+        "body": "The unit is the image slot, so whatever fills it answers to the same rule: alt on a photo, aria-label on an artefact fallback, and anything carrying role=\"img\". A slot's two branches do not get two different verdicts.",
+        "section": "imagery"
+      },
+      {
+        "name": "The Silent Artefact Rule",
+        "body": "An artefact is not a likeness, so it never speaks — it is aria-hidden even where the rule would otherwise let it talk. The jersey illustration is the same drawing for all 294 players and a monogram is two letters; neither identifies anybody. <JerseyShirt>, <SubjectAvatar> and <SubjectAvatarCluster> are all silent, and none of them takes an accessible-name prop.",
+        "section": "imagery"
+      },
+      {
+        "name": "The Either-Or Rule",
+        "body": "A figure with a caption needs no alt; a figure without one carries everything the caption would have said. Look for the same shape elsewhere: a sponsor tile renders a logo with an alt or a visible wordmark, never both — which is why formatSponsorAlt survives, since when the logo paints, the alt is the only naming on the tile.",
+        "section": "imagery"
+      },
+      {
+        "name": "The Alone Image Rule",
+        "body": "An image with nothing else on the page to name it says its position and extent — Foto 12 van 55 — never the collection, which the <h1> already named in the same section.",
+        "section": "imagery"
       }
     ],
     "dos": [
       "Do set every rectangle's border radius to 0 and reserve curves for true circles.",
+      "Do give a shadow-casting surface a 2px ink border, or 1.5px on a stamp, badge or chip — never a 1px hairline underneath a shadow. A shadowless divider may still be 2px ink; the implication runs one way only.",
       "Do use hard offset shadows with 0 blur, in exactly the seven documented tokens.",
       "Do press interactive surfaces into their shadow on hover (translate(1px, 1px) + shadow-none), gating only the translate behind motion-safe:.",
-      "Do pick the right green: jersey decorative only, jersey-deep for meaning and large text, jersey-link for inline prose links, jersey-bright for green text on ink.",
+      "Do pick the right green: jersey decorative only, jersey-deep for anything carrying text (headings, CTAs, inline prose links), jersey-bright for green text on ink.",
       "Do reach for an existing primitive — taped card, ticket stub, mono label, editorial heading, tape strip, stamp badge, striped seam — before writing new markup.",
       "Do route every page through the three container widths (680 / 1040 / 1280).",
       "Do keep photographs in colour with the newsprint warm-tint; greyscale-to-colour-on-hover belongs to sponsor logos alone.",
       "Do author heading emphasis as a Portable Text accent decorator, one emphasis per heading.",
-      "Do use Phosphor Fill icons from the single icon source."
+      "Do use Phosphor Fill icons from the single icon source.",
+      "Do give an image alt=\"\" when its own section already names it, and describe the moment when nothing else does."
     ],
     "donts": [
       "Don't introduce a blurred shadow, a gradient fill, or a glassmorphic surface — those are the SaaS anti-reference.",
       "Don't reintroduce a blurred shadow token. The pre-redesign family and the orphaned --shadow-photo-tape* pair were deleted from globals.css; re-adding one changes the design language.",
       "Don't put a radius on a loading skeleton. A skeleton must match the sharp shape of what it stands in for — 44 stray rounded / rounded-sm classes were removed from eight skeleton files for exactly this reason.",
       "Don't set jersey (#4acf52) as a text colour, and don't put it on cream.",
+      "Don't draw a green divider between repeating rows — a list, a table, a run of section rules. Rendered and rejected (C2): at that density a line of green hairlines reads as a green section, which the Rare Green Rule forbids. A green hairline under a heading that labels a group is allowed and already ships (SiteFooter, HulpFinder): it marks one boundary, not a rhythm. The test is repetition — if a reader would see two of them stacked, it is green on a run and it is wrong.",
       "Don't wrap a striped seam or a coloured band in a max-width container.",
       "Don't invent a container width outside 680 / 1040 / 1280 (chrome's 1440 is header and footer only).",
       "Don't pin a Display-size heading's italic accent to a heavy weight — Freight Big Pro has no 900 italic.",
@@ -605,7 +666,10 @@
       "Don't build a 16px semibold sans \"section label\" register between display serif and 11px mono.",
       "Don't reintroduce a neutral grey. gray-100, foundation-gray-light and the four table-* tokens have all been deleted; a section that needs to step down from the page gets cream-soft, not a grey.",
       "Don't rely on hover to reveal anything necessary — the primary usage scene is a phone, outdoors.",
-      "Don't use emoji as icons."
+      "Don't use emoji as icons.",
+      "Don't feed a heading, a card title or a caption back into the image beside it — a duplicated sentence spends the reader's attention twice for nothing.",
+      "Don't give an artefact an accessible name. The jersey illustration and the monogram disc identify nobody, so they take aria-hidden, not a label.",
+      "Don't add an alt field to a cover image. A cover is never alone, and an optional field that is correct when empty only invites a half-filled one."
     ]
   }
 }
