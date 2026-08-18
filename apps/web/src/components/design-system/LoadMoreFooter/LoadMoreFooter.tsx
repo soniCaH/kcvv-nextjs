@@ -46,7 +46,7 @@ export function LoadMoreFooter({
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
-        <Spinner size="md" label="Laden..." />
+        <Spinner variant="compact" label="Laden..." />
       </div>
     );
   }

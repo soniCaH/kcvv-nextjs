@@ -207,7 +207,12 @@ export function OrganigramExplorer({
         { transform: `translate(${dx}px, ${dy}px) scale(${scale})` },
         { transform: "none" },
       ],
-      { duration: 300, easing: "cubic-bezier(0.2, 0, 0, 1)" },
+      {
+        duration: 300,
+        // WAAPI easing strings can't read a CSS custom property, so the
+        // keyword stands in for var(--ease-out) here.
+        easing: "ease-out",
+      },
     );
   }, [open, focusId]);
 
@@ -354,7 +359,7 @@ export function OrganigramExplorer({
           style={{
             transform: `scale(${SCALE_STEPS[isPhone ? Math.min(scaleStep, 1) : scaleStep]})`,
           }}
-          className="mx-auto flex max-w-[60rem] origin-top flex-col items-center gap-5 transition-transform duration-[240ms]"
+          className="mx-auto flex max-w-[60rem] origin-top flex-col items-center gap-5 transition-transform duration-300"
         >
           <div
             key={focusId}

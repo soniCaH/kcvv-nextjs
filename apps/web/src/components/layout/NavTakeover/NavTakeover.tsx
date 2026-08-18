@@ -6,7 +6,6 @@ import {
   type ReactNode,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/design-system/Button";
 import { X } from "@/lib/icons.redesign";
 
@@ -101,10 +100,7 @@ export const NavTakeover = ({
       aria-modal="true"
       aria-label="Navigatiemenu"
       onKeyDown={handleTabTrap}
-      className={cn(
-        "bg-cream fixed inset-0 z-[60] flex flex-col",
-        "animate-in fade-in duration-150 motion-reduce:animate-none",
-      )}
+      className="bg-cream fixed inset-0 z-[60] flex flex-col"
     >
       {/* Top bar — same height as the closed header */}
       <div className="border-paper-edge flex h-16 shrink-0 items-center justify-between border-b px-4 lg:px-8">

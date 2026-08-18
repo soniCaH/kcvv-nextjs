@@ -5,7 +5,7 @@ import { LoadMoreFooter } from "./LoadMoreFooter";
 const meta = {
   title: "UI/LoadMoreFooter",
   component: LoadMoreFooter,
-  tags: ["autodocs"],
+  tags: ["autodocs", "vr"],
   parameters: {
     layout: "padded",
     docs: {

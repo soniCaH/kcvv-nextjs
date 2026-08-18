@@ -30,8 +30,10 @@ export interface SpinnerProps extends HTMLAttributes<HTMLDivElement> {
    */
   size?: SpinnerSize;
   /**
-   * Visual variant.
-   * @default 'primary'
+   * Visual variant. Defaults to the dots — the scarf (`'primary'`) is
+   * reserved for search and must be requested explicitly (Waiting-Device
+   * Rule, DESIGN.md → Motion).
+   * @default 'compact'
    */
   variant?: SpinnerVariant;
   /**
@@ -47,7 +49,7 @@ export interface SpinnerProps extends HTMLAttributes<HTMLDivElement> {
 
 export const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
   (
-    { size = "md", variant = "primary", label = "Laden…", className, ...props },
+    { size = "md", variant = "compact", label = "Laden…", className, ...props },
     ref,
   ) => {
     if (variant === "compact") {
