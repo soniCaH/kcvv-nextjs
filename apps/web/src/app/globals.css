@@ -719,7 +719,7 @@
   article a {
     color: var(--color-jersey-deep);
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: color 150ms var(--ease-out);
   }
 
   main a:hover,
@@ -767,7 +767,7 @@
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   transition:
-    color 0.3s ease,
+    color 150ms var(--ease-out),
     background-size 320ms ease-out;
 }
 
@@ -778,7 +778,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .prose-link {
-    transition: color 0.3s ease;
+    transition: color 150ms var(--ease-out);
   }
 }
 
@@ -825,8 +825,8 @@
   opacity: 0;
   transform: translateY(24px);
   transition:
-    opacity 500ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 500ms var(--ease-out),
+    transform 500ms var(--ease-out);
 }
 
 .article-body-motion.article-body-motion--entered {
@@ -856,7 +856,7 @@
    node bullet stays anchored and "colours in" (fills) in place. */
 .timeline-reveal [data-timeline-item] {
   opacity: 0;
-  transition: opacity 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 500ms var(--ease-out);
 }
 
 .timeline-reveal [data-timeline-item].timeline-item--entered {
@@ -866,7 +866,7 @@
 .timeline-reveal [data-timeline-card] {
   --timeline-reveal-x: 0px;
   transform: translateX(var(--timeline-reveal-x)) translateY(24px);
-  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 500ms var(--ease-out);
 }
 
 .timeline-reveal [data-timeline-item][data-side="left"] [data-timeline-card] {
@@ -886,7 +886,7 @@
 /* Bullet fills from hollow (cream) to jersey-deep as the row enters. */
 .timeline-reveal [data-timeline-bullet] {
   background-color: var(--color-cream);
-  transition: background-color 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 500ms var(--ease-out);
 }
 
 .timeline-reveal
@@ -1173,12 +1173,14 @@
 #cc-main .pm__close-btn {
   border: 2px solid var(--color-ink);
   box-shadow: var(--shadow-paper-sm);
-  /* Match the canonical paper-stamp curve (Tailwind transition-all duration-300
-     resolves to this timing function), not the CSS `ease` default. !important
-     because the library's `#cc-main .cc--anim .cm__btn` rule has equal
-     specificity, loads after globals.css, and only transitions colour — so
-     without this the transform/box-shadow press-down fires instantly. */
-  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  /* Match the canonical paper-stamp curve — the One Curve Rule's
+     `var(--ease-out)` — not the CSS `ease` default. !important because the
+     library's `#cc-main .cc--anim .cm__btn` rule has equal specificity, loads
+     after globals.css, and only transitions colour — so without this the
+     transform/box-shadow press-down fires instantly. 300ms because this is
+     the press (the Three Speeds Rule); kept `!important` so it still beats
+     the library's own defaults. */
+  transition: all 300ms var(--ease-out) !important;
 }
 #cc-main .cm__btn[data-role="all"]:hover,
 #cc-main .cm__btn[data-role="necessary"]:hover,
@@ -1297,7 +1299,7 @@
    node's FLIP travel transform, applied imperatively via the Web Animations
    API in the component. */
 .spotlight-pop {
-  animation: spotlight-pop 240ms ease-out both;
+  animation: spotlight-pop 300ms ease-out both;
 }
 @media (prefers-reduced-motion: reduce) {
   .spotlight-pop {

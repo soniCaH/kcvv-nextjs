@@ -354,7 +354,7 @@ export function OrganigramExplorer({
           style={{
             transform: `scale(${SCALE_STEPS[isPhone ? Math.min(scaleStep, 1) : scaleStep]})`,
           }}
-          className="mx-auto flex max-w-[60rem] origin-top flex-col items-center gap-5 transition-transform duration-[240ms]"
+          className="mx-auto flex max-w-[60rem] origin-top flex-col items-center gap-5 transition-transform duration-300"
         >
           <div
             key={focusId}
