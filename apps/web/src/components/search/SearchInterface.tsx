@@ -306,10 +306,14 @@ export const SearchInterface = ({
               }}
             />
 
-            {/* Loading State */}
+            {/* Loading State — the scarf. Search is the one sanctioned
+                mount (Waiting-Device Rule, DESIGN.md → Motion); every other
+                in-flight request uses variant="compact". Explicit here so
+                the call site says so, rather than relying on the prop's
+                default. */}
             {isLoading && (
               <div className="flex justify-center py-12">
-                <Spinner size="lg" />
+                <Spinner size="lg" variant="primary" />
               </div>
             )}
 
