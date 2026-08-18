@@ -587,6 +587,40 @@
      the soft/soft-hover pair for state-machine symmetry. */
   --shadow-paper-sm-alert: 4px 4px 0 0 var(--color-alert-soft);
   --shadow-paper-sm-alert-hover: 3px 3px 0 0 var(--color-alert-soft);
+
+  /* ===== Motion namespaces — the Namespace Rule (DESIGN.md → Motion) =====
+     A Tailwind v4 theme namespace this project does not reset is Tailwind's
+     design, not this project's. Tailwind's own `--ease-out` resolves to
+     `cubic-bezier(0, 0, 0.2, 1)` (tailwindcss@4.3.0/theme.css) — a different,
+     harder deceleration than the One Curve Rule's `cubic-bezier(0, 0, 0.58,
+     1)` — so every `ease-out` *utility* class site lied about which curve it
+     applied until this reset. Reset the namespace, then re-declare only what
+     the Motion rules sanction. */
+  --ease-*: initial;
+  --ease-out: cubic-bezier(0, 0, 0.58, 1);
+
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: var(--ease-out);
+
+  /* Only `animate-pulse` survives the reset — the Loop Rules recognise three
+     loops (scarf, dots, pulse) and `animate-bounce` / `animate-ping` have zero
+     consumers. Resetting `--animate-*` also drops Tailwind's own
+     `@keyframes pulse` (it lives inside Tailwind's `@theme default {}` block),
+     so the project defines its own below or all 109 `animate-pulse` uses stop
+     animating. A breathing loop uses `ease-in-out` and animates `opacity`
+     only, per the Loop Rules. */
+  --animate-*: initial;
+  --animate-pulse: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* ===== Global Styles ===== */
