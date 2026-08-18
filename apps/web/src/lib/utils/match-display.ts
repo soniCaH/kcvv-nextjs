@@ -198,15 +198,14 @@ export const HOME_AWAY_A11Y_NAME = {
 } as const;
 
 /**
- * `<TeamAgendaRow>`'s placeholder subject when a pitch-reservation fixture
- * (#2606) carries no competition label at all — not observed in production
- * (every one of the census's 17 rows carries a `TOURNAMENT`/`FRIENDLY`
- * type), but the row still needs a non-empty subject for the defensive case.
- * Lives here, not inline, for the same reason `OUTCOME_WORD`/
- * `MATCH_KIND_WORD`/`HOME_AWAY_WORD` do: this file is the one place the
- * row's shared vocabulary is declared.
+ * `reservationView()`'s subject when a pitch-reservation fixture (#2606)
+ * carries no competition label at all — not observed in production (every
+ * one of the census's 17 rows carries a `TOURNAMENT`/`FRIENDLY` type), but
+ * the row still needs a non-empty subject for the defensive case. Not
+ * exported: `reservationView()` is the one reader, so the literal only needs
+ * to be named once, here.
  */
-export const RESERVATION_SUBJECT_FALLBACK = "Gereserveerd";
+const RESERVATION_SUBJECT_FALLBACK = "Gereserveerd";
 
 /** The fields `reservationView()` needs — deliberately narrower than the full
  * `ScheduleReservation`/`MatchDetail` shapes so both can pass through it. */
@@ -216,7 +215,7 @@ export interface ReservationSubjectInput {
 }
 
 export interface ReservationView {
-  /** The competition label, or `RESERVATION_SUBJECT_FALLBACK` when absent. */
+  /** The competition label, or the reservation fallback word when absent. */
   subject: string;
   /**
    * The exceptional-status marker (FF/AFG/CANC/STOP), or `null` for
@@ -225,6 +224,14 @@ export interface ReservationView {
    * dropped just because the row has no opponent to report a result against.
    */
   statusWording: { abbreviation: string; longForm: string } | null;
+  /**
+   * The uppercase kicker word `<MatchHero>`'s reduced hero uses in place of
+   * `getKicker(status)`'s VOORBESCHOUWING/MATCHVERSLAG — a reservation is
+   * never a preview or a report of a match, so it gets its own fixed word,
+   * derived from the same fallback the subject falls back to rather than a
+   * second hand-spelled literal.
+   */
+  kicker: string;
 }
 
 /**
@@ -243,5 +250,48 @@ export function reservationView(
     statusWording: isExceptionalMatchStatus(match.status)
       ? matchStatusWording(match.status)
       : null,
+    kicker: RESERVATION_SUBJECT_FALLBACK.toUpperCase(),
   };
+}
+
+/**
+ * The accessible-name sentence for a reservation row — the one grammar three
+ * renderers (`<MatchStripView>`, `<UpcomingMatchesClient>`, `<TeamAgendaRow>`)
+ * each hand-built independently, each with its own copy of the "only
+ * announce the time when the match is still `scheduled`" rule. `subject` is
+ * whatever the caller composed (e.g. `reservationView(match).subject` alone,
+ * or a squad label folded in ahead of it) — this function only owns the
+ * sentence shape, not the vocabulary inside it. `kind`'s word is dropped
+ * when `statusWording` is present, so the sentence never argues with itself
+ * ("Volgende · AFG").
+ *
+ * The markup rule that pairs with this sentence: every reservation row is an
+ * `<article aria-label={label}>`, never a `<div>` — a `<div>`'s implicit
+ * `role=generic` does not support an accessible name from `aria-label` at
+ * all (it is prohibited and silently ignored), so a `<div>` here renders
+ * with no accessible content whatsoever.
+ */
+export function reservationRowLabel({
+  kind,
+  subject,
+  dateLabel,
+  time,
+  status,
+  statusWording,
+}: {
+  kind?: MatchRowKind;
+  subject: string;
+  dateLabel: string;
+  time?: string;
+  status: MatchStatus;
+  statusWording: { abbreviation: string; longForm: string } | null;
+}): string {
+  const kindWord = !statusWording && kind ? MATCH_KIND_WORD[kind] : null;
+  return [
+    kindWord ? `${kindWord}: ` : "",
+    subject,
+    `, ${dateLabel}`,
+    status === "scheduled" && time ? ` om ${time}` : "",
+    statusWording ? ` — ${statusWording.longForm}` : "",
+  ].join("");
 }
