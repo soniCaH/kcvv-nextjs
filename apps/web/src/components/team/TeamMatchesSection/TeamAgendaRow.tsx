@@ -44,16 +44,16 @@ import {
   MATCH_KIND_WORD,
   OUTCOME_UNDERLINE,
   OUTCOME_WORD,
-  RESERVATION_SUBJECT_FALLBACK,
+  reservationView,
   type MatchOutcome,
   type MatchRowKind,
 } from "@/lib/utils/match-display";
 import { matchStatusWording } from "@/components/match/MatchStatusBadge";
 import { House, Bus } from "@/lib/icons.redesign";
-import type { ScheduleMatch } from "@/components/match/types";
+import type { ScheduleMatch, ScheduleRow } from "@/components/match/types";
 
 export interface TeamAgendaRowProps {
-  match: ScheduleMatch;
+  match: ScheduleRow;
   /**
    * PSD team ID of the KCVV team being rendered (used to determine home/away
    * when is_home is absent). Passed down from the page.
@@ -153,7 +153,7 @@ function formatMonth(date: Date): string {
     .toLowerCase();
 }
 
-function formatKickoff(match: ScheduleMatch): string {
+function formatKickoff(match: { time?: string; date: Date }): string {
   if (match.time) return match.time;
   return toMatchDisplayZone(match.date).toFormat("HH:mm");
 }
@@ -227,10 +227,16 @@ export function TeamAgendaRow({
   className,
 }: TeamAgendaRowProps) {
   // Prefer match.is_home (provided by BFF); fall back to comparing kcvvTeamId
-  // against the home team's id when the BFF field is absent.
-  const isHome: boolean | undefined =
-    match.isHome ??
-    (kcvvTeamId !== undefined ? kcvvTeamId === match.homeTeam.id : undefined);
+  // against the home team's id when the BFF field is absent. Meaningless for
+  // a reservation (both sides are the same club — see `ScheduleReservation`),
+  // so this narrows on `match.isPlaceholder` rather than reading `homeTeam`
+  // off a shape that doesn't carry one.
+  const isHome: boolean | undefined = match.isPlaceholder
+    ? undefined
+    : (match.isHome ??
+      (kcvvTeamId !== undefined
+        ? kcvvTeamId === match.homeTeam.id
+        : undefined));
 
   // White on jersey-deep, inherited from the pre-#2395 green when cream missed
   // AA there. Both clear it now (white 5.29:1, cream 4.69:1) — see DESIGN.md
@@ -288,10 +294,14 @@ export function TeamAgendaRow({
     </div>
   ) : null;
 
-  const outcome = computeOutcome(match, isHome);
+  // Never settled: a reservation carries no score, so there is nothing for
+  // `computeOutcome` to read (`ScheduleReservation` has no `homeScore`/
+  // `awayScore`/`isHome` to pass it).
+  const outcome = match.isPlaceholder ? null : computeOutcome(match, isHome);
   const isPlayed = isPlayedMatch(match.status);
 
   const hasScoreline =
+    !match.isPlaceholder &&
     isPlayed &&
     typeof match.homeScore === "number" &&
     typeof match.awayScore === "number";
@@ -305,9 +315,10 @@ export function TeamAgendaRow({
   // resolve `upcomingLabel` identically instead of two independent copies.
   const kickoff = formatKickoff(match);
   const timeOrLabel = showUpcomingLabel ? upcomingLabel : kickoff;
-  const scoreOrTime = hasScoreline
-    ? `${match.homeScore} – ${match.awayScore}`
-    : timeOrLabel;
+  const scoreOrTime =
+    !match.isPlaceholder && hasScoreline
+      ? `${match.homeScore} – ${match.awayScore}`
+      : timeOrLabel;
 
   // Scorelines and kickoff times use the big display face; the "Gepland" label
   // drops to the mono caption register (cf. the mockup `.score.sched`).
@@ -478,9 +489,11 @@ export function TeamAgendaRow({
     // caption register rather than as bold body text — the one deliberate
     // departure from the prototype. It also sidesteps PSD sending one
     // competition name lowercase: the caption's CSS uppercase transform
-    // handles it, so the string is never re-cased here.
-    const competitionSubject =
-      match.competition || RESERVATION_SUBJECT_FALLBACK;
+    // handles it, so the string is never re-cased here. `reservationView()`
+    // is the shared derivation (#2688) — `<MatchStripView>` and
+    // `/wedstrijd/[matchId]` call the same helper so the subject can't drift
+    // between surfaces.
+    const competitionSubject = reservationView(match).subject;
     // Feeds the fallback into the SAME caption combinator the normal row
     // uses, with `kind`/`captionLabel`/an exceptional-status marker layered
     // on top of it — so the team page (which passes neither) renders a bare
@@ -527,7 +540,7 @@ export function TeamAgendaRow({
           {dateStub}
           <div className="flex w-full items-center gap-2 px-3 py-2">
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <Crest name={match.homeTeam.name} logo={match.homeTeam.logo} />
+              <Crest name={match.team.name} logo={match.team.logo} />
               <span className={subjectClass}>{subjectContent}</span>
             </div>
             <span className={timeClass}>{timeOrLabel}</span>

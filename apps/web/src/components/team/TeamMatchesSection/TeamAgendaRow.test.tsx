@@ -16,7 +16,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TeamAgendaRow } from "./TeamAgendaRow";
-import type { ScheduleMatch } from "@/components/match/types";
+import type {
+  ScheduleMatch,
+  ScheduleReservation,
+} from "@/components/match/types";
 
 // Render Link as a plain anchor that forwards onClick (no router in tests).
 vi.mock("next/link", () => ({
@@ -671,15 +674,14 @@ describe("TeamAgendaRow", () => {
    * and a spacer), scoped for these tests via `[data-placeholder="true"]`.
    */
   describe("Placeholder fixture (#2606)", () => {
-    const PLACEHOLDER: ScheduleMatch = {
-      ...BASE,
+    const PLACEHOLDER: ScheduleReservation = {
+      isPlaceholder: true,
       id: 99,
       date: new Date("2026-05-09T09:30:00.000Z"),
       time: "09:30",
-      homeTeam: { id: 1235, name: "KCVV Elewijt" },
-      awayTeam: { id: 1235, name: "KCVV Elewijt" },
+      team: { id: 1235, name: "KCVV Elewijt" },
+      status: "scheduled",
       competition: "Tornooi",
-      isPlaceholder: true,
     };
 
     const placeholderRow = () =>
@@ -735,19 +737,14 @@ describe("TeamAgendaRow", () => {
       expect(screen.queryByLabelText("Uitwedstrijd")).toBeNull();
     });
 
-    it("sheds the score slot AND its outcome tint even if the feed carried a scoreline", () => {
+    it("sheds the score slot AND its outcome tint even for a 'finished' status", () => {
       // A win/draw/loss underline is a claim about a score. A placeholder has
-      // no opponent to have won or lost against, so the tint must not paint
-      // even when upstream data carries scores it should never have.
+      // no opponent to have won or lost against — `ScheduleReservation`
+      // carries no `homeScore`/`awayScore` at all (#2688), so this only needs
+      // to confirm a status that would otherwise trigger the outcome tint
+      // still renders neither a scoreline nor a box-shadow.
       const { container } = render(
-        <TeamAgendaRow
-          match={{
-            ...PLACEHOLDER,
-            status: "finished",
-            homeScore: 0,
-            awayScore: 0,
-          }}
-        />,
+        <TeamAgendaRow match={{ ...PLACEHOLDER, status: "finished" }} />,
       );
       expect(placeholderRow().textContent).not.toMatch(/0\s*[–—-]\s*0/);
       expect(container.querySelectorAll("[style*='box-shadow']").length).toBe(

@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils/cn";
 import { MonoLabel } from "@/components/design-system/MonoLabel";
 import { ArrowRight } from "@/lib/icons.redesign";
 import { TeamAgendaRow } from "./TeamAgendaRow";
-import type { ScheduleMatch } from "@/components/match/types";
+import type { ScheduleRow } from "@/components/match/types";
 
 export interface TeamMatchesSectionProps {
-  matches: readonly ScheduleMatch[];
+  matches: readonly ScheduleRow[];
   /** Slug used to build the /ploegen/[slug]/wedstrijden href. */
   teamSlug: string;
   /** PSD team ID of the KCVV team (passed to agenda rows for home/away context). */
@@ -23,19 +23,19 @@ export interface TeamMatchesSectionProps {
 const RECENT_COUNT = 3;
 
 function findNextMatch(
-  matches: readonly ScheduleMatch[],
+  matches: readonly ScheduleRow[],
   now: Date,
-): ScheduleMatch | undefined {
+): ScheduleRow | undefined {
   return matches
     .filter((m) => m.status === "scheduled" && m.date >= now)
     .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
 }
 
 function recentResults(
-  matches: readonly ScheduleMatch[],
+  matches: readonly ScheduleRow[],
   excludeId: number | undefined,
   now: Date,
-): ScheduleMatch[] {
+): ScheduleRow[] {
   return matches
     .filter(
       (m) => m.status === "finished" && m.date < now && m.id !== excludeId,

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamMatchesSection } from "./TeamMatchesSection";
-import type { ScheduleMatch } from "@/components/match/types";
+import type { ScheduleMatch, ScheduleRow } from "@/components/match/types";
 import { VR_FROZEN_NOW_ISO } from "../../../../test/vr/frozen-clock";
 
 const KCVV = { id: 1235, name: "KCVV Elewijt" };
@@ -92,17 +92,26 @@ export const Empty: Story = {
  * (one crest, competition label, real kickoff), not the two-sided
  * scoreboard, and it is not a link.
  */
+function reservationDate(daysOffset: number): Date {
+  const date = new Date(STORY_ANCHOR);
+  date.setDate(date.getDate() + daysOffset);
+  return date;
+}
+
 export const PlaceholderNextMatch: Story = {
   args: {
     matches: [
       m(2, -14, "finished", [1, 1], true, OPP_C),
       m(3, -7, "finished", [3, 0], true, OPP_B),
       {
-        ...m(20, 10, "scheduled", undefined, true, KCVV),
-        time: "09:30",
-        competition: "Tornooi",
         isPlaceholder: true,
-      },
+        id: 20,
+        date: reservationDate(10),
+        time: "09:30",
+        team: KCVV,
+        status: "scheduled",
+        competition: "Tornooi",
+      } satisfies ScheduleRow,
     ],
   },
 };

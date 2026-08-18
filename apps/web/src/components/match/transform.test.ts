@@ -5,6 +5,16 @@
 import { describe, it, expect } from "vitest";
 import { transformMatchToSchedule } from "./transform";
 import type { Match } from "@/lib/effect/schemas";
+import type { ScheduleMatch, ScheduleRow } from "./types";
+
+/** Narrows a `ScheduleRow` to the `ScheduleMatch` member for tests that assert
+ * on `homeTeam`/`awayTeam`/scores — every fixture in this file that reaches
+ * for it is deliberately a non-placeholder match. */
+function expectFixture(row: ScheduleRow): ScheduleMatch {
+  if (row.isPlaceholder)
+    throw new Error("expected a ScheduleMatch, got a ScheduleReservation");
+  return row;
+}
 
 // Mock Match factory
 function createMockMatch(overrides: Partial<Match> = {}): Match {
@@ -33,7 +43,7 @@ function createMockMatch(overrides: Partial<Match> = {}): Match {
 describe("transformMatchToSchedule", () => {
   it("transforms a match to schedule format", () => {
     const match = createMockMatch();
-    const result = transformMatchToSchedule(match);
+    const result = expectFixture(transformMatchToSchedule(match));
 
     expect(result.id).toBe(123);
     expect(result.date).toEqual(new Date("2025-02-15T15:00:00"));
@@ -53,7 +63,9 @@ describe("transformMatchToSchedule", () => {
     const match = createMockMatch({
       away_team: { id: 2, name: "Opponent", team_label: "U23" },
     });
-    expect(transformMatchToSchedule(match).awayTeam.teamLabel).toBe("U23");
+    expect(
+      expectFixture(transformMatchToSchedule(match)).awayTeam.teamLabel,
+    ).toBe("U23");
   });
 
   it("handles scheduled match without scores", () => {
@@ -62,7 +74,7 @@ describe("transformMatchToSchedule", () => {
       home_team: { id: 1, name: "KCVV", score: undefined },
       away_team: { id: 2, name: "Opponent", score: undefined },
     });
-    const result = transformMatchToSchedule(match);
+    const result = expectFixture(transformMatchToSchedule(match));
 
     expect(result.status).toBe("scheduled");
     expect(result.homeScore).toBeUndefined();
@@ -74,7 +86,7 @@ describe("transformMatchToSchedule", () => {
       home_team: { id: 1, name: "KCVV", logo: undefined },
       away_team: { id: 2, name: "Opponent", logo: undefined },
     });
-    const result = transformMatchToSchedule(match);
+    const result = expectFixture(transformMatchToSchedule(match));
 
     expect(result.homeTeam.logo).toBeUndefined();
     expect(result.awayTeam.logo).toBeUndefined();
@@ -82,15 +94,21 @@ describe("transformMatchToSchedule", () => {
 
   it("passes is_home through as isHome when present", () => {
     const homeMatch = createMockMatch({ is_home: true });
-    expect(transformMatchToSchedule(homeMatch).isHome).toBe(true);
+    expect(expectFixture(transformMatchToSchedule(homeMatch)).isHome).toBe(
+      true,
+    );
 
     const awayMatch = createMockMatch({ is_home: false });
-    expect(transformMatchToSchedule(awayMatch).isHome).toBe(false);
+    expect(expectFixture(transformMatchToSchedule(awayMatch)).isHome).toBe(
+      false,
+    );
   });
 
   it("leaves isHome undefined when is_home is absent", () => {
     const match = createMockMatch();
-    expect(transformMatchToSchedule(match).isHome).toBeUndefined();
+    expect(
+      expectFixture(transformMatchToSchedule(match)).isHome,
+    ).toBeUndefined();
   });
 
   it("passes is_placeholder through as isPlaceholder when present (#2606)", () => {
@@ -101,8 +119,35 @@ describe("transformMatchToSchedule", () => {
     expect(transformMatchToSchedule(normal).isPlaceholder).toBe(false);
   });
 
-  it("leaves isPlaceholder undefined when is_placeholder is absent", () => {
+  it("normalizes isPlaceholder to false when is_placeholder is absent (#2688 — a definite discriminant, not a tri-state)", () => {
     const match = createMockMatch();
-    expect(transformMatchToSchedule(match).isPlaceholder).toBeUndefined();
+    expect(transformMatchToSchedule(match).isPlaceholder).toBe(false);
+  });
+
+  it("returns the ScheduleReservation shape for a placeholder — no awayTeam/scores, one `team` (#2688)", () => {
+    const placeholder = createMockMatch({
+      is_placeholder: true,
+      home_team: {
+        id: 1235,
+        name: "KCVV Elewijt",
+        logo: "https://example.com/kcvv.png",
+      },
+      away_team: { id: 1235, name: "KCVV Elewijt" },
+      status: "scheduled",
+      competition: "Tornooi",
+    });
+    const result = transformMatchToSchedule(placeholder);
+
+    expect(result.isPlaceholder).toBe(true);
+    if (!result.isPlaceholder) throw new Error("expected a reservation");
+    expect(result.team).toEqual({
+      id: 1235,
+      name: "KCVV Elewijt",
+      logo: "https://example.com/kcvv.png",
+      teamLabel: undefined,
+    });
+    expect(result.competition).toBe("Tornooi");
+    expect("awayTeam" in result).toBe(false);
+    expect("homeScore" in result).toBe(false);
   });
 });

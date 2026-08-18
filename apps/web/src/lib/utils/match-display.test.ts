@@ -6,6 +6,8 @@ import {
   isExceptionalMatchStatus,
   isPlayedMatch,
   isSettledMatch,
+  reservationView,
+  RESERVATION_SUBJECT_FALLBACK,
 } from "./match-display";
 import type { MatchStatus } from "@/lib/effect/schemas/match.schema";
 
@@ -203,5 +205,53 @@ describe("isExceptionalMatchStatus", () => {
     ] as MatchStatus[]) {
       expect(isExceptionalMatchStatus(status)).toBe(true);
     }
+  });
+});
+
+describe("reservationView", () => {
+  it("uses the competition label as the subject when present", () => {
+    const view = reservationView({
+      status: "scheduled",
+      competition: "Tornooi",
+    });
+    expect(view.subject).toBe("Tornooi");
+  });
+
+  it("falls back to RESERVATION_SUBJECT_FALLBACK when no competition label is sent", () => {
+    const view = reservationView({
+      status: "scheduled",
+      competition: undefined,
+    });
+    expect(view.subject).toBe(RESERVATION_SUBJECT_FALLBACK);
+  });
+
+  it("renders the competition label verbatim — no re-casing (PSD's lowercase gotcha, #2606)", () => {
+    const view = reservationView({
+      status: "scheduled",
+      competition: "vriendschappelijk",
+    });
+    expect(view.subject).toBe("vriendschappelijk");
+  });
+
+  it("carries no status marker for scheduled/finished — the layout already speaks for those", () => {
+    expect(
+      reservationView({ status: "scheduled", competition: "Tornooi" })
+        .statusWording,
+    ).toBeNull();
+    expect(
+      reservationView({ status: "finished", competition: "Tornooi" })
+        .statusWording,
+    ).toBeNull();
+  });
+
+  it("names an exceptional status — a reservation can be called off too (#2606)", () => {
+    const view = reservationView({
+      status: "cancelled",
+      competition: "Tornooi",
+    });
+    expect(view.statusWording).toEqual({
+      abbreviation: "CANC",
+      longForm: "Geannuleerd",
+    });
   });
 });

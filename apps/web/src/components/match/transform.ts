@@ -1,23 +1,36 @@
 import type { Match } from "@/lib/effect/schemas";
-import type { ScheduleMatch, ScheduleTeam } from "./types";
+import type { ScheduleRow, ScheduleTeam } from "./types";
 
 /**
- * Transform a BFF `Match` into the `ScheduleMatch` shape consumed by the
+ * Transform a BFF `Match` into the `ScheduleRow` shape consumed by the
  * match-agenda components (`<TeamMatchesSection>` / `<TeamAgendaRow>`). Shared
- * by the team-detail pages and the opponent-history (`/tegenstander`) page.
+ * by the team-detail pages, the opponent-history (`/tegenstander`) page, the
+ * homepage `<FirstTeamsBlock>`, and the landing `<MatchStripView>`.
+ *
+ * Branches on `match.is_placeholder` into the two `ScheduleRow` members
+ * (#2688) — the contract itself stays sparse (`is_placeholder` is `undefined`
+ * for an ordinary fixture, per #2606/#2632's review), but the web view-model
+ * normalises that into a definite `isPlaceholder` discriminant, because the
+ * union needs a real discriminant to narrow on, not a tri-state optional.
  *
  * @param match - Match from PSD API via the BFF
- * @returns ScheduleMatch object for display
+ * @returns ScheduleRow object for display
  */
-export function transformMatchToSchedule(match: Match): ScheduleMatch {
-  const transformTeam = (team: Match["home_team"]): ScheduleTeam => ({
-    id: team.id,
-    name: team.name,
-    logo: team.logo,
-    teamLabel: team.team_label,
-  });
+export function transformMatchToSchedule(match: Match): ScheduleRow {
+  if (match.is_placeholder) {
+    return {
+      isPlaceholder: true,
+      id: match.id,
+      date: match.date,
+      time: match.time,
+      team: transformTeam(match.home_team),
+      status: match.status,
+      competition: match.competition,
+    };
+  }
 
   return {
+    isPlaceholder: false,
     id: match.id,
     date: match.date,
     time: match.time,
@@ -28,6 +41,14 @@ export function transformMatchToSchedule(match: Match): ScheduleMatch {
     status: match.status,
     competition: match.competition,
     isHome: match.is_home,
-    isPlaceholder: match.is_placeholder,
+  };
+}
+
+function transformTeam(team: Match["home_team"]): ScheduleTeam {
+  return {
+    id: team.id,
+    name: team.name,
+    logo: team.logo,
+    teamLabel: team.team_label,
   };
 }

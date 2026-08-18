@@ -1,4 +1,5 @@
 import type { MatchStatus } from "@/lib/effect/schemas/match.schema";
+import { matchStatusWording } from "@/components/match/MatchStatusBadge";
 
 interface HasScoreMatch {
   home_team: { score?: number };
@@ -206,3 +207,41 @@ export const HOME_AWAY_A11Y_NAME = {
  * row's shared vocabulary is declared.
  */
 export const RESERVATION_SUBJECT_FALLBACK = "Gereserveerd";
+
+/** The fields `reservationView()` needs — deliberately narrower than the full
+ * `ScheduleReservation`/`MatchDetail` shapes so both can pass through it. */
+export interface ReservationSubjectInput {
+  status: MatchStatus;
+  competition?: string;
+}
+
+export interface ReservationView {
+  /** The competition label, or `RESERVATION_SUBJECT_FALLBACK` when absent. */
+  subject: string;
+  /**
+   * The exceptional-status marker (FF/AFG/CANC/STOP), or `null` for
+   * `scheduled`/`finished` — see `isExceptionalMatchStatus`. A reservation can
+   * be called off the same way a real fixture can (#2606), so this is not
+   * dropped just because the row has no opponent to report a result against.
+   */
+  statusWording: { abbreviation: string; longForm: string } | null;
+}
+
+/**
+ * The one place a pitch-reservation placeholder's subject/status derivation
+ * lives (#2688) — pairs with `OUTCOME_UNDERLINE`/`MATCH_KIND_WORD` above for
+ * the same reason: `<TeamAgendaRow>` (#2606) worked this logic out first and
+ * inlined it; every renderer built after it (`<MatchStripView>`,
+ * `/wedstrijd/[matchId]`) should call this instead of re-deriving the same
+ * two rules a third and fourth time.
+ */
+export function reservationView(
+  match: ReservationSubjectInput,
+): ReservationView {
+  return {
+    subject: match.competition || RESERVATION_SUBJECT_FALLBACK,
+    statusWording: isExceptionalMatchStatus(match.status)
+      ? matchStatusWording(match.status)
+      : null,
+  };
+}

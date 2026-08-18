@@ -46,6 +46,18 @@ A participant in a match — either the home or away side. Could be a KCVV team 
 
 **Not a standalone entity.** Opponents only exist within match context. The `id` comes from PSD's club registry and can be used to link matches against the same opponent (future feature).
 
+### Pitch-Reservation Placeholder
+
+A fixture where both sides are the same club (`home_team.id === away_team.id`). The association's device for "this team has something on the calendar that day, the details aren't settled yet" — used for the club's own youth tournaments and for external tournaments/friendlies alike (#2606). Not a bug in the feed; not derivable from `competition`/`competitionType` (a genuine tournament fixture with a real opponent carries the same values).
+
+| Code                   | Notes                                                                                                                                               |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Match.is_placeholder` | Contract field (optional boolean), computed by the BFF from club-id equality                                                                        |
+| `ScheduleReservation`  | Web view-model — a `ScheduleRow` union member distinct from `ScheduleMatch`, carrying one `team` (never `homeTeam`/`awayTeam`) and no score (#2688) |
+| `reservationView()`    | `apps/web/src/lib/utils/match-display.ts` — the shared subject/status derivation every renderer of a reservation uses                               |
+
+**Render rule:** never a second crest, a score slot, a home/away side, or a reason line for the missing opponent — the row/page states only what it has (date, subject, real time). `<TeamAgendaRow>` (#2606) is the prior art every other surface (`<MatchStripView>`, `/kalender`'s three view modes, `/wedstrijd/[matchId]`) matches rather than re-deriving (#2688).
+
 ### Lineup
 
 The players selected for a specific match, with their match-level roles.

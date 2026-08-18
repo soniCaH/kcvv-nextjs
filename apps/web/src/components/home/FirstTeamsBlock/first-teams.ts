@@ -25,7 +25,7 @@
  * as the reference implementation.
  */
 import type { Match } from "@/lib/effect/schemas";
-import type { ScheduleMatch } from "@/components/match/types";
+import type { ScheduleRow } from "@/components/match/types";
 import { transformMatchToSchedule } from "@/components/match/transform";
 import { hasScore, isSettledMatch } from "@/lib/utils/match-display";
 import { RESERVEN_PSD_ID } from "@/lib/utils/group-teams";
@@ -40,10 +40,14 @@ export interface FirstTeamInput {
 }
 
 export interface FirstTeamVM extends FirstTeamInput {
-  /** Most recent played match — rendered as a cream `<TeamAgendaRow>`. */
-  result?: ScheduleMatch;
-  /** Next scheduled fixture — rendered as the featured jersey-deep `<TeamAgendaRow>`. */
-  fixture?: ScheduleMatch;
+  /**
+   * Most recent played match — rendered as a cream `<TeamAgendaRow>`. Can be
+   * a pitch-reservation placeholder (#2688); `<TeamAgendaRow>` already
+   * branches on `.isPlaceholder` for the reduced treatment.
+   */
+  result?: ScheduleRow;
+  /** Next scheduled fixture — rendered as the featured jersey-deep `<TeamAgendaRow>`. Can also be a placeholder — see `result`. */
+  fixture?: ScheduleRow;
 }
 
 /** The fields senior-team selection reads — structural, so both call sites fit. */
