@@ -51,6 +51,12 @@ import {
 import { matchStatusWording } from "@/components/match/MatchStatusBadge";
 import { House, Bus } from "@/lib/icons.redesign";
 import type { ScheduleMatch } from "@/components/match/types";
+// PROTOTYPE — #2693. Throwaway; remove with the branch.
+import {
+  isProtoTournament,
+  ProtoTournamentRow,
+  useProtoVariant,
+} from "./prototype-2693/ProtoTournamentRow";
 
 export interface TeamAgendaRowProps {
   match: ScheduleMatch;
@@ -226,6 +232,12 @@ export function TeamAgendaRow({
   kind,
   className,
 }: TeamAgendaRowProps) {
+  // PROTOTYPE — #2693. Throwaway; remove with the branch.
+  const protoVariant = useProtoVariant();
+  if (protoVariant !== "off" && isProtoTournament(match)) {
+    return <ProtoTournamentRow match={match} variant={protoVariant} />;
+  }
+
   // Prefer match.is_home (provided by BFF); fall back to comparing kcvvTeamId
   // against the home team's id when the BFF field is absent.
   const isHome: boolean | undefined =

@@ -8,6 +8,8 @@ import { BffService } from "@/lib/effect/services/BffService";
 import type { Match } from "@kcvv/api-contract";
 import { TeamRepository } from "@/lib/repositories/team.repository";
 import { TeamAgendaRow } from "@/components/team/TeamMatchesSection/TeamAgendaRow";
+// PROTOTYPE — #2693. Throwaway; remove with the branch.
+import { PrototypeSwitcher } from "@/components/team/TeamMatchesSection/prototype-2693/PrototypeSwitcher";
 import { EmptyState } from "@/components/design-system/EmptyState";
 import { PageContainer } from "@/components/design-system/PageContainer";
 import { pendingEmptyBody } from "@/lib/utils/empty-state-copy";
@@ -219,6 +221,9 @@ export default async function WedstrijdenPage({
           </div>
         )}
       </PageContainer>
+
+      {/* PROTOTYPE — #2693. Throwaway; remove with the branch. */}
+      <PrototypeSwitcher />
     </>
   );
 }
