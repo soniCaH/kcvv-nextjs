@@ -75,10 +75,15 @@ footer (per §6.7).
 
 ## 4. States
 
-- **Empty list** (no upcoming events): centred message on the dark field — e.g. _"Geen evenementen
-  gepland — kom snel terug."_ (mono kicker + serif line). No month headers, no filter row.
-- **Filtered-to-zero** (a type has no upcoming events): _"Geen [type] gepland."_ + a **"Toon alles"**
-  reset chip. Filter row stays visible.
+- **Empty list** (no upcoming events): **superseded by #2427/#2562** — this state now renders the
+  shared tier-"surface" `<EmptyState>` ("Nog geen evenementen gepland."), and the filter row stays
+  **visible** rather than hidden. #2427 rule 5 considered and rejected the structural special-case
+  that hid the filter row here: the five chips are a fixed set independent of the data, so hiding
+  them bought nothing. The mono-kicker/serif-line treatment and the "no filter row" behaviour
+  documented below are retired.
+- **Filtered-to-zero** (a type has no upcoming events): also on the shared `<EmptyState>` — names
+  the active category (_"Geen evenementen in de categorie [type]."_) + the mandatory **"Toon alles"**
+  undo. Filter row stays visible, as before.
 - **Multi-day** (`dateStart` + `dateEnd`): stub shows the **start** day; the meta/kicker shows the
   **range** (list meta: `14–15 SEP`; hero kicker: `ZA 14 – ZO 15 SEPTEMBER`).
 - **Time-less / all-day** (`dateStart` time is `00:00`, or `eventFact.startTime` absent): **omit the

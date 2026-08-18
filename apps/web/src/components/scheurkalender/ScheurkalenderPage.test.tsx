@@ -74,12 +74,12 @@ describe("ScheurkalenderPage", () => {
   describe("empty state", () => {
     it("renders the empty message and no month headings", () => {
       renderPage([]);
-      expect(
-        screen.getByText("Geen competitiewedstrijden gevonden."),
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByRole("heading", { level: 2 }),
-      ).not.toBeInTheDocument();
+      // "gevonden" is banned outside query surfaces (#2427 rule 3).
+      const headings = screen.getAllByRole("heading", { level: 2 });
+      // Only the tier-"surface" <EmptyState>'s own heading renders — no
+      // per-month heading, since there is no fixture data to group.
+      expect(headings).toHaveLength(1);
+      expect(headings[0]).toHaveTextContent("Geen competitiewedstrijden.");
     });
   });
 

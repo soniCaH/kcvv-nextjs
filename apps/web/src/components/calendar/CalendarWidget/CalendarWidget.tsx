@@ -5,6 +5,11 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { trackEvent } from "@/lib/analytics/track-event";
+import { EmptyState } from "@/components/design-system";
+import {
+  filteredEmptyBody,
+  pendingEmptyBody,
+} from "@/lib/utils/empty-state-copy";
 import { CalendarMonth } from "../CalendarMonth";
 import { CalendarWeek } from "../CalendarWeek";
 import { CalendarAgenda } from "../CalendarAgenda";
@@ -186,15 +191,6 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
     return { filteredFeed: filtered, matches: matchList, events: eventList };
   }, [feed, activeTypeFilter]);
 
-  // Empty + filtered-to-zero copy. "all" + nothing = genuinely empty; a specific
-  // facet + nothing = the selection emptied the calendar.
-  const zeroMessage =
-    activeTypeFilter === "all"
-      ? "Geen wedstrijden of evenementen gepland."
-      : activeTypeFilter === "Wedstrijden"
-        ? "Geen wedstrijden gepland."
-        : `Geen evenementen in de categorie ${activeTypeFilter} gepland.`;
-
   return (
     <div className="space-y-4">
       {/* By-type filter chips (the row doubles as the colour legend) */}
@@ -273,23 +269,42 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
         {/* View content */}
         <div className="p-4">
           {filteredFeed.length === 0 ? (
-            // role="status" so the message is announced when a filter selection
-            // empties the calendar (a client-side state change, not a page load).
-            <div
-              role="status"
-              className="text-ink-muted flex flex-col items-center gap-3 py-12 text-center"
-            >
-              <p className="font-mono font-medium">{zeroMessage}</p>
-              {activeTypeFilter !== "all" && (
-                <button
-                  type="button"
-                  onClick={() => setType("all")}
-                  className="border-ink bg-cream text-ink hover:bg-cream-soft border-2 px-4 py-2 font-mono text-sm font-medium transition-colors"
-                >
-                  Toon alles
-                </button>
-              )}
-            </div>
+            // "all" + nothing = genuinely empty ("Nog geen" — a match or
+            // event can still be scheduled); a specific facet + nothing =
+            // the selection emptied the calendar (names the facet, carries
+            // the mandatory undo via `reason="filtered"`, never "Nog geen"
+            // — #2427 rule 5). Computed only here, not on every render
+            // (round 3 review, D6). `surface="bare"`: already inside this
+            // panel's own bordered/shadowed shell — a second frame here
+            // nested two ink borders with a shadow between them.
+            activeTypeFilter === "all" ? (
+              <EmptyState
+                tier="surface"
+                heading="Nog geen wedstrijden of evenementen gepland"
+                live
+                surface="bare"
+              >
+                {pendingEmptyBody(
+                  "er een wedstrijd of evenement gepland wordt",
+                  "het",
+                )}
+              </EmptyState>
+            ) : (
+              <EmptyState
+                tier="surface"
+                heading={
+                  activeTypeFilter === "Wedstrijden"
+                    ? "Geen wedstrijden gepland"
+                    : `Geen evenementen in de categorie ${activeTypeFilter}`
+                }
+                live
+                surface="bare"
+                reason="filtered"
+                undo={{ label: "Toon alles", onClick: () => setType("all") }}
+              >
+                {filteredEmptyBody("de volledige kalender")}
+              </EmptyState>
+            )
           ) : view === "month" ? (
             <CalendarMonth
               matches={matches}

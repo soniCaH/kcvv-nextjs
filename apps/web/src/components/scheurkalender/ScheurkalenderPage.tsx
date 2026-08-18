@@ -23,7 +23,7 @@
 import { DateTime } from "luxon";
 import { toDisplayZone } from "@/lib/utils/dates";
 import { capitalize } from "@/lib/utils/capitalize";
-import { PageContainer } from "@/components/design-system";
+import { EmptyState, PageContainer } from "@/components/design-system";
 import { PrintButton } from "./PrintButton";
 import { PrintDate } from "./PrintDate";
 
@@ -258,9 +258,22 @@ export function ScheurkalenderPage({
               ))}
             </div>
           ) : (
-            <p className="text-ink-muted px-4 py-16 text-center font-mono text-sm">
-              Geen competitiewedstrijden gevonden.
-            </p>
+            // "gevonden" is banned outside query surfaces (#2427 rule 3) — this
+            // is a data source, not a search. surface="bare": already inside
+            // the poster's own `border-ink` sheet frame — a second frame here
+            // nested two ink borders, and dropped a taped jersey into a print
+            // poster (#2562 review round 3). `className="px-5"` matches the
+            // populated grid's own horizontal inset above — without it, this
+            // branch's copy ran wider than the content it replaces inside
+            // the same sheet (#2562 review round 4).
+            <EmptyState
+              tier="surface"
+              heading="Geen competitiewedstrijden"
+              surface="bare"
+              className="px-5"
+            >
+              Er zijn geen competitiewedstrijden voor dit seizoen beschikbaar.
+            </EmptyState>
           )}
         </div>
 

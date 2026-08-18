@@ -3,16 +3,12 @@
 import { useState } from "react";
 
 import { trackEvent } from "@/lib/analytics/track-event";
-import { MonoLabel } from "@/components/design-system";
+import { EmptyState } from "@/components/design-system";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
+import { filteredEmptyBody } from "@/lib/utils/empty-state-copy";
 import { EventMonthList } from "../EventMonthList";
-import {
-  EventFilterBar,
-  EVENT_CHIP_BASE,
-  type EventFilterValue,
-} from "../EventFilterBar";
+import { EventFilterBar, type EventFilterValue } from "../EventFilterBar";
 import { DEFAULT_EVENT_TYPE } from "../event-type-style";
-import { cn } from "@/lib/utils/cn";
 
 export interface EventsBrowserProps {
   /**
@@ -30,12 +26,22 @@ export interface EventsBrowserProps {
 /**
  * Client shell for the `/evenementen` list (design lock 6e §2 + §4): the
  * colour-coded filter chips above the month-grouped `<TicketStub>` list, plus
- * the empty / filtered-to-zero states. Single-select, "Alles" default, on the
- * dark `jersey-deep-dark` page.
+ * the empty / filtered-to-zero states, both on the shared tier-"surface"
+ * `<EmptyState>` (#2427 / #2562). Single-select, "Alles" default, on the
+ * dark `jersey-deep-dark` page — `surface="inverse"` so the card's shadow
+ * stays visible against the dark field (round 3 review, A1: the default
+ * hard ink shadow is invisible on this ground).
  *
- * - No upcoming events at all → centred message, **no** filter row.
- * - A type with no upcoming events → per-category message + a "Toon alles"
- *   reset, with the filter row kept visible.
+ * - No upcoming events at all → "Nog geen evenementen gepland" (events can
+ *   still arrive). The filter row hides — nothing to filter, and showing it
+ *   invited a dead-end loop: pick a chip against zero events, land on the
+ *   filtered-to-zero copy, undo back to the same emptiness (round 3 review,
+ *   C5). This restores the pre-round-2 guard; round 2's own fix (below)
+ *   stays independently correct for a facet seeded while the feed is empty
+ *   (e.g. a deep link), where the row IS visible on mount.
+ * - A type with no upcoming events → names the active category, with the
+ *   mandatory "Toon alles" undo — `reason: "filtered"` on `<EmptyState>`,
+ *   which makes the undo a compile-time requirement, not a convention.
  *
  * Months whose tickets are all filtered out drop their header automatically —
  * `groupEventsByMonth` only buckets the events `<EventMonthList>` receives.
@@ -45,6 +51,7 @@ export function EventsBrowser({
   initialSelected = "all",
 }: EventsBrowserProps) {
   const [selected, setSelected] = useState<EventFilterValue>(initialSelected);
+  const isGenuinelyEmpty = events.length === 0;
 
   // Dedup guard: re-pressing the active chip is a no-op, so neither state nor
   // analytics fire twice for the same selection (repo analytics policy).
@@ -54,51 +61,50 @@ export function EventsBrowser({
     trackEvent("event_filter", { event_type: value });
   };
 
-  // No events at all: empty-list state — no filter row, no month headers.
-  if (events.length === 0) {
-    return (
-      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
-        <MonoLabel tone="cream">Agenda</MonoLabel>
-        <p className="font-display text-cream text-2xl">
-          Geen evenementen gepland — kom snel terug.
-        </p>
-      </div>
-    );
-  }
-
-  const filtered =
-    selected === "all"
-      ? events
-      : events.filter(
-          (event) => (event.eventType ?? DEFAULT_EVENT_TYPE) === selected,
-        );
+  // Keyed on whether a facet is ACTIVE, not on whether the computed list is
+  // empty — round 2's fix, kept: a facet can be active (e.g. seeded via
+  // `initialSelected`) while the raw feed is also empty, and the undo must
+  // still describe what's active. The filter row being hidden in that
+  // combination (above) makes it unreachable by click, but not by deep-link.
+  // No separate `isGenuinelyEmpty` branch here: filtering `[]` already
+  // yields `[]`, so the two arms below agree on an empty feed without a
+  // third case restating that (round 4 review — the dead arm survived the
+  // round-3 report that claimed it was already gone).
+  const isFilterActive = selected !== "all";
+  const filtered = isFilterActive
+    ? events.filter(
+        (event) => (event.eventType ?? DEFAULT_EVENT_TYPE) === selected,
+      )
+    : events;
 
   return (
     <div className="flex flex-col gap-8">
-      <EventFilterBar selected={selected} onSelect={handleSelect} />
+      {!isGenuinelyEmpty && (
+        <EventFilterBar selected={selected} onSelect={handleSelect} />
+      )}
 
       {filtered.length === 0 ? (
-        // role="status" (implicit aria-live="polite") so the per-category
-        // message is announced when a filter selection empties the list — it
-        // appears on a client-side state change, not a page load.
-        <div
-          role="status"
-          className="flex flex-col items-center gap-5 py-12 text-center"
-        >
-          <p className="font-display text-cream text-2xl">
-            Geen evenementen in de categorie {selected} gepland.
-          </p>
-          <button
-            type="button"
-            onClick={() => handleSelect("all")}
-            className={cn(
-              EVENT_CHIP_BASE,
-              "border-cream text-cream hover:bg-cream/10",
-            )}
+        isFilterActive ? (
+          <EmptyState
+            tier="surface"
+            surface="inverse"
+            heading={`Geen evenementen in de categorie ${selected}`}
+            live
+            reason="filtered"
+            undo={{ label: "Toon alles", onClick: () => handleSelect("all") }}
           >
-            Toon alles
-          </button>
-        </div>
+            {filteredEmptyBody("alle evenementen")}
+          </EmptyState>
+        ) : (
+          <EmptyState
+            tier="surface"
+            surface="inverse"
+            heading="Nog geen evenementen gepland"
+            live
+          >
+            Kom snel terug voor het volgende evenement.
+          </EmptyState>
+        )
       ) : (
         <EventMonthList events={filtered} />
       )}

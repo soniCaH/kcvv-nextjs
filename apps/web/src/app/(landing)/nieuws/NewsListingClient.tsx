@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
 import { NewsCard, CategoryFilters } from "@/components/article";
 import {
+  EmptyState,
   LoadMoreFooter,
   PageContainer,
   TapedCardGrid,
@@ -12,6 +13,10 @@ import { formatArticleDate } from "@/lib/utils/dates";
 import { articleTypeCardLabel } from "@/lib/utils/article-type-label";
 import { LISTING_BATCH_SIZE, LISTING_INITIAL_TOTAL } from "@/lib/constants";
 import { deduplicateById, type Paginated } from "@/lib/utils/pagination";
+import {
+  filteredEmptyBody,
+  pendingEmptyBody,
+} from "@/lib/utils/empty-state-copy";
 
 interface Category {
   id: string;
@@ -198,12 +203,54 @@ export function NewsListingClient({
           ))}
         </TapedCardGrid>
 
-        {/* Empty state */}
-        {isEmpty && !error && (
-          <p className="py-12 text-center text-gray-400">
-            Geen artikelen gevonden voor deze categorie.
-          </p>
-        )}
+        {/* Empty state. `activeCategoryLabel` is resolved here, not hoisted —
+            the `.find()` it runs has no reason to pay for itself on every
+            render of an infinite-scroll page when it's read only in this
+            branch (#2562 review round 3, D6). */}
+        {isEmpty &&
+          !error &&
+          (() => {
+            // Names the active facet by label ("Jeugd"), not a generic
+            // "deze categorie" — the copy is the tell (#2427 rule 5). `null`
+            // for "all", which is genuine emptiness, not a filter having
+            // emptied the surface. `activeCategory` holds a SLUG
+            // (`CategoryFilters` builds its tab values from
+            // `category.attributes.slug`, and `initialCategory` comes from
+            // the `?categorie=` slug) — match on slug, not `id`. The two
+            // look interchangeable today only because `nieuws/page.tsx`
+            // currently synthesises `{ id: tag, attributes: { name: tag,
+            // slug: tag } }` (#2562 review).
+            const activeCategoryLabel =
+              activeCategory === "all"
+                ? null
+                : (categories.find((c) => c.attributes.slug === activeCategory)
+                    ?.attributes.name ?? activeCategory);
+
+            return activeCategoryLabel ? (
+              <EmptyState
+                tier="surface"
+                heading={`Geen artikelen in ${activeCategoryLabel}`}
+                live
+                reason="filtered"
+                undo={{
+                  label: "Toon alles",
+                  onClick: () => handleCategoryChange("all"),
+                }}
+                className="mb-6"
+              >
+                {filteredEmptyBody("het volledige overzicht")}
+              </EmptyState>
+            ) : (
+              <EmptyState
+                tier="surface"
+                heading="Nog geen artikelen"
+                live
+                className="mb-6"
+              >
+                {pendingEmptyBody("we een artikel publiceren", "het")}
+              </EmptyState>
+            );
+          })()}
 
         {/* Error retry · in-flight spinner · load-more (NEWS-1, #2237 —
             replaces the old infinite scroll). Appends LISTING_BATCH_SIZE

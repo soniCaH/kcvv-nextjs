@@ -348,17 +348,8 @@ export const Loading: Story = {
   },
 };
 
-/**
- * Empty lineups (no data available)
- */
-export const EmptyLineups: Story = {
-  args: {
-    homeTeamName: "KCVV Elewijt",
-    awayTeamName: "KFC Turnhout",
-    homeLineup: [],
-    awayLineup: [],
-  },
-};
+// No "EmptyLineups" story here (round 3 review, C4): the both-sides-empty
+// branch this covered was removed as dead code — see MatchLineup.tsx.
 
 /**
  * Minimal data (just names)

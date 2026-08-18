@@ -317,20 +317,12 @@ describe("MatchEvents", () => {
     });
   });
 
-  describe("empty state", () => {
-    it("shows message when no events", () => {
-      render(
-        <MatchEvents
-          homeTeamName="KCVV Elewijt"
-          awayTeamName="KFC Turnhout"
-          events={[]}
-        />,
-      );
-      expect(
-        screen.getByText("Nog geen gebeurtenissen in deze wedstrijd."),
-      ).toBeInTheDocument();
-    });
-  });
+  // No "empty state" coverage here (round 3 review, C4): the whole-timeline
+  // tier-"surface" branch was removed as dead code — both production
+  // callers (MatchEventsSection, MatchGoalsBlock) already guard "does this
+  // section earn its space" before ever mounting <MatchEvents> with zero
+  // events, so the branch could never execute. See "grouped by team" above
+  // for the one still-reachable empty case (a single side with no events).
 
   describe("loading state", () => {
     it("renders skeleton when loading", () => {

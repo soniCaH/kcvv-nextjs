@@ -16,6 +16,7 @@
 import { cn } from "@/lib/utils/cn";
 import { ArrowUp, ArrowDown } from "@/lib/icons.redesign";
 import type { CardType } from "@/lib/effect/schemas/match.schema";
+import { EmptyState } from "@/components/design-system";
 import { CardGlyph } from "../CardGlyph";
 
 export interface LineupPlayer {
@@ -57,11 +58,12 @@ export interface MatchLineupProps {
 }
 
 /**
- * Render the match lineups for the home and away teams, including loading and empty states.
+ * Render the match lineups for the home and away teams, including loading and per-side states.
  *
  * Renders two team lineup panels side-by-side on large screens (stacked on small screens). If
- * `isLoading` is true, two skeleton cards are rendered. If both `homeLineup` and `awayLineup`
- * are empty, a centered Dutch message indicating no lineups is shown.
+ * `isLoading` is true, two skeleton cards are rendered. A side with no players renders its own
+ * tier-"slot" held-open box (see `TeamLineup`) — the both-sides-empty case is guarded out one
+ * level up, by `MatchLineupSection`.
  *
  * @param homeTeamName - Display name of the home team
  * @param awayTeamName - Display name of the away team
@@ -69,7 +71,7 @@ export interface MatchLineupProps {
  * @param awayLineup - Array of `LineupPlayer` entries for the away team
  * @param isLoading - If true, render loading skeletons instead of lineup data
  * @param className - Additional CSS class names to apply to the root container
- * @returns The rendered lineup UI (team panels, loading skeletons, or empty-state message)
+ * @returns The rendered lineup UI (team panels or loading skeletons)
  */
 export function MatchLineup({
   homeTeamName,
@@ -91,16 +93,12 @@ export function MatchLineup({
     );
   }
 
-  // No lineups available
-  if (homeLineup.length === 0 && awayLineup.length === 0) {
-    return (
-      <div className={cn("py-8 text-center", className)}>
-        <p className="text-ink-muted font-mono text-sm tracking-[0.14em] uppercase">
-          Geen opstellingen beschikbaar voor deze wedstrijd.
-        </p>
-      </div>
-    );
-  }
+  // No tier-"surface" branch for the both-lineups-empty case:
+  // `MatchLineupSection`, the one production caller, already returns `null`
+  // before mounting this component when `homeLineup.length === 0 &&
+  // awayLineup.length === 0` — so that condition is unreachable here. Each
+  // side's own tier-"slot" box (below) covers the render directly (#2562
+  // review round 3 — see MatchLineup.test.tsx for the guard this leans on).
 
   return (
     <div
@@ -144,7 +142,11 @@ function TeamLineup({
   );
 
   return (
-    <div>
+    // `flex flex-col` so an empty column's tier-"slot" box can grow to fill
+    // the grid row's stretched height (the grid item's own height is
+    // already the row height via the default `align-self: stretch`) rather
+    // than collapsing to one line beside a full column (#2562 review).
+    <div className="flex flex-col">
       {/* Team-column header: mono caps, ink top border. Stylistic seam between
           the section heading above and the player rows below. */}
       <h3 className="border-ink text-ink/70 border-t pt-2 pb-3 font-mono text-[10px] tracking-[0.16em] uppercase">
@@ -152,7 +154,10 @@ function TeamLineup({
       </h3>
 
       {players.length === 0 ? (
-        <p className="text-ink-muted text-sm">Geen opstelling beschikbaar</p>
+        // Tier "slot" (#2427 / #2562): one team's column is empty while the
+        // other side of the two-column layout is full. Fills the rest of
+        // the stretched column by default (`flex-1`).
+        <EmptyState tier="slot">Geen opstelling beschikbaar</EmptyState>
       ) : (
         <div>
           {starters.length > 0 && (

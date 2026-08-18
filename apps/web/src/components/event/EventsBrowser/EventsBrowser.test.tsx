@@ -43,15 +43,36 @@ describe("<EventsBrowser>", () => {
     vi.clearAllMocks();
   });
 
-  it("renders the empty-list state with no filter row when there are no events", () => {
+  it("renders the genuine-empty state with the filter row hidden (round 3 review, C5)", () => {
+    // Nothing to filter, and showing the row invited a dead-end loop (pick a
+    // chip against zero events, land on the same emptiness via undo) — the
+    // row hides again, restoring the pre-round-2 guard.
     render(<EventsBrowser events={[]} />);
 
+    // "Nog geen" — events can still arrive.
     expect(
-      screen.getByText(/geen evenementen gepland — kom snel terug/i),
+      screen.getByRole("heading", { name: /nog geen evenementen gepland/i }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("group", { name: /filter evenementen op type/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("names the active facet and offers the undo when seeded against a genuinely empty feed", () => {
+    // A facet can be active while the raw feed is also empty (e.g. a deep
+    // link via `initialSelected`) even though the filter row itself is
+    // hidden in that state — round 2's isFilterActive fix stays correct for
+    // this case independent of the row's own visibility (#2562 review).
+    render(<EventsBrowser events={[]} initialSelected="Clubevent" />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: /geen evenementen in de categorie clubevent/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Toon alles" }),
+    ).toBeInTheDocument();
   });
 
   it("renders the filter row and every event by default", () => {
@@ -109,7 +130,7 @@ describe("<EventsBrowser>", () => {
     // The message lives in a polite live region so screen readers announce it
     // when a filter selection empties the list (client-side state change).
     expect(screen.getByRole("status")).toHaveTextContent(
-      /geen evenementen in de categorie jeugdwerking gepland/i,
+      /geen evenementen in de categorie jeugdwerking/i,
     );
     // Filter row stays visible in the filtered-to-zero state.
     expect(
@@ -158,10 +179,8 @@ describe("<EventsBrowser>", () => {
     expect(
       within(group).getByRole("button", { name: "Jeugdwerking" }),
     ).toHaveAttribute("aria-pressed", "true");
-    expect(
-      screen.getByText(
-        /geen evenementen in de categorie jeugdwerking gepland/i,
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /geen evenementen in de categorie jeugdwerking/i,
+    );
   });
 });

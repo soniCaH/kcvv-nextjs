@@ -58,10 +58,13 @@ const ALL_CHIP_STYLE: ChipStyle = {
 const TYPE_ORDER = Object.keys(TYPE_CHIP_STYLE) as EventType[];
 
 /**
- * Shared chip shape (also used by the `/evenementen` filtered-to-zero reset
- * button + the `/kalender` `KalenderFilterBar`), so the chips stay visually
- * identical across the surface. Square corners (`rounded-none`) to match the
- * design system — no page carries rounded filter controls (#2239 KAL-1).
+ * Shared chip shape (also used by the `/kalender` `KalenderFilterBar`), so
+ * the chips stay visually identical across the surface. Square corners
+ * (`rounded-none`) to match the design system — no page carries rounded
+ * filter controls (#2239 KAL-1). `/evenementen`'s filtered-to-zero reset
+ * moved onto `<EmptyState>`'s own `<Button variant="ghost">` when the empty
+ * states migrated onto the shared primitive (#2427 / #2562) and no longer
+ * consumes this shape.
  */
 export const EVENT_CHIP_BASE =
   "inline-flex items-center rounded-none border-2 px-3.5 py-1.5 font-mono font-medium uppercase " +

@@ -80,7 +80,11 @@ export const FilteredToZero: Story = {
   },
 };
 
-/** Empty list — no upcoming events at all: centred message, no filter row. */
+/**
+ * Empty list — no upcoming events at all: "Nog geen evenementen gepland" on
+ * the tier-"surface" `<EmptyState>`. The filter row hides — nothing to
+ * filter, and showing it invited a dead-end loop (round 3 review, C5).
+ */
 export const Empty: Story = {
   args: { events: [] },
 };

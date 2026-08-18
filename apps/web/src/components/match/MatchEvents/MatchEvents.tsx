@@ -14,6 +14,7 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
 import { Swap } from "@/lib/icons.redesign";
+import { EmptyState } from "@/components/design-system";
 import { CardGlyph } from "../CardGlyph";
 
 function assertNever(value: never): never {
@@ -270,16 +271,15 @@ export function MatchEvents({
     return aTime - bTime;
   });
 
-  // Empty state
-  if (filteredEvents.length === 0) {
-    return (
-      <div role="status" className={cn("py-8 text-center", className)}>
-        <p className="text-ink-muted font-mono text-sm tracking-[0.14em] uppercase">
-          Nog geen gebeurtenissen in deze wedstrijd.
-        </p>
-      </div>
-    );
-  }
+  // No tier-"surface" branch for the whole-timeline-empty case: both
+  // production callers (`MatchEventsSection`, which renders `<MatchEvents
+  // events={events} />` with the default `filter="all"`, and
+  // `MatchGoalsBlock`, which renders `<MatchEvents filter="goals">`) already
+  // guard their own "does this section earn its space" decision before
+  // mounting this component, so `filteredEvents.length === 0` is
+  // unreachable here. When both sides of a `groupBy="team"` render are
+  // empty, each side's own tier-"slot" box (below) covers it (#2562 review
+  // round 3 — see MatchEvents.test.tsx for the two guard sites this leans on).
 
   // Group by team if requested: each column is single-side, so the
   // left/right split idiom from the chronological mode doesn't apply.
@@ -289,7 +289,11 @@ export function MatchEvents({
 
     return (
       <div className={cn("grid grid-cols-1 gap-8 md:grid-cols-2", className)}>
-        <div>
+        {/* `flex flex-col` on each column so an empty side's tier-"slot" box
+            can grow (`flex-1`) to fill the grid row's stretched height
+            instead of collapsing to one line beside a full column
+            (#2562 review). */}
+        <div className="flex flex-col">
           <h3 className="border-ink text-ink/70 mb-2 border-t pt-2 pb-3 font-mono text-[10px] tracking-[0.16em] uppercase">
             {homeTeamName}
           </h3>
@@ -299,7 +303,7 @@ export function MatchEvents({
             highlightTeam={highlightTeam}
           />
         </div>
-        <div>
+        <div className="flex flex-col">
           <h3 className="border-ink text-ink/70 mb-2 border-t pt-2 pb-3 font-mono text-[10px] tracking-[0.16em] uppercase">
             {awayTeamName}
           </h3>
@@ -362,11 +366,10 @@ function EventList({
   highlightTeam?: "home" | "away";
 }) {
   if (events.length === 0) {
-    return (
-      <p className="text-ink-muted font-mono text-sm tracking-[0.14em] uppercase">
-        Geen gebeurtenissen
-      </p>
-    );
+    // Tier "slot" (#2427 / #2562): one team's column is empty while the
+    // other side of the grouped view is full. Fills the rest of the
+    // stretched column by default (`flex-1`).
+    return <EmptyState tier="slot">Geen gebeurtenissen</EmptyState>;
   }
 
   return (
