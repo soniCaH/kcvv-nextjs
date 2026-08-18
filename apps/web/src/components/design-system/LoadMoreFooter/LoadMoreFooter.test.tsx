@@ -22,15 +22,11 @@ describe("LoadMoreFooter", () => {
         />,
       );
 
-      // Both Spinner variants render role="status", so the CSS class is the
-      // only observable difference between the dots and the scarf — this is
-      // not a lazy DOM-shape assertion, it is the only handle available.
+      // The CSS class is the only observable difference between variants —
+      // Spinner.test.tsx owns the dots-vs-scarf contract directly.
       expect(
         container.querySelector(".kcvv-spinner-pulse"),
       ).toBeInTheDocument();
-      expect(
-        container.querySelector(".kcvv-spinner-scarf"),
-      ).not.toBeInTheDocument();
     });
   });
 });

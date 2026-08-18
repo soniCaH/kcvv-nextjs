@@ -5,11 +5,6 @@ import { LoadMoreFooter } from "./LoadMoreFooter";
 const meta = {
   title: "UI/LoadMoreFooter",
   component: LoadMoreFooter,
-  // Phase 2 of the VR rollout covers every UI/* story file (testing-ops.md
-  // → "Opt-in via the vr tag"); this one was missing the tag, which is why
-  // it has never been captured. Adding it here so #2650's scarf → dots
-  // change to the Loading story gets a real baseline instead of shipping
-  // uncompared.
   tags: ["autodocs", "vr"],
   parameters: {
     layout: "padded",
