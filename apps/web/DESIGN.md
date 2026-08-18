@@ -310,6 +310,36 @@ Only three weights exist, plus a muted sibling for surfaces where black-on-black
 
 **The Complete Vocabulary Rule.** The seven tokens above are the entire shadow system — there is nothing else to reach for. The pre-redesign blurred family (`--shadow-sm`, `--shadow-DEFAULT`, `--shadow-md`, `--shadow-lg`, `--shadow-card-hover`, `--shadow-input`, `--shadow-input-focus`, `--shadow-soft`) and the orphaned asymmetric pair (`--shadow-photo-tape`, `--shadow-photo-tape-lift`) were removed from `globals.css`; all ten had zero consumers. Adding a blurred token back is a change to the design language, not a convenience.
 
+## Motion
+
+Motion here is **functional, not decorative**. Every duration answers exactly one of three jobs, every curve that starts on demand is the same curve, and a loop exists to say exactly one thing: the system is busy. Nothing spins, sweeps or breathes without meaning it — and nothing waits without picking the one device built for the kind of wait it is.
+
+The Press-Down Rule already lives in Elevation & Depth, above; this section documents the timing and curve system around it — durations, curve, loops, reduced motion, namespaces, and which device answers which wait — it does not restate or alter the press itself.
+
+### Motion Vocabulary
+
+- **Chrome** (`150ms`, `var(--ease-out)`): colour and border changes — nav links, chips, text links, filter bars.
+- **The Press** (`300ms`, `var(--ease-out)`): the press-down on cards and buttons. `PRESS_DOWN_CLASSES` is a locked primitive; its `duration-300` is part of the lock, not a side effect of this scale.
+- **Arrival** (`500ms`, `var(--ease-out)`): anything entering the screen — scroll reveals, drawers.
+- **The Curve** (`cubic-bezier(0, 0, 0.58, 1)`): the plain CSS `ease-out`, and the only curve anything that starts on demand may use.
+- **The Scarf**: the barber-pole spinner (`<Spinner>`, default variant). Travels, so it loops on `linear`. Search only.
+- **The Dots**: the compact three-dot pulse (`<Spinner variant="compact">`). Breathes, so it loops on `ease-in-out`. Any in-flight request that isn't search.
+- **The Skeleton Pulse**: `motion-safe:animate-pulse` bars, `ease-in-out`. A page arriving.
+
+### Named Rules
+
+**The Three Speeds Rule.** Exactly three durations exist, one per job: `150ms` for chrome, `300ms` for the press, `500ms` for arrival. There is no fourth. `240ms` is not a speed — it folds into `300ms`.
+
+**The One Curve Rule.** Every motion that starts on demand uses `cubic-bezier(0, 0, 0.58, 1)` — the plain CSS `ease-out`. There is no second curve for interaction. This is **not** Tailwind's `ease-out`: Tailwind v4 ships `cubic-bezier(0, 0, 0.2, 1)`, a different, harder deceleration, so the `--ease-*` namespace is reset in `globals.css` and only this curve re-declared — otherwise the class name would lie about which curve it applies. `cubic-bezier(0.22, 1, 0.36, 1)` (easeOutQuint) is removed everywhere it appeared: it front-loads roughly 90% of its travel into the first quarter of the duration, which is what made every duration on a short press feel identical before this rule existed. The curve, not the duration, was the finding that produced this rule (#2508).
+
+**The Loop Rule.** Only three things loop, and all three mean the same thing: the system is busy. The scarf, the dots and the skeleton pulse. Decoration does not loop — a new decorative loop is not banned outright, but it requires its own decision and is never a default. A loop that travels uses `linear` (the scarf); a loop that breathes uses `ease-in-out` (the dots and the pulse). A loop may animate only `opacity` and `transform`, which keeps every loop on the compositor — a hidden tab costs nothing, so no separate "stop when hidden" rule is needed.
+
+**The Waiting-Device Rule.** Three devices wait, and they are not interchangeable — each has exactly one home. A **page arriving** waits as a **skeleton**: its real opening, unshimmered, with `motion-safe:animate-pulse` bars where its data will be. A **request the visitor made** waits as **`<Spinner>`**: the compact dots inline — the scarf only in search. Nothing else waits. The test that separates the two: _a page that simply arrives made no request_, so it has nothing to spin about. This is a rule about **which device**, never about speed — the Three Speeds Rule already decides how fast; this decides which one shows up. It documents what already ships: no component, no CSS and no skeleton change belongs to this rule. Conforming all 28 loading skeletons onto one shared envelope is #2573's job, not this section's (#2510).
+
+**The Reduced-Motion Rule.** Under `prefers-reduced-motion: reduce`, every loop stops and everything that travels arrives instantly. **Colour and border transitions survive.** A colour fade is not motion and causes no vestibular problem; suppressing the 43 `transition-colors` uses on this site would make it read as broken for exactly the users this rule protects. It is the same split the Press-Down Rule already makes on one primitive — the translate gated behind `motion-safe:`, the shadow collapse not — stated here once for the whole system instead of once per primitive.
+
+**The Namespace Rule.** A Tailwind v4 theme namespace this project does not reset is Tailwind's design, not this project's. `@theme` resets `--ease-*`, `--animate-*`, `--default-transition-duration` and `--default-transition-timing-function`, then re-declares only what the rules above sanction: one curve, one duration default, and `animate-pulse` alone among the loop utilities (`animate-bounce` and `animate-ping` generate nothing — both had zero consumers). A token not declared in `globals.css` may not be used.
+
 ## Shapes
 
 **Everything rectangular is sharp.** Border radius is `0` on cards, buttons, inputs, selects, textareas, pills, badges, modals, images and bands. The only curve in the system is a true circle (`rounded-full`) for avatars, timeline bullets, spinner dots and score circles. There is no small-radius softening step, and there is no "just 2px" exception.
