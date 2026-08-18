@@ -1,4 +1,8 @@
-import type { UpcomingMatch } from "@/components/match/types";
+import type {
+  UpcomingMatch,
+  UpcomingReservation,
+  UpcomingRow,
+} from "@/components/match/types";
 
 const KCVV_LOGO =
   "https://dfaozfi7c7f3s.cloudfront.net/logos/extra_groot/1235.png?v=1";
@@ -26,6 +30,7 @@ const makeMatch = (
   away: UpcomingMatch["homeTeam"],
   options: Partial<UpcomingMatch> = {},
 ): UpcomingMatch => ({
+  isPlaceholder: false,
   id,
   date: new Date(date),
   time,
@@ -156,3 +161,25 @@ export const mockUpcomingThree: UpcomingMatch[] = mockUpcomingFive.slice(0, 3);
  */
 export const mockUpcomingSingleTeam: UpcomingMatch[] =
   mockUpcomingTwelve.filter((m) => m.kcvvTeamLabel === "A-Ploeg");
+
+/**
+ * A youth tournament placeholder (#2606) — both sides upstream are the same
+ * club. Renders as the reduced `<ReservationMatchRow>`: no opponent, no
+ * link, the club crest and the subject via `reservationView()` instead of
+ * "KCVV Elewijt — KCVV Elewijt" (#2688).
+ */
+export const mockUpcomingReservation: UpcomingReservation = {
+  isPlaceholder: true,
+  id: 90,
+  date: new Date("2026-05-09T09:30:00Z"),
+  time: "09:30",
+  team: kcvv(),
+  status: "scheduled",
+  competition: "Tornooi",
+  kcvvTeamLabel: "U13",
+};
+
+export const mockUpcomingWithReservation: UpcomingRow[] = [
+  ...mockUpcomingFive,
+  mockUpcomingReservation,
+];

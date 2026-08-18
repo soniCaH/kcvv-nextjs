@@ -8,6 +8,14 @@ import {
   mapMatchesToUpcomingMatches,
 } from "./match.mapper";
 import type { Match } from "@/lib/effect/schemas/match.schema";
+import type { UpcomingMatch, UpcomingRow } from "@/components/match/types";
+
+/** Narrows an `UpcomingRow` to `UpcomingMatch` — every fixture in this file
+ * is a genuine match, never a pitch-reservation placeholder. */
+function expectMatch(row: UpcomingRow): UpcomingMatch {
+  if (row.isPlaceholder) throw new Error("expected an UpcomingMatch");
+  return row;
+}
 
 describe("mapMatchToUpcomingMatch", () => {
   it("should map a scheduled match correctly", () => {
@@ -34,6 +42,7 @@ describe("mapMatchToUpcomingMatch", () => {
     const result = mapMatchToUpcomingMatch(match);
 
     expect(result).toEqual({
+      isPlaceholder: false,
       id: 1,
       date: new Date("2025-12-06T09:00:00"),
       time: "09:00",
@@ -79,7 +88,7 @@ describe("mapMatchToUpcomingMatch", () => {
       competition: "Competitie",
     };
 
-    const result = mapMatchToUpcomingMatch(match);
+    const result = expectMatch(mapMatchToUpcomingMatch(match));
 
     expect(result.homeTeam.score).toBe(2);
     expect(result.awayTeam.score).toBe(1);
@@ -140,6 +149,40 @@ describe("mapMatchToUpcomingMatch", () => {
     expect(result.kcvvTeamLabel).toBe("U21");
   });
 
+  it("returns an UpcomingReservation for a pitch-reservation placeholder — no awayTeam, one `team` (#2606, #2688)", () => {
+    const match: Match = {
+      id: 90,
+      date: new Date("2026-05-09T09:30:00"),
+      time: "09:30",
+      venue: undefined,
+      home_team: {
+        id: 1235,
+        name: "KCVV Elewijt",
+        logo: "https://example.com/kcvv.png",
+      },
+      away_team: { id: 1235, name: "KCVV Elewijt" },
+      status: "scheduled",
+      competition: "Tornooi",
+      squadLabel: "U13",
+      kcvv_team_id: 7,
+      kcvv_team_label: "U13",
+      is_placeholder: true,
+    } as Match;
+
+    const result = mapMatchToUpcomingMatch(match);
+
+    expect(result.isPlaceholder).toBe(true);
+    if (!result.isPlaceholder) throw new Error("expected a reservation");
+    expect(result.team).toEqual({
+      id: 1235,
+      name: "KCVV Elewijt",
+      logo: "https://example.com/kcvv.png",
+    });
+    expect(result.competition).toBe("Tornooi");
+    expect(result.kcvvTeamLabel).toBe("U13");
+    expect("awayTeam" in result).toBe(false);
+  });
+
   it("should handle stopped status", () => {
     const match: Match = {
       id: 13,
@@ -161,7 +204,7 @@ describe("mapMatchToUpcomingMatch", () => {
       competition: "Competitie",
     };
 
-    const result = mapMatchToUpcomingMatch(match);
+    const result = expectMatch(mapMatchToUpcomingMatch(match));
 
     expect(result.status).toBe("stopped");
     expect(result.awayTeam.name).toBe("KCVV Elewijt");
@@ -214,10 +257,10 @@ describe("mapMatchesToUpcomingMatches", () => {
     const result = mapMatchesToUpcomingMatches(matches);
 
     expect(result).toHaveLength(2);
-    expect(result[0].id).toBe(1);
-    expect(result[0].awayTeam.name).toBe("KCVV Elewijt");
-    expect(result[1].id).toBe(2);
-    expect(result[1].homeTeam.name).toBe("KCVV Elewijt");
+    expect(result[0]!.id).toBe(1);
+    expect(expectMatch(result[0]!).awayTeam.name).toBe("KCVV Elewijt");
+    expect(result[1]!.id).toBe(2);
+    expect(expectMatch(result[1]!).homeTeam.name).toBe("KCVV Elewijt");
   });
 
   it("should handle empty array", () => {
