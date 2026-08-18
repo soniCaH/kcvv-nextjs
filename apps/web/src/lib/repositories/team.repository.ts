@@ -16,8 +16,7 @@ import type { TeamStaffMember } from "../team-role-resolution";
 
 export const TEAMS_QUERY =
   defineQuery(`*[_type == "team" && archived != true && showInNavigation != false] | order(name asc) {
-  _id, psdId, name, displayName, "slug": slug.current, age, gender, footbelId, division, divisionFull,
-  tagline,
+  _id, psdId, name, displayName, "slug": slug.current, age, division, divisionFull,
   "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5))
 }`);
 
@@ -93,7 +92,6 @@ export interface TeamNavVM {
   psdId: string | null;
   division: string | null;
   divisionFull: string | null;
-  tagline: string | null;
   teamImageUrl: string | null;
 }
 
@@ -158,7 +156,6 @@ export function toTeamNavVM(row: TEAMS_QUERY_RESULT[number]): TeamNavVM {
     psdId: row.psdId,
     division: row.division,
     divisionFull: row.divisionFull,
-    tagline: row.tagline,
     teamImageUrl: row.teamImageUrl,
   };
 }
