@@ -40,11 +40,8 @@ function makeTeamRow(
     displayName: null,
     slug: "eerste-elftallen-a",
     age: "A",
-    gender: "male",
-    footbelId: 12345,
     division: "3de Afdeling",
     divisionFull: "3de Afdeling VFV A",
-    tagline: "Er is maar één plezante compagnie",
     teamImageUrl: "https://cdn.sanity.io/team.webp",
     ...overrides,
   };
@@ -74,7 +71,6 @@ describe("TeamRepository", () => {
         psdId: "100",
         division: "3de Afdeling",
         divisionFull: "3de Afdeling VFV A",
-        tagline: "Er is maar één plezante compagnie",
         teamImageUrl: "https://cdn.sanity.io/team.webp",
       });
     });
@@ -88,7 +84,6 @@ describe("TeamRepository", () => {
           psdId: null,
           division: null,
           divisionFull: null,
-          tagline: null,
           teamImageUrl: null,
         }),
       ]);
@@ -106,7 +101,6 @@ describe("TeamRepository", () => {
       expect(t.psdId).toBeNull();
       expect(t.division).toBeNull();
       expect(t.divisionFull).toBeNull();
-      expect(t.tagline).toBeNull();
       expect(t.teamImageUrl).toBeNull();
     });
   });

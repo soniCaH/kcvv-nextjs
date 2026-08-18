@@ -21,7 +21,6 @@ const makeTeam = (over: Partial<TeamNavVM>): TeamNavVM => ({
   psdId: null,
   division: null,
   divisionFull: null,
-  tagline: null,
   teamImageUrl: null,
 });
 
