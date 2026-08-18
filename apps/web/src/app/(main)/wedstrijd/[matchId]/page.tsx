@@ -362,17 +362,27 @@ export default async function MatchPage({ params }: MatchPageProps) {
           },
         ])}
       />
-      <JsonLd
-        data={buildSportsEventJsonLd({
-          name: `${match.home_team.name} vs ${match.away_team.name}`,
-          startDate: match.date.toISOString(),
-          homeTeamName: match.home_team.name,
-          awayTeamName: match.away_team.name,
-          status: match.status,
-          url: `${SITE_CONFIG.siteUrl}/wedstrijd/${matchId}`,
-          venue: match.venue,
-        })}
-      />
+      {/* No SportsEvent JSON-LD for a pitch-reservation placeholder (#2606)
+          — a self-match is a pitch booking, not a sporting event between two
+          competitors, so publishing one here would assert a real fixture
+          between the club and itself to search engines even though the
+          page's own <title> and OG already say "Gereserveerd" (a code-review
+          finding on #2688's first draft: a Writer Rule "carve-out" that
+          publishes a false fixture is not one). The breadcrumb above still
+          applies — it names this page, not a match. */}
+      {!match.is_placeholder && (
+        <JsonLd
+          data={buildSportsEventJsonLd({
+            name: `${match.home_team.name} vs ${match.away_team.name}`,
+            startDate: match.date.toISOString(),
+            homeTeamName: match.home_team.name,
+            awayTeamName: match.away_team.name,
+            status: match.status,
+            url: `${SITE_CONFIG.siteUrl}/wedstrijd/${matchId}`,
+            venue: match.venue,
+          })}
+        />
+      )}
 
       <MatchStripSlot />
 
