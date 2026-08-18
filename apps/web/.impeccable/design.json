@@ -658,7 +658,7 @@
       "Don't reintroduce a blurred shadow token. The pre-redesign family and the orphaned --shadow-photo-tape* pair were deleted from globals.css; re-adding one changes the design language.",
       "Don't put a radius on a loading skeleton. A skeleton must match the sharp shape of what it stands in for — 44 stray rounded / rounded-sm classes were removed from eight skeleton files for exactly this reason.",
       "Don't set jersey (#4acf52) as a text colour, and don't put it on cream.",
-      "Don't draw a new divider in green. Rendered and rejected (C2): at divider density a run of green hairlines reads as a green section, which the Rare Green Rule forbids. The convention already has two shipped exceptions (SiteFooter, HulpFinder) rather than a clean record — don't add a third.",
+      "Don't draw a green divider between repeating rows — a list, a table, a run of section rules. Rendered and rejected (C2): at that density a line of green hairlines reads as a green section, which the Rare Green Rule forbids. A green hairline under a heading that labels a group is allowed and already ships (SiteFooter, HulpFinder): it marks one boundary, not a rhythm. The test is repetition — if a reader would see two of them stacked, it is green on a run and it is wrong.",
       "Don't wrap a striped seam or a coloured band in a max-width container.",
       "Don't invent a container width outside 680 / 1040 / 1280 (chrome's 1440 is header and footer only).",
       "Don't pin a Display-size heading's italic accent to a heavy weight — Freight Big Pro has no 900 italic.",
