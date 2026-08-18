@@ -34,43 +34,56 @@ describe("Spinner", () => {
       expect(screen.getByText("Loading articles...")).toHaveClass("sr-only");
     });
 
-    it("should render the scarf barber-pole element by default", () => {
+    it("should render the compact dot pulse by default", () => {
+      // Waiting-Device Rule (DESIGN.md → Motion): the scarf is search-only,
+      // so the component defaults to the dots and the scarf must be
+      // requested explicitly via variant="primary".
       const { container } = render(<Spinner />);
       expect(
-        container.querySelector(".kcvv-spinner-scarf"),
+        container.querySelector(".kcvv-spinner-pulse"),
       ).toBeInTheDocument();
     });
   });
 
   describe("Sizes (scarf variants)", () => {
     it("should render medium size by default", () => {
-      const { container } = render(<Spinner />);
+      const { container } = render(<Spinner variant="primary" />);
       const scarf = container.querySelector(".kcvv-spinner-scarf");
       expect(scarf).toHaveClass("kcvv-spinner-scarf--md");
     });
 
     it("should render small size", () => {
-      const { container } = render(<Spinner size="sm" />);
+      const { container } = render(<Spinner variant="primary" size="sm" />);
       const scarf = container.querySelector(".kcvv-spinner-scarf");
       expect(scarf).toHaveClass("kcvv-spinner-scarf--sm");
     });
 
     it("should render large size", () => {
-      const { container } = render(<Spinner size="lg" />);
+      const { container } = render(<Spinner variant="primary" size="lg" />);
       const scarf = container.querySelector(".kcvv-spinner-scarf");
       expect(scarf).toHaveClass("kcvv-spinner-scarf--lg");
     });
 
     it("should render extra large size", () => {
-      const { container } = render(<Spinner size="xl" />);
+      const { container } = render(<Spinner variant="primary" size="xl" />);
       const scarf = container.querySelector(".kcvv-spinner-scarf");
       expect(scarf).toHaveClass("kcvv-spinner-scarf--xl");
     });
   });
 
   describe("Variants", () => {
-    it("should render primary scarf by default", () => {
+    it("should render compact dots by default", () => {
       const { container } = render(<Spinner />);
+      expect(
+        container.querySelector(".kcvv-spinner-pulse"),
+      ).toBeInTheDocument();
+      expect(
+        container.querySelector(".kcvv-spinner-scarf"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should render primary scarf when requested", () => {
+      const { container } = render(<Spinner variant="primary" />);
       const scarf = container.querySelector(".kcvv-spinner-scarf");
       expect(scarf).toHaveClass("kcvv-spinner-scarf--primary");
     });

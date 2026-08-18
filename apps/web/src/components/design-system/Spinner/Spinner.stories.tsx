@@ -91,25 +91,25 @@ export const AllSizes: Story = {
         <span className="text-ink-muted w-12 font-mono text-xs tracking-wider uppercase">
           SM
         </span>
-        <Spinner size="sm" />
+        <Spinner size="sm" variant="primary" />
       </div>
       <div className="flex items-center gap-4">
         <span className="text-ink-muted w-12 font-mono text-xs tracking-wider uppercase">
           MD
         </span>
-        <Spinner size="md" />
+        <Spinner size="md" variant="primary" />
       </div>
       <div className="flex items-center gap-4">
         <span className="text-ink-muted w-12 font-mono text-xs tracking-wider uppercase">
           LG
         </span>
-        <Spinner size="lg" />
+        <Spinner size="lg" variant="primary" />
       </div>
       <div className="flex items-center gap-4">
         <span className="text-ink-muted w-12 font-mono text-xs tracking-wider uppercase">
           XL
         </span>
-        <Spinner size="xl" />
+        <Spinner size="xl" variant="primary" />
       </div>
     </div>
   ),
@@ -169,7 +169,7 @@ export const InCard: Story = {
   render: () => (
     <div className="border-ink bg-cream w-72 border-2 p-6 shadow-[var(--shadow-paper-sm)]">
       <div className="flex flex-col items-center gap-4 py-6">
-        <Spinner size="lg" />
+        <Spinner size="lg" variant="primary" />
         <p className="text-ink-muted font-mono text-xs tracking-wider uppercase">
           Wedstrijden laden…
         </p>
@@ -185,7 +185,7 @@ export const InCard: Story = {
 export const Centered: Story = {
   render: () => (
     <div className="border-paper-edge bg-cream flex h-64 w-96 items-center justify-center border">
-      <Spinner size="lg" label="Loading content..." />
+      <Spinner size="lg" variant="primary" label="Loading content..." />
     </div>
   ),
 };
@@ -217,7 +217,7 @@ export const LoadingStates: Story = {
 
       <div className="border-paper-edge bg-cream border p-4">
         <div className="flex flex-col items-center gap-3 py-6">
-          <Spinner size="md" />
+          <Spinner size="md" variant="primary" />
           <span className="text-ink-muted font-mono text-xs tracking-wider uppercase">
             CENTER LOADING STATE
           </span>
