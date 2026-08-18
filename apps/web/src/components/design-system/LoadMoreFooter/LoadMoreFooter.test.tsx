@@ -6,9 +6,8 @@
  * — never the scarf, which is reserved for search.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
-import { fn } from "storybook/test";
 import { LoadMoreFooter } from "./LoadMoreFooter";
 
 describe("LoadMoreFooter", () => {
@@ -19,10 +18,13 @@ describe("LoadMoreFooter", () => {
           label="Meer nieuws laden"
           hasMore
           isLoading
-          onLoadMore={fn()}
+          onLoadMore={vi.fn()}
         />,
       );
 
+      // Both Spinner variants render role="status", so the CSS class is the
+      // only observable difference between the dots and the scarf — this is
+      // not a lazy DOM-shape assertion, it is the only handle available.
       expect(
         container.querySelector(".kcvv-spinner-pulse"),
       ).toBeInTheDocument();
