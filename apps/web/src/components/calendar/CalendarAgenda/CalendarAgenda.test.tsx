@@ -52,6 +52,7 @@ function makeMatch(
     status: "scheduled" as CalendarMatch["status"],
     team: "U7",
     isHome: true,
+    isPlaceholder: false,
     ...overrides,
   };
   return {
@@ -121,6 +122,34 @@ describe("CalendarAgenda", () => {
       "data-event-type",
       "Clubevent",
     );
+  });
+
+  it("renders a pitch-reservation placeholder as a reduced row — no opponent, no link (#2606, #2688)", () => {
+    // The bug this closes: before #2688, AgendaMatchRow rendered
+    // `match.homeTeam.name — match.awayTeam.name` unconditionally, so a
+    // self-match read as an ordinary linked "KCVV Elewijt — KCVV Elewijt" row.
+    render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[
+          makeMatch({
+            id: 90,
+            date: "2026-09-12T09:30:00",
+            homeTeam: { id: 1235, name: "KCVV Elewijt" },
+            awayTeam: { id: 1235, name: "KCVV Elewijt" },
+            competition: "Tornooi",
+            isPlaceholder: true,
+          }),
+        ]}
+        events={[]}
+      />,
+    );
+    const row = screen.getByTestId("agenda-reservation-row");
+    expect(row.tagName).not.toBe("A");
+    expect(row.querySelector("a")).toBeNull();
+    expect(row).toHaveTextContent("Tornooi");
+    expect(row.textContent).not.toMatch(/KCVV Elewijt.*KCVV Elewijt/);
+    expect(screen.queryByTestId("agenda-match-row")).toBeNull();
   });
 
   it("interleaves matches and events by time within a day", () => {

@@ -8,7 +8,11 @@ import {
   Crest,
   EmptyState,
 } from "@/components/design-system";
-import { getResultColor, isPlayedMatch } from "@/lib/utils/match-display";
+import {
+  getResultColor,
+  isPlayedMatch,
+  reservationView,
+} from "@/lib/utils/match-display";
 import { pendingEmptyBody } from "@/lib/utils/empty-state-copy";
 import { EventTypeTag, MatchVenueTag } from "../calendar-tags";
 import { trackKalenderItemClick } from "../calendar-analytics";
@@ -44,7 +48,40 @@ const OUTCOME_UNDERLINE: Record<"win" | "draw" | "loss", string | undefined> = {
  * underline) without the bordered card, so a dense Saturday reads as a clean
  * labelled wall rather than a stack of cards.
  */
+/**
+ * A pitch-reservation placeholder's reduced agenda row (#2606, #2688) — no
+ * opponent, no venue tag, no link (mirrors #2606 decision 5: nothing at
+ * `/wedstrijd/{id}` was worth clicking through to from a list row). Same
+ * `[52px_1fr_auto]` grid as `AgendaMatchRow` so the two rows still line up in
+ * the same day group.
+ */
+function ReservationAgendaRow({ match }: { match: CalendarMatch }) {
+  const { subject } = reservationView(match);
+  const when = match.time ?? formatMatchTime(match.date) ?? "";
+  return (
+    <div
+      data-testid="agenda-reservation-row"
+      className="border-paper-edge grid grid-cols-[52px_1fr_auto] items-center gap-3 border-b border-dashed px-2 py-2 last:border-b-0"
+    >
+      <span className="text-ink-muted font-mono text-[11px]">{when}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        <Crest
+          name={match.homeTeam.name}
+          logo={match.homeTeam.logo}
+          size={18}
+        />
+        <span className="text-ink-muted min-w-0 truncate font-mono text-[11px] font-semibold tracking-wide uppercase">
+          {subject}
+        </span>
+      </span>
+      <span />
+    </div>
+  );
+}
+
 function AgendaMatchRow({ match }: { match: CalendarMatch }) {
+  if (match.isPlaceholder) return <ReservationAgendaRow match={match} />;
+
   const isHome = match.isHome ?? getMatchDotType(match) === "home";
   const when = match.time ?? formatMatchTime(match.date) ?? "";
   const isPlayed = isPlayedMatch(match.status);

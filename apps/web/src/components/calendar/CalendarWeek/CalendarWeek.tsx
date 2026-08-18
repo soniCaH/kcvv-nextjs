@@ -7,6 +7,7 @@ import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { PRESS_DOWN_CLASSES } from "@/components/design-system/press-down";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { EVENT_TYPE_FILL } from "@/components/event/event-type-style";
+import { reservationView } from "@/lib/utils/match-display";
 import { trackKalenderItemClick } from "../calendar-analytics";
 import {
   getDaysInWeek,
@@ -25,7 +26,42 @@ export interface CalendarWeekProps {
 
 const SHORT_DAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 
+/**
+ * A pitch-reservation placeholder's reduced week-cell card (#2606, #2688) —
+ * no opponent (a self-match has none), no link (mirrors #2606 decision 5),
+ * just the club crest, the subject, and the real time. Same card chrome as
+ * `WeekMatchCard` so it still reads as one system in the grid.
+ */
+function ReservationWeekCard({ match }: { match: CalendarMatch }) {
+  const { subject } = reservationView(match);
+  return (
+    <div className="border-ink bg-cream shadow-paper-sm block border-2 p-1.5">
+      {match.team && (
+        <div className="text-ink-muted mb-0.5 truncate font-mono text-[9px] font-semibold tracking-wider uppercase">
+          {match.team}
+        </div>
+      )}
+      <div className="flex items-center gap-1">
+        <span
+          aria-hidden="true"
+          className="border-card-red h-1.5 w-1.5 shrink-0 rounded-full border-[1.5px] border-dashed bg-transparent"
+        />
+        <span className="text-ink-muted truncate font-mono text-[10px] font-semibold tracking-wide uppercase">
+          {subject}
+        </span>
+      </div>
+      {match.time && (
+        <div className="text-ink-muted mt-0.5 font-mono text-[10px]">
+          {match.time}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function WeekMatchCard({ match }: { match: CalendarMatch }) {
+  if (match.isPlaceholder) return <ReservationWeekCard match={match} />;
+
   const isHome = getMatchDotType(match) === "home";
   const opponent = isHome ? match.awayTeam : match.homeTeam;
 

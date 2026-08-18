@@ -90,7 +90,12 @@ function DayCellBody({
                   "h-2 w-2 rounded-full",
                   venue === "home"
                     ? "bg-card-red"
-                    : "border-card-red border-[1.5px] bg-transparent",
+                    : venue === "away"
+                      ? "border-card-red border-[1.5px] bg-transparent"
+                      : // A pitch-reservation placeholder has no side to
+                        // claim (#2606) — a dashed ring keeps the "Wedstrijden"
+                        // category red (#1992) without claiming home OR away.
+                        "border-card-red border-[1.5px] border-dashed bg-transparent",
                 )}
               />
             );

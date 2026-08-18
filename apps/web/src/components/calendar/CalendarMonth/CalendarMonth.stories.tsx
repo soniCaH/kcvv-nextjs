@@ -42,6 +42,7 @@ const marchMatches: CalendarMatch[] = [
     competition: "Nationale 1",
     team: "A-ploeg",
     isHome: true,
+    isPlaceholder: false,
   },
   {
     id: 2,
@@ -54,6 +55,7 @@ const marchMatches: CalendarMatch[] = [
     competition: "Nationale 1",
     team: "A-ploeg",
     isHome: false,
+    isPlaceholder: false,
   },
   {
     id: 3,
@@ -66,8 +68,26 @@ const marchMatches: CalendarMatch[] = [
     competition: "Jeugd",
     team: "U15 A",
     isHome: true,
+    isPlaceholder: false,
   },
 ];
+
+// A youth tournament placeholder (#2606): both sides are KCVV. Renders as the
+// reduced <TeamAgendaRow> in the day-detail panel and a dashed-ring pip on
+// the grid — never an ordinary linked "KCVV Elewijt – KCVV Elewijt" row.
+const reservationMatch: CalendarMatch = {
+  id: 90,
+  date: "2026-03-15T09:30:00",
+  time: "09:30",
+  homeTeam: kcvv,
+  awayTeam: kcvv,
+  scoreDisplay: { type: "vs" },
+  status: "scheduled",
+  competition: "Tornooi",
+  team: "U8",
+  isHome: true,
+  isPlaceholder: true,
+};
 
 const marchEvents: CalendarEvent[] = [
   {
@@ -94,6 +114,7 @@ const denseSaturdayMatches: CalendarMatch[] = Array.from(
     competition: "Jeugd",
     team: `U${7 + i}`,
     isHome: i % 3 !== 0,
+    isPlaceholder: false,
   }),
 );
 
@@ -155,6 +176,22 @@ export const SelectedDayEmpty: Story = {
     matches: marchMatches,
     events: [],
     selectedDate: "2026-03-10",
+    currentMonth: 3,
+    currentYear: 2026,
+  },
+};
+
+/**
+ * A youth tournament placeholder (#2606) among the day's other matches — the
+ * grid pip is a dashed ring (never a filled "home" red), and the day-detail
+ * panel renders the reduced `<TeamAgendaRow>` treatment, not a linked
+ * "KCVV Elewijt – KCVV Elewijt" scoreboard (#2688).
+ */
+export const SelectedDayWithReservation: Story = {
+  args: {
+    matches: [...marchMatches, reservationMatch],
+    events: [],
+    selectedDate: "2026-03-15",
     currentMonth: 3,
     currentYear: 2026,
   },
