@@ -207,7 +207,14 @@ export function OrganigramExplorer({
         { transform: `translate(${dx}px, ${dy}px) scale(${scale})` },
         { transform: "none" },
       ],
-      { duration: 300, easing: "cubic-bezier(0.2, 0, 0, 1)" },
+      {
+        duration: 300,
+        // The One Curve Rule's cubic-bezier(0, 0, 0.58, 1) — WAAPI easing
+        // strings can't read a CSS custom property, so this is the literal,
+        // not a var() that "should" be here. Do not swap it for a different
+        // curve.
+        easing: "cubic-bezier(0, 0, 0.58, 1)",
+      },
     );
   }, [open, focusId]);
 
