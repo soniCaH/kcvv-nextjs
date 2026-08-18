@@ -1052,21 +1052,25 @@ has no gutter on a phone, so the device only exists in the minority scene).
 **D17 — C3 is a documentation debt; C2 is rejected.**
 
 **§4.3's premise is factually wrong about this codebase.** It proposes adding a 1px listing rule "our
-border is 2px everywhere". Counted in `apps/web/src`:
+border is 2px everywhere". Counted in `apps/web/src`, product code only, order-independent:
 
-|                                     | uses   |
-| ----------------------------------- | ------ |
-| `border-paper-edge` (1px hairline)  | **90** |
-| `border-ink/15` · `/10` (1px alpha) | 13     |
-| `border-2 border-ink` (2px object)  | **16** |
-| `border-jersey-deep`                | 22     |
+|                                        | uses    |
+| -------------------------------------- | ------- |
+| `border-2` ink, any order (2px object) | **163** |
+| `border-paper-edge` (1px hairline)     | 32      |
+| `border-ink/15` · `/10` (1px alpha)    | 10      |
+| `border-jersey-deep`                   | 12      |
 
-The 1px structural rule outnumbers the 2px object border **90 to 16**. The semantic split §4.3 asks
-for is what the code already does — hairlines separate rows and sections, 2px ink draws objects that
-cast a shadow. **What is missing is the sentence in `DESIGN.md` saying so**, which is why the split
-is invisible to a reviewer and one edit from drifting. §4.3's stated risk still applies, in reverse:
-two weights must be semantically split or it is drift — today they are split by habit, and writing
-the habit down is the entire task. **Not a design decision; file it as documentation.**
+**Correction (#2611 review, 2026-08):** the count originally shown here (90 / 13 / 16 / 22) matched
+only the literal adjacent string `border-2 border-ink`, which undercounted `2px` ink roughly tenfold.
+Measured correctly, the `2px` object border outnumbers the `1px` structural rule **163 to 96**
+combined — the reverse of the "90 to 16" this entry originally claimed, and closer to §4.3's own
+"2px everywhere" than to this entry's rebuttal of it. The semantic split §4.3 asks for is not the
+clean binary this entry assumed; see `DESIGN.md`'s Shapes section for the one-directional version the
+code actually supports. **What is missing is still the sentence in `DESIGN.md` recording the real
+pattern**, which is why the split was invisible to a reviewer and one edit from drifting. §4.3's
+stated risk still applies: an undocumented pattern drifts either way. **Not a design decision; file
+it as documentation.**
 
 **C2 — accent hairlines: no.** Green stays an event — the kicker, the link, the match-day ground. At
 the density rendered in `d17-rule-weights.html` a section drawn in green hairlines reads as a green
