@@ -180,7 +180,15 @@ const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
 async function fetchStandings(
   match: MatchDetail,
 ): Promise<readonly RankingEntry[]> {
-  if (match.competitionType !== "league" || match.kcvv_team_id == null) {
+  // A pitch-reservation placeholder (#2606) carries no result vocabulary — a
+  // standings table is exactly that, so it never fetches for one, even on
+  // the defensive off-chance a reservation is ever miscategorised `league`
+  // upstream.
+  if (
+    match.is_placeholder ||
+    match.competitionType !== "league" ||
+    match.kcvv_team_id == null
+  ) {
     return [];
   }
   const standingsTeamId = match.kcvv_team_id;
@@ -319,8 +327,13 @@ export default async function MatchPage({ params }: MatchPageProps) {
       ) ?? [];
 
   const events: readonly MatchEvent[] = match.events ?? [];
-  const hasLineup = homeLineup.length > 0 || awayLineup.length > 0;
-  const hasEvents = events.length > 0;
+  // A pitch-reservation placeholder (#2606) shows no lineup, events, or
+  // result vocabulary — a self-match carries none of these upstream, but
+  // the guard is explicit rather than incidental so a stray BFF anomaly
+  // can't leak a lineup onto a reduced page.
+  const hasLineup =
+    !match.is_placeholder && (homeLineup.length > 0 || awayLineup.length > 0);
+  const hasEvents = !match.is_placeholder && events.length > 0;
 
   // `selectMatchArticle` applies the per-state truth table to pick the hero
   // article + (optional) inline secondary link.
@@ -349,17 +362,26 @@ export default async function MatchPage({ params }: MatchPageProps) {
           },
         ])}
       />
-      <JsonLd
-        data={buildSportsEventJsonLd({
-          name: `${match.home_team.name} vs ${match.away_team.name}`,
-          startDate: match.date.toISOString(),
-          homeTeamName: match.home_team.name,
-          awayTeamName: match.away_team.name,
-          status: match.status,
-          url: `${SITE_CONFIG.siteUrl}/wedstrijd/${matchId}`,
-          venue: match.venue,
-        })}
-      />
+      {/* No SportsEvent JSON-LD for a pitch-reservation placeholder (#2606)
+          — a self-match is a pitch booking, not a sporting event between two
+          competitors, so publishing one here would assert a real fixture
+          between the club and itself to search engines even though the
+          page's own <title> and OG already say "Gereserveerd". The
+          breadcrumb above still applies — it names this page, not a
+          match. */}
+      {!match.is_placeholder && (
+        <JsonLd
+          data={buildSportsEventJsonLd({
+            name: `${match.home_team.name} vs ${match.away_team.name}`,
+            startDate: match.date.toISOString(),
+            homeTeamName: match.home_team.name,
+            awayTeamName: match.away_team.name,
+            status: match.status,
+            url: `${SITE_CONFIG.siteUrl}/wedstrijd/${matchId}`,
+            venue: match.venue,
+          })}
+        />
+      )}
 
       <MatchStripSlot />
 
@@ -373,6 +395,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
           status={match.status}
           competition={match.competition}
           kcvvTeamLabel={match.kcvv_team_label}
+          isPlaceholder={match.is_placeholder ?? false}
         />
       </PageContainer>
 

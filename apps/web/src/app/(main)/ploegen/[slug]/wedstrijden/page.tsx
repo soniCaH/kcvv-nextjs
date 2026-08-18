@@ -15,7 +15,7 @@ import { PageHero } from "@/components/layout/PageHero";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd, buildSportsTeamJsonLd } from "@/lib/seo/jsonld";
 import { transformMatchToSchedule } from "@/components/match";
-import type { ScheduleMatch } from "@/components/match/types";
+import type { ScheduleRow } from "@/components/match/types";
 import { AgendaScrollToNext } from "./AgendaScrollToNext";
 
 interface WedstrijdenPageProps {
@@ -59,10 +59,10 @@ interface MonthGroup {
   label: string;
   monthName: string;
   yearSuffix: string;
-  matches: ScheduleMatch[];
+  matches: ScheduleRow[];
 }
 
-function groupByMonth(matches: ScheduleMatch[]): MonthGroup[] {
+function groupByMonth(matches: ScheduleRow[]): MonthGroup[] {
   const sorted = [...matches].sort(
     (a, b) => a.date.getTime() - b.date.getTime(),
   );
@@ -90,9 +90,9 @@ function groupByMonth(matches: ScheduleMatch[]): MonthGroup[] {
 }
 
 function findNextMatch(
-  matches: ScheduleMatch[],
+  matches: ScheduleRow[],
   now: Date,
-): ScheduleMatch | undefined {
+): ScheduleRow | undefined {
   return matches
     .filter((m) => m.status === "scheduled" && m.date >= now)
     .sort((a, b) => a.date.getTime() - b.date.getTime())[0];

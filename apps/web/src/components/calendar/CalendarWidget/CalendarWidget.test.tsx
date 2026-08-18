@@ -66,6 +66,7 @@ function makeMatch(
     status: "scheduled" as CalendarMatch["status"],
     team: "A-ploeg",
     isHome: true,
+    isPlaceholder: false,
     ...overrides,
   };
   return {

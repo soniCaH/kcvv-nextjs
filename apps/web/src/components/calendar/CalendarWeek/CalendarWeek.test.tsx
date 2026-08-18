@@ -51,6 +51,7 @@ function makeMatch(
     status: "scheduled" as CalendarMatch["status"],
     team: "A-ploeg",
     isHome: true,
+    isPlaceholder: false,
     ...overrides,
   };
   return {
@@ -102,6 +103,46 @@ describe("CalendarWeek", () => {
     const saturdayColumn = screen.getByTestId("week-col-2026-03-28");
     expect(saturdayColumn).toHaveTextContent("Racing Mechelen");
     expect(saturdayColumn).toHaveTextContent("A-ploeg");
+  });
+
+  it("renders a pitch-reservation placeholder without an opponent name or a link (#2606, #2688)", () => {
+    const matches = [
+      makeMatch({
+        id: 90,
+        date: "2026-03-28T09:30:00",
+        time: "09:30",
+        homeTeam: { id: 1235, name: "KCVV Elewijt" },
+        awayTeam: { id: 1235, name: "KCVV Elewijt" },
+        competition: "Tornooi",
+        isPlaceholder: true,
+      }),
+    ];
+    render(<CalendarWeek {...defaultProps} matches={matches} />);
+    const saturdayColumn = screen.getByTestId("week-col-2026-03-28");
+    expect(saturdayColumn).toHaveTextContent("Tornooi");
+    expect(saturdayColumn).toHaveTextContent("09:30");
+    expect(saturdayColumn.querySelector("a")).toBeNull();
+    // The whole point of the reduced card: the self-match's club name never
+    // reaches it, so the card cannot read as KCVV playing itself.
+    expect(saturdayColumn).not.toHaveTextContent("KCVV Elewijt");
+  });
+
+  it("marks a cancelled reservation with the same status badge a real match gets — a cancelled slot must not read as live (#2688)", () => {
+    const matches = [
+      makeMatch({
+        id: 91,
+        date: "2026-03-28T09:30:00",
+        time: "09:30",
+        homeTeam: { id: 1235, name: "KCVV Elewijt" },
+        awayTeam: { id: 1235, name: "KCVV Elewijt" },
+        competition: "Tornooi",
+        status: "cancelled",
+        isPlaceholder: true,
+      }),
+    ];
+    render(<CalendarWeek {...defaultProps} matches={matches} />);
+    const saturdayColumn = screen.getByTestId("week-col-2026-03-28");
+    expect(saturdayColumn).toHaveTextContent("CANC");
   });
 
   it("renders an event in its day column", () => {

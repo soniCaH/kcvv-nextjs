@@ -2,7 +2,10 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { FirstTeamsBlock } from "./FirstTeamsBlock";
 import type { FirstTeamVM } from "./first-teams";
-import type { ScheduleMatch } from "@/components/match/types";
+import type {
+  ScheduleMatch,
+  ScheduleReservation,
+} from "@/components/match/types";
 
 const meta = {
   title: "Features/Home/FirstTeamsBlock",
@@ -37,6 +40,7 @@ type Story = StoryObj<typeof meta>;
 // Both result + fixture are `ScheduleMatch`, fed straight into <TeamAgendaRow>.
 // Hoisted so the Outcomes story can spread it without a non-null assertion.
 const aResult: ScheduleMatch = {
+  isPlaceholder: false,
   id: 101,
   date: new Date("2026-06-21T15:00:00Z"),
   homeTeam: { id: 1235, name: "KCVV Elewijt" },
@@ -49,6 +53,7 @@ const aResult: ScheduleMatch = {
 };
 
 const aFixture: ScheduleMatch = {
+  isPlaceholder: false,
   id: 102,
   date: new Date("2026-06-29T13:00:00Z"),
   time: "15:00",
@@ -69,6 +74,7 @@ const aTeam: FirstTeamVM = {
 };
 
 const bResult: ScheduleMatch = {
+  isPlaceholder: false,
   id: 201,
   date: new Date("2026-06-22T13:30:00Z"),
   homeTeam: { id: 88, name: "Tempo Overijse" },
@@ -81,6 +87,7 @@ const bResult: ScheduleMatch = {
 };
 
 const bFixture: ScheduleMatch = {
+  isPlaceholder: false,
   id: 202,
   date: new Date("2026-06-28T17:30:00Z"),
   time: "19:30",
@@ -165,6 +172,7 @@ export const AwaitingResult: Story = {
       {
         ...bTeam,
         result: {
+          isPlaceholder: false,
           id: 203,
           date: new Date("2026-06-25T17:30:00Z"),
           time: "19:30",
@@ -220,6 +228,29 @@ export const LongOpponentNames: Story = {
         },
       },
     ],
+  },
+};
+
+/**
+ * A youth-May-tournament placeholder (#2606) in the B-ploeg fixture slot —
+ * deliberate coverage for a state that, before #2688, only rendered
+ * correctly on the homepage as an incidental side effect of #2632's shared
+ * `<TeamAgendaRow>` fix. One crest, the competition subject, the real
+ * kickoff — no opponent, no score, no link.
+ */
+const bFixtureReservation: ScheduleReservation = {
+  isPlaceholder: true,
+  id: 204,
+  date: new Date("2026-06-28T09:30:00Z"),
+  time: "09:30",
+  team: { id: 1236, name: "KCVV Elewijt B" },
+  status: "scheduled",
+  competition: "Tornooi",
+};
+
+export const ReservationFixture: Story = {
+  args: {
+    teams: [aTeam, { ...bTeam, fixture: bFixtureReservation }],
   },
 };
 

@@ -4,14 +4,14 @@ import {
   PageContainer,
   TapedCard,
 } from "@/components/design-system";
-import type { UpcomingMatch } from "@/components/match/types";
+import type { UpcomingRow } from "@/components/match/types";
 import { UpcomingMatchesClient } from "./UpcomingMatchesClient";
 
 const KCVV_TEAM_ID = 1235;
 const DEFAULT_VISIBLE = 5;
 
 export interface UpcomingMatchesProps {
-  matches: UpcomingMatch[];
+  matches: UpcomingRow[];
   /** Render initially in expanded state. Used by Storybook to capture the
    *  expanded baseline; production homepage always starts collapsed. */
   initialExpanded?: boolean;

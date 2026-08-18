@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { CalendarWeek } from "./CalendarWeek";
 import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
 import { fixtureImage } from "@test-fixtures/images";
+import { reservationMatch } from "../calendar-mocks";
 
 const meta = {
   title: "Features/Calendar/CalendarWeek",
@@ -38,6 +39,7 @@ const weekMatches: CalendarMatch[] = [
     competition: "Nationale 1",
     team: "A-ploeg",
     isHome: true,
+    isPlaceholder: false,
   },
   {
     id: 2,
@@ -50,6 +52,7 @@ const weekMatches: CalendarMatch[] = [
     competition: "Jeugd",
     team: "U15 A",
     isHome: true,
+    isPlaceholder: false,
   },
 ];
 
@@ -79,5 +82,17 @@ export const EmptyWeek: Story = {
     matches: [],
     events: [],
     weekStart: "2026-04-06",
+  },
+};
+
+/** A pitch-reservation placeholder among the week's other matches (#2606, #2688). */
+export const WithReservation: Story = {
+  args: {
+    matches: [
+      ...weekMatches,
+      reservationMatch({ date: "2026-03-26T09:30:00" }),
+    ],
+    events: weekEvents,
+    weekStart: "2026-03-23",
   },
 };

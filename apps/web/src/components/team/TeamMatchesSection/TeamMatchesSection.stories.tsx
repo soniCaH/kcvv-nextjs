@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamMatchesSection } from "./TeamMatchesSection";
-import type { ScheduleMatch } from "@/components/match/types";
+import type { ScheduleMatch, ScheduleRow } from "@/components/match/types";
 import { VR_FROZEN_NOW_ISO } from "../../../../test/vr/frozen-clock";
 
 const KCVV = { id: 1235, name: "KCVV Elewijt" };
@@ -18,6 +18,13 @@ const OPP_D = { id: 45, name: "Racing Gent B" };
 // as real time carries the anchor past the frozen clock.
 const STORY_ANCHOR = VR_FROZEN_NOW_ISO;
 
+/** Every fixture in this file is dated relative to the frozen VR anchor. */
+function dateFromAnchor(daysOffset: number): Date {
+  const date = new Date(STORY_ANCHOR);
+  date.setDate(date.getDate() + daysOffset);
+  return date;
+}
+
 function m(
   id: number,
   daysOffset: number,
@@ -26,11 +33,10 @@ function m(
   isHome = true,
   opp = OPP_A,
 ): ScheduleMatch {
-  const date = new Date(STORY_ANCHOR);
-  date.setDate(date.getDate() + daysOffset);
   return {
+    isPlaceholder: false,
     id,
-    date,
+    date: dateFromAnchor(daysOffset),
     time: "15:00",
     homeTeam: isHome ? KCVV : opp,
     awayTeam: isHome ? opp : KCVV,
@@ -98,11 +104,14 @@ export const PlaceholderNextMatch: Story = {
       m(2, -14, "finished", [1, 1], true, OPP_C),
       m(3, -7, "finished", [3, 0], true, OPP_B),
       {
-        ...m(20, 10, "scheduled", undefined, true, KCVV),
-        time: "09:30",
-        competition: "Tornooi",
         isPlaceholder: true,
-      },
+        id: 20,
+        date: dateFromAnchor(10),
+        time: "09:30",
+        team: KCVV,
+        status: "scheduled",
+        competition: "Tornooi",
+      } satisfies ScheduleRow,
     ],
   },
 };

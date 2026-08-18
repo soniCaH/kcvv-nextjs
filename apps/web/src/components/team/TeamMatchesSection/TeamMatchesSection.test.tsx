@@ -22,6 +22,7 @@ function makeMatch(
   overrides: Partial<ScheduleMatch> & { id: number },
 ): ScheduleMatch {
   return {
+    isPlaceholder: false,
     date: new Date("2026-09-20T15:00:00.000Z"),
     time: "15:00",
     homeTeam: { id: 10, name: "KCVV Elewijt" },

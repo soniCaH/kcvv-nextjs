@@ -52,6 +52,7 @@ function makeMatch(
     status: "scheduled" as CalendarMatch["status"],
     team: "U7",
     isHome: true,
+    isPlaceholder: false,
     ...overrides,
   };
   return {
@@ -121,6 +122,40 @@ describe("CalendarAgenda", () => {
       "data-event-type",
       "Clubevent",
     );
+  });
+
+  it("renders a pitch-reservation placeholder as a reduced row — no opponent, no link (#2606, #2688)", () => {
+    // The bug this closes: before #2688, AgendaMatchRow rendered
+    // `match.homeTeam.name — match.awayTeam.name` unconditionally, so a
+    // self-match read as an ordinary linked "KCVV Elewijt — KCVV Elewijt" row.
+    const { container } = render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[
+          makeMatch({
+            id: 90,
+            date: "2026-09-12T09:30:00",
+            homeTeam: { id: 1235, name: "KCVV Elewijt" },
+            awayTeam: { id: 1235, name: "KCVV Elewijt" },
+            competition: "Tornooi",
+            isPlaceholder: true,
+          }),
+        ]}
+        events={[]}
+      />,
+    );
+    const row = container.querySelector('[data-placeholder="true"]');
+    expect(row).not.toBeNull();
+    expect(row!.tagName).not.toBe("A");
+    expect(row!.querySelector("a")).toBeNull();
+    expect(row).toHaveTextContent("Tornooi");
+    expect(row!.textContent).not.toMatch(/KCVV Elewijt.*KCVV Elewijt/);
+    expect(screen.queryByTestId("agenda-match-row")).toBeNull();
+    // The default fixture's squad ("U7") must still show — a mixed-squad day
+    // (`AgendaMatchRow` renders this chip for every real row) otherwise
+    // leaves a reservation indistinguishable from any other squad's
+    // (code-review finding on #2688's first draft).
+    expect(row).toHaveTextContent("U7");
   });
 
   it("interleaves matches and events by time within a day", () => {

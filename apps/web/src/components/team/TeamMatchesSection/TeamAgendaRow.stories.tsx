@@ -1,11 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamAgendaRow } from "./TeamAgendaRow";
-import type { ScheduleMatch } from "@/components/match/types";
+import type {
+  ScheduleMatch,
+  ScheduleReservation,
+} from "@/components/match/types";
 
 const KCVV = { id: 1235, name: "KCVV Elewijt" };
 const OPP = { id: 42, name: "KSV Schoonbeek-Beverst A" };
 
 const upcoming: ScheduleMatch = {
+  isPlaceholder: false,
   id: 1,
   date: new Date("2026-09-20T15:00:00.000Z"),
   time: "15:00",
@@ -198,15 +202,14 @@ export const WithOpponentTeamLabel: Story = {
 // kickoff time. No opponent, no score slot, no home/away icon, and — unlike
 // every other state on this page — not a link.
 
-const placeholderTournament: ScheduleMatch = {
-  ...upcoming,
+const placeholderTournament: ScheduleReservation = {
+  isPlaceholder: true,
   id: 90,
   date: new Date("2026-05-09T09:30:00.000Z"),
   time: "09:30",
-  homeTeam: KCVV,
-  awayTeam: KCVV,
+  team: KCVV,
+  status: "scheduled",
   competition: "Tornooi",
-  isPlaceholder: true,
 };
 
 /** The dominant real case (15 of 17 in the #2606 census): a youth tournament. */

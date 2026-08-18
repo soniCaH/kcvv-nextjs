@@ -9,6 +9,7 @@ import { buildCalendarFeed } from "@/app/(main)/kalender/utils";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import CalendarLoading from "@/app/(main)/kalender/loading";
 import { fixtureImage } from "@test-fixtures/images";
+import { reservationMatch } from "../calendar-mocks";
 
 const kcvv = {
   id: 1,
@@ -32,6 +33,7 @@ const matches: CalendarMatch[] = [
     status: "scheduled",
     competition: "Nationale 1",
     team: "A-ploeg",
+    isPlaceholder: false,
   },
   {
     id: 2,
@@ -43,6 +45,7 @@ const matches: CalendarMatch[] = [
     status: "scheduled",
     competition: "Nationale 1",
     team: "A-ploeg",
+    isPlaceholder: false,
   },
   {
     id: 3,
@@ -54,6 +57,7 @@ const matches: CalendarMatch[] = [
     status: "scheduled",
     competition: "Jeugd",
     team: "U15 A",
+    isPlaceholder: false,
   },
 ];
 
@@ -76,6 +80,13 @@ const teams: CalendarTeamInfo[] = [
 ];
 
 const feed = buildCalendarFeed(matches, events);
+// A youth tournament placeholder (#2606) — both sides are KCVV. Own feed,
+// kept out of the default `matches` fixture so it doesn't perturb the other
+// views' existing baselines.
+const feedWithReservation = buildCalendarFeed(
+  [...matches, reservationMatch()],
+  events,
+);
 
 const meta = {
   title: "Features/Calendar/CalendarWidget",
@@ -158,6 +169,22 @@ export const SubscribePanelOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /Abonneer/i }));
+  },
+};
+
+/**
+ * A pitch-reservation placeholder (#2606) on the agenda view — the row a
+ * parent scrolling `/kalender` in list mode actually reads. No opponent, no
+ * link, the club crest and the competition subject instead (#2688). Own
+ * `feedWithReservation`, not the shared `feed`, so this is the only story
+ * whose baseline carries the new row.
+ */
+export const AgendaViewWithReservation: Story = {
+  args: { feed: feedWithReservation },
+  parameters: {
+    nextjs: {
+      navigation: { pathname: "/kalender", query: { view: "agenda" } },
+    },
   },
 };
 

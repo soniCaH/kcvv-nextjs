@@ -7,6 +7,10 @@ const meta = {
   component: MatchHero,
   tags: ["autodocs", "vr"],
   parameters: { layout: "padded" },
+  // Every story is a normal match unless it opts into the reservation state
+  // below — `isPlaceholder` is a required prop (#2688), so this is the one
+  // place the default lives rather than every story repeating it.
+  args: { isPlaceholder: false },
   decorators: [
     (Story) => (
       <div className="bg-cream-soft min-h-[400px] p-10">
@@ -130,6 +134,32 @@ export const MinimalData: Story = {
     awayTeam: defaultAwayTeam,
     date: upcomingDate,
     status: "scheduled",
+  },
+};
+
+/**
+ * A pitch-reservation placeholder (#2606) — both sides upstream are the same
+ * club. One crest, no "vs" a second one, no score region: the subject
+ * ("Tornooi") and real kickoff replace the competition/score vocabulary,
+ * and the meta line names the squad that reserved the slot (#2688).
+ *
+ * The fullest layout is the only one kept: the defensive no-competition
+ * fallback and the no-squad-label variant differ from this one only in the
+ * meta line's text, which `MatchHero.test.tsx` already pins at the unit
+ * level — a pixel diff cannot uniquely surface a string variant, so a
+ * separate baseline for each was three VR captures for one component.
+ */
+export const Reservation: Story = {
+  args: {
+    homeTeam: defaultHomeTeam,
+    awayTeam: defaultHomeTeam,
+    date: upcomingDate,
+    time: "09:30",
+    venue: "Sportpark Elewijt",
+    competition: "Tornooi",
+    kcvvTeamLabel: "U13",
+    status: "scheduled",
+    isPlaceholder: true,
   },
 };
 

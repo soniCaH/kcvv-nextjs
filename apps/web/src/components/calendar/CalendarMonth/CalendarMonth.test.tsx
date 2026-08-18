@@ -53,6 +53,7 @@ function makeMatch(
     status: "scheduled" as CalendarMatch["status"],
     team: "A-ploeg",
     isHome: true,
+    isPlaceholder: false,
     ...overrides,
   };
   return {
@@ -132,6 +133,30 @@ describe("CalendarMonth", () => {
       expect(pip.className).toContain("border-card-red");
     });
 
+    it("renders a dashed ring pip for a pitch-reservation placeholder, not a home pip, even when isHome is true (#2606, #2688)", () => {
+      render(
+        <CalendarMonth
+          {...baseProps}
+          matches={[
+            makeMatch({
+              id: 3,
+              isHome: true,
+              isPlaceholder: true,
+              homeTeam: { id: 1235, name: "KCVV Elewijt" },
+              awayTeam: { id: 1235, name: "KCVV Elewijt" },
+            }),
+          ]}
+          events={[]}
+        />,
+      );
+      const pip = within(screen.getByTestId("day-pips-2026-03-15")).getByTestId(
+        "match-pip",
+      );
+      expect(pip).toHaveAttribute("data-venue", "reservation");
+      expect(pip.className).toContain("border-dashed");
+      expect(pip.className).not.toContain("bg-card-red");
+    });
+
     it("renders one pip per match without a numeric count badge", () => {
       const matches = Array.from({ length: 5 }, (_, i) =>
         makeMatch({ id: i + 1 }),
@@ -169,6 +194,38 @@ describe("CalendarMonth", () => {
         />,
       );
       expect(screen.getAllByTestId("team-agenda-row")).toHaveLength(2);
+    });
+
+    it("renders a pitch-reservation placeholder as the reduced TeamAgendaRow — no opponent, no link (#2606, #2688)", () => {
+      // The bug this closes: before #2688, `calendarMatchToScheduleMatch`
+      // dropped `isPlaceholder`, so this row rendered as an ordinary linked
+      // "KCVV Elewijt – KCVV Elewijt" scoreboard.
+      render(
+        <CalendarMonth
+          {...baseProps}
+          matches={[
+            makeMatch({
+              id: 90,
+              isPlaceholder: true,
+              homeTeam: { id: 1235, name: "KCVV Elewijt" },
+              awayTeam: { id: 1235, name: "KCVV Elewijt" },
+              competition: "Tornooi",
+            }),
+          ]}
+          events={[]}
+        />,
+      );
+      const row = screen.getByTestId("team-agenda-row");
+      expect(row).toHaveAttribute("data-placeholder", "true");
+      expect(row.tagName).toBe("ARTICLE");
+      expect(row.closest("a")).toBeNull();
+      expect(row.textContent).not.toMatch(/KCVV Elewijt.*KCVV Elewijt/);
+      // The squad chip a normal row carries via homeTeam/awayTeam.teamLabel
+      // has no equivalent slot on the reduced Crest+caption tree, so
+      // SelectedDayDetail supplies it as captionLabel instead (#2688) — a
+      // parent on a mixed-squad day must still be able to tell whose
+      // reservation this is.
+      expect(row.textContent).toContain("A-ploeg");
     });
 
     it("renders an event row linking to its detail route with a type tag", () => {

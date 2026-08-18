@@ -20,6 +20,7 @@ import {
 import type { Match } from "@/lib/effect/schemas/match.schema";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import type { CalendarMatch, CalendarEvent } from "./utils";
+import { asNonPlaceholder } from "@/components/match/test-narrowing";
 
 function createMatch(overrides: Partial<Match> = {}): Match {
   return {
@@ -53,7 +54,16 @@ describe("transformMatchToCalendar", () => {
       competition: "2e Nationale",
       team: "A-Ploeg",
       isHome: undefined,
+      isPlaceholder: false,
     });
+  });
+
+  it("normalizes isPlaceholder to a definite boolean, never undefined (#2688)", () => {
+    expect(transformMatchToCalendar(createMatch()).isPlaceholder).toBe(false);
+    expect(
+      transformMatchToCalendar(createMatch({ is_placeholder: true }))
+        .isPlaceholder,
+    ).toBe(true);
   });
 
   it("renames kcvv_team_label to team", () => {
@@ -177,6 +187,7 @@ function makeCalendarMatch(
     status: "scheduled",
     team: "A-ploeg",
     scoreDisplay: { type: "vs" },
+    isPlaceholder: false,
     ...overrides,
   };
 }
@@ -293,6 +304,19 @@ describe("getMatchDotType", () => {
     });
     expect(getMatchDotType(match)).toBe("away");
   });
+
+  it("returns 'reservation' for a pitch-reservation placeholder, even though isHome resolves true (#2606, #2688)", () => {
+    // A self-match's isHome is typically true (homeTeamId === teamId), so the
+    // dot must check isPlaceholder FIRST — the bug #2688 found.
+    const match = makeCalendarMatch({
+      id: 1,
+      isHome: true,
+      isPlaceholder: true,
+      homeTeam: { id: 1235, name: "KCVV Elewijt" },
+      awayTeam: { id: 1235, name: "KCVV Elewijt" },
+    });
+    expect(getMatchDotType(match)).toBe("reservation");
+  });
 });
 
 // ── buildCalendarFeed ─────────────────────────────────────────────────────
@@ -393,16 +417,18 @@ describe("buildCalendarFeed", () => {
 
 describe("calendarMatchToScheduleMatch", () => {
   it("maps the VM onto the ScheduleMatch shape (date string → Date)", () => {
-    const result = calendarMatchToScheduleMatch(
-      makeCalendarMatch({
-        id: 7,
-        date: "2026-09-12T10:00:00.000Z",
-        time: "10:00",
-        homeScore: 3,
-        awayScore: 1,
-        status: "finished",
-        competition: "Tornooi",
-      }),
+    const result = asNonPlaceholder(
+      calendarMatchToScheduleMatch(
+        makeCalendarMatch({
+          id: 7,
+          date: "2026-09-12T10:00:00.000Z",
+          time: "10:00",
+          homeScore: 3,
+          awayScore: 1,
+          status: "finished",
+          competition: "Tornooi",
+        }),
+      ),
     );
 
     expect(result.id).toBe(7);
@@ -416,8 +442,10 @@ describe("calendarMatchToScheduleMatch", () => {
   });
 
   it("injects the KCVV squad label on the home side for a home match", () => {
-    const result = calendarMatchToScheduleMatch(
-      makeCalendarMatch({ id: 1, team: "U13", isHome: true }),
+    const result = asNonPlaceholder(
+      calendarMatchToScheduleMatch(
+        makeCalendarMatch({ id: 1, team: "U13", isHome: true }),
+      ),
     );
     expect(result.homeTeam.teamLabel).toBe("U13");
     expect(result.awayTeam.teamLabel).toBeUndefined();
@@ -425,8 +453,10 @@ describe("calendarMatchToScheduleMatch", () => {
   });
 
   it("injects the KCVV squad label on the away side for an away match", () => {
-    const result = calendarMatchToScheduleMatch(
-      makeCalendarMatch({ id: 2, team: "U13", isHome: false }),
+    const result = asNonPlaceholder(
+      calendarMatchToScheduleMatch(
+        makeCalendarMatch({ id: 2, team: "U13", isHome: false }),
+      ),
     );
     expect(result.awayTeam.teamLabel).toBe("U13");
     expect(result.homeTeam.teamLabel).toBeUndefined();
@@ -434,18 +464,46 @@ describe("calendarMatchToScheduleMatch", () => {
   });
 
   it("falls back to name-based home/away when isHome is absent", () => {
-    const result = calendarMatchToScheduleMatch(
-      makeCalendarMatch({
-        id: 3,
-        isHome: undefined,
-        homeTeam: { id: 1, name: "KCVV Elewijt" },
-        awayTeam: { id: 2, name: "Zemst" },
-        team: "A-ploeg",
-      }),
+    const result = asNonPlaceholder(
+      calendarMatchToScheduleMatch(
+        makeCalendarMatch({
+          id: 3,
+          isHome: undefined,
+          homeTeam: { id: 1, name: "KCVV Elewijt" },
+          awayTeam: { id: 2, name: "Zemst" },
+          team: "A-ploeg",
+        }),
+      ),
     );
     // name contains "kcvv" → treated as home.
     expect(result.isHome).toBe(true);
     expect(result.homeTeam.teamLabel).toBe("A-ploeg");
+  });
+
+  describe("pitch-reservation placeholder (#2606, #2688)", () => {
+    it("returns a ScheduleReservation — the silent hole #2688 found: isHome crossed this adapter, isPlaceholder did not", () => {
+      const result = calendarMatchToScheduleMatch(
+        makeCalendarMatch({
+          id: 90,
+          date: "2026-05-09T09:30:00.000Z",
+          time: "09:30",
+          isPlaceholder: true,
+          homeTeam: { id: 1235, name: "KCVV Elewijt" },
+          awayTeam: { id: 1235, name: "KCVV Elewijt" },
+          competition: "Tornooi",
+        }),
+      );
+
+      expect(result.isPlaceholder).toBe(true);
+      if (!result.isPlaceholder) throw new Error("expected a reservation");
+      expect(result.team).toEqual({
+        id: 1235,
+        name: "KCVV Elewijt",
+        logo: undefined,
+      });
+      expect(result.competition).toBe("Tornooi");
+      expect("awayTeam" in result).toBe(false);
+    });
   });
 });
 
@@ -622,6 +680,35 @@ describe("buildKalenderItemListEntries", () => {
       name: "Spaghetti-avond",
       url: "https://kcvvelewijt.be/evenementen/spaghetti-avond",
     });
+  });
+
+  it("names a pitch-reservation placeholder by its subject, never 'home — away' (#2606, #2688)", () => {
+    // The same bug this PR exists to remove, found live on a route its own
+    // body declared fixed — CalendarMatch's flat isPlaceholder boolean let
+    // this construction site compile clean without branching on it.
+    const feed = buildCalendarFeed(
+      [
+        makeCalendarMatch({
+          id: 90,
+          date: "2026-09-12T09:30:00.000Z",
+          isPlaceholder: true,
+          homeTeam: { id: 1235, name: "KCVV Elewijt" },
+          awayTeam: { id: 1235, name: "KCVV Elewijt" },
+          competition: "Tornooi",
+        }),
+      ],
+      [],
+    );
+
+    const entries = buildKalenderItemListEntries(feed, SITE, { nowMs: NOW });
+
+    expect(entries).toContainEqual({
+      name: "Tornooi",
+      url: "https://kcvvelewijt.be/wedstrijd/90",
+    });
+    expect(entries.some((e) => /KCVV Elewijt.*KCVV Elewijt/.test(e.name))).toBe(
+      false,
+    );
   });
 
   it("drops past items and caps at the limit", () => {

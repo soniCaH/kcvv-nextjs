@@ -1,15 +1,15 @@
 "use client";
 
 import { TeamAgendaRow } from "@/components/team/TeamMatchesSection/TeamAgendaRow";
-import type { ScheduleMatch } from "@/components/match/types";
+import type { ScheduleRow } from "@/components/match/types";
 import {
   trackFirstTeamsCardClick,
   type FirstTeamsCardKind,
 } from "./first-teams-analytics";
 
 export interface FirstTeamAgendaRowProps {
-  /** Result or fixture, already normalised to the shared `ScheduleMatch` shape. */
-  match: ScheduleMatch;
+  /** Result or fixture, already normalised to the shared `ScheduleRow` shape. */
+  match: ScheduleRow;
   /** Team slug — forwarded to the click analytics. */
   teamSlug: string;
   /** Which card kind drives the `source` analytics param. */

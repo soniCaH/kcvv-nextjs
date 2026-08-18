@@ -12,6 +12,7 @@ import { trackKalenderItemClick } from "../calendar-analytics";
 import {
   getDaysInMonth,
   getMatchDotType,
+  MATCH_DOT_CLASS,
   calendarMatchToScheduleMatch,
   formatDayDetailHeading,
   formatItemCount,
@@ -86,12 +87,7 @@ function DayCellBody({
                 key={match.id}
                 data-testid="match-pip"
                 data-venue={venue}
-                className={cn(
-                  "h-2 w-2 rounded-full",
-                  venue === "home"
-                    ? "bg-card-red"
-                    : "border-card-red border-[1.5px] bg-transparent",
-                )}
+                className={cn("h-2 w-2 rounded-full", MATCH_DOT_CLASS[venue])}
               />
             );
           })}
@@ -155,6 +151,12 @@ function SelectedDayDetail({
               match={calendarMatchToScheduleMatch(match)}
               showDateStub={false}
               onNavigate={() => trackKalenderItemClick("match")}
+              // `/kalender` mixes every KCVV squad on one wall — a normal
+              // row already carries its squad via `homeTeam`/
+              // `awayTeam.teamLabel` (injected below), but a reservation's
+              // reduced Crest+caption tree has no equivalent slot, so it's
+              // supplied the same way `/tegenstander` supplies one (#2688).
+              captionLabel={match.isPlaceholder ? match.team : undefined}
             />
           ))}
           {dayEvents.map((event) => {

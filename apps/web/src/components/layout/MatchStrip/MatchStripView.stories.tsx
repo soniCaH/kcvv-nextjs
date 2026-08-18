@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { MatchStripView } from "./MatchStripView";
-import type { ScheduleMatch } from "@/components/match/types";
+import type {
+  ScheduleMatch,
+  ScheduleReservation,
+} from "@/components/match/types";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 
 const meta = {
@@ -21,6 +24,7 @@ const OPPONENT = {
 };
 
 const homeWin: ScheduleMatch = {
+  isPlaceholder: false,
   id: 12345,
   date: new Date("2026-08-03T15:00:00Z"),
   status: "finished",
@@ -33,6 +37,7 @@ const homeWin: ScheduleMatch = {
 };
 
 const awayFixture: ScheduleMatch = {
+  isPlaceholder: false,
   id: 12346,
   date: new Date("2026-08-08T18:00:00Z"),
   time: "18:00",
@@ -108,6 +113,25 @@ export const AwaitingResult: Story = {
       fixture: awayFixture,
     },
   },
+};
+
+/**
+ * A pitch-reservation placeholder (#2606) as the next fixture — no opponent,
+ * no score slot, no `Wedstrijddetails` CTA. Mirrors `<TeamAgendaRow>`'s
+ * reduced treatment rather than inventing a second vocabulary (#2688).
+ */
+const reservation: ScheduleReservation = {
+  isPlaceholder: true,
+  id: 12348,
+  date: new Date("2026-05-09T09:30:00Z"),
+  time: "09:30",
+  team: KCVV,
+  status: "scheduled",
+  competition: "Tornooi",
+};
+
+export const ReservationFixture: Story = {
+  args: { data: { result: homeWin, fixture: reservation } },
 };
 
 /** No opponent logo, no kickoff time, no competition — the fallback path. */

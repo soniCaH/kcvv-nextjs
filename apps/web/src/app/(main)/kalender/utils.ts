@@ -9,8 +9,12 @@ import {
   DEFAULT_EVENT_TYPE,
   type EventType,
 } from "@/components/event/event-type-style";
-import type { MatchStatus, ScheduleMatch } from "@/components/match/types";
-import { getScoreDisplay, type ScoreDisplay } from "@/lib/utils/match-display";
+import type { MatchStatus, ScheduleRow } from "@/components/match/types";
+import {
+  getScoreDisplay,
+  reservationView,
+  type ScoreDisplay,
+} from "@/lib/utils/match-display";
 import { capitalize } from "@/lib/utils/capitalize";
 import {
   CLUB_TIMEZONE,
@@ -39,6 +43,15 @@ export interface CalendarMatch {
   competition?: string;
   team?: string;
   isHome?: boolean;
+  /**
+   * Whether this fixture is a pitch-reservation placeholder (#2606). Carried
+   * across the same two-hop chain `isHome` already used — the BFF's
+   * `Match.is_placeholder` is sparse (`undefined` for an ordinary fixture),
+   * but this route VM normalises it to a definite boolean and requires the
+   * field so `transformMatchToCalendar` can't silently drop it again, the way
+   * it dropped it before #2688.
+   */
+  isPlaceholder: boolean;
 }
 
 export interface CalendarEvent {
@@ -92,6 +105,7 @@ export function transformMatchToCalendar(match: Match): CalendarMatch {
     competition: match.competition,
     team: match.kcvv_team_label,
     isHome: match.is_home,
+    isPlaceholder: match.is_placeholder ?? false,
   };
 }
 
@@ -201,25 +215,21 @@ export function buildCalendarFeed(
   matches: CalendarMatch[],
   events: EventListItemVM[],
 ): CalendarFeedItem[] {
-  const matchItems = matches.map(
-    (match): CalendarFeedItem => ({
-      source: "match",
-      id: `match-${match.id}`,
-      dateStart: match.date,
-      kalenderType: "Wedstrijden",
-      match,
-    }),
-  );
+  const matchItems = matches.map((match): CalendarFeedItem => ({
+    source: "match",
+    id: `match-${match.id}`,
+    dateStart: match.date,
+    kalenderType: "Wedstrijden",
+    match,
+  }));
 
-  const eventItems = events.map(
-    (event): CalendarFeedItem => ({
-      source: event.source,
-      id: event.id,
-      dateStart: event.dateStart,
-      kalenderType: event.eventType ?? DEFAULT_EVENT_TYPE,
-      event: eventListItemToCalendarEvent(event),
-    }),
-  );
+  const eventItems = events.map((event): CalendarFeedItem => ({
+    source: event.source,
+    id: event.id,
+    dateStart: event.dateStart,
+    kalenderType: event.eventType ?? DEFAULT_EVENT_TYPE,
+    event: eventListItemToCalendarEvent(event),
+  }));
 
   // Key once per item, not twice per comparison — see `toFeedSortKey`.
   return [...matchItems, ...eventItems]
@@ -249,7 +259,14 @@ export function buildKalenderItemListEntries(
     .map((item) =>
       item.source === "match"
         ? {
-            name: `${item.match.homeTeam.name} — ${item.match.awayTeam.name}`,
+            // A reservation has no opponent to print "home — away" for
+            // (#2606) — unlike `SportsEvent` JSON-LD on `/wedstrijd/[matchId]`,
+            // this entry isn't dropped: an `ItemList` `name` is a label, not
+            // a fixture assertion, and the URL it points at is now a real
+            // reduced page (#2688).
+            name: item.match.isPlaceholder
+              ? reservationView(item.match).subject
+              : `${item.match.homeTeam.name} — ${item.match.awayTeam.name}`,
             url: `${siteUrl}/wedstrijd/${item.match.id}`,
           }
         : { name: item.event.title, url: `${siteUrl}${item.event.href}` },
@@ -355,8 +372,17 @@ export function getDaysInWeek(dateStr: string): string[] {
   return days;
 }
 
-/** Determine if a match is home or away for KCVV */
-export function getMatchDotType(match: CalendarMatch): "home" | "away" {
+/**
+ * Determine the match-day pip's venue class. `"reservation"` for a
+ * pitch-reservation placeholder (#2606) — a self-match has no home/away side
+ * to claim, and resolving one via `isHome`/name-matching (as #2688 found this
+ * function doing) renders a reserved slot as an ordinary home fixture on the
+ * month grid.
+ */
+export type MatchDotType = "home" | "away" | "reservation";
+
+export function getMatchDotType(match: CalendarMatch): MatchDotType {
+  if (match.isPlaceholder) return "reservation";
   if (match.isHome != null) {
     return match.isHome ? "home" : "away";
   }
@@ -365,10 +391,34 @@ export function getMatchDotType(match: CalendarMatch): "home" | "away" {
 }
 
 /**
- * Adapt a `CalendarMatch` (route VM, `date: string`) to the `ScheduleMatch`
+ * The visual treatment for a match-day pip/dot, keyed by `getMatchDotType`'s
+ * return — one map instead of two hand-copied ternary chains
+ * (`CalendarMonth`'s grid pip, `CalendarWeek`'s day-cell dot; the home/away
+ * pair was already duplicated between the two before #2688 added the third
+ * state to both copies). Deliberately excludes size: the two consumers draw
+ * their dot at different diameters, so each appends its own `h-*`/`w-*` via
+ * `cn()`.
+ */
+export const MATCH_DOT_CLASS: Record<MatchDotType, string> = {
+  home: "bg-card-red",
+  away: "border-card-red border-[1.5px] bg-transparent",
+  // A pitch-reservation placeholder has no side to claim (#2606) — a dashed
+  // ring keeps the "Wedstrijden" category red (#1992) without claiming home
+  // OR away.
+  reservation: "border-card-red border-[1.5px] border-dashed bg-transparent",
+};
+
+/**
+ * Adapt a `CalendarMatch` (route VM, `date: string`) to the `ScheduleRow`
  * shape the 6.C `<TeamAgendaRow>` consumes (`date: Date`). Reused by the
  * grid's selected-day detail so the calendar renders the locked 6.C scoreboard
  * vocabulary instead of a bespoke row.
+ *
+ * Branches on `match.isPlaceholder` into the two `ScheduleRow` members
+ * (#2688) — this was the two-hop chain's silent hole: `isHome` crossed both
+ * hops, `isPlaceholder` crossed neither, so the same reservation that renders
+ * reduced on the team page rendered as an ordinary two-crest linked scoreboard
+ * here.
  *
  * `/kalender` mixes every KCVV squad on one surface, so the squad context
  * (`match.team`, e.g. "U13"/"A-ploeg") is injected as the KCVV side's
@@ -379,9 +429,26 @@ export function getMatchDotType(match: CalendarMatch): "home" | "away" {
  */
 export function calendarMatchToScheduleMatch(
   match: CalendarMatch,
-): ScheduleMatch {
+): ScheduleRow {
+  if (match.isPlaceholder) {
+    return {
+      isPlaceholder: true,
+      id: match.id,
+      date: new Date(match.date),
+      time: match.time,
+      team: {
+        id: match.homeTeam.id,
+        name: match.homeTeam.name,
+        logo: match.homeTeam.logo,
+      },
+      status: match.status,
+      competition: match.competition,
+    };
+  }
+
   const dotType = getMatchDotType(match);
   return {
+    isPlaceholder: false,
     id: match.id,
     date: new Date(match.date),
     time: match.time,

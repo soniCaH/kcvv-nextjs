@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import type { Match } from "@/lib/effect/schemas";
 import type { ScheduleMatch } from "@/components/match/types";
 import type { FirstTeamVM } from "./first-teams";
+import { asNonPlaceholder } from "@/components/match/test-narrowing";
+
 import {
   deriveFirstTeamVM,
   firstTeamsHeading,
@@ -44,6 +46,7 @@ function match(p: {
   awayScore?: number;
   time?: string;
   competition?: string;
+  isPlaceholder?: boolean;
 }): Match {
   return {
     id: p.id,
@@ -54,6 +57,7 @@ function match(p: {
     status: p.status,
     competition: p.competition,
     is_home: p.isHome,
+    is_placeholder: p.isPlaceholder,
   } as unknown as Match;
 }
 
@@ -92,8 +96,8 @@ describe("deriveFirstTeamVM", () => {
       NOW,
     );
     expect(vm.result?.id).toBe(2);
-    expect(vm.result?.homeScore).toBe(3);
-    expect(vm.result?.awayScore).toBe(1);
+    expect(asNonPlaceholder(vm.result).homeScore).toBe(3);
+    expect(asNonPlaceholder(vm.result).awayScore).toBe(1);
     // Emitted as a ScheduleMatch so it can render via the shared <TeamAgendaRow>.
     expect(vm.result?.status).toBe("finished");
   });
@@ -153,11 +157,11 @@ describe("deriveFirstTeamVM", () => {
       ],
       NOW,
     );
-    expect(vm.result?.homeTeam.name).toBe("Overijse");
-    expect(vm.result?.awayTeam.name).toBe("KCVV");
-    expect(vm.result?.isHome).toBe(false);
-    expect(vm.result?.homeScore).toBe(2);
-    expect(vm.result?.awayScore).toBe(0);
+    expect(asNonPlaceholder(vm.result).homeTeam.name).toBe("Overijse");
+    expect(asNonPlaceholder(vm.result).awayTeam.name).toBe("KCVV");
+    expect(asNonPlaceholder(vm.result).isHome).toBe(false);
+    expect(asNonPlaceholder(vm.result).homeScore).toBe(2);
+    expect(asNonPlaceholder(vm.result).awayScore).toBe(0);
   });
 
   it("keeps both fixture sides so the row can pick the opponent from isHome", () => {
@@ -175,9 +179,9 @@ describe("deriveFirstTeamVM", () => {
       ],
       NOW,
     );
-    expect(home.fixture?.homeTeam.name).toBe("KCVV");
-    expect(home.fixture?.awayTeam.name).toBe("Hasselt");
-    expect(home.fixture?.isHome).toBe(true);
+    expect(asNonPlaceholder(home.fixture).homeTeam.name).toBe("KCVV");
+    expect(asNonPlaceholder(home.fixture).awayTeam.name).toBe("Hasselt");
+    expect(asNonPlaceholder(home.fixture).isHome).toBe(true);
 
     const away = deriveFirstTeamVM(
       team,
@@ -193,8 +197,8 @@ describe("deriveFirstTeamVM", () => {
       ],
       NOW,
     );
-    expect(away.fixture?.homeTeam.name).toBe("Overijse");
-    expect(away.fixture?.isHome).toBe(false);
+    expect(asNonPlaceholder(away.fixture).homeTeam.name).toBe("Overijse");
+    expect(asNonPlaceholder(away.fixture).isHome).toBe(false);
   });
 
   it("omits result/fixture when absent and never drops the team identity", () => {
@@ -251,7 +255,7 @@ describe("deriveFirstTeamVM", () => {
         NOW,
       );
       expect(vm.result?.id).toBe(2);
-      expect(vm.result?.homeScore).toBe(5);
+      expect(asNonPlaceholder(vm.result).homeScore).toBe(5);
       expect(vm.fixture).toBeUndefined();
     });
 
@@ -390,8 +394,8 @@ describe("deriveFirstTeamVM", () => {
       );
       expect(vm.result?.id).toBe(1);
       expect(vm.result?.status).toBe("scheduled");
-      expect(vm.result?.homeScore).toBeUndefined();
-      expect(vm.result?.awayScore).toBeUndefined();
+      expect(asNonPlaceholder(vm.result).homeScore).toBeUndefined();
+      expect(asNonPlaceholder(vm.result).awayScore).toBeUndefined();
     });
 
     it("does not also leave it in the fixture slot", () => {
@@ -430,7 +434,7 @@ describe("deriveFirstTeamVM", () => {
         NOW,
       );
       expect(vm.result?.id).toBe(2);
-      expect(vm.result?.homeScore).toBe(2);
+      expect(asNonPlaceholder(vm.result).homeScore).toBe(2);
     });
 
     it("outranks an older finished match", () => {
@@ -493,8 +497,69 @@ describe("deriveFirstTeamVM", () => {
       ],
       NOW,
     );
-    expect(noScore.result?.homeScore).toBeUndefined();
-    expect(noScore.result?.awayScore).toBeUndefined();
+    expect(asNonPlaceholder(noScore.result).homeScore).toBeUndefined();
+    expect(asNonPlaceholder(noScore.result).awayScore).toBeUndefined();
+  });
+
+  // #2606, #2688 — a reservation carries no result vocabulary at all, on any
+  // status or any date. Before #2688 a past-dated (but still `scheduled`)
+  // reservation fell into the result slot the same way a kicked-off match
+  // does (#2390), headlining the homepage's "Laatste uitslag" column reading
+  // "UITSLAG · TORNOOI".
+  describe("pitch-reservation placeholder (#2606, #2688)", () => {
+    it("routes a past-dated reservation to the fixture slot, never the result slot", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 90,
+            date: "2026-06-01T09:30:00Z", // well before NOW (2026-06-23)
+            status: "scheduled",
+            competition: "Tornooi",
+            isPlaceholder: true,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result).toBeUndefined();
+      expect(vm.fixture?.id).toBe(90);
+      expect(vm.fixture?.isPlaceholder).toBe(true);
+    });
+
+    it("routes a future-dated reservation to the fixture slot too", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 91,
+            date: "2026-07-01T09:30:00Z",
+            status: "scheduled",
+            competition: "Tornooi",
+            isPlaceholder: true,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.fixture?.id).toBe(91);
+    });
+
+    it("drops a cancelled reservation from both slots — same rule as a real cancelled match", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 92,
+            date: "2026-06-01T09:30:00Z",
+            status: "cancelled",
+            competition: "Tornooi",
+            isPlaceholder: true,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result).toBeUndefined();
+      expect(vm.fixture).toBeUndefined();
+    });
   });
 });
 

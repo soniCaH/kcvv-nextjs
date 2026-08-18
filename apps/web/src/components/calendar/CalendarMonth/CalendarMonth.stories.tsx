@@ -3,6 +3,7 @@ import { fn } from "storybook/test";
 import { CalendarMonth } from "./CalendarMonth";
 import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
 import { fixtureImage } from "@test-fixtures/images";
+import { reservationMatch } from "../calendar-mocks";
 
 const meta = {
   title: "Features/Calendar/CalendarMonth",
@@ -42,6 +43,7 @@ const marchMatches: CalendarMatch[] = [
     competition: "Nationale 1",
     team: "A-ploeg",
     isHome: true,
+    isPlaceholder: false,
   },
   {
     id: 2,
@@ -54,6 +56,7 @@ const marchMatches: CalendarMatch[] = [
     competition: "Nationale 1",
     team: "A-ploeg",
     isHome: false,
+    isPlaceholder: false,
   },
   {
     id: 3,
@@ -66,6 +69,7 @@ const marchMatches: CalendarMatch[] = [
     competition: "Jeugd",
     team: "U15 A",
     isHome: true,
+    isPlaceholder: false,
   },
 ];
 
@@ -94,6 +98,7 @@ const denseSaturdayMatches: CalendarMatch[] = Array.from(
     competition: "Jeugd",
     team: `U${7 + i}`,
     isHome: i % 3 !== 0,
+    isPlaceholder: false,
   }),
 );
 
@@ -155,6 +160,22 @@ export const SelectedDayEmpty: Story = {
     matches: marchMatches,
     events: [],
     selectedDate: "2026-03-10",
+    currentMonth: 3,
+    currentYear: 2026,
+  },
+};
+
+/**
+ * A youth tournament placeholder (#2606) among the day's other matches — the
+ * grid pip is a dashed ring (never a filled "home" red), and the day-detail
+ * panel renders the reduced `<TeamAgendaRow>` treatment, not a linked
+ * "KCVV Elewijt – KCVV Elewijt" scoreboard (#2688).
+ */
+export const SelectedDayWithReservation: Story = {
+  args: {
+    matches: [...marchMatches, reservationMatch()],
+    events: [],
+    selectedDate: "2026-03-15",
     currentMonth: 3,
     currentYear: 2026,
   },

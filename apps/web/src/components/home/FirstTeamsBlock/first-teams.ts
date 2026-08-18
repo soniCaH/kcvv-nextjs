@@ -25,7 +25,7 @@
  * as the reference implementation.
  */
 import type { Match } from "@/lib/effect/schemas";
-import type { ScheduleMatch } from "@/components/match/types";
+import type { ScheduleRow } from "@/components/match/types";
 import { transformMatchToSchedule } from "@/components/match/transform";
 import { hasScore, isSettledMatch } from "@/lib/utils/match-display";
 import { RESERVEN_PSD_ID } from "@/lib/utils/group-teams";
@@ -40,10 +40,14 @@ export interface FirstTeamInput {
 }
 
 export interface FirstTeamVM extends FirstTeamInput {
-  /** Most recent played match — rendered as a cream `<TeamAgendaRow>`. */
-  result?: ScheduleMatch;
-  /** Next scheduled fixture — rendered as the featured jersey-deep `<TeamAgendaRow>`. */
-  fixture?: ScheduleMatch;
+  /**
+   * Most recent played match — rendered as a cream `<TeamAgendaRow>`. Can be
+   * a pitch-reservation placeholder (#2688); `<TeamAgendaRow>` already
+   * branches on `.isPlaceholder` for the reduced treatment.
+   */
+  result?: ScheduleRow;
+  /** Next scheduled fixture — rendered as the featured jersey-deep `<TeamAgendaRow>`. Can also be a placeholder — see `result`. */
+  fixture?: ScheduleRow;
 }
 
 /** The fields senior-team selection reads — structural, so both call sites fit. */
@@ -121,6 +125,17 @@ export const SETTLED_LOOKAHEAD_MS = 72 * 60 * 60 * 1000;
  * The `never` assignment keeps the compile-time guarantee either way.
  */
 function matchSlot(match: Match, now: Date): "result" | "fixture" | null {
+  // A reservation carries no result vocabulary at all (#2606) — it must
+  // never headline the result slot, on any status or any date. Without this
+  // guard a past-dated (but still `scheduled`) reservation fell through to
+  // the `date < now` check below and headlined the homepage's "Laatste
+  // uitslag" column reading "UITSLAG · TORNOOI · 09:30". `postponed` /
+  // `cancelled` / `stopped` join the "answers neither what-happened nor
+  // where-do-I-go-next" rule the switch below already applies to a real
+  // match in the same statuses.
+  if (match.is_placeholder) {
+    return match.status === "scheduled" ? "fixture" : null;
+  }
   if (isSettledMatch(match.status)) return "result";
   switch (match.status) {
     case "scheduled":

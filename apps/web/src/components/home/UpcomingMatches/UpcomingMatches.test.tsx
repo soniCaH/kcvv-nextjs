@@ -7,6 +7,7 @@ import {
   mockUpcomingThree,
   mockUpcomingTwelve,
   mockUpcomingSingleTeam,
+  mockUpcomingWithReservation,
 } from "./UpcomingMatches.mocks";
 import { trackEvent } from "@/lib/analytics/track-event";
 import type { UpcomingMatch } from "@/components/match/types";
@@ -299,6 +300,46 @@ describe("UpcomingMatches", () => {
     expect(trackEvent).toHaveBeenCalledWith("match_card_click", {
       match_id: 501,
       source: "home_agenda",
+    });
+  });
+
+  // #2606, #2688 — the other-teams agenda is the surface most likely to carry
+  // a pitch-reservation placeholder: it renders exactly the non-senior/youth
+  // matches, and youth tournaments are where reservations come from. Before
+  // #2688 this row rendered as an ordinary linked "KCVV Elewijt — KCVV
+  // Elewijt" fixture with a home badge — nothing pinned it.
+  describe("pitch-reservation placeholder (#2606, #2688)", () => {
+    it("renders the reservation as a reduced, non-linking row — no opponent, no home/away badge", () => {
+      const { container } = render(
+        <UpcomingMatches matches={mockUpcomingWithReservation} />,
+      );
+      // The reservation is dated earliest, so it takes one of the 5 visible
+      // (collapsed) slots — 4 real fixtures link, the reservation does not.
+      expect(rowLinks()).toHaveLength(4);
+      expect(container).toHaveTextContent("Tornooi");
+      expect(screen.queryByText(/KCVV Elewijt.*KCVV Elewijt/)).toBeNull();
+    });
+
+    it("gives the reservation row its own accessible name via <article>, not an unlabelled <div>", () => {
+      render(<UpcomingMatches matches={mockUpcomingWithReservation} />);
+      const article = screen.getByRole("article", { name: /Tornooi/ });
+      expect(article).toBeInTheDocument();
+      // The one marker every reservation renderer carries (#2688).
+      expect(article).toHaveAttribute("data-placeholder", "true");
+    });
+
+    it("prints the status wording on a cancelled reservation — a dead slot must not read as live", () => {
+      const cancelled = mockUpcomingWithReservation.map((m) =>
+        m.isPlaceholder ? { ...m, status: "cancelled" as const } : m,
+      );
+      render(<UpcomingMatches matches={cancelled} />);
+      const article = screen.getByRole("article", { name: /Tornooi/ });
+      expect(article).toHaveTextContent("Geannuleerd");
+    });
+
+    it("still buckets the reservation under its own squad's filter chip", () => {
+      render(<UpcomingMatches matches={mockUpcomingWithReservation} />);
+      expect(chip(/U13/)).toBeInTheDocument();
     });
   });
 });

@@ -20,11 +20,4 @@ export type { MatchEventsSectionProps } from "./MatchEventsSection";
 export { MatchStandingsSection } from "./MatchStandingsSection";
 export type { MatchStandingsSectionProps } from "./MatchStandingsSection";
 
-export type {
-  UpcomingMatch,
-  MatchStatus,
-  ScheduleMatch,
-  ScheduleTeam,
-} from "./types";
-
 export { transformMatchToSchedule } from "./transform";

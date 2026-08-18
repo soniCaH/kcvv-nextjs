@@ -20,6 +20,7 @@ describe("MatchHero", () => {
           date={scheduledMatchDate}
           time="14:30"
           status="scheduled"
+          isPlaceholder={false}
         />,
       );
       const headings = screen.getAllByRole("heading", { level: 1 });
@@ -38,6 +39,7 @@ describe("MatchHero", () => {
           date={finishedMatchDate}
           time="14:30"
           status="finished"
+          isPlaceholder={false}
         />,
       );
       expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
@@ -54,6 +56,7 @@ describe("MatchHero", () => {
             awayTeam={awayTeam}
             date={finishedMatchDate}
             status={status}
+            isPlaceholder={false}
           />,
         );
         // The em-dash placeholders still paint — `textContent` keeps them — so
@@ -71,6 +74,7 @@ describe("MatchHero", () => {
           awayTeam={awayTeam}
           date={scheduledMatchDate}
           status="scheduled"
+          isPlaceholder={false}
         />,
       );
       const heading = screen.getByRole("heading", { level: 1 });
@@ -89,6 +93,7 @@ describe("MatchHero", () => {
           date={scheduledMatchDate}
           time="14:30"
           status="scheduled"
+          isPlaceholder={false}
         />,
       );
       expect(screen.getByText(/VOORBESCHOUWING/)).toBeInTheDocument();
@@ -108,6 +113,7 @@ describe("MatchHero", () => {
           date={finishedMatchDate}
           time="14:30"
           status={status}
+          isPlaceholder={false}
         />,
       );
       expect(screen.getByText(/MATCHVERSLAG/)).toBeInTheDocument();
@@ -122,6 +128,7 @@ describe("MatchHero", () => {
           awayTeam={awayTeam}
           date={scheduledMatchDate}
           status="scheduled"
+          isPlaceholder={false}
         />,
       );
       const scoreEl = screen.getByText("vs");
@@ -139,6 +146,7 @@ describe("MatchHero", () => {
           awayTeam={{ ...awayTeam, score: 1 }}
           date={finishedMatchDate}
           status="finished"
+          isPlaceholder={false}
         />,
       );
       expect(screen.getByText("3")).toBeInTheDocument();
@@ -157,6 +165,7 @@ describe("MatchHero", () => {
           awayTeam={awayTeam}
           date={finishedMatchDate}
           status="cancelled"
+          isPlaceholder={false}
         />,
       );
       // The score region itself + the em-dash separator all use "—".
@@ -173,6 +182,7 @@ describe("MatchHero", () => {
           awayTeam={awayTeam}
           date={scheduledMatchDate}
           status="scheduled"
+          isPlaceholder={false}
         />,
       );
       expect(screen.queryByText("FT")).not.toBeInTheDocument();
@@ -186,6 +196,7 @@ describe("MatchHero", () => {
           awayTeam={awayTeam}
           date={finishedMatchDate}
           status="cancelled"
+          isPlaceholder={false}
         />,
       );
       const badge = screen.getByText("CANC");
@@ -206,6 +217,7 @@ describe("MatchHero", () => {
           awayTeam={awayTeam}
           date={scheduledMatchDate}
           status="scheduled"
+          isPlaceholder={false}
         />,
       );
       const nameEl = screen.getByText(longHome.name);
@@ -219,6 +231,7 @@ describe("MatchHero", () => {
           awayTeam={{ name: "RC Mechelen" }}
           date={scheduledMatchDate}
           status="scheduled"
+          isPlaceholder={false}
         />,
       );
       // First-letter initials in the shield fallback (aria-hidden span).
@@ -241,6 +254,7 @@ describe("MatchHero", () => {
           time="14:30"
           venue="Sportpark Elewijt"
           status="scheduled"
+          isPlaceholder={false}
         />,
       );
       expect(screen.getByText("Sportpark Elewijt")).toBeInTheDocument();
@@ -254,6 +268,7 @@ describe("MatchHero", () => {
           date={scheduledMatchDate}
           time="14:30"
           status="scheduled"
+          isPlaceholder={false}
         />,
       );
       expect(container.textContent).not.toContain("Sportpark");
@@ -269,6 +284,7 @@ describe("MatchHero", () => {
           date={scheduledMatchDate}
           time="14:30"
           status="scheduled"
+          isPlaceholder={false}
         />,
       );
       // "ZA 14" and "JUN" share a wrapper that is a horizontal baseline-aligned
@@ -303,6 +319,7 @@ describe("MatchHero", () => {
           status="finished"
           competition="3e provinciale A"
           kcvvTeamLabel="KCVV-A"
+          isPlaceholder={false}
         />,
       );
       expect(screen.getByText("3e provinciale A")).toBeInTheDocument();
@@ -318,10 +335,123 @@ describe("MatchHero", () => {
           awayTeam={awayTeam}
           date={finishedMatchDate}
           status="finished"
+          isPlaceholder={false}
         />,
       );
       // Season label is always present (derived from date).
       expect(screen.getByText("’25/’26")).toBeInTheDocument();
+    });
+  });
+
+  describe("pitch-reservation placeholder (#2606, #2688)", () => {
+    it("names one club in the <h1>, never 'vs' a second one", () => {
+      render(
+        <MatchHero
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          date={scheduledMatchDate}
+          time="09:30"
+          status="scheduled"
+          competition="Tornooi"
+          isPlaceholder
+        />,
+      );
+      const heading = screen.getByRole("heading", { level: 1 });
+      expect(heading).toHaveTextContent("KCVV Elewijt");
+      expect(heading.textContent).not.toMatch(/vs/i);
+      expect(screen.queryByText("RC Mechelen")).toBeNull();
+    });
+
+    it("carries the one marker every reservation renderer carries (#2688)", () => {
+      const { container } = render(
+        <MatchHero
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          date={scheduledMatchDate}
+          status="scheduled"
+          competition="Tornooi"
+          isPlaceholder
+        />,
+      );
+      expect(
+        container.querySelector('[data-placeholder="true"]'),
+      ).not.toBeNull();
+    });
+
+    it("shows the real date/time/venue it has, no score region", () => {
+      render(
+        <MatchHero
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          date={scheduledMatchDate}
+          time="09:30"
+          venue="Sportpark Elewijt"
+          status="scheduled"
+          competition="Tornooi"
+          isPlaceholder
+        />,
+      );
+      expect(screen.getByText("09:30")).toBeInTheDocument();
+      expect(screen.getByText("Sportpark Elewijt")).toBeInTheDocument();
+      expect(screen.queryByText(/^vs$/)).toBeNull();
+      expect(screen.queryByText(/—/)).toBeNull();
+    });
+
+    it("renders the competition label as the subject — the same vocabulary <TeamAgendaRow> uses", () => {
+      render(
+        <MatchHero
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          date={scheduledMatchDate}
+          status="scheduled"
+          competition="Tornooi"
+          isPlaceholder
+        />,
+      );
+      expect(screen.getByText("Tornooi")).toBeInTheDocument();
+    });
+
+    it("names the squad that reserved the slot — the one useful fact this deliberately empty page owes a visitor", () => {
+      render(
+        <MatchHero
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          date={scheduledMatchDate}
+          status="scheduled"
+          competition="Tornooi"
+          kcvvTeamLabel="U13"
+          isPlaceholder
+        />,
+      );
+      expect(screen.getByText("U13")).toBeInTheDocument();
+    });
+
+    it("falls back to the RESERVATION_SUBJECT_FALLBACK wording when no competition label is sent", () => {
+      render(
+        <MatchHero
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          date={scheduledMatchDate}
+          status="scheduled"
+          isPlaceholder
+        />,
+      );
+      expect(screen.getByText("Gereserveerd")).toBeInTheDocument();
+    });
+
+    it("names an exceptional status via the same MatchStatusBadge table — a reservation can be called off too", () => {
+      render(
+        <MatchHero
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          date={scheduledMatchDate}
+          status="cancelled"
+          competition="Tornooi"
+          isPlaceholder
+        />,
+      );
+      expect(screen.getByText("Geannuleerd")).toBeInTheDocument();
+      expect(screen.getAllByText("CANC").length).toBeGreaterThan(0);
     });
   });
 });

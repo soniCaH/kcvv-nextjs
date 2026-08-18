@@ -11,7 +11,7 @@ import {
   type SeniorTeamCandidate,
 } from "@/components/home/FirstTeamsBlock/first-teams";
 import type { Match } from "@kcvv/api-contract";
-import type { ScheduleMatch } from "@/components/match/types";
+import type { ScheduleRow } from "@/components/match/types";
 
 /**
  * How long a played match stays newsworthy enough to headline the strip.
@@ -32,10 +32,18 @@ import type { ScheduleMatch } from "@/components/match/types";
 export const RESULT_RECENCY_MS = 15 * 24 * 60 * 60 * 1000;
 
 export interface MatchStripData {
-  /** Most recent played match, only when inside `RESULT_RECENCY_MS`. */
-  result: ScheduleMatch | null;
-  /** Next scheduled fixture. */
-  fixture: ScheduleMatch | null;
+  /**
+   * Most recent played match, only when inside `RESULT_RECENCY_MS`. Never a
+   * pitch-reservation placeholder: a booking carries no score, so `matchSlot`
+   * never routes one to the result slot and `pickLastResult` cannot return it
+   * (#2688). Guarded there, not re-checked here — one owner for the rule.
+   */
+  result: ScheduleRow | null;
+  /**
+   * Next scheduled fixture. Can be a placeholder — `<MatchStripView>` branches
+   * on `.isPlaceholder` to render the reduced treatment.
+   */
+  fixture: ScheduleRow | null;
 }
 
 /**

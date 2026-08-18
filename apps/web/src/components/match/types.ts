@@ -24,6 +24,14 @@ export interface ScheduleTeam {
 }
 
 export interface ScheduleMatch {
+  /**
+   * Discriminant against `ScheduleReservation` below. Required — an optional
+   * `isPlaceholder?: false` would let a construction site that simply omits
+   * the field type-check as `ScheduleMatch` with no complaint, defeating the
+   * entire point of the union. Required and literal `false` means every
+   * site that builds this object must say which kind of row it's building.
+   */
+  isPlaceholder: false;
   /** Match ID */
   id: number;
   /** Match date */
@@ -44,15 +52,63 @@ export interface ScheduleMatch {
   competition?: string;
   /** Whether the tracked team is playing at home. Provided by BFF via Match.is_home. */
   isHome?: boolean;
-  /**
-   * Whether this fixture is a pitch-reservation placeholder. Provided by BFF
-   * via `Match.is_placeholder` — see its doc in
-   * `packages/api-contract/src/schemas/match.ts` for full semantics.
-   */
-  isPlaceholder?: boolean;
 }
 
+/**
+ * A pitch-reservation placeholder (#2606) — both sides of the fixture are the
+ * same club. The club enters these deliberately ("this team has something
+ * that day, the details aren't settled"), for its own tournaments and for
+ * external ones alike, so there is no second side to render and nothing to
+ * navigate to (`/wedstrijd/{id}` for a placeholder is a reduced page, not a
+ * destination worth linking to from an agenda row — #2606 decision 5, #2688).
+ *
+ * Deliberately a **different shape** from `ScheduleMatch`, not the same shape
+ * with a boolean toggled — `awayTeam`/`homeScore`/`awayScore`/`isHome` do not
+ * exist here, so a renderer that reaches for an opponent without narrowing
+ * `match.isPlaceholder` first (`opponentOf`, a hand-built desktop slide, a
+ * two-hop calendar adapter) fails to compile instead of printing "KCVV
+ * Elewijt — KCVV Elewijt". See `reservationView()` in
+ * `@/lib/utils/match-display` for the shared subject/status derivation every
+ * renderer of this shape should use — `<TeamAgendaRow>` (#2606) is the prior
+ * art for the reduced treatment itself.
+ */
+export interface ScheduleReservation {
+  isPlaceholder: true;
+  /** Match ID */
+  id: number;
+  /** Match date */
+  date: Date;
+  /** Match time (HH:MM) — the real kickoff/meeting time, never "hele dag". */
+  time?: string;
+  /**
+   * The club's own crest/name. A self-match names one side, not two — both
+   * `home_team`/`away_team` carry the same club upstream, so there is no
+   * "home" or "away" designation to keep.
+   */
+  team: ScheduleTeam;
+  /** Match status — a reservation can be cancelled/postponed like any fixture. */
+  status: MatchStatus;
+  /** Competition name — the reservation's subject (e.g. "Tornooi"), when PSD sends one. */
+  competition?: string;
+}
+
+/**
+ * Either a genuine fixture or a pitch-reservation placeholder. The one type
+ * every match-row renderer and every `Match` → view-model adapter should
+ * accept/return from here on — see `ScheduleReservation`'s doc for why the
+ * split is a compile-time guardrail, not just documentation.
+ */
+export type ScheduleRow = ScheduleMatch | ScheduleReservation;
+
 export interface UpcomingMatch {
+  /**
+   * Discriminant against `UpcomingReservation` below — required, mirroring
+   * `ScheduleMatch`/`ScheduleReservation` (#2688). The homepage's other-teams
+   * agenda (`<UpcomingMatchesClient>`) is the surface most likely to carry a
+   * pitch reservation: it renders exactly the non-senior/youth matches, and
+   * youth tournaments are where reservations come from.
+   */
+  isPlaceholder: false;
   /** Match ID */
   id: number;
   /** Match date */
@@ -99,3 +155,37 @@ export interface UpcomingMatch {
    */
   teamLabel?: string;
 }
+
+/**
+ * A pitch-reservation placeholder (#2606) on the homepage's other-teams
+ * agenda (`<UpcomingMatchesClient>`). `ScheduleReservation` plus the deltas
+ * this surface actually needs: `venue` (this route's own field) and the
+ * squad-identifying fields (`squadLabel`/`kcvvTeamLabel`/`teamLabel`) —
+ * kept because this surface's filter chips bucket every row by squad and a
+ * reservation still belongs to exactly one squad, so it must file under the
+ * same chip a real fixture for that squad would. No `kcvvTeamId`: nothing
+ * reads it (`<UpcomingMatchesClient>`'s own `kcvvTeamId` is always the
+ * club-id prop, never a field read off a row).
+ */
+export interface UpcomingReservation extends Omit<ScheduleReservation, "team"> {
+  team: {
+    id: number;
+    name: string;
+    logo?: string;
+  };
+  /** Venue/location (optional) */
+  venue?: string;
+  /** Front-end squad short code (e.g. "U13") — see `UpcomingMatch.squadLabel`. */
+  squadLabel?: string;
+  /** Canonical human-readable squad label — see `UpcomingMatch.kcvvTeamLabel`. */
+  kcvvTeamLabel?: string;
+  /** Optional display-time team label set by the calling page. */
+  teamLabel?: string;
+}
+
+/**
+ * Either a genuine upcoming fixture or a pitch-reservation placeholder — the
+ * shape `<UpcomingMatchesClient>` and `mapMatchToUpcomingMatch` should
+ * accept/return from here on.
+ */
+export type UpcomingRow = UpcomingMatch | UpcomingReservation;

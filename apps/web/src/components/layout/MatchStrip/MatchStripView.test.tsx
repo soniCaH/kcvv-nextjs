@@ -2,11 +2,15 @@ import { describe, it, expect } from "vitest";
 import { render, screen, within, fireEvent } from "@testing-library/react";
 import { MatchStripView } from "./MatchStripView";
 import { KCVV_CLUB_ID } from "@/lib/constants";
-import type { ScheduleMatch } from "@/components/match/types";
+import type {
+  ScheduleMatch,
+  ScheduleReservation,
+} from "@/components/match/types";
 
 const OPPONENT = { id: 9999, name: "RC Mechelen", logo: "https://psd/rc.png" };
 
 const result: ScheduleMatch = {
+  isPlaceholder: false,
   id: 42,
   date: new Date("2026-08-03T15:00:00Z"),
   status: "finished",
@@ -19,6 +23,7 @@ const result: ScheduleMatch = {
 };
 
 const fixture: ScheduleMatch = {
+  isPlaceholder: false,
   id: 43,
   date: new Date("2026-08-08T18:00:00Z"),
   time: "18:00",
@@ -222,6 +227,111 @@ describe("MatchStripView", () => {
         />,
       );
       expect(screen.getAllByText("vs.").length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("pitch-reservation placeholder (#2606, #2688)", () => {
+    const reservation: ScheduleReservation = {
+      isPlaceholder: true,
+      id: 90,
+      date: new Date("2026-05-09T09:30:00Z"),
+      time: "09:30",
+      team: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+      status: "scheduled",
+      competition: "Tornooi",
+    };
+
+    it("renders the reservation as a mobile ledger row that is not a link — no <Link> wrapper (#2606 decision 5)", () => {
+      render(<MatchStripView data={{ result: null, fixture: reservation }} />);
+      expect(screen.queryByRole("link")).toBeNull();
+      expect(screen.getByText("Tornooi")).toBeInTheDocument();
+    });
+
+    it("gives the mobile ledger row a real accessible name via <article> — a bare <div> ignores aria-label entirely", () => {
+      render(<MatchStripView data={{ result: null, fixture: reservation }} />);
+      const article = screen.getByRole("article", { name: /Tornooi/ });
+      expect(article).toBeInTheDocument();
+      expect(article.tagName).toBe("ARTICLE");
+      // The one marker every reservation renderer carries (#2688) — lets a
+      // consumer (or a future test) find this row without depending on the
+      // element type or the accessible name.
+      expect(article).toHaveAttribute("data-placeholder", "true");
+    });
+
+    it("prints the club crest, never the opponent's — a reservation has no opponent", () => {
+      render(<MatchStripView data={{ result: null, fixture: reservation }} />);
+      // scoreboardScore/opponentOf would throw a type error at compile time if
+      // ever called on a reservation — this asserts the runtime consequence:
+      // no "KCVV Elewijt" opponent text renders a second time.
+      expect(screen.getAllByText("KCVV Elewijt")).toHaveLength(1);
+    });
+
+    it("shows the real kickoff time, never a score slot", () => {
+      render(<MatchStripView data={{ result: null, fixture: reservation }} />);
+      expect(screen.getAllByText("09:30").length).toBeGreaterThan(0);
+      expect(screen.queryByText(/\d+\s*–\s*\d+/)).toBeNull();
+    });
+
+    it("sheds the home/away venue glyph — a reservation has no side to name", () => {
+      render(<MatchStripView data={{ result: null, fixture: reservation }} />);
+      expect(screen.queryByLabelText("Thuiswedstrijd")).toBeNull();
+      expect(screen.queryByLabelText("Uitwedstrijd")).toBeNull();
+    });
+
+    it("never speaks result vocabulary, even handed a reservation in the result slot", () => {
+      render(<MatchStripView data={{ result: reservation, fixture: null }} />);
+      // The strip's own slot heading says "Uitslag" — that is chrome and stays.
+      // What must never happen is the reservation row claiming that word: its
+      // aria-label is its sole accessible content, and a booking has no result.
+      expect(screen.queryByRole("article", { name: /Uitslag/i })).toBeNull();
+      expect(
+        screen.getByRole("article", { name: /Tornooi/ }),
+      ).toBeInTheDocument();
+    });
+
+    it("falls back to RESERVATION_SUBJECT_FALLBACK when no competition label is sent", () => {
+      render(
+        <MatchStripView
+          data={{
+            result: null,
+            fixture: { ...reservation, competition: undefined },
+          }}
+        />,
+      );
+      expect(screen.getByText("Gereserveerd")).toBeInTheDocument();
+    });
+
+    it("desktop slide: no second crest, no Wedstrijddetails CTA (mirrors #2606 decision 5)", () => {
+      render(<MatchStripView data={{ result: null, fixture: reservation }} />);
+      expect(
+        screen.queryByRole("link", { name: /Wedstrijddetails/i }),
+      ).toBeNull();
+    });
+
+    it("still lets the switch move between a real result and a reservation fixture", () => {
+      render(<MatchStripView data={{ result, fixture: reservation }} />);
+      fireEvent.click(
+        screen.getByRole("button", { name: "Toon de volgende wedstrijd" }),
+      );
+      expect(screen.getAllByText("Tornooi").length).toBeGreaterThan(0);
+    });
+
+    it("keeps the desktop slide's aria-live region across the switch to a reservation — the region itself must not be unmounted", () => {
+      const { container } = render(
+        <MatchStripView data={{ result, fixture: reservation }} />,
+      );
+      expect(container.querySelectorAll('[aria-live="polite"]')).toHaveLength(
+        1,
+      );
+      fireEvent.click(
+        screen.getByRole("button", { name: "Toon de volgende wedstrijd" }),
+      );
+      // A live region inserted together with its content is not announced —
+      // hanging aria-live on only the normal branch's own wrapper would drop
+      // it from the DOM entirely once the reservation slide replaces it.
+      expect(container.querySelectorAll('[aria-live="polite"]')).toHaveLength(
+        1,
+      );
     });
   });
 

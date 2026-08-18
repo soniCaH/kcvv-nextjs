@@ -47,6 +47,7 @@ function match(
     competition: "Competitie",
     team,
     isHome,
+    isPlaceholder: false,
     ...opts,
   };
 }
@@ -124,4 +125,25 @@ export const SingleEventDay: Story = {
 
 export const EmptyMonth: Story = {
   args: { ...baseProps, matches: [], events: [] },
+};
+
+/**
+ * A youth tournament placeholder (#2606) beside a normal row — no opponent,
+ * no link, the club crest and the competition subject via `reservationView()`
+ * instead of "KCVV Elewijt — KCVV Elewijt" (#2688).
+ */
+export const WithReservation: Story = {
+  args: {
+    ...baseProps,
+    matches: [
+      ...sparseMatches,
+      match(90, "2026-09-13T09:30:00", "U8", "KCVV Elewijt", {
+        homeTeam: kcvv,
+        awayTeam: kcvv,
+        competition: "Tornooi",
+        isPlaceholder: true,
+      }),
+    ],
+    events: sparseEvents,
+  },
 };

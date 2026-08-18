@@ -6,6 +6,8 @@ import {
   isExceptionalMatchStatus,
   isPlayedMatch,
   isSettledMatch,
+  reservationView,
+  reservationRowLabel,
 } from "./match-display";
 import type { MatchStatus } from "@/lib/effect/schemas/match.schema";
 
@@ -203,5 +205,112 @@ describe("isExceptionalMatchStatus", () => {
     ] as MatchStatus[]) {
       expect(isExceptionalMatchStatus(status)).toBe(true);
     }
+  });
+});
+
+describe("reservationView", () => {
+  it("uses the competition label as the subject when present", () => {
+    const view = reservationView({
+      status: "scheduled",
+      competition: "Tornooi",
+    });
+    expect(view.subject).toBe("Tornooi");
+  });
+
+  it("falls back to 'Gereserveerd' when no competition label is sent", () => {
+    const view = reservationView({
+      status: "scheduled",
+      competition: undefined,
+    });
+    expect(view.subject).toBe("Gereserveerd");
+  });
+
+  it("renders the competition label verbatim — no re-casing (PSD's lowercase gotcha, #2606)", () => {
+    const view = reservationView({
+      status: "scheduled",
+      competition: "vriendschappelijk",
+    });
+    expect(view.subject).toBe("vriendschappelijk");
+  });
+
+  it("carries no status marker for scheduled/finished — the layout already speaks for those", () => {
+    expect(
+      reservationView({ status: "scheduled", competition: "Tornooi" })
+        .statusWording,
+    ).toBeNull();
+    expect(
+      reservationView({ status: "finished", competition: "Tornooi" })
+        .statusWording,
+    ).toBeNull();
+  });
+
+  it("names an exceptional status — a reservation can be called off too (#2606)", () => {
+    const view = reservationView({
+      status: "cancelled",
+      competition: "Tornooi",
+    });
+    expect(view.statusWording).toEqual({
+      abbreviation: "CANC",
+      longForm: "Geannuleerd",
+    });
+  });
+});
+
+describe("reservationRowLabel", () => {
+  it("composes subject, date and kickoff for a scheduled row", () => {
+    const label = reservationRowLabel({
+      subject: "Tornooi",
+      dateLabel: "9 mei",
+      time: "09:30",
+      status: "scheduled",
+      statusWording: null,
+    });
+    expect(label).toBe("Tornooi, 9 mei om 09:30");
+  });
+
+  it("prefixes the kind word when given and no status marker applies", () => {
+    const label = reservationRowLabel({
+      kind: "fixture",
+      subject: "Tornooi",
+      dateLabel: "9 mei",
+      time: "09:30",
+      status: "scheduled",
+      statusWording: null,
+    });
+    expect(label).toBe("Volgende: Tornooi, 9 mei om 09:30");
+  });
+
+  it("drops the kind word when a status marker applies — the sentence must not argue with itself", () => {
+    const label = reservationRowLabel({
+      kind: "fixture",
+      subject: "Tornooi",
+      dateLabel: "9 mei",
+      time: "09:30",
+      status: "cancelled",
+      statusWording: { abbreviation: "CANC", longForm: "Geannuleerd" },
+    });
+    expect(label).not.toContain("Volgende");
+    expect(label).toContain("Geannuleerd");
+  });
+
+  it("never announces a time for a non-scheduled status", () => {
+    const label = reservationRowLabel({
+      subject: "Tornooi",
+      dateLabel: "9 mei",
+      time: "09:30",
+      status: "cancelled",
+      statusWording: { abbreviation: "CANC", longForm: "Geannuleerd" },
+    });
+    expect(label).not.toContain("om 09:30");
+  });
+
+  it("omits the time segment entirely when none is given", () => {
+    const label = reservationRowLabel({
+      subject: "Tornooi",
+      dateLabel: "9 mei",
+      status: "scheduled",
+      statusWording: null,
+    });
+    expect(label).toBe("Tornooi, 9 mei");
   });
 });

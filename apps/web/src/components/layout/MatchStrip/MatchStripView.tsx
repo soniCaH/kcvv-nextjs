@@ -10,12 +10,19 @@ import {
   HOME_AWAY_A11Y_NAME,
   MATCH_KIND_WORD,
   OUTCOME_UNDERLINE,
+  reservationRowLabel,
+  reservationView,
   type MatchRowKind,
 } from "@/lib/utils/match-display";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import { formatMatchWidgetDate, formatMatchDayMonth } from "@/lib/utils/dates";
 import type { MatchStripData } from "@/lib/server/match-data";
-import type { ScheduleMatch, ScheduleTeam } from "@/components/match/types";
+import type {
+  ScheduleMatch,
+  ScheduleReservation,
+  ScheduleRow,
+  ScheduleTeam,
+} from "@/components/match/types";
 
 const KCVV_LOGO_URL = "/images/logos/kcvv-logo.png";
 
@@ -218,10 +225,13 @@ function LedgerLinkRow({
   kind,
   last = false,
 }: {
-  match: ScheduleMatch;
+  match: ScheduleRow;
   kind: MatchRowKind;
   last?: boolean;
 }) {
+  if (match.isPlaceholder) {
+    return <ReservationLedgerRow match={match} kind={kind} last={last} />;
+  }
   const home = isKcvvHome(match);
   const opponent = opponentOf(match);
   const dateLabel = formatMatchWidgetDate(match.date);
@@ -279,14 +289,74 @@ function LedgerLinkRow({
   );
 }
 
+/**
+ * The mobile ledger's reduced row for a pitch-reservation placeholder
+ * (#2606). Mirrors `<TeamAgendaRow>`'s prior-art treatment — one crest (the
+ * club's own, never an opponent), the competition subject via
+ * `reservationView()`, and the real kickoff time — but no `<Link>`: #2606
+ * decision 5 ruled a reservation out as a navigation target, and that holds
+ * here even though `/wedstrijd/[matchId]` now renders a reduced page for one
+ * (#2688) — there is still nothing worth clicking through to from a widget
+ * that has no room to explain what a reservation is.
+ */
+function ReservationLedgerRow({
+  match,
+  kind,
+  last = false,
+}: {
+  match: ScheduleReservation;
+  kind: MatchRowKind;
+  last?: boolean;
+}) {
+  const { subject, statusWording } = reservationView(match);
+  const dateLabel = formatMatchWidgetDate(match.date);
+  const label = reservationRowLabel({
+    kind,
+    subject,
+    dateLabel,
+    time: match.time,
+    status: match.status,
+    statusWording,
+  });
+
+  return (
+    // `<article>`, not a `<div>` — see the markup rule on
+    // `reservationRowLabel` in `match-display.ts`.
+    <article
+      aria-label={label}
+      data-placeholder="true"
+      className={cn(
+        "flex min-w-0 items-center gap-2.5 px-4 py-2.5",
+        last ? "" : "border-ink/15 border-b",
+      )}
+    >
+      {/* `aria-hidden`: the wrapper's `aria-label` above is this row's sole
+          accessible content — see the same pattern and rationale on
+          `<TeamAgendaRow>`'s placeholder branch. */}
+      <div aria-hidden="true" className="contents">
+        <StripDate date={match.date} kind={kind} />
+        <Crest team={match.team} />
+        <span className="text-ink-muted min-w-0 flex-1 truncate font-mono text-[11px] font-semibold tracking-wide uppercase">
+          {subject}
+        </span>
+        {match.time ? (
+          <span className="text-ink text-mono-sm shrink-0 font-mono font-semibold">
+            {match.time}
+          </span>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
 /* ── desktop ─────────────────────────────────────────────────────────────── */
 
 function DesktopSlider({
   result,
   fixture,
 }: {
-  result: ScheduleMatch | null;
-  fixture: ScheduleMatch | null;
+  result: ScheduleRow | null;
+  fixture: ScheduleRow | null;
 }) {
   // Default to the result when there is one; otherwise the fixture is the only
   // slide there is.
@@ -345,45 +415,92 @@ function DesktopSlider({
         </div>
       )}
 
-      <div aria-live="polite" className="min-w-0 py-3">
-        <div className="flex min-w-0 items-center justify-center gap-3 px-6">
-          <Crest team={showing.homeTeam} big />
-          <DesktopTeamName team={showing.homeTeam} />
-          {isResultSlide ? (
-            <Score match={showing} className="text-mono-md shrink-0" />
-          ) : (
-            // `ink/50` computes to 3.63:1 on cream — below AA. `ink-muted` is
-            // the palette's answer for de-emphasised text and clears at ~4.9:1.
-            <span className="font-display text-ink-muted text-mono-md shrink-0 leading-none italic">
-              vs.
-            </span>
-          )}
-          <DesktopTeamName team={showing.awayTeam} />
-          <Crest team={showing.awayTeam} big />
-        </div>
-        {/* No venue glyph: both teams render in scoreboard order here, so the
-            layout already says who was at home. */}
-        <div className="text-ink text-mono-sm mt-1.5 text-center font-mono font-semibold">
-          {formatMatchWidgetDate(showing.date)}
-          {!isResultSlide && showing.time ? ` · ${showing.time}` : ""}
-          {showing.competition ? ` · ${showing.competition}` : ""}
-        </div>
+      {/* `aria-live` lives on this always-present cell, not inside either
+          branch below — a live region inserted together with its content is
+          not announced (WAI-ARIA), so hanging it on only the normal branch's
+          own wrapper meant switching TO a reservation slide (or back) via
+          the desktop switch was announced in neither direction. */}
+      <div
+        aria-live="polite"
+        data-placeholder={showing.isPlaceholder ? "true" : undefined}
+        className="min-w-0 py-3"
+      >
+        {showing.isPlaceholder ? (
+          <ReservationDesktopSlide match={showing} />
+        ) : (
+          <>
+            <div className="flex min-w-0 items-center justify-center gap-3 px-6">
+              <Crest team={showing.homeTeam} big />
+              <DesktopTeamName team={showing.homeTeam} />
+              {isResultSlide ? (
+                <Score match={showing} className="text-mono-md shrink-0" />
+              ) : (
+                // `ink/50` computes to 3.63:1 on cream — below AA. `ink-muted` is
+                // the palette's answer for de-emphasised text and clears at ~4.9:1.
+                <span className="font-display text-ink-muted text-mono-md shrink-0 leading-none italic">
+                  vs.
+                </span>
+              )}
+              <DesktopTeamName team={showing.awayTeam} />
+              <Crest team={showing.awayTeam} big />
+            </div>
+            {/* No venue glyph: both teams render in scoreboard order here, so the
+                layout already says who was at home. */}
+            <div className="text-ink text-mono-sm mt-1.5 text-center font-mono font-semibold">
+              {formatMatchWidgetDate(showing.date)}
+              {!isResultSlide && showing.time ? ` · ${showing.time}` : ""}
+              {showing.competition ? ` · ${showing.competition}` : ""}
+            </div>
+          </>
+        )}
       </div>
 
+      {/* No CTA for a reservation — mirrors the mobile ledger row: #2606
+          decision 5 ruled it out as a navigation target, and the desktop
+          slide follows the same rule rather than inventing a second one.
+          An empty cell keeps the three-column grid intact. */}
       <div className="flex items-center justify-end px-6">
-        <Link
-          href={`/wedstrijd/${showing.id}`}
-          className={getButtonClasses({
-            variant: "primary",
-            size: "sm",
-            className: "no-underline",
-          })}
-        >
-          Wedstrijddetails
-          <span aria-hidden="true">→</span>
-        </Link>
+        {showing.isPlaceholder ? null : (
+          <Link
+            href={`/wedstrijd/${showing.id}`}
+            className={getButtonClasses({
+              variant: "primary",
+              size: "sm",
+              className: "no-underline",
+            })}
+          >
+            Wedstrijddetails
+            <span aria-hidden="true">→</span>
+          </Link>
+        )}
       </div>
     </div>
+  );
+}
+
+/**
+ * The desktop slide's reduced content for a pitch-reservation placeholder —
+ * one crest, the subject/kickoff, no opponent slot. See `ReservationLedgerRow`
+ * for the mobile equivalent and the shared rationale.
+ */
+function ReservationDesktopSlide({ match }: { match: ScheduleReservation }) {
+  const { subject, statusWording } = reservationView(match);
+  return (
+    <>
+      <div className="flex min-w-0 items-center justify-center gap-3 px-6">
+        <Crest team={match.team} big />
+        <span className="font-display text-ink text-mono-md min-w-0 truncate leading-none font-bold italic">
+          {match.team.name}
+        </span>
+      </div>
+      <div className="text-ink text-mono-sm mt-1.5 text-center font-mono font-semibold">
+        {subject}
+        {" · "}
+        {formatMatchWidgetDate(match.date)}
+        {match.time ? ` · ${match.time}` : ""}
+        {statusWording ? ` · ${statusWording.longForm}` : ""}
+      </div>
+    </>
   );
 }
 

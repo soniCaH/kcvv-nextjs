@@ -3,11 +3,15 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { FirstTeamsBlock } from "./FirstTeamsBlock";
 import type { FirstTeamVM } from "./first-teams";
-import type { ScheduleMatch } from "@/components/match/types";
+import type {
+  ScheduleMatch,
+  ScheduleReservation,
+} from "@/components/match/types";
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
 const aResult: ScheduleMatch = {
+  isPlaceholder: false,
   id: 101,
   date: new Date("2026-06-21T15:00:00Z"),
   homeTeam: { id: 1235, name: "KCVV Elewijt" },
@@ -20,6 +24,7 @@ const aResult: ScheduleMatch = {
 };
 
 const aFixture: ScheduleMatch = {
+  isPlaceholder: false,
   id: 102,
   date: new Date("2026-06-29T13:00:00Z"),
   time: "15:00",
@@ -50,6 +55,7 @@ const bTeamFixtureOnly: FirstTeamVM = {
   slug: "b-ploeg",
   division: "2de Provinciale",
   fixture: {
+    isPlaceholder: false,
     id: 202,
     date: new Date("2026-06-28T17:30:00Z"),
     time: "19:30",
@@ -101,6 +107,7 @@ describe("FirstTeamsBlock", () => {
             slug: "b-ploeg",
             division: "2de Provinciale",
             result: {
+              isPlaceholder: false,
               id: 203,
               date: new Date("2026-06-25T17:30:00Z"),
               time: "19:30",
@@ -165,6 +172,69 @@ describe("FirstTeamsBlock", () => {
       team_slug: "b-ploeg",
       match_id: 202,
       source: "first_teams_fixture",
+    });
+  });
+
+  // #2688 — deliberate coverage for a pitch-reservation placeholder (#2606)
+  // in either slot. Before this ticket, the homepage only rendered a
+  // placeholder correctly as an incidental side effect of #2632's shared
+  // `<TeamAgendaRow>` fix — nothing here pinned it, so a future refactor of
+  // <FirstTeamAgendaRow> could silently re-break it without a failing test.
+  describe("pitch-reservation placeholder (#2606, #2688)", () => {
+    const reservation: ScheduleReservation = {
+      isPlaceholder: true,
+      id: 90,
+      date: new Date("2026-05-09T09:30:00Z"),
+      time: "09:30",
+      team: { id: 1235, name: "KCVV Elewijt" },
+      status: "scheduled",
+      competition: "Tornooi",
+    };
+
+    it("renders the reservation as the reduced row in the fixture slot — no opponent, no link", () => {
+      const { container } = render(
+        <FirstTeamsBlock
+          teams={[{ ...aTeamResultOnly, fixture: reservation }]}
+        />,
+      );
+      // The subject renders alongside the homepage's "Volgende" kind word
+      // (#2632 review finding 1 — the placeholder branch honours `kind`), so
+      // it is not its own standalone text node; scope to the placeholder row.
+      const row = container.querySelector('[data-placeholder="true"]');
+      expect(row).not.toBeNull();
+      expect(row).toHaveTextContent("Tornooi");
+      expect(row).toHaveTextContent("09:30");
+      expect(
+        screen.queryByRole("link", { name: /Tornooi/ }),
+      ).not.toBeInTheDocument();
+      // The result slot's real opponent is untouched.
+      expect(screen.getAllByText("SK Londerzeel").length).toBeGreaterThan(0);
+    });
+
+    it("renders the reservation as the reduced row in the result slot too", () => {
+      const { container } = render(
+        <FirstTeamsBlock teams={[{ ...aTeam, result: reservation }]} />,
+      );
+      const row = container.querySelector('[data-placeholder="true"]');
+      expect(row).not.toBeNull();
+      expect(row).toHaveTextContent("Tornooi");
+      expect(screen.getAllByText("Sporting Hasselt").length).toBeGreaterThan(0);
+    });
+
+    it("never fires match_card_click for a reservation row — nothing was clicked through to", () => {
+      const { container } = render(
+        <FirstTeamsBlock
+          teams={[{ ...aTeamResultOnly, fixture: reservation }]}
+        />,
+      );
+      const row = container.querySelector('[data-placeholder="true"]');
+      expect(row).not.toBeNull();
+      expect(row?.tagName).toBe("ARTICLE");
+      if (row) fireEvent.click(row);
+      expect(trackEvent).not.toHaveBeenCalledWith(
+        "match_card_click",
+        expect.anything(),
+      );
     });
   });
 

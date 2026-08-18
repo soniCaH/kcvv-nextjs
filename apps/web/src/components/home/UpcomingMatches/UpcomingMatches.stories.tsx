@@ -5,6 +5,7 @@ import {
   mockUpcomingTwelve,
   mockUpcomingThree,
   mockUpcomingSingleTeam,
+  mockUpcomingWithReservation,
 } from "./UpcomingMatches.mocks";
 
 const meta = {
@@ -92,6 +93,23 @@ export const SingleTeamNoFilter: Story = {
       description: {
         story:
           "Every fixture belongs to one squad — the end-of-season tail. The team filter drops out entirely rather than rendering a reset beside a single dead facet (#2398).",
+      },
+    },
+  },
+};
+
+/**
+ * A youth tournament placeholder (#2606) among the other-teams agenda — no
+ * opponent, no link, the club crest and the competition subject instead of
+ * "KCVV Elewijt — KCVV Elewijt" (#2688).
+ */
+export const WithReservation: Story = {
+  args: { matches: mockUpcomingWithReservation },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A pitch-reservation placeholder in the mix — the reduced row (#2688), not an ordinary linked fixture between the club and itself.",
       },
     },
   },

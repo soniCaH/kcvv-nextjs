@@ -11,6 +11,7 @@ import type { ScheduleMatch } from "@/components/match/types";
 const mocked = vi.mocked(getFirstTeamStripData);
 
 const fixture: ScheduleMatch = {
+  isPlaceholder: false,
   id: 1,
   date: new Date("2026-05-10T19:30:00Z"),
   time: "19:30",

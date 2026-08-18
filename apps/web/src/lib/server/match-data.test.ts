@@ -128,6 +128,17 @@ describe("getFirstTeamStripData", () => {
     expect(data?.fixture?.id).toBe(2);
   });
 
+  it("never headlines a pitch reservation as the last result (#2688)", async () => {
+    mockFetches(TEAMS, [
+      { id: 1, status: "scheduled", date: hoursAgo(24), is_placeholder: true },
+      { id: 2, status: "scheduled", date: hoursAhead(48) },
+    ]);
+
+    const data = await getFirstTeamStripData();
+
+    expect(data?.result).toBeNull();
+  });
+
   it("keeps a result exactly on the recency boundary", async () => {
     const edgeHours = RESULT_RECENCY_MS / (60 * 60 * 1000);
     mockFetches(TEAMS, [

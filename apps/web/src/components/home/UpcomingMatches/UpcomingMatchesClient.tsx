@@ -6,8 +6,15 @@ import { cn } from "@/lib/utils/cn";
 import { formatMatchWidgetDate } from "@/lib/utils/dates";
 import { FilterTabs, type FilterTab } from "@/components/design-system";
 import { House, Bus } from "@/lib/icons.redesign";
-import { HOME_AWAY_WORD } from "@/lib/utils/match-display";
-import type { UpcomingMatch } from "@/components/match/types";
+import {
+  HOME_AWAY_WORD,
+  reservationRowLabel,
+  reservationView,
+} from "@/lib/utils/match-display";
+import type {
+  UpcomingReservation,
+  UpcomingRow,
+} from "@/components/match/types";
 import {
   trackAgendaCollapse,
   trackAgendaExpand,
@@ -22,13 +29,13 @@ const ALL_TEAMS = "all";
 type KcvvSide = "home" | "away";
 
 export interface UpcomingMatchesClientProps {
-  matches: UpcomingMatch[];
+  matches: UpcomingRow[];
   initialVisible: number;
   kcvvTeamId: number;
   initialExpanded?: boolean;
 }
 
-const matchTimestamp = (m: UpcomingMatch): number => {
+const matchTimestamp = (m: UpcomingRow): number => {
   const base =
     m.date instanceof Date ? m.date.getTime() : new Date(m.date).getTime();
   if (!m.time) return base;
@@ -44,7 +51,7 @@ const matchTimestamp = (m: UpcomingMatch): number => {
  * caption read it from here, so a match can never be filed under a chip whose
  * label the row then contradicts.
  */
-const matchTeamLabel = (m: UpcomingMatch): string | undefined =>
+const matchTeamLabel = (m: UpcomingRow): string | undefined =>
   m.teamLabel || m.kcvvTeamLabel || m.squadLabel;
 
 export const UpcomingMatchesClient = ({
@@ -239,11 +246,78 @@ const HomeAwayBadge = ({ side }: { side: KcvvSide }) => {
 };
 
 interface MatchRowProps {
-  match: UpcomingMatch;
+  match: UpcomingRow;
   kcvvTeamId: number;
 }
 
+/**
+ * The other-teams agenda's reduced row for a pitch-reservation placeholder
+ * (#2606) — no opponent (a self-match has none), no `<Link>` (mirrors #2606
+ * decision 5, the same rule every other reservation renderer in this repo
+ * follows), the subject via `reservationView()` so the wording can't drift
+ * from `<TeamAgendaRow>`/`<MatchStripView>`/`/kalender`. The squad chip
+ * (`matchTeamLabel`) is kept so a reservation files under the same filter
+ * chip a real fixture for that squad would.
+ *
+ * `<article>`, not a bare `<div>` — see the markup rule on
+ * `reservationRowLabel` in `match-display.ts`.
+ */
+const ReservationMatchRow = ({ match }: { match: UpcomingReservation }) => {
+  const { subject, statusWording } = reservationView(match);
+  const dateLabel = formatMatchWidgetDate(match.date);
+  const label = reservationRowLabel({
+    subject,
+    dateLabel,
+    time: match.time,
+    status: match.status,
+    statusWording,
+  });
+  // `statusWording` rides the visible caption, not only the accessible name:
+  // a cancelled reservation that looks identical to a live one tells a parent
+  // to turn up for something that is off (#2688).
+  const caption = [
+    matchTeamLabel(match),
+    subject,
+    match.venue,
+    statusWording?.longForm,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <article
+      aria-label={label}
+      data-placeholder="true"
+      className={cn(
+        "border-ink bg-cream relative grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 border-2 px-4 py-3",
+        "sm:grid-cols-[auto_1fr_auto] sm:gap-x-4",
+      )}
+    >
+      {/* `aria-hidden`: the `aria-label` above is this row's sole accessible
+          content — see the same pattern on `<TeamAgendaRow>`'s placeholder
+          branch and `<MatchStripView>`'s `ReservationLedgerRow`. */}
+      <div aria-hidden="true" className="contents">
+        <span className="text-ink/70 col-span-1 row-start-1 font-mono text-xs font-bold tracking-wide uppercase sm:col-auto sm:row-auto sm:min-w-[10rem]">
+          {dateLabel}
+          {match.time ? ` · ${match.time}` : ""}
+        </span>
+
+        <span className="text-ink col-span-2 row-start-2 font-sans text-base leading-tight sm:col-auto sm:row-auto">
+          <span className="font-bold">{match.team.name}</span>
+          {caption && (
+            <span className="text-ink/60 mt-0.5 block text-xs font-medium">
+              {caption}
+            </span>
+          )}
+        </span>
+      </div>
+    </article>
+  );
+};
+
 const MatchRow = ({ match, kcvvTeamId }: MatchRowProps) => {
+  if (match.isPlaceholder) return <ReservationMatchRow match={match} />;
+
   const homeIsKcvv = match.homeTeam.id === kcvvTeamId;
   const awayIsKcvv = match.awayTeam.id === kcvvTeamId;
   // Which side the badge speaks for, derived from the two flags above so it can

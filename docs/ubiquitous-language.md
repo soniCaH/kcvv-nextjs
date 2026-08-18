@@ -46,6 +46,23 @@ A participant in a match — either the home or away side. Could be a KCVV team 
 
 **Not a standalone entity.** Opponents only exist within match context. The `id` comes from PSD's club registry and can be used to link matches against the same opponent (future feature).
 
+### Pitch-Reservation Placeholder
+
+A fixture where both sides are the same club (`home_team.id === away_team.id`). The association's device for "this team has something on the calendar that day, the details aren't settled yet" — used for the club's own youth tournaments and for external tournaments/friendlies alike (#2606). Not a bug in the feed; not derivable from `competition`/`competitionType` (a genuine tournament fixture with a real opponent carries the same values).
+
+| Code                          | Notes                                                                                                                                                                  |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Match.is_placeholder`        | Contract field (optional boolean), computed by the BFF from club-id equality                                                                                           |
+| `ScheduleReservation`         | Web view-model — a `ScheduleRow` union member distinct from `ScheduleMatch`, carrying one `team` (never `homeTeam`/`awayTeam`) and no score (#2688)                    |
+| `UpcomingReservation`         | Web view-model — the `UpcomingRow` union member distinct from `UpcomingMatch`, used by the homepage's other-teams agenda (#2688)                                       |
+| `CalendarMatch.isPlaceholder` | Required boolean on `/kalender`'s route VM — the two-hop chain (`transformMatchToCalendar`) that carries `Match.is_placeholder` through to every calendar view (#2688) |
+| `reservationView()`           | `apps/web/src/lib/utils/match-display.ts` — the shared subject/status derivation every renderer of a reservation uses                                                  |
+| `reservationRowLabel()`       | `apps/web/src/lib/utils/match-display.ts` — the shared accessible-name sentence every reservation row's `aria-label` builds from (#2688)                               |
+
+**Render rule:** never a second crest, a score slot, a home/away side, a reason line for the missing opponent, or a click-through link — the row/page states only what it has (date, subject, real time). `<TeamAgendaRow>` (#2606) is the prior art every other surface (`<MatchStripView>`, `<UpcomingMatchesClient>`, `/kalender`'s three view modes, `/wedstrijd/[matchId]`) matches rather than re-deriving (#2688).
+
+**Enforcement is per-type, not per-domain-concept:** `ScheduleMatch`/`ScheduleReservation` and `UpcomingMatch`/`UpcomingReservation` make `isPlaceholder` a required, literal discriminant — a construction site that omits it does not type-check. `CalendarMatch` and `MatchHeroProps` only carry a required `boolean`, which stops a _dropped_ flag but not a _misread_ one; `MatchDetail` and several unreached surfaces (`MatchOption`, `ScheurkalenderMatch`, `HeroMatchData`, article `SportsEvent` JSON-LD) have no `isPlaceholder` typing at all. "Never a click-through" is enforced only by convention/comments across the reservation renderers, not by the type system. Tracked in [#2699].
+
 ### Lineup
 
 The players selected for a specific match, with their match-level roles.
@@ -506,3 +523,4 @@ Each content type has its own visibility logic. There is no universal "published
 | `Sanity*` | Web-layer view model projected from Sanity GROQ query |
 
 [#819]: https://github.com/soniCaH/www.kcvvelewijt.be/issues/819
+[#2699]: https://github.com/soniCaH/www.kcvvelewijt.be/issues/2699
