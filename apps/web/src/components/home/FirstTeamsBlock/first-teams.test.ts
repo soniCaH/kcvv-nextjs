@@ -53,6 +53,7 @@ function match(p: {
   awayScore?: number;
   time?: string;
   competition?: string;
+  isPlaceholder?: boolean;
 }): Match {
   return {
     id: p.id,
@@ -63,6 +64,7 @@ function match(p: {
     status: p.status,
     competition: p.competition,
     is_home: p.isHome,
+    is_placeholder: p.isPlaceholder,
   } as unknown as Match;
 }
 
@@ -504,6 +506,67 @@ describe("deriveFirstTeamVM", () => {
     );
     expect(asMatch(noScore.result).homeScore).toBeUndefined();
     expect(asMatch(noScore.result).awayScore).toBeUndefined();
+  });
+
+  // #2606, #2688 — a reservation carries no result vocabulary at all, on any
+  // status or any date. Before #2688 a past-dated (but still `scheduled`)
+  // reservation fell into the result slot the same way a kicked-off match
+  // does (#2390), headlining the homepage's "Laatste uitslag" column reading
+  // "UITSLAG · TORNOOI".
+  describe("pitch-reservation placeholder (#2606, #2688)", () => {
+    it("routes a past-dated reservation to the fixture slot, never the result slot", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 90,
+            date: "2026-06-01T09:30:00Z", // well before NOW (2026-06-23)
+            status: "scheduled",
+            competition: "Tornooi",
+            isPlaceholder: true,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result).toBeUndefined();
+      expect(vm.fixture?.id).toBe(90);
+      expect(vm.fixture?.isPlaceholder).toBe(true);
+    });
+
+    it("routes a future-dated reservation to the fixture slot too", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 91,
+            date: "2026-07-01T09:30:00Z",
+            status: "scheduled",
+            competition: "Tornooi",
+            isPlaceholder: true,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.fixture?.id).toBe(91);
+    });
+
+    it("drops a cancelled reservation from both slots — same rule as a real cancelled match", () => {
+      const vm = deriveFirstTeamVM(
+        team,
+        [
+          match({
+            id: 92,
+            date: "2026-06-01T09:30:00Z",
+            status: "cancelled",
+            competition: "Tornooi",
+            isPlaceholder: true,
+          }),
+        ],
+        NOW,
+      );
+      expect(vm.result).toBeUndefined();
+      expect(vm.fixture).toBeUndefined();
+    });
   });
 });
 
