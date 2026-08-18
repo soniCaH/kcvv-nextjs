@@ -50,8 +50,14 @@ export interface MatchHeroProps {
    * `<TeamAgendaRow>`'s prior-art wording rather than inventing a second one
    * (#2688). `homeTeam` is reused as the club side; `awayTeam` carries the
    * same club upstream and is not read in this mode.
+   *
+   * Required, not optional — a caller that forgets it renders "KCVV Elewijt
+   * vs KCVV Elewijt" with two crests with no compile error, the same defect
+   * `ScheduleMatch.isPlaceholder` was made required to close. A full
+   * discriminated union over `MatchHeroProps` is the deeper fix and is
+   * tracked separately; this is the minimal version of it.
    */
-  isPlaceholder?: boolean;
+  isPlaceholder: boolean;
   className?: string;
 }
 
@@ -88,6 +94,32 @@ function buildCompetitionMeta(
   if (kcvvTeamLabel) parts.push(kcvvTeamLabel);
   parts.push(formatSeasonLabel(date));
   return parts;
+}
+
+/**
+ * The mono meta line under the header — one `·`-interleaved render, shared
+ * by the normal hero's `buildCompetitionMeta` output and the reservation
+ * hero's `[subject, kcvvTeamLabel, statusWording]`. Two copies of this loop
+ * used to exist, one per hero, with the separator on opposite edges of the
+ * `.map()` — same rendered output, two spellings.
+ */
+function MetaLine({ parts }: { parts: string[] }) {
+  return (
+    <div className="border-ink border-t pt-3">
+      <div className="text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase">
+        {parts.map((part, index) => (
+          <span key={`${part}-${index}`}>
+            {part}
+            {index < parts.length - 1 && (
+              <span aria-hidden="true" className="text-ink-muted mx-2">
+                ·
+              </span>
+            )}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function ScoreRegion({
@@ -224,7 +256,10 @@ function ReservationHero({
   className?: string;
 }) {
   const stubDate = formatStubDate(date);
-  const { subject, statusWording } = reservationView({ status, competition });
+  const { subject, statusWording, kicker } = reservationView({
+    status,
+    competition,
+  });
 
   return (
     <TapedCard
@@ -234,6 +269,7 @@ function ReservationHero({
       padding="none"
       rotation="none"
       className={cn("relative overflow-visible", className)}
+      dataAttrs={{ "data-placeholder": "true" }}
     >
       <div className="grid grid-cols-1 md:grid-cols-[110px_1fr]">
         {/* ── Stub (left zone) ─────────────────────────────────────── */}
@@ -264,7 +300,7 @@ function ReservationHero({
         <div className="flex flex-col gap-5 p-5 md:gap-6 md:p-6">
           <div className="text-ink font-mono text-[10px] tracking-[0.18em] uppercase">
             <span aria-hidden="true">{"∗ "}</span>
-            GERESERVEERD
+            {kicker}
           </div>
 
           {/* One club, never a "vs" second one — a self-match has no
@@ -274,27 +310,14 @@ function ReservationHero({
             <TeamSlot team={team} align="start" />
           </h1>
 
-          <div className="border-ink border-t pt-3">
-            <div className="text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase">
-              {/* The one useful fact a deliberately empty page still owes a
-                  visitor: which squad reserved the slot. Without it the page
-                  said only "KCVV Elewijt" and "TORNOOI" and never which team
-                  (a code-review finding on #2688's first draft — the normal
-                  hero's `buildCompetitionMeta` already carries this). */}
-              {[subject, kcvvTeamLabel, statusWording?.longForm]
-                .filter((part): part is string => Boolean(part))
-                .map((part, index) => (
-                  <span key={`${part}-${index}`}>
-                    {index > 0 && (
-                      <span aria-hidden="true" className="text-ink-muted mx-2">
-                        ·
-                      </span>
-                    )}
-                    {part}
-                  </span>
-                ))}
-            </div>
-          </div>
+          {/* The one useful fact a deliberately empty page still owes a
+              visitor: which squad reserved the slot. Without it the page
+              said only "KCVV Elewijt" and "TORNOOI" and never which team. */}
+          <MetaLine
+            parts={[subject, kcvvTeamLabel, statusWording?.longForm].filter(
+              (part): part is string => Boolean(part),
+            )}
+          />
         </div>
       </div>
 
@@ -315,7 +338,7 @@ export function MatchHero({
   status,
   competition,
   kcvvTeamLabel,
-  isPlaceholder = false,
+  isPlaceholder,
   className,
 }: MatchHeroProps) {
   if (isPlaceholder) {
@@ -399,20 +422,7 @@ export function MatchHero({
             <TeamSlot team={awayTeam} align="end" />
           </h1>
 
-          <div className="border-ink border-t pt-3">
-            <div className="text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase">
-              {metaParts.map((part, index) => (
-                <span key={`${part}-${index}`}>
-                  {part}
-                  {index < metaParts.length - 1 && (
-                    <span aria-hidden="true" className="text-ink-muted mx-2">
-                      ·
-                    </span>
-                  )}
-                </span>
-              ))}
-            </div>
-          </div>
+          <MetaLine parts={metaParts} />
         </div>
       </div>
 

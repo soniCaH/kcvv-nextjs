@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { CalendarWeek } from "./CalendarWeek";
 import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
 import { fixtureImage } from "@test-fixtures/images";
+import { reservationMatch } from "../calendar-mocks";
 
 const meta = {
   title: "Features/Calendar/CalendarWeek",
@@ -55,22 +56,6 @@ const weekMatches: CalendarMatch[] = [
   },
 ];
 
-// A youth tournament placeholder (#2606) — both sides are KCVV. Renders as
-// the reduced week-cell card, no opponent, no link (#2688).
-const reservationMatch: CalendarMatch = {
-  id: 90,
-  date: "2026-03-26T09:30:00",
-  time: "09:30",
-  homeTeam: kcvv,
-  awayTeam: kcvv,
-  scoreDisplay: { type: "vs" },
-  status: "scheduled",
-  competition: "Tornooi",
-  team: "U8",
-  isHome: true,
-  isPlaceholder: true,
-};
-
 const weekEvents: CalendarEvent[] = [
   {
     id: "e1",
@@ -103,7 +88,10 @@ export const EmptyWeek: Story = {
 /** A pitch-reservation placeholder among the week's other matches (#2606, #2688). */
 export const WithReservation: Story = {
   args: {
-    matches: [...weekMatches, reservationMatch],
+    matches: [
+      ...weekMatches,
+      reservationMatch({ date: "2026-03-26T09:30:00" }),
+    ],
     events: weekEvents,
     weekStart: "2026-03-23",
   },

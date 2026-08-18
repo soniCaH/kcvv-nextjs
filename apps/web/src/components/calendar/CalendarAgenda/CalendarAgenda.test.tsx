@@ -128,7 +128,7 @@ describe("CalendarAgenda", () => {
     // The bug this closes: before #2688, AgendaMatchRow rendered
     // `match.homeTeam.name — match.awayTeam.name` unconditionally, so a
     // self-match read as an ordinary linked "KCVV Elewijt — KCVV Elewijt" row.
-    render(
+    const { container } = render(
       <CalendarAgenda
         {...baseProps}
         matches={[
@@ -144,11 +144,12 @@ describe("CalendarAgenda", () => {
         events={[]}
       />,
     );
-    const row = screen.getByTestId("agenda-reservation-row");
-    expect(row.tagName).not.toBe("A");
-    expect(row.querySelector("a")).toBeNull();
+    const row = container.querySelector('[data-placeholder="true"]');
+    expect(row).not.toBeNull();
+    expect(row!.tagName).not.toBe("A");
+    expect(row!.querySelector("a")).toBeNull();
     expect(row).toHaveTextContent("Tornooi");
-    expect(row.textContent).not.toMatch(/KCVV Elewijt.*KCVV Elewijt/);
+    expect(row!.textContent).not.toMatch(/KCVV Elewijt.*KCVV Elewijt/);
     expect(screen.queryByTestId("agenda-match-row")).toBeNull();
     // The default fixture's squad ("U7") must still show — a mixed-squad day
     // (`AgendaMatchRow` renders this chip for every real row) otherwise

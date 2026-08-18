@@ -5,16 +5,7 @@
 import { describe, it, expect } from "vitest";
 import { transformMatchToSchedule } from "./transform";
 import type { Match } from "@/lib/effect/schemas";
-import type { ScheduleMatch, ScheduleRow } from "./types";
-
-/** Narrows a `ScheduleRow` to the `ScheduleMatch` member for tests that assert
- * on `homeTeam`/`awayTeam`/scores — every fixture in this file that reaches
- * for it is deliberately a non-placeholder match. */
-function expectFixture(row: ScheduleRow): ScheduleMatch {
-  if (row.isPlaceholder)
-    throw new Error("expected a ScheduleMatch, got a ScheduleReservation");
-  return row;
-}
+import { asNonPlaceholder } from "./test-narrowing";
 
 // Mock Match factory
 function createMockMatch(overrides: Partial<Match> = {}): Match {
@@ -43,7 +34,7 @@ function createMockMatch(overrides: Partial<Match> = {}): Match {
 describe("transformMatchToSchedule", () => {
   it("transforms a match to schedule format", () => {
     const match = createMockMatch();
-    const result = expectFixture(transformMatchToSchedule(match));
+    const result = asNonPlaceholder(transformMatchToSchedule(match));
 
     expect(result.id).toBe(123);
     expect(result.date).toEqual(new Date("2025-02-15T15:00:00"));
@@ -64,7 +55,7 @@ describe("transformMatchToSchedule", () => {
       away_team: { id: 2, name: "Opponent", team_label: "U23" },
     });
     expect(
-      expectFixture(transformMatchToSchedule(match)).awayTeam.teamLabel,
+      asNonPlaceholder(transformMatchToSchedule(match)).awayTeam.teamLabel,
     ).toBe("U23");
   });
 
@@ -74,7 +65,7 @@ describe("transformMatchToSchedule", () => {
       home_team: { id: 1, name: "KCVV", score: undefined },
       away_team: { id: 2, name: "Opponent", score: undefined },
     });
-    const result = expectFixture(transformMatchToSchedule(match));
+    const result = asNonPlaceholder(transformMatchToSchedule(match));
 
     expect(result.status).toBe("scheduled");
     expect(result.homeScore).toBeUndefined();
@@ -86,7 +77,7 @@ describe("transformMatchToSchedule", () => {
       home_team: { id: 1, name: "KCVV", logo: undefined },
       away_team: { id: 2, name: "Opponent", logo: undefined },
     });
-    const result = expectFixture(transformMatchToSchedule(match));
+    const result = asNonPlaceholder(transformMatchToSchedule(match));
 
     expect(result.homeTeam.logo).toBeUndefined();
     expect(result.awayTeam.logo).toBeUndefined();
@@ -94,12 +85,12 @@ describe("transformMatchToSchedule", () => {
 
   it("passes is_home through as isHome when present", () => {
     const homeMatch = createMockMatch({ is_home: true });
-    expect(expectFixture(transformMatchToSchedule(homeMatch)).isHome).toBe(
+    expect(asNonPlaceholder(transformMatchToSchedule(homeMatch)).isHome).toBe(
       true,
     );
 
     const awayMatch = createMockMatch({ is_home: false });
-    expect(expectFixture(transformMatchToSchedule(awayMatch)).isHome).toBe(
+    expect(asNonPlaceholder(transformMatchToSchedule(awayMatch)).isHome).toBe(
       false,
     );
   });
@@ -107,7 +98,7 @@ describe("transformMatchToSchedule", () => {
   it("leaves isHome undefined when is_home is absent", () => {
     const match = createMockMatch();
     expect(
-      expectFixture(transformMatchToSchedule(match)).isHome,
+      asNonPlaceholder(transformMatchToSchedule(match)).isHome,
     ).toBeUndefined();
   });
 

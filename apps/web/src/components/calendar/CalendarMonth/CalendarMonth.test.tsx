@@ -220,6 +220,12 @@ describe("CalendarMonth", () => {
       expect(row.tagName).toBe("ARTICLE");
       expect(row.closest("a")).toBeNull();
       expect(row.textContent).not.toMatch(/KCVV Elewijt.*KCVV Elewijt/);
+      // The squad chip a normal row carries via homeTeam/awayTeam.teamLabel
+      // has no equivalent slot on the reduced Crest+caption tree, so
+      // SelectedDayDetail supplies it as captionLabel instead (#2688) — a
+      // parent on a mixed-squad day must still be able to tell whose
+      // reservation this is.
+      expect(row.textContent).toContain("A-ploeg");
     });
 
     it("renders an event row linking to its detail route with a type tag", () => {

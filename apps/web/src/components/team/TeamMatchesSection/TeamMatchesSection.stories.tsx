@@ -18,6 +18,13 @@ const OPP_D = { id: 45, name: "Racing Gent B" };
 // as real time carries the anchor past the frozen clock.
 const STORY_ANCHOR = VR_FROZEN_NOW_ISO;
 
+/** Every fixture in this file is dated relative to the frozen VR anchor. */
+function dateFromAnchor(daysOffset: number): Date {
+  const date = new Date(STORY_ANCHOR);
+  date.setDate(date.getDate() + daysOffset);
+  return date;
+}
+
 function m(
   id: number,
   daysOffset: number,
@@ -26,12 +33,10 @@ function m(
   isHome = true,
   opp = OPP_A,
 ): ScheduleMatch {
-  const date = new Date(STORY_ANCHOR);
-  date.setDate(date.getDate() + daysOffset);
   return {
     isPlaceholder: false,
     id,
-    date,
+    date: dateFromAnchor(daysOffset),
     time: "15:00",
     homeTeam: isHome ? KCVV : opp,
     awayTeam: isHome ? opp : KCVV,
@@ -93,12 +98,6 @@ export const Empty: Story = {
  * (one crest, competition label, real kickoff), not the two-sided
  * scoreboard, and it is not a link.
  */
-function reservationDate(daysOffset: number): Date {
-  const date = new Date(STORY_ANCHOR);
-  date.setDate(date.getDate() + daysOffset);
-  return date;
-}
-
 export const PlaceholderNextMatch: Story = {
   args: {
     matches: [
@@ -107,7 +106,7 @@ export const PlaceholderNextMatch: Story = {
       {
         isPlaceholder: true,
         id: 20,
-        date: reservationDate(10),
+        date: dateFromAnchor(10),
         time: "09:30",
         team: KCVV,
         status: "scheduled",

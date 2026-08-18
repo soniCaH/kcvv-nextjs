@@ -35,7 +35,6 @@ export function mapMatchToUpcomingMatch(match: Match): UpcomingRow {
       status: match.status,
       competition: match.competition,
       squadLabel: match.squadLabel,
-      kcvvTeamId: match.kcvv_team_id,
       kcvvTeamLabel: match.kcvv_team_label,
     };
   }

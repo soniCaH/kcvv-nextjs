@@ -38,17 +38,16 @@ import { toMatchDisplayZone } from "@/lib/utils/dates";
 import {
   getResultColor,
   HOME_AWAY_A11Y_NAME,
-  isExceptionalMatchStatus,
   isPlayedMatch,
   isSettledMatch,
   MATCH_KIND_WORD,
   OUTCOME_UNDERLINE,
   OUTCOME_WORD,
+  reservationRowLabel,
   reservationView,
   type MatchOutcome,
   type MatchRowKind,
 } from "@/lib/utils/match-display";
-import { matchStatusWording } from "@/components/match/MatchStatusBadge";
 import { House, Bus } from "@/lib/icons.redesign";
 import type { ScheduleMatch, ScheduleRow } from "@/components/match/types";
 
@@ -337,10 +336,11 @@ export function TeamAgendaRow({
   // bordered block would not survive this 9px caption line (#2423). Applies to
   // a placeholder row too: the club can call off a reserved slot the same way
   // it cancels a real fixture, and a bare "9 MEI · TORNOOI · 09:30" would tell
-  // a parent to turn up for something that is off.
-  const statusWording = isExceptionalMatchStatus(match.status)
-    ? matchStatusWording(match.status)
-    : null;
+  // a parent to turn up for something that is off. `reservationView()` derives
+  // this from the same two rules (`isExceptionalMatchStatus` +
+  // `matchStatusWording`) — reused here rather than re-inlined, even though
+  // this is the normal row's own statusWording, not a reservation's.
+  const statusWording = reservationView(match).statusWording;
 
   // The word the caption opens with, resolved most-informative-first. A
   // settled match names its outcome; a status the layout can't speak for is
@@ -392,14 +392,6 @@ export function TeamAgendaRow({
     // `||` not `??` — an empty-string competition must drop out, not render a
     // trailing separator.
     competitionText: string | null = match.competition || null,
-    // Falls back to the `captionLabel` prop when omitted. The placeholder
-    // branch below passes `match.team.teamLabel` here — the data-carried
-    // squad chip `/kalender`'s day-detail relies on for a normal row (its
-    // `<TeamName>` suffix), which has no equivalent in the placeholder's
-    // simplified Crest+caption tree. Setting `team.teamLabel` alone did
-    // nothing without this: nothing else in this branch ever reads it
-    // (a code-review finding on #2688's first draft).
-    captionLabelOverride: string | undefined = captionLabel,
   ) => {
     const parts = [
       leadWord ? (
@@ -419,10 +411,8 @@ export function TeamAgendaRow({
           {statusWording.abbreviation}
         </abbr>
       ) : null,
-      captionLabelOverride ? (
-        <span className={emphasis("text-jersey-deep")}>
-          {captionLabelOverride}
-        </span>
+      captionLabel ? (
+        <span className={emphasis("text-jersey-deep")}>{captionLabel}</span>
       ) : null,
       competitionText,
     ].filter(Boolean);
@@ -504,33 +494,31 @@ export function TeamAgendaRow({
     // `/wedstrijd/[matchId]` call the same helper so the subject can't drift
     // between surfaces.
     const competitionSubject = reservationView(match).subject;
-    // `/kalender` never passes `captionLabel` (its squad context for a
-    // normal row is data-carried on `homeTeam`/`awayTeam.teamLabel`
-    // instead), so a reservation there falls back to `match.team.teamLabel`
-    // — the same squad string `calendarMatchToScheduleMatch` injects for a
-    // normal row (#2688).
-    const effectiveCaptionLabel = captionLabel ?? match.team.teamLabel;
     // Feeds the fallback into the SAME caption combinator the normal row
-    // uses, with `kind`/the squad label/an exceptional-status marker layered
+    // uses, with `kind`/`captionLabel`/an exceptional-status marker layered
     // on top of it — so the team page (which passes neither) renders a bare
-    // subject while the homepage, `/tegenstander` and `/kalender` stay correct.
-    const subjectContent = buildCaption(
-      mobileKindWord,
-      competitionSubject,
-      effectiveCaptionLabel,
-    );
+    // subject while the homepage, `/tegenstander` and `/kalender` (which
+    // passes its squad string as `captionLabel`) stay correct.
+    const subjectContent = buildCaption(mobileKindWord, competitionSubject);
 
     // No reason line — "Tegenstander nog niet bekend" was prototyped and cut.
     // The label states only what the row itself states: the subject, the
     // date, the time — never why the opponent is missing. `labelSubject`
-    // folds the squad label in too (unlike the normal row's
-    // `scoreboardLabel`, which doesn't need to — two real team names already
-    // distinguish one reservation from another; two reservations on the same
-    // `/tegenstander` or `/kalender` page, both KCVV vs KCVV, do not).
-    const labelSubject = [effectiveCaptionLabel, competitionSubject]
+    // folds `captionLabel` in too (unlike the normal row's `scoreboardLabel`,
+    // which doesn't need to — two real team names already distinguish one
+    // reservation from another; two reservations on the same
+    // `/tegenstander`/`/kalender` page, both KCVV vs KCVV, do not).
+    const labelSubject = [captionLabel, competitionSubject]
       .filter(Boolean)
       .join(" · ");
-    const placeholderLabel = buildRowLabel(labelSubject);
+    const placeholderLabel = reservationRowLabel({
+      kind,
+      subject: labelSubject,
+      dateLabel: `${day} ${month}`,
+      time: showUpcomingLabel ? undefined : kickoff,
+      status: match.status,
+      statusWording,
+    });
 
     const subjectClass = captionClass("min-w-0 flex-1 truncate");
     const timeClass = scoreSlotClass(

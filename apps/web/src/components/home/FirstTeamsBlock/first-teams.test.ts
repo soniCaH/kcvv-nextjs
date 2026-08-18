@@ -1,16 +1,9 @@
 import { describe, it, expect } from "vitest";
 import type { Match } from "@/lib/effect/schemas";
-import type { ScheduleMatch, ScheduleRow } from "@/components/match/types";
+import type { ScheduleMatch } from "@/components/match/types";
 import type { FirstTeamVM } from "./first-teams";
+import { asNonPlaceholder } from "@/components/match/test-narrowing";
 
-/** Narrows a `ScheduleRow` to `ScheduleMatch` — every fixture in this file is
- * a genuine match, never a pitch-reservation placeholder. */
-function asMatch(row: ScheduleRow | undefined): ScheduleMatch {
-  if (!row || row.isPlaceholder) {
-    throw new Error("expected a ScheduleMatch result/fixture");
-  }
-  return row;
-}
 import {
   deriveFirstTeamVM,
   firstTeamsHeading,
@@ -103,8 +96,8 @@ describe("deriveFirstTeamVM", () => {
       NOW,
     );
     expect(vm.result?.id).toBe(2);
-    expect(asMatch(vm.result).homeScore).toBe(3);
-    expect(asMatch(vm.result).awayScore).toBe(1);
+    expect(asNonPlaceholder(vm.result).homeScore).toBe(3);
+    expect(asNonPlaceholder(vm.result).awayScore).toBe(1);
     // Emitted as a ScheduleMatch so it can render via the shared <TeamAgendaRow>.
     expect(vm.result?.status).toBe("finished");
   });
@@ -164,11 +157,11 @@ describe("deriveFirstTeamVM", () => {
       ],
       NOW,
     );
-    expect(asMatch(vm.result).homeTeam.name).toBe("Overijse");
-    expect(asMatch(vm.result).awayTeam.name).toBe("KCVV");
-    expect(asMatch(vm.result).isHome).toBe(false);
-    expect(asMatch(vm.result).homeScore).toBe(2);
-    expect(asMatch(vm.result).awayScore).toBe(0);
+    expect(asNonPlaceholder(vm.result).homeTeam.name).toBe("Overijse");
+    expect(asNonPlaceholder(vm.result).awayTeam.name).toBe("KCVV");
+    expect(asNonPlaceholder(vm.result).isHome).toBe(false);
+    expect(asNonPlaceholder(vm.result).homeScore).toBe(2);
+    expect(asNonPlaceholder(vm.result).awayScore).toBe(0);
   });
 
   it("keeps both fixture sides so the row can pick the opponent from isHome", () => {
@@ -186,9 +179,9 @@ describe("deriveFirstTeamVM", () => {
       ],
       NOW,
     );
-    expect(asMatch(home.fixture).homeTeam.name).toBe("KCVV");
-    expect(asMatch(home.fixture).awayTeam.name).toBe("Hasselt");
-    expect(asMatch(home.fixture).isHome).toBe(true);
+    expect(asNonPlaceholder(home.fixture).homeTeam.name).toBe("KCVV");
+    expect(asNonPlaceholder(home.fixture).awayTeam.name).toBe("Hasselt");
+    expect(asNonPlaceholder(home.fixture).isHome).toBe(true);
 
     const away = deriveFirstTeamVM(
       team,
@@ -204,8 +197,8 @@ describe("deriveFirstTeamVM", () => {
       ],
       NOW,
     );
-    expect(asMatch(away.fixture).homeTeam.name).toBe("Overijse");
-    expect(asMatch(away.fixture).isHome).toBe(false);
+    expect(asNonPlaceholder(away.fixture).homeTeam.name).toBe("Overijse");
+    expect(asNonPlaceholder(away.fixture).isHome).toBe(false);
   });
 
   it("omits result/fixture when absent and never drops the team identity", () => {
@@ -262,7 +255,7 @@ describe("deriveFirstTeamVM", () => {
         NOW,
       );
       expect(vm.result?.id).toBe(2);
-      expect(asMatch(vm.result).homeScore).toBe(5);
+      expect(asNonPlaceholder(vm.result).homeScore).toBe(5);
       expect(vm.fixture).toBeUndefined();
     });
 
@@ -401,8 +394,8 @@ describe("deriveFirstTeamVM", () => {
       );
       expect(vm.result?.id).toBe(1);
       expect(vm.result?.status).toBe("scheduled");
-      expect(asMatch(vm.result).homeScore).toBeUndefined();
-      expect(asMatch(vm.result).awayScore).toBeUndefined();
+      expect(asNonPlaceholder(vm.result).homeScore).toBeUndefined();
+      expect(asNonPlaceholder(vm.result).awayScore).toBeUndefined();
     });
 
     it("does not also leave it in the fixture slot", () => {
@@ -441,7 +434,7 @@ describe("deriveFirstTeamVM", () => {
         NOW,
       );
       expect(vm.result?.id).toBe(2);
-      expect(asMatch(vm.result).homeScore).toBe(2);
+      expect(asNonPlaceholder(vm.result).homeScore).toBe(2);
     });
 
     it("outranks an older finished match", () => {
@@ -504,8 +497,8 @@ describe("deriveFirstTeamVM", () => {
       ],
       NOW,
     );
-    expect(asMatch(noScore.result).homeScore).toBeUndefined();
-    expect(asMatch(noScore.result).awayScore).toBeUndefined();
+    expect(asNonPlaceholder(noScore.result).homeScore).toBeUndefined();
+    expect(asNonPlaceholder(noScore.result).awayScore).toBeUndefined();
   });
 
   // #2606, #2688 — a reservation carries no result vocabulary at all, on any

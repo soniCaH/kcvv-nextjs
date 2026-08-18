@@ -7,11 +7,15 @@ import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { PRESS_DOWN_CLASSES } from "@/components/design-system/press-down";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { EVENT_TYPE_FILL } from "@/components/event/event-type-style";
-import { reservationView } from "@/lib/utils/match-display";
+import {
+  isExceptionalMatchStatus,
+  reservationView,
+} from "@/lib/utils/match-display";
 import { trackKalenderItemClick } from "../calendar-analytics";
 import {
   getDaysInWeek,
   getMatchDotType,
+  MATCH_DOT_CLASS,
   formatEventTime,
   groupFeedByDay,
   EMPTY_DAY_FEED,
@@ -34,8 +38,12 @@ const SHORT_DAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
  */
 function ReservationWeekCard({ match }: { match: CalendarMatch }) {
   const { subject, statusWording } = reservationView(match);
+  const dotType = getMatchDotType(match);
   return (
-    <div className="border-ink bg-cream shadow-paper-sm block border-2 p-1.5">
+    <div
+      data-placeholder="true"
+      className="border-ink bg-cream shadow-paper-sm block border-2 p-1.5"
+    >
       {match.team && (
         <div className="text-ink-muted mb-0.5 truncate font-mono text-[9px] font-semibold tracking-wider uppercase">
           {match.team}
@@ -44,7 +52,10 @@ function ReservationWeekCard({ match }: { match: CalendarMatch }) {
       <div className="flex items-center gap-1">
         <span
           aria-hidden="true"
-          className="border-card-red h-1.5 w-1.5 shrink-0 rounded-full border-[1.5px] border-dashed bg-transparent"
+          className={cn(
+            "h-1.5 w-1.5 shrink-0 rounded-full",
+            MATCH_DOT_CLASS[dotType],
+          )}
         />
         <span className="text-ink-muted truncate font-mono text-[10px] font-semibold tracking-wide uppercase">
           {subject}
@@ -59,8 +70,8 @@ function ReservationWeekCard({ match }: { match: CalendarMatch }) {
         {/* A reservation can be called off the same way a real fixture can
             (#2606) — without this, a cancelled tournament reservation was
             visually identical to a live one, telling a parent to turn up for
-            something that is off (a code-review finding on #2688's first
-            draft; `WeekMatchCard` above already had this for a real match). */}
+            something that is off (`WeekMatchCard` above already had this
+            for a real match). */}
         {statusWording && <MatchStatusBadge status={match.status} />}
       </div>
     </div>
@@ -70,7 +81,8 @@ function ReservationWeekCard({ match }: { match: CalendarMatch }) {
 function WeekMatchCard({ match }: { match: CalendarMatch }) {
   if (match.isPlaceholder) return <ReservationWeekCard match={match} />;
 
-  const isHome = getMatchDotType(match) === "home";
+  const dotType = getMatchDotType(match);
+  const isHome = dotType === "home";
   const opponent = isHome ? match.awayTeam : match.homeTeam;
 
   const body = (
@@ -85,9 +97,7 @@ function WeekMatchCard({ match }: { match: CalendarMatch }) {
           aria-hidden="true"
           className={cn(
             "h-1.5 w-1.5 shrink-0 rounded-full",
-            isHome
-              ? "bg-card-red"
-              : "border-card-red border-[1.5px] bg-transparent",
+            MATCH_DOT_CLASS[dotType],
           )}
         />
         <span className="text-ink truncate text-xs font-medium">
@@ -105,7 +115,7 @@ function WeekMatchCard({ match }: { match: CalendarMatch }) {
             {match.scoreDisplay.home}-{match.scoreDisplay.away}
           </span>
         )}
-        {match.status !== "scheduled" && match.status !== "finished" && (
+        {isExceptionalMatchStatus(match.status) && (
           <MatchStatusBadge status={match.status} />
         )}
       </div>

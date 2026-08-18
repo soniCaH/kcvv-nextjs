@@ -8,14 +8,7 @@ import {
   mapMatchesToUpcomingMatches,
 } from "./match.mapper";
 import type { Match } from "@/lib/effect/schemas/match.schema";
-import type { UpcomingMatch, UpcomingRow } from "@/components/match/types";
-
-/** Narrows an `UpcomingRow` to `UpcomingMatch` — every fixture in this file
- * is a genuine match, never a pitch-reservation placeholder. */
-function expectMatch(row: UpcomingRow): UpcomingMatch {
-  if (row.isPlaceholder) throw new Error("expected an UpcomingMatch");
-  return row;
-}
+import { asNonPlaceholder } from "@/components/match/test-narrowing";
 
 describe("mapMatchToUpcomingMatch", () => {
   it("should map a scheduled match correctly", () => {
@@ -88,7 +81,7 @@ describe("mapMatchToUpcomingMatch", () => {
       competition: "Competitie",
     };
 
-    const result = expectMatch(mapMatchToUpcomingMatch(match));
+    const result = asNonPlaceholder(mapMatchToUpcomingMatch(match));
 
     expect(result.homeTeam.score).toBe(2);
     expect(result.awayTeam.score).toBe(1);
@@ -143,7 +136,7 @@ describe("mapMatchToUpcomingMatch", () => {
       kcvv_team_label: "U21",
     };
 
-    const result = mapMatchToUpcomingMatch(match);
+    const result = asNonPlaceholder(mapMatchToUpcomingMatch(match));
 
     expect(result.kcvvTeamId).toBe(7);
     expect(result.kcvvTeamLabel).toBe("U21");
@@ -204,7 +197,7 @@ describe("mapMatchToUpcomingMatch", () => {
       competition: "Competitie",
     };
 
-    const result = expectMatch(mapMatchToUpcomingMatch(match));
+    const result = asNonPlaceholder(mapMatchToUpcomingMatch(match));
 
     expect(result.status).toBe("stopped");
     expect(result.awayTeam.name).toBe("KCVV Elewijt");
@@ -258,9 +251,9 @@ describe("mapMatchesToUpcomingMatches", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0]!.id).toBe(1);
-    expect(expectMatch(result[0]!).awayTeam.name).toBe("KCVV Elewijt");
+    expect(asNonPlaceholder(result[0]!).awayTeam.name).toBe("KCVV Elewijt");
     expect(result[1]!.id).toBe(2);
-    expect(expectMatch(result[1]!).homeTeam.name).toBe("KCVV Elewijt");
+    expect(asNonPlaceholder(result[1]!).homeTeam.name).toBe("KCVV Elewijt");
   });
 
   it("should handle empty array", () => {

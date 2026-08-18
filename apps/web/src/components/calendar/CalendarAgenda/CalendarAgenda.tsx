@@ -60,7 +60,7 @@ function ReservationAgendaRow({ match }: { match: CalendarMatch }) {
   const when = match.time ?? formatMatchTime(match.date) ?? "";
   return (
     <div
-      data-testid="agenda-reservation-row"
+      data-placeholder="true"
       className="border-paper-edge grid grid-cols-[52px_1fr_auto] items-center gap-3 border-b border-dashed px-2 py-2 last:border-b-0"
     >
       <span className="text-ink-muted font-mono text-[11px]">{when}</span>
@@ -72,8 +72,8 @@ function ReservationAgendaRow({ match }: { match: CalendarMatch }) {
         />
         {/* Same squad chip `AgendaMatchRow` renders below — without it a
             reservation among a mixed-squad day's other rows (crest + subject
-            + time) cannot be told apart from any other squad's reservation
-            (code-review finding on #2688's first draft). */}
+            + time) cannot be told apart from any other squad's
+            reservation. */}
         {match.team && (
           <span className="text-ink-muted shrink-0 font-mono text-[10px] font-semibold tracking-wide">
             {match.team}

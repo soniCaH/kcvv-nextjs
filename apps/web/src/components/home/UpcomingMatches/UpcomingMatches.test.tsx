@@ -324,6 +324,8 @@ describe("UpcomingMatches", () => {
       render(<UpcomingMatches matches={mockUpcomingWithReservation} />);
       const article = screen.getByRole("article", { name: /Tornooi/ });
       expect(article).toBeInTheDocument();
+      // The one marker every reservation renderer carries (#2688).
+      expect(article).toHaveAttribute("data-placeholder", "true");
     });
 
     it("still buckets the reservation under its own squad's filter chip", () => {

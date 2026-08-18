@@ -6,7 +6,11 @@ import { cn } from "@/lib/utils/cn";
 import { formatMatchWidgetDate } from "@/lib/utils/dates";
 import { FilterTabs, type FilterTab } from "@/components/design-system";
 import { House, Bus } from "@/lib/icons.redesign";
-import { HOME_AWAY_WORD, reservationView } from "@/lib/utils/match-display";
+import {
+  HOME_AWAY_WORD,
+  reservationRowLabel,
+  reservationView,
+} from "@/lib/utils/match-display";
 import type {
   UpcomingReservation,
   UpcomingRow,
@@ -253,22 +257,21 @@ interface MatchRowProps {
  * follows), the subject via `reservationView()` so the wording can't drift
  * from `<TeamAgendaRow>`/`<MatchStripView>`/`/kalender`. The squad chip
  * (`matchTeamLabel`) is kept so a reservation files under the same filter
- * chip a real fixture for that squad would (code-review finding on #2688).
+ * chip a real fixture for that squad would.
  *
- * `<article>`, not a bare `<div>` — a `<div>`'s implicit `role=generic`
- * doesn't support an accessible name from `aria-label` (another finding on
- * the same review: `<MatchStripView>`'s reservation row made this mistake
- * first).
+ * `<article>`, not a bare `<div>` — see the markup rule on
+ * `reservationRowLabel` in `match-display.ts`.
  */
 const ReservationMatchRow = ({ match }: { match: UpcomingReservation }) => {
   const { subject, statusWording } = reservationView(match);
   const dateLabel = formatMatchWidgetDate(match.date);
-  const label = [
+  const label = reservationRowLabel({
     subject,
-    `, ${dateLabel}`,
-    match.status === "scheduled" && match.time ? ` om ${match.time}` : "",
-    statusWording ? ` — ${statusWording.longForm}` : "",
-  ].join("");
+    dateLabel,
+    time: match.time,
+    status: match.status,
+    statusWording,
+  });
   const caption = [matchTeamLabel(match), subject, match.venue]
     .filter(Boolean)
     .join(" · ");
@@ -276,6 +279,7 @@ const ReservationMatchRow = ({ match }: { match: UpcomingReservation }) => {
   return (
     <article
       aria-label={label}
+      data-placeholder="true"
       className={cn(
         "border-ink bg-cream relative grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 border-2 px-4 py-3",
         "sm:grid-cols-[auto_1fr_auto] sm:gap-x-4",

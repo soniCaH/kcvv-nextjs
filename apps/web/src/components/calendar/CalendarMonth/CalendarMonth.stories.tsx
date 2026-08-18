@@ -3,6 +3,7 @@ import { fn } from "storybook/test";
 import { CalendarMonth } from "./CalendarMonth";
 import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
 import { fixtureImage } from "@test-fixtures/images";
+import { reservationMatch } from "../calendar-mocks";
 
 const meta = {
   title: "Features/Calendar/CalendarMonth",
@@ -71,23 +72,6 @@ const marchMatches: CalendarMatch[] = [
     isPlaceholder: false,
   },
 ];
-
-// A youth tournament placeholder (#2606): both sides are KCVV. Renders as the
-// reduced <TeamAgendaRow> in the day-detail panel and a dashed-ring pip on
-// the grid — never an ordinary linked "KCVV Elewijt – KCVV Elewijt" row.
-const reservationMatch: CalendarMatch = {
-  id: 90,
-  date: "2026-03-15T09:30:00",
-  time: "09:30",
-  homeTeam: kcvv,
-  awayTeam: kcvv,
-  scoreDisplay: { type: "vs" },
-  status: "scheduled",
-  competition: "Tornooi",
-  team: "U8",
-  isHome: true,
-  isPlaceholder: true,
-};
 
 const marchEvents: CalendarEvent[] = [
   {
@@ -189,7 +173,7 @@ export const SelectedDayEmpty: Story = {
  */
 export const SelectedDayWithReservation: Story = {
   args: {
-    matches: [...marchMatches, reservationMatch],
+    matches: [...marchMatches, reservationMatch()],
     events: [],
     selectedDate: "2026-03-15",
     currentMonth: 3,

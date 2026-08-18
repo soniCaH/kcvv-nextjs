@@ -168,7 +168,7 @@ export const mockUpcomingSingleTeam: UpcomingMatch[] =
  * link, the club crest and the subject via `reservationView()` instead of
  * "KCVV Elewijt — KCVV Elewijt" (#2688).
  */
-export const mockUpcomingReservation: UpcomingReservation = {
+const mockUpcomingReservation: UpcomingReservation = {
   isPlaceholder: true,
   id: 90,
   date: new Date("2026-05-09T09:30:00Z"),

@@ -129,10 +129,10 @@ function matchSlot(match: Match, now: Date): "result" | "fixture" | null {
   // never headline the result slot, on any status or any date. Without this
   // guard a past-dated (but still `scheduled`) reservation fell through to
   // the `date < now` check below and headlined the homepage's "Laatste
-  // uitslag" column reading "UITSLAG · TORNOOI · 09:30" (a code-review
-  // finding on #2688's first draft). `postponed`/`cancelled`/`stopped` join
-  // the "answers neither what-happened nor where-do-I-go-next" rule the
-  // switch below already applies to a real match in the same statuses.
+  // uitslag" column reading "UITSLAG · TORNOOI · 09:30". `postponed` /
+  // `cancelled` / `stopped` join the "answers neither what-happened nor
+  // where-do-I-go-next" rule the switch below already applies to a real
+  // match in the same statuses.
   if (match.is_placeholder) {
     return match.status === "scheduled" ? "fixture" : null;
   }

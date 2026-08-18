@@ -9,6 +9,7 @@ import { buildCalendarFeed } from "@/app/(main)/kalender/utils";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import CalendarLoading from "@/app/(main)/kalender/loading";
 import { fixtureImage } from "@test-fixtures/images";
+import { reservationMatch } from "../calendar-mocks";
 
 const kcvv = {
   id: 1,
@@ -60,22 +61,6 @@ const matches: CalendarMatch[] = [
   },
 ];
 
-// A youth tournament placeholder (#2606) — both sides are KCVV. Own feed
-// (`feedWithReservation` below), kept out of the default `matches` fixture so
-// it doesn't perturb the other views' existing baselines.
-const reservationMatch: CalendarMatch = {
-  id: 90,
-  date: "2026-03-15T09:30:00",
-  time: "09:30",
-  homeTeam: kcvv,
-  awayTeam: kcvv,
-  scoreDisplay: { type: "vs" },
-  status: "scheduled",
-  competition: "Tornooi",
-  team: "U8",
-  isPlaceholder: true,
-};
-
 const events: EventListItemVM[] = [
   {
     id: "e1",
@@ -95,8 +80,11 @@ const teams: CalendarTeamInfo[] = [
 ];
 
 const feed = buildCalendarFeed(matches, events);
+// A youth tournament placeholder (#2606) — both sides are KCVV. Own feed,
+// kept out of the default `matches` fixture so it doesn't perturb the other
+// views' existing baselines.
 const feedWithReservation = buildCalendarFeed(
-  [...matches, reservationMatch],
+  [...matches, reservationMatch()],
   events,
 );
 

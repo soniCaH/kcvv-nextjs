@@ -10,6 +10,7 @@ import {
   HOME_AWAY_A11Y_NAME,
   MATCH_KIND_WORD,
   OUTCOME_UNDERLINE,
+  reservationRowLabel,
   reservationView,
   type MatchRowKind,
 } from "@/lib/utils/match-display";
@@ -309,21 +310,21 @@ function ReservationLedgerRow({
 }) {
   const { subject, statusWording } = reservationView(match);
   const dateLabel = formatMatchWidgetDate(match.date);
-  const label = [
-    `${MATCH_KIND_WORD[kind]}: `,
+  const label = reservationRowLabel({
+    kind,
     subject,
-    `, ${dateLabel}`,
-    match.status === "scheduled" && match.time ? ` om ${match.time}` : "",
-    statusWording ? ` — ${statusWording.longForm}` : "",
-  ].join("");
+    dateLabel,
+    time: match.time,
+    status: match.status,
+    statusWording,
+  });
 
   return (
-    // `<article>`, not a `<div>`: a `<div>`'s implicit role=generic does not
-    // support an accessible name from `aria-label` at all (it is prohibited
-    // and silently ignored), which left this row with no accessible content
-    // whatsoever — a code-review finding on #2688's first draft.
+    // `<article>`, not a `<div>` — see the markup rule on
+    // `reservationRowLabel` in `match-display.ts`.
     <article
       aria-label={label}
+      data-placeholder="true"
       className={cn(
         "flex min-w-0 items-center gap-2.5 px-4 py-2.5",
         last ? "" : "border-ink/15 border-b",
@@ -417,10 +418,13 @@ function DesktopSlider({
       {/* `aria-live` lives on this always-present cell, not inside either
           branch below — a live region inserted together with its content is
           not announced (WAI-ARIA), so hanging it on only the normal branch's
-          own wrapper meant switching TO a reservation slide (or back) via the
-          desktop switch was announced in neither direction (a code-review
-          finding on #2688's first draft). */}
-      <div aria-live="polite" className="min-w-0 py-3">
+          own wrapper meant switching TO a reservation slide (or back) via
+          the desktop switch was announced in neither direction. */}
+      <div
+        aria-live="polite"
+        data-placeholder={showing.isPlaceholder ? "true" : undefined}
+        className="min-w-0 py-3"
+      >
         {showing.isPlaceholder ? (
           <ReservationDesktopSlide match={showing} />
         ) : (

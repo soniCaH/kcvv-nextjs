@@ -252,6 +252,10 @@ describe("MatchStripView", () => {
       const article = screen.getByRole("article", { name: /Tornooi/ });
       expect(article).toBeInTheDocument();
       expect(article.tagName).toBe("ARTICLE");
+      // The one marker every reservation renderer carries (#2688) — lets a
+      // consumer (or a future test) find this row without depending on the
+      // element type or the accessible name.
+      expect(article).toHaveAttribute("data-placeholder", "true");
     });
 
     it("prints the club crest, never the opponent's — a reservation has no opponent", () => {
@@ -293,25 +297,7 @@ describe("MatchStripView", () => {
       ).toBeNull();
     });
 
-    it("desktop slide: renders the reservation subject and kickoff", () => {
-      render(<MatchStripView data={{ result: null, fixture: reservation }} />);
-      // Rendered on both the mobile row and the desktop slide.
-      expect(screen.getAllByText("Tornooi").length).toBeGreaterThan(0);
-    });
-
     it("still lets the switch move between a real result and a reservation fixture", () => {
-      const result: ScheduleMatch = {
-        isPlaceholder: false,
-        id: 42,
-        date: new Date("2026-08-03T15:00:00Z"),
-        status: "finished",
-        competition: "Tweede Provinciale A",
-        homeTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
-        awayTeam: { id: 9999, name: "RC Mechelen" },
-        homeScore: 3,
-        awayScore: 1,
-        isHome: true,
-      };
       render(<MatchStripView data={{ result, fixture: reservation }} />);
       fireEvent.click(
         screen.getByRole("button", { name: "Toon de volgende wedstrijd" }),
@@ -320,18 +306,6 @@ describe("MatchStripView", () => {
     });
 
     it("keeps the desktop slide's aria-live region across the switch to a reservation — the region itself must not be unmounted", () => {
-      const result: ScheduleMatch = {
-        isPlaceholder: false,
-        id: 42,
-        date: new Date("2026-08-03T15:00:00Z"),
-        status: "finished",
-        competition: "Tweede Provinciale A",
-        homeTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
-        awayTeam: { id: 9999, name: "RC Mechelen" },
-        homeScore: 3,
-        awayScore: 1,
-        isHome: true,
-      };
       const { container } = render(
         <MatchStripView data={{ result, fixture: reservation }} />,
       );
