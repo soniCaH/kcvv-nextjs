@@ -81,6 +81,16 @@ const LONG_AWAY: ScheduleMatch = {
   },
 };
 
+// Both layouts are in the DOM under jsdom (no CSS breakpoints), so a
+// normal row's combined `textContent` cannot tell them apart. Shared by
+// "Kind word" below — the normal row's two `data-layout` trees genuinely
+// differ. The placeholder row (further below) collapsed to one tree and
+// needs no such helper.
+const desktopText = () =>
+  document.querySelector('[data-layout="desktop"]')?.textContent ?? "";
+const mobileText = () =>
+  document.querySelector('[data-layout="mobile"]')?.textContent ?? "";
+
 describe("TeamAgendaRow", () => {
   describe("Date stub", () => {
     it("renders the day number", () => {
@@ -528,14 +538,6 @@ describe("TeamAgendaRow", () => {
   // #2404 — cream-vs-green and left-vs-right were the only carriers of
   // "this is a result" / "this is the next fixture".
   describe("Kind word", () => {
-    // Both layouts are in the DOM under jsdom (no CSS breakpoints), so the row's
-    // combined `textContent` cannot tell them apart — and since #2404 they no
-    // longer carry the same caption. Scope every assertion to one of them.
-    const desktopText = () =>
-      document.querySelector('[data-layout="desktop"]')?.textContent ?? "";
-    const mobileText = () =>
-      document.querySelector('[data-layout="mobile"]')?.textContent ?? "";
-
     describe("when the surface names its rows (kind given)", () => {
       it.each([
         [FINISHED_WIN, "Winst"],
@@ -657,6 +659,258 @@ describe("TeamAgendaRow", () => {
       render(<TeamAgendaRow match={BASE} onNavigate={onNavigate} />);
       await user.click(screen.getByTestId("team-agenda-row"));
       expect(onNavigate).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  /**
+   * Placeholder fixture (#2606) — both sides are the same club, a
+   * pitch-reservation the club enters when a team has something on the
+   * calendar but the opponent and programme aren't settled yet. Unlike the
+   * normal row, this state is ONE DOM tree at every viewport (no
+   * `data-layout` split — its two breakpoints differ only in a font size
+   * and a spacer), scoped for these tests via `[data-placeholder="true"]`.
+   */
+  describe("Placeholder fixture (#2606)", () => {
+    const PLACEHOLDER: ScheduleMatch = {
+      ...BASE,
+      id: 99,
+      date: new Date("2026-05-09T09:30:00.000Z"),
+      time: "09:30",
+      homeTeam: { id: 1235, name: "KCVV Elewijt" },
+      awayTeam: { id: 1235, name: "KCVV Elewijt" },
+      competition: "Tornooi",
+      isPlaceholder: true,
+    };
+
+    const placeholderRow = () =>
+      document.querySelector('[data-placeholder="true"]') as HTMLElement;
+
+    it("marks itself with data-placeholder — a normal row never carries the attribute", () => {
+      const { container: withPlaceholder } = render(
+        <TeamAgendaRow match={PLACEHOLDER} />,
+      );
+      expect(
+        withPlaceholder.querySelector('[data-placeholder="true"]'),
+      ).not.toBeNull();
+
+      const { container: normal } = render(<TeamAgendaRow match={BASE} />);
+      expect(normal.querySelector("[data-placeholder]")).toBeNull();
+    });
+
+    it("keeps the date stub", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      expect(screen.getByLabelText("9 mei")).toBeInTheDocument();
+    });
+
+    it("keeps the real kickoff time — never 'hele dag'", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      expect(placeholderRow().textContent).toContain("09:30");
+    });
+
+    it("renders the competition label verbatim in the mono-uppercase caption register (casing gotcha)", () => {
+      // PSD sends this competition name lowercase; the fix must lean on the
+      // caption's CSS uppercase transform rather than normalising the string.
+      render(
+        <TeamAgendaRow
+          match={{ ...PLACEHOLDER, competition: "vriendschappelijk" }}
+        />,
+      );
+      const subjects = Array.from(
+        placeholderRow().querySelectorAll(".font-mono.uppercase"),
+      ).filter((el) => el.textContent === "vriendschappelijk");
+      expect(subjects.length).toBeGreaterThan(0);
+    });
+
+    it("renders exactly one crest", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      expect(
+        placeholderRow().querySelectorAll('img, span[aria-hidden="true"]')
+          .length,
+      ).toBe(1);
+    });
+
+    it("sheds the home/away venue icon", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      expect(screen.queryByLabelText("Thuiswedstrijd")).toBeNull();
+      expect(screen.queryByLabelText("Uitwedstrijd")).toBeNull();
+    });
+
+    it("sheds the score slot AND its outcome tint even if the feed carried a scoreline", () => {
+      // A win/draw/loss underline is a claim about a score. A placeholder has
+      // no opponent to have won or lost against, so the tint must not paint
+      // even when upstream data carries scores it should never have.
+      const { container } = render(
+        <TeamAgendaRow
+          match={{
+            ...PLACEHOLDER,
+            status: "finished",
+            homeScore: 0,
+            awayScore: 0,
+          }}
+        />,
+      );
+      expect(placeholderRow().textContent).not.toMatch(/0\s*[–—-]\s*0/);
+      expect(container.querySelectorAll("[style*='box-shadow']").length).toBe(
+        0,
+      );
+    });
+
+    it("is not a link — no <Link> wrapper", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      expect(screen.queryByRole("link")).toBeNull();
+    });
+
+    it("never fires onNavigate — a reservation has no match detail to click through to", async () => {
+      const user = userEvent.setup();
+      const onNavigate = vi.fn();
+      render(<TeamAgendaRow match={PLACEHOLDER} onNavigate={onNavigate} />);
+      await user.click(screen.getByTestId("team-agenda-row"));
+      expect(onNavigate).not.toHaveBeenCalled();
+    });
+
+    it("gives the row its own accessible label naming the subject, not both teams", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      const label = placeholderRow().getAttribute("aria-label");
+      expect(label).toBe("Tornooi, 9 mei om 09:30");
+      expect(label).not.toContain("KCVV Elewijt");
+    });
+
+    it("hides its visible content from assistive tech so aria-label is the row's sole spoken content, not a duplicate", () => {
+      // Unlike the normal row's <Link aria-label>, which replaces the
+      // accessible name for an atomic interactive element, an <article>
+      // does not suppress its own children — they stay separately walkable
+      // in linear/browse mode. Content is hidden explicitly instead.
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      const row = placeholderRow();
+      expect(row.getAttribute("aria-label")).not.toBeNull();
+      expect(row.querySelector('[aria-hidden="true"]')).not.toBeNull();
+      expect(row.textContent).toContain("Tornooi");
+    });
+
+    it("never announces a reason for the missing opponent", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      expect(placeholderRow().textContent).not.toMatch(/tegenstander/i);
+    });
+
+    it("falls back to a generic subject when the competition label is absent — reachable both visibly and in the accessible label", () => {
+      render(
+        <TeamAgendaRow match={{ ...PLACEHOLDER, competition: undefined }} />,
+      );
+      const row = placeholderRow();
+      expect(row.textContent).toContain("Gereserveerd");
+      expect(row.getAttribute("aria-label")).toContain("Gereserveerd");
+    });
+
+    /**
+     * The branch must not silently drop props other host surfaces rely on.
+     * `<TeamAgendaRow>` is shared by the homepage (`kind`, `onNavigate`) and
+     * `/tegenstander` (`captionLabel`, `upcomingLabel`), neither of which is
+     * in #2632's build scope, but both of which render this same component
+     * today.
+     */
+    describe("Honours host-surface props on a placeholder row", () => {
+      it("prefixes the homepage's kind word onto the subject, visibly and in the label", () => {
+        render(<TeamAgendaRow match={PLACEHOLDER} kind="fixture" />);
+        const row = placeholderRow();
+        expect(row.textContent).toContain("Volgende");
+        expect(row.getAttribute("aria-label")).toContain("Volgende");
+      });
+
+      it("prints the opponent-history page's squad captionLabel, visibly and in the label", () => {
+        render(<TeamAgendaRow match={PLACEHOLDER} captionLabel="A-Ploeg" />);
+        const row = placeholderRow();
+        expect(row.textContent).toContain("A-Ploeg");
+        expect(row.textContent).toContain("Tornooi");
+        // Two reservations on the same /tegenstander page (mixing A-Ploeg,
+        // B-Ploeg, youth against one opponent) are otherwise indistinguishable
+        // to a screen reader — neither carries a real opponent name to tell
+        // them apart.
+        const label = row.getAttribute("aria-label");
+        expect(label).toContain("A-Ploeg");
+        expect(label).toContain("Tornooi");
+      });
+
+      it("shows upcomingLabel instead of the precise kickoff, at its own size — never the display face's", () => {
+        render(<TeamAgendaRow match={PLACEHOLDER} upcomingLabel="Gepland" />);
+        const row = placeholderRow();
+        expect(row.textContent).toContain("Gepland");
+        expect(row.textContent).not.toContain("09:30");
+        // Regression: a size class appended AFTER the mono/11px recipe (via a
+        // second `cn()` call) once silently overrode it via `twMerge`'s
+        // "last wins" rule, rendering "GEPLAND" at the display face's 18px.
+        const timeSpan = Array.from(row.querySelectorAll("span")).find(
+          (el) => el.textContent === "Gepland",
+        );
+        expect(timeSpan?.className).toContain("text-[11px]");
+        expect(timeSpan?.className).not.toMatch(/text-\[1[68]px\]/);
+      });
+    });
+
+    it("does not add font-semibold at the caption-wrapper level — identical weight to the normal row's caption", () => {
+      // Regression: the subject span once carried its own `font-semibold` on
+      // top of `buildCaption`'s per-segment emphasis, rendering a placeholder
+      // row's caption bolder than the same content on a normal row.
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      const subjectSpan = placeholderRow().querySelector("span.truncate");
+      expect(subjectSpan?.className.split(/\s+/)).not.toContain(
+        "font-semibold",
+      );
+    });
+
+    it("keeps the kickoff in the same centred slot an ordinary desktop row uses (#2397)", () => {
+      // Asserted structurally: a trailing flex-1 spacer balances the leading
+      // crest+subject flex-1, mirroring the normal row's [home][score][away]
+      // triple. jsdom has no layout; VR carries the pixel coverage.
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      const contentRow = placeholderRow().querySelector(
+        ".flex.w-full.items-center.gap-2.px-3.py-2",
+      );
+      const flexOneChildren = Array.from(contentRow?.children ?? []).filter(
+        (el) => el.className.split(/\s+/).includes("flex-1"),
+      );
+      expect(flexOneChildren.length).toBe(2);
+    });
+
+    describe("Exceptional status", () => {
+      it.each([
+        ["postponed", "PP", "Uitgesteld"],
+        ["cancelled", "CANC", "Geannuleerd"],
+        ["forfeited", "FF", "Forfait"],
+        ["stopped", "STOP", "Gestopt"],
+      ] as const)(
+        "marks a %s placeholder with the <MatchStatusBadge> short form",
+        (status, abbreviation, longForm) => {
+          render(<TeamAgendaRow match={{ ...PLACEHOLDER, status }} />);
+          const marker = screen.getByText(abbreviation);
+          expect(marker.tagName).toBe("ABBR");
+          expect(marker.getAttribute("title")).toBe(longForm);
+        },
+      );
+
+      it("drops 'om <kickoff>' from the accessible label for a cancelled placeholder", () => {
+        render(
+          <TeamAgendaRow match={{ ...PLACEHOLDER, status: "cancelled" }} />,
+        );
+        const label = placeholderRow().getAttribute("aria-label");
+        expect(label).not.toContain("om 09:30");
+        expect(label).toContain("Geannuleerd");
+      });
+    });
+
+    it("truncates a long subject instead of wrapping", () => {
+      render(
+        <TeamAgendaRow
+          match={{
+            ...PLACEHOLDER,
+            competition: "Beker van Vlaams-Brabant",
+          }}
+        />,
+      );
+      const subjects = placeholderRow().querySelectorAll(
+        'span[class*="truncate"]',
+      );
+      expect(subjects.length).toBe(1);
+      expect(subjects[0]?.textContent).toBe("Beker van Vlaams-Brabant");
     });
   });
 });

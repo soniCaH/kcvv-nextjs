@@ -4,6 +4,7 @@ import {
   waitForPageReady,
 } from "@storybook/test-runner";
 import { toMatchImageSnapshot } from "jest-image-snapshot";
+import { VR_FROZEN_NOW_ISO } from "../test/vr/frozen-clock.ts";
 
 const VIEWPORTS = {
   mobile: { width: 375, height: 667 },
@@ -13,11 +14,10 @@ const VIEWPORTS = {
 
 type ViewportName = keyof typeof VIEWPORTS;
 
-// Fixed timestamp pinned to 2026-01-15T12:00:00.000Z. Stories that derive
-// "today" or relative dates render against this exact moment so baselines
-// don't churn day-to-day. Derived from the ISO string at module load so
-// the comment and the runtime value can never drift.
-const FIXED_NOW_MS = Date.parse("2026-01-15T12:00:00.000Z");
+// Stories that derive "today" or relative dates render against this exact
+// moment so baselines don't churn day-to-day. Shared with any story fixture
+// that needs to anchor against the same instant — see frozen-clock.ts.
+const FIXED_NOW_MS = Date.parse(VR_FROZEN_NOW_ISO);
 // Seed for the mulberry32 PRNG below — any positive 32-bit integer works;
 // changing it would invalidate every baseline that exercises Math.random.
 const PRNG_SEED = 0x1234abcd;
@@ -58,9 +58,9 @@ function determinismInitScript({
   ) {
     if (!(this instanceof StubDate)) return new RealDate(fixedNowMs).toString();
     if (args.length === 0) return new RealDate(fixedNowMs);
-    return new (RealDate as new (
-      ...a: ConstructorParameters<typeof Date>
-    ) => Date)(...args);
+    return new (
+      RealDate as new (...a: ConstructorParameters<typeof Date>) => Date
+    )(...args);
   }
   StubDate.prototype = RealDate.prototype;
   StubDate.now = () => fixedNowMs;

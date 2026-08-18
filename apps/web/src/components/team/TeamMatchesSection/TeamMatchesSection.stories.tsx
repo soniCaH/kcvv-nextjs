@@ -1,12 +1,22 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamMatchesSection } from "./TeamMatchesSection";
 import type { ScheduleMatch } from "@/components/match/types";
+import { VR_FROZEN_NOW_ISO } from "../../../../test/vr/frozen-clock";
 
 const KCVV = { id: 1235, name: "KCVV Elewijt" };
 const OPP_A = { id: 42, name: "KSV Schoonbeek-Beverst A" };
 const OPP_B = { id: 43, name: "FC Mollem" };
 const OPP_C = { id: 44, name: "SK Relegem" };
 const OPP_D = { id: 45, name: "Racing Gent B" };
+
+// Anchored to the VR harness's FROZEN clock (`test-runner.ts`), not a real
+// calendar date — <TeamMatchesSection> filters past/future against that
+// frozen instant during a VR capture, never the real "today". Imported
+// rather than hand-copied so the two can never drift apart again: an anchor
+// picked relative to a real calendar date instead silently drops every
+// "recent result" row from the baseline without failing anything, as soon
+// as real time carries the anchor past the frozen clock.
+const STORY_ANCHOR = VR_FROZEN_NOW_ISO;
 
 function m(
   id: number,
@@ -16,7 +26,7 @@ function m(
   isHome = true,
   opp = OPP_A,
 ): ScheduleMatch {
-  const date = new Date("2026-09-15T12:00:00.000Z");
+  const date = new Date(STORY_ANCHOR);
   date.setDate(date.getDate() + daysOffset);
   return {
     id,
@@ -72,4 +82,27 @@ export const SeasonStart: Story = {
 /** Empty — component renders nothing (auto-hide). */
 export const Empty: Story = {
   args: { matches: [] },
+};
+
+/**
+ * A youth team's next fixture is a pitch-reservation placeholder (#2606) —
+ * a tournament with the opponents not yet known, the seasonal pattern that
+ * hits seven or eight youth pages at once every May. The featured
+ * "Eerstvolgende" slot renders it with the reduced placeholder content
+ * (one crest, competition label, real kickoff), not the two-sided
+ * scoreboard, and it is not a link.
+ */
+export const PlaceholderNextMatch: Story = {
+  args: {
+    matches: [
+      m(2, -14, "finished", [1, 1], true, OPP_C),
+      m(3, -7, "finished", [3, 0], true, OPP_B),
+      {
+        ...m(20, 10, "scheduled", undefined, true, KCVV),
+        time: "09:30",
+        competition: "Tornooi",
+        isPlaceholder: true,
+      },
+    ],
+  },
 };

@@ -73,6 +73,25 @@ const BaseMatchFields = {
   kcvv_team_label: S.optional(S.String),
   /** Whether the KCVV team is playing at home. Computed by BFF from homeTeamId === teamId. */
   is_home: S.optional(S.Boolean),
+  /**
+   * Whether this fixture is a pitch-reservation placeholder — both sides are
+   * the same club (#2606). The club enters these deliberately, meaning "this
+   * team has something that day, the details aren't settled", and uses the
+   * same device for external tournaments too. **Not derivable from
+   * `competitionType`** — a self-match can be a `TOURNAMENT` or a `FRIENDLY`
+   * entry, and an ordinary tournament fixture with a real opponent carries
+   * the same `competitionType` without being a placeholder. Computed by the
+   * BFF from `homeClubId === awayClubId`, guarded so both ids being absent
+   * does not read as a placeholder.
+   *
+   * Accepted false positive: a genuine internal fixture (KCVV A vs KCVV B)
+   * also satisfies `homeClubId === awayClubId` and would render as a
+   * placeholder too. The AC mandates the rule be computed from club-id
+   * equality alone, forbidding any exception for whose tournament it is,
+   * and #2606's census found no such row in production — so this is
+   * accepted, not a bug to design around.
+   */
+  is_placeholder: S.optional(S.Boolean),
 };
 
 /** Normalized match for UI consumption */

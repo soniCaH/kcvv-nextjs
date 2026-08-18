@@ -365,6 +365,20 @@ export function deriveOwnClubId(games: PsdGame[]): number | undefined {
   return first.awayClub.id;
 }
 
+/**
+ * Whether a fixture is a pitch-reservation placeholder — both sides are the
+ * same club, guarded so both ids being null/undefined does not collide into
+ * "true". Full semantics (including the accepted A-vs-B false positive) are
+ * documented once, on `is_placeholder` in
+ * `packages/api-contract/src/schemas/match.ts`.
+ */
+export function isSelfMatch(
+  homeClubId: number | null | undefined,
+  awayClubId: number | null | undefined,
+): boolean {
+  return homeClubId != null && awayClubId != null && homeClubId === awayClubId;
+}
+
 // ─── PSD Game → Match ─────────────────────────────────────────────────────────
 
 export function transformPsdGame(
@@ -419,6 +433,15 @@ export function transformPsdGame(
     competitionType: resolveCompetitionType(game.competitionType),
     kcvv_team_id: game.teamId ?? undefined,
     is_home: isHome,
+    // `|| undefined`, not the bare boolean: this is `false` for ~99.9% of
+    // matches, and JSON.stringify drops an `undefined` key entirely —
+    // sparing every KV-cached payload (getTeamMatches / getMatchesWindow /
+    // getOpponentHistory) that byte on write, on read-parse, and on every
+    // response. `is_home`'s sibling field already models "not applicable"
+    // as `undefined`, and the web side reads `=== true`, so `undefined` and
+    // `false` are indistinguishable downstream.
+    is_placeholder:
+      isSelfMatch(game.homeClub.id, game.awayClub.id) || undefined,
   };
 }
 
@@ -610,8 +633,7 @@ export function transformFootbalistoMatchDetail(
 
   // Resilient lineup decoding — invalid players are filtered, valid ones pass through
   let lineup:
-    | { home: MatchLineupPlayer[]; away: MatchLineupPlayer[] }
-    | undefined;
+    { home: MatchLineupPlayer[]; away: MatchLineupPlayer[] } | undefined;
   if (response.lineup || response.substitutes) {
     const rawHome = [
       ...(response.lineup?.home ?? []),
@@ -660,6 +682,11 @@ export function transformFootbalistoMatchDetail(
     lineup,
     events,
     hasReport: general.viewGameReport ?? false,
+    // Unlike `is_home`, this needs no team context to resolve — the detail
+    // endpoint already carries both club ids. `|| undefined` for the same
+    // sparse-JSON reason as `transformPsdGame`'s.
+    is_placeholder:
+      isSelfMatch(general.homeClub.id, general.awayClub.id) || undefined,
   };
 }
 
