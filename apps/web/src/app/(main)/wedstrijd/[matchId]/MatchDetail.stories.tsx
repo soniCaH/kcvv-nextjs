@@ -211,6 +211,7 @@ function MatchDetailAssembly() {
         status="finished"
         competition="3e provinciale A"
         kcvvTeamLabel="KCVV-A"
+        isPlaceholder={false}
       />
 
       <StripedSeam colorPair="ink-cream" height="md" />

@@ -287,6 +287,16 @@ describe("formatMatchTitle", () => {
     });
     expect(formatMatchTitle(match)).toBe("Gereserveerd — KCVV Elewijt");
   });
+
+  it("carries the competition subject into a reservation's title, not just the fallback word (#2688)", () => {
+    const match = createMatchDetail({
+      is_placeholder: true,
+      home_team: { id: 1235, name: "KCVV Elewijt" },
+      away_team: { id: 1235, name: "KCVV Elewijt" },
+      competition: "Tornooi",
+    });
+    expect(formatMatchTitle(match)).toBe("Tornooi — KCVV Elewijt");
+  });
 });
 
 describe("formatMatchDescription", () => {

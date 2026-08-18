@@ -9,6 +9,7 @@ import type {
 import type { MatchHeroTeam } from "@/components/match/MatchHero";
 import type { LineupPlayer } from "@/components/match/MatchLineup";
 import { toMatchDisplayZone } from "@/lib/utils/dates";
+import { reservationView } from "@/lib/utils/match-display";
 
 /**
  * Convert a match's home team into props suitable for the MatchHero component.
@@ -102,9 +103,9 @@ export { extractMatchTime } from "@/lib/utils/match-time";
  * Builds an SEO-friendly match title.
  *
  * A pitch-reservation placeholder (#2606) gets its own title rather than
- * "KCVV Elewijt vs KCVV Elewijt" — this is the metadata/OG surface, which the
- * Writer Rule's render-time carve-out (`apps/web/CLAUDE.md`) explicitly
- * allows to compose independently of the on-page hero (#2688).
+ * "KCVV Elewijt vs KCVV Elewijt" — composed from `reservationView()`'s
+ * subject, the same source `<MatchHero>`'s kicker reads, so the fallback
+ * word and the competition subject can't drift between the two (#2688).
  *
  * @returns `HomeTeam X - Y AwayTeam` if the match status is finished and both scores are present, otherwise `HomeTeam vs AwayTeam`
  */
@@ -113,7 +114,7 @@ export function formatMatchTitle(match: MatchDetail): string {
   const awayTeam = match.away_team.name;
 
   if (match.is_placeholder) {
-    return `Gereserveerd — ${homeTeam}`;
+    return `${reservationView(match).subject} — ${homeTeam}`;
   }
 
   // Only show score if match is finished AND both scores are defined

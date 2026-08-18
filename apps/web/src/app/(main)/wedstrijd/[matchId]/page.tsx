@@ -180,10 +180,10 @@ const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
 async function fetchStandings(
   match: MatchDetail,
 ): Promise<readonly RankingEntry[]> {
-  // A pitch-reservation placeholder (#2606) carries no result vocabulary
-  // (#2688's orchestrator decision) — a standings table is exactly that, so
-  // it never fetches for one, even on the defensive off-chance a reservation
-  // is ever miscategorised `league` upstream.
+  // A pitch-reservation placeholder (#2606) carries no result vocabulary — a
+  // standings table is exactly that, so it never fetches for one, even on
+  // the defensive off-chance a reservation is ever miscategorised `league`
+  // upstream.
   if (
     match.is_placeholder ||
     match.competitionType !== "league" ||
@@ -327,10 +327,10 @@ export default async function MatchPage({ params }: MatchPageProps) {
       ) ?? [];
 
   const events: readonly MatchEvent[] = match.events ?? [];
-  // A pitch-reservation placeholder shows no lineup, events, or result
-  // vocabulary (#2606, #2688 orchestrator decision) — a self-match carries
-  // none of these upstream, but the guard is explicit rather than incidental
-  // so a stray BFF anomaly can't leak a lineup onto a reduced page.
+  // A pitch-reservation placeholder (#2606) shows no lineup, events, or
+  // result vocabulary — a self-match carries none of these upstream, but
+  // the guard is explicit rather than incidental so a stray BFF anomaly
+  // can't leak a lineup onto a reduced page.
   const hasLineup =
     !match.is_placeholder && (homeLineup.length > 0 || awayLineup.length > 0);
   const hasEvents = !match.is_placeholder && events.length > 0;
@@ -366,10 +366,9 @@ export default async function MatchPage({ params }: MatchPageProps) {
           — a self-match is a pitch booking, not a sporting event between two
           competitors, so publishing one here would assert a real fixture
           between the club and itself to search engines even though the
-          page's own <title> and OG already say "Gereserveerd" (a code-review
-          finding on #2688's first draft: a Writer Rule "carve-out" that
-          publishes a false fixture is not one). The breadcrumb above still
-          applies — it names this page, not a match. */}
+          page's own <title> and OG already say "Gereserveerd". The
+          breadcrumb above still applies — it names this page, not a
+          match. */}
       {!match.is_placeholder && (
         <JsonLd
           data={buildSportsEventJsonLd({
@@ -396,7 +395,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
           status={match.status}
           competition={match.competition}
           kcvvTeamLabel={match.kcvv_team_label}
-          isPlaceholder={match.is_placeholder}
+          isPlaceholder={match.is_placeholder ?? false}
         />
       </PageContainer>
 
