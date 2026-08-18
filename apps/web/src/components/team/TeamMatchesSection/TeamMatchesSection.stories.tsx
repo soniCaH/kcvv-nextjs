@@ -29,6 +29,7 @@ function m(
   const date = new Date(STORY_ANCHOR);
   date.setDate(date.getDate() + daysOffset);
   return {
+    isPlaceholder: false,
     id,
     date,
     time: "15:00",

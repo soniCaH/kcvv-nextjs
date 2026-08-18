@@ -9,6 +9,7 @@ const KCVV = { id: 1235, name: "KCVV Elewijt" };
 const OPP = { id: 42, name: "KSV Schoonbeek-Beverst A" };
 
 const upcoming: ScheduleMatch = {
+  isPlaceholder: false,
   id: 1,
   date: new Date("2026-09-20T15:00:00.000Z"),
   time: "15:00",

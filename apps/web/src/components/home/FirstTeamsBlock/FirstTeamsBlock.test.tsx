@@ -11,6 +11,7 @@ import type {
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
 const aResult: ScheduleMatch = {
+  isPlaceholder: false,
   id: 101,
   date: new Date("2026-06-21T15:00:00Z"),
   homeTeam: { id: 1235, name: "KCVV Elewijt" },
@@ -23,6 +24,7 @@ const aResult: ScheduleMatch = {
 };
 
 const aFixture: ScheduleMatch = {
+  isPlaceholder: false,
   id: 102,
   date: new Date("2026-06-29T13:00:00Z"),
   time: "15:00",
@@ -53,6 +55,7 @@ const bTeamFixtureOnly: FirstTeamVM = {
   slug: "b-ploeg",
   division: "2de Provinciale",
   fixture: {
+    isPlaceholder: false,
     id: 202,
     date: new Date("2026-06-28T17:30:00Z"),
     time: "19:30",
@@ -104,6 +107,7 @@ describe("FirstTeamsBlock", () => {
             slug: "b-ploeg",
             division: "2de Provinciale",
             result: {
+              isPlaceholder: false,
               id: 203,
               date: new Date("2026-06-25T17:30:00Z"),
               time: "19:30",

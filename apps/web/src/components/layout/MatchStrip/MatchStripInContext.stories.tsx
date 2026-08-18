@@ -39,6 +39,7 @@ const seniorTeams: TeamNavVM[] = [
 ];
 
 const homeResult: ScheduleMatch = {
+  isPlaceholder: false,
   id: 12345,
   date: new Date("2026-08-03T15:00:00Z"),
   competition: "Tweede Provinciale A",
@@ -55,6 +56,7 @@ const homeResult: ScheduleMatch = {
 };
 
 const awayFixture: ScheduleMatch = {
+  isPlaceholder: false,
   id: 12346,
   date: new Date("2026-08-08T18:00:00Z"),
   time: "18:00",

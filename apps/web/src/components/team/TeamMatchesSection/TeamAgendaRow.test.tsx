@@ -40,6 +40,7 @@ vi.mock("next/link", () => ({
 }));
 
 const BASE: ScheduleMatch = {
+  isPlaceholder: false,
   id: 1,
   date: new Date("2026-08-15T15:00:00.000Z"),
   time: "15:00",
@@ -825,6 +826,37 @@ describe("TeamAgendaRow", () => {
         const label = row.getAttribute("aria-label");
         expect(label).toContain("A-Ploeg");
         expect(label).toContain("Tornooi");
+      });
+
+      it("falls back to match.team.teamLabel for the squad chip when no captionLabel prop is given — /kalender's mixed-squad case (#2688)", () => {
+        render(
+          <TeamAgendaRow
+            match={{
+              ...PLACEHOLDER,
+              team: { ...PLACEHOLDER.team, teamLabel: "U13" },
+            }}
+          />,
+        );
+        const row = placeholderRow();
+        expect(row.textContent).toContain("U13");
+        expect(row.textContent).toContain("Tornooi");
+        const label = row.getAttribute("aria-label");
+        expect(label).toContain("U13");
+      });
+
+      it("prefers an explicit captionLabel prop over match.team.teamLabel when both are present", () => {
+        render(
+          <TeamAgendaRow
+            match={{
+              ...PLACEHOLDER,
+              team: { ...PLACEHOLDER.team, teamLabel: "U13" },
+            }}
+            captionLabel="A-Ploeg"
+          />,
+        );
+        const row = placeholderRow();
+        expect(row.textContent).toContain("A-Ploeg");
+        expect(row.textContent).not.toContain("U13");
       });
 
       it("shows upcomingLabel instead of the precise kickoff, at its own size — never the display face's", () => {
