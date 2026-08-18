@@ -244,7 +244,14 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
           heading={`Geen hulpvragen voor ${audienceLabel}`}
           live
           reason="filtered"
-          undo={{ label: "Toon alles", onClick: () => setAudience(null) }}
+          // "Toon alle doelgroepen", not "Toon alles": the handler clears
+          // only `audience`, leaving `category` untouched, so the label
+          // must name the one facet it actually clears — matching the
+          // category branch below, which already does (round 4 review).
+          undo={{
+            label: "Toon alle doelgroepen",
+            onClick: () => setAudience(null),
+          }}
         >
           Er zijn voor deze rol geen hulpvragen beschikbaar.
         </EmptyState>

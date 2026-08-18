@@ -5,8 +5,12 @@ import { EmptyState } from "./EmptyState";
 /**
  * #2427 / #2562 — one primitive, two tiers. State-coverage: tier-1 genuine
  * (the null path — default artefact, no undo), tier-1 filter-empty (with
- * the mandatory undo), and tier-2. `vr`-tagged so both tiers acquire VR
- * baselines per the master-design VR contract.
+ * the mandatory undo), tier-1's two non-default `surface` values, and
+ * tier-2. `vr`-tagged so every state acquires VR baselines per the
+ * master-design VR contract — `surface="inverse"` exists specifically to
+ * fix a shadow that was invisible on a dark ground, so it needs its own
+ * baseline or a future token change could silently undo the fix
+ * (#2562 review round 4).
  *
  * No dedicated "custom artefact" story: every current call site that has
  * its own obvious mark (a crest, a ball) either doesn't exist yet or was
@@ -55,6 +59,54 @@ export const SurfaceFilterEmpty: Story = {
     undo: { label: "Toon alles", onClick: fn() },
     children: "Er zijn geen artikelen in deze categorie.",
   },
+};
+
+/**
+ * Tier 1, `surface="bare"` — no card frame at all, for a host already
+ * inside another bordered/shadowed panel (`CalendarWidget`,
+ * `ScheurkalenderPage`). Wrapped in a stand-in panel here so the baseline
+ * shows what the prop exists to avoid: two nested ink borders with a
+ * shadow between them.
+ */
+export const SurfaceBare: Story = {
+  name: "Tier 1 — surface: bare (nested panel)",
+  args: {
+    tier: "surface",
+    heading: "Nog geen wedstrijden of evenementen gepland",
+    surface: "bare",
+    children:
+      "Zodra er een wedstrijd of evenement gepland wordt, verschijnt het hier.",
+  },
+  decorators: [
+    (Story) => (
+      <div className="border-ink bg-cream shadow-paper-md border-2 p-4">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/**
+ * Tier 1, `surface="inverse"` — the paper frame with the muted "soft"
+ * shadow instead of the hard one, for a host on an ink/dark-green ground
+ * (`/evenementen`'s `bg-jersey-deep-dark`). The default hard shadow is
+ * invisible there — this baseline is the regression cover for that fix.
+ */
+export const SurfaceInverse: Story = {
+  name: "Tier 1 — surface: inverse (dark ground)",
+  args: {
+    tier: "surface",
+    heading: "Nog geen evenementen gepland",
+    surface: "inverse",
+    children: "Kom snel terug voor het volgende evenement.",
+  },
+  decorators: [
+    (Story) => (
+      <div className="bg-jersey-deep-dark p-6">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 /**

@@ -141,7 +141,10 @@ function SelectedDayDetail({
         // CELLS, which stay a bare empty cell deliberately — a dashed box in
         // most of ~35 cells on a real month would be clutter, not a held-open
         // shape (see the PR body's open-question note).
-        <EmptyState tier="slot">
+        // `live`: this panel swaps client-side when a different day is
+        // selected, with no navigation — without it, a screen-reader user
+        // picking an empty date gets silence (round 4 review).
+        <EmptyState tier="slot" live>
           Geen wedstrijden of activiteiten op deze dag
         </EmptyState>
       ) : (

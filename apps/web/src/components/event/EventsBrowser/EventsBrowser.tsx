@@ -66,14 +66,16 @@ export function EventsBrowser({
   // `initialSelected`) while the raw feed is also empty, and the undo must
   // still describe what's active. The filter row being hidden in that
   // combination (above) makes it unreachable by click, but not by deep-link.
+  // No separate `isGenuinelyEmpty` branch here: filtering `[]` already
+  // yields `[]`, so the two arms below agree on an empty feed without a
+  // third case restating that (round 4 review — the dead arm survived the
+  // round-3 report that claimed it was already gone).
   const isFilterActive = selected !== "all";
-  const filtered = isGenuinelyEmpty
-    ? []
-    : isFilterActive
-      ? events.filter(
-          (event) => (event.eventType ?? DEFAULT_EVENT_TYPE) === selected,
-        )
-      : events;
+  const filtered = isFilterActive
+    ? events.filter(
+        (event) => (event.eventType ?? DEFAULT_EVENT_TYPE) === selected,
+      )
+    : events;
 
   return (
     <div className="flex flex-col gap-8">

@@ -202,7 +202,7 @@ describe("CalendarMonth", () => {
       expect(heading).toHaveTextContent("2 wedstrijden · 1 evenement");
     });
 
-    it("shows an empty message when the selected day has no items", () => {
+    it("shows an empty message when the selected day has no items, exposed as a live status", () => {
       render(
         <CalendarMonth
           {...baseProps}
@@ -211,9 +211,12 @@ describe("CalendarMonth", () => {
           events={[]}
         />,
       );
-      expect(
-        screen.getByText(/Geen wedstrijden of activiteiten op deze dag/i),
-      ).toBeInTheDocument();
+      // `live` on the tier-"slot" box: this panel swaps client-side when a
+      // different day is selected, so a screen-reader user picking an empty
+      // date must still hear something (round 4 review).
+      expect(screen.getByRole("status")).toHaveTextContent(
+        /Geen wedstrijden of activiteiten op deze dag/i,
+      );
     });
   });
 

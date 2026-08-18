@@ -174,9 +174,46 @@ describe("HulpFinder", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       /geen hulpvragen voor speler/i,
     );
+    // "Toon alle doelgroepen", not "Toon alles" — the handler clears only
+    // `audience`, so the label names the one facet it actually clears
+    // (round 4 review).
     expect(
-      screen.getByRole("button", { name: "Toon alles" }),
+      screen.getByRole("button", { name: "Toon alle doelgroepen" }),
     ).toBeInTheDocument();
+  });
+
+  it("the undo clears only the active audience, leaving an active category untouched", () => {
+    // Both facets active at once: the audience branch still fires first
+    // (it's checked before `category`), and its undo must clear audience
+    // only — router.replace never gains a category param because
+    // `setAudience` has no way to touch `category` state at all.
+    mockSearchParams = new URLSearchParams("audience=speler");
+    const pathsWithoutSpelerRole = FINDER_FIXTURE_PATHS.filter(
+      (p) => !p.role.includes("speler"),
+    );
+    render(<HulpFinder responsibilityPaths={pathsWithoutSpelerRole} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Medisch" }));
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Toon alle doelgroepen" }),
+    );
+
+    // `audience` is gone from the replace URL; `setAudience` never touches
+    // `category`, so nothing category-related is added either.
+    expect(mockReplace).toHaveBeenCalledWith(
+      expect.not.stringContaining("audience="),
+      { scroll: false },
+    );
+    expect(mockReplace).toHaveBeenCalledWith(
+      expect.not.stringContaining("categor"),
+      { scroll: false },
+    );
+    // The category selection survives the undo click.
+    expect(screen.getByRole("button", { name: "Medisch" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 
   it("filters by the ?audience param (hero deep-link)", () => {

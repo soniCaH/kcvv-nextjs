@@ -262,11 +262,15 @@ export function ScheurkalenderPage({
             // is a data source, not a search. surface="bare": already inside
             // the poster's own `border-ink` sheet frame — a second frame here
             // nested two ink borders, and dropped a taped jersey into a print
-            // poster (#2562 review round 3).
+            // poster (#2562 review round 3). `className="px-5"` matches the
+            // populated grid's own horizontal inset above — without it, this
+            // branch's copy ran wider than the content it replaces inside
+            // the same sheet (#2562 review round 4).
             <EmptyState
               tier="surface"
               heading="Geen competitiewedstrijden"
               surface="bare"
+              className="px-5"
             >
               Er zijn geen competitiewedstrijden voor dit seizoen beschikbaar.
             </EmptyState>
