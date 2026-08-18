@@ -101,11 +101,20 @@ export { extractMatchTime } from "@/lib/utils/match-time";
 /**
  * Builds an SEO-friendly match title.
  *
+ * A pitch-reservation placeholder (#2606) gets its own title rather than
+ * "KCVV Elewijt vs KCVV Elewijt" — this is the metadata/OG surface, which the
+ * Writer Rule's render-time carve-out (`apps/web/CLAUDE.md`) explicitly
+ * allows to compose independently of the on-page hero (#2688).
+ *
  * @returns `HomeTeam X - Y AwayTeam` if the match status is finished and both scores are present, otherwise `HomeTeam vs AwayTeam`
  */
 export function formatMatchTitle(match: MatchDetail): string {
   const homeTeam = match.home_team.name;
   const awayTeam = match.away_team.name;
+
+  if (match.is_placeholder) {
+    return `Gereserveerd — ${homeTeam}`;
+  }
 
   // Only show score if match is finished AND both scores are defined
   if (

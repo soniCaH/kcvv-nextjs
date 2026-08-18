@@ -180,7 +180,15 @@ const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
 async function fetchStandings(
   match: MatchDetail,
 ): Promise<readonly RankingEntry[]> {
-  if (match.competitionType !== "league" || match.kcvv_team_id == null) {
+  // A pitch-reservation placeholder (#2606) carries no result vocabulary
+  // (#2688's orchestrator decision) — a standings table is exactly that, so
+  // it never fetches for one, even on the defensive off-chance a reservation
+  // is ever miscategorised `league` upstream.
+  if (
+    match.is_placeholder ||
+    match.competitionType !== "league" ||
+    match.kcvv_team_id == null
+  ) {
     return [];
   }
   const standingsTeamId = match.kcvv_team_id;
@@ -319,8 +327,13 @@ export default async function MatchPage({ params }: MatchPageProps) {
       ) ?? [];
 
   const events: readonly MatchEvent[] = match.events ?? [];
-  const hasLineup = homeLineup.length > 0 || awayLineup.length > 0;
-  const hasEvents = events.length > 0;
+  // A pitch-reservation placeholder shows no lineup, events, or result
+  // vocabulary (#2606, #2688 orchestrator decision) — a self-match carries
+  // none of these upstream, but the guard is explicit rather than incidental
+  // so a stray BFF anomaly can't leak a lineup onto a reduced page.
+  const hasLineup =
+    !match.is_placeholder && (homeLineup.length > 0 || awayLineup.length > 0);
+  const hasEvents = !match.is_placeholder && events.length > 0;
 
   // `selectMatchArticle` applies the per-state truth table to pick the hero
   // article + (optional) inline secondary link.
@@ -373,6 +386,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
           status={match.status}
           competition={match.competition}
           kcvvTeamLabel={match.kcvv_team_label}
+          isPlaceholder={match.is_placeholder}
         />
       </PageContainer>
 

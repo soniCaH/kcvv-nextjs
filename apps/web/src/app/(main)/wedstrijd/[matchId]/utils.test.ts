@@ -278,6 +278,15 @@ describe("formatMatchTitle", () => {
     // Should not include "undefined" in title
     expect(formatMatchTitle(match)).toBe("KCVV Elewijt vs KFC Turnhout");
   });
+
+  it("titles a pitch-reservation placeholder instead of 'KCVV Elewijt vs KCVV Elewijt' (#2606, #2688)", () => {
+    const match = createMatchDetail({
+      is_placeholder: true,
+      home_team: { id: 1235, name: "KCVV Elewijt" },
+      away_team: { id: 1235, name: "KCVV Elewijt" },
+    });
+    expect(formatMatchTitle(match)).toBe("Gereserveerd — KCVV Elewijt");
+  });
 });
 
 describe("formatMatchDescription", () => {

@@ -2,6 +2,7 @@ import Image from "next/image";
 import { toMatchDisplayZone } from "@/lib/utils/dates";
 import { TapedCard } from "@/components/design-system/TapedCard";
 import { cn } from "@/lib/utils/cn";
+import { reservationView } from "@/lib/utils/match-display";
 import type { MatchStatus } from "../types";
 import { MatchStatusBadge } from "../MatchStatusBadge";
 
@@ -41,6 +42,16 @@ export interface MatchHeroProps {
   status: MatchStatus;
   competition?: string;
   kcvvTeamLabel?: string;
+  /**
+   * Whether this fixture is a pitch-reservation placeholder (#2606) — a
+   * self-match where `homeTeam`/`awayTeam` are the same club. Renders the
+   * reduced treatment (`<ReservationHero>`): one crest, the date/time/venue
+   * it actually has, and no opponent, score, or result vocabulary — matching
+   * `<TeamAgendaRow>`'s prior-art wording rather than inventing a second one
+   * (#2688). `homeTeam` is reused as the club side; `awayTeam` carries the
+   * same club upstream and is not read in this mode.
+   */
+  isPlaceholder?: boolean;
   className?: string;
 }
 
@@ -183,6 +194,108 @@ function TeamSlot({
   );
 }
 
+/**
+ * The reduced hero for a pitch-reservation placeholder (#2606, #2688). Same
+ * two-zone `<TapedCard>` shell as the normal hero (stub date/time/venue on
+ * the left, headline on the right) so it reads as the same page, but the
+ * headline names one club — never "vs" a second one — and the meta line
+ * carries the reservation's subject (`reservationView()`, the same helper
+ * `<TeamAgendaRow>`/`<MatchStripView>` use) instead of a competition +
+ * squad + season list. No score region, no result vocabulary: a reservation
+ * has neither.
+ */
+function ReservationHero({
+  team,
+  date,
+  time,
+  venue,
+  status,
+  competition,
+  className,
+}: {
+  team: MatchHeroTeam;
+  date: Date;
+  time?: string;
+  venue?: string;
+  status: MatchStatus;
+  competition?: string;
+  className?: string;
+}) {
+  const stubDate = formatStubDate(date);
+  const { subject, statusWording } = reservationView({ status, competition });
+
+  return (
+    <TapedCard
+      as="section"
+      bg="cream"
+      shadow="md"
+      padding="none"
+      rotation="none"
+      className={cn("relative overflow-visible", className)}
+    >
+      <div className="grid grid-cols-1 md:grid-cols-[110px_1fr]">
+        {/* ── Stub (left zone) ─────────────────────────────────────── */}
+        <div className="bg-cream-soft text-ink flex flex-col gap-3 border-b-2 border-dashed border-[var(--color-ink)] p-5 md:border-r-2 md:border-b-0">
+          <div className="flex flex-row items-baseline gap-x-2 leading-none md:flex-col md:items-start md:gap-x-0">
+            <div className="font-display-big text-ink text-[20px] leading-none font-black md:text-[24px]">
+              {stubDate.weekday} {stubDate.day}
+            </div>
+            <div className="font-display-big text-ink text-[20px] leading-none font-black md:mt-1 md:text-[24px]">
+              {stubDate.month}
+            </div>
+          </div>
+
+          {time && (
+            <div className="text-ink font-mono text-[14px] tracking-[0.06em]">
+              {time}
+            </div>
+          )}
+
+          {venue && (
+            <div className="text-ink/75 font-mono text-[9.5px] leading-[1.4] tracking-[0.14em] uppercase">
+              {venue}
+            </div>
+          )}
+        </div>
+
+        {/* ── Body (right zone) ────────────────────────────────────── */}
+        <div className="flex flex-col gap-5 p-5 md:gap-6 md:p-6">
+          <div className="text-ink font-mono text-[10px] tracking-[0.18em] uppercase">
+            <span aria-hidden="true">{"∗ "}</span>
+            GERESERVEERD
+          </div>
+
+          {/* One club, never a "vs" second one — a self-match has no
+              opponent to name. `font-normal` for the same reason the normal
+              hero's <h1> uses it: the slot inside carries its own weight. */}
+          <h1 className="flex items-center gap-3 font-normal">
+            <TeamSlot team={team} align="start" />
+          </h1>
+
+          <div className="border-ink border-t pt-3">
+            <div className="text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase">
+              <span>{subject}</span>
+              {statusWording ? (
+                <>
+                  <span aria-hidden="true" className="text-ink-muted mx-2">
+                    ·
+                  </span>
+                  <span>{statusWording.longForm}</span>
+                </>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Corner stamp ─────────────────────────────────────────── */}
+      <div className="pointer-events-none absolute -top-3 right-4 z-10 rotate-[2deg]">
+        <MatchStatusBadge status={status} />
+      </div>
+    </TapedCard>
+  );
+}
+
 export function MatchHero({
   homeTeam,
   awayTeam,
@@ -192,8 +305,23 @@ export function MatchHero({
   status,
   competition,
   kcvvTeamLabel,
+  isPlaceholder = false,
   className,
 }: MatchHeroProps) {
+  if (isPlaceholder) {
+    return (
+      <ReservationHero
+        team={homeTeam}
+        date={date}
+        time={time}
+        venue={venue}
+        status={status}
+        competition={competition}
+        className={className}
+      />
+    );
+  }
+
   const stubDate = formatStubDate(date);
   const kicker = getKicker(status);
   const metaParts = buildCompetitionMeta(competition, kcvvTeamLabel, date);

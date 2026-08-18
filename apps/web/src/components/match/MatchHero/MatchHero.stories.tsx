@@ -134,6 +134,37 @@ export const MinimalData: Story = {
 };
 
 /**
+ * A pitch-reservation placeholder (#2606) — both sides upstream are the same
+ * club. One crest, no "vs" a second one, no score region: the subject
+ * ("Tornooi") and real kickoff replace the competition/score vocabulary
+ * (#2688).
+ */
+export const Reservation: Story = {
+  args: {
+    homeTeam: defaultHomeTeam,
+    awayTeam: defaultHomeTeam,
+    date: upcomingDate,
+    time: "09:30",
+    venue: "Sportpark Elewijt",
+    competition: "Tornooi",
+    status: "scheduled",
+    isPlaceholder: true,
+  },
+};
+
+/** The defensive fallback: no competition label sent for the reservation. */
+export const ReservationFallbackSubject: Story = {
+  args: {
+    homeTeam: defaultHomeTeam,
+    awayTeam: defaultHomeTeam,
+    date: upcomingDate,
+    time: "09:30",
+    status: "scheduled",
+    isPlaceholder: true,
+  },
+};
+
+/**
  * Mobile collapse — at narrow widths the two-zone grid stacks vertically,
  * the divider rotates from vertical-right to horizontal-bottom, and the
  * status badge stays anchored to the card's top-right.
