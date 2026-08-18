@@ -318,7 +318,11 @@ function ReservationLedgerRow({
   ].join("");
 
   return (
-    <div
+    // `<article>`, not a `<div>`: a `<div>`'s implicit role=generic does not
+    // support an accessible name from `aria-label` at all (it is prohibited
+    // and silently ignored), which left this row with no accessible content
+    // whatsoever — a code-review finding on #2688's first draft.
+    <article
       aria-label={label}
       className={cn(
         "flex min-w-0 items-center gap-2.5 px-4 py-2.5",
@@ -340,7 +344,7 @@ function ReservationLedgerRow({
           </span>
         ) : null}
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -410,34 +414,42 @@ function DesktopSlider({
         </div>
       )}
 
-      {showing.isPlaceholder ? (
-        <ReservationDesktopSlide match={showing} />
-      ) : (
-        <div aria-live="polite" className="min-w-0 py-3">
-          <div className="flex min-w-0 items-center justify-center gap-3 px-6">
-            <Crest team={showing.homeTeam} big />
-            <DesktopTeamName team={showing.homeTeam} />
-            {isResultSlide ? (
-              <Score match={showing} className="text-mono-md shrink-0" />
-            ) : (
-              // `ink/50` computes to 3.63:1 on cream — below AA. `ink-muted` is
-              // the palette's answer for de-emphasised text and clears at ~4.9:1.
-              <span className="font-display text-ink-muted text-mono-md shrink-0 leading-none italic">
-                vs.
-              </span>
-            )}
-            <DesktopTeamName team={showing.awayTeam} />
-            <Crest team={showing.awayTeam} big />
-          </div>
-          {/* No venue glyph: both teams render in scoreboard order here, so the
-              layout already says who was at home. */}
-          <div className="text-ink text-mono-sm mt-1.5 text-center font-mono font-semibold">
-            {formatMatchWidgetDate(showing.date)}
-            {!isResultSlide && showing.time ? ` · ${showing.time}` : ""}
-            {showing.competition ? ` · ${showing.competition}` : ""}
-          </div>
-        </div>
-      )}
+      {/* `aria-live` lives on this always-present cell, not inside either
+          branch below — a live region inserted together with its content is
+          not announced (WAI-ARIA), so hanging it on only the normal branch's
+          own wrapper meant switching TO a reservation slide (or back) via the
+          desktop switch was announced in neither direction (a code-review
+          finding on #2688's first draft). */}
+      <div aria-live="polite" className="min-w-0 py-3">
+        {showing.isPlaceholder ? (
+          <ReservationDesktopSlide match={showing} />
+        ) : (
+          <>
+            <div className="flex min-w-0 items-center justify-center gap-3 px-6">
+              <Crest team={showing.homeTeam} big />
+              <DesktopTeamName team={showing.homeTeam} />
+              {isResultSlide ? (
+                <Score match={showing} className="text-mono-md shrink-0" />
+              ) : (
+                // `ink/50` computes to 3.63:1 on cream — below AA. `ink-muted` is
+                // the palette's answer for de-emphasised text and clears at ~4.9:1.
+                <span className="font-display text-ink-muted text-mono-md shrink-0 leading-none italic">
+                  vs.
+                </span>
+              )}
+              <DesktopTeamName team={showing.awayTeam} />
+              <Crest team={showing.awayTeam} big />
+            </div>
+            {/* No venue glyph: both teams render in scoreboard order here, so the
+                layout already says who was at home. */}
+            <div className="text-ink text-mono-sm mt-1.5 text-center font-mono font-semibold">
+              {formatMatchWidgetDate(showing.date)}
+              {!isResultSlide && showing.time ? ` · ${showing.time}` : ""}
+              {showing.competition ? ` · ${showing.competition}` : ""}
+            </div>
+          </>
+        )}
+      </div>
 
       {/* No CTA for a reservation — mirrors the mobile ledger row: #2606
           decision 5 ruled it out as a navigation target, and the desktop
@@ -470,7 +482,7 @@ function DesktopSlider({
 function ReservationDesktopSlide({ match }: { match: ScheduleReservation }) {
   const { subject, statusWording } = reservationView(match);
   return (
-    <div className="min-w-0 py-3">
+    <>
       <div className="flex min-w-0 items-center justify-center gap-3 px-6">
         <Crest team={match.team} big />
         <span className="font-display text-ink text-mono-md min-w-0 truncate leading-none font-bold italic">
@@ -484,7 +496,7 @@ function ReservationDesktopSlide({ match }: { match: ScheduleReservation }) {
         {match.time ? ` · ${match.time}` : ""}
         {statusWording ? ` · ${statusWording.longForm}` : ""}
       </div>
-    </div>
+    </>
   );
 }
 

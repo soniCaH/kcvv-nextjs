@@ -10,6 +10,7 @@ import type {
 const OPPONENT = { id: 9999, name: "RC Mechelen", logo: "https://psd/rc.png" };
 
 const result: ScheduleMatch = {
+  isPlaceholder: false,
   id: 42,
   date: new Date("2026-08-03T15:00:00Z"),
   status: "finished",
@@ -22,6 +23,7 @@ const result: ScheduleMatch = {
 };
 
 const fixture: ScheduleMatch = {
+  isPlaceholder: false,
   id: 43,
   date: new Date("2026-08-08T18:00:00Z"),
   time: "18:00",
@@ -245,6 +247,13 @@ describe("MatchStripView", () => {
       expect(screen.getByText("Tornooi")).toBeInTheDocument();
     });
 
+    it("gives the mobile ledger row a real accessible name via <article> — a bare <div> ignores aria-label entirely", () => {
+      render(<MatchStripView data={{ result: null, fixture: reservation }} />);
+      const article = screen.getByRole("article", { name: /Tornooi/ });
+      expect(article).toBeInTheDocument();
+      expect(article.tagName).toBe("ARTICLE");
+    });
+
     it("prints the club crest, never the opponent's — a reservation has no opponent", () => {
       render(<MatchStripView data={{ result: null, fixture: reservation }} />);
       // scoreboardScore/opponentOf would throw a type error at compile time if
@@ -292,6 +301,7 @@ describe("MatchStripView", () => {
 
     it("still lets the switch move between a real result and a reservation fixture", () => {
       const result: ScheduleMatch = {
+        isPlaceholder: false,
         id: 42,
         date: new Date("2026-08-03T15:00:00Z"),
         status: "finished",
@@ -307,6 +317,36 @@ describe("MatchStripView", () => {
         screen.getByRole("button", { name: "Toon de volgende wedstrijd" }),
       );
       expect(screen.getAllByText("Tornooi").length).toBeGreaterThan(0);
+    });
+
+    it("keeps the desktop slide's aria-live region across the switch to a reservation — the region itself must not be unmounted", () => {
+      const result: ScheduleMatch = {
+        isPlaceholder: false,
+        id: 42,
+        date: new Date("2026-08-03T15:00:00Z"),
+        status: "finished",
+        competition: "Tweede Provinciale A",
+        homeTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+        awayTeam: { id: 9999, name: "RC Mechelen" },
+        homeScore: 3,
+        awayScore: 1,
+        isHome: true,
+      };
+      const { container } = render(
+        <MatchStripView data={{ result, fixture: reservation }} />,
+      );
+      expect(container.querySelectorAll('[aria-live="polite"]')).toHaveLength(
+        1,
+      );
+      fireEvent.click(
+        screen.getByRole("button", { name: "Toon de volgende wedstrijd" }),
+      );
+      // A live region inserted together with its content is not announced —
+      // hanging aria-live on only the normal branch's own wrapper would drop
+      // it from the DOM entirely once the reservation slide replaces it.
+      expect(container.querySelectorAll('[aria-live="polite"]')).toHaveLength(
+        1,
+      );
     });
   });
 
