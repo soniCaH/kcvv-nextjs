@@ -138,11 +138,11 @@ export function VariantA({
 }) {
   const club = namedClub(match);
   const time = startTime(match);
-  // The featured row carries the slot word, the same way the real row does —
-  // it is the only thing on the page that says what the green means.
-  const subject = [featured ? "Volgende" : null, match.competition, club.name]
-    .filter(Boolean)
-    .join(" · ");
+  // No slot word, even featured (owner, 2026-08-18). The real row prefixes
+  // "Volgende" on the featured card, but the green ground already says the
+  // row is next, and at 390px the prefix pushed the club name — the one part
+  // a tournament row exists to carry — into the ellipsis.
+  const subject = `${match.competition} · ${club.name}`;
 
   return (
     <article
