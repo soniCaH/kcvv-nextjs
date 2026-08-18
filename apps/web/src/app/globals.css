@@ -503,9 +503,13 @@
      4.5 R9 photo treatment, but <TapedFigure> declares no shadow of its own —
      it delegates to <TapedCard>, so both tokens had been orphaned since. */
 
-  --motion-fast: 150ms ease-out;
-  --motion-base: 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  --motion-tape: 300ms ease-out;
+  /* `--motion-fast` / `--motion-base` / `--motion-tape` were removed here
+     (#2650). `--motion-base` was `240ms cubic-bezier(0.2, 0.8, 0.2, 1)` — the
+     fourth speed and second curve the Motion section's Three Speeds Rule and
+     One Curve Rule both name as abolished — and all three had zero consumers
+     (`grep -rn 'var(--motion-' apps/web/src` returned nothing). The Namespace
+     Rule ("a token not declared in globals.css may not be used") only holds
+     if the file does not itself declare what the rules forbid. */
 
   /* ===== Redesign / Pattern Tokens (Phase 0) ===== */
 
@@ -604,16 +608,21 @@
 
   /* Only `animate-pulse` survives the reset — the Loop Rules recognise three
      loops (scarf, dots, pulse) and `animate-bounce` / `animate-ping` have zero
-     consumers. Resetting `--animate-*` also drops Tailwind's own
-     `@keyframes pulse` (it lives inside Tailwind's `@theme default {}` block),
-     so the project defines its own below or all 109 `animate-pulse` uses stop
-     animating. A breathing loop uses `ease-in-out` and animates `opacity`
-     only, per the Loop Rules. */
+     consumers. The value points at `kcvv-pulse`, a project-named keyframe,
+     not Tailwind's own `pulse` — resetting `--animate-*` does NOT drop
+     Tailwind's keyframes, because Tailwind re-emits any keyframe name a live
+     `--animate-*` value still references. Reusing the name `pulse` here would
+     compile TWO unlayered `@keyframes pulse` blocks (this one and Tailwind's),
+     and the later one in source order wins — silently reinstating Tailwind's
+     definition. Naming it `kcvv-pulse` takes the identifier out of Tailwind's
+     hands, so the project's keyframe is the only one that can run. A
+     breathing loop uses `ease-in-out` and animates `opacity` only, per the
+     Loop Rules. */
   --animate-*: initial;
-  --animate-pulse: pulse 2s ease-in-out infinite;
+  --animate-pulse: kcvv-pulse 2s ease-in-out infinite;
 }
 
-@keyframes pulse {
+@keyframes kcvv-pulse {
   0%,
   100% {
     opacity: 1;
@@ -768,7 +777,7 @@
   box-decoration-break: clone;
   transition:
     color 150ms var(--ease-out),
-    background-size 320ms ease-out;
+    background-size 300ms var(--ease-out);
 }
 
 .prose-link:hover,
@@ -983,7 +992,7 @@
    Tailwind happens to emit the two in. */
 @utility reveal-on-hover {
   opacity: 0;
-  transition: opacity 300ms;
+  transition: opacity 300ms var(--ease-out);
   @media (hover: none) {
     opacity: 1;
   }
