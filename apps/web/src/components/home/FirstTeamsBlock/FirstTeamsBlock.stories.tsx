@@ -2,7 +2,10 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { FirstTeamsBlock } from "./FirstTeamsBlock";
 import type { FirstTeamVM } from "./first-teams";
-import type { ScheduleMatch } from "@/components/match/types";
+import type {
+  ScheduleMatch,
+  ScheduleReservation,
+} from "@/components/match/types";
 
 const meta = {
   title: "Features/Home/FirstTeamsBlock",
@@ -220,6 +223,29 @@ export const LongOpponentNames: Story = {
         },
       },
     ],
+  },
+};
+
+/**
+ * A youth-May-tournament placeholder (#2606) in the B-ploeg fixture slot —
+ * deliberate coverage for a state that, before #2688, only rendered
+ * correctly on the homepage as an incidental side effect of #2632's shared
+ * `<TeamAgendaRow>` fix. One crest, the competition subject, the real
+ * kickoff — no opponent, no score, no link.
+ */
+const bFixtureReservation: ScheduleReservation = {
+  isPlaceholder: true,
+  id: 204,
+  date: new Date("2026-06-28T09:30:00Z"),
+  time: "09:30",
+  team: { id: 1236, name: "KCVV Elewijt B" },
+  status: "scheduled",
+  competition: "Tornooi",
+};
+
+export const ReservationFixture: Story = {
+  args: {
+    teams: [aTeam, { ...bTeam, fixture: bFixtureReservation }],
   },
 };
 
