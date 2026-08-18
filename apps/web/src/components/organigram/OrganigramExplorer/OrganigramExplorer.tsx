@@ -209,11 +209,9 @@ export function OrganigramExplorer({
       ],
       {
         duration: 300,
-        // The One Curve Rule's cubic-bezier(0, 0, 0.58, 1) — WAAPI easing
-        // strings can't read a CSS custom property, so this is the literal,
-        // not a var() that "should" be here. Do not swap it for a different
-        // curve.
-        easing: "cubic-bezier(0, 0, 0.58, 1)",
+        // WAAPI easing strings can't read a CSS custom property, so the
+        // keyword stands in for var(--ease-out) here.
+        easing: "ease-out",
       },
     );
   }, [open, focusId]);
