@@ -72,7 +72,7 @@ Amateur clubs at this level either run a template site or live entirely on Faceb
 - **Voice:** Dutch, plain, club-insider warmth without corporate polish. Never fabricate club history, honours, quotes, testimonials or magazine/edition chrome.
 - **Typography is fixed:** Freight Sans Pro (body), Freight Display / Freight Big Pro (headings), IBM Plex Mono. No new typefaces.
 - **Icons:** Phosphor Fill, via the single icon source. No emoji in UI.
-- **Sponsor treatment:** three tiers — main, second, regular. Sponsor logos are the only imagery rendered greyscale-to-colour-on-hover; every other photograph stays in colour.
+- **Sponsor treatment:** three tiers — main, second, regular. Sponsor logos are the only imagery rendered greyscale-to-colour-on-hover; every other photograph stays in colour. Exception: on `/sponsors`, where the logos are the content rather than the tail, every logo renders in colour at rest, at every tier — the wall (homepage + team pages) is unaffected (#2511/#2655).
 
 ## Evidence on Hand
 
