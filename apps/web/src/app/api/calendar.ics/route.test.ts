@@ -1,12 +1,14 @@
 /**
- * Calendar ICS API Route Tests (#2704)
+ * Calendar ICS API Route Tests (#2704, #2711 review follow-up)
  *
  * Mocks at the module boundary: `next/cache`'s `unstable_cache` (pass-through,
- * capturing the key it was given so the cache-key test can inspect it),
- * `BffService` (the PSD match fan-out), and `EventRepository` (the club
- * activities feed). `teamIds` is always passed explicitly in these requests so
- * `fetchMatches` never falls through to `TeamRepository.findAll()` — that
- * repository, and the rest of `AppLayer`'s repositories, stay real but unused.
+ * recording each call's key AND raw wrapped function — the latter lets a test
+ * invoke the club-activity cache's callback directly to assert it rejects
+ * rather than swallowing a failure), `BffService` (the PSD match fan-out),
+ * and `EventRepository` (the club activities feed). `teamIds` is always
+ * passed explicitly in these requests so `fetchMatches` never falls through
+ * to `TeamRepository.findAll()` — that repository, and the rest of
+ * `AppLayer`'s repositories, stay real but unused.
  */
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
@@ -14,11 +16,17 @@ import { Effect, Layer } from "effect";
 import type { Match } from "@kcvv/api-contract";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 
-const { mockGetMatches, mockFindUpcomingForList, unstableCacheKeys } =
+interface UnstableCacheCall {
+  keyParts: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fn: (...args: any[]) => any;
+}
+
+const { mockGetMatches, mockFindUpcomingForList, unstableCacheCalls } =
   vi.hoisted(() => ({
     mockGetMatches: vi.fn(),
     mockFindUpcomingForList: vi.fn(),
-    unstableCacheKeys: [] as string[][],
+    unstableCacheCalls: [] as UnstableCacheCall[],
   }));
 
 vi.mock("next/cache", () => ({
@@ -27,7 +35,7 @@ vi.mock("next/cache", () => ({
     fn: (...args: any[]) => any,
     keyParts: string[],
   ) => {
-    unstableCacheKeys.push(keyParts);
+    unstableCacheCalls.push({ keyParts, fn });
     return fn;
   },
 }));
@@ -69,6 +77,17 @@ vi.mock("@/lib/repositories/event.repository", async (importOriginal) => {
 
 import { GET } from "./route";
 
+/**
+ * The club-activity read is cached under its own module-scoped key (#2711
+ * review) — `unstable_cache(...)` for it runs exactly once, when this module
+ * is first imported, rather than once per request. Captured here, before any
+ * `beforeEach` clears `unstableCacheCalls`, so this is the one and only
+ * registration for it across the whole file.
+ */
+const eventsCacheCallAtImport = unstableCacheCalls.find(
+  (call) => JSON.stringify(call.keyParts) === JSON.stringify(["ical:events"]),
+);
+
 function makeMatch(overrides: Partial<Match> = {}): Match {
   return {
     id: 12345,
@@ -108,7 +127,10 @@ function makeRequest(query: string): NextRequest {
 
 describe("GET /api/calendar.ics", () => {
   beforeEach(() => {
-    unstableCacheKeys.length = 0;
+    // Only the per-request (matches-cache) registrations are cleared —
+    // `eventsCacheCallAtImport` was captured once, above, before this ever
+    // runs, and the events cache is never re-registered per request.
+    unstableCacheCalls.length = 0;
     mockGetMatches.mockReset().mockReturnValue(Effect.succeed([makeMatch()]));
     mockFindUpcomingForList.mockReset().mockReturnValue(Effect.succeed([]));
   });
@@ -167,7 +189,41 @@ describe("GET /api/calendar.ics", () => {
     await GET(makeRequest("teamIds=1235"));
     await GET(makeRequest("teamIds=1235&events=1"));
 
-    expect(unstableCacheKeys).toHaveLength(2);
-    expect(unstableCacheKeys[0]).not.toEqual(unstableCacheKeys[1]);
+    expect(unstableCacheCalls).toHaveLength(2);
+    expect(unstableCacheCalls[0]!.keyParts).not.toEqual(
+      unstableCacheCalls[1]!.keyParts,
+    );
+  });
+
+  it("registers the club-activity cache under its own fixed key, decoupled from teamIds/side — not multiplied per team-selection permutation", async () => {
+    expect(eventsCacheCallAtImport?.keyParts).toEqual(["ical:events"]);
+
+    mockFindUpcomingForList.mockReturnValue(Effect.succeed([makeEventItem()]));
+    await GET(makeRequest("teamIds=1235&events=1"));
+    await GET(makeRequest("teamIds=9999&side=home&events=1"));
+
+    // Two requests with different team selections registered no NEW events
+    // cache entry — only the two per-request matches-cache entries appear
+    // here (`unstableCacheCalls` was cleared in `beforeEach`, after the one
+    // module-scoped events registration already happened at import).
+    const eventsCacheRegistrationsDuringTest = unstableCacheCalls.filter(
+      (call) =>
+        JSON.stringify(call.keyParts) === JSON.stringify(["ical:events"]),
+    );
+    expect(eventsCacheRegistrationsDuringTest).toHaveLength(0);
+  });
+
+  it("lets a failed event read reject the cached callback itself, rather than resolving it with a degraded fallback (so Next's throw ⇒ last-good semantics apply, not caught ⇒ cached)", async () => {
+    expect(eventsCacheCallAtImport).toBeDefined();
+    mockFindUpcomingForList.mockReturnValue(Effect.die("Sanity is down"));
+
+    await expect(eventsCacheCallAtImport!.fn()).rejects.toBeDefined();
+  });
+
+  it("resolves the cached callback with the event list on a successful read", async () => {
+    const events = [makeEventItem()];
+    mockFindUpcomingForList.mockReturnValue(Effect.succeed(events));
+
+    await expect(eventsCacheCallAtImport!.fn()).resolves.toEqual(events);
   });
 });

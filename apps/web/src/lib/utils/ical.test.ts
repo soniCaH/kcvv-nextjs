@@ -464,6 +464,36 @@ describe("generateIcal — club activities (events flag)", () => {
     expect(output).toContain("kcvv-event-1@kcvvelewijt.be");
   });
 
+  it("drops an event with an unparseable dateStart instead of throwing — mergeEventFeed and EventMonthList drop such a row too, never fatal", () => {
+    const badItem = makeEventItem({ id: "bad", dateStart: "" });
+    const goodItem = makeEventItem({ id: "good" });
+
+    expect(() =>
+      generateIcal([makeMatch()], { events: [badItem, goodItem] }),
+    ).not.toThrow();
+
+    const output = generateIcal([makeMatch()], {
+      events: [badItem, goodItem],
+    });
+    expect(output).not.toContain("kcvv-event-bad@kcvvelewijt.be");
+    expect(output).toContain("kcvv-event-good@kcvvelewijt.be");
+    expect(output).toContain("kcvv-match-12345@kcvvelewijt.be");
+  });
+
+  it("drops an event's DTEND rather than throwing when dateEnd is unparseable, keeping the item as a timed event with no fabricated end", () => {
+    const output = generateIcal([], {
+      events: [
+        makeEventItem({
+          dateStart: "2026-04-15T17:00:00.000Z",
+          dateEnd: "not-a-date",
+        }),
+      ],
+    });
+
+    expect(output).toContain("DTSTART;TZID=Europe/Brussels:20260415T190000");
+    expect(output).not.toMatch(/^DTEND/m);
+  });
+
   it("describes the feed honestly (NAME / X-WR-CALDESC) when activities are included", () => {
     const withoutEvents = generateIcal([makeMatch()]);
     const withEvents = generateIcal([makeMatch()], {

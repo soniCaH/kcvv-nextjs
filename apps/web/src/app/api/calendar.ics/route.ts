@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { Effect } from "effect";
 import { unstable_cache } from "next/cache";
 import { runPromise } from "@/lib/effect/runtime";
-import { degradeSection } from "@/lib/effect/degrade";
 import {
   BffService,
   BFF_FAN_OUT_CONCURRENCY,
@@ -62,22 +61,51 @@ async function fetchMatches(
 /**
  * Club activities (#2704) — the same merged feed `/kalender` renders
  * (`EventRepository.findUpcomingForList()`), upcoming-only by construction
- * (its GROQ filters, not a re-filter here). Degrades like `/kalender` does: a
- * Sanity failure logs and falls back to an empty list rather than failing the
- * whole subscribed feed — a subscriber keeps their matches even on a bad day
- * for Sanity.
+ * (its GROQ filters, not a re-filter here).
+ *
+ * Cached under its own key, decoupled from `teamIds`/`side` (#2711 review) —
+ * the flag is club-wide, so every distinct team selection a subscriber can
+ * make would otherwise re-run this same two-query Sanity read on its own
+ * 15-minute cycle; an unbounded number of team combinations meant an
+ * effectively unbounded number of redundant reads for identical data.
+ *
+ * Deliberately *not* degraded inside this cached callback: `unstable_cache`
+ * only overwrites its entry when the wrapped function resolves, so letting a
+ * Sanity failure throw here means Next never caches it — the existing
+ * last-good value (or nothing, if there isn't one yet) survives, matching
+ * this repo's ISR rule ("caught ⇒ CACHED, throw ⇒ last-good", see root
+ * CLAUDE.md's Effect & Server Component Patterns). Catching it *inside*
+ * would instead write an empty activity list into the cache and pin it there
+ * for the full 15 minutes, outliving the Sanity blip that caused it.
+ */
+const fetchUpcomingEventsCached = unstable_cache(
+  (): Promise<EventListItemVM[]> =>
+    runPromise(
+      Effect.gen(function* () {
+        const eventRepo = yield* EventRepository;
+        return yield* eventRepo.findUpcomingForList();
+      }),
+    ),
+  ["ical:events"],
+  { revalidate: CACHE_MAX_AGE },
+);
+
+/**
+ * The request-facing read: degrades like `/kalender` does, but one layer
+ * above the cache boundary above — a Sanity failure logs and falls back to
+ * an empty list for *this* response only, without poisoning the shared
+ * `ical:events` cache entry, so the next request (cached or not) retries.
  */
 async function fetchEvents(): Promise<EventListItemVM[]> {
-  const program = Effect.gen(function* () {
-    const eventRepo = yield* EventRepository;
-    return yield* degradeSection(
-      eventRepo.findUpcomingForList(),
-      [] as EventListItemVM[],
+  try {
+    return await fetchUpcomingEventsCached();
+  } catch (error) {
+    console.warn(
       "[Calendar API] event-feed lookup failed; rendering matches only.",
+      error,
     );
-  });
-
-  return runPromise(program);
+    return [];
+  }
 }
 
 export async function GET(request: NextRequest) {

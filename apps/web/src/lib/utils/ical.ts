@@ -193,6 +193,17 @@ function resolveEventDates(item: EventListItemVM): {
  */
 function addEventVevent(cal: ReturnType<typeof ical>, item: EventListItemVM) {
   const { isAllDay, start, end } = resolveEventDates(item);
+
+  // An unparseable `dateStart` (only reachable via a malformed event doc —
+  // `EVENTS_QUERY` projects `coalesce(dateStart, "")`, so a doc missing the
+  // Studio-required field still clears the upcoming filter on a future
+  // `dateEnd` and reaches here) is dropped, not fatal — the same handling
+  // `mergeEventFeed` gives it (sorts to the end) and `<EventMonthList>` gives
+  // it (drops it when grouping). `ical-generator` throws on an invalid Luxon
+  // `start`, which would otherwise take the whole feed — matches included —
+  // down with it (#2711 review).
+  if (!start.isValid) return;
+
   const location = item.location ?? undefined;
   const url = `${SITE_CONFIG.siteUrl}${item.href}`;
   const id = buildEventUid(item);
@@ -218,7 +229,10 @@ function addEventVevent(cal: ReturnType<typeof ical>, item: EventListItemVM) {
     start,
     timezone: TIMEZONE,
     url,
-    ...(end ? { end } : {}),
+    // An invalid `end` (unparseable `dateEnd`) is dropped the same way a
+    // missing one is — never fabricated, never handed to `ical-generator`
+    // (which throws on an invalid Luxon value).
+    ...(end?.isValid ? { end } : {}),
     ...(location ? { location } : {}),
   });
 }
