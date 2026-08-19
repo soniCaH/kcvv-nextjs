@@ -14,6 +14,14 @@ export interface SponsorTileProps {
    * homepage `<SponsorsBlock>` leaves it `false` (flat cells, unchanged).
    */
   framed?: boolean;
+  /**
+   * `true` renders the logo in colour at rest — no greyscale filter, no
+   * hover/focus reveal. Used by the `/sponsors` merged wall (7.d3), where the
+   * logos are the page's content rather than a homepage tail. `false`
+   * (default) keeps the greyscale-to-colour-on-hover treatment used by the
+   * homepage and team-page `<SponsorsBlock>` wall.
+   */
+  colorAtRest?: boolean;
 }
 
 /**
@@ -25,22 +33,32 @@ export const SPONSOR_TILE_GRID_CLASS =
   "grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5 lg:gap-3.5";
 
 /**
- * Shared sponsor logo tile — a cream-soft cell holding a greyscale logo that
- * resolves to colour on hover/focus, an italic Freight Display wordmark
- * fallback when the sponsor has no logo, and an optional external link
- * (jersey-deep focus ring) when `url` is present.
+ * Shared sponsor logo tile — a cream-soft cell holding a logo, an italic
+ * Freight Display wordmark fallback when the sponsor has no logo, and an
+ * optional external link (jersey-deep focus ring) when `url` is present. The
+ * logo is greyscale-to-colour-on-hover by default, or in colour at rest when
+ * `colorAtRest` is set — see that prop's doc for which surface uses which.
  *
- * Consumed by the homepage `<SponsorsBlock>` (flat) and the `/sponsors` merged
- * wall (`framed`) so both surfaces share one tile vocabulary.
+ * Consumed by the homepage/team-page `<SponsorsBlock>` wall (flat, greyscale)
+ * and the `/sponsors` merged wall (`framed`, `colorAtRest`) so both surfaces
+ * share one tile vocabulary.
  */
-export const SponsorTile = ({ sponsor, framed = false }: SponsorTileProps) => {
+export const SponsorTile = ({
+  sponsor,
+  framed = false,
+  colorAtRest = false,
+}: SponsorTileProps) => {
   const inner = sponsor.logo ? (
     <Image
       src={sponsor.logo}
       alt={formatSponsorAlt(sponsor.name)}
       width={200}
       height={80}
-      className="h-auto max-h-[54px] w-auto max-w-full object-contain grayscale transition-all duration-300 ease-out group-hover:grayscale-0 group-focus-visible:grayscale-0 motion-reduce:transition-none"
+      className={cn(
+        "h-auto max-h-[54px] w-auto max-w-full object-contain",
+        !colorAtRest &&
+          "grayscale transition-all duration-300 ease-out group-hover:grayscale-0 group-focus-visible:grayscale-0 motion-reduce:transition-none",
+      )}
       sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 18vw"
     />
   ) : (
