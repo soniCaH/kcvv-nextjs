@@ -32,6 +32,33 @@ const TEST_CALLS = TEST_CALL_FORMS.flatMap((form) =>
 // keeps exiting 0, and nothing is checked ever again.
 const IN_BODY_ROUTE_IMPORT = `:matches(${TEST_CALLS}) ImportExpression > Literal[value=/\\/(page|layout|route|robots|sitemap|opengraph-image)$/]`;
 
+// Motion Vocabulary bans — DESIGN.md → Motion (#2658). #2650's `@theme`
+// resets (`--ease-*: initial`, `--animate-*: initial`) already make most of
+// Tailwind's motion utilities compile to nothing, but four gaps survive a
+// namespace reset: `duration-<n>` is a bare-value utility that accepts any
+// number regardless of theme, bracket syntax (`duration-[…]`, `ease-[…]`,
+// `animate-[…]`) bypasses the theme entirely, and an `animate-` loop utility
+// with no `motion-safe:`/`motion-reduce:` guard ignores
+// `prefers-reduced-motion`. These three selectors close those gaps.
+//
+// Same newline trap as IN_BODY_ROUTE_IMPORT above: each pattern is built as
+// a one-line string. Class strings are assembled through `cn()` and template
+// literals as often as plain string literals, so every selector matches both
+// `Literal` and `TemplateElement`.
+// `duration-0` and `animate-none` are both legitimate "off" values — a
+// zero-length transition and Tailwind's static `animation: none` utility,
+// neither drawn from a theme scale — so both are excluded from their
+// respective bans below. Flagging them would tell an author the opposite of
+// what's true.
+const OFF_SCALE_DURATION_PATTERN =
+  "duration-(?!0(?:[^0-9]|$))(?!150(?:[^0-9]|$))(?!300(?:[^0-9]|$))(?!500(?:[^0-9]|$))[0-9]+";
+const ARBITRARY_MOTION_VALUE_PATTERN = "(?:duration|ease|animate)-\\[";
+const UNGUARDED_LOOP_PATTERN =
+  "(?<!motion-safe:)(?<!motion-reduce:)animate-(?!none\\b)";
+
+const matchesClassString = (pattern) =>
+  `:matches(Literal[value=/${pattern}/], TemplateElement[value.raw=/${pattern}/])`;
+
 const eslintConfig = [
   ...nextCoreWebVitals,
   ...nextTypescript,
@@ -64,6 +91,36 @@ const eslintConfig = [
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
           caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
+  {
+    // Motion Vocabulary bans (DESIGN.md → Motion, #2658). Test/spec files
+    // are exempt — #2507 established the bare `animate-pulse` token as the
+    // correct thing to write in a test selector (e.g.
+    // `MatchLineup.test.tsx`, `MatchEvents.test.tsx`, both
+    // `[class*="animate-pulse"]`), so guarding it there would be wrong, not
+    // just unnecessary.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: matchesClassString(OFF_SCALE_DURATION_PATTERN),
+          message:
+            "Off-scale duration — the Three Speeds Rule allows only duration-150, duration-300 or duration-500 (apps/web/DESIGN.md → Motion). A duration outside those three is not a speed.",
+        },
+        {
+          selector: matchesClassString(ARBITRARY_MOTION_VALUE_PATTERN),
+          message:
+            "Arbitrary motion value — bracket syntax bypasses the `@theme` namespace reset entirely (apps/web/DESIGN.md → Motion, the Namespace Rule). Use a sanctioned duration/curve/loop token instead.",
+        },
+        {
+          selector: matchesClassString(UNGUARDED_LOOP_PATTERN),
+          message:
+            "Unguarded loop — an animate- utility needs a motion-safe: (or motion-reduce: to remove it) guard so prefers-reduced-motion can stop it (apps/web/DESIGN.md → Motion, the Reduced-Motion Rule).",
         },
       ],
     },
