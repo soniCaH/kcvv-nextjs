@@ -29,7 +29,7 @@ function makePlaceholderMatch(overrides: Partial<Match> = {}): Match {
     is_placeholder: true,
     competition: "Jeugdtornooi",
     ...overrides,
-  } as Partial<Match>);
+  });
 }
 
 describe("generateIcal", () => {
@@ -252,6 +252,30 @@ describe("a pitch-reservation placeholder", () => {
     expect(generateIcal([match], { side: "away" })).not.toContain(
       "BEGIN:VEVENT",
     );
+  });
+
+  it("folds a cancelled status into the SUMMARY, the way every other reservation renderer does", () => {
+    const output = generateIcal([
+      makePlaceholderMatch({ status: "postponed" }),
+    ]);
+
+    expect(output).toContain(
+      "SUMMARY:Jeugdtornooi — KCVV Elewijt — Uitgesteld",
+    );
+  });
+
+  it("omits LOCATION when no venue is set — a reservation can be an external tournament, not necessarily at the home venue", () => {
+    const output = generateIcal([makePlaceholderMatch({ venue: undefined })]);
+
+    expect(output).not.toMatch(/^LOCATION:/m);
+  });
+
+  it("uses the given venue for LOCATION when one is set", () => {
+    const output = generateIcal([
+      makePlaceholderMatch({ venue: "Sportcomplex De Nekker" }),
+    ]);
+
+    expect(output).toContain("Sportcomplex De Nekker");
   });
 });
 
