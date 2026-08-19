@@ -100,8 +100,9 @@ function resolveCompetitionLabel(
 }
 
 /**
- * Resolve a PSD competitionType field to the normalized league/cup/friendly
- * classification used by the UI gate (e.g. match-day standings).
+ * Resolve a PSD competitionType field to the normalized
+ * league/cup/friendly/tournament classification used by the UI gate (e.g.
+ * match-day standings).
  *
  * Only the **object** form carries a reliable `.type`. The match-detail
  * endpoint (`/games/{id}/info`) inlines a display *string* (e.g. "Croky Cup"),
@@ -111,7 +112,9 @@ function resolveCompetitionLabel(
  * match-team index, not from `/games/{id}/info` directly.
  *
  * PSD uses `type: "OFFICIAL"` (Dutch "Competitie") for league play; `"LEAGUE"`
- * is accepted as a forward-compat synonym.
+ * is accepted as a forward-compat synonym. `"TOURNAMENT"` resolves to
+ * `"tournament"`; any other code (e.g. `"INTERNATIONAL"`) has no member of
+ * its own and falls through to `"other"`.
  */
 export function resolveCompetitionType(
   ct: PsdCompetitionType | string | null | undefined,
@@ -125,6 +128,8 @@ export function resolveCompetitionType(
       return "cup";
     case "FRIENDLY":
       return "friendly";
+    case "TOURNAMENT":
+      return "tournament";
     default:
       return "other";
   }

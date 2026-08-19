@@ -34,8 +34,12 @@ describe("resolveCompetitionType", () => {
     expect(resolveCompetitionType(obj("FRIENDLY"))).toBe("friendly");
   });
 
-  it("maps an unknown object type to 'other'", () => {
-    expect(resolveCompetitionType(obj("TOURNAMENT"))).toBe("other");
+  it("maps TOURNAMENT to 'tournament'", () => {
+    expect(resolveCompetitionType(obj("TOURNAMENT"))).toBe("tournament");
+  });
+
+  it("maps an object type with no member of its own to 'other'", () => {
+    expect(resolveCompetitionType(obj("INTERNATIONAL"))).toBe("other");
   });
 
   it("maps a plain-string (inlined match-detail label) to 'other'", () => {
