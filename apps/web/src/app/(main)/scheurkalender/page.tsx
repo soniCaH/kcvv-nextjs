@@ -15,6 +15,7 @@ import {
   BFF_FAN_OUT_CONCURRENCY,
 } from "@/lib/effect/services/BffService";
 import { TeamRepository } from "@/lib/repositories/team.repository";
+import { selectSeniorTeams } from "@/components/home/FirstTeamsBlock/first-teams";
 import type { Match } from "@/lib/effect/schemas/match.schema";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import {
@@ -80,10 +81,12 @@ async function fetchScheurkalenderData(): Promise<ScheurkalenderData> {
       const bff = yield* BffService;
       const teamRepo = yield* TeamRepository;
 
-      // Senior A + B squads (age "A"); the one whose name ends " B" is the B-team.
-      const seniorTeams = (yield* teamRepo.findAll()).filter(
-        (team) => team.age === "A" && team.psdId !== null,
-      );
+      // Senior A + B squads; the one whose name ends " B" is the B-team.
+      // Uses the shared first-team filter rather than a local `age === "A"`
+      // test: Reserven carries the senior age code "A" too, so the local test
+      // put its league fixtures on the poster the moment its `showInNavigation`
+      // was turned on — labelled "A", since its name ends in neither suffix.
+      const seniorTeams = selectSeniorTeams(yield* teamRepo.findAll());
 
       // Full-season fixtures per team, in parallel. Catch broadly (the
       // CLAUDE.md "broader catch when necessary" exception): this ISR page is
