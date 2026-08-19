@@ -11,7 +11,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Large taped tile for the labelled Hoofdsponsors group on `/sponsors` (7.d3). Cream-soft `<TapedCard>` with a greyscale logo (colour on hover/focus) or italic-name fallback, over an italic-display name caption. Links out with a jersey-deep focus ring + canonical press-down when `url` is present.",
+          "Large taped tile for the labelled Hoofdsponsors group on `/sponsors` (7.d3). Cream-soft `<TapedCard>` with a logo in colour at rest (or italic-name fallback), over an italic-display name caption — `/sponsors` is the exception to the wall's greyscale rule (#2511/#2655). Links out with a jersey-deep focus ring + canonical press-down when `url` is present.",
       },
     },
   },
