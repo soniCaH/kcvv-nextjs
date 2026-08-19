@@ -2,15 +2,27 @@ import ical from "ical-generator";
 import { getVtimezoneComponent } from "@touch4it/ical-timezones";
 import { DateTime } from "luxon";
 import type { Match } from "@kcvv/api-contract";
+import type { EventListItemVM } from "@/lib/repositories/event.repository";
+import { SITE_CONFIG } from "@/lib/constants";
 // Doubles as the calendar's `TZID` — an iCal protocol value, not only a display
 // pin — so it is read from the one home rather than restated.
 import { CLUB_TIMEZONE as TIMEZONE, toMatchDisplayZone } from "./dates";
+import { parseEventDateTime } from "./event-datetime";
 import { reservationTitle, reservationView } from "./match-display";
 
 const HOME_VENUE_FALLBACK = "Sportpark Elewijt, Elewijt, België";
 
 export interface IcalOptions {
   side?: "home" | "away" | "all";
+  /**
+   * Club activities (#2704) — the merged `EventRepository.findUpcomingForList()`
+   * feed, already resolved to each item's own detail href. Omitting this key
+   * entirely (not passing `events` at all) is what keeps a matches-only request
+   * byte-for-byte identical to the pre-#2704 output; an explicit `[]` would work
+   * the same for VEVENTs but the caller (the route) only ever passes this key
+   * when `events=1` is set, so "key present" doubles as "flag on" here.
+   */
+  events?: readonly EventListItemVM[];
 }
 
 /**
@@ -116,9 +128,17 @@ function buildStartDateTime(match: Match): DateTime {
   return start.set({ hour: hours, minute: minutes });
 }
 
+/**
+ * `events` is appended rather than folded into `side`/`teamIds`: it is a
+ * club-wide opt-in, not scoped to the selected teams (#2704 design note), so
+ * it earns its own segment instead of multiplying into the team/side
+ * combinations. Defaulting to `false` keeps every pre-#2704 call — and the
+ * cache entries it already wrote — on the same key it always had.
+ */
 export function normalizeCacheKey(
   teamIds: string | null,
   side: string,
+  includeEvents = false,
 ): string {
   const sortedIds = teamIds
     ? teamIds
@@ -128,24 +148,104 @@ export function normalizeCacheKey(
         .sort()
         .join(",")
     : "all";
-  return `ical:${sortedIds}:${side}`;
+  return `ical:${sortedIds}:${side}${includeEvents ? ":events" : ""}`;
+}
+
+/**
+ * `kcvv-event-` keeps an event UID's namespace disjoint from a match's
+ * `kcvv-match-` one (#2704). A Sanity document id and a PSD match id are drawn
+ * from unrelated id spaces and can coincide; a shared prefix would let one
+ * silently collide with the other in a subscriber's calendar app instead of
+ * each being updated in place on refresh.
+ */
+function buildEventUid(item: EventListItemVM): string {
+  return `kcvv-event-${item.id}@kcvvelewijt.be`;
+}
+
+/**
+ * Mirrors `buildEventIcs`'s all-day rule (`lib/utils/event-ics.ts`) exactly —
+ * the per-event "Zet in agenda" download and this subscribe feed must agree on
+ * which activities render as all-day, or the two surfaces would tell a
+ * subscriber two different things about the same event. A Brussels-midnight
+ * start, with an end that is either absent or also midnight, is all-day.
+ */
+function resolveEventDates(item: EventListItemVM): {
+  isAllDay: boolean;
+  start: DateTime;
+  end: DateTime | null;
+} {
+  const start = parseEventDateTime(item.dateStart);
+  const end = item.dateEnd ? parseEventDateTime(item.dateEnd) : null;
+  const isAllDay =
+    start.isValid &&
+    start.toFormat("HH:mm") === "00:00" &&
+    (!end?.isValid || end.toFormat("HH:mm") === "00:00");
+  return { isAllDay, start, end };
+}
+
+/**
+ * Adds one club-activity VEVENT. `ical-generator`'s all-day `DTEND` is
+ * inclusive (it emits whatever `end` it is given verbatim), so the exclusive
+ * next-day roll — a single day spans to the next morning, a multi-day span
+ * ends the day after its last day — is done here, same as `buildEventIcs`. A
+ * timed item with no `dateEnd` omits `end` entirely rather than fabricating a
+ * duration the way a match's fixed 2h block does.
+ */
+function addEventVevent(cal: ReturnType<typeof ical>, item: EventListItemVM) {
+  const { isAllDay, start, end } = resolveEventDates(item);
+  const location = item.location ?? undefined;
+  const url = `${SITE_CONFIG.siteUrl}${item.href}`;
+  const id = buildEventUid(item);
+  const summary = item.title;
+
+  if (isAllDay) {
+    const lastDay = end?.isValid && end > start ? end : start;
+    cal.createEvent({
+      id,
+      summary,
+      allDay: true,
+      start,
+      end: lastDay.plus({ days: 1 }),
+      url,
+      ...(location ? { location } : {}),
+    });
+    return;
+  }
+
+  cal.createEvent({
+    id,
+    summary,
+    start,
+    timezone: TIMEZONE,
+    url,
+    ...(end ? { end } : {}),
+    ...(location ? { location } : {}),
+  });
 }
 
 export function generateIcal(
   matches: readonly Match[],
   options: IcalOptions = {},
 ): string {
-  const { side = "all" } = options;
+  const { side = "all", events } = options;
+  // `events` distinguishes "flag on, feed happens to have zero upcoming
+  // activities right now" from "flag off" — both would otherwise produce zero
+  // VEVENTs, but only the former should describe itself as an activities feed.
+  const includeEvents = events !== undefined;
 
   const cal = ical({
-    name: "KCVV Elewijt — Wedstrijden",
+    name: includeEvents
+      ? "KCVV Elewijt — Wedstrijden & Activiteiten"
+      : "KCVV Elewijt — Wedstrijden",
     prodId: "-//KCVV Elewijt//Wedstrijdkalender//NL",
     timezone: {
       name: TIMEZONE,
       generator: getVtimezoneComponent,
     },
     x: {
-      "X-WR-CALDESC": "Wedstrijdkalender van KCVV Elewijt",
+      "X-WR-CALDESC": includeEvents
+        ? "Wedstrijden en clubactiviteiten van KCVV Elewijt"
+        : "Wedstrijdkalender van KCVV Elewijt",
       "X-WR-TIMEZONE": TIMEZONE,
     },
   });
@@ -186,6 +286,14 @@ export function generateIcal(
       url: `https://www.kcvvelewijt.be/wedstrijd/${match.id}`,
       ...(location ? { location } : {}),
     });
+  }
+
+  // Club activities (#2704) — `EventRepository.findUpcomingForList()` is
+  // already upcoming-only and chronologically sorted by construction (its own
+  // GROQ filters + `mergeEventFeed`'s sort), so no re-filter/re-sort is done
+  // here; this loop only maps each item to a VEVENT.
+  for (const item of events ?? []) {
+    addEventVevent(cal, item);
   }
 
   return cal.toString();

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Match } from "@kcvv/api-contract";
+import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import { generateIcal, normalizeCacheKey } from "./ical";
 
 function makeMatch(overrides: Partial<Match> = {}): Match {
@@ -293,5 +294,189 @@ describe("normalizeCacheKey", () => {
   it("includes side in cache key", () => {
     expect(normalizeCacheKey("1235", "home")).toBe("ical:1235:home");
     expect(normalizeCacheKey("1235", "away")).toBe("ical:1235:away");
+  });
+
+  it("defaults to the same key as before events existed — an existing subscription's cache entry is unaffected", () => {
+    expect(normalizeCacheKey("1235", "all")).toBe("ical:1235:all");
+  });
+
+  it("gives events=1 a different cache key than the matches-only request", () => {
+    const withoutEvents = normalizeCacheKey("1235", "all", false);
+    const withEvents = normalizeCacheKey("1235", "all", true);
+
+    expect(withEvents).not.toBe(withoutEvents);
+  });
+});
+
+/**
+ * Fixture for the merged `/kalender` event feed (`EventRepository.findUpcomingForList()`).
+ * `dateStart`/`dateEnd` are genuine UTC instants (not Belgian wall-clock like a
+ * `Match.date`) — see `event-datetime.ts`. `2026-04-14T22:00:00.000Z` is
+ * Brussels midnight (2026-04-15, CEST +2).
+ */
+function makeEventItem(
+  overrides: Partial<EventListItemVM> = {},
+): EventListItemVM {
+  return {
+    id: "event-1",
+    title: "Mosselfestijn",
+    href: "/evenementen/mosselfestijn",
+    dateStart: "2026-04-14T22:00:00.000Z",
+    dateEnd: null,
+    eventType: "Clubevent",
+    location: "Sportpark Driesput, Elewijt",
+    source: "event",
+    ...overrides,
+  };
+}
+
+describe("generateIcal — club activities (events flag)", () => {
+  it("emits no event VEVENT when the events option is omitted (flag off)", () => {
+    const output = generateIcal([makeMatch()]);
+
+    expect(output).not.toContain("kcvv-event-");
+  });
+
+  it("emits an event VEVENT when events are passed (flag on)", () => {
+    const output = generateIcal([makeMatch()], {
+      events: [makeEventItem()],
+    });
+
+    expect(output).toContain("kcvv-event-event-1@kcvvelewijt.be");
+    expect(output).toContain("SUMMARY:Mosselfestijn");
+  });
+
+  it("keeps the matches-only output byte-for-byte identical when the events option is omitted", () => {
+    const matches = [makeMatch()];
+    const withoutOption = generateIcal(matches);
+    const withEmptyOptions = generateIcal(matches, { side: "all" });
+
+    expect(withoutOption).toBe(withEmptyOptions);
+  });
+
+  it("carries the event's LOCATION when present", () => {
+    const output = generateIcal([], {
+      events: [makeEventItem({ location: "Sportpark Driesput, Elewijt" })],
+    });
+
+    expect(output).toContain("LOCATION:Sportpark Driesput\\, Elewijt");
+  });
+
+  it("omits LOCATION when the event has none", () => {
+    const output = generateIcal([], {
+      events: [makeEventItem({ location: null })],
+    });
+
+    expect(output).not.toMatch(/^LOCATION:/m);
+  });
+
+  it("points URL at the item's own detail page, using the repository-resolved href", () => {
+    const output = generateIcal([], {
+      events: [
+        makeEventItem({
+          href: "/evenementen/mosselfestijn",
+          source: "event",
+        }),
+      ],
+    });
+
+    expect(output).toContain(
+      "URL;VALUE=URI:https://www.kcvvelewijt.be/evenementen/mosselfestijn",
+    );
+  });
+
+  it("points URL at /nieuws/[slug] for an event-article-sourced item", () => {
+    const output = generateIcal([], {
+      events: [
+        makeEventItem({
+          href: "/nieuws/jeugdtornooi-verslag",
+          source: "article",
+        }),
+      ],
+    });
+
+    expect(output).toContain(
+      "URL;VALUE=URI:https://www.kcvvelewijt.be/nieuws/jeugdtornooi-verslag",
+    );
+  });
+
+  it("emits a Brussels-midnight event as all-day, matching buildEventIcs's rule", () => {
+    const output = generateIcal([], {
+      events: [
+        makeEventItem({
+          dateStart: "2026-04-14T22:00:00.000Z", // 2026-04-15T00:00 Brussels
+          dateEnd: null,
+        }),
+      ],
+    });
+
+    expect(output).toContain("DTSTART;VALUE=DATE:20260415");
+    expect(output).toContain("DTEND;VALUE=DATE:20260416");
+  });
+
+  it("spans a multi-day all-day event to the day after its last day, matching buildEventIcs's rule", () => {
+    const output = generateIcal([], {
+      events: [
+        makeEventItem({
+          dateStart: "2026-09-13T22:00:00.000Z", // 2026-09-14T00:00 Brussels
+          dateEnd: "2026-09-15T22:00:00.000Z", // 2026-09-16T00:00 Brussels
+        }),
+      ],
+    });
+
+    expect(output).toContain("DTSTART;VALUE=DATE:20260914");
+    expect(output).toContain("DTEND;VALUE=DATE:20260917");
+  });
+
+  it("emits a timed event with a real DTSTART and no fabricated DTEND when there is no end", () => {
+    const output = generateIcal([], {
+      events: [
+        makeEventItem({
+          dateStart: "2026-04-15T17:00:00.000Z", // 19:00 Brussels (CEST)
+          dateEnd: null,
+        }),
+      ],
+    });
+
+    expect(output).toContain("DTSTART;TZID=Europe/Brussels:20260415T190000");
+    expect(output).not.toMatch(/^DTEND/m);
+  });
+
+  it("keeps a timed event's own DTEND when the item has an end", () => {
+    const output = generateIcal([], {
+      events: [
+        makeEventItem({
+          dateStart: "2026-04-15T17:00:00.000Z",
+          dateEnd: "2026-04-15T20:00:00.000Z",
+        }),
+      ],
+    });
+
+    expect(output).toContain("DTEND;TZID=Europe/Brussels:20260415T220000");
+  });
+
+  it("gives an event UID a distinct prefix from a match UID so the two can never collide", () => {
+    const output = generateIcal([makeMatch({ id: 1 })], {
+      events: [makeEventItem({ id: "1" })],
+    });
+
+    expect(output).toContain("kcvv-match-1@kcvvelewijt.be");
+    expect(output).toContain("kcvv-event-1@kcvvelewijt.be");
+  });
+
+  it("describes the feed honestly (NAME / X-WR-CALDESC) when activities are included", () => {
+    const withoutEvents = generateIcal([makeMatch()]);
+    const withEvents = generateIcal([makeMatch()], {
+      events: [makeEventItem()],
+    });
+
+    expect(withoutEvents).toContain("X-WR-CALNAME:KCVV Elewijt");
+    expect(withEvents).toContain(
+      "X-WR-CALNAME:KCVV Elewijt — Wedstrijden & Activiteiten",
+    );
+    expect(withEvents).toContain(
+      "X-WR-CALDESC:Wedstrijden en clubactiviteiten van KCVV Elewijt",
+    );
+    expect(withEvents).not.toBe(withoutEvents);
   });
 });
