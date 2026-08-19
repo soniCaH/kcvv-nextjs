@@ -254,6 +254,23 @@ export function reservationView(
   };
 }
 
+/** The fields `reservationTitle()` needs, on top of `reservationView()`'s own. */
+export interface ReservationTitleInput extends ReservationSubjectInput {
+  home_team: { name: string };
+}
+
+/**
+ * A pitch-reservation placeholder's title/summary: `reservationView()`'s
+ * subject plus the club's own name, the shape both `formatMatchTitle()`
+ * (`/wedstrijd/[matchId]/utils.ts`, the match detail page's SEO title) and
+ * `buildSummary()` (`lib/utils/ical.ts`, the ICS feed) need. Shared here
+ * rather than hand-spelled twice so the separator between the two halves
+ * can't diverge silently between the two surfaces (#2698).
+ */
+export function reservationTitle(match: ReservationTitleInput): string {
+  return `${reservationView(match).subject} — ${match.home_team.name}`;
+}
+
 /**
  * The accessible-name sentence for a reservation row — the one grammar three
  * renderers (`<MatchStripView>`, `<UpcomingMatchesClient>`, `<TeamAgendaRow>`)

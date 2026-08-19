@@ -17,6 +17,21 @@ function makeMatch(overrides: Partial<Match> = {}): Match {
   } as Match;
 }
 
+/**
+ * A pitch-reservation placeholder (#2606): both sides are the same club, so
+ * `home_team`/`away_team` carry identical ids and names.
+ */
+function makePlaceholderMatch(overrides: Partial<Match> = {}): Match {
+  return makeMatch({
+    id: 54321,
+    home_team: { id: 5, name: "KCVV Elewijt", score: undefined },
+    away_team: { id: 5, name: "KCVV Elewijt", score: undefined },
+    is_placeholder: true,
+    competition: "Jeugdtornooi",
+    ...overrides,
+  });
+}
+
 describe("generateIcal", () => {
   it("generates a valid iCal with a scheduled match", () => {
     const matches = [makeMatch()];
@@ -204,6 +219,63 @@ describe("generateIcal", () => {
     const idx1 = output.indexOf("kcvv-match-1@kcvvelewijt.be");
     const idx2 = output.indexOf("kcvv-match-2@kcvvelewijt.be");
     expect(idx1).toBeLessThan(idx2);
+  });
+});
+
+describe("a pitch-reservation placeholder", () => {
+  it("never renders a home===away SUMMARY", () => {
+    const output = generateIcal([makePlaceholderMatch()]);
+
+    expect(output).not.toContain("SUMMARY:KCVV Elewijt - KCVV Elewijt");
+  });
+
+  it("uses the reservation subject as the SUMMARY, mirroring formatMatchTitle", () => {
+    const output = generateIcal([
+      makePlaceholderMatch({ competition: "Jeugdtornooi" }),
+    ]);
+
+    expect(output).toContain("SUMMARY:Jeugdtornooi — KCVV Elewijt");
+  });
+
+  it("falls back to the reservation word when no competition is set", () => {
+    const output = generateIcal([
+      makePlaceholderMatch({ competition: undefined }),
+    ]);
+
+    expect(output).toContain("SUMMARY:Gereserveerd — KCVV Elewijt");
+  });
+
+  it("is treated as a home fixture for side filtering — it is the club's own booking, and both sides are literally the same club name", () => {
+    const match = makePlaceholderMatch();
+
+    expect(generateIcal([match], { side: "home" })).toContain("BEGIN:VEVENT");
+    expect(generateIcal([match], { side: "away" })).not.toContain(
+      "BEGIN:VEVENT",
+    );
+  });
+
+  it("folds a cancelled status into the SUMMARY, the way every other reservation renderer does", () => {
+    const output = generateIcal([
+      makePlaceholderMatch({ status: "postponed" }),
+    ]);
+
+    expect(output).toContain(
+      "SUMMARY:Jeugdtornooi — KCVV Elewijt — Uitgesteld",
+    );
+  });
+
+  it("omits LOCATION when no venue is set — a reservation can be an external tournament, not necessarily at the home venue", () => {
+    const output = generateIcal([makePlaceholderMatch({ venue: undefined })]);
+
+    expect(output).not.toMatch(/^LOCATION:/m);
+  });
+
+  it("uses the given venue for LOCATION when one is set", () => {
+    const output = generateIcal([
+      makePlaceholderMatch({ venue: "Sportcomplex De Nekker" }),
+    ]);
+
+    expect(output).toContain("Sportcomplex De Nekker");
   });
 });
 
