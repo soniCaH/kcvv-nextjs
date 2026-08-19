@@ -124,18 +124,17 @@ function buildStartDateTime(match: Match): DateTime {
 }
 
 /**
- * `events` is appended rather than folded into `side`/`teamIds`: it is a
- * club-wide opt-in, not scoped to the selected teams (#2704 design note), so
- * it earns its own segment instead of multiplying into the team/side
- * combinations. It is the `includeEvents ? ":events" : ""` suffix, not the
- * `false` default, that keeps a matches-only key unchanged from its
- * pre-#2704 form; the default only spares call sites that still pass just
- * two arguments.
+ * The match-fixture cache key: `teamIds`/`side` only. `events` (#2704) is
+ * deliberately absent — since #2711 round 2, club activities are cached
+ * under their own fixed key (`ical:events`, in `route.ts`) and composed with
+ * these fixtures per request, so which teams/sides are in scope never
+ * depends on whether activities are included. An `events=1` and an
+ * `events=0` request for the same `teamIds`/`side` therefore share this same
+ * key, instead of each duplicating the PSD fan-out.
  */
 export function normalizeCacheKey(
   teamIds: string | null,
   side: string,
-  includeEvents = false,
 ): string {
   const sortedIds = teamIds
     ? teamIds
@@ -145,7 +144,7 @@ export function normalizeCacheKey(
         .sort()
         .join(",")
     : "all";
-  return `ical:${sortedIds}:${side}${includeEvents ? ":events" : ""}`;
+  return `ical:${sortedIds}:${side}`;
 }
 
 /**

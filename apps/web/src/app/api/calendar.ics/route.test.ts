@@ -191,13 +191,25 @@ describe("GET /api/calendar.ics", () => {
     expect(body).not.toContain("kcvv-event-");
   });
 
-  it("gives an events=1 request a different cache key than the matches-only request, so neither can serve the other's cached body", async () => {
+  it("shares one matches cache key between an events=1 and a matches-only request for the same teamIds/side (#2711 round 2) — the fixture fetch is never duplicated per flag value", async () => {
     await GET(makeRequest("teamIds=1235"));
     await GET(makeRequest("teamIds=1235&events=1"));
 
     expect(unstableCacheCalls).toHaveLength(2);
-    expect(unstableCacheCalls[0]!.keyParts).not.toEqual(
+    expect(unstableCacheCalls[0]!.keyParts).toEqual(
       unstableCacheCalls[1]!.keyParts,
+    );
+  });
+
+  it("never serves a matches-only body to an events=1 request or vice versa — there is no shared body cache to collide on; each response is composed per request from its own includeEvents flag", async () => {
+    mockFindUpcomingForList.mockReturnValue(Effect.succeed([makeEventItem()]));
+
+    const matchesOnly = await GET(makeRequest("teamIds=1235"));
+    const withEvents = await GET(makeRequest("teamIds=1235&events=1"));
+
+    expect(await matchesOnly.text()).not.toContain("kcvv-event-");
+    expect(await withEvents.text()).toContain(
+      "kcvv-event-event-1@kcvvelewijt.be",
     );
   });
 
@@ -219,11 +231,22 @@ describe("GET /api/calendar.ics", () => {
     expect(eventsCacheRegistrationsDuringTest).toHaveLength(0);
   });
 
-  it("lets a failed event read reject the cached callback itself, rather than resolving it with a degraded fallback (so Next's throw ⇒ last-good semantics apply, not caught ⇒ cached)", async () => {
+  it("lets a failed event read reject the cached callback itself with the underlying failure, rather than resolving it with a degraded fallback (so Next's throw ⇒ last-good semantics apply, not caught ⇒ cached)", async () => {
     expect(eventsCacheCallAtImport).toBeDefined();
     mockFindUpcomingForList.mockReturnValue(Effect.die("Sanity is down"));
 
-    await expect(eventsCacheCallAtImport!.fn()).rejects.toBeDefined();
+    // Asserts the *cause* of the rejection, not merely that some rejection
+    // happened — `rejects.toBeDefined()` alone would also pass on a rejection
+    // caused by a typo in this test's own setup, proving nothing about the
+    // Sanity defect actually propagating (#2711 round 2 finding B).
+    let caught: unknown;
+    try {
+      await eventsCacheCallAtImport!.fn();
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeDefined();
+    expect(String(caught)).toContain("Sanity is down");
   });
 
   it("resolves the cached callback with the event list on a successful read", async () => {

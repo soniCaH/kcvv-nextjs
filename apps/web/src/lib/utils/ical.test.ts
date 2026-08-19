@@ -297,15 +297,8 @@ describe("normalizeCacheKey", () => {
     expect(normalizeCacheKey("1235", "away")).toBe("ical:1235:away");
   });
 
-  it("defaults to the same key as before events existed — an existing subscription's cache entry is unaffected", () => {
+  it("has no events dimension — #2711 round 2 moved club activities to their own separately-cached key, so the fixture key is unaffected by the flag and stable at its pre-#2704 form", () => {
     expect(normalizeCacheKey("1235", "all")).toBe("ical:1235:all");
-  });
-
-  it("gives events=1 a different cache key than the matches-only request", () => {
-    const withoutEvents = normalizeCacheKey("1235", "all", false);
-    const withEvents = normalizeCacheKey("1235", "all", true);
-
-    expect(withEvents).not.toBe(withoutEvents);
   });
 });
 
@@ -585,5 +578,37 @@ describe("generateIcal and buildEventIcs agree on the all-day classification", (
     expect(feedOutput).toContain(
       "DTSTART;TZID=Europe/Brussels:20260415T190000",
     );
+  });
+
+  /**
+   * The branch neither prior parity case exercised: `resolveEventDateRange`'s
+   * `lastDay.plus({ days: 1 })` only does real work when `end > start` (a
+   * genuine multi-day span) — a single-day event collapses `lastDay` to
+   * `start` either way. This is the branch most likely to silently drift
+   * between the two surfaces, and the reason the shared helper exists
+   * (#2711 round 1 finding 1).
+   */
+  it("both surfaces span the same multi-day all-day input to the same exclusive end day", () => {
+    const item = makeEventItem({
+      dateStart: "2026-09-13T22:00:00.000Z", // 2026-09-14T00:00 Brussels
+      dateEnd: "2026-09-15T22:00:00.000Z", // 2026-09-16T00:00 Brussels
+    });
+
+    const feedOutput = generateIcal([], {
+      includeEvents: true,
+      events: [item],
+    });
+    const downloadOutput = buildEventIcs({
+      uid: "x@kcvvelewijt.be",
+      title: item.title,
+      dateStart: item.dateStart,
+      dateEnd: item.dateEnd,
+      now: "2026-01-01T00:00:00.000Z",
+    });
+
+    expect(feedOutput).toContain("DTSTART;VALUE=DATE:20260914");
+    expect(downloadOutput).toContain("DTSTART;VALUE=DATE:20260914");
+    expect(feedOutput).toContain("DTEND;VALUE=DATE:20260917");
+    expect(downloadOutput).toContain("DTEND;VALUE=DATE:20260917");
   });
 });
