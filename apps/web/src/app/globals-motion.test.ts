@@ -75,9 +75,22 @@ describe("globals.css — the Motion Vocabulary reset (DESIGN.md → Motion)", (
     // Pinning the full set closes the gap the `ms`-only check above can't
     // see on its own — a new loop, or a travel rule mistakenly written in
     // seconds, would otherwise slip through unnoticed.
+    //
+    // Compared as a Set, not a multiset: a second rule re-using an existing
+    // period (e.g. another element on the 2s pulse) must NOT fail this
+    // test — only a genuinely new, unsanctioned period should. `.sort()`
+    // below is a plain lexicographic string sort, which happens to match
+    // numeric order for this exact set — a future `10s` would sort before
+    // `2`, and that's expected, not a bug.
     const sValues = [...globalsCss.matchAll(/\b(\d+(?:\.\d+)?)s\b/g)].map(
       (m) => m[1],
     );
-    expect(sValues.sort()).toEqual(["0.15", "0.3", "1.2", "1.5", "2"]);
+    expect([...new Set(sValues)].sort()).toEqual([
+      "0.15",
+      "0.3",
+      "1.2",
+      "1.5",
+      "2",
+    ]);
   });
 });

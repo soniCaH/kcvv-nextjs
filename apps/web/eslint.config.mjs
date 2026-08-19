@@ -45,10 +45,16 @@ const IN_BODY_ROUTE_IMPORT = `:matches(${TEST_CALLS}) ImportExpression > Literal
 // a one-line string. Class strings are assembled through `cn()` and template
 // literals as often as plain string literals, so every selector matches both
 // `Literal` and `TemplateElement`.
+// `duration-0` and `animate-none` are both legitimate "off" values — a
+// zero-length transition and Tailwind's static `animation: none` utility,
+// neither drawn from a theme scale — so both are excluded from their
+// respective bans below. Flagging them would tell an author the opposite of
+// what's true.
 const OFF_SCALE_DURATION_PATTERN =
-  "duration-(?!150(?:[^0-9]|$))(?!300(?:[^0-9]|$))(?!500(?:[^0-9]|$))[0-9]+";
+  "duration-(?!0(?:[^0-9]|$))(?!150(?:[^0-9]|$))(?!300(?:[^0-9]|$))(?!500(?:[^0-9]|$))[0-9]+";
 const ARBITRARY_MOTION_VALUE_PATTERN = "(?:duration|ease|animate)-\\[";
-const UNGUARDED_LOOP_PATTERN = "(?<!motion-safe:)(?<!motion-reduce:)animate-";
+const UNGUARDED_LOOP_PATTERN =
+  "(?<!motion-safe:)(?<!motion-reduce:)animate-(?!none\\b)";
 
 const matchesClassString = (pattern) =>
   `:matches(Literal[value=/${pattern}/], TemplateElement[value.raw=/${pattern}/])`;
