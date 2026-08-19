@@ -13,7 +13,7 @@ describe("<EmptyStateUndoAnalytics>", () => {
     vi.mocked(trackEvent).mockClear();
   });
 
-  it("delegates a click on the marked undo element to empty_state_undo", () => {
+  it("delegates a click on the marked undo element to empty_state_undo, slugifying the facet", () => {
     render(
       <EmptyStateUndoAnalytics source="evenementen" facet="Jeugdwerking">
         <button type="button" data-empty-state-undo="undo">
@@ -28,23 +28,6 @@ describe("<EmptyStateUndoAnalytics>", () => {
     expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
       source: "evenementen",
       filter_type: "jeugdwerking",
-    });
-  });
-
-  it("slugifies a facet value that arrives in display casing", () => {
-    render(
-      <EmptyStateUndoAnalytics source="nieuws" facet="Jeugd">
-        <button type="button" data-empty-state-undo="undo">
-          Toon alles
-        </button>
-      </EmptyStateUndoAnalytics>,
-    );
-
-    fireEvent.click(screen.getByText("Toon alles"));
-
-    expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
-      source: "nieuws",
-      filter_type: "jeugd",
     });
   });
 

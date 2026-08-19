@@ -160,10 +160,6 @@ export const params = [
   { parameterName: "gallery_slug", displayName: "Gallery slug" },
   { parameterName: "image_count", displayName: "Image count" },
   { parameterName: "image_index", displayName: "Image index" },
-  // Empty-state undo (#2691): `empty_state_undo` mints no new params here —
-  // it reuses `source` (which of the five hosts, above) and `filter_type`
-  // (the active facet, above, already carrying `match_agenda_filter` /
-  // `search_filter_changed` values).
   // ── Membership form (conversion — added #1974) ──────────────────────────
   { parameterName: "is_minor", displayName: "Is minor" },
   { parameterName: "has_prior_club", displayName: "Has prior club" },

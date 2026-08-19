@@ -86,13 +86,15 @@ describe("EmptyState — tier: surface (Tier 1)", () => {
   });
 
   it("always renders the data-empty-state-undo marker for reason='filtered' (#2691)", () => {
-    // Unconditional, structural on `reason`, not an opt-in flag — a
-    // host-mounted <EmptyStateUndoAnalytics> delegates the click into the
-    // `empty_state_undo` event off this marker, mirroring how ErrorState
-    // renders `data-error-action` for <ErrorAnalytics> to delegate off of.
-    // No prop can omit it: every "filtered" undo is analytics-visible by
-    // construction, so a sixth filtered surface can't silently ship one
-    // that never fires.
+    // Unconditional, structural on `reason`, not an opt-in flag — no prop
+    // can omit this marker. A host-mounted <EmptyStateUndoAnalytics>
+    // delegates the click into `empty_state_undo` off it, mirroring how
+    // ErrorState renders `data-error-action` for <ErrorAnalytics>. The
+    // marker being structural does NOT by itself guarantee a listener is
+    // mounted — a sixth filtered surface could still skip
+    // <EmptyStateUndoAnalytics> and ship a marker nothing reads. That half
+    // is held by the "wired to analytics" rule in
+    // cross-page-consistency.test.ts, not by this component.
     render(
       <EmptyState
         tier="surface"

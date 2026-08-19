@@ -2,7 +2,7 @@
 
 import { useRef, type ReactNode } from "react";
 import { trackEvent } from "@/lib/analytics/track-event";
-import { slugifyFacet } from "@/lib/analytics/slugify-facet";
+import { slugify } from "@/lib/seo/legacy-redirect";
 import { useDelegatedClick } from "@/hooks/useDelegatedClick";
 
 /**
@@ -25,12 +25,9 @@ export interface EmptyStateUndoAnalyticsProps {
    */
   source: EmptyStateUndoSource;
   /**
-   * The facet (active filter value) that emptied the surface — the same
-   * value the undo clears. Slugified before the push (`slugifyFacet`) so it
-   * lands in one value space under the reused `filter_type` dimension
-   * (`match_agenda_filter` / `search_filter_changed` already populate it),
-   * regardless of whether the host's own value is display-cased or already
-   * a lowercase slug.
+   * The facet (active filter value) that emptied the surface — slugified
+   * before the push (`slugify`, `lib/seo/legacy-redirect.ts`) so the five
+   * hosts' mixed casing lands on one value among *themselves*.
    */
   facet: string;
   children: ReactNode;
@@ -64,7 +61,7 @@ export function EmptyStateUndoAnalytics({
     onMatch: () => {
       trackEvent("empty_state_undo", {
         source,
-        filter_type: slugifyFacet(facet),
+        filter_type: slugify(facet),
       });
     },
   });

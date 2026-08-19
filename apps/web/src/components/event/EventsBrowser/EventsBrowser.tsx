@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { trackEvent } from "@/lib/analytics/track-event";
-import { EmptyStateUndoAnalytics } from "@/components/analytics";
+import { EmptyStateUndoAnalytics } from "@/components/analytics/EmptyStateUndoAnalytics";
 import { EmptyState } from "@/components/design-system";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import { filteredEmptyBody } from "@/lib/utils/empty-state-copy";

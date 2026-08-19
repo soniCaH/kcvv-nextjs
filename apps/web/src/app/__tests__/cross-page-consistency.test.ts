@@ -626,3 +626,25 @@ describe("rule 5 checks the routes it claims to (#2563)", () => {
     expect(bffFedRouteFiles).not.toContain("app/(main)/staf/[slug]/page.tsx");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Rule 6 (#2691) — a filtered EmptyState's undo is wired to analytics
+// ---------------------------------------------------------------------------
+
+/**
+ * `<EmptyState reason="filtered">`'s undo marker (`data-empty-state-undo`) is
+ * unconditional on `reason`, but mounting `<EmptyStateUndoAnalytics>` to
+ * consume it is still a convention nothing else enforces — a sixth filtered
+ * surface could compile, lint and pass its own tests while never mounting
+ * the wrapper, and its undo would silently emit nothing. Per-file, not
+ * per-JSX-nesting, matching this file's regex-on-source method.
+ */
+const filteredUndoSources = productionSources.filter((f) =>
+  /reason="filtered"/.test(code.get(f)!),
+);
+
+describe("a filtered EmptyState's undo is wired to analytics (#2691)", () => {
+  it.each(filteredUndoSources)("%s — mounts <EmptyStateUndoAnalytics>", (f) => {
+    expect(/<EmptyStateUndoAnalytics\b/.test(code.get(f)!)).toBe(true);
+  });
+});

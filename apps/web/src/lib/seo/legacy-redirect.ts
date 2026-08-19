@@ -18,19 +18,29 @@ import { SANITY_TAGS, SANITY_LIST_REVALIDATE } from "@/lib/sanity/cache-tags";
 // ─── Pure slug logic ─────────────────────────────────────────────────────────
 
 /**
- * Slugify a person's name the way the legacy site keyed profile URLs:
- * `"${firstName} ${lastName}"` lowercased, diacritics stripped, `&` → " en ",
- * non-alphanumerics collapsed to single hyphens. Mirrors the studio's
- * `slugifyTitle` so behaviour is consistent across the codebase.
+ * Slugify a single string the way the legacy site keyed profile URLs:
+ * lowercased, diacritics stripped, `&` → " en ", non-alphanumerics collapsed
+ * to single hyphens. Mirrors the studio's `slugifyTitle` so behaviour is
+ * consistent across the codebase. The general-purpose core `nameToSlug` (and
+ * any other single-string slugging need, e.g. an analytics facet value)
+ * builds on.
  */
-export function nameToSlug(firstName: string, lastName: string): string {
-  return `${firstName} ${lastName}`
+export function slugify(value: string): string {
+  return value
     .normalize("NFKD")
     .replace(/\p{M}+/gu, "")
     .replace(/&/g, " en ")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * Slugify a person's name the way the legacy site keyed profile URLs:
+ * `"${firstName} ${lastName}"` through `slugify`.
+ */
+export function nameToSlug(firstName: string, lastName: string): string {
+  return slugify(`${firstName} ${lastName}`);
 }
 
 export interface PersonRow {

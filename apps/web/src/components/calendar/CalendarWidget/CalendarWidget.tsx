@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { trackEvent } from "@/lib/analytics/track-event";
-import { EmptyStateUndoAnalytics } from "@/components/analytics";
+import { EmptyStateUndoAnalytics } from "@/components/analytics/EmptyStateUndoAnalytics";
 import { EmptyState } from "@/components/design-system";
 import {
   filteredEmptyBody,

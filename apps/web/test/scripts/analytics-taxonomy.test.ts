@@ -5,12 +5,6 @@
  * pnpm workspace, root `test` is `turbo test`, and no `.github/workflows/*.yml`
  * invokes `node --test`, so it had been silently red since #2503 added
  * `banner_`/`nav_`/`footer_` and stayed red through #2622's `inhoud_`.
- *
- * `scripts/` lives outside every workspace, so — same as
- * `check-branch.test.ts` next to this file — this is its only home: it is
- * collected by the existing `apps/web` vitest config (no `include` override;
- * only `test/e2e/**` is excluded) and therefore rides
- * `pnpm --filter @kcvv/web test` and `check-all`.
  */
 import { describe, it, expect } from "vitest";
 import {

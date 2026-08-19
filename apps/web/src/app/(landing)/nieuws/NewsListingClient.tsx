@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
 import { NewsCard, CategoryFilters } from "@/components/article";
-import { EmptyStateUndoAnalytics } from "@/components/analytics";
+import { EmptyStateUndoAnalytics } from "@/components/analytics/EmptyStateUndoAnalytics";
 import {
   EmptyState,
   LoadMoreFooter,
