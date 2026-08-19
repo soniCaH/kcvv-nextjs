@@ -25,6 +25,7 @@ import { toDisplayZone } from "@/lib/utils/dates";
 import { capitalize } from "@/lib/utils/capitalize";
 import { EmptyState, PageContainer } from "@/components/design-system";
 import { PosterPrintScale } from "./PosterPrintScale";
+import { SHEET_WIDTH_PX, WIDTH_FIT_SCALE } from "./poster-geometry";
 import { PrintButton } from "./PrintButton";
 import { PrintDate } from "./PrintDate";
 
@@ -145,14 +146,14 @@ const POSTER_PRINT_CSS = `
      relative to the block (the 5.5 mm the layout was locked on) and can
      rebalance the calendar-year column split. */
   .sk-poster-sheet {
-    width: 796px;
+    width: ${SHEET_WIDTH_PX}px;
     margin: 0 auto;
     /* Set by <PosterPrintScale> on \`beforeprint\` — it fits the sheet to the
        block on *both* axes, which a constant cannot do because the height is
        however long the season is. The fallback is the width fit: correct for
        a season short enough to fit, and the best available answer if the
        measurement never runs. */
-    transform: scale(var(--sk-poster-scale, 1.6144));
+    transform: scale(var(--sk-poster-scale, ${WIDTH_FIT_SCALE}));
     transform-origin: top center;
   }
 

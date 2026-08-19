@@ -1,24 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-
-/** CSS px per millimetre — print CSS resolves `px` at a fixed 96 dpi. */
-const PX_PER_MM = 96 / 25.4;
-
-/**
- * The poster block between the InDesign sponsor blocks
- * (`docs/design/mockups/phase-10-scheurkalender/sk2-poster-layout-locked.md`).
- * The print stylesheet reserves exactly this box inside the A2 page.
- */
-const BLOCK_WIDTH_PX = 340 * PX_PER_MM;
-const BLOCK_HEIGHT_PX = 567 * PX_PER_MM;
-
-/**
- * Width the sheet is laid out at in print — the width it has at the 860 px
- * viewport the layout was locked against, minus `<PageContainer>`'s `md:px-8`.
- * Kept in step with `POSTER_PRINT_CSS`.
- */
-const SHEET_WIDTH_PX = 796;
+import {
+  BLOCK_HEIGHT_PX,
+  BLOCK_WIDTH_PX,
+  SHEET_WIDTH_PX,
+} from "./poster-geometry";
 
 /**
  * Scales the poster sheet to fit the printed block (#2702).
@@ -38,8 +25,10 @@ const SHEET_WIDTH_PX = 796;
  *
  * Measuring cannot wait for the print layout (`beforeprint` fires before it),
  * and the on-screen sheet is a different width at every viewport, so the height
- * is read with the print width forced on. One synchronous reflow, once, at
- * print time.
+ * is read with the print width forced on — one forced reflow per measurement.
+ * It runs on mount, again if the web fonts were still loading, and again before
+ * printing; the page is a private tool one person opens to export a poster, so
+ * that costs nothing worth caching against.
  */
 export function PosterPrintScale() {
   useEffect(() => {
@@ -72,6 +61,18 @@ export function PosterPrintScale() {
       );
     };
 
+    // Measure on mount, not only on `beforeprint`. WebKit never fires that
+    // event, so on Safari — the likely "Save as PDF" route on a Mac — the
+    // sheet would keep the width-only fallback and clip; the same gap opens if
+    // Cmd+P beats hydration. Nothing about the measurement needs print state,
+    // so taking it early costs one reflow and closes both.
+    applyScale();
+    // Web fonts change the height. Only wait for them if they are still
+    // loading — on a warm cache they are done before this runs, and the
+    // already-resolved promise would just re-measure to the same answer.
+    if (document.fonts && document.fonts.status !== "loaded") {
+      void document.fonts.ready.then(applyScale);
+    }
     window.addEventListener("beforeprint", applyScale);
     return () => window.removeEventListener("beforeprint", applyScale);
   }, []);
