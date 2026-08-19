@@ -23,16 +23,33 @@
  * an opponent or programme is known, not a match to navigate to, so there is
  * nothing to fire a "clicked through" event for.
  *
- * Unlike the normal row's two genuinely different layouts, the placeholder's
- * only real difference between breakpoints is a font size and a spacer that
- * mirrors the away side purely to keep the time column centred — so it is one
- * DOM tree, sized responsively, not two.
+ * A fourth state — `match.competitionType === "tournament"` (#2696, built on
+ * #2692's structured type) — reuses that same reduced shape rather than a
+ * third layout, because whether the named club hosts the tournament or is
+ * merely another participant is not knowable from PSD: the row can state
+ * that the club is *where* the tournament is, never claim it as an opponent.
+ * The crest is the non-KCVV side's, derived from the club id (never
+ * home/away, since a tournament fixture — unlike a placeholder — has two
+ * genuinely different sides). The subject is the competition then the club
+ * ("TORNOOI · FC ZEMST SPORTIEF"), and unlike a placeholder it never takes
+ * the slot word, even featured — the green "Eerstvolgende" ground already
+ * says the row is next, and the word would push the club name into the
+ * ellipsis at narrow widths. #2693 (the design decision this ships) ruled
+ * the two states sharing one layout is sufficient distinctness — different
+ * crest, a club in the subject, a different detector — and that no further
+ * visual separation is to be invented.
+ *
+ * Unlike the normal row's two genuinely different layouts, the reduced
+ * states' only real difference between breakpoints is a font size and a
+ * spacer that mirrors the away side purely to keep the time column centred —
+ * so each is one DOM tree, sized responsively, not two.
  *
  * Design lock: docs/design/mockups/phase-6-team/detail-ia-locked.md §3
  */
 import { Fragment } from "react";
 import Link from "next/link";
 import { Crest, PRESS_DOWN_CLASSES } from "@/components/design-system";
+import { KCVV_CLUB_ID } from "@/lib/constants";
 import { cn } from "@/lib/utils/cn";
 import { toMatchDisplayZone } from "@/lib/utils/dates";
 import {
@@ -237,6 +254,15 @@ export function TeamAgendaRow({
         ? kcvvTeamId === match.homeTeam.id
         : undefined));
 
+  // The lawful tournament detector (#2696) — `competitionType === "tournament"`,
+  // never a string match on the Dutch `competition` label, mirroring the
+  // `competitionType === "league"` gate elsewhere in the codebase. A
+  // placeholder is never also a tournament row: they reuse the same reduced
+  // shape below, but a self-match has no second club to name.
+  const isTournament =
+    !match.isPlaceholder && match.competitionType === "tournament";
+  const isReducedRow = match.isPlaceholder || isTournament;
+
   // White on jersey-deep, inherited from the pre-#2395 green when cream missed
   // AA there. Both clear it now (white 5.29:1, cream 4.69:1) — see DESIGN.md
   // "Chips / Labels" for the open reconcile-to-cream question.
@@ -245,10 +271,10 @@ export function TeamAgendaRow({
   const cardBase = cn(
     "flex items-stretch gap-0",
     "border-2",
-    // A placeholder row carries no link and no navigate handler, so it does
-    // not get the paper press-down hover affordance either — there is
+    // A placeholder/tournament row carries no link and no navigate handler,
+    // so it does not get the paper press-down hover affordance either — there is
     // nothing underneath it to press down onto.
-    !match.isPlaceholder && PRESS_DOWN_CLASSES,
+    !isReducedRow && PRESS_DOWN_CLASSES,
     featured
       ? // Soft ink-muted offset (the design-system dark-card shadow, cf.
         // `--shadow-paper-sm-soft`) — a cream shadow vanished against the cream
@@ -483,8 +509,8 @@ export function TeamAgendaRow({
   const captionClass = (extra?: string) =>
     cn("font-mono text-[9px] tracking-wider uppercase", monoClass, extra);
 
-  if (match.isPlaceholder) {
-    // The competition label is the placeholder's default subject ("Tornooi" /
+  if (isReducedRow) {
+    // The competition label is the default subject ("Tornooi" /
     // "Vriendschappelijk"), rendered in the row's existing mono-uppercase
     // caption register rather than as bold body text — the one deliberate
     // departure from the prototype. It also sidesteps PSD sending one
@@ -492,27 +518,51 @@ export function TeamAgendaRow({
     // handles it, so the string is never re-cased here. `reservationView()`
     // is the shared derivation (#2688) — `<MatchStripView>` and
     // `/wedstrijd/[matchId]` call the same helper so the subject can't drift
-    // between surfaces.
+    // between surfaces. It reads `status`/`competition` off either member of
+    // `ScheduleRow` structurally, so it needs no branch here.
     const competitionSubject = reservationView(match).subject;
-    // Feeds the fallback into the SAME caption combinator the normal row
-    // uses, with `kind`/`captionLabel`/an exceptional-status marker layered
-    // on top of it — so the team page (which passes neither) renders a bare
-    // subject while the homepage, `/tegenstander` and `/kalender` (which
-    // passes its squad string as `captionLabel`) stay correct.
-    const subjectContent = buildCaption(mobileKindWord, competitionSubject);
+
+    // A tournament fixture (unlike a placeholder) has a second, genuinely
+    // different club to show — the crest and name of whichever side is NOT
+    // KCVV, derived from the club id (never home/away: #2696 explicitly
+    // rejects deriving it from `isHome`, since which side PSD lists as home
+    // is not the question being answered). A placeholder has no second club
+    // — both sides are KCVV — so it keeps showing its own `team`.
+    const rowTeam = match.isPlaceholder
+      ? match.team
+      : match.homeTeam.id === KCVV_CLUB_ID
+        ? match.awayTeam
+        : match.homeTeam;
+
+    // The tournament subject names the competition THEN the club — the club
+    // is presented as where the tournament is, never as an opponent, because
+    // PSD does not say whether it hosts or merely shares the bracket. No
+    // slot word, ever, unlike the placeholder branch below: the featured
+    // green ground already says the row is next, and at narrow widths the
+    // word pushed the club name — the one part this row exists to carry —
+    // into the ellipsis (#2693 decision, round 3).
+    const subjectSource = isTournament
+      ? [competitionSubject, rowTeam.name].filter(Boolean).join(" · ")
+      : competitionSubject;
+    const subjectContent = buildCaption(
+      isTournament ? null : mobileKindWord,
+      subjectSource,
+    );
 
     // No reason line — "Tegenstander nog niet bekend" was prototyped and cut.
     // The label states only what the row itself states: the subject, the
-    // date, the time — never why the opponent is missing. `labelSubject`
-    // folds `captionLabel` in too (unlike the normal row's `scoreboardLabel`,
-    // which doesn't need to — two real team names already distinguish one
-    // reservation from another; two reservations on the same
+    // date, the time — never why an opponent is missing or unconfirmed.
+    // `labelSubject` folds `captionLabel` in too (unlike the normal row's
+    // `scoreboardLabel`, which doesn't need to — two real team names already
+    // distinguish one reservation from another; two reservations on the same
     // `/tegenstander`/`/kalender` page, both KCVV vs KCVV, do not).
-    const labelSubject = [captionLabel, competitionSubject]
+    const labelSubject = [captionLabel, subjectSource]
       .filter(Boolean)
       .join(" · ");
     const placeholderLabel = reservationRowLabel({
-      kind,
+      // A tournament never takes the slot word, in the accessible name
+      // either — the same "no slot word, ever" rule as the visible caption.
+      kind: isTournament ? undefined : kind,
       subject: labelSubject,
       dateLabel: `${day} ${month}`,
       time: showUpcomingLabel ? undefined : kickoff,
@@ -530,7 +580,8 @@ export function TeamAgendaRow({
       <article
         data-testid="team-agenda-row"
         data-featured={featured}
-        data-placeholder="true"
+        data-placeholder={match.isPlaceholder ? "true" : undefined}
+        data-tournament={isTournament ? "true" : undefined}
         aria-label={placeholderLabel}
         className={cardBase}
       >
@@ -553,7 +604,7 @@ export function TeamAgendaRow({
               the time off the right edge at narrow widths (#2696). */}
           <div className="flex w-full min-w-0 items-center gap-2 px-3 py-2">
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <Crest name={match.team.name} logo={match.team.logo} />
+              <Crest name={rowTeam.name} logo={rowTeam.logo} />
               <span className={subjectClass}>{subjectContent}</span>
             </div>
             <span className={timeClass}>{timeOrLabel}</span>

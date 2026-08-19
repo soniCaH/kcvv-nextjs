@@ -239,3 +239,57 @@ export const PlaceholderFriendlyLowercaseLabel: Story = {
     },
   },
 };
+
+/**
+ * A subject long enough to fill the row at a narrow width — regression
+ * coverage for the missing `min-w-0` on this content box (#2696): without
+ * it, `truncate` never engages and the kickoff time clips off the right
+ * edge. Same box the tournament row below reuses.
+ */
+export const PlaceholderLongSubjectNarrow: Story = {
+  args: {
+    match: {
+      ...placeholderTournament,
+      id: 92,
+      competition: "Beker van Vlaams-Brabant en Omstreken",
+    },
+  },
+  parameters: { viewport: { defaultViewport: "kcvvMobile" } },
+};
+
+// ─── Tournament fixture (#2696) ─────────────────────────────────────────────
+// A genuine fixture — not a self-match — whose structured `competitionType`
+// is "tournament" (#2692). Reuses the placeholder register's shape above
+// rather than a third layout: one crest, one mono subject, the real start
+// time, no link. Unlike a placeholder the crest is the OPPONENT'S — derived
+// from the club id, never home/away — and the subject names the competition
+// then the club: "TORNOOI · FC ZEMST SPORTIEF". The club is presented as
+// where the tournament is, never as who KCVV plays, because PSD does not say
+// which. No slot word, even featured (#2693 decision, round 3): the green
+// ground already says the row is next, and the word pushed the club name
+// into the ellipsis at narrow widths.
+
+const tournamentFixture: ScheduleMatch = {
+  isPlaceholder: false,
+  id: 93,
+  date: new Date("2026-08-30T09:30:00.000Z"),
+  time: "09:30",
+  homeTeam: KCVV,
+  awayTeam: { id: 1391, name: "FC Zemst Sportief" },
+  status: "scheduled",
+  competition: "Tornooi",
+  competitionType: "tournament",
+};
+
+/** Plain — cream ground, one crest (the named club's, not KCVV's). */
+export const Tournament: Story = {
+  args: { match: tournamentFixture },
+};
+
+/**
+ * Featured "Eerstvolgende" — a tournament genuinely can be the next event
+ * (owner decision, #2693). No "Volgende" prefix on the jersey-deep ground.
+ */
+export const TournamentFeatured: Story = {
+  args: { match: tournamentFixture, featured: true },
+};

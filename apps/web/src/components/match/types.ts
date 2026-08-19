@@ -6,7 +6,7 @@
 
 export type { MatchStatus } from "@kcvv/api-contract";
 
-import type { MatchStatus } from "@kcvv/api-contract";
+import type { CompetitionType, MatchStatus } from "@kcvv/api-contract";
 
 export interface ScheduleTeam {
   /** Team ID */
@@ -50,6 +50,15 @@ export interface ScheduleMatch {
   status: MatchStatus;
   /** Competition name */
   competition?: string;
+  /**
+   * Structured league/cup/friendly/tournament classification (#2692),
+   * mirrored from `Match.competitionType`. Absent when the BFF can't resolve
+   * it. The lawful tournament detector — `competitionType === "tournament"`
+   * — never the Dutch `competition` label, which is a division/competition
+   * name, not a type (#2696, mirroring the `competitionType === "league"`
+   * gate).
+   */
+  competitionType?: CompetitionType;
   /** Whether the tracked team is playing at home. Provided by BFF via Match.is_home. */
   isHome?: boolean;
 }

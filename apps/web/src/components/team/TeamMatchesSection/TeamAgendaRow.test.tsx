@@ -927,4 +927,175 @@ describe("TeamAgendaRow", () => {
       expect(contentRow?.className.split(/\s+/)).toContain("min-w-0");
     });
   });
+
+  /**
+   * Tournament fixture (#2696) — a genuine fixture (not a self-match) whose
+   * structured `competitionType` is `"tournament"` (#2692). Reuses the
+   * placeholder register's shape (#2606/#2632) rather than a third layout:
+   * one crest, one mono subject, the real start time, no link. Unlike a
+   * placeholder the crest is the OPPONENT's — the named club is presented as
+   * where the tournament is, not who KCVV plays, because PSD does not say
+   * which. #2693 (design decision) ruled the two rows' shared layout is
+   * accepted as sufficient distinctness: different crest, a club in the
+   * subject, and a different detector — no further visual difference is to
+   * be invented here.
+   */
+  describe("Tournament fixture (#2696)", () => {
+    const TOURNAMENT: ScheduleMatch = {
+      isPlaceholder: false,
+      id: 200,
+      date: new Date("2026-08-30T09:30:00.000Z"),
+      time: "09:30",
+      homeTeam: { id: 1235, name: "KCVV Elewijt" },
+      awayTeam: {
+        id: 77,
+        name: "FC Zemst Sportief",
+        logo: "https://example.com/zemst.png",
+      },
+      status: "scheduled",
+      competition: "Tornooi",
+      competitionType: "tournament",
+    };
+
+    const tournamentRow = () =>
+      document.querySelector('[data-tournament="true"]') as HTMLElement;
+
+    it("marks itself with data-tournament — a normal row never carries the attribute", () => {
+      const { container: withTournament } = render(
+        <TeamAgendaRow match={TOURNAMENT} />,
+      );
+      expect(
+        withTournament.querySelector('[data-tournament="true"]'),
+      ).not.toBeNull();
+
+      const { container: normal } = render(<TeamAgendaRow match={BASE} />);
+      expect(normal.querySelector("[data-tournament]")).toBeNull();
+    });
+
+    it("gates on the structured competitionType, never on the Dutch competition label", () => {
+      // The Dutch word "Tornooi" alone must not trigger the reduced row —
+      // proves the detector isn't string-matching `competition`.
+      const { container: leagueWithTornooiLabel } = render(
+        <TeamAgendaRow
+          match={{ ...BASE, competition: "Tornooi", competitionType: "league" }}
+        />,
+      );
+      expect(
+        leagueWithTornooiLabel.querySelector('[data-tournament="true"]'),
+      ).toBeNull();
+      // It's the ordinary two-team row — both layouts render in jsdom (no
+      // CSS breakpoints), so home+away show on desktop and the opponent
+      // again on mobile: 3 crests, not the reduced row's 1.
+      expect(
+        leagueWithTornooiLabel.querySelectorAll('img, span[aria-hidden="true"]')
+          .length,
+      ).toBe(3);
+
+      // A different competition string entirely still triggers the reduced
+      // row as long as competitionType says tournament.
+      const { container: tournamentWithOtherLabel } = render(
+        <TeamAgendaRow
+          match={{ ...TOURNAMENT, competition: "Zomertornooi Mechelen" }}
+        />,
+      );
+      expect(
+        tournamentWithOtherLabel.querySelector('[data-tournament="true"]'),
+      ).not.toBeNull();
+    });
+
+    it("renders exactly one crest, no home/away icon, no score slot", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} />);
+      const row = tournamentRow();
+      expect(row.querySelectorAll('img, span[aria-hidden="true"]').length).toBe(
+        1,
+      );
+      expect(screen.queryByLabelText("Thuiswedstrijd")).toBeNull();
+      expect(screen.queryByLabelText("Uitwedstrijd")).toBeNull();
+    });
+
+    it("is not a link and never fires onNavigate", async () => {
+      const user = userEvent.setup();
+      const onNavigate = vi.fn();
+      render(<TeamAgendaRow match={TOURNAMENT} onNavigate={onNavigate} />);
+      expect(screen.queryByRole("link")).toBeNull();
+      await user.click(tournamentRow());
+      expect(onNavigate).not.toHaveBeenCalled();
+    });
+
+    it("shows the crest of the named club, not KCVV's — derived from club id, not home/away", () => {
+      // KCVV is homeTeam here; the opponent (away) crest must show.
+      const { container: kcvvHome } = render(
+        <TeamAgendaRow match={TOURNAMENT} />,
+      );
+      expect(
+        kcvvHome.querySelector('img[src="https://example.com/zemst.png"]'),
+      ).not.toBeNull();
+
+      // Swap sides — KCVV away this time. Same club must still show, proving
+      // the derivation reads club id, not the home/away slot.
+      const { container: kcvvAway } = render(
+        <TeamAgendaRow
+          match={{
+            ...TOURNAMENT,
+            id: 201,
+            homeTeam: TOURNAMENT.awayTeam,
+            awayTeam: TOURNAMENT.homeTeam,
+          }}
+        />,
+      );
+      expect(
+        kcvvAway.querySelector('img[src="https://example.com/zemst.png"]'),
+      ).not.toBeNull();
+    });
+
+    it("names the competition then the club, with no slot word — even featured", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} featured kind="fixture" />);
+      const row = tournamentRow();
+      expect(row.textContent).toContain("Tornooi");
+      expect(row.textContent).toContain("FC Zemst Sportief");
+      expect(row.textContent).not.toContain("Volgende");
+      // Competition before the club, joined by the caption's separator.
+      expect(row.textContent).toMatch(/Tornooi\s*·\s*FC Zemst Sportief/);
+    });
+
+    it("keeps the real start time — never a kickoff label", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} />);
+      expect(tournamentRow().textContent).toContain("09:30");
+    });
+
+    it("gives the row its own accessible label naming the subject and time, asserting no opponent", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} />);
+      const label = tournamentRow().getAttribute("aria-label");
+      expect(label).toBe("Tornooi · FC Zemst Sportief, 30 aug om 09:30");
+      expect(label).not.toContain("KCVV Elewijt");
+    });
+
+    it("drops the slot word from the accessible label too, even when kind is given", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} kind="fixture" />);
+      const label = tournamentRow().getAttribute("aria-label");
+      expect(label).not.toContain("Volgende");
+    });
+
+    it("honours the opponent-history page's squad captionLabel ahead of the subject", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} captionLabel="A-Ploeg" />);
+      const row = tournamentRow();
+      expect(row.textContent).toContain("A-Ploeg");
+      expect(row.textContent).toMatch(
+        /A-Ploeg\s*·\s*Tornooi\s*·\s*FC Zemst Sportief/,
+      );
+    });
+
+    it("carries min-w-0 on the content box, same as the placeholder register (#2696)", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} />);
+      const contentRow = tournamentRow().querySelector(
+        ".flex.w-full.items-center.gap-2.px-3.py-2",
+      );
+      expect(contentRow?.className.split(/\s+/)).toContain("min-w-0");
+    });
+
+    it("may be the featured 'Eerstvolgende' card", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} featured />);
+      expect(tournamentRow().getAttribute("data-featured")).toBe("true");
+    });
+  });
 });
