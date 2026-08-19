@@ -267,8 +267,8 @@ describe("NewsListingClient", () => {
     fireEvent.click(screen.getByRole("button", { name: "Toon alles" }));
 
     expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
-      surface: "nieuws",
-      filter_type: "Jeugd",
+      source: "nieuws",
+      filter_type: "jeugd",
     });
   });
 

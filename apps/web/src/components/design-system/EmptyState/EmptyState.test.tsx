@@ -85,36 +85,20 @@ describe("EmptyState — tier: surface (Tier 1)", () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it("renders no analytics marker on the undo when analyticsAction is omitted", () => {
+  it("always renders the data-empty-state-undo marker for reason='filtered' (#2691)", () => {
+    // Unconditional, structural on `reason`, not an opt-in flag — a
+    // host-mounted <EmptyStateUndoAnalytics> delegates the click into the
+    // `empty_state_undo` event off this marker, mirroring how ErrorState
+    // renders `data-error-action` for <ErrorAnalytics> to delegate off of.
+    // No prop can omit it: every "filtered" undo is analytics-visible by
+    // construction, so a sixth filtered surface can't silently ship one
+    // that never fires.
     render(
       <EmptyState
         tier="surface"
         heading="Geen artikelen in Jeugd"
         reason="filtered"
         undo={{ label: "Toon alles", onClick: vi.fn() }}
-      >
-        Body.
-      </EmptyState>,
-    );
-    expect(
-      screen.getByRole("button", { name: "Toon alles" }),
-    ).not.toHaveAttribute("data-empty-state-undo");
-  });
-
-  it("renders undo.analyticsAction as the data-empty-state-undo marker (#2691)", () => {
-    // Inert marker only — a host-mounted <EmptyStateUndoAnalytics> delegates
-    // the click into the `empty_state_undo` event, mirroring how ErrorState
-    // renders `data-error-action` for <ErrorAnalytics> to delegate off of.
-    render(
-      <EmptyState
-        tier="surface"
-        heading="Geen artikelen in Jeugd"
-        reason="filtered"
-        undo={{
-          label: "Toon alles",
-          onClick: vi.fn(),
-          analyticsAction: "undo",
-        }}
       >
         Body.
       </EmptyState>,

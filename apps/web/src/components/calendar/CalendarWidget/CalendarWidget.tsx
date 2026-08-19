@@ -292,7 +292,7 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
               </EmptyState>
             ) : (
               <EmptyStateUndoAnalytics
-                surface="kalender"
+                source="kalender"
                 facet={activeTypeFilter}
               >
                 <EmptyState
@@ -308,7 +308,6 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
                   undo={{
                     label: "Toon alles",
                     onClick: () => setType("all"),
-                    analyticsAction: "undo",
                   }}
                 >
                   {filteredEmptyBody("de volledige kalender")}

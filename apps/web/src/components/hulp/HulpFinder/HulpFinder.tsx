@@ -245,7 +245,7 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
       // `UserRole | null` type for the analytics facet.
       return (
         <EmptyStateUndoAnalytics
-          surface="hulp_audience"
+          source="hulp_audience"
           facet={audience ?? "onbekend"}
         >
           <EmptyState
@@ -260,7 +260,6 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
             undo={{
               label: "Toon alle doelgroepen",
               onClick: () => setAudience(null),
-              analyticsAction: "undo",
             }}
           >
             Er zijn voor deze rol geen hulpvragen beschikbaar.
@@ -275,7 +274,7 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
         // "deze categorie" — the copy is the tell (#2427 rule 5).
         const meta = CATEGORY_META[category];
         return (
-          <EmptyStateUndoAnalytics surface="hulp_category" facet={category}>
+          <EmptyStateUndoAnalytics source="hulp_category" facet={category}>
             <EmptyState
               tier="surface"
               heading={`Geen hulpvragen in ${meta.label}${audience ? " voor deze rol" : ""}`}
@@ -284,7 +283,6 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
               undo={{
                 label: "Toon alle categorieën",
                 onClick: () => setCategory("alles"),
-                analyticsAction: "undo",
               }}
             >
               {filteredEmptyBody("het volledige overzicht")}

@@ -163,8 +163,8 @@ describe("<EventsBrowser>", () => {
     await userEvent.click(screen.getByRole("button", { name: "Toon alles" }));
 
     expect(mockTrackEvent).toHaveBeenCalledWith("empty_state_undo", {
-      surface: "evenementen",
-      filter_type: "Jeugdwerking",
+      source: "evenementen",
+      filter_type: "jeugdwerking",
     });
     // The undo's own handleSelect("all") still fires its ordinary
     // event_filter — that payload must not regress.

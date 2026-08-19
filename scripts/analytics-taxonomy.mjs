@@ -52,8 +52,12 @@ export const prefixes = [
   "error_",
   "gallery_",
   // `<EmptyState>`'s mandatory undo (#2691). `empty_state_undo` only —
-  // reuses the already-registered `filter_type` dimension for the facet
-  // that was active, minting only `surface` as a new custom dimension.
+  // reuses the already-registered `source` dimension ("Interaction source")
+  // for which of the five surfaces rendered the undo, and the already-
+  // registered `filter_type` dimension for the facet that was active. No
+  // new custom dimensions (review round 1: an earlier version minted a new
+  // `surface` dimension, which would have taken this list past GA4's 50
+  // event-scoped-dimension cap).
   "empty_state_",
   // `/inhoud`, the contents page (#2622). `inhoud_view` +
   // `inhoud_entry_click`; the click reuses the already-registered `category`
@@ -156,13 +160,10 @@ export const params = [
   { parameterName: "gallery_slug", displayName: "Gallery slug" },
   { parameterName: "image_count", displayName: "Image count" },
   { parameterName: "image_index", displayName: "Image index" },
-  // ── Empty-state undo (#2691) ─────────────────────────────────────────────
-  // `filter_type` (already registered above, for `match_agenda_filter` /
-  // `search_filter_changed`) carries the facet — no new dimension for that
-  // half. `surface` is the one genuinely new dimension: which of the five
-  // hosts (`evenementen` | `kalender` | `hulp_audience` | `hulp_category` |
-  // `nieuws`) rendered the undo.
-  { parameterName: "surface", displayName: "Empty-state surface" },
+  // Empty-state undo (#2691): `empty_state_undo` mints no new params here —
+  // it reuses `source` (which of the five hosts, above) and `filter_type`
+  // (the active facet, above, already carrying `match_agenda_filter` /
+  // `search_filter_changed` values).
   // ── Membership form (conversion — added #1974) ──────────────────────────
   { parameterName: "is_minor", displayName: "Is minor" },
   { parameterName: "has_prior_club", displayName: "Has prior club" },

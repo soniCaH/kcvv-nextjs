@@ -86,7 +86,7 @@ export function EventsBrowser({
 
       {filtered.length === 0 ? (
         isFilterActive ? (
-          <EmptyStateUndoAnalytics surface="evenementen" facet={selected}>
+          <EmptyStateUndoAnalytics source="evenementen" facet={selected}>
             <EmptyState
               tier="surface"
               surface="inverse"
@@ -96,7 +96,6 @@ export function EventsBrowser({
               undo={{
                 label: "Toon alles",
                 onClick: () => handleSelect("all"),
-                analyticsAction: "undo",
               }}
             >
               {filteredEmptyBody("alle evenementen")}

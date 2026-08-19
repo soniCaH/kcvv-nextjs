@@ -228,7 +228,7 @@ export function NewsListingClient({
                     ?.attributes.name ?? activeCategory);
 
             return activeCategoryLabel ? (
-              <EmptyStateUndoAnalytics surface="nieuws" facet={activeCategory}>
+              <EmptyStateUndoAnalytics source="nieuws" facet={activeCategory}>
                 <EmptyState
                   tier="surface"
                   heading={`Geen artikelen in ${activeCategoryLabel}`}
@@ -237,7 +237,6 @@ export function NewsListingClient({
                   undo={{
                     label: "Toon alles",
                     onClick: () => handleCategoryChange("all"),
-                    analyticsAction: "undo",
                   }}
                   className="mb-6"
                 >

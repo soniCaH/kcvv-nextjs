@@ -2,20 +2,35 @@
 
 import { useRef, type ReactNode } from "react";
 import { trackEvent } from "@/lib/analytics/track-event";
+import { slugifyFacet } from "@/lib/analytics/slugify-facet";
 import { useDelegatedClick } from "@/hooks/useDelegatedClick";
+
+/**
+ * Which host's `<EmptyState>` this wraps. A closed union (not `string`) so a
+ * typo or a copy-paste from `<EmptyState surface>` (a *different* prop on
+ * the wrapped primitive — a visual ground: `"paper" | "bare" | "inverse"`)
+ * fails to compile instead of shipping a garbage dimension value. The two
+ * props sit adjacent at several call sites (e.g. `CalendarWidget`'s
+ * `source="kalender"` wrapping the primitive's own `surface="bare"`).
+ */
+export type EmptyStateUndoSource =
+  "evenementen" | "kalender" | "hulp_audience" | "hulp_category" | "nieuws";
 
 export interface EmptyStateUndoAnalyticsProps {
   /**
-   * Which surface's `<EmptyState>` this wraps, e.g. `"evenementen"` |
-   * `"kalender"` | `"hulp_audience"` | `"hulp_category"` | `"nieuws"`.
+   * Which of the five hosts rendered the undo. Pushed to GA4 as `source`,
+   * reusing the already-registered "Interaction source" dimension rather
+   * than minting a new one — the taxonomy is already near GA4's 50
+   * event-scoped custom-dimension cap.
    */
-  surface: string;
+  source: EmptyStateUndoSource;
   /**
    * The facet (active filter value) that emptied the surface — the same
-   * value the undo clears. Pushed under the dataLayer key `filter_type`,
-   * reusing the GA4 dimension `match_agenda_filter` / `search_filter_changed`
-   * already registered for "which filter facet is active" — GA4's 50-
-   * dimension cap makes a second dimension with the same meaning wasteful.
+   * value the undo clears. Slugified before the push (`slugifyFacet`) so it
+   * lands in one value space under the reused `filter_type` dimension
+   * (`match_agenda_filter` / `search_filter_changed` already populate it),
+   * regardless of whether the host's own value is display-cased or already
+   * a lowercase slug.
    */
   facet: string;
   children: ReactNode;
@@ -25,10 +40,11 @@ export interface EmptyStateUndoAnalyticsProps {
  * Client analytics shell for `<EmptyState>`'s mandatory `reason="filtered"`
  * undo (#2691). Mirrors `<ErrorAnalytics>`'s shape and mount point: a
  * host-level client wrapper delegates a click on the marker `<EmptyState>`
- * renders (`data-empty-state-undo`, set via `EmptyStateAction.analyticsAction`)
- * into `empty_state_undo` — one native listener per mount, not a `trackEvent`
- * call threaded into the primitive itself, so `<EmptyState>` stays
- * presentational and importable from a Server Component.
+ * renders (`data-empty-state-undo`, emitted unconditionally whenever
+ * `reason === "filtered"`) into `empty_state_undo` — one native listener per
+ * mount, not a `trackEvent` call threaded into the primitive itself, so
+ * `<EmptyState>` stays presentational and importable from a Server
+ * Component.
  *
  * `empty_state_undo` is deliberately distinct from each surface's ordinary
  * filter-reset event (`event_filter`, `kalender_filter`, …), which
@@ -37,7 +53,7 @@ export interface EmptyStateUndoAnalyticsProps {
  * affordance, never on an ordinary chip press.
  */
 export function EmptyStateUndoAnalytics({
-  surface,
+  source,
   facet,
   children,
 }: EmptyStateUndoAnalyticsProps) {
@@ -46,7 +62,10 @@ export function EmptyStateUndoAnalytics({
   useDelegatedClick(ref, {
     selector: "[data-empty-state-undo]",
     onMatch: () => {
-      trackEvent("empty_state_undo", { surface, filter_type: facet });
+      trackEvent("empty_state_undo", {
+        source,
+        filter_type: slugifyFacet(facet),
+      });
     },
   });
 

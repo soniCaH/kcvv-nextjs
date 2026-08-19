@@ -173,7 +173,7 @@ describe("HulpFinder", () => {
     );
 
     expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
-      surface: "hulp_category",
+      source: "hulp_category",
       filter_type: "medisch",
     });
   });
@@ -213,7 +213,7 @@ describe("HulpFinder", () => {
     );
 
     expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
-      surface: "hulp_audience",
+      source: "hulp_audience",
       filter_type: "speler",
     });
   });

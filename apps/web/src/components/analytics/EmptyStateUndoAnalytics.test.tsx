@@ -15,7 +15,7 @@ describe("<EmptyStateUndoAnalytics>", () => {
 
   it("delegates a click on the marked undo element to empty_state_undo", () => {
     render(
-      <EmptyStateUndoAnalytics surface="evenementen" facet="Jeugdwerking">
+      <EmptyStateUndoAnalytics source="evenementen" facet="Jeugdwerking">
         <button type="button" data-empty-state-undo="undo">
           Toon alles
         </button>
@@ -26,14 +26,31 @@ describe("<EmptyStateUndoAnalytics>", () => {
 
     expect(trackEvent).toHaveBeenCalledTimes(1);
     expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
-      surface: "evenementen",
-      filter_type: "Jeugdwerking",
+      source: "evenementen",
+      filter_type: "jeugdwerking",
+    });
+  });
+
+  it("slugifies a facet value that arrives in display casing", () => {
+    render(
+      <EmptyStateUndoAnalytics source="nieuws" facet="Jeugd">
+        <button type="button" data-empty-state-undo="undo">
+          Toon alles
+        </button>
+      </EmptyStateUndoAnalytics>,
+    );
+
+    fireEvent.click(screen.getByText("Toon alles"));
+
+    expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
+      source: "nieuws",
+      filter_type: "jeugd",
     });
   });
 
   it("ignores clicks outside any data-empty-state-undo element", () => {
     render(
-      <EmptyStateUndoAnalytics surface="evenementen" facet="Jeugdwerking">
+      <EmptyStateUndoAnalytics source="evenementen" facet="Jeugdwerking">
         <p>Geen knop hier.</p>
       </EmptyStateUndoAnalytics>,
     );
@@ -45,7 +62,7 @@ describe("<EmptyStateUndoAnalytics>", () => {
 
   it("renders its children", () => {
     render(
-      <EmptyStateUndoAnalytics surface="kalender" facet="Wedstrijden">
+      <EmptyStateUndoAnalytics source="kalender" facet="Wedstrijden">
         <span>wrapped content</span>
       </EmptyStateUndoAnalytics>,
     );

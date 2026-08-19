@@ -361,8 +361,8 @@ describe("CalendarWidget", () => {
       render(<CalendarWidget {...defaultProps} />);
       await user.click(screen.getByRole("button", { name: "Toon alles" }));
       expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
-        surface: "kalender",
-        filter_type: "Supportersactiviteit",
+        source: "kalender",
+        filter_type: "supportersactiviteit",
       });
       // The undo's own setType("all") still fires its ordinary
       // kalender_filter — that payload must not regress.
