@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { CAPTURE_HEIGHT, CAPTURE_WIDTH } from "../constants";
 import {
+  ShareBadgeContext,
   ShareFrame,
   ShareTop,
   ShareMid,
@@ -41,7 +42,7 @@ export const RegisterACream: Story = {
     ...base,
     register: "cream",
     children: (
-      <>
+      <ShareBadgeContext.Provider value="A">
         <ShareTop />
         <ShareMid center>
           <Kicker>Aftrap · 2e Provinciale</Kicker>
@@ -56,7 +57,7 @@ export const RegisterACream: Story = {
           <MetaLine>Zaterdag · 20:00 · Terrein A</MetaLine>
         </ShareMid>
         <ShareFoot />
-      </>
+      </ShareBadgeContext.Provider>
     ),
   },
 };
@@ -66,7 +67,8 @@ export const RegisterBDark: Story = {
     ...base,
     register: "dark",
     children: (
-      <>
+      // U13A — the widest real label — to prove the badge fits without clipping.
+      <ShareBadgeContext.Provider value="U13A">
         <ShareTop />
         <ShareMid center>
           <Kicker>Eindstand</Kicker>
@@ -86,7 +88,7 @@ export const RegisterBDark: Story = {
           <MetaLine style={{ marginTop: "16px" }}>2e Provinciale</MetaLine>
         </ShareMid>
         <ShareFoot />
-      </>
+      </ShareBadgeContext.Provider>
     ),
   },
 };
@@ -98,7 +100,7 @@ export const ImageRegister: Story = {
     overlay: "shout",
     imageUrl: "/images/ultras.jpg",
     children: (
-      <>
+      <ShareBadgeContext.Provider value="B">
         <ShareTop />
         <ShareMid>
           <Kicker>Doelpunt · 67&apos;</Kicker>
@@ -125,7 +127,7 @@ export const ImageRegister: Story = {
           </div>
         </ShareMid>
         <ShareFoot left="KCVV Elewijt — Eppegem" />
-      </>
+      </ShareBadgeContext.Provider>
     ),
   },
 };

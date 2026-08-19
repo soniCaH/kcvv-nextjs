@@ -80,6 +80,12 @@ export interface SharePalette {
   ghost: string;
   /** Hairline rule colour appropriate to the register. */
   rule: string;
+  /**
+   * Squad-badge background + text. Register-driven, not sentiment-driven —
+   * the squad is wayfinding, not mood, so it does not react to win/draw/loss.
+   */
+  badgeBg: string;
+  badgeText: string;
 }
 
 /** Darker than `--color-ink-muted` so small mono text clears AA on cream. */
@@ -101,6 +107,8 @@ const LOUD_PALETTE: SharePalette = {
   numDiscText: TOKENS.ink,
   ghost: CREAM_GHOST,
   rule: "rgba(245, 241, 230, 0.18)",
+  badgeBg: TOKENS.cream,
+  badgeText: TOKENS.ink,
 };
 
 /**
@@ -128,6 +136,8 @@ export function resolvePalette(
       numDiscText: TOKENS.cream,
       ghost: BRICK_GHOST,
       rule: "rgba(10, 10, 10, 0.14)",
+      badgeBg: TOKENS.ink,
+      badgeText: TOKENS.cream,
     };
   }
 
@@ -143,6 +153,8 @@ export function resolvePalette(
     numDiscText: TOKENS.cream,
     ghost: JERSEY_GHOST,
     rule: "rgba(10, 10, 10, 0.14)",
+    badgeBg: TOKENS.ink,
+    badgeText: TOKENS.cream,
   };
 }
 
@@ -219,6 +231,22 @@ export function resolveResultMood(mood: ResultMood): ResolvedResultMood {
 /** Normalize a "2 - 0" score to a tight en-dash "2–0" for display. */
 export function formatScore(score: string): string {
   return score.replace(/\s*-\s*/g, "–");
+}
+
+/**
+ * Convert a BFF squad label (`Match.kcvv_team_label`, e.g. `"A-Ploeg"`,
+ * `"U21"`) to the compact text shown in the `/share` squad badge. Deliberately
+ * a two-entry special case, not a general parser: `"A-Ploeg"` → `"A"`,
+ * `"B-Ploeg"` → `"B"`; anything else (a federation age code such as `"U21"`
+ * or `"U13A"`) passes through unchanged. Empty, whitespace-only or absent
+ * input means no badge.
+ */
+export function shortSquadLabel(label: string | undefined): string | undefined {
+  const trimmed = label?.trim();
+  if (!trimmed) return undefined;
+  if (trimmed === "A-Ploeg") return "A";
+  if (trimmed === "B-Ploeg") return "B";
+  return trimmed;
 }
 
 export interface CrestEntry {

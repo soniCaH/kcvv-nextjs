@@ -16,7 +16,8 @@ import {
   SQUARE_SIZE,
   TEMPLATE_SCALE,
 } from "../constants";
-import type { ResultMood } from "../shared/theme";
+import { ShareBadgeContext } from "../shared/ShareFrame";
+import { shortSquadLabel, type ResultMood } from "../shared/theme";
 import { Button } from "@/components/design-system/Button/Button";
 import { Input } from "@/components/design-system/Input/Input";
 import { Select } from "@/components/design-system/Select/Select";
@@ -67,6 +68,9 @@ export interface MatchOption {
   dateTime?: string;
   homeLogo?: string;
   awayLogo?: string;
+  /** Raw `Match.kcvv_team_label` (`"A-Ploeg"`, `"U21"`, …) — reduced to its
+   *  compact badge form via `shortSquadLabel` before it prefills Ploeg. */
+  kcvvTeamLabel?: string;
 }
 
 interface TemplateMeta {
@@ -363,6 +367,7 @@ export function SharePage({ matches, players }: SharePageProps) {
   const [score, setScore] = useState("");
   const [competition, setCompetition] = useState("");
   const [dateTime, setDateTime] = useState("");
+  const [squad, setSquad] = useState("");
 
   // Template-specific fields (reset on template switch)
   const [minute, setMinute] = useState("");
@@ -406,6 +411,7 @@ export function SharePage({ matches, players }: SharePageProps) {
     if (picked) {
       setCompetition(picked.competition ?? "");
       setDateTime(picked.dateTime ?? "");
+      setSquad(shortSquadLabel(picked.kcvvTeamLabel) ?? "");
     }
     clearPreview();
   };
@@ -648,6 +654,26 @@ export function SharePage({ matches, players }: SharePageProps) {
         </datalist>
       </section>
 
+      {/* ── Ploeg — always visible ──────────────────────────────────── */}
+      <section aria-labelledby="squad-label">
+        <label
+          id="squad-label"
+          htmlFor="squad-input"
+          className={`${labelClass} mb-2 block`}
+        >
+          Ploeg
+        </label>
+        <Input
+          id="squad-input"
+          value={squad}
+          onChange={(e) => {
+            setSquad(e.target.value);
+            clearPreview();
+          }}
+          placeholder="A"
+        />
+      </section>
+
       {/* ── Score ───────────────────────────────────────────────────── */}
       {currentTemplate.requiresScore && (
         <section aria-labelledby="score-label">
@@ -859,20 +885,22 @@ export function SharePage({ matches, players }: SharePageProps) {
           }}
         >
           <div ref={templateRef}>
-            {renderTemplate(selectedTemplateId, {
-              matchName: matchName || FALLBACK_MATCH_NAME,
-              score: score || FALLBACK_SCORE,
-              minute: minute || FALLBACK_MINUTE,
-              player: selectedPlayer,
-              mood,
-              competition: competition.trim() || undefined,
-              dateTime: dateTime.trim() || undefined,
-              // Raw URLs — the templates route remote images through the
-              // same-origin optimizer + sanitize at the <img> sink.
-              homeLogo: selectedMatch?.homeLogo,
-              awayLogo: selectedMatch?.awayLogo,
-              imageUrl: resolvedImageUrl,
-            })}
+            <ShareBadgeContext.Provider value={shortSquadLabel(squad)}>
+              {renderTemplate(selectedTemplateId, {
+                matchName: matchName || FALLBACK_MATCH_NAME,
+                score: score || FALLBACK_SCORE,
+                minute: minute || FALLBACK_MINUTE,
+                player: selectedPlayer,
+                mood,
+                competition: competition.trim() || undefined,
+                dateTime: dateTime.trim() || undefined,
+                // Raw URLs — the templates route remote images through the
+                // same-origin optimizer + sanitize at the <img> sink.
+                homeLogo: selectedMatch?.homeLogo,
+                awayLogo: selectedMatch?.awayLogo,
+                imageUrl: resolvedImageUrl,
+              })}
+            </ShareBadgeContext.Provider>
           </div>
         </div>
       </div>

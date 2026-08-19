@@ -4,6 +4,7 @@ import {
   opponentName,
   overlayGradient,
   resolvePalette,
+  shortSquadLabel,
   splitMatchName,
   toSameOriginImage,
 } from "./theme";
@@ -117,5 +118,35 @@ describe("opponentName", () => {
 
   it("returns the home side when KCVV is away", () => {
     expect(opponentName("Eppegem — KCVV Elewijt")).toBe("Eppegem");
+  });
+});
+
+describe("shortSquadLabel", () => {
+  it("collapses A-Ploeg to A", () => {
+    expect(shortSquadLabel("A-Ploeg")).toBe("A");
+  });
+
+  it("collapses B-Ploeg to B", () => {
+    expect(shortSquadLabel("B-Ploeg")).toBe("B");
+  });
+
+  it("passes a youth code through unchanged", () => {
+    expect(shortSquadLabel("U21")).toBe("U21");
+  });
+
+  it("passes a four-character youth code through unchanged", () => {
+    expect(shortSquadLabel("U13A")).toBe("U13A");
+  });
+
+  it("renders no badge for an empty string", () => {
+    expect(shortSquadLabel("")).toBeUndefined();
+  });
+
+  it("renders no badge for a whitespace-only string", () => {
+    expect(shortSquadLabel("   ")).toBeUndefined();
+  });
+
+  it("renders no badge for undefined", () => {
+    expect(shortSquadLabel(undefined)).toBeUndefined();
   });
 });
