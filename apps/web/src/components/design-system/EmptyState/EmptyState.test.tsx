@@ -85,6 +85,46 @@ describe("EmptyState — tier: surface (Tier 1)", () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
+  it("renders no analytics marker on the undo when analyticsAction is omitted", () => {
+    render(
+      <EmptyState
+        tier="surface"
+        heading="Geen artikelen in Jeugd"
+        reason="filtered"
+        undo={{ label: "Toon alles", onClick: vi.fn() }}
+      >
+        Body.
+      </EmptyState>,
+    );
+    expect(
+      screen.getByRole("button", { name: "Toon alles" }),
+    ).not.toHaveAttribute("data-empty-state-undo");
+  });
+
+  it("renders undo.analyticsAction as the data-empty-state-undo marker (#2691)", () => {
+    // Inert marker only — a host-mounted <EmptyStateUndoAnalytics> delegates
+    // the click into the `empty_state_undo` event, mirroring how ErrorState
+    // renders `data-error-action` for <ErrorAnalytics> to delegate off of.
+    render(
+      <EmptyState
+        tier="surface"
+        heading="Geen artikelen in Jeugd"
+        reason="filtered"
+        undo={{
+          label: "Toon alles",
+          onClick: vi.fn(),
+          analyticsAction: "undo",
+        }}
+      >
+        Body.
+      </EmptyState>,
+    );
+    expect(screen.getByRole("button", { name: "Toon alles" })).toHaveAttribute(
+      "data-empty-state-undo",
+      "undo",
+    );
+  });
+
   it("is not a live region by default", () => {
     render(
       <EmptyState tier="surface" heading="Nog geen sponsors">

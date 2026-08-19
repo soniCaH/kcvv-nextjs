@@ -54,6 +54,15 @@ import type { StateActionBase } from "../_internal/stateAction";
 /** An undo action — always a button (a filter reset never navigates). */
 export interface EmptyStateAction extends StateActionBase {
   onClick: () => void;
+  /**
+   * Stable analytics slug rendered as `data-empty-state-undo` (e.g.
+   * `"undo"`). A host-mounted `<EmptyStateUndoAnalytics>` wrapper (mirroring
+   * `<ErrorAnalytics>` and its `data-error-action` marker) delegates a click
+   * off this marker into `empty_state_undo` (#2691) — so this component
+   * stays free of any `trackEvent` call and stays importable from a Server
+   * Component. Omit it to render no marker.
+   */
+  analyticsAction?: string;
 }
 
 /**
@@ -220,6 +229,7 @@ function SurfaceEmptyState(props: EmptyStateSurfaceProps) {
                 variant="ghost"
                 size="sm"
                 onClick={props.undo.onClick}
+                data-empty-state-undo={props.undo.analyticsAction}
               >
                 {props.undo.label}
               </Button>
