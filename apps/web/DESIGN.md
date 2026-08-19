@@ -459,7 +459,7 @@ Decided on [#2548](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2548), b
 - **Do** pick the right green: `jersey` decorative only, `jersey-deep` for anything carrying text (headings, CTAs, inline prose links), `jersey-bright` for green text on ink.
 - **Do** reach for an existing primitive — taped card, ticket stub, mono label, editorial heading, tape strip, stamp badge, striped seam — before writing new markup.
 - **Do** route every page through the three container widths (680 / 1040 / 1280).
-- **Do** keep photographs in colour with the newsprint warm-tint; greyscale-to-colour-on-hover belongs to sponsor logos alone.
+- **Do** keep photographs in colour with the newsprint warm-tint; greyscale-to-colour-on-hover belongs to sponsor logos alone — except on `/sponsors` itself, see the Don't below.
 - **Do** author heading emphasis as a Portable Text `accent` decorator, one emphasis per heading.
 - **Do** use Phosphor Fill icons from the single icon source.
 - **Do** give an image `alt=""` when its own section already names it, and describe the moment when nothing else does.
