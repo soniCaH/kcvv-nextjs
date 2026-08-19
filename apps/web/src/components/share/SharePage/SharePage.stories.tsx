@@ -28,6 +28,7 @@ export const Default: Story = {
         competition: "2e Provinciale",
         dateTime: "Zaterdag · 20:00",
         awayLogo: OPPONENT_CREST,
+        kcvvTeamLabel: "A-Ploeg",
       },
       {
         id: 1002,
@@ -36,6 +37,7 @@ export const Default: Story = {
         competition: "Beker van Vlaanderen",
         dateTime: "Zondag · 15:00",
         homeLogo: OPPONENT_CREST,
+        kcvvTeamLabel: "A-Ploeg",
       },
     ],
     players: [

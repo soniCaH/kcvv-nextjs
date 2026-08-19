@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { act, render, screen } from "@testing-library/react";
-import { ShareFrame, ShareTop, ShareFoot } from "./ShareFrame";
+import {
+  ShareBadgeContext,
+  ShareFrame,
+  ShareTop,
+  ShareFoot,
+} from "./ShareFrame";
 import { Headline, Kicker, Scoreline, ShareName } from "./ShareElements";
 
 /** Fake element width measurement (happy-dom has no layout); returns a restore. */
@@ -196,6 +201,54 @@ describe("ShareFrame", () => {
     });
     expect(screen.getByText("KCVVELEWIJT.BE")).toBeInTheDocument();
     expect(screen.getByText("KCVV — Eppegem")).toBeInTheDocument();
+  });
+
+  it("renders no badge in the top bar when none is supplied (11-template default)", () => {
+    render(
+      <ShareFrame width={1080} height={1920} register="cream">
+        <ShareTop />
+      </ShareFrame>,
+    );
+    expect(screen.queryByText("A")).not.toBeInTheDocument();
+  });
+
+  it("renders a supplied badge's text in the top bar", () => {
+    render(
+      <ShareBadgeContext.Provider value="A">
+        <ShareFrame width={1080} height={1920} register="cream">
+          <ShareTop />
+        </ShareFrame>
+      </ShareBadgeContext.Provider>,
+    );
+    expect(screen.getByText("A")).toBeInTheDocument();
+  });
+
+  it("gives the badge cream-register colours: ink background, cream text", () => {
+    render(
+      <ShareBadgeContext.Provider value="U21">
+        <ShareFrame width={1080} height={1920} register="cream">
+          <ShareTop />
+        </ShareFrame>
+      </ShareBadgeContext.Provider>,
+    );
+    expect(screen.getByText("U21")).toHaveStyle({
+      backgroundColor: "#0a0a0a",
+      color: "#f5f1e6",
+    });
+  });
+
+  it("gives the badge dark-register colours: cream background, ink text", () => {
+    render(
+      <ShareBadgeContext.Provider value="U21">
+        <ShareFrame width={1080} height={1920} register="dark">
+          <ShareTop />
+        </ShareFrame>
+      </ShareBadgeContext.Provider>,
+    );
+    expect(screen.getByText("U21")).toHaveStyle({
+      backgroundColor: "#f5f1e6",
+      color: "#0a0a0a",
+    });
   });
 
   it("composes the headline accent word and punctuation into one accessible name", () => {

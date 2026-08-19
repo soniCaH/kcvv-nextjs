@@ -38,6 +38,7 @@ function toMatchOption(match: Match): MatchOption {
     dateTime: formatDateTime(match),
     homeLogo: match.home_team.logo,
     awayLogo: match.away_team.logo,
+    kcvvTeamLabel: match.kcvv_team_label,
   };
 }
 

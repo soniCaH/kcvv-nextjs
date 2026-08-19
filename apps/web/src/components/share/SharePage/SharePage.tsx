@@ -16,7 +16,8 @@ import {
   SQUARE_SIZE,
   TEMPLATE_SCALE,
 } from "../constants";
-import type { ResultMood } from "../shared/theme";
+import { ShareBadgeContext } from "../shared/ShareFrame";
+import { shortSquadLabel, type ResultMood } from "../shared/theme";
 import { Button } from "@/components/design-system/Button/Button";
 import { Input } from "@/components/design-system/Input/Input";
 import { Select } from "@/components/design-system/Select/Select";
@@ -67,6 +68,9 @@ export interface MatchOption {
   dateTime?: string;
   homeLogo?: string;
   awayLogo?: string;
+  /** Raw `Match.kcvv_team_label` (`"A-Ploeg"`, `"U21"`, …) — reduced to its
+   *  compact badge form via `shortSquadLabel` before it prefills Ploeg. */
+  kcvvTeamLabel?: string;
 }
 
 interface TemplateMeta {
@@ -363,6 +367,12 @@ export function SharePage({ matches, players }: SharePageProps) {
   const [score, setScore] = useState("");
   const [competition, setCompetition] = useState("");
   const [dateTime, setDateTime] = useState("");
+  const [squad, setSquad] = useState("");
+  // Disambiguates two matches that share a matchName (e.g. two KCVV squads vs
+  // the same opponent club, or "KCVV Elewijt — KCVV Elewijt" placeholders).
+  // Set only on an unambiguous datalist pick (by label); cleared on a miss so
+  // a stale id can never outlive its pick.
+  const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
 
   // Template-specific fields (reset on template switch)
   const [minute, setMinute] = useState("");
@@ -396,16 +406,40 @@ export function SharePage({ matches, players }: SharePageProps) {
   const currentTemplate = TEMPLATES.find((t) => t.id === selectedTemplateId)!;
   const visibleTemplates = TEMPLATES.filter((t) => t.aspect === aspect);
   const selectedPlayer = players.find((p) => p.id === selectedPlayerId);
-  const selectedMatch = matches.find((m) => m.matchName === matchName);
+  // An id from an unambiguous datalist pick wins over the (possibly
+  // colliding) matchName lookup; free-typed input has no id, so it falls
+  // back to the old best-effort matchName match.
+  const selectedMatch =
+    (selectedMatchId != null &&
+      matches.find((m) => m.id === selectedMatchId)) ||
+    matches.find((m) => m.matchName === matchName);
 
-  // Prefill competition + kickoff line when a known match is picked (handled in
-  // the change event, not an effect — the data flows from one input to others).
+  // Prefill competition + kickoff line + squad when a known match is picked
+  // (handled in the change event, not an effect — the data flows from one
+  // input to others). The datalist option value is `m.label` (unique — it
+  // carries the squad suffix, e.g. "(A-Ploeg)"), so two squads meeting the
+  // same opponent never collide here even though their `matchName` does.
+  // On a hit, `matchName` is set to the clean club-names-only matchup so the
+  // suffix never reaches the canvas.
   const handleMatchNameChange = (value: string) => {
+    const pickedByLabel = matches.find((m) => m.label === value);
+    if (pickedByLabel) {
+      setMatchName(pickedByLabel.matchName);
+      setSelectedMatchId(pickedByLabel.id);
+      setCompetition(pickedByLabel.competition ?? "");
+      setDateTime(pickedByLabel.dateTime ?? "");
+      setSquad(shortSquadLabel(pickedByLabel.kcvvTeamLabel) ?? "");
+      clearPreview();
+      return;
+    }
+
     setMatchName(value);
+    setSelectedMatchId(null);
     const picked = matches.find((m) => m.matchName === value);
     if (picked) {
       setCompetition(picked.competition ?? "");
       setDateTime(picked.dateTime ?? "");
+      setSquad(shortSquadLabel(picked.kcvvTeamLabel) ?? "");
     }
     clearPreview();
   };
@@ -641,11 +675,38 @@ export function SharePage({ matches, players }: SharePageProps) {
         />
         <datalist id="match-options">
           {matches.map((m) => (
-            <option key={m.id} value={m.matchName}>
+            // value is the unique label (carries the squad suffix, e.g.
+            // "(A-Ploeg)") so two matches sharing a matchName never collide;
+            // handleMatchNameChange resolves it back to the clean matchup.
+            <option key={m.id} value={m.label}>
               {m.label}
             </option>
           ))}
         </datalist>
+      </section>
+
+      {/* ── Ploeg — always visible ──────────────────────────────────── */}
+      <section aria-labelledby="squad-label">
+        <label
+          id="squad-label"
+          htmlFor="squad-input"
+          className={`${labelClass} mb-2 block`}
+        >
+          Ploeg
+        </label>
+        <Input
+          id="squad-input"
+          value={squad}
+          onChange={(e) => {
+            setSquad(e.target.value);
+            clearPreview();
+          }}
+          placeholder="A"
+          // The badge has no auto-fit (locked design — see #2700); the
+          // longest real label is 4 chars ("U13A"), so 6 leaves it room to
+          // spare while still bounding the canvas-width overflow risk.
+          maxLength={6}
+        />
       </section>
 
       {/* ── Score ───────────────────────────────────────────────────── */}
@@ -859,20 +920,22 @@ export function SharePage({ matches, players }: SharePageProps) {
           }}
         >
           <div ref={templateRef}>
-            {renderTemplate(selectedTemplateId, {
-              matchName: matchName || FALLBACK_MATCH_NAME,
-              score: score || FALLBACK_SCORE,
-              minute: minute || FALLBACK_MINUTE,
-              player: selectedPlayer,
-              mood,
-              competition: competition.trim() || undefined,
-              dateTime: dateTime.trim() || undefined,
-              // Raw URLs — the templates route remote images through the
-              // same-origin optimizer + sanitize at the <img> sink.
-              homeLogo: selectedMatch?.homeLogo,
-              awayLogo: selectedMatch?.awayLogo,
-              imageUrl: resolvedImageUrl,
-            })}
+            <ShareBadgeContext.Provider value={shortSquadLabel(squad)}>
+              {renderTemplate(selectedTemplateId, {
+                matchName: matchName || FALLBACK_MATCH_NAME,
+                score: score || FALLBACK_SCORE,
+                minute: minute || FALLBACK_MINUTE,
+                player: selectedPlayer,
+                mood,
+                competition: competition.trim() || undefined,
+                dateTime: dateTime.trim() || undefined,
+                // Raw URLs — the templates route remote images through the
+                // same-origin optimizer + sanitize at the <img> sink.
+                homeLogo: selectedMatch?.homeLogo,
+                awayLogo: selectedMatch?.awayLogo,
+                imageUrl: resolvedImageUrl,
+              })}
+            </ShareBadgeContext.Provider>
           </div>
         </div>
       </div>

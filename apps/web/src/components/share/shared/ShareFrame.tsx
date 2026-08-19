@@ -31,6 +31,16 @@ export function useSharePalette(): SharePalette {
   return useContext(SharePaletteContext);
 }
 
+/**
+ * Squad badge text (e.g. `"A"`, `"U21"`, `"U13A"`) for the enclosing render.
+ * Defaults to no badge. `SharePage` provides this around the element returned
+ * by its template renderer; `ShareTop` is the single seam that reads it, so
+ * every one of the 11 templates picks up the badge without a threaded prop.
+ * A template rendered standalone (Storybook, a unit test) shows no badge
+ * unless it is wrapped in this provider.
+ */
+export const ShareBadgeContext = createContext<string | undefined>(undefined);
+
 export interface ShareFrameProps {
   /** Canvas width in px (1080 for both Story and Square). */
   width: number;
@@ -191,19 +201,47 @@ export function Crest({ size = 96 }: { size?: number }) {
 }
 
 /**
- * Top bar: club crest only. (No social handle — Instagram/Facebook usernames
- * differ, so a single handle would be inconsistent.)
+ * Top bar: club crest, and — when the enclosing {@link ShareBadgeContext}
+ * carries one — a squad badge (`A`, `U21`, `U13A`, …) opposite it. (No social
+ * handle — Instagram/Facebook usernames differ, so a single handle would be
+ * inconsistent.) `justifyContent: "space-between"` with only the crest mounted
+ * renders identically to the pre-badge single-child row, so an absent badge
+ * changes nothing for the 11 templates that never supply one.
  */
 export function ShareTop({ crestSize }: { crestSize?: number }) {
+  const palette = useSharePalette();
+  const badge = useContext(ShareBadgeContext);
   return (
     <div
       style={{
         display: "flex",
         alignItems: "center",
+        justifyContent: "space-between",
         flexShrink: 0,
       }}
     >
       <Crest size={crestSize} />
+      {badge && (
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "76px",
+            padding: "0 30px",
+            fontFamily: MONO_FONT,
+            fontSize: "46px",
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            whiteSpace: "nowrap",
+            background: palette.badgeBg,
+            color: palette.badgeText,
+          }}
+        >
+          {badge}
+        </span>
+      )}
     </div>
   );
 }

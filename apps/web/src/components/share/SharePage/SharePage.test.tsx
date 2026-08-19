@@ -49,11 +49,32 @@ const MATCHES: MatchOption[] = [
     id: 1001,
     label: "KCVV Elewijt - FC Opponent (A-Ploeg)",
     matchName: "KCVV Elewijt — FC Opponent",
+    kcvvTeamLabel: "A-Ploeg",
   },
   {
     id: 1002,
     label: "FC Home - KCVV Elewijt (B-Ploeg)",
     matchName: "FC Home — KCVV Elewijt",
+    kcvvTeamLabel: "B-Ploeg",
+  },
+];
+
+// Two squads meeting the same opponent (or two pitch-reservation placeholders)
+// share an identical matchName — the datalist label is the only unique field.
+const COLLIDING_MATCHES: MatchOption[] = [
+  {
+    id: 3001,
+    label: "KCVV Elewijt - KCVV Elewijt (A-Ploeg)",
+    matchName: "KCVV Elewijt — KCVV Elewijt",
+    kcvvTeamLabel: "A-Ploeg",
+    dateTime: "Zaterdag · 14:00",
+  },
+  {
+    id: 3002,
+    label: "KCVV Elewijt - KCVV Elewijt (U15)",
+    matchName: "KCVV Elewijt — KCVV Elewijt",
+    kcvvTeamLabel: "U15",
+    dateTime: "Zaterdag · 16:00",
   },
 ];
 
@@ -665,6 +686,112 @@ describe("SharePage", () => {
       "aria-pressed",
       "true",
     );
+  });
+
+  // ─── Squad badge (Ploeg field) ──────────────────────────────────────────
+
+  it("picking a match with a known squad prefills Ploeg with its short form, and the badge appears in the live preview", async () => {
+    const user = userEvent.setup();
+    render(<SharePage matches={MATCHES} players={PLAYERS} />);
+
+    const matchInput = screen.getByPlaceholderText(/KCVV Elewijt/i);
+    await user.type(matchInput, MATCHES[0]!.matchName);
+
+    expect(screen.getByPlaceholderText("A")).toHaveValue("A");
+    expect(screen.getByText("A")).toBeInTheDocument();
+  });
+
+  it("picking a different known match replaces the badge", async () => {
+    const user = userEvent.setup();
+    render(<SharePage matches={MATCHES} players={PLAYERS} />);
+
+    const matchInput = screen.getByPlaceholderText(/KCVV Elewijt/i);
+    await user.type(matchInput, MATCHES[0]!.matchName);
+    expect(screen.getByPlaceholderText("A")).toHaveValue("A");
+
+    await user.clear(matchInput);
+    await user.type(matchInput, MATCHES[1]!.matchName);
+
+    expect(screen.getByPlaceholderText("A")).toHaveValue("B");
+    expect(screen.queryByText("A")).not.toBeInTheDocument();
+    expect(screen.getByText("B")).toBeInTheDocument();
+  });
+
+  it("clearing the Ploeg field removes the badge from the preview", async () => {
+    const user = userEvent.setup();
+    render(<SharePage matches={MATCHES} players={PLAYERS} />);
+
+    const matchInput = screen.getByPlaceholderText(/KCVV Elewijt/i);
+    await user.type(matchInput, MATCHES[0]!.matchName);
+    expect(screen.getByText("A")).toBeInTheDocument();
+
+    await user.clear(screen.getByPlaceholderText("A"));
+
+    expect(screen.queryByText("A")).not.toBeInTheDocument();
+  });
+
+  it("typing a squad by hand puts it on the preview for a free-typed matchup", async () => {
+    const user = userEvent.setup();
+    render(<SharePage matches={MATCHES} players={PLAYERS} />);
+
+    await user.type(
+      screen.getByPlaceholderText(/KCVV Elewijt/i),
+      "KCVV Elewijt — Rapid Leest",
+    );
+    await user.type(screen.getByPlaceholderText("A"), "U21");
+
+    expect(screen.getByText("U21")).toBeInTheDocument();
+  });
+
+  it("the Ploeg value survives a template switch (unlike Minuut / Speler / Resultaat)", async () => {
+    const user = userEvent.setup();
+    render(<SharePage matches={MATCHES} players={PLAYERS} />);
+
+    await user.type(screen.getByPlaceholderText("A"), "U15");
+    await user.click(screen.getByRole("button", { name: /aftrap/i }));
+
+    expect(screen.getByPlaceholderText("A")).toHaveValue("U15");
+  });
+
+  it("editing the Ploeg field after Genereer clears the generated preview", async () => {
+    const user = userEvent.setup();
+    render(<SharePage matches={MATCHES} players={PLAYERS} />);
+
+    await user.click(screen.getByRole("button", { name: /genereer/i }));
+    expect(screen.getByRole("img", { name: /preview/i })).toBeInTheDocument();
+
+    await user.type(screen.getByPlaceholderText("A"), "A");
+
+    expect(
+      screen.queryByRole("img", { name: /preview/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("picking a match by its unique datalist label keeps the rendered matchup club-names-only", async () => {
+    const user = userEvent.setup();
+    render(<SharePage matches={MATCHES} players={PLAYERS} />);
+
+    const matchInput = screen.getByPlaceholderText(/KCVV Elewijt/i);
+    await user.type(matchInput, MATCHES[0]!.label);
+
+    // The suffix-bearing label resolves to the clean club-names-only
+    // matchup — the suffix must never reach the input or the canvas.
+    expect(matchInput).toHaveValue(MATCHES[0]!.matchName);
+    expect((matchInput as HTMLInputElement).value).not.toContain("(");
+    expect(screen.getByPlaceholderText("A")).toHaveValue("A");
+  });
+
+  it("picking the second of two matches that share a matchName badges the second squad, not the first", async () => {
+    const user = userEvent.setup();
+    render(<SharePage matches={COLLIDING_MATCHES} players={PLAYERS} />);
+
+    const matchInput = screen.getByPlaceholderText(/KCVV Elewijt/i);
+    await user.type(matchInput, COLLIDING_MATCHES[1]!.label);
+
+    expect(matchInput).toHaveValue(COLLIDING_MATCHES[1]!.matchName);
+    expect((matchInput as HTMLInputElement).value).not.toContain("(");
+    expect(screen.getByPlaceholderText("A")).toHaveValue("U15");
+    expect(screen.getByText("U15")).toBeInTheDocument();
   });
 
   it("re-clicking the active template keeps it selected without churn", async () => {
