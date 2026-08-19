@@ -142,6 +142,8 @@ Two rules in the same documents give opposite answers:
 
 Nobody has decided which wins, because the greyscale rule was written as a photography rule and never tested against the no-hover scene. This is a contradiction to resolve, not a design to mock up.
 
+**Decided:** [#2511](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2511) resolved this — the wall keeps greyscale-to-colour-on-hover (the no-hover Don't never applied: a sponsor logo is fully legible in greyscale, so the colour reveal is brand flavour, not information), and `/sponsors` itself is a second, narrower exception where the logos are the content rather than the tail. Built in [#2655](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2655). See ticket 6 below — this map stays open per its own rule (a map closes on graduation, not on build).
+
 ### One thing that looks like a finding and is not
 
 The motto — "Er is maar één plezante compagnie", PRODUCT.md's _only_ sanctioned tagline — is the homepage's `<title>` (`(landing)/page.tsx:77`) and appears in body copy at `SiteFooter.tsx:42`, `HistoryTimeline.tsx:41`, `(main)/ploegen/page.tsx:77` and `TeamEnrolmentCta.tsx:103`. It appears **nowhere in the homepage's own body.**
@@ -213,6 +215,7 @@ Ordered cheapest-and-most-constraining first. Nothing is claimed yet.
 
 6. **Resolve the sponsor greyscale contradiction** · `wayfinder:grilling`
    Not a design question — two DESIGN.md rules give opposite answers and one of them has to lose. Candidates: keep as-is · colour on `(pointer: coarse)`, greyscale-to-colour retained for mouse · colour by tier. The third turns a style rule into a price list, which makes it a **club decision, not a design one** — flag it as such rather than deciding it in a design ticket. Commercial consequence, so bring it to the board rather than settling it in a PR. _Blocked by 2._
+   **Decided in [#2511](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2511), built in [#2655](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2655):** none of the three listed candidates — the wall keeps greyscale-to-colour-on-hover as-is, and `/sponsors` (not a `(pointer: coarse)` split, not a tier split) renders every logo in colour at rest. No board escalation was needed: nothing is priced, so there was nothing to sell and nothing to take away. Left open here per this map's own rule — a map closes on graduation, not on build.
 
 7. **Decide the draw, then decide the mark** · `wayfinder:grilling`
    `draw: undefined` means a drawn match is visually identical to an unplayed row. Settle the three-case rule **before** any candidate: any treatment that marks only a win turns the row into a scoreboard with a mood, and principle 1 forbids letting the result outrank the page. Candidates once the rule exists: the pale band as-is · a `<StampBadge>` on the row · the band's seams carry the tone and the data stays flat. _Blocked by 2 and 8._
