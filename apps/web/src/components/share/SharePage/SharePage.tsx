@@ -368,6 +368,11 @@ export function SharePage({ matches, players }: SharePageProps) {
   const [competition, setCompetition] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [squad, setSquad] = useState("");
+  // Disambiguates two matches that share a matchName (e.g. two KCVV squads vs
+  // the same opponent club, or "KCVV Elewijt — KCVV Elewijt" placeholders).
+  // Set only on an unambiguous datalist pick (by label); cleared on a miss so
+  // a stale id can never outlive its pick.
+  const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
 
   // Template-specific fields (reset on template switch)
   const [minute, setMinute] = useState("");
@@ -401,12 +406,35 @@ export function SharePage({ matches, players }: SharePageProps) {
   const currentTemplate = TEMPLATES.find((t) => t.id === selectedTemplateId)!;
   const visibleTemplates = TEMPLATES.filter((t) => t.aspect === aspect);
   const selectedPlayer = players.find((p) => p.id === selectedPlayerId);
-  const selectedMatch = matches.find((m) => m.matchName === matchName);
+  // An id from an unambiguous datalist pick wins over the (possibly
+  // colliding) matchName lookup; free-typed input has no id, so it falls
+  // back to the old best-effort matchName match.
+  const selectedMatch =
+    (selectedMatchId != null &&
+      matches.find((m) => m.id === selectedMatchId)) ||
+    matches.find((m) => m.matchName === matchName);
 
-  // Prefill competition + kickoff line when a known match is picked (handled in
-  // the change event, not an effect — the data flows from one input to others).
+  // Prefill competition + kickoff line + squad when a known match is picked
+  // (handled in the change event, not an effect — the data flows from one
+  // input to others). The datalist option value is `m.label` (unique — it
+  // carries the squad suffix, e.g. "(A-Ploeg)"), so two squads meeting the
+  // same opponent never collide here even though their `matchName` does.
+  // On a hit, `matchName` is set to the clean club-names-only matchup so the
+  // suffix never reaches the canvas.
   const handleMatchNameChange = (value: string) => {
+    const pickedByLabel = matches.find((m) => m.label === value);
+    if (pickedByLabel) {
+      setMatchName(pickedByLabel.matchName);
+      setSelectedMatchId(pickedByLabel.id);
+      setCompetition(pickedByLabel.competition ?? "");
+      setDateTime(pickedByLabel.dateTime ?? "");
+      setSquad(shortSquadLabel(pickedByLabel.kcvvTeamLabel) ?? "");
+      clearPreview();
+      return;
+    }
+
     setMatchName(value);
+    setSelectedMatchId(null);
     const picked = matches.find((m) => m.matchName === value);
     if (picked) {
       setCompetition(picked.competition ?? "");
@@ -647,7 +675,10 @@ export function SharePage({ matches, players }: SharePageProps) {
         />
         <datalist id="match-options">
           {matches.map((m) => (
-            <option key={m.id} value={m.matchName}>
+            // value is the unique label (carries the squad suffix, e.g.
+            // "(A-Ploeg)") so two matches sharing a matchName never collide;
+            // handleMatchNameChange resolves it back to the clean matchup.
+            <option key={m.id} value={m.label}>
               {m.label}
             </option>
           ))}
@@ -671,6 +702,10 @@ export function SharePage({ matches, players }: SharePageProps) {
             clearPreview();
           }}
           placeholder="A"
+          // The badge has no auto-fit (locked design — see #2700); the
+          // longest real label is 4 chars ("U13A"), so 6 leaves it room to
+          // spare while still bounding the canvas-width overflow risk.
+          maxLength={6}
         />
       </section>
 

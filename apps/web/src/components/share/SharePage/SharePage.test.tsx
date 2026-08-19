@@ -59,6 +59,25 @@ const MATCHES: MatchOption[] = [
   },
 ];
 
+// Two squads meeting the same opponent (or two pitch-reservation placeholders)
+// share an identical matchName — the datalist label is the only unique field.
+const COLLIDING_MATCHES: MatchOption[] = [
+  {
+    id: 3001,
+    label: "KCVV Elewijt - KCVV Elewijt (A-Ploeg)",
+    matchName: "KCVV Elewijt — KCVV Elewijt",
+    kcvvTeamLabel: "A-Ploeg",
+    dateTime: "Zaterdag · 14:00",
+  },
+  {
+    id: 3002,
+    label: "KCVV Elewijt - KCVV Elewijt (U15)",
+    matchName: "KCVV Elewijt — KCVV Elewijt",
+    kcvvTeamLabel: "U15",
+    dateTime: "Zaterdag · 16:00",
+  },
+];
+
 describe("SharePage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -746,6 +765,33 @@ describe("SharePage", () => {
     expect(
       screen.queryByRole("img", { name: /preview/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("picking a match by its unique datalist label keeps the rendered matchup club-names-only", async () => {
+    const user = userEvent.setup();
+    render(<SharePage matches={MATCHES} players={PLAYERS} />);
+
+    const matchInput = screen.getByPlaceholderText(/KCVV Elewijt/i);
+    await user.type(matchInput, MATCHES[0]!.label);
+
+    // The suffix-bearing label resolves to the clean club-names-only
+    // matchup — the suffix must never reach the input or the canvas.
+    expect(matchInput).toHaveValue(MATCHES[0]!.matchName);
+    expect((matchInput as HTMLInputElement).value).not.toContain("(");
+    expect(screen.getByPlaceholderText("A")).toHaveValue("A");
+  });
+
+  it("picking the second of two matches that share a matchName badges the second squad, not the first", async () => {
+    const user = userEvent.setup();
+    render(<SharePage matches={COLLIDING_MATCHES} players={PLAYERS} />);
+
+    const matchInput = screen.getByPlaceholderText(/KCVV Elewijt/i);
+    await user.type(matchInput, COLLIDING_MATCHES[1]!.label);
+
+    expect(matchInput).toHaveValue(COLLIDING_MATCHES[1]!.matchName);
+    expect((matchInput as HTMLInputElement).value).not.toContain("(");
+    expect(screen.getByPlaceholderText("A")).toHaveValue("U15");
+    expect(screen.getByText("U15")).toBeInTheDocument();
   });
 
   it("re-clicking the active template keeps it selected without churn", async () => {

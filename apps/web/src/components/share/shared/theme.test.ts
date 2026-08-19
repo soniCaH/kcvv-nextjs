@@ -130,6 +130,18 @@ describe("shortSquadLabel", () => {
     expect(shortSquadLabel("B-Ploeg")).toBe("B");
   });
 
+  it("collapses a hand-typed 'a-ploeg' (lowercase) to A", () => {
+    expect(shortSquadLabel("a-ploeg")).toBe("A");
+  });
+
+  it("collapses a hand-typed 'A-ploeg' (mixed case) to A", () => {
+    expect(shortSquadLabel("A-ploeg")).toBe("A");
+  });
+
+  it("collapses a hand-typed 'b-PLOEG' (mixed case) to B", () => {
+    expect(shortSquadLabel("b-PLOEG")).toBe("B");
+  });
+
   it("passes a youth code through unchanged", () => {
     expect(shortSquadLabel("U21")).toBe("U21");
   });

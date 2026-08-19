@@ -244,8 +244,12 @@ export function formatScore(score: string): string {
 export function shortSquadLabel(label: string | undefined): string | undefined {
   const trimmed = label?.trim();
   if (!trimmed) return undefined;
-  if (trimmed === "A-Ploeg") return "A";
-  if (trimmed === "B-Ploeg") return "B";
+  // Case-insensitive match: the BFF label is always "A-Ploeg"/"B-Ploeg", but
+  // a hand-typed Ploeg field (free-typed matchups have no BFF label to
+  // prefill from) may carry any casing an operator types.
+  const normalized = trimmed.toLowerCase();
+  if (normalized === "a-ploeg") return "A";
+  if (normalized === "b-ploeg") return "B";
   return trimmed;
 }
 
