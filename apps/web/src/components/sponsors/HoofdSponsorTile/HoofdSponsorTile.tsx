@@ -11,14 +11,15 @@ export interface HoofdSponsorTileProps {
 /**
  * <HoofdSponsorTile> — a large taped tile for the labelled "Hoofdsponsors"
  * group on `/sponsors` (7.d3). A cream-soft `<TapedCard>` (auto per-slot
- * rotation from `<TapedCardGrid>`) holding a greyscale logo that resolves to
- * colour on hover/focus — or an italic-display wordmark fallback when there is
- * no logo — over an italic-display name caption.
+ * rotation from `<TapedCardGrid>`) holding a logo in colour at rest — or an
+ * italic-display wordmark fallback when there is no logo — over an
+ * italic-display name caption. `/sponsors` is the one page where the logos
+ * are the content rather than a homepage tail, so unlike `<SponsorTile>` this
+ * never applies a greyscale filter (#2511/#2655).
  *
  * Clickable when `url` is present: the card becomes an external link with a
  * jersey-deep focus ring and the canonical paper press-down on hover. Without a
- * `url` it renders as a static taped tile (no press, logo stays greyscale —
- * mirrors `<SponsorTile>`).
+ * `url` it renders as a static taped tile (no press).
  */
 export function HoofdSponsorTile({ sponsor }: HoofdSponsorTileProps) {
   const tile = (
@@ -37,7 +38,7 @@ export function HoofdSponsorTile({ sponsor }: HoofdSponsorTileProps) {
             alt={formatSponsorAlt(sponsor.name)}
             width={220}
             height={88}
-            className="h-auto max-h-[56px] w-auto max-w-full object-contain grayscale transition-all duration-300 ease-out group-hover:grayscale-0 group-focus-visible:grayscale-0 motion-reduce:transition-none"
+            className="h-auto max-h-[56px] w-auto max-w-full object-contain"
             sizes="(max-width: 640px) 80vw, (max-width: 1024px) 45vw, 30vw"
           />
         ) : (
@@ -61,7 +62,7 @@ export function HoofdSponsorTile({ sponsor }: HoofdSponsorTileProps) {
         aria-label={`Bezoek de website van ${sponsor.name}`}
         data-sponsor-id={sponsor.id}
         data-sponsor-tier={sponsor.tier}
-        className="focus-visible:outline-jersey-deep group block focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="focus-visible:outline-jersey-deep block focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         {tile}
       </Link>

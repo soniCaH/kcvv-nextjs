@@ -52,6 +52,7 @@ hover:translate-y-1 transition-all duration-300`.
 - **Greyscale→colour (master-plan decision 16, as in `<SponsorsBlock>`):** `grayscale
 group-hover:grayscale-0 group-focus-visible:grayscale-0 transition-all duration-300
 motion-reduce:transition-none` on every logo `<Image>`.
+  - **Superseded for `/sponsors` itself** by [#2511](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2511)/[#2655](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2655) — unchanged for the wall (`<SponsorsBlock>`, homepage + team pages). **Canonical: `apps/web/DESIGN.md`.**
 - **Border / divider triples** `{weight, color-token, opacity}`:
   - Hoofd tile frame: `2px · --color-ink · 1` + `--shadow-paper` offset.
   - Wall tile frame: `1.5px · --color-ink · 1` (no shadow — flatter, denser).

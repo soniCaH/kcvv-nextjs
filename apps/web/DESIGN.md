@@ -459,7 +459,7 @@ Decided on [#2548](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2548), b
 - **Do** pick the right green: `jersey` decorative only, `jersey-deep` for anything carrying text (headings, CTAs, inline prose links), `jersey-bright` for green text on ink.
 - **Do** reach for an existing primitive — taped card, ticket stub, mono label, editorial heading, tape strip, stamp badge, striped seam — before writing new markup.
 - **Do** route every page through the three container widths (680 / 1040 / 1280).
-- **Do** keep photographs in colour with the newsprint warm-tint; greyscale-to-colour-on-hover belongs to sponsor logos alone.
+- **Do** keep photographs in colour with the newsprint warm-tint; greyscale-to-colour-on-hover belongs to sponsor logos alone — except on `/sponsors` itself, see the Don't below.
 - **Do** author heading emphasis as a Portable Text `accent` decorator, one emphasis per heading.
 - **Do** use Phosphor Fill icons from the single icon source.
 - **Do** give an image `alt=""` when its own section already names it, and describe the moment when nothing else does.
@@ -477,7 +477,7 @@ Decided on [#2548](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2548), b
 - **Don't** add a new typeface. Freight Sans Pro, Freight Display Pro, Freight Big Pro and IBM Plex Mono are the whole set.
 - **Don't** build a 16px semibold sans "section label" register between display serif and 11px mono.
 - **Don't** reintroduce a neutral grey. `gray-100`, `foundation-gray-light` and the four `table-*` tokens have all been deleted; a section that needs to step down from the page gets `cream-soft`, not a grey.
-- **Don't** rely on hover to reveal anything necessary — the primary usage scene is a phone, outdoors.
+- **Don't** rely on hover to reveal anything necessary — the primary usage scene is a phone, outdoors. Sponsor logos are the one exception: a logo is fully legible in greyscale, so the colour reveal is brand flavour rather than information. On `/sponsors`, where the logos are the content, they render in colour at rest.
 - **Don't** use emoji as icons.
 - **Don't** feed a heading, a card title or a caption back into the image beside it — a duplicated sentence spends the reader's attention twice for nothing.
 - **Don't** give an artefact an accessible name. The jersey illustration and the monogram disc identify nobody, so they take `aria-hidden`, not a label.

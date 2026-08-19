@@ -57,4 +57,21 @@ describe("SponsorTile", () => {
       "(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 18vw",
     );
   });
+
+  it("renders the logo greyscale-to-colour-on-hover by default (colorAtRest unset)", () => {
+    render(<SponsorTile sponsor={base} />);
+    expect(screen.getByRole("img")).toHaveClass(
+      "grayscale",
+      "group-hover:grayscale-0",
+      "group-focus-visible:grayscale-0",
+    );
+  });
+
+  it("renders the logo in colour at rest when colorAtRest is true, with no greyscale filter", () => {
+    render(<SponsorTile sponsor={base} colorAtRest />);
+    const img = screen.getByRole("img");
+    expect(img).not.toHaveClass("grayscale");
+    expect(img).not.toHaveClass("group-hover:grayscale-0");
+    expect(img).not.toHaveClass("group-focus-visible:grayscale-0");
+  });
 });

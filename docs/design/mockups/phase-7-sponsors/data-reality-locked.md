@@ -72,6 +72,7 @@ enum is Dutch:
 3. **Greyscale-by-default → full colour on hover/focus is locked** for every logo site-wide
    (master-plan decision 16, `filter: grayscale(100%)` + `--motion-base`). Already implemented
    in `<SponsorsBlock>`.
+   **Superseded for `/sponsors` itself** by [#2511](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2511)/[#2655](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2655) — "site-wide" no longer holds; `<SponsorsBlock>` (homepage + team pages) is unaffected. **Canonical: `apps/web/DESIGN.md`.**
 
 4. **Logos are the primary asset.** Italic display (Freight → Fraunces in mockups) name
    treatment is reserved for headlines, tier kickers, captions, and the missing-logo fallback.

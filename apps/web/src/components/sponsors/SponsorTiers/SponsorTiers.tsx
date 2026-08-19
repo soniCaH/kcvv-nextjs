@@ -45,7 +45,7 @@ export function SponsorTiers({ sponsors }: SponsorTiersProps) {
         <ul className={SPONSOR_TILE_GRID_CLASS}>
           {wall.map((sponsor) => (
             <li key={sponsor.id}>
-              <SponsorTile sponsor={sponsor} framed />
+              <SponsorTile sponsor={sponsor} framed colorAtRest />
             </li>
           ))}
         </ul>

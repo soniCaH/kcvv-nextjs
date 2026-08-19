@@ -64,4 +64,9 @@ describe("HoofdSponsorTile", () => {
       screen.getByAltText("Garage Peeters — sponsor KCVV Elewijt"),
     ).toBeInTheDocument();
   });
+
+  it("renders the logo in colour at rest — /sponsors is the exception to the wall's greyscale rule", () => {
+    render(<HoofdSponsorTile sponsor={base} />);
+    expect(screen.getByRole("img")).not.toHaveClass("grayscale");
+  });
 });
