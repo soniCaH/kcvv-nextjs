@@ -477,7 +477,7 @@ Decided on [#2548](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2548), b
 - **Don't** add a new typeface. Freight Sans Pro, Freight Display Pro, Freight Big Pro and IBM Plex Mono are the whole set.
 - **Don't** build a 16px semibold sans "section label" register between display serif and 11px mono.
 - **Don't** reintroduce a neutral grey. `gray-100`, `foundation-gray-light` and the four `table-*` tokens have all been deleted; a section that needs to step down from the page gets `cream-soft`, not a grey.
-- **Don't** rely on hover to reveal anything necessary — the primary usage scene is a phone, outdoors.
+- **Don't** rely on hover to reveal anything necessary — the primary usage scene is a phone, outdoors. Sponsor logos are the one exception: a logo is fully legible in greyscale, so the colour reveal is brand flavour rather than information. On `/sponsors`, where the logos are the content, they render in colour at rest.
 - **Don't** use emoji as icons.
 - **Don't** feed a heading, a card title or a caption back into the image beside it — a duplicated sentence spends the reader's attention twice for nothing.
 - **Don't** give an artefact an accessible name. The jersey illustration and the monogram disc identify nobody, so they take `aria-hidden`, not a label.
