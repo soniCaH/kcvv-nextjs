@@ -2,11 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { Effect } from "effect";
 import { unstable_cache } from "next/cache";
 import { runPromise } from "@/lib/effect/runtime";
+import { degradeSection } from "@/lib/effect/degrade";
 import {
   BffService,
   BFF_FAN_OUT_CONCURRENCY,
 } from "@/lib/effect/services/BffService";
 import { TeamRepository } from "@/lib/repositories/team.repository";
+import {
+  EventRepository,
+  type EventListItemVM,
+} from "@/lib/repositories/event.repository";
 import type { Match } from "@kcvv/api-contract";
 import { generateIcal, normalizeCacheKey } from "@/lib/utils/ical";
 
@@ -54,11 +59,35 @@ async function fetchMatches(
   return runPromise(program);
 }
 
+/**
+ * Club activities (#2704) — the same merged feed `/kalender` renders
+ * (`EventRepository.findUpcomingForList()`), upcoming-only by construction
+ * (its GROQ filters, not a re-filter here). Degrades like `/kalender` does: a
+ * Sanity failure logs and falls back to an empty list rather than failing the
+ * whole subscribed feed — a subscriber keeps their matches even on a bad day
+ * for Sanity.
+ */
+async function fetchEvents(): Promise<EventListItemVM[]> {
+  const program = Effect.gen(function* () {
+    const eventRepo = yield* EventRepository;
+    return yield* degradeSection(
+      eventRepo.findUpcomingForList(),
+      [] as EventListItemVM[],
+      "[Calendar API] event-feed lookup failed; rendering matches only.",
+    );
+  });
+
+  return runPromise(program);
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const rawTeamIds = searchParams.get("teamIds");
   const side = parseSide(searchParams.get("side"));
-  const cacheKey = normalizeCacheKey(rawTeamIds, side);
+  // All-or-nothing club-wide opt-in (#2704 design note) — deliberately not
+  // scoped by `teamIds`/`side`, which only ever filter fixtures.
+  const includeEvents = searchParams.get("events") === "1";
+  const cacheKey = normalizeCacheKey(rawTeamIds, side, includeEvents);
 
   const teamIdNums = rawTeamIds
     ? rawTeamIds
@@ -71,20 +100,29 @@ export async function GET(request: NextRequest) {
   try {
     const generateCached = unstable_cache(
       async () => {
-        const matches = await fetchMatches(teamIdNums);
-        return generateIcal(matches, { side });
+        const [matches, events] = await Promise.all([
+          fetchMatches(teamIdNums),
+          includeEvents ? fetchEvents() : Promise.resolve(undefined),
+        ]);
+        return generateIcal(matches, {
+          side,
+          ...(events !== undefined ? { events } : {}),
+        });
       },
       [cacheKey],
       { revalidate: CACHE_MAX_AGE },
     );
 
     const icalOutput = await generateCached();
+    const filename = includeEvents
+      ? "kcvv-wedstrijden-en-activiteiten.ics"
+      : "kcvv-wedstrijden.ics";
 
     return new NextResponse(icalOutput, {
       status: 200,
       headers: {
         "Content-Type": "text/calendar; charset=utf-8",
-        "Content-Disposition": 'attachment; filename="kcvv-wedstrijden.ics"',
+        "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": `max-age=${CACHE_MAX_AGE}, s-maxage=${CACHE_MAX_AGE}`,
       },
     });
