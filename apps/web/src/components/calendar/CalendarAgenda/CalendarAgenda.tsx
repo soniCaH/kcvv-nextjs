@@ -11,6 +11,8 @@ import {
 import {
   getResultColor,
   isPlayedMatch,
+  isReducedMatchRow,
+  otherClubSide,
   reservationView,
 } from "@/lib/utils/match-display";
 import { pendingEmptyBody } from "@/lib/utils/empty-state-copy";
@@ -54,22 +56,30 @@ const OUTCOME_UNDERLINE: Record<"win" | "draw" | "loss", string | undefined> = {
  * `/wedstrijd/{id}` was worth clicking through to from a list row). Same
  * `[52px_1fr_auto]` grid as `AgendaMatchRow` so the two rows still line up in
  * the same day group.
+ *
+ * Also renders a tournament fixture (#2696/#2715, `competitionType ===
+ * "tournament"` with no result yet — never a string match on the Dutch
+ * `competition` label). The crest and subject then name the **other club**,
+ * not KCVV's own — `otherClubSide()` derives it from the club id, never
+ * home/away, since PSD does not say whether the named club hosts or merely
+ * shares the bracket. `reservationView(match, otherClub)` composes the
+ * "TORNOOI · FC ZEMST SPORTIEF" subject for that case; `undefined` for a
+ * placeholder keeps its subject at the competition alone.
  */
 function ReservationAgendaRow({ match }: { match: CalendarMatch }) {
-  const { subject } = reservationView(match);
+  const otherClub = match.isPlaceholder ? undefined : otherClubSide(match);
+  const { subject } = reservationView(match, otherClub);
+  const crestTeam = otherClub ?? match.homeTeam;
   const when = match.time ?? formatMatchTime(match.date) ?? "";
   return (
     <div
-      data-placeholder="true"
+      data-placeholder={match.isPlaceholder ? "true" : undefined}
+      data-tournament={match.isPlaceholder ? undefined : "true"}
       className="border-paper-edge grid grid-cols-[52px_1fr_auto] items-center gap-3 border-b border-dashed px-2 py-2 last:border-b-0"
     >
       <span className="text-ink-muted font-mono text-[11px]">{when}</span>
       <span className="flex min-w-0 items-center gap-2">
-        <Crest
-          name={match.homeTeam.name}
-          logo={match.homeTeam.logo}
-          size={18}
-        />
+        <Crest name={crestTeam.name} logo={crestTeam.logo} size={18} />
         {/* Same squad chip `AgendaMatchRow` renders below — without it a
             reservation among a mixed-squad day's other rows (crest + subject
             + time) cannot be told apart from any other squad's
@@ -89,7 +99,7 @@ function ReservationAgendaRow({ match }: { match: CalendarMatch }) {
 }
 
 function AgendaMatchRow({ match }: { match: CalendarMatch }) {
-  if (match.isPlaceholder) return <ReservationAgendaRow match={match} />;
+  if (isReducedMatchRow(match)) return <ReservationAgendaRow match={match} />;
 
   const isHome = match.isHome ?? getMatchDotType(match) === "home";
   const when = match.time ?? formatMatchTime(match.date) ?? "";

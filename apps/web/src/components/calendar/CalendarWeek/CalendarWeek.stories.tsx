@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { CalendarWeek } from "./CalendarWeek";
 import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
 import { fixtureImage } from "@test-fixtures/images";
-import { reservationMatch } from "../calendar-mocks";
+import { reservationMatch, tournamentMatch } from "../calendar-mocks";
 
 const meta = {
   title: "Features/Calendar/CalendarWeek",
@@ -92,6 +92,20 @@ export const WithReservation: Story = {
       ...weekMatches,
       reservationMatch({ date: "2026-03-26T09:30:00" }),
     ],
+    events: weekEvents,
+    weekStart: "2026-03-23",
+  },
+};
+
+/**
+ * A tournament fixture (#2696/#2715) among the week's other matches — one
+ * crest (the named club's, not KCVV's), no opponent link. Distinct from
+ * `WithReservation` above: the subject names a real opponent (`TORNOOI · FC
+ * ZEMST SPORTIEF`), where a placeholder's subject is the competition alone.
+ */
+export const WithTournament: Story = {
+  args: {
+    matches: [...weekMatches, tournamentMatch({ date: "2026-03-26T09:30:00" })],
     events: weekEvents,
     weekStart: "2026-03-23",
   },

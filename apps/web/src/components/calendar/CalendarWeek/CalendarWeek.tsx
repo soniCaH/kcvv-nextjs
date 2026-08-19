@@ -9,6 +9,8 @@ import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { EVENT_TYPE_FILL } from "@/components/event/event-type-style";
 import {
   isExceptionalMatchStatus,
+  isReducedMatchRow,
+  otherClubSide,
   reservationView,
 } from "@/lib/utils/match-display";
 import { trackKalenderItemClick } from "../calendar-analytics";
@@ -35,13 +37,23 @@ const SHORT_DAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
  * no opponent (a self-match has none), no link (mirrors #2606 decision 5),
  * just the club crest, the subject, and the real time. Same card chrome as
  * `WeekMatchCard` so it still reads as one system in the grid.
+ *
+ * Also renders a tournament fixture (#2696/#2715, `competitionType ===
+ * "tournament"` with no result yet). The subject then names the **other
+ * club**, not KCVV's own — `otherClubSide()` derives it from the club id,
+ * never home/away, since PSD does not say whether the named club hosts or
+ * merely shares the bracket. The dot is always the dashed "reservation"
+ * treatment here, never home/away — a tournament sheds the home/away claim
+ * the same way a placeholder does (#2693): neither state in this card knows
+ * which side, if either, was "home".
  */
 function ReservationWeekCard({ match }: { match: CalendarMatch }) {
-  const { subject, statusWording } = reservationView(match);
-  const dotType = getMatchDotType(match);
+  const otherClub = match.isPlaceholder ? undefined : otherClubSide(match);
+  const { subject, statusWording } = reservationView(match, otherClub);
   return (
     <div
-      data-placeholder="true"
+      data-placeholder={match.isPlaceholder ? "true" : undefined}
+      data-tournament={match.isPlaceholder ? undefined : "true"}
       className="border-ink bg-cream shadow-paper-sm block border-2 p-1.5"
     >
       {match.team && (
@@ -54,7 +66,7 @@ function ReservationWeekCard({ match }: { match: CalendarMatch }) {
           aria-hidden="true"
           className={cn(
             "h-1.5 w-1.5 shrink-0 rounded-full",
-            MATCH_DOT_CLASS[dotType],
+            MATCH_DOT_CLASS.reservation,
           )}
         />
         <span className="text-ink-muted truncate font-mono text-[10px] font-semibold tracking-wide uppercase">
@@ -79,7 +91,7 @@ function ReservationWeekCard({ match }: { match: CalendarMatch }) {
 }
 
 function WeekMatchCard({ match }: { match: CalendarMatch }) {
-  if (match.isPlaceholder) return <ReservationWeekCard match={match} />;
+  if (isReducedMatchRow(match)) return <ReservationWeekCard match={match} />;
 
   const dotType = getMatchDotType(match);
   const isHome = dotType === "home";

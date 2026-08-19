@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { CalendarAgenda } from "./CalendarAgenda";
 import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
 import { fixtureImage } from "@test-fixtures/images";
+import { tournamentMatch } from "../calendar-mocks";
 
 const meta = {
   title: "Features/Calendar/CalendarAgenda",
@@ -145,5 +146,45 @@ export const WithReservation: Story = {
       }),
     ],
     events: sparseEvents,
+  },
+};
+
+/**
+ * A tournament fixture (#2696/#2715) beside a normal row — one crest (the
+ * named club's, not KCVV's), no vs-framing, no link. Distinct from
+ * `WithReservation` above: the crest and subject name a real opponent
+ * (`TORNOOI · FC ZEMST SPORTIEF`), where a placeholder's subject is the
+ * competition alone.
+ */
+export const WithTournament: Story = {
+  args: {
+    ...baseProps,
+    matches: [
+      ...sparseMatches,
+      tournamentMatch({ date: "2026-09-13T09:30:00" }),
+    ],
+    events: sparseEvents,
+  },
+};
+
+/**
+ * A tournament fixture whose result is already known (#2696 review) — once a
+ * scoreline exists the named club really was the opponent, so the row
+ * reverts to the ordinary linked two-crest scoreboard instead of staying
+ * reduced.
+ */
+export const PlayedTournament: Story = {
+  args: {
+    ...baseProps,
+    matches: [
+      tournamentMatch({
+        date: "2026-09-13T09:30:00",
+        status: "finished",
+        homeScore: 4,
+        awayScore: 1,
+        scoreDisplay: { type: "score", home: 4, away: 1 },
+      }),
+    ],
+    events: [],
   },
 };
