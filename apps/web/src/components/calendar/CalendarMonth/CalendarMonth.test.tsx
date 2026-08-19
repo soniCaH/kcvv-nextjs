@@ -228,6 +228,42 @@ describe("CalendarMonth", () => {
       expect(row.textContent).toContain("A-ploeg");
     });
 
+    /**
+     * A tournament fixture (#2696, competitionType === "tournament") reuses
+     * the same reduced TeamAgendaRow register as a placeholder — one crest
+     * (the opponent's, not KCVV's), no link. Before this fix,
+     * `calendarMatchToScheduleMatch` dropped `competitionType`, so this row
+     * rendered as an ordinary linked two-crest scoreboard on the calendar
+     * even though the team page already rendered it reduced.
+     */
+    it("renders a tournament fixture as the reduced TeamAgendaRow, with its squad captionLabel carried through", () => {
+      render(
+        <CalendarMonth
+          {...baseProps}
+          matches={[
+            makeMatch({
+              id: 91,
+              homeTeam: { id: 1235, name: "KCVV Elewijt" },
+              awayTeam: { id: 1391, name: "FC Zemst Sportief" },
+              competition: "Tornooi",
+              competitionType: "tournament",
+              team: "U9",
+            }),
+          ]}
+          events={[]}
+        />,
+      );
+      const row = screen.getByTestId("team-agenda-row");
+      expect(row).toHaveAttribute("data-tournament", "true");
+      expect(row.closest("a")).toBeNull();
+      expect(row.textContent).toContain("FC Zemst Sportief");
+      // The squad chip a normal row carries via homeTeam.teamLabel has no
+      // equivalent slot on the reduced tree — SelectedDayDetail must widen
+      // its captionLabel gate to cover this state too, not just
+      // isPlaceholder, or a mixed-squad day loses which team this is.
+      expect(row.textContent).toContain("U9");
+    });
+
     it("renders an event row linking to its detail route with a type tag", () => {
       render(
         <CalendarMonth

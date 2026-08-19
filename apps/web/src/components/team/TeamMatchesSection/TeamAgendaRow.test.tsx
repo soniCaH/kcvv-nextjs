@@ -1097,5 +1097,32 @@ describe("TeamAgendaRow", () => {
       render(<TeamAgendaRow match={TOURNAMENT} featured />);
       expect(tournamentRow().getAttribute("data-featured")).toBe("true");
     });
+
+    /**
+     * A played tournament match is no longer the "not yet confirmed" case
+     * this reduced state exists for — the club really was the opponent, so
+     * the row reverts to the full linked scoreboard: two crests, the
+     * scoreline, its outcome tint, and a link to the match detail (#2696
+     * review).
+     */
+    it("reverts to the full scoreboard once played — score, outcome tint, and a link", () => {
+      const played: ScheduleMatch = {
+        ...TOURNAMENT,
+        status: "finished",
+        homeScore: 3,
+        awayScore: 1,
+        isHome: true,
+      };
+      const { container } = render(<TeamAgendaRow match={played} />);
+
+      expect(container.querySelector('[data-tournament="true"]')).toBeNull();
+      expect(container.querySelector('[data-placeholder="true"]')).toBeNull();
+      expect(screen.getByRole("link")).toBeInTheDocument();
+      expect(screen.getByTestId("team-agenda-row").textContent).toContain("3");
+      expect(screen.getByTestId("team-agenda-row").textContent).toContain("1");
+      const spans = container.querySelectorAll("[style*='box-shadow']");
+      expect(spans.length).toBeGreaterThan(0);
+      expect(spans[0]?.getAttribute("style")).toContain("jersey-deep");
+    });
   });
 });

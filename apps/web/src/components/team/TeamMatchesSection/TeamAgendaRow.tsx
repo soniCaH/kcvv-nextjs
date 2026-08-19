@@ -254,13 +254,21 @@ export function TeamAgendaRow({
         ? kcvvTeamId === match.homeTeam.id
         : undefined));
 
+  // Played before `isTournament` needs it below — a tournament fixture that
+  // has actually been played is no longer the "not yet confirmed" case this
+  // state exists for: the club really was the opponent, so the row goes back
+  // to the full linked scoreboard (score, outcome tint, link) rather than the
+  // reduced register (#2696 review).
+  const isPlayed = isPlayedMatch(match.status);
+
   // The lawful tournament detector (#2696) — `competitionType === "tournament"`,
   // never a string match on the Dutch `competition` label, mirroring the
   // `competitionType === "league"` gate elsewhere in the codebase. A
   // placeholder is never also a tournament row: they reuse the same reduced
-  // shape below, but a self-match has no second club to name.
+  // shape below, but a self-match has no second club to name. Gated on
+  // `!isPlayed` — see the comment above.
   const isTournament =
-    !match.isPlaceholder && match.competitionType === "tournament";
+    !match.isPlaceholder && match.competitionType === "tournament" && !isPlayed;
   const isReducedRow = match.isPlaceholder || isTournament;
 
   // White on jersey-deep, inherited from the pre-#2395 green when cream missed
@@ -323,7 +331,6 @@ export function TeamAgendaRow({
   // `computeOutcome` to read (`ScheduleReservation` has no `homeScore`/
   // `awayScore`/`isHome` to pass it).
   const outcome = match.isPlaceholder ? null : computeOutcome(match, isHome);
-  const isPlayed = isPlayedMatch(match.status);
 
   const hasScoreline =
     !match.isPlaceholder &&

@@ -4,7 +4,7 @@
  * React / component dependencies so it can be used anywhere in the app.
  */
 
-export type { MatchStatus } from "@kcvv/api-contract";
+export type { CompetitionType, MatchStatus } from "@kcvv/api-contract";
 
 import type { CompetitionType, MatchStatus } from "@kcvv/api-contract";
 
