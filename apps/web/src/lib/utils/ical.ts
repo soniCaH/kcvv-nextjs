@@ -5,6 +5,7 @@ import type { Match } from "@kcvv/api-contract";
 // Doubles as the calendar's `TZID` — an iCal protocol value, not only a display
 // pin — so it is read from the one home rather than restated.
 import { CLUB_TIMEZONE as TIMEZONE, toMatchDisplayZone } from "./dates";
+import { reservationView } from "./match-display";
 
 const HOME_VENUE_FALLBACK = "Sportpark Elewijt, Elewijt, België";
 
@@ -12,11 +13,30 @@ export interface IcalOptions {
   side?: "home" | "away" | "all";
 }
 
+/**
+ * A pitch-reservation placeholder (#2606) has `home_team.id === away_team.id`,
+ * so both sides carry the literal name "KCVV Elewijt" — `isHomeMatch` returns
+ * `true` for it without needing a special case. That is the intended reading:
+ * a reservation is the club's own booking with no designated away side, so
+ * `side=home` includes it and `side=away` excludes it (#2698). Verified
+ * against `ical.test.ts`'s "is treated as a home fixture" case rather than
+ * assumed.
+ */
 function isHomeMatch(match: Match): boolean {
   return match.home_team.name.toLowerCase().includes("elewijt");
 }
 
+/**
+ * A pitch-reservation placeholder (#2606) gets its own summary rather than
+ * "KCVV Elewijt - KCVV Elewijt" — composed from `reservationView()`'s
+ * subject, the same source `formatMatchTitle()`
+ * (`/wedstrijd/[matchId]/utils.ts`) reads, so the wording can't drift between
+ * the ICS feed and the match detail page's SEO title (#2698).
+ */
 function buildSummary(match: Match): string {
+  if (match.is_placeholder) {
+    return `${reservationView(match).subject} — ${match.home_team.name}`;
+  }
   if (
     match.status === "finished" &&
     match.home_team.score != null &&
@@ -27,6 +47,13 @@ function buildSummary(match: Match): string {
   return `${match.home_team.name} - ${match.away_team.name}`;
 }
 
+/**
+ * No `is_placeholder` branch needed here (verified for #2698): this reads
+ * only `competition`/`squadLabel`, never `home_team`/`away_team`, so it
+ * cannot reproduce the "X - X" bug `buildSummary()` had. For a reservation
+ * it already prints the same competition/squad wording `reservationView()`
+ * derives the summary's subject from.
+ */
 function buildDescription(match: Match): string {
   const parts: string[] = [];
   if (match.competition) parts.push(match.competition);
