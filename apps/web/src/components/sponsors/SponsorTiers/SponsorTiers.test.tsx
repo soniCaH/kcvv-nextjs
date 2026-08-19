@@ -92,4 +92,17 @@ describe("SponsorTiers", () => {
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
     expect(within(region).getAllByRole("listitem")).toHaveLength(2);
   });
+
+  it("renders the wall's logo in colour at rest — /sponsors is the exception to the wall's greyscale rule", () => {
+    const wallWithLogo: Sponsor[] = [
+      s({
+        id: "sp",
+        name: "Sponsor Met Logo",
+        tier: "sponsor",
+        logo: "/sponsor.png",
+      }),
+    ];
+    render(<SponsorTiers sponsors={wallWithLogo} />);
+    expect(screen.getByRole("img")).not.toHaveClass("grayscale");
+  });
 });
