@@ -139,8 +139,10 @@ export const Default: Story = {
 };
 
 /**
- * Poster width — the ~860 px render the owner screenshots at, which prints the
- * club names at roughly 5.5 mm inside the 340 × 567 mm block.
+ * Poster width — the ~860 px render the owner used to screenshot, which prints
+ * the club names at roughly 5.5 mm inside the 340 × 567 mm block but wraps the
+ * longest two. The PDF export lays out wider than this so none of them wrap
+ * (`poster-geometry.ts`); this story is the narrow end of the range.
  */
 export const PosterWidth: Story = {
   args: { matches: seasonFixtures },

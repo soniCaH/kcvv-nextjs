@@ -1026,6 +1026,17 @@
   }
 }
 
+/* The consent modal never belongs on a printed page. It needs its own rule
+   rather than riding a page's print stylesheet: the library animates the modal
+   with `visibility`, so it sets `visibility: visible` on itself and survives a
+   blanket `visibility: hidden` — it printed straight over the /scheurkalender
+   poster artwork (#2702). */
+@media print {
+  #cc-main {
+    display: none !important;
+  }
+}
+
 /* ===== vanilla-cookieconsent Theme — KCVV Elewijt (retro-terrace · #2125) ===== */
 /* Scoped to #cc-main so specificity beats the library's :root defaults
    regardless of CSS chunk load order (library CSS loads dynamically).

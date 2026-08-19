@@ -11,6 +11,7 @@ import {
   ScheurkalenderPage,
   type ScheurkalenderMatch,
 } from "./ScheurkalenderPage";
+import { SHEET_WIDTH_PX, WIDTH_FIT_SCALE } from "./poster-geometry";
 
 // Fixtures spanning both calendar years of a season, so the column split is
 // exercised. Weekends: 29–30/08, 05–06/09 (2026) | 09–10/01, 16/01 (2027).
@@ -269,6 +270,41 @@ describe("ScheurkalenderPage", () => {
       expect(
         screen.getByRole("button", { name: "Afdrukken" }),
       ).toBeInTheDocument();
+    });
+  });
+
+  // The print export IS the poster artwork (#2702) — it replaces a screenshot,
+  // so a silently dropped hook means a blurry poster, not a broken page. jsdom
+  // applies no print styles, so these assert the wiring the stylesheet needs;
+  // the geometry itself is verified by exporting a PDF (see the PR).
+  describe("poster print export", () => {
+    it("wraps the sheet in the scaled page area", () => {
+      const { container } = renderPage();
+      const page = container.querySelector(".sk-poster");
+      expect(page).not.toBeNull();
+      expect(page!.querySelector(".sk-poster-sheet")).not.toBeNull();
+    });
+
+    it("prints A2 with background fills kept", () => {
+      const { container } = renderPage();
+      const css = container.querySelector("style")?.textContent ?? "";
+      // A2 as explicit dimensions — the `A2` keyword is invalid CSS and gets
+      // the whole declaration dropped, so assert the rule, not the prose that
+      // explains it.
+      expect(css).toContain("size: 420mm 594mm");
+      // Margins that leave the 340 × 567 mm poster block.
+      expect(css).toContain("margin: 13.5mm 40mm");
+      expect(css).toContain("print-color-adjust: exact");
+    });
+
+    it("falls back to the width fit the poster block implies", () => {
+      const { container } = renderPage();
+      const css = container.querySelector("style")?.textContent ?? "";
+      // The fallback only bites when the measurement never runs — a path no
+      // on-screen check exercises, so nothing else notices if the stylesheet
+      // stops carrying it.
+      expect(css).toContain(`--sk-poster-scale, ${WIDTH_FIT_SCALE}`);
+      expect(css).toContain(`width: ${SHEET_WIDTH_PX}px`);
     });
   });
 });

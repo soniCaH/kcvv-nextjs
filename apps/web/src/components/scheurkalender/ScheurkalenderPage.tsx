@@ -24,6 +24,8 @@ import { DateTime } from "luxon";
 import { toDisplayZone } from "@/lib/utils/dates";
 import { capitalize } from "@/lib/utils/capitalize";
 import { EmptyState, PageContainer } from "@/components/design-system";
+import { PosterPrintScale } from "./PosterPrintScale";
+import { SHEET_WIDTH_PX, WIDTH_FIT_SCALE } from "./poster-geometry";
 import { PrintButton } from "./PrintButton";
 import { PrintDate } from "./PrintDate";
 
@@ -68,6 +70,101 @@ interface MonthGroup {
 }
 
 const NL_WEEKDAYS = ["ma", "di", "wo", "do", "vr", "za", "zo"];
+
+/**
+ * Print stylesheet — turns `Cmd+P` into the poster's *source artwork* rather
+ * than a paper copy of a web page (#2702).
+ *
+ * The fixture table used to reach the A2 InDesign poster as a screenshot: a
+ * ~96 dpi raster placed in a document that prints at A2. Exported through the
+ * browser's PDF writer instead, the same sheet arrives as vector — InDesign
+ * places PDFs as vector, so the type stays sharp at any size and the screenshot
+ * step disappears.
+ *
+ * Scoped to this component rather than `globals.css`: it is page artwork, not a
+ * site-wide print convention. Deliberately static CSS — unlike
+ * `<VolledigOrganigram>`, which injects its rule at click time because its
+ * scale-to-fit factor depends on the rendered chart, every number here is
+ * fixed by the locked layout.
+ *
+ * No `>` in any selector: React escapes text children, and an escaped entity
+ * inside a raw-text `<style>` element is never decoded back.
+ */
+const POSTER_PRINT_CSS = `
+@media print {
+  /* A2 portrait, with margins that leave a content box of exactly
+     340 × 567 mm — the poster block between the InDesign sponsor blocks
+     (sk2-poster-layout-locked.md). The export therefore places at 100 %.
+
+     Written as explicit dimensions, not \`size: A2 portrait\`: the CSS
+     page-size keywords stop at A3 (A5 | A4 | A3 | B5 | B4 | JIS-B5 | JIS-B4 |
+     letter | legal | ledger), so \`A2\` is an invalid value the whole
+     declaration is dropped for — silently, and the export falls back to the
+     browser's default paper. */
+  @page { size: 420mm 594mm; margin: 13.5mm 40mm; }
+
+  /* Bound the document to exactly one page. Hiding the rest of the site below
+     only stops it being *painted* — it is still laid out, and a full site
+     header plus footer is taller than one sheet, so without this the export
+     came out three pages long, two of them blank. */
+  html, body {
+    width: 340mm !important;
+    height: 567mm !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    /* \`visibility: hidden\` below hides the site's boxes but not the page
+       ground behind them, so the cream body background printed as a border
+       around the artwork. */
+    background: #fff !important;
+  }
+
+  /* Only the sheet prints. The site header, the site footer and the toolbar
+     are screen chrome; without this they land on the poster. */
+  body * { visibility: hidden !important; }
+  .sk-poster, .sk-poster * { visibility: visible !important; }
+
+  /* The page area itself. \`overflow: hidden\` clips whatever the scale cannot
+     fit, so a long season can never spill a second, near-blank A2 sheet. */
+  .sk-poster {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 340mm !important;
+    height: 567mm;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+  }
+
+  /* Laid out at a fixed width and *scaled* onto the block, never reflowed into
+     it. Print's own width is the physical page, which is far wider in CSS px
+     than any screen render — reflowing there shrinks the club names relative to
+     the block and rebalances the calendar-year column split. The width itself
+     is chosen in \`poster-geometry.ts\`, on where club names stop wrapping. */
+  .sk-poster-sheet {
+    width: ${SHEET_WIDTH_PX}px;
+    margin: 0 auto;
+    /* Set by <PosterPrintScale> on \`beforeprint\` — it fits the sheet to the
+       block on *both* axes, which a constant cannot do because the height is
+       however long the season is. The fallback is the width fit: correct for
+       a season short enough to fit, and the best available answer if the
+       measurement never runs. */
+    transform: scale(var(--sk-poster-scale, ${WIDTH_FIT_SCALE}));
+    transform-origin: top center;
+  }
+
+  /* Chrome drops background fills in print unless the reader ticks "Background
+     graphics" by hand — which would silently flatten the sheet frame and the
+     white ground the poster block sits on. */
+  .sk-poster, .sk-poster * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+`;
 
 /** Bucket fixtures per weekend (ISO week — Mon–Sun share a group). */
 function groupByWeekend(matches: ScheurkalenderMatch[]): Weekend[] {
@@ -218,69 +315,78 @@ export function ScheurkalenderPage({
 
   return (
     <div className="bg-cream min-h-screen print:bg-white">
+      <style>{POSTER_PRINT_CSS}</style>
+      <PosterPrintScale />
+
       {/* Screen-only toolbar — hidden on print and cropped out of poster screenshots. */}
       <PageContainer className="flex justify-end pt-6 print:hidden">
         <PrintButton />
       </PageContainer>
 
-      <PageContainer className="pt-4 pb-12 print:p-0">
-        {/* The "sheet" — this is what gets screenshotted into the poster. */}
-        <div className="border-ink border-2 bg-white print:border-0">
-          {/* Masthead */}
-          <div className="border-ink flex items-baseline justify-between gap-4 border-b-2 px-4 py-3.5">
-            <h1 className="font-body text-ink text-lg font-extrabold tracking-[0.02em] uppercase">
-              KCVV Elewijt — Competitie {season}
-            </h1>
-            <p className="text-ink-muted font-mono text-[10px] tracking-[0.08em] uppercase">
-              A &amp; B · Wedstrijdkalender
-            </p>
+      {/* `sk-poster` is the printed page area; `sk-poster-sheet` is the artwork
+          scaled into it. Both are print-only hooks — see POSTER_PRINT_CSS. */}
+      <PageContainer className="sk-poster pt-4 pb-12 print:p-0">
+        <div className="sk-poster-sheet">
+          {/* The "sheet" — this is the artwork the poster places. */}
+          <div className="border-ink border-2 bg-white print:border-0">
+            {/* Masthead */}
+            <div className="border-ink flex items-baseline justify-between gap-4 border-b-2 px-4 py-3.5">
+              <h1 className="font-body text-ink text-lg font-extrabold tracking-[0.02em] uppercase">
+                KCVV Elewijt — Competitie {season}
+              </h1>
+              <p className="text-ink-muted font-mono text-[10px] tracking-[0.08em] uppercase">
+                A &amp; B · Wedstrijdkalender
+              </p>
+            </div>
+
+            {hasMatches ? (
+              <div
+                className={`grid px-5 pt-1.5 pb-[18px] ${
+                  columns.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                }`}
+              >
+                {columns.map((weekends, index) => (
+                  <div
+                    key={weekends[0]?.key ?? index}
+                    className={
+                      index === 0 && columns.length > 1
+                        ? "border-ink/15 border-r pr-[17px]"
+                        : columns.length > 1
+                          ? "pl-[17px]"
+                          : ""
+                    }
+                  >
+                    <FixtureColumn weekends={weekends} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // "gevonden" is banned outside query surfaces (#2427 rule 3) — this
+              // is a data source, not a search. surface="bare": already inside
+              // the poster's own `border-ink` sheet frame — a second frame here
+              // nested two ink borders, and dropped a taped jersey into a print
+              // poster (#2562 review round 3). `className="px-5"` matches the
+              // populated grid's own horizontal inset above — without it, this
+              // branch's copy ran wider than the content it replaces inside
+              // the same sheet (#2562 review round 4).
+              <EmptyState
+                tier="surface"
+                heading="Geen competitiewedstrijden"
+                surface="bare"
+                className="px-5"
+              >
+                Er zijn geen competitiewedstrijden voor dit seizoen beschikbaar.
+              </EmptyState>
+            )}
           </div>
 
-          {hasMatches ? (
-            <div
-              className={`grid px-5 pt-1.5 pb-[18px] ${
-                columns.length > 1 ? "grid-cols-2" : "grid-cols-1"
-              }`}
-            >
-              {columns.map((weekends, index) => (
-                <div
-                  key={weekends[0]?.key ?? index}
-                  className={
-                    index === 0 && columns.length > 1
-                      ? "border-ink/15 border-r pr-[17px]"
-                      : columns.length > 1
-                        ? "pl-[17px]"
-                        : ""
-                  }
-                >
-                  <FixtureColumn weekends={weekends} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            // "gevonden" is banned outside query surfaces (#2427 rule 3) — this
-            // is a data source, not a search. surface="bare": already inside
-            // the poster's own `border-ink` sheet frame — a second frame here
-            // nested two ink borders, and dropped a taped jersey into a print
-            // poster (#2562 review round 3). `className="px-5"` matches the
-            // populated grid's own horizontal inset above — without it, this
-            // branch's copy ran wider than the content it replaces inside
-            // the same sheet (#2562 review round 4).
-            <EmptyState
-              tier="surface"
-              heading="Geen competitiewedstrijden"
-              surface="bare"
-              className="px-5"
-            >
-              Er zijn geen competitiewedstrijden voor dit seizoen beschikbaar.
-            </EmptyState>
-          )}
+          {/* Print-only footer. It rides inside the scaled sheet on purpose: a
+              poster export is a snapshot of live PSD fixtures, so the artwork
+              carries the day it was pulled. */}
+          <p className="sk-poster-footer text-ink-muted mt-4 hidden text-center font-mono text-[10px] uppercase print:block">
+            KCVV Elewijt · Competitie {season} · afgedrukt op <PrintDate />
+          </p>
         </div>
-
-        {/* Print-only footer — kiosk prints get a date; the screen sheet stays clean. */}
-        <p className="text-ink-muted mt-4 hidden text-center font-mono text-[10px] uppercase print:block">
-          KCVV Elewijt · Competitie {season} · afgedrukt op <PrintDate />
-        </p>
       </PageContainer>
     </div>
   );
