@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fixtureImage } from "@test-fixtures/images";
+import { colorSwatchLogo } from "@test-fixtures/synthetic";
 import { SponsorTile } from "./SponsorTile";
 
 const meta = {
@@ -99,22 +100,32 @@ export const Framed: Story = {
   },
 };
 
+// GreyscaleAtRest/ColorAtRest deliberately use a synthetic, unambiguously
+// saturated fixture (`@test-fixtures/synthetic`) rather than the real
+// `sponsor-logo` pool used everywhere else in this file. Every production
+// sponsor logo turned out to be near-achromatic line art, which makes a CSS
+// `grayscale` filter a visual no-op against them — a VR baseline built from
+// one would pass unchanged whether or not `colorAtRest` actually worked. See
+// `test/fixtures/synthetic/README.md`. The two stories are otherwise a true
+// minimal pair — identical sponsor data, differing only in `colorAtRest` —
+// so the VR diff between them isolates exactly what the prop changes.
+const MINIMAL_PAIR_SPONSOR = {
+  name: "Fixture Sponsor",
+  logo: colorSwatchLogo,
+  url: "https://example.com/fixture-sponsor",
+  tier: "sponsor",
+} as const;
+
 export const GreyscaleAtRest: Story = {
   args: {
-    sponsor: {
-      id: "s-5",
-      name: "Bakkerij Peeters",
-      logo: fixtureImage("sponsor-logo", 0),
-      url: "https://example.com/peeters",
-      tier: "hoofdsponsor",
-    },
+    sponsor: { id: "s-5", ...MINIMAL_PAIR_SPONSOR },
     colorAtRest: false,
   },
   parameters: {
     docs: {
       description: {
         story:
-          "`colorAtRest: false` (default) → the homepage/team-page wall treatment: the logo renders greyscale and resolves to colour on hover/focus.",
+          "`colorAtRest: false` (default) → the homepage/team-page wall treatment: the logo renders greyscale and resolves to colour on hover/focus. Same fixture as `ColorAtRest` below — only `colorAtRest` differs.",
       },
     },
   },
@@ -122,21 +133,14 @@ export const GreyscaleAtRest: Story = {
 
 export const ColorAtRest: Story = {
   args: {
-    sponsor: {
-      id: "s-6",
-      name: "Apotheek Dilbeek",
-      logo: fixtureImage("sponsor-logo", 1),
-      url: "https://example.com/apotheek",
-      tier: "sponsor",
-    },
-    framed: true,
+    sponsor: { id: "s-6", ...MINIMAL_PAIR_SPONSOR },
     colorAtRest: true,
   },
   parameters: {
     docs: {
       description: {
         story:
-          "`colorAtRest: true` → the `/sponsors` merged-wall treatment: the logo is in colour at rest, no greyscale filter and no hover reveal. Paired with `framed` here to match production usage on `<SponsorTiers>`.",
+          "`colorAtRest: true` → the `/sponsors` merged-wall treatment: the logo is in colour at rest, no greyscale filter and no hover reveal. Same fixture as `GreyscaleAtRest` above — only `colorAtRest` differs.",
       },
     },
   },
