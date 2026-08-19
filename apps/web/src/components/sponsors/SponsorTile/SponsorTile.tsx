@@ -57,7 +57,7 @@ export const SponsorTile = ({
       className={cn(
         "h-auto max-h-[54px] w-auto max-w-full object-contain",
         !colorAtRest &&
-          "grayscale transition-all duration-300 ease-out group-hover:grayscale-0 group-focus-visible:grayscale-0 motion-reduce:transition-none",
+          "grayscale transition-[filter] duration-300 group-hover:grayscale-0 group-focus-visible:grayscale-0 motion-reduce:transition-none",
       )}
       sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 18vw"
     />

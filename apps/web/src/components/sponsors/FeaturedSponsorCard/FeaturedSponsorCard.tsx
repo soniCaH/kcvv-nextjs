@@ -86,7 +86,7 @@ export function FeaturedSponsorCard({ sponsor }: FeaturedSponsorCardProps) {
         data-sponsor-featured="true"
         className={cn(
           frameClass,
-          "group focus-visible:outline-jersey-deep transition-all duration-300 hover:translate-x-1 hover:translate-y-1 hover:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2",
+          "focus-visible:outline-jersey-deep transition-all duration-300 hover:translate-x-1 hover:translate-y-1 hover:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2",
         )}
       >
         {content}
