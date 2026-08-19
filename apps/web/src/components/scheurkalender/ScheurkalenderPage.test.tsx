@@ -271,4 +271,26 @@ describe("ScheurkalenderPage", () => {
       ).toBeInTheDocument();
     });
   });
+
+  // The print export IS the poster artwork (#2702) — it replaces a screenshot,
+  // so a silently dropped hook means a blurry poster, not a broken page. jsdom
+  // applies no print styles, so these assert the wiring the stylesheet needs;
+  // the geometry itself is verified by exporting a PDF (see the PR).
+  describe("poster print export", () => {
+    it("wraps the sheet in the scaled page area", () => {
+      const { container } = renderPage();
+      const page = container.querySelector(".sk-poster");
+      expect(page).not.toBeNull();
+      expect(page!.querySelector(".sk-poster-sheet")).not.toBeNull();
+    });
+
+    it("prints A2 with background fills kept", () => {
+      const { container } = renderPage();
+      const css = container.querySelector("style")?.textContent ?? "";
+      expect(css).toContain("size: A2 portrait");
+      // Margins that leave the 340 × 567 mm poster block.
+      expect(css).toContain("margin: 13.5mm 40mm");
+      expect(css).toContain("print-color-adjust: exact");
+    });
+  });
 });
