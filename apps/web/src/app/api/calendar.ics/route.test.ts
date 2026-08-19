@@ -103,6 +103,12 @@ function makeMatch(overrides: Partial<Match> = {}): Match {
   } as Match;
 }
 
+/**
+ * Fixture for the merged `/kalender` event feed (`EventRepository.findUpcomingForList()`).
+ * `dateStart`/`dateEnd` are genuine UTC instants (not Belgian wall-clock like a
+ * `Match.date`) — see `event-datetime.ts`. `2026-04-14T22:00:00.000Z` is
+ * Brussels midnight (2026-04-15, CEST +2).
+ */
 function makeEventItem(
   overrides: Partial<EventListItemVM> = {},
 ): EventListItemVM {

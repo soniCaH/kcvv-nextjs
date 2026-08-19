@@ -74,9 +74,9 @@ async function fetchMatches(
  * Sanity failure throw here means Next never caches it — the existing
  * last-good value (or nothing, if there isn't one yet) survives, matching
  * this repo's ISR rule ("caught ⇒ CACHED, throw ⇒ last-good", see root
- * CLAUDE.md's Effect & Server Component Patterns). Catching it *inside*
- * would instead write an empty activity list into the cache and pin it there
- * for the full 15 minutes, outliving the Sanity blip that caused it.
+ * CLAUDE.md's Effect & Server Component Patterns). `fetchEvents` below is
+ * where the degrade to `[]` actually happens, one layer above this boundary,
+ * so a failure here never gets written into the cache.
  */
 const fetchUpcomingEventsCached = unstable_cache(
   (): Promise<EventListItemVM[]> =>
@@ -90,12 +90,7 @@ const fetchUpcomingEventsCached = unstable_cache(
   { revalidate: CACHE_MAX_AGE },
 );
 
-/**
- * The request-facing read: degrades like `/kalender` does, but one layer
- * above the cache boundary above — a Sanity failure logs and falls back to
- * an empty list for *this* response only, without poisoning the shared
- * `ical:events` cache entry, so the next request (cached or not) retries.
- */
+/** Degrades the read above to `[]` on failure — see its doc for why the catch lives here, outside the cache boundary. */
 async function fetchEvents(): Promise<EventListItemVM[]> {
   try {
     return await fetchUpcomingEventsCached();
@@ -112,8 +107,6 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const rawTeamIds = searchParams.get("teamIds");
   const side = parseSide(searchParams.get("side"));
-  // All-or-nothing club-wide opt-in (#2704 design note) — deliberately not
-  // scoped by `teamIds`/`side`, which only ever filter fixtures.
   const includeEvents = searchParams.get("events") === "1";
   const cacheKey = normalizeCacheKey(rawTeamIds, side, includeEvents);
 
@@ -130,12 +123,11 @@ export async function GET(request: NextRequest) {
       async () => {
         const [matches, events] = await Promise.all([
           fetchMatches(teamIdNums),
-          includeEvents ? fetchEvents() : Promise.resolve(undefined),
+          includeEvents
+            ? fetchEvents()
+            : Promise.resolve<EventListItemVM[]>([]),
         ]);
-        return generateIcal(matches, {
-          side,
-          ...(events !== undefined ? { events } : {}),
-        });
+        return generateIcal(matches, { side, includeEvents, events });
       },
       [cacheKey],
       { revalidate: CACHE_MAX_AGE },

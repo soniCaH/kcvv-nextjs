@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Match } from "@kcvv/api-contract";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
+import { buildEventIcs } from "./event-ics";
 import { generateIcal, normalizeCacheKey } from "./ical";
 
 function makeMatch(overrides: Partial<Match> = {}): Match {
@@ -339,6 +340,7 @@ describe("generateIcal — club activities (events flag)", () => {
 
   it("emits an event VEVENT when events are passed (flag on)", () => {
     const output = generateIcal([makeMatch()], {
+      includeEvents: true,
       events: [makeEventItem()],
     });
 
@@ -346,16 +348,9 @@ describe("generateIcal — club activities (events flag)", () => {
     expect(output).toContain("SUMMARY:Mosselfestijn");
   });
 
-  it("keeps the matches-only output byte-for-byte identical when the events option is omitted", () => {
-    const matches = [makeMatch()];
-    const withoutOption = generateIcal(matches);
-    const withEmptyOptions = generateIcal(matches, { side: "all" });
-
-    expect(withoutOption).toBe(withEmptyOptions);
-  });
-
   it("carries the event's LOCATION when present", () => {
     const output = generateIcal([], {
+      includeEvents: true,
       events: [makeEventItem({ location: "Sportpark Driesput, Elewijt" })],
     });
 
@@ -364,6 +359,7 @@ describe("generateIcal — club activities (events flag)", () => {
 
   it("omits LOCATION when the event has none", () => {
     const output = generateIcal([], {
+      includeEvents: true,
       events: [makeEventItem({ location: null })],
     });
 
@@ -372,6 +368,7 @@ describe("generateIcal — club activities (events flag)", () => {
 
   it("points URL at the item's own detail page, using the repository-resolved href", () => {
     const output = generateIcal([], {
+      includeEvents: true,
       events: [
         makeEventItem({
           href: "/evenementen/mosselfestijn",
@@ -387,6 +384,7 @@ describe("generateIcal — club activities (events flag)", () => {
 
   it("points URL at /nieuws/[slug] for an event-article-sourced item", () => {
     const output = generateIcal([], {
+      includeEvents: true,
       events: [
         makeEventItem({
           href: "/nieuws/jeugdtornooi-verslag",
@@ -402,6 +400,7 @@ describe("generateIcal — club activities (events flag)", () => {
 
   it("emits a Brussels-midnight event as all-day, matching buildEventIcs's rule", () => {
     const output = generateIcal([], {
+      includeEvents: true,
       events: [
         makeEventItem({
           dateStart: "2026-04-14T22:00:00.000Z", // 2026-04-15T00:00 Brussels
@@ -416,6 +415,7 @@ describe("generateIcal — club activities (events flag)", () => {
 
   it("spans a multi-day all-day event to the day after its last day, matching buildEventIcs's rule", () => {
     const output = generateIcal([], {
+      includeEvents: true,
       events: [
         makeEventItem({
           dateStart: "2026-09-13T22:00:00.000Z", // 2026-09-14T00:00 Brussels
@@ -430,6 +430,7 @@ describe("generateIcal — club activities (events flag)", () => {
 
   it("emits a timed event with a real DTSTART and no fabricated DTEND when there is no end", () => {
     const output = generateIcal([], {
+      includeEvents: true,
       events: [
         makeEventItem({
           dateStart: "2026-04-15T17:00:00.000Z", // 19:00 Brussels (CEST)
@@ -444,6 +445,7 @@ describe("generateIcal — club activities (events flag)", () => {
 
   it("keeps a timed event's own DTEND when the item has an end", () => {
     const output = generateIcal([], {
+      includeEvents: true,
       events: [
         makeEventItem({
           dateStart: "2026-04-15T17:00:00.000Z",
@@ -457,6 +459,7 @@ describe("generateIcal — club activities (events flag)", () => {
 
   it("gives an event UID a distinct prefix from a match UID so the two can never collide", () => {
     const output = generateIcal([makeMatch({ id: 1 })], {
+      includeEvents: true,
       events: [makeEventItem({ id: "1" })],
     });
 
@@ -469,10 +472,14 @@ describe("generateIcal — club activities (events flag)", () => {
     const goodItem = makeEventItem({ id: "good" });
 
     expect(() =>
-      generateIcal([makeMatch()], { events: [badItem, goodItem] }),
+      generateIcal([makeMatch()], {
+        includeEvents: true,
+        events: [badItem, goodItem],
+      }),
     ).not.toThrow();
 
     const output = generateIcal([makeMatch()], {
+      includeEvents: true,
       events: [badItem, goodItem],
     });
     expect(output).not.toContain("kcvv-event-bad@kcvvelewijt.be");
@@ -482,6 +489,7 @@ describe("generateIcal — club activities (events flag)", () => {
 
   it("drops an event's DTEND rather than throwing when dateEnd is unparseable, keeping the item as a timed event with no fabricated end", () => {
     const output = generateIcal([], {
+      includeEvents: true,
       events: [
         makeEventItem({
           dateStart: "2026-04-15T17:00:00.000Z",
@@ -497,6 +505,7 @@ describe("generateIcal — club activities (events flag)", () => {
   it("describes the feed honestly (NAME / X-WR-CALDESC) when activities are included", () => {
     const withoutEvents = generateIcal([makeMatch()]);
     const withEvents = generateIcal([makeMatch()], {
+      includeEvents: true,
       events: [makeEventItem()],
     });
 
@@ -508,5 +517,73 @@ describe("generateIcal — club activities (events flag)", () => {
       "X-WR-CALDESC:Wedstrijden en clubactiviteiten van KCVV Elewijt",
     );
     expect(withEvents).not.toBe(withoutEvents);
+  });
+
+  it("is driven by includeEvents, not by a nonempty events array — passing events without the flag keeps the matches-only naming", () => {
+    const output = generateIcal([makeMatch()], {
+      events: [makeEventItem()],
+    });
+
+    expect(output).toContain("X-WR-CALNAME:KCVV Elewijt — Wedstrijden\r");
+    expect(output).not.toContain("Activiteiten");
+  });
+});
+
+/**
+ * `generateIcal`'s club-activity VEVENTs and the per-event "Zet in agenda"
+ * download (`buildEventIcs`) both resolve their all-day classification
+ * through the one shared `resolveEventDateRange` (#2711 review, fix 1) — this
+ * pins the two surfaces against the *same* input so a future edit to only one
+ * of them fails a test instead of silently diverging.
+ */
+describe("generateIcal and buildEventIcs agree on the all-day classification", () => {
+  it("both surfaces render the same Brussels-midnight input as all-day, on the same day", () => {
+    const item = makeEventItem({
+      dateStart: "2026-04-14T22:00:00.000Z", // 2026-04-15T00:00 Brussels
+      dateEnd: null,
+    });
+
+    const feedOutput = generateIcal([], {
+      includeEvents: true,
+      events: [item],
+    });
+    const downloadOutput = buildEventIcs({
+      uid: "x@kcvvelewijt.be",
+      title: item.title,
+      dateStart: item.dateStart,
+      dateEnd: item.dateEnd,
+      now: "2026-01-01T00:00:00.000Z",
+    });
+
+    expect(feedOutput).toContain("DTSTART;VALUE=DATE:20260415");
+    expect(downloadOutput).toContain("DTSTART;VALUE=DATE:20260415");
+    expect(feedOutput).toContain("DTEND;VALUE=DATE:20260416");
+    expect(downloadOutput).toContain("DTEND;VALUE=DATE:20260416");
+  });
+
+  it("both surfaces render the same timed input as timed, with the same DTSTART instant", () => {
+    const item = makeEventItem({
+      dateStart: "2026-04-15T17:00:00.000Z",
+      dateEnd: null,
+    });
+
+    const feedOutput = generateIcal([], {
+      includeEvents: true,
+      events: [item],
+    });
+    const downloadOutput = buildEventIcs({
+      uid: "x@kcvvelewijt.be",
+      title: item.title,
+      dateStart: item.dateStart,
+      dateEnd: item.dateEnd,
+      now: "2026-01-01T00:00:00.000Z",
+    });
+
+    expect(feedOutput).not.toMatch(/^DTSTART;VALUE=DATE/m);
+    expect(downloadOutput).not.toMatch(/^DTSTART;VALUE=DATE/m);
+    expect(downloadOutput).toContain("DTSTART:20260415T170000Z");
+    expect(feedOutput).toContain(
+      "DTSTART;TZID=Europe/Brussels:20260415T190000",
+    );
   });
 });
