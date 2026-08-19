@@ -2,7 +2,7 @@
 
 import { useRef, type ReactNode } from "react";
 import { trackEvent } from "@/lib/analytics/track-event";
-import { slugify } from "@/lib/seo/legacy-redirect";
+import { slugify } from "@/lib/utils/slugify";
 import { useDelegatedClick } from "@/hooks/useDelegatedClick";
 
 /**
@@ -26,8 +26,8 @@ export interface EmptyStateUndoAnalyticsProps {
   source: EmptyStateUndoSource;
   /**
    * The facet (active filter value) that emptied the surface — slugified
-   * before the push (`slugify`, `lib/seo/legacy-redirect.ts`) so the five
-   * hosts' mixed casing lands on one value among *themselves*.
+   * before the push (`slugify`, `lib/utils/slugify.ts`) so the five hosts'
+   * mixed casing lands on one value among *themselves*.
    */
   facet: string;
   children: ReactNode;
