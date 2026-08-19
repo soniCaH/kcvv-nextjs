@@ -57,14 +57,9 @@ export interface CalendarMatch {
    */
   isPlaceholder: boolean;
   /**
-   * Structured league/cup/friendly/tournament classification (#2692),
-   * mirrored from `Match.competitionType` — the same two-hop chain
-   * `isPlaceholder` above crosses. Without it, `calendarMatchToScheduleMatch`
-   * had no way to tell a tournament fixture apart from an ordinary one, so
-   * the same row that renders reduced on the team page (#2696) rendered as
-   * an ordinary two-crest linked scoreboard here. The lawful detector is
-   * `competitionType === "tournament"` — never the Dutch `competition`
-   * label.
+   * Carried across the same two-hop chain `isPlaceholder` above crosses —
+   * see `ScheduleMatch.competitionType` for the decision this exists to
+   * carry (#2692/#2696).
    */
   competitionType?: CompetitionType;
 }

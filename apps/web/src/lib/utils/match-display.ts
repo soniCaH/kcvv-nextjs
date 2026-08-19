@@ -1,5 +1,7 @@
+import type { CompetitionType } from "@kcvv/api-contract";
 import type { MatchStatus } from "@/lib/effect/schemas/match.schema";
 import { matchStatusWording } from "@/components/match/MatchStatusBadge";
+import { KCVV_CLUB_ID } from "@/lib/constants";
 
 interface HasScoreMatch {
   home_team: { score?: number };
@@ -101,6 +103,46 @@ export function isPlayedMatch(status: MatchStatus): boolean {
  */
 export function isExceptionalMatchStatus(status: MatchStatus): boolean {
   return status !== "scheduled" && status !== "finished";
+}
+
+/**
+ * Fields `isReducedMatchRow` needs — a structural subset both `ScheduleRow`
+ * members and `CalendarMatch` satisfy without a branch, mirroring
+ * `ReservationSubjectInput` below.
+ */
+export interface ReducedRowInput {
+  isPlaceholder: boolean;
+  competitionType?: CompetitionType;
+  status: MatchStatus;
+  homeScore?: number;
+  awayScore?: number;
+}
+
+/**
+ * Whether a match row renders the reduced reservation register — one crest,
+ * one mono subject, no link — instead of the full two-sided scoreboard.
+ * True for a placeholder (#2606, both sides are the same club) and for a
+ * tournament fixture (#2696, `competitionType === "tournament"` — never a
+ * string match on the Dutch `competition` label) that has no result yet.
+ *
+ * Gated on there being a scoreline, not merely on `isPlayedMatch`: a
+ * finished/forfeited/stopped tournament fixture whose scores are missing
+ * from the feed must not fall back to the vs-framed, linked scoreboard with
+ * a kickoff time and no score (#2696 review) — once a result exists, the
+ * club really was the opponent, so the row reverts to the full scoreboard.
+ *
+ * The one place this question is asked — `<TeamAgendaRow>` and
+ * `<CalendarMonth>`'s `captionLabel` gate each spelled it independently
+ * once, and the two answers had already drifted apart by review.
+ */
+export function isReducedMatchRow(match: ReducedRowInput): boolean {
+  if (match.isPlaceholder) return true;
+  if (match.competitionType !== "tournament") return false;
+  const hasScoreline =
+    isPlayedMatch(match.status) &&
+    typeof match.homeScore === "number" &&
+    typeof match.awayScore === "number";
+  return !hasScoreline;
 }
 
 /**
@@ -215,7 +257,11 @@ export interface ReservationSubjectInput {
 }
 
 export interface ReservationView {
-  /** The competition label, or the reservation fallback word when absent. */
+  /**
+   * The competition label, or the reservation fallback word when absent —
+   * with the `otherClub` name appended ("TORNOOI · FC ZEMST SPORTIEF") when
+   * one is given (#2696).
+   */
   subject: string;
   /**
    * The exceptional-status marker (FF/AFG/CANC/STOP), or `null` for
@@ -241,17 +287,45 @@ export interface ReservationView {
  * inlined it; every renderer built after it (`<MatchStripView>`,
  * `/wedstrijd/[matchId]`) should call this instead of re-deriving the same
  * two rules a third and fourth time.
+ *
+ * `otherClub` is the tournament case's addition (#2696): a placeholder's
+ * subject is the competition alone, a tournament fixture's is the
+ * competition THEN the named club — the club is presented as where the
+ * tournament is, never as an opponent, because PSD does not say whether it
+ * hosts or merely shares the bracket. `reservationView` stays the one place
+ * that composes either subject, rather than the join living a third time in
+ * a component.
  */
 export function reservationView(
   match: ReservationSubjectInput,
+  otherClub?: { name: string },
 ): ReservationView {
+  const competition = match.competition || RESERVATION_SUBJECT_FALLBACK;
   return {
-    subject: match.competition || RESERVATION_SUBJECT_FALLBACK,
+    subject: otherClub
+      ? [competition, otherClub.name].filter(Boolean).join(" · ")
+      : competition,
     statusWording: isExceptionalMatchStatus(match.status)
       ? matchStatusWording(match.status)
       : null,
     kicker: RESERVATION_SUBJECT_FALLBACK.toUpperCase(),
   };
+}
+
+/**
+ * The club that is not KCVV — derived from the club id, never home/away
+ * (#2696: `isHome` answers "which side did PSD list as home", not "is this
+ * club confirmed", which is not a question a tournament fixture can answer).
+ * Deliberately not unified with this codebase's other "which side is the
+ * opponent" tie-breaks — `MatchStripView`'s `opponentOf` uses
+ * `isHome ?? id === KCVV_CLUB_ID`, `nieuws/[slug]/utils.ts` has a third —
+ * those answer a different question for their own surface, on purpose.
+ */
+export function otherClubSide<Team extends { id: number }>(match: {
+  homeTeam: Team;
+  awayTeam: Team;
+}): Team {
+  return match.homeTeam.id === KCVV_CLUB_ID ? match.awayTeam : match.homeTeam;
 }
 
 /** The fields `reservationTitle()` needs, on top of `reservationView()`'s own. */

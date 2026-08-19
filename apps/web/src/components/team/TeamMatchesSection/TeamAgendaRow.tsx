@@ -49,15 +49,16 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { Crest, PRESS_DOWN_CLASSES } from "@/components/design-system";
-import { KCVV_CLUB_ID } from "@/lib/constants";
 import { cn } from "@/lib/utils/cn";
 import { toMatchDisplayZone } from "@/lib/utils/dates";
 import {
   getResultColor,
   HOME_AWAY_A11Y_NAME,
   isPlayedMatch,
+  isReducedMatchRow,
   isSettledMatch,
   MATCH_KIND_WORD,
+  otherClubSide,
   OUTCOME_UNDERLINE,
   OUTCOME_WORD,
   reservationRowLabel,
@@ -254,22 +255,31 @@ export function TeamAgendaRow({
         ? kcvvTeamId === match.homeTeam.id
         : undefined));
 
-  // Played before `isTournament` needs it below — a tournament fixture that
-  // has actually been played is no longer the "not yet confirmed" case this
-  // state exists for: the club really was the opponent, so the row goes back
-  // to the full linked scoreboard (score, outcome tint, link) rather than the
-  // reduced register (#2696 review).
+  // Hoisted ahead of their other uses further down (`showUpcomingLabel`,
+  // the normal row's `scoreOrTime`) — `isPlayed` and `hasScoreline` are
+  // needed standalone here, not just as inputs to `isReducedRow` below.
   const isPlayed = isPlayedMatch(match.status);
+  const hasScoreline =
+    !match.isPlaceholder &&
+    isPlayed &&
+    typeof match.homeScore === "number" &&
+    typeof match.awayScore === "number";
 
   // The lawful tournament detector (#2696) — `competitionType === "tournament"`,
   // never a string match on the Dutch `competition` label, mirroring the
-  // `competitionType === "league"` gate elsewhere in the codebase. A
-  // placeholder is never also a tournament row: they reuse the same reduced
-  // shape below, but a self-match has no second club to name. Gated on
-  // `!isPlayed` — see the comment above.
-  const isTournament =
-    !match.isPlaceholder && match.competitionType === "tournament" && !isPlayed;
-  const isReducedRow = match.isPlaceholder || isTournament;
+  // `competitionType === "league"` gate elsewhere in the codebase. Read
+  // directly for `data-tournament` below; `isReducedRow` goes through the
+  // shared `isReducedMatchRow` instead of re-deriving the same question,
+  // which is also what `<CalendarMonth>`'s `captionLabel` gate calls — the
+  // two answers had already drifted apart once when each kept its own copy.
+  const isTournamentFixture =
+    !match.isPlaceholder && match.competitionType === "tournament";
+  // `match.isPlaceholder ||` first: TypeScript's control-flow narrowing of
+  // `match` in the non-reduced branch further down needs a literal test on
+  // the discriminant it can alias, which an opaque function call alone
+  // can't provide — `isReducedMatchRow(match)` still decides the tournament
+  // half, so the rule itself has exactly one definition.
+  const isReducedRow = match.isPlaceholder || isReducedMatchRow(match);
 
   // White on jersey-deep, inherited from the pre-#2395 green when cream missed
   // AA there. Both clear it now (white 5.29:1, cream 4.69:1) — see DESIGN.md
@@ -332,11 +342,6 @@ export function TeamAgendaRow({
   // `awayScore`/`isHome` to pass it).
   const outcome = match.isPlaceholder ? null : computeOutcome(match, isHome);
 
-  const hasScoreline =
-    !match.isPlaceholder &&
-    isPlayed &&
-    typeof match.homeScore === "number" &&
-    typeof match.awayScore === "number";
   // Show the upcoming label ("Gepland") only for not-yet-played matches when one
   // was supplied. Gating on status (not merely the absence of a scoreline) keeps
   // a finished match with missing scores on the kickoff time rather than wrongly
@@ -517,44 +522,50 @@ export function TeamAgendaRow({
     cn("font-mono text-[9px] tracking-wider uppercase", monoClass, extra);
 
   if (isReducedRow) {
+    // TypeScript needs `match.isPlaceholder` to narrow `ScheduleReservation`'s
+    // `team` from `ScheduleMatch`'s `homeTeam`/`awayTeam` — asked once here,
+    // producing every value the two states disagree on, rather than re-asked
+    // at each site below (an earlier version asked it four times, in two
+    // spellings, and the two answers had already drifted apart by review).
+    const {
+      rowTeam,
+      otherClub,
+      leadWord: reducedLeadWord,
+      labelKind: reducedKind,
+    } = match.isPlaceholder
+      ? {
+          rowTeam: match.team,
+          otherClub: undefined,
+          leadWord: mobileKindWord,
+          labelKind: kind,
+        }
+      : {
+          // The non-KCVV side, derived from the club id — never home/away,
+          // since which side PSD lists as home is not the question a
+          // tournament fixture can answer (#2696).
+          rowTeam: otherClubSide(match),
+          otherClub: otherClubSide(match),
+          // No slot word, ever, unlike the placeholder case: the featured
+          // green ground already says the row is next, and at narrow
+          // widths the word pushed the club name — the one part this row
+          // exists to carry — into the ellipsis (#2693 decision, round 3).
+          leadWord: null,
+          // Same "no slot word, ever" rule reaches the accessible name.
+          labelKind: undefined,
+        };
+
     // The competition label is the default subject ("Tornooi" /
     // "Vriendschappelijk"), rendered in the row's existing mono-uppercase
     // caption register rather than as bold body text — the one deliberate
     // departure from the prototype. It also sidesteps PSD sending one
     // competition name lowercase: the caption's CSS uppercase transform
     // handles it, so the string is never re-cased here. `reservationView()`
-    // is the shared derivation (#2688) — `<MatchStripView>` and
+    // is the shared derivation (#2688/#2696) — `<MatchStripView>` and
     // `/wedstrijd/[matchId]` call the same helper so the subject can't drift
-    // between surfaces. It reads `status`/`competition` off either member of
-    // `ScheduleRow` structurally, so it needs no branch here.
-    const competitionSubject = reservationView(match).subject;
-
-    // A tournament fixture (unlike a placeholder) has a second, genuinely
-    // different club to show — the crest and name of whichever side is NOT
-    // KCVV, derived from the club id (never home/away: #2696 explicitly
-    // rejects deriving it from `isHome`, since which side PSD lists as home
-    // is not the question being answered). A placeholder has no second club
-    // — both sides are KCVV — so it keeps showing its own `team`.
-    const rowTeam = match.isPlaceholder
-      ? match.team
-      : match.homeTeam.id === KCVV_CLUB_ID
-        ? match.awayTeam
-        : match.homeTeam;
-
-    // The tournament subject names the competition THEN the club — the club
-    // is presented as where the tournament is, never as an opponent, because
-    // PSD does not say whether it hosts or merely shares the bracket. No
-    // slot word, ever, unlike the placeholder branch below: the featured
-    // green ground already says the row is next, and at narrow widths the
-    // word pushed the club name — the one part this row exists to carry —
-    // into the ellipsis (#2693 decision, round 3).
-    const subjectSource = isTournament
-      ? [competitionSubject, rowTeam.name].filter(Boolean).join(" · ")
-      : competitionSubject;
-    const subjectContent = buildCaption(
-      isTournament ? null : mobileKindWord,
-      subjectSource,
-    );
+    // between surfaces; `otherClub` composes a tournament's "competition ·
+    // club" subject there, `undefined` for a placeholder.
+    const subject = reservationView(match, otherClub).subject;
+    const subjectContent = buildCaption(reducedLeadWord, subject);
 
     // No reason line — "Tegenstander nog niet bekend" was prototyped and cut.
     // The label states only what the row itself states: the subject, the
@@ -563,13 +574,9 @@ export function TeamAgendaRow({
     // `scoreboardLabel`, which doesn't need to — two real team names already
     // distinguish one reservation from another; two reservations on the same
     // `/tegenstander`/`/kalender` page, both KCVV vs KCVV, do not).
-    const labelSubject = [captionLabel, subjectSource]
-      .filter(Boolean)
-      .join(" · ");
+    const labelSubject = [captionLabel, subject].filter(Boolean).join(" · ");
     const placeholderLabel = reservationRowLabel({
-      // A tournament never takes the slot word, in the accessible name
-      // either — the same "no slot word, ever" rule as the visible caption.
-      kind: isTournament ? undefined : kind,
+      kind: reducedKind,
       subject: labelSubject,
       dateLabel: `${day} ${month}`,
       time: showUpcomingLabel ? undefined : kickoff,
@@ -588,7 +595,7 @@ export function TeamAgendaRow({
         data-testid="team-agenda-row"
         data-featured={featured}
         data-placeholder={match.isPlaceholder ? "true" : undefined}
-        data-tournament={isTournament ? "true" : undefined}
+        data-tournament={isTournamentFixture ? "true" : undefined}
         aria-label={placeholderLabel}
         className={cardBase}
       >

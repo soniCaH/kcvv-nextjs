@@ -95,6 +95,43 @@ const desktopText = () =>
 const mobileText = () =>
   document.querySelector('[data-layout="mobile"]')?.textContent ?? "";
 
+/** A pitch-reservation placeholder (#2606) — both sides are the same club. */
+const PLACEHOLDER: ScheduleReservation = {
+  isPlaceholder: true,
+  id: 99,
+  date: new Date("2026-05-09T09:30:00.000Z"),
+  time: "09:30",
+  team: { id: 1235, name: "KCVV Elewijt" },
+  status: "scheduled",
+  competition: "Tornooi",
+};
+
+/** A genuine tournament fixture (#2696) — not a self-match. */
+const TOURNAMENT: ScheduleMatch = {
+  isPlaceholder: false,
+  id: 200,
+  date: new Date("2026-08-30T09:30:00.000Z"),
+  time: "09:30",
+  homeTeam: { id: 1235, name: "KCVV Elewijt" },
+  awayTeam: {
+    id: 77,
+    name: "FC Zemst Sportief",
+    logo: "https://example.com/zemst.png",
+  },
+  status: "scheduled",
+  competition: "Tornooi",
+  competitionType: "tournament",
+};
+
+/**
+ * The reduced-row content box both the placeholder and tournament registers
+ * share — hand-spelling this five-utility selector at each call site meant
+ * a cosmetic Tailwind edit (e.g. `gap-2` → `gap-2.5`) would break three
+ * tests in two describes at once.
+ */
+const contentBox = (row: HTMLElement) =>
+  row.querySelector(".flex.w-full.items-center.gap-2.px-3.py-2");
+
 describe("TeamAgendaRow", () => {
   describe("Date stub", () => {
     it("renders the day number", () => {
@@ -675,16 +712,6 @@ describe("TeamAgendaRow", () => {
    * and a spacer), scoped for these tests via `[data-placeholder="true"]`.
    */
   describe("Placeholder fixture (#2606)", () => {
-    const PLACEHOLDER: ScheduleReservation = {
-      isPlaceholder: true,
-      id: 99,
-      date: new Date("2026-05-09T09:30:00.000Z"),
-      time: "09:30",
-      team: { id: 1235, name: "KCVV Elewijt" },
-      status: "scheduled",
-      competition: "Tornooi",
-    };
-
     const placeholderRow = () =>
       document.querySelector('[data-placeholder="true"]') as HTMLElement;
 
@@ -860,9 +887,7 @@ describe("TeamAgendaRow", () => {
       // crest+subject flex-1, mirroring the normal row's [home][score][away]
       // triple. jsdom has no layout; VR carries the pixel coverage.
       render(<TeamAgendaRow match={PLACEHOLDER} />);
-      const contentRow = placeholderRow().querySelector(
-        ".flex.w-full.items-center.gap-2.px-3.py-2",
-      );
+      const contentRow = contentBox(placeholderRow());
       const flexOneChildren = Array.from(contentRow?.children ?? []).filter(
         (el) => el.className.split(/\s+/).includes("flex-1"),
       );
@@ -910,22 +935,6 @@ describe("TeamAgendaRow", () => {
       expect(subjects.length).toBe(1);
       expect(subjects[0]?.textContent).toBe("Beker van Vlaams-Brabant");
     });
-
-    /**
-     * The min-w-0 defect (#2696). The content box is `flex w-full`, and
-     * without `min-w-0` a flex item's automatic minimum width is its content
-     * size, not 0 — so the box refuses to shrink below the subject's natural
-     * width, overflows past the date stub, and the subject's `truncate`
-     * never gets a chance to engage. jsdom has no layout to reproduce the
-     * clipping itself; this locks the class that makes shrinking possible.
-     */
-    it("gives the content box min-w-0 so its truncating child can shrink (#2696)", () => {
-      render(<TeamAgendaRow match={PLACEHOLDER} />);
-      const contentRow = placeholderRow().querySelector(
-        ".flex.w-full.items-center.gap-2.px-3.py-2",
-      );
-      expect(contentRow?.className.split(/\s+/)).toContain("min-w-0");
-    });
   });
 
   /**
@@ -941,22 +950,6 @@ describe("TeamAgendaRow", () => {
    * be invented here.
    */
   describe("Tournament fixture (#2696)", () => {
-    const TOURNAMENT: ScheduleMatch = {
-      isPlaceholder: false,
-      id: 200,
-      date: new Date("2026-08-30T09:30:00.000Z"),
-      time: "09:30",
-      homeTeam: { id: 1235, name: "KCVV Elewijt" },
-      awayTeam: {
-        id: 77,
-        name: "FC Zemst Sportief",
-        logo: "https://example.com/zemst.png",
-      },
-      status: "scheduled",
-      competition: "Tornooi",
-      competitionType: "tournament",
-    };
-
     const tournamentRow = () =>
       document.querySelector('[data-tournament="true"]') as HTMLElement;
 
@@ -1085,14 +1078,6 @@ describe("TeamAgendaRow", () => {
       );
     });
 
-    it("carries min-w-0 on the content box, same as the placeholder register (#2696)", () => {
-      render(<TeamAgendaRow match={TOURNAMENT} />);
-      const contentRow = tournamentRow().querySelector(
-        ".flex.w-full.items-center.gap-2.px-3.py-2",
-      );
-      expect(contentRow?.className.split(/\s+/)).toContain("min-w-0");
-    });
-
     it("may be the featured 'Eerstvolgende' card", () => {
       render(<TeamAgendaRow match={TOURNAMENT} featured />);
       expect(tournamentRow().getAttribute("data-featured")).toBe("true");
@@ -1123,6 +1108,23 @@ describe("TeamAgendaRow", () => {
       const spans = container.querySelectorAll("[style*='box-shadow']");
       expect(spans.length).toBeGreaterThan(0);
       expect(spans[0]?.getAttribute("style")).toContain("jersey-deep");
+    });
+  });
+
+  /**
+   * The min-w-0 defect (#2696) — see the comment on the content box in
+   * `TeamAgendaRow.tsx`. Both reduced registers share the exact same box, so
+   * one parameterised test locks the fix for both rather than two
+   * byte-identical assertions in two describes.
+   */
+  describe.each([
+    ["placeholder", PLACEHOLDER],
+    ["tournament", TOURNAMENT],
+  ] as const)("Reduced row content box (#2696) — %s", (_label, match) => {
+    it("carries min-w-0 so its truncating child can shrink", () => {
+      render(<TeamAgendaRow match={match} />);
+      const row = screen.getByTestId("team-agenda-row");
+      expect(contentBox(row)?.className.split(/\s+/)).toContain("min-w-0");
     });
   });
 });

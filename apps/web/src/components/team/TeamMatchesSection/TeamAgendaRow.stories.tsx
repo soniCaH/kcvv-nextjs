@@ -241,10 +241,15 @@ export const PlaceholderFriendlyLowercaseLabel: Story = {
 };
 
 /**
- * A subject long enough to fill the row at a narrow width — regression
- * coverage for the missing `min-w-0` on this content box (#2696): without
- * it, `truncate` never engages and the kickoff time clips off the right
- * edge. Same box the tournament row below reuses.
+ * A subject long enough to fill the row at a narrow width — locks the
+ * `min-w-0` fix on this content box (see the comment on it in
+ * `TeamAgendaRow.tsx`). Same box the tournament row below reuses.
+ *
+ * `defaultViewport` below scopes the Storybook UI preview only —
+ * `.storybook/test-runner.ts` ignores `parameters.viewport` and captures
+ * all three VR viewports regardless, so this story's baselines exist at
+ * tablet/desktop too even though only the mobile one can ever show the
+ * truncation it exists to lock.
  */
 export const PlaceholderLongSubjectNarrow: Story = {
   args: {
@@ -259,24 +264,19 @@ export const PlaceholderLongSubjectNarrow: Story = {
 
 // ─── Tournament fixture (#2696) ─────────────────────────────────────────────
 // A genuine fixture — not a self-match — whose structured `competitionType`
-// is "tournament" (#2692). Reuses the placeholder register's shape above
-// rather than a third layout: one crest, one mono subject, the real start
-// time, no link. Unlike a placeholder the crest is the OPPONENT'S — derived
-// from the club id, never home/away — and the subject names the competition
-// then the club: "TORNOOI · FC ZEMST SPORTIEF". The club is presented as
-// where the tournament is, never as who KCVV plays, because PSD does not say
-// which. No slot word, even featured (#2693 decision, round 3): the green
-// ground already says the row is next, and the word pushed the club name
-// into the ellipsis at narrow widths.
+// is "tournament" (#2692). Reuses the placeholder register's shape above —
+// see `TeamAgendaRow.tsx` for the full #2693/#2696 rationale (crest derived
+// from the club id, "competition · club" subject, no slot word even
+// featured).
 
+// Spreads `upcoming` — its `isHome: true` rides along inert, since the
+// tournament row derives its crest from the club id, never home/away.
 const tournamentFixture: ScheduleMatch = {
-  isPlaceholder: false,
+  ...upcoming,
   id: 93,
   date: new Date("2026-08-30T09:30:00.000Z"),
   time: "09:30",
-  homeTeam: KCVV,
   awayTeam: { id: 1391, name: "FC Zemst Sportief" },
-  status: "scheduled",
   competition: "Tornooi",
   competitionType: "tournament",
 };
@@ -286,10 +286,7 @@ export const Tournament: Story = {
   args: { match: tournamentFixture },
 };
 
-/**
- * Featured "Eerstvolgende" — a tournament genuinely can be the next event
- * (owner decision, #2693). No "Volgende" prefix on the jersey-deep ground.
- */
+/** Featured "Eerstvolgende" — see `TeamAgendaRow.tsx` for why no "Volgende" prefix. */
 export const TournamentFeatured: Story = {
   args: { match: tournamentFixture, featured: true },
 };
