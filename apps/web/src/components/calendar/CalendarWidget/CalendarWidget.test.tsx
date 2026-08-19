@@ -354,5 +354,21 @@ describe("CalendarWidget", () => {
       await user.click(screen.getByRole("button", { name: "Toon alles" }));
       expect(mockPush).toHaveBeenCalledWith("/kalender", expect.anything());
     });
+
+    it("fires empty_state_undo (not just kalender_filter) when 'Toon alles' rescues a filtered-to-zero surface (#2691)", async () => {
+      const user = userEvent.setup();
+      mockSearchParams = new URLSearchParams("type=Supportersactiviteit");
+      render(<CalendarWidget {...defaultProps} />);
+      await user.click(screen.getByRole("button", { name: "Toon alles" }));
+      expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
+        surface: "kalender",
+        filter_type: "Supportersactiviteit",
+      });
+      // The undo's own setType("all") still fires its ordinary
+      // kalender_filter — that payload must not regress.
+      expect(trackEvent).toHaveBeenCalledWith("kalender_filter", {
+        kalender_type: "all",
+      });
+    });
   });
 });

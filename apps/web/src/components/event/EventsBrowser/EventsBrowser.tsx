@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { trackEvent } from "@/lib/analytics/track-event";
+import { EmptyStateUndoAnalytics } from "@/components/analytics";
 import { EmptyState } from "@/components/design-system";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import { filteredEmptyBody } from "@/lib/utils/empty-state-copy";
@@ -85,16 +86,22 @@ export function EventsBrowser({
 
       {filtered.length === 0 ? (
         isFilterActive ? (
-          <EmptyState
-            tier="surface"
-            surface="inverse"
-            heading={`Geen evenementen in de categorie ${selected}`}
-            live
-            reason="filtered"
-            undo={{ label: "Toon alles", onClick: () => handleSelect("all") }}
-          >
-            {filteredEmptyBody("alle evenementen")}
-          </EmptyState>
+          <EmptyStateUndoAnalytics surface="evenementen" facet={selected}>
+            <EmptyState
+              tier="surface"
+              surface="inverse"
+              heading={`Geen evenementen in de categorie ${selected}`}
+              live
+              reason="filtered"
+              undo={{
+                label: "Toon alles",
+                onClick: () => handleSelect("all"),
+                analyticsAction: "undo",
+              }}
+            >
+              {filteredEmptyBody("alle evenementen")}
+            </EmptyState>
+          </EmptyStateUndoAnalytics>
         ) : (
           <EmptyState
             tier="surface"

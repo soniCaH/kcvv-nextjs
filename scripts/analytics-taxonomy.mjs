@@ -51,6 +51,10 @@ export const prefixes = [
   "membership_",
   "error_",
   "gallery_",
+  // `<EmptyState>`'s mandatory undo (#2691). `empty_state_undo` only —
+  // reuses the already-registered `filter_type` dimension for the facet
+  // that was active, minting only `surface` as a new custom dimension.
+  "empty_state_",
   // `/inhoud`, the contents page (#2622). `inhoud_view` +
   // `inhoud_entry_click`; the click reuses the already-registered `category`
   // (which of the four groups) and `position` (rank inside it) dimensions, so
@@ -152,6 +156,13 @@ export const params = [
   { parameterName: "gallery_slug", displayName: "Gallery slug" },
   { parameterName: "image_count", displayName: "Image count" },
   { parameterName: "image_index", displayName: "Image index" },
+  // ── Empty-state undo (#2691) ─────────────────────────────────────────────
+  // `filter_type` (already registered above, for `match_agenda_filter` /
+  // `search_filter_changed`) carries the facet — no new dimension for that
+  // half. `surface` is the one genuinely new dimension: which of the five
+  // hosts (`evenementen` | `kalender` | `hulp_audience` | `hulp_category` |
+  // `nieuws`) rendered the undo.
+  { parameterName: "surface", displayName: "Empty-state surface" },
   // ── Membership form (conversion — added #1974) ──────────────────────────
   { parameterName: "is_minor", displayName: "Is minor" },
   { parameterName: "has_prior_club", displayName: "Has prior club" },

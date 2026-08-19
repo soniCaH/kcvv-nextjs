@@ -12,7 +12,10 @@ export interface EmptyStateUndoAnalyticsProps {
   surface: string;
   /**
    * The facet (active filter value) that emptied the surface — the same
-   * value the undo clears.
+   * value the undo clears. Pushed under the dataLayer key `filter_type`,
+   * reusing the GA4 dimension `match_agenda_filter` / `search_filter_changed`
+   * already registered for "which filter facet is active" — GA4's 50-
+   * dimension cap makes a second dimension with the same meaning wasteful.
    */
   facet: string;
   children: ReactNode;
@@ -43,7 +46,7 @@ export function EmptyStateUndoAnalytics({
   useDelegatedClick(ref, {
     selector: "[data-empty-state-undo]",
     onMatch: () => {
-      trackEvent("empty_state_undo", { surface, facet });
+      trackEvent("empty_state_undo", { surface, filter_type: facet });
     },
   });
 

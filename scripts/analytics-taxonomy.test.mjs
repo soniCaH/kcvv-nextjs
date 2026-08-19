@@ -16,7 +16,8 @@ import { prefixes, params, buildTriggerRegex } from "./analytics-taxonomy.mjs";
 const CANONICAL_TRIGGER_REGEX =
   "responsibility_|search_|organigram_|related_content_|related_article_|" +
   "article_|event_|player_|match_|team_|clubshop_banner_|kalender_|sponsor_|" +
-  "jeugd_|hub_|board_|geschiedenis_|ultras_|membership_|error_|gallery_";
+  "banner_|nav_|footer_|jeugd_|hub_|board_|geschiedenis_|ultras_|membership_|" +
+  "error_|gallery_|empty_state_|inhoud_";
 
 test("buildTriggerRegex() equals the canonical string", () => {
   assert.equal(buildTriggerRegex(), CANONICAL_TRIGGER_REGEX);

@@ -27,7 +27,7 @@ describe("<EmptyStateUndoAnalytics>", () => {
     expect(trackEvent).toHaveBeenCalledTimes(1);
     expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
       surface: "evenementen",
-      facet: "Jeugdwerking",
+      filter_type: "Jeugdwerking",
     });
   });
 
