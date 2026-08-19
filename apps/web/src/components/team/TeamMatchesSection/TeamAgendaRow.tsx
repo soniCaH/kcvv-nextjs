@@ -546,7 +546,12 @@ export function TeamAgendaRow({
             `cardBase`. */}
         <div aria-hidden="true" className="contents">
           {dateStub}
-          <div className="flex w-full items-center gap-2 px-3 py-2">
+          {/* `min-w-0`: a flex item's automatic minimum width is its content
+              size, not 0 — without it this box refuses to shrink below the
+              subject's natural width, overflows past the date stub, and the
+              subject's `truncate` never gets a chance to engage, clipping
+              the time off the right edge at narrow widths (#2696). */}
+          <div className="flex w-full min-w-0 items-center gap-2 px-3 py-2">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <Crest name={match.team.name} logo={match.team.logo} />
               <span className={subjectClass}>{subjectContent}</span>

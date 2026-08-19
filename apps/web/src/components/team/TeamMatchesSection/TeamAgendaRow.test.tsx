@@ -910,5 +910,21 @@ describe("TeamAgendaRow", () => {
       expect(subjects.length).toBe(1);
       expect(subjects[0]?.textContent).toBe("Beker van Vlaams-Brabant");
     });
+
+    /**
+     * The min-w-0 defect (#2696). The content box is `flex w-full`, and
+     * without `min-w-0` a flex item's automatic minimum width is its content
+     * size, not 0 — so the box refuses to shrink below the subject's natural
+     * width, overflows past the date stub, and the subject's `truncate`
+     * never gets a chance to engage. jsdom has no layout to reproduce the
+     * clipping itself; this locks the class that makes shrinking possible.
+     */
+    it("gives the content box min-w-0 so its truncating child can shrink (#2696)", () => {
+      render(<TeamAgendaRow match={PLACEHOLDER} />);
+      const contentRow = placeholderRow().querySelector(
+        ".flex.w-full.items-center.gap-2.px-3.py-2",
+      );
+      expect(contentRow?.className.split(/\s+/)).toContain("min-w-0");
+    });
   });
 });
