@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fixtureImage } from "@test-fixtures/images";
-import { colorSwatchLogo } from "@test-fixtures/synthetic";
 import { SponsorTile } from "./SponsorTile";
 
 const meta = {
@@ -100,18 +99,16 @@ export const Framed: Story = {
   },
 };
 
-// GreyscaleAtRest/ColorAtRest deliberately use a synthetic, unambiguously
-// saturated fixture (`@test-fixtures/synthetic`) rather than the real
-// `sponsor-logo` pool used everywhere else in this file. Every production
-// sponsor logo turned out to be near-achromatic line art, which makes a CSS
-// `grayscale` filter a visual no-op against them — a VR baseline built from
-// one would pass unchanged whether or not `colorAtRest` actually worked. See
-// `test/fixtures/synthetic/README.md`. The two stories are otherwise a true
-// minimal pair — identical sponsor data, differing only in `colorAtRest` —
-// so the VR diff between them isolates exactly what the prop changes.
+// These two stories are a minimal pair — identical sponsor data, differing
+// only in `colorAtRest` — using the real, already-saturated `dummy-rouge`
+// club-crest fixture (also used by TransferFactCard) rather than the
+// near-achromatic `sponsor-logo` pool used elsewhere in this file, so the
+// VR diff between them actually isolates what the prop changes.
+const COLOR_SWATCH_LOGO = "/images/logos/clubs/dummy-rouge.svg";
+
 const MINIMAL_PAIR_SPONSOR = {
   name: "Fixture Sponsor",
-  logo: colorSwatchLogo,
+  logo: COLOR_SWATCH_LOGO,
   url: "https://example.com/fixture-sponsor",
   tier: "sponsor",
 } as const;

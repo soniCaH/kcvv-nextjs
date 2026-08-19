@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160">
-  <rect x="8" y="8" width="224" height="144" rx="0" fill="#e0392b"/>
-  <circle cx="120" cy="60" r="34" fill="#1f7ae0"/>
-  <rect x="30" y="104" width="180" height="28" fill="#2fb156"/>
-  <text x="120" y="124" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#ffffff" text-anchor="middle">FIXTURE</text>
-</svg>

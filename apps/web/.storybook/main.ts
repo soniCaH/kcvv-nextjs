@@ -29,12 +29,6 @@ const config: StorybookConfig = {
     // `/test-fixtures/images/...` so VR snapshots don't depend on
     // remote placeholder services.
     { from: "../test/fixtures/images", to: "/test-fixtures/images" },
-    // A tiny hand-authored fixture pool, deliberately separate from
-    // `images/` above: that directory's `fixtures:sync` script deletes any
-    // file on disk with no `manifest.json` entry ("orphan cleanup"), so a
-    // synthetic asset placed there would be silently removed on the next
-    // sync run. See `test/fixtures/synthetic/README.md`.
-    { from: "../test/fixtures/synthetic", to: "/test-fixtures/synthetic" },
   ],
   viteFinal: async (cfg) => {
     cfg.resolve ??= {};
