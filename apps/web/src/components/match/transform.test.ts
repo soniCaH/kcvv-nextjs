@@ -102,6 +102,20 @@ describe("transformMatchToSchedule", () => {
     ).toBeUndefined();
   });
 
+  it("passes competitionType through when present (#2696)", () => {
+    const match = createMockMatch({ competitionType: "tournament" });
+    expect(
+      asNonPlaceholder(transformMatchToSchedule(match)).competitionType,
+    ).toBe("tournament");
+  });
+
+  it("leaves competitionType undefined when absent", () => {
+    const match = createMockMatch();
+    expect(
+      asNonPlaceholder(transformMatchToSchedule(match)).competitionType,
+    ).toBeUndefined();
+  });
+
   it("passes is_placeholder through as isPlaceholder when present (#2606)", () => {
     const placeholder = createMockMatch({ is_placeholder: true });
     expect(transformMatchToSchedule(placeholder).isPlaceholder).toBe(true);

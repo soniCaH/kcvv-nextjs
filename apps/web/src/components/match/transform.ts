@@ -40,6 +40,7 @@ export function transformMatchToSchedule(match: Match): ScheduleRow {
     awayScore: match.away_team.score,
     status: match.status,
     competition: match.competition,
+    competitionType: match.competitionType,
     isHome: match.is_home,
   };
 }

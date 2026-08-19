@@ -90,6 +90,17 @@ describe("transformMatchToCalendar", () => {
     expect(transformMatchToCalendar(away).isHome).toBe(false);
   });
 
+  it("passes competitionType through when present (#2696)", () => {
+    const match = createMatch({ competitionType: "tournament" });
+    expect(transformMatchToCalendar(match).competitionType).toBe("tournament");
+  });
+
+  it("leaves competitionType undefined when absent", () => {
+    expect(
+      transformMatchToCalendar(createMatch()).competitionType,
+    ).toBeUndefined();
+  });
+
   it("passes through undefined scores", () => {
     const match = createMatch({
       home_team: { id: 1, name: "KCVV Elewijt" },
@@ -478,6 +489,25 @@ describe("calendarMatchToScheduleMatch", () => {
     // name contains "kcvv" → treated as home.
     expect(result.isHome).toBe(true);
     expect(result.homeTeam.teamLabel).toBe("A-ploeg");
+  });
+
+  it("passes competitionType through, so a tournament fixture is detectable after the calendar hop (#2696 review)", () => {
+    const result = asNonPlaceholder(
+      calendarMatchToScheduleMatch(
+        makeCalendarMatch({
+          id: 4,
+          competitionType: "tournament",
+        }),
+      ),
+    );
+    expect(result.competitionType).toBe("tournament");
+  });
+
+  it("leaves competitionType undefined when the calendar feed didn't resolve one", () => {
+    const result = asNonPlaceholder(
+      calendarMatchToScheduleMatch(makeCalendarMatch({ id: 5 })),
+    );
+    expect(result.competitionType).toBeUndefined();
   });
 
   describe("pitch-reservation placeholder (#2606, #2688)", () => {

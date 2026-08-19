@@ -5,7 +5,9 @@ import {
   getResultColor,
   isExceptionalMatchStatus,
   isPlayedMatch,
+  isReducedMatchRow,
   isSettledMatch,
+  otherClubSide,
   reservationView,
   reservationRowLabel,
 } from "./match-display";
@@ -253,6 +255,114 @@ describe("reservationView", () => {
       abbreviation: "CANC",
       longForm: "Geannuleerd",
     });
+  });
+
+  describe("otherClub (#2696)", () => {
+    it("joins the competition and the club — 'competition · club'", () => {
+      const view = reservationView(
+        { status: "scheduled", competition: "Tornooi" },
+        { name: "FC Zemst Sportief" },
+      );
+      expect(view.subject).toBe("Tornooi · FC Zemst Sportief");
+    });
+
+    it("falls back to 'Gereserveerd · club' when the competition is absent", () => {
+      const view = reservationView(
+        { status: "scheduled", competition: undefined },
+        { name: "FC Zemst Sportief" },
+      );
+      expect(view.subject).toBe("Gereserveerd · FC Zemst Sportief");
+    });
+
+    it("is the competition alone when omitted — the placeholder case", () => {
+      const view = reservationView({
+        status: "scheduled",
+        competition: "Tornooi",
+      });
+      expect(view.subject).toBe("Tornooi");
+    });
+  });
+});
+
+describe("otherClubSide (#2696)", () => {
+  const KCVV_CLUB_ID = 1235;
+
+  it("returns the away side when KCVV is home", () => {
+    const match = {
+      homeTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+      awayTeam: { id: 1391, name: "FC Zemst Sportief" },
+    };
+    expect(otherClubSide(match)).toEqual(match.awayTeam);
+  });
+
+  it("returns the home side when KCVV is away — derived from the id, never isHome", () => {
+    const match = {
+      homeTeam: { id: 1391, name: "FC Zemst Sportief" },
+      awayTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+    };
+    expect(otherClubSide(match)).toEqual(match.homeTeam);
+  });
+});
+
+describe("isReducedMatchRow (#2696)", () => {
+  it("is true for a placeholder", () => {
+    expect(
+      isReducedMatchRow({ isPlaceholder: true, status: "scheduled" }),
+    ).toBe(true);
+  });
+
+  it("is false for an ordinary league match", () => {
+    expect(
+      isReducedMatchRow({
+        isPlaceholder: false,
+        competitionType: "league",
+        status: "scheduled",
+      }),
+    ).toBe(false);
+  });
+
+  it("is true for an unplayed tournament fixture", () => {
+    expect(
+      isReducedMatchRow({
+        isPlaceholder: false,
+        competitionType: "tournament",
+        status: "scheduled",
+      }),
+    ).toBe(true);
+  });
+
+  it("is false again once a tournament fixture has a result — not merely once it has been played", () => {
+    expect(
+      isReducedMatchRow({
+        isPlaceholder: false,
+        competitionType: "tournament",
+        status: "finished",
+        homeScore: 3,
+        awayScore: 1,
+      }),
+    ).toBe(false);
+  });
+
+  it("stays true for a finished/forfeited/stopped tournament fixture whose scores are missing from the feed", () => {
+    for (const status of ["finished", "forfeited", "stopped"] as const) {
+      expect(
+        isReducedMatchRow({
+          isPlaceholder: false,
+          competitionType: "tournament",
+          status,
+        }),
+      ).toBe(true);
+    }
+  });
+
+  it("never keys on the Dutch competition label", () => {
+    expect(
+      isReducedMatchRow({
+        isPlaceholder: false,
+        competitionType: "league",
+        status: "scheduled",
+      }),
+    ).toBe(false);
   });
 });
 

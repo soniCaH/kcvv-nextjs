@@ -21,6 +21,7 @@ import {
   EMPTY_DAY_FEED,
 } from "@/app/(main)/kalender/utils";
 import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
+import { isReducedMatchRow } from "@/lib/utils/match-display";
 
 export interface CalendarMonthProps {
   matches: CalendarMatch[];
@@ -153,10 +154,12 @@ function SelectedDayDetail({
               onNavigate={() => trackKalenderItemClick("match")}
               // `/kalender` mixes every KCVV squad on one wall — a normal
               // row already carries its squad via `homeTeam`/
-              // `awayTeam.teamLabel` (injected below), but a reservation's
-              // reduced Crest+caption tree has no equivalent slot, so it's
-              // supplied the same way `/tegenstander` supplies one (#2688).
-              captionLabel={match.isPlaceholder ? match.team : undefined}
+              // `awayTeam.teamLabel` (injected below), but the reduced
+              // Crest+caption tree has no equivalent slot, so it's supplied
+              // the same way `/tegenstander` supplies one (#2688). Gating on
+              // `isPlaceholder` alone left a tournament row's squad label
+              // off — widened rather than adding a second prop.
+              captionLabel={isReducedMatchRow(match) ? match.team : undefined}
             />
           ))}
           {dayEvents.map((event) => {

@@ -95,6 +95,43 @@ const desktopText = () =>
 const mobileText = () =>
   document.querySelector('[data-layout="mobile"]')?.textContent ?? "";
 
+/** A pitch-reservation placeholder (#2606) — both sides are the same club. */
+const PLACEHOLDER: ScheduleReservation = {
+  isPlaceholder: true,
+  id: 99,
+  date: new Date("2026-05-09T09:30:00.000Z"),
+  time: "09:30",
+  team: { id: 1235, name: "KCVV Elewijt" },
+  status: "scheduled",
+  competition: "Tornooi",
+};
+
+/** A genuine tournament fixture (#2696) — not a self-match. */
+const TOURNAMENT: ScheduleMatch = {
+  isPlaceholder: false,
+  id: 200,
+  date: new Date("2026-08-30T09:30:00.000Z"),
+  time: "09:30",
+  homeTeam: { id: 1235, name: "KCVV Elewijt" },
+  awayTeam: {
+    id: 77,
+    name: "FC Zemst Sportief",
+    logo: "https://example.com/zemst.png",
+  },
+  status: "scheduled",
+  competition: "Tornooi",
+  competitionType: "tournament",
+};
+
+/**
+ * The reduced-row content box both the placeholder and tournament registers
+ * share — hand-spelling this five-utility selector at each call site meant
+ * a cosmetic Tailwind edit (e.g. `gap-2` → `gap-2.5`) would break three
+ * tests in two describes at once.
+ */
+const contentBox = (row: HTMLElement) =>
+  row.querySelector(".flex.w-full.items-center.gap-2.px-3.py-2");
+
 describe("TeamAgendaRow", () => {
   describe("Date stub", () => {
     it("renders the day number", () => {
@@ -675,16 +712,6 @@ describe("TeamAgendaRow", () => {
    * and a spacer), scoped for these tests via `[data-placeholder="true"]`.
    */
   describe("Placeholder fixture (#2606)", () => {
-    const PLACEHOLDER: ScheduleReservation = {
-      isPlaceholder: true,
-      id: 99,
-      date: new Date("2026-05-09T09:30:00.000Z"),
-      time: "09:30",
-      team: { id: 1235, name: "KCVV Elewijt" },
-      status: "scheduled",
-      competition: "Tornooi",
-    };
-
     const placeholderRow = () =>
       document.querySelector('[data-placeholder="true"]') as HTMLElement;
 
@@ -860,9 +887,7 @@ describe("TeamAgendaRow", () => {
       // crest+subject flex-1, mirroring the normal row's [home][score][away]
       // triple. jsdom has no layout; VR carries the pixel coverage.
       render(<TeamAgendaRow match={PLACEHOLDER} />);
-      const contentRow = placeholderRow().querySelector(
-        ".flex.w-full.items-center.gap-2.px-3.py-2",
-      );
+      const contentRow = contentBox(placeholderRow());
       const flexOneChildren = Array.from(contentRow?.children ?? []).filter(
         (el) => el.className.split(/\s+/).includes("flex-1"),
       );
@@ -909,6 +934,197 @@ describe("TeamAgendaRow", () => {
       );
       expect(subjects.length).toBe(1);
       expect(subjects[0]?.textContent).toBe("Beker van Vlaams-Brabant");
+    });
+  });
+
+  /**
+   * Tournament fixture (#2696) — a genuine fixture (not a self-match) whose
+   * structured `competitionType` is `"tournament"` (#2692). Reuses the
+   * placeholder register's shape (#2606/#2632) rather than a third layout:
+   * one crest, one mono subject, the real start time, no link. Unlike a
+   * placeholder the crest is the OPPONENT's — the named club is presented as
+   * where the tournament is, not who KCVV plays, because PSD does not say
+   * which. #2693 (design decision) ruled the two rows' shared layout is
+   * accepted as sufficient distinctness: different crest, a club in the
+   * subject, and a different detector — no further visual difference is to
+   * be invented here.
+   */
+  describe("Tournament fixture (#2696)", () => {
+    const tournamentRow = () =>
+      document.querySelector('[data-tournament="true"]') as HTMLElement;
+
+    it("marks itself with data-tournament — a normal row never carries the attribute", () => {
+      const { container: withTournament } = render(
+        <TeamAgendaRow match={TOURNAMENT} />,
+      );
+      expect(
+        withTournament.querySelector('[data-tournament="true"]'),
+      ).not.toBeNull();
+
+      const { container: normal } = render(<TeamAgendaRow match={BASE} />);
+      expect(normal.querySelector("[data-tournament]")).toBeNull();
+    });
+
+    it("gates on the structured competitionType, never on the Dutch competition label", () => {
+      // The Dutch word "Tornooi" alone must not trigger the reduced row —
+      // proves the detector isn't string-matching `competition`.
+      const { container: leagueWithTornooiLabel } = render(
+        <TeamAgendaRow
+          match={{ ...BASE, competition: "Tornooi", competitionType: "league" }}
+        />,
+      );
+      expect(
+        leagueWithTornooiLabel.querySelector('[data-tournament="true"]'),
+      ).toBeNull();
+      // It's the ordinary two-team row — both layouts render in jsdom (no
+      // CSS breakpoints), so home+away show on desktop and the opponent
+      // again on mobile: 3 crests, not the reduced row's 1.
+      expect(
+        leagueWithTornooiLabel.querySelectorAll('img, span[aria-hidden="true"]')
+          .length,
+      ).toBe(3);
+
+      // A different competition string entirely still triggers the reduced
+      // row as long as competitionType says tournament.
+      const { container: tournamentWithOtherLabel } = render(
+        <TeamAgendaRow
+          match={{ ...TOURNAMENT, competition: "Zomertornooi Mechelen" }}
+        />,
+      );
+      expect(
+        tournamentWithOtherLabel.querySelector('[data-tournament="true"]'),
+      ).not.toBeNull();
+    });
+
+    it("renders exactly one crest, no home/away icon, no score slot", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} />);
+      const row = tournamentRow();
+      expect(row.querySelectorAll('img, span[aria-hidden="true"]').length).toBe(
+        1,
+      );
+      expect(screen.queryByLabelText("Thuiswedstrijd")).toBeNull();
+      expect(screen.queryByLabelText("Uitwedstrijd")).toBeNull();
+    });
+
+    it("is not a link and never fires onNavigate", async () => {
+      const user = userEvent.setup();
+      const onNavigate = vi.fn();
+      render(<TeamAgendaRow match={TOURNAMENT} onNavigate={onNavigate} />);
+      expect(screen.queryByRole("link")).toBeNull();
+      await user.click(tournamentRow());
+      expect(onNavigate).not.toHaveBeenCalled();
+    });
+
+    it("shows the crest of the named club, not KCVV's — derived from club id, not home/away", () => {
+      // KCVV is homeTeam here; the opponent (away) crest must show.
+      const { container: kcvvHome } = render(
+        <TeamAgendaRow match={TOURNAMENT} />,
+      );
+      expect(
+        kcvvHome.querySelector('img[src="https://example.com/zemst.png"]'),
+      ).not.toBeNull();
+
+      // Swap sides — KCVV away this time. Same club must still show, proving
+      // the derivation reads club id, not the home/away slot.
+      const { container: kcvvAway } = render(
+        <TeamAgendaRow
+          match={{
+            ...TOURNAMENT,
+            id: 201,
+            homeTeam: TOURNAMENT.awayTeam,
+            awayTeam: TOURNAMENT.homeTeam,
+          }}
+        />,
+      );
+      expect(
+        kcvvAway.querySelector('img[src="https://example.com/zemst.png"]'),
+      ).not.toBeNull();
+    });
+
+    it("names the competition then the club, with no slot word — even featured", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} featured kind="fixture" />);
+      const row = tournamentRow();
+      expect(row.textContent).toContain("Tornooi");
+      expect(row.textContent).toContain("FC Zemst Sportief");
+      expect(row.textContent).not.toContain("Volgende");
+      // Competition before the club, joined by the caption's separator.
+      expect(row.textContent).toMatch(/Tornooi\s*·\s*FC Zemst Sportief/);
+    });
+
+    it("keeps the real start time — never a kickoff label", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} />);
+      expect(tournamentRow().textContent).toContain("09:30");
+    });
+
+    it("gives the row its own accessible label naming the subject and time, asserting no opponent", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} />);
+      const label = tournamentRow().getAttribute("aria-label");
+      expect(label).toBe("Tornooi · FC Zemst Sportief, 30 aug om 09:30");
+      expect(label).not.toContain("KCVV Elewijt");
+    });
+
+    it("drops the slot word from the accessible label too, even when kind is given", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} kind="fixture" />);
+      const label = tournamentRow().getAttribute("aria-label");
+      expect(label).not.toContain("Volgende");
+    });
+
+    it("honours the opponent-history page's squad captionLabel ahead of the subject", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} captionLabel="A-Ploeg" />);
+      const row = tournamentRow();
+      expect(row.textContent).toContain("A-Ploeg");
+      expect(row.textContent).toMatch(
+        /A-Ploeg\s*·\s*Tornooi\s*·\s*FC Zemst Sportief/,
+      );
+    });
+
+    it("may be the featured 'Eerstvolgende' card", () => {
+      render(<TeamAgendaRow match={TOURNAMENT} featured />);
+      expect(tournamentRow().getAttribute("data-featured")).toBe("true");
+    });
+
+    /**
+     * A played tournament match is no longer the "not yet confirmed" case
+     * this reduced state exists for — the club really was the opponent, so
+     * the row reverts to the full linked scoreboard: two crests, the
+     * scoreline, its outcome tint, and a link to the match detail (#2696
+     * review).
+     */
+    it("reverts to the full scoreboard once played — score, outcome tint, and a link", () => {
+      const played: ScheduleMatch = {
+        ...TOURNAMENT,
+        status: "finished",
+        homeScore: 3,
+        awayScore: 1,
+        isHome: true,
+      };
+      const { container } = render(<TeamAgendaRow match={played} />);
+
+      expect(container.querySelector('[data-tournament="true"]')).toBeNull();
+      expect(container.querySelector('[data-placeholder="true"]')).toBeNull();
+      expect(screen.getByRole("link")).toBeInTheDocument();
+      expect(screen.getByTestId("team-agenda-row").textContent).toContain("3");
+      expect(screen.getByTestId("team-agenda-row").textContent).toContain("1");
+      const spans = container.querySelectorAll("[style*='box-shadow']");
+      expect(spans.length).toBeGreaterThan(0);
+      expect(spans[0]?.getAttribute("style")).toContain("jersey-deep");
+    });
+  });
+
+  /**
+   * The min-w-0 defect (#2696) — see the comment on the content box in
+   * `TeamAgendaRow.tsx`. Both reduced registers share the exact same box, so
+   * one parameterised test locks the fix for both rather than two
+   * byte-identical assertions in two describes.
+   */
+  describe.each([
+    ["placeholder", PLACEHOLDER],
+    ["tournament", TOURNAMENT],
+  ] as const)("Reduced row content box (#2696) — %s", (_label, match) => {
+    it("carries min-w-0 so its truncating child can shrink", () => {
+      render(<TeamAgendaRow match={match} />);
+      const row = screen.getByTestId("team-agenda-row");
+      expect(contentBox(row)?.className.split(/\s+/)).toContain("min-w-0");
     });
   });
 });

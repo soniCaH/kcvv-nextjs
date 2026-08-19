@@ -239,3 +239,54 @@ export const PlaceholderFriendlyLowercaseLabel: Story = {
     },
   },
 };
+
+/**
+ * A subject long enough to fill the row at a narrow width — locks the
+ * `min-w-0` fix on this content box (see the comment on it in
+ * `TeamAgendaRow.tsx`). Same box the tournament row below reuses.
+ *
+ * `defaultViewport` below scopes the Storybook UI preview only —
+ * `.storybook/test-runner.ts` ignores `parameters.viewport` and captures
+ * all three VR viewports regardless, so this story's baselines exist at
+ * tablet/desktop too even though only the mobile one can ever show the
+ * truncation it exists to lock.
+ */
+export const PlaceholderLongSubjectNarrow: Story = {
+  args: {
+    match: {
+      ...placeholderTournament,
+      id: 92,
+      competition: "Beker van Vlaams-Brabant en Omstreken",
+    },
+  },
+  parameters: { viewport: { defaultViewport: "kcvvMobile" } },
+};
+
+// ─── Tournament fixture (#2696) ─────────────────────────────────────────────
+// A genuine fixture — not a self-match — whose structured `competitionType`
+// is "tournament" (#2692). Reuses the placeholder register's shape above —
+// see `TeamAgendaRow.tsx` for the full #2693/#2696 rationale (crest derived
+// from the club id, "competition · club" subject, no slot word even
+// featured).
+
+// Spreads `upcoming` — its `isHome: true` rides along inert, since the
+// tournament row derives its crest from the club id, never home/away.
+const tournamentFixture: ScheduleMatch = {
+  ...upcoming,
+  id: 93,
+  date: new Date("2026-08-30T09:30:00.000Z"),
+  time: "09:30",
+  awayTeam: { id: 1391, name: "FC Zemst Sportief" },
+  competition: "Tornooi",
+  competitionType: "tournament",
+};
+
+/** Plain — cream ground, one crest (the named club's, not KCVV's). */
+export const Tournament: Story = {
+  args: { match: tournamentFixture },
+};
+
+/** Featured "Eerstvolgende" — see `TeamAgendaRow.tsx` for why no "Volgende" prefix. */
+export const TournamentFeatured: Story = {
+  args: { match: tournamentFixture, featured: true },
+};

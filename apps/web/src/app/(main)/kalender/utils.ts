@@ -9,7 +9,11 @@ import {
   DEFAULT_EVENT_TYPE,
   type EventType,
 } from "@/components/event/event-type-style";
-import type { MatchStatus, ScheduleRow } from "@/components/match/types";
+import type {
+  CompetitionType,
+  MatchStatus,
+  ScheduleRow,
+} from "@/components/match/types";
 import {
   getScoreDisplay,
   reservationView,
@@ -52,6 +56,12 @@ export interface CalendarMatch {
    * it dropped it before #2688.
    */
   isPlaceholder: boolean;
+  /**
+   * Carried across the same two-hop chain `isPlaceholder` above crosses —
+   * see `ScheduleMatch.competitionType` for the decision this exists to
+   * carry (#2692/#2696).
+   */
+  competitionType?: CompetitionType;
 }
 
 export interface CalendarEvent {
@@ -103,6 +113,7 @@ export function transformMatchToCalendar(match: Match): CalendarMatch {
     scoreDisplay: getScoreDisplay(match),
     status: match.status,
     competition: match.competition,
+    competitionType: match.competitionType,
     team: match.kcvv_team_label,
     isHome: match.is_home,
     isPlaceholder: match.is_placeholder ?? false,
@@ -468,6 +479,7 @@ export function calendarMatchToScheduleMatch(
     awayScore: match.awayScore,
     status: match.status,
     competition: match.competition,
+    competitionType: match.competitionType,
     isHome: match.isHome ?? dotType === "home",
   };
 }
