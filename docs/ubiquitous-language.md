@@ -103,6 +103,7 @@ The type of tournament a match belongs to. Stored on `Match.competition`.
 | `LEAGUE`          | Competitie        | Regular league play                                            |
 | `CUP`             | Beker             | Cup tournament (specific name from PSD `competitionType.name`) |
 | `FRIENDLY`        | Vriendschappelijk | Friendly match                                                 |
+| `TOURNAMENT`      | Tornooi           | Tournament fixture                                             |
 
 **Open:** PSD also returns `competitionType.name` (e.g. "Beker van Brabant"). This should be mapped to a Dutch display label. See PRD.
 
@@ -112,7 +113,7 @@ The specific division a team is placed in for a competition — `3de Afdeling Vo
 
 A reeks is named in **two vocabularies** and both are correct: the federation's (PSD `competition.name`, prefixed `Voetbal : <bond> -` plus a trailing space) and the club's (Sanity `divisionFull`). `3de Afdeling Voetb Vl A` and `3e Nationale VV A` are the same reeks. The club's name wins on anything a human reads; PSD's fills the gap where no editorial value is set (#2589).
 
-**Only PSD carries a reeks per competition.** A match carries none — the fixture feed knows only `OFFICIAL`/`CUP`/`FRIENDLY`. Sanity carries one per _team_, which cannot name two phases.
+**Only PSD carries a reeks per competition.** A match carries none — the fixture feed knows only `OFFICIAL`/`CUP`/`FRIENDLY`/`TOURNAMENT`. Sanity carries one per _team_, which cannot name two phases.
 
 ### Competition Phase
 

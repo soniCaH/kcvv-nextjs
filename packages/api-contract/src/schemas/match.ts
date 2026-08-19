@@ -43,15 +43,16 @@ export const MatchStatus = S.Literal(...MATCH_STATUS_VALUES);
 export type MatchStatus = S.Schema.Type<typeof MatchStatus>;
 
 /**
- * Normalized league/cup/friendly classification for a match.
+ * Normalized league/cup/friendly/tournament classification for a match.
  *
  * Surfaced so consumers can gate behaviour on the *structured* competition type
  * instead of string-matching the Dutch `competition` label (which is a division
  * name like "3de Nationale", not "Competitie"). Derived by the BFF from PSD's
  * `competitionType.type` (`OFFICIAL`/`LEAGUE` → `"league"`, `CUP` → `"cup"`,
- * `FRIENDLY` → `"friendly"`, anything else → `"other"`).
+ * `FRIENDLY` → `"friendly"`, `TOURNAMENT` → `"tournament"`, anything else →
+ * `"other"`).
  */
-export const CompetitionType = S.Literal("league", "cup", "friendly", "other");
+export const CompetitionType = S.Literal("league", "cup", "friendly", "tournament", "other");
 export type CompetitionType = S.Schema.Type<typeof CompetitionType>;
 
 /** Shared fields between Match and MatchDetail */
