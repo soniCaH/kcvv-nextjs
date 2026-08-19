@@ -139,12 +139,11 @@ const POSTER_PRINT_CSS = `
     overflow: hidden;
   }
 
-  /* The layout is locked against an 860 px viewport, where <PageContainer>
-     leaves the sheet 796 px wide (860 − 2 × 32 px of \`md:px-8\`). Print lays
-     out at the physical page width instead, so the sheet is *scaled* onto the
-     block rather than reflowed into it — reflowing would shrink the club names
-     relative to the block (the 5.5 mm the layout was locked on) and can
-     rebalance the calendar-year column split. */
+  /* Laid out at a fixed width and *scaled* onto the block, never reflowed into
+     it. Print's own width is the physical page, which is far wider in CSS px
+     than any screen render — reflowing there shrinks the club names relative to
+     the block and rebalances the calendar-year column split. The width itself
+     is chosen in \`poster-geometry.ts\`, on where club names stop wrapping. */
   .sk-poster-sheet {
     width: ${SHEET_WIDTH_PX}px;
     margin: 0 auto;

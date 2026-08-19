@@ -42,7 +42,9 @@ afterEach(() => {
 
 describe("PosterPrintScale", () => {
   it("scales a long season down so it fits the block height", () => {
-    const sheetHeight = 1464; // 26/27: 56 fixtures, taller than the block
+    // Taller than 26/27, which fits on width alone at the current layout
+    // width — the height fit only takes over past ~1534 px.
+    const sheetHeight = 1800;
     mountSheet(sheetHeight);
     render(<PosterPrintScale />);
 
@@ -62,7 +64,7 @@ describe("PosterPrintScale", () => {
   });
 
   it("measures on mount, so a browser that never fires beforeprint still fits", () => {
-    const sheetHeight = 1464;
+    const sheetHeight = 1800;
     mountSheet(sheetHeight);
 
     render(<PosterPrintScale />);
@@ -86,7 +88,9 @@ describe("PosterPrintScale", () => {
   });
 
   it("stops measuring once unmounted", () => {
-    mountSheet(1464);
+    // Height-limited, so the replacement sheet below would measure to a
+    // different scale — otherwise a leaked listener would look like a pass.
+    mountSheet(1800);
     const { unmount } = render(<PosterPrintScale />);
     const scaleAtUnmount = readScale();
     unmount();

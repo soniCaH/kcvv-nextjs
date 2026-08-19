@@ -25,11 +25,30 @@ export const BLOCK_WIDTH_PX = 340 * PX_PER_MM;
 export const BLOCK_HEIGHT_PX = 567 * PX_PER_MM;
 
 /**
- * Width the sheet is laid out at in print — the width it has at the 860 px
- * viewport the layout was locked against, minus `<PageContainer>`'s `md:px-8`
- * (860 − 2 × 32).
+ * Width the sheet is laid out at in print: the narrowest width at which no
+ * club name wraps to a second line.
+ *
+ * It started as 796 — the sheet's width at the 860 px viewport the layout was
+ * locked against (860 − 2 × 32 px of `<PageContainer>`'s `md:px-8`) — because
+ * that is the render the owner used to screenshot. Measured against the real
+ * 56-fixture 26/27 season, that width is dominated on both counts it was
+ * chosen for:
+ *
+ * | laid out at | names wrapped | printed name |
+ * | ----------- | ------------- | ------------ |
+ * | 796 px      | 6             | 5.42 mm      |
+ * | 860 px      | 2             | 5.53 mm      |
+ * | 920 px      | 0             | 5.17 mm      |
+ * | 976 px      | 0             | 4.88 mm      |
+ *
+ * Wrapping is not free height: six wrapped rows make the sheet tall enough that
+ * the height fit, not the width fit, decides the scale — so 796 printed both
+ * more wrapping *and* smaller type than 860. Past 920 the sheet stops getting
+ * shorter (nothing is left to unwrap) while the type keeps shrinking, so 920 is
+ * the last width that buys anything. The poster keeps a whole club name on one
+ * line at the cost of 0.36 mm of type against the lock.
  */
-export const SHEET_WIDTH_PX = 796;
+export const SHEET_WIDTH_PX = 920;
 
 /**
  * Fit on width alone. The stylesheet carries this as the fallback for a print
