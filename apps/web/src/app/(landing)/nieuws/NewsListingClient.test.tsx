@@ -9,6 +9,7 @@ import {
 import type { ImageProps } from "next/image";
 import { NewsListingClient } from "./NewsListingClient";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
+import { trackEvent } from "@/lib/analytics/track-event";
 
 vi.mock("next/image", () => ({
   default: ({ alt, src, ...props }: ImageProps) => {
@@ -16,6 +17,8 @@ vi.mock("next/image", () => ({
     return <img {...imgProps} />;
   },
 }));
+
+vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
 const mockFetchArticles = vi.fn();
 
@@ -241,6 +244,31 @@ describe("NewsListingClient", () => {
       expect(
         screen.getByText(/geen artikelen in jeugdwerking/i),
       ).toBeInTheDocument();
+    });
+  });
+
+  it("fires empty_state_undo with the nieuws surface + facet when 'Toon alles' is clicked (#2691)", async () => {
+    mockFetchArticles.mockResolvedValue({ items: [], hasMore: false });
+
+    render(
+      <NewsListingClient
+        initialArticles={[]}
+        categories={categories}
+        hasMore={false}
+        fetchArticles={mockFetchArticles}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Jeugd" }));
+    await waitFor(() => {
+      expect(screen.getByText(/geen artikelen in jeugd/i)).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Toon alles" }));
+
+    expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
+      source: "nieuws",
+      filter_type: "jeugd",
     });
   });
 

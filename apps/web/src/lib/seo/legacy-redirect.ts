@@ -14,23 +14,17 @@
  */
 import { fetchGroq } from "@/lib/sanity/fetch-groq";
 import { SANITY_TAGS, SANITY_LIST_REVALIDATE } from "@/lib/sanity/cache-tags";
+import { slugify } from "@/lib/utils/slugify";
 
 // ─── Pure slug logic ─────────────────────────────────────────────────────────
 
 /**
  * Slugify a person's name the way the legacy site keyed profile URLs:
- * `"${firstName} ${lastName}"` lowercased, diacritics stripped, `&` → " en ",
- * non-alphanumerics collapsed to single hyphens. Mirrors the studio's
- * `slugifyTitle` so behaviour is consistent across the codebase.
+ * `"${firstName} ${lastName}"` through the shared `slugify`
+ * (`lib/utils/slugify.ts` — dependency-free on purpose; this file is not).
  */
 export function nameToSlug(firstName: string, lastName: string): string {
-  return `${firstName} ${lastName}`
-    .normalize("NFKD")
-    .replace(/\p{M}+/gu, "")
-    .replace(/&/g, " en ")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  return slugify(`${firstName} ${lastName}`);
 }
 
 export interface PersonRow {

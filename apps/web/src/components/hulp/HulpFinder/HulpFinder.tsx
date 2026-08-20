@@ -32,6 +32,7 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight } from "@/lib/icons.redesign";
+import { EmptyStateUndoAnalytics } from "@/components/analytics/EmptyStateUndoAnalytics";
 import { EmptyState } from "@/components/design-system";
 import { filteredEmptyBody } from "@/lib/utils/empty-state-copy";
 import { useResponsibilityAnalytics } from "@/hooks/useResponsibilityAnalytics";
@@ -231,7 +232,13 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
         </EmptyState>
       );
     }
-    if (audiencePaths.length === 0) {
+    // `audience &&` is redundant on its own — an unfiltered `audiencePaths`
+    // (audience === null) equals `responsibilityPaths`, which the branch
+    // above already proved non-empty, so this can only be true when
+    // `audience` is set. Narrowing on it here (rather than relying on that
+    // proof in prose) is what lets `audience` below type as `UserRole`
+    // instead of `UserRole | null`, with no sentinel fallback needed.
+    if (audience && audiencePaths.length === 0) {
       // Names the active audience by label ("Ouder"), not the generic "deze
       // rol" — same rule as the category branch below (#2427 rule 5).
       // `reason="filtered"` makes the undo a compile-time requirement.
@@ -239,22 +246,24 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
         HUB_AUDIENCE_FILTERS.find((o) => o.value === audience)?.label ??
         "deze rol";
       return (
-        <EmptyState
-          tier="surface"
-          heading={`Geen hulpvragen voor ${audienceLabel}`}
-          live
-          reason="filtered"
-          // "Toon alle doelgroepen", not "Toon alles": the handler clears
-          // only `audience`, leaving `category` untouched, so the label
-          // must name the one facet it actually clears — matching the
-          // category branch below, which already does (round 4 review).
-          undo={{
-            label: "Toon alle doelgroepen",
-            onClick: () => setAudience(null),
-          }}
-        >
-          Er zijn voor deze rol geen hulpvragen beschikbaar.
-        </EmptyState>
+        <EmptyStateUndoAnalytics source="hulp_audience" facet={audience}>
+          <EmptyState
+            tier="surface"
+            heading={`Geen hulpvragen voor ${audienceLabel}`}
+            live
+            reason="filtered"
+            // "Toon alle doelgroepen", not "Toon alles": the handler clears
+            // only `audience`, leaving `category` untouched, so the label
+            // must name the one facet it actually clears — matching the
+            // category branch below, which already does (round 4 review).
+            undo={{
+              label: "Toon alle doelgroepen",
+              onClick: () => setAudience(null),
+            }}
+          >
+            Er zijn voor deze rol geen hulpvragen beschikbaar.
+          </EmptyState>
+        </EmptyStateUndoAnalytics>
       );
     }
     if (category !== "alles") {
@@ -264,18 +273,20 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
         // "deze categorie" — the copy is the tell (#2427 rule 5).
         const meta = CATEGORY_META[category];
         return (
-          <EmptyState
-            tier="surface"
-            heading={`Geen hulpvragen in ${meta.label}${audience ? " voor deze rol" : ""}`}
-            live
-            reason="filtered"
-            undo={{
-              label: "Toon alle categorieën",
-              onClick: () => setCategory("alles"),
-            }}
-          >
-            {filteredEmptyBody("het volledige overzicht")}
-          </EmptyState>
+          <EmptyStateUndoAnalytics source="hulp_category" facet={category}>
+            <EmptyState
+              tier="surface"
+              heading={`Geen hulpvragen in ${meta.label}${audience ? " voor deze rol" : ""}`}
+              live
+              reason="filtered"
+              undo={{
+                label: "Toon alle categorieën",
+                onClick: () => setCategory("alles"),
+              }}
+            >
+              {filteredEmptyBody("het volledige overzicht")}
+            </EmptyState>
+          </EmptyStateUndoAnalytics>
         );
       }
       return <div className="space-y-2.5">{all.map(renderCard)}</div>;

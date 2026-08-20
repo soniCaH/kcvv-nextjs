@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { trackEvent } from "@/lib/analytics/track-event";
+import { EmptyStateUndoAnalytics } from "@/components/analytics/EmptyStateUndoAnalytics";
 import { EmptyState } from "@/components/design-system";
 import {
   filteredEmptyBody,
@@ -290,20 +291,28 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
                 )}
               </EmptyState>
             ) : (
-              <EmptyState
-                tier="surface"
-                heading={
-                  activeTypeFilter === "Wedstrijden"
-                    ? "Geen wedstrijden gepland"
-                    : `Geen evenementen in de categorie ${activeTypeFilter}`
-                }
-                live
-                surface="bare"
-                reason="filtered"
-                undo={{ label: "Toon alles", onClick: () => setType("all") }}
+              <EmptyStateUndoAnalytics
+                source="kalender"
+                facet={activeTypeFilter}
               >
-                {filteredEmptyBody("de volledige kalender")}
-              </EmptyState>
+                <EmptyState
+                  tier="surface"
+                  heading={
+                    activeTypeFilter === "Wedstrijden"
+                      ? "Geen wedstrijden gepland"
+                      : `Geen evenementen in de categorie ${activeTypeFilter}`
+                  }
+                  live
+                  surface="bare"
+                  reason="filtered"
+                  undo={{
+                    label: "Toon alles",
+                    onClick: () => setType("all"),
+                  }}
+                >
+                  {filteredEmptyBody("de volledige kalender")}
+                </EmptyState>
+              </EmptyStateUndoAnalytics>
             )
           ) : view === "month" ? (
             <CalendarMonth

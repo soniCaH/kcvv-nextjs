@@ -154,6 +154,25 @@ describe("<EventsBrowser>", () => {
     });
   });
 
+  it("fires empty_state_undo (not event_filter) when the undo rescues a filtered-to-zero surface (#2691)", async () => {
+    render(<EventsBrowser events={EVENTS} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Jeugdwerking" }));
+    mockTrackEvent.mockClear(); // drop the chip's own event_filter
+
+    await userEvent.click(screen.getByRole("button", { name: "Toon alles" }));
+
+    expect(mockTrackEvent).toHaveBeenCalledWith("empty_state_undo", {
+      source: "evenementen",
+      filter_type: "jeugdwerking",
+    });
+    // The undo's own handleSelect("all") still fires its ordinary
+    // event_filter — that payload must not regress.
+    expect(mockTrackEvent).toHaveBeenCalledWith("event_filter", {
+      event_type: "all",
+    });
+  });
+
   it("does not re-fire event_filter when the active chip is re-pressed (dedup guard)", async () => {
     render(<EventsBrowser events={EVENTS} />);
 

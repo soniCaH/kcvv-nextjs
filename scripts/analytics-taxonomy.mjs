@@ -51,6 +51,14 @@ export const prefixes = [
   "membership_",
   "error_",
   "gallery_",
+  // `<EmptyState>`'s mandatory undo (#2691). `empty_state_undo` only —
+  // reuses the already-registered `source` dimension ("Interaction source")
+  // for which of the five surfaces rendered the undo, and the already-
+  // registered `filter_type` dimension for the facet that was active. No
+  // new custom dimensions (review round 1: an earlier version minted a new
+  // `surface` dimension, which would have taken this list past GA4's 50
+  // event-scoped-dimension cap).
+  "empty_state_",
   // `/inhoud`, the contents page (#2622). `inhoud_view` +
   // `inhoud_entry_click`; the click reuses the already-registered `category`
   // (which of the four groups) and `position` (rank inside it) dimensions, so

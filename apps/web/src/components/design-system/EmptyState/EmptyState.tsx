@@ -220,6 +220,7 @@ function SurfaceEmptyState(props: EmptyStateSurfaceProps) {
                 variant="ghost"
                 size="sm"
                 onClick={props.undo.onClick}
+                data-empty-state-undo="undo"
               >
                 {props.undo.label}
               </Button>

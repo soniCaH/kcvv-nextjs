@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
 import { NewsCard, CategoryFilters } from "@/components/article";
+import { EmptyStateUndoAnalytics } from "@/components/analytics/EmptyStateUndoAnalytics";
 import {
   EmptyState,
   LoadMoreFooter,
@@ -227,19 +228,21 @@ export function NewsListingClient({
                     ?.attributes.name ?? activeCategory);
 
             return activeCategoryLabel ? (
-              <EmptyState
-                tier="surface"
-                heading={`Geen artikelen in ${activeCategoryLabel}`}
-                live
-                reason="filtered"
-                undo={{
-                  label: "Toon alles",
-                  onClick: () => handleCategoryChange("all"),
-                }}
-                className="mb-6"
-              >
-                {filteredEmptyBody("het volledige overzicht")}
-              </EmptyState>
+              <EmptyStateUndoAnalytics source="nieuws" facet={activeCategory}>
+                <EmptyState
+                  tier="surface"
+                  heading={`Geen artikelen in ${activeCategoryLabel}`}
+                  live
+                  reason="filtered"
+                  undo={{
+                    label: "Toon alles",
+                    onClick: () => handleCategoryChange("all"),
+                  }}
+                  className="mb-6"
+                >
+                  {filteredEmptyBody("het volledige overzicht")}
+                </EmptyState>
+              </EmptyStateUndoAnalytics>
             ) : (
               <EmptyState
                 tier="surface"

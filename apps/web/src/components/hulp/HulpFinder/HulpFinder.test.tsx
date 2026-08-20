@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { HulpFinder } from "./HulpFinder";
 import { FINDER_FIXTURE_PATHS } from "./__fixtures__/paths.fixture";
+import { trackEvent } from "@/lib/analytics/track-event";
+
+vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
 const mockReplace = vi.fn();
 let mockSearchParams = new URLSearchParams();
@@ -53,6 +56,7 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = scrollIntoView;
   scrollIntoView.mockClear();
   mockReplace.mockClear();
+  vi.mocked(trackEvent).mockClear();
   trackView.mockClear();
   trackContactClicked.mockClear();
   trackOrganigramLink.mockClear();
@@ -159,6 +163,21 @@ describe("HulpFinder", () => {
     );
   });
 
+  it("fires empty_state_undo with the hulp_category surface + facet when the category undo is clicked (#2691)", () => {
+    mockSearchParams = new URLSearchParams("audience=supporter");
+    render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
+    fireEvent.click(screen.getByRole("button", { name: "Medisch" }));
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Toon alle categorieën" }),
+    );
+
+    expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
+      source: "hulp_category",
+      filter_type: "medisch",
+    });
+  });
+
   it("names the active audience by label when it empties across every category", () => {
     // No path in this subset is tagged 'speler' — the audience branch (not
     // the per-category branch above) should fire, and should name the
@@ -180,6 +199,23 @@ describe("HulpFinder", () => {
     expect(
       screen.getByRole("button", { name: "Toon alle doelgroepen" }),
     ).toBeInTheDocument();
+  });
+
+  it("fires empty_state_undo with the hulp_audience surface + facet when the audience undo is clicked (#2691)", () => {
+    mockSearchParams = new URLSearchParams("audience=speler");
+    const pathsWithoutSpelerRole = FINDER_FIXTURE_PATHS.filter(
+      (p) => !p.role.includes("speler"),
+    );
+    render(<HulpFinder responsibilityPaths={pathsWithoutSpelerRole} />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Toon alle doelgroepen" }),
+    );
+
+    expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
+      source: "hulp_audience",
+      filter_type: "speler",
+    });
   });
 
   it("the undo clears only the active audience, leaving an active category untouched", () => {

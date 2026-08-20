@@ -85,6 +85,32 @@ describe("EmptyState — tier: surface (Tier 1)", () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
+  it("always renders the data-empty-state-undo marker for reason='filtered' (#2691)", () => {
+    // Unconditional, structural on `reason`, not an opt-in flag — no prop
+    // can omit this marker. A host-mounted <EmptyStateUndoAnalytics>
+    // delegates the click into `empty_state_undo` off it, mirroring how
+    // ErrorState renders `data-error-action` for <ErrorAnalytics>. The
+    // marker being structural does NOT by itself guarantee a listener is
+    // mounted — a sixth filtered surface could still skip
+    // <EmptyStateUndoAnalytics> and ship a marker nothing reads. That half
+    // is held by the "wired to analytics" rule in
+    // cross-page-consistency.test.ts, not by this component.
+    render(
+      <EmptyState
+        tier="surface"
+        heading="Geen artikelen in Jeugd"
+        reason="filtered"
+        undo={{ label: "Toon alles", onClick: vi.fn() }}
+      >
+        Body.
+      </EmptyState>,
+    );
+    expect(screen.getByRole("button", { name: "Toon alles" })).toHaveAttribute(
+      "data-empty-state-undo",
+      "undo",
+    );
+  });
+
   it("is not a live region by default", () => {
     render(
       <EmptyState tier="surface" heading="Nog geen sponsors">
