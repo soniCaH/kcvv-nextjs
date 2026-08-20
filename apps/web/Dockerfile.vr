@@ -59,7 +59,11 @@ WORKDIR /work/apps/web
 #   The `vr:*` scripts go through apps/web/scripts/vr-docker.mjs, which owns
 #   that arg list — `vr:update:story -- ui-button` appends `-u -- ui-button`.
 #   It also refuses an unscoped run before this image is built (#2380).
-# `--testTimeout 30000` covers the heavier MDX-backed Foundation reference
+# `--testTimeout 120000` covers the heavier MDX-backed Foundation reference
 # stories (icon catalogue, type scale) — the default 15s flakes when the
-# runner is under load.
-ENTRYPOINT ["sh", "-c", "exec pnpm exec concurrently -k -s first --hide 0 \"http-server ./storybook-static -p 6006 -a 127.0.0.1 --silent --cors\" \"wait-on --timeout 60000 tcp:127.0.0.1:6006 && test-storybook --url http://127.0.0.1:6006 --index-json --testTimeout 30000 --includeTags vr --excludeTags vr-skip $*\"", "--"]
+# runner is under load. Raised to 120s so it stays comfortably above the
+# `INITIAL_NAVIGATION_TIMEOUT_MS` that `.storybook/test-runner.ts` gives the one
+# `iframe.html` navigation — Jest must not kill the hook before Playwright's own
+# navigation budget runs out, or the real cause is hidden (#2721). Keep this in
+# step with the `vr:run*` scripts in package.json — local and CI stay identical.
+ENTRYPOINT ["sh", "-c", "exec pnpm exec concurrently -k -s first --hide 0 \"http-server ./storybook-static -p 6006 -a 127.0.0.1 --silent --cors\" \"wait-on --timeout 60000 tcp:127.0.0.1:6006 && test-storybook --url http://127.0.0.1:6006 --index-json --testTimeout 120000 --includeTags vr --excludeTags vr-skip $*\"", "--"]

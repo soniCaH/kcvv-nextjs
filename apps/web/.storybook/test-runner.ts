@@ -30,6 +30,15 @@ const IMAGE_LOAD_TIMEOUT_MS = 1500;
 // per-image load + decode pair below, which is what actually guarantees a
 // stable screenshot.
 const NETWORK_IDLE_TIMEOUT_MS = 3000;
+// Cap on the one `iframe.html` navigation in `prepare`. Playwright's default is
+// 30s and the CI opening burst sits right on that cliff: every Jest worker
+// cold-launches Chromium and parses the whole preview bundle at the same
+// instant, so the first navigation of a run costs an order of magnitude more
+// than every later one (which lands on warm OS + V8 caches). Three workers all
+// timed out at exactly 30s while 177 of 180 suites passed (#2721). Note this
+// is Playwright's navigation budget, NOT Jest's `--testTimeout` — that one
+// governs the surrounding test and must stay comfortably above this value.
+const INITIAL_NAVIGATION_TIMEOUT_MS = 90000;
 
 // Runs in the page context BEFORE any story script. Stubs sources of
 // non-determinism that would otherwise produce per-run pixel drift:
@@ -158,15 +167,20 @@ const config: TestRunnerConfig = {
 
     // Mirror defaultPrepare's connection-refused message so VR users get the
     // same "is your storybook running?" hint they would without our override.
-    await page.goto(iframeURL, { waitUntil: "load" }).catch((err) => {
-      const message = (err as Error).message ?? "";
-      if (message.includes("ERR_CONNECTION_REFUSED")) {
-        throw new Error(
-          `[VR] Could not access the Storybook instance at ${targetURL}. Is it running?\n\n${message}`,
-        );
-      }
-      throw err;
-    });
+    await page
+      .goto(iframeURL, {
+        waitUntil: "load",
+        timeout: INITIAL_NAVIGATION_TIMEOUT_MS,
+      })
+      .catch((err) => {
+        const message = (err as Error).message ?? "";
+        if (message.includes("ERR_CONNECTION_REFUSED")) {
+          throw new Error(
+            `[VR] Could not access the Storybook instance at ${targetURL}. Is it running?\n\n${message}`,
+          );
+        }
+        throw err;
+      });
   },
   // Re-seed the PRNG before each story so consumption order is independent of
   // which other story rendered first in the same `.stories.tsx` file. Without

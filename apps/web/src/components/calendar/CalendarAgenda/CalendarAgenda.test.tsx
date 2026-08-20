@@ -12,6 +12,7 @@ import { CalendarAgenda } from "./CalendarAgenda";
 import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
 import { getScoreDisplay } from "@/lib/utils/match-display";
 import { trackEvent } from "@/lib/analytics/track-event";
+import { tournamentMatch, tournamentOpponent } from "../calendar-mocks";
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
@@ -156,6 +157,72 @@ describe("CalendarAgenda", () => {
     // leaves a reservation indistinguishable from any other squad's
     // (code-review finding on #2688's first draft).
     expect(row).toHaveTextContent("U7");
+  });
+
+  it("renders a tournament fixture as a reduced row — one crest, no vs framing, no link (#2715)", () => {
+    // The bug this closes: a tournament fixture (competitionType ===
+    // "tournament", a real named opponent, no result yet) rendered as an
+    // ordinary linked two-crest scoreboard on this view, even though
+    // <TeamAgendaRow> already rendered it reduced (#2696).
+    const { container } = render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[tournamentMatch({ id: 91, date: "2026-09-12T09:30:00" })]}
+        events={[]}
+      />,
+    );
+    const row = container.querySelector('[data-tournament="true"]');
+    expect(row).not.toBeNull();
+    expect(row!.tagName).not.toBe("A");
+    expect(row!.querySelector("a")).toBeNull();
+    expect(row).toHaveTextContent("Tornooi");
+    expect(row).toHaveTextContent(tournamentOpponent.name);
+    expect(screen.queryByTestId("agenda-match-row")).toBeNull();
+  });
+
+  it("renders a played tournament fixture (a real scoreline exists) as an ordinary linked row (#2696 review)", () => {
+    // Once a result exists, the named club really was the opponent, so the
+    // row reverts to the full scoreboard — `isReducedMatchRow` gates on
+    // `hasScoreline`, not merely on the tournament competitionType.
+    render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[
+          tournamentMatch({
+            id: 92,
+            date: "2026-09-12T09:30:00",
+            status: "finished",
+            homeScore: 4,
+            awayScore: 1,
+          }),
+        ]}
+        events={[]}
+      />,
+    );
+    const row = screen.getByTestId("agenda-match-row");
+    expect(row).toHaveTextContent("4 – 1");
+    expect(row).toHaveAttribute("href", "/wedstrijd/92");
+  });
+
+  it("never triggers the reduced row from the Dutch competition label alone (#2715)", () => {
+    // The competition string "Tornooi" with a non-tournament competitionType
+    // must render as an ordinary match row — the lawful detector is
+    // `competitionType === "tournament"`, never the Dutch label.
+    render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[
+          makeMatch({
+            id: 93,
+            competition: "Tornooi",
+            competitionType: "league",
+          }),
+        ]}
+        events={[]}
+      />,
+    );
+    const row = screen.getByTestId("agenda-match-row");
+    expect(row).toHaveTextContent("KCVV Elewijt — Zemst");
   });
 
   it("interleaves matches and events by time within a day", () => {

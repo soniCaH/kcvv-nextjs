@@ -11,6 +11,7 @@ import { CalendarWeek } from "./CalendarWeek";
 import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
 import { getScoreDisplay } from "@/lib/utils/match-display";
 import { trackEvent } from "@/lib/analytics/track-event";
+import { tournamentMatch, tournamentOpponent } from "../calendar-mocks";
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
@@ -143,6 +144,54 @@ describe("CalendarWeek", () => {
     render(<CalendarWeek {...defaultProps} matches={matches} />);
     const saturdayColumn = screen.getByTestId("week-col-2026-03-28");
     expect(saturdayColumn).toHaveTextContent("CANC");
+  });
+
+  it("renders a tournament fixture as a reduced card — one crest, no opponent link (#2715)", () => {
+    // The bug this closes: a tournament fixture (competitionType ===
+    // "tournament", a real named opponent, no result yet) rendered as an
+    // ordinary linked match card on this view, even though <TeamAgendaRow>
+    // already rendered it reduced (#2696).
+    const matches = [tournamentMatch({ id: 91, date: "2026-03-28T09:30:00" })];
+    render(<CalendarWeek {...defaultProps} matches={matches} />);
+    const saturdayColumn = screen.getByTestId("week-col-2026-03-28");
+    const card = saturdayColumn.querySelector('[data-tournament="true"]');
+    expect(card).not.toBeNull();
+    expect(card).toHaveTextContent("Tornooi");
+    expect(card).toHaveTextContent(tournamentOpponent.name);
+    expect(saturdayColumn.querySelector("a")).toBeNull();
+  });
+
+  it("renders a played tournament fixture (a real scoreline exists) as an ordinary linked card (#2696 review)", () => {
+    const matches = [
+      tournamentMatch({
+        id: 92,
+        date: "2026-03-28T09:30:00",
+        status: "finished",
+        homeScore: 4,
+        awayScore: 1,
+        scoreDisplay: { type: "score", home: 4, away: 1 },
+      }),
+    ];
+    render(<CalendarWeek {...defaultProps} matches={matches} />);
+    const saturdayColumn = screen.getByTestId("week-col-2026-03-28");
+    expect(saturdayColumn).toHaveTextContent(tournamentOpponent.name);
+    expect(saturdayColumn).toHaveTextContent("4-1");
+    expect(saturdayColumn.querySelector("a")).not.toBeNull();
+  });
+
+  it("never triggers the reduced card from the Dutch competition label alone (#2715)", () => {
+    const matches = [
+      makeMatch({
+        id: 93,
+        date: "2026-03-28T15:00:00",
+        competition: "Tornooi",
+        competitionType: "league",
+      }),
+    ];
+    render(<CalendarWeek {...defaultProps} matches={matches} />);
+    const saturdayColumn = screen.getByTestId("week-col-2026-03-28");
+    expect(saturdayColumn).toHaveTextContent("Racing Mechelen");
+    expect(saturdayColumn.querySelector('[data-tournament="true"]')).toBeNull();
   });
 
   it("renders an event in its day column", () => {
