@@ -9,6 +9,11 @@ import {
   MONO_FONT,
   TOKENS,
 } from "../constants";
+// PROTOTYPE #2722 — throwaway import. Remove with the prototype.
+import {
+  ProtoSquadBand,
+  ProtoSquadMark,
+} from "../prototype-2722/ProtoSquadVariants";
 import {
   overlayGradient,
   resolvePalette,
@@ -212,37 +217,23 @@ export function ShareTop({ crestSize }: { crestSize?: number }) {
   const palette = useSharePalette();
   const badge = useContext(ShareBadgeContext);
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        flexShrink: 0,
-      }}
-    >
-      <Crest size={crestSize} />
-      {badge && (
-        <span
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "76px",
-            padding: "0 30px",
-            fontFamily: MONO_FONT,
-            fontSize: "46px",
-            fontWeight: 700,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            whiteSpace: "nowrap",
-            background: palette.badgeBg,
-            color: palette.badgeText,
-          }}
-        >
-          {badge}
-        </span>
-      )}
-    </div>
+    // PROTOTYPE #2722 — a fragment so variant B can hang a full-bleed band
+    // under the top row. Revert to a single <div> when the prototype is folded
+    // in. `ProtoSquadMark` renders the shipped #2700 mark for variant "off".
+    <>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexShrink: 0,
+        }}
+      >
+        <Crest size={crestSize} />
+        <ProtoSquadMark badge={badge} palette={palette} />
+      </div>
+      <ProtoSquadBand badge={badge} palette={palette} />
+    </>
   );
 }
 

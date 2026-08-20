@@ -17,6 +17,13 @@ import {
   TEMPLATE_SCALE,
 } from "../constants";
 import { ShareBadgeContext } from "../shared/ShareFrame";
+// PROTOTYPE #2722 — throwaway imports. Remove with the prototype.
+import {
+  isProtoVariant,
+  ProtoVariantContext,
+  type ProtoVariant,
+} from "../prototype-2722/ProtoSquadVariants";
+import { PrototypeSwitcher } from "../prototype-2722/PrototypeSwitcher";
 import { shortSquadLabel, type ResultMood } from "../shared/theme";
 import { Button } from "@/components/design-system/Button/Button";
 import { Input } from "@/components/design-system/Input/Input";
@@ -349,6 +356,17 @@ function renderTemplate(id: TemplateId, o: RenderOpts): React.ReactNode {
 }
 
 export function SharePage({ matches, players }: SharePageProps) {
+  // PROTOTYPE #2722 — `?variant=off|A|B|C`. Read from `window.location` rather
+  // than `useSearchParams`, so the SharePage unit tests need no router context
+  // and the switcher can change variants without remounting the form (and
+  // losing the match / Ploeg the operator just typed). No hydration mismatch:
+  // `squad` starts empty, and with no squad every variant renders identically.
+  const [protoVariant, setProtoVariant] = useState<ProtoVariant>(() => {
+    if (typeof window === "undefined") return "off";
+    const raw = new URLSearchParams(window.location.search).get("variant");
+    return isProtoVariant(raw) ? raw : "off";
+  });
+
   const templateRef = useRef<HTMLDivElement>(null);
   const previewUrlRef = useRef<string | null>(null);
   const uploadUrlRef = useRef<string | null>(null);
@@ -920,22 +938,24 @@ export function SharePage({ matches, players }: SharePageProps) {
           }}
         >
           <div ref={templateRef}>
-            <ShareBadgeContext.Provider value={shortSquadLabel(squad)}>
-              {renderTemplate(selectedTemplateId, {
-                matchName: matchName || FALLBACK_MATCH_NAME,
-                score: score || FALLBACK_SCORE,
-                minute: minute || FALLBACK_MINUTE,
-                player: selectedPlayer,
-                mood,
-                competition: competition.trim() || undefined,
-                dateTime: dateTime.trim() || undefined,
-                // Raw URLs — the templates route remote images through the
-                // same-origin optimizer + sanitize at the <img> sink.
-                homeLogo: selectedMatch?.homeLogo,
-                awayLogo: selectedMatch?.awayLogo,
-                imageUrl: resolvedImageUrl,
-              })}
-            </ShareBadgeContext.Provider>
+            <ProtoVariantContext.Provider value={protoVariant}>
+              <ShareBadgeContext.Provider value={shortSquadLabel(squad)}>
+                {renderTemplate(selectedTemplateId, {
+                  matchName: matchName || FALLBACK_MATCH_NAME,
+                  score: score || FALLBACK_SCORE,
+                  minute: minute || FALLBACK_MINUTE,
+                  player: selectedPlayer,
+                  mood,
+                  competition: competition.trim() || undefined,
+                  dateTime: dateTime.trim() || undefined,
+                  // Raw URLs — the templates route remote images through the
+                  // same-origin optimizer + sanitize at the <img> sink.
+                  homeLogo: selectedMatch?.homeLogo,
+                  awayLogo: selectedMatch?.awayLogo,
+                  imageUrl: resolvedImageUrl,
+                })}
+              </ShareBadgeContext.Provider>
+            </ProtoVariantContext.Provider>
           </div>
         </div>
       </div>
@@ -970,6 +990,9 @@ export function SharePage({ matches, players }: SharePageProps) {
           )}
         </>
       )}
+
+      {/* PROTOTYPE #2722 — remove with the prototype. */}
+      <PrototypeSwitcher current={protoVariant} onChange={setProtoVariant} />
     </PageContainer>
   );
 }

@@ -1,6 +1,8 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
 import { DISPLAY_FONT, GRAIN_DATA_URL, MONO_FONT, TOKENS } from "../constants";
-import { useSharePalette } from "./ShareFrame";
+import { ShareBadgeContext, useSharePalette } from "./ShareFrame";
+// PROTOTYPE #2722 — throwaway import. Remove with the prototype.
+import { useProtoSquadName } from "../prototype-2722/ProtoSquadVariants";
 import { formatScore, toSameOriginImage, type CrestEntry } from "./theme";
 
 /**
@@ -186,10 +188,15 @@ export function ShareName({
   style?: React.CSSProperties;
 }) {
   const palette = useSharePalette();
+  // PROTOTYPE #2722 — variant C folds the squad into the club name. Every other
+  // variant gets `children` back untouched. Measured AFTER the swap so the
+  // auto-fit sizes the text that actually renders.
+  const badge = React.useContext(ShareBadgeContext);
+  const content = useProtoSquadName(children, badge);
   const { ref, size } = useAutoFit<HTMLDivElement>(
     fontSize,
     minFontSize,
-    children,
+    content,
   );
   return (
     <div
@@ -206,7 +213,7 @@ export function ShareName({
         ...style,
       }}
     >
-      {children}
+      {content}
     </div>
   );
 }
