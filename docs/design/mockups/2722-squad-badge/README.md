@@ -75,5 +75,13 @@ across:
 
 ## Verdict
 
-_Not decided yet._ Record the winning variant and the reason here, then fold it
-into `ShareFrame.tsx` / `ShareElements.tsx` properly and drop the losers.
+**`off` wins — leave the shipped #2700 badge exactly as it is.** Decided
+2026-08-20. No variant was folded into `main`; nothing changed in production.
+
+The question this settled: the corner mark is quiet enough that the club's own
+operator missed it, and none of the three louder treatments earned the cost of
+changing a locked, working surface across 11 templates and two registers.
+
+**If this is reopened, do not re-run the prototype from scratch** — the four
+treatments are on `prototype/2722-squad-badge` and can be brought back up with
+the run command above. Re-argue the verdict, not the code.
