@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Match } from "@kcvv/api-contract";
+import type { EventListItemVM } from "@/lib/repositories/event.repository";
+import { buildEventIcs } from "./event-ics";
 import { generateIcal, normalizeCacheKey } from "./ical";
 
 function makeMatch(overrides: Partial<Match> = {}): Match {
@@ -293,5 +295,320 @@ describe("normalizeCacheKey", () => {
   it("includes side in cache key", () => {
     expect(normalizeCacheKey("1235", "home")).toBe("ical:1235:home");
     expect(normalizeCacheKey("1235", "away")).toBe("ical:1235:away");
+  });
+
+  it("has no events dimension — #2711 round 2 moved club activities to their own separately-cached key, so the fixture key is unaffected by the flag and stable at its pre-#2704 form", () => {
+    expect(normalizeCacheKey("1235", "all")).toBe("ical:1235:all");
+  });
+});
+
+/**
+ * Fixture for the merged `/kalender` event feed (`EventRepository.findUpcomingForList()`).
+ * `dateStart`/`dateEnd` are genuine UTC instants (not Belgian wall-clock like a
+ * `Match.date`) — see `event-datetime.ts`. `2026-04-14T22:00:00.000Z` is
+ * Brussels midnight (2026-04-15, CEST +2).
+ */
+function makeEventItem(
+  overrides: Partial<EventListItemVM> = {},
+): EventListItemVM {
+  return {
+    id: "event-1",
+    title: "Mosselfestijn",
+    href: "/evenementen/mosselfestijn",
+    dateStart: "2026-04-14T22:00:00.000Z",
+    dateEnd: null,
+    eventType: "Clubevent",
+    location: "Sportpark Driesput, Elewijt",
+    source: "event",
+    ...overrides,
+  };
+}
+
+describe("generateIcal — club activities (events flag)", () => {
+  it("emits no event VEVENT when the events option is omitted (flag off)", () => {
+    const output = generateIcal([makeMatch()]);
+
+    expect(output).not.toContain("kcvv-event-");
+  });
+
+  it("emits an event VEVENT when events are passed (flag on)", () => {
+    const output = generateIcal([makeMatch()], {
+      includeEvents: true,
+      events: [makeEventItem()],
+    });
+
+    expect(output).toContain("kcvv-event-event-1@kcvvelewijt.be");
+    expect(output).toContain("SUMMARY:Mosselfestijn");
+  });
+
+  it("carries the event's LOCATION when present", () => {
+    const output = generateIcal([], {
+      includeEvents: true,
+      events: [makeEventItem({ location: "Sportpark Driesput, Elewijt" })],
+    });
+
+    expect(output).toContain("LOCATION:Sportpark Driesput\\, Elewijt");
+  });
+
+  it("omits LOCATION when the event has none", () => {
+    const output = generateIcal([], {
+      includeEvents: true,
+      events: [makeEventItem({ location: null })],
+    });
+
+    expect(output).not.toMatch(/^LOCATION:/m);
+  });
+
+  it("points URL at the item's own detail page, using the repository-resolved href", () => {
+    const output = generateIcal([], {
+      includeEvents: true,
+      events: [
+        makeEventItem({
+          href: "/evenementen/mosselfestijn",
+          source: "event",
+        }),
+      ],
+    });
+
+    expect(output).toContain(
+      "URL;VALUE=URI:https://www.kcvvelewijt.be/evenementen/mosselfestijn",
+    );
+  });
+
+  it("points URL at /nieuws/[slug] for an event-article-sourced item", () => {
+    const output = generateIcal([], {
+      includeEvents: true,
+      events: [
+        makeEventItem({
+          href: "/nieuws/jeugdtornooi-verslag",
+          source: "article",
+        }),
+      ],
+    });
+
+    expect(output).toContain(
+      "URL;VALUE=URI:https://www.kcvvelewijt.be/nieuws/jeugdtornooi-verslag",
+    );
+  });
+
+  it("emits a Brussels-midnight event as all-day, matching buildEventIcs's rule", () => {
+    const output = generateIcal([], {
+      includeEvents: true,
+      events: [
+        makeEventItem({
+          dateStart: "2026-04-14T22:00:00.000Z", // 2026-04-15T00:00 Brussels
+          dateEnd: null,
+        }),
+      ],
+    });
+
+    expect(output).toContain("DTSTART;VALUE=DATE:20260415");
+    expect(output).toContain("DTEND;VALUE=DATE:20260416");
+  });
+
+  it("spans a multi-day all-day event to the day after its last day, matching buildEventIcs's rule", () => {
+    const output = generateIcal([], {
+      includeEvents: true,
+      events: [
+        makeEventItem({
+          dateStart: "2026-09-13T22:00:00.000Z", // 2026-09-14T00:00 Brussels
+          dateEnd: "2026-09-15T22:00:00.000Z", // 2026-09-16T00:00 Brussels
+        }),
+      ],
+    });
+
+    expect(output).toContain("DTSTART;VALUE=DATE:20260914");
+    expect(output).toContain("DTEND;VALUE=DATE:20260917");
+  });
+
+  it("emits a timed event with a real DTSTART and no fabricated DTEND when there is no end", () => {
+    const output = generateIcal([], {
+      includeEvents: true,
+      events: [
+        makeEventItem({
+          dateStart: "2026-04-15T17:00:00.000Z", // 19:00 Brussels (CEST)
+          dateEnd: null,
+        }),
+      ],
+    });
+
+    expect(output).toContain("DTSTART;TZID=Europe/Brussels:20260415T190000");
+    expect(output).not.toMatch(/^DTEND/m);
+  });
+
+  it("keeps a timed event's own DTEND when the item has an end", () => {
+    const output = generateIcal([], {
+      includeEvents: true,
+      events: [
+        makeEventItem({
+          dateStart: "2026-04-15T17:00:00.000Z",
+          dateEnd: "2026-04-15T20:00:00.000Z",
+        }),
+      ],
+    });
+
+    expect(output).toContain("DTEND;TZID=Europe/Brussels:20260415T220000");
+  });
+
+  it("gives an event UID a distinct prefix from a match UID so the two can never collide", () => {
+    const output = generateIcal([makeMatch({ id: 1 })], {
+      includeEvents: true,
+      events: [makeEventItem({ id: "1" })],
+    });
+
+    expect(output).toContain("kcvv-match-1@kcvvelewijt.be");
+    expect(output).toContain("kcvv-event-1@kcvvelewijt.be");
+  });
+
+  it("drops an event with an unparseable dateStart instead of throwing — mergeEventFeed and EventMonthList drop such a row too, never fatal", () => {
+    const badItem = makeEventItem({ id: "bad", dateStart: "" });
+    const goodItem = makeEventItem({ id: "good" });
+
+    expect(() =>
+      generateIcal([makeMatch()], {
+        includeEvents: true,
+        events: [badItem, goodItem],
+      }),
+    ).not.toThrow();
+
+    const output = generateIcal([makeMatch()], {
+      includeEvents: true,
+      events: [badItem, goodItem],
+    });
+    expect(output).not.toContain("kcvv-event-bad@kcvvelewijt.be");
+    expect(output).toContain("kcvv-event-good@kcvvelewijt.be");
+    expect(output).toContain("kcvv-match-12345@kcvvelewijt.be");
+  });
+
+  it("drops an event's DTEND rather than throwing when dateEnd is unparseable, keeping the item as a timed event with no fabricated end", () => {
+    const output = generateIcal([], {
+      includeEvents: true,
+      events: [
+        makeEventItem({
+          dateStart: "2026-04-15T17:00:00.000Z",
+          dateEnd: "not-a-date",
+        }),
+      ],
+    });
+
+    expect(output).toContain("DTSTART;TZID=Europe/Brussels:20260415T190000");
+    expect(output).not.toMatch(/^DTEND/m);
+  });
+
+  it("describes the feed honestly (NAME / X-WR-CALDESC) when activities are included", () => {
+    const withoutEvents = generateIcal([makeMatch()]);
+    const withEvents = generateIcal([makeMatch()], {
+      includeEvents: true,
+      events: [makeEventItem()],
+    });
+
+    expect(withoutEvents).toContain("X-WR-CALNAME:KCVV Elewijt");
+    expect(withEvents).toContain(
+      "X-WR-CALNAME:KCVV Elewijt — Wedstrijden & Activiteiten",
+    );
+    expect(withEvents).toContain(
+      "X-WR-CALDESC:Wedstrijden en clubactiviteiten van KCVV Elewijt",
+    );
+    expect(withEvents).not.toBe(withoutEvents);
+  });
+
+  it("is driven by includeEvents, not by a nonempty events array — passing events without the flag keeps the matches-only naming", () => {
+    const output = generateIcal([makeMatch()], {
+      events: [makeEventItem()],
+    });
+
+    expect(output).toContain("X-WR-CALNAME:KCVV Elewijt — Wedstrijden\r");
+    expect(output).not.toContain("Activiteiten");
+  });
+});
+
+/**
+ * `generateIcal`'s club-activity VEVENTs and the per-event "Zet in agenda"
+ * download (`buildEventIcs`) both resolve their all-day classification
+ * through the one shared `resolveEventDateRange` (#2711 review, fix 1) — this
+ * pins the two surfaces against the *same* input so a future edit to only one
+ * of them fails a test instead of silently diverging.
+ */
+describe("generateIcal and buildEventIcs agree on the all-day classification", () => {
+  it("both surfaces render the same Brussels-midnight input as all-day, on the same day", () => {
+    const item = makeEventItem({
+      dateStart: "2026-04-14T22:00:00.000Z", // 2026-04-15T00:00 Brussels
+      dateEnd: null,
+    });
+
+    const feedOutput = generateIcal([], {
+      includeEvents: true,
+      events: [item],
+    });
+    const downloadOutput = buildEventIcs({
+      uid: "x@kcvvelewijt.be",
+      title: item.title,
+      dateStart: item.dateStart,
+      dateEnd: item.dateEnd,
+      now: "2026-01-01T00:00:00.000Z",
+    });
+
+    expect(feedOutput).toContain("DTSTART;VALUE=DATE:20260415");
+    expect(downloadOutput).toContain("DTSTART;VALUE=DATE:20260415");
+    expect(feedOutput).toContain("DTEND;VALUE=DATE:20260416");
+    expect(downloadOutput).toContain("DTEND;VALUE=DATE:20260416");
+  });
+
+  it("both surfaces render the same timed input as timed, with the same DTSTART instant", () => {
+    const item = makeEventItem({
+      dateStart: "2026-04-15T17:00:00.000Z",
+      dateEnd: null,
+    });
+
+    const feedOutput = generateIcal([], {
+      includeEvents: true,
+      events: [item],
+    });
+    const downloadOutput = buildEventIcs({
+      uid: "x@kcvvelewijt.be",
+      title: item.title,
+      dateStart: item.dateStart,
+      dateEnd: item.dateEnd,
+      now: "2026-01-01T00:00:00.000Z",
+    });
+
+    expect(feedOutput).not.toMatch(/^DTSTART;VALUE=DATE/m);
+    expect(downloadOutput).not.toMatch(/^DTSTART;VALUE=DATE/m);
+    expect(downloadOutput).toContain("DTSTART:20260415T170000Z");
+    expect(feedOutput).toContain(
+      "DTSTART;TZID=Europe/Brussels:20260415T190000",
+    );
+  });
+
+  /**
+   * The branch neither prior parity case exercised: `resolveEventDateRange`'s
+   * `lastDay.plus({ days: 1 })` only does real work when `end > start` (a
+   * genuine multi-day span) — a single-day event collapses `lastDay` to
+   * `start` either way. This is the branch most likely to silently drift
+   * between the two surfaces, and the reason the shared helper exists
+   * (#2711 round 1 finding 1).
+   */
+  it("both surfaces span the same multi-day all-day input to the same exclusive end day", () => {
+    const item = makeEventItem({
+      dateStart: "2026-09-13T22:00:00.000Z", // 2026-09-14T00:00 Brussels
+      dateEnd: "2026-09-15T22:00:00.000Z", // 2026-09-16T00:00 Brussels
+    });
+
+    const feedOutput = generateIcal([], {
+      includeEvents: true,
+      events: [item],
+    });
+    const downloadOutput = buildEventIcs({
+      uid: "x@kcvvelewijt.be",
+      title: item.title,
+      dateStart: item.dateStart,
+      dateEnd: item.dateEnd,
+      now: "2026-01-01T00:00:00.000Z",
+    });
+
+    expect(feedOutput).toContain("DTSTART;VALUE=DATE:20260914");
+    expect(downloadOutput).toContain("DTSTART;VALUE=DATE:20260914");
+    expect(feedOutput).toContain("DTEND;VALUE=DATE:20260917");
+    expect(downloadOutput).toContain("DTEND;VALUE=DATE:20260917");
   });
 });

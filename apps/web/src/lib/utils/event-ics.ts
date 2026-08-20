@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { parseEventDateTime } from "./event-datetime";
+import { resolveEventDateRange } from "./event-datetime";
 
 export interface EventIcsInput {
   /** Stable iCal UID — e.g. `${slug}@kcvvelewijt.be`. */
@@ -77,22 +77,16 @@ function foldLine(line: string): string {
  * Content lines are folded at 75 octets (RFC 5545 §3.1) and CRLF-joined.
  */
 export function buildEventIcs(input: EventIcsInput): string {
-  const start = parseEventDateTime(input.dateStart);
-  const end = input.dateEnd ? parseEventDateTime(input.dateEnd) : null;
-
-  const isAllDay =
-    start.isValid &&
-    start.toFormat("HH:mm") === "00:00" &&
-    (!end?.isValid || end.toFormat("HH:mm") === "00:00");
+  const { isAllDay, start, allDayEndExclusive } = resolveEventDateRange(
+    input.dateStart,
+    input.dateEnd,
+  );
 
   const dateLines: string[] = [];
   if (isAllDay) {
-    // All-day DTEND is exclusive: a single day spans to the next morning; a
-    // multi-day span ends the day after its last day.
-    const lastDay = end?.isValid && end > start ? end : start;
     dateLines.push(`DTSTART;VALUE=DATE:${start.toFormat("yyyyLLdd")}`);
     dateLines.push(
-      `DTEND;VALUE=DATE:${lastDay.plus({ days: 1 }).toFormat("yyyyLLdd")}`,
+      `DTEND;VALUE=DATE:${allDayEndExclusive.toFormat("yyyyLLdd")}`,
     );
   } else {
     dateLines.push(`DTSTART:${toUtcStamp(input.dateStart)}`);

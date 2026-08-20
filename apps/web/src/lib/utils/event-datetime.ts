@@ -17,3 +17,50 @@ import { toDisplayZone } from "./dates";
 export function parseEventDateTime(iso: string): DateTime {
   return toDisplayZone(iso);
 }
+
+export interface EventDateRange {
+  start: DateTime;
+  end: DateTime | null;
+  /** A Brussels-midnight start, with an end that is either absent or also midnight. */
+  isAllDay: boolean;
+  /**
+   * The exclusive all-day `DTEND` day — a single day spans to the next
+   * morning, a multi-day span ends the day after its last day. Only
+   * meaningful when `isAllDay` is `true`; harmless (an invalid or otherwise
+   * unused `DateTime`) when it isn't.
+   */
+  allDayEndExclusive: DateTime;
+}
+
+/**
+ * The event domain's one all-day classification, shared by every surface
+ * that renders an `.ics` VEVENT for an event/activity: the per-event "Zet in
+ * agenda" download (`buildEventIcs`) and the subscribe feed's club-activity
+ * VEVENTs (`generateIcal`'s `addEventVevent`). The two surfaces must agree on
+ * which events render as all-day, or a subscriber sees the same event
+ * described two different ways depending on which one they used — this used
+ * to be a hand-copied predicate in both places, silently divergible.
+ *
+ * Classification only: each caller still owns its own *emission* (UTC stamps
+ * written by hand vs. Luxon objects handed to `ical-generator`), which
+ * differs enough between the two surfaces that sharing it would cost more
+ * than it saves.
+ */
+export function resolveEventDateRange(
+  dateStart: string,
+  dateEnd?: string | null,
+): EventDateRange {
+  const start = parseEventDateTime(dateStart);
+  const end = dateEnd ? parseEventDateTime(dateEnd) : null;
+  const isAllDay =
+    start.isValid &&
+    start.toFormat("HH:mm") === "00:00" &&
+    (!end?.isValid || end.toFormat("HH:mm") === "00:00");
+  const lastDay = end?.isValid && end > start ? end : start;
+  return {
+    start,
+    end,
+    isAllDay,
+    allDayEndExclusive: lastDay.plus({ days: 1 }),
+  };
+}

@@ -7,6 +7,10 @@ import {
   BFF_FAN_OUT_CONCURRENCY,
 } from "@/lib/effect/services/BffService";
 import { TeamRepository } from "@/lib/repositories/team.repository";
+import {
+  EventRepository,
+  type EventListItemVM,
+} from "@/lib/repositories/event.repository";
 import type { Match } from "@kcvv/api-contract";
 import { generateIcal, normalizeCacheKey } from "@/lib/utils/ical";
 
@@ -25,7 +29,7 @@ function parseSide(raw: string | null): Side {
   return "all";
 }
 
-async function fetchMatches(
+async function fetchMatchesUncached(
   teamIdParams: number[] | null,
 ): Promise<readonly Match[]> {
   const program = Effect.gen(function* () {
@@ -54,11 +58,76 @@ async function fetchMatches(
   return runPromise(program);
 }
 
+/**
+ * Fixtures, cached under a matches-only key (`normalizeCacheKey`, no longer
+ * events-aware — #2711 round 2). `events` never changes which teams/sides are
+ * in scope, so this cache is shared by an `events=1` and an `events=0`
+ * request for the same `teamIds`/`side` instead of duplicating the PSD
+ * fan-out per flag value. Built fresh per request because the key itself is
+ * request-dependent (`teamIds`/`side`); `unstable_cache` still dedupes across
+ * requests that land on the same key, same as pre-#2704.
+ */
+function fetchMatches(
+  teamIdParams: number[] | null,
+  cacheKey: string,
+): Promise<readonly Match[]> {
+  return unstable_cache(() => fetchMatchesUncached(teamIdParams), [cacheKey], {
+    revalidate: CACHE_MAX_AGE,
+  })();
+}
+
+/**
+ * Club activities (#2704) — the same merged feed `/kalender` renders
+ * (`EventRepository.findUpcomingForList()`), upcoming-only by construction
+ * (its GROQ filters, not a re-filter here).
+ *
+ * Cached under its own fixed key, decoupled from `teamIds`/`side` (#2711
+ * review) — the flag is club-wide, so every distinct team selection a
+ * subscriber can make would otherwise re-run this same two-query Sanity read
+ * on its own 15-minute cycle.
+ *
+ * Deliberately *not* degraded inside this cached callback: `unstable_cache`
+ * only overwrites its entry when the wrapped function resolves, so letting a
+ * Sanity failure throw here means Next never caches it — the existing
+ * last-good value (or nothing, if there isn't one yet) survives, matching
+ * this repo's ISR rule ("caught ⇒ CACHED, throw ⇒ last-good", see root
+ * CLAUDE.md's Effect & Server Component Patterns). `fetchEvents` below
+ * degrades to `[]`, but only for its own return value — since #2711 round 2
+ * removed the combined-body cache entirely (this function's own `ical:events`
+ * entry is the *only* cache either read touches), that degrade can no longer
+ * reach any cache at all, at any layer.
+ */
+const fetchUpcomingEventsCached = unstable_cache(
+  (): Promise<EventListItemVM[]> =>
+    runPromise(
+      Effect.gen(function* () {
+        const eventRepo = yield* EventRepository;
+        return yield* eventRepo.findUpcomingForList();
+      }),
+    ),
+  ["ical:events"],
+  { revalidate: CACHE_MAX_AGE },
+);
+
+/** Degrades the read above to `[]` on failure — see its doc for why the catch lives here, outside the cache boundary. */
+async function fetchEvents(): Promise<EventListItemVM[]> {
+  try {
+    return await fetchUpcomingEventsCached();
+  } catch (error) {
+    console.warn(
+      "[Calendar API] event-feed lookup failed; rendering matches only.",
+      error,
+    );
+    return [];
+  }
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const rawTeamIds = searchParams.get("teamIds");
   const side = parseSide(searchParams.get("side"));
-  const cacheKey = normalizeCacheKey(rawTeamIds, side);
+  const includeEvents = searchParams.get("events") === "1";
+  const matchesCacheKey = normalizeCacheKey(rawTeamIds, side);
 
   const teamIdNums = rawTeamIds
     ? rawTeamIds
@@ -69,22 +138,28 @@ export async function GET(request: NextRequest) {
     : null;
 
   try {
-    const generateCached = unstable_cache(
-      async () => {
-        const matches = await fetchMatches(teamIdNums);
-        return generateIcal(matches, { side });
-      },
-      [cacheKey],
-      { revalidate: CACHE_MAX_AGE },
-    );
+    // Neither read's own cache can ever hold a degraded body: the matches
+    // cache never sees a failure caught inside it (a Sanity/PSD blip on the
+    // *events* side never reaches this fetch at all), and the events read's
+    // own cache only ever stores a resolved value (see its doc). Composing
+    // them into the final ICS string happens per request, uncached — cheap
+    // string building over a few hundred matches, next to the I/O it
+    // replaces (#2711 round 2).
+    const [matches, events] = await Promise.all([
+      fetchMatches(teamIdNums, matchesCacheKey),
+      includeEvents ? fetchEvents() : Promise.resolve<EventListItemVM[]>([]),
+    ]);
 
-    const icalOutput = await generateCached();
+    const icalOutput = generateIcal(matches, { side, includeEvents, events });
+    const filename = includeEvents
+      ? "kcvv-wedstrijden-en-activiteiten.ics"
+      : "kcvv-wedstrijden.ics";
 
     return new NextResponse(icalOutput, {
       status: 200,
       headers: {
         "Content-Type": "text/calendar; charset=utf-8",
-        "Content-Disposition": 'attachment; filename="kcvv-wedstrijden.ics"',
+        "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": `max-age=${CACHE_MAX_AGE}, s-maxage=${CACHE_MAX_AGE}`,
       },
     });
