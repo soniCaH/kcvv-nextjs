@@ -95,71 +95,52 @@ describe("MatchLineup", () => {
   });
 
   describe("shirt number register (#2621)", () => {
-    it("sets a present shirt number in the display register, not mono", () => {
-      const lineup: LineupPlayer[] = [
-        {
-          id: 1,
-          name: "Numbered Player",
-          number: 9,
-          isCaptain: false,
-          status: "starter",
-        },
-      ];
-      render(
-        <MatchLineup {...defaultProps} homeLineup={lineup} awayLineup={[]} />,
-      );
-      const badge = screen.getByText("9");
-      expect(badge).toHaveClass("font-display");
-      expect(badge).toHaveClass("italic");
-      expect(badge).not.toHaveClass("font-mono");
-    });
+    it.each<[number | undefined, string]>([
+      [9, "9"],
+      [0, "—"],
+      [undefined, "—"],
+    ])(
+      "sets shirt number %s in the display register, rendering %s",
+      (number, expected) => {
+        const lineup: LineupPlayer[] = [
+          {
+            id: 1,
+            name: "Test Player",
+            number,
+            isCaptain: false,
+            status: "starter",
+          },
+        ];
+        render(
+          <MatchLineup {...defaultProps} homeLineup={lineup} awayLineup={[]} />,
+        );
+        // A known number is a direct text child of the badge; an absent one
+        // (the placeholder) is wrapped in an `aria-hidden` span one level
+        // in — walk up to the badge either way.
+        const textNode = screen.getByText(expected);
+        const badge =
+          textNode.getAttribute("aria-hidden") === "true"
+            ? textNode.parentElement!
+            : textNode;
+        expect(badge).toHaveClass("font-display");
+        expect(badge).toHaveClass("italic");
+        expect(badge).not.toHaveClass("font-mono");
+        expect(screen.queryByText("0")).not.toBeInTheDocument();
+      },
+    );
 
-    it("renders a zero shirt number as an honest absence, never literal 0", () => {
+    it("hides the placeholder dash from assistive tech (#2621)", () => {
       const lineup: LineupPlayer[] = [
-        {
-          id: 1,
-          name: "Unknown Number Player",
-          number: 0,
-          isCaptain: false,
-          status: "starter",
-        },
+        { id: 1, name: "Test Player", isCaptain: false, status: "starter" },
       ];
       render(
         <MatchLineup {...defaultProps} homeLineup={lineup} awayLineup={[]} />,
       );
-      expect(screen.queryByText("0")).not.toBeInTheDocument();
-      expect(screen.getByText("—")).toBeInTheDocument();
-    });
-
-    it("renders a missing shirt number as an honest absence in a held-open slot", () => {
-      const lineup: LineupPlayer[] = [
-        {
-          id: 1,
-          name: "No Number Player",
-          isCaptain: false,
-          status: "starter",
-        },
-      ];
-      render(
-        <MatchLineup {...defaultProps} homeLineup={lineup} awayLineup={[]} />,
-      );
-      expect(screen.getByText("—")).toBeInTheDocument();
+      expect(screen.getByText("—")).toHaveAttribute("aria-hidden", "true");
     });
 
     it("keeps minutes played in the mono register — counts stay mono", () => {
-      const lineup: LineupPlayer[] = [
-        {
-          id: 1,
-          name: "Subbed Player",
-          number: 9,
-          minutesPlayed: 75,
-          isCaptain: false,
-          status: "substituted",
-        },
-      ];
-      render(
-        <MatchLineup {...defaultProps} homeLineup={lineup} awayLineup={[]} />,
-      );
+      render(<MatchLineup {...defaultProps} />);
       expect(screen.getByText("75'")).toHaveClass("font-mono");
     });
   });

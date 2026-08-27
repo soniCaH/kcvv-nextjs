@@ -384,14 +384,12 @@ export const ShirtNumberStates: Story = {
     awayTeamName: "KFC Turnhout",
     homeLineup: [
       {
-        id: 1,
         name: "Present Number",
         number: 9,
         isCaptain: false,
         status: "starter" as const,
       },
       {
-        id: 2,
         name: "Present Number (Keeper)",
         number: 1,
         isCaptain: false,
@@ -399,13 +397,11 @@ export const ShirtNumberStates: Story = {
         isKeeper: true,
       },
       {
-        id: 3,
         name: "Missing Number",
         isCaptain: false,
         status: "starter" as const,
       },
       {
-        id: 4,
         name: "Unknown Number (PSD sends 0)",
         number: 0,
         isCaptain: false,

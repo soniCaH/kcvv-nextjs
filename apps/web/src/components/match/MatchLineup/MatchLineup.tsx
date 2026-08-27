@@ -24,11 +24,7 @@ export interface LineupPlayer {
   id?: number;
   /** Player name */
   name: string;
-  /**
-   * Jersey number. PSD also sends `0` on some rows to mean "unknown number"
-   * — that is not a real shirt number, so `0` is rendered the same as
-   * `undefined` (see `formatShirtNumber` below).
-   */
+  /** Jersey number. PSD sends `0` to mean "unknown" — see `formatShirtNumber`. */
   number?: number;
   /** Minutes played in match */
   minutesPlayed?: number;
@@ -196,17 +192,26 @@ function TeamLineup({
 }
 
 /**
- * Format a lineup player's shirt number for display, honestly.
+ * Whether a lineup player's shirt number is actually known.
  *
  * PSD sends `0` on some rows to mean "unknown number" rather than a real
- * shirt number nobody wears — so `0` renders the same as an absent number:
- * an em dash, never `0` (#2621 AC3).
+ * shirt number nobody wears, so `0` counts as unknown alongside `undefined`.
+ */
+function hasKnownShirtNumber(number: number | undefined): boolean {
+  return number !== undefined && number !== 0;
+}
+
+/**
+ * Format a lineup player's shirt number for display, honestly.
+ *
+ * `0` renders the same as an absent number: an em dash, never `0` (#2621
+ * AC3) — see `hasKnownShirtNumber`.
  *
  * @param number - The player's jersey number, if known
  * @returns The number as a string, or "—" when absent or `0`
  */
 function formatShirtNumber(number: number | undefined): string {
-  return number === undefined || number === 0 ? "—" : String(number);
+  return hasKnownShirtNumber(number) ? String(number) : "—";
 }
 
 /**
@@ -248,19 +253,23 @@ function PlayerRow({ player }: { player: LineupPlayer }) {
           while counts elsewhere on the page (minutes played, etc.) stay
           mono. bg-warm for keepers, bg-ink for outfielders. The slot always
           renders at a fixed size so a row without a number never shifts
-          against a row that has one; a missing or `0` number (PSD's
-          "unknown number" sentinel) renders as an honest em dash rather
-          than a literal 0. The visible number stays the accessible name;
-          the keeper hint ships as an `sr-only` sibling so screen readers
-          announce "11 Keeper" rather than overriding the number entirely. */}
+          against a row that has one. A known number stays the accessible
+          name; an absent one (see `formatShirtNumber`) is `aria-hidden` so
+          it never joins the row's text. The keeper hint ships as a
+          separate `sr-only` sibling either way, so a numberless KCVV
+          keeper still announces "Keeper" rather than "— Keeper". */}
       <span
         className={cn(
           "flex h-7 w-7 shrink-0 items-center justify-center",
-          "font-display text-[15px] leading-none font-black italic tabular-nums",
+          "font-display text-[15px] leading-none font-black italic lining-nums",
           numberBg,
         )}
       >
-        {formatShirtNumber(player.number)}
+        {hasKnownShirtNumber(player.number) ? (
+          formatShirtNumber(player.number)
+        ) : (
+          <span aria-hidden="true">{formatShirtNumber(player.number)}</span>
+        )}
         {player.isKeeper && <span className="sr-only"> Keeper</span>}
       </span>
 
