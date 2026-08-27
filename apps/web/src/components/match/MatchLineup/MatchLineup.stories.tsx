@@ -371,6 +371,52 @@ export const MinimalData: Story = {
 };
 
 /**
+ * Shirt-number states (#2621) — a present number (outfielder), a present
+ * number (keeper, warm badge), a missing number, and an upstream `0`
+ * ("unknown number") side by side in the same column. The two absent cases
+ * must both render an honest em dash, never a literal `0`, and every badge
+ * must hold the same slot size so the column stays aligned regardless of
+ * which state a row is in.
+ */
+export const ShirtNumberStates: Story = {
+  args: {
+    homeTeamName: "KCVV Elewijt",
+    awayTeamName: "KFC Turnhout",
+    homeLineup: [
+      {
+        id: 1,
+        name: "Present Number",
+        number: 9,
+        isCaptain: false,
+        status: "starter" as const,
+      },
+      {
+        id: 2,
+        name: "Present Number (Keeper)",
+        number: 1,
+        isCaptain: false,
+        status: "starter" as const,
+        isKeeper: true,
+      },
+      {
+        id: 3,
+        name: "Missing Number",
+        isCaptain: false,
+        status: "starter" as const,
+      },
+      {
+        id: 4,
+        name: "Unknown Number (PSD sends 0)",
+        number: 0,
+        isCaptain: false,
+        status: "starter" as const,
+      },
+    ],
+    awayLineup: [],
+  },
+};
+
+/**
  * Mobile viewport
  */
 export const MobileView: Story = {

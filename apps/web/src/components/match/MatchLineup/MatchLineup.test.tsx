@@ -94,6 +94,76 @@ describe("MatchLineup", () => {
     });
   });
 
+  describe("shirt number register (#2621)", () => {
+    it("sets a present shirt number in the display register, not mono", () => {
+      const lineup: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Numbered Player",
+          number: 9,
+          isCaptain: false,
+          status: "starter",
+        },
+      ];
+      render(
+        <MatchLineup {...defaultProps} homeLineup={lineup} awayLineup={[]} />,
+      );
+      const badge = screen.getByText("9");
+      expect(badge).toHaveClass("font-display");
+      expect(badge).toHaveClass("italic");
+      expect(badge).not.toHaveClass("font-mono");
+    });
+
+    it("renders a zero shirt number as an honest absence, never literal 0", () => {
+      const lineup: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Unknown Number Player",
+          number: 0,
+          isCaptain: false,
+          status: "starter",
+        },
+      ];
+      render(
+        <MatchLineup {...defaultProps} homeLineup={lineup} awayLineup={[]} />,
+      );
+      expect(screen.queryByText("0")).not.toBeInTheDocument();
+      expect(screen.getByText("—")).toBeInTheDocument();
+    });
+
+    it("renders a missing shirt number as an honest absence in a held-open slot", () => {
+      const lineup: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "No Number Player",
+          isCaptain: false,
+          status: "starter",
+        },
+      ];
+      render(
+        <MatchLineup {...defaultProps} homeLineup={lineup} awayLineup={[]} />,
+      );
+      expect(screen.getByText("—")).toBeInTheDocument();
+    });
+
+    it("keeps minutes played in the mono register — counts stay mono", () => {
+      const lineup: LineupPlayer[] = [
+        {
+          id: 1,
+          name: "Subbed Player",
+          number: 9,
+          minutesPlayed: 75,
+          isCaptain: false,
+          status: "substituted",
+        },
+      ];
+      render(
+        <MatchLineup {...defaultProps} homeLineup={lineup} awayLineup={[]} />,
+      );
+      expect(screen.getByText("75'")).toHaveClass("font-mono");
+    });
+  });
+
   describe("player grouping", () => {
     it("renders the BANK divider when the team has substitutes", () => {
       render(<MatchLineup {...defaultProps} />);

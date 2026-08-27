@@ -24,7 +24,11 @@ export interface LineupPlayer {
   id?: number;
   /** Player name */
   name: string;
-  /** Jersey number */
+  /**
+   * Jersey number. PSD also sends `0` on some rows to mean "unknown number"
+   * — that is not a real shirt number, so `0` is rendered the same as
+   * `undefined` (see `formatShirtNumber` below).
+   */
   number?: number;
   /** Minutes played in match */
   minutesPlayed?: number;
@@ -192,6 +196,20 @@ function TeamLineup({
 }
 
 /**
+ * Format a lineup player's shirt number for display, honestly.
+ *
+ * PSD sends `0` on some rows to mean "unknown number" rather than a real
+ * shirt number nobody wears — so `0` renders the same as an absent number:
+ * an em dash, never `0` (#2621 AC3).
+ *
+ * @param number - The player's jersey number, if known
+ * @returns The number as a string, or "—" when absent or `0`
+ */
+function formatShirtNumber(number: number | undefined): string {
+  return number === undefined || number === 0 ? "—" : String(number);
+}
+
+/**
  * Renders a single lineup player row with substitution icon, jersey number badge, player name (with captain indicator), and minutes played when applicable.
  *
  * @param player - Player data to display (name, number, captain flag, status, and optional minutesPlayed).
@@ -225,22 +243,26 @@ function PlayerRow({ player }: { player: LineupPlayer }) {
         )}
       </span>
 
-      {/* Jersey number — bg-warm for keepers, bg-ink for outfielders. The
-          visible number stays the accessible name; the keeper hint ships as
-          an `sr-only` sibling so screen readers announce "11 Keeper" rather
-          than overriding the number entirely. */}
-      {player.number !== undefined && (
-        <span
-          className={cn(
-            "flex h-7 w-7 shrink-0 items-center justify-center",
-            "font-mono text-[12px] font-bold tracking-tight tabular-nums",
-            numberBg,
-          )}
-        >
-          {player.number}
-          {player.isKeeper && <span className="sr-only"> Keeper</span>}
-        </span>
-      )}
+      {/* Jersey number — set in the display register (D7, #2621): a shirt
+          number reads the way a number looks on a shirt, black italic,
+          while counts elsewhere on the page (minutes played, etc.) stay
+          mono. bg-warm for keepers, bg-ink for outfielders. The slot always
+          renders at a fixed size so a row without a number never shifts
+          against a row that has one; a missing or `0` number (PSD's
+          "unknown number" sentinel) renders as an honest em dash rather
+          than a literal 0. The visible number stays the accessible name;
+          the keeper hint ships as an `sr-only` sibling so screen readers
+          announce "11 Keeper" rather than overriding the number entirely. */}
+      <span
+        className={cn(
+          "flex h-7 w-7 shrink-0 items-center justify-center",
+          "font-display text-[15px] leading-none font-black italic tabular-nums",
+          numberBg,
+        )}
+      >
+        {formatShirtNumber(player.number)}
+        {player.isKeeper && <span className="sr-only"> Keeper</span>}
+      </span>
 
       {/* Player name */}
       <span className="text-ink flex min-w-0 flex-1 items-center gap-1.5">
