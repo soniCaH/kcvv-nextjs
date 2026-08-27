@@ -12,12 +12,80 @@ import { reservationTitle, reservationView } from "./match-display";
 
 const HOME_VENUE_FALLBACK = "Sportpark Elewijt, Elewijt, België";
 
-export interface IcalOptions {
-  side?: "home" | "away" | "all";
-  /** Club activities (#2704) opt-in — see `generateIcal`'s destructure for the default. */
-  includeEvents?: boolean;
-  /** The merged `EventRepository.findUpcomingForList()` feed, already resolved to each item's own detail href. */
-  events?: readonly EventListItemVM[];
+export type MatchSide = "home" | "away" | "all";
+
+/**
+ * A normalised item `generateIcal` knows how to emit as one `VEVENT` (#2717).
+ * The generator itself has no idea a `Match` or an `EventListItemVM` exists —
+ * `matchToEntry`/`eventToEntry` (below) are the only places that translate a
+ * domain object into this shape, applied by `matchesToEntries`/
+ * `eventsToEntries` before `generateIcal` ever sees the collection.
+ *
+ * A discriminated union rather than one bag of optional fields: an all-day
+ * entry always carries a real `end` (the exclusive next-day roll,
+ * `resolveEventDateRange`'s `allDayEndExclusive`) and never a `description`
+ * (only a match's mapper ever sets one); a timed entry's `end` is genuinely
+ * optional (an event with no stated end omits it rather than fabricating a
+ * duration — a match's own `matchToEntry` always supplies one).
+ */
+interface IcalEntryBase {
+  id: string;
+  summary: string;
+  location?: string;
+  url: string;
+}
+
+export interface TimedIcalEntry extends IcalEntryBase {
+  allDay?: false;
+  start: DateTime;
+  end?: DateTime;
+  description?: string;
+}
+
+export interface AllDayIcalEntry extends IcalEntryBase {
+  allDay: true;
+  start: DateTime;
+  end: DateTime;
+}
+
+export type IcalEntry = TimedIcalEntry | AllDayIcalEntry;
+
+/**
+ * What this feed carries — resolved once (from the route's `events=1` query
+ * flag, via `resolveFeedVariant`) and threaded through as this one value
+ * rather than re-derived at each of `NAME`/`X-WR-CALDESC`/the download
+ * filename (#2717). `CalendarSubscribePanel.buildWebcalUrl`'s still-unbuilt
+ * `events=1` UI toggle (#2705) is the next consumer of this same descriptor.
+ */
+export type FeedVariant = "matches" | "matches-and-events";
+
+interface FeedVariantMeta {
+  name: string;
+  caldesc: string;
+  filename: string;
+}
+
+const FEED_VARIANT_META: Record<FeedVariant, FeedVariantMeta> = {
+  matches: {
+    name: "KCVV Elewijt — Wedstrijden",
+    caldesc: "Wedstrijdkalender van KCVV Elewijt",
+    filename: "kcvv-wedstrijden.ics",
+  },
+  "matches-and-events": {
+    name: "KCVV Elewijt — Wedstrijden & Activiteiten",
+    caldesc: "Wedstrijden en clubactiviteiten van KCVV Elewijt",
+    filename: "kcvv-wedstrijden-en-activiteiten.ics",
+  },
+};
+
+/** The single place `NAME`/`X-WR-CALDESC`/the download filename read from. */
+export function getFeedVariantMeta(variant: FeedVariant): FeedVariantMeta {
+  return FEED_VARIANT_META[variant];
+}
+
+/** The one place the `events=1` query flag becomes a `FeedVariant`. */
+export function resolveFeedVariant(includeEvents: boolean): FeedVariant {
+  return includeEvents ? "matches-and-events" : "matches";
 }
 
 /**
@@ -158,81 +226,30 @@ function buildEventUid(item: EventListItemVM): string {
   return `kcvv-event-${item.id}@kcvvelewijt.be`;
 }
 
-/**
- * Adds one club-activity VEVENT. `ical-generator`'s all-day `DTEND` is
- * inclusive (it emits whatever `end` it is given verbatim) — the exclusive
- * next-day roll is `resolveEventDateRange`'s `allDayEndExclusive`, computed
- * once for both this and `buildEventIcs`. A timed item with no `dateEnd`
- * omits `end` entirely rather than fabricating a duration the way a match's
- * fixed 2h block does.
- */
-function addEventVevent(cal: ReturnType<typeof ical>, item: EventListItemVM) {
-  const { isAllDay, start, end, allDayEndExclusive } = resolveEventDateRange(
-    item.dateStart,
-    item.dateEnd,
-  );
-
-  // An unparseable `dateStart` (reachable via `EVENTS_QUERY`'s
-  // `coalesce(dateStart, "")` on a malformed doc) is dropped, not fatal —
-  // matching `mergeEventFeed`/`<EventMonthList>`'s handling of the same row.
-  // `ical-generator` throws on an invalid Luxon `start`, which would 500 the
-  // whole feed otherwise.
-  if (!start.isValid) return;
-
-  const location = item.location ?? undefined;
-  const url = `${SITE_CONFIG.siteUrl}${item.href}`;
-  const id = buildEventUid(item);
-  const summary = item.title;
-
-  if (isAllDay) {
-    cal.createEvent({
-      id,
-      summary,
-      allDay: true,
-      start,
-      end: allDayEndExclusive,
-      url,
-      ...(location ? { location } : {}),
-    });
-    return;
-  }
-
-  cal.createEvent({
-    id,
-    summary,
+/** A `Match` → `IcalEntry`, applied per item before `generateIcal` ever runs. */
+function matchToEntry(match: Match): TimedIcalEntry {
+  const start = buildStartDateTime(match);
+  return {
+    id: `kcvv-match-${match.id}@kcvvelewijt.be`,
+    summary: buildSummary(match),
     start,
-    timezone: TIMEZONE,
-    url,
-    // An invalid `end` is dropped the same way a missing one is above.
-    ...(end?.isValid ? { end } : {}),
-    ...(location ? { location } : {}),
-  });
+    end: start.plus({ hours: 2 }),
+    description: buildDescription(match),
+    url: `${SITE_CONFIG.siteUrl}/wedstrijd/${match.id}`,
+    location: buildLocation(match),
+  };
 }
 
-export function generateIcal(
+/**
+ * The pre-mapping stage for matches (#2717): dedupe by id, filter by `side`,
+ * sort by date — all three ran inside `generateIcal` itself pre-refactor.
+ * `side` (home/away) is a fixture-only concept, so it is applied here rather
+ * than in `generateIcal`, which no longer knows what a `Match` is at all.
+ */
+export function matchesToEntries(
   matches: readonly Match[],
-  options: IcalOptions = {},
-): string {
-  const { side = "all", includeEvents = false, events = [] } = options;
-
-  const cal = ical({
-    name: includeEvents
-      ? "KCVV Elewijt — Wedstrijden & Activiteiten"
-      : "KCVV Elewijt — Wedstrijden",
-    prodId: "-//KCVV Elewijt//Wedstrijdkalender//NL",
-    timezone: {
-      name: TIMEZONE,
-      generator: getVtimezoneComponent,
-    },
-    x: {
-      "X-WR-CALDESC": includeEvents
-        ? "Wedstrijden en clubactiviteiten van KCVV Elewijt"
-        : "Wedstrijdkalender van KCVV Elewijt",
-      "X-WR-TIMEZONE": TIMEZONE,
-    },
-  });
-
-  // Deduplicate by match id
+  side: MatchSide = "all",
+): TimedIcalEntry[] {
   const seen = new Set<number>();
   const unique = matches.filter((m) => {
     if (seen.has(m.id)) return false;
@@ -240,7 +257,6 @@ export function generateIcal(
     return true;
   });
 
-  // Filter by side
   const filtered =
     side === "home"
       ? unique.filter(isHomeMatch)
@@ -248,35 +264,158 @@ export function generateIcal(
         ? unique.filter((m) => !isHomeMatch(m))
         : unique;
 
-  // Sort by date
   const sorted = [...filtered].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
 
-  for (const match of sorted) {
-    const start = buildStartDateTime(match);
-    const end = start.plus({ hours: 2 });
-    const location = buildLocation(match);
+  return sorted.map(matchToEntry);
+}
 
-    cal.createEvent({
-      id: `kcvv-match-${match.id}@kcvvelewijt.be`,
-      summary: buildSummary(match),
+/**
+ * An `EventListItemVM` → `IcalEntry`. Returns `undefined` for an unparseable
+ * `dateStart` (reachable via `EVENTS_QUERY`'s `coalesce(dateStart, "")` on a
+ * malformed doc) rather than throwing — matching `mergeEventFeed`/
+ * `<EventMonthList>`'s handling of the same row. `ical-generator` throws on an
+ * invalid Luxon `start`, which would 500 the whole feed otherwise.
+ *
+ * `ical-generator`'s all-day `DTEND` is inclusive (it emits whatever `end` it
+ * is given verbatim) — the exclusive next-day roll is
+ * `resolveEventDateRange`'s `allDayEndExclusive`, computed once for both this
+ * and `buildEventIcs`. A timed item with no `dateEnd` omits `end` entirely
+ * rather than fabricating a duration the way a match's fixed 2h block does.
+ */
+function eventToEntry(item: EventListItemVM): IcalEntry | undefined {
+  const { isAllDay, start, end, allDayEndExclusive } = resolveEventDateRange(
+    item.dateStart,
+    item.dateEnd,
+  );
+
+  if (!start.isValid) return undefined;
+
+  const location = item.location ?? undefined;
+  const url = `${SITE_CONFIG.siteUrl}${item.href}`;
+  const id = buildEventUid(item);
+  const summary = item.title;
+
+  if (isAllDay) {
+    return {
+      id,
+      summary,
+      allDay: true,
       start,
-      end,
-      timezone: TIMEZONE,
-      description: buildDescription(match),
-      url: `${SITE_CONFIG.siteUrl}/wedstrijd/${match.id}`,
-      ...(location ? { location } : {}),
-    });
+      end: allDayEndExclusive,
+      url,
+      location,
+    };
   }
 
-  // Club activities (#2704) — `EventRepository.findUpcomingForList()` is
-  // already upcoming-only and chronologically sorted by construction (its own
-  // GROQ filters + `mergeEventFeed`'s sort), so no re-filter/re-sort happens
-  // here.
-  for (const item of events) {
-    addEventVevent(cal, item);
+  return {
+    id,
+    summary,
+    start,
+    // An invalid `end` is dropped the same way a missing one is above.
+    end: end?.isValid ? end : undefined,
+    url,
+    location,
+  };
+}
+
+/**
+ * The pre-mapping stage for club activities (#2704, #2717).
+ * `EventRepository.findUpcomingForList()` is already upcoming-only and
+ * chronologically sorted by construction (its own GROQ filters +
+ * `mergeEventFeed`'s sort), so no re-filter/re-sort happens here — only the
+ * per-item map, dropping any entry `eventToEntry` couldn't parse.
+ */
+export function eventsToEntries(
+  events: readonly EventListItemVM[],
+): IcalEntry[] {
+  return events
+    .map(eventToEntry)
+    .filter((entry): entry is IcalEntry => entry !== undefined);
+}
+
+/** Emits one `VEVENT` for a normalised entry — the whole of `generateIcal`'s per-item knowledge. */
+function emitEntry(cal: ReturnType<typeof ical>, entry: IcalEntry): void {
+  if (entry.allDay) {
+    cal.createEvent({
+      id: entry.id,
+      summary: entry.summary,
+      allDay: true,
+      start: entry.start,
+      end: entry.end,
+      url: entry.url,
+      ...(entry.location ? { location: entry.location } : {}),
+    });
+    return;
+  }
+
+  cal.createEvent({
+    id: entry.id,
+    summary: entry.summary,
+    start: entry.start,
+    timezone: TIMEZONE,
+    url: entry.url,
+    ...(entry.end ? { end: entry.end } : {}),
+    ...(entry.description !== undefined
+      ? { description: entry.description }
+      : {}),
+    ...(entry.location ? { location: entry.location } : {}),
+  });
+}
+
+/**
+ * Emission-only (#2717): turns a normalised `IcalEntry[]` into a `.ics`
+ * document. Knows nothing about a `Match` or an `EventListItemVM` — every
+ * domain concern (dedup, `side` filtering, sorting, all-day classification,
+ * UID scheme) is resolved upstream by `matchesToEntries`/`eventsToEntries`
+ * before this ever runs. `variant` is the feed-variant descriptor
+ * (`resolveFeedVariant`), threaded through once for `NAME`/`X-WR-CALDESC`
+ * rather than re-derived here.
+ */
+export function generateIcal(
+  items: readonly IcalEntry[],
+  variant: FeedVariant = "matches",
+): string {
+  const meta = getFeedVariantMeta(variant);
+
+  const cal = ical({
+    name: meta.name,
+    prodId: "-//KCVV Elewijt//Wedstrijdkalender//NL",
+    timezone: {
+      name: TIMEZONE,
+      generator: getVtimezoneComponent,
+    },
+    x: {
+      "X-WR-CALDESC": meta.caldesc,
+      "X-WR-TIMEZONE": TIMEZONE,
+    },
+  });
+
+  for (const entry of items) {
+    emitEntry(cal, entry);
   }
 
   return cal.toString();
+}
+
+/**
+ * The thin composition layer (#2717) between the route's raw `Match[]`/
+ * `EventListItemVM[]` reads and the emission-only `generateIcal`: applies
+ * `matchesToEntries`/`eventsToEntries`, then concatenates matches before
+ * events — a club activity is never interleaved by date with the fixtures,
+ * matching the pre-refactor two-loop order — before calling `generateIcal`
+ * with the already-resolved `variant`.
+ */
+export function buildCalendarFeed(
+  matches: readonly Match[],
+  events: readonly EventListItemVM[],
+  variant: FeedVariant,
+  side: MatchSide = "all",
+): string {
+  const matchEntries = matchesToEntries(matches, side);
+  const eventEntries =
+    variant === "matches-and-events" ? eventsToEntries(events) : [];
+
+  return generateIcal([...matchEntries, ...eventEntries], variant);
 }
