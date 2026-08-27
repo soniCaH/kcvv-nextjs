@@ -627,24 +627,12 @@ describe("rule 5 checks the routes it claims to (#2563)", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Rule 6 (#2691) — a filtered EmptyState's undo is wired to analytics
-// ---------------------------------------------------------------------------
-
-/**
- * `<EmptyState reason="filtered">`'s undo marker (`data-empty-state-undo`) is
- * unconditional on `reason`, but mounting `<EmptyStateUndoAnalytics>` to
- * consume it is still a convention nothing else enforces — a sixth filtered
- * surface could compile, lint and pass its own tests while never mounting
- * the wrapper, and its undo would silently emit nothing. Per-file, not
- * per-JSX-nesting, matching this file's regex-on-source method.
- */
-const filteredUndoSources = productionSources.filter((f) =>
-  /reason="filtered"/.test(code.get(f)!),
-);
-
-describe("a filtered EmptyState's undo is wired to analytics (#2691)", () => {
-  it.each(filteredUndoSources)("%s — mounts <EmptyStateUndoAnalytics>", (f) => {
-    expect(/<EmptyStateUndoAnalytics\b/.test(code.get(f)!)).toBe(true);
-  });
-});
+// Rule 6 (#2691) — "a filtered EmptyState's undo is wired to analytics" — is
+// deleted as of #2719. It was a regex-on-source guard checking that a host
+// mounted `<EmptyStateUndoAnalytics>`, needed only because wiring analytics
+// to a filtered `<EmptyState>`'s undo was a convention, not a compile-time
+// requirement. `analyticsSource`/`analyticsFacet` are now required props on
+// `EmptyStateSurfaceFilteredProps` (`EmptyState.tsx`) — a host that skips
+// them fails `tsgo --noEmit`, which supersedes this rule outright. Numbering
+// is left as a gap, not renumbered, per this file's own convention (rules
+// are referenced by issue number in comments elsewhere in the repo).
