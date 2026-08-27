@@ -233,10 +233,28 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      # The orphan-branch push must re-trigger nothing, but the sticky comment
+      # has to appear as the CI bot rather than as `github-actions`, so this job
+      # runs on a per-run App installation token (see renovate.yml for why).
+      - name: Mint an installation token
+        id: app-token
+        uses: actions/create-github-app-token@v3.2.0
+        with:
+          client-id: ${{ vars.KCVV_APP_CLIENT_ID }}
+          private-key: ${{ secrets.KCVV_APP_PRIVATE_KEY }}
+          # Scoped below what the App grants. `contents` pushes the orphan
+          # branch; `pull-requests` + `issues` cover the sticky comment (a PR
+          # comment is an issue comment, and which permission the REST call
+          # needs depends on the endpoint, so both are granted). Notably NOT
+          # `workflows` — nothing here rewrites .github/workflows.
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+
       - name: Checkout code
         uses: actions/checkout@v7.0.1
         with:
-          token: ${{ secrets.KCVV_VR_BOT_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
       - name: Download diff artifacts
@@ -250,7 +268,7 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
-          TOKEN: ${{ secrets.KCVV_VR_BOT_TOKEN }}
+          TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           BRANCH="vr-diffs/pr-${PR_NUMBER}"
 
@@ -262,8 +280,8 @@ jobs:
             exit 0
           fi
 
-          git config user.email "kcvv-vr-bot@users.noreply.github.com"
-          git config user.name "kcvv-vr-bot"
+          git config user.email "321706059+kcvv-elewijt-ci-bot[bot]@users.noreply.github.com"
+          git config user.name "kcvv-elewijt-ci-bot[bot]"
 
           # Create a detached orphan branch with no history
           git checkout --orphan "$BRANCH"
@@ -320,7 +338,7 @@ jobs:
         with:
           header: vr-diff-comment
           path: ${{ steps.build-comment.outputs.comment_file }}
-          GITHUB_TOKEN: ${{ secrets.KCVV_VR_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
   deploy-api-staging:
     name: Deploy API staging to Cloudflare Workers

@@ -6,6 +6,10 @@
 #
 # Behaviour is unchanged: renovate.json is still the single source of truth and is
 # picked up automatically. This only supplies a runner with enough memory.
+#
+# To work off a backlog outside the Monday window, dispatch this workflow with
+# `ignoreSchedule: yes`. It opens at most 3 concurrent PRs and 2 per hour, both
+# forced explicitly — re-dispatch to take the next batch.
 name: Renovate
 
 on:
@@ -21,6 +25,17 @@ on:
         type: choice
         options: [info, debug]
         default: info
+      # A `type: boolean` input is a real boolean from the UI checkbox but a
+      # STRING over the API (`gh workflow run -f x=false`), and every non-empty
+      # string is truthy in an Actions expression — so "off" silently ran as
+      # "on" and opened six PRs. A choice compared as a string cannot do that.
+      ignoreSchedule:
+        description: "Ignore the Monday-only schedule and open PRs now"
+        type: choice
+        # Quoted: unquoted `no`/`yes` are YAML booleans, which is the same class
+        # of type surprise this input was rewritten to avoid.
+        options: ["no", "yes"]
+        default: "no"
 
 concurrency:
   group: renovate
@@ -37,10 +52,33 @@ jobs:
     timeout-minutes: 30
 
     steps:
+      # Renovate runs as the `KCVV Elewijt CI Bot` GitHub App, not as a machine
+      # account with a PAT. The token below is minted per run and expires in an
+      # hour, so nothing long-lived sits in a secret, and an App cannot be
+      # suspended the way the old `kcvv-vr-bot` user was on 2026-08-27.
+      - name: Mint an installation token
+        id: app-token
+        uses: actions/create-github-app-token@v3.2.0
+        with:
+          client-id: ${{ vars.KCVV_APP_CLIENT_ID }}
+          private-key: ${{ secrets.KCVV_APP_PRIVATE_KEY }}
+
       - uses: renovatebot/github-action@5402b206248e5a8c8427a15102702eb9c1793efc # v46.2.4
         with:
-          token: ${{ secrets.RENOVATE_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
         env:
           RENOVATE_PLATFORM: github
           RENOVATE_REPOSITORIES: ${{ github.repository }}
+          # `force` is the only override renovate.json's own `schedule` loses
+          # to — a plain RENOVATE_SCHEDULE is outranked by the repo config.
+          # The limits are restated inside the same `force` on purpose: the
+          # repo-level `prConcurrentLimit: 3` did NOT cap the first off-schedule
+          # run (six PRs in one pass, 2026-08-27), and `force` is the one level
+          # that is guaranteed to bind.
+          RENOVATE_FORCE: ${{ inputs.ignoreSchedule == 'yes' && '{"schedule":null,"prConcurrentLimit":3,"prHourlyLimit":2}' || '{}' }}
+          # An installation token has no user behind it, so Renovate cannot
+          # discover who it is committing as — both must be stated explicitly
+          # or it refuses to open a PR.
+          RENOVATE_USERNAME: kcvv-elewijt-ci-bot[bot]
+          RENOVATE_GIT_AUTHOR: kcvv-elewijt-ci-bot[bot] <321706059+kcvv-elewijt-ci-bot[bot]@users.noreply.github.com>
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
