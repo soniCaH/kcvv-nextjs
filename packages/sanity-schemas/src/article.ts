@@ -1,5 +1,6 @@
 import {defineField, defineType} from 'sanity'
-import {LinkIcon, UserIcon} from '@sanity/icons'
+import {LinkIcon} from '@sanity/icons/Link'
+import {UserIcon} from '@sanity/icons/User'
 import {accentTitleOf} from './blocks/editorial-marks'
 import {articlePreviewSelect, prepareArticlePreview} from './preview/article-preview'
 import {validateSubjectsCount} from './validation/subjects-count'

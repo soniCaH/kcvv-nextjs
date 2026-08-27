@@ -1,5 +1,7 @@
 import {Box, Button, Card, Flex, Stack, Text} from '@sanity/ui'
-import {ChevronDownIcon, ChevronRightIcon, TrashIcon} from '@sanity/icons'
+import {ChevronDownIcon} from '@sanity/icons/ChevronDown'
+import {ChevronRightIcon} from '@sanity/icons/ChevronRight'
+import {TrashIcon} from '@sanity/icons/Trash'
 import {type JSX} from 'react'
 import {
   MemberField,

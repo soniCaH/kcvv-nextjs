@@ -1,5 +1,6 @@
 import {defineArrayMember} from 'sanity'
-import {BlockquoteIcon, HighlightIcon} from '@sanity/icons'
+import {BlockquoteIcon} from '@sanity/icons/Blockquote'
+import {HighlightIcon} from '@sanity/icons/Highlight'
 
 /**
  * Shared editorial Portable Text definitions for the bio/body fields

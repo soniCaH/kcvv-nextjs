@@ -1,5 +1,5 @@
 import {defineField, defineType} from 'sanity'
-import {InlineElementIcon} from '@sanity/icons'
+import {InlineElementIcon} from '@sanity/icons/InlineElement'
 
 export const htmlTable = defineType({
   name: 'htmlTable',

@@ -1,4 +1,4 @@
-import {CloseIcon} from '@sanity/icons'
+import {CloseIcon} from '@sanity/icons/Close'
 import {Autocomplete, Button, Card, Flex, Stack, Text} from '@sanity/ui'
 import {
   type FocusEvent,

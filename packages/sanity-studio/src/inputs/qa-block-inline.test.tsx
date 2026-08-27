@@ -14,11 +14,9 @@ vi.mock('sanity', () => ({
     Array.isArray(path) && path[0] === 'subjects' ? mockSubjects.current : undefined,
 }))
 
-vi.mock('@sanity/icons', () => ({
-  TrashIcon: () => null,
-  ChevronDownIcon: () => null,
-  ChevronRightIcon: () => null,
-}))
+vi.mock('@sanity/icons/Trash', () => ({TrashIcon: () => null}))
+vi.mock('@sanity/icons/ChevronDown', () => ({ChevronDownIcon: () => null}))
+vi.mock('@sanity/icons/ChevronRight', () => ({ChevronRightIcon: () => null}))
 
 vi.mock('@sanity/ui', () => {
   type P = {children?: React.ReactNode}
