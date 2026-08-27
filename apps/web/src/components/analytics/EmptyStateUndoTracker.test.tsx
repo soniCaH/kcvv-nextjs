@@ -18,7 +18,6 @@ describe("<EmptyStateUndoTracker>", () => {
     render(
       <button
         type="button"
-        data-empty-state-undo="undo"
         data-empty-state-undo-source="evenementen"
         data-empty-state-undo-facet="Jeugdwerking"
       >
@@ -26,7 +25,7 @@ describe("<EmptyStateUndoTracker>", () => {
       </button>,
     );
 
-    fireEvent.click(document.querySelector("[data-empty-state-undo]")!);
+    fireEvent.click(document.querySelector("[data-empty-state-undo-source]")!);
 
     expect(trackEvent).toHaveBeenCalledTimes(1);
     expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
@@ -35,20 +34,11 @@ describe("<EmptyStateUndoTracker>", () => {
     });
   });
 
-  it("does not fire for a click outside any data-empty-state-undo element (a non-filtered EmptyState has no marker at all)", () => {
+  it("does not fire for a click outside any marked undo (a non-filtered EmptyState has no marker at all)", () => {
     render(<EmptyStateUndoTracker />);
     render(<p>Geen knop hier.</p>);
 
     fireEvent.click(document.querySelector("p")!);
-
-    expect(trackEvent).not.toHaveBeenCalled();
-  });
-
-  it("does not fire when the marker is missing its source/facet payload (defensive — matches ErrorAnalytics's guard)", () => {
-    render(<EmptyStateUndoTracker />);
-    render(<button type="button" data-empty-state-undo="undo" />);
-
-    fireEvent.click(document.querySelector("[data-empty-state-undo]")!);
 
     expect(trackEvent).not.toHaveBeenCalled();
   });
