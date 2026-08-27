@@ -9,8 +9,8 @@
  * safe to import from a client component's hot path without pulling in
  * unrelated module-scope side effects. `lib/seo/legacy-redirect.ts`'s
  * `nameToSlug` builds on this; so does the analytics facet slugging in
- * `components/analytics/EmptyStateUndoAnalytics.tsx` (#2691) — that second
- * caller is *why* this lives here rather than in `legacy-redirect.ts`
+ * `components/analytics/EmptyStateUndoTracker.tsx` (#2691/#2719) — that
+ * second caller is *why* this lives here rather than in `legacy-redirect.ts`
  * itself: `legacy-redirect.ts` imports `fetchGroq` (`lib/sanity/fetch-groq`
  * → `lib/sanity/client`), which constructs a Sanity client at module scope.
  * Storybook/CI has no `NEXT_PUBLIC_SANITY_PROJECT_ID`, so any component that
