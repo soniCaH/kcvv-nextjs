@@ -3,7 +3,7 @@ import type { Match } from "@kcvv/api-contract";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import { buildEventIcs } from "./event-ics";
 import {
-  buildCalendarFeed,
+  buildIcalFeed,
   normalizeCacheKey,
   resolveFeedVariant,
   type MatchSide,
@@ -11,10 +11,13 @@ import {
 
 /**
  * Drives the full `matchesToEntries`/`eventsToEntries` → `generateIcal`
- * pipeline the same way `route.ts` does (#2717), via the same
- * `buildCalendarFeed` composition — mirrors the pre-refactor
- * `generateIcal(matches, options)` call shape so the ~40 assertions below
- * could be rewritten to a new call site without touching any expected value.
+ * pipeline the same way `route.ts` does (#2717), via the same `buildIcalFeed`
+ * composition — mirrors the pre-refactor `generateIcal(matches, options)`
+ * call shape so the ~40 assertions below could be rewritten to a new call
+ * site without touching any expected value. Passes `events` only when the
+ * flag is on, the same way `route.ts` only ever fetches it then — matching
+ * `buildIcalFeed`'s own contract that it never re-gates `events` on
+ * `variant` itself (see that function's doc).
  */
 function renderIcal(
   matches: readonly Match[],
@@ -25,9 +28,9 @@ function renderIcal(
   } = {},
 ): string {
   const { side = "all", includeEvents = false, events = [] } = options;
-  return buildCalendarFeed(
+  return buildIcalFeed(
     matches,
-    events,
+    includeEvents ? events : [],
     resolveFeedVariant(includeEvents),
     side,
   );
@@ -250,6 +253,24 @@ describe("generateIcal", () => {
     const idx1 = output.indexOf("kcvv-match-1@kcvvelewijt.be");
     const idx2 = output.indexOf("kcvv-match-2@kcvvelewijt.be");
     expect(idx1).toBeLessThan(idx2);
+  });
+
+  /**
+   * `match.time` is unvalidated free text upstream — PSD is known-messy — so
+   * a malformed value must be dropped, not thrown, the same way an
+   * unparseable event `dateStart` is (see the events-flag describe below).
+   * Pre-refactor this same input threw inside `generateIcal` and 500'd the
+   * whole feed for every subscriber over one bad fixture; this pins the fix.
+   */
+  it("drops a match with an unparseable time instead of throwing", () => {
+    const bad = makeMatch({ id: 999, time: "aa:bb" });
+    const good = makeMatch({ id: 1000, time: "15:00" });
+
+    expect(() => renderIcal([bad, good])).not.toThrow();
+
+    const output = renderIcal([bad, good]);
+    expect(output).not.toContain("kcvv-match-999@kcvvelewijt.be");
+    expect(output).toContain("kcvv-match-1000@kcvvelewijt.be");
   });
 });
 
@@ -544,6 +565,24 @@ describe("generateIcal — club activities (events flag)", () => {
 
     expect(output).toContain("X-WR-CALNAME:KCVV Elewijt — Wedstrijden\r");
     expect(output).not.toContain("Activiteiten");
+  });
+});
+
+/**
+ * `buildIcalFeed` itself — not through `renderIcal`, which reproduces
+ * `route.ts`'s own "only fetch events when the flag is on" gate. This pins
+ * that `buildIcalFeed` has no *second* gate of its own: it maps and includes
+ * whatever `events` it is given, regardless of `variant`. The route can
+ * never exercise the `variant === "matches"` + nonempty-`events` combination
+ * (it always passes `[]` when the flag is off), but a future caller —
+ * #2705's `buildWebcalUrl` toggle is the named one — must be able to hand
+ * `buildIcalFeed` both without either silently discarding the other.
+ */
+describe("buildIcalFeed — events are never re-gated on variant", () => {
+  it("includes events even when variant is matches-only — the caller decides what to pass in", () => {
+    const output = buildIcalFeed([], [makeEventItem()], "matches");
+
+    expect(output).toContain("kcvv-event-event-1@kcvvelewijt.be");
   });
 });
 

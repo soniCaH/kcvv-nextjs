@@ -14,20 +14,6 @@ const HOME_VENUE_FALLBACK = "Sportpark Elewijt, Elewijt, België";
 
 export type MatchSide = "home" | "away" | "all";
 
-/**
- * A normalised item `generateIcal` knows how to emit as one `VEVENT` (#2717).
- * The generator itself has no idea a `Match` or an `EventListItemVM` exists —
- * `matchToEntry`/`eventToEntry` (below) are the only places that translate a
- * domain object into this shape, applied by `matchesToEntries`/
- * `eventsToEntries` before `generateIcal` ever sees the collection.
- *
- * A discriminated union rather than one bag of optional fields: an all-day
- * entry always carries a real `end` (the exclusive next-day roll,
- * `resolveEventDateRange`'s `allDayEndExclusive`) and never a `description`
- * (only a match's mapper ever sets one); a timed entry's `end` is genuinely
- * optional (an event with no stated end omits it rather than fabricating a
- * duration — a match's own `matchToEntry` always supplies one).
- */
 interface IcalEntryBase {
   id: string;
   summary: string;
@@ -48,6 +34,20 @@ export interface AllDayIcalEntry extends IcalEntryBase {
   end: DateTime;
 }
 
+/**
+ * A normalised item `generateIcal` knows how to emit as one `VEVENT` (#2717).
+ * The generator itself has no idea a `Match` or an `EventListItemVM` exists —
+ * `matchToEntry`/`eventToEntry` (below) are the only places that translate a
+ * domain object into this shape, applied by `matchesToEntries`/
+ * `eventsToEntries` before `generateIcal` ever sees the collection.
+ *
+ * A discriminated union rather than one bag of optional fields: an all-day
+ * entry always carries a real `end` (the exclusive next-day roll,
+ * `resolveEventDateRange`'s `allDayEndExclusive`) and never a `description`
+ * (only a match's mapper ever sets one); a timed entry's `end` is genuinely
+ * optional (an event with no stated end omits it rather than fabricating a
+ * duration — a match's own `matchToEntry` always supplies one).
+ */
 export type IcalEntry = TimedIcalEntry | AllDayIcalEntry;
 
 /**
@@ -181,6 +181,15 @@ function buildLocation(match: Match): string | undefined {
  * carries one, only overrides the hour and minute. Converting instead (the
  * pre-#2601 `time`-less branch) put every such fixture in the subscribed feed
  * one or two hours late, and rolled a 22:00 kickoff onto the next day.
+ *
+ * `match.time` is unvalidated free text upstream (`S.optional(S.String)` on
+ * `Match` in `packages/api-contract/src/schemas/match.ts`) — a malformed
+ * value (`"15"`, `"aa:bb"`) parses to a non-finite hour/minute, and Luxon's
+ * `DateTime#set` throws on those rather than returning an invalid `DateTime`.
+ * Guarding here, before `.set()` runs, means this always *returns* an invalid
+ * `DateTime` instead — `matchToEntry` can then check `.isValid` the same way
+ * `eventToEntry` checks its own parse, instead of the throw escaping and
+ * 500ing the whole feed for every subscriber over one malformed fixture.
  */
 function buildStartDateTime(match: Match): DateTime {
   // Minute precision, as the pre-#2601 `fromObject` call implicitly had: PSD
@@ -188,6 +197,9 @@ function buildStartDateTime(match: Match): DateTime {
   const start = toMatchDisplayZone(match.date).startOf("minute");
   if (!match.time) return start;
   const [hours, minutes] = match.time.split(":").map(Number);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+    return DateTime.invalid("malformed match.time");
+  }
   return start.set({ hour: hours, minute: minutes });
 }
 
@@ -226,9 +238,17 @@ function buildEventUid(item: EventListItemVM): string {
   return `kcvv-event-${item.id}@kcvvelewijt.be`;
 }
 
-/** A `Match` → `IcalEntry`, applied per item before `generateIcal` ever runs. */
-function matchToEntry(match: Match): TimedIcalEntry {
+/**
+ * A `Match` → `IcalEntry`, applied per item before `generateIcal` ever runs.
+ * Returns `undefined` for an unparseable `match.time` rather than throwing —
+ * mirroring `eventToEntry`'s guard below, and for the same reason: PSD data
+ * is known-messy, and one malformed fixture must not take down the feed for
+ * every subscriber.
+ */
+function matchToEntry(match: Match): TimedIcalEntry | undefined {
   const start = buildStartDateTime(match);
+  if (!start.isValid) return undefined;
+
   return {
     id: `kcvv-match-${match.id}@kcvvelewijt.be`,
     summary: buildSummary(match),
@@ -245,6 +265,8 @@ function matchToEntry(match: Match): TimedIcalEntry {
  * sort by date — all three ran inside `generateIcal` itself pre-refactor.
  * `side` (home/away) is a fixture-only concept, so it is applied here rather
  * than in `generateIcal`, which no longer knows what a `Match` is at all.
+ * Drops any entry `matchToEntry` couldn't parse, the same way
+ * `eventsToEntries` drops an unparseable event.
  */
 export function matchesToEntries(
   matches: readonly Match[],
@@ -268,7 +290,9 @@ export function matchesToEntries(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
 
-  return sorted.map(matchToEntry);
+  return sorted
+    .map(matchToEntry)
+    .filter((entry): entry is TimedIcalEntry => entry !== undefined);
 }
 
 /**
@@ -406,16 +430,23 @@ export function generateIcal(
  * events — a club activity is never interleaved by date with the fixtures,
  * matching the pre-refactor two-loop order — before calling `generateIcal`
  * with the already-resolved `variant`.
+ *
+ * `events` is always mapped and included — there is no second gate on
+ * `variant` here. The caller decides what to pass (the route passes `[]`
+ * when the `events=1` flag is off, so it never fetches the activities feed
+ * at all); gating on `variant` a second time inside this function would only
+ * ever matter for a call the route can't make, while quietly discarding
+ * `events` for any future caller (e.g. #2705's `buildWebcalUrl` toggle) that
+ * computes `variant` and `events` from different places.
  */
-export function buildCalendarFeed(
+export function buildIcalFeed(
   matches: readonly Match[],
   events: readonly EventListItemVM[],
   variant: FeedVariant,
   side: MatchSide = "all",
 ): string {
   const matchEntries = matchesToEntries(matches, side);
-  const eventEntries =
-    variant === "matches-and-events" ? eventsToEntries(events) : [];
+  const eventEntries = eventsToEntries(events);
 
   return generateIcal([...matchEntries, ...eventEntries], variant);
 }
