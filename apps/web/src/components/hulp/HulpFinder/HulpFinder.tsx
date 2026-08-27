@@ -257,9 +257,9 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
           undo={{
             label: "Toon alle doelgroepen",
             onClick: () => setAudience(null),
+            analyticsSource: "hulp_audience",
+            analyticsFacet: audience,
           }}
-          analyticsSource="hulp_audience"
-          analyticsFacet={audience}
         >
           Er zijn voor deze rol geen hulpvragen beschikbaar.
         </EmptyState>
@@ -280,9 +280,9 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
             undo={{
               label: "Toon alle categorieën",
               onClick: () => setCategory("alles"),
+              analyticsSource: "hulp_category",
+              analyticsFacet: category,
             }}
-            analyticsSource="hulp_category"
-            analyticsFacet={category}
           >
             {filteredEmptyBody("het volledige overzicht")}
           </EmptyState>

@@ -303,9 +303,9 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
                 undo={{
                   label: "Toon alles",
                   onClick: () => setType("all"),
+                  analyticsSource: "kalender",
+                  analyticsFacet: activeTypeFilter,
                 }}
-                analyticsSource="kalender"
-                analyticsFacet={activeTypeFilter}
               >
                 {filteredEmptyBody("de volledige kalender")}
               </EmptyState>

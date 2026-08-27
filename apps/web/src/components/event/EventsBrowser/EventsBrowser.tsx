@@ -94,9 +94,9 @@ export function EventsBrowser({
             undo={{
               label: "Toon alles",
               onClick: () => handleSelect("all"),
+              analyticsSource: "evenementen",
+              analyticsFacet: selected,
             }}
-            analyticsSource="evenementen"
-            analyticsFacet={selected}
           >
             {filteredEmptyBody("alle evenementen")}
           </EmptyState>
