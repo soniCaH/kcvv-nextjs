@@ -62,6 +62,12 @@
     },
     "@kcvv/sanity-studio#build": {
       "outputs": []
+    },
+    "@kcvv/api-contract#test": {
+      "outputs": []
+    },
+    "@kcvv/sanity-studio#test": {
+      "outputs": []
     }
   }
 }
