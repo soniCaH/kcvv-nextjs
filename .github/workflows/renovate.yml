@@ -63,15 +63,12 @@ jobs:
           client-id: ${{ vars.KCVV_APP_CLIENT_ID }}
           private-key: ${{ secrets.KCVV_APP_PRIVATE_KEY }}
 
-      - uses: renovatebot/github-action@e09d604f8f803bb527bd8321ed5be06c460b8682 # v46.2.2
+      - uses: renovatebot/github-action@5402b206248e5a8c8427a15102702eb9c1793efc # v46.2.4
         with:
           token: ${{ steps.app-token.outputs.token }}
         env:
           RENOVATE_PLATFORM: github
           RENOVATE_REPOSITORIES: ${{ github.repository }}
-          # An installation token has no user behind it, so Renovate cannot
-          # discover who it is committing as — both must be stated explicitly
-          # or it refuses to open a PR.
           # `force` is the only override renovate.json's own `schedule` loses
           # to — a plain RENOVATE_SCHEDULE is outranked by the repo config.
           # The limits are restated inside the same `force` on purpose: the
@@ -79,6 +76,9 @@ jobs:
           # run (six PRs in one pass, 2026-08-27), and `force` is the one level
           # that is guaranteed to bind.
           RENOVATE_FORCE: ${{ inputs.ignoreSchedule == 'yes' && '{"schedule":null,"prConcurrentLimit":3,"prHourlyLimit":2}' || '{}' }}
+          # An installation token has no user behind it, so Renovate cannot
+          # discover who it is committing as — both must be stated explicitly
+          # or it refuses to open a PR.
           RENOVATE_USERNAME: kcvv-elewijt-ci-bot[bot]
           RENOVATE_GIT_AUTHOR: kcvv-elewijt-ci-bot[bot] <321706059+kcvv-elewijt-ci-bot[bot]@users.noreply.github.com>
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
