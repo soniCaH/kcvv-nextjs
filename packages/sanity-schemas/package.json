@@ -14,11 +14,11 @@
     "build": "tsgo --noEmit"
   },
   "peerDependencies": {
-    "@sanity/icons": "3.8.0",
+    "@sanity/icons": "5.2.1",
     "sanity": "6.1.0"
   },
   "devDependencies": {
-    "@sanity/icons": "3.8.0",
+    "@sanity/icons": "5.2.1",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "sanity": "6.9.2",
     "typescript": "6.0.3"
