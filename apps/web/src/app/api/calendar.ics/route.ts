@@ -12,7 +12,13 @@ import {
   type EventListItemVM,
 } from "@/lib/repositories/event.repository";
 import type { Match } from "@kcvv/api-contract";
-import { generateIcal, normalizeCacheKey } from "@/lib/utils/ical";
+import {
+  buildIcalFeed,
+  getFeedVariantMeta,
+  normalizeCacheKey,
+  resolveFeedVariant,
+  type MatchSide,
+} from "@/lib/utils/ical";
 
 export const runtime = "nodejs";
 
@@ -22,9 +28,7 @@ export const runtime = "nodejs";
 const CACHE_MAX_AGE = 900;
 const MAX_TEAM_IDS = 20;
 
-type Side = "home" | "away" | "all";
-
-function parseSide(raw: string | null): Side {
+function parseSide(raw: string | null): MatchSide {
   if (raw === "home" || raw === "away") return raw;
   return "all";
 }
@@ -126,7 +130,14 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const rawTeamIds = searchParams.get("teamIds");
   const side = parseSide(searchParams.get("side"));
-  const includeEvents = searchParams.get("events") === "1";
+  // Resolved once, here, from the `events=1` query flag. Threaded through to
+  // `buildIcalFeed` (NAME/X-WR-CALDESC, resolved inside `generateIcal`) and
+  // `getFeedVariantMeta` (the download filename) — neither re-derives it
+  // (#2717). The inline check below, on `variant` itself, is a different
+  // concern: whether to fetch the activities feed over the network at all,
+  // so the flag being off skips the Sanity read entirely rather than
+  // fetching a result `buildIcalFeed` would render anyway.
+  const variant = resolveFeedVariant(searchParams.get("events") === "1");
   const matchesCacheKey = normalizeCacheKey(rawTeamIds, side);
 
   const teamIdNums = rawTeamIds
@@ -147,13 +158,13 @@ export async function GET(request: NextRequest) {
     // replaces (#2711 round 2).
     const [matches, events] = await Promise.all([
       fetchMatches(teamIdNums, matchesCacheKey),
-      includeEvents ? fetchEvents() : Promise.resolve<EventListItemVM[]>([]),
+      variant === "matches-and-events"
+        ? fetchEvents()
+        : Promise.resolve<EventListItemVM[]>([]),
     ]);
 
-    const icalOutput = generateIcal(matches, { side, includeEvents, events });
-    const filename = includeEvents
-      ? "kcvv-wedstrijden-en-activiteiten.ics"
-      : "kcvv-wedstrijden.ics";
+    const icalOutput = buildIcalFeed(matches, events, variant, side);
+    const { filename } = getFeedVariantMeta(variant);
 
     return new NextResponse(icalOutput, {
       status: 200,

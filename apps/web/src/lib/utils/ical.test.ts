@@ -2,7 +2,39 @@ import { describe, expect, it } from "vitest";
 import type { Match } from "@kcvv/api-contract";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import { buildEventIcs } from "./event-ics";
-import { generateIcal, normalizeCacheKey } from "./ical";
+import {
+  buildIcalFeed,
+  normalizeCacheKey,
+  resolveFeedVariant,
+  type MatchSide,
+} from "./ical";
+
+/**
+ * Drives the full `matchesToEntries`/`eventsToEntries` → `generateIcal`
+ * pipeline the same way `route.ts` does (#2717), via the same `buildIcalFeed`
+ * composition — mirrors the pre-refactor `generateIcal(matches, options)`
+ * call shape so the ~40 assertions below could be rewritten to a new call
+ * site without touching any expected value. Passes `events` only when the
+ * flag is on, the same way `route.ts` only ever fetches it then — matching
+ * `buildIcalFeed`'s own contract that it never re-gates `events` on
+ * `variant` itself (see that function's doc).
+ */
+function renderIcal(
+  matches: readonly Match[],
+  options: {
+    side?: MatchSide;
+    includeEvents?: boolean;
+    events?: readonly EventListItemVM[];
+  } = {},
+): string {
+  const { side = "all", includeEvents = false, events = [] } = options;
+  return buildIcalFeed(
+    matches,
+    includeEvents ? events : [],
+    resolveFeedVariant(includeEvents),
+    side,
+  );
+}
 
 function makeMatch(overrides: Partial<Match> = {}): Match {
   return {
@@ -37,7 +69,7 @@ function makePlaceholderMatch(overrides: Partial<Match> = {}): Match {
 describe("generateIcal", () => {
   it("generates a valid iCal with a scheduled match", () => {
     const matches = [makeMatch()];
-    const output = generateIcal(matches);
+    const output = renderIcal(matches);
 
     expect(output).toContain("BEGIN:VCALENDAR");
     expect(output).toContain("KCVV Elewijt//Wedstrijdkalender//NL");
@@ -58,21 +90,21 @@ describe("generateIcal", () => {
       home_team: { id: 1, name: "KCVV Elewijt", score: 3 },
       away_team: { id: 2, name: "KFC Turnhout", score: 1 },
     } as Partial<Match>);
-    const output = generateIcal([match]);
+    const output = renderIcal([match]);
 
     expect(output).toContain("SUMMARY:KCVV Elewijt 3-1 KFC Turnhout");
   });
 
   it("uses home venue as LOCATION when provided", () => {
     const match = makeMatch({ venue: "Stadion De Kuip" });
-    const output = generateIcal([match]);
+    const output = renderIcal([match]);
 
     expect(output).toContain("Stadion De Kuip");
   });
 
   it("falls back to Sportpark Elewijt for home matches without venue", () => {
     const match = makeMatch({ venue: undefined });
-    const output = generateIcal([match]);
+    const output = renderIcal([match]);
 
     expect(output).toContain("Sportpark Elewijt\\, Elewijt\\, België");
   });
@@ -83,7 +115,7 @@ describe("generateIcal", () => {
       home_team: { id: 2, name: "KFC Turnhout", score: undefined },
       away_team: { id: 1, name: "KCVV Elewijt", score: undefined },
     } as Partial<Match>);
-    const output = generateIcal([match]);
+    const output = renderIcal([match]);
 
     expect(output).not.toMatch(/^LOCATION:/m);
   });
@@ -95,7 +127,7 @@ describe("generateIcal", () => {
       home_team: { id: 3, name: "FC Away", score: undefined },
       away_team: { id: 1, name: "KCVV Elewijt", score: undefined },
     } as Partial<Match>);
-    const output = generateIcal([home, away], { side: "home" });
+    const output = renderIcal([home, away], { side: "home" });
 
     expect(output).toContain("kcvv-match-1@kcvvelewijt.be");
     expect(output).not.toContain("kcvv-match-2@kcvvelewijt.be");
@@ -108,7 +140,7 @@ describe("generateIcal", () => {
       home_team: { id: 3, name: "FC Away", score: undefined },
       away_team: { id: 1, name: "KCVV Elewijt", score: undefined },
     } as Partial<Match>);
-    const output = generateIcal([home, away], { side: "away" });
+    const output = renderIcal([home, away], { side: "away" });
 
     expect(output).not.toContain("kcvv-match-1@kcvvelewijt.be");
     expect(output).toContain("kcvv-match-2@kcvvelewijt.be");
@@ -117,7 +149,7 @@ describe("generateIcal", () => {
   it("deduplicates matches by id", () => {
     const match1 = makeMatch({ id: 100 });
     const match2 = makeMatch({ id: 100 });
-    const output = generateIcal([match1, match2]);
+    const output = renderIcal([match1, match2]);
 
     const eventCount = output.split("BEGIN:VEVENT").length - 1;
     expect(eventCount).toBe(1);
@@ -130,7 +162,7 @@ describe("generateIcal", () => {
       home_team: { id: 3, name: "FC Away", score: undefined },
       away_team: { id: 1, name: "KCVV Elewijt", score: undefined },
     } as Partial<Match>);
-    const output = generateIcal([home, away], { side: "all" });
+    const output = renderIcal([home, away], { side: "all" });
 
     expect(output).toContain("kcvv-match-1@kcvvelewijt.be");
     expect(output).toContain("kcvv-match-2@kcvvelewijt.be");
@@ -141,7 +173,7 @@ describe("generateIcal", () => {
       date: new Date("2025-01-15T00:00:00.000Z"),
       time: "15:00",
     });
-    const output = generateIcal([match]);
+    const output = renderIcal([match]);
     // 15:00 Brussels local time preserved with TZID
     expect(output).toContain("DTSTART;TZID=Europe/Brussels:20250115T150000");
   });
@@ -151,7 +183,7 @@ describe("generateIcal", () => {
       date: new Date("2025-07-15T00:00:00.000Z"),
       time: "15:00",
     });
-    const output = generateIcal([match]);
+    const output = renderIcal([match]);
     // 15:00 Brussels local time preserved with TZID
     expect(output).toContain("DTSTART;TZID=Europe/Brussels:20250715T150000");
   });
@@ -168,7 +200,7 @@ describe("generateIcal", () => {
         date: new Date(Date.UTC(2025, 2, 22, 15, 0)),
         time: undefined,
       });
-      const output = generateIcal([match]);
+      const output = renderIcal([match]);
 
       expect(output).toContain("DTSTART;TZID=Europe/Brussels:20250322T150000");
     });
@@ -178,15 +210,15 @@ describe("generateIcal", () => {
         date: new Date(Date.UTC(2025, 0, 15, 0, 0)),
         time: undefined,
       });
-      const output = generateIcal([match]);
+      const output = renderIcal([match]);
 
       expect(output).toContain("DTSTART;TZID=Europe/Brussels:20250115T000000");
     });
 
     it("agrees with the same kickoff spelled out in `time`", () => {
       const date = new Date(Date.UTC(2025, 6, 15, 15, 0));
-      const implicit = generateIcal([makeMatch({ date, time: undefined })]);
-      const explicit = generateIcal([makeMatch({ date, time: "15:00" })]);
+      const implicit = renderIcal([makeMatch({ date, time: undefined })]);
+      const explicit = renderIcal([makeMatch({ date, time: "15:00" })]);
 
       // The event's own DTSTART, not the VTIMEZONE transition rules above it —
       // those are identical whatever the fixture, so a looser match passes
@@ -201,7 +233,7 @@ describe("generateIcal", () => {
         date: new Date(Date.UTC(2025, 7, 3, 22, 0)),
         time: undefined,
       });
-      const output = generateIcal([match]);
+      const output = renderIcal([match]);
 
       expect(output).toContain("DTSTART;TZID=Europe/Brussels:20250803T220000");
     });
@@ -216,23 +248,41 @@ describe("generateIcal", () => {
       id: 2,
       date: new Date("2025-04-01T14:00:00Z"),
     });
-    const output = generateIcal([later, earlier]);
+    const output = renderIcal([later, earlier]);
 
     const idx1 = output.indexOf("kcvv-match-1@kcvvelewijt.be");
     const idx2 = output.indexOf("kcvv-match-2@kcvvelewijt.be");
     expect(idx1).toBeLessThan(idx2);
   });
+
+  /**
+   * `match.time` is unvalidated free text upstream — PSD is known-messy — so
+   * a malformed value must be dropped, not thrown, the same way an
+   * unparseable event `dateStart` is (see the events-flag describe below).
+   * Pre-refactor this same input threw inside `generateIcal` and 500'd the
+   * whole feed for every subscriber over one bad fixture; this pins the fix.
+   */
+  it("drops a match with an unparseable time instead of throwing", () => {
+    const bad = makeMatch({ id: 999, time: "aa:bb" });
+    const good = makeMatch({ id: 1000, time: "15:00" });
+
+    expect(() => renderIcal([bad, good])).not.toThrow();
+
+    const output = renderIcal([bad, good]);
+    expect(output).not.toContain("kcvv-match-999@kcvvelewijt.be");
+    expect(output).toContain("kcvv-match-1000@kcvvelewijt.be");
+  });
 });
 
 describe("a pitch-reservation placeholder", () => {
   it("never renders a home===away SUMMARY", () => {
-    const output = generateIcal([makePlaceholderMatch()]);
+    const output = renderIcal([makePlaceholderMatch()]);
 
     expect(output).not.toContain("SUMMARY:KCVV Elewijt - KCVV Elewijt");
   });
 
   it("uses the reservation subject as the SUMMARY, mirroring formatMatchTitle", () => {
-    const output = generateIcal([
+    const output = renderIcal([
       makePlaceholderMatch({ competition: "Jeugdtornooi" }),
     ]);
 
@@ -240,7 +290,7 @@ describe("a pitch-reservation placeholder", () => {
   });
 
   it("falls back to the reservation word when no competition is set", () => {
-    const output = generateIcal([
+    const output = renderIcal([
       makePlaceholderMatch({ competition: undefined }),
     ]);
 
@@ -250,16 +300,12 @@ describe("a pitch-reservation placeholder", () => {
   it("is treated as a home fixture for side filtering — it is the club's own booking, and both sides are literally the same club name", () => {
     const match = makePlaceholderMatch();
 
-    expect(generateIcal([match], { side: "home" })).toContain("BEGIN:VEVENT");
-    expect(generateIcal([match], { side: "away" })).not.toContain(
-      "BEGIN:VEVENT",
-    );
+    expect(renderIcal([match], { side: "home" })).toContain("BEGIN:VEVENT");
+    expect(renderIcal([match], { side: "away" })).not.toContain("BEGIN:VEVENT");
   });
 
   it("folds a cancelled status into the SUMMARY, the way every other reservation renderer does", () => {
-    const output = generateIcal([
-      makePlaceholderMatch({ status: "postponed" }),
-    ]);
+    const output = renderIcal([makePlaceholderMatch({ status: "postponed" })]);
 
     expect(output).toContain(
       "SUMMARY:Jeugdtornooi — KCVV Elewijt — Uitgesteld",
@@ -267,13 +313,13 @@ describe("a pitch-reservation placeholder", () => {
   });
 
   it("omits LOCATION when no venue is set — a reservation can be an external tournament, not necessarily at the home venue", () => {
-    const output = generateIcal([makePlaceholderMatch({ venue: undefined })]);
+    const output = renderIcal([makePlaceholderMatch({ venue: undefined })]);
 
     expect(output).not.toMatch(/^LOCATION:/m);
   });
 
   it("uses the given venue for LOCATION when one is set", () => {
-    const output = generateIcal([
+    const output = renderIcal([
       makePlaceholderMatch({ venue: "Sportcomplex De Nekker" }),
     ]);
 
@@ -326,13 +372,13 @@ function makeEventItem(
 
 describe("generateIcal — club activities (events flag)", () => {
   it("emits no event VEVENT when the events option is omitted (flag off)", () => {
-    const output = generateIcal([makeMatch()]);
+    const output = renderIcal([makeMatch()]);
 
     expect(output).not.toContain("kcvv-event-");
   });
 
   it("emits an event VEVENT when events are passed (flag on)", () => {
-    const output = generateIcal([makeMatch()], {
+    const output = renderIcal([makeMatch()], {
       includeEvents: true,
       events: [makeEventItem()],
     });
@@ -342,7 +388,7 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("carries the event's LOCATION when present", () => {
-    const output = generateIcal([], {
+    const output = renderIcal([], {
       includeEvents: true,
       events: [makeEventItem({ location: "Sportpark Driesput, Elewijt" })],
     });
@@ -351,7 +397,7 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("omits LOCATION when the event has none", () => {
-    const output = generateIcal([], {
+    const output = renderIcal([], {
       includeEvents: true,
       events: [makeEventItem({ location: null })],
     });
@@ -360,7 +406,7 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("points URL at the item's own detail page, using the repository-resolved href", () => {
-    const output = generateIcal([], {
+    const output = renderIcal([], {
       includeEvents: true,
       events: [
         makeEventItem({
@@ -376,7 +422,7 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("points URL at /nieuws/[slug] for an event-article-sourced item", () => {
-    const output = generateIcal([], {
+    const output = renderIcal([], {
       includeEvents: true,
       events: [
         makeEventItem({
@@ -392,7 +438,7 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("emits a Brussels-midnight event as all-day, matching buildEventIcs's rule", () => {
-    const output = generateIcal([], {
+    const output = renderIcal([], {
       includeEvents: true,
       events: [
         makeEventItem({
@@ -407,7 +453,7 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("spans a multi-day all-day event to the day after its last day, matching buildEventIcs's rule", () => {
-    const output = generateIcal([], {
+    const output = renderIcal([], {
       includeEvents: true,
       events: [
         makeEventItem({
@@ -422,7 +468,7 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("emits a timed event with a real DTSTART and no fabricated DTEND when there is no end", () => {
-    const output = generateIcal([], {
+    const output = renderIcal([], {
       includeEvents: true,
       events: [
         makeEventItem({
@@ -437,7 +483,7 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("keeps a timed event's own DTEND when the item has an end", () => {
-    const output = generateIcal([], {
+    const output = renderIcal([], {
       includeEvents: true,
       events: [
         makeEventItem({
@@ -451,7 +497,7 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("gives an event UID a distinct prefix from a match UID so the two can never collide", () => {
-    const output = generateIcal([makeMatch({ id: 1 })], {
+    const output = renderIcal([makeMatch({ id: 1 })], {
       includeEvents: true,
       events: [makeEventItem({ id: "1" })],
     });
@@ -465,13 +511,13 @@ describe("generateIcal — club activities (events flag)", () => {
     const goodItem = makeEventItem({ id: "good" });
 
     expect(() =>
-      generateIcal([makeMatch()], {
+      renderIcal([makeMatch()], {
         includeEvents: true,
         events: [badItem, goodItem],
       }),
     ).not.toThrow();
 
-    const output = generateIcal([makeMatch()], {
+    const output = renderIcal([makeMatch()], {
       includeEvents: true,
       events: [badItem, goodItem],
     });
@@ -481,7 +527,7 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("drops an event's DTEND rather than throwing when dateEnd is unparseable, keeping the item as a timed event with no fabricated end", () => {
-    const output = generateIcal([], {
+    const output = renderIcal([], {
       includeEvents: true,
       events: [
         makeEventItem({
@@ -496,8 +542,8 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("describes the feed honestly (NAME / X-WR-CALDESC) when activities are included", () => {
-    const withoutEvents = generateIcal([makeMatch()]);
-    const withEvents = generateIcal([makeMatch()], {
+    const withoutEvents = renderIcal([makeMatch()]);
+    const withEvents = renderIcal([makeMatch()], {
       includeEvents: true,
       events: [makeEventItem()],
     });
@@ -513,12 +559,30 @@ describe("generateIcal — club activities (events flag)", () => {
   });
 
   it("is driven by includeEvents, not by a nonempty events array — passing events without the flag keeps the matches-only naming", () => {
-    const output = generateIcal([makeMatch()], {
+    const output = renderIcal([makeMatch()], {
       events: [makeEventItem()],
     });
 
     expect(output).toContain("X-WR-CALNAME:KCVV Elewijt — Wedstrijden\r");
     expect(output).not.toContain("Activiteiten");
+  });
+});
+
+/**
+ * `buildIcalFeed` itself — not through `renderIcal`, which reproduces
+ * `route.ts`'s own "only fetch events when the flag is on" gate. This pins
+ * that `buildIcalFeed` has no *second* gate of its own: it maps and includes
+ * whatever `events` it is given, regardless of `variant`. The route can
+ * never exercise the `variant === "matches"` + nonempty-`events` combination
+ * (it always passes `[]` when the flag is off), but a future caller —
+ * #2705's `buildWebcalUrl` toggle is the named one — must be able to hand
+ * `buildIcalFeed` both without either silently discarding the other.
+ */
+describe("buildIcalFeed — events are never re-gated on variant", () => {
+  it("includes events even when variant is matches-only — the caller decides what to pass in", () => {
+    const output = buildIcalFeed([], [makeEventItem()], "matches");
+
+    expect(output).toContain("kcvv-event-event-1@kcvvelewijt.be");
   });
 });
 
@@ -536,7 +600,7 @@ describe("generateIcal and buildEventIcs agree on the all-day classification", (
       dateEnd: null,
     });
 
-    const feedOutput = generateIcal([], {
+    const feedOutput = renderIcal([], {
       includeEvents: true,
       events: [item],
     });
@@ -560,7 +624,7 @@ describe("generateIcal and buildEventIcs agree on the all-day classification", (
       dateEnd: null,
     });
 
-    const feedOutput = generateIcal([], {
+    const feedOutput = renderIcal([], {
       includeEvents: true,
       events: [item],
     });
@@ -594,7 +658,7 @@ describe("generateIcal and buildEventIcs agree on the all-day classification", (
       dateEnd: "2026-09-15T22:00:00.000Z", // 2026-09-16T00:00 Brussels
     });
 
-    const feedOutput = generateIcal([], {
+    const feedOutput = renderIcal([], {
       includeEvents: true,
       events: [item],
     });

@@ -36,7 +36,7 @@ export interface EventDateRange {
  * The event domain's one all-day classification, shared by every surface
  * that renders an `.ics` VEVENT for an event/activity: the per-event "Zet in
  * agenda" download (`buildEventIcs`) and the subscribe feed's club-activity
- * VEVENTs (`generateIcal`'s `addEventVevent`). The two surfaces must agree on
+ * VEVENTs (`ical.ts`'s `eventToEntry`). The two surfaces must agree on
  * which events render as all-day, or a subscriber sees the same event
  * described two different ways depending on which one they used — this used
  * to be a hand-copied predicate in both places, silently divergible.
