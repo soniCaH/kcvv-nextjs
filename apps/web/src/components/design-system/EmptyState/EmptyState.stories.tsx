@@ -56,11 +56,15 @@ export const SurfaceFilterEmpty: Story = {
     tier: "surface",
     heading: "Geen artikelen in Jeugd",
     reason: "filtered",
-    undo: { label: "Toon alles", onClick: fn() },
-    // Inert data-* payload for the global analytics listener (#2719) — no
-    // visual effect, so this does not touch the VR baseline.
-    analyticsSource: "nieuws",
-    analyticsFacet: "Jeugd",
+    // analyticsSource/analyticsFacet: an inert data-* payload for the
+    // global analytics listener (#2719) — no visual effect, so this does
+    // not touch the VR baseline.
+    undo: {
+      label: "Toon alles",
+      onClick: fn(),
+      analyticsSource: "nieuws",
+      analyticsFacet: "Jeugd",
+    },
     children: "Er zijn geen artikelen in deze categorie.",
   },
 };

@@ -2,6 +2,47 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { EmptyState } from "./EmptyState";
+import type {
+  EmptyStateSurfaceFilteredProps,
+  EmptyStateSurfacePendingProps,
+} from "./EmptyState";
+
+// Type-level assertions (#2719) — TypeScript, not vitest, is what's under
+// test here. `@ts-expect-error` fails the *type check* if the flagged line
+// stops being an error (i.e. if `undo`'s analytics fields ever become
+// optional again, or the pending variant grows an `undo` field), which is
+// what makes analytics wiring a compile error at the call site instead of a
+// convention a lint/regex guard has to police. Bare const declarations, not
+// `render()` calls — no runtime behavior is under test.
+const _missingAnalyticsSource: EmptyStateSurfaceFilteredProps = {
+  tier: "surface",
+  heading: "Geen artikelen",
+  reason: "filtered",
+  children: "Body.",
+  // @ts-expect-error — reason="filtered" requires undo.analyticsSource
+  undo: { label: "Toon alles", onClick: () => {}, analyticsFacet: "Jeugd" },
+};
+const _missingAnalyticsFacet: EmptyStateSurfaceFilteredProps = {
+  tier: "surface",
+  heading: "Geen artikelen",
+  reason: "filtered",
+  children: "Body.",
+  // @ts-expect-error — reason="filtered" requires undo.analyticsFacet
+  undo: { label: "Toon alles", onClick: () => {}, analyticsSource: "nieuws" },
+};
+const _pendingWithUndo: EmptyStateSurfacePendingProps = {
+  tier: "surface",
+  heading: "Nog geen sponsors",
+  children: "Body.",
+  // @ts-expect-error — the pending (reason omitted) variant has no `undo`
+  // field at all, so it has nothing to attach analytics fields to
+  undo: {
+    label: "Toon alles",
+    onClick: () => {},
+    analyticsSource: "nieuws",
+    analyticsFacet: "Jeugd",
+  },
+};
 
 describe("EmptyState — tier: surface (Tier 1)", () => {
   it("renders the heading, at level 2 by default, with a terminal period", () => {
@@ -76,9 +117,12 @@ describe("EmptyState — tier: surface (Tier 1)", () => {
         tier="surface"
         heading="Geen artikelen in Jeugd"
         reason="filtered"
-        undo={{ label: "Toon alles", onClick }}
-        analyticsSource="nieuws"
-        analyticsFacet="Jeugd"
+        undo={{
+          label: "Toon alles",
+          onClick,
+          analyticsSource: "nieuws",
+          analyticsFacet: "Jeugd",
+        }}
       >
         Body.
       </EmptyState>,
@@ -87,51 +131,25 @@ describe("EmptyState — tier: surface (Tier 1)", () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it("always renders the data-empty-state-undo marker for reason='filtered' (#2691)", () => {
-    // Unconditional, structural on `reason`, not an opt-in flag — no prop
-    // can omit this marker. A single global listener (mounted once, near the
-    // root layout) delegates the click into `empty_state_undo` off it,
-    // mirroring how ErrorState renders `data-error-action` for
-    // <ErrorAnalytics>. As of #2719, the wiring is no longer merely
-    // structural-on-the-marker — `analyticsSource`/`analyticsFacet` are
-    // REQUIRED props on this variant (see the type-level test below), so a
-    // sixth filtered surface cannot compile without supplying the payload
-    // the global listener needs. The old guard in
-    // cross-page-consistency.test.ts (a regex-on-source check that a host
-    // mounted `<EmptyStateUndoAnalytics>`) is superseded by this and has
-    // been deleted.
-    render(
-      <EmptyState
-        tier="surface"
-        heading="Geen artikelen in Jeugd"
-        reason="filtered"
-        undo={{ label: "Toon alles", onClick: vi.fn() }}
-        analyticsSource="nieuws"
-        analyticsFacet="Jeugd"
-      >
-        Body.
-      </EmptyState>,
-    );
-    expect(screen.getByRole("button", { name: "Toon alles" })).toHaveAttribute(
-      "data-empty-state-undo",
-      "undo",
-    );
-  });
-
-  it("renders analyticsSource/analyticsFacet as inert data-* attributes on the undo button (#2719)", () => {
+  it("renders undo.analyticsSource/analyticsFacet as inert data-* attributes on the undo button (#2719)", () => {
     // Mirrors ErrorState's `data-error-action={action.analyticsAction}`
-    // (ErrorState.tsx:92) exactly: a plain string prop rendered as a data-*
+    // (ErrorState.tsx:92): a plain string field rendered as a data-*
     // attribute. `<EmptyState>` imports nothing from `@/components/analytics`
-    // — the global listener reads these attributes, this component never
-    // calls `trackEvent` itself.
+    // at runtime — the global listener (`EmptyStateUndoTracker`) reads these
+    // attributes off a click target; this component never calls `trackEvent`
+    // itself. See the type-level assertions above this file's `describe` for
+    // the compile-time half of the guarantee.
     render(
       <EmptyState
         tier="surface"
         heading="Geen artikelen in Jeugd"
         reason="filtered"
-        undo={{ label: "Toon alles", onClick: vi.fn() }}
-        analyticsSource="nieuws"
-        analyticsFacet="Jeugd"
+        undo={{
+          label: "Toon alles",
+          onClick: vi.fn(),
+          analyticsSource: "nieuws",
+          analyticsFacet: "Jeugd",
+        }}
       >
         Body.
       </EmptyState>,
@@ -139,54 +157,6 @@ describe("EmptyState — tier: surface (Tier 1)", () => {
     const button = screen.getByRole("button", { name: "Toon alles" });
     expect(button).toHaveAttribute("data-empty-state-undo-source", "nieuws");
     expect(button).toHaveAttribute("data-empty-state-undo-facet", "Jeugd");
-  });
-
-  it("requires analyticsSource/analyticsFacet for reason='filtered' and forbids them otherwise — compile-time (#2719)", () => {
-    // Type-level assertions, not runtime behavior: TypeScript, not vitest,
-    // is the thing under test here. `@ts-expect-error` fails the *type
-    // check* if the flagged line stops being an error — i.e. if the props
-    // ever become optional again — which is what makes analytics wiring a
-    // compile error at the call site instead of a convention a lint/regex
-    // guard has to police (the whole point of #2719).
-    render(
-      // @ts-expect-error — reason="filtered" requires analyticsSource
-      <EmptyState
-        tier="surface"
-        heading="Geen artikelen"
-        reason="filtered"
-        undo={{ label: "Toon alles", onClick: vi.fn() }}
-        analyticsFacet="Jeugd"
-      >
-        Body.
-      </EmptyState>,
-    );
-
-    render(
-      // @ts-expect-error — reason="filtered" requires analyticsFacet
-      <EmptyState
-        tier="surface"
-        heading="Geen artikelen"
-        reason="filtered"
-        undo={{ label: "Toon alles", onClick: vi.fn() }}
-        analyticsSource="nieuws"
-      >
-        Body.
-      </EmptyState>,
-    );
-
-    render(
-      // @ts-expect-error — the pending (reason omitted) variant has no
-      // analyticsSource/analyticsFacet prop at all
-      <EmptyState
-        tier="surface"
-        heading="Nog geen sponsors"
-        analyticsSource="nieuws"
-      >
-        Body.
-      </EmptyState>,
-    );
-
-    expect(true).toBe(true);
   });
 
   it("is not a live region by default", () => {

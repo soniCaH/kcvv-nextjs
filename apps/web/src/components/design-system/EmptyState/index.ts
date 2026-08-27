@@ -7,5 +7,4 @@ export {
   type EmptyStateSurfaceFilteredProps,
   type EmptyStateSlotProps,
   type EmptyStateAction,
-  type EmptyStateUndoSource,
 } from "./EmptyState";

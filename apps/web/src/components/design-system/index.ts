@@ -133,7 +133,6 @@ export type {
   EmptyStateSurfaceFilteredProps,
   EmptyStateSlotProps,
   EmptyStateAction,
-  EmptyStateUndoSource,
 } from "./EmptyState";
 
 // JerseyIllustration
