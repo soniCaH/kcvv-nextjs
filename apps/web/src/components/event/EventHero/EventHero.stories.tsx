@@ -47,6 +47,7 @@ const renderEventHero = ({
       ctas={
         <EventDetailCtas
           eventSlug={slug}
+          eventId={`story-${slug}`}
           eventTitle={heroArgs.title}
           dateStart={heroArgs.dateStart}
           dateEnd={heroArgs.dateEnd}

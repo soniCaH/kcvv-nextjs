@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EventDetailCtas } from "./EventDetailCtas";
+import { buildEventUid } from "@/lib/utils/event-uid";
 
 const trackEventMock = vi.fn();
 vi.mock("@/lib/analytics/track-event", () => ({
@@ -11,6 +12,7 @@ vi.mock("@/lib/analytics/track-event", () => ({
 
 const baseProps = {
   eventSlug: "mosselfeest",
+  eventId: "event-doc-id-123",
   eventTitle: "Mosselfeest 2026",
   dateStart: "2026-09-12T16:00:00Z",
   dateEnd: "2026-09-12T20:00:00Z",
@@ -116,5 +118,31 @@ describe("EventDetailCtas", () => {
       event_slug: "mosselfeest",
       cta: "agenda",
     });
+  });
+
+  // #2716: the per-event download and the subscribe feed (`ical.ts`'s
+  // `eventToEntry`) must mint the same UID for the same activity — both
+  // surfaces call the one shared `buildEventUid` (`event-uid.ts`), so this
+  // pins the download's UID against that shared function rather than a
+  // second, hand-copied literal.
+  it("mints the .ics UID via the shared buildEventUid(eventId) scheme", async () => {
+    const user = userEvent.setup();
+    let capturedIcs: string | undefined;
+    globalThis.URL.createObjectURL = vi.fn((blob: Blob) => {
+      void blob.text().then((text) => {
+        capturedIcs = text;
+      });
+      return "blob:mock";
+    });
+
+    render(<EventDetailCtas {...baseProps} />);
+    await user.click(screen.getByRole("button", { name: /Zet in agenda/i }));
+    // Flush the microtask queued by Blob#text() above.
+    await Promise.resolve();
+
+    expect(capturedIcs).toContain(`UID:${buildEventUid(baseProps.eventId)}`);
+    // The slug never appears bare — the pre-#2716 defect minted
+    // `${eventSlug}@kcvvelewijt.be` with no namespace prefix at all.
+    expect(capturedIcs).not.toContain(`UID:${baseProps.eventSlug}@`);
   });
 });

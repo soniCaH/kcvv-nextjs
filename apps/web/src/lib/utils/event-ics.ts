@@ -2,7 +2,13 @@ import { DateTime } from "luxon";
 import { resolveEventDateRange } from "./event-datetime";
 
 export interface EventIcsInput {
-  /** Stable iCal UID — e.g. `${slug}@kcvvelewijt.be`. */
+  /**
+   * Stable iCal UID — e.g. `kcvv-event-<id>@kcvvelewijt.be`, from the shared
+   * `buildEventUid` (`event-uid.ts`). Caller-supplied rather than derived
+   * here: this module has no opinion of its own on the scheme, so both `.ics`
+   * surfaces (this download and the subscribe feed's `ical.ts`) agree by
+   * construction on whatever the caller passes in (#2716).
+   */
   uid: string;
   title: string;
   /** ISO datetime of the event start (UTC, as stored in Sanity). */
