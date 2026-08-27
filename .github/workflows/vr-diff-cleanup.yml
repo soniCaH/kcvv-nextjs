@@ -11,11 +11,16 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Deliberately the built-in GITHUB_TOKEN, not the CI-bot App: deleting a
+      # branch does not need to trigger any workflow, and `permissions:` above
+      # already grants it. Nothing here can rot when a bot identity changes —
+      # which is exactly how this job broke on 2026-08-27, when the old
+      # `kcvv-vr-bot` machine account was suspended and every merge went red.
       - name: Delete orphan branch
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
-          TOKEN: ${{ secrets.KCVV_VR_BOT_TOKEN }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH="vr-diffs/pr-${PR_NUMBER}"
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -23,10 +28,14 @@ jobs:
             -H "Authorization: token ${TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${REPO}/git/refs/heads/${BRANCH}")
-          # 204 = deleted; 422 = ref not found (PR had no VR failures) — both are fine
-          if [ "$HTTP_STATUS" = "204" ] || [ "$HTTP_STATUS" = "422" ]; then
-            echo "Branch cleanup result: HTTP ${HTTP_STATUS} (OK)"
-          else
-            echo "::error::Unexpected HTTP ${HTTP_STATUS} while deleting ${BRANCH}"
-            exit 1
-          fi
+          # 204 = deleted. 422 and 404 both mean the ref is not there (the PR had
+          # no VR failures, so no orphan branch was ever pushed) — all fine.
+          case "$HTTP_STATUS" in
+            204 | 404 | 422)
+              echo "Branch cleanup result: HTTP ${HTTP_STATUS} (OK)"
+              ;;
+            *)
+              echo "::error::Unexpected HTTP ${HTTP_STATUS} while deleting ${BRANCH}"
+              exit 1
+              ;;
+          esac

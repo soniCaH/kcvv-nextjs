@@ -37,10 +37,26 @@ jobs:
     timeout-minutes: 30
 
     steps:
+      # Renovate runs as the `KCVV Elewijt CI Bot` GitHub App, not as a machine
+      # account with a PAT. The token below is minted per run and expires in an
+      # hour, so nothing long-lived sits in a secret, and an App cannot be
+      # suspended the way the old `kcvv-vr-bot` user was on 2026-08-27.
+      - name: Mint an installation token
+        id: app-token
+        uses: actions/create-github-app-token@v3.2.0
+        with:
+          app-id: ${{ vars.KCVV_APP_ID }}
+          private-key: ${{ secrets.KCVV_APP_PRIVATE_KEY }}
+
       - uses: renovatebot/github-action@e09d604f8f803bb527bd8321ed5be06c460b8682 # v46.2.2
         with:
-          token: ${{ secrets.RENOVATE_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
         env:
           RENOVATE_PLATFORM: github
           RENOVATE_REPOSITORIES: ${{ github.repository }}
+          # An installation token has no user behind it, so Renovate cannot
+          # discover who it is committing as — both must be stated explicitly
+          # or it refuses to open a PR.
+          RENOVATE_USERNAME: kcvv-elewijt-ci-bot[bot]
+          RENOVATE_GIT_AUTHOR: kcvv-elewijt-ci-bot[bot] <321706059+kcvv-elewijt-ci-bot[bot]@users.noreply.github.com>
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}

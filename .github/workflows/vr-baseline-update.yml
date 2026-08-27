@@ -2,14 +2,17 @@ name: VR Baseline Update
 
 # Triggered by a maintainer commenting `@kcvv-bot update-vr-baselines` on a PR.
 # Re-runs the VR suite with --update-snapshots, commits the regenerated PNGs to
-# the PR branch under the kcvv-vr-bot identity, and pushes — which re-triggers
+# the PR branch under the CI-bot identity, and pushes — which re-triggers
 # the `visual-regression` job to verify the new baselines pass.
 #
-# Bot identity (Phase 1 decision per PRD §15):
-#   PAT-owned bot user `kcvv-vr-bot` with token in secret `KCVV_VR_BOT_TOKEN`.
-#   The token needs `contents: write` scope on this repo (classic PAT or
-#   fine-grained PAT with repository contents read+write). A GitHub App is the
-#   cleaner long-term choice and may replace this in a follow-up.
+# Bot identity: the `KCVV Elewijt CI Bot` GitHub App (app id in the repo
+#   variable `KCVV_APP_ID`, key in the secret `KCVV_APP_PRIVATE_KEY`). Each run
+#   mints its own installation token, valid for an hour. It replaced the
+#   PAT-owned machine account `kcvv-vr-bot`, which GitHub suspended on
+#   2026-08-27 and took Renovate and every VR job down with it.
+#   An App token is also what makes the push below re-trigger CI: the built-in
+#   GITHUB_TOKEN deliberately does not, which would leave the new baselines
+#   unverified.
 #
 # Anti-pattern: this workflow MUST NOT use `[skip ci]` — the visual-regression
 # job needs to run on the resulting commit to verify the new baselines.
@@ -28,7 +31,7 @@ jobs:
     if: |
       github.event.issue.pull_request &&
       contains(github.event.comment.body, '@kcvv-bot update-vr-baselines') &&
-      github.event.comment.user.login != 'kcvv-vr-bot'
+      github.event.comment.user.login != 'kcvv-elewijt-ci-bot[bot]'
     runs-on: ubuntu-latest
     # Cheap gate (one API call + one reaction). 5 min is generous; anything
     # longer almost certainly means GitHub API itself is degraded.
@@ -101,6 +104,13 @@ jobs:
             core.setOutput('repo', pr.data.head.repo.full_name);
             core.setOutput('sha', pr.data.head.sha);
 
+      - name: Mint an installation token
+        id: app-token
+        uses: actions/create-github-app-token@v3.2.0
+        with:
+          app-id: ${{ vars.KCVV_APP_ID }}
+          private-key: ${{ secrets.KCVV_APP_PRIVATE_KEY }}
+
       - name: Checkout PR branch (pinned to resolved SHA)
         uses: actions/checkout@v7.0.1
         with:
@@ -112,7 +122,7 @@ jobs:
           # push time (git push will fail non-fast-forward if the branch raced
           # ahead, which is the safe outcome).
           ref: ${{ steps.pr.outputs.sha }}
-          token: ${{ secrets.KCVV_VR_BOT_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
       - name: Install pnpm
@@ -141,8 +151,8 @@ jobs:
       - name: Commit and push baselines
         working-directory: ${{ github.workspace }}
         env:
-          BOT_USER: kcvv-vr-bot
-          BOT_EMAIL: kcvv-vr-bot@users.noreply.github.com
+          BOT_USER: kcvv-elewijt-ci-bot[bot]
+          BOT_EMAIL: 321706059+kcvv-elewijt-ci-bot[bot]@users.noreply.github.com
         run: |
           # actions/checkout writes safe.directory under a temp HOME that is
           # discarded after the step — re-register so git accepts the workspace.
