@@ -355,15 +355,22 @@ describe("CalendarWidget", () => {
       expect(mockPush).toHaveBeenCalledWith("/kalender", expect.anything());
     });
 
-    it("fires empty_state_undo (not just kalender_filter) when 'Toon alles' rescues a filtered-to-zero surface (#2691)", async () => {
+    it("marks 'Toon alles' with the kalender source + active facet for the global analytics listener (#2719), and its own setType still fires kalender_filter", async () => {
+      // The click-to-`empty_state_undo` wiring is a global listener's job
+      // now (`EmptyStateUndoTracker`, tested on its own) — this host's job
+      // is only to supply the `analyticsSource`/`analyticsFacet` structural
+      // props, rendered as inert `data-*` attributes on the undo button.
       const user = userEvent.setup();
       mockSearchParams = new URLSearchParams("type=Supportersactiviteit");
       render(<CalendarWidget {...defaultProps} />);
-      await user.click(screen.getByRole("button", { name: "Toon alles" }));
-      expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
-        source: "kalender",
-        filter_type: "supportersactiviteit",
-      });
+      const undo = screen.getByRole("button", { name: "Toon alles" });
+      expect(undo).toHaveAttribute("data-empty-state-undo-source", "kalender");
+      expect(undo).toHaveAttribute(
+        "data-empty-state-undo-facet",
+        "Supportersactiviteit",
+      );
+
+      await user.click(undo);
       // The undo's own setType("all") still fires its ordinary
       // kalender_filter — that payload must not regress.
       expect(trackEvent).toHaveBeenCalledWith("kalender_filter", {
