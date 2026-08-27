@@ -6,6 +6,11 @@
 #
 # Behaviour is unchanged: renovate.json is still the single source of truth and is
 # picked up automatically. This only supplies a runner with enough memory.
+#
+# To work off a backlog outside the Monday window, dispatch this workflow with
+# `ignoreSchedule: true`. Rate limits are untouched, so it opens at most 3
+# concurrent PRs (renovate.json `prConcurrentLimit`) and 2 per hour (Renovate's
+# default `prHourlyLimit`) — re-dispatch to take the next batch.
 name: Renovate
 
 on:
@@ -21,6 +26,10 @@ on:
         type: choice
         options: [info, debug]
         default: info
+      ignoreSchedule:
+        description: "Ignore the Monday-only schedule and open PRs now"
+        type: boolean
+        default: false
 
 concurrency:
   group: renovate
@@ -45,7 +54,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3.2.0
         with:
-          app-id: ${{ vars.KCVV_APP_ID }}
+          client-id: ${{ vars.KCVV_APP_CLIENT_ID }}
           private-key: ${{ secrets.KCVV_APP_PRIVATE_KEY }}
 
       - uses: renovatebot/github-action@e09d604f8f803bb527bd8321ed5be06c460b8682 # v46.2.2
@@ -57,6 +66,12 @@ jobs:
           # An installation token has no user behind it, so Renovate cannot
           # discover who it is committing as — both must be stated explicitly
           # or it refuses to open a PR.
+          # `force` is the only override renovate.json's own `schedule` loses
+          # to — a plain RENOVATE_SCHEDULE is outranked by the repo config.
+          # It clears ONLY the top-level schedule: `prConcurrentLimit: 3` from
+          # renovate.json and the default `prHourlyLimit: 2` both still apply,
+          # so working off a backlog stays a trickle rather than a flood.
+          RENOVATE_FORCE: ${{ inputs.ignoreSchedule && '{"schedule":null}' || '{}' }}
           RENOVATE_USERNAME: kcvv-elewijt-ci-bot[bot]
           RENOVATE_GIT_AUTHOR: kcvv-elewijt-ci-bot[bot] <321706059+kcvv-elewijt-ci-bot[bot]@users.noreply.github.com>
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
