@@ -6,8 +6,8 @@
  *
  * - **Tier "surface"** — the whole surface is empty (`/sponsors`, `/galerij`,
  *   `/zoeken`, a filtered `/nieuws`). The `SearchNoResultsCard` register: a
- *   cream-soft paper card, a taped artefact (a defaulting slot — pass nothing
- *   and it ships the jersey), a display heading, a body line, and — only when
+ *   cream-soft paper card taped at its top border, an artefact (a defaulting
+ *   slot — pass nothing and it ships the jersey), a display heading, a body line, and — only when
  *   `reason: "filtered"` — the mandatory undo (#2427 rule 4). That case is
  *   structural, not conventional: `undo` is a required field on that variant,
  *   the same way tier "slot" has no `heading`/`artefact` prop at all rather
@@ -30,9 +30,13 @@
  *
  * The artefact is never `<TapedCard>` — that primitive has no frameless
  * (`shadow: "none"`) or transparent-`bg` option today, and this slot needs
- * both (a bare `<JerseyShirt>` beside a hand-placed `<TapeStrip>`, not a
- * second nested card). Add those options to `<TapedCard>` before reaching
- * for a third way to tape something.
+ * both (a bare `<JerseyShirt>`, not a second nested card). Add those options
+ * to `<TapedCard>` before reaching for a third way to frame an artefact.
+ *
+ * The tier-"surface" frame itself is `<TapedCard>` open-coded, for one
+ * reason: `<TapedCard>` forwards `data-*` but not `role`, and `live` here
+ * needs `role="status"`. It still anchors its tape the way `<TapedCard>`
+ * does — one strip, direct child of the frame, on the frame's own border.
  *
  * Sits beside `<ErrorState>` — same job at a different severity, same
  * folder. `EmptyStateAction` shares its base shape with `ErrorStateAction`
@@ -101,8 +105,8 @@ interface EmptyStateSurfaceCommonProps extends EmptyStateSharedProps {
    *  used by `SearchNoResultsCard` and `HulpFinder`). */
   children: ReactNode;
   /**
-   * The taped artefact. A **defaulting slot**, not a hardcoded image —
-   * omit it and the primitive ships a taped `<JerseyShirt>`. A surface with
+   * The artefact beside the copy. A **defaulting slot**, not a hardcoded
+   * image — omit it and the primitive ships a `<JerseyShirt>`. A surface with
    * its own obvious mark (a crest, a ball) can pass one without touching
    * this component.
    */
@@ -183,18 +187,24 @@ function SurfaceEmptyState(props: EmptyStateSurfaceProps) {
       role={live ? "status" : undefined}
       className={cn(
         SURFACE_CLASS[surface],
-        "text-center sm:text-left",
+        "relative text-center sm:text-left",
         className,
       )}
     >
+      {/* Tape straddles the card's own top border, so it must be a direct
+          child of the framed `<section>` — the same anchoring `<TapedCard>`
+          uses. Parented to the artefact wrapper it anchored to an invisible
+          inner box and floated in open cream (#2677). `surface="bare"` draws
+          no border, so there is no edge to straddle and no tape. */}
+      {surface !== "bare" && <TapeStrip color="warm" length="md" />}
+
       <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-7">
-        {/* Taped artefact — a defaulting slot, not a hardcoded image. Ordered
+        {/* Artefact — a defaulting slot, not a hardcoded image. Ordered
             AFTER the text on mobile (rule 4: the undo belongs "right where
             the results would have been" — a decorative artefact pushed below
             the fold costs nothing; the heading/body/action row pushed below
             it does). Row order on `sm+` is unaffected. */}
-        <div className="relative order-2 inline-block flex-shrink-0 sm:order-1">
-          <TapeStrip color="warm" length="md" />
+        <div className="order-2 inline-block flex-shrink-0 sm:order-1">
           {artefact ?? (
             <JerseyShirt className="h-20 w-20 -rotate-3 sm:h-28 sm:w-28" />
           )}
