@@ -242,6 +242,14 @@ jobs:
         with:
           client-id: ${{ vars.KCVV_APP_CLIENT_ID }}
           private-key: ${{ secrets.KCVV_APP_PRIVATE_KEY }}
+          # Scoped below what the App grants. `contents` pushes the orphan
+          # branch; `pull-requests` + `issues` cover the sticky comment (a PR
+          # comment is an issue comment, and which permission the REST call
+          # needs depends on the endpoint, so both are granted). Notably NOT
+          # `workflows` — nothing here rewrites .github/workflows.
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
 
       - name: Checkout code
         uses: actions/checkout@v7.0.1

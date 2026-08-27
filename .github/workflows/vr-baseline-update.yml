@@ -5,8 +5,8 @@ name: VR Baseline Update
 # the PR branch under the CI-bot identity, and pushes — which re-triggers
 # the `visual-regression` job to verify the new baselines pass.
 #
-# Bot identity: the `KCVV Elewijt CI Bot` GitHub App (app id in the repo
-#   variable `KCVV_APP_ID`, key in the secret `KCVV_APP_PRIVATE_KEY`). Each run
+# Bot identity: the `KCVV Elewijt CI Bot` GitHub App (client id in the repo
+#   variable `KCVV_APP_CLIENT_ID`, key in the secret `KCVV_APP_PRIVATE_KEY`). Each run
 #   mints its own installation token, valid for an hour. It replaced the
 #   PAT-owned machine account `kcvv-vr-bot`, which GitHub suspended on
 #   2026-08-27 and took Renovate and every VR job down with it.
@@ -110,6 +110,10 @@ jobs:
         with:
           client-id: ${{ vars.KCVV_APP_CLIENT_ID }}
           private-key: ${{ secrets.KCVV_APP_PRIVATE_KEY }}
+          # This job only commits baseline PNGs to the PR branch. The comment
+          # reactions below run on `github.token`, not this one, so `contents`
+          # is the whole requirement.
+          permission-contents: write
 
       - name: Checkout PR branch (pinned to resolved SHA)
         uses: actions/checkout@v7.0.1

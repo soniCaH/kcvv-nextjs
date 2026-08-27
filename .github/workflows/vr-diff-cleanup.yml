@@ -8,6 +8,14 @@ jobs:
   cleanup:
     name: Delete vr-diffs orphan branch
     runs-on: ubuntu-latest
+    # Mirrors the condition on ci.yml's `vr-diff-comment`, which is the only
+    # thing that ever pushes a `vr-diffs/pr-N` branch. On a fork or Dependabot
+    # PR no branch is ever created, AND the `pull_request` GITHUB_TOKEN is
+    # downgraded to read-only there — so without this gate the job would try a
+    # DELETE it cannot make, for a ref that does not exist, and go red on close.
+    # Skipping is the fix rather than `pull_request_target`, which would hand a
+    # write token to a fork-PR context for no gain.
+    if: github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]'
     permissions:
       contents: write
     steps:
