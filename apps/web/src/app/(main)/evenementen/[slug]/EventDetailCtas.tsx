@@ -8,13 +8,7 @@ import { buildEventUid } from "@/lib/utils/event-uid";
 export interface EventDetailCtasProps {
   /** Slug of the event — non-PII, sent as `event_slug`; also the `.ics` filename. */
   eventSlug: string;
-  /**
-   * Sanity document id (or source article id) of the event — the `.ics`
-   * UID's stable key via `buildEventUid` (#2716), matching the subscribe
-   * feed's scheme for the same activity. Not the slug: a slug is
-   * Studio-editable, and keying on it would silently mint a new UID on
-   * rename, orphaning the old one in every subscriber's calendar.
-   */
+  /** Sanity document id of the event — the `.ics` UID's stable key via `buildEventUid` (#2716); see that module for why the id and not the slug. */
   eventId: string;
   eventTitle: string;
   /** ISO datetime of the event start. */

@@ -27,12 +27,20 @@ const suppressNavigation = (event: Event) => event.preventDefault();
 
 describe("EventDetailCtas", () => {
   let clickSpy: ReturnType<typeof vi.spyOn>;
+  // The Blob passed to createObjectURL by the most recent agenda click — set
+  // by the stub below so a test can inspect the actual .ics content without
+  // re-stubbing the global itself (which vi.restoreAllMocks() couldn't undo).
+  let lastIcsBlob: Blob | undefined;
 
   beforeEach(() => {
     trackEventMock.mockReset();
+    lastIcsBlob = undefined;
     document.addEventListener("click", suppressNavigation, true);
     // Stub blob-URL APIs (absent / navigation-triggering in the test DOM).
-    globalThis.URL.createObjectURL = vi.fn(() => "blob:mock");
+    globalThis.URL.createObjectURL = vi.fn((blob: Blob) => {
+      lastIcsBlob = blob;
+      return "blob:mock";
+    });
     globalThis.URL.revokeObjectURL = vi.fn();
     clickSpy = vi
       .spyOn(HTMLAnchorElement.prototype, "click")
@@ -120,29 +128,15 @@ describe("EventDetailCtas", () => {
     });
   });
 
-  // #2716: the per-event download and the subscribe feed (`ical.ts`'s
-  // `eventToEntry`) must mint the same UID for the same activity — both
-  // surfaces call the one shared `buildEventUid` (`event-uid.ts`), so this
-  // pins the download's UID against that shared function rather than a
-  // second, hand-copied literal.
   it("mints the .ics UID via the shared buildEventUid(eventId) scheme", async () => {
     const user = userEvent.setup();
-    let capturedIcs: string | undefined;
-    globalThis.URL.createObjectURL = vi.fn((blob: Blob) => {
-      void blob.text().then((text) => {
-        capturedIcs = text;
-      });
-      return "blob:mock";
-    });
-
     render(<EventDetailCtas {...baseProps} />);
     await user.click(screen.getByRole("button", { name: /Zet in agenda/i }));
-    // Flush the microtask queued by Blob#text() above.
-    await Promise.resolve();
 
-    expect(capturedIcs).toContain(`UID:${buildEventUid(baseProps.eventId)}`);
+    const ics = await lastIcsBlob!.text();
+    expect(ics).toContain(`UID:${buildEventUid(baseProps.eventId)}`);
     // The slug never appears bare — the pre-#2716 defect minted
     // `${eventSlug}@kcvvelewijt.be` with no namespace prefix at all.
-    expect(capturedIcs).not.toContain(`UID:${baseProps.eventSlug}@`);
+    expect(ics).not.toContain(`UID:${baseProps.eventSlug}@`);
   });
 });

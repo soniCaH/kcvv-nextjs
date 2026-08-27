@@ -583,7 +583,7 @@ describe("buildIcalFeed — events are never re-gated on variant", () => {
   it("includes events even when variant is matches-only — the caller decides what to pass in", () => {
     const output = buildIcalFeed([], [makeEventItem()], "matches");
 
-    expect(output).toContain("kcvv-event-event-1@kcvvelewijt.be");
+    expect(output).toContain(`UID:${buildEventUid("event-1")}`);
   });
 });
 
@@ -682,11 +682,11 @@ describe("generateIcal and buildEventIcs agree on the all-day classification", (
  * #2716: the subscribe feed and the per-event "Zet in agenda" download used
  * to mint different UIDs for the same activity — the feed's `kcvv-event-<id>`
  * scheme vs. the download's bare `<slug>@kcvvelewijt.be`, with no namespace
- * prefix at all. Both now call the one shared `buildEventUid` (`event-uid.ts`):
- * the feed via `eventToEntry` (internally), the download via its
- * `EventDetailCtas` call site. This pins the two surfaces against the *same*
- * id so a future hand-copied literal on either side fails a test instead of
- * silently diverging again.
+ * prefix at all. This pins the feed side (`eventToEntry`, exercised for real
+ * via `renderIcal`) against a `buildEventIcs` call reconstructed the same way
+ * `EventDetailCtas`'s call site builds it — a real regression on the feed
+ * side fails here; a literal re-inlined in `EventDetailCtas` itself is
+ * guarded separately, by `EventDetailCtas.test.tsx`.
  */
 describe("generateIcal and buildEventIcs agree on the event UID scheme", () => {
   it("both surfaces emit the same UID for the same event id", () => {
@@ -710,9 +710,5 @@ describe("generateIcal and buildEventIcs agree on the event UID scheme", () => {
     const expectedUid = buildEventUid("abc123");
     expect(feedOutput).toContain(`UID:${expectedUid}`);
     expect(downloadOutput).toContain(`UID:${expectedUid}`);
-  });
-
-  it("buildEventUid is pure — the same id always produces the same UID", () => {
-    expect(buildEventUid("abc123")).toBe(buildEventUid("abc123"));
   });
 });

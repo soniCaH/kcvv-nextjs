@@ -240,6 +240,9 @@ function matchToEntry(match: Match): TimedIcalEntry | undefined {
   if (!start.isValid) return undefined;
 
   return {
+    // `kcvv-match-` is the other half of the namespace disjointness
+    // `buildEventUid` (`event-uid.ts`) documents for `kcvv-event-` — kept
+    // as a local literal since matches have no shared-surface UID to unify.
     id: `kcvv-match-${match.id}@kcvvelewijt.be`,
     summary: buildSummary(match),
     start,
