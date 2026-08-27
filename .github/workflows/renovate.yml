@@ -8,9 +8,8 @@
 # picked up automatically. This only supplies a runner with enough memory.
 #
 # To work off a backlog outside the Monday window, dispatch this workflow with
-# `ignoreSchedule: true`. Rate limits are untouched, so it opens at most 3
-# concurrent PRs (renovate.json `prConcurrentLimit`) and 2 per hour (Renovate's
-# default `prHourlyLimit`) — re-dispatch to take the next batch.
+# `ignoreSchedule: yes`. It opens at most 3 concurrent PRs and 2 per hour, both
+# forced explicitly — re-dispatch to take the next batch.
 name: Renovate
 
 on:
@@ -26,10 +25,17 @@ on:
         type: choice
         options: [info, debug]
         default: info
+      # A `type: boolean` input is a real boolean from the UI checkbox but a
+      # STRING over the API (`gh workflow run -f x=false`), and every non-empty
+      # string is truthy in an Actions expression — so "off" silently ran as
+      # "on" and opened six PRs. A choice compared as a string cannot do that.
       ignoreSchedule:
         description: "Ignore the Monday-only schedule and open PRs now"
-        type: boolean
-        default: false
+        type: choice
+        # Quoted: unquoted `no`/`yes` are YAML booleans, which is the same class
+        # of type surprise this input was rewritten to avoid.
+        options: ["no", "yes"]
+        default: "no"
 
 concurrency:
   group: renovate
@@ -68,10 +74,11 @@ jobs:
           # or it refuses to open a PR.
           # `force` is the only override renovate.json's own `schedule` loses
           # to — a plain RENOVATE_SCHEDULE is outranked by the repo config.
-          # It clears ONLY the top-level schedule: `prConcurrentLimit: 3` from
-          # renovate.json and the default `prHourlyLimit: 2` both still apply,
-          # so working off a backlog stays a trickle rather than a flood.
-          RENOVATE_FORCE: ${{ inputs.ignoreSchedule && '{"schedule":null}' || '{}' }}
+          # The limits are restated inside the same `force` on purpose: the
+          # repo-level `prConcurrentLimit: 3` did NOT cap the first off-schedule
+          # run (six PRs in one pass, 2026-08-27), and `force` is the one level
+          # that is guaranteed to bind.
+          RENOVATE_FORCE: ${{ inputs.ignoreSchedule == 'yes' && '{"schedule":null,"prConcurrentLimit":3,"prHourlyLimit":2}' || '{}' }}
           RENOVATE_USERNAME: kcvv-elewijt-ci-bot[bot]
           RENOVATE_GIT_AUTHOR: kcvv-elewijt-ci-bot[bot] <321706059+kcvv-elewijt-ci-bot[bot]@users.noreply.github.com>
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
