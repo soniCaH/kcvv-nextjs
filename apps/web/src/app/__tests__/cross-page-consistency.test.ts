@@ -632,7 +632,27 @@ describe("rule 5 checks the routes it claims to (#2563)", () => {
 // mounted `<EmptyStateUndoAnalytics>`, needed only because wiring analytics
 // to a filtered `<EmptyState>`'s undo was a convention, not a compile-time
 // requirement. `analyticsSource`/`analyticsFacet` are now required props on
-// `EmptyStateSurfaceFilteredProps` (`EmptyState.tsx`) — a host that skips
-// them fails `tsgo --noEmit`, which supersedes this rule outright. Numbering
-// is left as a gap, not renumbered, per this file's own convention (rules
-// are referenced by issue number in comments elsewhere in the repo).
+// `EmptyStateAction` (`EmptyState.tsx`) — a host that skips them fails
+// `tsgo --noEmit`. Numbering is left as a gap, not renumbered, per this
+// file's own convention (rules are referenced by issue number in comments
+// elsewhere in the repo).
+
+// ---------------------------------------------------------------------------
+// Rule 7 (#2719) — the empty-state-undo global listener stays mounted
+// ---------------------------------------------------------------------------
+
+/**
+ * The type system guarantees a filtered `<EmptyState>` carries its analytics
+ * payload; it says nothing about whether anything ever reads it. Delete the
+ * `<EmptyStateUndoTracker />` line from the root layout and every one of
+ * rule 6's old five surfaces goes silent — lint, `tsgo`, and the component's
+ * own tests (which mount it directly) all stay green, because none of them
+ * exercise the layout. This is that missing half.
+ */
+describe("the empty-state-undo global listener stays mounted (#2719)", () => {
+  it("app/layout.tsx mounts <EmptyStateUndoTracker>", () => {
+    expect(/<EmptyStateUndoTracker\b/.test(code.get("app/layout.tsx")!)).toBe(
+      true,
+    );
+  });
+});
