@@ -1,4 +1,4 @@
-import {UploadIcon} from '@sanity/icons'
+import {UploadIcon} from '@sanity/icons/Upload'
 import {Button, Stack} from '@sanity/ui'
 import {useRef, type ChangeEvent, type JSX} from 'react'
 import {useFormBuilder, type ArrayOfObjectsInputProps} from 'sanity'

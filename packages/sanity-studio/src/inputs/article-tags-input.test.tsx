@@ -67,7 +67,7 @@ vi.mock('@sanity/ui', () => {
   return {Stack, Flex, Card, Text, Button, Autocomplete}
 })
 
-vi.mock('@sanity/icons', () => ({CloseIcon: () => null}))
+vi.mock('@sanity/icons/Close', () => ({CloseIcon: () => null}))
 
 import {ArticleTagsInput} from './article-tags-input'
 
