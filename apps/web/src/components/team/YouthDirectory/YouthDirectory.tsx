@@ -61,11 +61,13 @@ export function YouthDirectory({
             the group (#2602): 150px on the phone, 200px from `md` up — the
             component's only breakpoint. `auto-fill` counts tracks with the
             minimum, so a phone card is `(358 − 16) / 2 = 171px` at two
-            columns; any minimum above 171px drops a 390px phone to one
-            column, turning this sixteen-card directory from 8 rows
-            (~1750px) into 16 (~3900–5700px). Wendy is on a phone — raise this
-            number only after re-checking that arithmetic against the phone
-            width you're designing for. */}
+            columns on a 390px phone; any minimum above 171px drops that
+            phone to one column, turning this sixteen-card directory from 8
+            rows (~1750px) into 16 (~3900–5700px). 171px is the loosest gate,
+            not the binding one — narrower phones tip first: this repo's own
+            VR `mobile` viewport (375px) needs ≤163px, and a 360px phone
+            needs ≤156px. Wendy is on a phone — check a raise against the
+            narrowest width in that range, not just 390px. */}
           <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-4 gap-y-7 md:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
             {group.teams.map((team, index) => {
               // The caption is the team's one display name (#2630) — the same
