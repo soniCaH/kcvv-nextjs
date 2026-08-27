@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { GoogleTagManagerLoader } from "@/components/layout/GoogleTagManagerLoader";
+import { EmptyStateUndoTracker } from "@/components/analytics/EmptyStateUndoTracker";
 import { Effect } from "effect";
 import { runPromise } from "@/lib/effect/runtime";
 import {
@@ -118,6 +119,12 @@ export default async function RootLayout({
         </Script>
         <GoogleTagManagerLoader gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
         <ScrollToTop />
+        {/* One document-wide click listener (#2719) for every filtered
+            <EmptyState>'s undo, wherever it renders — this layout is shared
+            by both the (main) and (landing) route groups, so mounting it
+            once here already covers all five current filtered surfaces. See
+            EmptyStateUndoTracker.tsx for why. */}
+        <EmptyStateUndoTracker />
         <AccentStrip />
         <SiteHeader seniorTeams={seniorTeams} />
         {/* flex-1 column so a short page's footer sticks to the viewport
