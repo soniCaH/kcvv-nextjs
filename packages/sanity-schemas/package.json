@@ -7,6 +7,10 @@
     ".": {
       "import": "./src/index.ts",
       "types": "./src/index.ts"
+    },
+    "./validation/respondent-key": {
+      "import": "./src/validation/respondent-key.ts",
+      "types": "./src/validation/respondent-key.ts"
     }
   },
   "scripts": {

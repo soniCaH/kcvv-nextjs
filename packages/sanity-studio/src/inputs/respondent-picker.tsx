@@ -7,7 +7,12 @@ import {
   useClient,
   useFormValue,
 } from 'sanity'
-import {ALL_RESPONDENTS_KEY} from '@kcvv/sanity-schemas'
+// Imported from the package's `./validation/respondent-key` subpath, not the
+// `@kcvv/sanity-schemas` barrel — the barrel re-exports every schema module,
+// each of which calls `defineType(...)` at import time. This module has no
+// `sanity` runtime dependency at all, so pulling it in directly here keeps
+// this component (and any test that mocks `sanity`) from paying that cost.
+import {ALL_RESPONDENTS_KEY} from '@kcvv/sanity-schemas/validation/respondent-key'
 
 const API_VERSION = '2024-01-01'
 
