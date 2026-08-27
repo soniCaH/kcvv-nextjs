@@ -68,6 +68,12 @@ const eslintConfig = [
       next: {
         rootDir: __dirname,
       },
+      // ponytail: pinned instead of "detect" — eslint-plugin-react's version
+      // sniffer calls the `context.getFilename()` API that ESLint 10 removed.
+      // Bump this when React majors; drop it when the plugin supports v10.
+      react: {
+        version: "19.2",
+      },
     },
   },
   {
