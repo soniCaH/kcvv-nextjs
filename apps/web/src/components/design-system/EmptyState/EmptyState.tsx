@@ -11,7 +11,14 @@
  *   `reason: "filtered"` — the mandatory undo (#2427 rule 4). That case is
  *   structural, not conventional: `undo` is a required field on that variant,
  *   the same way tier "slot" has no `heading`/`artefact` prop at all rather
- *   than trusting every host to remember one.
+ *   than trusting every host to remember one. Since #2719, `analyticsSource`
+ *   and `analyticsFacet` are required alongside it for the same reason — a
+ *   filtered empty state that renders the undo but not its analytics wiring
+ *   no longer compiles. Both render as inert `data-*` attributes; this file
+ *   imports nothing from `@/components/analytics` (a design-system primitive
+ *   must not — #2691's review killed the inverse dependency), and a single
+ *   global click listener elsewhere reads the attributes and fires
+ *   `empty_state_undo`.
  * - **Tier "slot"** — one slot is empty inside an otherwise full page (a
  *   `MatchLineup` team column, a `MatchEvents` team list). A dashed
  *   `ink-muted` box that holds the slot's shape so the absence reads as a
@@ -59,6 +66,17 @@ import type { StateActionBase } from "../_internal/stateAction";
 export interface EmptyStateAction extends StateActionBase {
   onClick: () => void;
 }
+
+/**
+ * Which host's filtered `<EmptyState>` this is. A closed union (not
+ * `string`) so a typo or a copy-paste from `<EmptyState surface>` (a
+ * *different* prop on this same component — a visual ground:
+ * `"paper" | "bare" | "inverse"`) fails to compile instead of shipping a
+ * garbage dimension value. Owned here (not `@/components/analytics`) because
+ * this is now a structural prop of the primitive, not the wrapper (#2719).
+ */
+export type EmptyStateUndoSource =
+  "evenementen" | "kalender" | "hulp_audience" | "hulp_category" | "nieuws";
 
 /**
  * Chrome the tier-"surface" card draws around itself.
@@ -114,17 +132,38 @@ interface EmptyStateSurfaceCommonProps extends EmptyStateSharedProps {
   surface?: EmptyStateSurface;
 }
 
-/** Genuine emptiness or a fruitless query — nothing to undo. */
+/** Genuine emptiness or a fruitless query — nothing to undo, and nothing to
+ *  tell an analytics listener about. */
 export interface EmptyStateSurfacePendingProps extends EmptyStateSurfaceCommonProps {
   reason?: undefined;
+  analyticsSource?: undefined;
+  analyticsFacet?: undefined;
 }
 
-/** A filter emptied the surface — the undo is mandatory, structurally: this
- *  variant does not compile without one. "Right where the results would
- *  have been" (#2427 rule 4). */
+/**
+ * A filter emptied the surface — the undo is mandatory, structurally: this
+ * variant does not compile without one. "Right where the results would have
+ * been" (#2427 rule 4).
+ *
+ * `analyticsSource`/`analyticsFacet` are mandatory for the same reason,
+ * since #2719: rendered as inert `data-*` attributes on the undo button
+ * (mirroring `<ErrorState>`'s `data-error-action={action.analyticsAction}`,
+ * `ErrorState.tsx:92`) for one global click listener to read — never
+ * imported into or consumed by this component. Before #2719 a host could
+ * render the mandatory undo without wiring analytics to it at all (caught
+ * only by a regex-on-source test); now a missing wire-up is a type error at
+ * the call site.
+ */
 export interface EmptyStateSurfaceFilteredProps extends EmptyStateSurfaceCommonProps {
   reason: "filtered";
   undo: EmptyStateAction;
+  /** Which host rendered the undo. Read by the global listener and pushed
+   *  to GA4 as `source` (the "Interaction source" dimension). */
+  analyticsSource: EmptyStateUndoSource;
+  /** The facet (active filter value) that emptied the surface, in whatever
+   *  casing the host already displays it — the global listener slugifies it
+   *  before the `trackEvent` push, exactly as `EmptyStateUndoAnalytics` did. */
+  analyticsFacet: string;
 }
 
 export type EmptyStateSurfaceProps =
@@ -231,6 +270,8 @@ function SurfaceEmptyState(props: EmptyStateSurfaceProps) {
                 size="sm"
                 onClick={props.undo.onClick}
                 data-empty-state-undo="undo"
+                data-empty-state-undo-source={props.analyticsSource}
+                data-empty-state-undo-facet={props.analyticsFacet}
               >
                 {props.undo.label}
               </Button>
