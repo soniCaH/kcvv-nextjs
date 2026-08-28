@@ -11,7 +11,10 @@
  *   `reason: "filtered"` — the mandatory undo (#2427 rule 4). That case is
  *   structural, not conventional: `undo` is a required field on that variant,
  *   the same way tier "slot" has no `heading`/`artefact` prop at all rather
- *   than trusting every host to remember one.
+ *   than trusting every host to remember one. `undo.analyticsSource`/
+ *   `analyticsFacet` are required alongside `label`/`onClick`, rendered as
+ *   inert `data-*` attributes a single global click listener reads — see
+ *   `EmptyStateAction` below for why the analytics fields live there.
  * - **Tier "slot"** — one slot is empty inside an otherwise full page (a
  *   `MatchLineup` team column, a `MatchEvents` team list). A dashed
  *   `ink-muted` box that holds the slot's shape so the absence reads as a
@@ -45,6 +48,7 @@
  */
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
+import type { EmptyStateUndoSource } from "@/lib/analytics/empty-state-undo-attrs";
 import { Button } from "../Button";
 import {
   EditorialHeading,
@@ -55,9 +59,29 @@ import { MonoLabel } from "../MonoLabel";
 import { TapeStrip } from "../TapeStrip";
 import type { StateActionBase } from "../_internal/stateAction";
 
-/** An undo action — always a button (a filter reset never navigates). */
+/**
+ * An undo action — always a button (a filter reset never navigates).
+ *
+ * `analyticsSource`/`analyticsFacet` are mandatory alongside `label`/
+ * `onClick`: rendered as inert `data-empty-state-undo-source`/`-facet`
+ * attributes (mirroring `<ErrorState>`'s `data-error-action`,
+ * `ErrorState.tsx:92` — though there `analyticsAction` stays optional and a
+ * plain `string`, since `<ErrorState>`'s action row isn't undo-only and its
+ * wrapper is page-scoped, not a single global listener) for one global click
+ * listener to read — never imported into or consumed by this component.
+ * They live on the action, not as flat sibling props on `<EmptyState>`,
+ * because `EmptyStateAction` is only ever reached via `undo` — a variant
+ * with no `undo` has nothing to forbid.
+ *
+ * `EmptyStateUndoSource`'s own type — the closed set of hosts — lives in
+ * `@/lib/analytics/empty-state-undo-attrs` (a GA4 vocabulary, not a
+ * design-system shape), imported here as a type only so this file still
+ * imports nothing from `@/components/analytics` at runtime.
+ */
 export interface EmptyStateAction extends StateActionBase {
   onClick: () => void;
+  analyticsSource: EmptyStateUndoSource;
+  analyticsFacet: string;
 }
 
 /**
@@ -120,8 +144,9 @@ export interface EmptyStateSurfacePendingProps extends EmptyStateSurfaceCommonPr
 }
 
 /** A filter emptied the surface — the undo is mandatory, structurally: this
- *  variant does not compile without one. "Right where the results would
- *  have been" (#2427 rule 4). */
+ *  variant does not compile without one, including its analytics payload
+ *  (see `EmptyStateAction` above). "Right where the results would have
+ *  been" (#2427 rule 4). */
 export interface EmptyStateSurfaceFilteredProps extends EmptyStateSurfaceCommonProps {
   reason: "filtered";
   undo: EmptyStateAction;
@@ -230,7 +255,8 @@ function SurfaceEmptyState(props: EmptyStateSurfaceProps) {
                 variant="ghost"
                 size="sm"
                 onClick={props.undo.onClick}
-                data-empty-state-undo="undo"
+                data-empty-state-undo-source={props.undo.analyticsSource}
+                data-empty-state-undo-facet={props.undo.analyticsFacet}
               >
                 {props.undo.label}
               </Button>

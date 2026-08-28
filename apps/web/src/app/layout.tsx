@@ -9,6 +9,10 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { GoogleTagManagerLoader } from "@/components/layout/GoogleTagManagerLoader";
+// Deep import, not the `@/components/analytics` barrel — deliberately: the
+// barrel also re-exports PageViewTracker/ErrorAnalytics, and importing it
+// here would drag both into every route's root chunk.
+import { EmptyStateUndoTracker } from "@/components/analytics/EmptyStateUndoTracker";
 import { Effect } from "effect";
 import { runPromise } from "@/lib/effect/runtime";
 import {
@@ -118,6 +122,9 @@ export default async function RootLayout({
         </Script>
         <GoogleTagManagerLoader gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
         <ScrollToTop />
+        {/* Global empty-state-undo click listener (#2719) — see
+            EmptyStateUndoTracker.tsx for why it lives here. */}
+        <EmptyStateUndoTracker />
         <AccentStrip />
         <SiteHeader seniorTeams={seniorTeams} />
         {/* flex-1 column so a short page's footer sticks to the viewport

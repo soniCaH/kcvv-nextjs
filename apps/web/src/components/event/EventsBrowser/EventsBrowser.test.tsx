@@ -154,18 +154,21 @@ describe("<EventsBrowser>", () => {
     });
   });
 
-  it("fires empty_state_undo (not event_filter) when the undo rescues a filtered-to-zero surface (#2691)", async () => {
+  it("marks the undo with the evenementen source + active facet for the global analytics listener (#2719), and its own handleSelect still fires event_filter", async () => {
+    // The click-to-`empty_state_undo` wiring is a global listener's job now
+    // (`EmptyStateUndoTracker`, tested on its own) — this host's job is only
+    // to supply `analyticsSource`/`analyticsFacet`, rendered as inert
+    // `data-*` attributes.
     render(<EventsBrowser events={EVENTS} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Jeugdwerking" }));
     mockTrackEvent.mockClear(); // drop the chip's own event_filter
 
-    await userEvent.click(screen.getByRole("button", { name: "Toon alles" }));
+    const undo = screen.getByRole("button", { name: "Toon alles" });
+    expect(undo).toHaveAttribute("data-empty-state-undo-source", "evenementen");
+    expect(undo).toHaveAttribute("data-empty-state-undo-facet", "Jeugdwerking");
 
-    expect(mockTrackEvent).toHaveBeenCalledWith("empty_state_undo", {
-      source: "evenementen",
-      filter_type: "jeugdwerking",
-    });
+    await userEvent.click(undo);
     // The undo's own handleSelect("all") still fires its ordinary
     // event_filter — that payload must not regress.
     expect(mockTrackEvent).toHaveBeenCalledWith("event_filter", {

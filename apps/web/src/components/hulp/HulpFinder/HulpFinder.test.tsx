@@ -163,19 +163,23 @@ describe("HulpFinder", () => {
     );
   });
 
-  it("fires empty_state_undo with the hulp_category surface + facet when the category undo is clicked (#2691)", () => {
+  it("marks the category undo with the hulp_category source + active facet for the global analytics listener (#2719)", () => {
+    // The click-to-`empty_state_undo` wiring is a global listener's job now
+    // (`EmptyStateUndoTracker`, tested on its own) — this host's job is only
+    // to supply `analyticsSource`/`analyticsFacet`, rendered as inert
+    // `data-*` attributes.
     mockSearchParams = new URLSearchParams("audience=supporter");
     render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
     fireEvent.click(screen.getByRole("button", { name: "Medisch" }));
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Toon alle categorieën" }),
-    );
-
-    expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
-      source: "hulp_category",
-      filter_type: "medisch",
+    const undo = screen.getByRole("button", {
+      name: "Toon alle categorieën",
     });
+    expect(undo).toHaveAttribute(
+      "data-empty-state-undo-source",
+      "hulp_category",
+    );
+    expect(undo).toHaveAttribute("data-empty-state-undo-facet", "medisch");
   });
 
   it("names the active audience by label when it empties across every category", () => {
@@ -201,21 +205,21 @@ describe("HulpFinder", () => {
     ).toBeInTheDocument();
   });
 
-  it("fires empty_state_undo with the hulp_audience surface + facet when the audience undo is clicked (#2691)", () => {
+  it("marks the audience undo with the hulp_audience source + active facet for the global analytics listener (#2719)", () => {
     mockSearchParams = new URLSearchParams("audience=speler");
     const pathsWithoutSpelerRole = FINDER_FIXTURE_PATHS.filter(
       (p) => !p.role.includes("speler"),
     );
     render(<HulpFinder responsibilityPaths={pathsWithoutSpelerRole} />);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Toon alle doelgroepen" }),
-    );
-
-    expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
-      source: "hulp_audience",
-      filter_type: "speler",
+    const undo = screen.getByRole("button", {
+      name: "Toon alle doelgroepen",
     });
+    expect(undo).toHaveAttribute(
+      "data-empty-state-undo-source",
+      "hulp_audience",
+    );
+    expect(undo).toHaveAttribute("data-empty-state-undo-facet", "speler");
   });
 
   it("the undo clears only the active audience, leaving an active category untouched", () => {

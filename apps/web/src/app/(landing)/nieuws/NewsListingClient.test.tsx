@@ -9,7 +9,6 @@ import {
 import type { ImageProps } from "next/image";
 import { NewsListingClient } from "./NewsListingClient";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
-import { trackEvent } from "@/lib/analytics/track-event";
 
 vi.mock("next/image", () => ({
   default: ({ alt, src, ...props }: ImageProps) => {
@@ -17,8 +16,6 @@ vi.mock("next/image", () => ({
     return <img {...imgProps} />;
   },
 }));
-
-vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
 const mockFetchArticles = vi.fn();
 
@@ -247,7 +244,13 @@ describe("NewsListingClient", () => {
     });
   });
 
-  it("fires empty_state_undo with the nieuws surface + facet when 'Toon alles' is clicked (#2691)", async () => {
+  it("marks the 'Toon alles' undo with the nieuws source + active facet for the global analytics listener (#2719)", async () => {
+    // The click-to-`empty_state_undo` wiring itself is no longer this
+    // component's concern — one global listener (`EmptyStateUndoTracker`,
+    // mounted once near the root layout) owns that, and is tested on its
+    // own. This host's job is only to supply the correct
+    // `analyticsSource`/`analyticsFacet` structural props, which
+    // `<EmptyState>` renders as inert `data-*` attributes.
     mockFetchArticles.mockResolvedValue({ items: [], hasMore: false });
 
     render(
@@ -264,12 +267,9 @@ describe("NewsListingClient", () => {
       expect(screen.getByText(/geen artikelen in jeugd/i)).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Toon alles" }));
-
-    expect(trackEvent).toHaveBeenCalledWith("empty_state_undo", {
-      source: "nieuws",
-      filter_type: "jeugd",
-    });
+    const undo = screen.getByRole("button", { name: "Toon alles" });
+    expect(undo).toHaveAttribute("data-empty-state-undo-source", "nieuws");
+    expect(undo).toHaveAttribute("data-empty-state-undo-facet", "Jeugd");
   });
 
   it("deduplicates articles returned by loadMore against the grid", async () => {

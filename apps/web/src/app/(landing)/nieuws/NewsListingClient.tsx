@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
 import { NewsCard, CategoryFilters } from "@/components/article";
-import { EmptyStateUndoAnalytics } from "@/components/analytics/EmptyStateUndoAnalytics";
 import {
   EmptyState,
   LoadMoreFooter,
@@ -160,6 +159,24 @@ export function NewsListingClient({
     handleCategoryChangeRef.current = handleCategoryChange;
   }, [loadMore, handleCategoryChange]);
 
+  // The filtered EmptyState's undo action — defined here, not inline in the
+  // JSX below, so the callback closes over `handleCategoryChange` at the
+  // component's top level rather than inside the render-time IIFE that
+  // computes `activeCategoryLabel`.
+  const undoAllCategories = useCallback(
+    () => handleCategoryChange("all"),
+    [handleCategoryChange],
+  );
+  const undoAction = useMemo(
+    () => ({
+      label: "Toon alles",
+      onClick: undoAllCategories,
+      analyticsSource: "nieuws" as const,
+      analyticsFacet: activeCategory,
+    }),
+    [undoAllCategories, activeCategory],
+  );
+
   const isEmpty = gridArticles.length === 0 && !isLoading;
 
   return (
@@ -228,21 +245,16 @@ export function NewsListingClient({
                     ?.attributes.name ?? activeCategory);
 
             return activeCategoryLabel ? (
-              <EmptyStateUndoAnalytics source="nieuws" facet={activeCategory}>
-                <EmptyState
-                  tier="surface"
-                  heading={`Geen artikelen in ${activeCategoryLabel}`}
-                  live
-                  reason="filtered"
-                  undo={{
-                    label: "Toon alles",
-                    onClick: () => handleCategoryChange("all"),
-                  }}
-                  className="mb-6"
-                >
-                  {filteredEmptyBody("het volledige overzicht")}
-                </EmptyState>
-              </EmptyStateUndoAnalytics>
+              <EmptyState
+                tier="surface"
+                heading={`Geen artikelen in ${activeCategoryLabel}`}
+                live
+                reason="filtered"
+                undo={undoAction}
+                className="mb-6"
+              >
+                {filteredEmptyBody("het volledige overzicht")}
+              </EmptyState>
             ) : (
               <EmptyState
                 tier="surface"
