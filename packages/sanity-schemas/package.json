@@ -19,7 +19,7 @@
   },
   "peerDependencies": {
     "@sanity/icons": "5.2.1",
-    "sanity": "6.1.0"
+    "sanity": "6.11.0"
   },
   "devDependencies": {
     "@sanity/icons": "5.2.1",
