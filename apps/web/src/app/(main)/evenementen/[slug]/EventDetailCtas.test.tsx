@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EventDetailCtas } from "./EventDetailCtas";
+import { buildEventUid } from "@/lib/utils/event-uid";
 
 const trackEventMock = vi.fn();
 vi.mock("@/lib/analytics/track-event", () => ({
@@ -11,6 +12,7 @@ vi.mock("@/lib/analytics/track-event", () => ({
 
 const baseProps = {
   eventSlug: "mosselfeest",
+  eventId: "event-doc-id-123",
   eventTitle: "Mosselfeest 2026",
   dateStart: "2026-09-12T16:00:00Z",
   dateEnd: "2026-09-12T20:00:00Z",
@@ -25,12 +27,20 @@ const suppressNavigation = (event: Event) => event.preventDefault();
 
 describe("EventDetailCtas", () => {
   let clickSpy: ReturnType<typeof vi.spyOn>;
+  // The Blob passed to createObjectURL by the most recent agenda click — set
+  // by the stub below so a test can inspect the actual .ics content without
+  // re-stubbing the global itself (which vi.restoreAllMocks() couldn't undo).
+  let lastIcsBlob: Blob | undefined;
 
   beforeEach(() => {
     trackEventMock.mockReset();
+    lastIcsBlob = undefined;
     document.addEventListener("click", suppressNavigation, true);
     // Stub blob-URL APIs (absent / navigation-triggering in the test DOM).
-    globalThis.URL.createObjectURL = vi.fn(() => "blob:mock");
+    globalThis.URL.createObjectURL = vi.fn((blob: Blob) => {
+      lastIcsBlob = blob;
+      return "blob:mock";
+    });
     globalThis.URL.revokeObjectURL = vi.fn();
     clickSpy = vi
       .spyOn(HTMLAnchorElement.prototype, "click")
@@ -116,5 +126,17 @@ describe("EventDetailCtas", () => {
       event_slug: "mosselfeest",
       cta: "agenda",
     });
+  });
+
+  it("mints the .ics UID via the shared buildEventUid(eventId) scheme", async () => {
+    const user = userEvent.setup();
+    render(<EventDetailCtas {...baseProps} />);
+    await user.click(screen.getByRole("button", { name: /Zet in agenda/i }));
+
+    const ics = await lastIcsBlob!.text();
+    expect(ics).toContain(`UID:${buildEventUid(baseProps.eventId)}`);
+    // The slug never appears bare — the pre-#2716 defect minted
+    // `${eventSlug}@kcvvelewijt.be` with no namespace prefix at all.
+    expect(ics).not.toContain(`UID:${baseProps.eventSlug}@`);
   });
 });

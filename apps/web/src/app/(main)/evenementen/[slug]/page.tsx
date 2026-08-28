@@ -160,6 +160,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
           ctas={
             <EventDetailCtas
               eventSlug={event.slug}
+              eventId={event.id}
               eventTitle={event.title}
               dateStart={event.dateStart}
               dateEnd={event.dateEnd}

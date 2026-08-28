@@ -8,6 +8,7 @@ import { SITE_CONFIG } from "@/lib/constants";
 // pin — so it is read from the one home rather than restated.
 import { CLUB_TIMEZONE as TIMEZONE, toMatchDisplayZone } from "./dates";
 import { resolveEventDateRange } from "./event-datetime";
+import { buildEventUid } from "./event-uid";
 import { reservationTitle, reservationView } from "./match-display";
 
 const HOME_VENUE_FALLBACK = "Sportpark Elewijt, Elewijt, België";
@@ -228,17 +229,6 @@ export function normalizeCacheKey(
 }
 
 /**
- * `kcvv-event-` keeps an event UID's namespace disjoint from a match's
- * `kcvv-match-` one (#2704). A Sanity document id and a PSD match id are drawn
- * from unrelated id spaces and can coincide; a shared prefix would let one
- * silently collide with the other in a subscriber's calendar app instead of
- * each being updated in place on refresh.
- */
-function buildEventUid(item: EventListItemVM): string {
-  return `kcvv-event-${item.id}@kcvvelewijt.be`;
-}
-
-/**
  * A `Match` → `IcalEntry`, applied per item before `generateIcal` ever runs.
  * Returns `undefined` for an unparseable `match.time` rather than throwing —
  * mirroring `eventToEntry`'s guard below, and for the same reason: PSD data
@@ -250,6 +240,9 @@ function matchToEntry(match: Match): TimedIcalEntry | undefined {
   if (!start.isValid) return undefined;
 
   return {
+    // `kcvv-match-` is the other half of the namespace disjointness
+    // `buildEventUid` (`event-uid.ts`) documents for `kcvv-event-` — kept
+    // as a local literal since matches have no shared-surface UID to unify.
     id: `kcvv-match-${match.id}@kcvvelewijt.be`,
     summary: buildSummary(match),
     start,
@@ -318,7 +311,7 @@ function eventToEntry(item: EventListItemVM): IcalEntry | undefined {
 
   const location = item.location ?? undefined;
   const url = `${SITE_CONFIG.siteUrl}${item.href}`;
-  const id = buildEventUid(item);
+  const id = buildEventUid(item.id);
   const summary = item.title;
 
   if (isAllDay) {

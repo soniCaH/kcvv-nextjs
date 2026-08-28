@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Match } from "@kcvv/api-contract";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import { buildEventIcs } from "./event-ics";
+import { buildEventUid } from "./event-uid";
 import {
   buildIcalFeed,
   normalizeCacheKey,
@@ -582,7 +583,7 @@ describe("buildIcalFeed — events are never re-gated on variant", () => {
   it("includes events even when variant is matches-only — the caller decides what to pass in", () => {
     const output = buildIcalFeed([], [makeEventItem()], "matches");
 
-    expect(output).toContain("kcvv-event-event-1@kcvvelewijt.be");
+    expect(output).toContain(`UID:${buildEventUid("event-1")}`);
   });
 });
 
@@ -674,5 +675,40 @@ describe("generateIcal and buildEventIcs agree on the all-day classification", (
     expect(downloadOutput).toContain("DTSTART;VALUE=DATE:20260914");
     expect(feedOutput).toContain("DTEND;VALUE=DATE:20260917");
     expect(downloadOutput).toContain("DTEND;VALUE=DATE:20260917");
+  });
+});
+
+/**
+ * #2716: the subscribe feed and the per-event "Zet in agenda" download used
+ * to mint different UIDs for the same activity — the feed's `kcvv-event-<id>`
+ * scheme vs. the download's bare `<slug>@kcvvelewijt.be`, with no namespace
+ * prefix at all. This pins the feed side (`eventToEntry`, exercised for real
+ * via `renderIcal`) against a `buildEventIcs` call reconstructed the same way
+ * `EventDetailCtas`'s call site builds it — a real regression on the feed
+ * side fails here; a literal re-inlined in `EventDetailCtas` itself is
+ * guarded separately, by `EventDetailCtas.test.tsx`.
+ */
+describe("generateIcal and buildEventIcs agree on the event UID scheme", () => {
+  it("both surfaces emit the same UID for the same event id", () => {
+    const item = makeEventItem({ id: "abc123" });
+
+    const feedOutput = renderIcal([], {
+      includeEvents: true,
+      events: [item],
+    });
+    // Mirrors EventDetailCtas's call site: the download's caller passes
+    // `buildEventUid(eventId)` as `EventIcsInput.uid` (`buildEventIcs` takes
+    // the UID as caller-supplied input and has no opinion of its own).
+    const downloadOutput = buildEventIcs({
+      uid: buildEventUid(item.id),
+      title: item.title,
+      dateStart: item.dateStart,
+      dateEnd: item.dateEnd,
+      now: "2026-01-01T00:00:00.000Z",
+    });
+
+    const expectedUid = buildEventUid("abc123");
+    expect(feedOutput).toContain(`UID:${expectedUid}`);
+    expect(downloadOutput).toContain(`UID:${expectedUid}`);
   });
 });
