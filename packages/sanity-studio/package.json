@@ -28,7 +28,7 @@
     "@sanity/icons": "5.2.1",
     "@sanity/ui": "3.5.3",
     "react": "19.2.8",
-    "sanity": "6.1.0"
+    "sanity": "6.11.0"
   },
   "devDependencies": {
     "@sanity/eslint-config-studio": "6.0.0",
