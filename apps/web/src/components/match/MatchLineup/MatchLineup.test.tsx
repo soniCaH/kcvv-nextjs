@@ -94,6 +94,57 @@ describe("MatchLineup", () => {
     });
   });
 
+  describe("shirt number register (#2621)", () => {
+    it.each<[number | undefined, string]>([
+      [9, "9"],
+      [0, "—"],
+      [undefined, "—"],
+    ])(
+      "sets shirt number %s in the display register, rendering %s",
+      (number, expected) => {
+        const lineup: LineupPlayer[] = [
+          {
+            id: 1,
+            name: "Test Player",
+            number,
+            isCaptain: false,
+            status: "starter",
+          },
+        ];
+        render(
+          <MatchLineup {...defaultProps} homeLineup={lineup} awayLineup={[]} />,
+        );
+        // A known number is a direct text child of the badge; an absent one
+        // (the placeholder) is wrapped in an `aria-hidden` span one level
+        // in — walk up to the badge either way.
+        const textNode = screen.getByText(expected);
+        const badge =
+          textNode.getAttribute("aria-hidden") === "true"
+            ? textNode.parentElement!
+            : textNode;
+        expect(badge).toHaveClass("font-display");
+        expect(badge).toHaveClass("italic");
+        expect(badge).not.toHaveClass("font-mono");
+        expect(screen.queryByText("0")).not.toBeInTheDocument();
+      },
+    );
+
+    it("hides the placeholder dash from assistive tech (#2621)", () => {
+      const lineup: LineupPlayer[] = [
+        { id: 1, name: "Test Player", isCaptain: false, status: "starter" },
+      ];
+      render(
+        <MatchLineup {...defaultProps} homeLineup={lineup} awayLineup={[]} />,
+      );
+      expect(screen.getByText("—")).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("keeps minutes played in the mono register — counts stay mono", () => {
+      render(<MatchLineup {...defaultProps} />);
+      expect(screen.getByText("75'")).toHaveClass("font-mono");
+    });
+  });
+
   describe("player grouping", () => {
     it("renders the BANK divider when the team has substitutes", () => {
       render(<MatchLineup {...defaultProps} />);
