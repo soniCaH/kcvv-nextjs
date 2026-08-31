@@ -6,12 +6,12 @@
  *
  * Geometry ported from the design drill that decided the vocabulary:
  * `docs/design/mockups/2590-non-cutout-photos/2590-1-niet-uitgeknipt.html`.
- * Bands reuse the shared `_jersey-paths.ts` stripe sets; hoops and dots are
- * generated from fixed grid constants (deterministic, no per-instance
- * randomness lives here — the variant module already resolved which
- * pattern and stripe count to draw).
+ * Bands reuse `jersey-illustration-geometry.ts`'s stripe sets; hoops and
+ * dots are generated from fixed grid constants (deterministic, no
+ * per-instance randomness lives here — the variant module already resolved
+ * which pattern and stripe count to draw).
  */
-import { JERSEY_STRIPE_PATHS_BY_COUNT } from "../_jersey-paths";
+import { JERSEY_STRIPE_PATHS_BY_COUNT } from "./jersey-illustration-geometry";
 import type { ShirtPattern, StripeCount } from "./player-figure-variant";
 
 const HOOP_ROW_Y_POSITIONS = [186, 212, 238, 264, 290] as const;
@@ -39,6 +39,11 @@ function buildDotPositions(): { cx: number; cy: number }[] {
   }
   return dots;
 }
+
+// `DOT_GRID` is frozen and `buildDotPositions` takes no arguments, so the
+// result is the same every render — compute it once at module load rather
+// than on every draw of a dotted card.
+const DOT_POSITIONS = buildDotPositions();
 
 export interface ShirtPatternMarksProps {
   pattern: ShirtPattern;
@@ -71,7 +76,7 @@ export function ShirtPatternMarks({
           return (
             <path
               key={y}
-              d={`M ${HOOP_LEFT_X + taper} ${y} L ${HOOP_RIGHT_X - taper} ${y}`}
+              d={`M ${(HOOP_LEFT_X + taper).toFixed(2)} ${y} L ${(HOOP_RIGHT_X - taper).toFixed(2)} ${y}`}
               strokeWidth={strokeWidth}
             />
           );
@@ -80,19 +85,13 @@ export function ShirtPatternMarks({
     );
   }
 
-  // dots
+  // dots — `fill`/`stroke` hoisted onto the wrapping `<g>` rather than
+  // repeated on each of the (up to) 36 circles.
   return (
-    <>
-      {buildDotPositions().map(({ cx, cy }) => (
-        <circle
-          key={`${cx}-${cy}`}
-          cx={cx}
-          cy={cy}
-          r={DOT_GRID.radius}
-          fill="var(--color-ink)"
-          stroke="none"
-        />
+    <g fill="var(--color-ink)" stroke="none">
+      {DOT_POSITIONS.map(({ cx, cy }) => (
+        <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={DOT_GRID.radius} />
       ))}
-    </>
+    </g>
   );
 }

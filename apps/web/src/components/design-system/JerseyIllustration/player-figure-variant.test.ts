@@ -18,8 +18,10 @@ import {
   computePlayerFigureVariant,
   djb2Seed,
   generateRawPlayerFigureVariant,
+  playerFigureSeed,
   SHIRT_PATTERNS,
   SLEEVE_LENGTHS,
+  STRIPE_COUNTS,
 } from "./player-figure-variant";
 
 // The real eerste-elftallen-a squad (26 outfield + keeper names), verbatim
@@ -80,16 +82,34 @@ describe("djb2Seed", () => {
 });
 
 describe("computePlayerFigureVariant — determinism", () => {
-  it("draws the same figure for the same full name on every call", () => {
-    const first = computePlayerFigureVariant("Maxim Breugelmans");
-    const second = computePlayerFigureVariant("Maxim Breugelmans");
+  it("draws the same figure for the same seed on every call", () => {
+    const first = computePlayerFigureVariant("player-id-1");
+    const second = computePlayerFigureVariant("player-id-1");
     expect(second).toEqual(first);
   });
 
-  it("draws a different figure for a different full name", () => {
-    const a = computePlayerFigureVariant("Maxim Breugelmans");
-    const b = computePlayerFigureVariant("Lars De Smet");
+  it("draws a different figure for a different seed", () => {
+    const a = computePlayerFigureVariant("player-id-1");
+    const b = computePlayerFigureVariant("player-id-2");
     expect(a).not.toEqual(b);
+  });
+});
+
+describe("playerFigureSeed — the seed's one owner", () => {
+  it("seeds from the player's id, not a display name", () => {
+    expect(playerFigureSeed({ id: "abc123" })).toBe("abc123");
+  });
+
+  it("two players sharing an id (the same player) get the same seed", () => {
+    expect(playerFigureSeed({ id: "abc123" })).toBe(
+      playerFigureSeed({ id: "abc123" }),
+    );
+  });
+
+  it("two different ids get different seeds", () => {
+    expect(playerFigureSeed({ id: "abc123" })).not.toBe(
+      playerFigureSeed({ id: "xyz789" }),
+    );
   });
 });
 
@@ -126,7 +146,7 @@ describe("generateRawPlayerFigureVariant — lever ranges", () => {
       expect(v.lean).toBeLessThanOrEqual(3);
       expect(v.drop).toBeGreaterThanOrEqual(-14);
       expect(v.drop).toBeLessThanOrEqual(16);
-      expect([3, 4, 5]).toContain(v.stripeCount);
+      expect(STRIPE_COUNTS).toContain(v.stripeCount);
       expect(SLEEVE_LENGTHS).toContain(v.sleeve);
       expect(SHIRT_PATTERNS).toContain(v.pattern);
     }
@@ -149,7 +169,7 @@ describe("generateRawPlayerFigureVariant — lever ranges", () => {
     for (const sleeve of SLEEVE_LENGTHS) {
       expect(variants.some((v) => v.sleeve === sleeve)).toBe(true);
     }
-    for (const count of [3, 4, 5] as const) {
+    for (const count of STRIPE_COUNTS) {
       expect(variants.some((v) => v.stripeCount === count)).toBe(true);
     }
   });
@@ -177,21 +197,6 @@ describe("containment guard — the top edge (#2542 addendum)", () => {
       expect(box.minX).toBeGreaterThanOrEqual(CONTAINMENT_MARGIN - BOX_EPSILON);
       expect(box.maxX).toBeLessThanOrEqual(
         FIGURE_VIEWBOX_WIDTH - CONTAINMENT_MARGIN + BOX_EPSILON,
-      );
-    }
-  });
-
-  it("resolves within at most 8 passes (shift-then-shrink converges)", () => {
-    // A regression guard on the pass budget itself: run the same loop body
-    // and assert it settles, not just that the final box is contained.
-    for (const seed of seeds.slice(0, 200)) {
-      const guarded = applyContainmentGuard(
-        generateRawPlayerFigureVariant(seed),
-      );
-      const box = computeFigureBoundingBox(guarded);
-      const width = box.maxX - box.minX;
-      expect(width).toBeLessThanOrEqual(
-        FIGURE_VIEWBOX_WIDTH - 2 * CONTAINMENT_MARGIN + BOX_EPSILON,
       );
     }
   });

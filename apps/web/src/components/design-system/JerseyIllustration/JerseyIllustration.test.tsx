@@ -59,7 +59,12 @@ describe("JerseyIllustration", () => {
   });
 
   describe("per-player variance (#2635)", () => {
-    it("draws the same figure for the same seed on every render", () => {
+    // The seed → lever equality/inequality itself is covered exhaustively
+    // in `player-figure-variant.test.ts`. This one test is component-level:
+    // it exercises the actual render path (does the `seed` prop reach the
+    // DOM output byte-for-byte the same way twice), which a pure-function
+    // test of the variant module alone can't.
+    it("renders identically for a repeated seed and differently for a new one", () => {
       const first = render(
         <JerseyIllustration variant="card" seed="Maxim Breugelmans" />,
       );
@@ -70,31 +75,29 @@ describe("JerseyIllustration", () => {
         <JerseyIllustration variant="card" seed="Maxim Breugelmans" />,
       );
       expect(second.container.innerHTML).toBe(firstMarkup);
-    });
+      second.unmount();
 
-    it("draws a different figure for a different seed", () => {
-      const a = render(
-        <JerseyIllustration variant="card" seed="Maxim Breugelmans" />,
-      );
-      const b = render(
+      const third = render(
         <JerseyIllustration variant="card" seed="Lars De Smet" />,
       );
-      expect(b.container.innerHTML).not.toBe(a.container.innerHTML);
+      expect(third.container.innerHTML).not.toBe(firstMarkup);
     });
 
-    it("applies the seed's computed registration offset as a CSS pixel translate", () => {
+    it("applies the seed's computed registration offset as an SVG-space translate on the overprint pass, not a CSS pixel offset", () => {
       const seed = "Maxim Breugelmans";
       const expected = computePlayerFigureVariant(seed);
       const { container } = render(
         <JerseyIllustration variant="card" seed={seed} />,
       );
-      // Second of the two absolute inset-0 layers is the overprint pass —
-      // the one registration offset applies to.
-      const overprintLayer = container.querySelectorAll(
-        '[data-testid="jersey-illustration"] > div',
-      )[1] as HTMLElement;
-      expect(overprintLayer.style.transform).toBe(
-        `translate(${expected.registrationX}px, ${expected.registrationY}px)`,
+      // Second <svg> is the overprint pass; its outermost <g> is the
+      // registration wrapper, in the SAME viewBox units as every other
+      // lever — a CSS-pixel offset on the wrapping <div> would put the
+      // registration draw outside the geometry the containment guard
+      // bounds (code review finding #1).
+      const overprintSvg = container.querySelectorAll("svg")[1];
+      const registrationGroup = overprintSvg?.querySelector("g");
+      expect(registrationGroup?.getAttribute("transform")).toBe(
+        `translate(${expected.registrationX.toFixed(2)} ${expected.registrationY.toFixed(2)})`,
       );
     });
   });

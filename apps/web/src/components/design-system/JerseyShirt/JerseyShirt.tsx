@@ -22,6 +22,7 @@
  * Path provenance: `_jersey-paths.ts` (shared with `<JerseyIllustration>`).
  */
 import {
+  JERSEY_OUTLINE_STROKE_WIDTH,
   JERSEY_TORSO_FILL_PATH,
   JERSEY_TORSO_OUTLINE_PATH,
   JERSEY_TORSO_VIEWBOX,
@@ -42,7 +43,6 @@ export interface JerseyShirtProps {
 }
 
 const STRIPE_STROKE_WIDTH = 2;
-const OUTLINE_STROKE_WIDTH = 3;
 
 // Cream letter on ink stroke shim — replicates the printed-on-felt feel of
 // the locked mockup. Tailwind v4 doesn't expose a token for this exact
@@ -82,7 +82,7 @@ export function JerseyShirt({ letterOverlay, className }: JerseyShirtProps) {
           <g
             fill="none"
             stroke="var(--color-jersey-deep)"
-            strokeWidth={OUTLINE_STROKE_WIDTH}
+            strokeWidth={JERSEY_OUTLINE_STROKE_WIDTH}
             strokeLinejoin="miter"
             strokeLinecap="square"
           >

@@ -1,13 +1,17 @@
 /**
- * Deterministic per-player figure variance for `<JerseyIllustration>` (#2635).
+ * Deterministic per-player figure variance for `<JerseyIllustration>` (#2635),
+ * hardcoded to that component's 220×300 full-figure viewBox and this exact
+ * lever set — it is not a general containment mechanism. `<JerseyShirt>`
+ * crops to a different viewBox (`0 120 220 180`) and could not reuse it.
  *
  * A player with no photo used to draw the identical constant figure, so a
  * squad of 26 read as 26 copies. This module derives a per-player variant —
  * registration offset, opacity, scale, crop, mirror, head/shoulder/torso
- * geometry, sleeve length and shirt pattern — from a djb2 hash of the
- * player's full name, so the same player draws the same figure every
- * render, every season, and server and client agree (no `Math.random`,
- * no DOM measurement anywhere in this file).
+ * geometry, sleeve length and shirt pattern — from a djb2 hash of a stable
+ * per-player seed (`playerFigureSeed`, below — an id, never a display
+ * name), so the same player draws the same figure every render, every
+ * season, and server and client agree (no `Math.random`, no DOM
+ * measurement anywhere in this file).
  *
  * The lever ranges and the two-part containment guard are ported verbatim
  * from the design drill that decided them:
@@ -23,11 +27,22 @@
  *
  * The PRNG draw order matches the mockups exactly — including a `scale`
  * draw that gets immediately superseded by a wider one later — so a given
- * name maps to the same visual result the drill measured its verified
- * numbers against (0 clipped, 15-of-26-short → 0).
+ * seed maps to the same visual result the drill measured its verified
+ * numbers against (0 clipped, 15-of-26-short → 0). Those numbers are a
+ * property of the lever ranges plus the guard, not of any particular seed
+ * sample — switching the seed source (from a display name to a stable id,
+ * per code review) changes which look a given player draws, not whether
+ * the guard holds.
  */
 
-import { JERSEY_HEAD_ELLIPSE } from "../_jersey-paths";
+import {
+  JERSEY_ARM_REACH_HALF_WIDTH,
+  JERSEY_FIGURE_VIEWBOX_HEIGHT,
+  JERSEY_FIGURE_VIEWBOX_WIDTH,
+  JERSEY_HEAD_ELLIPSE,
+  JERSEY_OUTLINE_STROKE_WIDTH,
+  JERSEY_TORSO_HALF_WIDTH,
+} from "../_jersey-paths";
 
 export const SHIRT_PATTERNS = ["bands", "hoops", "dots", "plain"] as const;
 export type ShirtPattern = (typeof SHIRT_PATTERNS)[number];
@@ -55,9 +70,15 @@ export interface PlayerFigureVariant {
   underprintOpacity: number;
   /** Overprint (outline) layer opacity (0.82–1.0). */
   overprintOpacity: number;
-  /** Overprint registration misalignment, x axis, in the two-pass print's own px (−3…+4). */
+  /**
+   * Overprint registration misalignment, x axis, in the SAME viewBox units
+   * as every other lever (−3…+4) — applied as a `<g transform="translate(…)">`
+   * wrapping the overprint pass, one step after the shared base transform,
+   * matching the design drill. NOT a CSS pixel offset: at card size that
+   * would put the offset outside the geometry the containment guard bounds.
+   */
   registrationX: number;
-  /** Overprint registration misalignment, y axis (−3…+4). */
+  /** Overprint registration misalignment, y axis (−3…+4). Same units caveat as `registrationX`. */
   registrationY: number;
   /** Horizontal mirror: 1 = as-drawn, -1 = flipped. */
   flip: 1 | -1;
@@ -84,25 +105,33 @@ export interface FigureBoundingBox {
   maxY: number;
 }
 
-/** The full-figure viewBox is `0 0 220 300` — see `_jersey-paths.ts`. */
-export const FIGURE_VIEWBOX_WIDTH = 220;
-export const FIGURE_VIEWBOX_HEIGHT = 300;
+/** The full-figure viewBox is `_jersey-paths.ts`'s `JERSEY_FIGURE_VIEWBOX`. */
+export const FIGURE_VIEWBOX_WIDTH = JERSEY_FIGURE_VIEWBOX_WIDTH;
+export const FIGURE_VIEWBOX_HEIGHT = JERSEY_FIGURE_VIEWBOX_HEIGHT;
 
 /** Breathing room inside the viewBox the guard keeps clear on every side. */
 export const CONTAINMENT_MARGIN = 4;
 
-/** Half the 3px outline stroke, plus a hair of slack — added to every extent. */
-const STROKE_ALLOWANCE = 2;
+/** Half the outline stroke, plus a hair of slack — added to every extent. */
+const STROKE_ALLOWANCE = JERSEY_OUTLINE_STROKE_WIDTH / 2 + 0.5;
 
-/** The guard's shift-then-shrink loop never needs more than this many passes. */
+/**
+ * The shift-then-shrink loop's termination cap — NOT a convergence bound.
+ * Measured over 200k seeds: 88% exit by pass 1, 99.97% by pass 3, and 0.025%
+ * (50/200,000) exhaust all 8 without converging — they oscillate, because
+ * the `+ 0.5` width slack below lets a box up to 212.5 wide skip the shrink,
+ * after which fixing `minX` pushes `maxX` back out. Those oscillating seeds'
+ * final positions genuinely depend on the count being 8 — this is
+ * drill-verbatim; do not "fix" it by rewriting the loop.
+ */
 const MAX_CONTAINMENT_PASSES = 8;
 
 /** Below this, a pass is treated as converged rather than looping again. */
 const SNAP_EPSILON = 0.4;
 
 /**
- * djb2 (XOR variant) over the player's full name. Matches the algorithm
- * decided in #2542's addendum — do not switch to the additive djb2 used by
+ * djb2 (XOR variant) over the seed input. Matches the algorithm decided in
+ * #2542's addendum — do not switch to the additive djb2 used by
  * `hashMemberId` (a different, unrelated hash with a different purpose:
  * masking ids before they reach analytics, not seeding a PRNG).
  */
@@ -112,6 +141,28 @@ export function djb2Seed(input: string): number {
     hash = (hash * 33) ^ input.charCodeAt(i);
   }
   return hash >>> 0;
+}
+
+/**
+ * Canonical seed input for a player's figure — the player's own stable
+ * identity, never a display name. A name (`${firstName} ${lastName}`) is
+ * editable: a typo fix, a diacritic correction, or a married name would
+ * silently redraw the figure, and two players who happen to share a display
+ * name would draw the identical figure side by side in the same grid — the
+ * exact "26 copies of one figure" symptom this feature exists to kill.
+ * `id` should be immutable and never empty (e.g. the Sanity `_id`) — unlike
+ * a name, which `toPlayerVM` defaults to `""` for an unauthored player.
+ *
+ * One owner for what the seed string is, so every consumer agrees: a
+ * player must draw the same figure on `<PlayerCard>` and `<PlayerHero>`
+ * alike, not just within either component on its own.
+ */
+export interface PlayerFigureIdentity {
+  id: string;
+}
+
+export function playerFigureSeed(player: PlayerFigureIdentity): string {
+  return player.id;
 }
 
 /** A stable xorshift32 stream — the same seed always yields the same draws in the same order. */
@@ -134,7 +185,7 @@ function span(random: () => number, lo: number, hi: number): number {
 /**
  * The seeded levers, before the containment guard runs. Draw order matches
  * the design drill exactly, including the discarded first `scale` draw —
- * changing the order changes which name maps to which look.
+ * changing the order changes which seed maps to which look.
  */
 export function generateRawPlayerFigureVariant(
   seed: number,
@@ -251,7 +302,12 @@ const applyMatrix = (m: Matrix2D, x: number, y: number): [number, number] => [
   m.b * x + m.d * y + m.f,
 ];
 
-/** The base `<g>` transform shared by both print passes — see `JerseyIllustration.tsx`. */
+/**
+ * The base `<g>` transform shared by both print passes. `<JerseyIllustration>`
+ * renders this matrix directly (`matrix(a b c d e f)`) rather than
+ * re-encoding the same translate/rotate/skewX/scale chain as a template
+ * string — one encoding, so the two can never drift apart.
+ */
 export function buildBaseTransformMatrix(
   variant: PlayerFigureVariant,
 ): Matrix2D {
@@ -270,9 +326,18 @@ export function buildBaseTransformMatrix(
 /**
  * The figure's axis-aligned bounding box, computed analytically from the
  * composed matrix — no DOM measurement. The widest drawn element is the
- * torso (half-width 80) or the shoulder bumps (half-width 60), each carried
- * through `build` and `shoulderWidth`; the head (half-width 44, `rx`) is
- * never the widest. The head top is `cy + headDy - ry`.
+ * torso (`JERSEY_TORSO_HALF_WIDTH`) or the arms (`JERSEY_ARM_REACH_HALF_WIDTH`),
+ * each carried through `build` and `shoulderWidth` — with `build ≥ 0.86`,
+ * `JERSEY_TORSO_HALF_WIDTH * build` is always ≥ 68.8, so the head
+ * (`JERSEY_HEAD_ELLIPSE.rx`, 44) never wins that comparison and is not a
+ * candidate here. The head top (`cy + headDy − ry`) still bounds the box
+ * separately — the guard's top clearance is about the head, not the torso.
+ *
+ * The rendered figure is two passes: the underprint at the base transform,
+ * and the overprint shifted from it by `(registrationX, registrationY)` in
+ * these same viewBox units (see `JerseyIllustration.tsx`). The box below is
+ * the union of both — bounding only the underprint would let the guard
+ * certify a box the overprint's registration draw can still poke outside.
  */
 export function computeFigureBoundingBox(
   variant: PlayerFigureVariant,
@@ -280,9 +345,8 @@ export function computeFigureBoundingBox(
   const base = buildBaseTransformMatrix(variant);
   const halfWidth =
     Math.max(
-      80 * variant.build,
-      60 * variant.build * variant.shoulderWidth,
-      JERSEY_HEAD_ELLIPSE.rx,
+      JERSEY_TORSO_HALF_WIDTH * variant.build,
+      JERSEY_ARM_REACH_HALF_WIDTH * variant.build * variant.shoulderWidth,
     ) + STROKE_ALLOWANCE;
   const top =
     JERSEY_HEAD_ELLIPSE.cy +
@@ -300,11 +364,21 @@ export function computeFigureBoundingBox(
 
   const xs = corners.map(([x]) => x);
   const ys = corners.map(([, y]) => y);
-  return {
+  const underprint = {
     minX: Math.min(...xs),
     maxX: Math.max(...xs),
     minY: Math.min(...ys),
     maxY: Math.max(...ys),
+  };
+
+  // The overprint pass is the identical geometry, translated by the
+  // registration offset — a uniform shift, so the union is cheap to derive
+  // from the underprint box rather than re-running `applyMatrix`.
+  return {
+    minX: Math.min(underprint.minX, underprint.minX + variant.registrationX),
+    maxX: Math.max(underprint.maxX, underprint.maxX + variant.registrationX),
+    minY: Math.min(underprint.minY, underprint.minY + variant.registrationY),
+    maxY: Math.max(underprint.maxY, underprint.maxY + variant.registrationY),
   };
 }
 
@@ -373,13 +447,11 @@ export function applyBottomClamp(
 }
 
 /**
- * The full pipeline: seed the player's full name, draw the levers, then
+ * The full pipeline: seed (see `playerFigureSeed`), draw the levers, then
  * guard and clamp. This is what `<JerseyIllustration>` calls — it never
  * needs the intermediate steps.
  */
-export function computePlayerFigureVariant(
-  fullName: string,
-): PlayerFigureVariant {
-  const raw = generateRawPlayerFigureVariant(djb2Seed(fullName));
+export function computePlayerFigureVariant(seed: string): PlayerFigureVariant {
+  const raw = generateRawPlayerFigureVariant(djb2Seed(seed));
   return applyBottomClamp(applyContainmentGuard(raw));
 }

@@ -9,44 +9,67 @@
  * `team/SquadGrid/<PlayerCard>` (`CardIllustration`); zero domain knowledge, so
  * it lives in the neutral design-system rather than under either domain.
  *
- * **#2635 — per-player variance.** `seed` (the player's full name) is hashed
- * (djb2) into a deterministic `PlayerFigureVariant`
- * (`player-figure-variant.ts`) — registration offset, underprint/overprint
- * opacity, scale, crop, paper rotation, mirror, head tilt/height, shoulder
- * width, torso build, posture lean, sleeve length, shirt pattern. The same
- * name always draws the same figure (server and client agree; no
- * `Math.random`). A containment guard + bottom clamp run before the SVG
- * transforms are built, so the figure never clips at the top and never stops
- * short at the bottom, whatever the draw. `seed` is required — a
- * personalised figure needs an identity to seed from; a caller with none
- * (there are none left in production — see `<JerseyShirt>`, pinned to the
- * base geometry instead) should reach for a different primitive rather than
- * pass a constant string.
+ * **#2635 — per-player variance.** `seed` (a stable per-player identity —
+ * see `playerFigureSeed`, never a display name) is hashed (djb2) into a
+ * deterministic `PlayerFigureVariant` (`player-figure-variant.ts`) —
+ * registration offset, underprint/overprint opacity, scale, crop, paper
+ * rotation, mirror, head tilt/height, shoulder width, torso build, posture
+ * lean, sleeve length, shirt pattern. The same seed always draws the same
+ * figure (server and client agree; no `Math.random`). A containment guard +
+ * bottom clamp run before the SVG transforms are built, bounding the union
+ * of both print passes (registration included), so the figure never clips
+ * at the top and never stops short at the bottom, whatever the draw. `seed`
+ * is required — a personalised figure needs an identity to seed from; a
+ * caller with none (there are none left in production — see
+ * `<JerseyShirt>`, pinned to the base geometry instead) should reach for a
+ * different primitive rather than pass a constant string.
+ *
+ * The base transform (translate/rotate/skewX/scale) is rendered as the
+ * literal matrix `buildBaseTransformMatrix` computes — not re-encoded as a
+ * template string — so the geometry the guard bounds and the geometry that
+ * ships can never drift apart. The registration offset is a second,
+ * separate `<g transform="translate(…)">` in the SAME viewBox units as
+ * everything else (not a CSS pixel offset): it needs to scale with the
+ * figure exactly like every other lever, and the guard's bounding box
+ * needs to see it to bound what actually ships.
  *
  * Not to be confused with `<JerseyShirt>`: that is a torso-only crop with the
  * inverted palette (ink fill / jersey-deep outline), explicitly pinned to
  * `_jersey-paths.ts`'s base geometry — left untouched by this variant system.
  *
- * Path provenance: `_jersey-paths.ts` (shared with `<JerseyShirt>`).
+ * Path provenance: `_jersey-paths.ts` (shared with `<JerseyShirt>`);
+ * `jersey-illustration-geometry.ts` (this component's variant-only additions).
  */
-import { useMemo } from "react";
 import { cn } from "@/lib/utils/cn";
 import {
   JERSEY_FIGURE_VIEWBOX,
   JERSEY_HEAD_ELLIPSE,
+  JERSEY_OUTLINE_STROKE_WIDTH,
   JERSEY_SHOULDER_BUMP_LEFT_PATH,
   JERSEY_SHOULDER_BUMP_RIGHT_PATH,
-  JERSEY_SLEEVE_LEFT_PATH,
-  JERSEY_SLEEVE_RIGHT_PATH,
   JERSEY_TORSO_FILL_PATH,
   JERSEY_TORSO_OUTLINE_PATH,
   JERSEY_V_COLLAR_PATH,
 } from "../_jersey-paths";
+import {
+  JERSEY_SLEEVE_LEFT_PATH,
+  JERSEY_SLEEVE_RIGHT_PATH,
+} from "./jersey-illustration-geometry";
 import { ShirtPatternMarks } from "./jersey-shirt-pattern";
-import { computePlayerFigureVariant } from "./player-figure-variant";
+import {
+  buildBaseTransformMatrix,
+  computePlayerFigureVariant,
+} from "./player-figure-variant";
 
 const STRIPE_STROKE_WIDTH = 2;
-const OUTLINE_STROKE_WIDTH = 3;
+
+// The viewBox is 220×300 units rendered into a 140–390px card/hero — 2dp on
+// a geometry value is ~0.006px of movement, and coarser than that is real
+// compression savings (raw floats are incompressible entropy; brotli takes
+// a real squad's markup down ~51% at 2dp). Opacity stays at 3dp: 2dp would
+// be coarser than the 1/255 alpha step a browser can even show.
+const fx = (n: number) => n.toFixed(2);
+const fo = (n: number) => n.toFixed(3);
 
 export interface JerseyIllustrationProps {
   /**
@@ -57,10 +80,10 @@ export interface JerseyIllustrationProps {
    */
   variant: "hero" | "card";
   /**
-   * Deterministic seed input — the player's full name (e.g.
-   * `${firstName} ${lastName}`). Hashed (djb2) into the figure's variant, so
-   * the same player draws the same figure on every render, every season,
-   * and server and client agree.
+   * Deterministic seed input — a stable per-player identity (build one via
+   * `playerFigureSeed`; never a display name). Hashed (djb2) into the
+   * figure's variant, so the same player draws the same figure on every
+   * render, every season, and server and client agree.
    */
   seed: string;
   /** Extra classes merged onto the outer wrapper, after the variant classes. */
@@ -78,12 +101,17 @@ export function JerseyIllustration({
   const positioning =
     variant === "hero" ? "relative h-full w-full" : "absolute inset-0";
 
-  const figure = useMemo(() => computePlayerFigureVariant(seed), [seed]);
-
-  const baseTransform = `translate(${110 + figure.offsetX} ${150 + figure.offsetY + figure.drop}) rotate(${figure.rotation}) skewX(${figure.lean}) scale(${figure.flip * figure.scale} ${figure.scale}) translate(-110 -150)`;
-  const headTransform = `translate(${JERSEY_HEAD_ELLIPSE.cx} ${JERSEY_HEAD_ELLIPSE.cy + figure.headDy}) rotate(${figure.headTilt}) translate(${-JERSEY_HEAD_ELLIPSE.cx} ${-JERSEY_HEAD_ELLIPSE.cy})`;
-  const shoulderTransform = `translate(110 182) scale(${figure.shoulderWidth} 1) translate(-110 -182)`;
-  const bodyTransform = `translate(110 220) scale(${figure.build} 1) translate(-110 -220)`;
+  // A Server Component (no "use client" in this file or either consumer) —
+  // React's Flight dispatcher runs `useMemo` as `(create) => create()`, no
+  // cache, so memoising here bought nothing but a hook dependency on an
+  // otherwise hook-free primitive. Plain computation instead.
+  const figure = computePlayerFigureVariant(seed);
+  const baseTransformMatrix = buildBaseTransformMatrix(figure);
+  const baseTransform = `matrix(${fx(baseTransformMatrix.a)} ${fx(baseTransformMatrix.b)} ${fx(baseTransformMatrix.c)} ${fx(baseTransformMatrix.d)} ${fx(baseTransformMatrix.e)} ${fx(baseTransformMatrix.f)})`;
+  const registrationTransform = `translate(${fx(figure.registrationX)} ${fx(figure.registrationY)})`;
+  const headTransform = `translate(${fx(JERSEY_HEAD_ELLIPSE.cx)} ${fx(JERSEY_HEAD_ELLIPSE.cy + figure.headDy)}) rotate(${fx(figure.headTilt)}) translate(${fx(-JERSEY_HEAD_ELLIPSE.cx)} ${fx(-JERSEY_HEAD_ELLIPSE.cy)})`;
+  const shoulderTransform = `translate(110 182) scale(${fx(figure.shoulderWidth)} 1) translate(-110 -182)`;
+  const bodyTransform = `translate(110 220) scale(${fx(figure.build)} 1) translate(-110 -220)`;
 
   const armLeftPath =
     figure.sleeve === "long"
@@ -102,7 +130,7 @@ export function JerseyIllustration({
     >
       <div
         className="absolute inset-0 mix-blend-multiply"
-        style={{ opacity: figure.underprintOpacity }}
+        style={{ opacity: fo(figure.underprintOpacity) }}
       >
         <svg
           viewBox={JERSEY_FIGURE_VIEWBOX}
@@ -130,54 +158,49 @@ export function JerseyIllustration({
       </div>
       <div
         className="absolute inset-0"
-        style={{
-          transform: `translate(${figure.registrationX}px, ${figure.registrationY}px)`,
-          opacity: figure.overprintOpacity,
-        }}
+        style={{ opacity: fo(figure.overprintOpacity) }}
       >
         <svg
           viewBox={JERSEY_FIGURE_VIEWBOX}
           preserveAspectRatio="xMidYMid meet"
           className="block h-full w-full"
         >
-          <g transform={baseTransform}>
+          {/* Registration offset: a second transform in the SAME viewBox
+              units as `baseTransform`, applied after it — the two-pass
+              print's intentional misalignment, not a CSS pixel nudge. */}
+          <g transform={registrationTransform}>
             <g
-              transform={headTransform}
+              transform={baseTransform}
               fill="none"
               stroke="var(--color-ink)"
-              strokeWidth={OUTLINE_STROKE_WIDTH}
+              strokeWidth={JERSEY_OUTLINE_STROKE_WIDTH}
               strokeLinejoin="miter"
               strokeLinecap="square"
             >
-              <ellipse
-                cx={JERSEY_HEAD_ELLIPSE.cx}
-                cy={JERSEY_HEAD_ELLIPSE.cy}
-                rx={JERSEY_HEAD_ELLIPSE.rx}
-                ry={JERSEY_HEAD_ELLIPSE.ry}
-              />
-            </g>
-            <g
-              transform={bodyTransform}
-              fill="none"
-              stroke="var(--color-ink)"
-              strokeWidth={OUTLINE_STROKE_WIDTH}
-              strokeLinejoin="miter"
-              strokeLinecap="square"
-            >
-              <path d={JERSEY_TORSO_OUTLINE_PATH} />
-              <g transform={shoulderTransform}>
-                <path d={armLeftPath} />
-                <path d={armRightPath} />
+              <g transform={headTransform}>
+                <ellipse
+                  cx={JERSEY_HEAD_ELLIPSE.cx}
+                  cy={JERSEY_HEAD_ELLIPSE.cy}
+                  rx={JERSEY_HEAD_ELLIPSE.rx}
+                  ry={JERSEY_HEAD_ELLIPSE.ry}
+                />
               </g>
-              <path
-                d={JERSEY_V_COLLAR_PATH}
-                strokeWidth={STRIPE_STROKE_WIDTH}
-              />
-              <ShirtPatternMarks
-                pattern={figure.pattern}
-                stripeCount={figure.stripeCount}
-                strokeWidth={STRIPE_STROKE_WIDTH}
-              />
+              <g transform={bodyTransform}>
+                <path d={JERSEY_TORSO_OUTLINE_PATH} />
+                <g transform={shoulderTransform}>
+                  <path d={armLeftPath} />
+                  <path d={armRightPath} />
+                </g>
+                <path
+                  d={JERSEY_V_COLLAR_PATH}
+                  strokeWidth={STRIPE_STROKE_WIDTH}
+                />
+                <ShirtPatternMarks
+                  pattern={figure.pattern}
+                  stripeCount={figure.stripeCount}
+                  strokeWidth={STRIPE_STROKE_WIDTH}
+                />
+              </g>
             </g>
           </g>
         </svg>
