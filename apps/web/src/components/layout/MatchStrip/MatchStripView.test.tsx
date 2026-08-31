@@ -347,3 +347,138 @@ describe("MatchStripView", () => {
     ).toBeNull();
   });
 });
+
+/**
+ * #2616 — on the day of its Match the strip relabels the fixture to "Vandaag"
+ * and takes the dark jersey ground. `matchDay` is a plain boolean prop
+ * (computed once, server-side, by `<MatchStrip>` — see its own docblock) so
+ * these tests drive it directly rather than freezing the system clock.
+ */
+describe("matchDay ground (#2616)", () => {
+  const todaysFixture: ScheduleMatch = { ...fixture, venue: "De Dries" };
+
+  it("keeps the cream ground when matchDay is false — the default, unchanged from today's behaviour", () => {
+    render(<MatchStripView data={{ result, fixture: todaysFixture }} />);
+    expect(screen.getByRole("complementary")).toHaveClass("bg-cream");
+    expect(screen.queryByText("Vandaag")).toBeNull();
+  });
+
+  it("takes the dark jersey ground when matchDay is true", () => {
+    render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    const aside = screen.getByRole("complementary");
+    expect(aside).toHaveClass("bg-jersey-deep-dark");
+    expect(aside).not.toHaveClass("bg-cream");
+  });
+
+  it("relabels the mobile fixture row to Vandaag with its kickoff and venue", () => {
+    render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    const row = screen.getByRole("link", { name: /^Volgende wedstrijd/ });
+    expect(within(row).getByText("Vandaag")).toBeInTheDocument();
+    expect(within(row).getByText("18:00 · De Dries")).toBeInTheDocument();
+    // The numeric day/month stub is redundant with "Vandaag" and drops out.
+    expect(within(row).queryByText("8")).toBeNull();
+  });
+
+  it("omits the venue segment when the fixture carries none", () => {
+    render(<MatchStripView data={{ result: null, fixture }} matchDay />);
+    const row = screen.getByRole("link", { name: /^Volgende wedstrijd/ });
+    expect(within(row).getByText("18:00")).toBeInTheDocument();
+  });
+
+  it("names today in the fixture row's accessible name", () => {
+    render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    expect(
+      screen.getByRole("link", { name: /^Volgende wedstrijd vandaag/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not relabel the result row — only the fixture is today's Match", () => {
+    render(
+      <MatchStripView data={{ result, fixture: todaysFixture }} matchDay />,
+    );
+    expect(screen.getByRole("link", { name: /^Uitslag/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Uitslag.*[Vv]andaag/ }),
+    ).toBeNull();
+  });
+
+  it("defaults the desktop slider to the fixture slide, not the result, when it is match day", () => {
+    render(
+      <MatchStripView data={{ result, fixture: todaysFixture }} matchDay />,
+    );
+    // Unlike the non-match-day default (which opens on the result), today's
+    // strip must lead with the reason it exists — otherwise a desktop visitor
+    // sees yesterday's score first and has to click through to find out there
+    // is a Match today at all.
+    expect(
+      screen.getByRole("link", { name: /Wedstrijddetails/i }),
+    ).toHaveAttribute("href", `/wedstrijd/${todaysFixture.id}`);
+  });
+
+  it("swaps the desktop CTA from primary to the inverted variant", () => {
+    render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    const cta = screen.getByRole("link", { name: /Wedstrijddetails/i });
+    expect(cta).toHaveClass("bg-cream");
+    expect(cta).not.toHaveClass("bg-jersey-deep");
+  });
+
+  it("shows the kickoff and venue in the desktop meta line, in place of vs.", () => {
+    const { container } = render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    const slide = container.querySelector('[aria-live="polite"]');
+    expect(slide?.textContent).toContain("18:00");
+    expect(slide?.textContent).toContain("Vandaag");
+    expect(slide?.textContent).toContain("De Dries");
+    expect(slide?.textContent).not.toMatch(/vs\./);
+  });
+
+  it("claims no live or in-progress state anywhere on the match-day ground", () => {
+    const { container } = render(
+      <MatchStripView data={{ result, fixture: todaysFixture }} matchDay />,
+    );
+    expect(container.textContent).not.toMatch(/live/i);
+  });
+
+  it("leaves the strip unchanged when the next fixture is a pitch-reservation placeholder, even matchDay were somehow passed true", () => {
+    // Guards the caller contract documented on <MatchStrip>: a reservation
+    // never earns matchDay in the first place, so this only proves the view
+    // itself doesn't independently relabel one if it were ever handed true.
+    const reservation: ScheduleReservation = {
+      isPlaceholder: true,
+      id: 90,
+      date: new Date("2026-05-09T09:30:00Z"),
+      time: "09:30",
+      team: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+      status: "scheduled",
+      competition: "Tornooi",
+    };
+    render(
+      <MatchStripView data={{ result: null, fixture: reservation }} matchDay />,
+    );
+    expect(screen.queryByText("Vandaag")).toBeNull();
+  });
+});

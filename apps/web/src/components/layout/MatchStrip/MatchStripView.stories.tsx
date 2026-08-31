@@ -52,6 +52,31 @@ export const ResultAndFixture: Story = {
   args: { data: { result: homeWin, fixture: awayFixture } },
 };
 
+/**
+ * #2616 — the dark jersey ground. The next fixture is today's, at home, so
+ * the fixture row/slide relabels to "Vandaag" with its kickoff and venue and
+ * the whole strip — including the still-listed last result — takes the dark
+ * ground, per the checkpoint against `matchstrip-locked.md` (see the PR
+ * body): CTA `inverted`, arrows/dividers/slide label to cream alphas, team
+ * names and score to cream, the meta line to `warm`.
+ */
+const todaysFixture: ScheduleMatch = {
+  isPlaceholder: false,
+  id: 12349,
+  date: new Date("2026-08-15T15:00:00Z"),
+  time: "15:00",
+  venue: "De Dries",
+  status: "scheduled",
+  competition: "Tweede Provinciale A",
+  homeTeam: KCVV,
+  awayTeam: { id: 7654, name: "KFC Hofstade" },
+  isHome: true,
+};
+
+export const MatchDay: Story = {
+  args: { data: { result: homeWin, fixture: todaysFixture }, matchDay: true },
+};
+
 /** Outside the 72h window, or at the start of a season — fixture only. */
 export const FixtureOnly: Story = {
   args: { data: { result: null, fixture: awayFixture } },

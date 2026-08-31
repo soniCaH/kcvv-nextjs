@@ -66,11 +66,17 @@ const awayFixture: ScheduleMatch = {
   isHome: false,
 };
 
-function PageShell({ data }: { data: MatchStripData | null }) {
+function PageShell({
+  data,
+  matchDay = false,
+}: {
+  data: MatchStripData | null;
+  matchDay?: boolean;
+}) {
   return (
     <div className="bg-cream-soft min-h-screen">
       <SiteHeader seniorTeams={seniorTeams} />
-      {data ? <MatchStripView data={data} /> : null}
+      {data ? <MatchStripView data={data} matchDay={matchDay} /> : null}
       <main className="mx-auto max-w-[1200px] px-4 py-12 lg:px-8">
         <div className="border-paper-edge bg-cream rounded-none border p-8">
           <p className="font-display text-ink/60 text-[18px] italic">
@@ -102,4 +108,29 @@ export const FixtureOnly: Story = {
 
 export const NoMatchData: Story = {
   args: { data: null },
+};
+
+/**
+ * #2616 — the dark jersey ground in its real context: sticky `<SiteHeader>`
+ * above, the cream page body below. Checks the ground swap doesn't clash with
+ * the chrome immediately around it (no cream sliver, no double border).
+ */
+const todaysFixture: ScheduleMatch = {
+  isPlaceholder: false,
+  id: 12350,
+  date: new Date("2026-08-15T15:00:00Z"),
+  time: "15:00",
+  venue: "De Dries",
+  competition: "Tweede Provinciale A",
+  status: "scheduled",
+  homeTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+  awayTeam: { id: 7654, name: "KFC Hofstade" },
+  isHome: true,
+};
+
+export const MatchDay: Story = {
+  args: {
+    data: { result: homeResult, fixture: todaysFixture },
+    matchDay: true,
+  },
 };
