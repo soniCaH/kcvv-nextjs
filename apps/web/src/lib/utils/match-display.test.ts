@@ -8,6 +8,8 @@ import {
   isReducedMatchRow,
   isSettledMatch,
   otherClubSide,
+  OUTCOME_UNDERLINE,
+  OUTCOME_UNDERLINE_DARK,
   reservationView,
   reservationRowLabel,
 } from "./match-display";
@@ -422,5 +424,30 @@ describe("reservationRowLabel", () => {
       statusWording: null,
     });
     expect(label).toBe("Tornooi, 9 mei");
+  });
+});
+
+/**
+ * `<MatchStripView>`'s dark-ground counterpart to `OUTCOME_UNDERLINE` (#2616):
+ * the light mix reads as a pastel highlighter behind ink text on cream, which
+ * disappears behind cream text on the match-day ground. Same keys, same "no
+ * tint on a draw" rule, mixed toward the dark ground instead of cream.
+ */
+describe("OUTCOME_UNDERLINE_DARK", () => {
+  it("carries exactly the win/draw/loss keys OUTCOME_UNDERLINE does", () => {
+    expect(Object.keys(OUTCOME_UNDERLINE_DARK).sort()).toEqual(
+      Object.keys(OUTCOME_UNDERLINE).sort(),
+    );
+  });
+
+  it("gives a draw no tint, same as the light ground", () => {
+    expect(OUTCOME_UNDERLINE_DARK.draw).toBeUndefined();
+  });
+
+  it("mixes win and loss toward the dark ground rather than cream", () => {
+    expect(OUTCOME_UNDERLINE_DARK.win).toContain("--color-jersey-deep-dark");
+    expect(OUTCOME_UNDERLINE_DARK.win).not.toContain("--color-cream");
+    expect(OUTCOME_UNDERLINE_DARK.loss).toContain("--color-jersey-deep-dark");
+    expect(OUTCOME_UNDERLINE_DARK.loss).not.toContain("--color-cream");
   });
 });

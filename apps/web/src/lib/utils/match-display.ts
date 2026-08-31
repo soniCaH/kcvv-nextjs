@@ -159,6 +159,22 @@ export const OUTCOME_UNDERLINE: Record<MatchOutcome, string | undefined> = {
 };
 
 /**
+ * The dark-ground counterpart to `OUTCOME_UNDERLINE` above — `<MatchStripView>`
+ * on its match-day ground (#2616). The light mix reads as a pastel highlighter
+ * *behind* ink text; on `--color-jersey-deep-dark` the text itself turns cream,
+ * so the same cream-mixed tint would wash out under it instead of setting it
+ * off. Mixed toward the ground rather than toward cream, at a heavier stop so
+ * the patch still reads as a distinct tint against a ground it is this close
+ * to in hue. Same keys, same "no tint on a draw" rule.
+ */
+export const OUTCOME_UNDERLINE_DARK: Record<MatchOutcome, string | undefined> =
+  {
+    win: "inset 0 -9px 0 color-mix(in srgb, var(--color-jersey-deep) 55%, var(--color-jersey-deep-dark))",
+    draw: undefined,
+    loss: "inset 0 -9px 0 color-mix(in srgb, var(--color-alert) 55%, var(--color-jersey-deep-dark))",
+  };
+
+/**
  * The word for a settled match's outcome, KCVV-perspective — the label register
  * that names what `OUTCOME_UNDERLINE` above tints. The tint alone is meaning by
  * colour: a win and a loss differ only in hue, and a draw is the absence of one
