@@ -70,9 +70,13 @@ export function OrganigramHero({
             {heading}
           </EditorialHeading>
 
-          {/* Reading column, not chrome — converted from a bare `44ch` to
-              the prose measure under #2645 (DESIGN.md "The Three Widths
-              Rule" / #2436). */}
+          {/* Reading column, not chrome — converted from a bare `44ch`
+              (DESIGN.md "The Reading-Measure Exemption Rule", #2645). Mostly
+              inert: at `lg`+ the `1fr` cell of `lg:grid-cols-[1fr_0.82fr]`
+              inside `PageContainer width="index"` (1280) tops out around
+              607px, well under 680, so the grid column is what actually
+              binds there. This clamp only takes over below `lg`, roughly an
+              816–1023px viewport, before the grid columns apply. */}
           <p className="text-cream/80 font-display max-w-[var(--container-prose)] text-[16px] leading-[1.4] italic">
             {lead}
           </p>

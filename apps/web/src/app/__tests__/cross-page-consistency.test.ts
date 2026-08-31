@@ -656,3 +656,99 @@ describe("the empty-state-undo global listener stays mounted (#2719)", () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// Rule 8 (#2645) — no bare `ch` reading measure without a named exemption
+// ---------------------------------------------------------------------------
+
+/**
+ * DESIGN.md's "The Reading-Measure Exemption Rule" (#2436, #2645): `ch`
+ * resolves against the current font's zero-glyph advance, so the same value
+ * renders at a different pixel width depending on font and size — drift
+ * invisible in review. A reading paragraph takes `var(--container-prose)`
+ * instead; a bare `ch` max-width survives only where DESIGN.md names an
+ * exemption, and only with an inline comment pointing back at it.
+ *
+ * This is the rule that failed inside its own branch before it existed:
+ * `EditorialHeroShell.stories.tsx` carried a live, hand-copied `max-w-[52ch]`
+ * from #2645's first commit until code review caught it by hand. A guard
+ * here would have failed that run — which is why this one scans every
+ * first-party source file, stories included, with no file-class exemption.
+ * `COMMENT_OR_STRING` already does the narrower job a stories-wide carve-out
+ * used to stand in for: the one legitimate doc-comment mention of `ch`
+ * (`SiteHeader.stories.tsx`, explaining the truncation cap in prose) is
+ * stripped as a comment before this pattern ever sees it.
+ */
+const BARE_CH_MAX_WIDTH = /max-w-\[\d+ch\]/;
+
+/**
+ * Strip-then-scan, exactly as the shared `code` map already does for every
+ * file below — exposed separately so the self-test can run it against raw
+ * snippets that were never loaded into that map.
+ */
+function hasBareChMaxWidth(source: string): boolean {
+  const stripped = source.replace(COMMENT_OR_STRING, (token) =>
+    token.startsWith("/") ? "" : token,
+  );
+  return BARE_CH_MAX_WIDTH.test(stripped);
+}
+
+/**
+ * The two shapes DESIGN.md's Reading-Measure Exemption Rule names, each
+ * carrying its own inline comment: helper copy sharing a row with controls
+ * (`VolledigOrganigram`'s toolbar caption), and a single-line truncating
+ * label (`SiteHeader`'s nav-label cap).
+ */
+const CH_EXEMPT_FILES = new Set([
+  "components/organigram/OrganigramExplorer/VolledigOrganigram.tsx",
+  "components/layout/SiteHeader/SiteHeader.tsx",
+]);
+
+describe("no bare `ch` reading measure without a named exemption (#2645)", () => {
+  it.each(scannableSources.filter((f) => !CH_EXEMPT_FILES.has(f)))(
+    "%s — no bare `ch` max-width",
+    (relPath) => {
+      expect(BARE_CH_MAX_WIDTH.test(code.get(relPath)!)).toBe(false);
+    },
+  );
+});
+
+/**
+ * The exemption set is hand-written, so an edit that lets it drift stale —
+ * a file renamed, or one that stopped needing the exemption — would read as
+ * a pass everywhere else while quietly no longer meaning anything for these
+ * two. Pinned by asserting each still actually carries the pattern it is
+ * exempted for.
+ */
+describe("rule 8's exemptions still apply (#2645)", () => {
+  it.each([...CH_EXEMPT_FILES])("%s — still carries a bare `ch`", (relPath) => {
+    expect(BARE_CH_MAX_WIDTH.test(code.get(relPath)!)).toBe(true);
+  });
+});
+
+/**
+ * The rule's own coverage — the same convention rules 3 and 4 carry. The
+ * near-miss that matters most here is the comment-only mention: without
+ * `COMMENT_OR_STRING` stripping, `SiteHeader.stories.tsx`'s doc comment
+ * explaining `max-w-[14ch] truncate]` in prose would itself trip the rule.
+ */
+describe("rule 8 catches what it claims to (#2645)", () => {
+  it.each([
+    ['<p className="max-w-[52ch] text-xl">'],
+    ['className={cn("text-ink-soft max-w-[46ch] mt-2")}'],
+    ['const NAV_LABEL_TRUNCATE = "block max-w-[14ch] truncate";'],
+  ])("flags %s", (snippet) => {
+    expect(hasBareChMaxWidth(snippet)).toBe(true);
+  });
+
+  it.each([
+    ['<p className="max-w-[var(--container-prose)] text-xl">'],
+    ['<div className="mx-auto flex max-w-[40rem] flex-col">'],
+    ['<div className="max-w-3xl">'],
+    // A doc comment explaining the pattern in prose, not using it in a class.
+    ["// scales like `max-w-[14ch] truncate` today"],
+    ["/** bounds the row at `max-w-[52ch]` (retired) */"],
+  ])("leaves %s alone", (snippet) => {
+    expect(hasBareChMaxWidth(snippet)).toBe(false);
+  });
+});

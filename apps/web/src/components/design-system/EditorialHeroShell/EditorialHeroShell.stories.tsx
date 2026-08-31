@@ -26,7 +26,8 @@ const editorialPlaceholder = (
     <h1 className="text-ink font-serif text-5xl leading-tight font-black">
       Headline column placeholder.
     </h1>
-    <p className="text-ink-soft max-w-[52ch] font-serif text-xl italic">
+    {/* Mirrors <EditorialLead>'s measure (#2645). */}
+    <p className="text-ink-soft max-w-[var(--container-prose)] font-serif text-xl italic">
       Editorial lead placeholder paragraph.
     </p>
   </>

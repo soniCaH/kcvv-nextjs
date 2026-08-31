@@ -244,8 +244,6 @@ function SurfaceEmptyState(props: EmptyStateSurfaceProps) {
             {heading}
           </EditorialHeading>
 
-          {/* Read as a paragraph, not chrome, so it takes the prose measure
-              (#2645) — converted from a bare `52ch`. */}
           <div className="text-ink-soft mt-3 max-w-[var(--container-prose)] text-[14.5px] leading-relaxed">
             {children}
           </div>
