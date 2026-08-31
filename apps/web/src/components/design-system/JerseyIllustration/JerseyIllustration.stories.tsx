@@ -22,11 +22,12 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Hero variant — the `/spelers/[slug]` no-photo fallback. `relative h-full
- * w-full` inside the polaroid frame. `seed` (the player's full name) draws
- * this figure's per-player variant (#2635).
+ * w-full` inside the polaroid frame. `seed` (a stable per-player identity —
+ * see `playerFigureSeed`, never a display name) draws this figure's
+ * per-player variant (#2635).
  */
 export const Hero: Story = {
-  args: { variant: "hero", seed: "Joris Vermeiren" },
+  args: { variant: "hero", seed: "a1b2c3d4" },
 };
 
 /**
@@ -34,5 +35,5 @@ export const Hero: Story = {
  * inset-0` inside the bordered 3:4 figure.
  */
 export const Card: Story = {
-  args: { variant: "card", seed: "Lars De Smet" },
+  args: { variant: "card", seed: "e5f6a7b8" },
 };

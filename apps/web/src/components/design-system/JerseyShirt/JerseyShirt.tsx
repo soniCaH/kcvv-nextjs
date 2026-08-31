@@ -10,13 +10,14 @@
  *
  * **#2635 cohesion-contract decision: pinned to the base variant,
  * deliberately.** `<JerseyIllustration>` now draws a deterministic
- * per-player figure seeded from the player's name (#2635); `<JerseyShirt>`
- * does not adopt that system and keeps reading `_jersey-paths.ts` directly,
- * unparameterised. Its callers (`ClubshopBanner`, `TeamHero`,
- * `TeamFlagship`, `TeamEnrolmentCta`, `YouthDirectory`, `EmptyState`,
- * `ErrorState`) are team- or club-level chrome, never a single player, so
- * there is no name to seed from — pinning is the only deliberate choice
- * available, not a default left unmade.
+ * per-player figure seeded from a stable player id (#2635, see
+ * `playerFigureSeed`); `<JerseyShirt>` does not adopt that system and keeps
+ * reading `_jersey-paths.ts` directly, unparameterised. Its callers
+ * (`ClubshopBanner`, `TeamHero`, `TeamFlagship`, `TeamEnrolmentCta`,
+ * `YouthDirectory`, `EmptyState`, `ErrorState`) are team- or club-level
+ * chrome, never a single player, so there is no player identity to seed
+ * from — pinning is the only deliberate choice available, not a default
+ * left unmade.
  *
  * Spec: `docs/design/mockups/phase-3-a-tier-c-figures/jerseyshirt-locked.md`.
  * Path provenance: `_jersey-paths.ts` (shared with `<JerseyIllustration>`).
