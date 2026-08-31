@@ -81,6 +81,39 @@ export function clubToday(): string {
 }
 
 /**
+ * Whether a BFF match date falls on the given reference calendar day —
+ * the comparison `<MatchStrip>` needs to decide whether today is match day
+ * (#2616). Composed from the two zone-aware primitives above rather than a
+ * third parse: `toMatchDisplayZone` is the wall-clock read a BFF `Match` date
+ * requires (never `toDisplayZone` — that would roll a ≥22:00 kickoff onto the
+ * next day, see its docblock), and `clubToday` is "today" read in the same
+ * zone, so the two sides of the comparison cannot disagree about which
+ * calendar the club is on.
+ *
+ * `referenceDay` is REQUIRED, deliberately not defaulted to `clubToday()`
+ * (#2616 review). The AC calls this "a pure function … over a Match date and
+ * a reference calendar day" — a default that reads the wall clock would let
+ * `isMatchDay(fixture.date)` compile anywhere, including inside
+ * `<MatchStripView>`, the client component whose own docblock explains at
+ * length why that exact read must stay server-side (a client/server date
+ * disagreement across a midnight boundary). A required parameter makes that
+ * mistake unwritable instead of merely documented; the one extra argument at
+ * the one real call site (`<MatchStrip>`) is the cost. The parse this
+ * composes is already tested (`toMatchDisplayZone` in this file's test
+ * suite, #2601/#2604); this function owns only the equality check.
+ *
+ * An invalid `matchDate` reads as "not today" rather than throwing —
+ * `toMatchDisplayZone(...).toISODate()` is `null` for one, which can never
+ * equal a real `referenceDay` string.
+ */
+export function isMatchDay(
+  matchDate: Date | string,
+  referenceDay: string,
+): boolean {
+  return toMatchDisplayZone(matchDate).toISODate() === referenceDay;
+}
+
+/**
  * Format date for article display in Belgian Dutch format (e.g., "15 januari 2024")
  * @param date - Date object or ISO string
  */

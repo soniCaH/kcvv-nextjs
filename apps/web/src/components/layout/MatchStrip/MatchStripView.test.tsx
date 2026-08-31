@@ -347,3 +347,197 @@ describe("MatchStripView", () => {
     ).toBeNull();
   });
 });
+
+/**
+ * #2616 — on the day of its Match the strip relabels the fixture to "Vandaag"
+ * and takes the dark jersey ground. `matchDay` is a plain boolean prop
+ * (computed once, server-side, by `<MatchStrip>` — see its own docblock) so
+ * these tests drive it directly rather than freezing the system clock.
+ */
+describe("matchDay ground (#2616)", () => {
+  const todaysFixture: ScheduleMatch = { ...fixture };
+
+  it("keeps the cream ground when matchDay is false — the default, unchanged from today's behaviour", () => {
+    render(<MatchStripView data={{ result, fixture: todaysFixture }} />);
+    expect(screen.getByRole("complementary")).toHaveClass("bg-cream");
+    expect(screen.queryByText("Vandaag")).toBeNull();
+  });
+
+  it("takes the dark jersey ground when matchDay is true", () => {
+    render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    const aside = screen.getByRole("complementary");
+    expect(aside).toHaveClass("bg-jersey-deep-dark");
+    expect(aside).not.toHaveClass("bg-cream");
+  });
+
+  // No venue: PSD supplies none on this path today (`transformPsdGame` /
+  // `transformPsdMatchDetail` in apps/api/src/psd/transforms.ts both hardcode
+  // `venue: undefined`, #2398) — ScheduleMatch carries no such field, so the
+  // strip only ever names today and the kickoff, never a ground it cannot
+  // confirm.
+  it("relabels the mobile fixture row to Vandaag with its kickoff", () => {
+    render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    const row = screen.getByRole("link", { name: /^Volgende wedstrijd/ });
+    expect(within(row).getByText("Vandaag")).toBeInTheDocument();
+    expect(within(row).getByText("18:00")).toBeInTheDocument();
+    // The numeric day/month stub is redundant with "Vandaag" and drops out.
+    expect(within(row).queryByText("8")).toBeNull();
+  });
+
+  // The result row above it keeps its fixed-width date stub (`w-14`) — a
+  // narrower "Vandaag" column would shift the crest/name/score columns
+  // between the two rows of the same mobile ledger.
+  it("keeps the date column's fixed width on the Vandaag stub", () => {
+    render(
+      <MatchStripView data={{ result, fixture: todaysFixture }} matchDay />,
+    );
+    const row = screen.getByRole("link", { name: /^Volgende wedstrijd/ });
+    expect(within(row).getByText("Vandaag")).toHaveClass("w-14");
+  });
+
+  it("names today in the fixture row's accessible name", () => {
+    render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    expect(
+      screen.getByRole("link", { name: /^Volgende wedstrijd vandaag/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not relabel the result row — only the fixture is today's Match", () => {
+    render(
+      <MatchStripView data={{ result, fixture: todaysFixture }} matchDay />,
+    );
+    expect(screen.getByRole("link", { name: /^Uitslag/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Uitslag.*[Vv]andaag/ }),
+    ).toBeNull();
+  });
+
+  // jersey-deep on jersey-deep-dark is 2.3:1 — the same ratio that forces the
+  // CTA's primary -> inverted swap below. The focus ring needs the same
+  // dark-ground counterpart, or a keyboard user tabbing the ledger on match
+  // day gets no usable indicator at all.
+  it("gives the mobile row's focus ring a dark-ground counterpart", () => {
+    render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    const row = screen.getByRole("link", { name: /^Volgende wedstrijd/ });
+    expect(row).toHaveClass("focus-visible:outline-cream");
+    expect(row).not.toHaveClass("focus-visible:outline-jersey-deep");
+  });
+
+  it("defaults the desktop slider to the fixture slide, not the result, when it is match day", () => {
+    render(
+      <MatchStripView data={{ result, fixture: todaysFixture }} matchDay />,
+    );
+    // Unlike the non-match-day default (which opens on the result), today's
+    // strip must lead with the reason it exists — otherwise a desktop visitor
+    // sees yesterday's score first and has to click through to find out there
+    // is a Match today at all.
+    expect(
+      screen.getByRole("link", { name: /Wedstrijddetails/i }),
+    ).toHaveAttribute("href", `/wedstrijd/${todaysFixture.id}`);
+  });
+
+  it("swaps the desktop CTA from primary to the inverted variant", () => {
+    render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    const cta = screen.getByRole("link", { name: /Wedstrijddetails/i });
+    expect(cta).toHaveClass("bg-cream");
+    expect(cta).not.toHaveClass("bg-jersey-deep");
+  });
+
+  it("shows the kickoff in the desktop score slot, in place of vs., and keeps the competition on the meta line", () => {
+    const { container } = render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    const slide = container.querySelector('[aria-live="polite"]');
+    expect(slide?.textContent).toContain("18:00");
+    expect(slide?.textContent).toContain(todaysFixture.competition);
+    expect(slide?.textContent).not.toMatch(/vs\./);
+  });
+
+  // "Vandaag" lives once, on the slide label — the mobile row's own
+  // rationale ("restating 'Volgende' under 'Vandaag' would argue with
+  // itself") applies just as much to stacking the word twice on one desktop
+  // slide, so the meta line must not repeat it.
+  it("says Vandaag on the desktop slide label but not the meta line", () => {
+    // Both layouts render in the DOM regardless of viewport (only CSS
+    // visibility differs), so "Vandaag" legitimately appears twice overall —
+    // once in the mobile ledger row, once as the desktop slide label. What
+    // must not happen is a THIRD copy on the desktop slide's own meta line,
+    // stacking the word on one slide the way the mobile row's own rationale
+    // ("restating 'Volgende' under 'Vandaag' would argue with itself")
+    // explicitly rules out.
+    const { container } = render(
+      <MatchStripView
+        data={{ result: null, fixture: todaysFixture }}
+        matchDay
+      />,
+    );
+    expect(screen.getAllByText("Vandaag")).toHaveLength(2);
+    const slide = container.querySelector('[aria-live="polite"]');
+    expect(slide?.textContent).not.toContain("Vandaag");
+  });
+
+  // Reachable whenever matchDay && !showing.time — not reachable through
+  // today's PSD path (parseDateString defaults to "00:00"), but ScheduleMatch
+  // still types `time` as optional, so the fallback must not assume cream.
+  // Today's fixture with no known kickoff routes through <Score> (which
+  // owns the ground colour and the has-a-score/no-score fallback) rather
+  // than a hand-built "vs." span — so it renders cream, not the light
+  // ink-muted fallback, with no separate pairing needed (#2616 review,
+  // simplify pass item 2).
+  it("renders today's vs. fallback through Score, in cream, when the fixture carries no time", () => {
+    const { container } = render(
+      <MatchStripView
+        data={{ result: null, fixture: { ...todaysFixture, time: undefined } }}
+        matchDay
+      />,
+    );
+    const slide = container.querySelector('[aria-live="polite"]');
+    const vs = within(slide as HTMLElement).getByText("vs.");
+    expect(vs).toHaveClass("text-cream");
+    expect(vs).not.toHaveClass("text-ink-muted");
+  });
+
+  // The plain "vs." literal is reachable only for a future, non-today
+  // fixture — which means matchDay is always false wherever it renders (a
+  // fixture slide is only ever "today" when matchDay is true) — so it never
+  // needs a dark counterpart at all.
+  it("keeps the plain vs. literal ink-only — it never renders on the match-day ground", () => {
+    render(<MatchStripView data={{ result: null, fixture }} />);
+    expect(screen.getByText("vs.")).toHaveClass("text-ink-muted");
+  });
+
+  it("claims no live or in-progress state anywhere on the match-day ground", () => {
+    const { container } = render(
+      <MatchStripView data={{ result, fixture: todaysFixture }} matchDay />,
+    );
+    expect(container.textContent).not.toMatch(/live/i);
+  });
+});

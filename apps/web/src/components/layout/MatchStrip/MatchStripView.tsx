@@ -8,6 +8,7 @@ import { getButtonClasses } from "@/components/design-system/Button";
 import { House, Bus } from "@/lib/icons.redesign";
 import {
   HOME_AWAY_A11Y_NAME,
+  MATCH_DAY_WORD,
   MATCH_KIND_WORD,
   OUTCOME_UNDERLINE,
   reservationRowLabel,
@@ -28,6 +29,32 @@ const KCVV_LOGO_URL = "/images/logos/kcvv-logo.png";
 
 export interface MatchStripViewProps {
   data: MatchStripData;
+  /**
+   * Whether the next fixture falls on today's calendar day (#2616) — computed
+   * once, server-side, by `<MatchStrip>` and passed down as a plain boolean
+   * rather than recomputed here. This is a client component ("use client" at
+   * the top), rendered once during SSR and again on hydration in the
+   * visitor's own browser; if it called `isMatchDay()`/`clubToday()` itself,
+   * those two passes could disagree across a midnight boundary the same way
+   * `dates.ts` documents for an unpinned date parse. Baking the boolean into
+   * the prop sidesteps that entirely — see `<MatchStrip>`'s own docblock.
+   *
+   * Only ever `true` for a genuine `ScheduleMatch` fixture, never a
+   * pitch-reservation placeholder (#2606) — `<MatchStrip>` enforces that; this
+   * component trusts the prop rather than re-deriving it (`match-data.ts`:
+   * "Guarded there, not re-checked here — one owner for the rule"); only the
+   * *fixture* row/slide is relabelled "Vandaag" even so, since a reservation
+   * row never reaches the "today" branch below regardless
+   * (`ReservationLedgerRow` / `ReservationDesktopSlide` have no such branch
+   * at all).
+   *
+   * This is a dark-ground **variant** of both layouts, not a background swap
+   * on the `<aside>` alone — every descendant that assumed a cream ground
+   * (ink text, ink-muted captions, the `primary` button) gets a paired
+   * dark-ground counterpart, threaded down as `dark`/`today` props rather
+   * than recomputed per element.
+   */
+  matchDay?: boolean;
 }
 
 /**
@@ -40,28 +67,55 @@ export interface MatchStripViewProps {
  *   one touch target with no nested interactives and the trailing chevron is a
  *   visible affordance rather than a hover-only reveal.
  * - **Desktop** — one match at a time behind a two-slide switch, defaulting to
- *   the result, with the `Wedstrijddetails` CTA. Deliberately not a carousel:
- *   two slides, no auto-advance, no swipe-only path.
+ *   the result (or to the fixture on match day, see `<DesktopSlider>`), with
+ *   the `Wedstrijddetails` CTA. Deliberately not a carousel: two slides, no
+ *   auto-advance, no swipe-only path.
  *
  * Scores render in true scoreboard order (home team first). Home/away is drawn
  * only on mobile, where the row shows the opponent alone — on desktop both
  * teams appear in order, so a venue glyph would restate the layout.
  */
-export function MatchStripView({ data }: MatchStripViewProps) {
+export function MatchStripView({
+  data,
+  matchDay = false,
+}: MatchStripViewProps) {
   const { result, fixture } = data;
 
   return (
     <aside
       aria-label="Laatste uitslag en volgende wedstrijd"
-      className="bg-cream border-t-jersey-deep/35 border-b-ink/15 border-t border-b"
+      className={cn(
+        "border-t border-b",
+        // border-b: the same /15 hairline `<LedgerLinkRow>`/`<DesktopSlider>`
+        // use internally (#2616 review) — previously /10 here, one of three
+        // divergent dark-ground alphas with nothing recording whether the
+        // difference was a decision. border-t keeps its own accent value:
+        // the light ground's green top rule has no direct dark analogue once
+        // the whole band already IS green.
+        matchDay
+          ? "bg-jersey-deep-dark border-t-cream/25 border-b-cream/15"
+          : "bg-cream border-t-jersey-deep/35 border-b-ink/15",
+      )}
     >
       <div className="lg:hidden">
         {result ? (
-          <LedgerLinkRow match={result} kind="result" last={!fixture} />
+          <LedgerLinkRow
+            match={result}
+            kind="result"
+            last={!fixture}
+            matchDay={matchDay}
+          />
         ) : null}
-        {fixture ? <LedgerLinkRow match={fixture} kind="fixture" last /> : null}
+        {fixture ? (
+          <LedgerLinkRow
+            match={fixture}
+            kind="fixture"
+            last
+            matchDay={matchDay}
+          />
+        ) : null}
       </div>
-      <DesktopSlider result={result} fixture={fixture} />
+      <DesktopSlider result={result} fixture={fixture} matchDay={matchDay} />
     </aside>
   );
 }
@@ -98,9 +152,34 @@ function scoreboardScore(match: ScheduleMatch): string | null {
   return `${homeScore}–${awayScore}`;
 }
 
+/**
+ * Whether this row/slide is showing the match-day fixture (#2616) — the one
+ * definition `<LedgerLinkRow>` and `<DesktopSlider>` both call, replacing two
+ * formulas that had already drifted (each carried its own comment explaining
+ * why it differed from the other — the same drift `isReducedMatchRow`'s
+ * docblock in `match-display.ts` records for a different pair of call
+ * sites). `kind === "fixture"` is enough on its own: `<MatchStrip>` is the
+ * single place that ever sets `matchDay` true, and it only does so for a
+ * genuine `ScheduleMatch` fixture, never a pitch-reservation placeholder —
+ * re-checking `isPlaceholder` here would be the same re-derivation the
+ * "one owner for the rule" convention forbids.
+ */
+function isTodayFixture(matchDay: boolean, kind: MatchRowKind): boolean {
+  return matchDay && kind === "fixture";
+}
+
 /* ── atoms ───────────────────────────────────────────────────────────────── */
 
-function Crest({ team, big = false }: { team: ScheduleTeam; big?: boolean }) {
+function Crest({
+  team,
+  big = false,
+  dark = false,
+}: {
+  team: ScheduleTeam;
+  big?: boolean;
+  /** The match-day ground (#2616) — recolours the initial-fallback badge only; a real logo image needs no change. */
+  dark?: boolean;
+}) {
   const size = big ? "h-9 w-9" : "h-7 w-7";
   // The upstream does not always carry a logo for KCVV's own side; fall back to
   // the local asset before the initial badge, so the club crest is never an "E".
@@ -119,14 +198,21 @@ function Crest({ team, big = false }: { team: ScheduleTeam; big?: boolean }) {
   }
   const initial =
     team.name.trim().split(/\s+/).at(-1)?.[0]?.toUpperCase() ?? "?";
+  // A plain template, not `cn()`: `tailwind-merge` treats the custom
+  // `text-mono-sm` **size** token and `text-ink`/`text-cream` **color**
+  // utilities as the same conflict group (both match its generic `text-*`
+  // pattern) and silently drops whichever comes first — verified with
+  // `twMerge("text-ink text-mono-sm")` → `"text-mono-sm"` alone. None of
+  // these classes ever need deduplicating against each other, so `cn()`'s
+  // merge behaviour has nothing to offer here and everything to lose.
   return (
     <span
       aria-hidden="true"
-      className={cn(
-        "border-ink/40 bg-cream-soft text-ink inline-flex shrink-0 items-center justify-center border",
-        "font-display text-mono-sm leading-none font-black italic",
-        size,
-      )}
+      className={`font-display text-mono-sm inline-flex shrink-0 items-center justify-center border leading-none font-black italic ${size} ${
+        dark
+          ? "border-cream/40 bg-cream/10 text-cream"
+          : "border-ink/40 bg-cream-soft text-ink"
+      }`}
     >
       {initial}
     </span>
@@ -138,12 +224,15 @@ function Crest({ team, big = false }: { team: ScheduleTeam; big?: boolean }) {
  * The wording now comes from `HOME_AWAY_A11Y_NAME` rather than a copy, so that
  * claim is enforced instead of aspirational (#2398).
  */
-function VenueGlyph({ home }: { home: boolean }) {
+function VenueGlyph({ home, dark = false }: { home: boolean; dark?: boolean }) {
   const Icon = home ? House : Bus;
   return (
     <Icon
       aria-label={home ? HOME_AWAY_A11Y_NAME.home : HOME_AWAY_A11Y_NAME.away}
-      className="text-ink-muted h-4 w-4 shrink-0"
+      className={cn(
+        "h-4 w-4 shrink-0",
+        dark ? "text-cream/70" : "text-ink-muted",
+      )}
     />
   );
 }
@@ -163,23 +252,34 @@ function VenueGlyph({ home }: { home: boolean }) {
 function Score({
   match,
   className,
+  dark = false,
 }: {
   match: ScheduleMatch;
   className?: string;
+  /** The match-day ground (#2616) — cream text, and `OUTCOME_UNDERLINE.dark`'s outcome tint. */
+  dark?: boolean;
 }) {
+  // Every caller's `className` carries a `text-mono-*` size token
+  // (`text-mono-md`/`text-mono-sm`) — combined through `cn()` that collides
+  // with the `text-ink`/`text-cream` color class below (see `<Crest>`'s
+  // comment on the conflict-group), silently dropping the color. A plain
+  // template sidesteps it.
   const score = scoreboardScore(match);
+  const colorClass = dark ? "text-cream" : "text-ink";
   if (score === null) {
     return (
-      <span className={cn("text-ink font-mono font-bold", className)}>
+      <span className={`${colorClass} font-mono font-bold ${className ?? ""}`}>
         {match.time ?? "vs."}
       </span>
     );
   }
   const outcome = outcomeOf(match);
-  const shadow = outcome ? OUTCOME_UNDERLINE[outcome] : undefined;
+  const shadow = outcome
+    ? OUTCOME_UNDERLINE[dark ? "dark" : "light"][outcome]
+    : undefined;
   return (
     <span
-      className={cn("text-ink font-mono font-bold", className)}
+      className={`${colorClass} font-mono font-bold ${className ?? ""}`}
       style={shadow ? { boxShadow: shadow, padding: "0 8px" } : undefined}
     >
       {score}
@@ -199,21 +299,72 @@ function Score({
  * `w-14`, the widest word being "Volgende") and one 9px line of height, which
  * is the trade #2388's own note proposed.
  */
-function StripDate({ date, kind }: { date: Date; kind: MatchRowKind }) {
+function StripDate({
+  date,
+  kind,
+  today = false,
+  dark = false,
+}: {
+  date: Date;
+  kind: MatchRowKind;
+  /**
+   * The match-day relabel (#2616) — replaces the day/month + kind-word stack
+   * with `MATCH_DAY_WORD` outright rather than recolouring it in place.
+   * Restating "Volgende" underneath "Vandaag" would argue with itself: the
+   * word already says this is the next match, and the point of the whole
+   * feature is that a reader no longer has to compare a date against the
+   * calendar in their head. Only ever passed for the fixture row — see
+   * `<MatchStripView>`'s `matchDay` docblock for why a reservation row can
+   * never reach this branch.
+   */
+  today?: boolean;
+  dark?: boolean;
+}) {
+  // One span carrying the box classes and the ground colour, with only the
+  // CHILDREN branching on `today` — `today` and `dark` are independent props,
+  // and an earlier version's `today` branch hardcoded `text-cream`, ignoring
+  // `dark` entirely (silently cream-on-cream had either prop disagreed,
+  // #2616 review). `formatMatchDayMonth` still runs unconditionally: it's
+  // cheap, and a second early return is exactly the branch that drifted once.
   const { day, month } = formatMatchDayMonth(date);
   return (
-    <span className="text-ink text-mono-sm w-14 shrink-0 font-mono font-bold whitespace-nowrap tabular-nums">
-      {day}{" "}
-      <span className="text-ink-muted font-medium uppercase">{month}</span>
-      {/* jersey-deep, not the stub's own ink/ink-muted pair: at 9px directly
-          under a bold date, an ink word reads as a third line of the date
-          rather than as a label. Green is the one accent this cream band
-          already carries (its top border), so it separates without adding a
-          hue. On `<TeamAgendaRow>` the same word takes ink instead, because
-          there it sits inside an ink-muted caption and emphasis runs darker. */}
-      <span className="text-jersey-deep block text-[9px] leading-tight tracking-[0.06em] uppercase">
-        {MATCH_KIND_WORD[kind]}
-      </span>
+    // Plain template, not `cn()` — see `<Crest>`'s comment on the
+    // `text-mono-sm` / `text-{color}` conflict-group collision.
+    <span
+      className={`text-mono-sm w-14 shrink-0 font-mono font-bold whitespace-nowrap tabular-nums ${dark ? "text-cream" : "text-ink"} ${today ? "uppercase" : ""}`}
+    >
+      {today ? (
+        MATCH_DAY_WORD
+      ) : (
+        <>
+          {day}{" "}
+          <span
+            className={cn(
+              "font-medium uppercase",
+              dark ? "text-cream/70" : "text-ink-muted",
+            )}
+          >
+            {month}
+          </span>
+          {/* jersey-deep, not the stub's own ink/ink-muted pair: at 9px directly
+              under a bold date, an ink word reads as a third line of the date
+              rather than as a label. Green is the one accent this cream band
+              already carries (its top border), so it separates without adding a
+              hue. On `<TeamAgendaRow>` the same word takes ink instead, because
+              there it sits inside an ink-muted caption and emphasis runs darker.
+              On the match-day ground (#2616) this becomes a cream alpha instead —
+              the same "slide label" treatment the desktop switch's kind word
+              gets, since this caption is that same word in the mobile layout. */}
+          <span
+            className={cn(
+              "block text-[9px] leading-tight tracking-[0.06em] uppercase",
+              dark ? "text-cream/70" : "text-jersey-deep",
+            )}
+          >
+            {MATCH_KIND_WORD[kind]}
+          </span>
+        </>
+      )}
     </span>
   );
 }
@@ -224,17 +375,36 @@ function LedgerLinkRow({
   match,
   kind,
   last = false,
+  matchDay = false,
 }: {
   match: ScheduleRow;
   kind: MatchRowKind;
   last?: boolean;
+  /** The strip's match-day ground (#2616) — see `<MatchStripView>`'s own docblock. */
+  matchDay?: boolean;
 }) {
   if (match.isPlaceholder) {
     return <ReservationLedgerRow match={match} kind={kind} last={last} />;
   }
+  const today = isTodayFixture(matchDay, kind);
   const home = isKcvvHome(match);
   const opponent = opponentOf(match);
-  const dateLabel = formatMatchWidgetDate(match.date);
+  const dateLabel = today
+    ? MATCH_DAY_WORD.toLowerCase()
+    : formatMatchWidgetDate(match.date);
+
+  // The match-day ground's decided tokens (#2616 review) — one named pair per
+  // concern, mirroring `<TeamAgendaRow>`'s `monoClass`/`stubBorder` for its
+  // own light/dark (`featured`) split, hoisted once rather than re-typed at
+  // each of this row's elements. `muted`'s alpha (`/70`) and `hairline`'s
+  // (`/15`) are picked to match the light ground's single, un-forked values
+  // (`text-ink-muted`, `border-ink/15`) numerically — previously three
+  // different alphas across the file with nothing recording whether the
+  // difference was a decision or a typo.
+  const text = matchDay ? "text-cream" : "text-ink";
+  const muted = matchDay ? "text-cream/70" : "text-ink-muted";
+  const hairline = matchDay ? "border-cream/15" : "border-ink/15";
+
   // The `aria-label` replaces the row's contents as its accessible name, so the
   // score has to be spelled out here or a screen-reader user never hears it.
   // Stated KCVV-first and side-by-side with each name, since "3-1" alone does
@@ -262,27 +432,45 @@ function LedgerLinkRow({
       href={`/wedstrijd/${match.id}`}
       aria-label={label}
       className={cn(
-        "hover:bg-cream-soft focus-visible:outline-jersey-deep flex min-w-0 items-center gap-2.5 px-4 py-2.5 no-underline",
+        "flex min-w-0 items-center gap-2.5 px-4 py-2.5 no-underline",
         "focus-visible:outline-2 focus-visible:outline-offset-[-2px]",
-        last ? "" : "border-ink/15 border-b",
+        // jersey-deep on jersey-deep-dark is 2.3:1 — the same ratio the CTA's
+        // primary fill fails at (see the button-variant swap below) — so the
+        // focus ring needs its own dark-ground counterpart, not just a moved
+        // class.
+        matchDay
+          ? "focus-visible:outline-cream"
+          : "focus-visible:outline-jersey-deep",
+        matchDay ? "hover:bg-cream/10" : "hover:bg-cream-soft",
+        !last && "border-b",
+        !last && hairline,
       )}
     >
-      <StripDate date={match.date} kind={kind} />
-      <Crest team={opponent} />
-      <span className="font-display text-ink min-w-0 flex-1 truncate leading-none font-bold italic">
+      <StripDate date={match.date} kind={kind} today={today} dark={matchDay} />
+      <Crest team={opponent} dark={matchDay} />
+      <span
+        className={cn(
+          "font-display min-w-0 flex-1 truncate leading-none font-bold italic",
+          text,
+        )}
+      >
         {opponent.name}
       </span>
-      <VenueGlyph home={home} />
+      <VenueGlyph home={home} dark={matchDay} />
       <span className="shrink-0">
         {kind === "result" ? (
-          <Score match={match} className="text-mono-md" />
+          <Score match={match} className="text-mono-md" dark={matchDay} />
         ) : match.time ? (
-          <span className="text-ink text-mono-sm font-mono font-semibold">
+          // Plain template, not `cn()` — see `<Crest>`'s comment on the
+          // `text-mono-sm` / `text-{color}` conflict-group collision.
+          <span
+            className={`text-mono-sm font-mono font-semibold whitespace-nowrap ${text}`}
+          >
             {match.time}
           </span>
         ) : null}
       </span>
-      <span aria-hidden="true" className="text-ink-muted shrink-0 font-mono">
+      <span aria-hidden="true" className={cn("shrink-0 font-mono", muted)}>
         →
       </span>
     </Link>
@@ -354,13 +542,19 @@ function ReservationLedgerRow({
 function DesktopSlider({
   result,
   fixture,
+  matchDay = false,
 }: {
   result: ScheduleRow | null;
   fixture: ScheduleRow | null;
+  /** The strip's match-day ground (#2616) — see `<MatchStripView>`'s own docblock. */
+  matchDay?: boolean;
 }) {
-  // Default to the result when there is one; otherwise the fixture is the only
-  // slide there is.
-  const [showResult, setShowResult] = useState(result !== null);
+  // Default to the result when there is one; otherwise the fixture is the
+  // only slide there is. On match day, default to the fixture instead — it
+  // is the reason the strip is dark in the first place, and a desktop
+  // visitor should not have to click through the switch to discover there is
+  // a Match today.
+  const [showResult, setShowResult] = useState(result !== null && !matchDay);
 
   // One source of truth for which slide is showing, so the label, the score and
   // the CTA cannot disagree. Deriving `isResultSlide` from `showResult` alone
@@ -380,40 +574,84 @@ function DesktopSlider({
   const showing = slide.match;
   const isResultSlide = slide.kind === "result";
   const bothSides = result !== null && fixture !== null;
+  const today = isTodayFixture(matchDay, slide.kind);
+
+  // The match-day ground's decided tokens (#2616 review) — see
+  // `<LedgerLinkRow>`'s identical hoist for the alpha choices' rationale.
+  // `<DesktopTeamName>`/`<Crest>`/`<Score>` each own their own light/dark
+  // text colour internally (their own `dark` prop), so this function only
+  // needs the two tokens nothing else already owns.
+  const hairline = matchDay ? "border-cream/15" : "border-ink/15";
+  const metaTone = matchDay ? "text-warm" : "text-ink";
+  const arrowClass = matchDay
+    ? "border-cream text-cream hover:bg-cream/10"
+    : "border-ink text-ink hover:bg-cream-soft";
+
+  // `<MonoLabel>` sets its own text colour from `tone` on its own inner span
+  // — a colour class on a *wrapper* around it never applies, on either
+  // ground (#2616 review). The light ground was therefore silently
+  // rendering `text-ink` (MonoLabel's own default), not the `text-ink-muted`
+  // the old wrapper claimed; `tone="ink"` here makes that the same rendered
+  // pixel, but truthfully. The `opacity-70` wrapper on the dark ground is
+  // the escape hatch `MonoLabel.tsx` itself documents for a softer label on
+  // a dark surface — kept as the one place cream is a fraction of itself.
+  const slideLabelWord = today ? MATCH_DAY_WORD : MATCH_KIND_WORD[slide.kind];
+  const slideLabelNode = matchDay ? (
+    <span className="opacity-70">
+      <MonoLabel size="sm" tone="cream">
+        {slideLabelWord}
+      </MonoLabel>
+    </span>
+  ) : (
+    <MonoLabel size="sm" tone="ink">
+      {slideLabelWord}
+    </MonoLabel>
+  );
 
   return (
     <div className="hidden lg:grid lg:grid-cols-[auto_1fr_auto]">
-      {bothSides ? (
-        <div className="border-ink/15 flex items-center justify-center gap-2 border-r px-5">
+      {/* One wrapper for both the switch (`bothSides`) and the label-only
+          cases — they differed only in `justify-center gap-2` and the two
+          buttons either side of the label (#2616 review). */}
+      <div
+        className={cn(
+          "flex items-center border-r px-5",
+          hairline,
+          bothSides && "justify-center gap-2",
+        )}
+      >
+        {bothSides && (
           <button
             type="button"
             onClick={() => setShowResult(true)}
             disabled={isResultSlide}
             aria-label="Toon de laatste uitslag"
-            className="border-ink text-ink hover:bg-cream-soft flex h-9 w-9 items-center justify-center border-2 font-mono text-sm disabled:opacity-30"
+            className={cn(
+              "flex h-9 w-9 items-center justify-center border-2 font-mono text-sm disabled:opacity-30",
+              arrowClass,
+            )}
           >
             ←
           </button>
-          <span className="text-ink-muted w-20 text-center">
-            <MonoLabel size="sm">{MATCH_KIND_WORD[slide.kind]}</MonoLabel>
-          </span>
+        )}
+        <span className={cn(bothSides && "w-20 text-center")}>
+          {slideLabelNode}
+        </span>
+        {bothSides && (
           <button
             type="button"
             onClick={() => setShowResult(false)}
             disabled={!isResultSlide}
             aria-label="Toon de volgende wedstrijd"
-            className="border-ink text-ink hover:bg-cream-soft flex h-9 w-9 items-center justify-center border-2 font-mono text-sm disabled:opacity-30"
+            className={cn(
+              "flex h-9 w-9 items-center justify-center border-2 font-mono text-sm disabled:opacity-30",
+              arrowClass,
+            )}
           >
             →
           </button>
-        </div>
-      ) : (
-        <div className="border-ink/15 flex items-center border-r px-5">
-          <span className="text-ink-muted">
-            <MonoLabel size="sm">{MATCH_KIND_WORD[slide.kind]}</MonoLabel>
-          </span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* `aria-live` lives on this always-present cell, not inside either
           branch below — a live region inserted together with its content is
@@ -430,26 +668,54 @@ function DesktopSlider({
         ) : (
           <>
             <div className="flex min-w-0 items-center justify-center gap-3 px-6">
-              <Crest team={showing.homeTeam} big />
-              <DesktopTeamName team={showing.homeTeam} />
-              {isResultSlide ? (
-                <Score match={showing} className="text-mono-md shrink-0" />
+              <Crest team={showing.homeTeam} big dark={matchDay} />
+              <DesktopTeamName team={showing.homeTeam} dark={matchDay} />
+              {isResultSlide || today ? (
+                // `<Score>` already owns the ground colour and the
+                // has-a-score/no-score fallback (`match.time ?? "vs."`) — on
+                // match day the fixture has no score yet, so this renders
+                // exactly the kickoff the "names … the kickoff" half of
+                // #2616's AC asks for, in the same slot the result's score
+                // sits in (#2616 review, replacing a hand-built middle arm
+                // that duplicated `<Score>` byte for byte).
+                <Score
+                  match={showing}
+                  className="text-mono-md shrink-0"
+                  dark={matchDay}
+                />
               ) : (
+                // Reachable only for a future, non-today fixture — which
+                // means `matchDay` is always false here (a fixture slide is
+                // only ever "today" when `matchDay` is true), so this never
+                // needs a dark counterpart.
                 // `ink/50` computes to 3.63:1 on cream — below AA. `ink-muted` is
                 // the palette's answer for de-emphasised text and clears at ~4.9:1.
                 <span className="font-display text-ink-muted text-mono-md shrink-0 leading-none italic">
                   vs.
                 </span>
               )}
-              <DesktopTeamName team={showing.awayTeam} />
-              <Crest team={showing.awayTeam} big />
+              <DesktopTeamName team={showing.awayTeam} dark={matchDay} />
+              <Crest team={showing.awayTeam} big dark={matchDay} />
             </div>
             {/* No venue glyph: both teams render in scoreboard order here, so the
-                layout already says who was at home. */}
-            <div className="text-ink text-mono-sm mt-1.5 text-center font-mono font-semibold">
-              {formatMatchWidgetDate(showing.date)}
-              {!isResultSlide && showing.time ? ` · ${showing.time}` : ""}
-              {showing.competition ? ` · ${showing.competition}` : ""}
+                layout already says who was at home. Plain template, not
+                `cn()` — see `<Crest>`'s comment on the `text-mono-sm` /
+                `text-{color}` conflict-group collision.
+                MATCH_DAY_WORD lives on the slide label to the left, not here
+                too — the mobile row's own rationale ("restating 'Volgende'
+                under 'Vandaag' would argue with itself") applies just as
+                much to stacking the word twice on one desktop slide. This
+                line keeps doing what it does on any other day: naming the
+                competition, just without the now-redundant date/kickoff
+                (#2616 review). */}
+            <div
+              className={`text-mono-sm mt-1.5 text-center font-mono font-semibold ${metaTone}`}
+            >
+              {today
+                ? (showing.competition ?? "")
+                : `${formatMatchWidgetDate(showing.date)}${
+                    !isResultSlide && showing.time ? ` · ${showing.time}` : ""
+                  }${showing.competition ? ` · ${showing.competition}` : ""}`}
             </div>
           </>
         )}
@@ -464,7 +730,12 @@ function DesktopSlider({
           <Link
             href={`/wedstrijd/${showing.id}`}
             className={getButtonClasses({
-              variant: "primary",
+              // The primary variant's fill is 2.3:1 on the match-day ground
+              // and its ink border/shadow 1.6:1 — both effectively invisible
+              // (#2616 decision sheet §8, D7c). `inverted` needs no new
+              // variant: it is already cream-ground with the soft offset
+              // shadow this ground calls for.
+              variant: matchDay ? "inverted" : "primary",
               size: "sm",
               className: "no-underline",
             })}
@@ -504,9 +775,20 @@ function ReservationDesktopSlide({ match }: { match: ScheduleReservation }) {
   );
 }
 
-function DesktopTeamName({ team }: { team: ScheduleTeam }) {
+function DesktopTeamName({
+  team,
+  dark = false,
+}: {
+  team: ScheduleTeam;
+  /** The match-day ground (#2616). */
+  dark?: boolean;
+}) {
+  // Plain template, not `cn()` — see `<Crest>`'s comment on the
+  // `text-mono-md` / `text-{color}` conflict-group collision.
   return (
-    <span className="font-display text-ink text-mono-md max-w-[40%] min-w-0 truncate leading-none font-bold italic">
+    <span
+      className={`font-display text-mono-md max-w-[40%] min-w-0 truncate leading-none font-bold italic ${dark ? "text-cream" : "text-ink"}`}
+    >
       {team.id === KCVV_CLUB_ID ? "KCVV" : team.name}
     </span>
   );

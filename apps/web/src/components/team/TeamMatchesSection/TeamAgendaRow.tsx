@@ -365,7 +365,11 @@ export function TeamAgendaRow({
       ? "text-white"
       : "text-ink";
 
-  const outlineShadow = outcome ? OUTCOME_UNDERLINE[outcome] : undefined;
+  // TeamAgendaRow predates the light/dark ground split OUTCOME_UNDERLINE now
+  // carries (#2616) and has never reconsidered this tint for its own
+  // `featured` (jersey-deep) card — `.light` here preserves that exact,
+  // pre-existing value unchanged, on both grounds.
+  const outlineShadow = outcome ? OUTCOME_UNDERLINE.light[outcome] : undefined;
 
   // A status the layout can't speak for on its own — a forfeit otherwise reads
   // as a bare scoreline, an `afgelast` match as a kickoff to turn up for. The
