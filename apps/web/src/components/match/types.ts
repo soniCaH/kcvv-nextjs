@@ -38,6 +38,13 @@ export interface ScheduleMatch {
   date: Date;
   /** Match time (HH:MM) */
   time?: string;
+  /**
+   * Venue/location, mirrored from `Match.venue` (#2616). Optional — a BFF
+   * match not yet assigned a pitch carries none, and no renderer may invent
+   * one. `<MatchStripView>` is the one consumer today, and only on the day
+   * of the match: the strip otherwise names neither team's ground.
+   */
+  venue?: string;
   /** Home team */
   homeTeam: ScheduleTeam;
   /** Away team */

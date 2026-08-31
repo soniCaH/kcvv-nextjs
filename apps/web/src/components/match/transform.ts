@@ -34,6 +34,7 @@ export function transformMatchToSchedule(match: Match): ScheduleRow {
     id: match.id,
     date: match.date,
     time: match.time,
+    venue: match.venue,
     homeTeam: transformTeam(match.home_team),
     awayTeam: transformTeam(match.away_team),
     homeScore: match.home_team.score,
