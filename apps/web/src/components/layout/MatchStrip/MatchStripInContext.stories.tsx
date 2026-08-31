@@ -120,7 +120,6 @@ const todaysFixture: ScheduleMatch = {
   id: 12350,
   date: new Date("2026-08-15T15:00:00Z"),
   time: "15:00",
-  venue: "De Dries",
   competition: "Tweede Provinciale A",
   status: "scheduled",
   homeTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
