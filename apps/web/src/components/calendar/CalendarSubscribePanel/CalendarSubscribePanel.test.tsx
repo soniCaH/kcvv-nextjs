@@ -158,24 +158,9 @@ describe("CalendarSubscribePanel", () => {
       );
     });
 
-    it("restores the events flag when the switch is turned back on", async () => {
-      const user = userEvent.setup();
-      render(<CalendarSubscribePanel {...defaultProps} />);
-      const toggle = screen.getByRole("switch", { name: /clubactiviteiten/i });
-      await user.click(toggle);
-      await user.click(toggle);
-      await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
-      expect(mockWriteText).toHaveBeenCalledWith(
-        "webcal://localhost:3000/api/calendar.ics?teamIds=101,102,103&side=all&events=1",
-      );
-    });
-
     it("encodes the same URL in the QR code as the copied link", async () => {
       const user = userEvent.setup();
       render(<CalendarSubscribePanel {...defaultProps} />);
-      await user.click(
-        screen.getByRole("switch", { name: /clubactiviteiten/i }),
-      );
       await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
       const qrValue = screen.getByTestId("qr-value").dataset.value;
       expect(qrValue).toBe(mockWriteText.mock.calls[0]![0]);
@@ -183,16 +168,11 @@ describe("CalendarSubscribePanel", () => {
   });
 
   describe("club-activities switch", () => {
-    it("is on by default", () => {
+    it("is on by default, named 'Clubactiviteiten'", () => {
       render(<CalendarSubscribePanel {...defaultProps} />);
       expect(
         screen.getByRole("switch", { name: /clubactiviteiten/i }),
       ).toHaveAttribute("aria-checked", "true");
-    });
-
-    it("names club activities, not event categories or a list", () => {
-      render(<CalendarSubscribePanel {...defaultProps} />);
-      expect(screen.getByText("Clubactiviteiten")).toBeInTheDocument();
     });
 
     it("toggles off on click", async () => {

@@ -14,6 +14,8 @@ import {
 import type { Match } from "@kcvv/api-contract";
 import {
   buildIcalFeed,
+  CALENDAR_EVENTS_PARAM,
+  CALENDAR_EVENTS_PARAM_VALUE,
   getFeedVariantMeta,
   normalizeCacheKey,
   resolveFeedVariant,
@@ -137,7 +139,9 @@ export async function GET(request: NextRequest) {
   // concern: whether to fetch the activities feed over the network at all,
   // so the flag being off skips the Sanity read entirely rather than
   // fetching a result `buildIcalFeed` would render anyway.
-  const variant = resolveFeedVariant(searchParams.get("events") === "1");
+  const variant = resolveFeedVariant(
+    searchParams.get(CALENDAR_EVENTS_PARAM) === CALENDAR_EVENTS_PARAM_VALUE,
+  );
   const matchesCacheKey = normalizeCacheKey(rawTeamIds, side);
 
   const teamIdNums = rawTeamIds

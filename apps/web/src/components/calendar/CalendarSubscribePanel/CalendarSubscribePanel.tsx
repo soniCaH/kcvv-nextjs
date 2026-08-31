@@ -5,6 +5,10 @@ import { QRCodeSVG } from "qrcode.react";
 import { cn } from "@/lib/utils/cn";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { RemovableChip } from "@/components/design-system";
+import {
+  CALENDAR_EVENTS_PARAM,
+  CALENDAR_EVENTS_PARAM_VALUE,
+} from "@/lib/utils/calendar-feed-query";
 import type { CalendarTeamInfo } from "@/app/(main)/kalender/utils";
 
 export interface CalendarSubscribePanelProps {
@@ -21,13 +25,8 @@ const SIDE_TABS: { value: Side; label: string }[] = [
   { value: "away", label: "Uit" },
 ];
 
-/**
- * The single source both the copy button and the QR code read from (#2705) —
- * neither computes the URL a second time. `includeEvents` emits the same
- * `events=1` flag the feed route understands (#2704); leaving it off omits
- * the param entirely, so the URL is byte-identical to the matches-only feed
- * that predates this flag — existing saved subscriptions never see a change.
- */
+/** `includeEvents` off omits the param entirely (rather than `events=0`), so
+ * the URL stays byte-identical to the pre-#2704 matches-only feed. */
 function buildWebcalUrl(
   teamIds: number[],
   side: Side,
@@ -35,7 +34,9 @@ function buildWebcalUrl(
   includeEvents: boolean,
 ): string {
   const base = `webcal://${host}/api/calendar.ics?teamIds=${teamIds.join(",")}&side=${side}`;
-  return includeEvents ? `${base}&events=1` : base;
+  return includeEvents
+    ? `${base}&${CALENDAR_EVENTS_PARAM}=${CALENDAR_EVENTS_PARAM_VALUE}`
+    : base;
 }
 
 function computeInitialSelection(
@@ -58,10 +59,8 @@ export function CalendarSubscribePanel({
     computeInitialSelection(teams, preselectedTeamLabel),
   );
   const [side, setSide] = useState<Side>("all");
-  // On by default (#2705) — someone subscribing for the first time should
-  // leave with club activities in their calendar unless they opt out. The
-  // feed route's own default stays off (#2704); this is the panel's emitted
-  // value, not the endpoint's assumption.
+  // On by default (#2705) — deliberately not the same as the route's own
+  // default, which stays off (#2704).
   const [includeEvents, setIncludeEvents] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -167,19 +166,20 @@ export function CalendarSubscribePanel({
           </div>
 
           {/* Club-activities on/off switch (#2705) — one control, all or
-              nothing (no per-category list). Its own row, kept separate from
-              the side-filter + copy row below so that row's equal-height
-              lock (6d5) is untouched. Track is 24×44px — the WCAG 2.5.8
-              minimum target size — rather than mirroring the smaller chip
-              cross, which predates that check. */}
-          <div className="mb-3 flex items-center gap-2.5">
+              nothing. Its own row, separate from the side-filter + copy row
+              below so that row's equal-height lock (6d5) is untouched. */}
+          <div
+            className="mb-3 flex cursor-pointer items-center gap-2.5"
+            onClick={() => setIncludeEvents((prev) => !prev)}
+          >
             <button
               type="button"
               role="switch"
               aria-checked={includeEvents}
-              aria-label="Clubactiviteiten in het abonnement"
-              onClick={() => setIncludeEvents((prev) => !prev)}
+              aria-labelledby="subscribe-panel-events-label"
               className={cn(
+                // 24×44px track — the WCAG 2.5.8 minimum target size (unlike
+                // the smaller RemovableChip cross, which predates that check).
                 "border-ink relative h-6 w-11 shrink-0 border-2 transition-colors",
                 "focus-visible:outline-ink focus-visible:outline-2 focus-visible:outline-offset-2",
                 includeEvents ? "bg-jersey-deep" : "bg-cream-soft",
@@ -188,12 +188,15 @@ export function CalendarSubscribePanel({
               <span
                 aria-hidden="true"
                 className={cn(
-                  "bg-ink absolute top-0.5 left-0.5 h-4 w-4 transition-transform",
+                  "bg-ink absolute top-0.5 left-0.5 h-4 w-4 transition-transform motion-reduce:transition-none",
                   includeEvents ? "translate-x-5" : "translate-x-0",
                 )}
               />
             </button>
-            <span className="text-ink font-mono text-[11px] font-semibold tracking-wide uppercase">
+            <span
+              id="subscribe-panel-events-label"
+              className="text-ink font-mono text-[11px] font-semibold tracking-wide uppercase"
+            >
               Clubactiviteiten
             </span>
           </div>
