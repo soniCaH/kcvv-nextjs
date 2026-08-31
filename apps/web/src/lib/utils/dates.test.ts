@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
+  clubToday,
   formatArticleDate,
   formatWidgetDate,
   formatMatchDayMonth,
   formatMatchWidgetDate,
+  isMatchDay,
   toDisplayZone,
   toMatchDisplayZone,
 } from "./dates";
@@ -152,5 +154,56 @@ describe("match-date formatters", () => {
   it("returns empty output for an invalid date", () => {
     expect(formatMatchWidgetDate(new Date(NaN))).toBe("");
     expect(formatMatchDayMonth(new Date(NaN))).toEqual({ day: "", month: "" });
+  });
+});
+
+/**
+ * #2616 — the comparison `<MatchStrip>` needs to relabel a fixture as "today".
+ * `toMatchDisplayZone`'s parse is already covered above (#2601/#2604); this
+ * only exercises the comparison, so every case passes an explicit
+ * `referenceDay` rather than freezing the system clock.
+ */
+describe("isMatchDay", () => {
+  it("is true for a match on the reference day", () => {
+    const kickoff = new Date(Date.UTC(2026, 7, 8, 15, 0));
+    expect(isMatchDay(kickoff, "2026-08-08")).toBe(true);
+  });
+
+  it("is false for a match the day before the reference day", () => {
+    const kickoff = new Date(Date.UTC(2026, 7, 8, 15, 0));
+    expect(isMatchDay(kickoff, "2026-08-09")).toBe(false);
+  });
+
+  it("is false for a match the day after the reference day", () => {
+    const kickoff = new Date(Date.UTC(2026, 7, 8, 15, 0));
+    expect(isMatchDay(kickoff, "2026-08-07")).toBe(false);
+  });
+
+  it("reads a late kickoff on its own Belgian day, not the day a naive UTC read would roll it onto", () => {
+    // 22:00 Belgian kickoff on 3 August, carried as a BFF wall-clock Date —
+    // `toDisplayZone` would roll this onto the 4th (see the parse tests
+    // above); `isMatchDay` must agree with `toMatchDisplayZone` instead.
+    const kickoff = new Date(Date.UTC(2026, 7, 3, 22, 0));
+    expect(isMatchDay(kickoff, "2026-08-03")).toBe(true);
+    expect(isMatchDay(kickoff, "2026-08-04")).toBe(false);
+  });
+
+  it("accepts a serialised match date the same as the Date it came from", () => {
+    const kickoff = new Date(Date.UTC(2026, 7, 8, 15, 0));
+    expect(isMatchDay(kickoff.toISOString(), "2026-08-08")).toBe(true);
+  });
+
+  it("is false for an invalid date rather than throwing", () => {
+    expect(isMatchDay("not-a-date", "2026-08-08")).toBe(false);
+  });
+
+  it("defaults the reference day to clubToday() when omitted", () => {
+    // A midday-UTC kickoff on the club's calendar "today" — noon keeps this
+    // clear of the UTC/Brussels midnight-rollover window `toMatchDisplayZone`
+    // itself has to handle, so the assertion is only about the default
+    // parameter, not about the parse.
+    const today = clubToday();
+    const kickoffToday = new Date(`${today}T12:00:00Z`);
+    expect(isMatchDay(kickoffToday)).toBe(true);
   });
 });
