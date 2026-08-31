@@ -1,17 +1,29 @@
 /**
  * <JerseyShirt> — decorative jersey illustration (Tier C primitive).
  *
- * Two-pass print vocabulary identical to `<PlayerFigure>`'s illustration
- * fallback, palette inverted: ink underprint + jersey-deep overprint
- * (collar, four vertical stripes, body outline). The 2-3px registration
- * offset is achieved by giving the underprint and overprint layers
- * different `inset` values, with the underprint multiplied onto the
+ * Two-pass print vocabulary identical to `<JerseyIllustration>`'s
+ * illustration fallback, palette inverted: ink underprint + jersey-deep
+ * overprint (collar, four vertical stripes, body outline). The 2-3px
+ * registration offset is achieved by giving the underprint and overprint
+ * layers different `inset` values, with the underprint multiplied onto the
  * overprint.
  *
+ * **#2635 cohesion-contract decision: pinned to the base variant,
+ * deliberately.** `<JerseyIllustration>` now draws a deterministic
+ * per-player figure seeded from a stable player id (#2635, see
+ * `playerFigureSeed`); `<JerseyShirt>` does not adopt that system and keeps
+ * reading `_jersey-paths.ts` directly, unparameterised. Its callers
+ * (`ClubshopBanner`, `TeamHero`, `TeamFlagship`, `TeamEnrolmentCta`,
+ * `YouthDirectory`, `EmptyState`, `ErrorState`) are team- or club-level
+ * chrome, never a single player, so there is no player identity to seed
+ * from — pinning is the only deliberate choice available, not a default
+ * left unmade.
+ *
  * Spec: `docs/design/mockups/phase-3-a-tier-c-figures/jerseyshirt-locked.md`.
- * Path provenance: `_jersey-paths.ts` (shared with `<PlayerFigure>`).
+ * Path provenance: `_jersey-paths.ts` (shared with `<JerseyIllustration>`).
  */
 import {
+  JERSEY_OUTLINE_STROKE_WIDTH,
   JERSEY_TORSO_FILL_PATH,
   JERSEY_TORSO_OUTLINE_PATH,
   JERSEY_TORSO_VIEWBOX,
@@ -32,7 +44,6 @@ export interface JerseyShirtProps {
 }
 
 const STRIPE_STROKE_WIDTH = 2;
-const OUTLINE_STROKE_WIDTH = 3;
 
 // Cream letter on ink stroke shim — replicates the printed-on-felt feel of
 // the locked mockup. Tailwind v4 doesn't expose a token for this exact
@@ -72,7 +83,7 @@ export function JerseyShirt({ letterOverlay, className }: JerseyShirtProps) {
           <g
             fill="none"
             stroke="var(--color-jersey-deep)"
-            strokeWidth={OUTLINE_STROKE_WIDTH}
+            strokeWidth={JERSEY_OUTLINE_STROKE_WIDTH}
             strokeLinejoin="miter"
             strokeLinecap="square"
           >

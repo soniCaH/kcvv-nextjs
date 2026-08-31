@@ -198,6 +198,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
       <MatchStripSlot />
       <PageContainer as="section" className="py-12 lg:py-16">
         <PlayerHero
+          id={player.id}
           firstName={player.firstName}
           lastName={player.lastName}
           position={player.position}

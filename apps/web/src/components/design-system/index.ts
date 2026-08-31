@@ -136,8 +136,11 @@ export type {
 } from "./EmptyState";
 
 // JerseyIllustration
-export { JerseyIllustration } from "./JerseyIllustration";
-export type { JerseyIllustrationProps } from "./JerseyIllustration";
+export { JerseyIllustration, playerFigureSeed } from "./JerseyIllustration";
+export type {
+  JerseyIllustrationProps,
+  PlayerFigureIdentity,
+} from "./JerseyIllustration";
 
 // JerseyShirt
 export { JerseyShirt } from "./JerseyShirt";

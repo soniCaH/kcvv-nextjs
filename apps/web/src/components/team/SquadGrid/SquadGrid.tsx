@@ -62,6 +62,7 @@ export function SquadGrid({ players }: SquadGridProps) {
             {group.players.map((p) => (
               <PlayerCard
                 key={p.id}
+                id={p.id}
                 firstName={p.firstName}
                 lastName={p.lastName}
                 position={p.position}

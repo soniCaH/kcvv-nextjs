@@ -2,9 +2,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 import { TapedCard } from "@/components/design-system/TapedCard";
-import { JerseyIllustration } from "@/components/design-system/JerseyIllustration";
+import {
+  JerseyIllustration,
+  playerFigureSeed,
+} from "@/components/design-system/JerseyIllustration";
 
 export interface PlayerCardProps {
+  /**
+   * Stable identity — e.g. the Sanity `_id`. Seeds the illustration
+   * fallback via `playerFigureSeed` (#2635): never the display name, so a
+   * spelling fix or a married name never redraws the figure, and two
+   * players sharing a first+last name never draw identically.
+   */
+  id: string;
   firstName: string;
   lastName: string;
   /**
@@ -23,6 +33,7 @@ export interface PlayerCardProps {
 }
 
 export function PlayerCard({
+  id,
   firstName,
   lastName,
   position,
@@ -61,6 +72,7 @@ export function PlayerCard({
         ) : (
           <JerseyIllustration
             variant="card"
+            seed={playerFigureSeed({ id })}
             data-testid="player-card-illustration"
           />
         )}

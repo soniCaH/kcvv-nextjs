@@ -3,16 +3,32 @@
  * verbatim from `option-b-stamped-block-print.html` `#player-figure` (lines
  * 720-756).
  *
- * Both `<JerseyShirt>` and `<PlayerFigure>` consume these constants so the
- * two-pass print vocabulary is byte-identical across the primitives —
- * "one illustrator's hand" cohesion contract per
- * `docs/design/mockups/phase-3-a-tier-c-figures/jerseyshirt-locked.md`.
+ * `<JerseyShirt>` and `<JerseyIllustration>` (shipped as this file's
+ * successor primitive under #2118) both consume these constants so the
+ * two-pass print vocabulary traces to "one illustrator's hand" cohesion
+ * contract per `docs/design/mockups/phase-3-a-tier-c-figures/jerseyshirt-locked.md`.
+ *
+ * **#2635 cohesion-contract decision.** `<JerseyIllustration>` now draws a
+ * deterministic per-player variant (`player-figure-variant.ts`, seeded from
+ * a stable per-player id) — it is no longer byte-identical per instance.
+ * `<JerseyShirt>` is **explicitly pinned to this file's base geometry**: it
+ * has no player identity to seed from (its callers are team- and
+ * club-level — `ClubshopBanner`, `TeamHero`, `TeamFlagship`,
+ * `YouthDirectory`, `EmptyState`, `ErrorState` — never a single player), so
+ * it keeps reading these constants directly and unparameterised.
+ *
+ * This file holds only geometry both primitives can consume identically —
+ * the base silhouette plus the shared extents the containment guard bounds
+ * against. Geometry that exists solely for `<JerseyIllustration>`'s variant
+ * system (long-sleeve arm paths, alternate stripe counts) lives beside that
+ * component instead (`JerseyIllustration/jersey-illustration-geometry.ts`),
+ * one consumer, one home — `<JerseyShirt>` never imports it.
  *
  * Coordinate space is the viewBox `0 0 220 300` (full figure including head).
  * `<JerseyShirt>` crops to the torso via `viewBox="0 120 220 180"`;
- * `<PlayerFigure>` (when shipped under #1633) uses the full viewBox.
+ * `<JerseyIllustration>` uses the full viewBox.
  *
- * Do not edit these strings independently of the locked spec.
+ * Do not edit the base geometry below independently of the locked spec.
  */
 
 export const JERSEY_TORSO_FILL_PATH =
@@ -33,9 +49,9 @@ export const JERSEY_VERTICAL_STRIPE_PATHS = [
 export const JERSEY_TORSO_VIEWBOX = "0 120 220 180";
 
 /**
- * Full-figure paths consumed by `<PlayerFigure>` (#1633). Not used by
+ * Full-figure paths consumed by `<JerseyIllustration>`. Not used by
  * `<JerseyShirt>` (which crops to the torso), but live here so the two
- * primitives share one provenance and stay byte-identical.
+ * primitives share one provenance.
  *
  * Head ellipse + shoulder bumps source: `option-b-stamped-block-print.html`
  * `#player-figure` lines 727-731 / 738-742.
@@ -53,4 +69,37 @@ export const JERSEY_SHOULDER_BUMP_LEFT_PATH =
 export const JERSEY_SHOULDER_BUMP_RIGHT_PATH =
   "M 168 168 L 150 162 L 148 196 L 166 200 Z";
 
-export const JERSEY_FIGURE_VIEWBOX = "0 0 220 300";
+/** The full-figure viewBox, in units — build the `viewBox` string from these, never hand-copy them. */
+export const JERSEY_FIGURE_VIEWBOX_WIDTH = 220;
+export const JERSEY_FIGURE_VIEWBOX_HEIGHT = 300;
+
+export const JERSEY_FIGURE_VIEWBOX = `0 0 ${JERSEY_FIGURE_VIEWBOX_WIDTH} ${JERSEY_FIGURE_VIEWBOX_HEIGHT}`;
+
+/**
+ * The outline (overprint) stroke width shared by every consumer —
+ * `<JerseyIllustration>`'s head/torso/collar/pattern strokes and
+ * `<JerseyShirt>`'s torso outline both use this, and the containment
+ * guard's `STROKE_ALLOWANCE` derives from it. One definition so a future
+ * re-weight of the line can't silently drift between them.
+ */
+export const JERSEY_OUTLINE_STROKE_WIDTH = 3;
+
+/**
+ * Half-width, in viewBox units from the x=110 centreline, of the widest
+ * point the base torso path (`JERSEY_TORSO_FILL_PATH`/`_OUTLINE_PATH`)
+ * reaches — `110 − 30` (and `190 − 110`) from that path's own endpoints.
+ * The containment guard's bounding box uses this (scaled by `build`) as one
+ * of the two candidates for the figure's widest extent.
+ */
+export const JERSEY_TORSO_HALF_WIDTH = 80;
+
+/**
+ * Half-width, in viewBox units from the x=110 centreline, of the widest
+ * point either arm variant reaches — the long-sleeve path's leftmost point
+ * is `x=50` (`110 − 50 = 60`, in `jersey-illustration-geometry.ts`); the
+ * short shoulder-bump's leftmost point (`x=52`) reaches slightly less. `60`
+ * is the safe upper bound the containment guard measures both against, so
+ * a future sleeve or bump edit that reaches further MUST update this
+ * constant in the same diff — the guard has no other way to know.
+ */
+export const JERSEY_ARM_REACH_HALF_WIDTH = 60;

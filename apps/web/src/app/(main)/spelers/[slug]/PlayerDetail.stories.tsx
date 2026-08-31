@@ -73,6 +73,7 @@ function PlayerProfileAssembly({
     <>
       <section className="mx-auto w-full max-w-[var(--container-wide)] px-4 py-12 lg:px-8 lg:py-16">
         <PlayerHero
+          id="player-maxim-breugelmans"
           firstName="Maxim"
           lastName="Breugelmans"
           position="Middenvelder"
