@@ -1,5 +1,9 @@
 /**
- * <EditorialLead> — italic display paragraph capped at 52ch line length.
+ * <EditorialLead> — italic display paragraph capped at the prose reading
+ * measure (`var(--container-prose)`, 680 — DESIGN.md "The Three Widths
+ * Rule"). Was a bare `52ch`; converted under #2645 because this is a reading
+ * column, not chrome — the font-metric drift `ch` carries is exactly what
+ * the reading-measure ban (#2436) exists to remove.
  *
  * Renders the article's lead paragraph (or a body-derived fallback). The
  * exported `truncateLead` helper enforces the 280-char cap that the
@@ -33,7 +37,7 @@ export interface EditorialLeadProps {
 
 export function EditorialLead({ children }: EditorialLeadProps) {
   return (
-    <p className="text-ink-soft max-w-[52ch] font-serif text-xl leading-snug italic">
+    <p className="text-ink-soft max-w-[var(--container-prose)] font-serif text-xl leading-snug italic">
       {children}
     </p>
   );

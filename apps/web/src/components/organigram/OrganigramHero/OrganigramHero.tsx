@@ -70,7 +70,10 @@ export function OrganigramHero({
             {heading}
           </EditorialHeading>
 
-          <p className="text-cream/80 font-display max-w-[44ch] text-[16px] leading-[1.4] italic">
+          {/* Reading column, not chrome — converted from a bare `44ch` to
+              the prose measure under #2645 (DESIGN.md "The Three Widths
+              Rule" / #2436). */}
+          <p className="text-cream/80 font-display max-w-[var(--container-prose)] text-[16px] leading-[1.4] italic">
             {lead}
           </p>
 

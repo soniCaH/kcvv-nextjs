@@ -420,7 +420,12 @@ export function PageHero(props: PageHeroProps) {
         <p
           className={cn(
             "font-display text-ink-soft mt-3.5 leading-[1.38] italic",
-            showImage ? "text-[1.05rem]" : "max-w-[40ch] text-[1.25rem]",
+            // The typographic (no-image) lead is a reading column, not
+            // chrome — converted from a bare `40ch` to the prose measure
+            // under #2645 (DESIGN.md "The Three Widths Rule" / #2436).
+            showImage
+              ? "text-[1.05rem]"
+              : "max-w-[var(--container-prose)] text-[1.25rem]",
           )}
         >
           {lead}

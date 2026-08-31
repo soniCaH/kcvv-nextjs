@@ -146,7 +146,13 @@ export function ErrorState({
           {pun}
         </EditorialHeading>
 
-        <p className="text-ink-soft text-body-md mt-3.5 max-w-[46ch]">{body}</p>
+        {/* Read as a paragraph, not chrome, so it takes the prose measure
+            (#2645) — converted from a bare `46ch`. Effectively bounded by
+            the `max-w-[40rem]` (640px) wrapper above, which is already
+            narrower than the 680px token. */}
+        <p className="text-ink-soft text-body-md mt-3.5 max-w-[var(--container-prose)]">
+          {body}
+        </p>
 
         <ActionRow actions={actions} />
       </div>

@@ -285,6 +285,13 @@ The real usage scene is a phone held outdoors on the sideline. Layouts collapse 
 
 **The Three Widths Rule.** A content container may use 680, 1040 or 1280 and no other value. If a layout seems to need 900px, it needs one of the three.
 
+**The Reading-Measure Exemption Rule.** `ch` is banned as a reading measure (#2436): it resolves against the current font's zero-glyph advance, so the same value renders at a different pixel width in serif italic than in sans, and again at a different type size — drift invisible in review. Anything a visitor reads as a paragraph takes `var(--container-prose)` instead, never a `ch` value — `EditorialLead`, `PageHero`'s typographic lead, `OrganigramHero`'s lead, `ErrorState`'s body and `EmptyState`'s body all converted under #2645. Two shapes are not reading columns and may keep a bare `ch` max-width, each carrying an inline comment naming the exemption and pointing back here:
+
+- **Helper copy that shares a row with controls.** `VolledigOrganigram`'s toolbar caption sits in a `justify-between` row next to the "Blader door het organigram" / "Download als PDF" buttons. Converting it to 680 was tried and reverted (#2560 / PR #2644): the caption claims the whole row, the button group wraps to a second line, and the chart shifts down. The slot is narrow on purpose — the unit was never the defect here.
+- **Single-line labels that truncate.** `SiteHeader`'s nav-label cap (`max-w-[14ch] truncate`) bounds a single line against a Sanity team name, scaled to the mono type step it renders at — a truncation cap, not a measure of a paragraph. Truncation is always legal; this is not a case the next audit needs to re-open.
+
+A grep for a bare `ch` max-width in `apps/web/src` (excluding `*.stories.tsx`) should return only these two, each with its exemption comment.
+
 **The Full-Bleed Never Wraps Rule.** Striped seams and coloured bands are viewport-wide by definition. Wrapping one in a max-width container is always a bug.
 
 ## Elevation & Depth
