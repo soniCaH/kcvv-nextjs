@@ -90,12 +90,17 @@ export function clubToday(): string {
  * zone, so the two sides of the comparison cannot disagree about which
  * calendar the club is on.
  *
- * `referenceDay` defaults to `clubToday()` so a caller can write
- * `isMatchDay(fixture.date)`, but stays a plain parameter — not a call baked
- * into the body — so the comparison itself is testable against a fixed day
- * without freezing the system clock. The parse this composes is already
- * tested (`toMatchDisplayZone` in this file's test suite, #2601/#2604); this
- * function owns only the equality check.
+ * `referenceDay` is REQUIRED, deliberately not defaulted to `clubToday()`
+ * (#2616 review). The AC calls this "a pure function … over a Match date and
+ * a reference calendar day" — a default that reads the wall clock would let
+ * `isMatchDay(fixture.date)` compile anywhere, including inside
+ * `<MatchStripView>`, the client component whose own docblock explains at
+ * length why that exact read must stay server-side (a client/server date
+ * disagreement across a midnight boundary). A required parameter makes that
+ * mistake unwritable instead of merely documented; the one extra argument at
+ * the one real call site (`<MatchStrip>`) is the cost. The parse this
+ * composes is already tested (`toMatchDisplayZone` in this file's test
+ * suite, #2601/#2604); this function owns only the equality check.
  *
  * An invalid `matchDate` reads as "not today" rather than throwing —
  * `toMatchDisplayZone(...).toISODate()` is `null` for one, which can never
@@ -103,7 +108,7 @@ export function clubToday(): string {
  */
 export function isMatchDay(
   matchDate: Date | string,
-  referenceDay: string = clubToday(),
+  referenceDay: string,
 ): boolean {
   return toMatchDisplayZone(matchDate).toISODate() === referenceDay;
 }

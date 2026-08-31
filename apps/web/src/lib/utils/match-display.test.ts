@@ -9,7 +9,6 @@ import {
   isSettledMatch,
   otherClubSide,
   OUTCOME_UNDERLINE,
-  OUTCOME_UNDERLINE_DARK,
   reservationView,
   reservationRowLabel,
 } from "./match-display";
@@ -428,26 +427,32 @@ describe("reservationRowLabel", () => {
 });
 
 /**
- * `<MatchStripView>`'s dark-ground counterpart to `OUTCOME_UNDERLINE` (#2616):
- * the light mix reads as a pastel highlighter behind ink text on cream, which
- * disappears behind cream text on the match-day ground. Same keys, same "no
- * tint on a draw" rule, mixed toward the dark ground instead of cream.
+ * `<MatchStripView>`'s match-day ground reads `OUTCOME_UNDERLINE.dark`
+ * (#2616): the light mix reads as a pastel highlighter behind ink text on
+ * cream, which disappears behind cream text on that ground. Same keys, same
+ * "no tint on a draw" rule, mixed toward the dark ground instead of cream.
  */
-describe("OUTCOME_UNDERLINE_DARK", () => {
-  it("carries exactly the win/draw/loss keys OUTCOME_UNDERLINE does", () => {
-    expect(Object.keys(OUTCOME_UNDERLINE_DARK).sort()).toEqual(
-      Object.keys(OUTCOME_UNDERLINE).sort(),
+describe("OUTCOME_UNDERLINE (light/dark)", () => {
+  it("carries exactly the win/draw/loss keys on both grounds", () => {
+    expect(Object.keys(OUTCOME_UNDERLINE.dark).sort()).toEqual(
+      Object.keys(OUTCOME_UNDERLINE.light).sort(),
     );
   });
 
-  it("gives a draw no tint, same as the light ground", () => {
-    expect(OUTCOME_UNDERLINE_DARK.draw).toBeUndefined();
+  it("gives a draw no tint on either ground", () => {
+    expect(OUTCOME_UNDERLINE.light.draw).toBeUndefined();
+    expect(OUTCOME_UNDERLINE.dark.draw).toBeUndefined();
   });
 
-  it("mixes win and loss toward the dark ground rather than cream", () => {
-    expect(OUTCOME_UNDERLINE_DARK.win).toContain("--color-jersey-deep-dark");
-    expect(OUTCOME_UNDERLINE_DARK.win).not.toContain("--color-cream");
-    expect(OUTCOME_UNDERLINE_DARK.loss).toContain("--color-jersey-deep-dark");
-    expect(OUTCOME_UNDERLINE_DARK.loss).not.toContain("--color-cream");
+  it("mixes the light ground's win/loss toward cream", () => {
+    expect(OUTCOME_UNDERLINE.light.win).toContain("--color-cream");
+    expect(OUTCOME_UNDERLINE.light.loss).toContain("--color-cream");
+  });
+
+  it("mixes the dark ground's win/loss toward jersey-deep-dark rather than cream", () => {
+    expect(OUTCOME_UNDERLINE.dark.win).toContain("--color-jersey-deep-dark");
+    expect(OUTCOME_UNDERLINE.dark.win).not.toContain("--color-cream");
+    expect(OUTCOME_UNDERLINE.dark.loss).toContain("--color-jersey-deep-dark");
+    expect(OUTCOME_UNDERLINE.dark.loss).not.toContain("--color-cream");
   });
 });

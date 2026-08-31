@@ -151,28 +151,41 @@ export function isReducedMatchRow(match: ReducedRowInput): boolean {
  * legible on both cream and jersey-deep cards). Owned by `<TeamAgendaRow>` —
  * the shared match row used on team pages, `/kalender`, and the homepage
  * `<FirstTeamsBlock>` (#2301) — so the outcome colour can't drift between them.
+ *
+ * Nested by ground rather than forked into a second top-level export
+ * (#2616 review): a `OUTCOME_UNDERLINE_DARK` sibling would restate the whole
+ * geometry — the `inset 0 -9px 0`, the hue pair, the "no tint on a draw"
+ * rule — as a second hand-maintained literal, with nothing enforcing the two
+ * stay in step. `OUTCOME_UNDERLINE[ground][outcome]` keeps the shape in one
+ * place; only the colour stops the mix is pulled toward differ by ground.
+ *
+ * `light` is `<TeamAgendaRow>`'s own ground (including its `featured`
+ * jersey-deep card — that treatment predates this split and isn't
+ * reconsidered here). `dark` is `<MatchStripView>`'s match-day ground
+ * (#2616): the light mix reads as a pastel highlighter *behind* ink text; on
+ * `--color-jersey-deep-dark` the text itself turns cream, so the same
+ * cream-mixed tint would wash out under it instead of setting it off — mixed
+ * toward the ground instead, at a heavier stop so the patch still reads as a
+ * distinct tint against a ground it is this close to in hue.
+ *
+ * The `<CalendarAgenda>` drift (a third, `light`-only copy) is a known gap —
+ * see `OUTCOME_WORD`'s docblock below, which already records it.
  */
-export const OUTCOME_UNDERLINE: Record<MatchOutcome, string | undefined> = {
-  win: "inset 0 -9px 0 color-mix(in srgb, var(--color-jersey-deep) 34%, var(--color-cream))",
-  draw: undefined,
-  loss: "inset 0 -9px 0 color-mix(in srgb, var(--color-alert) 38%, var(--color-cream))",
-};
-
-/**
- * The dark-ground counterpart to `OUTCOME_UNDERLINE` above — `<MatchStripView>`
- * on its match-day ground (#2616). The light mix reads as a pastel highlighter
- * *behind* ink text; on `--color-jersey-deep-dark` the text itself turns cream,
- * so the same cream-mixed tint would wash out under it instead of setting it
- * off. Mixed toward the ground rather than toward cream, at a heavier stop so
- * the patch still reads as a distinct tint against a ground it is this close
- * to in hue. Same keys, same "no tint on a draw" rule.
- */
-export const OUTCOME_UNDERLINE_DARK: Record<MatchOutcome, string | undefined> =
-  {
+export const OUTCOME_UNDERLINE: Record<
+  "light" | "dark",
+  Record<MatchOutcome, string | undefined>
+> = {
+  light: {
+    win: "inset 0 -9px 0 color-mix(in srgb, var(--color-jersey-deep) 34%, var(--color-cream))",
+    draw: undefined,
+    loss: "inset 0 -9px 0 color-mix(in srgb, var(--color-alert) 38%, var(--color-cream))",
+  },
+  dark: {
     win: "inset 0 -9px 0 color-mix(in srgb, var(--color-jersey-deep) 55%, var(--color-jersey-deep-dark))",
     draw: undefined,
     loss: "inset 0 -9px 0 color-mix(in srgb, var(--color-alert) 55%, var(--color-jersey-deep-dark))",
-  };
+  },
+};
 
 /**
  * The word for a settled match's outcome, KCVV-perspective — the label register
@@ -212,6 +225,23 @@ export const MATCH_KIND_WORD = {
   result: "Uitslag",
   fixture: "Volgende",
 } as const;
+
+/**
+ * The word for a fixture that falls on today's calendar day (#2616) —
+ * `<MatchStripView>`'s match-day relabel, replacing `MATCH_KIND_WORD.fixture`
+ * outright rather than sitting alongside it. Named here rather than
+ * hand-spelled at each render site: it had already drifted to a second,
+ * lowercase copy inside a single component (the mobile row's `aria-label`)
+ * before this constant existed, and a fifth copy already lives in
+ * `apps/web/src/components/share/SquarePreGameTemplate/SquarePreGameTemplate.tsx`
+ * (not touched here — out of scope for #2616, but reachable from this
+ * constant going forward). Lowercase forms (e.g. an `aria-label`'s sentence
+ * position) derive from this via `.toLowerCase()` rather than a second
+ * exported literal, mirroring how `HOME_AWAY_A11Y_NAME` below is its own
+ * word rather than a case transform — this one *is* a pure case transform,
+ * so it doesn't need a second constant to say so.
+ */
+export const MATCH_DAY_WORD = "Vandaag";
 
 /**
  * Which slot a match row is filling — the *surface's* answer, not the match's.

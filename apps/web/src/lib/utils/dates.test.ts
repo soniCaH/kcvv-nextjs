@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import {
-  clubToday,
   formatArticleDate,
   formatWidgetDate,
   formatMatchDayMonth,
@@ -195,15 +194,5 @@ describe("isMatchDay", () => {
 
   it("is false for an invalid date rather than throwing", () => {
     expect(isMatchDay("not-a-date", "2026-08-08")).toBe(false);
-  });
-
-  it("defaults the reference day to clubToday() when omitted", () => {
-    // A midday-UTC kickoff on the club's calendar "today" — noon keeps this
-    // clear of the UTC/Brussels midnight-rollover window `toMatchDisplayZone`
-    // itself has to handle, so the assertion is only about the default
-    // parameter, not about the parse.
-    const today = clubToday();
-    const kickoffToday = new Date(`${today}T12:00:00Z`);
-    expect(isMatchDay(kickoffToday)).toBe(true);
   });
 });

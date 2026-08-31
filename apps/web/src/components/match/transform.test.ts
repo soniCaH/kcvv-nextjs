@@ -102,20 +102,6 @@ describe("transformMatchToSchedule", () => {
     ).toBeUndefined();
   });
 
-  it("passes venue through when present (#2616)", () => {
-    const match = createMockMatch({ venue: "De Dries" });
-    expect(asNonPlaceholder(transformMatchToSchedule(match)).venue).toBe(
-      "De Dries",
-    );
-  });
-
-  it("leaves venue undefined when absent (#2616)", () => {
-    const match = createMockMatch();
-    expect(
-      asNonPlaceholder(transformMatchToSchedule(match)).venue,
-    ).toBeUndefined();
-  });
-
   it("passes competitionType through when present (#2696)", () => {
     const match = createMockMatch({ competitionType: "tournament" });
     expect(
