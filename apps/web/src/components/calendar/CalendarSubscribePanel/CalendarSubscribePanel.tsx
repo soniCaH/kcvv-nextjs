@@ -5,6 +5,10 @@ import { QRCodeSVG } from "qrcode.react";
 import { cn } from "@/lib/utils/cn";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { RemovableChip } from "@/components/design-system";
+import {
+  CALENDAR_EVENTS_PARAM,
+  CALENDAR_EVENTS_PARAM_VALUE,
+} from "@/lib/utils/calendar-feed-query";
 import type { CalendarTeamInfo } from "@/app/(main)/kalender/utils";
 
 export interface CalendarSubscribePanelProps {
@@ -21,8 +25,18 @@ const SIDE_TABS: { value: Side; label: string }[] = [
   { value: "away", label: "Uit" },
 ];
 
-function buildWebcalUrl(teamIds: number[], side: Side, host: string): string {
-  return `webcal://${host}/api/calendar.ics?teamIds=${teamIds.join(",")}&side=${side}`;
+/** `includeEvents` off omits the param entirely (rather than `events=0`), so
+ * the URL stays byte-identical to the pre-#2704 matches-only feed. */
+function buildWebcalUrl(
+  teamIds: number[],
+  side: Side,
+  host: string,
+  includeEvents: boolean,
+): string {
+  const base = `webcal://${host}/api/calendar.ics?teamIds=${teamIds.join(",")}&side=${side}`;
+  return includeEvents
+    ? `${base}&${CALENDAR_EVENTS_PARAM}=${CALENDAR_EVENTS_PARAM_VALUE}`
+    : base;
 }
 
 function computeInitialSelection(
@@ -45,6 +59,9 @@ export function CalendarSubscribePanel({
     computeInitialSelection(teams, preselectedTeamLabel),
   );
   const [side, setSide] = useState<Side>("all");
+  // On by default (#2705) — deliberately not the same as the route's own
+  // default, which stays off (#2704).
+  const [includeEvents, setIncludeEvents] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const host =
@@ -56,7 +73,7 @@ export function CalendarSubscribePanel({
     .filter((t) => selectedTeamIds.has(t.id))
     .map((t) => t.psdId);
 
-  const webcalUrl = buildWebcalUrl(selectedPsdIds, side, host);
+  const webcalUrl = buildWebcalUrl(selectedPsdIds, side, host, includeEvents);
 
   function removeTeam(teamId: string) {
     setSelectedTeamIds((prev) => {
@@ -78,6 +95,7 @@ export function CalendarSubscribePanel({
       trackEvent("kalender_subscribe_copy", {
         teams_count: selectedPsdIds.length,
         side,
+        events: includeEvents,
       });
     } catch (err) {
       console.error("Failed to copy to clipboard:", err);
@@ -145,6 +163,42 @@ export function CalendarSubscribePanel({
                 ))}
               </select>
             )}
+          </div>
+
+          {/* Club-activities on/off switch (#2705) — one control, all or
+              nothing. Its own row, separate from the side-filter + copy row
+              below so that row's equal-height lock (6d5) is untouched. */}
+          <div
+            className="mb-3 flex cursor-pointer items-center gap-2.5"
+            onClick={() => setIncludeEvents((prev) => !prev)}
+          >
+            <button
+              type="button"
+              role="switch"
+              aria-checked={includeEvents}
+              aria-labelledby="subscribe-panel-events-label"
+              className={cn(
+                // 24×44px track — the WCAG 2.5.8 minimum target size (unlike
+                // the smaller RemovableChip cross, which predates that check).
+                "border-ink relative h-6 w-11 shrink-0 border-2 transition-colors",
+                "focus-visible:outline-ink focus-visible:outline-2 focus-visible:outline-offset-2",
+                includeEvents ? "bg-jersey-deep" : "bg-cream-soft",
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "bg-ink absolute top-0.5 left-0.5 h-4 w-4 transition-transform motion-reduce:transition-none",
+                  includeEvents ? "translate-x-5" : "translate-x-0",
+                )}
+              />
+            </button>
+            <span
+              id="subscribe-panel-events-label"
+              className="text-ink font-mono text-[11px] font-semibold tracking-wide uppercase"
+            >
+              Clubactiviteiten
+            </span>
           </div>
 
           {/* Side filter (segmented) + copy — equal height */}

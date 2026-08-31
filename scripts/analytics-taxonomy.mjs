@@ -134,6 +134,10 @@ export const params = [
   { parameterName: "kalender_type", displayName: "Kalender type" },
   { parameterName: "teams_count", displayName: "Teams count" },
   { parameterName: "side", displayName: "Match side" },
+  // `kalender_subscribe_copy`'s `events` param (#2705, club-activities
+  // switch) mints no dimension of its own — GA4's 50 event-scoped-dimension
+  // cap is already exceeded (see the #2419/#2400 note below), so it rides
+  // `event_name` instead. Do not re-add it.
   // ── Sponsors ────────────────────────────────────────────────────────────
   { parameterName: "sponsor_id", displayName: "Sponsor ID hashed" },
   { parameterName: "tier", displayName: "Sponsor tier" },

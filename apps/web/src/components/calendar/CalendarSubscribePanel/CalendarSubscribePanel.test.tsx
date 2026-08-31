@@ -13,6 +13,11 @@ import { trackEvent } from "@/lib/analytics/track-event";
 import type { CalendarTeamInfo } from "@/app/(main)/kalender/utils";
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
+vi.mock("qrcode.react", () => ({
+  QRCodeSVG: ({ value }: { value: string }) => (
+    <svg data-testid="qr-value" data-value={value} />
+  ),
+}));
 
 // ── Fixtures ───────────────────────────────────────────────────────────────
 
@@ -110,12 +115,12 @@ describe("CalendarSubscribePanel", () => {
   });
 
   describe("webcal URL (via clipboard)", () => {
-    it("copies the all-teams webcal URL", async () => {
+    it("copies the all-teams webcal URL with club activities included by default", async () => {
       const user = userEvent.setup();
       render(<CalendarSubscribePanel {...defaultProps} />);
       await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
       expect(mockWriteText).toHaveBeenCalledWith(
-        "webcal://localhost:3000/api/calendar.ics?teamIds=101,102,103&side=all",
+        "webcal://localhost:3000/api/calendar.ics?teamIds=101,102,103&side=all&events=1",
       );
     });
 
@@ -125,7 +130,7 @@ describe("CalendarSubscribePanel", () => {
       await user.click(screen.getByRole("button", { name: "Thuis" }));
       await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
       expect(mockWriteText).toHaveBeenCalledWith(
-        "webcal://localhost:3000/api/calendar.ics?teamIds=101,102,103&side=home",
+        "webcal://localhost:3000/api/calendar.ics?teamIds=101,102,103&side=home&events=1",
       );
     });
 
@@ -137,8 +142,45 @@ describe("CalendarSubscribePanel", () => {
       );
       await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
       expect(mockWriteText).toHaveBeenCalledWith(
-        "webcal://localhost:3000/api/calendar.ics?teamIds=102,103&side=all",
+        "webcal://localhost:3000/api/calendar.ics?teamIds=102,103&side=all&events=1",
       );
+    });
+
+    it("drops the events flag entirely when the club-activities switch is turned off", async () => {
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      await user.click(
+        screen.getByRole("switch", { name: /clubactiviteiten/i }),
+      );
+      await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
+      expect(mockWriteText).toHaveBeenCalledWith(
+        "webcal://localhost:3000/api/calendar.ics?teamIds=101,102,103&side=all",
+      );
+    });
+
+    it("encodes the same URL in the QR code as the copied link", async () => {
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
+      const qrValue = screen.getByTestId("qr-value").dataset.value;
+      expect(qrValue).toBe(mockWriteText.mock.calls[0]![0]);
+    });
+  });
+
+  describe("club-activities switch", () => {
+    it("is on by default, named 'Clubactiviteiten'", () => {
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      expect(
+        screen.getByRole("switch", { name: /clubactiviteiten/i }),
+      ).toHaveAttribute("aria-checked", "true");
+    });
+
+    it("toggles off on click", async () => {
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      const toggle = screen.getByRole("switch", { name: /clubactiviteiten/i });
+      await user.click(toggle);
+      expect(toggle).toHaveAttribute("aria-checked", "false");
     });
   });
 
@@ -150,7 +192,7 @@ describe("CalendarSubscribePanel", () => {
       expect(screen.getByText("Gekopieerd")).toBeInTheDocument();
     });
 
-    it("fires kalender_subscribe_copy with teams_count + side", async () => {
+    it("fires kalender_subscribe_copy with teams_count + side + events", async () => {
       const user = userEvent.setup();
       render(<CalendarSubscribePanel {...defaultProps} />);
       await user.click(screen.getByRole("button", { name: "Thuis" }));
@@ -158,6 +200,21 @@ describe("CalendarSubscribePanel", () => {
       expect(trackEvent).toHaveBeenCalledWith("kalender_subscribe_copy", {
         teams_count: 3,
         side: "home",
+        events: true,
+      });
+    });
+
+    it("reports events: false in analytics when the switch is off", async () => {
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      await user.click(
+        screen.getByRole("switch", { name: /clubactiviteiten/i }),
+      );
+      await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
+      expect(trackEvent).toHaveBeenCalledWith("kalender_subscribe_copy", {
+        teams_count: 3,
+        side: "all",
+        events: false,
       });
     });
   });

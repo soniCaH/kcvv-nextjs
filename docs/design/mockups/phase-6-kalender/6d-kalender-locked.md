@@ -83,9 +83,18 @@ the score — applies to played matches in both the grid detail and the agenda. 
 
 ## iCal subscribe (retain + reskin → 6d5 drilled 2026-06-05)
 
-The **"Abonneer" panel is kept** — a **matches-only "follow your team" feed**, orthogonal to
-the type filter (per PRD §2/§7). `/api/calendar.ics` is unchanged. No events in the subscribe
-feed (per-event "Zet in agenda" already exists on `/evenementen/[slug]`).
+The **"Abonneer" panel is kept** — a **"follow your team" feed**, orthogonal to the type filter
+(per PRD §2/§7).
+
+> **Reversal (#2705, 2026-08):** this lock originally read "`/api/calendar.ics` is unchanged. No
+> events in the subscribe feed (per-event "Zet in agenda" already exists on
+> `/evenementen/[slug]`)." That call is reversed. #2704 gave `/api/calendar.ics` an opt-in
+> `events=1` query flag that folds every upcoming club activity into the feed alongside the
+> fixtures; #2705 added a **club-activities on/off switch** to this panel, on by default, that
+> emits that same flag. The feed route's own default is unaffected — it still omits activities
+> unless asked — so every subscription saved before this switch existed keeps behaving exactly as
+> it did. The per-event "Zet in agenda" download on `/evenementen/[slug]` is unchanged and still
+> exists as the single-event alternative.
 
 The gate only asked for a "chrome reskin" — no layout was drilled — so a `6d5` A/B was run
 (`6d5-subscribe-compare.html`, 3 options). **Owner picked (ii) "Seizoenskaart" — a perforated
@@ -94,8 +103,10 @@ ticket-stub:**
 - **Left stub = the QR, always visible** (scan-to-add on mobile); a dashed perforation divides
   it from the body. The raw `webcal://` URL is **not surfaced** (it was technical noise).
 - **Body** = `"Volg je ploeg(en)."` italic-display headline → selected-team tokens → a
-  `Alle / Thuis / Uit` segmented control + a single **`Kopieer link`** button. The segmented
-  control and the copy button are **equal height** (owner refinement).
+  **`Clubactiviteiten`** on/off switch (#2705, on by default) → a `Alle / Thuis / Uit` segmented
+  control + a single **`Kopieer link`** button. The segmented control and the copy button are
+  **equal height** (owner refinement); the activities switch sits on its own row above that pair
+  and does not disturb it.
 - **Selected-team tokens use the new `<RemovableChip>` design-system primitive** (label + ×).
   Extracted here because the "chip with a cross" pattern was hand-rolled in ~6 places
   (organigram search bars, nav) and never consolidated — those are follow-up migrations.

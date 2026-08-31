@@ -48,6 +48,10 @@ The redesign brings `/kalender` onto the retro-terrace-fanzine language, consume
   `eventFact`. No new fields.
 - **Adding events to the iCal _subscribe_ feed.** `/api/calendar.ics` stays matches-only; per-event
   "Zet in agenda" already exists (`buildEventIcs`, used by `/evenementen/[slug]`) and is not rebuilt.
+  **Reversed by #2704/#2705 (2026-08):** the route grew an opt-in `events=1` flag (default off, so
+  existing subscriptions are unaffected) and `<CalendarSubscribePanel>` grew an on-by-default
+  club-activities switch that emits it. `buildEventIcs`/"Zet in agenda" is unchanged and still the
+  single-event alternative.
 - **RSVP / ticketing / "training" as a filter facet** (no standalone training data source — dropped
   from the master-plan §6.6 wording on purpose).
 - **Route rename or new route.** `/kalender` stays; no 301s.
@@ -143,8 +147,9 @@ Lock doc: `docs/design/mockups/phase-6-kalender/6d-kalender-locked.md`.
 
 ### Phase 5 — iCal + analytics + SEO + cleanup (#1995)
 
-- [ ] `<CalendarSubscribePanel>` reskinned (paper/ink + chip vocabulary), retained as a matches-only
-      "follow your team" feed; `/api/calendar.ics` unchanged.
+- [ ] `<CalendarSubscribePanel>` reskinned (paper/ink + chip vocabulary), retained as a "follow your
+      team" feed. **Reversed by #2704/#2705:** `/api/calendar.ics` grew an opt-in `events=1` flag and
+      the panel grew an on-by-default club-activities switch emitting it (route default stays off).
 - [ ] `kalender_*` analytics fire (taxonomy §9) — incl. **`kalender_view_toggle`** (Maand/Week/Agenda
       switch — the §9 "A/B-dependent" caveat now resolves to **yes**) + `kalender_view` page-view.
       `kalender_` appended to the live GTM trigger RegEx (manual step, PR body); the `kalender_type`
@@ -178,8 +183,8 @@ All headline questions are answered in `docs/design/mockups/phase-6-kalender/6d-
   (`<KalenderFilterBar>`, `EVENT_CHIP_BASE` + `EVENT_TYPE_FILL`), **not** `<FilterTabs>`;
   **Wedstrijden = `card-red`**. Shipped #1992, confirmed here. The chip row is the legend (the
   legacy bottom dot-legend is dropped).
-- `[x]` **iCal subscribe stays matches-only** → yes; retained + reskinned, orthogonal to the type
-  filter.
+- `[x]` **iCal subscribe stays matches-only** → yes at the time this was decided; retained + reskinned,
+  orthogonal to the type filter. **Reversed by #2704/#2705** — see the Phase 5 checklist above.
 - `[x]` **Past/archive scope** → the Agenda is **month-windowed** and shares the grid's period nav
   (`‹ Month ›`); page back/forward by month in any view. **Not** whole-season (≈1000 matches at
   kickoff) and **not** flat upcoming-only. Past months simply carry played results (matches are
@@ -203,7 +208,7 @@ byte-identical to the deployed trigger.
 | `kalender_filter`         | type tab change (dedup-guarded)                                           | `kalender_type` (`Wedstrijden`/eventType) | 2                 |
 | `kalender_item_click`     | click a feed item through to detail                                       | `source` (`match`/`event`/`article`)      | 5                 |
 | `kalender_subscribe_open` | open iCal subscribe panel                                                 | —                                         | 5                 |
-| `kalender_subscribe_copy` | copy/QR the webcal feed                                                   | `teams_count`, `side`                     | 5                 |
+| `kalender_subscribe_copy` | copy/QR the webcal feed                                                   | `teams_count`, `side`, `events` (#2705)   | 5                 |
 | `kalender_view_toggle`    | month/week (or other) view switch — **only if the reskin direction wins** | `view`                                    | 5 (A/B-dependent) |
 
 - New params (`kalender_type`, `source`, `view`, `teams_count`, `side`) need GA4 DLVs + Event-tag
@@ -227,17 +232,17 @@ byte-identical to the deployed trigger.
 
 ## Appendix — current-state reference (for implementers)
 
-| Concern                | Location                                                                                                             |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Route + server fetch   | `apps/web/src/app/(main)/kalender/page.tsx` (`fetchCalendarData`)                                                    |
-| Kalender view-models   | `apps/web/src/app/(main)/kalender/utils.ts` (`CalendarMatch`/`CalendarEvent`/`CalendarTeamInfo`)                     |
-| Widget shell + filter  | `apps/web/src/components/calendar/CalendarWidget/` (by-team filter, view toggle, subscribe toggle)                   |
-| Month / week views     | `apps/web/src/components/calendar/CalendarMonth/`, `…/CalendarWeek/`                                                 |
-| iCal subscribe panel   | `apps/web/src/components/calendar/CalendarSubscribePanel/`                                                           |
-| Matches-only iCal feed | `apps/web/src/lib/utils/ical.ts` (`generateIcal`) + `apps/web/src/app/api/calendar.ics/route.ts`                     |
-| Per-event iCal         | `apps/web/src/lib/utils/event-ics.ts` (`buildEventIcs`) — not used by /kalender                                      |
-| 6.E merged feed        | `apps/web/src/lib/repositories/event.repository.ts` — `findUpcomingForList()`, `mergeEventFeed()`, `EventListItemVM` |
-| eventType styling      | `apps/web/src/components/event/.../event-type-style.ts` (`EVENT_TYPE_FILL`, `DEFAULT_EVENT_TYPE`)                    |
-| FilterTabs             | `apps/web/src/components/design-system/FilterTabs/` (no icon prop)                                                   |
-| /evenementen filter    | `apps/web/src/components/event/EventFilterBar/` (custom colour chips)                                                |
-| Master-plan direction  | `docs/plans/2026-04-27-redesign-master-design.md` §6.6                                                               |
+| Concern                                             | Location                                                                                                             |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Route + server fetch                                | `apps/web/src/app/(main)/kalender/page.tsx` (`fetchCalendarData`)                                                    |
+| Kalender view-models                                | `apps/web/src/app/(main)/kalender/utils.ts` (`CalendarMatch`/`CalendarEvent`/`CalendarTeamInfo`)                     |
+| Widget shell + filter                               | `apps/web/src/components/calendar/CalendarWidget/` (by-team filter, view toggle, subscribe toggle)                   |
+| Month / week views                                  | `apps/web/src/components/calendar/CalendarMonth/`, `…/CalendarWeek/`                                                 |
+| iCal subscribe panel                                | `apps/web/src/components/calendar/CalendarSubscribePanel/`                                                           |
+| iCal feed (matches + opt-in club activities, #2704) | `apps/web/src/lib/utils/ical.ts` (`generateIcal`) + `apps/web/src/app/api/calendar.ics/route.ts`                     |
+| Per-event iCal                                      | `apps/web/src/lib/utils/event-ics.ts` (`buildEventIcs`) — not used by /kalender                                      |
+| 6.E merged feed                                     | `apps/web/src/lib/repositories/event.repository.ts` — `findUpcomingForList()`, `mergeEventFeed()`, `EventListItemVM` |
+| eventType styling                                   | `apps/web/src/components/event/.../event-type-style.ts` (`EVENT_TYPE_FILL`, `DEFAULT_EVENT_TYPE`)                    |
+| FilterTabs                                          | `apps/web/src/components/design-system/FilterTabs/` (no icon prop)                                                   |
+| /evenementen filter                                 | `apps/web/src/components/event/EventFilterBar/` (custom colour chips)                                                |
+| Master-plan direction                               | `docs/plans/2026-04-27-redesign-master-design.md` §6.6                                                               |

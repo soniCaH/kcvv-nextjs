@@ -55,10 +55,19 @@ export type IcalEntry = TimedIcalEntry | AllDayIcalEntry;
  * What this feed carries — resolved once (from the route's `events=1` query
  * flag, via `resolveFeedVariant`) and threaded through as this one value
  * rather than re-derived at each of `NAME`/`X-WR-CALDESC`/the download
- * filename (#2717). `CalendarSubscribePanel.buildWebcalUrl`'s still-unbuilt
- * `events=1` UI toggle (#2705) is the next consumer of this same descriptor.
+ * filename (#2717). `CalendarSubscribePanel.buildWebcalUrl` (#2705) is the
+ * other consumer of the flag — it builds the same `events=1` query param
+ * client-side, from the constants re-exported below.
  */
 export type FeedVariant = "matches" | "matches-and-events";
+
+// Re-exported for server-side consumers of this module (e.g. `route.ts`).
+// The canonical definition lives in `calendar-feed-query.ts`, a client-safe
+// leaf module `CalendarSubscribePanel` ("use client") can import directly.
+export {
+  CALENDAR_EVENTS_PARAM,
+  CALENDAR_EVENTS_PARAM_VALUE,
+} from "./calendar-feed-query";
 
 interface FeedVariantMeta {
   name: string;
