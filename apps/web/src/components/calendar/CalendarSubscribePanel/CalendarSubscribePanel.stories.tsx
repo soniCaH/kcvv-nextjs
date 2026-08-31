@@ -27,7 +27,19 @@ type Story = StoryObj<typeof meta>;
 // ── Stories ────────────────────────────────────────────────────────────────
 
 export const Default: Story = {
+  // Club-activities switch is on by default (#2705).
   args: {},
+};
+
+export const ActivitiesOff: Story = {
+  // The switch turned off — the copied link/QR drop back to the matches-only
+  // webcal URL that predates #2704/#2705.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole("switch", { name: /clubactiviteiten/i }),
+    );
+  },
 };
 
 export const PrefilledSingleTeam: Story = {
