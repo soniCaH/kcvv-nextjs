@@ -158,11 +158,14 @@ rest in #1995. All non-PII (public titles/slugs only).
 
 `kalender_type` is registered as its own GA4 dimension — distinct from
 `event_type` — because it is a superset (`Wedstrijden` ∪ the 4 `eventType`
-values). `view` + `source` reuse existing dimensions. `events` (#2705) is a
-new boolean dimension — whether the copied/QR'd webcal URL carries the
-`events=1` club-activities flag — registered via
-`scripts/create-ga4-dimensions.mjs`. Manual GTM/GA4 wiring lives in the #1974
-umbrella (§6).
+values). `view` + `source` reuse existing dimensions. `events` (#2705,
+whether the copied/QR'd webcal URL carries the `events=1` club-activities
+flag) mints **no** new GA4 dimension — the event-scoped custom-dimension list
+in `scripts/analytics-taxonomy.mjs` is already past GA4's 50-dimension cap —
+so it is read from `event_name` (`kalender_subscribe_copy` is uniquely
+segmented already), the same pattern the #2419/#2400 and #2691 families use.
+A dimension can be registered for it once a slot is freed elsewhere. Manual
+GTM/GA4 wiring lives in the #1974 umbrella (§6).
 
 ## 4. Tracer Bullet
 
