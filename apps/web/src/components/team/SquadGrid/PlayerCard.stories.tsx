@@ -21,6 +21,7 @@ type Story = StoryObj<typeof meta>;
 /** Photo state — newsprint-treated psdImage, blended onto the card's cream, with number disc top-left. */
 export const WithPhoto: Story = {
   args: {
+    id: "player-123",
     firstName: "Maxim",
     lastName: "Breugelmans",
     position: "Aanvaller",
@@ -33,6 +34,7 @@ export const WithPhoto: Story = {
 /** Illustration fallback — no psdImage → canonical jersey figure. */
 export const IllustrationFallback: Story = {
   args: {
+    id: "player-124",
     firstName: "Lars",
     lastName: "De Smet",
     position: "Keeper",
@@ -44,6 +46,7 @@ export const IllustrationFallback: Story = {
 /** No jersey number — disc omitted. */
 export const NoNumber: Story = {
   args: {
+    id: "player-125",
     firstName: "Thibault",
     lastName: "Claes",
     position: "Verdediger",
@@ -59,6 +62,7 @@ export const NoNumber: Story = {
  */
 export const NoPosition: Story = {
   args: {
+    id: "player-126",
     firstName: "Ruben",
     lastName: "Peeters",
     jerseyNumber: 5,

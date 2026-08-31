@@ -54,11 +54,21 @@ import { cn } from "@/lib/utils/cn";
 import { TapedFigure } from "@/components/design-system/TapedFigure";
 import { NumberDisplay } from "@/components/design-system/NumberDisplay";
 import { MonoLabel } from "@/components/design-system/MonoLabel";
-import { JerseyIllustration } from "@/components/design-system/JerseyIllustration";
+import {
+  JerseyIllustration,
+  playerFigureSeed,
+} from "@/components/design-system/JerseyIllustration";
 
 const ADULT_AGE_THRESHOLD = 18;
 
 export interface PlayerHeroProps {
+  /**
+   * Stable identity — e.g. the Sanity `_id`. Seeds the illustration
+   * fallback via `playerFigureSeed` (#2635): never the display name, so a
+   * spelling fix or a married name never redraws the figure, and this
+   * player draws the identical figure `<PlayerCard>` drew for them.
+   */
+  id: string;
   firstName: string;
   lastName: string;
   /**
@@ -136,6 +146,7 @@ function formatAgeGradedBirthDate(iso: string, now: Date): string | undefined {
 }
 
 export function PlayerHero({
+  id,
   firstName,
   lastName,
   position,
@@ -248,7 +259,7 @@ export function PlayerHero({
           ) : (
             <JerseyIllustration
               variant="hero"
-              seed={`${firstName} ${lastName}`}
+              seed={playerFigureSeed({ id })}
               data-testid="player-hero-illustration"
             />
           )}

@@ -29,6 +29,7 @@ describe("PlayerHero", () => {
     it("renders the first name with upright Black display weight", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Maxim"
           lastName="Breugelmans"
           position="Middenvelder"
@@ -44,6 +45,7 @@ describe("PlayerHero", () => {
     it("renders the last name in italic display weight with a trailing period", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Maxim"
           lastName="Breugelmans"
           position="Middenvelder"
@@ -58,6 +60,7 @@ describe("PlayerHero", () => {
     it("survives a long Dutch family name (Van den Broeck) without crashing", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Joachim"
           lastName="Van den Broeck"
           position="Verdediger"
@@ -73,6 +76,7 @@ describe("PlayerHero", () => {
     it("renders the photo state when photoUrl is provided", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Maxim"
           lastName="Breugelmans"
           position="Middenvelder"
@@ -87,6 +91,7 @@ describe("PlayerHero", () => {
     it("renders the illustration fallback when photoUrl is missing", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Maxim"
           lastName="Breugelmans"
           position="Middenvelder"
@@ -100,33 +105,35 @@ describe("PlayerHero", () => {
     });
   });
 
-  describe("Illustration variance (#2635)", () => {
-    it("seeds the illustration from the player's full name, so the same player draws the same figure", () => {
+  describe("Illustration wiring (#2635)", () => {
+    // The seed/guard determinism pair lives once, at the source
+    // (`player-figure-variant.test.ts`). This only proves the wiring: the
+    // illustration is seeded from `id`, never from the display name.
+    it("seeds the illustration from the player's id, not the display name", () => {
       const first = render(
-        <PlayerHero firstName="Maxim" lastName="Breugelmans" />,
+        <PlayerHero id="player-1" firstName="Maxim" lastName="Breugelmans" />,
       );
       const firstMarkup = first.getByTestId(
         "player-hero-illustration",
       ).innerHTML;
       first.unmount();
 
-      const second = render(
-        <PlayerHero firstName="Maxim" lastName="Breugelmans" />,
+      // Same id, corrected name → identical figure.
+      const renamed = render(
+        <PlayerHero id="player-1" firstName="Maxime" lastName="Breugelmans" />,
       );
-      expect(second.getByTestId("player-hero-illustration").innerHTML).toBe(
+      expect(renamed.getByTestId("player-hero-illustration").innerHTML).toBe(
         firstMarkup,
       );
-    });
+      renamed.unmount();
 
-    it("draws a different figure for a different player", () => {
-      const a = render(<PlayerHero firstName="Maxim" lastName="Breugelmans" />);
-      const aMarkup = a.getByTestId("player-hero-illustration").innerHTML;
-      a.unmount();
-
-      const b = render(<PlayerHero firstName="Sem" lastName="De Witte" />);
-      expect(b.getByTestId("player-hero-illustration").innerHTML).not.toBe(
-        aMarkup,
+      // Same display name, different id → a different figure.
+      const namesake = render(
+        <PlayerHero id="player-2" firstName="Maxim" lastName="Breugelmans" />,
       );
+      expect(
+        namesake.getByTestId("player-hero-illustration").innerHTML,
+      ).not.toBe(firstMarkup);
     });
   });
 
@@ -134,6 +141,7 @@ describe("PlayerHero", () => {
     it("renders full DD·MM·YYYY for adults (≥18)", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Maxim"
           lastName="Breugelmans"
           position="Middenvelder"
@@ -149,6 +157,7 @@ describe("PlayerHero", () => {
     it("renders `<age> jaar · 'YY` for minors (<18)", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Sem"
           lastName="De Witte"
           position="Aanvaller"
@@ -165,6 +174,7 @@ describe("PlayerHero", () => {
     it("treats players turning 18 today as adults (≥18 inclusive)", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Jonas"
           lastName="Peeters"
           position="Middenvelder"
@@ -178,6 +188,7 @@ describe("PlayerHero", () => {
     it("omits the birthDate cell when no birthDate is supplied", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Maxim"
           lastName="Breugelmans"
           position="Middenvelder"
@@ -192,6 +203,7 @@ describe("PlayerHero", () => {
     it("omits the position cell — not a placeholder — when position is absent (#2567)", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Maxim"
           lastName="Breugelmans"
           birthDate="1999-03-14"
@@ -203,7 +215,13 @@ describe("PlayerHero", () => {
     });
 
     it("hides the meta row entirely when both position and birthDate are absent", () => {
-      render(<PlayerHero firstName="Maxim" lastName="Breugelmans" />);
+      render(
+        <PlayerHero
+          id="player-test"
+          firstName="Maxim"
+          lastName="Breugelmans"
+        />,
+      );
       expect(screen.queryByTestId("player-hero-meta")).toBeNull();
     });
   });
@@ -212,6 +230,7 @@ describe("PlayerHero", () => {
     it("renders the jersey number when provided", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Maxim"
           lastName="Breugelmans"
           position="Middenvelder"
@@ -231,6 +250,7 @@ describe("PlayerHero", () => {
       // breadcrumb chip on this same page (#2535).
       render(
         <PlayerHero
+          id="player-test"
           firstName="Maxim"
           lastName="Breugelmans"
           position="Middenvelder"
@@ -245,6 +265,7 @@ describe("PlayerHero", () => {
     it("never renders a NIEUW badge", () => {
       render(
         <PlayerHero
+          id="player-test"
           firstName="Maxim"
           lastName="Breugelmans"
           position="Middenvelder"

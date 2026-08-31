@@ -60,6 +60,7 @@ type Story = StoryObj<typeof meta>;
 /** A-team adult with a photo — canonical hero composition. */
 export const AdultWithPhoto: Story = {
   args: {
+    id: "player-maxim-breugelmans",
     firstName: "Maxim",
     lastName: "Breugelmans",
     position: "Middenvelder",
@@ -73,6 +74,7 @@ export const AdultWithPhoto: Story = {
 /** A-team adult without a psdImage — illustration fallback (6.d2). */
 export const AdultIllustrationFallback: Story = {
   args: {
+    id: "player-joris-vermeiren",
     firstName: "Joris",
     lastName: "Vermeiren",
     position: "Verdediger",
@@ -85,6 +87,7 @@ export const AdultIllustrationFallback: Story = {
 /** U17 minor with a photo — age-graded meta (6.d9). Full DOB suppressed. */
 export const MinorU17WithPhoto: Story = {
   args: {
+    id: "player-sem-de-witte",
     firstName: "Sem",
     lastName: "De Witte",
     position: "Aanvaller",
@@ -98,6 +101,7 @@ export const MinorU17WithPhoto: Story = {
 /** U8 minor without a photo — minor + illustration; covers youngest profile. */
 export const MinorU8Illustration: Story = {
   args: {
+    id: "player-lars-peeters",
     firstName: "Lars",
     lastName: "Peeters",
     position: "Middenvelder",
@@ -110,6 +114,7 @@ export const MinorU8Illustration: Story = {
 /** Long Dutch family name stress — verifies the italic last name does not break layout (6.d1). */
 export const LongSurname: Story = {
   args: {
+    id: "player-joachim-van-den-broeck",
     firstName: "Joachim",
     lastName: "Van den Broeck",
     position: "Verdediger",
@@ -128,6 +133,7 @@ export const LongSurname: Story = {
  */
 export const NoPosition: Story = {
   args: {
+    id: "player-ruben-peeters",
     firstName: "Ruben",
     lastName: "Peeters",
     photoUrl: REAL_PLAYER_PHOTOS.mendesMouro,
