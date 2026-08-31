@@ -100,6 +100,36 @@ describe("PlayerHero", () => {
     });
   });
 
+  describe("Illustration variance (#2635)", () => {
+    it("seeds the illustration from the player's full name, so the same player draws the same figure", () => {
+      const first = render(
+        <PlayerHero firstName="Maxim" lastName="Breugelmans" />,
+      );
+      const firstMarkup = first.getByTestId(
+        "player-hero-illustration",
+      ).innerHTML;
+      first.unmount();
+
+      const second = render(
+        <PlayerHero firstName="Maxim" lastName="Breugelmans" />,
+      );
+      expect(second.getByTestId("player-hero-illustration").innerHTML).toBe(
+        firstMarkup,
+      );
+    });
+
+    it("draws a different figure for a different player", () => {
+      const a = render(<PlayerHero firstName="Maxim" lastName="Breugelmans" />);
+      const aMarkup = a.getByTestId("player-hero-illustration").innerHTML;
+      a.unmount();
+
+      const b = render(<PlayerHero firstName="Sem" lastName="De Witte" />);
+      expect(b.getByTestId("player-hero-illustration").innerHTML).not.toBe(
+        aMarkup,
+      );
+    });
+  });
+
   describe("Age-graded meta row (6.d9)", () => {
     it("renders full DD·MM·YYYY for adults (≥18)", () => {
       render(

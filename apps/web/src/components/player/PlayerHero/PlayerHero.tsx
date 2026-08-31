@@ -248,6 +248,7 @@ export function PlayerHero({
           ) : (
             <JerseyIllustration
               variant="hero"
+              seed={`${firstName} ${lastName}`}
               data-testid="player-hero-illustration"
             />
           )}

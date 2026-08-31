@@ -1,15 +1,25 @@
 /**
  * <JerseyShirt> — decorative jersey illustration (Tier C primitive).
  *
- * Two-pass print vocabulary identical to `<PlayerFigure>`'s illustration
- * fallback, palette inverted: ink underprint + jersey-deep overprint
- * (collar, four vertical stripes, body outline). The 2-3px registration
- * offset is achieved by giving the underprint and overprint layers
- * different `inset` values, with the underprint multiplied onto the
+ * Two-pass print vocabulary identical to `<JerseyIllustration>`'s
+ * illustration fallback, palette inverted: ink underprint + jersey-deep
+ * overprint (collar, four vertical stripes, body outline). The 2-3px
+ * registration offset is achieved by giving the underprint and overprint
+ * layers different `inset` values, with the underprint multiplied onto the
  * overprint.
  *
+ * **#2635 cohesion-contract decision: pinned to the base variant,
+ * deliberately.** `<JerseyIllustration>` now draws a deterministic
+ * per-player figure seeded from the player's name (#2635); `<JerseyShirt>`
+ * does not adopt that system and keeps reading `_jersey-paths.ts` directly,
+ * unparameterised. Its callers (`ClubshopBanner`, `TeamHero`,
+ * `TeamFlagship`, `TeamEnrolmentCta`, `YouthDirectory`, `EmptyState`,
+ * `ErrorState`) are team- or club-level chrome, never a single player, so
+ * there is no name to seed from — pinning is the only deliberate choice
+ * available, not a default left unmade.
+ *
  * Spec: `docs/design/mockups/phase-3-a-tier-c-figures/jerseyshirt-locked.md`.
- * Path provenance: `_jersey-paths.ts` (shared with `<PlayerFigure>`).
+ * Path provenance: `_jersey-paths.ts` (shared with `<JerseyIllustration>`).
  */
 import {
   JERSEY_TORSO_FILL_PATH,

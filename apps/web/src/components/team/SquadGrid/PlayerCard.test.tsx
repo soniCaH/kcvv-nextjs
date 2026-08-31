@@ -44,6 +44,40 @@ describe("PlayerCard", () => {
     });
   });
 
+  describe("Illustration variance (#2635)", () => {
+    it("seeds the illustration from the player's full name, so the same player draws the same figure", () => {
+      const first = render(
+        <PlayerCard firstName="Lars" lastName="De Smet" position="Keeper" />,
+      );
+      const firstMarkup = first.getByTestId(
+        "player-card-illustration",
+      ).innerHTML;
+      first.unmount();
+
+      const second = render(
+        <PlayerCard firstName="Lars" lastName="De Smet" position="Keeper" />,
+      );
+      expect(second.getByTestId("player-card-illustration").innerHTML).toBe(
+        firstMarkup,
+      );
+    });
+
+    it("draws a different figure for a different player", () => {
+      const a = render(
+        <PlayerCard firstName="Lars" lastName="De Smet" position="Keeper" />,
+      );
+      const aMarkup = a.getByTestId("player-card-illustration").innerHTML;
+      a.unmount();
+
+      const b = render(
+        <PlayerCard firstName="Jonas" lastName="Vermeer" position="Keeper" />,
+      );
+      expect(b.getByTestId("player-card-illustration").innerHTML).not.toBe(
+        aMarkup,
+      );
+    });
+  });
+
   describe("Photo treatment (#2633)", () => {
     it("fills the window and multiplies onto the card's cream", () => {
       const { container } = render(
