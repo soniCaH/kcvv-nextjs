@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   groupTeamsForLanding,
   getYouthDivision,
+  getYouthDivisionTone,
   isAgeCode,
   type TeamLandingItem,
 } from "./group-teams";
@@ -222,5 +223,33 @@ describe("getYouthDivision", () => {
   it("should return null for non-youth age groups", () => {
     expect(getYouthDivision("A")).toBeNull();
     expect(getYouthDivision(undefined)).toBeNull();
+  });
+});
+
+describe("getYouthDivisionTone", () => {
+  it("should return one tone per division", () => {
+    expect(getYouthDivisionTone("Bovenbouw")).toBe("jersey-deep");
+    expect(getYouthDivisionTone("Middenbouw")).toBe("alert");
+    expect(getYouthDivisionTone("Onderbouw")).toBe("warning");
+  });
+
+  // The null branch is the whole reason this is unit-tested rather than left
+  // to visual regression (#2615) — both a senior age code and U5 must land on
+  // the Senioren tone via `getYouthDivision()`'s null return, not by a second,
+  // separate rule.
+  it("should resolve a senior age code's null division to the Senioren tone", () => {
+    // "A" is not just any senior code — it is Reserven's own age (its Sanity
+    // `age` is "A", the same code the A-ploeg carries). Feeding it through
+    // `getYouthDivision()` first, rather than asserting `getYouthDivisionTone`
+    // on a hand-picked null, is what makes Reserven's landing on the Senioren
+    // tone deliberate rather than an accident of the age parser.
+    expect(getYouthDivisionTone(getYouthDivision("A"))).toBe("ink");
+  });
+
+  it("should resolve U5's null division to the Senioren tone", () => {
+    // U5 is a real age code that falls outside every bouw band (U6–U11 is the
+    // youngest), so `getYouthDivision("U5")` is null the same way a senior
+    // code is — and must land on the same tone, not a fifth one.
+    expect(getYouthDivisionTone(getYouthDivision("U5"))).toBe("ink");
   });
 });

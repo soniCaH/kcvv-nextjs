@@ -75,6 +75,36 @@ export function getYouthDivision(
   return null;
 }
 
+/**
+ * A closed set of colour-token identities, one per Youth Division plus
+ * Senioren — D6/D6a (#2608 Unit 5, #2615). Named after the existing token it
+ * resolves to (`--color-ink`, `--color-jersey-deep`, `--color-alert`,
+ * `--color-warning`), never a class string: consumers own the presentation
+ * (e.g. a `text-${tone}` lookup), this module owns only which division gets
+ * which tone.
+ */
+export type YouthDivisionTone = "ink" | "jersey-deep" | "alert" | "warning";
+
+const YOUTH_DIVISION_TONES: Record<YouthDivisionName, YouthDivisionTone> = {
+  Bovenbouw: "jersey-deep",
+  Middenbouw: "alert",
+  Onderbouw: "warning",
+};
+
+/**
+ * The Senioren tone — also what a `null` division resolves to, since
+ * `getYouthDivision()` returns null for both senior age codes and `U5` (an
+ * age code with no bouw band), and neither case is a Youth Division at all.
+ * Reserven lands here too: its Sanity `age` is `"A"`, so it hits this same
+ * branch through `getYouthDivision("A")` rather than a Reserven-specific
+ * rule — deliberately, not by accident (#2615).
+ */
+export function getYouthDivisionTone(
+  division: YouthDivisionName | null,
+): YouthDivisionTone {
+  return division ? YOUTH_DIVISION_TONES[division] : "ink";
+}
+
 function sortByAgeDesc(ageOrder: string[]) {
   return (a: TeamLandingItem, b: TeamLandingItem) => {
     const idxA = ageOrder.indexOf(a.age);
