@@ -134,6 +134,7 @@ export const params = [
   { parameterName: "kalender_type", displayName: "Kalender type" },
   { parameterName: "teams_count", displayName: "Teams count" },
   { parameterName: "side", displayName: "Match side" },
+  { parameterName: "events", displayName: "Includes club activities" },
   // ── Sponsors ────────────────────────────────────────────────────────────
   { parameterName: "sponsor_id", displayName: "Sponsor ID hashed" },
   { parameterName: "tier", displayName: "Sponsor tier" },

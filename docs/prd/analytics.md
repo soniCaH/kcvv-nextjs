@@ -154,12 +154,15 @@ rest in #1995. All non-PII (public titles/slugs only).
 | `kalender_view_toggle`    | Maand/Week/Agenda switch (deduped)  | `view`                               |
 | `kalender_item_click`     | feed item → detail click-through    | `source` (`match`/`event`/`article`) |
 | `kalender_subscribe_open` | open the iCal subscribe panel       | —                                    |
-| `kalender_subscribe_copy` | copy the webcal feed                | `teams_count`, `side`                |
+| `kalender_subscribe_copy` | copy the webcal feed                | `teams_count`, `side`, `events`      |
 
 `kalender_type` is registered as its own GA4 dimension — distinct from
 `event_type` — because it is a superset (`Wedstrijden` ∪ the 4 `eventType`
-values). `view` + `source` reuse existing dimensions. Manual GTM/GA4 wiring
-lives in the #1974 umbrella (§6).
+values). `view` + `source` reuse existing dimensions. `events` (#2705) is a
+new boolean dimension — whether the copied/QR'd webcal URL carries the
+`events=1` club-activities flag — registered via
+`scripts/create-ga4-dimensions.mjs`. Manual GTM/GA4 wiring lives in the #1974
+umbrella (§6).
 
 ## 4. Tracer Bullet
 

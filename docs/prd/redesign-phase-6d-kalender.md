@@ -48,6 +48,10 @@ The redesign brings `/kalender` onto the retro-terrace-fanzine language, consume
   `eventFact`. No new fields.
 - **Adding events to the iCal _subscribe_ feed.** `/api/calendar.ics` stays matches-only; per-event
   "Zet in agenda" already exists (`buildEventIcs`, used by `/evenementen/[slug]`) and is not rebuilt.
+  **Reversed by #2704/#2705 (2026-08):** the route grew an opt-in `events=1` flag (default off, so
+  existing subscriptions are unaffected) and `<CalendarSubscribePanel>` grew an on-by-default
+  club-activities switch that emits it. `buildEventIcs`/"Zet in agenda" is unchanged and still the
+  single-event alternative.
 - **RSVP / ticketing / "training" as a filter facet** (no standalone training data source — dropped
   from the master-plan §6.6 wording on purpose).
 - **Route rename or new route.** `/kalender` stays; no 301s.
@@ -203,7 +207,7 @@ byte-identical to the deployed trigger.
 | `kalender_filter`         | type tab change (dedup-guarded)                                           | `kalender_type` (`Wedstrijden`/eventType) | 2                 |
 | `kalender_item_click`     | click a feed item through to detail                                       | `source` (`match`/`event`/`article`)      | 5                 |
 | `kalender_subscribe_open` | open iCal subscribe panel                                                 | —                                         | 5                 |
-| `kalender_subscribe_copy` | copy/QR the webcal feed                                                   | `teams_count`, `side`                     | 5                 |
+| `kalender_subscribe_copy` | copy/QR the webcal feed                                                   | `teams_count`, `side`, `events` (#2705)   | 5                 |
 | `kalender_view_toggle`    | month/week (or other) view switch — **only if the reskin direction wins** | `view`                                    | 5 (A/B-dependent) |
 
 - New params (`kalender_type`, `source`, `view`, `teams_count`, `side`) need GA4 DLVs + Event-tag
