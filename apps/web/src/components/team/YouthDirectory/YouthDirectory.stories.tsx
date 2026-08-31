@@ -80,3 +80,24 @@ export const SparseDirectory: Story = {
     ],
   },
 };
+
+/**
+ * Onderbouw in frame, on its own.
+ *
+ * `FullDirectory` puts Onderbouw fourth, below the fold on every VR viewport
+ * (1440×900 / 768×1024 / 375×667 — none scroll), and `SparseDirectory` only
+ * ever populates Middenbouw — so the `warning` tone (Onderbouw's, and the
+ * exact division #2615's problem statement names) shipped with zero VR
+ * coverage until this story (#2615 code review).
+ */
+export const OnderbouwFocus: Story = {
+  args: {
+    heading: "Andere",
+    divisions: [
+      { label: "Reserven", teams: [] },
+      { label: "Bovenbouw", range: "U17–U21", teams: [] },
+      { label: "Middenbouw", range: "U12–U16", teams: [] },
+      { label: "Onderbouw", range: "U6–U11", teams: [team("U9")] },
+    ],
+  },
+};
