@@ -21,8 +21,21 @@ const SIDE_TABS: { value: Side; label: string }[] = [
   { value: "away", label: "Uit" },
 ];
 
-function buildWebcalUrl(teamIds: number[], side: Side, host: string): string {
-  return `webcal://${host}/api/calendar.ics?teamIds=${teamIds.join(",")}&side=${side}`;
+/**
+ * The single source both the copy button and the QR code read from (#2705) —
+ * neither computes the URL a second time. `includeEvents` emits the same
+ * `events=1` flag the feed route understands (#2704); leaving it off omits
+ * the param entirely, so the URL is byte-identical to the matches-only feed
+ * that predates this flag — existing saved subscriptions never see a change.
+ */
+function buildWebcalUrl(
+  teamIds: number[],
+  side: Side,
+  host: string,
+  includeEvents: boolean,
+): string {
+  const base = `webcal://${host}/api/calendar.ics?teamIds=${teamIds.join(",")}&side=${side}`;
+  return includeEvents ? `${base}&events=1` : base;
 }
 
 function computeInitialSelection(
@@ -45,6 +58,11 @@ export function CalendarSubscribePanel({
     computeInitialSelection(teams, preselectedTeamLabel),
   );
   const [side, setSide] = useState<Side>("all");
+  // On by default (#2705) — someone subscribing for the first time should
+  // leave with club activities in their calendar unless they opt out. The
+  // feed route's own default stays off (#2704); this is the panel's emitted
+  // value, not the endpoint's assumption.
+  const [includeEvents, setIncludeEvents] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const host =
@@ -56,7 +74,7 @@ export function CalendarSubscribePanel({
     .filter((t) => selectedTeamIds.has(t.id))
     .map((t) => t.psdId);
 
-  const webcalUrl = buildWebcalUrl(selectedPsdIds, side, host);
+  const webcalUrl = buildWebcalUrl(selectedPsdIds, side, host, includeEvents);
 
   function removeTeam(teamId: string) {
     setSelectedTeamIds((prev) => {
@@ -78,6 +96,7 @@ export function CalendarSubscribePanel({
       trackEvent("kalender_subscribe_copy", {
         teams_count: selectedPsdIds.length,
         side,
+        events: includeEvents,
       });
     } catch (err) {
       console.error("Failed to copy to clipboard:", err);
@@ -145,6 +164,38 @@ export function CalendarSubscribePanel({
                 ))}
               </select>
             )}
+          </div>
+
+          {/* Club-activities on/off switch (#2705) — one control, all or
+              nothing (no per-category list). Its own row, kept separate from
+              the side-filter + copy row below so that row's equal-height
+              lock (6d5) is untouched. Track is 24×44px — the WCAG 2.5.8
+              minimum target size — rather than mirroring the smaller chip
+              cross, which predates that check. */}
+          <div className="mb-3 flex items-center gap-2.5">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={includeEvents}
+              aria-label="Clubactiviteiten in het abonnement"
+              onClick={() => setIncludeEvents((prev) => !prev)}
+              className={cn(
+                "border-ink relative h-6 w-11 shrink-0 border-2 transition-colors",
+                "focus-visible:outline-ink focus-visible:outline-2 focus-visible:outline-offset-2",
+                includeEvents ? "bg-jersey-deep" : "bg-cream-soft",
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "bg-ink absolute top-0.5 left-0.5 h-4 w-4 transition-transform",
+                  includeEvents ? "translate-x-5" : "translate-x-0",
+                )}
+              />
+            </button>
+            <span className="text-ink font-mono text-[11px] font-semibold tracking-wide uppercase">
+              Clubactiviteiten
+            </span>
           </div>
 
           {/* Side filter (segmented) + copy — equal height */}
