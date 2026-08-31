@@ -167,4 +167,42 @@ describe("YouthDirectory", () => {
       expect(jersey.textContent).not.toContain("Reserven");
     });
   });
+
+  describe("the Youth Division tone (#2615)", () => {
+    // One team per division so each card's own tone is unambiguous — asserts
+    // the resolved tone via `data-tone`, never a class string, per the AC.
+    const oneOfEach: YouthDivisionGroup[] = [
+      { label: "Reserven", teams: [reservenTeam()] },
+      { label: "Bovenbouw", range: "U17–U21", teams: [team("U17")] },
+      { label: "Middenbouw", range: "U12–U16", teams: [team("U13")] },
+      { label: "Onderbouw", range: "U6–U11", teams: [team("U9")] },
+    ];
+
+    it("colours each card by its own division, not the group it renders inside", () => {
+      renderDirectory(oneOfEach);
+      const cards = screen.getAllByTestId("youth-team-card");
+      // The JerseyShirt fallback also renders the age code as its chest
+      // overlay text, so a caption's `data-tone` is read off the `<p>`
+      // directly rather than by matching text (which the chest duplicates).
+      const captionTone = (card: HTMLElement) =>
+        card.querySelector("p[data-tone]")?.getAttribute("data-tone");
+
+      expect(captionTone(cards[0])).toBe("ink");
+      expect(captionTone(cards[1])).toBe("jersey-deep");
+      expect(captionTone(cards[2])).toBe("alert");
+      expect(captionTone(cards[3])).toBe("warning");
+    });
+
+    it("colours the group bar's tick with the same tone as its cards", () => {
+      renderDirectory(oneOfEach);
+      const ticks = screen.getAllByTestId("youth-division-tick");
+
+      expect(ticks.map((t) => t.dataset.tone)).toEqual([
+        "ink",
+        "jersey-deep",
+        "alert",
+        "warning",
+      ]);
+    });
+  });
 });

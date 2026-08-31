@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   groupTeamsForLanding,
   getYouthDivision,
+  getYouthDivisionTone,
   isAgeCode,
   type TeamLandingItem,
 } from "./group-teams";
@@ -222,5 +223,20 @@ describe("getYouthDivision", () => {
   it("should return null for non-youth age groups", () => {
     expect(getYouthDivision("A")).toBeNull();
     expect(getYouthDivision(undefined)).toBeNull();
+  });
+});
+
+describe("getYouthDivisionTone", () => {
+  // Includes the null branch directly: `getYouthDivision()` returns null for
+  // both senior age codes and U5 (see the `getYouthDivision` suite above),
+  // and `getYouthDivisionTone`'s null arm is a single literal ("ink") no
+  // matter which of those produced it — so one direct-null assertion here is
+  // exhaustive; wrapping both `getYouthDivision` null cases through it again
+  // would cover no additional behaviour.
+  it("should return one tone per division", () => {
+    expect(getYouthDivisionTone(null)).toBe("ink");
+    expect(getYouthDivisionTone("Bovenbouw")).toBe("jersey-deep");
+    expect(getYouthDivisionTone("Middenbouw")).toBe("alert");
+    expect(getYouthDivisionTone("Onderbouw")).toBe("warning");
   });
 });

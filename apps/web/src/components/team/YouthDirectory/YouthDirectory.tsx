@@ -4,7 +4,49 @@ import { cn } from "@/lib/utils/cn";
 import { EditorialHeading } from "@/components/design-system/EditorialHeading";
 import { TapedCard } from "@/components/design-system/TapedCard";
 import { JerseyShirt } from "@/components/design-system/JerseyShirt";
-import { isAgeCode, type YouthDivisionGroup } from "@/lib/utils/group-teams";
+import {
+  getYouthDivision,
+  getYouthDivisionTone,
+  isAgeCode,
+  type YouthDivisionGroup,
+  type YouthDivisionTone,
+} from "@/lib/utils/group-teams";
+
+/**
+ * The presentation half of the D6/D6a tone lookup (#2615) — `getYouthDivisionTone`
+ * resolves a colour-token identity, never a class string, so the Tailwind
+ * utility per tone lives here, beside its only consumer. Two maps because the
+ * tone lands on two different CSS properties: the card caption's text colour,
+ * and the group-bar tick's fill (`docs/design/mockups/research-d-series/d6a-band-tones.html`
+ * — the comp's `.gbar` label text stays `ink-muted`; only its 10px tick square
+ * carries the tone).
+ */
+const TONE_CLASS = {
+  ink: "text-ink",
+  "jersey-deep": "text-jersey-deep",
+  alert: "text-alert",
+  warning: "text-warning",
+} satisfies Record<YouthDivisionTone, string>;
+
+const TICK_TONE_CLASS = {
+  ink: "bg-ink",
+  "jersey-deep": "bg-jersey-deep",
+  alert: "bg-alert",
+  warning: "bg-warning",
+} satisfies Record<YouthDivisionTone, string>;
+
+/**
+ * Resolve a team's own tone from its own age — never from the group it
+ * happens to render inside. A search hit or related-teams card will one day
+ * hold only a `TeamLandingItem`, with no group label to key on, so the tone
+ * must be derivable from the team alone for it to travel with the card at
+ * all (#2615). Reserven's age is `"A"` — a senior code — so it resolves via
+ * this exact call the same way any senior team does: no Reserven-specific
+ * branch.
+ */
+function toneFor(age: string): YouthDivisionTone {
+  return getYouthDivisionTone(getYouthDivision(age));
+}
 
 export interface YouthDirectoryProps {
   /**
@@ -53,9 +95,30 @@ export function YouthDirectory({
 
       {groups.map((group) => (
         <div key={group.label} data-testid="youth-division">
-          <h3 className="text-ink-muted border-paper-edge mb-5 border-b pb-1.5 font-mono text-[11px] tracking-[0.1em] uppercase">
-            {group.label}
-            {group.range ? ` · ${group.range}` : null}
+          {/* The group bar is otherwise identical to `<SquadGrid>`'s heading
+            (same classes bar `mb-5`/`mb-3`) — deliberately: SquadGrid groups
+            players by position, which has no comparable tone, so the two
+            headings diverge here rather than sharing an extracted one. */}
+          <h3 className="text-ink-muted border-paper-edge mb-5 flex items-center gap-[9px] border-b pb-1.5 font-mono text-[11px] tracking-[0.1em] uppercase">
+            {/* Comp treatment, not a guess: `d6a-band-tones.html`'s `.gbar`
+              keeps its label text `ink-muted` in every variant that ships a
+              group bar at all — only a 10px tick square beside it carries
+              the tone. First team's age stands in for the whole group: every
+              team a group holds already shares one division by construction
+              (`groupTeamsForLanding`), Reserven included via its "A" age. */}
+            <span
+              aria-hidden="true"
+              data-testid="youth-division-tick"
+              data-tone={toneFor(group.teams[0].age)}
+              className={cn(
+                "h-2.5 w-2.5 flex-none",
+                TICK_TONE_CLASS[toneFor(group.teams[0].age)],
+              )}
+            />
+            <span>
+              {group.label}
+              {group.range ? ` · ${group.range}` : null}
+            </span>
           </h3>
           {/* Track minimum is a chosen constant per breakpoint, not a fit to
             the group (#2602): 150px on the phone, 200px from `md` up — the
@@ -80,6 +143,9 @@ export function YouthDirectory({
               const ageCode = isAgeCode(team.age) ? team.age : null;
               const caption = team.displayName;
               const chestMark = ageCode ?? caption.charAt(0).toUpperCase();
+              // The team's own age, not the group it renders inside — see
+              // `toneFor`'s doc comment for why that distinction matters.
+              const cardTone = toneFor(team.age);
               return (
                 <Link
                   key={team._id}
@@ -122,7 +188,13 @@ export function YouthDirectory({
                         </div>
                       )}
                     </div>
-                    <p className="font-display-big text-jersey-deep mt-2 text-center text-2xl font-black tabular-nums">
+                    <p
+                      data-tone={cardTone}
+                      className={cn(
+                        TONE_CLASS[cardTone],
+                        "font-display-big mt-2 text-center text-2xl font-black tabular-nums",
+                      )}
+                    >
                       {caption}
                     </p>
                     {/* The reeks this team plays in, when the club has
