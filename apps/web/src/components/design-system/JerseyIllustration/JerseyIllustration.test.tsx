@@ -5,7 +5,7 @@ import { computePlayerFigureVariant } from "./player-figure-variant";
 
 describe("JerseyIllustration", () => {
   it("renders an aria-hidden wrapper with the default test id and cream-soft ground", () => {
-    render(<JerseyIllustration variant="hero" seed="Maxim Breugelmans" />);
+    render(<JerseyIllustration variant="hero" seed="9f1a2b3c" />);
     const wrapper = screen.getByTestId("jersey-illustration");
     expect(wrapper).toHaveAttribute("aria-hidden", "true");
     expect(wrapper).toHaveClass("bg-cream-soft");
@@ -15,7 +15,7 @@ describe("JerseyIllustration", () => {
     render(
       <JerseyIllustration
         variant="card"
-        seed="Maxim Breugelmans"
+        seed="9f1a2b3c"
         data-testid="player-card-illustration"
       />,
     );
@@ -25,7 +25,7 @@ describe("JerseyIllustration", () => {
 
   it("renders the two-pass figure geometry from the shared paths module", () => {
     const { container } = render(
-      <JerseyIllustration variant="hero" seed="Maxim Breugelmans" />,
+      <JerseyIllustration variant="hero" seed="9f1a2b3c" />,
     );
     // Head ellipse drawn once per pass, whatever the seed.
     expect(container.querySelectorAll("ellipse")).toHaveLength(2);
@@ -36,13 +36,13 @@ describe("JerseyIllustration", () => {
   });
 
   it("applies the hero variant's relative fill-parent positioning", () => {
-    render(<JerseyIllustration variant="hero" seed="Maxim Breugelmans" />);
+    render(<JerseyIllustration variant="hero" seed="9f1a2b3c" />);
     const wrapper = screen.getByTestId("jersey-illustration");
     expect(wrapper).toHaveClass("relative", "h-full", "w-full");
   });
 
   it("applies the card variant's absolute inset-0 positioning", () => {
-    render(<JerseyIllustration variant="card" seed="Maxim Breugelmans" />);
+    render(<JerseyIllustration variant="card" seed="9f1a2b3c" />);
     const wrapper = screen.getByTestId("jersey-illustration");
     expect(wrapper).toHaveClass("absolute", "inset-0");
   });
@@ -51,7 +51,7 @@ describe("JerseyIllustration", () => {
     render(
       <JerseyIllustration
         variant="card"
-        seed="Maxim Breugelmans"
+        seed="9f1a2b3c"
         className="opacity-50"
       />,
     );
@@ -66,25 +66,25 @@ describe("JerseyIllustration", () => {
     // test of the variant module alone can't.
     it("renders identically for a repeated seed and differently for a new one", () => {
       const first = render(
-        <JerseyIllustration variant="card" seed="Maxim Breugelmans" />,
+        <JerseyIllustration variant="card" seed="9f1a2b3c" />,
       );
       const firstMarkup = first.container.innerHTML;
       first.unmount();
 
       const second = render(
-        <JerseyIllustration variant="card" seed="Maxim Breugelmans" />,
+        <JerseyIllustration variant="card" seed="9f1a2b3c" />,
       );
       expect(second.container.innerHTML).toBe(firstMarkup);
       second.unmount();
 
       const third = render(
-        <JerseyIllustration variant="card" seed="Lars De Smet" />,
+        <JerseyIllustration variant="card" seed="4d5e6f70" />,
       );
       expect(third.container.innerHTML).not.toBe(firstMarkup);
     });
 
     it("applies the seed's computed registration offset as an SVG-space translate on the overprint pass, not a CSS pixel offset", () => {
-      const seed = "Maxim Breugelmans";
+      const seed = "9f1a2b3c";
       const expected = computePlayerFigureVariant(seed);
       const { container } = render(
         <JerseyIllustration variant="card" seed={seed} />,
