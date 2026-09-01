@@ -10,9 +10,11 @@ type TapedCardInteractive = TapedCardProps["interactive"];
 
 /**
  * Internal render tone — derived from `placement`, never authored by a
- * caller (#2515 rule 5).
+ * caller (#2515 rule 5). Module-private: not re-exported from either
+ * `PullQuote/index.ts` or the design-system barrel, so there is no public
+ * door back to authoring a tone directly.
  */
-export type PullQuoteTone = "cream" | "ink" | "jersey";
+type PullQuoteTone = "cream" | "ink" | "jersey";
 
 /**
  * Where the card sits relative to the page's reading flow. The component
@@ -65,7 +67,7 @@ export interface PullQuoteProps {
    * "de jeugdvisie · plezier · techniek · teamspirit"). Renders via
    * `<MonoLabelRow>` when no `attribution` is supplied. A card carries a
    * named speaker OR context labels OR nothing — never both; `attribution`
-   * wins if both are passed.
+   * wins if both are passed (a dev-mode warning fires when they collide).
    */
   labels?: MonoLabelRowItem[];
   /**
@@ -73,6 +75,11 @@ export interface PullQuoteProps {
    * Never pass a tone directly (#2515 rule 5). Defaults to "flow" (cream).
    */
   placement?: PullQuotePlacement;
+  /**
+   * Only takes effect when `children` is a plain string — the highlighter
+   * pass needs a string to search. Silently inert (with a dev-mode
+   * warning) against any other `children`.
+   */
   emphasis?: PullQuoteEmphasis;
   rotation?: TapedCardProps["rotation"];
   tape?: TapedCardProps["tape"];
@@ -171,6 +178,28 @@ function renderBodyWithEmphasis(
   );
 }
 
+/**
+ * `emphasis` only has meaning against a plain-string body — the highlighter
+ * pass needs `String.indexOf` to find the substring to wrap. A non-string
+ * `children` (rich Portable Text content forwarded as-is) has no string to
+ * search, so `emphasis` is silently inert there. Warn in dev rather than
+ * fail the type check or drop the caller's intent without a trace.
+ */
+function resolveQuoteBody(
+  children: ReactNode,
+  emphasis: PullQuoteEmphasis | undefined,
+): ReactNode {
+  if (typeof children === "string") {
+    return renderBodyWithEmphasis(children, emphasis);
+  }
+  if (emphasis && process.env.NODE_ENV === "development") {
+    console.warn(
+      "[PullQuote] emphasis is ignored — children is not a plain string, so there is no text to search for a match",
+    );
+  }
+  return children;
+}
+
 export function PullQuote({
   children,
   attribution,
@@ -185,10 +214,21 @@ export function PullQuote({
 }: PullQuoteProps) {
   const tone = PLACEMENT_TONE[placement];
   const palette = TONE[tone];
-  const body =
-    typeof children === "string"
-      ? renderBodyWithEmphasis(children, emphasis)
-      : children;
+  const body = resolveQuoteBody(children, emphasis);
+
+  if (
+    attribution &&
+    labels &&
+    labels.length > 0 &&
+    process.env.NODE_ENV === "development"
+  ) {
+    // A card carries a named speaker OR context labels OR nothing — never
+    // both (#2515 rule 4). `attribution` wins silently; warn so a caller
+    // that passed both by mistake doesn't lose the labels without a trace.
+    console.warn(
+      "[PullQuote] both attribution and labels were passed — attribution wins and labels is not rendered",
+    );
+  }
 
   return (
     <TapedCard

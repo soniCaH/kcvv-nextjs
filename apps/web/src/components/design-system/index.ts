@@ -264,7 +264,6 @@ export { PullQuote } from "./PullQuote";
 export type {
   PullQuoteProps,
   PullQuoteAttribution,
-  PullQuoteTone,
   PullQuotePlacement,
   PullQuoteEmphasis,
 } from "./PullQuote";

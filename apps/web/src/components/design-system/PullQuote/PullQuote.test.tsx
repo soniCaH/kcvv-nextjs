@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { PullQuote } from "./PullQuote";
 
 describe("PullQuote", () => {
@@ -126,6 +126,58 @@ describe("PullQuote", () => {
       </PullQuote>,
     );
     expect(screen.getByTestId("rich-child")).toBeInTheDocument();
+  });
+
+  describe("dev-mode warnings (code review findings 4 & 5)", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.unstubAllEnvs();
+    });
+
+    it("warns in dev when emphasis is passed alongside non-string children", () => {
+      vi.stubEnv("NODE_ENV", "development");
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <PullQuote attribution={{ name: "x" }} emphasis={{ text: "tribune" }}>
+          <span>rich text</span>
+        </PullQuote>,
+      );
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("emphasis is ignored"),
+      );
+    });
+
+    it("does not warn when emphasis is passed alongside string children", () => {
+      vi.stubEnv("NODE_ENV", "development");
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <PullQuote attribution={{ name: "x" }} emphasis={{ text: "tribune" }}>
+          Een tribune die zingt
+        </PullQuote>,
+      );
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it("warns in dev when both attribution and labels are passed", () => {
+      vi.stubEnv("NODE_ENV", "development");
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <PullQuote attribution={{ name: "x" }} labels={[{ label: "PLEZIER" }]}>
+          x
+        </PullQuote>,
+      );
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("attribution wins"),
+      );
+    });
+
+    it("does not warn when only attribution, or only labels, is passed", () => {
+      vi.stubEnv("NODE_ENV", "development");
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(<PullQuote attribution={{ name: "x" }}>x</PullQuote>);
+      render(<PullQuote labels={[{ label: "PLEZIER" }]}>x</PullQuote>);
+      expect(warn).not.toHaveBeenCalled();
+    });
   });
 
   it("emphasis wraps the matched substring in <HighlighterStroke> (no font change)", () => {
