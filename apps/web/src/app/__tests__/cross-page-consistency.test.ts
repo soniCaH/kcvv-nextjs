@@ -689,10 +689,10 @@ describe("the empty-state-undo global listener stays mounted (#2719)", () => {
  * the exemption comment DESIGN.md promises. A file drifting past its pinned
  * count, or losing the declaration or the comment, fails.
  */
-const BARE_CH_MAX_WIDTH = /max-w-\[\d+ch\]/;
+const BARE_CH_MAX_WIDTH = /max-w-\[\d*\.?\d+ch\]/;
 
 /** Global twin of `BARE_CH_MAX_WIDTH`, for counting rather than testing. */
-const BARE_CH_MAX_WIDTH_G = /max-w-\[\d+ch\]/g;
+const BARE_CH_MAX_WIDTH_G = /max-w-\[\d*\.?\d+ch\]/g;
 
 /** Every match of `BARE_CH_MAX_WIDTH` in an already-stripped source. */
 function chOccurrences(strippedSource: string): number {
@@ -797,6 +797,10 @@ describe("rule 8 catches what it claims to (#2645)", () => {
     ['<p className="max-w-[52ch] text-xl">'],
     ['className={cn("text-ink-soft max-w-[46ch] mt-2")}'],
     ['const NAV_LABEL_TRUNCATE = "block max-w-[14ch] truncate";'],
+    // Fractional and leading-dot forms are valid Tailwind arbitrary values
+    // (and valid CSS) — `\d+` alone walked straight past them.
+    ['<p className="max-w-[52.5ch] text-xl">'],
+    ['<p className="max-w-[.5ch] text-xl">'],
   ])("flags %s", (snippet) => {
     expect(hasBareChMaxWidth(snippet)).toBe(true);
   });
@@ -814,6 +818,10 @@ describe("rule 8 catches what it claims to (#2645)", () => {
 
   it("counts every occurrence, not just whether one exists", () => {
     expect(chOccurrences('max-w-[60ch]" ... "max-w-[14ch]')).toBe(2);
+  });
+
+  it("counts a fractional `ch` value too", () => {
+    expect(chOccurrences('max-w-[52.5ch]" ... "max-w-[60ch]')).toBe(2);
   });
 
   it("a second, undocumented `ch` in an exempt file changes the count the pinned check relies on", () => {
