@@ -97,7 +97,7 @@ export interface EventsBrowserProps {
  *   still arrive). The filter row hides — nothing to filter, and showing it
  *   invited a dead-end loop: pick a chip against zero events, land on the
  *   filtered-to-zero copy, undo back to the same emptiness (round 3 review,
- *   C5). This restains the pre-round-2 guard; round 2's own fix (below)
+ *   C5). This restores the pre-round-2 guard; round 2's own fix (below)
  *   stays independently correct for a facet seeded while the feed is empty
  *   (e.g. a deep link), where the row IS visible on mount.
  * - A type with no upcoming events → names the active category, with the

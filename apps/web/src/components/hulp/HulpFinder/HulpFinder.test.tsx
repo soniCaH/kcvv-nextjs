@@ -6,12 +6,12 @@ import { trackEvent } from "@/lib/analytics/track-event";
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
-const mockReplace = vi.fn();
+const mockPush = vi.fn();
 let mockSearchParams = new URLSearchParams();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
-    replace: mockReplace,
+    push: mockPush,
+    replace: vi.fn(),
     prefetch: vi.fn(),
     back: vi.fn(),
     forward: vi.fn(),
@@ -55,7 +55,7 @@ const scrollIntoView = vi.fn();
 beforeEach(() => {
   Element.prototype.scrollIntoView = scrollIntoView;
   scrollIntoView.mockClear();
-  mockReplace.mockClear();
+  mockPush.mockClear();
   vi.mocked(trackEvent).mockClear();
   trackView.mockClear();
   trackContactClicked.mockClear();
@@ -225,7 +225,7 @@ describe("HulpFinder", () => {
   it("the undo clears only the active audience, leaving an active category untouched", () => {
     // Both facets active at once: the audience branch still fires first
     // (it's checked before `category`), and its undo must clear audience
-    // only — router.replace never gains a category param because
+    // only — router.push never gains a category param because
     // `setAudience` has no way to touch `category` state at all.
     mockSearchParams = new URLSearchParams("audience=speler");
     const pathsWithoutSpelerRole = FINDER_FIXTURE_PATHS.filter(
@@ -239,13 +239,13 @@ describe("HulpFinder", () => {
       screen.getByRole("button", { name: "Toon alle doelgroepen" }),
     );
 
-    // `audience` is gone from the replace URL; `setAudience` never touches
+    // `audience` is gone from the pushed URL; `setAudience` never touches
     // `category`, so nothing category-related is added either.
-    expect(mockReplace).toHaveBeenCalledWith(
+    expect(mockPush).toHaveBeenCalledWith(
       expect.not.stringContaining("audience="),
       { scroll: false },
     );
-    expect(mockReplace).toHaveBeenCalledWith(
+    expect(mockPush).toHaveBeenCalledWith(
       expect.not.stringContaining("categor"),
       { scroll: false },
     );
@@ -266,8 +266,47 @@ describe("HulpFinder", () => {
   it("an audience chip writes the ?audience param", () => {
     render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
     fireEvent.click(screen.getByRole("button", { name: "Ouder" }));
-    expect(mockReplace).toHaveBeenCalledWith(
+    expect(mockPush).toHaveBeenCalledWith(
       expect.stringContaining("audience=ouder"),
+      { scroll: false },
+    );
+  });
+
+  it("a category chip writes the ?categorie param", () => {
+    render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
+    fireEvent.click(screen.getByRole("button", { name: "Medisch" }));
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.stringContaining("categorie=medisch"),
+      { scroll: false },
+    );
+  });
+
+  it("seeds the active category from ?categorie= (e.g. after browser back)", () => {
+    mockSearchParams = new URLSearchParams("categorie=medisch");
+    render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
+    expect(screen.getByRole("button", { name: "Medisch" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(q(/mijn kind is geblesseerd/i)).toBeInTheDocument();
+  });
+
+  it("gains an explicit 'Alles' reset chip on the audience row (#2429/#2564)", () => {
+    mockSearchParams = new URLSearchParams("audience=ouder");
+    render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
+    // Both rows now carry an "Alles" chip.
+    expect(screen.getAllByRole("button", { name: "Alles" }).length).toBe(2);
+
+    // Re-pressing the already-active "Ouder" chip is a dedup no-op — the
+    // toggle-off-by-reclicking idiom is retired in favour of "Alles" as the
+    // one reset, matching every other absorbed row.
+    fireEvent.click(screen.getByRole("button", { name: "Ouder" }));
+    expect(mockPush).not.toHaveBeenCalled();
+
+    const allesButtons = screen.getAllByRole("button", { name: "Alles" });
+    fireEvent.click(allesButtons[0]!);
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.not.stringContaining("audience="),
       { scroll: false },
     );
   });

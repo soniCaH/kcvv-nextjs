@@ -7,10 +7,14 @@
  * **Pure browse.** The unified search lives in `<HubSearch>` (hero + sticky nav),
  * so the finder no longer owns a search box. It is category-led:
  *
- *  - **Audience chips** (ouder/speler/trainer/supporter) filter by `role`, driven
- *    by the `?audience` URL param so the hero's audience deep-links land here.
- *  - **Category chips** (Alles + 6 · Phosphor glyph · Medisch = brick accent ·
- *    active = jersey-deep) switch the view.
+ *  - **Audience chips** (Alles + ouder/speler/trainer/supporter) filter by
+ *    `role`, driven by the `?audience` URL param so the hero's audience
+ *    deep-links land here.
+ *  - **Category chips** (Alles + 6 · Phosphor glyph) switch the view. Both
+ *    rows are `<FilterTabs>` (#2429/#2564) — the neutral Direction D chip,
+ *    no facet colour, no brick accent (that Medisch-only left-edge accent
+ *    was dropped on absorption; see the `AUDIENCE_TABS`/`CATEGORY_TABS`
+ *    docblock below).
  *  - **"Alles"** = a capped category preview — top-3 per category (declaration
  *    order; no fabricated "most asked") + an "Alle N →" affordance that opens that
  *    category's full list. A specific category shows its full single-open accordion.
@@ -32,7 +36,11 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight } from "@/lib/icons.redesign";
-import { EmptyState } from "@/components/design-system";
+import {
+  EmptyState,
+  FilterTabs,
+  type FilterTab,
+} from "@/components/design-system";
 import { filteredEmptyBody } from "@/lib/utils/empty-state-copy";
 import { useResponsibilityAnalytics } from "@/hooks/useResponsibilityAnalytics";
 import { useHubMemberPanel } from "@/components/organigram/HubMemberPanel";
@@ -51,7 +59,44 @@ import {
 import { QuestionCard } from "./QuestionCard";
 
 const AUDIENCE_PARAM = "audience";
+const CATEGORY_PARAM = "categorie";
 type CategoryFilter = "alles" | CategoryKey;
+
+/** Type guard: is `value` a renderable category facet? Narrows a raw URL param. */
+function isCategoryKey(value: string | null): value is CategoryKey {
+  return (
+    value !== null && (CATEGORY_ORDER as readonly string[]).includes(value)
+  );
+}
+
+/**
+ * Both `/hulp` chip rows, absorbed into `<FilterTabs>` by #2429/#2564 —
+ * replaces the two bespoke hand-rolled rows this component used to carry.
+ * Audience gains an explicit "Alles" leading facet (it previously had none;
+ * the active chip toggled itself off) so it matches the single-select +
+ * "Alles" reset shape every other absorbed row already uses. The category
+ * row's leading-glyph slot (Phosphor Fill, via `CATEGORY_META`) is the
+ * reversed Direction D lock (#2429 resolution addendum, "rule 9"); the
+ * brick left-edge accent Medisch carried outside the primitive is dropped —
+ * the resolution explicitly left that a deferred, unsettled question about
+ * the primitive's prop surface, not a decided requirement.
+ */
+const AUDIENCE_TABS: FilterTab[] = [
+  { value: "alles", label: "Alles" },
+  ...HUB_AUDIENCE_FILTERS.map((option): FilterTab => ({
+    value: option.value,
+    label: option.label,
+  })),
+];
+
+const CATEGORY_TABS: FilterTab[] = [
+  { value: "alles", label: "Alles" },
+  ...CATEGORY_ORDER.map((cat): FilterTab => ({
+    value: cat,
+    label: CATEGORY_META[cat].label,
+    icon: CATEGORY_META[cat].icon,
+  })),
+];
 
 export interface HulpFinderProps {
   responsibilityPaths: ResponsibilityPath[];
@@ -68,7 +113,29 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
     trackStepLinkClicked,
   } = useResponsibilityAnalytics();
 
-  const [category, setCategory] = useState<CategoryFilter>("alles");
+  // Category is local state seeded from `?categorie=` — NOT fully
+  // URL-derived like `audience` below, because `reveal()` (the `#<slug>`
+  // question deep-link) also switches category and must not clobber that
+  // deep-link's own URL hash with a `?categorie=…#hulp` push. Chip/"Alle N
+  // →" driven changes go through `setCategoryFilter` below, which pushes
+  // the URL (#2429 resolution rule 5 / #2564) — browser back then undoes a
+  // category filter. The block right after re-syncs `category` FROM the URL
+  // on navigation (back/forward), mirroring `SearchInterface`'s
+  // `trackedSearchParams` pattern.
+  const [category, setCategory] = useState<CategoryFilter>(() => {
+    const initial = searchParams.get(CATEGORY_PARAM);
+    return isCategoryKey(initial) ? initial : "alles";
+  });
+  const [trackedSearchParams, setTrackedSearchParams] = useState(searchParams);
+  if (trackedSearchParams !== searchParams) {
+    setTrackedSearchParams(searchParams);
+    const urlCategory = searchParams.get(CATEGORY_PARAM);
+    const nextCategory: CategoryFilter = isCategoryKey(urlCategory)
+      ? urlCategory
+      : "alles";
+    if (nextCategory !== category) setCategory(nextCategory);
+  }
+
   const [openId, setOpenId] = useState<string | null>(null);
   const pendingScroll = useRef<string | null>(null);
   const finderRef = useRef<HTMLDivElement>(null);
@@ -154,18 +221,44 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
     finderRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [category]);
 
+  // Dedup guard: re-pressing the already-active audience chip is a no-op —
+  // no redundant history entry (repo analytics policy). The row's own
+  // "Alles" chip (added on absorption into `<FilterTabs>`, #2429/#2564) is
+  // now the only way to clear a selection — clicking the active chip a
+  // second time no longer toggles it off, matching every other filter row.
   const setAudience = useCallback(
     (next: UserRole | null) => {
+      if (next === audience) return;
       // Read the live URL (this is a client-only handler) so the panel's
       // `?member`/`?holder` deep-link — written via history.replaceState, which
       // Next's useSearchParams does not observe — survives an audience toggle.
+      // `push`, not `replace` (#2429 resolution rule 5 / #2564): filter state
+      // is always a real history entry, so browser back undoes it — the same
+      // mechanism `setCategoryFilter` below uses.
       const params = new URLSearchParams(window.location.search);
       if (next) params.set(AUDIENCE_PARAM, next);
       else params.delete(AUDIENCE_PARAM);
       const qs = params.toString();
-      router.replace(`/hulp${qs ? `?${qs}` : ""}#hulp`, { scroll: false });
+      router.push(`/hulp${qs ? `?${qs}` : ""}#hulp`, { scroll: false });
     },
-    [router],
+    [audience, router],
+  );
+
+  // Dedup guard: re-pressing the active chip / "Alle N →" into the already-
+  // active category is a no-op — no redundant history entry.
+  const setCategoryFilter = useCallback(
+    (next: CategoryFilter) => {
+      if (next === category) return;
+      setCategory(next);
+      // Same live-URL read as `setAudience` — preserves the panel's
+      // `?member`/`?holder` deep-link.
+      const params = new URLSearchParams(window.location.search);
+      if (next === "alles") params.delete(CATEGORY_PARAM);
+      else params.set(CATEGORY_PARAM, next);
+      const qs = params.toString();
+      router.push(`/hulp${qs ? `?${qs}` : ""}#hulp`, { scroll: false });
+    },
+    [category, router],
   );
 
   const handleToggle = useCallback((id: string) => {
@@ -174,10 +267,13 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
 
   // Switch to a single category via "Alle N →" and flag a scroll-to-top so the
   // user lands on the filtered list, not stranded lower on the now-shorter page.
-  const handleSeeAll = useCallback((cat: CategoryKey) => {
-    setCategory(cat);
-    scrollToTopRef.current = true;
-  }, []);
+  const handleSeeAll = useCallback(
+    (cat: CategoryKey) => {
+      setCategoryFilter(cat);
+      scrollToTopRef.current = true;
+    },
+    [setCategoryFilter],
+  );
 
   // `nodeId` is threaded up from the card's already-resolved contact (no second
   // resolveContact), so the analytics node and the rendered link can't diverge.
@@ -279,7 +375,7 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
             reason="filtered"
             undo={{
               label: "Toon alle categorieën",
-              onClick: () => setCategory("alles"),
+              onClick: () => setCategoryFilter("alles"),
               analyticsSource: "hulp_category",
               analyticsFacet: category,
             }}
@@ -308,74 +404,35 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
 
   return (
     <div ref={finderRef} className="scroll-mt-32">
-      {/* Audience filter — mirrors the hero chips; drives ?audience. */}
+      {/* Audience filter — mirrors the hero chips; drives ?audience. Gains an
+          explicit "Alles" leading facet on absorption (#2429/#2564) — it
+          previously had none, and the active chip toggled itself off; every
+          other absorbed row already has "Alles" as its reset facet. */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-ink-muted font-mono text-[11px] tracking-[0.1em] uppercase">
           Ik ben
         </span>
-        {HUB_AUDIENCE_FILTERS.map((option) => {
-          const active = audience === option.value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={active}
-              onClick={() => setAudience(active ? null : option.value)}
-              className={`inline-flex min-h-11 items-center justify-center border-[1.5px] px-3 py-1.5 font-mono text-[11px] font-semibold tracking-[0.05em] uppercase transition-colors ${
-                active
-                  ? "border-ink bg-ink text-cream"
-                  : "border-ink-muted text-ink-soft hover:bg-cream-soft"
-              }`}
-            >
-              {option.label}
-            </button>
-          );
-        })}
+        <FilterTabs
+          tabs={AUDIENCE_TABS}
+          activeTab={audience ?? "alles"}
+          onChange={(value) =>
+            setAudience(value === "alles" ? null : (value as UserRole))
+          }
+          showCounts={false}
+          ariaLabel="Filter op doelgroep"
+          className="flex-1"
+        />
       </div>
 
       {/* Category chips. */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          aria-pressed={category === "alles"}
-          onClick={() => setCategory("alles")}
-          className={`border-ink inline-flex min-h-11 items-center justify-center border-[1.5px] px-3 py-1.5 font-mono text-[11px] font-semibold tracking-[0.04em] uppercase shadow-[2px_2px_0_0_var(--color-ink)] transition-all duration-300 hover:translate-x-1 hover:translate-y-1 hover:shadow-none ${
-            category === "alles"
-              ? "bg-jersey-deep text-cream"
-              : "bg-cream text-ink"
-          }`}
-        >
-          Alles
-        </button>
-        {CATEGORY_ORDER.map((cat) => {
-          const meta = CATEGORY_META[cat];
-          const Icon = meta.icon;
-          const active = category === cat;
-          const brickEdge =
-            !active && meta.accent === "brick"
-              ? "border-l-alert border-l-4"
-              : "";
-          return (
-            <button
-              key={cat}
-              type="button"
-              aria-pressed={active}
-              onClick={() => setCategory(cat)}
-              className={`border-ink inline-flex min-h-11 items-center gap-2 border-[1.5px] px-3 py-1.5 font-mono text-[11px] font-semibold tracking-[0.04em] uppercase shadow-[2px_2px_0_0_var(--color-ink)] transition-all duration-300 hover:translate-x-1 hover:translate-y-1 hover:shadow-none ${
-                active
-                  ? "bg-jersey-deep text-cream"
-                  : `bg-cream text-ink ${brickEdge}`
-              }`}
-            >
-              <Icon
-                size={14}
-                aria-hidden
-                className={active ? undefined : ACCENT_GLYPH_CLASS[meta.accent]}
-              />
-              {meta.label}
-            </button>
-          );
-        })}
+      <div className="mt-4">
+        <FilterTabs
+          tabs={CATEGORY_TABS}
+          activeTab={category}
+          onChange={(value) => setCategoryFilter(value as CategoryFilter)}
+          showCounts={false}
+          ariaLabel="Filter op categorie"
+        />
       </div>
 
       {/* Content. */}
