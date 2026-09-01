@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { trackEvent } from "@/lib/analytics/track-event";
+import { useFilterParam } from "@/hooks/useFilterParam";
 import {
   EmptyState,
   FilterTabs,
@@ -54,24 +55,13 @@ const KALENDER_FILTER_TABS: FilterTab[] = [
 ];
 
 /** Every valid `?type=` value, in render order — the single source of truth
- *  for validating the URL param (an unknown value falls back to "all").
- *  Derived from `KALENDER_FILTER_TABS` itself (#2564 review item 10) so a
- *  new chip can't be added to the row and forgotten here — the failure mode
- *  that shipped a chip whose own deep link silently fell back to "all". The
- *  only consumer is this component, so it lives here rather than in the
- *  route's `utils.ts` (which otherwise has no reason to import a
- *  client-side URL-parsing concern). */
+ *  `useFilterParam` narrows the URL param against (an unknown value falls
+ *  back to "all"). Derived from `KALENDER_FILTER_TABS` itself (#2564 review
+ *  item 10) so a new chip can't be added to the row and forgotten here —
+ *  the failure mode that shipped a chip whose own deep link silently fell
+ *  back to "all". */
 const KALENDER_FILTER_VALUES: readonly KalenderFilterValue[] =
   KALENDER_FILTER_TABS.map((tab) => tab.value as KalenderFilterValue);
-
-function isKalenderFilterValue(
-  value: string | null,
-): value is KalenderFilterValue {
-  return (
-    value !== null &&
-    (KALENDER_FILTER_VALUES as readonly string[]).includes(value)
-  );
-}
 
 export interface CalendarWidgetProps {
   /**
@@ -139,11 +129,15 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
   const view: ViewMode =
     isPhone && requestedView === "week" ? "agenda" : requestedView;
 
-  // By-type filter (Phase 6.D Phase 2, #1992). An unknown `?type=` falls to "all".
-  const rawType = searchParams.get("type");
-  const activeTypeFilter: KalenderFilterValue = isKalenderFilterValue(rawType)
-    ? rawType
-    : "all";
+  // By-type filter (Phase 6.D Phase 2, #1992). An unknown `?type=` falls to
+  // "all" — `useFilterParam` (#2779) owns the narrow-or-fallback, the
+  // delete-on-default write, and the dedup guard the old hand-rolled
+  // `isKalenderFilterValue` + `setType` body used to.
+  const [activeTypeFilter, setActiveTypeFilter] = useFilterParam(
+    "type",
+    KALENDER_FILTER_VALUES,
+    { fallback: "all", route: "/kalender" },
+  );
 
   // One shared period anchor for all three views (6.D lock — switching Maand /
   // Week / Agenda keeps the navigated window). Month + Agenda page by month,
@@ -202,17 +196,12 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
 
   function setType(value: KalenderFilterValue) {
     // Dedup guard: re-pressing the active chip is a no-op, so neither the URL
-    // push nor the `kalender_filter` analytics event fires twice (repo policy).
+    // push nor the `kalender_filter` analytics event fires twice (repo
+    // policy) — `useFilterParam`'s own internal dedup guard covers the URL
+    // write, but the analytics call is this component's own side effect, so
+    // it needs its own guard too.
     if (value === activeTypeFilter) return;
-    const params = new URLSearchParams(searchParams.toString());
-    if (value === "all") {
-      params.delete("type");
-    } else {
-      params.set("type", value);
-    }
-    router.push(`/kalender${params.size ? `?${params.toString()}` : ""}`, {
-      scroll: false,
-    });
+    setActiveTypeFilter(value);
     trackEvent("kalender_filter", { kalender_type: value });
   }
 
