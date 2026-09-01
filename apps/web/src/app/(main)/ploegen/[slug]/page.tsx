@@ -30,11 +30,15 @@ import { buildBreadcrumbJsonLd, buildSportsTeamJsonLd } from "@/lib/seo/jsonld";
 import { PageViewTracker, TrackInView } from "@/components/analytics";
 import { MatchStripSlot } from "@/components/layout/MatchStrip";
 import { getTeamMatches } from "@/lib/server/match-data";
+import { isPermanentBffFailure } from "@/lib/effect/classify-bff-failure";
 import { StripedSeam } from "@/components/design-system/StripedSeam";
 import { PageContainer } from "@/components/design-system/PageContainer";
 import { TeamHero } from "@/components/team/TeamHero";
 import { StandingsSection } from "@/components/team/StandingsSection";
-import { TeamMatchesSection } from "@/components/team/TeamMatchesSection";
+import {
+  TeamMatchesSection,
+  hasVisibleMatches,
+} from "@/components/team/TeamMatchesSection";
 import { CompetitiveStatusLine } from "@/components/team/CompetitiveStatusLine";
 import { SquadGrid } from "@/components/team/SquadGrid";
 import { TeamEnrolmentCta } from "@/components/team/TeamEnrolmentCta";
@@ -109,32 +113,86 @@ interface BffData {
 }
 
 /**
- * Deliberately no `catch`/`catchAll` on either read (#2540 state 4 / #2636
- * AC 4). A caught BFF failure would *succeed* — the empty render it produces
- * gets written into the 15-minute ISR cache like any other, so an upstream
- * blip on a Sunday afternoon would silently delete the league table at peak
- * traffic and keep saying "the season hasn't started" for the whole window.
- * Left to reject, the same failure makes this render throw, so ISR serves
- * the last-good page instead — up to 15 min stale, recovering silently at
- * the next successful regeneration. Only a genuinely cold render during an
- * outage has no last-good page to fall back to; that path is `error.tsx`'s,
- * not this function's.
+ * One of PSD's two reads, caught and classified rather than left to reject
+ * outright — `fetchBffData` below needs to know, per read, whether a failure
+ * is transient (let it propagate) or permanent (degrade) before it can decide
+ * whether the whole competitive block throws or renders `"unavailable"`.
  */
-async function fetchBffData(psdTeamId: number): Promise<BffData> {
-  const [matches, standings] = await Promise.all([
+type ReadOutcome<A> =
+  | { readonly ok: true; readonly value: A }
+  | {
+      readonly ok: false;
+      readonly permanent: boolean;
+      readonly error: unknown;
+    };
+
+async function classify<A>(promise: Promise<A>): Promise<ReadOutcome<A>> {
+  try {
+    return { ok: true, value: await promise };
+  } catch (error) {
+    return { ok: false, permanent: isPermanentBffFailure(error), error };
+  }
+}
+
+/**
+ * Deliberately no plain `catch`/`catchAll` on either read (#2540 state 4 /
+ * #2636 AC 4). A caught BFF failure would *succeed* — the empty render it
+ * produces gets written into the 15-minute ISR cache like any other, so an
+ * upstream blip on a Sunday afternoon would silently delete the league table
+ * at peak traffic and keep saying "the season hasn't started" for the whole
+ * window. Left to reject, the same failure makes this render throw, so ISR
+ * serves the last-good page instead — up to 15 min stale, recovering
+ * silently at the next successful regeneration.
+ *
+ * That is the right shape for a *transient* failure. It is the wrong shape
+ * for a *permanent* one (#2636 finding 3): `generateStaticParams` returns
+ * `[]`, so a team whose `psdId` is stale/mistyped in Sanity, or whose feed
+ * this deploy can no longer decode, never once succeeds — there is no
+ * last-good page for ISR to fall back to, ever, so every request throws and
+ * the route serves `error.tsx` forever instead of the hero/squad/staff a
+ * broken competitive block should still degrade to.
+ *
+ * `classify` + `isPermanentBffFailure` tell the two apart by the caught
+ * error's tag: `HttpNotFound` (the id genuinely does not exist upstream) and
+ * `ParseError`/`HttpApiDecodeError` (a shape this deploy cannot read) will
+ * not resolve themselves on the next ISR regeneration, so they are caught
+ * and reported as `"unavailable"`. Every other tag — a timeout, a 502/503, a
+ * generic client/network error — is transient and still rethrown here,
+ * preserving the throw-for-ISR-fallback behaviour above. If EITHER read is
+ * transiently broken, that wins over the other read's permanent failure: a
+ * `Promise.all`-style rejection is still the safer default when there is any
+ * chance the next regeneration recovers on its own.
+ */
+async function fetchBffData(
+  psdTeamId: number,
+): Promise<BffData | "unavailable"> {
+  const [matchesResult, standingsResult] = await Promise.all([
     // Via `getTeamMatches` because this page mounts its own
     // `<MatchStripSlot />` further down, and on `/ploegen/eerste-elftallen-a`
     // the strip resolves to this very psdId — the same double-read the
     // homepage had (#2441).
-    getTeamMatches(psdTeamId),
-    runPromise(
-      Effect.gen(function* () {
-        const bff = yield* BffService;
-        return yield* bff.getRanking(psdTeamId);
-      }),
+    classify(getTeamMatches(psdTeamId)),
+    classify(
+      runPromise(
+        Effect.gen(function* () {
+          const bff = yield* BffService;
+          return yield* bff.getRanking(psdTeamId);
+        }),
+      ),
     ),
   ]);
-  return { matches, standings, teamId: psdTeamId };
+
+  if (!matchesResult.ok && !matchesResult.permanent) throw matchesResult.error;
+  if (!standingsResult.ok && !standingsResult.permanent) {
+    throw standingsResult.error;
+  }
+  if (!matchesResult.ok || !standingsResult.ok) return "unavailable";
+
+  return {
+    matches: matchesResult.value,
+    standings: standingsResult.value,
+    teamId: psdTeamId,
+  };
 }
 
 export default async function TeamPage({ params }: TeamPageProps) {
@@ -182,10 +240,13 @@ export default async function TeamPage({ params }: TeamPageProps) {
       : null,
   ]);
 
-  const standings = bffData?.standings ?? [];
-  const scheduleMatches = (bffData?.matches ?? []).map(
-    transformMatchToSchedule,
-  );
+  const bffTeamId =
+    bffData && bffData !== "unavailable" ? bffData.teamId : undefined;
+  const standings =
+    bffData && bffData !== "unavailable" ? bffData.standings : [];
+  const scheduleMatches = (
+    bffData && bffData !== "unavailable" ? bffData.matches : []
+  ).map(transformMatchToSchedule);
   const staff = team.staff.map((s) => ({
     id: s.id,
     firstName: s.firstName,
@@ -202,35 +263,52 @@ export default async function TeamPage({ params }: TeamPageProps) {
   // The competitive block — `#klassement` + `#wedstrijden` — is gated as ONE
   // unit, replacing the two independent `showStandings` / `showMatches`
   // flags this used to derive inline (#2636). `bffData` is `null` only when
-  // the team carries no usable PSD id, which the state function reads as
-  // "not in competition" rather than throwing (see `fetchBffData` above for
-  // the fetch-failure case, which never reaches here at all).
+  // the team carries no usable PSD id (a deliberate skip, not a failure) and
+  // `"unavailable"` when `fetchBffData` caught a *permanent* PSD failure
+  // (#2636 finding 3) — a *transient* failure never reaches here at all,
+  // since `fetchBffData` lets that one reject and take the render down so
+  // ISR can serve the last-good page.
   const competitiveState = deriveCompetitiveBlockState(bffData);
-  const inCompetition = competitiveState.kind !== "not-in-competition";
-  const klassementLabel =
-    competitiveState.kind === "not-in-competition"
-      ? null
-      : competitiveBlockHeadingLabel(competitiveState);
+  const inCompetition =
+    competitiveState.kind !== "not-in-competition" &&
+    competitiveState.kind !== "unavailable";
+  const klassementLabel = inCompetition
+    ? competitiveBlockHeadingLabel(
+        competitiveState as Exclude<
+          typeof competitiveState,
+          { kind: "not-in-competition" } | { kind: "unavailable" }
+        >,
+      )
+    : null;
 
   // Section render flags — keep the sticky nav in sync with each section's
   // own auto-hide so the nav never lists a section that doesn't render.
+  //
+  // `#wedstrijden` gets its OWN flag rather than reusing `inCompetition`
+  // directly: the fixture gate can be open (a league match exists this
+  // season) while every individual fixture is postponed/cancelled/forfeited/
+  // stopped, or stuck at `"scheduled"` in the past — `<TeamMatchesSection>`
+  // would then self-hide beneath an unconditionally-rendered seam and nav
+  // chip. `hasVisibleMatches` is the exact predicate that component uses
+  // internally, so this can never drift from what it actually renders
+  // (#2636 finding 2).
   const showSquad = team.players.length > 0;
   const showStaff = staff.length > 0;
+  const showWedstrijden = inCompetition && hasVisibleMatches(scheduleMatches);
   const showEditorial =
     (teamBody !== null && hasRenderableBioContent(teamBody)) ||
     (team.trainingSchedule?.length ?? 0) > 0 ||
     (teamContact !== null && hasRenderableBioContent(teamContact));
 
-  // The pre-publication status line (`competitiveState.kind ===
-  // "not-in-competition"`) is the ONE deliberate exception to the nav/render
-  // invariant below: it is a status line, not a section, so it never earns a
-  // nav entry even though it renders in the section-nav's stead (#2540/#2636
-  // decision). Every other item here is kept in exact sync with what
-  // actually renders further down.
+  // The status line states (`not-in-competition` / `unavailable`) are the
+  // ONE deliberate exception to the nav/render invariant below: neither is a
+  // section, so neither earns a nav entry even though one renders in the
+  // section-nav's stead (#2540/#2636 decision). Every other item here is
+  // kept in exact sync with what actually renders further down.
   const navItems: TeamSectionNavItem[] = [
     inCompetition &&
       klassementLabel !== null && { id: "klassement", label: klassementLabel },
-    inCompetition && { id: "wedstrijden", label: "Wedstrijden" },
+    showWedstrijden && { id: "wedstrijden", label: "Wedstrijden" },
     showSquad && { id: "spelers", label: "Spelers" },
     showStaff && { id: "staf", label: "Staf" },
     showEditorial && { id: "info", label: "Info" },
@@ -277,15 +355,24 @@ export default async function TeamPage({ params }: TeamPageProps) {
       <TeamSectionNav items={navItems} />
 
       {/* The competitive block — #klassement + #wedstrijden — renders as ONE
-          unit (#2540/#2636): both sections together, or neither, with a
-          single status line taking their place. Never independently, so the
-          nav's two entries and the two rendered sections can never drift
-          out of sync with each other. */}
-      {!inCompetition ? (
+          gated unit (#2540/#2636): `#klassement` always renders once
+          `inCompetition`, or a status line takes both sections' place
+          (pre-publication, or a permanently-failed PSD read). `#wedstrijden`
+          carries its own `showWedstrijden` flag beneath that gate — see the
+          comment beside it above — so an empty section can never sit behind
+          a live nav chip. */}
+      {competitiveState.kind === "unavailable" ? (
         <>
           <StripedSeam colorPair="ink-cream" height="md" />
           <PageContainer className="py-10">
-            <CompetitiveStatusLine />
+            <CompetitiveStatusLine variant="unavailable" />
+          </PageContainer>
+        </>
+      ) : !inCompetition ? (
+        <>
+          <StripedSeam colorPair="ink-cream" height="md" />
+          <PageContainer className="py-10">
+            <CompetitiveStatusLine variant="not-in-competition" />
           </PageContainer>
         </>
       ) : (
@@ -303,28 +390,32 @@ export default async function TeamPage({ params }: TeamPageProps) {
               <StandingsSection
                 tables={standings}
                 divisionFull={team.divisionFull}
-                highlightTeamId={bffData?.teamId}
+                highlightTeamId={bffTeamId}
               />
             </PageContainer>
           </TrackInView>
 
-          <StripedSeam colorPair="ink-cream" height="md" />
-          <TrackInView
-            eventName="team_matches_in_view"
-            params={analyticsParams}
-          >
-            <PageContainer
-              as="section"
-              id="wedstrijden"
-              className="scroll-mt-[6.5rem] py-10"
-            >
-              <TeamMatchesSection
-                matches={scheduleMatches}
-                teamSlug={slug}
-                kcvvTeamId={bffData?.teamId}
-              />
-            </PageContainer>
-          </TrackInView>
+          {showWedstrijden ? (
+            <>
+              <StripedSeam colorPair="ink-cream" height="md" />
+              <TrackInView
+                eventName="team_matches_in_view"
+                params={analyticsParams}
+              >
+                <PageContainer
+                  as="section"
+                  id="wedstrijden"
+                  className="scroll-mt-[6.5rem] py-10"
+                >
+                  <TeamMatchesSection
+                    matches={scheduleMatches}
+                    teamSlug={slug}
+                    kcvvTeamId={bffTeamId}
+                  />
+                </PageContainer>
+              </TrackInView>
+            </>
+          ) : null}
         </>
       )}
 
