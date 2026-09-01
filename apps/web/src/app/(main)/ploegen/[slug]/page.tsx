@@ -2,10 +2,17 @@
  * Team Detail Page — Phase 6.C single-scroll composition.
  *
  * SiteHeader → MatchStripSlot → TeamHero → sticky section-nav →
- * StandingsSection → TeamMatchesSection → SquadGrid → TeamStaff →
- * TeamEditorial → VerderLezenRow → global SponsorsBlock → footer.
+ * [competitive block: status line, or StandingsSection + TeamMatchesSection]
+ * → SquadGrid → TeamStaff → TeamEditorial → VerderLezenRow →
+ * global SponsorsBlock → footer.
  * <StripedSeam> separates sections; every non-hero section auto-hides on
  * empty data (a U6 page degrades to hero + squad + staff).
+ *
+ * The competitive block (`#klassement` + `#wedstrijden`) does not auto-hide
+ * per section any more — it is gated as ONE unit by
+ * `deriveCompetitiveBlockState` (#2636): both sections render together, or
+ * neither does and a single status line takes their place. See the comment
+ * beside `competitiveState` below.
  */
 
 import { Effect } from "effect";
@@ -28,6 +35,7 @@ import { PageContainer } from "@/components/design-system/PageContainer";
 import { TeamHero } from "@/components/team/TeamHero";
 import { StandingsSection } from "@/components/team/StandingsSection";
 import { TeamMatchesSection } from "@/components/team/TeamMatchesSection";
+import { CompetitiveStatusLine } from "@/components/team/CompetitiveStatusLine";
 import { SquadGrid } from "@/components/team/SquadGrid";
 import { TeamEnrolmentCta } from "@/components/team/TeamEnrolmentCta";
 import { TeamStaff } from "@/components/team/TeamStaff";
@@ -38,6 +46,10 @@ import { articleVMsToVerderLezenItems } from "@/lib/utils/article-related-items"
 import { TeamRepository } from "@/lib/repositories/team.repository";
 import { hasRenderableBioContent } from "@/lib/portable-text/findPullquoteText";
 import { transformMatchToSchedule } from "@/components/match";
+import {
+  deriveCompetitiveBlockState,
+  competitiveBlockHeadingLabel,
+} from "@/lib/utils/competitive-block-state";
 import { TeamSectionNav, type TeamSectionNavItem } from "./TeamSectionNav";
 
 interface TeamPageProps {
@@ -96,27 +108,33 @@ interface BffData {
   teamId: number;
 }
 
-async function fetchBffData(psdTeamId: number): Promise<BffData | null> {
-  try {
-    const [matches, standings] = await Promise.all([
-      // Via `getTeamMatches` because this page mounts its own
-      // `<MatchStripSlot />` further down, and on `/ploegen/eerste-elftallen-a`
-      // the strip resolves to this very psdId — the same double-read the
-      // homepage had (#2441).
-      getTeamMatches(psdTeamId).catch(() => [] as readonly Match[]),
-      runPromise(
-        Effect.gen(function* () {
-          const bff = yield* BffService;
-          return yield* bff.getRanking(psdTeamId);
-        }).pipe(
-          Effect.catchAll(() => Effect.succeed([] as readonly RankingTable[])),
-        ),
-      ),
-    ]);
-    return { matches, standings, teamId: psdTeamId };
-  } catch {
-    return null;
-  }
+/**
+ * Deliberately no `catch`/`catchAll` on either read (#2540 state 4 / #2636
+ * AC 4). A caught BFF failure would *succeed* — the empty render it produces
+ * gets written into the 15-minute ISR cache like any other, so an upstream
+ * blip on a Sunday afternoon would silently delete the league table at peak
+ * traffic and keep saying "the season hasn't started" for the whole window.
+ * Left to reject, the same failure makes this render throw, so ISR serves
+ * the last-good page instead — up to 15 min stale, recovering silently at
+ * the next successful regeneration. Only a genuinely cold render during an
+ * outage has no last-good page to fall back to; that path is `error.tsx`'s,
+ * not this function's.
+ */
+async function fetchBffData(psdTeamId: number): Promise<BffData> {
+  const [matches, standings] = await Promise.all([
+    // Via `getTeamMatches` because this page mounts its own
+    // `<MatchStripSlot />` further down, and on `/ploegen/eerste-elftallen-a`
+    // the strip resolves to this very psdId — the same double-read the
+    // homepage had (#2441).
+    getTeamMatches(psdTeamId),
+    runPromise(
+      Effect.gen(function* () {
+        const bff = yield* BffService;
+        return yield* bff.getRanking(psdTeamId);
+      }),
+    ),
+  ]);
+  return { matches, standings, teamId: psdTeamId };
 }
 
 export default async function TeamPage({ params }: TeamPageProps) {
@@ -136,6 +154,15 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
   // Both depend only on `team`, never on each other, so they share one wave
   // rather than serializing Sanity behind the BFF pair (#2441).
+  //
+  // #2627 guard: no `<Suspense>` boundary between the content-store (Sanity)
+  // read above and this PSD wave, on this route or on
+  // `/ploegen/[slug]/wedstrijden`, without re-reading #2627 first. #2627
+  // measured that streaming here pays for itself on ~18 requests per deploy
+  // and costs a real 404 status code and the throw `fetchBffData` now relies
+  // on: once a shell flushes, the response is locked at 200 and a PSD
+  // rejection can only resolve *inside* the stream as error UI — which is
+  // exactly the "cached lie" #2540/#2636 removed the two catches to avoid.
   const [relatedArticles, bffData] = await Promise.all([
     // Same section, same verdict as `/spelers/[slug]` and `/staf/[slug]`
     // (#2433 rule 3/4): "Verder lezen." is polish, and its absence asserts
@@ -172,12 +199,21 @@ export default async function TeamPage({ params }: TeamPageProps) {
   const teamBody = team.body as PortableTextBlock[] | null;
   const teamContact = team.contactInfo as PortableTextBlock[] | null;
 
+  // The competitive block — `#klassement` + `#wedstrijden` — is gated as ONE
+  // unit, replacing the two independent `showStandings` / `showMatches`
+  // flags this used to derive inline (#2636). `bffData` is `null` only when
+  // the team carries no usable PSD id, which the state function reads as
+  // "not in competition" rather than throwing (see `fetchBffData` above for
+  // the fetch-failure case, which never reaches here at all).
+  const competitiveState = deriveCompetitiveBlockState(bffData);
+  const inCompetition = competitiveState.kind !== "not-in-competition";
+  const klassementLabel =
+    competitiveState.kind === "not-in-competition"
+      ? null
+      : competitiveBlockHeadingLabel(competitiveState);
+
   // Section render flags — keep the sticky nav in sync with each section's
   // own auto-hide so the nav never lists a section that doesn't render.
-  // Rows, not tables — matches `<StandingsSection>`'s own guard, so the seam
-  // and the nav entry never appear around a section that renders nothing.
-  const showStandings = standings.some((table) => table.entries.length > 0);
-  const showMatches = scheduleMatches.length > 0;
   const showSquad = team.players.length > 0;
   const showStaff = staff.length > 0;
   const showEditorial =
@@ -185,9 +221,16 @@ export default async function TeamPage({ params }: TeamPageProps) {
     (team.trainingSchedule?.length ?? 0) > 0 ||
     (teamContact !== null && hasRenderableBioContent(teamContact));
 
+  // The pre-publication status line (`competitiveState.kind ===
+  // "not-in-competition"`) is the ONE deliberate exception to the nav/render
+  // invariant below: it is a status line, not a section, so it never earns a
+  // nav entry even though it renders in the section-nav's stead (#2540/#2636
+  // decision). Every other item here is kept in exact sync with what
+  // actually renders further down.
   const navItems: TeamSectionNavItem[] = [
-    showStandings && { id: "klassement", label: "Klassement" },
-    showMatches && { id: "wedstrijden", label: "Wedstrijden" },
+    inCompetition &&
+      klassementLabel !== null && { id: "klassement", label: klassementLabel },
+    inCompetition && { id: "wedstrijden", label: "Wedstrijden" },
     showSquad && { id: "spelers", label: "Spelers" },
     showStaff && { id: "staf", label: "Staf" },
     showEditorial && { id: "info", label: "Info" },
@@ -233,7 +276,19 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
       <TeamSectionNav items={navItems} />
 
-      {showStandings ? (
+      {/* The competitive block — #klassement + #wedstrijden — renders as ONE
+          unit (#2540/#2636): both sections together, or neither, with a
+          single status line taking their place. Never independently, so the
+          nav's two entries and the two rendered sections can never drift
+          out of sync with each other. */}
+      {!inCompetition ? (
+        <>
+          <StripedSeam colorPair="ink-cream" height="md" />
+          <PageContainer className="py-10">
+            <CompetitiveStatusLine />
+          </PageContainer>
+        </>
+      ) : (
         <>
           <StripedSeam colorPair="ink-cream" height="md" />
           <TrackInView
@@ -252,11 +307,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
               />
             </PageContainer>
           </TrackInView>
-        </>
-      ) : null}
 
-      {showMatches ? (
-        <>
           <StripedSeam colorPair="ink-cream" height="md" />
           <TrackInView
             eventName="team_matches_in_view"
@@ -275,7 +326,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
             </PageContainer>
           </TrackInView>
         </>
-      ) : null}
+      )}
 
       {showSquad ? (
         <>
