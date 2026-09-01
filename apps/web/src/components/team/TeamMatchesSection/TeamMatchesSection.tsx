@@ -9,6 +9,11 @@ import { cn } from "@/lib/utils/cn";
 import { MonoLabel } from "@/components/design-system/MonoLabel";
 import { ArrowRight } from "@/lib/icons.redesign";
 import { TeamAgendaRow } from "./TeamAgendaRow";
+import {
+  findNextMatch,
+  hasVisibleMatches,
+  recentResults,
+} from "./match-visibility";
 import type { ScheduleRow } from "@/components/match/types";
 
 export interface TeamMatchesSectionProps {
@@ -20,43 +25,21 @@ export interface TeamMatchesSectionProps {
   className?: string;
 }
 
-const RECENT_COUNT = 3;
-
-function findNextMatch(
-  matches: readonly ScheduleRow[],
-  now: Date,
-): ScheduleRow | undefined {
-  return matches
-    .filter((m) => m.status === "scheduled" && m.date >= now)
-    .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
-}
-
-function recentResults(
-  matches: readonly ScheduleRow[],
-  excludeId: number | undefined,
-  now: Date,
-): ScheduleRow[] {
-  return matches
-    .filter(
-      (m) => m.status === "finished" && m.date < now && m.id !== excludeId,
-    )
-    .sort((a, b) => b.date.getTime() - a.date.getTime())
-    .slice(0, RECENT_COUNT);
-}
-
 export function TeamMatchesSection({
   matches,
   teamSlug,
   kcvvTeamId,
   className,
 }: TeamMatchesSectionProps) {
-  if (matches.length === 0) return null;
-
   const now = new Date();
+
+  // Same predicate `page.tsx` reads to decide the seam, the `<section>` and
+  // the sticky-nav entry (`match-visibility.ts`) — one owner, so this guard
+  // and that decision can never drift apart (#2636 finding 2).
+  if (!hasVisibleMatches(matches, now)) return null;
+
   const next = findNextMatch(matches, now);
   const recent = recentResults(matches, next?.id, now);
-
-  if (!next && recent.length === 0) return null;
 
   const calendarHref = `/ploegen/${teamSlug}/wedstrijden`;
 
