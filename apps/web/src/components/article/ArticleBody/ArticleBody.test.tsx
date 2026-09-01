@@ -454,6 +454,19 @@ describe("<ArticleBody>", () => {
       // QuoteMark + blockquote only — no third (attribution) child.
       expect(wrapper?.children).toHaveLength(2);
     });
+
+    it("resolves `emphasis` into a <HighlighterStroke>-wrapped body via renderTextWithEmphasis (code review finding 2)", () => {
+      const content = [
+        pullQuoteBlock({ externalName: "Coach", emphasis: "zingt" }),
+      ];
+      const { container } = render(<ArticleBody content={content} />);
+      const stroke = container.querySelector("[data-highlighter-stroke]");
+      expect(stroke).not.toBeNull();
+      expect(stroke?.textContent).toBe("zingt");
+      expect(container.querySelector("blockquote")?.textContent).toBe(
+        "Een tribune die zingt is meer waard dan welke aanwinst dan ook.",
+      );
+    });
   });
 
   describe("blockquote PT style serializer (#2566, decision #2515 rule 2)", () => {
