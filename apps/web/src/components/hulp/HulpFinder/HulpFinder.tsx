@@ -113,35 +113,19 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
     trackStepLinkClicked,
   } = useResponsibilityAnalytics();
 
-  // Category is local state seeded from `?categorie=` — NOT fully
-  // URL-derived like `audience` below, because `reveal()` (the `#<slug>`
-  // question deep-link) also switches category and must not clobber that
-  // deep-link's own URL hash with a `?categorie=…#hulp` push. Chip/"Alle N
-  // →" driven changes go through `setCategoryFilter` below, which pushes
-  // the URL (#2429 resolution rule 5 / #2564) — browser back then undoes a
-  // category filter. The block right after re-syncs `category` FROM the URL
-  // on navigation, mirroring `SearchInterface`'s `trackedSearchParams`
-  // pattern — but tracked on the `?categorie=` VALUE, not the `searchParams`
-  // object reference. Tracking the object would re-fire on ANY url change
-  // (e.g. an audience chip push) and, reading a `?categorie=` the URL never
-  // carried the reveal-set category in, unconditionally reset back to
-  // "alles" — clobbering `reveal()`'s local override on every unrelated
-  // navigation (#2564 review finding 2, reproduced: land on `/hulp#<slug>`,
-  // click an audience chip, the revealed question disappears).
-  const [category, setCategory] = useState<CategoryFilter>(() => {
-    const initial = searchParams.get(CATEGORY_PARAM);
-    return isCategoryKey(initial) ? initial : "alles";
-  });
+  // Both facets are purely URL-derived — `category` used to carry its own
+  // mirrored `useState` + a render-phase resync (#2564 review item 5) so
+  // that `reveal()` (the `#<slug>` question deep-link) could set it without
+  // writing `?categorie=`. That mirror is what let an unrelated `?audience=`
+  // push clobber a revealed category back to "alles" (round-1 finding 2):
+  // reading the whole `searchParams` object, the resync saw ANY url change
+  // as a reason to re-derive from a `?categorie=` the deep-link never wrote.
+  // `reveal()` below now writes the param it already implies instead, so
+  // there is nothing left to mirror.
   const categoryParam = searchParams.get(CATEGORY_PARAM);
-  const [trackedCategoryParam, setTrackedCategoryParam] =
-    useState(categoryParam);
-  if (trackedCategoryParam !== categoryParam) {
-    setTrackedCategoryParam(categoryParam);
-    const nextCategory: CategoryFilter = isCategoryKey(categoryParam)
-      ? categoryParam
-      : "alles";
-    if (nextCategory !== category) setCategory(nextCategory);
-  }
+  const category: CategoryFilter = isCategoryKey(categoryParam)
+    ? categoryParam
+    : "alles";
 
   const [openId, setOpenId] = useState<string | null>(null);
   const pendingScroll = useRef<string | null>(null);
@@ -182,18 +166,55 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
     if (path && audiencePaths.includes(path)) trackView(path.id);
   }, [openId, pathById, audiencePaths, trackView]);
 
+  // Writes one `?<key>=` param (or clears it on `null`) plus a hash, in one
+  // history entry. `#2564 review items 5 + 6` — the single writer both chip
+  // rows AND `reveal()` share, collapsing what used to be two byte-for-byte
+  // near-identical `router.push` bodies. The hash is a parameter (not
+  // hardcoded `#hulp`) precisely so `reveal()` can share this writer while
+  // landing on its own question's `#<id>` instead of the section anchor a
+  // chip press uses.
+  const pushParam = useCallback(
+    (
+      key: string,
+      value: string | null,
+      { hash, replace = false }: { hash: string; replace?: boolean },
+    ) => {
+      // Read the live URL (this is a client-only handler) so the panel's
+      // `?member`/`?holder` deep-link — written via history.replaceState,
+      // which Next's useSearchParams does not observe — survives this write.
+      const params = new URLSearchParams(window.location.search);
+      if (value) params.set(key, value);
+      else params.delete(key);
+      const qs = params.toString();
+      const url = `/hulp${qs ? `?${qs}` : ""}#${hash}`;
+      // `push` by default — filter state is always a real history entry, so
+      // browser back undoes it (#2429 resolution rule 5). `replace` for a
+      // hash reveal: landing on a deep link isn't an action to undo, so it
+      // shouldn't cost the visitor a back-press.
+      if (replace) router.replace(url, { scroll: false });
+      else router.push(url, { scroll: false });
+    },
+    [router],
+  );
+
   // #<slug> deep-link: reveal + open the question (switching to its category so
-  // it renders, since "Alles" only shows the top-3 per category).
+  // it renders, since "Alles" only shows the top-3 per category). Writes
+  // `?categorie=` via `pushParam` only when the category actually needs to
+  // change — the hash itself is already correct by the time this runs (a
+  // real `hashchange`, or the hash present on first load, both move
+  // `window.location.hash` natively before this fires).
   const reveal = useCallback(
     (rawId: string) => {
       const id = rawId.replace(/^#/, "");
       const path = pathById.get(id);
       if (!path) return;
-      setCategory(path.category);
       setOpenId(id);
       pendingScroll.current = id;
+      if (path.category !== category) {
+        pushParam(CATEGORY_PARAM, path.category, { hash: id, replace: true });
+      }
     },
-    [pathById],
+    [pathById, category, pushParam],
   );
 
   useEffect(() => {
@@ -236,19 +257,9 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
   const setAudience = useCallback(
     (next: UserRole | null) => {
       if (next === audience) return;
-      // Read the live URL (this is a client-only handler) so the panel's
-      // `?member`/`?holder` deep-link — written via history.replaceState, which
-      // Next's useSearchParams does not observe — survives an audience toggle.
-      // `push`, not `replace` (#2429 resolution rule 5 / #2564): filter state
-      // is always a real history entry, so browser back undoes it — the same
-      // mechanism `setCategoryFilter` below uses.
-      const params = new URLSearchParams(window.location.search);
-      if (next) params.set(AUDIENCE_PARAM, next);
-      else params.delete(AUDIENCE_PARAM);
-      const qs = params.toString();
-      router.push(`/hulp${qs ? `?${qs}` : ""}#hulp`, { scroll: false });
+      pushParam(AUDIENCE_PARAM, next, { hash: "hulp" });
     },
-    [audience, router],
+    [audience, pushParam],
   );
 
   // Dedup guard: re-pressing the active chip / "Alle N →" into the already-
@@ -256,16 +267,11 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
   const setCategoryFilter = useCallback(
     (next: CategoryFilter) => {
       if (next === category) return;
-      setCategory(next);
-      // Same live-URL read as `setAudience` — preserves the panel's
-      // `?member`/`?holder` deep-link.
-      const params = new URLSearchParams(window.location.search);
-      if (next === "alles") params.delete(CATEGORY_PARAM);
-      else params.set(CATEGORY_PARAM, next);
-      const qs = params.toString();
-      router.push(`/hulp${qs ? `?${qs}` : ""}#hulp`, { scroll: false });
+      pushParam(CATEGORY_PARAM, next === "alles" ? null : next, {
+        hash: "hulp",
+      });
     },
-    [category, router],
+    [category, pushParam],
   );
 
   const handleToggle = useCallback((id: string) => {
