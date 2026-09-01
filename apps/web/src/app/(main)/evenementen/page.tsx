@@ -12,10 +12,15 @@
  *
  * The filter chips, empty / filtered-to-zero states, and analytics live in the
  * `<EventsBrowser>` client shell; this server page only fetches the feed.
+ *
+ * No `<Suspense>` boundary around `<EventsBrowser>` — it reads its active
+ * facet from `window.location` on mount rather than `useSearchParams`
+ * (#2564 review item 2), so this whole page stays server-rendered/prerendered
+ * on this ISR route: the ticket list ships in the HTML, not a loading
+ * skeleton thrown away at hydration.
  */
 
 import { Effect } from "effect";
-import { Suspense } from "react";
 
 import { SITE_CONFIG } from "@/lib/constants";
 import { runPromise } from "@/lib/effect/runtime";
@@ -25,10 +30,7 @@ import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { PageContainer } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
-import {
-  EventsBrowser,
-  EventsBrowserSkeleton,
-} from "@/components/event/EventsBrowser";
+import { EventsBrowser } from "@/components/event/EventsBrowser";
 
 export const metadata = buildPageMetadata({
   title: "Evenementen",
@@ -77,15 +79,7 @@ export default async function EvenementenPage() {
           kicker="KCVV Elewijt · Agenda"
           headline="Evenementen"
         />
-        {/* <EventsBrowser> reads `?type=` via `useSearchParams`, so it needs
-            its own `<Suspense>` boundary on this ISR (not force-dynamic)
-            route — without one, Next bails the WHOLE page to client-side
-            rendering (empty shell, no h1, no hero) instead of scoping the
-            bailout to this subtree (#2564 review finding 1). The hero above
-            stays outside the boundary since it doesn't read search params. */}
-        <Suspense fallback={<EventsBrowserSkeleton />}>
-          <EventsBrowser events={events} />
-        </Suspense>
+        <EventsBrowser events={events} />
       </PageContainer>
     </div>
   );

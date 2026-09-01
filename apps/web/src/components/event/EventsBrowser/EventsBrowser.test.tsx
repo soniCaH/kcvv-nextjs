@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
@@ -8,14 +8,6 @@ import { EventsBrowser } from "./EventsBrowser";
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 const mockTrackEvent = vi.mocked(trackEvent);
-
-const mockPush = vi.fn();
-let mockSearchParams = new URLSearchParams();
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
-  useSearchParams: () => mockSearchParams,
-}));
 
 function ev(
   overrides: Partial<EventListItemVM> & { id: string },
@@ -49,7 +41,11 @@ const EVENTS: EventListItemVM[] = [
 describe("<EventsBrowser>", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSearchParams = new URLSearchParams();
+    // A spy on `window.history.pushState` left un-restored by an earlier
+    // test would keep recording calls into that test's own spy reference —
+    // `clearAllMocks` only resets call logs, not the wrapping itself.
+    vi.restoreAllMocks();
+    window.history.replaceState({}, "", "/evenementen");
   });
 
   it("renders the genuine-empty state with the filter row hidden (round 3 review, C5)", () => {
@@ -72,7 +68,7 @@ describe("<EventsBrowser>", () => {
     // link via `?type=`) even though the filter row itself is hidden in that
     // state — round 2's isFilterActive fix stays correct for this case
     // independent of the row's own visibility (#2562 review).
-    mockSearchParams = new URLSearchParams("type=Clubevent");
+    window.history.replaceState({}, "", "/evenementen?type=Clubevent");
     render(<EventsBrowser events={[]} />);
 
     expect(
@@ -99,19 +95,21 @@ describe("<EventsBrowser>", () => {
     ).toBeInTheDocument();
   });
 
-  it("pushes ?type= on a chip click", async () => {
+  it("pushes ?type= via history.pushState (not router.push) on a chip click", async () => {
+    const pushStateSpy = vi.spyOn(window.history, "pushState");
     render(<EventsBrowser events={EVENTS} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Clubevent" }));
 
-    expect(mockPush).toHaveBeenCalledWith(
+    expect(pushStateSpy).toHaveBeenCalledWith(
+      window.history.state,
+      "",
       expect.stringContaining("type=Clubevent"),
-      expect.anything(),
     );
   });
 
   it("narrows the list to the ?type= facet and hides non-matching months", () => {
-    mockSearchParams = new URLSearchParams("type=Clubevent");
+    window.history.replaceState({}, "", "/evenementen?type=Clubevent");
     render(<EventsBrowser events={EVENTS} />);
 
     expect(
@@ -127,7 +125,7 @@ describe("<EventsBrowser>", () => {
   });
 
   it("buckets a type-less event under the Andere chip", async () => {
-    mockSearchParams = new URLSearchParams("type=Andere");
+    window.history.replaceState({}, "", "/evenementen?type=Andere");
     render(
       <EventsBrowser
         events={[
@@ -142,7 +140,7 @@ describe("<EventsBrowser>", () => {
   });
 
   it("shows a per-category message + reset when a type has no events", async () => {
-    mockSearchParams = new URLSearchParams("type=Jeugdwerking");
+    window.history.replaceState({}, "", "/evenementen?type=Jeugdwerking");
     render(<EventsBrowser events={EVENTS} />);
 
     // The message lives in a polite live region so screen readers announce it
@@ -155,9 +153,14 @@ describe("<EventsBrowser>", () => {
       screen.getByRole("group", { name: /filter evenementen op type/i }),
     ).toBeInTheDocument();
 
+    const pushStateSpy = vi.spyOn(window.history, "pushState");
     await userEvent.click(screen.getByRole("button", { name: "Toon alles" }));
 
-    expect(mockPush).toHaveBeenCalledWith("/evenementen", expect.anything());
+    expect(pushStateSpy).toHaveBeenCalledWith(
+      window.history.state,
+      "",
+      "/evenementen",
+    );
   });
 
   it("fires event_filter with the selected event_type on a real change", async () => {
@@ -175,7 +178,7 @@ describe("<EventsBrowser>", () => {
     // (`EmptyStateUndoTracker`, tested on its own) — this host's job is only
     // to supply `analyticsSource`/`analyticsFacet`, rendered as inert
     // `data-*` attributes.
-    mockSearchParams = new URLSearchParams("type=Jeugdwerking");
+    window.history.replaceState({}, "", "/evenementen?type=Jeugdwerking");
     render(<EventsBrowser events={EVENTS} />);
 
     const undo = screen.getByRole("button", { name: "Toon alles" });
@@ -190,18 +193,19 @@ describe("<EventsBrowser>", () => {
     });
   });
 
-  it("does not re-fire event_filter when the active chip is re-pressed (dedup guard)", async () => {
+  it("does not re-fire event_filter or push the URL when the active chip is re-pressed (dedup guard)", async () => {
+    const pushStateSpy = vi.spyOn(window.history, "pushState");
     render(<EventsBrowser events={EVENTS} />);
 
     const allesChip = screen.getByRole("button", { name: "Alles" });
     // "Alles" is already selected → no-op, no analytics.
     await userEvent.click(allesChip);
     expect(mockTrackEvent).not.toHaveBeenCalled();
-    expect(mockPush).not.toHaveBeenCalled();
+    expect(pushStateSpy).not.toHaveBeenCalled();
   });
 
   it("renders the filtered-to-zero state when seeded via ?type=", () => {
-    mockSearchParams = new URLSearchParams("type=Jeugdwerking");
+    window.history.replaceState({}, "", "/evenementen?type=Jeugdwerking");
     render(<EventsBrowser events={EVENTS} />);
 
     const group = screen.getByRole("group", {
@@ -213,5 +217,28 @@ describe("<EventsBrowser>", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       /geen evenementen in de categorie jeugdwerking/i,
     );
+  });
+
+  it("re-syncs the active facet on browser back/forward (popstate) without pushing the URL again", async () => {
+    render(<EventsBrowser events={EVENTS} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Clubevent" }));
+    expect(screen.getByRole("button", { name: "Clubevent" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    // Simulate what the browser itself does on a back press.
+    window.history.pushState({}, "", "/evenementen");
+    const pushStateSpy = vi.spyOn(window.history, "pushState");
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+
+    expect(screen.getByRole("button", { name: "Alles" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(pushStateSpy).not.toHaveBeenCalled();
   });
 });

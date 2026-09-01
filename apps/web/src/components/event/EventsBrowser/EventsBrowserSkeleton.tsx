@@ -1,32 +1,27 @@
+import { FilterTabsSkeleton } from "@/components/design-system";
+
 /**
  * `<EventsBrowser>` loading skeleton — the filter chip row + month-grouped
- * ticket list only (not the page's opening, which renders outside this
- * boundary). Shared by two callers:
+ * ticket list only (not the page's opening, which is static and renders
+ * outside any loading boundary). The route's ONLY caller now:
+ * `apps/web/src/app/(main)/evenementen/loading.tsx` (the navigation-triggered
+ * full-page skeleton). `page.tsx` no longer wraps `<EventsBrowser>` in a
+ * local `<Suspense>` — that component reads its active facet from
+ * `window.location` on mount rather than `useSearchParams` (#2564 review
+ * item 2), so the whole page stays server-prerendered and never shows a
+ * loading skeleton for its own subtree.
  *
- * - `apps/web/src/app/(main)/evenementen/loading.tsx` — the route's
- *   navigation-triggered full-page skeleton.
- * - `apps/web/src/app/(main)/evenementen/page.tsx` — the local `<Suspense>`
- *   fallback around `<EventsBrowser>` (it reads `?type=` via
- *   `useSearchParams`, so on this ISR route it needs a LOCAL boundary or the
- *   whole page bails to client-side rendering — #2564 review finding 1).
- *
- * One skeleton in one place keeps both callers honest against the real
- * `<FilterTabs>` shape: a single-line, non-wrapping `gap-3` row (#2564 —
- * absorbed `EventFilterBar`'s old `flex-wrap` chips), not the wrapping,
- * bespoke-sized row this used to model.
+ * The chip row is the shared `<FilterTabsSkeleton>` (#2564 review item 4) —
+ * one definition of the real row's shape (single-line, non-wrapping,
+ * `gap-3`, `h-9` chips), not a bespoke redraw of it.
  */
 export function EventsBrowserSkeleton() {
   return (
-    <div className="flex flex-col gap-8 motion-safe:animate-pulse">
-      {/* Filter chip row — single line, matching <FilterTabs>. */}
-      <div className="flex gap-3 pb-1.5">
-        {["w-16", "w-28", "w-32", "w-28", "w-20"].map((w, i) => (
-          <div
-            key={i}
-            className={`border-cream/40 bg-cream/10 h-9 border-2 ${w}`}
-          />
-        ))}
-      </div>
+    <div aria-hidden className="flex flex-col gap-8 motion-safe:animate-pulse">
+      <FilterTabsSkeleton
+        surface="inverse"
+        widths={["w-16", "w-28", "w-32", "w-28", "w-20"]}
+      />
 
       {/* Month-grouped ticket list. */}
       <div className="flex flex-col gap-12">

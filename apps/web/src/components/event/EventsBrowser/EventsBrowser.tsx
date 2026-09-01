@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { trackEvent } from "@/lib/analytics/track-event";
 import {
   EmptyState,
@@ -12,77 +12,46 @@ import { filteredEmptyBody } from "@/lib/utils/empty-state-copy";
 import { EventMonthList } from "../EventMonthList";
 import {
   DEFAULT_EVENT_TYPE,
-  EVENT_TYPE_FILL,
+  EVENT_TYPE_TABS,
+  EVENT_TYPE_ORDER,
   type EventType,
 } from "../event-type-style";
 
-/** Filter selection: a specific event type, or `"all"` (the default — no filter). */
-export type EventFilterValue = EventType | "all";
+/** Filter selection: a specific event type, or `"all"` (the default — no
+ *  filter). Module-local — nothing outside this file consumes it. */
+type EventFilterValue = EventType | "all";
 
-/**
- * The `/evenementen` by-type filter row (design lock 6e §2, absorbed into
- * `<FilterTabs>` by #2429/#2564 — replaces the deleted bespoke
- * `EventFilterBar`). Colour is a prop (`FilterTab.color`), sourced from the
- * shared `EVENT_TYPE_FILL` map — the same colours `<TicketStub>`'s tear-off
- * date block uses — so the row stays a faithful legend for the tickets it
- * labels. `Alles` and `Andere` carry no colour and render the neutral
- * Direction D chip (`EVENT_TYPE_FILL.Andere`, "bg-ink text-cream", already
- * matches that neutral fill). `shadow="soft"` (passed at the call site) is
- * this row's concession to the dark `jersey-deep-dark` field.
- *
- * `EVENT_TYPE_TABS satisfies Record<EventType, FilterTab>` — restores the
- * exhaustiveness guard the old `EventFilterBar`'s `satisfies
- * Record<EventType, ChipStyle>` gave: a new `eventType` enum value is a
- * compile error here, not a silently uncoloured chip and a `?type=` deep
- * link `isEventFilterValue` would reject (#2564 review finding 4).
- */
-const EVENT_TYPE_TABS = {
-  Clubevent: {
-    value: "Clubevent",
-    label: "Clubevent",
-    color: { border: "border-jersey-deep", fill: EVENT_TYPE_FILL.Clubevent },
-  },
-  Supportersactiviteit: {
-    value: "Supportersactiviteit",
-    label: "Supportersactiviteit",
-    color: {
-      border: "border-warm",
-      fill: EVENT_TYPE_FILL.Supportersactiviteit,
-    },
-  },
-  Jeugdwerking: {
-    value: "Jeugdwerking",
-    label: "Jeugdwerking",
-    color: {
-      border: "border-jersey-bright",
-      fill: EVENT_TYPE_FILL.Jeugdwerking,
-    },
-  },
-  Andere: { value: "Andere", label: "Andere" },
-} satisfies Record<EventType, FilterTab>;
-
-// Render order: the four event types in `<TicketStub>` order, derived from
-// the map above so it can't drift out of sync with it. Also the single
-// source of truth for validating a `?type=` URL param (an unknown value
-// falls back to `"all"`).
-const EVENT_TYPE_ORDER = Object.keys(EVENT_TYPE_TABS) as EventType[];
-
+/** Every valid `?type=` value, in render order — the single source of truth
+ *  for validating the URL param (an unknown value falls back to "all").
+ *  Derived from the shared `EVENT_TYPE_ORDER` (`event-type-style.ts`), so a
+ *  new event type can't be added to the row and forgotten here. */
 const EVENT_FILTER_VALUES: readonly EventFilterValue[] = [
   "all",
   ...EVENT_TYPE_ORDER,
 ];
 
-/** Type guard: is `value` a renderable filter facet? Narrows a raw URL param. */
 function isEventFilterValue(value: string | null): value is EventFilterValue {
   return (
     value !== null && (EVENT_FILTER_VALUES as readonly string[]).includes(value)
   );
 }
 
+/**
+ * The `/evenementen` by-type filter row (design lock 6e §2, absorbed into
+ * `<FilterTabs>` by #2429/#2564 — replaces the deleted bespoke
+ * `EventFilterBar`). `EVENT_TYPE_TABS` + `EVENT_TYPE_ORDER` are the shared
+ * source (`event-type-style.ts`, #2564 review item 1) also consumed by
+ * `/kalender`'s `CalendarWidget` — one definition of each event type's
+ * colour, not two kept in sync by hand. `Alles` carries no colour and
+ * renders the neutral Direction D chip. `surface="inverse"` (passed at the
+ * call site) is this row's concession to the dark `jersey-deep-dark` field.
+ */
 const EVENTS_FILTER_TABS: FilterTab[] = [
   { value: "all", label: "Alles" },
   ...EVENT_TYPE_ORDER.map((type) => EVENT_TYPE_TABS[type]),
 ];
+
+const TYPE_PARAM = "type";
 
 export interface EventsBrowserProps {
   /**
@@ -101,9 +70,24 @@ export interface EventsBrowserProps {
  * stays visible against the dark field (round 3 review, A1: the default
  * hard ink shadow is invisible on this ground).
  *
- * The active facet is always in `?type=` (#2429 resolution rule 5 / #2564)
- * — `router.push`, so browser back undoes a filter, replacing the local
- * `useState` this component used to carry.
+ * The active facet is local `useState`, mirrored into `?type=` via
+ * `window.history.pushState` — deliberately NOT `useSearchParams` /
+ * `router.push` (#2564 review item 2). This component used to read the URL
+ * with `useSearchParams`, which on this static/ISR route forced Next to
+ * bail the WHOLE subtree to client-side rendering: the server-rendered HTML
+ * shipped only a loading skeleton, thrown away at hydration, and every
+ * visitor re-rendered the full month-grouped ticket list client-side from
+ * data already sitting in the RSC payload. `pushState` (the same pattern
+ * `NewsListingClient.tsx` uses) keeps the AC — filter state is in the URL,
+ * browser back undoes a filter — while the page stays fully prerendered. A
+ * mount effect seeds a deep-linked `?type=`, which costs one extra render
+ * only for a visitor who arrives on one, instead of de-prerendering the
+ * page for everyone; a `popstate` listener keeps the row in sync with
+ * browser back/forward. Passing the current `window.history.state` (not
+ * `{}`) to `pushState` keeps Next's internal `__NA` marker so its patched
+ * push/replaceState treats this as an internal write, not a fresh
+ * navigation to re-process — same precedent as
+ * `lib/utils/same-page-anchor.ts`.
  *
  * - No upcoming events at all → "Nog geen evenementen gepland" (events can
  *   still arrive). The filter row hides — nothing to filter, and showing it
@@ -120,28 +104,54 @@ export interface EventsBrowserProps {
  * `groupEventsByMonth` only buckets the events `<EventMonthList>` receives.
  */
 export function EventsBrowser({ events }: EventsBrowserProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const rawType = searchParams.get("type");
-  const selected: EventFilterValue = isEventFilterValue(rawType)
-    ? rawType
-    : "all";
+  const [selected, setSelected] = useState<EventFilterValue>("all");
   const isGenuinelyEmpty = events.length === 0;
+
+  // Deep-link restore on first mount: a one-time read of the URL (an
+  // external system) — reads `window.location` directly rather than
+  // `useSearchParams` so this component stays server-renderable (see the
+  // docblock above). The synchronous seed here mirrors
+  // `HubMemberPanel`'s own `?member=` deep-link restore.
+  useEffect(() => {
+    const urlType = new URLSearchParams(window.location.search).get(TYPE_PARAM);
+    if (isEventFilterValue(urlType) && urlType !== "all") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time URL deep-link seed, not a sync loop
+      setSelected(urlType);
+    }
+    // Run once on mount — the initial URL is the only deep-link source.
+  }, []);
+
+  // Browser back/forward — re-reads `?type=` and updates state WITHOUT
+  // writing the URL again (the browser already moved it).
+  useEffect(() => {
+    const onPopState = () => {
+      const urlType = new URLSearchParams(window.location.search).get(
+        TYPE_PARAM,
+      );
+      setSelected(isEventFilterValue(urlType) ? urlType : "all");
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   // Dedup guard: re-pressing the active chip is a no-op, so neither the URL
   // push nor analytics fire twice for the same selection (repo analytics
   // policy).
   const handleSelect = (value: EventFilterValue) => {
     if (value === selected) return;
-    const params = new URLSearchParams(searchParams.toString());
+    setSelected(value);
+    const params = new URLSearchParams(window.location.search);
     if (value === "all") {
-      params.delete("type");
+      params.delete(TYPE_PARAM);
     } else {
-      params.set("type", value);
+      params.set(TYPE_PARAM, value);
     }
-    router.push(`/evenementen${params.size ? `?${params.toString()}` : ""}`, {
-      scroll: false,
-    });
+    const qs = params.toString();
+    window.history.pushState(
+      window.history.state,
+      "",
+      `/evenementen${qs ? `?${qs}` : ""}`,
+    );
     trackEvent("event_filter", { event_type: value });
   };
 
@@ -169,7 +179,7 @@ export function EventsBrowser({ events }: EventsBrowserProps) {
           activeTab={selected}
           onChange={(value) => handleSelect(value as EventFilterValue)}
           showCounts={false}
-          shadow="soft"
+          surface="inverse"
           ariaLabel="Filter evenementen op type"
         />
       )}

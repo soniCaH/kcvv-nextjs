@@ -10,14 +10,6 @@ vi.mock("@/lib/effect/runtime", () => ({
   runPromise: vi.fn(),
 }));
 
-// <EventsBrowser> reads its active facet from `?type=` (#2429/#2564) via
-// useSearchParams/useRouter — this test doesn't exercise filtering, so an
-// empty, inert mock is enough to satisfy the App Router context.
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
-}));
-
 vi.mock("@/lib/repositories/event.repository", () => ({
   EventRepository: {},
 }));

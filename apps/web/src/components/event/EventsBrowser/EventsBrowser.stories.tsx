@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { within, userEvent } from "storybook/test";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import { EventsBrowser } from "./EventsBrowser";
 
@@ -49,9 +50,6 @@ const meta = {
   component: EventsBrowser,
   parameters: {
     layout: "fullscreen",
-    nextjs: {
-      navigation: { pathname: "/evenementen", query: {} },
-    },
   },
   tags: ["autodocs", "vr"],
   // Render on the dark `/evenementen` field so chips, month headers + seams
@@ -74,21 +72,34 @@ export const Populated: Story = {
 };
 
 /**
- * Filtered-to-zero — "Jeugdwerking" pre-selected (via `?type=`) against a
- * list with no Jeugdwerking events, so the per-category message + "Toon
- * alles" reset show while the filter row stays visible.
+ * Filtered-to-zero — "Jeugdwerking" pressed against a list with no
+ * Jeugdwerking events, so the per-category message + "Toon alles" reset
+ * show while the filter row stays visible. Reached via a `play` click
+ * rather than a `?type=` seed: `<EventsBrowser>` reads its active facet
+ * from `window.location` on mount (#2564 review item 2, so this route stays
+ * server-prerendered), which Storybook's `nextjs.navigation` mock — a
+ * Next-router shim, not the real browser URL — has no effect on.
+ *
+ * The click's own `window.history.pushState` is a REAL browser API call —
+ * Storybook doesn't hard-navigate between stories in the same test file, so
+ * without restoring the URL afterwards this leaks into whatever story runs
+ * next in the same page and seeds ITS mount from a stale `?type=`. Confirmed
+ * empirically: the `Empty` story's own baseline rendered this story's
+ * "Jeugdwerking" copy until the restore below was added.
  */
 export const FilteredToZero: Story = {
-  parameters: {
-    nextjs: {
-      navigation: {
-        pathname: "/evenementen",
-        query: { type: "Jeugdwerking" },
-      },
-    },
-  },
   args: {
     events: EVENTS.filter((event) => event.eventType !== "Jeugdwerking"),
+  },
+  play: async ({ canvasElement }) => {
+    const originalUrl =
+      window.location.pathname + window.location.search + window.location.hash;
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Jeugdwerking" }));
+    // Restore — after the snapshot-worthy state above has rendered, so this
+    // doesn't affect this story's own screenshot, only what the NEXT story
+    // reads on its own mount.
+    window.history.replaceState(window.history.state, "", originalUrl);
   },
 };
 
