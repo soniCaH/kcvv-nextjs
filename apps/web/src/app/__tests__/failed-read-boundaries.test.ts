@@ -34,9 +34,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Runtime, Cause } from "effect";
 import { HttpNotFound, HttpBadGateway } from "@kcvv/api-contract";
-import type { MatchDetail } from "@/lib/effect/schemas/match.schema";
+import { createMatchDetail } from "@/app/(main)/wedstrijd/[matchId]/match-detail.fixtures";
 
 // Sanity is unreachable for every read in this file. Repositories left
 // unmocked below therefore die; the two mocked below are the page subjects
@@ -52,8 +52,14 @@ vi.mock("@/lib/sanity/client", () => ({
 // pages below mount), so its match-detail and ranking reads must be mocked
 // here rather than left to die against the real BFF. `getMatchDetail` always
 // succeeds — the standings read is this suite's actual subject — and every
-// other method is a safe empty default, mirroring the other pages in this
-// file that never touch the BFF from their own awaited body.
+// other method is a safe empty default. This layer is NOT inert for the
+// other pages below: `/kalender`'s own `fetchCalendarData` calls
+// `bff.getMatches(...)` from its own awaited body too (`kalender/page.tsx`),
+// so this mock silently hands it a working BFF it did not have before — it
+// stays green today only because its `teamRepo.findAll()` dies against the
+// globally-unreachable Sanity mock first, never reaching the BFF fan-out.
+// Harmless while that ordering holds; load-bearing the day someone mocks
+// `TeamRepository` in this file.
 const { mockGetMatchDetail, mockGetRanking } = vi.hoisted(() => ({
   mockGetMatchDetail: vi.fn(),
   mockGetRanking: vi.fn(),
@@ -133,19 +139,24 @@ import StaffPage from "@/app/(main)/staf/[slug]/page";
 import MatchPage from "@/app/(main)/wedstrijd/[matchId]/page";
 
 /** A league match with a resolvable KCVV side — the only shape that reaches
- * the `getRanking` call in `fetchStandings` at all. */
-function leagueMatchFixture(id: number): MatchDetail {
-  return {
+ * the `getRanking` call in `fetchStandings` at all. Builds on the shared
+ * `createMatchDetail` (also used by `utils.test.ts`) rather than a second
+ * hand-copy of the same base fixture. */
+function leagueMatchFixture(id: number) {
+  return createMatchDetail({
     id,
-    date: new Date("2025-12-07T15:00:00"),
-    home_team: { id: 1, name: "KCVV Elewijt" },
-    away_team: { id: 2, name: "KFC Turnhout" },
-    status: "scheduled",
-    hasReport: false,
     competitionType: "league",
     kcvv_team_id: 1,
     is_placeholder: false,
-  } as MatchDetail;
+  });
+}
+
+/** Unwrap a rejected `Effect.runPromise`'s `FiberFailure` down to the tagged
+ * error's own `_tag` — same squash `isPermanentBffFailure` uses. */
+function rejectedBffErrorTag(error: unknown): unknown {
+  if (!Runtime.isFiberFailure(error)) return undefined;
+  const squashed = Cause.squash(error[Runtime.FiberFailureCauseId]);
+  return (squashed as { _tag?: unknown })?._tag;
 }
 
 describe("a failed subject takes the page down (#2563)", () => {
@@ -206,9 +217,19 @@ describe("/wedstrijd/[matchId] classifies a failed ranking read (#2778)", () => 
       Effect.fail(new HttpBadGateway({ error: "upstream is down" })),
     );
 
-    await expect(
-      MatchPage({ params: Promise.resolve({ matchId: "9001" }) }),
-    ).rejects.toThrow();
+    const rejection = await MatchPage({
+      params: Promise.resolve({ matchId: "9001" }),
+    }).then(
+      () => {
+        throw new Error("expected MatchPage to reject");
+      },
+      (error: unknown) => error,
+    );
+
+    // Proves the rejection is THIS read, not a coincidence of Sanity being
+    // globally unreachable in this file.
+    expect(mockGetRanking).toHaveBeenCalledWith(1);
+    expect(rejectedBffErrorTag(rejection)).toBe("HttpBadGateway");
   });
 
   it("a permanent ranking failure (404) degrades to no standings instead of taking the page down", async () => {
@@ -222,5 +243,9 @@ describe("/wedstrijd/[matchId] classifies a failed ranking read (#2778)", () => 
     await expect(
       MatchPage({ params: Promise.resolve({ matchId: "9002" }) }),
     ).resolves.toBeTruthy();
+    // Proves `getRanking` was actually reached (not short-circuited by the
+    // is_placeholder/competitionType/kcvv_team_id guard) before asserting the
+    // page survived it.
+    expect(mockGetRanking).toHaveBeenCalledWith(1);
   });
 });

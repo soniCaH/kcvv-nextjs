@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Effect } from "effect";
 import { isPermanentBffFailure } from "./classify-bff-failure";
+import { makeTaggedBffError } from "./bff-error.fixtures";
 import type { BffError } from "@/lib/effect/services/BffService";
 
 // Typed against the real `BffError["_tag"]` union (not a bare `string`), so
@@ -14,12 +15,8 @@ import type { BffError } from "@/lib/effect/services/BffService";
 // (`@effect/platform`'s `HttpClientError.ts`), neither of which carries that
 // string as its own `_tag`.
 async function runAndCatch(tag: BffError["_tag"]): Promise<unknown> {
-  class Tagged {
-    readonly _tag = tag;
-    readonly message = "boom";
-  }
   try {
-    await Effect.runPromise(Effect.fail(new Tagged()));
+    await Effect.runPromise(Effect.fail(makeTaggedBffError(tag)));
   } catch (error) {
     return error;
   }

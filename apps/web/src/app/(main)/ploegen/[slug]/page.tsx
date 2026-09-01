@@ -148,6 +148,15 @@ interface BffData {
  *
  * Either way, a transient failure is rethrown unchanged, preserving the
  * throw-for-ISR-fallback behaviour above.
+ *
+ * `degradeIfPermanent` is not yet universal: `app/sitemap.ts`,
+ * `(main)/ploegen/[slug]/wedstrijden/page.tsx`, `(main)/share/page.tsx`, and
+ * `(main)/tegenstander/[clubId]/page.tsx` still hand-spell a narrower version
+ * of this split as a bare `Effect.catchTag("HttpNotFound", ...)` — catching
+ * only the 404 case, not the full three-tag permanent classifier. Converging
+ * them is deliberately not done here: it would widen what they catch to
+ * `ParseError`/`HttpApiDecodeError` too, a behaviour change beyond what those
+ * routes asked for. Tracked in #2782.
  */
 async function fetchBffData(
   psdTeamId: number,

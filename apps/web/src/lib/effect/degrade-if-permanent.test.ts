@@ -1,21 +1,24 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Effect } from "effect";
 import { degradeIfPermanent } from "./degrade-if-permanent";
+import { makeTaggedBffError } from "./bff-error.fixtures";
 import type { BffError } from "@/lib/effect/services/BffService";
 
-// Same rationale as `classify-bff-failure.test.ts`: typed against the real
-// `BffError["_tag"]` union, not a bare `string`, so a tag renamed or removed
-// on `BffError` fails this file to compile instead of silently narrowing
-// which tags this helper degrades.
 function failingEffect(tag: BffError["_tag"]): Effect.Effect<never, BffError> {
-  class Tagged {
-    readonly _tag = tag;
-    readonly message = "boom";
-  }
-  return Effect.fail(new Tagged()) as unknown as Effect.Effect<never, BffError>;
+  return Effect.fail(makeTaggedBffError(tag)) as unknown as Effect.Effect<
+    never,
+    BffError
+  >;
 }
 
 describe("degradeIfPermanent", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it.each<BffError["_tag"]>([
     "HttpNotFound",
     "ParseError",
@@ -29,6 +32,17 @@ describe("degradeIfPermanent", () => {
       expect(result).toBe("fallback");
     },
   );
+
+  it("warns when it classifies a permanent failure, naming the tag", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await Effect.runPromise(
+      degradeIfPermanent(failingEffect("HttpNotFound"), "fallback" as const),
+    );
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("HttpNotFound"),
+      expect.objectContaining({ error: expect.anything() }),
+    );
+  });
 
   it.each<BffError["_tag"]>([
     "HttpServiceUnavailable",

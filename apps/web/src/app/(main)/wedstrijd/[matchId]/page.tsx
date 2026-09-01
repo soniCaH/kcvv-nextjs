@@ -171,22 +171,22 @@ const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
  * structured `competitionType` (never on string-matching the Dutch label) and
  * a resolved `kcvv_team_id`; anything else triggers no ranking fetch at all.
  *
- * Deliberately no bare `catchAll` on the ranking read (#2778) — the identical
- * caching hazard #2636 fixed on `/ploegen/[slug]`'s `fetchBffData` (see that
- * function's docstring for the full rationale), just on this sibling route. A
- * caught failure *succeeds*, so the empty render it produces gets written
- * into this route's 5-minute ISR cache like any other, silently deleting the
- * match-day standings snapshot for the whole window on a transient blip.
- * Left to reject, a **transient** failure (timeout, 502/503, generic client
- * error) makes this render throw instead, so ISR serves the last-good page.
- * A **permanent** one — a stale `kcvv_team_id`, or a response this deploy can
- * no longer decode — is classified *as an Effect*, before it ever becomes a
- * rejected promise, via the shared `degradeIfPermanent`
- * (`lib/effect/degrade-if-permanent.ts`, the same classifier
- * `/ploegen/[slug]/page.tsx`'s ranking read uses) and resolves to `null`
- * instead — there is no last-good page for a cold `generateStaticParams` miss
- * to fall back to, so this must degrade rather than take the route down
- * forever.
+ * Deliberately no bare `catchAll` on the ranking read (#2778) — see
+ * `/ploegen/[slug]/page.tsx`'s `fetchBffData` docstring for the full
+ * transient-throws / permanent-degrades rationale shared via
+ * `degradeIfPermanent` (`lib/effect/degrade-if-permanent.ts`).
+ *
+ * This route's own facts: a 5-minute ISR window (below), and no cheaper
+ * failure domain to isolate this one read into than the whole page. This
+ * site has no PPR/streaming (root `CLAUDE.md`'s "Nothing streams" rule), so
+ * every read in this render's single `Promise.all` (below) fails the whole
+ * page the same way regardless of which one rejected — there is no partial-
+ * render escape hatch that lets only `<MatchStandingsSection>` go down while
+ * the hero and lineup still serve. A rejecting ranking read taking the route
+ * down is therefore not a choice this function makes so much as this render
+ * model's shape; the only alternative is catching it, which is the bug this
+ * ticket fixes — trading a full-page throw (ISR keeps serving the last-good
+ * page) for a successful-but-wrong render cached for the whole window.
  *
  * Owner call (#2778): a permanently-failed read degrades to the exact same
  * outcome as "no ranking fetched at all" below — an empty `RankingEntry[]`,
@@ -215,16 +215,20 @@ async function fetchStandings(
     return [];
   }
   const standingsTeamId = match.kcvv_team_id;
+  // Unlike `/ploegen/[slug]`, this route makes no distinction between "the
+  // ranking read permanently failed" and "there is legitimately no table" —
+  // both already resolve to the same empty `RankingEntry[]` below, so the
+  // permanent fallback is `[]` directly rather than a `null` sentinel this
+  // function would immediately unwrap.
   const tables = await runPromise(
     degradeIfPermanent(
       Effect.gen(function* () {
         const bff = yield* BffService;
         return yield* bff.getRanking(standingsTeamId);
       }),
-      null,
+      [] as readonly RankingTable[],
     ),
   );
-  if (tables === null) return [];
 
   const holds = (table: RankingTable, clubId: number) =>
     table.entries.some((e) => e.club_id === clubId);
