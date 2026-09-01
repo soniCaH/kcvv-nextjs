@@ -69,20 +69,30 @@ export const WithRoleAndSource: Story = {
   },
 };
 
-export const ToneInk: Story = {
+// Tone is derived from `placement`, never authored directly (#2515 rule 5).
+export const PlacementSection: Story = {
   args: {
-    tone: "ink",
+    placement: "section",
     attribution: { name: "Coach", role: "A-PLOEG" },
     children:
       "We hebben de kleedkamer in de derde minuut weer wakker gekregen.",
   },
 };
 
-export const ToneJersey: Story = {
+export const PlacementAside: Story = {
   args: {
-    tone: "jersey",
+    placement: "aside",
     attribution: { name: "Niels", role: "U21" },
     children: "Ik heb hier op tien verschillende posities gespeeld.",
+  },
+};
+
+// Default placement ("flow") — cream, in the flow among paragraphs.
+export const PlacementFlow: Story = {
+  args: {
+    placement: "flow",
+    attribution: { name: "Maxim", role: "A-PLOEG" },
+    children: "Geen drama. Gewoon doorgaan en zondag de drie pakken.",
   },
 };
 
@@ -109,6 +119,43 @@ export const WithEmphasis: Story = {
     attribution: { name: "Maxim", role: "A-PLOEG" },
     emphasis: { text: "tribune die zingt" },
     children: "Een tribune die zingt is meer waard dan welke aanwinst dan ook.",
+  },
+};
+
+// State coverage (#2566) — the three states every consumer must cover:
+// with attribution, without attribution (context labels instead), and the
+// null path (neither — a nameless quote with nothing else that quotes).
+export const WithLabelsNoAttribution: Story = {
+  args: {
+    placement: "section",
+    labels: [
+      { label: "de jeugdvisie" },
+      { label: "plezier" },
+      { label: "techniek" },
+      { label: "teamspirit" },
+    ],
+    children:
+      "Bij KCVV Elewijt staat plezier op één. Wie graag speelt, leert vanzelf — techniek, teamspirit en respect groeien mee.",
+  },
+};
+
+export const NullPathNoAttributionNoLabels: Story = {
+  args: {
+    children: "Een tribune die zingt is meer waard dan welke aanwinst dan ook.",
+  },
+};
+
+// A CMS blockquote — the object this ticket's rule 2 makes the CMS block
+// render as, with a `children` ReactNode standing in for the rich Portable
+// Text output (marks already applied upstream) rather than a plain string.
+export const AsBlockquote: Story = {
+  args: {
+    children: (
+      <>
+        Het clubgevoel zit in de kleinste dingen —{" "}
+        <em>een kop koffie na de match</em>.
+      </>
+    ),
   },
 };
 
@@ -140,12 +187,12 @@ export const WithSubjectAvatarMonogramFallback: AvatarStory = {
   render: renderWithAvatar,
 };
 
-// Avatar slot on the ink tone — confirms the cream typography on the
-// dark card still reads correctly inside the new two-line attribution
-// stack.
+// Avatar slot on the ink tone (placement="section") — confirms the cream
+// typography on the dark card still reads correctly inside the new
+// two-line attribution stack.
 export const WithSubjectAvatarToneInk: AvatarStory = {
   args: {
-    tone: "ink",
+    placement: "section",
     attribution: {
       name: "Wim Govaerts",
       role: "TRAINER",

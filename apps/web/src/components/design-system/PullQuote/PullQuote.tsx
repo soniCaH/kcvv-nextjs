@@ -1,12 +1,29 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 import { HighlighterStroke } from "../HighlighterStroke";
+import { MonoLabelRow, type MonoLabelRowItem } from "../MonoLabelRow";
+import type { MonoLabelTone } from "../MonoLabel";
 import { QuoteMark, type QuoteMarkColor } from "../QuoteMark";
 import { TapedCard, type TapedCardProps } from "../TapedCard";
 
 type TapedCardInteractive = TapedCardProps["interactive"];
 
+/**
+ * Internal render tone — derived from `placement`, never authored by a
+ * caller (#2515 rule 5).
+ */
 export type PullQuoteTone = "cream" | "ink" | "jersey";
+
+/**
+ * Where the card sits relative to the page's reading flow. The component
+ * derives its own tone from this:
+ *   - "section" — the card owns its own section (a heading above it, or
+ *     full-bleed seams framing it) → ink.
+ *   - "aside"   — a companion beside running text (a sticky column, an
+ *     `<aside>`) → jersey (jersey-deep paper).
+ *   - "flow"    — in the flow among paragraphs (the default) → cream.
+ */
+export type PullQuotePlacement = "section" | "aside" | "flow";
 
 interface TonePalette {
   bg: TapedCardProps["bg"];
@@ -15,6 +32,7 @@ interface TonePalette {
   name: string;
   metaText: string;
   quoteMark: QuoteMarkColor;
+  labelTone: MonoLabelTone;
 }
 
 export interface PullQuoteAttribution {
@@ -29,9 +47,32 @@ export interface PullQuoteEmphasis {
 }
 
 export interface PullQuoteProps {
-  children: string;
-  attribution: PullQuoteAttribution;
-  tone?: PullQuoteTone;
+  /**
+   * The quoted body. A plain string runs through the `emphasis` highlighter
+   * pass; any other ReactNode (e.g. Portable Text marks already rendered by
+   * a `blockquote`-style serializer) is rendered as-is.
+   */
+  children: ReactNode;
+  /**
+   * Optional structured attribution — a named speaker. Renders the
+   * attribution row below the quote body. Omit for a nameless quote: the
+   * row is skipped entirely rather than rendering an empty slot (#2515
+   * rule 1).
+   */
+  attribution?: PullQuoteAttribution;
+  /**
+   * Optional context-label row (mono caps chips — e.g. `<JeugdVisie>`'s
+   * "de jeugdvisie · plezier · techniek · teamspirit"). Renders via
+   * `<MonoLabelRow>` when no `attribution` is supplied. A card carries a
+   * named speaker OR context labels OR nothing — never both; `attribution`
+   * wins if both are passed.
+   */
+  labels?: MonoLabelRowItem[];
+  /**
+   * Where this card sits — the component derives its own tone from this.
+   * Never pass a tone directly (#2515 rule 5). Defaults to "flow" (cream).
+   */
+  placement?: PullQuotePlacement;
   emphasis?: PullQuoteEmphasis;
   rotation?: TapedCardProps["rotation"];
   tape?: TapedCardProps["tape"];
@@ -63,6 +104,7 @@ const TONE: Record<PullQuoteTone, TonePalette> = {
     name: "text-ink",
     metaText: "text-ink-muted",
     quoteMark: "jersey",
+    labelTone: "muted",
   },
   ink: {
     bg: "ink",
@@ -79,6 +121,7 @@ const TONE: Record<PullQuoteTone, TonePalette> = {
     // sits at the right contrast ratio.
     metaText: "text-cream",
     quoteMark: "jersey",
+    labelTone: "cream",
   },
   jersey: {
     // Phase 3 redesign — bright `--color-jersey` is retired (per owner
@@ -89,7 +132,14 @@ const TONE: Record<PullQuoteTone, TonePalette> = {
     name: "text-cream",
     metaText: "text-cream",
     quoteMark: "cream",
+    labelTone: "cream",
   },
+};
+
+const PLACEMENT_TONE: Record<PullQuotePlacement, PullQuoteTone> = {
+  section: "ink",
+  aside: "jersey",
+  flow: "cream",
 };
 
 function renderBodyWithEmphasis(
@@ -124,7 +174,8 @@ function renderBodyWithEmphasis(
 export function PullQuote({
   children,
   attribution,
-  tone = "cream",
+  labels,
+  placement = "flow",
   emphasis,
   rotation,
   tape,
@@ -132,7 +183,13 @@ export function PullQuote({
   avatarSlot,
   className,
 }: PullQuoteProps) {
+  const tone = PLACEMENT_TONE[placement];
   const palette = TONE[tone];
+  const body =
+    typeof children === "string"
+      ? renderBodyWithEmphasis(children, emphasis)
+      : children;
+
   return (
     <TapedCard
       bg={palette.bg}
@@ -143,22 +200,30 @@ export function PullQuote({
       padding="lg"
       className={cn(className)}
     >
-      <div data-pull-quote-tone={tone} className="flex flex-col gap-4">
+      <div
+        data-pull-quote-tone={tone}
+        data-pull-quote-placement={placement}
+        className="flex flex-col gap-4"
+      >
         <QuoteMark color={palette.quoteMark} />
-        <q
+        <blockquote
           className={cn(
             "font-display block italic",
             "text-display-sm",
             palette.body,
           )}
         >
-          {renderBodyWithEmphasis(children, emphasis)}
-        </q>
-        <PullQuoteAttributionRow
-          attribution={attribution}
-          avatarSlot={avatarSlot}
-          palette={palette}
-        />
+          {body}
+        </blockquote>
+        {attribution ? (
+          <PullQuoteAttributionRow
+            attribution={attribution}
+            avatarSlot={avatarSlot}
+            palette={palette}
+          />
+        ) : labels && labels.length > 0 ? (
+          <MonoLabelRow items={labels} tone={palette.labelTone} />
+        ) : null}
       </div>
     </TapedCard>
   );
