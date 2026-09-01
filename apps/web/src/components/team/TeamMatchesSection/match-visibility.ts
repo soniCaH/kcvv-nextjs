@@ -43,10 +43,22 @@ export function recentResults(
 /**
  * Whether `<TeamMatchesSection>` would render anything for this match list —
  * a featured next fixture, a recent result, or both. `now` defaults to the
- * current time so a page-level caller and the section's own render need not
- * thread one instant between them; both read PSD data that is day/hour
- * granular, never second-granular, so two independent `new Date()` calls a
- * few milliseconds apart cannot disagree in practice.
+ * current time for callers that have no reason to pin one.
+ *
+ * `/ploegen/[slug]/page.tsx` is not one of those callers, and MUST pass its
+ * own `now` through to both this call and `<TeamMatchesSection now={now}>`
+ * (review round 3, PR #2774). The two are not "a few milliseconds apart":
+ * the page is ISR-cached for up to 15 minutes with the nav chip and the seam
+ * baked into that cached HTML, while `<TeamMatchesSection>` is a
+ * `"use client"` component that re-derives its own guard on hydration, with
+ * a clock read that can be up to the whole cache window later. A team with
+ * one scheduled fixture and no finished-and-past ones flips
+ * `hasVisibleMatches` from true to false the moment that fixture's kickoff
+ * passes (PSD leaves the status at `"scheduled"` until it syncs the result) —
+ * a page cached minutes earlier ships `showWedstrijden: true`, and the
+ * client then renders `null` under a seam and a nav chip that already
+ * committed to showing it. One instant, threaded through both call sites,
+ * closes that; two independent `new Date()` reads do not.
  *
  * A single allocation-free `some()`, not a call through `findNextMatch` +
  * `recentResults` — those sort and slice to pick a *specific* next match and
@@ -55,7 +67,7 @@ export function recentResults(
  * own guard is `!next && recent.length === 0` on the `next`/`recent` it
  * already derived for rendering — which is exactly this predicate's
  * definition, so the two can never disagree without also duplicating the
- * derivation, at zero extra cost.
+ * derivation, at zero extra cost, PROVIDED both sides read the same `now`.
  */
 export function hasVisibleMatches(
   matches: readonly ScheduleRow[],

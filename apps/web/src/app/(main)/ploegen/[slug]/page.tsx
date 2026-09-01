@@ -286,10 +286,18 @@ export default async function TeamPage({ params }: TeamPageProps) {
   // would then self-hide beneath an unconditionally-rendered seam and nav
   // chip. `hasVisibleMatches` is the exact predicate that component uses
   // internally, so this can never drift from what it actually renders
-  // (#2636 finding 2).
+  // (#2636 finding 2) — PROVIDED both read the same instant. This page is
+  // ISR-cached for up to 15 minutes with `showWedstrijden` baked into the
+  // HTML, while `<TeamMatchesSection>` re-derives on client hydration with
+  // its own clock read; two independent `new Date()` calls can disagree by
+  // up to that whole cache window (a fixture crossing kickoff between the
+  // two), not milliseconds. One snapshot, threaded to both call sites,
+  // closes that (review round 3, PR #2774).
+  const now = new Date();
   const showSquad = team.players.length > 0;
   const showStaff = staff.length > 0;
-  const showWedstrijden = inCompetition && hasVisibleMatches(scheduleMatches);
+  const showWedstrijden =
+    inCompetition && hasVisibleMatches(scheduleMatches, now);
   const showEditorial =
     (teamBody !== null && hasRenderableBioContent(teamBody)) ||
     (team.trainingSchedule?.length ?? 0) > 0 ||
@@ -404,6 +412,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                     matches={scheduleMatches}
                     teamSlug={slug}
                     kcvvTeamId={bffTeamId}
+                    now={now}
                   />
                 </PageContainer>
               </TrackInView>

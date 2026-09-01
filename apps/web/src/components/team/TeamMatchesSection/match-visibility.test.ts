@@ -53,4 +53,19 @@ describe("hasVisibleMatches", () => {
     });
     expect(hasVisibleMatches([stale], NOW)).toBe(false);
   });
+
+  it("flips for the same match list as `now` crosses kickoff — the reason the caller must pin one instant (#2636 review round 3)", () => {
+    const kickoff = new Date("2026-09-20T15:00:00.000Z");
+    const oneScheduledFixture = [row({ status: "scheduled", date: kickoff })];
+
+    const beforeKickoff = new Date(kickoff.getTime() - 1000);
+    const afterKickoff = new Date(kickoff.getTime() + 1000);
+
+    expect(hasVisibleMatches(oneScheduledFixture, beforeKickoff)).toBe(true);
+    // PSD leaves the status at "scheduled" until it syncs a result — so
+    // crossing kickoff alone (no status change) flips this to false. A page
+    // rendered against `beforeKickoff` and a component hydrating against
+    // `afterKickoff` would disagree if they read two independent clocks.
+    expect(hasVisibleMatches(oneScheduledFixture, afterKickoff)).toBe(false);
+  });
 });

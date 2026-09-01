@@ -9,6 +9,10 @@
  *  - Renders "Volledige kalender →" link to /ploegen/[slug]/wedstrijden
  *  - No crash when only future matches exist (season-start)
  *  - No crash when only past matches exist (end of season)
+ *  - The `now` prop, not the ambient clock, decides next/recent (#2636
+ *    review round 3 — the page must be able to pin the exact instant it
+ *    already used for `hasVisibleMatches`, since the two can otherwise
+ *    disagree by up to the ISR cache window rather than milliseconds)
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
@@ -170,5 +174,33 @@ describe("TeamMatchesSection", () => {
       .getAllByTestId("team-agenda-row")
       .filter((el) => el.getAttribute("data-featured") === "true");
     expect(featured).toHaveLength(0);
+  });
+
+  it("decides next/recent from the passed now prop, not the ambient clock", () => {
+    // The ambient (faked) clock is 2026-09-15. A fixture on 2026-09-20 reads
+    // as "next" against that — but if the caller pins a LATER `now`
+    // (mirroring an ISR-cached page's snapshot outliving that fixture's
+    // kickoff before the client hydrates), the section must follow the prop,
+    // not the ambient clock.
+    const matches = [
+      makeMatch({
+        id: 1,
+        status: "scheduled",
+        date: new Date("2026-09-20T15:00:00.000Z"),
+      }),
+    ];
+    const pinnedNow = new Date("2026-09-25T00:00:00.000Z"); // after the fixture
+    // Relative to pinnedNow the fixture is in the past and still unfinished
+    // (PSD hasn't synced a result), so there is neither a next match nor a
+    // finished result — the section auto-hides instead of trusting the
+    // ambient clock, which would still read it as upcoming.
+    const { container } = render(
+      <TeamMatchesSection
+        matches={matches}
+        teamSlug="kcvv-a"
+        now={pinnedNow}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
   });
 });
