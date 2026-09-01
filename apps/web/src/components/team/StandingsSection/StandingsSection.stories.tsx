@@ -113,7 +113,39 @@ export const ProviderNameFallback: Story = {
   args: { tables: [senior], divisionFull: null, highlightTeamId: 1235 },
 };
 
-/** No table published — the section renders nothing. */
+// Every row published, none scored yet — before matchday 1 the reeks has
+// entries but no numbers, so the section drops position and every numeric
+// column and renders the clubs as a plain list (#2605 decision 3).
+const numberlessSeason: RankingTable = {
+  competition_id: 222464,
+  competition_name: "3de Afdeling Voetb Vl A",
+  entries: [
+    entry(0, 101, "KSK Kampenhout", 0, 0, 0, 0, 0, 0, 0),
+    entry(0, 102, "FC Perk", 0, 0, 0, 0, 0, 0, 0),
+    entry(0, 1235, "KCVV Elewijt", 0, 0, 0, 0, 0, 0, 0),
+    entry(0, 104, "Eppegem B", 0, 0, 0, 0, 0, 0, 0),
+  ],
+} as RankingTable;
+
+/**
+ * No table published — #2605/#2636: the section keeps rendering (its seam
+ * and nav entry survive) and says so in present tense, never a promise.
+ */
 export const NoTables: Story = {
   args: { tables: [] },
+};
+
+// The single-table numberless render is `Features/Teams/StandingsTable`'s
+// `Numberless` story — byte-identical to what this section would produce
+// with one numberless table, so it isn't duplicated here (#2636 finding 6).
+// `MixedTables` below is the genuinely distinct section-level case.
+
+/**
+ * The winter-break shape (#2636 finding 4): a finished, fully-scored autumn
+ * poule next to a spring poule that has not kicked off. Each table is
+ * classified on its own — the autumn table renders in full, the spring one
+ * as a club list — never one verdict blanket-applied to both.
+ */
+export const MixedTables: Story = {
+  args: { tables: [autumn, numberlessSeason], highlightTeamId: 1235 },
 };

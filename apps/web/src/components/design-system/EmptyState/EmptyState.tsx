@@ -16,14 +16,18 @@
  *   inert `data-*` attributes a single global click listener reads — see
  *   `EmptyStateAction` below for why the analytics fields live there.
  * - **Tier "slot"** — one slot is empty inside an otherwise full page (a
- *   `MatchLineup` team column, a `MatchEvents` team list). A dashed
- *   `ink-muted` box that holds the slot's shape so the absence reads as a
- *   known gap rather than a render failure. No heading, no action, ever —
- *   the type system has no `heading`/`artefact`/`undo` prop on this tier.
- *   `flex-1` by default so it fills a `flex flex-col` host column's
- *   grid-stretched height instead of collapsing to one line — the host still
- *   owns making that column `flex flex-col` in the first place; the
- *   primitive cannot reach outside itself to do that part.
+ *   `MatchLineup` team column, a `MatchEvents` team list). A dashed box that
+ *   holds the slot's shape so the absence reads as a known gap rather than a
+ *   render failure — `border-ink-muted` by default (`background:
+ *   "transparent"`), or `border-ink` on a `cream-soft` fill
+ *   (`background: "cream-soft"`) for a slot standing alone on the page
+ *   rather than inside an already-framed surface (`<CompetitiveStatusLine>`,
+ *   #2636). No heading, no action, ever — the type system has no
+ *   `heading`/`artefact`/`undo` prop on this tier. `flex-1` by default so it
+ *   fills a `flex flex-col` host column's grid-stretched height instead of
+ *   collapsing to one line — the host still owns making that column `flex
+ *   flex-col` in the first place; the primitive cannot reach outside itself
+ *   to do that part.
  *
  * **The copy is the tell.** Both tiers share one visual register; only the
  * words distinguish genuine emptiness ("Nog geen …") from a filter that
@@ -155,10 +159,31 @@ export interface EmptyStateSurfaceFilteredProps extends EmptyStateSurfaceCommonP
 export type EmptyStateSurfaceProps =
   EmptyStateSurfacePendingProps | EmptyStateSurfaceFilteredProps;
 
+/**
+ * Tier-"slot" background, the same idea as tier-"surface"'s `surface` prop:
+ * - `"transparent"` (default) — the original held-open gap: `ink-muted`
+ *   border, no fill. Every existing consumer (`MatchLineup`, `MatchEvents`,
+ *   `CalendarMonth`) gets this without asking for it, so none of their
+ *   baselines move.
+ * - `"cream-soft"` — a solid-ink border on a `cream-soft` fill, for a slot
+ *   that stands alone on the page rather than sitting inside an
+ *   already-framed surface (`<CompetitiveStatusLine>`, #2636). Recolours the
+ *   same primitive instead of a host overriding its border/fill classes from
+ *   outside.
+ */
+export type EmptyStateSlotBackground = "transparent" | "cream-soft";
+
+const SLOT_BACKGROUND_CLASS: Record<EmptyStateSlotBackground, string> = {
+  transparent: "border-ink-muted",
+  "cream-soft": "border-ink bg-cream-soft",
+};
+
 export interface EmptyStateSlotProps extends EmptyStateSharedProps {
   tier: "slot";
   /** The held-open label — short, mono, uppercase. No heading, no action. */
   children: ReactNode;
+  /** @default "transparent" */
+  background?: EmptyStateSlotBackground;
 }
 
 export type EmptyStateProps = EmptyStateSurfaceProps | EmptyStateSlotProps;
@@ -182,12 +207,18 @@ function headingLevelFor(
   }
 }
 
-function SlotEmptyState({ children, live, className }: EmptyStateSlotProps) {
+function SlotEmptyState({
+  children,
+  live,
+  className,
+  background = "transparent",
+}: EmptyStateSlotProps) {
   return (
     <div
       role={live ? "status" : undefined}
       className={cn(
-        "border-ink-muted flex flex-1 items-center justify-center border-2 border-dashed px-3 py-3 text-center",
+        "flex flex-1 items-center justify-center border-2 border-dashed px-3 py-3 text-center",
+        SLOT_BACKGROUND_CLASS[background],
         className,
       )}
     >

@@ -128,3 +128,17 @@ export const Slot: Story = {
     children: "Geen opstelling beschikbaar",
   },
 };
+
+/**
+ * Tier 2, `background="cream-soft"` — a solid-ink border on a `cream-soft`
+ * fill, for a slot standing alone on the page rather than inside an
+ * already-framed surface (`<CompetitiveStatusLine>`, #2636 finding 12).
+ */
+export const SlotCreamSoft: Story = {
+  name: "Tier 2 — cream-soft background",
+  args: {
+    tier: "slot",
+    background: "cream-soft",
+    children: "De kalender voor dit seizoen is nog niet bekendgemaakt.",
+  },
+};

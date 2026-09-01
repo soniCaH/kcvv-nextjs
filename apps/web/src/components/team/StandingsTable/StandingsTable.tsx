@@ -1,4 +1,5 @@
 import { Crest, MonoLabel } from "@/components/design-system";
+import { isNumberlessTable } from "@/lib/utils/competitive-block-state";
 import { cn } from "@/lib/utils/cn";
 import type { RankingEntry } from "@kcvv/api-contract";
 
@@ -12,12 +13,109 @@ export interface StandingsTableProps {
   caption?: string;
 }
 
+/**
+ * The KCVV row/item accent — a tinted background with an inset left rule in
+ * jersey green. Shared between the numbered table and the numberless list so
+ * the two registers read as the same accent, not two independent ones.
+ */
+const KCVV_HIGHLIGHT_CLASS =
+  "bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))] shadow-[inset_3px_0_0_var(--color-jersey-deep)]";
+
+/** Crest + truncating team name, italic unless it's the KCVV row. The one
+ * piece both the numbered table and the numberless list render identically. */
+function ClubIdentity({
+  teamName,
+  teamLogo,
+  isKcvv,
+}: {
+  teamName: string;
+  teamLogo: string | undefined;
+  isKcvv: boolean;
+}) {
+  return (
+    <>
+      <Crest name={teamName} logo={teamLogo} size={16} />
+      <span
+        className={cn(
+          "font-display text-ink min-w-0 truncate",
+          isKcvv ? "font-semibold not-italic" : "italic",
+        )}
+        title={teamName}
+      >
+        {teamName}
+      </span>
+    </>
+  );
+}
+
+function NumberlessClubList({
+  entries,
+  highlightTeamId,
+  caption,
+}: {
+  entries: readonly RankingEntry[];
+  highlightTeamId: number | undefined;
+  caption: string | undefined;
+}) {
+  return (
+    <div
+      data-testid="standings-table"
+      data-variant="numberless"
+      className="w-full"
+      role="region"
+      aria-label={caption ?? "De reeks"}
+    >
+      {caption ? (
+        <p className="pb-2 text-left">
+          <MonoLabel>{caption}</MonoLabel>
+        </p>
+      ) : null}
+      <ul className="font-mono text-xs">
+        {entries.map((entry) => {
+          const isKcvv = entry.team_id === highlightTeamId;
+          return (
+            <li
+              key={entry.team_id}
+              data-testid={isKcvv ? "standings-kcvv-row" : undefined}
+              className={cn(
+                "flex items-center gap-1.5 border-b border-[color:var(--color-paper-edge)] py-2 pr-4 pl-4",
+                isKcvv && KCVV_HIGHLIGHT_CLASS,
+              )}
+            >
+              <ClubIdentity
+                teamName={entry.team_name}
+                teamLogo={entry.team_logo}
+                isKcvv={isKcvv}
+              />
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export function StandingsTable({
   entries,
   highlightTeamId,
   caption,
 }: StandingsTableProps) {
   if (entries.length === 0) return null;
+
+  // Derived from the entries themselves rather than taken as a prop: a
+  // `numberless` boolean a caller sets could disagree with the data it
+  // passes alongside it, silently dropping every number from a table that
+  // actually has them. This way that state cannot be expressed (#2636
+  // finding 9).
+  if (isNumberlessTable(entries)) {
+    return (
+      <NumberlessClubList
+        entries={entries}
+        highlightTeamId={highlightTeamId}
+        caption={caption}
+      />
+    );
+  }
 
   return (
     <div
@@ -94,8 +192,7 @@ export function StandingsTable({
                 data-testid={isKcvv ? "standings-kcvv-row" : undefined}
                 className={cn(
                   "border-b border-[color:var(--color-paper-edge)]",
-                  isKcvv &&
-                    "bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))] shadow-[inset_3px_0_0_var(--color-jersey-deep)]",
+                  isKcvv && KCVV_HIGHLIGHT_CLASS,
                 )}
               >
                 {/* Position */}
@@ -106,20 +203,11 @@ export function StandingsTable({
                 {/* Team name + crest */}
                 <td className="py-2 pr-3">
                   <span className="flex items-center gap-1.5">
-                    <Crest
-                      name={entry.team_name}
-                      logo={entry.team_logo}
-                      size={16}
+                    <ClubIdentity
+                      teamName={entry.team_name}
+                      teamLogo={entry.team_logo}
+                      isKcvv={isKcvv}
                     />
-                    <span
-                      className={cn(
-                        "font-display text-ink min-w-0 truncate",
-                        isKcvv ? "font-semibold not-italic" : "italic",
-                      )}
-                      title={entry.team_name}
-                    >
-                      {entry.team_name}
-                    </span>
                   </span>
                 </td>
 

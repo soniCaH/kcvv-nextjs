@@ -261,4 +261,25 @@ describe("EmptyState — tier: slot (Tier 2)", () => {
     );
     expect(container.firstElementChild).toHaveClass("flex-1");
   });
+
+  it("defaults background to transparent (border-ink-muted, no fill) — every existing consumer's baseline stays put", () => {
+    const { container } = render(
+      <EmptyState tier="slot">Geen opstelling beschikbaar</EmptyState>,
+    );
+    expect(container.firstElementChild).toHaveClass("border-ink-muted");
+    expect(container.firstElementChild).not.toHaveClass("bg-cream-soft");
+  });
+
+  it('switches to a solid ink border on a cream-soft fill with background="cream-soft" (#2636 finding 12)', () => {
+    const { container } = render(
+      <EmptyState tier="slot" background="cream-soft">
+        De kalender voor dit seizoen is nog niet bekendgemaakt.
+      </EmptyState>,
+    );
+    expect(container.firstElementChild).toHaveClass(
+      "border-ink",
+      "bg-cream-soft",
+    );
+    expect(container.firstElementChild).not.toHaveClass("border-ink-muted");
+  });
 });

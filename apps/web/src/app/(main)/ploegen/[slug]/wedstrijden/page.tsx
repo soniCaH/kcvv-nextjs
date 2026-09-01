@@ -16,6 +16,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd, buildSportsTeamJsonLd } from "@/lib/seo/jsonld";
 import { transformMatchToSchedule } from "@/components/match";
 import type { ScheduleRow } from "@/components/match/types";
+import { findNextMatch } from "@/components/team/TeamMatchesSection/match-visibility";
 import { AgendaScrollToNext } from "./AgendaScrollToNext";
 
 interface WedstrijdenPageProps {
@@ -87,15 +88,6 @@ function groupByMonth(matches: ScheduleRow[]): MonthGroup[] {
   }
 
   return Array.from(grouped.values());
-}
-
-function findNextMatch(
-  matches: ScheduleRow[],
-  now: Date,
-): ScheduleRow | undefined {
-  return matches
-    .filter((m) => m.status === "scheduled" && m.date >= now)
-    .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
 }
 
 export default async function WedstrijdenPage({

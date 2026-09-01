@@ -6,5 +6,6 @@ export {
   type EmptyStateSurfacePendingProps,
   type EmptyStateSurfaceFilteredProps,
   type EmptyStateSlotProps,
+  type EmptyStateSlotBackground,
   type EmptyStateAction,
 } from "./EmptyState";

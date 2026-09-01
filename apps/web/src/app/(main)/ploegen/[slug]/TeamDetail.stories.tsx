@@ -2,9 +2,9 @@
  * Pages/* assembly story for `/ploegen/[slug]` — the Phase 6.C team detail
  * composition.
  *
- * Renders the visible page sections (TeamHero → StandingsSection →
- * TeamMatchesSection → SquadGrid → TeamStaff → TeamEditorial) with fixture
- * data, mirroring the server `page.tsx` body but WITHOUT the server-only chrome
+ * Renders the visible page sections (TeamHero → competitive block →
+ * SquadGrid → TeamStaff → TeamEditorial) with fixture data, mirroring the
+ * server `page.tsx` body but WITHOUT the server-only chrome
  * (`<MatchStripSlot>`, `<TeamSectionNav>`, `<PageViewTracker>`, `<TrackInView>`,
  * `<JsonLd>`, `<VerderLezenRow>`, `<SponsorsSection>`), which require runtime
  * BFF / Sanity fetches and analytics context. Functional smoke for the
@@ -14,22 +14,30 @@
  * Per `apps/web/CLAUDE.md`, Pages/* stories are NOT VR-tested. Add or change
  * visual baselines on the per-section stories
  * (`Features/Teams/TeamHero`, `…/StandingsSection`, `…/TeamMatchesSection`,
- * `…/SquadGrid`, `…/TeamStaff`, `…/TeamEditorial`) instead.
+ * `…/CompetitiveStatusLine`, `…/SquadGrid`, `…/TeamStaff`, `…/TeamEditorial`)
+ * instead.
+ *
+ * The competitive-block state stories below (#2636) exist to show all four
+ * `deriveCompetitiveBlockState` outcomes assembled on a full page — the
+ * function itself is unit-tested without rendering anything at
+ * `src/lib/utils/competitive-block-state.test.ts`.
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import type { PortableTextBlock } from "@portabletext/react";
-import type { RankingEntry, RankingTable } from "@kcvv/api-contract";
+import type { Match, RankingEntry, RankingTable } from "@kcvv/api-contract";
 import type { PlayerVM } from "@/lib/repositories/player.repository";
 import type { ScheduleMatch } from "@/components/match/types";
 import { TeamHero } from "@/components/team/TeamHero";
 import { StandingsSection } from "@/components/team/StandingsSection";
 import { TeamMatchesSection } from "@/components/team/TeamMatchesSection";
+import { CompetitiveStatusLine } from "@/components/team/CompetitiveStatusLine";
 import { SquadGrid } from "@/components/team/SquadGrid";
 import { TeamStaff } from "@/components/team/TeamStaff";
 import type { TeamStaffMemberData } from "@/components/team/TeamStaff";
 import { TeamEditorial } from "@/components/team/TeamEditorial";
 import { StripedSeam, PageContainer } from "@/components/design-system";
+import { deriveCompetitiveBlockState } from "@/lib/utils/competitive-block-state";
 
 const KCVV_TEAM_ID = 1235;
 const TEAM_SLUG = "kcvv-elewijt-a";
@@ -115,6 +123,42 @@ const scheduleMatches: ScheduleMatch[] = [
   scheduleMatch(2, -7, "finished", [3, 0], true, OPP_B),
   scheduleMatch(3, 7, "scheduled", undefined, false, OPP_A),
   scheduleMatch(4, 14, "scheduled", undefined, true, OPP_B),
+];
+
+function fixtureMatch(competitionType: Match["competitionType"]): Match {
+  return {
+    id: 900,
+    date: new Date("2026-09-05T14:00:00.000Z"),
+    home_team: KCVV,
+    away_team: OPP_A,
+    status: "scheduled",
+    competitionType,
+  } as Match;
+}
+
+// The #2636 AC 2 gate itself: at least one OFFICIAL (`competitionType ===
+// "league"`) fixture this season. Empty reads as not-in-competition exactly
+// as `deriveCompetitiveBlockState` does for a real team with no league feed.
+const LEAGUE_FIXTURE: Match[] = [fixtureMatch("league")];
+const NO_LEAGUE_FIXTURE: Match[] = [];
+
+// State 2 (#2540/#2636/#2605) — in competition, no rows published yet. The
+// same fixture list, but the association has not published a table at all.
+const noTableTables: RankingTable[] = [];
+
+// State 5 (#2605 decision 3) — before matchday 1: every row published, none
+// scored. Renders as a plain club list, not a table full of zeroes.
+const numberlessTables: RankingTable[] = [
+  {
+    competition_id: 222464,
+    competition_name: "3de Afdeling Voetb Vl A",
+    entries: [
+      rankEntry(0, 101, "KSK Kampenhout", 0, 0, 0, 0, 0, 0, 0),
+      rankEntry(0, 102, "FC Perk", 0, 0, 0, 0, 0, 0, 0),
+      rankEntry(0, KCVV_TEAM_ID, "KCVV Elewijt", 0, 0, 0, 0, 0, 0, 0),
+      rankEntry(0, 104, "Eppegem B", 0, 0, 0, 0, 0, 0, 0),
+    ],
+  } as RankingTable,
 ];
 
 const PHOTOS = {
@@ -225,12 +269,41 @@ const contactInfo: PortableTextBlock[] = [
   block({ text: "Secretariaat: info@kcvvelewijt.be" }),
 ];
 
+/** The four `deriveCompetitiveBlockState` outcomes this page can render —
+ * fed the same shape `page.tsx` passes it (`matches` + `standings`), and
+ * switched on the same `state.kind`, rather than a hand-derived
+ * `inCompetition` boolean paralleling that function instead of calling it
+ * (#2636 finding 13). */
+type CompetitiveVariant =
+  "not-in-competition" | "no-table" | "numberless" | "live";
+
+const COMPETITIVE_FIXTURES: Record<
+  CompetitiveVariant,
+  { matches: Match[]; standings: RankingTable[] }
+> = {
+  "not-in-competition": { matches: NO_LEAGUE_FIXTURE, standings: [] },
+  "no-table": { matches: LEAGUE_FIXTURE, standings: noTableTables },
+  numberless: { matches: LEAGUE_FIXTURE, standings: numberlessTables },
+  live: { matches: LEAGUE_FIXTURE, standings: standingsTables },
+};
+
+interface TeamDetailAssemblyProps {
+  /** Which of the four #2636 competitive-block states this story shows.
+   * Defaults to `"live"` — every section present, the maximal composition. */
+  competitive?: CompetitiveVariant;
+}
+
 /**
  * Page-level composition of the senior team detail route. Mirrors the section
  * ordering, the `<StripedSeam>` cadence, and the `<PageContainer>` section
- * wrappers of `page.tsx`.
+ * wrappers of `page.tsx` — including the #2636 rule that `#klassement` and
+ * `#wedstrijden` render as ONE unit: both together, or a single status line
+ * in their place.
  */
-function TeamDetailAssembly() {
+function TeamDetailAssembly({ competitive = "live" }: TeamDetailAssemblyProps) {
+  const { matches, standings } = COMPETITIVE_FIXTURES[competitive];
+  const competitiveState = deriveCompetitiveBlockState({ matches, standings });
+
   return (
     <>
       <PageContainer>
@@ -245,23 +318,34 @@ function TeamDetailAssembly() {
         />
       </PageContainer>
 
-      <StripedSeam colorPair="ink-cream" height="md" />
-      <PageContainer as="section" className="py-10">
-        <StandingsSection
-          tables={standingsTables}
-          divisionFull="Eerste Elftal A – 3e Nat. A"
-          highlightTeamId={KCVV_TEAM_ID}
-        />
-      </PageContainer>
+      {competitiveState.kind === "not-in-competition" ? (
+        <>
+          <StripedSeam colorPair="ink-cream" height="md" />
+          <PageContainer className="py-10">
+            <CompetitiveStatusLine />
+          </PageContainer>
+        </>
+      ) : (
+        <>
+          <StripedSeam colorPair="ink-cream" height="md" />
+          <PageContainer as="section" className="py-10">
+            <StandingsSection
+              tables={standings}
+              divisionFull="Eerste Elftal A – 3e Nat. A"
+              highlightTeamId={KCVV_TEAM_ID}
+            />
+          </PageContainer>
 
-      <StripedSeam colorPair="ink-cream" height="md" />
-      <PageContainer as="section" className="py-10">
-        <TeamMatchesSection
-          matches={scheduleMatches}
-          teamSlug={TEAM_SLUG}
-          kcvvTeamId={KCVV_TEAM_ID}
-        />
-      </PageContainer>
+          <StripedSeam colorPair="ink-cream" height="md" />
+          <PageContainer as="section" className="py-10">
+            <TeamMatchesSection
+              matches={scheduleMatches}
+              teamSlug={TEAM_SLUG}
+              kcvvTeamId={KCVV_TEAM_ID}
+            />
+          </PageContainer>
+        </>
+      )}
 
       <StripedSeam colorPair="ink-cream" height="md" />
       <PageContainer as="section" className="py-10">
@@ -294,7 +378,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Phase 6.C `/ploegen/[slug]` composition (senior A-team, all sections present). See the per-section stories under `Features/Teams/*` for VR-tested visuals; this story exists as a design reference only and is not VR-tested.",
+          "Phase 6.C `/ploegen/[slug]` composition (senior A-team). See the per-section stories under `Features/Teams/*` for VR-tested visuals; this story exists as a design reference only and is not VR-tested.",
       },
     },
   },
@@ -311,7 +395,32 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Senior A-team — every section renders (standings, matches, squad, staff,
+ * State 3/live — every section renders (standings, matches, squad, staff,
  * editorial), the maximal composition.
  */
 export const SeniorTeam: Story = {};
+
+/**
+ * State 1 — not in competition. No official fixture this season: the
+ * competitive half collapses to one status line, no `#klassement`, no
+ * `#wedstrijden`, no nav entries for either.
+ */
+export const NotInCompetition: Story = {
+  args: { competitive: "not-in-competition" },
+};
+
+/**
+ * State 2 — in competition, no table published yet. Both sections render;
+ * `#klassement` says so in its own voice, present tense, never a promise.
+ */
+export const NoTablePublished: Story = {
+  args: { competitive: "no-table" },
+};
+
+/**
+ * State 5 (#2605) — in competition, every row published but unscored (before
+ * matchday 1). `#klassement` renders the clubs as a plain list.
+ */
+export const Numberless: Story = {
+  args: { competitive: "numberless" },
+};

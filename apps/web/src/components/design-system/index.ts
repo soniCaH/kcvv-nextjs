@@ -134,6 +134,7 @@ export type {
   EmptyStateSurfacePendingProps,
   EmptyStateSurfaceFilteredProps,
   EmptyStateSlotProps,
+  EmptyStateSlotBackground,
   EmptyStateAction,
 } from "./EmptyState";
 
