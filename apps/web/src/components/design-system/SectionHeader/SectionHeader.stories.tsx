@@ -23,6 +23,7 @@ const meta = {
   },
   argTypes: {
     variant: { control: "radio", options: ["light", "dark"] },
+    ruled: { control: "boolean" },
     as: { control: "radio", options: ["h1", "h2", "h3"] },
     size: {
       control: "radio",
@@ -110,4 +111,63 @@ export const SizeDisplay2xl: Story = {
 
 export const SizeDisplaySm: Story = {
   args: { title: "Klein onderdeel", size: "display-sm" },
+};
+
+/**
+ * D10/S2 — hairlines run out from a centred title, chapter furniture for a
+ * long index page. Same kicker/domain as the accepted evidence in
+ * docs/design/mockups/research-d-series/d10-section-openers.html
+ * ("Negentien ploegen, van U6 tot U21"), shortened here so the rules stay
+ * clearly visible inside this story's fixed-width demo frame — the evidence
+ * title's full length is exercised instead by
+ * `RuledTitleExceedsLengthLimit` below, where it deliberately falls back to
+ * the default layout.
+ */
+export const Ruled: Story = {
+  args: {
+    title: "Van U6 tot U21",
+    kicker: [{ label: "JEUGD" }],
+    ruled: true,
+  },
+};
+
+export const RuledDarkVariant: Story = {
+  decorators: [
+    (Story) => (
+      <div className="bg-ink p-10">
+        <Story />
+      </div>
+    ),
+  ],
+  args: {
+    title: "Wedstrijden",
+    kicker: [{ label: "A-PLOEG" }],
+    ruled: true,
+    variant: "dark",
+  },
+};
+
+export const RuledWithLink: Story = {
+  args: {
+    title: "Het rooster",
+    kicker: [{ label: "MATCHEN" }],
+    ruled: true,
+    linkText: "Volledige kalender",
+    linkHref: "/kalender",
+  },
+};
+
+/**
+ * Boundary of the length constraint (`RULED_TITLE_MAX_LENGTH` = 40
+ * characters in SectionHeader.tsx). This title is 41 characters — one past
+ * the limit — so `ruled` is silently ignored and the default ranged-left
+ * layout renders instead, because centring a heading this long between
+ * rules scans worse than not centring it at all.
+ */
+export const RuledTitleExceedsLengthLimit: Story = {
+  args: {
+    title: "Van de allerkleinste duiveltjes tot de A-ploeg",
+    kicker: [{ label: "JEUGD" }],
+    ruled: true,
+  },
 };
