@@ -1,6 +1,6 @@
 // apps/web/src/components/design-system/SectionHeader/SectionHeader.test.tsx
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { SectionHeader } from "./SectionHeader";
 
 describe("SectionHeader", () => {
@@ -100,6 +100,98 @@ describe("SectionHeader", () => {
         <SectionHeader title="Nieuws" className="mb-5" />,
       );
       expect(container.querySelector("header")).toHaveClass("mb-5");
+    });
+  });
+
+  describe("Ruled variant", () => {
+    it("does not render ruled markup by default", () => {
+      const { container } = render(<SectionHeader title="Nieuws" />);
+      expect(container.querySelector("header")).not.toHaveAttribute(
+        "data-ruled",
+      );
+    });
+
+    it("renders hairlines flanking the title when ruled and within the length limit", () => {
+      const { container } = render(
+        <SectionHeader title="Negentien ploegen, van U6 tot U21" ruled />,
+      );
+      const header = container.querySelector("header");
+      expect(header).toHaveAttribute("data-ruled", "true");
+      expect(header).toHaveClass("items-center", "text-center");
+      // Heading flanked by exactly two hairline spans in the same row.
+      const row = screen.getByRole("heading").parentElement;
+      expect(row?.querySelectorAll('[aria-hidden="true"]')).toHaveLength(2);
+    });
+
+    it("centres a title exactly at the length limit (boundary: 40 chars)", () => {
+      const boundaryTitle = "a".repeat(40);
+      const { container } = render(
+        <SectionHeader title={boundaryTitle} ruled />,
+      );
+      expect(container.querySelector("header")).toHaveAttribute(
+        "data-ruled",
+        "true",
+      );
+    });
+
+    it("falls back to the default layout one character past the length limit (boundary: 41 chars)", () => {
+      const tooLongTitle = "a".repeat(41);
+      const { container } = render(
+        <SectionHeader title={tooLongTitle} ruled />,
+      );
+      expect(container.querySelector("header")).not.toHaveAttribute(
+        "data-ruled",
+      );
+      expect(container.querySelector("header")).not.toHaveClass("items-center");
+    });
+
+    it("warns in development when a too-long title requests the ruled treatment", () => {
+      vi.stubEnv("NODE_ENV", "development");
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(<SectionHeader title={"a".repeat(41)} ruled />);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("ruled treatment ignored"),
+      );
+      warnSpy.mockRestore();
+      vi.unstubAllEnvs();
+    });
+
+    it("does not warn when ruled is requested within the length limit", () => {
+      vi.stubEnv("NODE_ENV", "development");
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(<SectionHeader title="Nieuws" ruled />);
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
+      vi.unstubAllEnvs();
+    });
+
+    it("centres a link below the ruled row instead of beside the heading", () => {
+      render(
+        <SectionHeader
+          title="Nieuws"
+          ruled
+          linkText="Alle berichten"
+          linkHref="/nieuws"
+        />,
+      );
+      const link = screen.getByRole("link", { name: /Alle berichten/i });
+      const row = screen.getByRole("heading").parentElement;
+      // The link is a sibling of the ruled row, not inside it.
+      expect(row?.contains(link)).toBe(false);
+    });
+
+    it("draws cream hairlines on the dark variant", () => {
+      const { container } = render(
+        <SectionHeader title="Nieuws" ruled variant="dark" />,
+      );
+      const hairline = container.querySelector('[aria-hidden="true"]');
+      expect(hairline).toHaveClass("bg-cream");
+    });
+
+    it("draws ink hairlines on the light variant (default)", () => {
+      const { container } = render(<SectionHeader title="Nieuws" ruled />);
+      const hairline = container.querySelector('[aria-hidden="true"]');
+      expect(hairline).toHaveClass("bg-ink");
     });
   });
 });
