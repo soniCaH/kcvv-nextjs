@@ -1,8 +1,19 @@
 import { describe, it, expect } from "vitest";
 import { Effect } from "effect";
 import { isPermanentBffFailure } from "./classify-bff-failure";
+import type { BffError } from "@/lib/effect/services/BffService";
 
-async function runAndCatch(tag: string): Promise<unknown> {
+// Typed against the real `BffError["_tag"]` union (not a bare `string`), so
+// a tag renamed or removed on `BffError` fails THIS file to compile too —
+// the review finding this fixes: the previous version built its own
+// `class Tagged { _tag = tag }` from hand-written strings, asserting
+// `PERMANENT_TAGS` against strings the test itself supplied, which could
+// never catch drift between the two (#2636 finding 2). Its transient case
+// also asserted a tag, `"HttpClientError"`, that does not exist —
+// `HttpClientError` is a *type alias* for `RequestError | ResponseError`
+// (`@effect/platform`'s `HttpClientError.ts`), neither of which carries that
+// string as its own `_tag`.
+async function runAndCatch(tag: BffError["_tag"]): Promise<unknown> {
   class Tagged {
     readonly _tag = tag;
     readonly message = "boom";
@@ -16,18 +27,20 @@ async function runAndCatch(tag: string): Promise<unknown> {
 }
 
 describe("isPermanentBffFailure", () => {
-  it.each(["HttpNotFound", "ParseError", "HttpApiDecodeError"])(
-    "reads %s as permanent",
-    async (tag) => {
-      expect(isPermanentBffFailure(await runAndCatch(tag))).toBe(true);
-    },
-  );
+  it.each<BffError["_tag"]>([
+    "HttpNotFound",
+    "ParseError",
+    "HttpApiDecodeError",
+  ])("reads %s as permanent", async (tag) => {
+    expect(isPermanentBffFailure(await runAndCatch(tag))).toBe(true);
+  });
 
-  it.each([
+  it.each<BffError["_tag"]>([
     "HttpServiceUnavailable",
     "HttpBadGateway",
     "TimeoutException",
-    "HttpClientError",
+    "RequestError",
+    "ResponseError",
   ])("reads %s as transient, not permanent", async (tag) => {
     expect(isPermanentBffFailure(await runAndCatch(tag))).toBe(false);
   });
