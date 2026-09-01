@@ -4,9 +4,13 @@
  * Three independently auto-hiding blocks:
  *  - **Het verhaal** (`team.body`) — Portable Text prose. Reuses the 6.A
  *    `pullquote` decorator serializer (inline `<HighlighterStroke>`); the first
- *    pullquote run is lifted into a jersey `<PullQuote>` card ("same text, two
- *    surfaces", 6.A.d5). Attribution is intentionally omitted — a team has no
- *    single speaker and named-coach data is not fabricated (#1944 open Q).
+ *    pullquote run is lifted into a `<PullQuote>` card centred below the
+ *    paragraph it echoes ("same text, two surfaces", 6.A.d5). It shares
+ *    "Het verhaal"'s section rather than owning one of its own and sits in
+ *    no aside column, so it renders at the default flow placement (cream)
+ *    per #2515 rule 5 — not a jersey card kept for its old pixels.
+ *    Attribution is intentionally omitted — a team has no single speaker
+ *    and named-coach data is not fabricated (#1944 open Q).
  *  - **Trainingsschema** (`team.trainingSchedule[]`) — compact table.
  *  - **Contact** (`team.contactInfo`) — Portable Text prose.
  *
@@ -101,9 +105,7 @@ export function TeamEditorial({
           </div>
           {pullquoteText !== null ? (
             <div className="mt-8 flex justify-center">
-              <PullQuote placement="aside" rotation={2}>
-                {pullquoteText}
-              </PullQuote>
+              <PullQuote rotation={2}>{pullquoteText}</PullQuote>
             </div>
           ) : null}
         </section>

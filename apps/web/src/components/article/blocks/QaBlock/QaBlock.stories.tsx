@@ -29,7 +29,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Phase 5 dispatcher. `standard` pairs render through `<QARow>`; `key` and `quote` render through `<PullQuote>` (cream / ink tones); consecutive `rapid-fire` pairs collapse into a single `<QaGroupRapidFire>`. All paths resolve speakers from `article.subjects[]`.",
+          "Phase 5 dispatcher. `standard` pairs render through `<QARow>`; `key` and `quote` render through `<PullQuote>` at the default flow placement (cream) — both sit as plain siblings among the QA rows, so neither owns a section or an aside; consecutive `rapid-fire` pairs collapse into a single `<QaGroupRapidFire>`. All paths resolve speakers from `article.subjects[]`.",
       },
     },
   },
@@ -297,6 +297,43 @@ export const DuoInterviewMixedTags: Story = {
           ],
         },
       ],
+    },
+  },
+};
+
+// Isolates the "quote" tag alone (code review finding 1 on #2566).
+// `MixedTagSuite` already exercises a "quote" pair, but it sits below the
+// fold in every captured viewport (VR clips to the viewport's scroll
+// height at capture time, and the quote pair is the 7th of 8 units there)
+// — so the ink→cream fix from finding 1 had no baseline that could ever
+// show it moving. A short, single-pair story keeps the card in frame on
+// every viewport, giving the placement fix real pictorial coverage.
+export const QuoteTag: Story = {
+  args: {
+    subjects: singleSubject,
+    value: {
+      pairs: [
+        {
+          _key: "quote-1",
+          tag: "quote",
+          question: "(verborgen voor quote)",
+          respondents: [
+            {
+              answer: answer(
+                "Ik voetbal nog altijd met schrik in de buik — dat is het enige wat mij scherp houdt.",
+              ),
+            },
+          ],
+        },
+      ],
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A lone `quote` pair. Same flow placement (cream) as `key` — both are plain siblings among the QA rows, with no heading of their own and no aside column (#2515 rule 5).",
+      },
     },
   },
 };
