@@ -127,12 +127,14 @@ export default function HomeLoading() {
             list, not a card grid (#2398). Chip widths approximate the real
             "Alles · A-Ploeg · U21 …" facet set, in Tailwind units to match the
             /kalender chip skeleton. `pb-1.5` mirrors the gutter <FilterTabs>
-            leaves so its paper shadow isn't clipped. */}
+            leaves so its paper shadow isn't clipped. `h-9` matches
+            <FilterTabs>'s one chip size (#2564) — this used to model the
+            narrower `size="sm"` UpcomingMatchesClient dropped on absorption. */}
         <div className="mb-5 flex gap-3 pb-1.5">
           {["w-16", "w-24", "w-20", "w-14", "w-16"].map((w, i) => (
             <div
               key={i}
-              className={`border-ink bg-cream-soft shadow-paper-sm h-7 border-2 ${w}`}
+              className={`border-ink bg-cream-soft shadow-paper-sm h-9 border-2 ${w}`}
             />
           ))}
         </div>

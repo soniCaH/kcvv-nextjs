@@ -28,17 +28,19 @@ export default function CalendarLoading() {
       <PageContainer width="index" className="py-10">
         {/* Matches CalendarWidget's root <div className="space-y-4"> */}
         <div className="space-y-4">
-          {/* Type filter chips — square placeholders matching KalenderFilterBar
+          {/* Type filter chips — square placeholders matching <FilterTabs>
               (Alles · Wedstrijden · Clubevent · Supportersactiviteit ·
-              Jeugdwerking · Andere); square corners per #2239 KAL-1 */}
+              Jeugdwerking · Andere); square corners per #2239 KAL-1. Single
+              line, `gap-3` — the real row never wraps (#2429/#2564; this used
+              to model the deleted bespoke KalenderFilterBar's wrapping row). */}
           <div
-            className="flex flex-wrap gap-2"
+            className="flex gap-3 pb-1.5"
             data-testid="calendar-skeleton-filter-tabs"
           >
             {["w-16", "w-28", "w-24", "w-44", "w-28", "w-20"].map((w, i) => (
               <div
                 key={i}
-                className={`${w} border-paper-edge bg-cream-soft h-[32px] rounded-none border-2 motion-safe:animate-pulse`}
+                className={`${w} border-paper-edge bg-cream-soft h-9 rounded-none border-2 motion-safe:animate-pulse`}
                 data-testid="skeleton-pill"
               />
             ))}
