@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { useState } from "react";
 import { fn } from "storybook/test";
+import { FirstAid, SoccerBall } from "@/lib/icons.redesign";
 import { FilterTabs, type FilterTab, type FilterTabsProps } from "./FilterTabs";
 
 /**
@@ -13,7 +14,9 @@ import { FilterTabs, type FilterTab, type FilterTabsProps } from "./FilterTabs";
  * no badge. Source-of-record:
  * docs/design/mockups/phase-2-track-b/option-d-paper-chrome-ink-emphasis.html.
  *
- * Used in: Organigram, News Categories, Sponsors, Responsibility Finder.
+ * The single filter primitive (#2429 / #2564) — absorbs every filter row on
+ * the site: News categories, search result types, `/kalender`, `/evenementen`,
+ * and both `/hulp` rows (audience + category).
  */
 const meta = {
   title: "UI/FilterTabs",
@@ -23,7 +26,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Unified filter component for consistent filtering UI across the application. Direction D paper-chip vocabulary: ink-bordered cream-soft chips with mono caps labels, ink-invert active state, and inline counts using a 1 px hairline pipe divider (no pill, no badge). Mobile scrolling and three size variants (sm/md/lg) preserved.",
+          "Unified filter component for consistent filtering UI across the application. Direction D paper-chip vocabulary: ink-bordered cream-soft chips with mono caps labels, ink-invert active state, and inline counts using a 1 px hairline pipe divider (no pill, no badge). One chip size site-wide; per-facet colour and a leading glyph are both optional props.",
       },
     },
   },
@@ -32,11 +35,6 @@ const meta = {
     onChange: fn(),
   },
   argTypes: {
-    size: {
-      control: "select",
-      options: ["sm", "md", "lg"],
-      description: "Size variant — controls chip padding + font-size only",
-    },
     showCounts: {
       control: "boolean",
       description:
@@ -45,6 +43,12 @@ const meta = {
     renderAsLinks: {
       control: "boolean",
       description: "Render as links instead of buttons",
+    },
+    shadow: {
+      control: "select",
+      options: ["sm", "soft"],
+      description:
+        "Inactive-chip shadow register — 'soft' for a row hosted on an ink/dark ground",
     },
   },
 } satisfies Meta<typeof FilterTabs>;
@@ -83,6 +87,43 @@ const roleTabs: FilterTab[] = [
   { value: "player", label: "Speler" },
   { value: "trainer", label: "Trainer" },
   { value: "volunteer", label: "Vrijwilliger" },
+];
+
+// Colour-coded facet tabs — the shape `/kalender` and `/evenementen` pass,
+// sourced from each domain's own colour map (never hardcoded here).
+const kalenderTabs: FilterTab[] = [
+  { value: "all", label: "Alles" },
+  {
+    value: "Wedstrijden",
+    label: "Wedstrijden",
+    color: { border: "border-card-red", fill: "bg-card-red text-cream" },
+  },
+  {
+    value: "Clubevent",
+    label: "Clubevent",
+    color: { border: "border-jersey-deep", fill: "bg-jersey-deep text-white" },
+  },
+  {
+    value: "Supportersactiviteit",
+    label: "Supportersactiviteit",
+    color: { border: "border-warm", fill: "bg-warm text-ink" },
+  },
+  {
+    value: "Jeugdwerking",
+    label: "Jeugdwerking",
+    color: {
+      border: "border-jersey-bright",
+      fill: "bg-jersey-bright text-ink",
+    },
+  },
+  { value: "Andere", label: "Andere" },
+];
+
+// The `/hulp` category row — the leading-glyph slot in use.
+const hulpCategoryTabs: FilterTab[] = [
+  { value: "alles", label: "Alles" },
+  { value: "medisch", label: "Medisch", icon: FirstAid },
+  { value: "sportief", label: "Sportief", icon: SoccerBall },
 ];
 
 /**
@@ -131,7 +172,7 @@ function InteractiveFilterTabsInner(args: FilterTabsProps) {
 }
 
 /**
- * Default medium-sized filter tabs with counts.
+ * Default filter tabs with counts.
  * Used in most filtering scenarios across the app.
  */
 export const Default: Story = {
@@ -139,37 +180,6 @@ export const Default: Story = {
   args: {
     tabs: departmentTabs,
     activeTab: "all",
-    size: "md",
-    showCounts: true,
-    ariaLabel: "Filter by department",
-  },
-};
-
-/**
- * Small variant - compact design for tight spaces.
- * Good for sidebars or mobile interfaces.
- */
-export const Small: Story = {
-  render: (args) => <InteractiveFilterTabs {...args} />,
-  args: {
-    tabs: departmentTabs,
-    activeTab: "all",
-    size: "sm",
-    showCounts: true,
-    ariaLabel: "Filter by department",
-  },
-};
-
-/**
- * Large variant - prominent filtering for main content areas.
- * Good for hero sections or primary filters.
- */
-export const Large: Story = {
-  render: (args) => <InteractiveFilterTabs {...args} />,
-  args: {
-    tabs: departmentTabs,
-    activeTab: "all",
-    size: "lg",
     showCounts: true,
     ariaLabel: "Filter by department",
   },
@@ -184,7 +194,6 @@ export const WithoutCounts: Story = {
   args: {
     tabs: roleTabs,
     activeTab: "parent",
-    size: "md",
     showCounts: false,
     ariaLabel: "Select role",
   },
@@ -199,7 +208,6 @@ export const NewsCategoryFilter: Story = {
   args: {
     tabs: categoryTabs,
     activeTab: "all",
-    size: "md",
     showCounts: true,
     ariaLabel: "Filter news by category",
   },
@@ -214,45 +222,60 @@ export const SponsorTierFilter: Story = {
   args: {
     tabs: sponsorTabs,
     activeTab: "all",
-    size: "md",
     showCounts: true,
     ariaLabel: "Filter sponsors by tier",
   },
 };
 
 /**
- * Mobile viewport (375px) - demonstrates scrolling behavior.
- * Arrow buttons appear when tabs overflow.
+ * Per-facet colour — `/kalender`'s by-type row. Colour is a prop
+ * (`FilterTab.color`), sourced from the domain's own colour map so this
+ * primitive stays colour-agnostic. "Alles" and "Andere" carry no colour and
+ * render the neutral Direction D chip.
  */
-export const Mobile: Story = {
+export const ColorCoded: Story = {
   render: (args) => <InteractiveFilterTabs {...args} />,
   args: {
-    tabs: categoryTabs,
+    tabs: kalenderTabs,
     activeTab: "all",
-    size: "md",
-    showCounts: true,
-    ariaLabel: "Filter by category",
-  },
-  globals: {
-    viewport: { value: "kcvvMobile" },
+    showCounts: false,
+    ariaLabel: "Filter kalender op type",
   },
 };
 
 /**
- * Tablet viewport (768px) - fewer items require scrolling.
- * Shows responsive behavior at medium breakpoints.
+ * `shadow="soft"` — for a row hosted on an ink/dark ground (`/evenementen`
+ * on `bg-jersey-deep-dark`), where a hard ink shadow would be invisible.
  */
-export const Tablet: Story = {
+export const OnDarkGround: Story = {
   render: (args) => <InteractiveFilterTabs {...args} />,
   args: {
-    tabs: categoryTabs,
+    tabs: kalenderTabs,
     activeTab: "all",
-    size: "md",
-    showCounts: true,
-    ariaLabel: "Filter by category",
+    showCounts: false,
+    shadow: "soft",
+    ariaLabel: "Filter evenementen op type",
   },
-  globals: {
-    viewport: { value: "tablet" },
+  decorators: [
+    (Story) => (
+      <div className="bg-jersey-deep-dark p-6">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/**
+ * Leading-glyph slot — an optional Phosphor Fill icon before the label
+ * (#2429 resolution addendum, "rule 9"). `/hulp`'s category row uses it.
+ */
+export const WithLeadingGlyph: Story = {
+  render: (args) => <InteractiveFilterTabs {...args} />,
+  args: {
+    tabs: hulpCategoryTabs,
+    activeTab: "alles",
+    showCounts: false,
+    ariaLabel: "Filter op categorie",
   },
 };
 
@@ -279,7 +302,6 @@ export const AsLinks: Story = {
       },
     ],
     activeTab: "all",
-    size: "md",
     showCounts: true,
     renderAsLinks: true,
     ariaLabel: "Filter news by category",
@@ -298,7 +320,6 @@ export const TwoOptions: Story = {
       { value: "archived", label: "Archived", count: 12 },
     ],
     activeTab: "active",
-    size: "md",
     showCounts: true,
     ariaLabel: "Filter by status",
   },
@@ -327,7 +348,6 @@ export const ManyOptions: Story = {
       { value: "u17", label: "U17", count: 17 },
     ],
     activeTab: "all",
-    size: "md",
     showCounts: true,
     ariaLabel: "Filter by age group",
   },
@@ -342,7 +362,6 @@ export const AccessibilityTest: Story = {
   args: {
     tabs: departmentTabs,
     activeTab: "all",
-    size: "md",
     showCounts: true,
     ariaLabel: "Filter by department (keyboard accessible)",
   },
@@ -365,54 +384,35 @@ export const AccessibilityTest: Story = {
 };
 
 /**
- * Size comparison - all three sizes side-by-side.
- * Visual reference for choosing the right size.
+ * Mobile viewport (375px) - demonstrates scrolling behavior.
+ * Arrow buttons appear when tabs overflow.
  */
-export const SizeComparison: Story = {
+export const Mobile: Story = {
+  render: (args) => <InteractiveFilterTabs {...args} />,
   args: {
-    tabs: departmentTabs,
+    tabs: categoryTabs,
     activeTab: "all",
-    size: "md",
     showCounts: true,
+    ariaLabel: "Filter by category",
   },
-  render: () => (
-    <div className="space-y-8">
-      <div>
-        <h3 className="text-ink-muted mb-3 font-mono text-xs font-semibold tracking-wider uppercase">
-          Small
-        </h3>
-        <FilterTabs
-          tabs={departmentTabs}
-          activeTab="all"
-          onChange={() => {}}
-          size="sm"
-          showCounts={true}
-        />
-      </div>
-      <div>
-        <h3 className="text-ink-muted mb-3 font-mono text-xs font-semibold tracking-wider uppercase">
-          Medium (Default)
-        </h3>
-        <FilterTabs
-          tabs={departmentTabs}
-          activeTab="all"
-          onChange={() => {}}
-          size="md"
-          showCounts={true}
-        />
-      </div>
-      <div>
-        <h3 className="text-ink-muted mb-3 font-mono text-xs font-semibold tracking-wider uppercase">
-          Large
-        </h3>
-        <FilterTabs
-          tabs={departmentTabs}
-          activeTab="all"
-          onChange={() => {}}
-          size="lg"
-          showCounts={true}
-        />
-      </div>
-    </div>
-  ),
+  globals: {
+    viewport: { value: "kcvvMobile" },
+  },
+};
+
+/**
+ * Tablet viewport (768px) - fewer items require scrolling.
+ * Shows responsive behavior at medium breakpoints.
+ */
+export const Tablet: Story = {
+  render: (args) => <InteractiveFilterTabs {...args} />,
+  args: {
+    tabs: categoryTabs,
+    activeTab: "all",
+    showCounts: true,
+    ariaLabel: "Filter by category",
+  },
+  globals: {
+    viewport: { value: "tablet" },
+  },
 };

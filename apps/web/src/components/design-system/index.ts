@@ -13,7 +13,12 @@ export type { SpinnerProps, SpinnerSize, SpinnerVariant } from "./Spinner";
 
 // FilterTabs
 export { FilterTabs } from "./FilterTabs";
-export type { FilterTabsProps, FilterTab } from "./FilterTabs";
+export type {
+  FilterTabsProps,
+  FilterTab,
+  FilterTabColor,
+  FilterTabsShadow,
+} from "./FilterTabs";
 
 // Input
 export { Input } from "./Input";

@@ -19,18 +19,67 @@
  * arrows. Counts render inline after a 1 px hairline pipe — no pill, no
  * badge.
  *
- * Used in: Organigram, News Categories, Sponsors, Responsibility Finder.
+ * **The single filter primitive (#2429 / #2564).** One `<FilterTabs>` now
+ * absorbs every filter row on the site — News categories, search result
+ * types, `/kalender`'s by-type chips, `/evenementen`'s by-type chips, and
+ * both of `/hulp`'s rows (audience + category) — replacing the bespoke
+ * `KalenderFilterBar` and `EventFilterBar` (deleted) plus HulpFinder's two
+ * hand-rolled chip rows. Per-facet colour identity survives absorption as
+ * the optional `FilterTab.color` prop (sourced from each domain's own
+ * colour map, e.g. `EVENT_TYPE_FILL` — this component stays colour-agnostic
+ * and never hardcodes a facet's fill) rather than being flattened to
+ * neutral. `shadow="soft"` opts the whole row into the soft shadow for a
+ * host on an ink/dark ground (DESIGN.md: a hard ink shadow is invisible
+ * there) — mirrors `<TapedCard shadow="soft">` / `<EmptyState
+ * surface="inverse">`.
+ *
+ * **Overflow is plain scroll, on purpose.** Four alternatives (wrap-capped,
+ * sticky "Alles", "Alles" outside the scroller, snap-back-on-empty) were
+ * prototyped on the real `/kalender` route and rejected as unintuitive
+ * (#2429 resolution, rule 3) — this row never wraps and never traps the
+ * reset off-screen behind different chrome. `overflow-x-auto` + the shared
+ * absolute-positioned scroll arrows is the only overflow treatment.
+ *
+ * **`role="group"` + `aria-pressed`, not `role="tablist"`/`"tab"`.** A
+ * filter narrows a list in place — a set of toggles, not tabs — and this
+ * component renders no `tabpanel` for `role="tab"` to associate with
+ * (#2429 resolution, rule 7). `role="tablist"` stays reserved for genuine
+ * segmented switchers elsewhere (the Maand·Week·Agenda toggle,
+ * `MemberDetailPanel`'s holder switcher), which are a different component.
+ *
+ * **One chip size.** The `size` prop is deleted (#2429 resolution, rule 6)
+ * — every chip renders at the former `md` dimensions, ending the four
+ * shipped heights (24/27/31/44px) this primitive's various absorbed rows
+ * used to disagree on.
+ *
+ * **Leading-glyph slot.** `FilterTab.icon` returns as an optional prop
+ * (#2429 resolution addendum, "rule 9") — a filter row may carry a
+ * Phosphor Fill icon before its label. This deliberately reverses the
+ * Direction D checkpoint lock (`docs/design/mockups/phase-2-track-b/compare.md`
+ * lines 22 + 70, which is left unedited as the historical record of that
+ * checkpoint). The slot is optional: a row with no glyph renders exactly as
+ * before.
+ *
  * State management is left to the parent (`activeTab` + `onChange?`); when
  * `renderAsLinks` is true, tabs with `href` render as `<a>` instead of
  * `<button>` for full-page Next.js navigation.
- *
- * Direction D retired the leading-glyph slot — `FilterTab.icon` is no
- * longer part of the prop surface (closes #1573).
  */
 
 import { cn } from "@/lib/utils/cn";
 import { useScrollHint } from "@/components/design-system/ScrollHint/useScrollHint";
 import { ScrollArrowButton } from "@/components/design-system/ScrollHint/ScrollArrowButton";
+import type { RedesignIconProps } from "@/lib/icons.redesign";
+import type { ComponentType } from "react";
+
+/** A tab's per-facet colour identity — border always, fill only when
+ *  selected. Sourced by the caller from its own domain colour map (e.g.
+ *  `EVENT_TYPE_FILL`); omit for the neutral ink/cream Direction D chip. */
+export interface FilterTabColor {
+  /** Border colour class, e.g. `"border-jersey-deep"`. Applied at rest and selected. */
+  border: string;
+  /** Background + text classes applied only when this tab is selected, e.g. `"bg-jersey-deep text-white"`. */
+  fill: string;
+}
 
 export interface FilterTab {
   /** Unique identifier */
@@ -41,9 +90,17 @@ export interface FilterTab {
   count?: number;
   /** Optional href — only consumed when `renderAsLinks` is true */
   href?: string;
+  /** Optional leading glyph — a Phosphor Fill icon component (`@/lib/icons.redesign`). */
+  icon?: ComponentType<RedesignIconProps>;
+  /** Optional per-facet colour identity. Omit for the neutral chip. */
+  color?: FilterTabColor;
 }
 
-export type FilterTabsSize = "sm" | "md" | "lg";
+/** Shadow register for the row — `"sm"` (default) is the hard ink shadow
+ *  for a cream/paper field; `"soft"` is for a chip row hosted on an ink or
+ *  dark-green ground, where DESIGN.md's rule is that a hard shadow is
+ *  invisible. Mirrors `<TapedCard shadow>` / `<EmptyState surface>`. */
+export type FilterTabsShadow = "sm" | "soft";
 
 export interface FilterTabsProps {
   /** Array of filter options */
@@ -52,16 +109,16 @@ export interface FilterTabsProps {
   activeTab: string;
   /** Change handler (for controlled tabs) */
   onChange?: (value: string) => void;
-  /** Size variant — controls padding + font-size only */
-  size?: FilterTabsSize;
   /** Show count after a hairline pipe divider when present */
   showCounts?: boolean;
   /** Additional CSS classes applied to the outer container */
   className?: string;
-  /** Optional aria-label for the tablist */
+  /** Optional aria-label for the filter group */
   ariaLabel?: string;
   /** Render as links instead of buttons (for Next.js Link / SSR routing) */
   renderAsLinks?: boolean;
+  /** Inactive-chip shadow register — `"soft"` for a row hosted on an ink/dark ground. */
+  shadow?: FilterTabsShadow;
 }
 
 const CHIP_BASE_CLASSES = [
@@ -72,14 +129,10 @@ const CHIP_BASE_CLASSES = [
   "inline-flex flex-shrink-0 items-center gap-2",
   "rounded-none border-2 border-ink",
   "font-mono font-semibold uppercase tracking-[0.08em]",
+  "px-3 py-2 text-[11px]",
   "transition-all duration-300",
   "hover:translate-x-1 hover:translate-y-1 hover:shadow-none",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jersey-deep focus-visible:ring-offset-2",
-] as const;
-
-const CHIP_INACTIVE_CLASSES = [
-  "bg-cream-soft text-ink",
-  "shadow-paper-sm",
 ] as const;
 
 const CHIP_ACTIVE_CLASSES = [
@@ -87,53 +140,49 @@ const CHIP_ACTIVE_CLASSES = [
   "shadow-paper-sm-soft",
 ] as const;
 
-const SIZE_CLASSES: Record<FilterTabsSize, string> = {
-  sm: "px-[9px] py-[5px] text-[10px]",
-  md: "px-3 py-2 text-[11px]",
-  lg: "px-4 py-[11px] text-xs",
+const INACTIVE_SHADOW_CLASS: Record<FilterTabsShadow, string> = {
+  sm: "shadow-paper-sm",
+  soft: "shadow-paper-sm-soft",
 };
 
-const ARROW_SIZE_CLASSES: Record<FilterTabsSize, string> = {
-  sm: "w-8 h-8",
-  md: "w-10 h-10",
-  lg: "w-12 h-12",
-};
-
-const SCROLL_PADDING_LEFT: Record<FilterTabsSize, string> = {
-  sm: "pl-10",
-  md: "pl-12",
-  lg: "pl-14",
-};
-
-const SCROLL_PADDING_RIGHT: Record<FilterTabsSize, string> = {
-  sm: "pr-10",
-  md: "pr-12",
-  lg: "pr-14",
-};
+const ARROW_SIZE_CLASSES = "w-10 h-10";
+const SCROLL_PADDING_LEFT = "pl-12";
+const SCROLL_PADDING_RIGHT = "pr-12";
 
 export function FilterTabs({
   tabs,
   activeTab,
   onChange,
-  size = "md",
   showCounts = true,
   className = "",
   ariaLabel = "Filter tabs",
   renderAsLinks = false,
+  shadow = "sm",
 }: FilterTabsProps) {
   const { scrollRef, canScrollLeft, canScrollRight, scrollLeft, scrollRight } =
     useScrollHint<HTMLDivElement>();
 
   const renderTab = (tab: FilterTab) => {
     const isActive = activeTab === tab.value;
+    const Icon = tab.icon;
     const chipClasses = cn(
       ...CHIP_BASE_CLASSES,
-      SIZE_CLASSES[size],
-      ...(isActive ? CHIP_ACTIVE_CLASSES : CHIP_INACTIVE_CLASSES),
+      isActive
+        ? tab.color
+          ? cn(tab.color.fill, tab.color.border, "shadow-paper-sm-soft")
+          : CHIP_ACTIVE_CLASSES
+        : tab.color
+          ? cn(
+              "bg-cream-soft text-ink",
+              tab.color.border,
+              INACTIVE_SHADOW_CLASS[shadow],
+            )
+          : cn("bg-cream-soft text-ink", INACTIVE_SHADOW_CLASS[shadow]),
     );
 
     const content = (
       <>
+        {Icon && <Icon size={14} aria-hidden />}
         <span>{tab.label}</span>
         {showCounts && typeof tab.count !== "undefined" && (
           <span
@@ -156,10 +205,7 @@ export function FilterTabs({
           key={tab.value}
           href={tab.href}
           className={chipClasses}
-          role="tab"
-          aria-selected={isActive ? "true" : "false"}
           aria-current={isActive ? "page" : undefined}
-          tabIndex={isActive ? 0 : -1}
         >
           {content}
         </a>
@@ -171,10 +217,8 @@ export function FilterTabs({
         key={tab.value}
         onClick={() => onChange?.(tab.value)}
         className={chipClasses}
-        role="tab"
-        aria-selected={isActive ? "true" : "false"}
+        aria-pressed={isActive}
         type="button"
-        tabIndex={isActive ? 0 : -1}
       >
         {content}
       </button>
@@ -187,13 +231,13 @@ export function FilterTabs({
         <ScrollArrowButton
           direction="left"
           onClick={scrollLeft}
-          className={ARROW_SIZE_CLASSES[size]}
+          className={ARROW_SIZE_CLASSES}
         />
       )}
 
       <div
         ref={scrollRef}
-        role="tablist"
+        role="group"
         aria-label={ariaLabel}
         className={cn(
           // scrollbar-hide @utility lives in globals.css. pb-1.5 (6 px)
@@ -204,8 +248,8 @@ export function FilterTabs({
           // matches BrandedTabs (`gap-3` = 12 px) — overrides the mockup's
           // 8 px to keep the two atoms visually consistent at the row level.
           "scrollbar-hide flex gap-3 overflow-x-auto scroll-smooth pb-1.5",
-          canScrollLeft ? SCROLL_PADDING_LEFT[size] : "pl-0",
-          canScrollRight ? SCROLL_PADDING_RIGHT[size] : "pr-0",
+          canScrollLeft ? SCROLL_PADDING_LEFT : "pl-0",
+          canScrollRight ? SCROLL_PADDING_RIGHT : "pr-0",
         )}
       >
         {tabs.map(renderTab)}
@@ -215,7 +259,7 @@ export function FilterTabs({
         <ScrollArrowButton
           direction="right"
           onClick={scrollRight}
-          className={ARROW_SIZE_CLASSES[size]}
+          className={ARROW_SIZE_CLASSES}
         />
       )}
     </div>
