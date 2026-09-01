@@ -4,7 +4,9 @@ import type { ScheduleRow } from "@/components/match/types";
  * Pure match-selection logic behind `<TeamMatchesSection>`, split out of that
  * `"use client"` component so `page.tsx` (a server component) can import the
  * SAME predicate that decides what the section renders, rather than
- * re-deriving a second version of it (#2636 finding 2).
+ * re-deriving a second version of it (#2636 finding 2). Also the shared home
+ * for `findNextMatch`, previously duplicated verbatim in
+ * `/ploegen/[slug]/wedstrijden/page.tsx` (#2636 finding 11).
  *
  * Before this split, `#wedstrijden`'s seam, `<section>` and sticky-nav entry
  * were driven by the page's own `inCompetition` flag alone, while
@@ -14,7 +16,7 @@ import type { ScheduleRow } from "@/components/match/types";
  * the render/nav drift the AC requires staying in sync.
  */
 
-export const RECENT_COUNT = 3;
+const RECENT_COUNT = 3;
 
 export function findNextMatch(
   matches: readonly ScheduleRow[],
@@ -45,13 +47,23 @@ export function recentResults(
  * thread one instant between them; both read PSD data that is day/hour
  * granular, never second-granular, so two independent `new Date()` calls a
  * few milliseconds apart cannot disagree in practice.
+ *
+ * A single allocation-free `some()`, not a call through `findNextMatch` +
+ * `recentResults` — those sort and slice to pick a *specific* next match and
+ * up to three *specific* recent results, work this existence check does not
+ * need. `<TeamMatchesSection>` itself does not call this function either: its
+ * own guard is `!next && recent.length === 0` on the `next`/`recent` it
+ * already derived for rendering — which is exactly this predicate's
+ * definition, so the two can never disagree without also duplicating the
+ * derivation, at zero extra cost.
  */
 export function hasVisibleMatches(
   matches: readonly ScheduleRow[],
   now: Date = new Date(),
 ): boolean {
-  if (matches.length === 0) return false;
-  const next = findNextMatch(matches, now);
-  const recent = recentResults(matches, next?.id, now);
-  return next !== undefined || recent.length > 0;
+  return matches.some(
+    (m) =>
+      (m.status === "scheduled" && m.date >= now) ||
+      (m.status === "finished" && m.date < now),
+  );
 }
