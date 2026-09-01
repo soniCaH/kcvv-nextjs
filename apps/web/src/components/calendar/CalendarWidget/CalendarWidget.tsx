@@ -5,30 +5,75 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { trackEvent } from "@/lib/analytics/track-event";
-import { EmptyState } from "@/components/design-system";
+import {
+  EmptyState,
+  FilterTabs,
+  type FilterTab,
+} from "@/components/design-system";
 import {
   filteredEmptyBody,
   pendingEmptyBody,
 } from "@/lib/utils/empty-state-copy";
+import { EVENT_TYPE_FILL } from "@/components/event/event-type-style";
 import { CalendarMonth } from "../CalendarMonth";
 import { CalendarWeek } from "../CalendarWeek";
 import { CalendarAgenda } from "../CalendarAgenda";
 import { CalendarSubscribePanel } from "../CalendarSubscribePanel";
 import {
-  KalenderFilterBar,
-  isKalenderFilterValue,
-  type KalenderFilterValue,
-} from "../KalenderFilterBar";
-import {
   formatMonthNavLabel,
   formatWeekRangeLabel,
+  isKalenderFilterValue,
 } from "@/app/(main)/kalender/utils";
 import type {
   CalendarFeedItem,
   CalendarMatch,
   CalendarEvent,
   CalendarTeamInfo,
+  KalenderFilterValue,
 } from "@/app/(main)/kalender/utils";
+
+/**
+ * The by-type filter row (#1992, absorbed into `<FilterTabs>` by #2429/#2564
+ * — replaces the deleted bespoke `KalenderFilterBar`). Colour is a prop
+ * (`FilterTab.color`), sourced from `EVENT_TYPE_FILL` — the same map
+ * `<TicketStub>`'s tear-off date block uses — so the row stays a faithful
+ * legend for the tickets it labels. `Wedstrijden` (matches) carries the
+ * owner-locked `card-red` fill (#1992); `Alles` and `Andere` carry no
+ * colour and render the neutral Direction D chip.
+ */
+const KALENDER_FILTER_TABS: FilterTab[] = [
+  { value: "all", label: "Alles" },
+  {
+    value: "Wedstrijden",
+    label: "Wedstrijden",
+    color: { border: "border-card-red", fill: "bg-card-red text-cream" },
+  },
+  {
+    value: "Clubevent",
+    label: "Clubevent",
+    color: {
+      border: "border-jersey-deep",
+      fill: EVENT_TYPE_FILL.Clubevent,
+    },
+  },
+  {
+    value: "Supportersactiviteit",
+    label: "Supportersactiviteit",
+    color: {
+      border: "border-warm",
+      fill: EVENT_TYPE_FILL.Supportersactiviteit,
+    },
+  },
+  {
+    value: "Jeugdwerking",
+    label: "Jeugdwerking",
+    color: {
+      border: "border-jersey-bright",
+      fill: EVENT_TYPE_FILL.Jeugdwerking,
+    },
+  },
+  { value: "Andere", label: "Andere" },
+];
 
 export interface CalendarWidgetProps {
   /**
@@ -194,7 +239,13 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
   return (
     <div className="space-y-4">
       {/* By-type filter chips (the row doubles as the colour legend) */}
-      <KalenderFilterBar selected={activeTypeFilter} onSelect={setType} />
+      <FilterTabs
+        tabs={KALENDER_FILTER_TABS}
+        activeTab={activeTypeFilter}
+        onChange={(value) => setType(value as KalenderFilterValue)}
+        showCounts={false}
+        ariaLabel="Filter kalender op type"
+      />
 
       {/* Paper/ink panel shell */}
       <div className="border-ink bg-cream shadow-paper-md border-2">

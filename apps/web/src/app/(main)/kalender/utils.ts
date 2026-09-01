@@ -153,6 +153,34 @@ export function eventListItemToCalendarEvent(
  */
 export type KalenderType = "Wedstrijden" | EventType;
 
+/** Filter selection: a specific kalender type, or `"all"` (the default — no filter). */
+export type KalenderFilterValue = KalenderType | "all";
+
+/** Every valid filter value, in render order — the single source of truth for
+ *  validating a `?type=` URL param (an unknown value falls back to `"all"`).
+ *  `EVENT_TYPE_ORDER` mirrors `<TicketStub>`'s render order. */
+const EVENT_TYPE_ORDER: readonly EventType[] = [
+  "Clubevent",
+  "Supportersactiviteit",
+  "Jeugdwerking",
+  "Andere",
+];
+const KALENDER_FILTER_VALUES: readonly KalenderFilterValue[] = [
+  "all",
+  "Wedstrijden",
+  ...EVENT_TYPE_ORDER,
+];
+
+/** Type guard: is `value` a renderable filter facet? Narrows a raw URL param. */
+export function isKalenderFilterValue(
+  value: string | null,
+): value is KalenderFilterValue {
+  return (
+    value !== null &&
+    (KALENDER_FILTER_VALUES as readonly string[]).includes(value)
+  );
+}
+
 /**
  * Unified calendar feed item — a discriminated union over `source` that merges
  * the two sources the calendar renders: PSD matches and the 6.E event feed
