@@ -198,21 +198,16 @@ function Crest({
   }
   const initial =
     team.name.trim().split(/\s+/).at(-1)?.[0]?.toUpperCase() ?? "?";
-  // A plain template, not `cn()`: `tailwind-merge` treats the custom
-  // `text-mono-sm` **size** token and `text-ink`/`text-cream` **color**
-  // utilities as the same conflict group (both match its generic `text-*`
-  // pattern) and silently drops whichever comes first — verified with
-  // `twMerge("text-ink text-mono-sm")` → `"text-mono-sm"` alone. None of
-  // these classes ever need deduplicating against each other, so `cn()`'s
-  // merge behaviour has nothing to offer here and everything to lose.
   return (
     <span
       aria-hidden="true"
-      className={`font-display text-mono-sm inline-flex shrink-0 items-center justify-center border leading-none font-black italic ${size} ${
+      className={cn(
+        "font-display text-mono-sm inline-flex shrink-0 items-center justify-center border leading-none font-black italic",
+        size,
         dark
           ? "border-cream/40 bg-cream/10 text-cream"
-          : "border-ink/40 bg-cream-soft text-ink"
-      }`}
+          : "border-ink/40 bg-cream-soft text-ink",
+      )}
     >
       {initial}
     </span>
@@ -259,16 +254,11 @@ function Score({
   /** The match-day ground (#2616) — cream text, and `OUTCOME_UNDERLINE.dark`'s outcome tint. */
   dark?: boolean;
 }) {
-  // Every caller's `className` carries a `text-mono-*` size token
-  // (`text-mono-md`/`text-mono-sm`) — combined through `cn()` that collides
-  // with the `text-ink`/`text-cream` color class below (see `<Crest>`'s
-  // comment on the conflict-group), silently dropping the color. A plain
-  // template sidesteps it.
   const score = scoreboardScore(match);
   const colorClass = dark ? "text-cream" : "text-ink";
   if (score === null) {
     return (
-      <span className={`${colorClass} font-mono font-bold ${className ?? ""}`}>
+      <span className={cn(colorClass, "font-mono font-bold", className)}>
         {match.time ?? "vs."}
       </span>
     );
@@ -279,7 +269,7 @@ function Score({
     : undefined;
   return (
     <span
-      className={`${colorClass} font-mono font-bold ${className ?? ""}`}
+      className={cn(colorClass, "font-mono font-bold", className)}
       style={shadow ? { boxShadow: shadow, padding: "0 8px" } : undefined}
     >
       {score}
@@ -328,10 +318,12 @@ function StripDate({
   // cheap, and a second early return is exactly the branch that drifted once.
   const { day, month } = formatMatchDayMonth(date);
   return (
-    // Plain template, not `cn()` — see `<Crest>`'s comment on the
-    // `text-mono-sm` / `text-{color}` conflict-group collision.
     <span
-      className={`text-mono-sm w-14 shrink-0 font-mono font-bold whitespace-nowrap tabular-nums ${dark ? "text-cream" : "text-ink"} ${today ? "uppercase" : ""}`}
+      className={cn(
+        "text-mono-sm w-14 shrink-0 font-mono font-bold whitespace-nowrap tabular-nums",
+        dark ? "text-cream" : "text-ink",
+        today && "uppercase",
+      )}
     >
       {today ? (
         MATCH_DAY_WORD
@@ -461,10 +453,11 @@ function LedgerLinkRow({
         {kind === "result" ? (
           <Score match={match} className="text-mono-md" dark={matchDay} />
         ) : match.time ? (
-          // Plain template, not `cn()` — see `<Crest>`'s comment on the
-          // `text-mono-sm` / `text-{color}` conflict-group collision.
           <span
-            className={`text-mono-sm font-mono font-semibold whitespace-nowrap ${text}`}
+            className={cn(
+              "text-mono-sm font-mono font-semibold whitespace-nowrap",
+              text,
+            )}
           >
             {match.time}
           </span>
@@ -698,9 +691,7 @@ function DesktopSlider({
               <Crest team={showing.awayTeam} big dark={matchDay} />
             </div>
             {/* No venue glyph: both teams render in scoreboard order here, so the
-                layout already says who was at home. Plain template, not
-                `cn()` — see `<Crest>`'s comment on the `text-mono-sm` /
-                `text-{color}` conflict-group collision.
+                layout already says who was at home.
                 MATCH_DAY_WORD lives on the slide label to the left, not here
                 too — the mobile row's own rationale ("restating 'Volgende'
                 under 'Vandaag' would argue with itself") applies just as
@@ -709,7 +700,10 @@ function DesktopSlider({
                 competition, just without the now-redundant date/kickoff
                 (#2616 review). */}
             <div
-              className={`text-mono-sm mt-1.5 text-center font-mono font-semibold ${metaTone}`}
+              className={cn(
+                "text-mono-sm mt-1.5 text-center font-mono font-semibold",
+                metaTone,
+              )}
             >
               {today
                 ? (showing.competition ?? "")
@@ -783,11 +777,12 @@ function DesktopTeamName({
   /** The match-day ground (#2616). */
   dark?: boolean;
 }) {
-  // Plain template, not `cn()` — see `<Crest>`'s comment on the
-  // `text-mono-md` / `text-{color}` conflict-group collision.
   return (
     <span
-      className={`font-display text-mono-md max-w-[40%] min-w-0 truncate leading-none font-bold italic ${dark ? "text-cream" : "text-ink"}`}
+      className={cn(
+        "font-display text-mono-md max-w-[40%] min-w-0 truncate leading-none font-bold italic",
+        dark ? "text-cream" : "text-ink",
+      )}
     >
       {team.id === KCVV_CLUB_ID ? "KCVV" : team.name}
     </span>
