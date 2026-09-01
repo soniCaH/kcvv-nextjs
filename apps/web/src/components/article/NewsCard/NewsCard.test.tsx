@@ -78,6 +78,46 @@ describe("NewsCard", () => {
     });
   });
 
+  describe("Subject artefact (#2462 / #2574)", () => {
+    it("renders the hatch when neither imageUrl nor artefact is provided — the default stays byte-unchanged", () => {
+      const { container } = render(<NewsCard {...defaultProps} />);
+      expect(
+        container.querySelector("[data-testid='newscard-image-fallback']"),
+      ).toBeInTheDocument();
+    });
+
+    it("renders the subject artefact instead of the hatch when artefact is provided", () => {
+      const { container } = render(
+        <NewsCard
+          {...defaultProps}
+          artefact={<span data-testid="stub-artefact">artefact</span>}
+        />,
+      );
+      expect(screen.getByTestId("stub-artefact")).toBeInTheDocument();
+      expect(
+        container.querySelector("[data-testid='newscard-image-fallback']"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("prefers imageUrl over artefact when both are provided", () => {
+      const { container } = render(
+        <NewsCard
+          {...defaultProps}
+          imageUrl="/test.jpg"
+          artefact={<span data-testid="stub-artefact">artefact</span>}
+        />,
+      );
+      expect(container.querySelector("img")).toHaveAttribute(
+        "src",
+        "/test.jpg",
+      );
+      expect(screen.queryByTestId("stub-artefact")).not.toBeInTheDocument();
+      expect(
+        container.querySelector("[data-testid='newscard-image-fallback']"),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   describe("Badge, date and dek", () => {
     it("renders badge", () => {
       render(<NewsCard {...defaultProps} badge="Clubnieuws" />);

@@ -1,13 +1,17 @@
 /**
- * Garment geometry that exists only for `<JerseyIllustration>`'s per-player
- * variant system (#2635) — long-sleeve arm paths and the alternate stripe
- * (band) counts. `_jersey-paths.ts` holds the base silhouette both
- * `<JerseyShirt>` and `<JerseyIllustration>` share; this file holds the
- * additive geometry with exactly one consumer, so it lives beside that
- * consumer instead of in the shared module — `<JerseyShirt>` never imports
- * from here.
+ * Additive geometry for `<JerseyIllustration>` with exactly one consumer —
+ * `_jersey-paths.ts` holds the base silhouette both `<JerseyShirt>` and
+ * `<JerseyIllustration>` share; this file holds whatever geometry only
+ * `<JerseyIllustration>` draws, so it lives beside that one consumer
+ * instead of in the shared module — `<JerseyShirt>` never imports from
+ * here. Two additions live here so far:
  *
- * Source: `docs/design/mockups/2590-non-cutout-photos/2590-1-niet-uitgeknipt.html`.
+ * - Long-sleeve arm paths and the alternate stripe (band) counts, for the
+ *   per-player variant system (#2635). Source:
+ *   `docs/design/mockups/2590-non-cutout-photos/2590-1-niet-uitgeknipt.html`.
+ * - The coat garment-front lines (#2485), moved here from `_jersey-paths.ts`
+ *   at #2574 code review — a single-consumer geometry belongs beside its
+ *   one consumer, not in the module two components share.
  */
 import { JERSEY_VERTICAL_STRIPE_PATHS } from "../_jersey-paths";
 import type { StripeCount } from "./player-figure-variant";
@@ -50,3 +54,21 @@ export const JERSEY_STRIPE_PATHS_BY_COUNT: Record<
   4: JERSEY_VERTICAL_STRIPE_PATHS,
   5: JERSEY_STRIPE_PATHS_5,
 };
+
+/**
+ * Coat garment-front lines (#2485) — the overprint-only geometry
+ * `<JerseyIllustration garment="coat">` draws instead of
+ * `JERSEY_V_COLLAR_PATH` + the shirt pattern. A player takes the jersey, a
+ * staff member takes a coat: same head, torso and shoulder bumps, differing
+ * only in these garment-front lines and in which ink goes down first (the
+ * coat inverts the underprint/overprint palette — see
+ * `<JerseyIllustration>`). Converging lapels, a placket running to the hem,
+ * and two notch ticks where the lapel meets the collar — one array, the
+ * peer form to `JERSEY_VERTICAL_STRIPE_PATHS` (`_jersey-paths.ts`).
+ */
+export const JERSEY_COAT_GARMENT_PATHS = [
+  "M 84 137 L 110 198 L 136 137", // lapels
+  "M 110 198 L 110 300", // placket
+  "M 96 165 L 78 176", // left notch tick
+  "M 124 165 L 142 176", // right notch tick
+] as const;

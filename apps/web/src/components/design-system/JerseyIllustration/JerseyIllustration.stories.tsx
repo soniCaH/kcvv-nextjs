@@ -37,3 +37,33 @@ export const Hero: Story = {
 export const Card: Story = {
   args: { variant: "card", seed: "e5f6a7b8" },
 };
+
+/**
+ * `garment="coat"` at hero scale (#2485) — the staff-document figure. Same
+ * head, torso and shoulder bumps as `Hero`; only the garment-front lines
+ * (lapels, placket, notch ticks) and the two-pass palette (inverted: ink
+ * underprint, jersey-deep overprint) change.
+ *
+ * Not wired to any route today — `<StaffHero>` (`/staf/[slug]`) still
+ * renders its own jersey-deep initials plate, explicitly "NOT the
+ * player-only jersey illustration" per its docblock. This story covers the
+ * hero-scale coat state in isolation, for a future `<StaffHero>` migration
+ * to draw from.
+ */
+export const CoatHero: Story = {
+  args: { variant: "hero", seed: "a1b2c3d4", garment: "coat" },
+  // `!vr` negates the meta-level "vr" tag — this state renders nowhere in
+  // production (see the docblock above) and the AC doesn't ask for it;
+  // `CoatCard` below is the one `getCardSubjectArtefact` actually draws
+  // from and keeps its baseline.
+  tags: ["!vr"],
+};
+
+/**
+ * `garment="coat"` at card scale (#2485 / #2574) — the imageless-card
+ * artefact a staff-document subject resolves to via
+ * `@/lib/utils/card-subject-artefact`.
+ */
+export const CoatCard: Story = {
+  args: { variant: "card", seed: "e5f6a7b8", garment: "coat" },
+};
