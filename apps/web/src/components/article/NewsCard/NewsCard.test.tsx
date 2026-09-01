@@ -78,6 +78,60 @@ describe("NewsCard", () => {
     });
   });
 
+  describe("Subject artefact (#2462 / #2574)", () => {
+    it("renders the hatch when neither imageUrl nor fallback is provided — the default stays byte-unchanged", () => {
+      const { container } = render(<NewsCard {...defaultProps} />);
+      expect(
+        container.querySelector("[data-testid='newscard-image-fallback']"),
+      ).toBeInTheDocument();
+      expect(
+        container.querySelector("[data-testid='newscard-image-artefact']"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("renders the subject artefact instead of the hatch when fallback is provided", () => {
+      const { container } = render(
+        <NewsCard
+          {...defaultProps}
+          fallback={<span data-testid="stub-artefact">artefact</span>}
+        />,
+      );
+      expect(screen.getByTestId("stub-artefact")).toBeInTheDocument();
+      expect(
+        container.querySelector("[data-testid='newscard-image-fallback']"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("prefers imageUrl over fallback when both are provided", () => {
+      const { container } = render(
+        <NewsCard
+          {...defaultProps}
+          imageUrl="/test.jpg"
+          fallback={<span data-testid="stub-artefact">artefact</span>}
+        />,
+      );
+      expect(container.querySelector("img")).toHaveAttribute(
+        "src",
+        "/test.jpg",
+      );
+      expect(screen.queryByTestId("stub-artefact")).not.toBeInTheDocument();
+      expect(
+        container.querySelector("[data-testid='newscard-image-fallback']"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("a document subject's fallback (undefined, from getCardSubjectArtefact) keeps the hatch", () => {
+      // Mirrors how a call-site actually reaches this: pass the helper's
+      // result straight through rather than special-casing "document".
+      const { container } = render(
+        <NewsCard {...defaultProps} fallback={undefined} />,
+      );
+      expect(
+        container.querySelector("[data-testid='newscard-image-fallback']"),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe("Badge, date and dek", () => {
     it("renders badge", () => {
       render(<NewsCard {...defaultProps} badge="Clubnieuws" />);

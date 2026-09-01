@@ -2,6 +2,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { NewsCard } from "./NewsCard";
 import { fixtureImage } from "@test-fixtures/images";
+import { getCardSubjectArtefact } from "@/lib/utils/card-subject-artefact";
 
 const meta = {
   title: "Features/Articles/NewsCard",
@@ -313,5 +314,109 @@ export const LongCompoundTitle: Story = {
       </div>
     ),
   ],
+  tags: ["vr"],
+};
+
+// ===== #2574 — imageless card artefact (#2462 / #2472 / #2485) =====
+//
+// "A card without a photo shows its own subject's artefact — a team's
+// shirt, a club's crest — rather than a generic texture." The hatch stays
+// this card's own default (see `NoImagePlaceholder` above) and is still
+// correct for the one subject kind with nothing to depict: a document.
+// State coverage below is every other subject kind `getCardSubjectArtefact`
+// resolves, plus #2472's placeholder-crest state — accepted unchanged, at
+// this card's scale, with no detection of any kind.
+//
+// All new baselines (#2574 ships no change to any existing story above).
+
+const artefactSharedArgs = {
+  ...bgSharedArgs,
+  imageUrl: undefined,
+};
+
+export const ArtefactPersonPlayer: Story = {
+  args: {
+    ...artefactSharedArgs,
+    title: "Wie is de nieuwe aanwinst op links?",
+    badge: "SPELER",
+    fallback: getCardSubjectArtefact({
+      kind: "person",
+      personType: "player",
+      seed: "storybook-player-1",
+    }),
+  },
+  tags: ["vr"],
+};
+
+/** #2485's amendment — a staff document takes the coat, not the jersey. */
+export const ArtefactPersonStaff: Story = {
+  args: {
+    ...artefactSharedArgs,
+    title: "Kennismaking met de nieuwe jeugdcoördinator",
+    badge: "STAF",
+    fallback: getCardSubjectArtefact({
+      kind: "person",
+      personType: "staff",
+      seed: "storybook-staff-1",
+    }),
+  },
+  tags: ["vr"],
+};
+
+export const ArtefactTeam: Story = {
+  args: {
+    ...artefactSharedArgs,
+    title: "U14 sluit de heenronde af op de tweede plaats",
+    badge: "PLOEG",
+    fallback: getCardSubjectArtefact({ kind: "team", ageLabel: "U14" }),
+  },
+  tags: ["vr"],
+};
+
+export const ArtefactClubCrest: Story = {
+  args: {
+    ...artefactSharedArgs,
+    title: "Onderlinge geschiedenis tegen KFC Zemst",
+    badge: "TEGENSTANDER",
+    fallback: getCardSubjectArtefact({
+      kind: "club",
+      name: "KFC Zemst",
+      logoUrl: "/images/logos/clubs/dummy-vert.svg",
+    }),
+  },
+  tags: ["vr"],
+};
+
+/**
+ * #2472 — PSD's generic grey-shield placeholder, rendered through the exact
+ * same `<Crest>` path as a real crest above: no detection, no substitution.
+ * `/images/logos/clubs/dummy-grey.svg` stands in for the real PSD asset
+ * (out of reach from Storybook) — a flat grey shield with no distinguishing
+ * marks, matching #2472's own measurement that every placeholder id hashes
+ * identically. The point this story makes is that nothing here looks
+ * different from `ArtefactClubCrest` above beyond the source image itself.
+ */
+export const ArtefactClubPlaceholderCrest: Story = {
+  args: {
+    ...artefactSharedArgs,
+    title: "Onderlinge geschiedenis tegen SK Laar",
+    badge: "TEGENSTANDER",
+    fallback: getCardSubjectArtefact({
+      kind: "club",
+      name: "SK Laar",
+      logoUrl: "/images/logos/clubs/dummy-grey.svg",
+    }),
+  },
+  tags: ["vr"],
+};
+
+/** The document path — no artefact, the hatch keeps its job (#2462 rule 2). */
+export const ArtefactDocument: Story = {
+  args: {
+    ...artefactSharedArgs,
+    title: "Nieuw op de website: het clubreglement",
+    badge: "PAGINA",
+    fallback: getCardSubjectArtefact({ kind: "document" }),
+  },
   tags: ["vr"],
 };

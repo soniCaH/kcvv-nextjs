@@ -1,6 +1,7 @@
 // apps/web/src/components/article/NewsCard/NewsCard.tsx
 import Link from "next/link";
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 import {
   TapedCard,
@@ -33,6 +34,18 @@ export interface NewsCardProps {
    * (#1471) where the cover is a CMS photo with an LQIP.
    */
   imageLqip?: string | null;
+  /**
+   * What the image region renders when `imageUrl` is absent, instead of the
+   * default hatch — #2462's "a card without a photo shows its own subject's
+   * artefact". Build one with `getCardSubjectArtefact`
+   * (`@/lib/utils/card-subject-artefact`) so the mapping from subject kind
+   * to artefact lives in one place; `<NewsCard>` itself only learns "render
+   * this instead of the hatch". Omit (or pass `undefined` — which
+   * `getCardSubjectArtefact` returns for a `"document"` subject) to keep
+   * the hatch, which stays the default so every existing caller is
+   * byte-unchanged.
+   */
+  fallback?: ReactNode;
   /** Single category label — shown in the MonoLabel row above the title. */
   badge?: string;
   /**
@@ -171,6 +184,7 @@ export const NewsCard = ({
   href,
   imageUrl,
   imageLqip,
+  fallback,
   badge,
   typeLabel,
   date,
@@ -269,6 +283,8 @@ export const NewsCard = ({
             placeholder={imageLqip ? "blur" : "empty"}
             blurDataURL={imageLqip ?? undefined}
           />
+        ) : fallback ? (
+          <div data-testid="newscard-image-artefact">{fallback}</div>
         ) : (
           <div
             data-testid="newscard-image-fallback"
