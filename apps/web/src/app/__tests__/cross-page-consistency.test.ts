@@ -678,8 +678,26 @@ describe("the empty-state-undo global listener stays mounted (#2719)", () => {
  * used to stand in for: the one legitimate doc-comment mention of `ch`
  * (`SiteHeader.stories.tsx`, explaining the truncation cap in prose) is
  * stripped as a comment before this pattern ever sees it.
+ *
+ * **The exemption is pinned by declaration, not by file.** An earlier draft
+ * of this rule skipped `VolledigOrganigram.tsx` and `SiteHeader.tsx`
+ * entirely once each was known to hold an approved `ch`, which means a
+ * second, undocumented `ch` landing anywhere else in either file — a real
+ * reading measure this time — would pass silently. Each exempt file below
+ * is instead required to match the pattern exactly as many times as it has
+ * pinned declarations, and to still contain both the exact approved text and
+ * the exemption comment DESIGN.md promises. A file drifting past its pinned
+ * count, or losing the declaration or the comment, fails.
  */
 const BARE_CH_MAX_WIDTH = /max-w-\[\d+ch\]/;
+
+/** Global twin of `BARE_CH_MAX_WIDTH`, for counting rather than testing. */
+const BARE_CH_MAX_WIDTH_G = /max-w-\[\d+ch\]/g;
+
+/** Every match of `BARE_CH_MAX_WIDTH` in an already-stripped source. */
+function chOccurrences(strippedSource: string): number {
+  return [...strippedSource.matchAll(BARE_CH_MAX_WIDTH_G)].length;
+}
 
 /**
  * Strip-then-scan, exactly as the shared `code` map already does for every
@@ -694,15 +712,27 @@ function hasBareChMaxWidth(source: string): boolean {
 }
 
 /**
- * The two shapes DESIGN.md's Reading-Measure Exemption Rule names, each
- * carrying its own inline comment: helper copy sharing a row with controls
+ * The exact declaration text DESIGN.md's Reading-Measure Exemption Rule
+ * names, one entry per file: helper copy sharing a row with controls
  * (`VolledigOrganigram`'s toolbar caption), and a single-line truncating
- * label (`SiteHeader`'s nav-label cap).
+ * label (`SiteHeader`'s nav-label cap). Pinning the literal line — not just
+ * "this file has a `ch` somewhere" — is what makes a *different* `ch` added
+ * later in the same file a failure rather than noise the count-check
+ * absorbs.
  */
-const CH_EXEMPT_FILES = new Set([
-  "components/organigram/OrganigramExplorer/VolledigOrganigram.tsx",
-  "components/layout/SiteHeader/SiteHeader.tsx",
-]);
+const CH_EXEMPT_DECLARATIONS: Record<string, readonly string[]> = {
+  "components/organigram/OrganigramExplorer/VolledigOrganigram.tsx": [
+    '<p className="text-ink-soft max-w-[60ch] text-sm leading-relaxed">',
+  ],
+  "components/layout/SiteHeader/SiteHeader.tsx": [
+    'const NAV_LABEL_TRUNCATE = "block max-w-[14ch] truncate";',
+  ],
+};
+
+const CH_EXEMPT_FILES = new Set(Object.keys(CH_EXEMPT_DECLARATIONS));
+
+/** The rule's own name — every exempt file must still cite it inline. */
+const EXEMPTION_MARKER = "Reading-Measure Exemption Rule";
 
 describe("no bare `ch` reading measure without a named exemption (#2645)", () => {
   it.each(scannableSources.filter((f) => !CH_EXEMPT_FILES.has(f)))(
@@ -714,16 +744,43 @@ describe("no bare `ch` reading measure without a named exemption (#2645)", () =>
 });
 
 /**
- * The exemption set is hand-written, so an edit that lets it drift stale —
- * a file renamed, or one that stopped needing the exemption — would read as
- * a pass everywhere else while quietly no longer meaning anything for these
- * two. Pinned by asserting each still actually carries the pattern it is
- * exempted for.
+ * The exemption-comment check needs the file as written, not `code`'s
+ * comment-stripped copy — the marker string it looks for lives inside the
+ * very comment that map strips. Read once per exempt file, outside the
+ * shared pipeline the rest of this suite scans. Whitespace (including the
+ * docblock's own `\n *` continuation) is collapsed before matching, because
+ * prettier is free to re-wrap a long comment line and split the marker
+ * phrase across two — exactly what it did to `SiteHeader.tsx`'s.
  */
-describe("rule 8's exemptions still apply (#2645)", () => {
-  it.each([...CH_EXEMPT_FILES])("%s — still carries a bare `ch`", (relPath) => {
-    expect(BARE_CH_MAX_WIDTH.test(code.get(relPath)!)).toBe(true);
-  });
+const rawExemptSource = new Map(
+  Object.keys(CH_EXEMPT_DECLARATIONS).map((relPath) => [
+    relPath,
+    readFileSync(resolve(srcDir, relPath), "utf8")
+      // JSDoc line-continuation (`\n * `) first, or its leading ` * ` reads
+      // as a literal asterisk sitting between two collapsed words instead of
+      // the space it visually is.
+      .replace(/\n\s*\*\s?/g, " ")
+      .replace(/\s+/g, " "),
+  ]),
+);
+
+/**
+ * Each exempt file is held to exactly its pinned declarations — no fewer
+ * (the exemption going stale, DESIGN.md's promise) and no more (a second,
+ * undocumented `ch` the count-only version of this rule could not see).
+ */
+describe("rule 8's exemptions are pinned to their exact declarations (#2645)", () => {
+  it.each(Object.entries(CH_EXEMPT_DECLARATIONS))(
+    "%s — matches only its pinned declaration(s)",
+    (relPath, declarations) => {
+      const source = code.get(relPath)!;
+      expect(chOccurrences(source)).toBe(declarations.length);
+      for (const declaration of declarations) {
+        expect(source).toContain(declaration);
+      }
+      expect(rawExemptSource.get(relPath)!).toContain(EXEMPTION_MARKER);
+    },
+  );
 });
 
 /**
@@ -731,6 +788,9 @@ describe("rule 8's exemptions still apply (#2645)", () => {
  * near-miss that matters most here is the comment-only mention: without
  * `COMMENT_OR_STRING` stripping, `SiteHeader.stories.tsx`'s doc comment
  * explaining `max-w-[14ch] truncate]` in prose would itself trip the rule.
+ * `chOccurrences` gets its own cases too, since it is what makes a *second*
+ * `ch` in an exempt file a failure rather than something the boolean check
+ * would wave through as "still true".
  */
 describe("rule 8 catches what it claims to (#2645)", () => {
   it.each([
@@ -750,5 +810,17 @@ describe("rule 8 catches what it claims to (#2645)", () => {
     ["/** bounds the row at `max-w-[52ch]` (retired) */"],
   ])("leaves %s alone", (snippet) => {
     expect(hasBareChMaxWidth(snippet)).toBe(false);
+  });
+
+  it("counts every occurrence, not just whether one exists", () => {
+    expect(chOccurrences('max-w-[60ch]" ... "max-w-[14ch]')).toBe(2);
+  });
+
+  it("a second, undocumented `ch` in an exempt file changes the count the pinned check relies on", () => {
+    const oneApproved =
+      '<p className="text-ink-soft max-w-[60ch] text-sm leading-relaxed">';
+    const withASecondOne = `${oneApproved}\n<span className="max-w-[30ch]">`;
+    expect(chOccurrences(oneApproved)).toBe(1);
+    expect(chOccurrences(withASecondOne)).toBe(2);
   });
 });
