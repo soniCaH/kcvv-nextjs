@@ -18,7 +18,11 @@
  * `motion-safe:animate-pulse` bars.
  */
 
-import { PageContainer, StripedSeam } from "@/components/design-system";
+import {
+  PageContainer,
+  StripedSeam,
+  FilterTabsSkeleton,
+} from "@/components/design-system";
 import { FIRST_TEAMS_ROW_GRID } from "@/components/home/FirstTeamsBlock";
 import {
   UITGELICHT_ROW_CLASS,
@@ -125,18 +129,14 @@ export default function HomeLoading() {
         <div className="bg-paper-edge mb-6 h-9 w-64" />
         {/* Team-chip filter row, then the stacked agenda rows — the band is a
             list, not a card grid (#2398). Chip widths approximate the real
-            "Alles · A-Ploeg · U21 …" facet set, in Tailwind units to match the
-            /kalender chip skeleton. `pb-1.5` mirrors the gutter <FilterTabs>
-            leaves so its paper shadow isn't clipped. `h-9` matches
-            <FilterTabs>'s one chip size (#2564) — this used to model the
-            narrower `size="sm"` UpcomingMatchesClient dropped on absorption. */}
-        <div className="mb-5 flex gap-3 pb-1.5">
-          {["w-16", "w-24", "w-20", "w-14", "w-16"].map((w, i) => (
-            <div
-              key={i}
-              className={`border-ink bg-cream-soft shadow-paper-sm h-9 border-2 ${w}`}
-            />
-          ))}
+            "Alles · A-Ploeg · U21 …" facet set. The shared
+            <FilterTabsSkeleton> (#2564 review item 4) keeps this from
+            drifting the way it did pre-absorption, when it modelled the
+            narrower `size="sm"` UpcomingMatchesClient has since dropped. */}
+        <div className="mb-5">
+          <FilterTabsSkeleton
+            widths={["w-16", "w-24", "w-20", "w-14", "w-16"]}
+          />
         </div>
         {/* <MatchRow> is a two-line grid below `sm` and one line above it, so
             the skeleton has to be too or the swap reflows on mobile — the exact

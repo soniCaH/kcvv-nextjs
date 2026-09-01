@@ -6,7 +6,7 @@
  */
 
 import { SearchMastheadSkeleton } from "@/components/search/SearchMastheadSkeleton";
-import { PageContainer } from "@/components/design-system";
+import { PageContainer, FilterTabsSkeleton } from "@/components/design-system";
 
 export default function SearchLoading() {
   return (
@@ -18,15 +18,11 @@ export default function SearchLoading() {
       <SearchMastheadSkeleton />
 
       <PageContainer width="index" className="py-12">
-        {/* Filter chips */}
-        <div className="flex gap-2 motion-safe:animate-pulse">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="border-ink/15 bg-ink/5 h-9 w-20 rounded-none border-2"
-            />
-          ))}
-        </div>
+        {/* Filter chips — the shared <FilterTabsSkeleton> (#2564 review
+            items 3 + 4); this used to draw 4 uniform `gap-2` placeholders
+            with no `pb-1.5`, for the real 5-tab (Alles · Nieuws · Spelers ·
+            Staf · Ploegen) `gap-3` row. */}
+        <FilterTabsSkeleton widths={["w-14", "w-16", "w-16", "w-12", "w-16"]} />
 
         {/* Result rows */}
         <div className="mt-8 space-y-4 motion-safe:animate-pulse">
