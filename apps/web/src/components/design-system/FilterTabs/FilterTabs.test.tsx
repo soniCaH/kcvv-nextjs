@@ -7,6 +7,10 @@
  * docs/design/mockups/phase-2-track-b/compare.md and
  * option-d-paper-chrome-ink-emphasis.html (`.f-chip` rules, ink-invert
  * active variant).
+ *
+ * ARIA: `role="group"` + `aria-pressed` (#2429 resolution, rule 7) — a
+ * filter narrows a list in place, it is not a `role="tablist"`/`"tab"` pair
+ * with an associated panel.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -26,13 +30,17 @@ describe("FilterTabs", () => {
     it("should render all tabs", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
 
-      expect(screen.getByRole("tab", { name: "All 10" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Active 5" })).toBeInTheDocument();
       expect(
-        screen.getByRole("tab", { name: "Inactive 3" }),
+        screen.getByRole("button", { name: "All 10" }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("tab", { name: "Archived 2" }),
+        screen.getByRole("button", { name: "Active 5" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Inactive 3" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Archived 2" }),
       ).toBeInTheDocument();
     });
 
@@ -45,15 +53,15 @@ describe("FilterTabs", () => {
         />,
       );
 
-      const tablist = screen.getByRole("tablist");
-      expect(tablist).toHaveAttribute("aria-label", "Category filters");
+      const group = screen.getByRole("group");
+      expect(group).toHaveAttribute("aria-label", "Category filters");
     });
 
     it("should render with default aria-label", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
 
-      const tablist = screen.getByRole("tablist");
-      expect(tablist).toHaveAttribute("aria-label", "Filter tabs");
+      const group = screen.getByRole("group");
+      expect(group).toHaveAttribute("aria-label", "Filter tabs");
     });
   });
 
@@ -61,7 +69,7 @@ describe("FilterTabs", () => {
     it("renders inactive chips with paper-chip body (cream-soft bg, ink border, ink text)", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="active" />);
 
-      const inactive = screen.getByRole("tab", { name: "All 10" });
+      const inactive = screen.getByRole("button", { name: "All 10" });
       expect(inactive).toHaveClass("bg-cream-soft");
       expect(inactive).toHaveClass("border-2");
       expect(inactive).toHaveClass("border-ink");
@@ -71,7 +79,7 @@ describe("FilterTabs", () => {
     it("renders the active chip inverted (ink bg, cream text) with the soft shadow", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="active" />);
 
-      const active = screen.getByRole("tab", { name: "Active 5" });
+      const active = screen.getByRole("button", { name: "Active 5" });
       expect(active).toHaveClass("bg-ink");
       expect(active).toHaveClass("text-cream");
       expect(active).toHaveClass("shadow-paper-sm-soft");
@@ -80,7 +88,7 @@ describe("FilterTabs", () => {
     it("uses mono caps + tracking on every chip", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
 
-      const tab = screen.getByRole("tab", { name: "All 10" });
+      const tab = screen.getByRole("button", { name: "All 10" });
       expect(tab).toHaveClass("font-mono");
       expect(tab).toHaveClass("uppercase");
       expect(tab.className).toContain("tracking-[0.08em]");
@@ -89,74 +97,133 @@ describe("FilterTabs", () => {
     it("uses sharp corners (rounded-none)", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
 
-      const tab = screen.getByRole("tab", { name: "All 10" });
+      const tab = screen.getByRole("button", { name: "All 10" });
       expect(tab).toHaveClass("rounded-none");
     });
 
     it("inactive chips carry the ink offset shadow at rest", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="active" />);
 
-      const inactive = screen.getByRole("tab", { name: "All 10" });
+      const inactive = screen.getByRole("button", { name: "All 10" });
       expect(inactive).toHaveClass("shadow-paper-sm");
     });
 
-    it("the tablist row reserves room below for the 4px paper shadow", () => {
+    it("inactive chips carry the soft shadow when surface='inverse' (dark/ink ground)", () => {
+      render(
+        <FilterTabs tabs={mockTabs} activeTab="active" surface="inverse" />,
+      );
+
+      const inactive = screen.getByRole("button", { name: "All 10" });
+      expect(inactive).toHaveClass("shadow-paper-sm-soft");
+      expect(inactive).not.toHaveClass("shadow-paper-sm");
+    });
+
+    it("the row reserves room below for the 4px paper shadow", () => {
       // overflow-x: auto silently forces overflow-y to behave like a scroll
       // container, which would otherwise clip --shadow-paper-sm. pb-1.5 keeps
       // the 4 × 4 ink shadow visible (same fix as BrandedTabs #1576).
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
 
-      const tablist = screen.getByRole("tablist");
-      expect(tablist).toHaveClass("pb-1.5");
+      const group = screen.getByRole("group");
+      expect(group).toHaveClass("pb-1.5");
     });
 
-    it("the tablist row uses gap-3 (12px) for chip breathing room", () => {
+    it("the row uses gap-3 (12px) for chip breathing room", () => {
       // Matches BrandedTabs (#1576) row gap; overrides the option-d mockup's
       // 8 px to keep the two Track B tab atoms visually consistent.
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
 
-      const tablist = screen.getByRole("tablist");
-      expect(tablist).toHaveClass("gap-3");
+      const group = screen.getByRole("group");
+      expect(group).toHaveClass("gap-3");
+    });
+  });
+
+  describe("Per-facet colour prop", () => {
+    const coloredTabs: FilterTab[] = [
+      { value: "all", label: "Alles" },
+      {
+        value: "wedstrijden",
+        label: "Wedstrijden",
+        color: { border: "border-card-red", fill: "bg-card-red text-cream" },
+      },
+    ];
+
+    it("applies the colour border at rest", () => {
+      render(<FilterTabs tabs={coloredTabs} activeTab="all" />);
+
+      const chip = screen.getByRole("button", { name: "Wedstrijden" });
+      expect(chip).toHaveClass("border-card-red");
+      expect(chip).not.toHaveClass("border-ink");
+    });
+
+    it("applies the colour fill only when selected", () => {
+      render(<FilterTabs tabs={coloredTabs} activeTab="wedstrijden" />);
+
+      const chip = screen.getByRole("button", { name: "Wedstrijden" });
+      expect(chip).toHaveClass("bg-card-red");
+      expect(chip).toHaveClass("text-cream");
+    });
+
+    it("a tab with no colour renders the neutral Direction D chip", () => {
+      render(<FilterTabs tabs={coloredTabs} activeTab="all" />);
+
+      const chip = screen.getByRole("button", { name: "Alles" });
+      expect(chip).toHaveClass("border-ink");
+      expect(chip).not.toHaveClass("border-card-red");
+    });
+  });
+
+  describe("Leading-glyph slot", () => {
+    it("renders no icon when a tab has none", () => {
+      const { container } = render(
+        <FilterTabs tabs={mockTabs} activeTab="all" />,
+      );
+      expect(container.querySelectorAll("svg").length).toBe(0);
+    });
+
+    it("renders the optional leading glyph before the label", () => {
+      function TestIcon(
+        _props: import("@/lib/icons.redesign").RedesignIconProps,
+      ) {
+        return <svg data-testid="leading-glyph" />;
+      }
+      const tabsWithIcon: FilterTab[] = [
+        { value: "all", label: "Alles", icon: TestIcon },
+      ];
+
+      render(<FilterTabs tabs={tabsWithIcon} activeTab="all" />);
+
+      expect(screen.getByTestId("leading-glyph")).toBeInTheDocument();
     });
   });
 
   describe("Press idiom (canonical press-down hover)", () => {
     it("applies the hover translate(1, 1) press utility classes", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
-      const tab = screen.getByRole("tab", { name: "Active 5" });
+      const tab = screen.getByRole("button", { name: "Active 5" });
       expect(tab).toHaveClass("hover:translate-x-1");
       expect(tab).toHaveClass("hover:translate-y-1");
     });
 
     it("hover collapses the shadow fully to none (canonical press-down)", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
-      const inactive = screen.getByRole("tab", { name: "Active 5" });
+      const inactive = screen.getByRole("button", { name: "Active 5" });
       expect(inactive).toHaveClass("hover:shadow-none");
     });
 
     it("uses the canonical 300ms duration for hover transitions", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
-      const tab = screen.getByRole("tab", { name: "All 10" });
+      const tab = screen.getByRole("button", { name: "All 10" });
       expect(tab).toHaveClass("transition-all", "duration-300");
     });
   });
 
   describe("Active Tab", () => {
-    it("should mark the active tab via aria-selected", () => {
+    it("should mark the active tab via aria-pressed", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="active" />);
 
-      const activeTab = screen.getByRole("tab", { name: "Active 5" });
-      expect(activeTab).toHaveAttribute("aria-selected", "true");
-    });
-
-    it("should set correct tabIndex for active and inactive tabs", () => {
-      render(<FilterTabs tabs={mockTabs} activeTab="active" />);
-
-      const activeTab = screen.getByRole("tab", { name: "Active 5" });
-      const inactiveTab = screen.getByRole("tab", { name: "All 10" });
-
-      expect(activeTab).toHaveAttribute("tabIndex", "0");
-      expect(inactiveTab).toHaveAttribute("tabIndex", "-1");
+      const activeTab = screen.getByRole("button", { name: "Active 5" });
+      expect(activeTab).toHaveAttribute("aria-pressed", "true");
     });
   });
 
@@ -200,37 +267,10 @@ describe("FilterTabs", () => {
 
       render(<FilterTabs tabs={tabsWithoutCounts} activeTab="all" />);
 
-      expect(screen.getByRole("tab", { name: "All" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Active" })).toBeInTheDocument();
-    });
-  });
-
-  describe("Size Variants — padding + font-size only", () => {
-    it("should render small size", () => {
-      render(<FilterTabs tabs={mockTabs} activeTab="all" size="sm" />);
-
-      const tab = screen.getByRole("tab", { name: /all/i });
-      expect(tab.className).toContain("px-[9px]");
-      expect(tab.className).toContain("py-[5px]");
-      expect(tab.className).toContain("text-[10px]");
-    });
-
-    it("should render medium size by default", () => {
-      render(<FilterTabs tabs={mockTabs} activeTab="all" />);
-
-      const tab = screen.getByRole("tab", { name: /all/i });
-      expect(tab).toHaveClass("px-3");
-      expect(tab).toHaveClass("py-2");
-      expect(tab.className).toContain("text-[11px]");
-    });
-
-    it("should render large size", () => {
-      render(<FilterTabs tabs={mockTabs} activeTab="all" size="lg" />);
-
-      const tab = screen.getByRole("tab", { name: /all/i });
-      expect(tab).toHaveClass("px-4");
-      expect(tab.className).toContain("py-[11px]");
-      expect(tab).toHaveClass("text-xs");
+      expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Active" }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -243,7 +283,7 @@ describe("FilterTabs", () => {
         <FilterTabs tabs={mockTabs} activeTab="all" onChange={handleChange} />,
       );
 
-      const activeTab = screen.getByRole("tab", { name: "Active 5" });
+      const activeTab = screen.getByRole("button", { name: "Active 5" });
       await user.click(activeTab);
 
       expect(handleChange).toHaveBeenCalledTimes(1);
@@ -268,7 +308,7 @@ describe("FilterTabs", () => {
         />,
       );
 
-      const activeTab = screen.getByRole("tab", { name: "Active 5" });
+      const activeTab = screen.getByRole("link", { name: "Active 5" });
       await user.click(activeTab);
 
       expect(handleChange).not.toHaveBeenCalled();
@@ -279,7 +319,7 @@ describe("FilterTabs", () => {
     it("should render as buttons by default", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
 
-      const tabs = screen.getAllByRole("tab");
+      const tabs = screen.getAllByRole("button");
       tabs.forEach((tab) => {
         expect(tab.tagName).toBe("BUTTON");
       });
@@ -299,7 +339,7 @@ describe("FilterTabs", () => {
         />,
       );
 
-      const tabs = screen.getAllByRole("tab");
+      const tabs = screen.getAllByRole("link");
       tabs.forEach((tab) => {
         expect(tab.tagName).toBe("A");
       });
@@ -319,7 +359,7 @@ describe("FilterTabs", () => {
         />,
       );
 
-      const activeTab = screen.getByRole("tab", { name: "Active 5" });
+      const activeTab = screen.getByRole("link", { name: "Active 5" });
       expect(activeTab).toHaveAttribute("aria-current", "page");
     });
 
@@ -337,7 +377,7 @@ describe("FilterTabs", () => {
         />,
       );
 
-      const allTab = screen.getByRole("tab", { name: /all/i });
+      const allTab = screen.getByRole("link", { name: /all/i });
       expect(allTab).toHaveAttribute("href", "/all");
     });
   });
@@ -426,7 +466,7 @@ describe("FilterTabs", () => {
       );
 
       const scrollContainer = container.querySelector(
-        '[role="tablist"]',
+        '[role="group"]',
       ) as HTMLElement;
 
       Object.defineProperty(scrollContainer, "scrollLeft", { value: 100 });
@@ -456,18 +496,18 @@ describe("FilterTabs", () => {
     it("should have proper ARIA roles", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
 
-      expect(screen.getByRole("tablist")).toBeInTheDocument();
-      expect(screen.getAllByRole("tab")).toHaveLength(4);
+      expect(screen.getByRole("group")).toBeInTheDocument();
+      expect(screen.getAllByRole("button")).toHaveLength(4);
     });
 
-    it("should have proper aria-selected attributes", () => {
+    it("should have proper aria-pressed attributes", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="active" />);
 
-      const activeTab = screen.getByRole("tab", { name: "Active 5" });
-      const inactiveTab = screen.getByRole("tab", { name: "All 10" });
+      const activeTab = screen.getByRole("button", { name: "Active 5" });
+      const inactiveTab = screen.getByRole("button", { name: "All 10" });
 
-      expect(activeTab).toHaveAttribute("aria-selected", "true");
-      expect(inactiveTab).toHaveAttribute("aria-selected", "false");
+      expect(activeTab).toHaveAttribute("aria-pressed", "true");
+      expect(inactiveTab).toHaveAttribute("aria-pressed", "false");
     });
 
     it("should be keyboard navigable", async () => {
@@ -475,14 +515,14 @@ describe("FilterTabs", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
 
       await user.tab();
-      const activeTab = screen.getByRole("tab", { name: /all/i });
+      const activeTab = screen.getByRole("button", { name: /all/i });
       expect(activeTab).toHaveFocus();
     });
 
     it("focus-visible ring uses jersey-deep for keyboard users", () => {
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
 
-      const tab = screen.getByRole("tab", { name: /all/i });
+      const tab = screen.getByRole("button", { name: /all/i });
       expect(tab.className).toContain("focus-visible:ring-2");
       expect(tab.className).toContain("focus-visible:ring-jersey-deep");
     });

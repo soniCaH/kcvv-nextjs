@@ -5,20 +5,23 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { clubToday, toDisplayZone } from "@/lib/utils/dates";
 import { trackEvent } from "@/lib/analytics/track-event";
-import { EmptyState } from "@/components/design-system";
+import {
+  EmptyState,
+  FilterTabs,
+  type FilterTab,
+} from "@/components/design-system";
 import {
   filteredEmptyBody,
   pendingEmptyBody,
 } from "@/lib/utils/empty-state-copy";
+import {
+  EVENT_TYPE_TABS,
+  EVENT_TYPE_ORDER,
+} from "@/components/event/event-type-style";
 import { CalendarMonth } from "../CalendarMonth";
 import { CalendarWeek } from "../CalendarWeek";
 import { CalendarAgenda } from "../CalendarAgenda";
 import { CalendarSubscribePanel } from "../CalendarSubscribePanel";
-import {
-  KalenderFilterBar,
-  isKalenderFilterValue,
-  type KalenderFilterValue,
-} from "../KalenderFilterBar";
 import {
   formatMonthNavLabel,
   formatWeekRangeLabel,
@@ -28,7 +31,47 @@ import type {
   CalendarMatch,
   CalendarEvent,
   CalendarTeamInfo,
+  KalenderFilterValue,
 } from "@/app/(main)/kalender/utils";
+
+/**
+ * The by-type filter row (#1992, absorbed into `<FilterTabs>` by #2429/#2564
+ * — replaces the deleted bespoke `KalenderFilterBar`). `EVENT_TYPE_TABS` +
+ * `EVENT_TYPE_ORDER` are the shared source (`event-type-style.ts`, #2564
+ * review item 1) also consumed by `/evenementen`'s `EventsBrowser` — one
+ * definition of each event-type chip's colour, not two kept in sync by
+ * hand. `Wedstrijden` (matches) is this row's own addition, carrying the
+ * owner-locked `card-red` fill (#1992).
+ */
+const KALENDER_FILTER_TABS: FilterTab[] = [
+  { value: "all", label: "Alles" },
+  {
+    value: "Wedstrijden",
+    label: "Wedstrijden",
+    color: { border: "border-card-red", fill: "bg-card-red text-cream" },
+  },
+  ...EVENT_TYPE_ORDER.map((type) => EVENT_TYPE_TABS[type]),
+];
+
+/** Every valid `?type=` value, in render order — the single source of truth
+ *  for validating the URL param (an unknown value falls back to "all").
+ *  Derived from `KALENDER_FILTER_TABS` itself (#2564 review item 10) so a
+ *  new chip can't be added to the row and forgotten here — the failure mode
+ *  that shipped a chip whose own deep link silently fell back to "all". The
+ *  only consumer is this component, so it lives here rather than in the
+ *  route's `utils.ts` (which otherwise has no reason to import a
+ *  client-side URL-parsing concern). */
+const KALENDER_FILTER_VALUES: readonly KalenderFilterValue[] =
+  KALENDER_FILTER_TABS.map((tab) => tab.value as KalenderFilterValue);
+
+function isKalenderFilterValue(
+  value: string | null,
+): value is KalenderFilterValue {
+  return (
+    value !== null &&
+    (KALENDER_FILTER_VALUES as readonly string[]).includes(value)
+  );
+}
 
 export interface CalendarWidgetProps {
   /**
@@ -194,7 +237,13 @@ export function CalendarWidget({ feed, teams, today }: CalendarWidgetProps) {
   return (
     <div className="space-y-4">
       {/* By-type filter chips (the row doubles as the colour legend) */}
-      <KalenderFilterBar selected={activeTypeFilter} onSelect={setType} />
+      <FilterTabs
+        tabs={KALENDER_FILTER_TABS}
+        activeTab={activeTypeFilter}
+        onChange={(value) => setType(value as KalenderFilterValue)}
+        showCounts={false}
+        ariaLabel="Filter kalender op type"
+      />
 
       {/* Paper/ink panel shell */}
       <div className="border-ink bg-cream shadow-paper-md border-2">

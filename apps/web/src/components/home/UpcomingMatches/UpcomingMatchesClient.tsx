@@ -139,7 +139,6 @@ export const UpcomingMatchesClient = ({
           tabs={tabs}
           activeTab={selectedTeam}
           onChange={handleFilter}
-          size="sm"
           ariaLabel="Filter wedstrijden op ploeg"
           className="mb-5"
         />

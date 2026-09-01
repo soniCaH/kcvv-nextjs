@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useSyncExternalStore } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { HulpFinder } from "./HulpFinder";
 import { FINDER_FIXTURE_PATHS } from "./__fixtures__/paths.fixture";
@@ -6,11 +7,71 @@ import { trackEvent } from "@/lib/analytics/track-event";
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
-const mockReplace = vi.fn();
-let mockSearchParams = new URLSearchParams();
+// `category` is purely URL-derived (#2564 review item 5), so a mocked
+// `push`/`replace` that doesn't ALSO update what `useSearchParams` returns —
+// and notify React of it — would leave every "click a category chip, see it
+// take effect" test asserting against stale params. This tiny store mirrors
+// real Next.js: pushing/replacing updates the params AND triggers a
+// re-render in every mounted `useSearchParams()` consumer, exactly the way
+// the real router does after a client-side navigation.
+const searchParamsStore = vi.hoisted(() => {
+  let current = new URLSearchParams();
+  const listeners = new Set<() => void>();
+  return {
+    get: () => current,
+    set: (next: URLSearchParams) => {
+      current = next;
+      listeners.forEach((listener) => listener());
+    },
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
+});
+
+function paramsFromUrl(url: string): URLSearchParams {
+  const query = url.split("?")[1]?.split("#")[0] ?? "";
+  return new URLSearchParams(query);
+}
+
+function hashFromUrl(url: string): string {
+  const hashIndex = url.indexOf("#");
+  return hashIndex === -1 ? "" : url.slice(hashIndex);
+}
+
+// `pushParam` (the component under test) intentionally reads the LIVE
+// `window.location.search`, not `useSearchParams()`'s return value — that's
+// what lets the panel's `?member`/`?holder` deep-link (written via
+// `history.replaceState`, which `useSearchParams` never observes) survive a
+// filter change. A real Next.js app keeps `window.location` and
+// `useSearchParams()` in lockstep automatically; this mock has to do that
+// syncing by hand — search AND hash both — or a click that merges in a new
+// param would only see the ONE param it just set (dropping whatever else
+// `useSearchParams()` was reporting), and a dropped hash would wipe out
+// `reveal()`'s own `#<id>` on the very next chip click.
+function applyUrl(url: string) {
+  const params = paramsFromUrl(url);
+  searchParamsStore.set(params);
+  // Property assignment, not `history.replaceState` — happy-dom doesn't
+  // resolve a relative `history.replaceState` target against the test
+  // environment's default `about:blank` origin (it silently no-ops), but
+  // direct `location.search`/`.hash` assignment updates `window.location`
+  // reliably regardless of origin.
+  window.location.search = params.toString();
+  window.location.hash = hashFromUrl(url);
+}
+
+function setMockSearchParams(params: URLSearchParams) {
+  applyUrl(`/hulp?${params.toString()}`);
+}
+
+const mockPush = vi.fn((url: string) => applyUrl(url));
+const mockReplace = vi.fn((url: string) => applyUrl(url));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: mockPush,
     replace: mockReplace,
     prefetch: vi.fn(),
     back: vi.fn(),
@@ -18,7 +79,8 @@ vi.mock("next/navigation", () => ({
     refresh: vi.fn(),
   }),
   usePathname: () => "/hulp",
-  useSearchParams: () => mockSearchParams,
+  useSearchParams: () =>
+    useSyncExternalStore(searchParamsStore.subscribe, searchParamsStore.get),
 }));
 
 let mockPanel: {
@@ -55,14 +117,15 @@ const scrollIntoView = vi.fn();
 beforeEach(() => {
   Element.prototype.scrollIntoView = scrollIntoView;
   scrollIntoView.mockClear();
-  mockReplace.mockClear();
+  mockPush.mockClear();
   vi.mocked(trackEvent).mockClear();
   trackView.mockClear();
   trackContactClicked.mockClear();
   trackOrganigramLink.mockClear();
   trackStepLinkClicked.mockClear();
-  mockSearchParams = new URLSearchParams();
+  setMockSearchParams(new URLSearchParams());
   mockPanel = null;
+  window.location.hash = "";
 });
 
 const q = (re: RegExp) => screen.getByRole("button", { name: re });
@@ -152,7 +215,7 @@ describe("HulpFinder", () => {
   });
 
   it("shows a per-category empty state when the active audience empties a category", () => {
-    mockSearchParams = new URLSearchParams("audience=supporter");
+    setMockSearchParams(new URLSearchParams("audience=supporter"));
     render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
     // No medisch path is tagged 'supporter' → the category is empty for them.
     fireEvent.click(screen.getByRole("button", { name: "Medisch" }));
@@ -168,7 +231,7 @@ describe("HulpFinder", () => {
     // (`EmptyStateUndoTracker`, tested on its own) — this host's job is only
     // to supply `analyticsSource`/`analyticsFacet`, rendered as inert
     // `data-*` attributes.
-    mockSearchParams = new URLSearchParams("audience=supporter");
+    setMockSearchParams(new URLSearchParams("audience=supporter"));
     render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
     fireEvent.click(screen.getByRole("button", { name: "Medisch" }));
 
@@ -188,8 +251,8 @@ describe("HulpFinder", () => {
     // audience ("Speler"), not the generic "deze rol" (#2427 rule 5, #2562
     // review — the category branch already did this, the audience branch
     // hadn't). `audience` reads from the URL (`?audience=`), so it is seeded
-    // via `mockSearchParams`, matching the sibling audience test below.
-    mockSearchParams = new URLSearchParams("audience=speler");
+    // via `setMockSearchParams`, matching the sibling audience test below.
+    setMockSearchParams(new URLSearchParams("audience=speler"));
     const pathsWithoutSpelerRole = FINDER_FIXTURE_PATHS.filter(
       (p) => !p.role.includes("speler"),
     );
@@ -206,7 +269,7 @@ describe("HulpFinder", () => {
   });
 
   it("marks the audience undo with the hulp_audience source + active facet for the global analytics listener (#2719)", () => {
-    mockSearchParams = new URLSearchParams("audience=speler");
+    setMockSearchParams(new URLSearchParams("audience=speler"));
     const pathsWithoutSpelerRole = FINDER_FIXTURE_PATHS.filter(
       (p) => !p.role.includes("speler"),
     );
@@ -225,9 +288,11 @@ describe("HulpFinder", () => {
   it("the undo clears only the active audience, leaving an active category untouched", () => {
     // Both facets active at once: the audience branch still fires first
     // (it's checked before `category`), and its undo must clear audience
-    // only — router.replace never gains a category param because
-    // `setAudience` has no way to touch `category` state at all.
-    mockSearchParams = new URLSearchParams("audience=speler");
+    // only. `category` is now purely URL-derived (#2564 review item 5), so
+    // "untouched" means the pushed URL KEEPS `categorie=medisch` — dropping
+    // it would be exactly the clobber round-1 finding 2 was about. The one
+    // thing that must NOT reappear is `audience=`.
+    setMockSearchParams(new URLSearchParams("audience=speler"));
     const pathsWithoutSpelerRole = FINDER_FIXTURE_PATHS.filter(
       (p) => !p.role.includes("speler"),
     );
@@ -239,14 +304,13 @@ describe("HulpFinder", () => {
       screen.getByRole("button", { name: "Toon alle doelgroepen" }),
     );
 
-    // `audience` is gone from the replace URL; `setAudience` never touches
-    // `category`, so nothing category-related is added either.
-    expect(mockReplace).toHaveBeenCalledWith(
+    // `audience` is gone from the pushed URL; `categorie=medisch` survives.
+    expect(mockPush).toHaveBeenLastCalledWith(
       expect.not.stringContaining("audience="),
       { scroll: false },
     );
-    expect(mockReplace).toHaveBeenCalledWith(
-      expect.not.stringContaining("categor"),
+    expect(mockPush).toHaveBeenLastCalledWith(
+      expect.stringContaining("categorie=medisch"),
       { scroll: false },
     );
     // The category selection survives the undo click.
@@ -257,7 +321,7 @@ describe("HulpFinder", () => {
   });
 
   it("filters by the ?audience param (hero deep-link)", () => {
-    mockSearchParams = new URLSearchParams("audience=supporter");
+    setMockSearchParams(new URLSearchParams("audience=supporter"));
     render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
     expect(q(/ik wil sponsor worden/i)).toBeInTheDocument();
     expect(qMaybe(/hoe schrijf ik mijn kind in/i)).not.toBeInTheDocument();
@@ -266,9 +330,71 @@ describe("HulpFinder", () => {
   it("an audience chip writes the ?audience param", () => {
     render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
     fireEvent.click(screen.getByRole("button", { name: "Ouder" }));
-    expect(mockReplace).toHaveBeenCalledWith(
+    expect(mockPush).toHaveBeenCalledWith(
       expect.stringContaining("audience=ouder"),
       { scroll: false },
+    );
+  });
+
+  it("a category chip writes the ?categorie param", () => {
+    render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
+    fireEvent.click(screen.getByRole("button", { name: "Medisch" }));
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.stringContaining("categorie=medisch"),
+      { scroll: false },
+    );
+  });
+
+  it("seeds the active category from ?categorie= (e.g. after browser back)", () => {
+    setMockSearchParams(new URLSearchParams("categorie=medisch"));
+    render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
+    expect(screen.getByRole("button", { name: "Medisch" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(q(/mijn kind is geblesseerd/i)).toBeInTheDocument();
+  });
+
+  it("gains an explicit 'Alles' reset chip on the audience row (#2429/#2564)", () => {
+    setMockSearchParams(new URLSearchParams("audience=ouder"));
+    render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
+    // Both rows now carry an "Alles" chip.
+    expect(screen.getAllByRole("button", { name: "Alles" }).length).toBe(2);
+
+    // Re-pressing the already-active "Ouder" chip is a dedup no-op — the
+    // toggle-off-by-reclicking idiom is retired in favour of "Alles" as the
+    // one reset, matching every other absorbed row.
+    fireEvent.click(screen.getByRole("button", { name: "Ouder" }));
+    expect(mockPush).not.toHaveBeenCalled();
+
+    const allesButtons = screen.getAllByRole("button", { name: "Alles" });
+    fireEvent.click(allesButtons[0]!);
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.not.stringContaining("audience="),
+      { scroll: false },
+    );
+  });
+
+  it("keeps the #<slug> deep-linked category after an unrelated audience chip click (#2564 review finding 2)", () => {
+    // Reproduction: land on /hulp#<slug> (reveal() sets `category` locally,
+    // WITHOUT touching ?categorie=), then press an audience chip — an
+    // unrelated ?audience= URL push must not clobber the revealed category
+    // back to "Alles".
+    window.location.hash = "#blessure";
+    render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
+
+    expect(q(/mijn kind is geblesseerd/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Medisch" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Ouder" }));
+
+    expect(q(/mijn kind is geblesseerd/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Medisch" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
   });
 

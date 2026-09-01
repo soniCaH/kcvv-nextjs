@@ -12,6 +12,12 @@
  *
  * The filter chips, empty / filtered-to-zero states, and analytics live in the
  * `<EventsBrowser>` client shell; this server page only fetches the feed.
+ *
+ * No `<Suspense>` boundary around `<EventsBrowser>` — it reads its active
+ * facet from `window.location` on mount rather than `useSearchParams`
+ * (#2564 review item 2), so this whole page stays server-rendered/prerendered
+ * on this ISR route: the ticket list ships in the HTML, not a loading
+ * skeleton thrown away at hydration.
  */
 
 import { Effect } from "effect";

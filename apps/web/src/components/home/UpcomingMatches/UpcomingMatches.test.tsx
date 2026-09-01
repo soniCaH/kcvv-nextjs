@@ -18,7 +18,7 @@ vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 const rowLinks = () =>
   screen.getAllByRole("link", { name: /^(?!Volledige).*/i });
 
-const chip = (name: RegExp) => screen.getByRole("tab", { name });
+const chip = (name: RegExp) => screen.getByRole("button", { name });
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -159,7 +159,10 @@ describe("UpcomingMatches", () => {
   // the same position from week to week as fixtures come and go.
   it("renders one label-sorted chip per distinct team plus an Alles reset", () => {
     render(<UpcomingMatches matches={mockUpcomingTwelve} />);
-    const tabs = screen.getAllByRole("tab");
+    const filterGroup = screen.getByRole("group", {
+      name: /filter wedstrijden op ploeg/i,
+    });
+    const tabs = within(filterGroup).getAllByRole("button");
     expect(tabs.map((t) => t.textContent)).toEqual([
       "Alles12",
       "A-Ploeg6",
@@ -173,7 +176,7 @@ describe("UpcomingMatches", () => {
 
   it("hides the filter entirely when every match is the same team", () => {
     render(<UpcomingMatches matches={mockUpcomingSingleTeam} />);
-    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    expect(screen.queryByRole("group")).not.toBeInTheDocument();
   });
 
   it("narrows the visible rows to the selected team", async () => {

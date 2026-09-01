@@ -11,7 +11,11 @@
  * that never arrives.
  */
 
-import { PageContainer, TapedCardGrid } from "@/components/design-system";
+import {
+  PageContainer,
+  TapedCardGrid,
+  FilterTabsSkeleton,
+} from "@/components/design-system";
 import { PageHeroSkeleton } from "@/components/layout/PageHero";
 
 /** A flush-image card footprint — image atop a border-2 ink body. */
@@ -46,15 +50,17 @@ export default function NewsLoading() {
         <PageHeroSkeleton register="minimal" />
       </PageContainer>
 
-      {/* Sticky filter bar — mirrors the page's dark category-filter band. */}
+      {/* Sticky filter bar — mirrors the page's dark category-filter band.
+          The shared <FilterTabsSkeleton> (#2564 review items 3 + 4): the
+          real row dropped its `size="sm"` (~29px) chip for the one `md`
+          (~36px) size on absorption, and this skeleton — still drawing
+          `h-8` (32px) — used to reflow on every /nieuws load. */}
       <div className="bg-ink/95 sticky top-0 z-30 border-b border-white/10 py-3 backdrop-blur-sm">
-        <PageContainer
-          width="index"
-          className="flex gap-2 motion-safe:animate-pulse"
-        >
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="bg-cream/15 h-8 w-20" />
-          ))}
+        <PageContainer width="index">
+          <FilterTabsSkeleton
+            surface="inverse"
+            widths={["w-16", "w-20", "w-24", "w-20", "w-16"]}
+          />
         </PageContainer>
       </div>
 

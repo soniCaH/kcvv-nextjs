@@ -5,6 +5,7 @@ import {
   fireEvent,
   waitFor,
   cleanup,
+  act,
 } from "@testing-library/react";
 import type { ImageProps } from "next/image";
 import { NewsListingClient } from "./NewsListingClient";
@@ -48,6 +49,13 @@ const categories = [
 describe("NewsListingClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // `vi.spyOn(window.history, "pushState")` (used below) leaves a spy
+    // installed on the shared jsdom `window.history` instance across tests —
+    // `clearAllMocks` only resets call logs, not the wrapping itself, so a
+    // later test's spy would inherit an earlier test's already-recorded
+    // calls. Restore the real implementation between tests too.
+    vi.restoreAllMocks();
+    window.history.replaceState({}, "", "/nieuws");
   });
 
   const clickLoadMore = () =>
@@ -189,11 +197,11 @@ describe("NewsListingClient", () => {
       />,
     );
 
-    expect(screen.getByRole("tab", { name: "Alles" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Alles" })).toBeInTheDocument();
     expect(
-      screen.getByRole("tab", { name: "Eerste ploeg" }),
+      screen.getByRole("button", { name: "Eerste ploeg" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Jeugd" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Jeugd" })).toBeInTheDocument();
   });
 
   it("shows empty state when no articles match category", async () => {
@@ -209,7 +217,7 @@ describe("NewsListingClient", () => {
     );
 
     // Click a category tab
-    fireEvent.click(screen.getByRole("tab", { name: "Jeugd" }));
+    fireEvent.click(screen.getByRole("button", { name: "Jeugd" }));
 
     await waitFor(() => {
       expect(screen.getByText(/geen artikelen/i)).toBeInTheDocument();
@@ -235,7 +243,7 @@ describe("NewsListingClient", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "Jeugdwerking" }));
+    fireEvent.click(screen.getByRole("button", { name: "Jeugdwerking" }));
 
     await waitFor(() => {
       expect(
@@ -262,7 +270,7 @@ describe("NewsListingClient", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "Jeugd" }));
+    fireEvent.click(screen.getByRole("button", { name: "Jeugd" }));
     await waitFor(() => {
       expect(screen.getByText(/geen artikelen in jeugd/i)).toBeInTheDocument();
     });
@@ -356,7 +364,7 @@ describe("NewsListingClient", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "Jeugd" }));
+    fireEvent.click(screen.getByRole("button", { name: "Jeugd" }));
 
     await waitFor(() => {
       expect(
@@ -367,6 +375,99 @@ describe("NewsListingClient", () => {
     expect(
       screen.getAllByRole("heading", { name: /^Cat One\.?$/ }),
     ).toHaveLength(1);
+  });
+
+  it("writes ?categorie= via history.pushState (not router.push), adding a real history entry", async () => {
+    mockFetchArticles.mockResolvedValue({ items: [], hasMore: false });
+    const pushStateSpy = vi.spyOn(window.history, "pushState");
+
+    render(
+      <NewsListingClient
+        initialArticles={[]}
+        categories={categories}
+        hasMore={false}
+        fetchArticles={mockFetchArticles}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Jeugd" }));
+
+    await waitFor(() => {
+      expect(pushStateSpy).toHaveBeenCalledWith(
+        window.history.state,
+        "",
+        "/nieuws?categorie=Jeugd",
+      );
+    });
+    expect(window.location.search).toBe("?categorie=Jeugd");
+  });
+
+  it("fetches exactly once per category change — no server round-trip double-fetch (#2564 review finding 3)", async () => {
+    mockFetchArticles.mockResolvedValue({ items: [], hasMore: false });
+
+    render(
+      <NewsListingClient
+        initialArticles={[makeArticle({ id: "a1", title: "Article One" })]}
+        categories={categories}
+        hasMore={false}
+        fetchArticles={mockFetchArticles}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Jeugd" }));
+
+    await waitFor(() => {
+      expect(mockFetchArticles).toHaveBeenCalledTimes(1);
+    });
+    // A `router.push`-triggered server round-trip would show up as a second
+    // call shortly after — give it a beat, then confirm it never arrives.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(mockFetchArticles).toHaveBeenCalledTimes(1);
+  });
+
+  it("re-fetches the URL's category on browser back/forward (popstate) without pushing the URL again", async () => {
+    mockFetchArticles.mockResolvedValueOnce({
+      items: [makeArticle({ id: "j1", title: "Jeugd Article" })],
+      hasMore: false,
+    });
+
+    render(
+      <NewsListingClient
+        initialArticles={[makeArticle({ id: "a1", title: "Article One" })]}
+        categories={categories}
+        hasMore={false}
+        fetchArticles={mockFetchArticles}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Jeugd" }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { name: /^Jeugd Article\.?$/ }),
+      ).toBeInTheDocument(),
+    );
+
+    // Simulate what the browser itself does on a back press: move the URL,
+    // then fire `popstate` (jsdom/happy-dom don't do this from a real back
+    // button, since there's no real session history in a test).
+    mockFetchArticles.mockResolvedValueOnce({
+      items: [makeArticle({ id: "a2", title: "All Article" })],
+      hasMore: false,
+    });
+    window.history.pushState({}, "", "/nieuws");
+    const pushStateSpy = vi.spyOn(window.history, "pushState");
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { name: /^All Article\.?$/ }),
+      ).toBeInTheDocument(),
+    );
+    // Our own popstate handler must not push a second history entry on top
+    // of the browser's own back-navigation.
+    expect(pushStateSpy).not.toHaveBeenCalled();
   });
 
   it("shows loading indicator while fetching", async () => {

@@ -115,12 +115,12 @@ describe("SearchInterface", () => {
 
       // Wait for filters to appear
       await waitFor(() => {
-        expect(screen.getByRole("tablist")).toBeInTheDocument();
+        expect(screen.getByRole("group")).toBeInTheDocument();
       });
 
       // Article tab should be active
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
-      expect(articleTab).toHaveAttribute("aria-selected", "true");
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
+      expect(articleTab).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should respect URL params over initial props", async () => {
@@ -141,11 +141,11 @@ describe("SearchInterface", () => {
       expect(input).toHaveValue("url query");
 
       await waitFor(() => {
-        expect(screen.getByRole("tablist")).toBeInTheDocument();
+        expect(screen.getByRole("group")).toBeInTheDocument();
       });
 
-      const playerTab = screen.getByRole("tab", { name: /spelers/i });
-      expect(playerTab).toHaveAttribute("aria-selected", "true");
+      const playerTab = screen.getByRole("button", { name: /spelers/i });
+      expect(playerTab).toHaveAttribute("aria-pressed", "true");
     });
   });
 
@@ -209,11 +209,11 @@ describe("SearchInterface", () => {
 
       // Wait for search to complete and filters to appear
       await waitFor(() => {
-        expect(screen.getByRole("tablist")).toBeInTheDocument();
+        expect(screen.getByRole("group")).toBeInTheDocument();
       });
 
       // Click article filter
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
       expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test&type=article");
@@ -540,10 +540,10 @@ describe("SearchInterface", () => {
       render(<SearchInterface />);
 
       await waitFor(() => {
-        expect(screen.getByRole("tablist")).toBeInTheDocument();
+        expect(screen.getByRole("group")).toBeInTheDocument();
       });
 
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
       expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test&type=article");
@@ -562,12 +562,12 @@ describe("SearchInterface", () => {
       render(<SearchInterface />);
 
       await waitFor(() => {
-        expect(screen.getByRole("tablist")).toBeInTheDocument();
+        expect(screen.getByRole("group")).toBeInTheDocument();
       });
 
       expect(fetchMock).toHaveBeenCalledTimes(1);
 
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
       // Should still only have 1 fetch call (no refetch)
@@ -588,10 +588,10 @@ describe("SearchInterface", () => {
       render(<SearchInterface />);
 
       await waitFor(() => {
-        expect(screen.getByRole("tablist")).toBeInTheDocument();
+        expect(screen.getByRole("group")).toBeInTheDocument();
       });
 
-      const allTab = screen.getByRole("tab", { name: /alles/i });
+      const allTab = screen.getByRole("button", { name: /alles/i });
       await user.click(allTab);
 
       expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test");
@@ -627,11 +627,11 @@ describe("SearchInterface", () => {
 
       // Should initialize filter with URL type
       await waitFor(() => {
-        expect(screen.getByRole("tablist")).toBeInTheDocument();
+        expect(screen.getByRole("group")).toBeInTheDocument();
       });
 
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
-      expect(articleTab).toHaveAttribute("aria-selected", "true");
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
+      expect(articleTab).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should validate type param from URL", async () => {
@@ -647,12 +647,12 @@ describe("SearchInterface", () => {
       render(<SearchInterface />);
 
       await waitFor(() => {
-        expect(screen.getByRole("tablist")).toBeInTheDocument();
+        expect(screen.getByRole("group")).toBeInTheDocument();
       });
 
       // Should default to 'all' for invalid type
-      const allTab = screen.getByRole("tab", { name: /alles/i });
-      expect(allTab).toHaveAttribute("aria-selected", "true");
+      const allTab = screen.getByRole("button", { name: /alles/i });
+      expect(allTab).toHaveAttribute("aria-pressed", "true");
     });
   });
 
@@ -818,7 +818,7 @@ describe("SearchInterface", () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByRole("tablist")).toBeInTheDocument();
+        expect(screen.getByRole("group")).toBeInTheDocument();
       });
     });
 
@@ -840,12 +840,12 @@ describe("SearchInterface", () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByRole("tablist")).toBeInTheDocument();
+        expect(screen.getByRole("group")).toBeInTheDocument();
       });
 
       // Verify total count is displayed on the "Alles" tab
-      const tablist = screen.getByRole("tablist");
-      const allesTab = within(tablist).getByRole("tab", { name: /alles/i });
+      const tablist = screen.getByRole("group");
+      const allesTab = within(tablist).getByRole("button", { name: /alles/i });
       expect(
         within(allesTab).getByText(mockResponse.count.toString()),
       ).toBeInTheDocument();
@@ -970,7 +970,7 @@ describe("SearchInterface", () => {
       );
 
       // 6. Verify filters are shown
-      expect(screen.getByRole("tablist")).toBeInTheDocument();
+      expect(screen.getByRole("group")).toBeInTheDocument();
     });
 
     it("should handle search, filter, then new search", async () => {
@@ -992,11 +992,11 @@ describe("SearchInterface", () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByRole("tablist")).toBeInTheDocument();
+        expect(screen.getByRole("group")).toBeInTheDocument();
       });
 
       // Change filter
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
       expect(mockPush).toHaveBeenCalledWith("/zoeken?q=first&type=article");

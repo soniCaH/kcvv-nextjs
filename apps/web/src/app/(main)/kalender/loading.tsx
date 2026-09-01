@@ -11,7 +11,7 @@
  */
 
 import { PageHero } from "@/components/layout/PageHero";
-import { PageContainer } from "@/components/design-system";
+import { PageContainer, FilterTabsSkeleton } from "@/components/design-system";
 
 export default function CalendarLoading() {
   return (
@@ -28,20 +28,16 @@ export default function CalendarLoading() {
       <PageContainer width="index" className="py-10">
         {/* Matches CalendarWidget's root <div className="space-y-4"> */}
         <div className="space-y-4">
-          {/* Type filter chips — square placeholders matching KalenderFilterBar
-              (Alles · Wedstrijden · Clubevent · Supportersactiviteit ·
-              Jeugdwerking · Andere); square corners per #2239 KAL-1 */}
-          <div
-            className="flex flex-wrap gap-2"
-            data-testid="calendar-skeleton-filter-tabs"
-          >
-            {["w-16", "w-28", "w-24", "w-44", "w-28", "w-20"].map((w, i) => (
-              <div
-                key={i}
-                className={`${w} border-paper-edge bg-cream-soft h-[32px] rounded-none border-2 motion-safe:animate-pulse`}
-                data-testid="skeleton-pill"
-              />
-            ))}
+          {/* Type filter chips (Alles · Wedstrijden · Clubevent ·
+              Supportersactiviteit · Jeugdwerking · Andere) — the shared
+              <FilterTabsSkeleton> (#2564 review item 4), so this can't drift
+              from the real row's shape the way the six hand-drawn versions
+              of it did. */}
+          <div data-testid="calendar-skeleton-filter-tabs">
+            <FilterTabsSkeleton
+              count={6}
+              widths={["w-16", "w-28", "w-24", "w-44", "w-28", "w-20"]}
+            />
           </div>
 
           {/* Paper/ink panel */}
