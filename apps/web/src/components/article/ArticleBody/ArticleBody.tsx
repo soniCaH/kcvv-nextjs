@@ -12,13 +12,9 @@ import {
   X,
 } from "@/lib/icons.redesign";
 import type { ReactNode } from "react";
-import { BodyQuote } from "@/components/design-system/BodyQuote";
 import { DropCapParagraph } from "@/components/design-system/DropCapParagraph";
 import { EndMark } from "@/components/design-system/EndMark";
-import {
-  PullQuote,
-  type PullQuoteTone,
-} from "@/components/design-system/PullQuote";
+import { PullQuote } from "@/components/design-system/PullQuote";
 import { QASectionDivider } from "@/components/design-system/QASectionDivider";
 import { SubjectAvatar } from "@/components/design-system/SubjectAvatar";
 import { TapedFigure } from "@/components/design-system/TapedFigure";
@@ -46,6 +42,12 @@ import {
   type VideoBlockValue,
 } from "@/components/article/VideoBlock";
 import { HtmlTableBlock } from "@/components/article/blocks/HtmlTableBlock";
+import { renderTextWithEmphasis } from "@/lib/portable-text/renderTextWithEmphasis";
+import type { PortableTextBlockLike } from "@/lib/portable-text/findPullquoteText";
+import {
+  segmentArticleBody,
+  type ArticleBodySegment,
+} from "@/lib/portable-text/segmentArticleBody";
 import { cn } from "@/lib/utils/cn";
 
 /**
@@ -58,6 +60,8 @@ import { cn } from "@/lib/utils/cn";
  *   - `accent` mark renders italic + jersey-deep (5.A.1).
  *   - `h2` block delegates to <QASectionDivider> for the section-break
  *     treatment (5.d3 lock).
+ *   - `blockquote` style block renders <PullQuote> as the full taped card
+ *     — the only quote object on the site (#2566, decision #2515).
  *   - `pullQuote` block renders <PullQuote> with a <SubjectAvatar
  *     scale="attribution"> in the attribution slot (5.A.2 + 5.d2 lock).
  *   - `transferFact` runs renders as a 1-up / 2-up grid via the
@@ -117,7 +121,6 @@ interface PullQuoteBlock {
   _type: "pullQuote";
   _key?: string;
   body?: string;
-  tone?: PullQuoteTone;
   respondentKey?: string;
   emphasis?: string;
   externalName?: string;
@@ -172,19 +175,6 @@ interface InternalLinkReference {
 interface InternalLinkValue {
   reference?: InternalLinkReference;
 }
-
-type PortableTextSpanLike = {
-  _type?: string;
-  text?: string;
-  marks?: string[];
-};
-
-type PortableTextBlockLike = {
-  _type?: string;
-  style?: string;
-  listItem?: string;
-  children?: PortableTextSpanLike[];
-};
 
 function isNormalParagraph(block: PortableTextBlock): boolean {
   if (block._type !== "block") return false;
@@ -285,53 +275,6 @@ function socialBrandFor(
   return null;
 }
 
-/**
- * Segment the body content into PT-block runs and consecutive-
- * transferFact groups, per the 5.d-tra adjacency rule.
- */
-type ArticleBodySegment =
-  | { kind: "pt"; key: string; blocks: PortableTextBlock[] }
-  | { kind: "transfer-facts"; key: string; facts: TransferFactValue[] };
-
-function buildSegments(blocks: PortableTextBlock[]): ArticleBodySegment[] {
-  const segments: ArticleBodySegment[] = [];
-  let ptBuffer: PortableTextBlock[] = [];
-  let tfBuffer: TransferFactValue[] = [];
-  let idx = 0;
-
-  const flushPt = () => {
-    if (ptBuffer.length > 0) {
-      segments.push({ kind: "pt", key: `pt-${idx++}`, blocks: ptBuffer });
-      ptBuffer = [];
-    }
-  };
-  const flushTf = () => {
-    if (tfBuffer.length > 0) {
-      segments.push({
-        kind: "transfer-facts",
-        key: `tf-${idx++}`,
-        facts: tfBuffer,
-      });
-      tfBuffer = [];
-    }
-  };
-
-  for (const block of blocks) {
-    if (block._type === "transferFact") {
-      const fact = block as TransferFactValue;
-      if (!fact.playerName?.trim()) continue;
-      flushPt();
-      tfBuffer.push(fact);
-      continue;
-    }
-    flushTf();
-    ptBuffer.push(block);
-  }
-  flushPt();
-  flushTf();
-  return segments;
-}
-
 function TransferFactGroup({ facts }: { facts: TransferFactValue[] }) {
   if (facts.length === 0) return null;
   if (facts.length === 1) {
@@ -363,17 +306,96 @@ function TransferFactGroup({ facts }: { facts: TransferFactValue[] }) {
   );
 }
 
+// The one shared spacer wrapper for a card that stands alone in the body
+// flow — a `pullQuote` block's card and a blockquote-group's card are the
+// same object rendered from two different authoring paths (#2515 rule 2),
+// so they share one wrapper. Keeps the pre-existing `data-pullquote-spacer`
+// attribute name.
+function QuoteSpacer({ children }: { children: ReactNode }) {
+  return (
+    <div data-pullquote-spacer="true" className="my-10">
+      {children}
+    </div>
+  );
+}
+
+// One source `blockquote`-style block becomes one `<p>` inside a merged
+// blockquote-group card. Hoisted to module scope (not a closure allocated
+// fresh per group per render) so `@portabletext/react` sees the same
+// component reference across renders.
+function BlockquoteGroupParagraph({ children }: { children?: ReactNode }) {
+  return <p className="mb-3 last:mb-0">{children}</p>;
+}
+
+/**
+ * Components for rendering the merged children of a blockquote group —
+ * identical to the outer `components` (so accent/link marks inside a quote
+ * still resolve) except `block.blockquote` itself renders
+ * `<BlockquoteGroupParagraph>` instead of recursing into another
+ * `<PullQuote>`. Built from `ARTICLE_BLOCK_STYLE_HANDLERS` (a concretely
+ * typed record) rather than spreading `base.block` — `PortableTextComponents["block"]`
+ * is a union of that record shape and a single catch-all component
+ * function, and spreading the union directly would either fail to compile
+ * or (behind a cast) silently accept the single-component member and drop
+ * every other style handler inside a quote.
+ */
+function buildBlockquoteGroupComponents(
+  base: PortableTextComponents,
+): PortableTextComponents {
+  return {
+    ...base,
+    block: {
+      ...ARTICLE_BLOCK_STYLE_HANDLERS,
+      blockquote: BlockquoteGroupParagraph,
+    },
+  };
+}
+
+function BlockquoteGroup({
+  blocks,
+  components,
+}: {
+  blocks: PortableTextBlock[];
+  components: PortableTextComponents;
+}) {
+  return (
+    <QuoteSpacer>
+      {/* Editor blockquotes carry no structured attribution — the null
+          path. `attribution={undefined}` is required by PullQuoteProps'
+          attribution-XOR-labels union. */}
+      <PullQuote attribution={undefined}>
+        <PortableText value={blocks} components={components} />
+      </PullQuote>
+    </QuoteSpacer>
+  );
+}
+
 function renderSegments(
   segments: ArticleBodySegment[],
   components: PortableTextComponents,
+  blockquoteGroupComponents: PortableTextComponents,
 ): ReactNode {
-  return segments.map((seg) =>
-    seg.kind === "pt" ? (
-      <PortableText key={seg.key} value={seg.blocks} components={components} />
-    ) : (
-      <TransferFactGroup key={seg.key} facts={seg.facts} />
-    ),
-  );
+  return segments.map((seg) => {
+    if (seg.kind === "pt") {
+      return (
+        <PortableText
+          key={seg.key}
+          value={seg.blocks}
+          components={components}
+        />
+      );
+    }
+    if (seg.kind === "transfer-facts") {
+      return <TransferFactGroup key={seg.key} facts={seg.facts} />;
+    }
+    return (
+      <BlockquoteGroup
+        key={seg.key}
+        blocks={seg.blocks}
+        components={blockquoteGroupComponents}
+      />
+    );
+  });
 }
 
 function renderPullQuote(
@@ -385,20 +407,21 @@ function renderPullQuote(
 
   const respondent = resolvePairRespondent(value.respondentKey, subjects);
   const resolved = resolveSubject(respondent);
-  const emphasis = value.emphasis ? { text: value.emphasis } : undefined;
-  const tone = value.tone ?? "cream";
+  // `emphasis` moved off <PullQuote> (design-system stays presentational —
+  // inline emphasis is a Portable Text concern) — ArticleBody, which
+  // already knows the phrase and already builds node trees, resolves it
+  // to a ReactNode here and hands it over as `children` directly.
+  const quoteBody = renderTextWithEmphasis(body, value.emphasis?.trim());
 
   let inner: ReactNode;
 
   if (resolved && respondent) {
     inner = (
       <PullQuote
-        tone={tone}
         attribution={{
           name: resolved.name,
           role: resolved.role || undefined,
         }}
-        emphasis={emphasis}
         avatarSlot={
           <SubjectAvatar
             firstName={deriveSubjectFirstName(respondent, resolved.name)}
@@ -407,35 +430,30 @@ function renderPullQuote(
           />
         }
       >
-        {body}
+        {quoteBody}
       </PullQuote>
     );
   } else {
     const externalName = value.externalName?.trim();
     inner = externalName ? (
       <PullQuote
-        tone={tone}
         attribution={{
           name: externalName,
           role: value.externalRole?.trim() || undefined,
           source: value.externalSource?.trim() || undefined,
         }}
-        emphasis={emphasis}
       >
-        {body}
+        {quoteBody}
       </PullQuote>
     ) : (
-      <PullQuote tone={tone} attribution={{ name: "" }} emphasis={emphasis}>
-        {body}
-      </PullQuote>
+      // No resolvable speaker and no external name — a nameless quote.
+      // `attribution` is omitted entirely; <PullQuote> skips the row
+      // rather than rendering an empty one (#2515 rule 1).
+      <PullQuote attribution={undefined}>{quoteBody}</PullQuote>
     );
   }
 
-  return (
-    <div data-pullquote-spacer="true" className="my-10">
-      {inner}
-    </div>
-  );
+  return <QuoteSpacer>{inner}</QuoteSpacer>;
 }
 
 /**
@@ -564,6 +582,50 @@ interface ComponentsBuildArgs {
   videoBlockPositions: Map<string, number>;
 }
 
+// h2–h6 are static — none of them close over `subjects` / `articleSlug` /
+// `videoBlockPositions` — so they're hoisted out of `buildComponents` to a
+// module-level constant rather than reallocated every render. Concretely
+// typed (not the wide `PortableTextComponents["block"]` union) so
+// `buildBlockquoteGroupComponents` can spread it directly with no cast.
+//
+// `blockquote` is deliberately absent: `segmentArticleBody` diverts every
+// blockquote-style block (single or consecutive) into a `blockquote-group`
+// segment before any block ever reaches this map (see `BlockquoteGroup`),
+// so a `blockquote` entry here would be permanently unreachable dead code.
+// The serializer-completeness guard (#2278) models this the same way it
+// already models `transferFact` — a `SEGMENTER_HANDLED` style, not a decoy
+// handler — see `ArticleBody.serializer-completeness.test.tsx`.
+const ARTICLE_BLOCK_STYLE_HANDLERS = {
+  h2: ({ value }: { value?: PortableTextBlock }) => {
+    if (!value) return null;
+    return <QASectionDivider title={[value]} />;
+  },
+  // h3–h6 are plain in-body subheadings. Preflight zeroes heading size,
+  // weight and margins, so each level restates its own scale — without
+  // this they'd render as flat body text (same failure mode as lists).
+  // h1 is not selectable in the schema: the article title is the only <h1>.
+  h3: ({ children }: { children?: ReactNode }) => (
+    <h3 className="font-display text-ink mt-10 mb-3 text-2xl font-black">
+      {children}
+    </h3>
+  ),
+  h4: ({ children }: { children?: ReactNode }) => (
+    <h4 className="font-display text-ink mt-8 mb-2 text-xl font-black">
+      {children}
+    </h4>
+  ),
+  h5: ({ children }: { children?: ReactNode }) => (
+    <h5 className="font-display text-ink mt-6 mb-2 text-lg font-bold">
+      {children}
+    </h5>
+  ),
+  h6: ({ children }: { children?: ReactNode }) => (
+    <h6 className="text-ink mt-6 mb-2 font-mono text-sm font-semibold tracking-[0.14em] uppercase">
+      {children}
+    </h6>
+  ),
+};
+
 /**
  * Builds the Portable Text serializer map for the body. Exported so the
  * serializer-completeness guard (#2278) can assert every `article.body` /
@@ -577,37 +639,7 @@ export function buildComponents({
   videoBlockPositions,
 }: ComponentsBuildArgs): PortableTextComponents {
   return {
-    block: {
-      h2: ({ value }: { value?: PortableTextBlock }) => {
-        if (!value) return null;
-        return <QASectionDivider title={[value]} />;
-      },
-      // h3–h6 are plain in-body subheadings. Preflight zeroes heading size,
-      // weight and margins, so each level restates its own scale — without
-      // this they'd render as flat body text (same failure mode as lists).
-      // h1 is not selectable in the schema: the article title is the only <h1>.
-      h3: ({ children }) => (
-        <h3 className="font-display text-ink mt-10 mb-3 text-2xl font-black">
-          {children}
-        </h3>
-      ),
-      h4: ({ children }) => (
-        <h4 className="font-display text-ink mt-8 mb-2 text-xl font-black">
-          {children}
-        </h4>
-      ),
-      h5: ({ children }) => (
-        <h5 className="font-display text-ink mt-6 mb-2 text-lg font-bold">
-          {children}
-        </h5>
-      ),
-      h6: ({ children }) => (
-        <h6 className="text-ink mt-6 mb-2 font-mono text-sm font-semibold tracking-[0.14em] uppercase">
-          {children}
-        </h6>
-      ),
-      blockquote: ({ children }) => <BodyQuote>{children}</BodyQuote>,
-    },
+    block: ARTICLE_BLOCK_STYLE_HANDLERS,
     // Tailwind v4 Preflight strips list-style + padding from ul/ol; the body is
     // not wrapped in `prose`, so lists need explicit markers/indent here or they
     // render as flat text.
@@ -780,6 +812,10 @@ export function ArticleBody({
     articleSlug,
     videoBlockPositions,
   });
+  // Derived once per render here (not once per blockquote-group per
+  // render, inside BlockquoteGroup) — it depends only on `components`,
+  // which is itself already built once per render.
+  const blockquoteGroupComponents = buildBlockquoteGroupComponents(components);
   const hasRenderableBody = content.some(blockHasRenderableOutput);
 
   return (
@@ -792,13 +828,21 @@ export function ArticleBody({
         style={{ maxWidth: "var(--container-prose)" }}
       >
         {beforeDropCap.length > 0
-          ? renderSegments(buildSegments(beforeDropCap), components)
+          ? renderSegments(
+              segmentArticleBody(beforeDropCap),
+              components,
+              blockquoteGroupComponents,
+            )
           : null}
         {hasDropCap && dropCapText.length > 0 ? (
           <DropCapParagraph tone="ink">{dropCapText}</DropCapParagraph>
         ) : null}
         {afterDropCap.length > 0
-          ? renderSegments(buildSegments(afterDropCap), components)
+          ? renderSegments(
+              segmentArticleBody(afterDropCap),
+              components,
+              blockquoteGroupComponents,
+            )
           : null}
         {hasRenderableBody ? (
           <EndMark label={endMarkLabelFor(articleType)} />

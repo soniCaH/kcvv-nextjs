@@ -2,7 +2,7 @@
  * <QuotesBlock> — Phase 6.A player-profile quote interlude.
  *
  * Renders the SECOND `pullquote`-marked run in `player.bio` as a single
- * full-width `<PullQuote tone="ink">` card (6.d8 lock — Variant C; §5.3's
+ * full-width `<PullQuote placement="section">` card (6.d8 lock — Variant C; §5.3's
  * ink + cream pair is rejected). The dark-band aesthetic parked at 6.d4
  * (StatsStrip drop) lives here as the page's strongest punctuation.
  *
@@ -60,7 +60,7 @@ export function QuotesBlock({ bio, playerName, className }: QuotesBlockProps) {
           In zijn eigen woorden.
         </EditorialHeading>
         <PullQuote
-          tone="ink"
+          placement="section"
           attribution={{ name: playerName ?? "" }}
           rotation={-0.5}
         >

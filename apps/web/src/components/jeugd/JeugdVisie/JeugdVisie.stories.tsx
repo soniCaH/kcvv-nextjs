@@ -10,7 +10,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'The `/jeugd` filosofie/visie block (Phase 7 / 7j0b). Carries the `#visie` anchor. A mono section kicker "Onze jeugdvisie" above a cream-soft `<TapedCard>` pairing a jersey-deep `<QuoteMark>` with the visie statement (italic display) and a mono tag row. Replaces the retired green `<MissionBanner>`.',
+          'The `/jeugd` filosofie/visie block (Phase 7 / 7j0b). Carries the `#visie` anchor. A mono section kicker "Onze jeugdvisie" above a cream `<PullQuote>` (default flow placement) carrying the visie statement and a mono tag row in the `labels` slot (#2566).',
       },
     },
   },

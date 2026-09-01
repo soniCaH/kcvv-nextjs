@@ -198,7 +198,15 @@ export const QaBlock = ({ value, subjects = null }: QaBlockProps) => {
     }
 
     if (unit.kind === "key" || unit.kind === "quote") {
-      const tone = unit.kind === "key" ? "cream" : "ink";
+      // Position, not authorship, decides the card's tone (#2515 rule 5).
+      // "key" and "quote" units land as siblings in the same `rendered`
+      // array and render in one flex column alongside the standard QARow
+      // units — no unit here owns its own heading, and none sits beside
+      // running text in an aside. Both are in the flow, so both share the
+      // same (default) placement regardless of which authoring tag
+      // produced them; letting the tag pick "section" for one of them
+      // would be choosing a placement to reproduce a colour, the exact
+      // defect this ticket removes.
       const first = unit.pair.respondents?.[0];
       const body = flattenAnswerToString(first?.answer);
       if (body.length === 0) return;
@@ -212,7 +220,6 @@ export const QaBlock = ({ value, subjects = null }: QaBlockProps) => {
           rendered.push(
             <PullQuote
               key={unit.pair._key ?? `${unit.kind}-${i}`}
-              tone={tone}
               attribution={{
                 name: joinFirstNames(members.map((m) => m.firstName)),
                 role: UNANIMOUS_ROLE,
@@ -244,7 +251,6 @@ export const QaBlock = ({ value, subjects = null }: QaBlockProps) => {
       rendered.push(
         <PullQuote
           key={unit.pair._key ?? `${unit.kind}-${i}`}
-          tone={tone}
           attribution={{
             name: resolved.name,
             role: resolved.role || undefined,

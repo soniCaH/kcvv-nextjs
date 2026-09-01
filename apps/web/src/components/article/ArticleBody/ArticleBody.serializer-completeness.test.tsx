@@ -118,11 +118,19 @@ const styleValues = (of: OfMember[]): string[] => {
 };
 
 // `transferFact` is routed by ArticleBody's adjacency segmenter
-// (`buildSegments` → `<TransferFactGroup>`), NOT the Portable Text `types` map,
-// so it is legitimately absent from the serializer map. Verified to still
+// (`segmentArticleBody` → `<TransferFactGroup>`), NOT the Portable Text `types`
+// map, so it is legitimately absent from the serializer map. Verified to still
 // render via `<ArticleBody>` in its own test below, so the exclusion is not a
 // silent hole.
 const SEGMENTER_HANDLED = new Set(["transferFact"]);
+
+// Same shape as `SEGMENTER_HANDLED`, but for block *styles* rather than object
+// *types* — `blockquote` is routed by the same adjacency segmenter
+// (`segmentArticleBody` → `<BlockquoteGroup>`), not `components.block`, so a
+// `block.blockquote` entry would be permanently unreachable dead code (#2566
+// code review finding 7). Verified to still render via `<ArticleBody>` in its
+// own test below.
+const SEGMENTER_HANDLED_STYLES = new Set(["blockquote"]);
 
 const components = buildComponents({
   subjects: null,
@@ -181,7 +189,8 @@ describe.each([["article"], ["page"]])(
     it("every non-normal block style has a block serializer", () => {
       const block = (components.block ?? {}) as Record<string, unknown>;
       const missing = styleValues(of).filter(
-        (v) => v !== "normal" && !(v in block),
+        (v) =>
+          v !== "normal" && !SEGMENTER_HANDLED_STYLES.has(v) && !(v in block),
       );
       expect(missing).toEqual([]);
     });
@@ -251,6 +260,25 @@ describe("ArticleBody serializer completeness — render integration (#2278)", (
     expect(
       container.querySelector("[data-transfer-fact-group]"),
     ).not.toBeNull();
+  });
+
+  it("segmenter-handled blockquote style renders via ArticleBody (not dropped)", () => {
+    const { container } = render(
+      <ArticleBody
+        content={[
+          {
+            _type: "block",
+            _key: "bq",
+            style: "blockquote",
+            markDefs: [],
+            children: [
+              { _type: "span", _key: "bq-c", text: "Compagnie.", marks: [] },
+            ],
+          } as unknown as PortableTextBlock,
+        ]}
+      />,
+    );
+    expect(container.querySelector("[data-pull-quote-tone]")).not.toBeNull();
   });
 
   it("bullet + numbered lists render with visible markers (Preflight-safe)", () => {

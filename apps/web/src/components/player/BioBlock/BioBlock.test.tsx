@@ -153,6 +153,16 @@ describe("BioBlock", () => {
       const tone = card.querySelector("[data-pull-quote-tone]");
       expect(tone?.getAttribute("data-pull-quote-tone")).toBe("jersey");
     });
+
+    it("omits the attribution row entirely when playerName is absent — no phantom empty slot (#2515 rule 1)", () => {
+      render(<BioBlock bio={BIO_TWO_MARKS} />);
+      const card = screen.getByTestId("bioblock-pullquote");
+      const wrapper = card.querySelector("[data-pull-quote-tone]");
+      expect(wrapper).not.toBeNull();
+      // QuoteMark + blockquote only — no third (attribution) child, and no
+      // empty <span> consuming the flex gap under an unset name.
+      expect(wrapper?.children).toHaveLength(2);
+    });
   });
 
   describe("Bio with 1 marked span", () => {

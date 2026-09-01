@@ -3,14 +3,17 @@ import { describe, expect, it } from "vitest";
 import { PullQuote } from "./PullQuote";
 
 describe("PullQuote", () => {
-  it("renders the quoted body inside <q>", () => {
+  it("renders the quoted body inside <blockquote> (not <q> — #2515 rule 3)", () => {
     render(
       <PullQuote attribution={{ name: "Maxim" }}>
         Eindelijk weer een zege
       </PullQuote>,
     );
-    const q = screen.getByText("Eindelijk weer een zege").closest("q");
-    expect(q).not.toBeNull();
+    const quote = screen
+      .getByText("Eindelijk weer een zege")
+      .closest("blockquote");
+    expect(quote).not.toBeNull();
+    expect(document.querySelector("q")).toBeNull();
   });
 
   it("renders the attribution name", () => {
@@ -31,18 +34,89 @@ describe("PullQuote", () => {
     expect(screen.getByText("INTERVIEW")).toBeInTheDocument();
   });
 
-  it("default tone is cream", () => {
+  describe("state coverage — attribution / labels / null path (#2515 rule 1)", () => {
+    it("omits the attribution row entirely when attribution is absent", () => {
+      const { container } = render(
+        <PullQuote attribution={undefined}>x</PullQuote>,
+      );
+      expect(
+        container.querySelector('[data-pull-quote-name="display"]'),
+      ).toBeNull();
+      // No stray empty row — the flex column has exactly two children
+      // (QuoteMark + blockquote), never a phantom third slot.
+      const wrapper = container.querySelector("[data-pull-quote-tone]");
+      expect(wrapper?.children).toHaveLength(2);
+    });
+
+    it("renders the attribution row when attribution is present", () => {
+      const { container } = render(
+        <PullQuote attribution={{ name: "Maxim" }}>x</PullQuote>,
+      );
+      const wrapper = container.querySelector("[data-pull-quote-tone]");
+      expect(wrapper?.children).toHaveLength(3);
+      expect(screen.getByText("Maxim")).toBeInTheDocument();
+    });
+
+    it("renders a MonoLabelRow of context labels when labels are present and attribution is absent", () => {
+      render(
+        <PullQuote labels={[{ label: "PLEZIER" }, { label: "TECHNIEK" }]}>
+          x
+        </PullQuote>,
+      );
+      expect(screen.getByText("PLEZIER")).toBeInTheDocument();
+      expect(screen.getByText("TECHNIEK")).toBeInTheDocument();
+    });
+
+    it("renders nothing in the row slot when neither attribution nor labels are given — the null path", () => {
+      const { container } = render(
+        <PullQuote attribution={undefined}>x</PullQuote>,
+      );
+      expect(container.querySelector("[data-divider]")).toBeNull();
+      expect(container.querySelectorAll("span").length).toBeGreaterThan(0); // QuoteMark still renders
+    });
+
+    it("omits the attribution row when the name is blank — a caller's raw, possibly-empty value needs no ternary (code review finding 4)", () => {
+      const { container } = render(
+        <PullQuote attribution={{ name: "" }}>x</PullQuote>,
+      );
+      const wrapper = container.querySelector("[data-pull-quote-tone]");
+      expect(wrapper?.children).toHaveLength(2);
+    });
+
+    it("omits the attribution row when the name is whitespace-only", () => {
+      const { container } = render(
+        <PullQuote attribution={{ name: "   " }}>x</PullQuote>,
+      );
+      const wrapper = container.querySelector("[data-pull-quote-tone]");
+      expect(wrapper?.children).toHaveLength(2);
+    });
+
+    it("does not compile with both attribution and labels — enforced by the type checker, not a runtime warning (code review finding 3)", () => {
+      const element = (
+        // @ts-expect-error — attribution and labels are mutually exclusive.
+        <PullQuote attribution={{ name: "Maxim" }} labels={[{ label: "X" }]}>
+          x
+        </PullQuote>
+      );
+      expect(element).toBeTruthy();
+    });
+  });
+
+  it("default placement is flow → tone cream", () => {
     const { container } = render(
       <PullQuote attribution={{ name: "x" }}>x</PullQuote>,
     );
     expect(
       container.querySelector('[data-pull-quote-tone="cream"]'),
     ).not.toBeNull();
+    expect(
+      container.querySelector('[data-pull-quote-placement="flow"]'),
+    ).not.toBeNull();
   });
 
-  it("tone='ink' applies ink tone data attribute", () => {
+  it("placement='section' derives ink tone", () => {
     const { container } = render(
-      <PullQuote tone="ink" attribution={{ name: "x" }}>
+      <PullQuote placement="section" attribution={{ name: "x" }}>
         x
       </PullQuote>,
     );
@@ -51,9 +125,9 @@ describe("PullQuote", () => {
     ).not.toBeNull();
   });
 
-  it("tone='jersey' applies jersey tone data attribute", () => {
+  it("placement='aside' derives jersey tone", () => {
     const { container } = render(
-      <PullQuote tone="jersey" attribution={{ name: "x" }}>
+      <PullQuote placement="aside" attribution={{ name: "x" }}>
         x
       </PullQuote>,
     );
@@ -62,15 +136,13 @@ describe("PullQuote", () => {
     ).not.toBeNull();
   });
 
-  it("emphasis wraps the matched substring in <HighlighterStroke> (no font change)", () => {
-    const { container } = render(
-      <PullQuote attribution={{ name: "x" }} emphasis={{ text: "tribune" }}>
-        Een tribune die zingt is meer waard
+  it("renders non-string children (e.g. Portable Text marks already resolved by the caller) as-is", () => {
+    render(
+      <PullQuote attribution={{ name: "x" }}>
+        <span data-testid="rich-child">rich text</span>
       </PullQuote>,
     );
-    expect(container.querySelector("[data-highlighter-stroke]")).not.toBeNull();
-    // No <em> — the emphasis is the highlighter alone; font stays italic body.
-    expect(container.querySelector("em")).toBeNull();
+    expect(screen.getByTestId("rich-child")).toBeInTheDocument();
   });
 
   describe("avatarSlot layout (5.d2 lock)", () => {

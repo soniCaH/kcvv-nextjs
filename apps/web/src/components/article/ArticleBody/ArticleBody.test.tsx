@@ -361,7 +361,7 @@ describe("<ArticleBody>", () => {
     it("renders <PullQuote> with avatar slot when respondentKey resolves", () => {
       const content = [
         paragraph("First."),
-        pullQuoteBlock({ respondentKey: "subj-1", tone: "cream" }),
+        pullQuoteBlock({ respondentKey: "subj-1" }),
       ];
       const subjects = [
         {
@@ -432,15 +432,145 @@ describe("<ArticleBody>", () => {
       ).toBeNull();
     });
 
-    it("threads tone='ink' from the PT block through to <PullQuote>", () => {
+    it("stays in the default flow placement (cream) — the pullQuote block never carries a tone (decision #2515)", () => {
       const content = [
         paragraph("First."),
-        pullQuoteBlock({ externalName: "Coach", tone: "ink" }),
+        pullQuoteBlock({ externalName: "Coach" }),
       ];
       const { container } = render(<ArticleBody content={content} />);
       expect(
-        container.querySelector('[data-pull-quote-tone="ink"]'),
+        container.querySelector('[data-pull-quote-tone="cream"]'),
       ).not.toBeNull();
+      expect(
+        container.querySelector('[data-pull-quote-placement="flow"]'),
+      ).not.toBeNull();
+    });
+
+    it("omits the attribution row for a nameless quote — no resolved subject and no externalName (#2515 rule 1)", () => {
+      const content = [paragraph("First."), pullQuoteBlock({})];
+      const { container } = render(<ArticleBody content={content} />);
+      const wrapper = container.querySelector("[data-pull-quote-tone]");
+      expect(wrapper).not.toBeNull();
+      // QuoteMark + blockquote only — no third (attribution) child.
+      expect(wrapper?.children).toHaveLength(2);
+    });
+
+    it("resolves `emphasis` into a <HighlighterStroke>-wrapped body via renderTextWithEmphasis (code review finding 2)", () => {
+      const content = [
+        pullQuoteBlock({ externalName: "Coach", emphasis: "zingt" }),
+      ];
+      const { container } = render(<ArticleBody content={content} />);
+      const stroke = container.querySelector("[data-highlighter-stroke]");
+      expect(stroke).not.toBeNull();
+      expect(stroke?.textContent).toBe("zingt");
+      expect(container.querySelector("blockquote")?.textContent).toBe(
+        "Een tribune die zingt is meer waard dan welke aanwinst dan ook.",
+      );
+    });
+  });
+
+  describe("blockquote PT style serializer (#2566, decision #2515 rule 2)", () => {
+    function blockquoteBlock(text: string): PortableTextBlock {
+      return {
+        _type: "block",
+        _key: `bq-${Math.random().toString(36).slice(2, 8)}`,
+        style: "blockquote",
+        children: [{ _type: "span", _key: "bq-c", text, marks: [] }],
+        markDefs: [],
+      } as PortableTextBlock;
+    }
+
+    it("renders a CMS blockquote as the full <PullQuote> taped card, not the deleted <BodyQuote>", () => {
+      const content = [
+        paragraph("First."),
+        blockquoteBlock("Hier kan ik tonen wat ik in mij heb."),
+      ];
+      const { container } = render(<ArticleBody content={content} />);
+      expect(
+        screen.getByText("Hier kan ik tonen wat ik in mij heb."),
+      ).toBeInTheDocument();
+      expect(container.querySelector("[data-pull-quote-tone]")).not.toBeNull();
+      expect(container.querySelector("[data-body-quote]")).toBeNull();
+    });
+
+    it("renders the blockquote card with the default flow placement (cream), same register everywhere — rule 2, one register", () => {
+      const content = [blockquoteBlock("Compagnie.")];
+      const { container } = render(<ArticleBody content={content} />);
+      expect(
+        container.querySelector('[data-pull-quote-tone="cream"]'),
+      ).not.toBeNull();
+    });
+
+    it("omits the attribution row for a blockquote (editor blockquotes carry no structured attribution)", () => {
+      const content = [blockquoteBlock("Compagnie.")];
+      const { container } = render(<ArticleBody content={content} />);
+      const wrapper = container.querySelector("[data-pull-quote-tone]");
+      expect(wrapper?.children).toHaveLength(2);
+    });
+
+    it("groups consecutive blockquote blocks into ONE card, not one per block (code review finding 8)", () => {
+      // Reproduces the production shape of `2024-03-25-kopzorgen-het-voetbal`,
+      // whose editor pressed Enter between paragraphs of one continuous
+      // statement, producing 5 sibling blockquote-style blocks — not 5
+      // separate quotations. A quotation is one object (#2515 rule 2).
+      const content = [
+        paragraph("Intro."),
+        blockquoteBlock("Eerste alinea van de quote."),
+        blockquoteBlock("Tweede alinea van de quote."),
+        paragraph("Slot."),
+      ];
+      const { container } = render(<ArticleBody content={content} />);
+
+      // Exactly one card, not two.
+      const cards = container.querySelectorAll("[data-pull-quote-tone]");
+      expect(cards).toHaveLength(1);
+      // Exactly one QuoteMark inside it (the card's single gesture, #2515
+      // rule 3) — asserted structurally via the merged card's own child
+      // count: QuoteMark + blockquote body + (no attribution row).
+      expect(cards[0]?.children).toHaveLength(2);
+      // Both paragraphs' text made it into the single merged card.
+      expect(
+        screen.getByText("Eerste alinea van de quote."),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Tweede alinea van de quote."),
+      ).toBeInTheDocument();
+    });
+
+    it("does not group blockquotes separated by a normal paragraph", () => {
+      const content = [
+        blockquoteBlock("Losstaande quote één."),
+        paragraph("Tussenzin."),
+        blockquoteBlock("Losstaande quote twee."),
+      ];
+      const { container } = render(<ArticleBody content={content} />);
+      const cards = container.querySelectorAll("[data-pull-quote-tone]");
+      expect(cards).toHaveLength(2);
+    });
+
+    it("renders inline marks (e.g. accent) inside a grouped blockquote", () => {
+      const marked: PortableTextBlock = {
+        _type: "block",
+        _key: "bq-marked",
+        style: "blockquote",
+        children: [
+          { _type: "span", _key: "c1", text: "Normale tekst en ", marks: [] },
+          {
+            _type: "span",
+            _key: "c2",
+            text: "geaccentueerd",
+            marks: ["accent"],
+          },
+          { _type: "span", _key: "c3", text: ".", marks: [] },
+        ],
+        markDefs: [],
+      } as unknown as PortableTextBlock;
+      const content = [blockquoteBlock("Eerste alinea."), marked];
+      const { container } = render(<ArticleBody content={content} />);
+      expect(screen.getByText("geaccentueerd").tagName).toBe("EM");
+      expect(container.querySelectorAll("[data-pull-quote-tone]")).toHaveLength(
+        1,
+      );
     });
   });
 

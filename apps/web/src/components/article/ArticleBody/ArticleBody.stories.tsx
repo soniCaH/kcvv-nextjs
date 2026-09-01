@@ -116,7 +116,6 @@ function transferFactBlock(args: {
 function pullQuoteBlock(
   body: string,
   extras: {
-    tone?: "cream" | "ink" | "jersey";
     respondentKey?: string;
     emphasis?: string;
     externalName?: string;
@@ -227,7 +226,6 @@ const WITH_PULL_QUOTE_CONTENT: PortableTextBlock[] = [
   pullQuoteBlock(
     "We hebben de kleedkamer in de derde minuut weer wakker gekregen.",
     {
-      tone: "ink",
       respondentKey: "subj-coach",
     },
   ),
@@ -437,12 +435,51 @@ export const AllPullQuote: Story = {
 // Mixed body with an inline `pullQuote` block that resolves a KCVV
 // subject (Wim Govaerts) via respondentKey. The pullQuote renders the
 // avatar layout with the staff photo + italic display name + mono caps
-// role/source. tone="ink" demonstrates the dark variant inside the
-// otherwise cream body. EndMark closes the body.
+// role/source, in the default flow placement (cream — the `pullQuote`
+// block never carries a tone, #2515 decision). EndMark closes the body.
 export const WithPullQuote: Story = {
   args: {
     content: WITH_PULL_QUOTE_CONTENT,
     subjects: WITH_PULL_QUOTE_SUBJECTS,
+  },
+};
+
+// A `pullQuote` block with `emphasis` set — the phrase resolves through
+// `renderTextWithEmphasis()` (lib/portable-text/) into a
+// <HighlighterStroke>-wrapped span inside the quote body. This is the only
+// pictorial VR coverage of a highlighted quote in the suite: `<PullQuote>`
+// lost its own `emphasis` prop (and the `WithEmphasis` story that
+// demonstrated it) when the highlighter pass moved to ArticleBody, its one
+// caller — the feature lives here now, so its VR coverage does too. Long
+// enough that the highlighted phrase is still visible at mobile width.
+const WITH_PULL_QUOTE_EMPHASIS_CONTENT: PortableTextBlock[] = [
+  paragraph(
+    "Wim Govaerts opent de deur van zijn kantoor met een lach. Het tweede seizoen op de bank loopt op zijn einde.",
+  ),
+  pullQuoteBlock(
+    "We hebben de kleedkamer in de derde minuut weer wakker gekregen — dat gevoel van samen knokken voor elkaar dragen we het hele seizoen mee.",
+    {
+      externalName: "Wim Govaerts",
+      externalRole: "TRAINER",
+      emphasis: "samen knokken voor elkaar",
+    },
+  ),
+  paragraph(
+    "Die wakker-roeper-mentaliteit zou de rode draad worden door de tweede helft van het seizoen.",
+  ),
+];
+
+export const PullQuoteWithEmphasis: Story = {
+  args: {
+    content: WITH_PULL_QUOTE_EMPHASIS_CONTENT,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A `pullQuote` block carrying an `emphasis` phrase — served markup runs through `renderTextWithEmphasis()`, so the highlighter stroke is actually drawn in this baseline, not just asserted in a unit test.",
+      },
+    },
   },
 };
 
@@ -864,6 +901,52 @@ export const WithMixedPhase5Blocks: Story = {
       description: {
         story:
           "Phase 5.C serializer coverage. Renders one articleImage (prose-width, with caption + credit), one external `videoBlock` (YouTube embed branch), one `fileAttachment` (PDF card), one `htmlTable`, a `blockquote`, plus internal + external link marks inside a paragraph. The cream surface stays consistent across all blocks per the locked composition.",
+      },
+    },
+  },
+};
+
+// Consecutive blockquote-style blocks (code review finding 8 on #2566).
+// Reproduces the shape of production's `2024-03-25-kopzorgen-het-voetbal`,
+// whose editor pressed Enter between paragraphs of ONE continuous quoted
+// statement — Portable Text does not merge same-style blocks, so that
+// authored 5 sibling `blockquote` blocks, not 5 separate quotations. A
+// quotation is one object (#2515 rule 2): `buildSegments` groups the run
+// into a single `<PullQuote>` card carrying one paragraph per source
+// block, with a lone blockquote elsewhere in the body still rendering its
+// own separate card.
+export const WithConsecutiveBlockquotes: Story = {
+  args: {
+    content: [
+      paragraph(
+        "Iedere voetballiefhebber kan zich wel een belangrijk kopbaldoelpunt voor de geest halen.",
+      ),
+      blockquoteParagraph(
+        "De regels van het voetbalspel worden bepaald door IFAB en FIFA. Voetbal Vlaanderen volgt deze regels.",
+        "bq-1",
+      ),
+      blockquoteParagraph(
+        "Daarom is het belangrijk dat het koppen op een juiste manier aangeleerd wordt, zodat jeugdspelers later het verschil kunnen maken.",
+        "bq-2",
+      ),
+      blockquoteParagraph(
+        "Vanaf U10 is er in ons opleidingsplan ruimte voor de halfhoge bal en kan het technisch juist koppen aangeleerd worden.",
+        "bq-3",
+      ),
+      paragraph(
+        "Dat blijft de leidraad voor elke jeugdcoach bij KCVV Elewijt.",
+      ),
+      blockquoteParagraph(
+        "Een aparte, losstaande quote verderop in het artikel — dit blijft wél zijn eigen kaart.",
+        "bq-lone",
+      ),
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Three consecutive `blockquote` blocks merge into ONE taped card (one quote mark, three paragraphs) instead of three stacked near-identical cards. A fourth, later blockquote separated by a normal paragraph renders as its own separate card, unaffected.",
       },
     },
   },

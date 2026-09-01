@@ -331,7 +331,7 @@ describe("QaBlock", () => {
       ).toBeInTheDocument();
     });
 
-    it("renders a quote pair as PullQuote tone=ink with no source meta", () => {
+    it("renders a quote pair as PullQuote tone=cream (same flow position as key) with no source meta", () => {
       render(
         <QaBlock
           subjects={PLAYER_SUBJECTS}
@@ -352,13 +352,17 @@ describe("QaBlock", () => {
         />,
       );
 
+      // "key" and "quote" units are siblings in the same flex column — no
+      // heading of their own, not beside running text — so both share the
+      // default flow placement (cream). Only the source-meta rule (question
+      // rides as source for "key", never for "quote") still differs.
       expect(
-        document.querySelector('[data-pull-quote-tone="ink"]'),
+        document.querySelector('[data-pull-quote-tone="cream"]'),
       ).not.toBeNull();
       expect(
         screen.getByText("Ik voetbal nog altijd met schrik."),
       ).toBeInTheDocument();
-      // The question must NOT bleed through as source for quote tone.
+      // The question must NOT bleed through as source for quote tags.
       expect(screen.queryByText("(hidden for quote)")).toBeNull();
     });
 

@@ -90,7 +90,7 @@ export function BioBlock({ bio, playerName, className }: BioBlockProps) {
             className="self-start lg:sticky lg:top-24"
           >
             <PullQuote
-              tone="jersey"
+              placement="aside"
               attribution={{ name: playerName ?? "" }}
               rotation={2}
               interactive="tilt"

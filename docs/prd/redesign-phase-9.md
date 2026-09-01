@@ -123,7 +123,9 @@ is the live one). **Keep** the live chart components
 - `article/SubjectAttribution/` → remove the `SubjectAttribution` + `SubjectPhoto`
   **components**; keep `resolveSubject` / `resolvePairRespondent` utils (live).
 - `design-system/Divider/` → remove base `Divider` + `SolidDivider` exports; keep
-  `DottedDivider` (live: privacy, BodyQuote) + `DashedDivider` (live: CalendarAgenda).
+  `DottedDivider` (live: privacy) + `DashedDivider` (live: CalendarAgenda).
+  `BodyQuote`, `DottedDivider`'s other consumer at the time this PRD was written,
+  was deleted in #2566 — its blockquote treatment folded into `PullQuote`.
 - `design-system/Spinner/` → remove `FullPageSpinner`; keep `Spinner` (live).
 
 ### 2.6 Orphan hooks / utils

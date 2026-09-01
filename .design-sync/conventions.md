@@ -43,7 +43,7 @@ tilt on cards. Small text on `jersey-deep` uses `text-white` (cream fails AA the
 - **Type & editorial**: `EditorialHeading` (period-terminated headline with italic
   accent or highlighter emphasis), `EditorialLead`, `EditorialKicker`, `SectionHeader`,
   `SectionKicker`, `MonoLabel` / `MonoLabelRow` (mono pills/labels), `NumberDisplay`,
-  `PullQuote`, `BodyQuote`, `DropCapParagraph`, `HighlighterStroke`, `QuoteMark`.
+  `PullQuote`, `DropCapParagraph`, `HighlighterStroke`, `QuoteMark`.
 - **Paper cards & media**: `TapedCard`, `TapedCardGrid`, `TapedFigure` (photo + caption),
   `ClippedCard`, `StampBadge`, `Crest`, `JerseyShirt` / `JerseyIllustration`.
 - **Actions & forms**: `Button`, `LinkButton`, `DownloadButton`, `Input`, `Textarea`,

@@ -106,7 +106,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Phase 6.A quote interlude for `/spelers/[slug]`. Renders the SECOND `pullquote`-marked run in `player.bio` as a single full-width `<PullQuote tone="ink">` card — the home for the parked 6.d4 dark-band aesthetic. Auto-hides when fewer than 2 marked runs exist (BioBlock owns span #0).',
+          'Phase 6.A quote interlude for `/spelers/[slug]`. Renders the SECOND `pullquote`-marked run in `player.bio` as a single full-width `<PullQuote placement="section">` card — the home for the parked 6.d4 dark-band aesthetic. Auto-hides when fewer than 2 marked runs exist (BioBlock owns span #0).',
       },
     },
   },

@@ -1,12 +1,36 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
-import { HighlighterStroke } from "../HighlighterStroke";
+import type { MonoLabelTone } from "../MonoLabel";
+import { MonoLabelRow, type MonoLabelRowItem } from "../MonoLabelRow";
 import { QuoteMark, type QuoteMarkColor } from "../QuoteMark";
 import { TapedCard, type TapedCardProps } from "../TapedCard";
 
 type TapedCardInteractive = TapedCardProps["interactive"];
 
-export type PullQuoteTone = "cream" | "ink" | "jersey";
+/**
+ * Internal render tone — derived from `placement`, never authored by a
+ * caller (#2515 rule 5). Module-private: not re-exported from either
+ * `PullQuote/index.ts` or the design-system barrel, so there is no public
+ * door back to authoring a tone directly.
+ */
+type PullQuoteTone = "cream" | "ink" | "jersey";
+
+/**
+ * Where the card sits relative to the page's reading flow. The component
+ * derives its own tone from this — the test is structural, not chromatic:
+ *   - "section" — the card is the SOLE content of its container, and that
+ *     container is either framed by seams (e.g. `<StripedSeam>` on both
+ *     sides) or introduced by a real heading element (an `<h2>`/
+ *     `<EditorialHeading>`, not a mono kicker `<div>`) → ink. A card that
+ *     shares its section with running prose (a paragraph before or after
+ *     it) does not own the section, even under a heading — see `flow`.
+ *   - "aside"   — a companion beside running text (a sticky column, a real
+ *     `<aside>` element) → jersey (jersey-deep paper).
+ *   - "flow"    — everything else: in the flow among paragraphs, sharing a
+ *     section with prose, or centred below the text it echoes (the
+ *     default) → cream.
+ */
+export type PullQuotePlacement = "section" | "aside" | "flow";
 
 interface TonePalette {
   bg: TapedCardProps["bg"];
@@ -15,6 +39,7 @@ interface TonePalette {
   name: string;
   metaText: string;
   quoteMark: QuoteMarkColor;
+  labelTone: MonoLabelTone;
 }
 
 export interface PullQuoteAttribution {
@@ -23,16 +48,28 @@ export interface PullQuoteAttribution {
   source?: string;
 }
 
-export interface PullQuoteEmphasis {
-  /** substring of the body to accentuate via <HighlighterStroke> — no font change */
-  text: string;
-}
+/**
+ * A card carries a named speaker OR context labels OR nothing — never
+ * both. Encoded as a discriminated union rather than two independent
+ * optionals so the "never both" rule is enforced by the type checker, not
+ * documented and hoped for. `attribution`'s `| undefined` (rather than an
+ * optional `?:`) is required so a caller's conditional attribution (e.g.
+ * `{ name: playerName ?? "" }` — see `speaker` below for why the empty-name
+ * case still needs no special-casing at the call site) still type-checks
+ * without forcing `labels` into the same branch.
+ */
+type PullQuoteRow =
+  | { attribution: PullQuoteAttribution | undefined; labels?: never }
+  | { labels: MonoLabelRowItem[]; attribution?: never };
 
-export interface PullQuoteProps {
-  children: string;
-  attribution: PullQuoteAttribution;
-  tone?: PullQuoteTone;
-  emphasis?: PullQuoteEmphasis;
+export type PullQuoteProps = {
+  /** The quoted body — any Portable Text / rich content the caller builds. */
+  children: ReactNode;
+  /**
+   * Where this card sits — the component derives its own tone from this.
+   * Never pass a tone directly (#2515 rule 5). Defaults to "flow" (cream).
+   */
+  placement?: PullQuotePlacement;
   rotation?: TapedCardProps["rotation"];
   tape?: TapedCardProps["tape"];
   /**
@@ -50,11 +87,12 @@ export interface PullQuoteProps {
    * stack (italic display name on top, mono caps role/source below) per
    * the 5.d2 lock. When omitted, the attribution falls back to the
    * original inline mono caps row — suitable for external-source quotes
-   * that don't reference a KCVV subject.
+   * that don't reference a KCVV subject. Ignored when the row renders
+   * `labels` instead of an `attribution`.
    */
   avatarSlot?: ReactNode;
   className?: string;
-}
+} & PullQuoteRow;
 
 const TONE: Record<PullQuoteTone, TonePalette> = {
   cream: {
@@ -63,6 +101,7 @@ const TONE: Record<PullQuoteTone, TonePalette> = {
     name: "text-ink",
     metaText: "text-ink-muted",
     quoteMark: "jersey",
+    labelTone: "muted",
   },
   ink: {
     bg: "ink",
@@ -79,6 +118,7 @@ const TONE: Record<PullQuoteTone, TonePalette> = {
     // sits at the right contrast ratio.
     metaText: "text-cream",
     quoteMark: "jersey",
+    labelTone: "cream",
   },
   jersey: {
     // Phase 3 redesign — bright `--color-jersey` is retired (per owner
@@ -89,50 +129,36 @@ const TONE: Record<PullQuoteTone, TonePalette> = {
     name: "text-cream",
     metaText: "text-cream",
     quoteMark: "cream",
+    labelTone: "cream",
   },
 };
 
-function renderBodyWithEmphasis(
-  body: string,
-  emphasis: PullQuoteEmphasis | undefined,
-) {
-  if (!emphasis) return body;
-  const idx = body.indexOf(emphasis.text);
-  if (idx < 0) {
-    if (process.env.NODE_ENV === "development") {
-      console.warn(
-        `[PullQuote] emphasis.text "${emphasis.text}" not found in quote body`,
-      );
-    }
-    return body;
-  }
-  const before = body.slice(0, idx);
-  const match = body.slice(idx, idx + emphasis.text.length);
-  const after = body.slice(idx + emphasis.text.length);
-  // No font change — the emphasis is the highlighter pass alone, so the
-  // quote reads as one continuous italic display sentence with a marker
-  // pulled across the accentuated phrase.
-  return (
-    <>
-      {before}
-      <HighlighterStroke>{match}</HighlighterStroke>
-      {after}
-    </>
-  );
-}
+const PLACEMENT_TONE: Record<PullQuotePlacement, PullQuoteTone> = {
+  section: "ink",
+  aside: "jersey",
+  flow: "cream",
+};
 
 export function PullQuote({
   children,
   attribution,
-  tone = "cream",
-  emphasis,
+  labels,
+  placement = "flow",
   rotation,
   tape,
   interactive,
   avatarSlot,
   className,
 }: PullQuoteProps) {
+  const tone = PLACEMENT_TONE[placement];
   const palette = TONE[tone];
+  // An authored-but-blank name (`{ name: "" }` — the shape a caller gets by
+  // writing `{ name: playerName ?? "" }` rather than a ternary) is still a
+  // nameless quote: the row must be omitted, not rendered empty (#2515
+  // rule 1). Trimming here means every call site can pass its raw,
+  // possibly-blank name straight through with no ternary of its own.
+  const speaker = attribution?.name.trim() ? attribution : undefined;
+
   return (
     <TapedCard
       bg={palette.bg}
@@ -143,22 +169,30 @@ export function PullQuote({
       padding="lg"
       className={cn(className)}
     >
-      <div data-pull-quote-tone={tone} className="flex flex-col gap-4">
+      <div
+        data-pull-quote-tone={tone}
+        data-pull-quote-placement={placement}
+        className="flex flex-col gap-4"
+      >
         <QuoteMark color={palette.quoteMark} />
-        <q
+        <blockquote
           className={cn(
             "font-display block italic",
             "text-display-sm",
             palette.body,
           )}
         >
-          {renderBodyWithEmphasis(children, emphasis)}
-        </q>
-        <PullQuoteAttributionRow
-          attribution={attribution}
-          avatarSlot={avatarSlot}
-          palette={palette}
-        />
+          {children}
+        </blockquote>
+        {speaker ? (
+          <PullQuoteAttributionRow
+            attribution={speaker}
+            avatarSlot={avatarSlot}
+            palette={palette}
+          />
+        ) : labels && labels.length > 0 ? (
+          <MonoLabelRow items={labels} tone={palette.labelTone} />
+        ) : null}
       </div>
     </TapedCard>
   );

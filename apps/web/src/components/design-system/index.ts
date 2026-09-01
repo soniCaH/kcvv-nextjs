@@ -98,10 +98,6 @@ export type { UseScrollHintReturn, ScrollArrowButtonProps } from "./ScrollHint";
 export { PageContainer } from "./PageContainer";
 export type { PageContainerProps, PageContainerWidth } from "./PageContainer";
 
-// BodyQuote
-export { BodyQuote } from "./BodyQuote";
-export type { BodyQuoteProps } from "./BodyQuote";
-
 // Divider
 export { DashedDivider, DottedDivider } from "./Divider";
 export type { DividerProps, DividerStyle, DividerColor } from "./Divider";
@@ -272,8 +268,7 @@ export { PullQuote } from "./PullQuote";
 export type {
   PullQuoteProps,
   PullQuoteAttribution,
-  PullQuoteTone,
-  PullQuoteEmphasis,
+  PullQuotePlacement,
 } from "./PullQuote";
 
 // NumberDisplay
