@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
 import { NewsCard, CategoryFilters } from "@/components/article";
 import {
@@ -43,7 +42,6 @@ export function NewsListingClient({
   initialCategory,
   fetchArticles,
 }: NewsListingClientProps) {
-  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState(
     initialCategory ?? "all",
   );
@@ -59,6 +57,9 @@ export function NewsListingClient({
   const nextOffsetRef = useRef(initialArticles.length);
   const loadMoreRef = useRef<() => void>(() => {});
   const handleCategoryChangeRef = useRef<(category: string) => void>(() => {});
+  const applyCategoryRef = useRef<
+    (category: string, options: { updateUrl: boolean }) => void
+  >(() => {});
 
   const loadMore = useCallback(async () => {
     if (!hasMore || isLoadingRef.current) return;
@@ -104,9 +105,27 @@ export function NewsListingClient({
     }
   }, [hasMore, activeCategory, fetchArticles]);
 
-  // Category change handler
-  const handleCategoryChange = useCallback(
-    async (category: string) => {
+  // Fetches a category's first batch and (optionally) writes the URL. Shared
+  // by the chip click-handler and the `popstate` listener below, so both a
+  // forward chip click and a browser back/forward press run through exactly
+  // one fetch — never `router.push`'s server round-trip on top of it.
+  //
+  // `/nieuws` awaits `searchParams` server-side (page.tsx), which makes the
+  // segment dynamic like `force-dynamic`. `router.push`ing a `?categorie=`
+  // change there re-runs the server page — a second, redundant
+  // `fetchArticlesAction` — and, while that resolves, Next shows
+  // `loading.tsx` and unmounts this component, discarding the grid the
+  // client fetch above just built (#2564 review finding 3, reproduced: every
+  // chip click fired two fetches and flashed the loading skeleton).
+  // `window.history.pushState` updates the address bar and adds a real
+  // history entry (browser back undoes a filter, #2429 resolution rule 5)
+  // without going through Next's router at all, so no server re-render, no
+  // second fetch, no discarded grid. Because `pushState` doesn't itself
+  // notify React, a `popstate` listener re-runs this same fetch (with
+  // `updateUrl: false`, since the browser already moved the URL) so back/
+  // forward doesn't leave the grid out of sync with the address bar.
+  const applyCategory = useCallback(
+    async (category: string, { updateUrl }: { updateUrl: boolean }) => {
       if (category === activeCategory) return;
       const prevCategory = activeCategory;
       const requestId = ++categoryRequestId.current;
@@ -130,15 +149,12 @@ export function NewsListingClient({
         nextOffsetRef.current = result.items.length;
         setHasMore(result.hasMore);
 
-        // Update URL and scroll only after successful fetch. `router.push`
-        // (not `history.replaceState`) so a filter is a real history entry —
-        // browser back undoes it, the same mechanism every filter row on the
-        // site now shares (#2429 resolution, rule 5). `scroll: false`: this
-        // component already owns the scroll-to-top below.
-        const url = categoryFilter
-          ? `/nieuws?categorie=${encodeURIComponent(categoryFilter)}`
-          : "/nieuws";
-        router.push(url, { scroll: false });
+        if (updateUrl) {
+          const url = categoryFilter
+            ? `/nieuws?categorie=${encodeURIComponent(categoryFilter)}`
+            : "/nieuws";
+          window.history.pushState({}, "", url);
+        }
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (err) {
         if (requestId !== categoryRequestId.current) return;
@@ -157,13 +173,33 @@ export function NewsListingClient({
         }
       }
     },
-    [activeCategory, fetchArticles, router],
+    [activeCategory, fetchArticles],
+  );
+
+  // Chip click / "Toon alles" undo — the URL-writing path.
+  const handleCategoryChange = useCallback(
+    (category: string) => applyCategory(category, { updateUrl: true }),
+    [applyCategory],
   );
 
   useEffect(() => {
     loadMoreRef.current = loadMore;
     handleCategoryChangeRef.current = handleCategoryChange;
-  }, [loadMore, handleCategoryChange]);
+    applyCategoryRef.current = applyCategory;
+  }, [loadMore, handleCategoryChange, applyCategory]);
+
+  // Browser back/forward — re-applies the URL's `?categorie=` WITHOUT
+  // writing it again (the browser already moved it). Reads through a ref so
+  // this listener attaches once, not on every category change.
+  useEffect(() => {
+    const onPopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlCategory = params.get("categorie") ?? "all";
+      applyCategoryRef.current(urlCategory, { updateUrl: false });
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   // The filtered EmptyState's undo action — defined here, not inline in the
   // JSX below, so the callback closes over `handleCategoryChange` at the
