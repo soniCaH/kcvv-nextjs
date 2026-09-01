@@ -1,10 +1,7 @@
 import type { RankingTable } from "@kcvv/api-contract";
 import { StandingsTable } from "@/components/team/StandingsTable";
 import { EmptyState } from "@/components/design-system/EmptyState";
-import {
-  classifyStandingsTable,
-  classifyStandingsTables,
-} from "@/lib/utils/competitive-block-state";
+import { classifyStandingsTables } from "@/lib/utils/competitive-block-state";
 import { cn } from "@/lib/utils/cn";
 
 export interface StandingsSectionProps {
@@ -34,16 +31,14 @@ export interface StandingsSectionProps {
  * gate is open (#2636) — so unlike before #2636, this component never auto-
  * hides itself. `#klassement` shows the clubs it has and the numbers it has,
  * and it never says a table is coming (#2605): no rows yet renders a present-
- * tense note in its own voice rather than a bare `null`, and rows without
- * numbers (before matchday 1, or a reeks PSD never scores) render as a plain
- * club list rather than a table full of zeroes.
+ * tense note in its own voice rather than a bare `null`.
  *
- * Each table's numberless/live render is decided per table
- * (`classifyStandingsTable`), never by the block-level `classifyStandingsTables`
- * verdict applied uniformly — a youth side past the winter break can have a
- * scored autumn poule next to an unplayed spring one, and blanket-applying one
- * verdict to both would render the unplayed poule as a full table of
- * position-0 zeroes (#2636 finding 4).
+ * Each table decides its own numberless/live render from its own `entries`
+ * (`<StandingsTable>`, via `isNumberlessTable`) — this component does not
+ * compute or pass that verdict. A youth side past the winter break can have
+ * a scored autumn poule next to an unplayed spring one, and a single
+ * block-level verdict applied to both would render the unplayed poule as a
+ * full table of position-0 zeroes (#2636 finding 4 / finding 9).
  */
 export function StandingsSection({
   tables,
@@ -51,9 +46,7 @@ export function StandingsSection({
   highlightTeamId,
   className,
 }: StandingsSectionProps) {
-  const state = classifyStandingsTables(tables);
-
-  if (state === "no-table") {
+  if (classifyStandingsTables(tables) === "no-table") {
     return (
       <div data-testid="standings-section" className={cn("flex", className)}>
         <EmptyState tier="slot">
@@ -63,22 +56,21 @@ export function StandingsSection({
     );
   }
 
-  const tablesWithRows = tables.filter((table) => table.entries.length > 0);
-
   return (
     <div
       data-testid="standings-section"
       className={cn("flex flex-col gap-10", className)}
     >
-      {tablesWithRows.map((table) => (
-        <StandingsTable
-          key={table.competition_id}
-          entries={table.entries}
-          caption={divisionFull ?? table.competition_name}
-          highlightTeamId={highlightTeamId}
-          numberless={classifyStandingsTable(table) === "numberless"}
-        />
-      ))}
+      {tables
+        .filter((table) => table.entries.length > 0)
+        .map((table) => (
+          <StandingsTable
+            key={table.competition_id}
+            entries={table.entries}
+            caption={divisionFull ?? table.competition_name}
+            highlightTeamId={highlightTeamId}
+          />
+        ))}
     </div>
   );
 }

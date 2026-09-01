@@ -8,7 +8,9 @@
  *  - Non-KCVV rows: no highlight testid
  *  - Goal difference formatting (+N for positive)
  *  - No Vorm column, no green/yellow/red badges
- *  - `numberless`: no columns at all, just crest + name (#2605)
+ *  - Numberless entries (played 0 / points 0, #2605): no columns at all,
+ *    just crest + name — derived from `entries` itself, not a caller-set
+ *    prop (#2636 finding 9)
  */
 
 import { describe, it, expect } from "vitest";
@@ -48,6 +50,25 @@ const DIVISION: RankingEntry[] = [
     team_name: "Third Town",
     points: 22,
     goal_difference: -3,
+  }),
+];
+
+const NUMBERLESS_DIVISION: RankingEntry[] = [
+  entry({
+    position: 0,
+    team_id: 1,
+    team_name: "Leader FC",
+    played: 0,
+    points: 0,
+    goal_difference: 0,
+  }),
+  entry({
+    position: 0,
+    team_id: 1235,
+    team_name: "KCVV Elewijt",
+    played: 0,
+    points: 0,
+    goal_difference: 0,
   }),
 ];
 
@@ -109,12 +130,11 @@ describe("StandingsTable", () => {
     expect(headers).not.toContain("form");
   });
 
-  it("renders a plain club list (no columns) when numberless", () => {
+  it("renders a plain club list (no columns) when every entry is played 0 / points 0", () => {
     render(
       <StandingsTable
-        entries={DIVISION}
+        entries={NUMBERLESS_DIVISION}
         highlightTeamId={1235}
-        numberless
         caption="3de Afdeling Voetb Vl A"
       />,
     );
@@ -131,15 +151,26 @@ describe("StandingsTable", () => {
 
   it("still highlights the KCVV row when numberless", () => {
     render(
-      <StandingsTable entries={DIVISION} highlightTeamId={1235} numberless />,
+      <StandingsTable entries={NUMBERLESS_DIVISION} highlightTeamId={1235} />,
     );
 
     const kcvvRow = screen.getByTestId("standings-kcvv-row");
     expect(kcvvRow.textContent).toContain("KCVV Elewijt");
   });
 
-  it("renders nothing when numberless and entries is empty", () => {
-    const { container } = render(<StandingsTable entries={[]} numberless />);
-    expect(container.firstChild).toBeNull();
+  it("renders the full table (not a list) as soon as one entry carries real numbers", () => {
+    // Guards against a caller ever being able to force the list render on
+    // real data — there is no prop left to do that with (#2636 finding 9).
+    const mixed = [
+      ...NUMBERLESS_DIVISION,
+      entry({ team_id: 999, team_name: "FC Perk", played: 4, points: 9 }),
+    ];
+    render(<StandingsTable entries={mixed} />);
+
+    expect(screen.getByTestId("standings-table")).not.toHaveAttribute(
+      "data-variant",
+      "numberless",
+    );
+    expect(screen.getAllByRole("columnheader").length).toBeGreaterThan(0);
   });
 });

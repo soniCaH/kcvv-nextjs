@@ -1,4 +1,4 @@
-import type { Match, RankingTable } from "@kcvv/api-contract";
+import type { Match, RankingEntry, RankingTable } from "@kcvv/api-contract";
 
 /**
  * The competitive half of a team page — `#klassement` + `#wedstrijden` — as
@@ -18,27 +18,32 @@ import type { Match, RankingTable } from "@kcvv/api-contract";
  *   same way), so it is caught and degrades to this state instead, rather
  *   than taking the whole page down forever (#2636 finding 3).
  * - **`no-table`** — in competition, but the association has not published a
- *   row yet. `tables` carries whatever the provider returned (usually `[]`
- *   or every entry empty) purely for debugging; the caller does not read
- *   entries off it.
+ *   row yet.
  * - **`numberless`** — in competition, and every published entry reads
  *   `played === 0 && points === 0` (before matchday 1, or a reeks PSD never
- *   scores). `tables` is filtered to the tables that have rows.
- * - **`live`** — at least one published table carries real numbers. `tables`
- *   is filtered to the tables that have rows. This is a *block-level* verdict
- *   for the nav chip's label only (#2605: "Klassement" only when there are
- *   points on the page at all) — it does **not** mean every table in it is
- *   individually live. A youth side past the winter break can have a scored
- *   autumn poule next to an unplayed spring one; `classifyStandingsTable`
- *   below is the per-table complement `<StandingsSection>` uses so the spring
- *   poule still renders as a club list, not a table of position-0 zeroes.
+ *   scores).
+ * - **`live`** — at least one published table carries real numbers. This is a
+ *   *block-level* verdict for the nav chip's label only (#2605: "Klassement"
+ *   only when there are points on the page at all) — it does **not** mean
+ *   every table is individually live. A youth side past the winter break can
+ *   have a scored autumn poule next to an unplayed spring one; `<StandingsSection>`
+ *   re-derives each table's own numberless/live render straight from its
+ *   `tables` prop via `isNumberlessTable` (#2636 finding 9), independent of
+ *   this block-level verdict.
+ *
+ * None of these states carry the tables themselves — `<StandingsSection>` is
+ * the one place that reads `RankingTable[]` and classifies it, from the
+ * `standings` prop `page.tsx` already has in hand. Carrying a second,
+ * separately-filtered copy on the state value invited exactly what it caused
+ * (#2636 finding 3): two classifications of the same data computed from two
+ * different inputs, agreeing only by accident.
  */
 export type CompetitiveBlockState =
   | { readonly kind: "not-in-competition" }
   | { readonly kind: "unavailable" }
-  | { readonly kind: "no-table"; readonly tables: readonly RankingTable[] }
-  | { readonly kind: "numberless"; readonly tables: readonly RankingTable[] }
-  | { readonly kind: "live"; readonly tables: readonly RankingTable[] };
+  | { readonly kind: "no-table" }
+  | { readonly kind: "numberless" }
+  | { readonly kind: "live" };
 
 /** What `fetchBffData` resolves to when it resolves — never the rejection. */
 export interface CompetitiveFetchResult {
@@ -71,46 +76,34 @@ function isInCompetition(matches: readonly Match[]): boolean {
   return matches.some((match) => match.competitionType === "league");
 }
 
-/** Every entry in a table reads `played === 0 && points === 0` — before
- * matchday 1, or a reeks PSD never scores (#2605 decision 3). */
-function isNumberlessTable(table: RankingTable): boolean {
-  return table.entries.every(
-    (entry) => entry.played === 0 && entry.points === 0,
-  );
-}
-
 /**
- * Per-table classification (#2636 finding 4) — deliberately independent of
- * `classifyStandingsTables` below. That function verdicts the whole block
- * for the nav chip's label ("is there real ranked content on this page at
- * all"); this one verdicts one table for how `<StandingsTable>` renders it.
- * The two diverge exactly when a youth side has crossed the winter break: the
- * block reads `"live"` (the autumn poule has real points), but the fresh
- * spring poule — zero played, zero points — still needs its own `"numberless"`
- * verdict so it renders as a club list rather than a table of position-0
- * zeroes. Called on tables that already have rows; an empty table is not
- * meaningfully either and is filtered out by the caller before this runs.
+ * Every entry reads `played === 0 && points === 0` — before matchday 1, or a
+ * reeks PSD never scores (#2605 decision 3). Takes `entries` directly (not a
+ * `RankingTable`) so `<StandingsTable>` can call it on the exact prop it
+ * already renders from, deriving its own numberless/live register instead of
+ * trusting a caller-supplied `numberless` boolean that the data could
+ * contradict (#2636 finding 9).
  */
-export function classifyStandingsTable(
-  table: RankingTable,
-): "numberless" | "live" {
-  return isNumberlessTable(table) ? "numberless" : "live";
+export function isNumberlessTable(entries: readonly RankingEntry[]): boolean {
+  return entries.every((entry) => entry.played === 0 && entry.points === 0);
 }
 
 /**
  * Classifies `#klassement`'s tables as a whole, independent of the fixture
  * gate above. Shared between `deriveCompetitiveBlockState` (the page-level
- * gate) and `<StandingsSection>` (which renders whenever the gate is open,
- * and needs the same three-way read of its own `tables` prop to decide
- * whether it has any table to show at all) so that predicate has exactly one
- * owner. **Not** the per-table verdict — see `classifyStandingsTable` above.
+ * gate, for the nav chip's label) and `<StandingsSection>` (which renders
+ * whenever the gate is open, and needs the same three-way read of its own
+ * `tables` prop to decide whether it has any table to show at all) so that
+ * predicate has exactly one owner.
  */
 export function classifyStandingsTables(
   tables: readonly RankingTable[],
 ): "no-table" | "numberless" | "live" {
   const tablesWithRows = tables.filter((table) => table.entries.length > 0);
   if (tablesWithRows.length === 0) return "no-table";
-  if (tablesWithRows.every(isNumberlessTable)) return "numberless";
+  if (tablesWithRows.every((table) => isNumberlessTable(table.entries))) {
+    return "numberless";
+  }
   return "live";
 }
 
@@ -135,34 +128,40 @@ export function deriveCompetitiveBlockState(
   if (!isInCompetition(fetchResult.matches)) {
     return { kind: "not-in-competition" };
   }
-
-  const tablesState = classifyStandingsTables(fetchResult.standings);
-  if (tablesState === "no-table") {
-    return { kind: "no-table", tables: fetchResult.standings };
-  }
-
-  const tablesWithRows = fetchResult.standings.filter(
-    (table) => table.entries.length > 0,
-  );
-  return { kind: tablesState, tables: tablesWithRows };
+  return { kind: classifyStandingsTables(fetchResult.standings) };
 }
 
 /**
  * `#klassement`'s heading follows the data (#2605 decision): `"Klassement"`
- * only when the table carries real points, `"De reeks"` otherwise. Used for
- * both the sticky nav's chip label today and the section's own `<h2>` once
- * #2637 adds one — one word, one owner, so the nav chip and the heading can
- * never read differently for the same page.
+ * only when the table carries real points, `"De reeks"` when it is in
+ * competition but has none yet, and no label (`null`) at all when the block
+ * doesn't render a `#klassement` nav entry in the first place. Used for both
+ * the sticky nav's chip label today and the section's own `<h2>` once #2637
+ * adds one — one word, one owner, so the nav chip and the heading can never
+ * read differently for the same page.
  *
- * Only meaningful once the block is in competition and available; the caller
- * does not ask for a label in `not-in-competition` or `unavailable`, since
- * neither earns a nav entry.
+ * Takes the full `CompetitiveBlockState` (not a narrowed `Exclude<>`) and
+ * switches on every member so a state added later fails to compile here
+ * instead of compiling silently against a hand-written exclusion that no
+ * longer matches the union.
  */
 export function competitiveBlockHeadingLabel(
-  state: Exclude<
-    CompetitiveBlockState,
-    { kind: "not-in-competition" } | { kind: "unavailable" }
-  >,
-): string {
-  return state.kind === "live" ? "Klassement" : "De reeks";
+  state: CompetitiveBlockState,
+): string | null {
+  switch (state.kind) {
+    case "not-in-competition":
+    case "unavailable":
+      return null;
+    case "live":
+      return "Klassement";
+    case "no-table":
+    case "numberless":
+      return "De reeks";
+    default: {
+      const _exhaustive: never = state;
+      throw new Error(
+        `competitiveBlockHeadingLabel: unhandled state ${JSON.stringify(_exhaustive)}`,
+      );
+    }
+  }
 }

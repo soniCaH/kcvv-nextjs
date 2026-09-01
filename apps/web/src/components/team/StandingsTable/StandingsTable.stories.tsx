@@ -83,12 +83,12 @@ const numberlessDivision: RankingEntry[] = [
 /**
  * Every entry reads `played 0` / `points 0` (#2605 decision 3) — position
  * and every numeric column drop, and the clubs render as a plain list.
+ * Derived from `entries` itself, not a `numberless` prop (#2636 finding 9).
  */
 export const Numberless: Story = {
   args: {
     entries: numberlessDivision,
     highlightTeamId: 1235,
-    numberless: true,
     caption: "3de Afdeling Voetb Vl A",
   },
 };

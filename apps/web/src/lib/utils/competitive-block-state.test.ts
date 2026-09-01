@@ -1,17 +1,18 @@
 /**
  * `deriveCompetitiveBlockState` unit tests (#2636).
  *
- * Covers all four reachable states plus the null-fetch-result path, and the
- * gate rule itself: a match's `competitionType`, never `standings.length`.
+ * Covers all four reachable states plus the null-fetch-result and
+ * "unavailable" paths, and the gate rule itself: a match's `competitionType`,
+ * never `standings.length`.
  */
 
 import { describe, it, expect } from "vitest";
 import type { Match, RankingEntry, RankingTable } from "@kcvv/api-contract";
 import {
-  classifyStandingsTable,
   classifyStandingsTables,
   competitiveBlockHeadingLabel,
   deriveCompetitiveBlockState,
+  isNumberlessTable,
 } from "./competitive-block-state";
 
 function match(overrides: Partial<Match> = {}): Match {
@@ -81,7 +82,7 @@ describe("deriveCompetitiveBlockState", () => {
       matches: [match({ competitionType: "league" })],
       standings: [],
     });
-    expect(state.kind).toBe("no-table");
+    expect(state).toEqual({ kind: "no-table" });
   });
 
   it("returns no-table when in competition but no table has any rows", () => {
@@ -89,10 +90,7 @@ describe("deriveCompetitiveBlockState", () => {
       matches: [match()],
       standings: [table({ entries: [] })],
     });
-    expect(state).toEqual({
-      kind: "no-table",
-      tables: [table({ entries: [] })],
-    });
+    expect(state).toEqual({ kind: "no-table" });
   });
 
   it("returns numberless when every row reads played 0 and points 0", () => {
@@ -107,10 +105,7 @@ describe("deriveCompetitiveBlockState", () => {
         }),
       ],
     });
-    expect(state.kind).toBe("numberless");
-    if (state.kind === "numberless") {
-      expect(state.tables).toHaveLength(1);
-    }
+    expect(state).toEqual({ kind: "numberless" });
   });
 
   it("returns live when at least one row carries real numbers", () => {
@@ -118,7 +113,7 @@ describe("deriveCompetitiveBlockState", () => {
       matches: [match()],
       standings: [table({ entries: [entry({ played: 4, points: 9 })] })],
     });
-    expect(state.kind).toBe("live");
+    expect(state).toEqual({ kind: "live" });
   });
 
   it("returns the block-level live verdict when one of two tables is numberless and the other is live", () => {
@@ -127,30 +122,24 @@ describe("deriveCompetitiveBlockState", () => {
     // (numberless) at the same time. `deriveCompetitiveBlockState`'s "live"
     // is a BLOCK-level verdict for the nav chip's label (#2605: "Klassement"
     // only when there are points on the page at all) — it does NOT mean
-    // every table renders as a full table. `classifyStandingsTable` below
-    // is the per-table complement that decides that per table, and this
-    // input is exactly the case it exists for (#2636 finding 4).
-    const numberless = table({
-      competition_id: 1,
-      entries: [entry({ played: 0, points: 0 })],
-    });
-    const live = table({
-      competition_id: 2,
-      entries: [entry({ played: 4, points: 9 })],
-    });
+    // every table renders as a full table. `<StandingsSection>` decides that
+    // per table via `isNumberlessTable`, independently, from its own
+    // `tables` prop (#2636 finding 4 / finding 9).
+    const numberlessEntries = [entry({ played: 0, points: 0 })];
+    const liveEntries = [entry({ played: 4, points: 9 })];
     const state = deriveCompetitiveBlockState({
       matches: [match()],
-      standings: [numberless, live],
+      standings: [
+        table({ competition_id: 1, entries: numberlessEntries }),
+        table({ competition_id: 2, entries: liveEntries }),
+      ],
     });
-    expect(state.kind).toBe("live");
-    if (state.kind === "live") {
-      expect(state.tables).toHaveLength(2);
-      expect(classifyStandingsTable(numberless)).toBe("numberless");
-      expect(classifyStandingsTable(live)).toBe("live");
-    }
+    expect(state).toEqual({ kind: "live" });
+    expect(isNumberlessTable(numberlessEntries)).toBe(true);
+    expect(isNumberlessTable(liveEntries)).toBe(false);
   });
 
-  it("filters out rowless tables when returning numberless/live", () => {
+  it("still returns live when a rowless table sits beside one with real numbers", () => {
     const rowless = table({ competition_id: 1, entries: [] });
     const withRows = table({
       competition_id: 2,
@@ -160,10 +149,7 @@ describe("deriveCompetitiveBlockState", () => {
       matches: [match()],
       standings: [rowless, withRows],
     });
-    expect(state.kind).toBe("live");
-    if (state.kind === "live") {
-      expect(state.tables).toEqual([withRows]);
-    }
+    expect(state).toEqual({ kind: "live" });
   });
 
   it("returns unavailable for the 'unavailable' sentinel, without reading matches or standings", () => {
@@ -177,26 +163,18 @@ describe("deriveCompetitiveBlockState", () => {
   });
 });
 
-describe("classifyStandingsTable (per-table, #2636 finding 4)", () => {
-  it("reads live for a table with at least one real number", () => {
+describe("isNumberlessTable", () => {
+  it("is true when every entry is played 0 / points 0", () => {
     expect(
-      classifyStandingsTable(
-        table({ entries: [entry({ played: 4, points: 9 })] }),
-      ),
-    ).toBe("live");
+      isNumberlessTable([
+        entry({ played: 0, points: 0, team_id: 1 }),
+        entry({ played: 0, points: 0, team_id: 2 }),
+      ]),
+    ).toBe(true);
   });
 
-  it("reads numberless for a table where every entry is played 0 / points 0", () => {
-    expect(
-      classifyStandingsTable(
-        table({
-          entries: [
-            entry({ played: 0, points: 0, team_id: 1 }),
-            entry({ played: 0, points: 0, team_id: 2 }),
-          ],
-        }),
-      ),
-    ).toBe("numberless");
+  it("is false when at least one entry carries real numbers", () => {
+    expect(isNumberlessTable([entry({ played: 4, points: 9 })])).toBe(false);
   });
 });
 
@@ -211,21 +189,27 @@ describe("classifyStandingsTables", () => {
 });
 
 describe("competitiveBlockHeadingLabel", () => {
+  it("reads null for not-in-competition — no nav entry to label", () => {
+    expect(
+      competitiveBlockHeadingLabel({ kind: "not-in-competition" }),
+    ).toBeNull();
+  });
+
+  it("reads null for unavailable — no nav entry to label", () => {
+    expect(competitiveBlockHeadingLabel({ kind: "unavailable" })).toBeNull();
+  });
+
   it("reads Klassement for a live state", () => {
-    expect(competitiveBlockHeadingLabel({ kind: "live", tables: [] })).toBe(
-      "Klassement",
-    );
+    expect(competitiveBlockHeadingLabel({ kind: "live" })).toBe("Klassement");
   });
 
   it("reads De reeks for a no-table state", () => {
-    expect(competitiveBlockHeadingLabel({ kind: "no-table", tables: [] })).toBe(
-      "De reeks",
-    );
+    expect(competitiveBlockHeadingLabel({ kind: "no-table" })).toBe("De reeks");
   });
 
   it("reads De reeks for a numberless state", () => {
-    expect(
-      competitiveBlockHeadingLabel({ kind: "numberless", tables: [] }),
-    ).toBe("De reeks");
+    expect(competitiveBlockHeadingLabel({ kind: "numberless" })).toBe(
+      "De reeks",
+    );
   });
 });

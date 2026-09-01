@@ -135,13 +135,10 @@ export const NoTables: Story = {
   args: { tables: [] },
 };
 
-/**
- * Every entry reads `played 0` / `points 0` — the section renders the reeks
- * as a plain club list instead of a table full of zeroes.
- */
-export const Numberless: Story = {
-  args: { tables: [numberlessSeason], highlightTeamId: 1235 },
-};
+// The single-table numberless render is `Features/Teams/StandingsTable`'s
+// `Numberless` story — byte-identical to what this section would produce
+// with one numberless table, so it isn't duplicated here (#2636 finding 6).
+// `MixedTables` below is the genuinely distinct section-level case.
 
 /**
  * The winter-break shape (#2636 finding 4): a finished, fully-scored autumn
