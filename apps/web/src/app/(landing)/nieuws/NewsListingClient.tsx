@@ -11,6 +11,7 @@ import {
 } from "@/components/design-system";
 import { formatArticleDate } from "@/lib/utils/dates";
 import { articleTypeCardLabel } from "@/lib/utils/article-type-label";
+import { useFilterParam } from "@/hooks/useFilterParam";
 import { LISTING_BATCH_SIZE, LISTING_INITIAL_TOTAL } from "@/lib/constants";
 import { deduplicateById, type Paginated } from "@/lib/utils/pagination";
 import {
@@ -59,6 +60,24 @@ export function NewsListingClient({
   const applyCategoryRef = useRef<
     (category: string, options: { updateUrl: boolean }) => void
   >(() => {});
+
+  // The URL-write half of the mechanism below, via `useFilterParam` in
+  // "history" mode (#2779). Only the setter is used — `activeCategory`
+  // above stays this component's own source of truth for rendering, since
+  // it's driven by the async fetch-then-write sequence `applyCategory` owns
+  // (see its own comment), not a simple reactive derivation. `initialValue`
+  // seeds the hook's internal tracking from the same server-resolved prop
+  // `activeCategory` already uses, so the two never start out of sync.
+  const categorySlugs = useMemo(
+    () => categories.map((c) => c.attributes.slug),
+    [categories],
+  );
+  const [, setCategoryParam] = useFilterParam("categorie", categorySlugs, {
+    fallback: "all",
+    route: "/nieuws",
+    writeVia: "history",
+    initialValue: initialCategory ?? "all",
+  });
 
   const loadMore = useCallback(async () => {
     if (!hasMore || isLoadingRef.current) return;
@@ -116,17 +135,18 @@ export function NewsListingClient({
   // `loading.tsx` and unmounts this component, discarding the grid the
   // client fetch above just built (#2564 review finding 3, reproduced: every
   // chip click fired two fetches and flashed the loading skeleton).
-  // `window.history.pushState` updates the address bar and adds a real
-  // history entry (browser back undoes a filter, #2429 resolution rule 5)
-  // without going through Next's router at all, so no server re-render, no
-  // second fetch, no discarded grid. Passing the current `window.history.state`
-  // (not `{}`) keeps Next's internal `__NA` marker, so its own patched
-  // push/replaceState still treats this as an internal write rather than a
-  // fresh navigation to re-process — same precedent as
-  // `lib/utils/same-page-anchor.ts`. Because `pushState` doesn't itself
-  // notify React, a `popstate` listener re-runs this same fetch (with
-  // `updateUrl: false`, since the browser already moved the URL) so back/
-  // forward doesn't leave the grid out of sync with the address bar.
+  // `setCategoryParam` (via `useFilterParam` in "history" mode, #2779)
+  // writes `window.history.pushState` instead — updating the address bar
+  // and adding a real history entry (browser back undoes a filter, #2429
+  // resolution rule 5) without going through Next's router at all, so no
+  // server re-render, no second fetch, no discarded grid. The URL write
+  // stays gated on fetch SUCCESS and happens only here, after the grid is
+  // already updated — never in the click handler itself — the ordering is
+  // deliberate and unchanged by adopting the hook's setter. Because a
+  // `pushState`-driven write doesn't itself notify React, a `popstate`
+  // listener re-runs this same fetch (with `updateUrl: false`, since the
+  // browser already moved the URL) so back/forward doesn't leave the grid
+  // out of sync with the address bar.
   const applyCategory = useCallback(
     async (category: string, { updateUrl }: { updateUrl: boolean }) => {
       if (category === activeCategory) return;
@@ -152,12 +172,7 @@ export function NewsListingClient({
         nextOffsetRef.current = result.items.length;
         setHasMore(result.hasMore);
 
-        if (updateUrl) {
-          const url = categoryFilter
-            ? `/nieuws?categorie=${encodeURIComponent(categoryFilter)}`
-            : "/nieuws";
-          window.history.pushState(window.history.state, "", url);
-        }
+        if (updateUrl) setCategoryParam(category);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (err) {
         if (requestId !== categoryRequestId.current) return;
@@ -176,7 +191,7 @@ export function NewsListingClient({
         }
       }
     },
-    [activeCategory, fetchArticles],
+    [activeCategory, fetchArticles, setCategoryParam],
   );
 
   // Chip click / "Toon alles" undo — the URL-writing path.
