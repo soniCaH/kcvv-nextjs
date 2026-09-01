@@ -63,6 +63,7 @@ beforeEach(() => {
   trackStepLinkClicked.mockClear();
   mockSearchParams = new URLSearchParams();
   mockPanel = null;
+  window.location.hash = "";
 });
 
 const q = (re: RegExp) => screen.getByRole("button", { name: re });
@@ -308,6 +309,29 @@ describe("HulpFinder", () => {
     expect(mockPush).toHaveBeenCalledWith(
       expect.not.stringContaining("audience="),
       { scroll: false },
+    );
+  });
+
+  it("keeps the #<slug> deep-linked category after an unrelated audience chip click (#2564 review finding 2)", () => {
+    // Reproduction: land on /hulp#<slug> (reveal() sets `category` locally,
+    // WITHOUT touching ?categorie=), then press an audience chip — an
+    // unrelated ?audience= URL push must not clobber the revealed category
+    // back to "Alles".
+    window.location.hash = "#blessure";
+    render(<HulpFinder responsibilityPaths={FINDER_FIXTURE_PATHS} />);
+
+    expect(q(/mijn kind is geblesseerd/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Medisch" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Ouder" }));
+
+    expect(q(/mijn kind is geblesseerd/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Medisch" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
   });
 

@@ -120,18 +120,25 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
   // →" driven changes go through `setCategoryFilter` below, which pushes
   // the URL (#2429 resolution rule 5 / #2564) — browser back then undoes a
   // category filter. The block right after re-syncs `category` FROM the URL
-  // on navigation (back/forward), mirroring `SearchInterface`'s
-  // `trackedSearchParams` pattern.
+  // on navigation, mirroring `SearchInterface`'s `trackedSearchParams`
+  // pattern — but tracked on the `?categorie=` VALUE, not the `searchParams`
+  // object reference. Tracking the object would re-fire on ANY url change
+  // (e.g. an audience chip push) and, reading a `?categorie=` the URL never
+  // carried the reveal-set category in, unconditionally reset back to
+  // "alles" — clobbering `reveal()`'s local override on every unrelated
+  // navigation (#2564 review finding 2, reproduced: land on `/hulp#<slug>`,
+  // click an audience chip, the revealed question disappears).
   const [category, setCategory] = useState<CategoryFilter>(() => {
     const initial = searchParams.get(CATEGORY_PARAM);
     return isCategoryKey(initial) ? initial : "alles";
   });
-  const [trackedSearchParams, setTrackedSearchParams] = useState(searchParams);
-  if (trackedSearchParams !== searchParams) {
-    setTrackedSearchParams(searchParams);
-    const urlCategory = searchParams.get(CATEGORY_PARAM);
-    const nextCategory: CategoryFilter = isCategoryKey(urlCategory)
-      ? urlCategory
+  const categoryParam = searchParams.get(CATEGORY_PARAM);
+  const [trackedCategoryParam, setTrackedCategoryParam] =
+    useState(categoryParam);
+  if (trackedCategoryParam !== categoryParam) {
+    setTrackedCategoryParam(categoryParam);
+    const nextCategory: CategoryFilter = isCategoryKey(categoryParam)
+      ? categoryParam
       : "alles";
     if (nextCategory !== category) setCategory(nextCategory);
   }
