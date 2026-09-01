@@ -25,7 +25,7 @@
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import type { PortableTextBlock } from "@portabletext/react";
-import type { RankingEntry, RankingTable } from "@kcvv/api-contract";
+import type { Match, RankingEntry, RankingTable } from "@kcvv/api-contract";
 import type { PlayerVM } from "@/lib/repositories/player.repository";
 import type { ScheduleMatch } from "@/components/match/types";
 import { TeamHero } from "@/components/team/TeamHero";
@@ -37,6 +37,7 @@ import { TeamStaff } from "@/components/team/TeamStaff";
 import type { TeamStaffMemberData } from "@/components/team/TeamStaff";
 import { TeamEditorial } from "@/components/team/TeamEditorial";
 import { StripedSeam, PageContainer } from "@/components/design-system";
+import { deriveCompetitiveBlockState } from "@/lib/utils/competitive-block-state";
 
 const KCVV_TEAM_ID = 1235;
 const TEAM_SLUG = "kcvv-elewijt-a";
@@ -123,6 +124,23 @@ const scheduleMatches: ScheduleMatch[] = [
   scheduleMatch(3, 7, "scheduled", undefined, false, OPP_A),
   scheduleMatch(4, 14, "scheduled", undefined, true, OPP_B),
 ];
+
+function fixtureMatch(competitionType: Match["competitionType"]): Match {
+  return {
+    id: 900,
+    date: new Date("2026-09-05T14:00:00.000Z"),
+    home_team: KCVV,
+    away_team: OPP_A,
+    status: "scheduled",
+    competitionType,
+  } as Match;
+}
+
+// The #2636 AC 2 gate itself: at least one OFFICIAL (`competitionType ===
+// "league"`) fixture this season. Empty reads as not-in-competition exactly
+// as `deriveCompetitiveBlockState` does for a real team with no league feed.
+const LEAGUE_FIXTURE: Match[] = [fixtureMatch("league")];
+const NO_LEAGUE_FIXTURE: Match[] = [];
 
 // State 2 (#2540/#2636/#2605) — in competition, no rows published yet. The
 // same fixture list, but the association has not published a table at all.
@@ -251,15 +269,22 @@ const contactInfo: PortableTextBlock[] = [
   block({ text: "Secretariaat: info@kcvvelewijt.be" }),
 ];
 
-/** The four `deriveCompetitiveBlockState` outcomes this page can render. */
+/** The four `deriveCompetitiveBlockState` outcomes this page can render —
+ * fed the same shape `page.tsx` passes it (`matches` + `standings`), and
+ * switched on the same `state.kind`, rather than a hand-derived
+ * `inCompetition` boolean paralleling that function instead of calling it
+ * (#2636 finding 13). */
 type CompetitiveVariant =
   "not-in-competition" | "no-table" | "numberless" | "live";
 
-const COMPETITIVE_TABLES: Record<CompetitiveVariant, RankingTable[]> = {
-  "not-in-competition": [],
-  "no-table": noTableTables,
-  numberless: numberlessTables,
-  live: standingsTables,
+const COMPETITIVE_FIXTURES: Record<
+  CompetitiveVariant,
+  { matches: Match[]; standings: RankingTable[] }
+> = {
+  "not-in-competition": { matches: NO_LEAGUE_FIXTURE, standings: [] },
+  "no-table": { matches: LEAGUE_FIXTURE, standings: noTableTables },
+  numberless: { matches: LEAGUE_FIXTURE, standings: numberlessTables },
+  live: { matches: LEAGUE_FIXTURE, standings: standingsTables },
 };
 
 interface TeamDetailAssemblyProps {
@@ -276,7 +301,8 @@ interface TeamDetailAssemblyProps {
  * in their place.
  */
 function TeamDetailAssembly({ competitive = "live" }: TeamDetailAssemblyProps) {
-  const inCompetition = competitive !== "not-in-competition";
+  const { matches, standings } = COMPETITIVE_FIXTURES[competitive];
+  const competitiveState = deriveCompetitiveBlockState({ matches, standings });
 
   return (
     <>
@@ -292,7 +318,7 @@ function TeamDetailAssembly({ competitive = "live" }: TeamDetailAssemblyProps) {
         />
       </PageContainer>
 
-      {!inCompetition ? (
+      {competitiveState.kind === "not-in-competition" ? (
         <>
           <StripedSeam colorPair="ink-cream" height="md" />
           <PageContainer className="py-10">
@@ -304,7 +330,7 @@ function TeamDetailAssembly({ competitive = "live" }: TeamDetailAssemblyProps) {
           <StripedSeam colorPair="ink-cream" height="md" />
           <PageContainer as="section" className="py-10">
             <StandingsSection
-              tables={COMPETITIVE_TABLES[competitive]}
+              tables={standings}
               divisionFull="Eerste Elftal A – 3e Nat. A"
               highlightTeamId={KCVV_TEAM_ID}
             />
