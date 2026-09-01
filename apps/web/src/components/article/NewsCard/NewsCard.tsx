@@ -44,6 +44,11 @@ export interface NewsCardProps {
    * `getCardSubjectArtefact` returns for a `"document"` subject) to keep
    * the hatch, which stays the default so every existing caller is
    * byte-unchanged.
+   *
+   * Positioning contract: every artefact `getCardSubjectArtefact` returns
+   * expects to fill a `position: relative`, definitely-sized container —
+   * this card wraps `fallback` in exactly that (see the render below), so
+   * a caller never needs to size or position the node it passes.
    */
   fallback?: ReactNode;
   /** Single category label — shown in the MonoLabel row above the title. */
@@ -284,7 +289,12 @@ export const NewsCard = ({
             blurDataURL={imageLqip ?? undefined}
           />
         ) : fallback ? (
-          <div data-testid="newscard-image-artefact">{fallback}</div>
+          <div
+            data-testid="newscard-image-artefact"
+            className="relative h-full w-full"
+          >
+            {fallback}
+          </div>
         ) : (
           <div
             data-testid="newscard-image-fallback"

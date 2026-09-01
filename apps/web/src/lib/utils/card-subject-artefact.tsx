@@ -49,14 +49,20 @@ export type CardArtefactSubject =
 // Measured at #2462: a 180×180 crest, contained in a 288px card, lands at
 // ~121px with no upscale. `<JerseyShirt>`'s own default (240px) and its
 // documented corner-anchor override (140px) bracket that number, so 128px
-// (Tailwind `h-32`/`w-32`) keeps every artefact in this same visual
-// register across subject kinds. `<Crest>`'s `size` prop takes the number
-// directly; `<JerseyShirt>`'s override must stay a static Tailwind class
-// (a template-literal arbitrary value is invisible to Tailwind's static
-// scanner and silently ships no CSS at all) — keep the two in sync by hand
-// if this ever changes.
+// keeps every artefact in this same visual register across subject kinds.
+// `<Crest>`'s `size` prop takes the number directly.
+//
+// `<JerseyShirt>`'s own className is a plain string concat
+// (`` `... h-60 w-60${className}` ``), not `cn()` — so a same-property
+// override (`h-32`/`w-32` against its baked-in `h-60`/`w-60`) is decided by
+// Tailwind's generated stylesheet order, not by which class comes later in
+// the attribute string, and loses (code review, #2574: the team artefact
+// baseline shipped byte-comparable to the unstyled 240px default). `max-h-*`
+// / `max-w-*` are a **different** CSS property from `height`/`width`, so
+// they compose instead of conflicting, the same pattern `<TeamHero>` and
+// `<YouthDirectory>` already use against this exact component.
 const ARTEFACT_SLOT_SIZE = 128;
-const ARTEFACT_SLOT_SIZE_CLASS = "mx-0 h-32 w-32";
+const ARTEFACT_SLOT_SIZE_CLASS = "h-full max-h-32 w-full max-w-32";
 
 /**
  * Maps an imageless card's subject to its own artefact — #2462's resolution
@@ -64,6 +70,15 @@ const ARTEFACT_SLOT_SIZE_CLASS = "mx-0 h-32 w-32";
  * than a generic texture." One helper owns this mapping (#2462 rule 5) so
  * no call-site re-decides it; pass the result straight to `<NewsCard
  * fallback>` (or any consumer of the same slot shape).
+ *
+ * **Positioning contract.** Every branch below renders content that expects
+ * to fill its immediate container — `<JerseyIllustration variant="card">`
+ * is `absolute inset-0` itself; the team/club wrappers are `absolute
+ * inset-0` too. The element you render this into **must** be `position:
+ * relative` with a definite size (e.g. `className="relative h-full
+ * w-full"`) — `<NewsCard>`'s own `fallback` slot does this. Don't rely on
+ * some further ancestor happening to be `relative`, the way an earlier
+ * version of this wiring did.
  *
  * `"document"` resolves to `undefined` on purpose (#2462 rule 2) — a
  * document has no artefact, and that is not a gap: there is no illustration

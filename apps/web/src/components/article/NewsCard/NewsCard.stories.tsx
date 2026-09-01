@@ -334,6 +334,21 @@ const artefactSharedArgs = {
   imageUrl: undefined,
 };
 
+// The real card width these artefacts render into — `<VerderLezenRow>`'s
+// slider slot is `w-72 md:w-80` (288/320px, see VerderLezenRow.tsx). The
+// bare 1440px canvas these stories rendered on before (code review #2574
+// finding #4) locked baselines at a card width no page produces — the
+// exact gap that let finding #1's inert Tailwind override through
+// un-caught. Mirrors the framing `JerseyIllustration.stories.tsx` already
+// uses for the same reason.
+const ARTEFACT_CARD_DECORATOR: NonNullable<Story["decorators"]> = [
+  (StoryFn) => (
+    <div className="w-72">
+      <StoryFn />
+    </div>
+  ),
+];
+
 export const ArtefactPersonPlayer: Story = {
   args: {
     ...artefactSharedArgs,
@@ -345,6 +360,7 @@ export const ArtefactPersonPlayer: Story = {
       seed: "storybook-player-1",
     }),
   },
+  decorators: ARTEFACT_CARD_DECORATOR,
   tags: ["vr"],
 };
 
@@ -360,6 +376,7 @@ export const ArtefactPersonStaff: Story = {
       seed: "storybook-staff-1",
     }),
   },
+  decorators: ARTEFACT_CARD_DECORATOR,
   tags: ["vr"],
 };
 
@@ -370,6 +387,19 @@ export const ArtefactTeam: Story = {
     badge: "PLOEG",
     fallback: getCardSubjectArtefact({ kind: "team", ageLabel: "U14" }),
   },
+  decorators: ARTEFACT_CARD_DECORATOR,
+  tags: ["vr"],
+};
+
+/** A team subject with no age label — `<JerseyShirt>` renders no chest overlay. */
+export const ArtefactTeamNoAgeLabel: Story = {
+  args: {
+    ...artefactSharedArgs,
+    title: "Reserven sluiten af op de vijfde plaats",
+    badge: "PLOEG",
+    fallback: getCardSubjectArtefact({ kind: "team" }),
+  },
+  decorators: ARTEFACT_CARD_DECORATOR,
   tags: ["vr"],
 };
 
@@ -384,6 +414,7 @@ export const ArtefactClubCrest: Story = {
       logoUrl: "/images/logos/clubs/dummy-vert.svg",
     }),
   },
+  decorators: ARTEFACT_CARD_DECORATOR,
   tags: ["vr"],
 };
 
@@ -407,6 +438,24 @@ export const ArtefactClubPlaceholderCrest: Story = {
       logoUrl: "/images/logos/clubs/dummy-grey.svg",
     }),
   },
+  decorators: ARTEFACT_CARD_DECORATOR,
+  tags: ["vr"],
+};
+
+/**
+ * A club subject with no logo at all — falls through to `<Crest>`'s own
+ * initialled-disc fallback (never invented by `getCardSubjectArtefact`
+ * itself). The likeliest real PSD state to actually ship, per #2472's own
+ * measurement that a name-only club record is common upstream.
+ */
+export const ArtefactClubNoLogo: Story = {
+  args: {
+    ...artefactSharedArgs,
+    title: "Onderlinge geschiedenis tegen SK Laar",
+    badge: "TEGENSTANDER",
+    fallback: getCardSubjectArtefact({ kind: "club", name: "SK Laar" }),
+  },
+  decorators: ARTEFACT_CARD_DECORATOR,
   tags: ["vr"],
 };
 
@@ -418,5 +467,6 @@ export const ArtefactDocument: Story = {
     badge: "PAGINA",
     fallback: getCardSubjectArtefact({ kind: "document" }),
   },
+  decorators: ARTEFACT_CARD_DECORATOR,
   tags: ["vr"],
 };
