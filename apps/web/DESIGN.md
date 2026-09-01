@@ -437,6 +437,26 @@ A rotated, content-bearing paper stamp that pins over the edge of a card — 14p
 
 A full-bleed 45° two-tone stripe band (12 / 18 / 24 / 28px tall) rendered as an SVG pattern, used as a section rule. Four pairs: ink-cream (default, high contrast), jersey-cream, jersey-tonal-dark, and cream-jersey-deep. The angle can flip so a top and bottom seam lean toward each other and "tape" a section shut.
 
+## The Imageless Card
+
+**A card without a photo shows its own subject's artefact, not a generic texture.** A person (player or staff) takes the jersey-illustration figure; a team takes the shirt; a club (an opponent) takes its crest, contained on `bg-cream-soft`. Only one subject kind has nothing to depict — a document (an article, a page, a gallery, an event) — and for that one the 135° jersey-deep hatch keeps its job. One helper, `getCardSubjectArtefact` (`apps/web/src/lib/utils/card-subject-artefact.tsx`), owns the mapping from subject kind to artefact so no call-site re-decides it; a card only ever learns "render this instead of the hatch" via its `fallback` slot.
+
+Decided on [#2462](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2462) (crest card), [#2472](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2472) (placeholder crest), amended by [#2485](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2485) (the non-playing figure), built by [#2574](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2574).
+
+### Named Rules
+
+**The Subject, Not The Route Rule.** The artefact follows the document the card was built from, never the page it happens to render on. The same player is the same jersey figure in the squad grid and in a related-content row — the divergence this closes is that, before #2574, they were not.
+
+**The Document Has Nothing To Show Rule.** A document is the one subject kind with no artefact, and that is not a gap — there is no illustration for "a piece of writing". The hatch is correct for exactly this one case, which is why it stays `<NewsCard>`'s own default rather than becoming a fifth artefact.
+
+**The Person Resolves One Level Finer Rule (#2485).** "Person → jersey illustration" is one level too coarse: a player document takes the jersey, a staff document takes a coat off the same figure — same head, torso and shoulder bumps; only the garment-front lines (collar + shirt pattern vs. lapels/placket/notch ticks) and the two-pass palette (inverted: ink underprint, jersey-deep overprint) change. The key is always the document type, never the route and never role text — a role string is missing or generic (`"Staf"`) for most of the site's imageless staff cards, so it cannot carry this decision.
+
+**The Contained, Never Covered Rule.** A crest is `object-contain` at every size, including this artefact's ~121px card scale (measured on a 288px card, #2462) — never `object-cover`, which would crop a square transparent logo the way #2462's own worked example predicted. The team shirt and the player/staff figure are likewise sized to sit inside their slot, not fill it edge to edge.
+
+**The Slot Keeps Its Ratio Rule.** The artefact fills the card's existing image region; it never switches that region to a different aspect ratio per subject kind. This is what keeps a slider's cards sharing a top edge — the one thing the rejected "go typographic" candidate at #2462 gave away.
+
+**The Placeholder Crest Is Accepted, Unqualified Rule (#2472).** A club's logo — a real crest, PSD's generic grey-shield placeholder for an unknown club id, or (rarer) a real per-club URL that happens to decode to a fully transparent image — renders through the exact same path, at every scale, with **no detection of any kind**: no byte-hashing, no redirect-target check, no `?v=` sniffing, no deny-list. Judged on render, not on rate: neither failure mode reads as a defect at any measured size, so there is no threshold to defend and nothing to substitute it with. A missing or wrong crest is upstream data work in PSD, not a render-time concern — see `getCardSubjectArtefact`'s docblock for the six ways a detector was tried and found insufficient.
+
 ## What an Image Says
 
 **An image says only what the page does not already say.** If the subject is named in the same section — a card's own title, a figure's own caption, an opening's own `<h1>` — the image is decorative and says nothing. Where nothing else names it, the image carries the whole burden.
@@ -474,6 +494,7 @@ Decided on [#2548](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2548), b
 - **Do** author heading emphasis as a Portable Text `accent` decorator, one emphasis per heading.
 - **Do** use Phosphor Fill icons from the single icon source.
 - **Do** give an image `alt=""` when its own section already names it, and describe the moment when nothing else does.
+- **Do** reach for `getCardSubjectArtefact` before hand-rolling a no-photo treatment for a new card — a fifth artefact or a second mapping is exactly the drift #2462 closed.
 
 ### Don't:
 
@@ -493,3 +514,4 @@ Decided on [#2548](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2548), b
 - **Don't** feed a heading, a card title or a caption back into the image beside it — a duplicated sentence spends the reader's attention twice for nothing.
 - **Don't** give an artefact an accessible name. The jersey illustration and the monogram disc identify nobody, so they take `aria-hidden`, not a label.
 - **Don't** add an alt field to a cover image. A cover is never alone, and an optional field that is correct when empty only invites a half-filled one.
+- **Don't** try to tell a real crest apart from PSD's placeholder shield. No byte-hashing, no redirect-target check, no `?v=` sniffing, no deny-list — #2472 tried six variants of this and rejected all of them; a missing crest is upstream data work, not a render-time concern.
