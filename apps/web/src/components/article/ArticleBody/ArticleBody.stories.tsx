@@ -867,6 +867,52 @@ export const WithMixedPhase5Blocks: Story = {
   },
 };
 
+// Consecutive blockquote-style blocks (code review finding 8 on #2566).
+// Reproduces the shape of production's `2024-03-25-kopzorgen-het-voetbal`,
+// whose editor pressed Enter between paragraphs of ONE continuous quoted
+// statement — Portable Text does not merge same-style blocks, so that
+// authored 5 sibling `blockquote` blocks, not 5 separate quotations. A
+// quotation is one object (#2515 rule 2): `buildSegments` groups the run
+// into a single `<PullQuote>` card carrying one paragraph per source
+// block, with a lone blockquote elsewhere in the body still rendering its
+// own separate card.
+export const WithConsecutiveBlockquotes: Story = {
+  args: {
+    content: [
+      paragraph(
+        "Iedere voetballiefhebber kan zich wel een belangrijk kopbaldoelpunt voor de geest halen.",
+      ),
+      blockquoteParagraph(
+        "De regels van het voetbalspel worden bepaald door IFAB en FIFA. Voetbal Vlaanderen volgt deze regels.",
+        "bq-1",
+      ),
+      blockquoteParagraph(
+        "Daarom is het belangrijk dat het koppen op een juiste manier aangeleerd wordt, zodat jeugdspelers later het verschil kunnen maken.",
+        "bq-2",
+      ),
+      blockquoteParagraph(
+        "Vanaf U10 is er in ons opleidingsplan ruimte voor de halfhoge bal en kan het technisch juist koppen aangeleerd worden.",
+        "bq-3",
+      ),
+      paragraph(
+        "Dat blijft de leidraad voor elke jeugdcoach bij KCVV Elewijt.",
+      ),
+      blockquoteParagraph(
+        "Een aparte, losstaande quote verderop in het artikel — dit blijft wél zijn eigen kaart.",
+        "bq-lone",
+      ),
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Three consecutive `blockquote` blocks merge into ONE taped card (one quote mark, three paragraphs) instead of three stacked near-identical cards. A fourth, later blockquote separated by a normal paragraph renders as its own separate card, unaffected.",
+      },
+    },
+  },
+};
+
 // Body-flow eventFact (not absorbed by hero). Mirrors the
 // announcement / interview / transfer variants where the eventFact
 // authored inside the body renders as a polaroid card.

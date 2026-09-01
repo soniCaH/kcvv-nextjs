@@ -283,17 +283,36 @@ function socialBrandFor(
 }
 
 /**
- * Segment the body content into PT-block runs and consecutive-
- * transferFact groups, per the 5.d-tra adjacency rule.
+ * Segment the body content into PT-block runs, consecutive-transferFact
+ * groups (5.d-tra adjacency rule), and consecutive-blockquote groups.
+ *
+ * A quotation is one object (#2515 rule 2), but Portable Text does not
+ * merge adjacent same-style blocks — an editor who pressed Enter between
+ * paragraphs of ONE quoted statement produces N sibling `blockquote`-style
+ * blocks, not one. Left ungrouped, that renders as N stacked taped cards
+ * with N quote marks for what reads as a single quotation (measured on
+ * production: `2024-03-25-kopzorgen-het-voetbal` carries 5 consecutive
+ * blockquote blocks that are one continuous statement). Consecutive
+ * blockquote-style blocks are buffered here and rendered as one
+ * `<PullQuote>` card carrying one paragraph per source block.
  */
 type ArticleBodySegment =
   | { kind: "pt"; key: string; blocks: PortableTextBlock[] }
-  | { kind: "transfer-facts"; key: string; facts: TransferFactValue[] };
+  | { kind: "transfer-facts"; key: string; facts: TransferFactValue[] }
+  | { kind: "blockquote-group"; key: string; blocks: PortableTextBlock[] };
+
+function isBlockquoteStyleBlock(block: PortableTextBlock): boolean {
+  return (
+    block._type === "block" &&
+    (block as PortableTextBlockLike).style === "blockquote"
+  );
+}
 
 function buildSegments(blocks: PortableTextBlock[]): ArticleBodySegment[] {
   const segments: ArticleBodySegment[] = [];
   let ptBuffer: PortableTextBlock[] = [];
   let tfBuffer: TransferFactValue[] = [];
+  let bqBuffer: PortableTextBlock[] = [];
   let idx = 0;
 
   const flushPt = () => {
@@ -312,20 +331,39 @@ function buildSegments(blocks: PortableTextBlock[]): ArticleBodySegment[] {
       tfBuffer = [];
     }
   };
+  const flushBq = () => {
+    if (bqBuffer.length > 0) {
+      segments.push({
+        kind: "blockquote-group",
+        key: `bq-${idx++}`,
+        blocks: bqBuffer,
+      });
+      bqBuffer = [];
+    }
+  };
 
   for (const block of blocks) {
     if (block._type === "transferFact") {
       const fact = block as TransferFactValue;
       if (!fact.playerName?.trim()) continue;
       flushPt();
+      flushBq();
       tfBuffer.push(fact);
       continue;
     }
+    if (isBlockquoteStyleBlock(block)) {
+      flushPt();
+      flushTf();
+      bqBuffer.push(block);
+      continue;
+    }
     flushTf();
+    flushBq();
     ptBuffer.push(block);
   }
   flushPt();
   flushTf();
+  flushBq();
   return segments;
 }
 
@@ -360,17 +398,69 @@ function TransferFactGroup({ facts }: { facts: TransferFactValue[] }) {
   );
 }
 
+/**
+ * Components for rendering the merged children of a blockquote group —
+ * identical to the outer `components` (so accent/link marks inside a quote
+ * still resolve) except `block.blockquote` itself renders a plain
+ * paragraph instead of recursing into another `<PullQuote>`. One source
+ * `blockquote`-style block becomes one `<p>` inside the single merged card.
+ */
+function buildBlockquoteGroupComponents(
+  base: PortableTextComponents,
+): PortableTextComponents {
+  return {
+    ...base,
+    block: {
+      ...(base.block as Record<string, unknown>),
+      blockquote: ({ children }: { children?: ReactNode }) => (
+        <p className="mb-3 last:mb-0">{children}</p>
+      ),
+    },
+  };
+}
+
+function BlockquoteGroup({
+  blocks,
+  components,
+}: {
+  blocks: PortableTextBlock[];
+  components: PortableTextComponents;
+}) {
+  const innerComponents = buildBlockquoteGroupComponents(components);
+  return (
+    <div data-blockquote-spacer="true" className="my-10">
+      <PullQuote>
+        <PortableText value={blocks} components={innerComponents} />
+      </PullQuote>
+    </div>
+  );
+}
+
 function renderSegments(
   segments: ArticleBodySegment[],
   components: PortableTextComponents,
 ): ReactNode {
-  return segments.map((seg) =>
-    seg.kind === "pt" ? (
-      <PortableText key={seg.key} value={seg.blocks} components={components} />
-    ) : (
-      <TransferFactGroup key={seg.key} facts={seg.facts} />
-    ),
-  );
+  return segments.map((seg) => {
+    if (seg.kind === "pt") {
+      return (
+        <PortableText
+          key={seg.key}
+          value={seg.blocks}
+          components={components}
+        />
+      );
+    }
+    if (seg.kind === "transfer-facts") {
+      return <TransferFactGroup key={seg.key} facts={seg.facts} />;
+    }
+    return (
+      <BlockquoteGroup
+        key={seg.key}
+        blocks={seg.blocks}
+        components={components}
+      />
+    );
+  });
 }
 
 function renderPullQuote(
@@ -607,6 +697,14 @@ export function buildComponents({
       // marks (accent, links) rendered by the surrounding PortableText
       // pass, so it's forwarded as-is rather than re-run through the
       // string-only emphasis highlighter.
+      //
+      // `buildSegments` diverts every blockquote-style block (single or
+      // consecutive) into a `blockquote-group` segment before it ever
+      // reaches this map — see `BlockquoteGroup` below — so this handler
+      // is unreachable from the top-level `content` array. It stays
+      // defined for the serializer-completeness guard (#2278) and as a
+      // defensive fallback for any nested PortableText pass that renders
+      // `content` directly without going through `buildSegments` first.
       blockquote: ({ children }) => (
         <div data-blockquote-spacer="true" className="my-10">
           <PullQuote>{children}</PullQuote>

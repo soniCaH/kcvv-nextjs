@@ -494,6 +494,71 @@ describe("<ArticleBody>", () => {
       const wrapper = container.querySelector("[data-pull-quote-tone]");
       expect(wrapper?.children).toHaveLength(2);
     });
+
+    it("groups consecutive blockquote blocks into ONE card, not one per block (code review finding 8)", () => {
+      // Reproduces the production shape of `2024-03-25-kopzorgen-het-voetbal`,
+      // whose editor pressed Enter between paragraphs of one continuous
+      // statement, producing 5 sibling blockquote-style blocks — not 5
+      // separate quotations. A quotation is one object (#2515 rule 2).
+      const content = [
+        paragraph("Intro."),
+        blockquoteBlock("Eerste alinea van de quote."),
+        blockquoteBlock("Tweede alinea van de quote."),
+        paragraph("Slot."),
+      ];
+      const { container } = render(<ArticleBody content={content} />);
+
+      // Exactly one card, not two.
+      const cards = container.querySelectorAll("[data-pull-quote-tone]");
+      expect(cards).toHaveLength(1);
+      // Exactly one QuoteMark inside it (the card's single gesture, #2515
+      // rule 3) — asserted structurally via the merged card's own child
+      // count: QuoteMark + blockquote body + (no attribution row).
+      expect(cards[0]?.children).toHaveLength(2);
+      // Both paragraphs' text made it into the single merged card.
+      expect(
+        screen.getByText("Eerste alinea van de quote."),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Tweede alinea van de quote."),
+      ).toBeInTheDocument();
+    });
+
+    it("does not group blockquotes separated by a normal paragraph", () => {
+      const content = [
+        blockquoteBlock("Losstaande quote één."),
+        paragraph("Tussenzin."),
+        blockquoteBlock("Losstaande quote twee."),
+      ];
+      const { container } = render(<ArticleBody content={content} />);
+      const cards = container.querySelectorAll("[data-pull-quote-tone]");
+      expect(cards).toHaveLength(2);
+    });
+
+    it("renders inline marks (e.g. accent) inside a grouped blockquote", () => {
+      const marked: PortableTextBlock = {
+        _type: "block",
+        _key: "bq-marked",
+        style: "blockquote",
+        children: [
+          { _type: "span", _key: "c1", text: "Normale tekst en ", marks: [] },
+          {
+            _type: "span",
+            _key: "c2",
+            text: "geaccentueerd",
+            marks: ["accent"],
+          },
+          { _type: "span", _key: "c3", text: ".", marks: [] },
+        ],
+        markDefs: [],
+      } as unknown as PortableTextBlock;
+      const content = [blockquoteBlock("Eerste alinea."), marked];
+      const { container } = render(<ArticleBody content={content} />);
+      expect(screen.getByText("geaccentueerd").tagName).toBe("EM");
+      expect(container.querySelectorAll("[data-pull-quote-tone]")).toHaveLength(
+        1,
+      );
+    });
   });
 
   describe("transferFact adjacency grouping", () => {
