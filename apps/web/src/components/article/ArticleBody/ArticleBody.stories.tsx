@@ -116,7 +116,6 @@ function transferFactBlock(args: {
 function pullQuoteBlock(
   body: string,
   extras: {
-    tone?: "cream" | "ink" | "jersey";
     respondentKey?: string;
     emphasis?: string;
     externalName?: string;
@@ -227,7 +226,6 @@ const WITH_PULL_QUOTE_CONTENT: PortableTextBlock[] = [
   pullQuoteBlock(
     "We hebben de kleedkamer in de derde minuut weer wakker gekregen.",
     {
-      tone: "ink",
       respondentKey: "subj-coach",
     },
   ),
@@ -437,8 +435,8 @@ export const AllPullQuote: Story = {
 // Mixed body with an inline `pullQuote` block that resolves a KCVV
 // subject (Wim Govaerts) via respondentKey. The pullQuote renders the
 // avatar layout with the staff photo + italic display name + mono caps
-// role/source. tone="ink" demonstrates the dark variant inside the
-// otherwise cream body. EndMark closes the body.
+// role/source, in the default flow placement (cream — the `pullQuote`
+// block never carries a tone, #2515 decision). EndMark closes the body.
 export const WithPullQuote: Story = {
   args: {
     content: WITH_PULL_QUOTE_CONTENT,

@@ -361,7 +361,7 @@ describe("<ArticleBody>", () => {
     it("renders <PullQuote> with avatar slot when respondentKey resolves", () => {
       const content = [
         paragraph("First."),
-        pullQuoteBlock({ respondentKey: "subj-1", tone: "cream" }),
+        pullQuoteBlock({ respondentKey: "subj-1" }),
       ];
       const subjects = [
         {
@@ -432,15 +432,67 @@ describe("<ArticleBody>", () => {
       ).toBeNull();
     });
 
-    it("threads tone='ink' from the PT block through to <PullQuote>", () => {
+    it("stays in the default flow placement (cream) — the pullQuote block never carries a tone (decision #2515)", () => {
       const content = [
         paragraph("First."),
-        pullQuoteBlock({ externalName: "Coach", tone: "ink" }),
+        pullQuoteBlock({ externalName: "Coach" }),
       ];
       const { container } = render(<ArticleBody content={content} />);
       expect(
-        container.querySelector('[data-pull-quote-tone="ink"]'),
+        container.querySelector('[data-pull-quote-tone="cream"]'),
       ).not.toBeNull();
+      expect(
+        container.querySelector('[data-pull-quote-placement="flow"]'),
+      ).not.toBeNull();
+    });
+
+    it("omits the attribution row for a nameless quote — no resolved subject and no externalName (#2515 rule 1)", () => {
+      const content = [paragraph("First."), pullQuoteBlock({})];
+      const { container } = render(<ArticleBody content={content} />);
+      const wrapper = container.querySelector("[data-pull-quote-tone]");
+      expect(wrapper).not.toBeNull();
+      // QuoteMark + blockquote only — no third (attribution) child.
+      expect(wrapper?.children).toHaveLength(2);
+    });
+  });
+
+  describe("blockquote PT style serializer (#2566, decision #2515 rule 2)", () => {
+    function blockquoteBlock(text: string): PortableTextBlock {
+      return {
+        _type: "block",
+        _key: `bq-${Math.random().toString(36).slice(2, 8)}`,
+        style: "blockquote",
+        children: [{ _type: "span", _key: "bq-c", text, marks: [] }],
+        markDefs: [],
+      } as PortableTextBlock;
+    }
+
+    it("renders a CMS blockquote as the full <PullQuote> taped card, not the deleted <BodyQuote>", () => {
+      const content = [
+        paragraph("First."),
+        blockquoteBlock("Hier kan ik tonen wat ik in mij heb."),
+      ];
+      const { container } = render(<ArticleBody content={content} />);
+      expect(
+        screen.getByText("Hier kan ik tonen wat ik in mij heb."),
+      ).toBeInTheDocument();
+      expect(container.querySelector("[data-pull-quote-tone]")).not.toBeNull();
+      expect(container.querySelector("[data-body-quote]")).toBeNull();
+    });
+
+    it("renders the blockquote card with the default flow placement (cream), same register everywhere — rule 2, one register", () => {
+      const content = [blockquoteBlock("Compagnie.")];
+      const { container } = render(<ArticleBody content={content} />);
+      expect(
+        container.querySelector('[data-pull-quote-tone="cream"]'),
+      ).not.toBeNull();
+    });
+
+    it("omits the attribution row for a blockquote (editor blockquotes carry no structured attribution)", () => {
+      const content = [blockquoteBlock("Compagnie.")];
+      const { container } = render(<ArticleBody content={content} />);
+      const wrapper = container.querySelector("[data-pull-quote-tone]");
+      expect(wrapper?.children).toHaveLength(2);
     });
   });
 

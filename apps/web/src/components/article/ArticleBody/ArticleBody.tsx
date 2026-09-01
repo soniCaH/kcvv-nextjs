@@ -12,13 +12,9 @@ import {
   X,
 } from "@/lib/icons.redesign";
 import type { ReactNode } from "react";
-import { BodyQuote } from "@/components/design-system/BodyQuote";
 import { DropCapParagraph } from "@/components/design-system/DropCapParagraph";
 import { EndMark } from "@/components/design-system/EndMark";
-import {
-  PullQuote,
-  type PullQuoteTone,
-} from "@/components/design-system/PullQuote";
+import { PullQuote } from "@/components/design-system/PullQuote";
 import { QASectionDivider } from "@/components/design-system/QASectionDivider";
 import { SubjectAvatar } from "@/components/design-system/SubjectAvatar";
 import { TapedFigure } from "@/components/design-system/TapedFigure";
@@ -58,6 +54,8 @@ import { cn } from "@/lib/utils/cn";
  *   - `accent` mark renders italic + jersey-deep (5.A.1).
  *   - `h2` block delegates to <QASectionDivider> for the section-break
  *     treatment (5.d3 lock).
+ *   - `blockquote` style block renders <PullQuote> as the full taped card
+ *     — the only quote object on the site (#2566, decision #2515).
  *   - `pullQuote` block renders <PullQuote> with a <SubjectAvatar
  *     scale="attribution"> in the attribution slot (5.A.2 + 5.d2 lock).
  *   - `transferFact` runs renders as a 1-up / 2-up grid via the
@@ -117,7 +115,6 @@ interface PullQuoteBlock {
   _type: "pullQuote";
   _key?: string;
   body?: string;
-  tone?: PullQuoteTone;
   respondentKey?: string;
   emphasis?: string;
   externalName?: string;
@@ -386,14 +383,12 @@ function renderPullQuote(
   const respondent = resolvePairRespondent(value.respondentKey, subjects);
   const resolved = resolveSubject(respondent);
   const emphasis = value.emphasis ? { text: value.emphasis } : undefined;
-  const tone = value.tone ?? "cream";
 
   let inner: ReactNode;
 
   if (resolved && respondent) {
     inner = (
       <PullQuote
-        tone={tone}
         attribution={{
           name: resolved.name,
           role: resolved.role || undefined,
@@ -414,7 +409,6 @@ function renderPullQuote(
     const externalName = value.externalName?.trim();
     inner = externalName ? (
       <PullQuote
-        tone={tone}
         attribution={{
           name: externalName,
           role: value.externalRole?.trim() || undefined,
@@ -425,9 +419,10 @@ function renderPullQuote(
         {body}
       </PullQuote>
     ) : (
-      <PullQuote tone={tone} attribution={{ name: "" }} emphasis={emphasis}>
-        {body}
-      </PullQuote>
+      // No resolvable speaker and no external name — a nameless quote.
+      // `attribution` is omitted entirely; <PullQuote> skips the row
+      // rather than rendering an empty one (#2515 rule 1).
+      <PullQuote emphasis={emphasis}>{body}</PullQuote>
     );
   }
 
@@ -606,7 +601,17 @@ export function buildComponents({
           {children}
         </h6>
       ),
-      blockquote: ({ children }) => <BodyQuote>{children}</BodyQuote>,
+      // A CMS blockquote becomes the full <PullQuote> card — tape, offset
+      // shadow, everything. One register, no in-prose exception (#2566,
+      // decision #2515 rule 2). `children` already carries any inline
+      // marks (accent, links) rendered by the surrounding PortableText
+      // pass, so it's forwarded as-is rather than re-run through the
+      // string-only emphasis highlighter.
+      blockquote: ({ children }) => (
+        <div data-blockquote-spacer="true" className="my-10">
+          <PullQuote>{children}</PullQuote>
+        </div>
+      ),
     },
     // Tailwind v4 Preflight strips list-style + padding from ul/ol; the body is
     // not wrapped in `prose`, so lists need explicit markers/indent here or they

@@ -811,8 +811,9 @@
    off-brand drop-cap / h2-rule / blockquote rules that previously lived
    here have been removed — those treatments are now owned by the
    `ArticleBody.tsx` PortableText serializer through design-system
-   primitives (<DropCapParagraph>, <QASectionDivider>, <BodyQuote>). What
-   remains in this block is the body fade-up motion (§7.5). */
+   primitives (<DropCapParagraph>, <QASectionDivider>, <PullQuote> — the
+   `blockquote` style renders the full taped card, #2566). What remains in
+   this block is the body fade-up motion (§7.5). */
 
 /* §7.5 — Body fade-up motion. The `article-body-motion` class is applied
    by `ArticleBodyMotion` on mount, and the `--entered` modifier is added
