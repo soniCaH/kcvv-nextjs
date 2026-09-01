@@ -76,8 +76,8 @@
       "@/components/design-system/Alert": [
         "../apps/web/src/components/design-system/Alert/index.ts"
       ],
-      "@/components/design-system/BodyQuote": [
-        "../apps/web/src/components/design-system/BodyQuote/index.ts"
+      "@/components/design-system/BracketAffordance": [
+        "../apps/web/src/components/design-system/BracketAffordance/index.ts"
       ],
       "@/components/design-system/Button": [
         "../apps/web/src/components/design-system/Button/index.ts"
@@ -93,6 +93,9 @@
       ],
       "@/components/design-system/EditorialHeading": [
         "../apps/web/src/components/design-system/EditorialHeading/index.ts"
+      ],
+      "@/components/design-system/EmptyState": [
+        "../apps/web/src/components/design-system/EmptyState/index.ts"
       ],
       "@/components/design-system/EndMark": [
         "../apps/web/src/components/design-system/EndMark/index.ts"
@@ -111,6 +114,9 @@
       ],
       "@/components/design-system/JerseyShirt": [
         "../apps/web/src/components/design-system/JerseyShirt/index.ts"
+      ],
+      "@/components/design-system/LeaderDotRow": [
+        "../apps/web/src/components/design-system/LeaderDotRow/index.ts"
       ],
       "@/components/design-system/LinkButton": [
         "../apps/web/src/components/design-system/LinkButton/index.ts"
@@ -167,6 +173,12 @@
         "../apps/web/src/components/event/EventsBrowser/index.ts"
       ],
       "@/components/home": ["../apps/web/src/components/home/index.ts"],
+      "@/components/home/FeaturedUitgelichtRow": [
+        "../apps/web/src/components/home/FeaturedUitgelichtRow/index.ts"
+      ],
+      "@/components/home/FirstTeamsBlock": [
+        "../apps/web/src/components/home/FirstTeamsBlock/index.ts"
+      ],
       "@/components/home/SponsorsSection": [
         "../apps/web/src/components/home/SponsorsSection/index.ts"
       ],
@@ -245,6 +257,9 @@
         "../apps/web/src/components/organigram/StructureDirectory/index.ts"
       ],
       "@/components/player": ["../apps/web/src/components/player/index.ts"],
+      "@/components/player/PlayerHero": [
+        "../apps/web/src/components/player/PlayerHero/index.ts"
+      ],
       "@/components/search": ["../apps/web/src/components/search/index.ts"],
       "@/components/sponsors": ["../apps/web/src/components/sponsors/index.ts"],
       "@/components/sponsors/SponsorTile": [
@@ -261,6 +276,9 @@
       ],
       "@/components/team/SquadGrid": [
         "../apps/web/src/components/team/SquadGrid/index.ts"
+      ],
+      "@/components/team/StandingsSection": [
+        "../apps/web/src/components/team/StandingsSection/index.ts"
       ],
       "@/components/team/StandingsTable": [
         "../apps/web/src/components/team/StandingsTable/index.ts"
