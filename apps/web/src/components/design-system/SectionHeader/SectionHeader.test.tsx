@@ -1,7 +1,23 @@
 // apps/web/src/components/design-system/SectionHeader/SectionHeader.test.tsx
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { SectionHeader } from "./SectionHeader";
+import { SectionHeader, type SectionHeaderProps } from "./SectionHeader";
+
+// Type-level assertion (D10/S2 size restriction) — TypeScript, not
+// vitest, is what's under test here. `@ts-expect-error` fails the *type
+// check* if the flagged line stops being an error (i.e. if `ruled: true`
+// and a non-default `size` ever become a legal pair again), which is what
+// makes the D10 evidence's single-size restriction a compile error at the
+// call site rather than a convention nothing enforces. Bare const
+// declaration — no runtime behavior is under test.
+const _ruledWithNonDefaultSize: SectionHeaderProps = {
+  title: "Nieuws",
+  ruled: true,
+  // @ts-expect-error — `ruled: true` restricts `size` to the default
+  // (display-lg); D10 shows no other size paired with the ruled variant.
+  size: "display-sm",
+};
+void _ruledWithNonDefaultSize;
 
 describe("SectionHeader", () => {
   describe("Title", () => {
@@ -117,10 +133,22 @@ describe("SectionHeader", () => {
       );
       const header = container.querySelector("header");
       expect(header).toHaveAttribute("data-ruled", "true");
-      expect(header).toHaveClass("items-center", "text-center");
+      // Centring only activates from the `lg` breakpoint — see
+      // RULED_TITLE_MAX_LENGTH's doc comment for why a bare (unprefixed)
+      // items-center/text-center would slice a rule through a heading
+      // that wraps to two lines below `lg`.
+      expect(header).toHaveClass("lg:items-center", "lg:text-center");
       // Heading flanked by exactly two hairline spans in the same row.
       const row = screen.getByRole("heading").parentElement;
       expect(row?.querySelectorAll('[aria-hidden="true"]')).toHaveLength(2);
+    });
+
+    it("hides the hairlines below the lg breakpoint and shows them from it", () => {
+      const { container } = render(
+        <SectionHeader title="Negentien ploegen, van U6 tot U21" ruled />,
+      );
+      const hairline = container.querySelector('[aria-hidden="true"]');
+      expect(hairline).toHaveClass("hidden", "lg:block");
     });
 
     it("centres a title exactly at the length limit (boundary: 40 chars)", () => {
@@ -142,7 +170,9 @@ describe("SectionHeader", () => {
       expect(container.querySelector("header")).not.toHaveAttribute(
         "data-ruled",
       );
-      expect(container.querySelector("header")).not.toHaveClass("items-center");
+      expect(container.querySelector("header")).not.toHaveClass(
+        "lg:items-center",
+      );
     });
 
     it("warns in development when a too-long title requests the ruled treatment", () => {
