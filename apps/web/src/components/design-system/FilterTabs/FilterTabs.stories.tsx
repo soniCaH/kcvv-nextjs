@@ -44,11 +44,11 @@ const meta = {
       control: "boolean",
       description: "Render as links instead of buttons",
     },
-    shadow: {
+    surface: {
       control: "select",
-      options: ["sm", "soft"],
+      options: ["paper", "inverse"],
       description:
-        "Inactive-chip shadow register — 'soft' for a row hosted on an ink/dark ground",
+        "The row's ground — 'inverse' for a row hosted on an ink/dark ground",
     },
   },
 } satisfies Meta<typeof FilterTabs>;
@@ -89,8 +89,10 @@ const roleTabs: FilterTab[] = [
   { value: "volunteer", label: "Vrijwilliger" },
 ];
 
-// Colour-coded facet tabs — the shape `/kalender` and `/evenementen` pass,
-// sourced from each domain's own colour map (never hardcoded here).
+// Colour-coded facet tabs. `/kalender` is the only surface with a
+// Wedstrijden chip, and it's on cream; `/evenementen` is the only dark row
+// and has no Wedstrijden chip — the two combinations below match what each
+// page actually ships, not a hybrid neither does (#2564 review item 12).
 const kalenderTabs: FilterTab[] = [
   { value: "all", label: "Alles" },
   {
@@ -118,6 +120,10 @@ const kalenderTabs: FilterTab[] = [
   },
   { value: "Andere", label: "Andere" },
 ];
+
+const evenementenTabs: FilterTab[] = kalenderTabs.filter(
+  (tab) => tab.value !== "Wedstrijden",
+);
 
 // The `/hulp` category row — the leading-glyph slot in use.
 const hulpCategoryTabs: FilterTab[] = [
@@ -244,16 +250,18 @@ export const ColorCoded: Story = {
 };
 
 /**
- * `shadow="soft"` — for a row hosted on an ink/dark ground (`/evenementen`
- * on `bg-jersey-deep-dark`), where a hard ink shadow would be invisible.
+ * `surface="inverse"` — for a row hosted on an ink/dark ground
+ * (`/evenementen` on `bg-jersey-deep-dark`), where a hard ink shadow would
+ * be invisible. Renders `/evenementen`'s own tab set (no Wedstrijden chip —
+ * that one's `/kalender`-only, and `/kalender` is on cream).
  */
 export const OnDarkGround: Story = {
   render: (args) => <InteractiveFilterTabs {...args} />,
   args: {
-    tabs: kalenderTabs,
+    tabs: evenementenTabs,
     activeTab: "all",
     showCounts: false,
-    shadow: "soft",
+    surface: "inverse",
     ariaLabel: "Filter evenementen op type",
   },
   decorators: [

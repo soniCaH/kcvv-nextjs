@@ -108,8 +108,10 @@ describe("FilterTabs", () => {
       expect(inactive).toHaveClass("shadow-paper-sm");
     });
 
-    it("inactive chips carry the soft shadow when shadow='soft' (dark/ink ground)", () => {
-      render(<FilterTabs tabs={mockTabs} activeTab="active" shadow="soft" />);
+    it("inactive chips carry the soft shadow when surface='inverse' (dark/ink ground)", () => {
+      render(
+        <FilterTabs tabs={mockTabs} activeTab="active" surface="inverse" />,
+      );
 
       const inactive = screen.getByRole("button", { name: "All 10" });
       expect(inactive).toHaveClass("shadow-paper-sm-soft");

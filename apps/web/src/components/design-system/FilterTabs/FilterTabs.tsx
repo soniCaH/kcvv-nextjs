@@ -11,13 +11,13 @@
  *
  * Each chip is a paper-chip body: `border-2 ink` + `--shadow-paper-sm` +
  * `bg-cream-soft`, mono caps label, sharp corners. Active inverts to
- * `bg-ink text-cream` with the soft `--shadow-paper-sm-soft`. Hover
- * collapses the shadow fully (`hover:shadow-none`) and translates by 4 px
- * on both axes (`hover:translate-x-1 hover:translate-y-1`) over
- * `transition-all duration-300` — the canonical press-down hover shared
- * with `<Button>`, `<BrandedTabs>`, `<ScrollArrowButton>`, and the slider
- * arrows. Counts render inline after a 1 px hairline pipe — no pill, no
- * badge.
+ * `bg-ink text-cream` with the soft `--shadow-paper-sm-soft` — unconditionally,
+ * regardless of `surface` (see below). Hover collapses the shadow fully
+ * (`hover:shadow-none`) and translates by 4 px on both axes
+ * (`hover:translate-x-1 hover:translate-y-1`) over `transition-all
+ * duration-300` — the canonical press-down hover shared with `<Button>`,
+ * `<BrandedTabs>`, `<ScrollArrowButton>`, and the slider arrows. Counts
+ * render inline after a 1 px hairline pipe — no pill, no badge.
  *
  * **The single filter primitive (#2429 / #2564).** One `<FilterTabs>` now
  * absorbs every filter row on the site — News categories, search result
@@ -28,10 +28,10 @@
  * the optional `FilterTab.color` prop (sourced from each domain's own
  * colour map, e.g. `EVENT_TYPE_FILL` — this component stays colour-agnostic
  * and never hardcodes a facet's fill) rather than being flattened to
- * neutral. `shadow="soft"` opts the whole row into the soft shadow for a
- * host on an ink/dark ground (DESIGN.md: a hard ink shadow is invisible
- * there) — mirrors `<TapedCard shadow="soft">` / `<EmptyState
- * surface="inverse">`.
+ * neutral. `surface="inverse"` opts the whole row's INACTIVE chips into the
+ * soft shadow for a host on an ink/dark ground (DESIGN.md: a hard ink
+ * shadow is invisible there) — the same fact `<EmptyState surface="inverse">`
+ * names for its own card, so the two use the same word for it.
  *
  * **Overflow is plain scroll, on purpose.** Four alternatives (wrap-capped,
  * sticky "Alles", "Alles" outside the scroller, snap-back-on-empty) were
@@ -63,6 +63,14 @@
  * State management is left to the parent (`activeTab` + `onChange?`); when
  * `renderAsLinks` is true, tabs with `href` render as `<a>` instead of
  * `<button>` for full-page Next.js navigation.
+ *
+ * Known repo-wide gap, not specific to this component: the press-down hover
+ * above is hand-written rather than `PRESS_DOWN_CLASSES`
+ * (`design-system/press-down.ts`), and unlike that canonical string this
+ * one doesn't gate the translate behind `motion-safe:`. ~20 other sites
+ * share the same ungated form — a repo-wide sweep, not something to fix
+ * here — but this component is now the press-down for all six filter rows,
+ * so it's worth more than the other ~20 (#2564 review, "note, don't fix").
  */
 
 import { cn } from "@/lib/utils/cn";
@@ -96,11 +104,15 @@ export interface FilterTab {
   color?: FilterTabColor;
 }
 
-/** Shadow register for the row — `"sm"` (default) is the hard ink shadow
- *  for a cream/paper field; `"soft"` is for a chip row hosted on an ink or
- *  dark-green ground, where DESIGN.md's rule is that a hard shadow is
- *  invisible. Mirrors `<TapedCard shadow>` / `<EmptyState surface>`. */
-export type FilterTabsShadow = "sm" | "soft";
+/** The row's ground — `"paper"` (default) for a cream/paper field, where the
+ *  hard ink shadow reads correctly; `"inverse"` for a row hosted on an ink
+ *  or dark-green ground, where DESIGN.md's rule is that the hard shadow is
+ *  invisible and the soft one is used instead. Only INACTIVE chips read
+ *  this — the active chip is unconditionally the soft shadow regardless of
+ *  ground. Same word `<EmptyState surface>` / `<TapedCard shadow>` use for
+ *  the same fact, so a row and a nearby empty state name their ground
+ *  identically instead of two props disagreeing on one truth. */
+export type FilterTabsSurface = "paper" | "inverse";
 
 export interface FilterTabsProps {
   /** Array of filter options */
@@ -117,8 +129,8 @@ export interface FilterTabsProps {
   ariaLabel?: string;
   /** Render as links instead of buttons (for Next.js Link / SSR routing) */
   renderAsLinks?: boolean;
-  /** Inactive-chip shadow register — `"soft"` for a row hosted on an ink/dark ground. */
-  shadow?: FilterTabsShadow;
+  /** The row's ground — `"inverse"` for a row hosted on an ink/dark ground. */
+  surface?: FilterTabsSurface;
 }
 
 const CHIP_BASE_CLASSES = [
@@ -135,20 +147,6 @@ const CHIP_BASE_CLASSES = [
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jersey-deep focus-visible:ring-offset-2",
 ] as const;
 
-const CHIP_ACTIVE_CLASSES = [
-  "bg-ink text-cream",
-  "shadow-paper-sm-soft",
-] as const;
-
-const INACTIVE_SHADOW_CLASS: Record<FilterTabsShadow, string> = {
-  sm: "shadow-paper-sm",
-  soft: "shadow-paper-sm-soft",
-};
-
-const ARROW_SIZE_CLASSES = "w-10 h-10";
-const SCROLL_PADDING_LEFT = "pl-12";
-const SCROLL_PADDING_RIGHT = "pr-12";
-
 export function FilterTabs({
   tabs,
   activeTab,
@@ -157,7 +155,7 @@ export function FilterTabs({
   className = "",
   ariaLabel = "Filter tabs",
   renderAsLinks = false,
-  shadow = "sm",
+  surface = "paper",
 }: FilterTabsProps) {
   const { scrollRef, canScrollLeft, canScrollRight, scrollLeft, scrollRight } =
     useScrollHint<HTMLDivElement>();
@@ -165,19 +163,21 @@ export function FilterTabs({
   const renderTab = (tab: FilterTab) => {
     const isActive = activeTab === tab.value;
     const Icon = tab.icon;
+    // One `cn()` call: the colour's border applies at rest AND selected, so
+    // it sits outside the active/inactive branch entirely — twMerge's
+    // last-argument-wins per utility group makes `tab.color.border` beat
+    // the base `border-ink` either way, without a second, nested `cn()`
+    // parsing the same colour classes twice per coloured chip.
     const chipClasses = cn(
       ...CHIP_BASE_CLASSES,
+      isActive ? "bg-ink text-cream" : "bg-cream-soft text-ink",
       isActive
-        ? tab.color
-          ? cn(tab.color.fill, tab.color.border, "shadow-paper-sm-soft")
-          : CHIP_ACTIVE_CLASSES
-        : tab.color
-          ? cn(
-              "bg-cream-soft text-ink",
-              tab.color.border,
-              INACTIVE_SHADOW_CLASS[shadow],
-            )
-          : cn("bg-cream-soft text-ink", INACTIVE_SHADOW_CLASS[shadow]),
+        ? "shadow-paper-sm-soft"
+        : surface === "inverse"
+          ? "shadow-paper-sm-soft"
+          : "shadow-paper-sm",
+      isActive && tab.color?.fill,
+      tab.color?.border,
     );
 
     const content = (
@@ -231,7 +231,7 @@ export function FilterTabs({
         <ScrollArrowButton
           direction="left"
           onClick={scrollLeft}
-          className={ARROW_SIZE_CLASSES}
+          className="h-10 w-10"
         />
       )}
 
@@ -248,8 +248,8 @@ export function FilterTabs({
           // matches BrandedTabs (`gap-3` = 12 px) — overrides the mockup's
           // 8 px to keep the two atoms visually consistent at the row level.
           "scrollbar-hide flex gap-3 overflow-x-auto scroll-smooth pb-1.5",
-          canScrollLeft ? SCROLL_PADDING_LEFT : "pl-0",
-          canScrollRight ? SCROLL_PADDING_RIGHT : "pr-0",
+          canScrollLeft ? "pl-12" : "pl-0",
+          canScrollRight ? "pr-12" : "pr-0",
         )}
       >
         {tabs.map(renderTab)}
@@ -259,7 +259,7 @@ export function FilterTabs({
         <ScrollArrowButton
           direction="right"
           onClick={scrollRight}
-          className={ARROW_SIZE_CLASSES}
+          className="h-10 w-10"
         />
       )}
     </div>
