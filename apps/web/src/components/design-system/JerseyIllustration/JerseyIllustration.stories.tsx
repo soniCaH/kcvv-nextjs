@@ -37,3 +37,23 @@ export const Hero: Story = {
 export const Card: Story = {
   args: { variant: "card", seed: "e5f6a7b8" },
 };
+
+/**
+ * `garment="coat"` (#2485) — the staff-document figure. Same head, torso
+ * and shoulder bumps as `Hero`; only the garment-front lines (lapels,
+ * placket, notch ticks) and the two-pass palette (inverted: ink underprint,
+ * jersey-deep overprint) change. Hero variant — `/staf/[slug]`'s no-photo
+ * fallback.
+ */
+export const CoatHero: Story = {
+  args: { variant: "hero", seed: "a1b2c3d4", garment: "coat" },
+};
+
+/**
+ * `garment="coat"` at card scale (#2485 / #2574) — the imageless-card
+ * artefact a staff-document subject resolves to via
+ * `@/lib/utils/card-subject-artefact`.
+ */
+export const CoatCard: Story = {
+  args: { variant: "card", seed: "e5f6a7b8", garment: "coat" },
+};

@@ -101,4 +101,79 @@ describe("JerseyIllustration", () => {
       );
     });
   });
+
+  describe("garment (#2485 / #2574)", () => {
+    it("defaults to the jersey garment — jersey-deep underprint, ink overprint, V-collar drawn", () => {
+      const { container } = render(
+        <JerseyIllustration variant="card" seed="9f1a2b3c" />,
+      );
+      expect(screen.getByTestId("jersey-illustration")).toHaveAttribute(
+        "data-garment",
+        "jersey",
+      );
+      const underprintGroup = container.querySelector("svg > g");
+      expect(underprintGroup).toHaveAttribute(
+        "fill",
+        "var(--color-jersey-deep)",
+      );
+      const overprintSvg = container.querySelectorAll("svg")[1];
+      const overprintGroup = overprintSvg?.querySelector("g > g");
+      expect(overprintGroup).toHaveAttribute("stroke", "var(--color-ink)");
+      expect(
+        container.querySelector(`path[d="M 92 132 L 110 156 L 128 132"]`),
+      ).toBeInTheDocument();
+    });
+
+    it('garment="coat" inverts the two-pass palette and swaps the collar for lapels, placket and notch ticks', () => {
+      const { container } = render(
+        <JerseyIllustration variant="card" seed="9f1a2b3c" garment="coat" />,
+      );
+      expect(screen.getByTestId("jersey-illustration")).toHaveAttribute(
+        "data-garment",
+        "coat",
+      );
+      const underprintGroup = container.querySelector("svg > g");
+      expect(underprintGroup).toHaveAttribute("fill", "var(--color-ink)");
+      const overprintSvg = container.querySelectorAll("svg")[1];
+      const overprintGroup = overprintSvg?.querySelector("g > g");
+      expect(overprintGroup).toHaveAttribute(
+        "stroke",
+        "var(--color-jersey-deep)",
+      );
+      // The V-collar is gone; the lapel path stands in for it.
+      expect(
+        container.querySelector(`path[d="M 92 132 L 110 156 L 128 132"]`),
+      ).not.toBeInTheDocument();
+      expect(
+        container.querySelector(`path[d="M 84 137 L 110 198 L 136 137"]`),
+      ).toBeInTheDocument();
+      expect(
+        container.querySelector(`path[d="M 110 198 L 110 300"]`),
+      ).toBeInTheDocument();
+    });
+
+    it("keeps the head, torso and shoulder-bump geometry byte-identical between garments — only the garment-front lines and palette differ", () => {
+      const jersey = render(
+        <JerseyIllustration variant="card" seed="9f1a2b3c" />,
+      );
+      const jerseyEllipses = jersey.container.querySelectorAll("ellipse");
+      const jerseyTorsoFill = jersey.container.querySelector(
+        `path[d="${"M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300 Z"}"]`,
+      );
+      expect(jerseyTorsoFill).toBeInTheDocument();
+      jersey.unmount();
+
+      const coat = render(
+        <JerseyIllustration variant="card" seed="9f1a2b3c" garment="coat" />,
+      );
+      const coatEllipses = coat.container.querySelectorAll("ellipse");
+      expect(coatEllipses).toHaveLength(jerseyEllipses.length);
+      expect(
+        coat.container.querySelector(
+          `path[d="${"M 30 300 L 40 168 Q 60 138 110 130 Q 160 138 180 168 L 190 300 Z"}"]`,
+        ),
+      ).toBeInTheDocument();
+      coat.unmount();
+    });
+  });
 });

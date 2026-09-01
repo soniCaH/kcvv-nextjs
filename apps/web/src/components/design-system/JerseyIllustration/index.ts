@@ -1,5 +1,6 @@
 export {
   JerseyIllustration,
+  type JerseyIllustrationGarment,
   type JerseyIllustrationProps,
 } from "./JerseyIllustration";
 export {

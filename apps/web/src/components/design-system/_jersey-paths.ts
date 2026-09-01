@@ -39,6 +39,21 @@ export const JERSEY_TORSO_OUTLINE_PATH =
 
 export const JERSEY_V_COLLAR_PATH = "M 92 132 L 110 156 L 128 132";
 
+/**
+ * Coat garment lines (#2485) — the overprint-only geometry
+ * `<JerseyIllustration garment="coat">` draws instead of
+ * `JERSEY_V_COLLAR_PATH` + the stripe/pattern marks. A player takes the
+ * jersey, a staff member takes a coat: same head, torso and shoulder bumps,
+ * differing only in these garment-front lines and in which ink goes down
+ * first (the coat inverts the underprint/overprint palette — see
+ * `<JerseyIllustration>`). Converging lapels, a placket running to the hem,
+ * and two notch ticks where the lapel meets the collar.
+ */
+export const JERSEY_COAT_LAPEL_PATH = "M 84 137 L 110 198 L 136 137";
+export const JERSEY_COAT_PLACKET_PATH = "M 110 198 L 110 300";
+export const JERSEY_COAT_NOTCH_LEFT_PATH = "M 96 165 L 78 176";
+export const JERSEY_COAT_NOTCH_RIGHT_PATH = "M 124 165 L 142 176";
+
 export const JERSEY_VERTICAL_STRIPE_PATHS = [
   "M 70 168 L 70 300",
   "M 88 158 L 88 300",

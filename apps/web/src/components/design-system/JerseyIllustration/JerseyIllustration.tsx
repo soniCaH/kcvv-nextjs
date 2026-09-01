@@ -37,11 +37,29 @@
  * inverted palette (ink fill / jersey-deep outline), explicitly pinned to
  * `_jersey-paths.ts`'s base geometry — left untouched by this variant system.
  *
- * Path provenance: `_jersey-paths.ts` (shared with `<JerseyShirt>`);
+ * **`garment` (#2485, folded into #2574's card-artefact work).** A person
+ * without a photo takes one of two garments off the same figure: a player
+ * document takes `"jersey"` (default), a staff document takes `"coat"`.
+ * Only the overprint's garment-front lines change (V-collar + shirt pattern
+ * vs. lapels/placket/notch ticks, `_jersey-paths.ts`) and the two-pass
+ * palette inverts — ink underprint, jersey-deep overprint, `<JerseyShirt>`'s
+ * existing inversion rather than a new one, so a staff run reads as
+ * not-a-player at a glance. `garment` is orthogonal to `variant`, which
+ * keeps owning positioning only — there is no way to ask for a green coat
+ * or an inverted jersey. The key is always the document the card was built
+ * from, never the route and never role text — see the shared helper at
+ * `@/lib/utils/card-subject-artefact` for where that decision is made.
+ *
+ * Path provenance: `_jersey-paths.ts` (shared with `<JerseyShirt>`, and the
+ * source of the coat's garment-front paths);
  * `jersey-illustration-geometry.ts` (this component's variant-only additions).
  */
 import { cn } from "@/lib/utils/cn";
 import {
+  JERSEY_COAT_LAPEL_PATH,
+  JERSEY_COAT_NOTCH_LEFT_PATH,
+  JERSEY_COAT_NOTCH_RIGHT_PATH,
+  JERSEY_COAT_PLACKET_PATH,
   JERSEY_FIGURE_VIEWBOX,
   JERSEY_HEAD_ELLIPSE,
   JERSEY_OUTLINE_STROKE_WIDTH,
@@ -62,6 +80,8 @@ import {
 } from "./player-figure-variant";
 
 const STRIPE_STROKE_WIDTH = 2;
+
+export type JerseyIllustrationGarment = "jersey" | "coat";
 
 // The viewBox is 220×300 units rendered into a 140–390px card/hero — 2dp on
 // a geometry value is ~0.006px of movement, and coarser than that is real
@@ -86,6 +106,12 @@ export interface JerseyIllustrationProps {
    * render, every season, and server and client agree.
    */
   seed: string;
+  /**
+   * Which garment the figure wears. `"jersey"` (default) for a player
+   * document, `"coat"` for a staff document — see the docblock above for
+   * why this is a separate, orthogonal prop rather than a third `variant`.
+   */
+  garment?: JerseyIllustrationGarment;
   /** Extra classes merged onto the outer wrapper, after the variant classes. */
   className?: string;
   /** Forwarded test id. Defaults to `"jersey-illustration"`. */
@@ -95,11 +121,22 @@ export interface JerseyIllustrationProps {
 export function JerseyIllustration({
   variant,
   seed,
+  garment = "jersey",
   className,
   "data-testid": dataTestId = "jersey-illustration",
 }: JerseyIllustrationProps) {
   const positioning =
     variant === "hero" ? "relative h-full w-full" : "absolute inset-0";
+  const isCoat = garment === "coat";
+  // The coat inverts the two-pass palette, head included — ink underprint,
+  // jersey-deep overprint — `<JerseyShirt>`'s existing inversion rather than
+  // a new one (#2485 rule 2).
+  const underprintFill = isCoat
+    ? "var(--color-ink)"
+    : "var(--color-jersey-deep)";
+  const overprintStroke = isCoat
+    ? "var(--color-jersey-deep)"
+    : "var(--color-ink)";
 
   // A Server Component (no "use client" in this file or either consumer) —
   // React's Flight dispatcher runs `useMemo` as `(create) => create()`, no
@@ -125,6 +162,7 @@ export function JerseyIllustration({
   return (
     <div
       data-testid={dataTestId}
+      data-garment={garment}
       aria-hidden="true"
       className={cn("bg-cream-soft", positioning, className)}
     >
@@ -137,7 +175,7 @@ export function JerseyIllustration({
           preserveAspectRatio="xMidYMid meet"
           className="block h-full w-full"
         >
-          <g transform={baseTransform} fill="var(--color-jersey-deep)">
+          <g transform={baseTransform} fill={underprintFill}>
             <g transform={headTransform}>
               <ellipse
                 cx={JERSEY_HEAD_ELLIPSE.cx}
@@ -172,7 +210,7 @@ export function JerseyIllustration({
             <g
               transform={baseTransform}
               fill="none"
-              stroke="var(--color-ink)"
+              stroke={overprintStroke}
               strokeWidth={JERSEY_OUTLINE_STROKE_WIDTH}
               strokeLinejoin="miter"
               strokeLinecap="square"
@@ -191,15 +229,42 @@ export function JerseyIllustration({
                   <path d={armLeftPath} />
                   <path d={armRightPath} />
                 </g>
-                <path
-                  d={JERSEY_V_COLLAR_PATH}
-                  strokeWidth={STRIPE_STROKE_WIDTH}
-                />
-                <ShirtPatternMarks
-                  pattern={figure.pattern}
-                  stripeCount={figure.stripeCount}
-                  strokeWidth={STRIPE_STROKE_WIDTH}
-                />
+                {isCoat ? (
+                  // Coat garment-front — converging lapels, a placket to
+                  // the hem, two notch ticks. No shirt pattern: a coat
+                  // doesn't carry the club's striped/dotted kit vocabulary
+                  // (#2485 rule 1).
+                  <>
+                    <path
+                      d={JERSEY_COAT_LAPEL_PATH}
+                      strokeWidth={STRIPE_STROKE_WIDTH}
+                    />
+                    <path
+                      d={JERSEY_COAT_PLACKET_PATH}
+                      strokeWidth={STRIPE_STROKE_WIDTH}
+                    />
+                    <path
+                      d={JERSEY_COAT_NOTCH_LEFT_PATH}
+                      strokeWidth={STRIPE_STROKE_WIDTH}
+                    />
+                    <path
+                      d={JERSEY_COAT_NOTCH_RIGHT_PATH}
+                      strokeWidth={STRIPE_STROKE_WIDTH}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <path
+                      d={JERSEY_V_COLLAR_PATH}
+                      strokeWidth={STRIPE_STROKE_WIDTH}
+                    />
+                    <ShirtPatternMarks
+                      pattern={figure.pattern}
+                      stripeCount={figure.stripeCount}
+                      strokeWidth={STRIPE_STROKE_WIDTH}
+                    />
+                  </>
+                )}
               </g>
             </g>
           </g>

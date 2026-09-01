@@ -138,6 +138,7 @@ export type {
 // JerseyIllustration
 export { JerseyIllustration, playerFigureSeed } from "./JerseyIllustration";
 export type {
+  JerseyIllustrationGarment,
   JerseyIllustrationProps,
   PlayerFigureIdentity,
 } from "./JerseyIllustration";
