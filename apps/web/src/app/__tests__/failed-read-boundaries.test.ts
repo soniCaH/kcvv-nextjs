@@ -34,6 +34,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { Effect, Layer } from "effect";
+import { HttpNotFound, HttpBadGateway } from "@kcvv/api-contract";
+import type { MatchDetail } from "@/lib/effect/schemas/match.schema";
 
 // Sanity is unreachable for every read in this file. Repositories left
 // unmocked below therefore die; the two mocked below are the page subjects
@@ -43,6 +46,36 @@ vi.mock("@/lib/sanity/client", () => ({
     fetch: vi.fn(() => Promise.reject(new Error("Sanity is unreachable"))),
   },
 }));
+
+// `/wedstrijd/[matchId]` reads `BffService` directly in its own page body
+// (not through a child component, unlike the `<MatchStripSlot>` the other
+// pages below mount), so its match-detail and ranking reads must be mocked
+// here rather than left to die against the real BFF. `getMatchDetail` always
+// succeeds — the standings read is this suite's actual subject — and every
+// other method is a safe empty default, mirroring the other pages in this
+// file that never touch the BFF from their own awaited body.
+const { mockGetMatchDetail, mockGetRanking } = vi.hoisted(() => ({
+  mockGetMatchDetail: vi.fn(),
+  mockGetRanking: vi.fn(),
+}));
+
+vi.mock("@/lib/effect/services/BffService", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/effect/services/BffService")>();
+  return {
+    ...actual,
+    BffServiceLive: Layer.succeed(actual.BffService, {
+      getMatches: () => Effect.succeed([]),
+      getNextMatches: () => Effect.succeed([]),
+      getMatchesWindow: () => Effect.succeed([]),
+      getMatchDetail: mockGetMatchDetail,
+      getRanking: mockGetRanking,
+      getRelated: () => Effect.succeed([]),
+      getOpponentHistory: () => Effect.die("not used by this suite"),
+      getPlayerStats: () => Effect.die("not used by this suite"),
+    }),
+  };
+});
 
 vi.mock("@/lib/repositories/player.repository", async (importOriginal) => {
   const mod =
@@ -97,6 +130,23 @@ import CalendarPage from "@/app/(main)/kalender/page";
 import JeugdPage from "@/app/(landing)/jeugd/page";
 import PlayerPage from "@/app/(main)/spelers/[slug]/page";
 import StaffPage from "@/app/(main)/staf/[slug]/page";
+import MatchPage from "@/app/(main)/wedstrijd/[matchId]/page";
+
+/** A league match with a resolvable KCVV side — the only shape that reaches
+ * the `getRanking` call in `fetchStandings` at all. */
+function leagueMatchFixture(id: number): MatchDetail {
+  return {
+    id,
+    date: new Date("2025-12-07T15:00:00"),
+    home_team: { id: 1, name: "KCVV Elewijt" },
+    away_team: { id: 2, name: "KFC Turnhout" },
+    status: "scheduled",
+    hasReport: false,
+    competitionType: "league",
+    kcvv_team_id: 1,
+    is_placeholder: false,
+  } as MatchDetail;
+}
 
 describe("a failed subject takes the page down (#2563)", () => {
   it("/sponsors — the sponsor wall is the subject, so the page throws", async () => {
@@ -134,5 +184,43 @@ describe("a failed section keeps the page (#2563)", () => {
 
   it("/jeugd — a failed editorial-cards read leaves the page", async () => {
     await expect(JeugdPage()).resolves.toBeTruthy();
+  });
+});
+
+describe("/wedstrijd/[matchId] classifies a failed ranking read (#2778)", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockGetMatchDetail.mockReset();
+    mockGetRanking.mockReset();
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("a transient ranking failure (502) takes the page down, so ISR serves the last-good page", async () => {
+    mockGetMatchDetail.mockReturnValue(
+      Effect.succeed(leagueMatchFixture(9001)),
+    );
+    mockGetRanking.mockReturnValue(
+      Effect.fail(new HttpBadGateway({ error: "upstream is down" })),
+    );
+
+    await expect(
+      MatchPage({ params: Promise.resolve({ matchId: "9001" }) }),
+    ).rejects.toThrow();
+  });
+
+  it("a permanent ranking failure (404) degrades to no standings instead of taking the page down", async () => {
+    mockGetMatchDetail.mockReturnValue(
+      Effect.succeed(leagueMatchFixture(9002)),
+    );
+    mockGetRanking.mockReturnValue(
+      Effect.fail(new HttpNotFound({ error: "unknown psd team id" })),
+    );
+
+    await expect(
+      MatchPage({ params: Promise.resolve({ matchId: "9002" }) }),
+    ).resolves.toBeTruthy();
   });
 });
