@@ -61,7 +61,10 @@ export default function ClubPage() {
 
       {/* Mission. */}
       <PageContainer width="index" className="py-12">
-        <PullQuote tone="ink" attribution={{ name: "Sportpark Elewijt" }}>
+        <PullQuote
+          placement="section"
+          attribution={{ name: "Sportpark Elewijt" }}
+        >
           Wij zijn KCVV Elewijt. Een plek waar jong en oud wekelijks samenkomen
           voor hun passie.
         </PullQuote>

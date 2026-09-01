@@ -101,7 +101,7 @@ export function TeamEditorial({
           </div>
           {pullquoteText !== null ? (
             <div className="mt-8 flex justify-center">
-              <PullQuote tone="jersey" attribution={{ name: "" }} rotation={2}>
+              <PullQuote placement="aside" rotation={2}>
                 {pullquoteText}
               </PullQuote>
             </div>

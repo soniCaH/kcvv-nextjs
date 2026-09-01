@@ -198,7 +198,10 @@ export const QaBlock = ({ value, subjects = null }: QaBlockProps) => {
     }
 
     if (unit.kind === "key" || unit.kind === "quote") {
-      const tone = unit.kind === "key" ? "cream" : "ink";
+      // Position, not authorship, decides the card's tone (#2515 rule 5):
+      // "key" reads as a highlight in the flow of QA rows → cream; "quote"
+      // is the interview's dramatic breakout, its own beat → ink.
+      const placement = unit.kind === "key" ? "flow" : "section";
       const first = unit.pair.respondents?.[0];
       const body = flattenAnswerToString(first?.answer);
       if (body.length === 0) return;
@@ -212,7 +215,7 @@ export const QaBlock = ({ value, subjects = null }: QaBlockProps) => {
           rendered.push(
             <PullQuote
               key={unit.pair._key ?? `${unit.kind}-${i}`}
-              tone={tone}
+              placement={placement}
               attribution={{
                 name: joinFirstNames(members.map((m) => m.firstName)),
                 role: UNANIMOUS_ROLE,
@@ -244,7 +247,7 @@ export const QaBlock = ({ value, subjects = null }: QaBlockProps) => {
       rendered.push(
         <PullQuote
           key={unit.pair._key ?? `${unit.kind}-${i}`}
-          tone={tone}
+          placement={placement}
           attribution={{
             name: resolved.name,
             role: resolved.role || undefined,

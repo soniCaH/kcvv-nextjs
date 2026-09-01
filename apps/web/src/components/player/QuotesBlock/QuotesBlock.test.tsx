@@ -146,6 +146,17 @@ describe("QuotesBlock", () => {
       ).toBeInTheDocument();
     });
 
+    it("omits the attribution row entirely when playerName is absent — no phantom empty slot (#2515 rule 1)", () => {
+      render(<QuotesBlock bio={BIO_TWO_MARKS} />);
+      const wrapper = screen
+        .getByTestId("quotesblock")
+        .querySelector("[data-pull-quote-tone]");
+      expect(wrapper).not.toBeNull();
+      // QuoteMark + blockquote only — no third (attribution) child, and no
+      // empty <span> consuming the flex gap under an unset name.
+      expect(wrapper?.children).toHaveLength(2);
+    });
+
     it("renders the canonical heading with the highlighter marker on 'woorden'", () => {
       render(<QuotesBlock bio={BIO_TWO_MARKS} playerName="Maxim" />);
       const heading = screen.getByRole("heading", { level: 2 });
