@@ -444,6 +444,45 @@ export const WithPullQuote: Story = {
   },
 };
 
+// A `pullQuote` block with `emphasis` set — the phrase resolves through
+// `renderTextWithEmphasis()` (lib/portable-text/) into a
+// <HighlighterStroke>-wrapped span inside the quote body. This is the only
+// pictorial VR coverage of a highlighted quote in the suite: `<PullQuote>`
+// lost its own `emphasis` prop (and the `WithEmphasis` story that
+// demonstrated it) when the highlighter pass moved to ArticleBody, its one
+// caller — the feature lives here now, so its VR coverage does too. Long
+// enough that the highlighted phrase is still visible at mobile width.
+const WITH_PULL_QUOTE_EMPHASIS_CONTENT: PortableTextBlock[] = [
+  paragraph(
+    "Wim Govaerts opent de deur van zijn kantoor met een lach. Het tweede seizoen op de bank loopt op zijn einde.",
+  ),
+  pullQuoteBlock(
+    "We hebben de kleedkamer in de derde minuut weer wakker gekregen — dat gevoel van samen knokken voor elkaar dragen we het hele seizoen mee.",
+    {
+      externalName: "Wim Govaerts",
+      externalRole: "TRAINER",
+      emphasis: "samen knokken voor elkaar",
+    },
+  ),
+  paragraph(
+    "Die wakker-roeper-mentaliteit zou de rode draad worden door de tweede helft van het seizoen.",
+  ),
+];
+
+export const PullQuoteWithEmphasis: Story = {
+  args: {
+    content: WITH_PULL_QUOTE_EMPHASIS_CONTENT,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A `pullQuote` block carrying an `emphasis` phrase — served markup runs through `renderTextWithEmphasis()`, so the highlighter stroke is actually drawn in this baseline, not just asserted in a unit test.",
+      },
+    },
+  },
+};
+
 // Edge case: body that doesn't reference any image blocks (the shell's
 // default — image serializers wire in later sub-issues). Distinguished
 // from Medium by being slightly longer + multiple section breaks.
