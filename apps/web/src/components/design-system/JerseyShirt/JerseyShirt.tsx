@@ -35,10 +35,21 @@ export interface JerseyShirtProps {
   /** Optional editor-supplied chest letter overlay (e.g. "U11", "A"). */
   letterOverlay?: string;
   /**
-   * Tailwind classes merged into the outer `<figure>`. Use to override
-   * the default `h-60 w-60` size for corner-anchored variants — e.g.
-   * the R6.C Clubshop section renders the shirt at ~140px in the
-   * top-right corner via `className="h-35 w-35 mx-0"`.
+   * Tailwind classes merged into the outer `<figure>` via a plain string
+   * concat, NOT `cn()` — so a same-property override against the baked-in
+   * `h-60 w-60 mx-auto` (`h-*`, `w-*`, `mx-*`) does **not** reliably win.
+   * Same-property Tailwind utilities resolve by the order they're emitted
+   * in the generated stylesheet, not by which class comes later in this
+   * string, and the default wins regardless. Five call sites relied on
+   * this working and silently render at 240px today (`ClubshopBanner`
+   * additionally stays centred despite passing `mx-0`) — see #2777.
+   *
+   * The one override that *does* work: a **different** CSS property, e.g.
+   * `max-h-*`/`max-w-*` against the baked-in `h-*`/`w-*`, which composes
+   * instead of conflicting (`getCardSubjectArtefact`,
+   * `apps/web/src/lib/utils/card-subject-artefact.tsx`, is the one caller
+   * doing this correctly). Do not add a new same-property override here;
+   * fix #2777 instead.
    */
   className?: string;
 }
@@ -52,10 +63,12 @@ const LETTER_TEXT_SHADOW =
   "2px 2px 0 var(--color-ink), -1px -1px 0 var(--color-ink), 1px -1px 0 var(--color-ink), -1px 1px 0 var(--color-ink)";
 
 export function JerseyShirt({ letterOverlay, className }: JerseyShirtProps) {
-  // The figure's default dimensions live in this base string; the
-  // consumer-supplied className appends *after* so utility wins
-  // (`h-35 w-35 mx-0` overrides `h-60 w-60 mx-auto`). Cheaper than
-  // pulling in `cn()` for one merge.
+  // The figure's default dimensions live in this base string. A
+  // same-property override in `className` (`h-*`, `w-*`, `mx-*`) does NOT
+  // reliably win here — see the `className` prop docblock above and #2777.
+  // Left as a plain concat rather than fixed to `cn()` in this branch: the
+  // fix moves real pixels at five call sites across the site and belongs
+  // in its own PR (#2777), not folded into an unrelated feature branch.
   const figureClass = `relative mx-auto my-0 h-60 w-60${className ? ` ${className}` : ""}`;
   return (
     <figure aria-hidden="true" className={figureClass}>

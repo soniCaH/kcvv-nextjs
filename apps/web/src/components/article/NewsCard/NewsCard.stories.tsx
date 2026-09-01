@@ -354,10 +354,10 @@ export const ArtefactPersonPlayer: Story = {
     ...artefactSharedArgs,
     title: "Wie is de nieuwe aanwinst op links?",
     badge: "SPELER",
-    fallback: getCardSubjectArtefact({
+    artefact: getCardSubjectArtefact({
       kind: "person",
       personType: "player",
-      seed: "storybook-player-1",
+      id: "storybook-player-1",
     }),
   },
   decorators: ARTEFACT_CARD_DECORATOR,
@@ -370,10 +370,10 @@ export const ArtefactPersonStaff: Story = {
     ...artefactSharedArgs,
     title: "Kennismaking met de nieuwe jeugdcoördinator",
     badge: "STAF",
-    fallback: getCardSubjectArtefact({
+    artefact: getCardSubjectArtefact({
       kind: "person",
       personType: "staff",
-      seed: "storybook-staff-1",
+      id: "storybook-staff-1",
     }),
   },
   decorators: ARTEFACT_CARD_DECORATOR,
@@ -385,7 +385,7 @@ export const ArtefactTeam: Story = {
     ...artefactSharedArgs,
     title: "U14 sluit de heenronde af op de tweede plaats",
     badge: "PLOEG",
-    fallback: getCardSubjectArtefact({ kind: "team", ageLabel: "U14" }),
+    artefact: getCardSubjectArtefact({ kind: "team", ageLabel: "U14" }),
   },
   decorators: ARTEFACT_CARD_DECORATOR,
   tags: ["vr"],
@@ -397,7 +397,7 @@ export const ArtefactTeamNoAgeLabel: Story = {
     ...artefactSharedArgs,
     title: "Reserven sluiten af op de vijfde plaats",
     badge: "PLOEG",
-    fallback: getCardSubjectArtefact({ kind: "team" }),
+    artefact: getCardSubjectArtefact({ kind: "team" }),
   },
   decorators: ARTEFACT_CARD_DECORATOR,
   tags: ["vr"],
@@ -408,7 +408,7 @@ export const ArtefactClubCrest: Story = {
     ...artefactSharedArgs,
     title: "Onderlinge geschiedenis tegen KFC Zemst",
     badge: "TEGENSTANDER",
-    fallback: getCardSubjectArtefact({
+    artefact: getCardSubjectArtefact({
       kind: "club",
       name: "KFC Zemst",
       logoUrl: "/images/logos/clubs/dummy-vert.svg",
@@ -425,21 +425,23 @@ export const ArtefactClubCrest: Story = {
  * (out of reach from Storybook) — a flat grey shield with no distinguishing
  * marks, matching #2472's own measurement that every placeholder id hashes
  * identically. The point this story makes is that nothing here looks
- * different from `ArtefactClubCrest` above beyond the source image itself.
+ * different from `ArtefactClubCrest` above beyond the source image itself —
+ * which is also why it carries no `vr` tag: DESIGN.md's rule says no code
+ * will ever distinguish the two, so this baseline cannot regress
+ * independently of `ArtefactClubCrest`'s.
  */
 export const ArtefactClubPlaceholderCrest: Story = {
   args: {
     ...artefactSharedArgs,
     title: "Onderlinge geschiedenis tegen SK Laar",
     badge: "TEGENSTANDER",
-    fallback: getCardSubjectArtefact({
+    artefact: getCardSubjectArtefact({
       kind: "club",
       name: "SK Laar",
       logoUrl: "/images/logos/clubs/dummy-grey.svg",
     }),
   },
   decorators: ARTEFACT_CARD_DECORATOR,
-  tags: ["vr"],
 };
 
 /**
@@ -453,20 +455,24 @@ export const ArtefactClubNoLogo: Story = {
     ...artefactSharedArgs,
     title: "Onderlinge geschiedenis tegen SK Laar",
     badge: "TEGENSTANDER",
-    fallback: getCardSubjectArtefact({ kind: "club", name: "SK Laar" }),
+    artefact: getCardSubjectArtefact({ kind: "club", name: "SK Laar" }),
   },
   decorators: ARTEFACT_CARD_DECORATOR,
   tags: ["vr"],
 };
 
-/** The document path — no artefact, the hatch keeps its job (#2462 rule 2). */
+/**
+ * The document path — no artefact, the hatch keeps its job (#2462 rule 2).
+ * No `vr` tag: this exercises the same "no image, no artefact → hatch"
+ * render path `NoImagePlaceholder` above already guards a baseline for —
+ * only the title/badge text differ, which the hatch itself doesn't render.
+ */
 export const ArtefactDocument: Story = {
   args: {
     ...artefactSharedArgs,
     title: "Nieuw op de website: het clubreglement",
     badge: "PAGINA",
-    fallback: getCardSubjectArtefact({ kind: "document" }),
+    artefact: getCardSubjectArtefact({ kind: "document" }),
   },
   decorators: ARTEFACT_CARD_DECORATOR,
-  tags: ["vr"],
 };

@@ -38,19 +38,13 @@ export interface NewsCardProps {
    * What the image region renders when `imageUrl` is absent, instead of the
    * default hatch — #2462's "a card without a photo shows its own subject's
    * artefact". Build one with `getCardSubjectArtefact`
-   * (`@/lib/utils/card-subject-artefact`) so the mapping from subject kind
-   * to artefact lives in one place; `<NewsCard>` itself only learns "render
-   * this instead of the hatch". Omit (or pass `undefined` — which
-   * `getCardSubjectArtefact` returns for a `"document"` subject) to keep
-   * the hatch, which stays the default so every existing caller is
-   * byte-unchanged.
-   *
-   * Positioning contract: every artefact `getCardSubjectArtefact` returns
-   * expects to fill a `position: relative`, definitely-sized container —
-   * this card wraps `fallback` in exactly that (see the render below), so
-   * a caller never needs to size or position the node it passes.
+   * (`@/lib/utils/card-subject-artefact`), which returns a self-positioning
+   * node — nothing further to size or position here. Omit (or pass
+   * `undefined` — which `getCardSubjectArtefact` returns for a `"document"`
+   * subject) to keep the hatch, which stays the default so every existing
+   * caller is byte-unchanged.
    */
-  fallback?: ReactNode;
+  artefact?: ReactNode;
   /** Single category label — shown in the MonoLabel row above the title. */
   badge?: string;
   /**
@@ -189,7 +183,7 @@ export const NewsCard = ({
   href,
   imageUrl,
   imageLqip,
-  fallback,
+  artefact,
   badge,
   typeLabel,
   date,
@@ -288,13 +282,8 @@ export const NewsCard = ({
             placeholder={imageLqip ? "blur" : "empty"}
             blurDataURL={imageLqip ?? undefined}
           />
-        ) : fallback ? (
-          <div
-            data-testid="newscard-image-artefact"
-            className="relative h-full w-full"
-          >
-            {fallback}
-          </div>
+        ) : artefact ? (
+          artefact
         ) : (
           <div
             data-testid="newscard-image-fallback"

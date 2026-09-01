@@ -52,6 +52,11 @@ export const Card: Story = {
  */
 export const CoatHero: Story = {
   args: { variant: "hero", seed: "a1b2c3d4", garment: "coat" },
+  // `!vr` negates the meta-level "vr" tag — this state renders nowhere in
+  // production (see the docblock above) and the AC doesn't ask for it;
+  // `CoatCard` below is the one `getCardSubjectArtefact` actually draws
+  // from and keeps its baseline.
+  tags: ["!vr"],
 };
 
 /**

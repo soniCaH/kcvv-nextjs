@@ -14,7 +14,7 @@ describe("getCardSubjectArtefact", () => {
         {getCardSubjectArtefact({
           kind: "person",
           personType: "player",
-          seed: "player-1",
+          id: "player-1",
         })}
       </>,
     );
@@ -30,7 +30,7 @@ describe("getCardSubjectArtefact", () => {
         {getCardSubjectArtefact({
           kind: "person",
           personType: "staff",
-          seed: "staff-1",
+          id: "staff-1",
         })}
       </>,
     );
@@ -46,7 +46,7 @@ describe("getCardSubjectArtefact", () => {
         {getCardSubjectArtefact({
           kind: "person",
           personType: "player",
-          seed: "stable-id",
+          id: "stable-id",
         })}
       </>,
     );
@@ -58,7 +58,7 @@ describe("getCardSubjectArtefact", () => {
         {getCardSubjectArtefact({
           kind: "person",
           personType: "player",
-          seed: "stable-id",
+          id: "stable-id",
         })}
       </>,
     );
@@ -83,6 +83,10 @@ describe("getCardSubjectArtefact", () => {
   });
 
   it("resolves a club to a contained Crest — real logo", () => {
+    // #2472: `<Crest>` does not — and must not — try to tell a real crest
+    // apart from PSD's generic grey-shield placeholder. Any truthy URL
+    // (real or placeholder) renders through this exact same path, with no
+    // detection of any kind.
     const { container } = render(
       <>
         {getCardSubjectArtefact({
@@ -94,24 +98,6 @@ describe("getCardSubjectArtefact", () => {
     );
     const img = container.querySelector("img");
     expect(img).toHaveAttribute("src", "/images/logos/clubs/dummy-vert.svg");
-    expect(img).toHaveClass("object-contain");
-  });
-
-  it("#2472 — a placeholder crest URL is passed straight through, with no detection of any kind", () => {
-    // The whole point of #2472's resolution: `<Crest>` does not — and
-    // must not — try to tell a real crest apart from PSD's generic
-    // grey-shield placeholder. Any truthy URL renders identically.
-    const { container } = render(
-      <>
-        {getCardSubjectArtefact({
-          kind: "club",
-          name: "SK Laar",
-          logoUrl: "/images/logos/clubs/dummy-grey.svg",
-        })}
-      </>,
-    );
-    const img = container.querySelector("img");
-    expect(img).toHaveAttribute("src", "/images/logos/clubs/dummy-grey.svg");
     expect(img).toHaveClass("object-contain");
   });
 

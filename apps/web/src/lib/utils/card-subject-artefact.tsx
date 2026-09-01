@@ -4,6 +4,7 @@ import {
   Crest,
   JerseyIllustration,
   JerseyShirt,
+  playerFigureSeed,
 } from "@/components/design-system";
 
 /**
@@ -23,11 +24,13 @@ export type CardArtefactSubject =
        */
       personType: "player" | "staff";
       /**
-       * Stable identity seeding `<JerseyIllustration>`'s per-player draw
-       * (#2635) — an id, never a display name. Build via `playerFigureSeed`
-       * for a player subject if convenient; any stable id works.
+       * Stable identity, e.g. the Sanity `_id` — never a display name.
+       * Fed through `playerFigureSeed` (the one owner of what a seed
+       * string is), the same way `<SquadGrid>`'s `<PlayerCard>` and
+       * `<PlayerHero>` already do, so a given player draws the same figure
+       * everywhere `<JerseyIllustration>` renders them.
        */
-      seed: string;
+      id: string;
     }
   | {
       kind: "team";
@@ -40,7 +43,7 @@ export type CardArtefactSubject =
       name: string;
       /**
        * Club logo URL. Passed through to `<Crest>` unchanged — see the
-       * placeholder-crest docblock below.
+       * placeholder-crest note below.
        */
       logoUrl?: string | null;
     }
@@ -52,69 +55,44 @@ export type CardArtefactSubject =
 // keeps every artefact in this same visual register across subject kinds.
 // `<Crest>`'s `size` prop takes the number directly.
 //
-// `<JerseyShirt>`'s own className is a plain string concat
-// (`` `... h-60 w-60${className}` ``), not `cn()` — so a same-property
-// override (`h-32`/`w-32` against its baked-in `h-60`/`w-60`) is decided by
-// Tailwind's generated stylesheet order, not by which class comes later in
-// the attribute string, and loses (code review, #2574: the team artefact
-// baseline shipped byte-comparable to the unstyled 240px default). `max-h-*`
-// / `max-w-*` are a **different** CSS property from `height`/`width`, so
-// they compose instead of conflicting, the same pattern `<TeamHero>` and
-// `<YouthDirectory>` already use against this exact component.
+// The class only uses `max-h-*`/`max-w-*` against `<JerseyShirt>`'s baked-in
+// `h-60 w-60` — a *different* CSS property, so it composes instead of
+// racing the default on Tailwind's generated stylesheet order the way a
+// same-property override (`h-32`/`w-32`, or `h-full`/`w-full`) would and
+// silently lose. See `<JerseyShirt>`'s own docblock before changing this.
+// The two constants below encode the same 128px — Tailwind's spacing scale
+// (`32` → `8rem` → 128px) has no token → arbitrary-class helper to derive
+// one from the other, so keep them in sync by hand if this number changes.
 const ARTEFACT_SLOT_SIZE = 128;
-const ARTEFACT_SLOT_SIZE_CLASS = "h-full max-h-32 w-full max-w-32";
+const ARTEFACT_SLOT_SIZE_CLASS = "max-h-32 max-w-32";
 
 /**
- * Maps an imageless card's subject to its own artefact — #2462's resolution
- * for "a card without a photo shows its own subject's artefact… rather
- * than a generic texture." One helper owns this mapping (#2462 rule 5) so
- * no call-site re-decides it; pass the result straight to `<NewsCard
- * fallback>` (or any consumer of the same slot shape).
+ * Maps an imageless card's subject to its own artefact — see DESIGN.md
+ * § "The Imageless Card" for the design rules this implements (#2462,
+ * #2472, #2485). `"document"` resolves to `undefined`, so `<NewsCard>`'s
+ * own hatch stays whatever it already defaults to.
  *
- * **Positioning contract.** Every branch below renders content that expects
- * to fill its immediate container — `<JerseyIllustration variant="card">`
- * is `absolute inset-0` itself; the team/club wrappers are `absolute
- * inset-0` too. The element you render this into **must** be `position:
- * relative` with a definite size (e.g. `className="relative h-full
- * w-full"`) — `<NewsCard>`'s own `fallback` slot does this. Don't rely on
- * some further ancestor happening to be `relative`, the way an earlier
- * version of this wiring did.
+ * Every branch is wrapped in one `relative h-full w-full` container, so the
+ * returned node is self-positioning — a caller doesn't size or position it.
  *
- * `"document"` resolves to `undefined` on purpose (#2462 rule 2) — a
- * document has no artefact, and that is not a gap: there is no illustration
- * for "a piece of writing", so the hatch (`<NewsCard>`'s own default when
- * `fallback` is omitted) keeps its job. It is the only one of the four
- * subject kinds that says nothing about its subject, which is exactly
- * right for the one kind that has nothing to depict.
- *
- * Every returned artefact sits on `bg-cream-soft` and is **contained, never
- * covered** (#2462 rule 3) — `object-contain` on the crest, a fixed-size
- * figure centred in the slot for the team shirt — and the slot itself keeps
- * whatever aspect ratio the caller already gave it (#2462 rule 4); nothing
- * here switches the image region to a different shape.
- *
- * ## The placeholder crest is accepted at every scale (#2472)
- *
- * A club's logo — a real crest, or PSD's generic grey-shield placeholder
- * returned for an unknown club id, or (rarer) a real per-club URL that
- * decodes to a fully transparent image — is rendered exactly the same way,
- * at every size, with **no detection of any kind**: no byte-hashing, no
- * redirect-target check, no `?v=` sniffing, no deny-list. `<Crest>`'s
- * `object-contain` sizing already makes every one of those cases read as a
- * harmless institutional shield (or, in the transparent case, an empty
- * cream slot) rather than a broken image — measured against real
- * production crests at every shipped size plus this artefact's ~121px
- * card scale, and neither failure mode read as a defect at any of them.
- * A missing or wrong crest is upstream data work in PSD, never something
- * this site invents at render time.
- *
- * Do not reintroduce a detector here. #2472's resolution comment records
- * six ways one was tried and found insufficient — cheapest of them (a
- * redirect-target read) still missed the fully-transparent case, which no
- * header or URL shape can see; only decoding pixels can, and that cost was
- * rejected. If this rule is ever revisited, read that comment first.
+ * Do not add crest detection here (byte-hashing, redirect-target checks,
+ * `?v=` sniffing, a deny-list). #2472's resolution comment records six
+ * variants tried and rejected; a missing or wrong crest is upstream PSD
+ * data work, not a render-time concern.
  */
 export function getCardSubjectArtefact(
+  subject: CardArtefactSubject,
+): ReactNode | undefined {
+  const content = renderSubjectArtefact(subject);
+  if (content === undefined) return undefined;
+  return (
+    <div className="bg-cream-soft relative flex h-full w-full items-center justify-center">
+      {content}
+    </div>
+  );
+}
+
+function renderSubjectArtefact(
   subject: CardArtefactSubject,
 ): ReactNode | undefined {
   switch (subject.kind) {
@@ -122,28 +100,24 @@ export function getCardSubjectArtefact(
       return (
         <JerseyIllustration
           variant="card"
-          seed={subject.seed}
+          seed={playerFigureSeed({ id: subject.id })}
           garment={subject.personType === "staff" ? "coat" : "jersey"}
         />
       );
     case "team":
       return (
-        <div className="bg-cream-soft absolute inset-0 flex items-center justify-center">
-          <JerseyShirt
-            letterOverlay={subject.ageLabel ?? undefined}
-            className={ARTEFACT_SLOT_SIZE_CLASS}
-          />
-        </div>
+        <JerseyShirt
+          letterOverlay={subject.ageLabel ?? undefined}
+          className={ARTEFACT_SLOT_SIZE_CLASS}
+        />
       );
     case "club":
       return (
-        <div className="bg-cream-soft absolute inset-0 flex items-center justify-center">
-          <Crest
-            name={subject.name}
-            logo={subject.logoUrl ?? undefined}
-            size={ARTEFACT_SLOT_SIZE}
-          />
-        </div>
+        <Crest
+          name={subject.name}
+          logo={subject.logoUrl ?? undefined}
+          size={ARTEFACT_SLOT_SIZE}
+        />
       );
     case "document":
       return undefined;

@@ -50,16 +50,12 @@
  * from, never the route and never role text — see the shared helper at
  * `@/lib/utils/card-subject-artefact` for where that decision is made.
  *
- * Path provenance: `_jersey-paths.ts` (shared with `<JerseyShirt>`, and the
- * source of the coat's garment-front paths);
- * `jersey-illustration-geometry.ts` (this component's variant-only additions).
+ * Path provenance: `_jersey-paths.ts` (shared with `<JerseyShirt>`);
+ * `jersey-illustration-geometry.ts` (this component's variant-only
+ * additions, including the coat's garment-front paths).
  */
 import { cn } from "@/lib/utils/cn";
 import {
-  JERSEY_COAT_LAPEL_PATH,
-  JERSEY_COAT_NOTCH_LEFT_PATH,
-  JERSEY_COAT_NOTCH_RIGHT_PATH,
-  JERSEY_COAT_PLACKET_PATH,
   JERSEY_FIGURE_VIEWBOX,
   JERSEY_HEAD_ELLIPSE,
   JERSEY_OUTLINE_STROKE_WIDTH,
@@ -70,6 +66,7 @@ import {
   JERSEY_V_COLLAR_PATH,
 } from "../_jersey-paths";
 import {
+  JERSEY_COAT_GARMENT_PATHS,
   JERSEY_SLEEVE_LEFT_PATH,
   JERSEY_SLEEVE_RIGHT_PATH,
 } from "./jersey-illustration-geometry";
@@ -235,22 +232,9 @@ export function JerseyIllustration({
                   // doesn't carry the club's striped/dotted kit vocabulary
                   // (#2485 rule 1).
                   <>
-                    <path
-                      d={JERSEY_COAT_LAPEL_PATH}
-                      strokeWidth={STRIPE_STROKE_WIDTH}
-                    />
-                    <path
-                      d={JERSEY_COAT_PLACKET_PATH}
-                      strokeWidth={STRIPE_STROKE_WIDTH}
-                    />
-                    <path
-                      d={JERSEY_COAT_NOTCH_LEFT_PATH}
-                      strokeWidth={STRIPE_STROKE_WIDTH}
-                    />
-                    <path
-                      d={JERSEY_COAT_NOTCH_RIGHT_PATH}
-                      strokeWidth={STRIPE_STROKE_WIDTH}
-                    />
+                    {JERSEY_COAT_GARMENT_PATHS.map((d) => (
+                      <path key={d} d={d} strokeWidth={STRIPE_STROKE_WIDTH} />
+                    ))}
                   </>
                 ) : (
                   <>
