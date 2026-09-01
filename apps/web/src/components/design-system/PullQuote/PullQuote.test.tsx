@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { PullQuote } from "./PullQuote";
 
 describe("PullQuote", () => {
@@ -36,7 +36,9 @@ describe("PullQuote", () => {
 
   describe("state coverage — attribution / labels / null path (#2515 rule 1)", () => {
     it("omits the attribution row entirely when attribution is absent", () => {
-      const { container } = render(<PullQuote>x</PullQuote>);
+      const { container } = render(
+        <PullQuote attribution={undefined}>x</PullQuote>,
+      );
       expect(
         container.querySelector('[data-pull-quote-name="display"]'),
       ).toBeNull();
@@ -65,23 +67,38 @@ describe("PullQuote", () => {
       expect(screen.getByText("TECHNIEK")).toBeInTheDocument();
     });
 
-    it("attribution wins over labels when both are supplied", () => {
-      render(
-        <PullQuote
-          attribution={{ name: "Maxim" }}
-          labels={[{ label: "PLEZIER" }]}
-        >
-          x
-        </PullQuote>,
-      );
-      expect(screen.getByText("Maxim")).toBeInTheDocument();
-      expect(screen.queryByText("PLEZIER")).toBeNull();
-    });
-
     it("renders nothing in the row slot when neither attribution nor labels are given — the null path", () => {
-      const { container } = render(<PullQuote>x</PullQuote>);
+      const { container } = render(
+        <PullQuote attribution={undefined}>x</PullQuote>,
+      );
       expect(container.querySelector("[data-divider]")).toBeNull();
       expect(container.querySelectorAll("span").length).toBeGreaterThan(0); // QuoteMark still renders
+    });
+
+    it("omits the attribution row when the name is blank — a caller's raw, possibly-empty value needs no ternary (code review finding 4)", () => {
+      const { container } = render(
+        <PullQuote attribution={{ name: "" }}>x</PullQuote>,
+      );
+      const wrapper = container.querySelector("[data-pull-quote-tone]");
+      expect(wrapper?.children).toHaveLength(2);
+    });
+
+    it("omits the attribution row when the name is whitespace-only", () => {
+      const { container } = render(
+        <PullQuote attribution={{ name: "   " }}>x</PullQuote>,
+      );
+      const wrapper = container.querySelector("[data-pull-quote-tone]");
+      expect(wrapper?.children).toHaveLength(2);
+    });
+
+    it("does not compile with both attribution and labels — enforced by the type checker, not a runtime warning (code review finding 3)", () => {
+      const element = (
+        // @ts-expect-error — attribution and labels are mutually exclusive.
+        <PullQuote attribution={{ name: "Maxim" }} labels={[{ label: "X" }]}>
+          x
+        </PullQuote>
+      );
+      expect(element).toBeTruthy();
     });
   });
 
@@ -119,76 +136,13 @@ describe("PullQuote", () => {
     ).not.toBeNull();
   });
 
-  it("renders a non-string children (e.g. Portable Text marks) as-is, without the emphasis pass", () => {
+  it("renders non-string children (e.g. Portable Text marks already resolved by the caller) as-is", () => {
     render(
       <PullQuote attribution={{ name: "x" }}>
         <span data-testid="rich-child">rich text</span>
       </PullQuote>,
     );
     expect(screen.getByTestId("rich-child")).toBeInTheDocument();
-  });
-
-  describe("dev-mode warnings (code review findings 4 & 5)", () => {
-    afterEach(() => {
-      vi.restoreAllMocks();
-      vi.unstubAllEnvs();
-    });
-
-    it("warns in dev when emphasis is passed alongside non-string children", () => {
-      vi.stubEnv("NODE_ENV", "development");
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-      render(
-        <PullQuote attribution={{ name: "x" }} emphasis={{ text: "tribune" }}>
-          <span>rich text</span>
-        </PullQuote>,
-      );
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining("emphasis is ignored"),
-      );
-    });
-
-    it("does not warn when emphasis is passed alongside string children", () => {
-      vi.stubEnv("NODE_ENV", "development");
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-      render(
-        <PullQuote attribution={{ name: "x" }} emphasis={{ text: "tribune" }}>
-          Een tribune die zingt
-        </PullQuote>,
-      );
-      expect(warn).not.toHaveBeenCalled();
-    });
-
-    it("warns in dev when both attribution and labels are passed", () => {
-      vi.stubEnv("NODE_ENV", "development");
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-      render(
-        <PullQuote attribution={{ name: "x" }} labels={[{ label: "PLEZIER" }]}>
-          x
-        </PullQuote>,
-      );
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining("attribution wins"),
-      );
-    });
-
-    it("does not warn when only attribution, or only labels, is passed", () => {
-      vi.stubEnv("NODE_ENV", "development");
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-      render(<PullQuote attribution={{ name: "x" }}>x</PullQuote>);
-      render(<PullQuote labels={[{ label: "PLEZIER" }]}>x</PullQuote>);
-      expect(warn).not.toHaveBeenCalled();
-    });
-  });
-
-  it("emphasis wraps the matched substring in <HighlighterStroke> (no font change)", () => {
-    const { container } = render(
-      <PullQuote attribution={{ name: "x" }} emphasis={{ text: "tribune" }}>
-        Een tribune die zingt is meer waard
-      </PullQuote>,
-    );
-    expect(container.querySelector("[data-highlighter-stroke]")).not.toBeNull();
-    // No <em> — the emphasis is the highlighter alone; font stays italic body.
-    expect(container.querySelector("em")).toBeNull();
   });
 
   describe("avatarSlot layout (5.d2 lock)", () => {

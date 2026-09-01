@@ -3,16 +3,26 @@ import { fixtureImage } from "@test-fixtures/images";
 import { PullQuote, type PullQuoteProps } from "./PullQuote";
 import { SubjectAvatar } from "../SubjectAvatar";
 
+// `Omit` does not distribute over a union — `Omit<PullQuoteProps,
+// "avatarSlot">` would flatten the attribution-XOR-labels union into one
+// object with both fields simultaneously optional, losing the "never
+// both" guarantee `PullQuoteProps` exists to enforce. Distributing `Omit`
+// over each union member first (the standard `DistributedOmit` idiom)
+// keeps it intact.
+type DistributedOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
 // Story-only args used for the avatar-layout variants. Serializable so
 // the Storybook controls panel can introspect every field — `avatarSlot`
 // itself is a `ReactNode` on `PullQuoteProps` and would otherwise be
 // uneditable through Controls. The render function below maps these
 // flat fields into a `<SubjectAvatar />` and forwards everything else
 // to `<PullQuote>`.
-interface AvatarStoryArgs extends Omit<PullQuoteProps, "avatarSlot"> {
+type AvatarStoryArgs = DistributedOmit<PullQuoteProps, "avatarSlot"> & {
   avatarFirstName: string;
   avatarPhotoUrl?: string;
-}
+};
 
 const meta = {
   title: "UI/PullQuote",
@@ -29,7 +39,16 @@ const meta = {
 } satisfies Meta<typeof PullQuote>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+// `StoryObj<typeof meta>` collapses `args` to `never` here: Storybook's
+// `ArgsFromMeta` intersects the untyped `decorators` array's inferred arg
+// type into the story args type, and that inference doesn't handle a
+// component whose props are a discriminated union (attribution XOR
+// labels, #2515 rule 4 / code review finding 3) — confirmed via a minimal
+// repro reproducing the exact `never` collapse and its fix. Typing
+// against the component directly (`StoryObj<typeof PullQuote>`) skips
+// that intersection and type-checks correctly; verified `tags` /
+// `parameters` / `args` on individual stories all still work.
+type Story = StoryObj<typeof PullQuote>;
 type AvatarStory = StoryObj<AvatarStoryArgs>;
 
 function renderWithAvatar({
@@ -88,7 +107,12 @@ export const PlacementAside: Story = {
 };
 
 // Default placement ("flow") — cream, in the flow among paragraphs.
+// Renders the identical code path as Playground (flow is the default, and
+// name-only attribution is already covered three times over) — kept for
+// autodocs completeness only, not VR-tagged (zero pixel delta from
+// Playground, verified by direct PNG comparison).
 export const PlacementFlow: Story = {
+  tags: ["autodocs"],
   args: {
     placement: "flow",
     attribution: { name: "Maxim", role: "A-PLOEG" },
@@ -105,20 +129,13 @@ export const Rotated: Story = {
   },
 };
 
+// Long body wraps across multiple lines inside the card without breaking
+// the layout.
 export const LongQuote: Story = {
   args: {
     attribution: { name: "Voorzitter", role: "BESTUUR" },
-    emphasis: { text: "generatie na generatie" },
     children:
       "Het clubgevoel zit in de kleinste dingen — een kop koffie na de match, een gedeeld pintje, een ouder die zijn kind langs de zijlijn ziet groeien. Dat verkoop je niet, dat bouw je generatie na generatie.",
-  },
-};
-
-export const WithEmphasis: Story = {
-  args: {
-    attribution: { name: "Maxim", role: "A-PLOEG" },
-    emphasis: { text: "tribune die zingt" },
-    children: "Een tribune die zingt is meer waard dan welke aanwinst dan ook.",
   },
 };
 
@@ -141,6 +158,9 @@ export const WithLabelsNoAttribution: Story = {
 
 export const NullPathNoAttributionNoLabels: Story = {
   args: {
+    // Explicit `undefined` (not an omitted prop) — required by
+    // PullQuoteProps' attribution-XOR-labels union.
+    attribution: undefined,
     children: "Een tribune die zingt is meer waard dan welke aanwinst dan ook.",
   },
 };
@@ -148,8 +168,13 @@ export const NullPathNoAttributionNoLabels: Story = {
 // A CMS blockquote — the object this ticket's rule 2 makes the CMS block
 // render as, with a `children` ReactNode standing in for the rich Portable
 // Text output (marks already applied upstream) rather than a plain string.
+// Not VR-tagged: the <em> sits inside an already-italic font-display
+// blockquote, so the mark is invisible to a screenshot (covered by unit
+// tests instead) — kept for autodocs completeness only.
 export const AsBlockquote: Story = {
+  tags: ["autodocs"],
   args: {
+    attribution: undefined,
     children: (
       <>
         Het clubgevoel zit in de kleinste dingen —{" "}

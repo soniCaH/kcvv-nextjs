@@ -265,7 +265,6 @@ export type {
   PullQuoteProps,
   PullQuoteAttribution,
   PullQuotePlacement,
-  PullQuoteEmphasis,
 } from "./PullQuote";
 
 // NumberDisplay

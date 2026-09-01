@@ -14,19 +14,13 @@ const VISIE_TAGS = [
  *
  * Folded into `<PullQuote>` (#2566, decision #2515 rule 4): the visie
  * statement and a mono tag row (the `labels` slot — a nameless quote with
- * context labels instead of a person attribution) inside one card, at the
- * default flow placement (cream).
+ * context labels instead of a person attribution) inside one card.
  *
- * `<SectionKicker>` is a mono eyebrow label (a `<div>`, not a heading
- * element — see `SectionKicker.tsx`), not the "heading above it" rule 5
- * means by "the card owns its own section"; that branch's own examples
- * (`/club`'s mission quote, framed by a `<StripedSeam>` on BOTH sides;
- * `<QuotesBlock>`'s real `<EditorialHeading level={2}>`) don't apply here —
- * `/jeugd` has one seam before the card (the hero's own transition, not a
- * frame around this card) and no seam after. Section/ink would also land
- * this card immediately under `<PageHero register="band" tone="dark">` +
- * that seam, reopening the dark band it just closed. Flow is the honest
- * read of its position, and it happens to be what the page needs.
+ * Explicit, deliberate exception to `<PullQuote>`'s `section` test (see
+ * `PullQuotePlacement`'s doc): this card fails it (a mono kicker, not a
+ * heading; no seam framing both sides) AND section/ink would land it right
+ * under `<PageHero tone="dark">` + the seam that just closed the dark
+ * band — so it stays at the default flow placement (cream) on purpose.
  */
 export function JeugdVisie() {
   return (

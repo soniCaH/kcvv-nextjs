@@ -91,7 +91,7 @@ export function BioBlock({ bio, playerName, className }: BioBlockProps) {
           >
             <PullQuote
               placement="aside"
-              attribution={playerName ? { name: playerName } : undefined}
+              attribution={{ name: playerName ?? "" }}
               rotation={2}
               interactive="tilt"
             >

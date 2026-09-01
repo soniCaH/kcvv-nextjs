@@ -61,7 +61,7 @@ export function QuotesBlock({ bio, playerName, className }: QuotesBlockProps) {
         </EditorialHeading>
         <PullQuote
           placement="section"
-          attribution={playerName ? { name: playerName } : undefined}
+          attribution={{ name: playerName ?? "" }}
           rotation={-0.5}
         >
           {quoteText}

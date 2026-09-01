@@ -105,7 +105,13 @@ export function TeamEditorial({
           </div>
           {pullquoteText !== null ? (
             <div className="mt-8 flex justify-center">
-              <PullQuote rotation={2}>{pullquoteText}</PullQuote>
+              {/* No speaker to attribute (see docblock) and no context
+                  labels — the null path. `attribution={undefined}`
+                  (rather than omitting the prop) is required by
+                  PullQuoteProps' attribution-XOR-labels union. */}
+              <PullQuote attribution={undefined} rotation={2}>
+                {pullquoteText}
+              </PullQuote>
             </div>
           ) : null}
         </section>
