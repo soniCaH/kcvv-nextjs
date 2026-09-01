@@ -14,7 +14,10 @@ import {
   filteredEmptyBody,
   pendingEmptyBody,
 } from "@/lib/utils/empty-state-copy";
-import { EVENT_TYPE_FILL } from "@/components/event/event-type-style";
+import {
+  EVENT_TYPE_FILL,
+  type EventType,
+} from "@/components/event/event-type-style";
 import { CalendarMonth } from "../CalendarMonth";
 import { CalendarWeek } from "../CalendarWeek";
 import { CalendarAgenda } from "../CalendarAgenda";
@@ -39,24 +42,23 @@ import type {
  * `<TicketStub>`'s tear-off date block uses — so the row stays a faithful
  * legend for the tickets it labels. `Wedstrijden` (matches) carries the
  * owner-locked `card-red` fill (#1992); `Alles` and `Andere` carry no
- * colour and render the neutral Direction D chip.
+ * colour and render the neutral Direction D chip (`EVENT_TYPE_FILL.Andere`,
+ * "bg-ink text-cream", already matches that neutral fill, so an explicit
+ * colour on Andere would be a no-op).
+ *
+ * `EVENT_TYPE_TABS satisfies Record<EventType, FilterTab>` — restores the
+ * exhaustiveness guard the old `KalenderFilterBar`'s `satisfies
+ * Record<EventType, ChipStyle>` gave: a new `eventType` enum value is a
+ * compile error here, not a silently uncoloured chip and a `?type=` deep
+ * link `isKalenderFilterValue` would reject (#2564 review finding 4).
  */
-const KALENDER_FILTER_TABS: FilterTab[] = [
-  { value: "all", label: "Alles" },
-  {
-    value: "Wedstrijden",
-    label: "Wedstrijden",
-    color: { border: "border-card-red", fill: "bg-card-red text-cream" },
-  },
-  {
+const EVENT_TYPE_TABS = {
+  Clubevent: {
     value: "Clubevent",
     label: "Clubevent",
-    color: {
-      border: "border-jersey-deep",
-      fill: EVENT_TYPE_FILL.Clubevent,
-    },
+    color: { border: "border-jersey-deep", fill: EVENT_TYPE_FILL.Clubevent },
   },
-  {
+  Supportersactiviteit: {
     value: "Supportersactiviteit",
     label: "Supportersactiviteit",
     color: {
@@ -64,7 +66,7 @@ const KALENDER_FILTER_TABS: FilterTab[] = [
       fill: EVENT_TYPE_FILL.Supportersactiviteit,
     },
   },
-  {
+  Jeugdwerking: {
     value: "Jeugdwerking",
     label: "Jeugdwerking",
     color: {
@@ -72,7 +74,21 @@ const KALENDER_FILTER_TABS: FilterTab[] = [
       fill: EVENT_TYPE_FILL.Jeugdwerking,
     },
   },
-  { value: "Andere", label: "Andere" },
+  Andere: { value: "Andere", label: "Andere" },
+} satisfies Record<EventType, FilterTab>;
+
+// Render order: the four event types in `<TicketStub>` order, derived from
+// the map above so it can't drift out of sync with it.
+const EVENT_TYPE_ORDER = Object.keys(EVENT_TYPE_TABS) as EventType[];
+
+const KALENDER_FILTER_TABS: FilterTab[] = [
+  { value: "all", label: "Alles" },
+  {
+    value: "Wedstrijden",
+    label: "Wedstrijden",
+    color: { border: "border-card-red", fill: "bg-card-red text-cream" },
+  },
+  ...EVENT_TYPE_ORDER.map((type) => EVENT_TYPE_TABS[type]),
 ];
 
 export interface CalendarWidgetProps {

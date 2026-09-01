@@ -158,13 +158,17 @@ export type KalenderFilterValue = KalenderType | "all";
 
 /** Every valid filter value, in render order — the single source of truth for
  *  validating a `?type=` URL param (an unknown value falls back to `"all"`).
- *  `EVENT_TYPE_ORDER` mirrors `<TicketStub>`'s render order. */
-const EVENT_TYPE_ORDER: readonly EventType[] = [
-  "Clubevent",
-  "Supportersactiviteit",
-  "Jeugdwerking",
-  "Andere",
-];
+ *  `EVENT_TYPE_ORDER` mirrors `<TicketStub>`'s render order, derived from a
+ *  `satisfies Record<EventType, true>` map rather than a bare array literal
+ *  so a new `eventType` schema value is a compile error here — not a
+ *  silently-rejected `?type=` deep link (#2564 review finding 4; the same
+ *  exhaustiveness guard `EVENT_TYPE_TABS` restores in `CalendarWidget.tsx`). */
+const EVENT_TYPE_ORDER = Object.keys({
+  Clubevent: true,
+  Supportersactiviteit: true,
+  Jeugdwerking: true,
+  Andere: true,
+} satisfies Record<EventType, true>) as EventType[];
 const KALENDER_FILTER_VALUES: readonly KalenderFilterValue[] = [
   "all",
   "Wedstrijden",

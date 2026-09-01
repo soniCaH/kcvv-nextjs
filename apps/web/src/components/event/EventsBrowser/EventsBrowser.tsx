@@ -19,14 +19,57 @@ import {
 /** Filter selection: a specific event type, or `"all"` (the default — no filter). */
 export type EventFilterValue = EventType | "all";
 
-/** Every valid filter value — the single source of truth for validating a
- *  `?type=` URL param (an unknown value falls back to `"all"`). */
+/**
+ * The `/evenementen` by-type filter row (design lock 6e §2, absorbed into
+ * `<FilterTabs>` by #2429/#2564 — replaces the deleted bespoke
+ * `EventFilterBar`). Colour is a prop (`FilterTab.color`), sourced from the
+ * shared `EVENT_TYPE_FILL` map — the same colours `<TicketStub>`'s tear-off
+ * date block uses — so the row stays a faithful legend for the tickets it
+ * labels. `Alles` and `Andere` carry no colour and render the neutral
+ * Direction D chip (`EVENT_TYPE_FILL.Andere`, "bg-ink text-cream", already
+ * matches that neutral fill). `shadow="soft"` (passed at the call site) is
+ * this row's concession to the dark `jersey-deep-dark` field.
+ *
+ * `EVENT_TYPE_TABS satisfies Record<EventType, FilterTab>` — restores the
+ * exhaustiveness guard the old `EventFilterBar`'s `satisfies
+ * Record<EventType, ChipStyle>` gave: a new `eventType` enum value is a
+ * compile error here, not a silently uncoloured chip and a `?type=` deep
+ * link `isEventFilterValue` would reject (#2564 review finding 4).
+ */
+const EVENT_TYPE_TABS = {
+  Clubevent: {
+    value: "Clubevent",
+    label: "Clubevent",
+    color: { border: "border-jersey-deep", fill: EVENT_TYPE_FILL.Clubevent },
+  },
+  Supportersactiviteit: {
+    value: "Supportersactiviteit",
+    label: "Supportersactiviteit",
+    color: {
+      border: "border-warm",
+      fill: EVENT_TYPE_FILL.Supportersactiviteit,
+    },
+  },
+  Jeugdwerking: {
+    value: "Jeugdwerking",
+    label: "Jeugdwerking",
+    color: {
+      border: "border-jersey-bright",
+      fill: EVENT_TYPE_FILL.Jeugdwerking,
+    },
+  },
+  Andere: { value: "Andere", label: "Andere" },
+} satisfies Record<EventType, FilterTab>;
+
+// Render order: the four event types in `<TicketStub>` order, derived from
+// the map above so it can't drift out of sync with it. Also the single
+// source of truth for validating a `?type=` URL param (an unknown value
+// falls back to `"all"`).
+const EVENT_TYPE_ORDER = Object.keys(EVENT_TYPE_TABS) as EventType[];
+
 const EVENT_FILTER_VALUES: readonly EventFilterValue[] = [
   "all",
-  "Clubevent",
-  "Supportersactiviteit",
-  "Jeugdwerking",
-  "Andere",
+  ...EVENT_TYPE_ORDER,
 ];
 
 /** Type guard: is `value` a renderable filter facet? Narrows a raw URL param. */
@@ -36,40 +79,9 @@ function isEventFilterValue(value: string | null): value is EventFilterValue {
   );
 }
 
-/**
- * The `/evenementen` by-type filter row (design lock 6e §2, absorbed into
- * `<FilterTabs>` by #2429/#2564 — replaces the deleted bespoke
- * `EventFilterBar`). Colour is a prop (`FilterTab.color`), sourced from the
- * shared `EVENT_TYPE_FILL` map — the same colours `<TicketStub>`'s tear-off
- * date block uses — so the row stays a faithful legend for the tickets it
- * labels. `Alles` and `Andere` carry no colour and render the neutral
- * Direction D chip. `shadow="soft"` (passed at the call site) is this row's
- * concession to the dark `jersey-deep-dark` field.
- */
 const EVENTS_FILTER_TABS: FilterTab[] = [
   { value: "all", label: "Alles" },
-  {
-    value: "Clubevent",
-    label: "Clubevent",
-    color: { border: "border-jersey-deep", fill: EVENT_TYPE_FILL.Clubevent },
-  },
-  {
-    value: "Supportersactiviteit",
-    label: "Supportersactiviteit",
-    color: {
-      border: "border-warm",
-      fill: EVENT_TYPE_FILL.Supportersactiviteit,
-    },
-  },
-  {
-    value: "Jeugdwerking",
-    label: "Jeugdwerking",
-    color: {
-      border: "border-jersey-bright",
-      fill: EVENT_TYPE_FILL.Jeugdwerking,
-    },
-  },
-  { value: "Andere", label: "Andere" },
+  ...EVENT_TYPE_ORDER.map((type) => EVENT_TYPE_TABS[type]),
 ];
 
 export interface EventsBrowserProps {
