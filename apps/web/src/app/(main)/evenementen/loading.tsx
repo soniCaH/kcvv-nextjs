@@ -4,17 +4,19 @@
  * Mirrors `EvenementenPage` (`/evenementen`):
  *   the shared opening's quiet register on the dark field (mono kicker +
  *   display headline), sharing one padded section with
- *     → <EventsBrowser>: colour-coded filter chip row above a single-column,
- *       month-grouped `<TicketStub>` list (each month: display heading + ticket
- *       rows)
+ *     → <EventsBrowserSkeleton>: single-line filter chip row (matching
+ *       <FilterTabs>, #2564) above a single-column, month-grouped
+ *       `<TicketStub>` list (each month: display heading + ticket rows)
  *
  * Index width (1280) on the dark field. Placeholder bars use translucent cream
  * fills (on-dark equivalent of `paper-edge`); chips/tickets keep square corners
- * and ink/cream borders.
+ * and ink/cream borders. The filter-row + ticket-list skeleton is shared with
+ * the local `<Suspense>` fallback in `page.tsx` — see `EventsBrowserSkeleton`.
  */
 
 import { PageContainer } from "@/components/design-system";
 import { PageHeroSkeleton } from "@/components/layout/PageHero";
+import { EventsBrowserSkeleton } from "@/components/event/EventsBrowser";
 
 export default function EvenementenLoading() {
   return (
@@ -32,43 +34,7 @@ export default function EvenementenLoading() {
       <PageContainer width="index" className="flex-1 py-12 sm:py-16">
         <PageHeroSkeleton register="minimal" tone="dark" />
 
-        <div className="flex flex-col gap-8 motion-safe:animate-pulse">
-          {/* Filter chip row. */}
-          <div className="flex flex-wrap gap-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div
-                key={i}
-                className="border-cream/40 bg-cream/10 h-9 w-24 border-2"
-              />
-            ))}
-          </div>
-
-          {/* Month-grouped ticket list. */}
-          <div className="flex flex-col gap-12">
-            {Array.from({ length: 2 }).map((_, m) => (
-              <section key={m}>
-                <div className="bg-cream/25 mb-4 h-9 w-48" />
-                <ul className="flex flex-col gap-4">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <li
-                      key={i}
-                      className="border-cream/40 bg-cream/5 flex items-stretch border-2"
-                    >
-                      <div className="border-cream/40 flex w-[72px] shrink-0 flex-col items-center justify-center gap-1 border-r-2 border-dashed py-4">
-                        <div className="bg-cream/20 h-6 w-8" />
-                        <div className="bg-cream/15 h-2 w-10" />
-                      </div>
-                      <div className="flex flex-1 flex-col justify-center gap-2 px-4 py-4">
-                        <div className="bg-cream/20 h-4 w-1/2" />
-                        <div className="bg-cream/15 h-3 w-2/3" />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
-        </div>
+        <EventsBrowserSkeleton />
       </PageContainer>
     </div>
   );
