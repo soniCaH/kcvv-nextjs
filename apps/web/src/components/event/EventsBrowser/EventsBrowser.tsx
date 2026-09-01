@@ -1,14 +1,76 @@
 "use client";
 
-import { useState } from "react";
-
+import { useSearchParams, useRouter } from "next/navigation";
 import { trackEvent } from "@/lib/analytics/track-event";
-import { EmptyState } from "@/components/design-system";
+import {
+  EmptyState,
+  FilterTabs,
+  type FilterTab,
+} from "@/components/design-system";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import { filteredEmptyBody } from "@/lib/utils/empty-state-copy";
 import { EventMonthList } from "../EventMonthList";
-import { EventFilterBar, type EventFilterValue } from "../EventFilterBar";
-import { DEFAULT_EVENT_TYPE } from "../event-type-style";
+import {
+  DEFAULT_EVENT_TYPE,
+  EVENT_TYPE_FILL,
+  type EventType,
+} from "../event-type-style";
+
+/** Filter selection: a specific event type, or `"all"` (the default — no filter). */
+export type EventFilterValue = EventType | "all";
+
+/** Every valid filter value — the single source of truth for validating a
+ *  `?type=` URL param (an unknown value falls back to `"all"`). */
+const EVENT_FILTER_VALUES: readonly EventFilterValue[] = [
+  "all",
+  "Clubevent",
+  "Supportersactiviteit",
+  "Jeugdwerking",
+  "Andere",
+];
+
+/** Type guard: is `value` a renderable filter facet? Narrows a raw URL param. */
+function isEventFilterValue(value: string | null): value is EventFilterValue {
+  return (
+    value !== null && (EVENT_FILTER_VALUES as readonly string[]).includes(value)
+  );
+}
+
+/**
+ * The `/evenementen` by-type filter row (design lock 6e §2, absorbed into
+ * `<FilterTabs>` by #2429/#2564 — replaces the deleted bespoke
+ * `EventFilterBar`). Colour is a prop (`FilterTab.color`), sourced from the
+ * shared `EVENT_TYPE_FILL` map — the same colours `<TicketStub>`'s tear-off
+ * date block uses — so the row stays a faithful legend for the tickets it
+ * labels. `Alles` and `Andere` carry no colour and render the neutral
+ * Direction D chip. `shadow="soft"` (passed at the call site) is this row's
+ * concession to the dark `jersey-deep-dark` field.
+ */
+const EVENTS_FILTER_TABS: FilterTab[] = [
+  { value: "all", label: "Alles" },
+  {
+    value: "Clubevent",
+    label: "Clubevent",
+    color: { border: "border-jersey-deep", fill: EVENT_TYPE_FILL.Clubevent },
+  },
+  {
+    value: "Supportersactiviteit",
+    label: "Supportersactiviteit",
+    color: {
+      border: "border-warm",
+      fill: EVENT_TYPE_FILL.Supportersactiviteit,
+    },
+  },
+  {
+    value: "Jeugdwerking",
+    label: "Jeugdwerking",
+    color: {
+      border: "border-jersey-bright",
+      fill: EVENT_TYPE_FILL.Jeugdwerking,
+    },
+  },
+  { value: "Andere", label: "Andere" },
+];
 
 export interface EventsBrowserProps {
   /**
@@ -16,11 +78,6 @@ export interface EventsBrowserProps {
    * filtered upcoming-only + sorted chronologically by the repo.
    */
   events: EventListItemVM[];
-  /**
-   * Seeds the selected filter — for tests / Storybook state-coverage stories
-   * (e.g. the filtered-to-zero state). Production always starts at `"all"`.
-   */
-  initialSelected?: EventFilterValue;
 }
 
 /**
@@ -32,11 +89,15 @@ export interface EventsBrowserProps {
  * stays visible against the dark field (round 3 review, A1: the default
  * hard ink shadow is invisible on this ground).
  *
+ * The active facet is always in `?type=` (#2429 resolution rule 5 / #2564)
+ * — `router.push`, so browser back undoes a filter, replacing the local
+ * `useState` this component used to carry.
+ *
  * - No upcoming events at all → "Nog geen evenementen gepland" (events can
  *   still arrive). The filter row hides — nothing to filter, and showing it
  *   invited a dead-end loop: pick a chip against zero events, land on the
  *   filtered-to-zero copy, undo back to the same emptiness (round 3 review,
- *   C5). This restores the pre-round-2 guard; round 2's own fix (below)
+ *   C5). This restains the pre-round-2 guard; round 2's own fix (below)
  *   stays independently correct for a facet seeded while the feed is empty
  *   (e.g. a deep link), where the row IS visible on mount.
  * - A type with no upcoming events → names the active category, with the
@@ -46,24 +107,35 @@ export interface EventsBrowserProps {
  * Months whose tickets are all filtered out drop their header automatically —
  * `groupEventsByMonth` only buckets the events `<EventMonthList>` receives.
  */
-export function EventsBrowser({
-  events,
-  initialSelected = "all",
-}: EventsBrowserProps) {
-  const [selected, setSelected] = useState<EventFilterValue>(initialSelected);
+export function EventsBrowser({ events }: EventsBrowserProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawType = searchParams.get("type");
+  const selected: EventFilterValue = isEventFilterValue(rawType)
+    ? rawType
+    : "all";
   const isGenuinelyEmpty = events.length === 0;
 
-  // Dedup guard: re-pressing the active chip is a no-op, so neither state nor
-  // analytics fire twice for the same selection (repo analytics policy).
+  // Dedup guard: re-pressing the active chip is a no-op, so neither the URL
+  // push nor analytics fire twice for the same selection (repo analytics
+  // policy).
   const handleSelect = (value: EventFilterValue) => {
     if (value === selected) return;
-    setSelected(value);
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") {
+      params.delete("type");
+    } else {
+      params.set("type", value);
+    }
+    router.push(`/evenementen${params.size ? `?${params.toString()}` : ""}`, {
+      scroll: false,
+    });
     trackEvent("event_filter", { event_type: value });
   };
 
   // Keyed on whether a facet is ACTIVE, not on whether the computed list is
-  // empty — round 2's fix, kept: a facet can be active (e.g. seeded via
-  // `initialSelected`) while the raw feed is also empty, and the undo must
+  // empty — round 2's fix, kept: a facet can be active (e.g. seeded via a
+  // deep-linked `?type=`) while the raw feed is also empty, and the undo must
   // still describe what's active. The filter row being hidden in that
   // combination (above) makes it unreachable by click, but not by deep-link.
   // No separate `isGenuinelyEmpty` branch here: filtering `[]` already
@@ -80,7 +152,14 @@ export function EventsBrowser({
   return (
     <div className="flex flex-col gap-8">
       {!isGenuinelyEmpty && (
-        <EventFilterBar selected={selected} onSelect={handleSelect} />
+        <FilterTabs
+          tabs={EVENTS_FILTER_TABS}
+          activeTab={selected}
+          onChange={(value) => handleSelect(value as EventFilterValue)}
+          showCounts={false}
+          shadow="soft"
+          ariaLabel="Filter evenementen op type"
+        />
       )}
 
       {filtered.length === 0 ? (

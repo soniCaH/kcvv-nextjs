@@ -16,11 +16,13 @@ export const DEFAULT_EVENT_TYPE: EventType = "Andere";
 
 /**
  * Single source of truth for the per-type fill (background + text colour),
- * shared by `<TicketStub>`'s tear-off date block and `<EventFilterBar>`'s
- * selected chip, so the filter row stays a faithful legend for the tickets it
- * labels (design lock 6e2). The text tone follows the WCAG contrast rule —
- * small text on jersey-deep uses white, not cream. Keeping one map means a
- * category re-tint can never drift the chip out of sync with its ticket.
+ * shared by `<TicketStub>`'s tear-off date block and `<FilterTabs>`'s
+ * per-facet `color.fill` on `/kalender` + `/evenementen` (#2429/#2564 —
+ * absorbed the former bespoke `EventFilterBar`/`KalenderFilterBar`), so the
+ * filter row stays a faithful legend for the tickets it labels (design lock
+ * 6e2). The text tone follows the WCAG contrast rule — small text on
+ * jersey-deep uses white, not cream. Keeping one map means a category
+ * re-tint can never drift the chip out of sync with its ticket.
  */
 export const EVENT_TYPE_FILL = {
   Clubevent: "bg-jersey-deep text-white",

@@ -47,7 +47,12 @@ const EVENTS: EventListItemVM[] = [
 const meta = {
   title: "Features/Events/EventsBrowser",
   component: EventsBrowser,
-  parameters: { layout: "fullscreen" },
+  parameters: {
+    layout: "fullscreen",
+    nextjs: {
+      navigation: { pathname: "/evenementen", query: {} },
+    },
+  },
   tags: ["autodocs", "vr"],
   // Render on the dark `/evenementen` field so chips, month headers + seams
   // are evaluated against jersey-deep-dark.
@@ -69,13 +74,20 @@ export const Populated: Story = {
 };
 
 /**
- * Filtered-to-zero — "Jeugdwerking" pre-selected against a list with no
- * Jeugdwerking events, so the per-category message + "Toon alles" reset show
- * while the filter row stays visible.
+ * Filtered-to-zero — "Jeugdwerking" pre-selected (via `?type=`) against a
+ * list with no Jeugdwerking events, so the per-category message + "Toon
+ * alles" reset show while the filter row stays visible.
  */
 export const FilteredToZero: Story = {
+  parameters: {
+    nextjs: {
+      navigation: {
+        pathname: "/evenementen",
+        query: { type: "Jeugdwerking" },
+      },
+    },
+  },
   args: {
-    initialSelected: "Jeugdwerking",
     events: EVENTS.filter((event) => event.eventType !== "Jeugdwerking"),
   },
 };
