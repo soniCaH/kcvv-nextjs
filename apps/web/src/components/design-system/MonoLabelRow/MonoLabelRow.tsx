@@ -1,6 +1,10 @@
 import { Fragment } from "react";
 import { cn } from "@/lib/utils/cn";
-import { MonoLabel, type MonoLabelProps } from "../MonoLabel";
+import {
+  MonoLabel,
+  type MonoLabelProps,
+  type MonoLabelTone,
+} from "../MonoLabel";
 
 export type MonoLabelRowDivider = "·" | "|" | "/" | "★";
 export type MonoLabelRowAs = "div" | "ol" | "ul";
@@ -16,14 +20,35 @@ export interface MonoLabelRowProps {
   divider?: MonoLabelRowDivider;
   as?: MonoLabelRowAs;
   wrap?: boolean;
+  /**
+   * Text tone applied to every `plain`-variant item and to the divider —
+   * forwarded to each `<MonoLabel>` (pill variants ignore it, same as
+   * `MonoLabel` itself). Defaults to "ink" (readable on cream/paper). Pass
+   * "cream" on a dark card (e.g. `<PullQuote placement="section">`'s
+   * context-label slot) so the row stays readable.
+   */
+  tone?: MonoLabelTone;
   className?: string;
 }
+
+const DIVIDER_DOT_CLASS: Record<MonoLabelTone, string> = {
+  ink: "bg-ink-muted/60",
+  muted: "bg-ink-muted/60",
+  cream: "bg-cream/60",
+};
+
+const DIVIDER_GLYPH_CLASS: Record<MonoLabelTone, string> = {
+  ink: "text-ink-muted",
+  muted: "text-ink-muted",
+  cream: "text-cream",
+};
 
 export function MonoLabelRow({
   items,
   divider = "·",
   as: Tag = "div",
   wrap = true,
+  tone = "ink",
   className,
 }: MonoLabelRowProps) {
   if (items.length === 0) return null;
@@ -42,7 +67,11 @@ export function MonoLabelRow({
     >
       {items.map((item, index) => {
         const label = (
-          <MonoLabel variant={item.variant ?? "plain"} size={item.size ?? "sm"}>
+          <MonoLabel
+            variant={item.variant ?? "plain"}
+            size={item.size ?? "sm"}
+            tone={tone}
+          >
             {item.label}
           </MonoLabel>
         );
@@ -53,14 +82,20 @@ export function MonoLabelRow({
                 data-divider="true"
                 data-divider-glyph={divider}
                 aria-hidden="true"
-                className="bg-ink-muted/60 inline-block h-[3px] w-[3px] rounded-full"
+                className={cn(
+                  "inline-block h-[3px] w-[3px] rounded-full",
+                  DIVIDER_DOT_CLASS[tone],
+                )}
               />
             ) : (
               <span
                 data-divider="true"
                 data-divider-glyph={divider}
                 aria-hidden="true"
-                className="text-ink-muted text-label font-mono leading-none"
+                className={cn(
+                  "text-label font-mono leading-none",
+                  DIVIDER_GLYPH_CLASS[tone],
+                )}
               >
                 {divider}
               </span>

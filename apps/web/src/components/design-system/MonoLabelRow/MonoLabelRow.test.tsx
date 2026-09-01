@@ -92,4 +92,18 @@ describe("MonoLabelRow", () => {
       "custom-row",
     );
   });
+
+  it("default tone='ink' forwards to MonoLabel", () => {
+    const { container } = render(<MonoLabelRow items={[{ label: "A" }]} />);
+    expect(container.querySelector('[data-tone="ink"]')).not.toBeNull();
+  });
+
+  it("tone='cream' forwards to every item and the divider", () => {
+    const { container } = render(
+      <MonoLabelRow tone="cream" items={[{ label: "A" }, { label: "B" }]} />,
+    );
+    expect(container.querySelectorAll('[data-tone="cream"]')).toHaveLength(2);
+    const dot = container.querySelector('[data-divider="true"]');
+    expect(dot?.className).toContain("bg-cream/60");
+  });
 });
