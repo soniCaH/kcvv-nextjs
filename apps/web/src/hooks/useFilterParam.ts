@@ -95,15 +95,14 @@ export function useFilterParam<T extends string>(
   options: UseFilterParamOptions<T>,
 ): [T, SetFilterParam<T>] {
   const { fallback, route, writeVia = "router", hash, initialValue } = options;
-  const router = useRouter();
 
   // "history" mode's reactive read: local state, seeded once on mount (or
   // synchronously from `initialValue`) and re-synced on `popstate` — the
   // mechanism `EventsBrowser`/`NewsListingClient` hand-rolled before this
   // hook. Called unconditionally every render (its body no-ops in "router"
-  // mode via the `writeVia !== "history"` guards below) so the only hook in
-  // this file called conditionally is `useSearchParams()` further down —
-  // see its own comment for why.
+  // mode via the `writeVia !== "history"` guards below), so the only two
+  // hooks in this file called conditionally are `useRouter()` and
+  // `useSearchParams()` further down — see their own comment for why.
   const [historyValue, setHistoryValue] = useState<T>(
     () => initialValue ?? fallback,
   );
@@ -131,13 +130,19 @@ export function useFilterParam<T extends string>(
 
   // "router" mode's read: `useSearchParams()` is already fully reactive to
   // `router.push`/`replace` and browser back/forward, so it needs none of
-  // the state/effect machinery above. It must never run in "history" mode —
-  // merely calling it, regardless of whether the result is used, opts the
-  // whole subtree into client-side rendering (see the module docblock).
-  // `writeVia` is a literal every call site hardcodes once — never a value
-  // that changes across a mounted instance's renders — which is the
-  // precondition this conditional call relies on.
+  // the state/effect machinery above. Both this and `useRouter()` below must
+  // never run in "history" mode: merely calling `useSearchParams()`,
+  // regardless of whether the result is used, opts the whole subtree into
+  // client-side rendering (see the module docblock), and `useRouter()`
+  // throws outside an App Router context — which a "history"-mode caller
+  // (`EventsBrowser`, `NewsListingClient`) has no other reason to render
+  // under (their own tests don't mock `next/navigation` at all). `writeVia`
+  // is a literal every call site hardcodes once — never a value that changes
+  // across a mounted instance's renders — which is the precondition these
+  // two conditional calls rely on.
   // eslint-disable-next-line react-hooks/rules-of-hooks -- `writeVia` is a per-call-site-stable literal, never derived from state/props that change during a component's lifetime; see the module docblock
+  const router = writeVia === "router" ? useRouter() : null;
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- see the comment above `router`
   const routerRaw = writeVia === "router" ? useSearchParams().get(name) : null;
 
   const value =
@@ -156,8 +161,10 @@ export function useFilterParam<T extends string>(
       const path = `${route}${qs ? `?${qs}` : ""}${finalHash ? `#${finalHash}` : ""}`;
 
       if (writeVia === "router") {
-        if (overrides?.replace) router.replace(path, { scroll: false });
-        else router.push(path, { scroll: false });
+        // `router` is guaranteed non-null here: it's only ever null when
+        // `writeVia !== "router"`, and this branch requires the opposite.
+        if (overrides?.replace) router!.replace(path, { scroll: false });
+        else router!.push(path, { scroll: false });
       } else {
         setHistoryValue(next);
         // Passing the current `window.history.state` (not `{}`) keeps
