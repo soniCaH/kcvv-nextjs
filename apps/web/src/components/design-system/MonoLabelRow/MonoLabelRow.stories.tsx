@@ -79,3 +79,26 @@ export const OrderedList: Story = {
     ],
   },
 };
+
+// tone="cream" on a jersey-deep surface — confirms both the label text and
+// the divider dot/glyph stay readable on a dark card (e.g. `<PullQuote>`'s
+// context-label slot). Without this, the only pictorial coverage of
+// tone="cream" is indirect, via a PullQuote story.
+export const ToneCreamOnJerseyDeep: Story = {
+  args: {
+    tone: "cream",
+    items: [
+      { label: "DE JEUGDVISIE" },
+      { label: "PLEZIER" },
+      { label: "TECHNIEK" },
+      { label: "TEAMSPIRIT" },
+    ],
+  },
+  decorators: [
+    (Story) => (
+      <div className="bg-jersey-deep border-jersey-deep-dark border p-6">
+        <Story />
+      </div>
+    ),
+  ],
+};
