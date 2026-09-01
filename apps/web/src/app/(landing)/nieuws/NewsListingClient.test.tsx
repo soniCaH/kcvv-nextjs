@@ -394,7 +394,7 @@ describe("NewsListingClient", () => {
 
     await waitFor(() => {
       expect(pushStateSpy).toHaveBeenCalledWith(
-        {},
+        window.history.state,
         "",
         "/nieuws?categorie=Jeugd",
       );

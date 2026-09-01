@@ -56,7 +56,6 @@ export function NewsListingClient({
   const isLoadingRef = useRef(false);
   const nextOffsetRef = useRef(initialArticles.length);
   const loadMoreRef = useRef<() => void>(() => {});
-  const handleCategoryChangeRef = useRef<(category: string) => void>(() => {});
   const applyCategoryRef = useRef<
     (category: string, options: { updateUrl: boolean }) => void
   >(() => {});
@@ -120,7 +119,11 @@ export function NewsListingClient({
   // `window.history.pushState` updates the address bar and adds a real
   // history entry (browser back undoes a filter, #2429 resolution rule 5)
   // without going through Next's router at all, so no server re-render, no
-  // second fetch, no discarded grid. Because `pushState` doesn't itself
+  // second fetch, no discarded grid. Passing the current `window.history.state`
+  // (not `{}`) keeps Next's internal `__NA` marker, so its own patched
+  // push/replaceState still treats this as an internal write rather than a
+  // fresh navigation to re-process — same precedent as
+  // `lib/utils/same-page-anchor.ts`. Because `pushState` doesn't itself
   // notify React, a `popstate` listener re-runs this same fetch (with
   // `updateUrl: false`, since the browser already moved the URL) so back/
   // forward doesn't leave the grid out of sync with the address bar.
@@ -153,7 +156,7 @@ export function NewsListingClient({
           const url = categoryFilter
             ? `/nieuws?categorie=${encodeURIComponent(categoryFilter)}`
             : "/nieuws";
-          window.history.pushState({}, "", url);
+          window.history.pushState(window.history.state, "", url);
         }
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (err) {
@@ -164,7 +167,7 @@ export function NewsListingClient({
           message: "Artikelen laden mislukt.",
           retry: () => {
             setError(null);
-            handleCategoryChangeRef.current(category);
+            applyCategoryRef.current(category, { updateUrl: true });
           },
         });
       } finally {
@@ -184,9 +187,8 @@ export function NewsListingClient({
 
   useEffect(() => {
     loadMoreRef.current = loadMore;
-    handleCategoryChangeRef.current = handleCategoryChange;
     applyCategoryRef.current = applyCategory;
-  }, [loadMore, handleCategoryChange, applyCategory]);
+  }, [loadMore, applyCategory]);
 
   // Browser back/forward — re-applies the URL's `?categorie=` WITHOUT
   // writing it again (the browser already moved it). Reads through a ref so

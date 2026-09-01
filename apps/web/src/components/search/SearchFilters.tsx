@@ -41,7 +41,9 @@ export const SearchFilters = ({
   onFilterChange,
   resultCounts,
 }: SearchFiltersProps) => {
-  // FilterTab.icon retired with Track B Direction D (closes #1573).
+  // No leading glyphs here — the icon slot returned (#2429 resolution
+  // addendum "rule 9" / #2564) but this row doesn't have one to show; the
+  // slot is optional, so omitting it renders exactly as before.
   const tabs: FilterTab[] = useMemo(
     () => [
       { value: "all", label: "Alles", count: resultCounts.all },
