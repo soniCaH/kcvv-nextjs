@@ -10,9 +10,34 @@ import userEvent from "@testing-library/user-event";
 import { SearchInterface } from "./SearchInterface";
 import { createMockSearchResponse } from "@/../tests/helpers/search.helpers";
 
-// Mock Next.js navigation hooks
-const mockPush = vi.fn();
+// Mock Next.js navigation hooks. `useFilterParam`'s writer (#2779) reads the
+// LIVE `window.location.search` to merge in `?q=` — a facet it doesn't own —
+// when it writes `?type=`, so both `mockPush` and `mockSearchParams.set`/
+// `.delete` (the file's existing "seed the URL before render" idiom) keep
+// `window.location` in sync, the way a real `router.push` keeps the actual
+// address bar in sync. Neither touches `mockSearchParams` itself, though:
+// `activeType` keeps its own optimistic local state, updated directly by
+// `handleFilterChange` (only the URL-building inside it moves onto the
+// hook's setter) — not a pure `useSearchParams()` derivation, which would
+// need `push` to reactively feed back into `useSearchParams()` and would
+// resurface a latent, pre-existing, unrelated double-fetch in the plain
+// query-submit path (`currentUrlQueryValue`'s effect) that this file's
+// fetch mocks (one queued response per test) aren't built to tolerate.
+const mockPush = vi.fn((url: string) => {
+  window.location.search = url.split("?")[1] ?? "";
+});
 const mockSearchParams = new URLSearchParams();
+
+const realSet = mockSearchParams.set.bind(mockSearchParams);
+const realDelete = mockSearchParams.delete.bind(mockSearchParams);
+mockSearchParams.set = (key: string, value: string) => {
+  realSet(key, value);
+  window.location.search = mockSearchParams.toString();
+};
+mockSearchParams.delete = (key: string) => {
+  realDelete(key);
+  window.location.search = mockSearchParams.toString();
+};
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -216,7 +241,10 @@ describe("SearchInterface", () => {
       const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
-      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test&type=article");
+      // scroll:false — useFilterParam's own write, #2779.
+      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test&type=article", {
+        scroll: false,
+      });
     });
 
     it("should trim whitespace from query", async () => {
@@ -546,7 +574,10 @@ describe("SearchInterface", () => {
       const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
-      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test&type=article");
+      // scroll:false — useFilterParam's own write, #2779.
+      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test&type=article", {
+        scroll: false,
+      });
     });
 
     it("should not refetch when filter is changed", async () => {
@@ -594,7 +625,10 @@ describe("SearchInterface", () => {
       const allTab = screen.getByRole("button", { name: /alles/i });
       await user.click(allTab);
 
-      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test");
+      // scroll:false — useFilterParam's own write, #2779.
+      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test", {
+        scroll: false,
+      });
     });
   });
 
@@ -999,7 +1033,10 @@ describe("SearchInterface", () => {
       const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
-      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=first&type=article");
+      // scroll:false — useFilterParam's own write, #2779.
+      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=first&type=article", {
+        scroll: false,
+      });
 
       // Second search
       const mockResponse2 = createMockSearchResponse("second");
