@@ -1,5 +1,7 @@
 import type { RankingTable } from "@kcvv/api-contract";
 import { StandingsTable } from "@/components/team/StandingsTable";
+import { EmptyState } from "@/components/design-system/EmptyState";
+import { classifyStandingsTables } from "@/lib/utils/competitive-block-state";
 import { cn } from "@/lib/utils/cn";
 
 export interface StandingsSectionProps {
@@ -22,10 +24,16 @@ export interface StandingsSectionProps {
  *
  * Never two sections: #2540 gives `#klassement` exactly one `<h2>`, one
  * `StripedSeam` and one nav entry, and splitting the phases into two sections
- * breaks that invariant. The `<h2>` itself is #2540's and is not here yet.
+ * breaks that invariant. The `<h2>` itself lands with the rest of the heading
+ * sweep (#2637) and is not here yet.
  *
- * `<StandingsTable>` stays a single-table renderer and keeps its own empty
- * guard, so a table that arrives with no rows drops out on its own.
+ * The parent only mounts this component once the competitive block's fixture
+ * gate is open (#2636) — so unlike before #2636, this component never auto-
+ * hides itself. `#klassement` shows the clubs it has and the numbers it has,
+ * and it never says a table is coming (#2605): no rows yet renders a present-
+ * tense note in its own voice rather than a bare `null`, and rows without
+ * numbers (before matchday 1, or a reeks PSD never scores) render as a plain
+ * club list rather than a table full of zeroes.
  */
 export function StandingsSection({
   tables,
@@ -33,21 +41,32 @@ export function StandingsSection({
   highlightTeamId,
   className,
 }: StandingsSectionProps) {
-  // Count rows, not tables — the contract permits a published-but-empty reeks,
-  // and a section of nothing but empty tables must not draw its own seam.
-  if (!tables.some((table) => table.entries.length > 0)) return null;
+  const state = classifyStandingsTables(tables);
+
+  if (state === "no-table") {
+    return (
+      <div data-testid="standings-section" className={cn("flex", className)}>
+        <EmptyState tier="slot">
+          Voor deze reeks is er geen klassement.
+        </EmptyState>
+      </div>
+    );
+  }
+
+  const tablesWithRows = tables.filter((table) => table.entries.length > 0);
 
   return (
     <div
       data-testid="standings-section"
       className={cn("flex flex-col gap-10", className)}
     >
-      {tables.map((table) => (
+      {tablesWithRows.map((table) => (
         <StandingsTable
           key={table.competition_id}
           entries={table.entries}
           caption={divisionFull ?? table.competition_name}
           highlightTeamId={highlightTeamId}
+          numberless={state === "numberless"}
         />
       ))}
     </div>

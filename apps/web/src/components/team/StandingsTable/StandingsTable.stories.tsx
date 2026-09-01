@@ -71,3 +71,24 @@ export const NoHighlight: Story = {
 export const Empty: Story = {
   args: { entries: [] },
 };
+
+// Every row published, none scored — the state before matchday 1.
+const numberlessDivision: RankingEntry[] = [
+  entry(0, 101, "KSK Kampenhout", 0, 0, 0, 0, 0, 0, 0),
+  entry(0, 102, "FC Perk", 0, 0, 0, 0, 0, 0, 0),
+  entry(0, 1235, "KCVV Elewijt", 0, 0, 0, 0, 0, 0, 0),
+  entry(0, 104, "Eppegem B", 0, 0, 0, 0, 0, 0, 0),
+];
+
+/**
+ * Every entry reads `played 0` / `points 0` (#2605 decision 3) — position
+ * and every numeric column drop, and the clubs render as a plain list.
+ */
+export const Numberless: Story = {
+  args: {
+    entries: numberlessDivision,
+    highlightTeamId: 1235,
+    numberless: true,
+    caption: "3de Afdeling Voetb Vl A",
+  },
+};

@@ -8,6 +8,7 @@
  *  - Non-KCVV rows: no highlight testid
  *  - Goal difference formatting (+N for positive)
  *  - No Vorm column, no green/yellow/red badges
+ *  - `numberless`: no columns at all, just crest + name (#2605)
  */
 
 import { describe, it, expect } from "vitest";
@@ -106,5 +107,39 @@ describe("StandingsTable", () => {
       .map((h) => h.textContent?.toLowerCase());
     expect(headers).not.toContain("vorm");
     expect(headers).not.toContain("form");
+  });
+
+  it("renders a plain club list (no columns) when numberless", () => {
+    render(
+      <StandingsTable
+        entries={DIVISION}
+        highlightTeamId={1235}
+        numberless
+        caption="3de Afdeling Voetb Vl A"
+      />,
+    );
+
+    expect(screen.queryAllByRole("columnheader")).toHaveLength(0);
+    expect(screen.getByTestId("standings-table")).toHaveAttribute(
+      "data-variant",
+      "numberless",
+    );
+    expect(screen.getByText("Leader FC")).toBeInTheDocument();
+    expect(screen.getByText("KCVV Elewijt")).toBeInTheDocument();
+    expect(screen.getByText("3de Afdeling Voetb Vl A")).toBeInTheDocument();
+  });
+
+  it("still highlights the KCVV row when numberless", () => {
+    render(
+      <StandingsTable entries={DIVISION} highlightTeamId={1235} numberless />,
+    );
+
+    const kcvvRow = screen.getByTestId("standings-kcvv-row");
+    expect(kcvvRow.textContent).toContain("KCVV Elewijt");
+  });
+
+  it("renders nothing when numberless and entries is empty", () => {
+    const { container } = render(<StandingsTable entries={[]} numberless />);
+    expect(container.firstChild).toBeNull();
   });
 });

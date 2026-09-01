@@ -113,7 +113,32 @@ export const ProviderNameFallback: Story = {
   args: { tables: [senior], divisionFull: null, highlightTeamId: 1235 },
 };
 
-/** No table published — the section renders nothing. */
+// Every row published, none scored yet — before matchday 1 the reeks has
+// entries but no numbers, so the section drops position and every numeric
+// column and renders the clubs as a plain list (#2605 decision 3).
+const numberlessSeason: RankingTable = {
+  competition_id: 222464,
+  competition_name: "3de Afdeling Voetb Vl A",
+  entries: [
+    entry(0, 101, "KSK Kampenhout", 0, 0, 0, 0, 0, 0, 0),
+    entry(0, 102, "FC Perk", 0, 0, 0, 0, 0, 0, 0),
+    entry(0, 1235, "KCVV Elewijt", 0, 0, 0, 0, 0, 0, 0),
+    entry(0, 104, "Eppegem B", 0, 0, 0, 0, 0, 0, 0),
+  ],
+} as RankingTable;
+
+/**
+ * No table published — #2605/#2636: the section keeps rendering (its seam
+ * and nav entry survive) and says so in present tense, never a promise.
+ */
 export const NoTables: Story = {
   args: { tables: [] },
+};
+
+/**
+ * Every entry reads `played 0` / `points 0` — the section renders the reeks
+ * as a plain club list instead of a table full of zeroes.
+ */
+export const Numberless: Story = {
+  args: { tables: [numberlessSeason], highlightTeamId: 1235 },
 };

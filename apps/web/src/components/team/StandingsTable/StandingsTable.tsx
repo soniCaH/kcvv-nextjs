@@ -10,14 +10,90 @@ export interface StandingsTableProps {
    * team playing two phases gets two distinct landmark names instead of two
    * identical "Klassement" ones (#2631). */
   caption?: string;
+  /**
+   * Every entry reads `played === 0 && points === 0` — before matchday 1, or
+   * a reeks PSD never scores at all (#2605 decision 3). Position and every
+   * numeric column would all read the same non-answer, which reads as ranked
+   * when it isn't, so this drops them and renders the clubs as a plain list
+   * instead — "a full overview of all competition opponents at one glance."
+   */
+  numberless?: boolean;
+}
+
+function isKcvvRow(entry: RankingEntry, highlightTeamId: number | undefined) {
+  return entry.team_id === highlightTeamId;
+}
+
+function NumberlessClubList({
+  entries,
+  highlightTeamId,
+  caption,
+}: {
+  entries: readonly RankingEntry[];
+  highlightTeamId: number | undefined;
+  caption: string | undefined;
+}) {
+  return (
+    <div
+      data-testid="standings-table"
+      data-variant="numberless"
+      className="w-full"
+      role="region"
+      aria-label={caption ?? "De reeks"}
+    >
+      {caption ? (
+        <p className="pb-2 text-left">
+          <MonoLabel>{caption}</MonoLabel>
+        </p>
+      ) : null}
+      <ul className="font-mono text-xs">
+        {entries.map((entry) => {
+          const isKcvv = isKcvvRow(entry, highlightTeamId);
+          return (
+            <li
+              key={entry.team_id}
+              data-testid={isKcvv ? "standings-kcvv-row" : undefined}
+              className={cn(
+                "flex items-center gap-1.5 border-b border-[color:var(--color-paper-edge)] py-2 pr-4 pl-4",
+                isKcvv &&
+                  "bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))] shadow-[inset_3px_0_0_var(--color-jersey-deep)]",
+              )}
+            >
+              <Crest name={entry.team_name} logo={entry.team_logo} size={16} />
+              <span
+                className={cn(
+                  "font-display text-ink min-w-0 truncate",
+                  isKcvv ? "font-semibold not-italic" : "italic",
+                )}
+                title={entry.team_name}
+              >
+                {entry.team_name}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
 }
 
 export function StandingsTable({
   entries,
   highlightTeamId,
   caption,
+  numberless = false,
 }: StandingsTableProps) {
   if (entries.length === 0) return null;
+
+  if (numberless) {
+    return (
+      <NumberlessClubList
+        entries={entries}
+        highlightTeamId={highlightTeamId}
+        caption={caption}
+      />
+    );
+  }
 
   return (
     <div
