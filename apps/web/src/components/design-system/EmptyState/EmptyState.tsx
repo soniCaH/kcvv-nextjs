@@ -244,7 +244,7 @@ function SurfaceEmptyState(props: EmptyStateSurfaceProps) {
             {heading}
           </EditorialHeading>
 
-          <div className="text-ink-soft mt-3 max-w-[52ch] text-[14.5px] leading-relaxed">
+          <div className="text-ink-soft mt-3 max-w-[var(--container-prose)] text-[14.5px] leading-relaxed">
             {children}
           </div>
 

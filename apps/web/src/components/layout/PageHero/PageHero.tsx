@@ -420,7 +420,9 @@ export function PageHero(props: PageHeroProps) {
         <p
           className={cn(
             "font-display text-ink-soft mt-3.5 leading-[1.38] italic",
-            showImage ? "text-[1.05rem]" : "max-w-[40ch] text-[1.25rem]",
+            showImage
+              ? "text-[1.05rem]"
+              : "max-w-[var(--container-prose)] text-[1.25rem]",
           )}
         >
           {lead}

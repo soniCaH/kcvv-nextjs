@@ -34,6 +34,10 @@ export interface SiteHeaderProps {
  * only to the desktop row — the mobile drawer has no width constraint. `ch` is
  * exact here because every nav label is mono. `min-w-0` lets the flex item
  * actually shrink; without it `truncate` never engages.
+ *
+ * Exempt from the reading-measure ban (DESIGN.md "The Reading-Measure
+ * Exemption Rule", #2645): a single-line label that truncates, not a
+ * reading column.
  */
 const NAV_LABEL_TRUNCATE = "block max-w-[14ch] truncate";
 
