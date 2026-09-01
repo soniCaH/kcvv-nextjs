@@ -1,7 +1,10 @@
 import type { RankingTable } from "@kcvv/api-contract";
 import { StandingsTable } from "@/components/team/StandingsTable";
 import { EmptyState } from "@/components/design-system/EmptyState";
-import { classifyStandingsTables } from "@/lib/utils/competitive-block-state";
+import {
+  classifyStandingsTable,
+  classifyStandingsTables,
+} from "@/lib/utils/competitive-block-state";
 import { cn } from "@/lib/utils/cn";
 
 export interface StandingsSectionProps {
@@ -34,6 +37,13 @@ export interface StandingsSectionProps {
  * tense note in its own voice rather than a bare `null`, and rows without
  * numbers (before matchday 1, or a reeks PSD never scores) render as a plain
  * club list rather than a table full of zeroes.
+ *
+ * Each table's numberless/live render is decided per table
+ * (`classifyStandingsTable`), never by the block-level `classifyStandingsTables`
+ * verdict applied uniformly — a youth side past the winter break can have a
+ * scored autumn poule next to an unplayed spring one, and blanket-applying one
+ * verdict to both would render the unplayed poule as a full table of
+ * position-0 zeroes (#2636 finding 4).
  */
 export function StandingsSection({
   tables,
@@ -66,7 +76,7 @@ export function StandingsSection({
           entries={table.entries}
           caption={divisionFull ?? table.competition_name}
           highlightTeamId={highlightTeamId}
-          numberless={state === "numberless"}
+          numberless={classifyStandingsTable(table) === "numberless"}
         />
       ))}
     </div>

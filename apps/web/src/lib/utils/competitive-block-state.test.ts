@@ -8,6 +8,7 @@
 import { describe, it, expect } from "vitest";
 import type { Match, RankingEntry, RankingTable } from "@kcvv/api-contract";
 import {
+  classifyStandingsTable,
   classifyStandingsTables,
   competitiveBlockHeadingLabel,
   deriveCompetitiveBlockState,
@@ -120,10 +121,15 @@ describe("deriveCompetitiveBlockState", () => {
     expect(state.kind).toBe("live");
   });
 
-  it("returns live when one of two tables is numberless and the other is live", () => {
+  it("returns the block-level live verdict when one of two tables is numberless and the other is live", () => {
     // A youth side crossing the winter break can have a finished autumn
     // poule (live) and a fresh spring one that has not kicked off yet
-    // (numberless) at the same time — the block is live either way.
+    // (numberless) at the same time. `deriveCompetitiveBlockState`'s "live"
+    // is a BLOCK-level verdict for the nav chip's label (#2605: "Klassement"
+    // only when there are points on the page at all) — it does NOT mean
+    // every table renders as a full table. `classifyStandingsTable` below
+    // is the per-table complement that decides that per table, and this
+    // input is exactly the case it exists for (#2636 finding 4).
     const numberless = table({
       competition_id: 1,
       entries: [entry({ played: 0, points: 0 })],
@@ -139,6 +145,8 @@ describe("deriveCompetitiveBlockState", () => {
     expect(state.kind).toBe("live");
     if (state.kind === "live") {
       expect(state.tables).toHaveLength(2);
+      expect(classifyStandingsTable(numberless)).toBe("numberless");
+      expect(classifyStandingsTable(live)).toBe("live");
     }
   });
 
@@ -156,6 +164,39 @@ describe("deriveCompetitiveBlockState", () => {
     if (state.kind === "live") {
       expect(state.tables).toEqual([withRows]);
     }
+  });
+
+  it("returns unavailable for the 'unavailable' sentinel, without reading matches or standings", () => {
+    // `fetchBffData` passes this literal when it caught a PERMANENT PSD
+    // failure (#2636 finding 3) — a stale/mistyped psdId or an undecodable
+    // response. A transient failure never reaches here at all; the render
+    // throws instead so ISR can serve the last-good page.
+    expect(deriveCompetitiveBlockState("unavailable")).toEqual({
+      kind: "unavailable",
+    });
+  });
+});
+
+describe("classifyStandingsTable (per-table, #2636 finding 4)", () => {
+  it("reads live for a table with at least one real number", () => {
+    expect(
+      classifyStandingsTable(
+        table({ entries: [entry({ played: 4, points: 9 })] }),
+      ),
+    ).toBe("live");
+  });
+
+  it("reads numberless for a table where every entry is played 0 / points 0", () => {
+    expect(
+      classifyStandingsTable(
+        table({
+          entries: [
+            entry({ played: 0, points: 0, team_id: 1 }),
+            entry({ played: 0, points: 0, team_id: 2 }),
+          ],
+        }),
+      ),
+    ).toBe("numberless");
   });
 });
 

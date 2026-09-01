@@ -137,4 +137,31 @@ describe("StandingsSection", () => {
 
     expect(screen.getAllByTestId("standings-kcvv-row")).toHaveLength(2);
   });
+
+  it("classifies mixed tables independently: a live poule next to an unplayed one (#2636 finding 4)", () => {
+    // The winter-break shape: a finished, fully-scored autumn poule sitting
+    // beside a spring poule that has not kicked off. The block-level verdict
+    // is "live" (AUTUMN has real points), but the spring table must still
+    // render as a club list, not a table of position-0 zeroes.
+    const springUnplayed = table({
+      competition_id: 221298,
+      competition_name: "Gewestelijk U13 AY",
+      entries: [
+        entry({ team_id: 1, team_name: "FC Mollem", played: 0, points: 0 }),
+        entry({
+          team_id: 1235,
+          team_name: "KCVV Elewijt",
+          played: 0,
+          points: 0,
+        }),
+      ],
+    });
+
+    render(<StandingsSection tables={[AUTUMN, springUnplayed]} />);
+
+    const rendered = screen.getAllByTestId("standings-table");
+    expect(rendered).toHaveLength(2);
+    expect(rendered[0]).not.toHaveAttribute("data-variant", "numberless");
+    expect(rendered[1]).toHaveAttribute("data-variant", "numberless");
+  });
 });

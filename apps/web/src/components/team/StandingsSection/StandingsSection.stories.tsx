@@ -142,3 +142,13 @@ export const NoTables: Story = {
 export const Numberless: Story = {
   args: { tables: [numberlessSeason], highlightTeamId: 1235 },
 };
+
+/**
+ * The winter-break shape (#2636 finding 4): a finished, fully-scored autumn
+ * poule next to a spring poule that has not kicked off. Each table is
+ * classified on its own — the autumn table renders in full, the spring one
+ * as a club list — never one verdict blanket-applied to both.
+ */
+export const MixedTables: Story = {
+  args: { tables: [autumn, numberlessSeason], highlightTeamId: 1235 },
+};
