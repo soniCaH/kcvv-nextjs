@@ -15,8 +15,8 @@ import {
   pendingEmptyBody,
 } from "@/lib/utils/empty-state-copy";
 import {
-  EVENT_TYPE_FILL,
-  type EventType,
+  EVENT_TYPE_TABS,
+  EVENT_TYPE_ORDER,
 } from "@/components/event/event-type-style";
 import { CalendarMonth } from "../CalendarMonth";
 import { CalendarWeek } from "../CalendarWeek";
@@ -25,7 +25,6 @@ import { CalendarSubscribePanel } from "../CalendarSubscribePanel";
 import {
   formatMonthNavLabel,
   formatWeekRangeLabel,
-  isKalenderFilterValue,
 } from "@/app/(main)/kalender/utils";
 import type {
   CalendarFeedItem,
@@ -37,50 +36,13 @@ import type {
 
 /**
  * The by-type filter row (#1992, absorbed into `<FilterTabs>` by #2429/#2564
- * — replaces the deleted bespoke `KalenderFilterBar`). Colour is a prop
- * (`FilterTab.color`), sourced from `EVENT_TYPE_FILL` — the same map
- * `<TicketStub>`'s tear-off date block uses — so the row stays a faithful
- * legend for the tickets it labels. `Wedstrijden` (matches) carries the
- * owner-locked `card-red` fill (#1992); `Alles` and `Andere` carry no
- * colour and render the neutral Direction D chip (`EVENT_TYPE_FILL.Andere`,
- * "bg-ink text-cream", already matches that neutral fill, so an explicit
- * colour on Andere would be a no-op).
- *
- * `EVENT_TYPE_TABS satisfies Record<EventType, FilterTab>` — restores the
- * exhaustiveness guard the old `KalenderFilterBar`'s `satisfies
- * Record<EventType, ChipStyle>` gave: a new `eventType` enum value is a
- * compile error here, not a silently uncoloured chip and a `?type=` deep
- * link `isKalenderFilterValue` would reject (#2564 review finding 4).
+ * — replaces the deleted bespoke `KalenderFilterBar`). `EVENT_TYPE_TABS` +
+ * `EVENT_TYPE_ORDER` are the shared source (`event-type-style.ts`, #2564
+ * review item 1) also consumed by `/evenementen`'s `EventsBrowser` — one
+ * definition of each event-type chip's colour, not two kept in sync by
+ * hand. `Wedstrijden` (matches) is this row's own addition, carrying the
+ * owner-locked `card-red` fill (#1992).
  */
-const EVENT_TYPE_TABS = {
-  Clubevent: {
-    value: "Clubevent",
-    label: "Clubevent",
-    color: { border: "border-jersey-deep", fill: EVENT_TYPE_FILL.Clubevent },
-  },
-  Supportersactiviteit: {
-    value: "Supportersactiviteit",
-    label: "Supportersactiviteit",
-    color: {
-      border: "border-warm",
-      fill: EVENT_TYPE_FILL.Supportersactiviteit,
-    },
-  },
-  Jeugdwerking: {
-    value: "Jeugdwerking",
-    label: "Jeugdwerking",
-    color: {
-      border: "border-jersey-bright",
-      fill: EVENT_TYPE_FILL.Jeugdwerking,
-    },
-  },
-  Andere: { value: "Andere", label: "Andere" },
-} satisfies Record<EventType, FilterTab>;
-
-// Render order: the four event types in `<TicketStub>` order, derived from
-// the map above so it can't drift out of sync with it.
-const EVENT_TYPE_ORDER = Object.keys(EVENT_TYPE_TABS) as EventType[];
-
 const KALENDER_FILTER_TABS: FilterTab[] = [
   { value: "all", label: "Alles" },
   {
@@ -90,6 +52,26 @@ const KALENDER_FILTER_TABS: FilterTab[] = [
   },
   ...EVENT_TYPE_ORDER.map((type) => EVENT_TYPE_TABS[type]),
 ];
+
+/** Every valid `?type=` value, in render order — the single source of truth
+ *  for validating the URL param (an unknown value falls back to "all").
+ *  Derived from `KALENDER_FILTER_TABS` itself (#2564 review item 10) so a
+ *  new chip can't be added to the row and forgotten here — the failure mode
+ *  that shipped a chip whose own deep link silently fell back to "all". The
+ *  only consumer is this component, so it lives here rather than in the
+ *  route's `utils.ts` (which otherwise has no reason to import a
+ *  client-side URL-parsing concern). */
+const KALENDER_FILTER_VALUES: readonly KalenderFilterValue[] =
+  KALENDER_FILTER_TABS.map((tab) => tab.value as KalenderFilterValue);
+
+function isKalenderFilterValue(
+  value: string | null,
+): value is KalenderFilterValue {
+  return (
+    value !== null &&
+    (KALENDER_FILTER_VALUES as readonly string[]).includes(value)
+  );
+}
 
 export interface CalendarWidgetProps {
   /**
