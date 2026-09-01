@@ -37,13 +37,13 @@ describe("CategoryFilters", () => {
       render(<CategoryFilters categories={mockCategories} />);
 
       // Should have "All" tab
-      expect(screen.getByRole("tab", { name: /alles/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /alles/i })).toBeInTheDocument();
 
       // Should have all category tabs
-      expect(screen.getByRole("tab", { name: /nieuws/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /jeugd/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /nieuws/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /jeugd/i })).toBeInTheDocument();
       expect(
-        screen.getByRole("tab", { name: /evenementen/i }),
+        screen.getByRole("link", { name: /evenementen/i }),
       ).toBeInTheDocument();
     });
 
@@ -51,14 +51,14 @@ describe("CategoryFilters", () => {
       render(<CategoryFilters categories={[]} />);
 
       // Should still render "All" tab
-      expect(screen.getByRole("tab", { name: /alles/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /alles/i })).toBeInTheDocument();
     });
 
     it("should render with custom aria-label", () => {
       render(<CategoryFilters categories={mockCategories} />);
 
-      const tablist = screen.getByRole("tablist");
-      expect(tablist).toHaveAttribute("aria-label", "Filter news by category");
+      const group = screen.getByRole("group");
+      expect(group).toHaveAttribute("aria-label", "Filter news by category");
     });
   });
 
@@ -66,8 +66,8 @@ describe("CategoryFilters", () => {
     it("should highlight 'All' tab by default", () => {
       render(<CategoryFilters categories={mockCategories} />);
 
-      const allTab = screen.getByRole("tab", { name: /alles/i });
-      expect(allTab).toHaveAttribute("aria-selected", "true");
+      const allTab = screen.getByRole("link", { name: /alles/i });
+      expect(allTab).toHaveAttribute("aria-current", "page");
     });
 
     it("should highlight active category", () => {
@@ -75,8 +75,8 @@ describe("CategoryFilters", () => {
         <CategoryFilters categories={mockCategories} activeCategory="jeugd" />,
       );
 
-      const jeugdTab = screen.getByRole("tab", { name: /jeugd/i });
-      expect(jeugdTab).toHaveAttribute("aria-selected", "true");
+      const jeugdTab = screen.getByRole("link", { name: /jeugd/i });
+      expect(jeugdTab).toHaveAttribute("aria-current", "page");
     });
 
     it("should not highlight inactive categories", () => {
@@ -84,8 +84,8 @@ describe("CategoryFilters", () => {
         <CategoryFilters categories={mockCategories} activeCategory="jeugd" />,
       );
 
-      const nieuwsTab = screen.getByRole("tab", { name: /nieuws/i });
-      expect(nieuwsTab).toHaveAttribute("aria-selected", "false");
+      const nieuwsTab = screen.getByRole("link", { name: /nieuws/i });
+      expect(nieuwsTab).not.toHaveAttribute("aria-current");
     });
   });
 
@@ -93,17 +93,17 @@ describe("CategoryFilters", () => {
     it("should set correct href for 'All' tab", () => {
       render(<CategoryFilters categories={mockCategories} />);
 
-      const allTab = screen.getByRole("tab", { name: /alles/i });
+      const allTab = screen.getByRole("link", { name: /alles/i });
       expect(allTab).toHaveAttribute("href", "/nieuws");
     });
 
     it("should set correct href for category tabs", () => {
       render(<CategoryFilters categories={mockCategories} />);
 
-      const nieuwsTab = screen.getByRole("tab", { name: /nieuws/i });
+      const nieuwsTab = screen.getByRole("link", { name: /nieuws/i });
       expect(nieuwsTab).toHaveAttribute("href", "/nieuws?categorie=nieuws");
 
-      const jeugdTab = screen.getByRole("tab", { name: /jeugd/i });
+      const jeugdTab = screen.getByRole("link", { name: /jeugd/i });
       expect(jeugdTab).toHaveAttribute("href", "/nieuws?categorie=jeugd");
     });
 
@@ -120,7 +120,7 @@ describe("CategoryFilters", () => {
 
       render(<CategoryFilters categories={specialCategories} />);
 
-      const tab = screen.getByRole("tab", { name: /test & demo/i });
+      const tab = screen.getByRole("link", { name: /test & demo/i });
       expect(tab).toHaveAttribute("href", "/nieuws?categorie=test%26demo");
     });
   });
@@ -129,7 +129,7 @@ describe("CategoryFilters", () => {
     it("should render as links by default", () => {
       render(<CategoryFilters categories={mockCategories} />);
 
-      const tabs = screen.getAllByRole("tab");
+      const tabs = screen.getAllByRole("link");
       tabs.forEach((tab) => {
         expect(tab.tagName).toBe("A");
       });
@@ -140,7 +140,7 @@ describe("CategoryFilters", () => {
         <CategoryFilters categories={mockCategories} renderAsLinks={false} />,
       );
 
-      const tabs = screen.getAllByRole("tab");
+      const tabs = screen.getAllByRole("button");
       tabs.forEach((tab) => {
         expect(tab.tagName).toBe("BUTTON");
       });
@@ -158,7 +158,7 @@ describe("CategoryFilters", () => {
         />,
       );
 
-      const nieuwsTab = screen.getByRole("tab", { name: /nieuws/i });
+      const nieuwsTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(nieuwsTab);
 
       expect(handleChange).toHaveBeenCalledTimes(1);
@@ -177,44 +177,11 @@ describe("CategoryFilters", () => {
         />,
       );
 
-      const allTab = screen.getByRole("tab", { name: /alles/i });
+      const allTab = screen.getByRole("button", { name: /alles/i });
       await user.click(allTab);
 
       expect(handleChange).toHaveBeenCalledTimes(1);
       expect(handleChange).toHaveBeenCalledWith("all");
-    });
-  });
-
-  describe("Size Variants", () => {
-    // Size tokens align with the FilterTabs Direction-D contract:
-    // sm `px-[9px] py-[5px] text-[10px]`, md `px-3 py-2 text-[11px]`,
-    // lg `px-4 py-[11px] text-xs`. See packages/.../FilterTabs.tsx
-    // SIZE_CLASSES for the canonical mapping.
-    it("should render small size by default", () => {
-      render(<CategoryFilters categories={mockCategories} />);
-
-      const tab = screen.getByRole("tab", { name: /alles/i });
-      expect(tab.className).toContain("px-[9px]");
-      expect(tab.className).toContain("py-[5px]");
-      expect(tab.className).toContain("text-[10px]");
-    });
-
-    it("should render medium size", () => {
-      render(<CategoryFilters categories={mockCategories} size="md" />);
-
-      const tab = screen.getByRole("tab", { name: /alles/i });
-      expect(tab).toHaveClass("px-3");
-      expect(tab).toHaveClass("py-2");
-      expect(tab.className).toContain("text-[11px]");
-    });
-
-    it("should render large size", () => {
-      render(<CategoryFilters categories={mockCategories} size="lg" />);
-
-      const tab = screen.getByRole("tab", { name: /alles/i });
-      expect(tab).toHaveClass("px-4");
-      expect(tab.className).toContain("py-[11px]");
-      expect(tab).toHaveClass("text-xs");
     });
   });
 
@@ -242,7 +209,7 @@ describe("CategoryFilters", () => {
       render(<CategoryFilters categories={mockCategories} />);
 
       // The tabs should render but without count badges
-      const tabs = screen.getAllByRole("tab");
+      const tabs = screen.getAllByRole("link");
       expect(tabs.length).toBe(4); // All + 3 categories
 
       // Verify no count badge elements are rendered
@@ -267,7 +234,7 @@ describe("CategoryFilters", () => {
       expect(screen.queryByText("8")).not.toBeInTheDocument();
 
       // Verify tabs don't contain any numeric values
-      const tabs = screen.getAllByRole("tab");
+      const tabs = screen.getAllByRole("link");
       tabs.forEach((tab) => {
         const textContent = tab.textContent || "";
         expect(textContent).not.toMatch(/\d+/);
@@ -287,8 +254,8 @@ describe("CategoryFilters", () => {
       expect(screen.queryByText("8")).not.toBeInTheDocument();
 
       // Verify component renders successfully
-      const tablist = screen.getByRole("tablist");
-      expect(tablist).toBeInTheDocument();
+      const group = screen.getByRole("group");
+      expect(group).toBeInTheDocument();
     });
   });
 
@@ -296,14 +263,14 @@ describe("CategoryFilters", () => {
     it("should render 'All' tab first", () => {
       render(<CategoryFilters categories={mockCategories} />);
 
-      const tabs = screen.getAllByRole("tab");
+      const tabs = screen.getAllByRole("link");
       expect(tabs[0]).toHaveTextContent("Alles");
     });
 
     it("should render categories in order after 'All' tab", () => {
       render(<CategoryFilters categories={mockCategories} />);
 
-      const tabs = screen.getAllByRole("tab");
+      const tabs = screen.getAllByRole("link");
       expect(tabs[0]).toHaveTextContent("Alles");
       expect(tabs[1]).toHaveTextContent("Nieuws");
       expect(tabs[2]).toHaveTextContent("Jeugd");
@@ -315,29 +282,29 @@ describe("CategoryFilters", () => {
     it("should have proper ARIA roles", () => {
       render(<CategoryFilters categories={mockCategories} />);
 
-      expect(screen.getByRole("tablist")).toBeInTheDocument();
-      expect(screen.getAllByRole("tab")).toHaveLength(4); // All + 3 categories
+      expect(screen.getByRole("group")).toBeInTheDocument();
+      expect(screen.getAllByRole("link")).toHaveLength(4); // All + 3 categories
     });
 
-    it("should have proper aria-selected attributes", () => {
+    it("should have proper aria-current attributes", () => {
       render(
         <CategoryFilters categories={mockCategories} activeCategory="jeugd" />,
       );
 
-      const activeTab = screen.getByRole("tab", { name: /jeugd/i });
-      const inactiveTab = screen.getByRole("tab", { name: /nieuws/i });
+      const activeTab = screen.getByRole("link", { name: /jeugd/i });
+      const inactiveTab = screen.getByRole("link", { name: /nieuws/i });
 
-      expect(activeTab).toHaveAttribute("aria-selected", "true");
-      expect(inactiveTab).toHaveAttribute("aria-selected", "false");
+      expect(activeTab).toHaveAttribute("aria-current", "page");
+      expect(inactiveTab).not.toHaveAttribute("aria-current");
     });
 
     it("should be keyboard navigable", async () => {
       const user = userEvent.setup();
       render(<CategoryFilters categories={mockCategories} />);
 
-      // Tab to first button (All tab should be active by default)
+      // Tab to first link (All tab should be active by default)
       await user.tab();
-      const allTab = screen.getByRole("tab", { name: /alles/i });
+      const allTab = screen.getByRole("link", { name: /alles/i });
       expect(allTab).toHaveFocus();
     });
   });

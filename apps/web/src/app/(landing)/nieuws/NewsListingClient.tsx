@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
 import { NewsCard, CategoryFilters } from "@/components/article";
 import {
@@ -42,6 +43,7 @@ export function NewsListingClient({
   initialCategory,
   fetchArticles,
 }: NewsListingClientProps) {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState(
     initialCategory ?? "all",
   );
@@ -128,11 +130,15 @@ export function NewsListingClient({
         nextOffsetRef.current = result.items.length;
         setHasMore(result.hasMore);
 
-        // Update URL and scroll only after successful fetch
+        // Update URL and scroll only after successful fetch. `router.push`
+        // (not `history.replaceState`) so a filter is a real history entry —
+        // browser back undoes it, the same mechanism every filter row on the
+        // site now shares (#2429 resolution, rule 5). `scroll: false`: this
+        // component already owns the scroll-to-top below.
         const url = categoryFilter
           ? `/nieuws?categorie=${encodeURIComponent(categoryFilter)}`
           : "/nieuws";
-        window.history.replaceState({}, "", url);
+        router.push(url, { scroll: false });
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (err) {
         if (requestId !== categoryRequestId.current) return;
@@ -151,7 +157,7 @@ export function NewsListingClient({
         }
       }
     },
-    [activeCategory, fetchArticles],
+    [activeCategory, fetchArticles, router],
   );
 
   useEffect(() => {

@@ -17,6 +17,11 @@ vi.mock("next/image", () => ({
   },
 }));
 
+const mockPush = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
 const mockFetchArticles = vi.fn();
 
 function makeArticle(overrides: Partial<ArticleVM> = {}): ArticleVM {
@@ -189,11 +194,11 @@ describe("NewsListingClient", () => {
       />,
     );
 
-    expect(screen.getByRole("tab", { name: "Alles" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Alles" })).toBeInTheDocument();
     expect(
-      screen.getByRole("tab", { name: "Eerste ploeg" }),
+      screen.getByRole("button", { name: "Eerste ploeg" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Jeugd" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Jeugd" })).toBeInTheDocument();
   });
 
   it("shows empty state when no articles match category", async () => {
@@ -209,7 +214,7 @@ describe("NewsListingClient", () => {
     );
 
     // Click a category tab
-    fireEvent.click(screen.getByRole("tab", { name: "Jeugd" }));
+    fireEvent.click(screen.getByRole("button", { name: "Jeugd" }));
 
     await waitFor(() => {
       expect(screen.getByText(/geen artikelen/i)).toBeInTheDocument();
@@ -235,7 +240,7 @@ describe("NewsListingClient", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "Jeugdwerking" }));
+    fireEvent.click(screen.getByRole("button", { name: "Jeugdwerking" }));
 
     await waitFor(() => {
       expect(
@@ -262,7 +267,7 @@ describe("NewsListingClient", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "Jeugd" }));
+    fireEvent.click(screen.getByRole("button", { name: "Jeugd" }));
     await waitFor(() => {
       expect(screen.getByText(/geen artikelen in jeugd/i)).toBeInTheDocument();
     });
@@ -356,7 +361,7 @@ describe("NewsListingClient", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "Jeugd" }));
+    fireEvent.click(screen.getByRole("button", { name: "Jeugd" }));
 
     await waitFor(() => {
       expect(

@@ -27,7 +27,6 @@ interface Category {
 interface CategoryFiltersProps {
   categories: Category[];
   activeCategory?: string;
-  size?: "sm" | "md" | "lg";
   showCounts?: boolean;
   renderAsLinks?: boolean;
   onChange?: (category: string) => void;
@@ -41,7 +40,6 @@ interface CategoryFiltersProps {
  *
  * @param categories - Array of category objects to create tabs from
  * @param activeCategory - Slug of the currently active category; defaults to `"all"` when not provided
- * @param size - Visual size variant for the tabs (`"sm" | "md" | "lg"`)
  * @param showCounts - Whether to display article counts for each category
  * @param renderAsLinks - When `true`, tabs render as links with hrefs; when `false`, tabs render as interactive buttons
  * @param onChange - Callback invoked with the selected category slug when `renderAsLinks` is `false`
@@ -50,7 +48,6 @@ interface CategoryFiltersProps {
 export function CategoryFilters({
   categories,
   activeCategory,
-  size = "sm",
   showCounts = false,
   renderAsLinks = true,
   onChange,
@@ -76,7 +73,6 @@ export function CategoryFilters({
     <FilterTabs
       tabs={tabs}
       activeTab={activeCategory || "all"}
-      size={size}
       showCounts={showCounts}
       renderAsLinks={renderAsLinks}
       onChange={onChange}

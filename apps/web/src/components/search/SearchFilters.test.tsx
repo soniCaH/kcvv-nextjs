@@ -26,11 +26,19 @@ describe("SearchFilters", () => {
         />,
       );
 
-      expect(screen.getByRole("tab", { name: /alles/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /nieuws/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /spelers/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /staf/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /ploegen/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /alles/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /nieuws/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /spelers/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /staf/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /ploegen/i }),
+      ).toBeInTheDocument();
     });
 
     it("should render with correct ARIA label", () => {
@@ -42,10 +50,10 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const tablist = screen.getByRole("tablist", {
+      const group = screen.getByRole("group", {
         name: /filter zoekresultaten op type/i,
       });
-      expect(tablist).toBeInTheDocument();
+      expect(group).toBeInTheDocument();
     });
   });
 
@@ -60,7 +68,7 @@ describe("SearchFilters", () => {
       );
 
       // Verify tab structure and ordering
-      const tabs = screen.getAllByRole("tab");
+      const tabs = screen.getAllByRole("button");
       expect(tabs).toHaveLength(5);
       expect(tabs[3]).toHaveTextContent("Staf");
       expect(within(tabs[3]).getByText("0")).toBeInTheDocument();
@@ -92,11 +100,11 @@ describe("SearchFilters", () => {
       );
 
       // Scope count lookups to each tab to avoid false positives
-      const allTab = screen.getByRole("tab", { name: /alles/i });
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
-      const playerTab = screen.getByRole("tab", { name: /spelers/i });
-      const staffTab = screen.getByRole("tab", { name: /staf/i });
-      const teamTab = screen.getByRole("tab", { name: /ploegen/i });
+      const allTab = screen.getByRole("button", { name: /alles/i });
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
+      const playerTab = screen.getByRole("button", { name: /spelers/i });
+      const staffTab = screen.getByRole("button", { name: /staf/i });
+      const teamTab = screen.getByRole("button", { name: /ploegen/i });
 
       expect(within(allTab).getByText("10")).toBeInTheDocument();
       expect(within(articleTab).getByText("5")).toBeInTheDocument();
@@ -123,7 +131,7 @@ describe("SearchFilters", () => {
       );
 
       // All tabs should still render
-      const tabs = screen.getAllByRole("tab");
+      const tabs = screen.getAllByRole("button");
       expect(tabs).toHaveLength(5);
     });
   });
@@ -138,8 +146,8 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const allTab = screen.getByRole("tab", { name: /alles/i });
-      expect(allTab).toHaveAttribute("aria-selected", "true");
+      const allTab = screen.getByRole("button", { name: /alles/i });
+      expect(allTab).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should mark 'article' tab as active when activeType is 'article'", () => {
@@ -151,8 +159,8 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
-      expect(articleTab).toHaveAttribute("aria-selected", "true");
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
+      expect(articleTab).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should mark 'player' tab as active when activeType is 'player'", () => {
@@ -164,8 +172,8 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const playerTab = screen.getByRole("tab", { name: /spelers/i });
-      expect(playerTab).toHaveAttribute("aria-selected", "true");
+      const playerTab = screen.getByRole("button", { name: /spelers/i });
+      expect(playerTab).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should mark 'team' tab as active when activeType is 'team'", () => {
@@ -177,8 +185,8 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const teamTab = screen.getByRole("tab", { name: /ploegen/i });
-      expect(teamTab).toHaveAttribute("aria-selected", "true");
+      const teamTab = screen.getByRole("button", { name: /ploegen/i });
+      expect(teamTab).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should have only one active tab at a time", () => {
@@ -190,7 +198,7 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const selectedTabs = screen.getAllByRole("tab", { selected: true });
+      const selectedTabs = screen.getAllByRole("button", { pressed: true });
       expect(selectedTabs).toHaveLength(1);
       expect(selectedTabs[0]).toHaveTextContent("Nieuws");
     });
@@ -209,7 +217,7 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const allTab = screen.getByRole("tab", { name: /alles/i });
+      const allTab = screen.getByRole("button", { name: /alles/i });
       await user.click(allTab);
 
       expect(handleFilterChange).toHaveBeenCalledWith("all");
@@ -227,7 +235,7 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
       expect(handleFilterChange).toHaveBeenCalledWith("article");
@@ -245,7 +253,7 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const playerTab = screen.getByRole("tab", { name: /spelers/i });
+      const playerTab = screen.getByRole("button", { name: /spelers/i });
       await user.click(playerTab);
 
       expect(handleFilterChange).toHaveBeenCalledWith("player");
@@ -263,7 +271,7 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const teamTab = screen.getByRole("tab", { name: /ploegen/i });
+      const teamTab = screen.getByRole("button", { name: /ploegen/i });
       await user.click(teamTab);
 
       expect(handleFilterChange).toHaveBeenCalledWith("team");
@@ -281,7 +289,7 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
       // FilterTabs allows clicking active tab
@@ -336,8 +344,8 @@ describe("SearchFilters", () => {
       );
 
       // Verify prop-driven behavior: activeType determines which tab is selected
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
-      expect(articleTab).toHaveAttribute("aria-selected", "true");
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
+      expect(articleTab).toHaveAttribute("aria-pressed", "true");
 
       // Verify resultCounts are rendered in the tabs
       expect(screen.getByText("5")).toBeInTheDocument(); // article count
@@ -366,7 +374,7 @@ describe("SearchFilters", () => {
       );
 
       // All tabs should be buttons
-      const tabs = screen.getAllByRole("tab");
+      const tabs = screen.getAllByRole("button");
       tabs.forEach((tab) => {
         expect(tab.tagName).toBe("BUTTON");
       });
@@ -374,7 +382,7 @@ describe("SearchFilters", () => {
   });
 
   describe("Accessibility", () => {
-    it("should use tablist role for semantic structure", () => {
+    it("should use group role for semantic structure", () => {
       render(
         <SearchFilters
           activeType="all"
@@ -383,27 +391,7 @@ describe("SearchFilters", () => {
         />,
       );
 
-      expect(screen.getByRole("tablist")).toBeInTheDocument();
-    });
-
-    it("should render tabs with roving tabindex (active tab focusable)", () => {
-      render(
-        <SearchFilters
-          activeType="all"
-          onFilterChange={vi.fn()}
-          resultCounts={mockResultCounts}
-        />,
-      );
-
-      // FilterTabs uses roving tabindex - only active tab is focusable
-      const activeTab = screen.getByRole("tab", { name: /alles/i });
-      const inactiveTab = screen.getByRole("tab", { name: /nieuws/i });
-
-      // Active tab should have tabindex="0"
-      expect(activeTab).toHaveAttribute("tabindex", "0");
-
-      // Inactive tabs should have tabindex="-1"
-      expect(inactiveTab).toHaveAttribute("tabindex", "-1");
+      expect(screen.getByRole("group")).toBeInTheDocument();
     });
 
     it("should support Enter key activation", async () => {
@@ -418,7 +406,7 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const articleTab = screen.getByRole("tab", { name: /nieuws/i });
+      const articleTab = screen.getByRole("button", { name: /nieuws/i });
       articleTab.focus();
       await user.keyboard("{Enter}");
 
@@ -437,7 +425,7 @@ describe("SearchFilters", () => {
         />,
       );
 
-      const playerTab = screen.getByRole("tab", { name: /spelers/i });
+      const playerTab = screen.getByRole("button", { name: /spelers/i });
       playerTab.focus();
       await user.keyboard(" ");
 

@@ -62,7 +62,6 @@ export const SearchFilters = ({
       tabs={tabs}
       activeTab={activeType}
       onChange={handleChange}
-      size="md"
       showCounts={true}
       renderAsLinks={false}
       ariaLabel="Filter zoekresultaten op type"
