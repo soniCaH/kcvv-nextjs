@@ -147,17 +147,18 @@ export function isReducedMatchRow(match: ReducedRowInput): boolean {
 
 /**
  * Inset underline that tints a finished match's scoreline by KCVV-perspective
- * outcome (win = jersey-deep, loss = alert, draw = none — the cream mix keeps it
- * legible on both cream and jersey-deep cards). Owned by `<TeamAgendaRow>` —
- * the shared match row used on team pages, `/kalender`, and the homepage
- * `<FirstTeamsBlock>` (#2301) — so the outcome colour can't drift between them.
+ * outcome (win = jersey-deep, loss = alert, draw = ink-muted — all three mixed
+ * toward the ground so the patch stays legible on both cream and jersey-deep
+ * cards). Owned by `<TeamAgendaRow>` — the shared match row used on team
+ * pages, `/kalender`, and the homepage `<FirstTeamsBlock>` (#2301) — so the
+ * outcome colour can't drift between them.
  *
  * Nested by ground rather than forked into a second top-level export
  * (#2616 review): a `OUTCOME_UNDERLINE_DARK` sibling would restate the whole
- * geometry — the `inset 0 -9px 0`, the hue pair, the "no tint on a draw"
- * rule — as a second hand-maintained literal, with nothing enforcing the two
- * stay in step. `OUTCOME_UNDERLINE[ground][outcome]` keeps the shape in one
- * place; only the colour stops the mix is pulled toward differ by ground.
+ * geometry — the `inset 0 -9px 0`, the hue triple — as a second
+ * hand-maintained literal, with nothing enforcing the two stay in step.
+ * `OUTCOME_UNDERLINE[ground][outcome]` keeps the shape in one place; only the
+ * colour the mix is pulled toward differs by ground.
  *
  * `light` is `<TeamAgendaRow>`'s own ground (including its `featured`
  * jersey-deep card — that treatment predates this split and isn't
@@ -168,46 +169,90 @@ export function isReducedMatchRow(match: ReducedRowInput): boolean {
  * toward the ground instead, at a heavier stop so the patch still reads as a
  * distinct tint against a ground it is this close to in hue.
  *
- * The `<CalendarAgenda>` drift (a third, `light`-only copy) is a known gap —
- * see `OUTCOME_WORD`'s docblock below, which already records it.
+ * The draw stop (`--color-ink-muted`, 34%/55%) was decided in #2512: it is
+ * the one neutral that lands at the same strength as the win/loss mixes
+ * either side of it (`#c6c3bc`, 1.54:1 against cream, measured against the
+ * `#a2c9b0`/`#deb2a5` win/loss pair #2513 had already proved reads outdoors)
+ * — a calculator is not the test for any of the three; #2513 settled that.
+ *
+ * `<CalendarAgenda>` used to carry a third, drifted, `light`-only copy of
+ * this record (#2404 named the gap). #2656 deleted it — the agenda row now
+ * reads this export directly, so the "outcome colour can't drift between
+ * them" claim above is enforced, not aspirational.
  */
 export const OUTCOME_UNDERLINE: Record<
   "light" | "dark",
-  Record<MatchOutcome, string | undefined>
+  Record<MatchOutcome, string>
 > = {
   light: {
     win: "inset 0 -9px 0 color-mix(in srgb, var(--color-jersey-deep) 34%, var(--color-cream))",
-    draw: undefined,
+    draw: "inset 0 -9px 0 color-mix(in srgb, var(--color-ink-muted) 34%, var(--color-cream))",
     loss: "inset 0 -9px 0 color-mix(in srgb, var(--color-alert) 38%, var(--color-cream))",
   },
   dark: {
     win: "inset 0 -9px 0 color-mix(in srgb, var(--color-jersey-deep) 55%, var(--color-jersey-deep-dark))",
-    draw: undefined,
+    draw: "inset 0 -9px 0 color-mix(in srgb, var(--color-ink-muted) 55%, var(--color-jersey-deep-dark))",
     loss: "inset 0 -9px 0 color-mix(in srgb, var(--color-alert) 55%, var(--color-jersey-deep-dark))",
   },
 };
 
 /**
- * The word for a settled match's outcome, KCVV-perspective — the label register
- * that names what `OUTCOME_UNDERLINE` above tints. The tint alone is meaning by
- * colour: a win and a loss differ only in hue, and a draw is the absence of one
- * (#2404). Every surface that renders the underline should be able to reach for
- * the word from here rather than inventing its own.
+ * The word for a settled match's outcome, KCVV-perspective, in its
+ * **fixed-width caption register** — the label that names what
+ * `OUTCOME_UNDERLINE` above tints, sized for a 9px mono caption in a
+ * narrow column (`<MatchStripView>`'s `w-14` mobile-ledger stub;
+ * `<TeamAgendaRow>`'s mobile caption, which #2512 accepted the same
+ * shorter spelling for even though it isn't itself column-constrained,
+ * so the shared constant doesn't fork over one consumer's width). For any
+ * spot that is *not* a fixed-width caption — an `aria-label`, or any other
+ * prose context — use `OUTCOME_WORD_FULL` below instead. Every surface
+ * that renders the underline should be able to reach for one of the two
+ * rather than inventing its own.
  *
  * Nouns, not the share card's verbs. `resolveResultMood`
  * (`components/share/shared/theme.ts`) says "Gewonnen" / "Verloren" because
- * there the word is a display headline standing on its own; here it prefixes a
- * 9px mono caption and has to read as a label. "Gelijkspel" is deliberately
- * spelled the same on both.
+ * there the word is a display headline standing on its own with no column to
+ * fit — here it prefixes a 9px mono caption in a fixed-width stub (`w-14` on
+ * `<MatchStripView>`'s mobile ledger). That is why `draw` reads "Gelijk"
+ * here and "Gelijkspel" on the share card: the two registers were always
+ * different, `Gelijkspel` was just the one word where the difference
+ * happened not to show, until the mobile ledger needed the shorter spelling
+ * to fit `w-14` without taking width back off the opponent name (#2656 — the
+ * same trade #2388 fought and #2404 won back). Do not let the two spellings
+ * re-converge; that would silently retake the width.
  *
- * Known gap, named rather than papered over: `<CalendarAgenda>` renders the
- * tint from its own local `OUTCOME_UNDERLINE` copy — which has already drifted
- * from the one above (`-4px` solid vs `-9px` `color-mix`) — and carries no word
- * at all. Pointing it here would change `/kalender`'s pixels, so #2404 left it;
- * the underline's "so the outcome colour can't drift between them" claim above
- * is aspirational until it lands.
+ * The placement rule this word obeys — **the outcome word appears only
+ * where nothing else in the row assigns the score** — was decided in #2512,
+ * extending the mobile/desktop split `<TeamAgendaRow>` already argues (see
+ * its `desktopKindWord`/`mobileKindWord` comment): two clubs printed either
+ * side of a score, or a `Thuis`/`Uit` venue tag beside it, already say who
+ * won, so the word there would be noise stacking into a column of one
+ * repeated word down a season. It is asked for only where nothing else in
+ * the row makes that claim — `<TeamAgendaRow>`'s mobile column (opponent
+ * alone) and `<MatchStripView>`'s mobile ledger stub (`<StripDate>`, no
+ * second club printed). `<CalendarAgenda>` is the exception that proves the
+ * rule from the other direction: it prints no word at all, because its
+ * `<MatchVenueTag>` already assigns the score the same way a `Thuis`/`Uit`
+ * tag would.
  */
 export const OUTCOME_WORD: Record<MatchOutcome, string> = {
+  win: "Winst",
+  draw: "Gelijk",
+  loss: "Verlies",
+};
+
+/**
+ * `OUTCOME_WORD`'s full-length register, for anywhere the shortened caption
+ * spelling has no column to protect: an `aria-label` (`<TeamAgendaRow>`'s
+ * `buildRowLabel`, `<MatchStripView>`'s `<LedgerLinkRow>` label), or any
+ * other prose context. `win`/`loss` are identical to `OUTCOME_WORD` — only
+ * `draw` differs, "Gelijkspel" rather than the caption's "Gelijk". Reading
+ * `OUTCOME_WORD.draw` into an unconstrained accessible name would leak a
+ * visual-only abbreviation into a register that never needed it — the same
+ * class of mistake `OUTCOME_WORD`'s own docblock above warns against for the
+ * share card, just one hop closer to home.
+ */
+export const OUTCOME_WORD_FULL: Record<MatchOutcome, string> = {
   win: "Winst",
   draw: "Gelijkspel",
   loss: "Verlies",

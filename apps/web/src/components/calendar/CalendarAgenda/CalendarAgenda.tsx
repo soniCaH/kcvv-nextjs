@@ -12,7 +12,9 @@ import {
   getResultColor,
   isPlayedMatch,
   isReducedMatchRow,
+  isSettledMatch,
   otherClubSide,
+  OUTCOME_UNDERLINE,
   reservationView,
 } from "@/lib/utils/match-display";
 import { pendingEmptyBody } from "@/lib/utils/empty-state-copy";
@@ -37,12 +39,6 @@ export interface CalendarAgendaProps {
   currentMonth: number;
   currentYear: number;
 }
-
-const OUTCOME_UNDERLINE: Record<"win" | "draw" | "loss", string | undefined> = {
-  win: "inset 0 -4px 0 var(--color-jersey-deep)",
-  draw: undefined,
-  loss: "inset 0 -4px 0 var(--color-alert)",
-};
 
 /**
  * One match row at list density — reuses the 6.C row vocabulary (crest ·
@@ -106,11 +102,26 @@ function AgendaMatchRow({ match }: { match: CalendarMatch }) {
   const isPlayed = isPlayedMatch(match.status);
   const hasScore =
     typeof match.homeScore === "number" && typeof match.awayScore === "number";
+  // `isSettledMatch`, not `isPlayed` (#2656 review) — `isPlayedMatch` also
+  // covers `stopped`, and an abandoned match's partial scoreline is not a
+  // result to tint. `<TeamAgendaRow>`'s `computeOutcome` gates the same way
+  // ("Settled, not merely finished" / "`stopped` stays out — nothing is
+  // settled"); this row rendering both the scoreline (via `isPlayed`, which
+  // must still show a stopped match's partial score) and the tint (via
+  // `isSettledMatch`) off two different predicates is deliberate, not a
+  // second drift the shared `OUTCOME_UNDERLINE` record just closed.
   const outcome =
-    isPlayed && hasScore
+    isSettledMatch(match.status) && hasScore
       ? getResultColor(match.homeScore!, match.awayScore!, isHome)
       : null;
-  const underline = outcome ? OUTCOME_UNDERLINE[outcome] : undefined;
+  // #2656 — reads the shared `<TeamAgendaRow>`/`<MatchStripView>` record
+  // (light ground; this row is always on cream) instead of its own drifted
+  // local copy, so the outcome colour can't drift between surfaces again.
+  // No outcome word is added here (unlike `<TeamAgendaRow>`'s mobile column
+  // and `<MatchStripView>`'s mobile ledger): `<MatchVenueTag>` below already
+  // assigns the score the way a second club name or a Thuis/Uit tag does
+  // elsewhere, so per the placement rule this row stays quiet.
+  const underline = outcome ? OUTCOME_UNDERLINE.light[outcome] : undefined;
 
   return (
     <Link

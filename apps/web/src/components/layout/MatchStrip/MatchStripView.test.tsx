@@ -37,7 +37,10 @@ const fixture: ScheduleMatch = {
 describe("MatchStripView", () => {
   it("renders both matches as links to their own match-detail route", () => {
     render(<MatchStripView data={{ result, fixture }} />);
-    expect(screen.getByRole("link", { name: /^Uitslag/ })).toHaveAttribute(
+    // `result` is a settled win, so the row's lead word is the outcome
+    // ("Winst"), not the plain slot word — see the "names a settled
+    // result's outcome, matching the visible stub" describe block below.
+    expect(screen.getByRole("link", { name: /^Winst/ })).toHaveAttribute(
       "href",
       "/wedstrijd/42",
     );
@@ -49,7 +52,7 @@ describe("MatchStripView", () => {
   it("names the opponent, not KCVV, in each row's accessible name", () => {
     render(<MatchStripView data={{ result, fixture }} />);
     expect(
-      screen.getByRole("link", { name: /Uitslag.*RC Mechelen/ }),
+      screen.getByRole("link", { name: /Winst.*RC Mechelen/ }),
     ).toBeInTheDocument();
   });
 
@@ -101,7 +104,7 @@ describe("MatchStripView", () => {
     // render KCVV as its own opponent.
     const { isHome: _omitted, ...withoutIsHome } = result;
     render(<MatchStripView data={{ result: withoutIsHome, fixture: null }} />);
-    const row = screen.getByRole("link", { name: /^Uitslag/ });
+    const row = screen.getByRole("link", { name: /^Winst/ });
     // KCVV is the home side by club id, so the opponent must be the away team
     // and the label must read KCVV 3 - RC Mechelen 1, not KCVV against itself.
     expect(row).toHaveAccessibleName(/KCVV Elewijt 3 - RC Mechelen 1/);
@@ -125,7 +128,7 @@ describe("MatchStripView", () => {
 
   it("marks a home match with the house glyph and an away match with the bus", () => {
     render(<MatchStripView data={{ result, fixture }} />);
-    const resultRow = screen.getByRole("link", { name: /^Uitslag/ });
+    const resultRow = screen.getByRole("link", { name: /^Winst/ });
     const fixtureRow = screen.getByRole("link", { name: /^Volgende/ });
     expect(
       within(resultRow).getByLabelText("Thuiswedstrijd"),
@@ -143,11 +146,23 @@ describe("MatchStripView", () => {
     expect(score?.getAttribute("style") ?? "").toContain("inset");
   });
 
-  it("gives a draw no outcome sweep", () => {
+  it("marks a draw with its own ink-muted outcome sweep (#2512/#2656)", () => {
     const draw: ScheduleMatch = { ...result, homeScore: 2, awayScore: 2 };
     render(<MatchStripView data={{ result: draw, fixture: null }} />);
     const score = screen.getAllByText("2–2")[0];
-    expect(score?.getAttribute("style") ?? "").not.toContain("inset");
+    expect(score?.getAttribute("style") ?? "").toContain("ink-muted");
+  });
+
+  it("shows 'Gelijk' in the visible ledger stub but keeps 'Gelijkspel' in the accessible name (#2656 review)", () => {
+    // Same split as `<TeamAgendaRow>`: `OUTCOME_WORD.draw` ("Gelijk") is
+    // shortened only to fit this row's `w-14` date/word stub — the
+    // `aria-label` has no such column, so it reads `OUTCOME_WORD_FULL.draw`
+    // ("Gelijkspel") instead.
+    const draw: ScheduleMatch = { ...result, homeScore: 2, awayScore: 2 };
+    render(<MatchStripView data={{ result: draw, fixture: null }} />);
+    const row = screen.getByRole("link", { name: /Gelijkspel/ });
+    expect(within(row).getByText("Gelijk")).toBeInTheDocument();
+    expect(within(row).queryByText("Gelijkspel")).toBeNull();
   });
 
   it("renders the fixture alone when there is no result", () => {
@@ -160,7 +175,7 @@ describe("MatchStripView", () => {
 
   it("renders the result alone when there is no fixture", () => {
     render(<MatchStripView data={{ result, fixture: null }} />);
-    expect(screen.getByRole("link", { name: /^Uitslag/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Winst/ })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /^Volgende/ })).toBeNull();
   });
 
@@ -425,6 +440,30 @@ describe("matchDay ground (#2616)", () => {
     expect(
       screen.queryByRole("link", { name: /^Uitslag.*[Vv]andaag/ }),
     ).toBeNull();
+  });
+
+  // Regression (#2656 review): `outcomeWord` was computed without checking
+  // `matchDay`, so a settled result on the dark match-day ground read
+  // "Winst" instead of "Uitslag" — #2512 asked only for the light-ground
+  // ledger to name a settled result, not for the dark ledger to change.
+  it("keeps the plain slot word, visible and accessible, for a settled result on the match-day ground", () => {
+    render(
+      <MatchStripView data={{ result, fixture: todaysFixture }} matchDay />,
+    );
+    const row = screen.getByRole("link", { name: /^Uitslag/ });
+    expect(within(row).getByText("Uitslag")).toBeInTheDocument();
+    expect(within(row).queryByText("Winst")).toBeNull();
+  });
+
+  // Regression (#2656 review): the visible stub and the accessible name used
+  // to read the word from two independently-gated places — the exact drift
+  // #2404 introduced `MATCH_KIND_WORD` to end — so a settled result named
+  // its outcome ("Winst") visibly while the label still opened with the
+  // plain slot word ("Uitslag").
+  it("names a settled result's outcome identically in the visible stub and the accessible name off the match-day ground", () => {
+    render(<MatchStripView data={{ result, fixture: null }} />);
+    const row = screen.getByRole("link", { name: /^Winst/ });
+    expect(within(row).getByText("Winst")).toBeInTheDocument();
   });
 
   // jersey-deep on jersey-deep-dark is 2.3:1 — the same ratio that forces the

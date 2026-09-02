@@ -61,6 +61,7 @@ import {
   otherClubSide,
   OUTCOME_UNDERLINE,
   OUTCOME_WORD,
+  OUTCOME_WORD_FULL,
   reservationRowLabel,
   reservationView,
   type MatchOutcome,
@@ -388,7 +389,16 @@ export function TeamAgendaRow({
   // settled match names its outcome; a status the layout can't speak for is
   // left to `statusWording` ("Volgende · AFG" would argue with itself); a
   // surface that asked for its rows to be named gets the slot word.
+  //
+  // Two spellings of the outcome word: `OUTCOME_WORD` is the fixed-width
+  // caption register ("Gelijk", #2512/#2656) — used below for the VISIBLE
+  // desktop/mobile captions, which is where the column exists to protect.
+  // `OUTCOME_WORD_FULL` ("Gelijkspel") is for `buildRowLabel`'s accessible
+  // name further down, which has no column at all — reading the shortened
+  // spelling into it would leak a visual-only abbreviation into a register
+  // that never needed it.
   const outcomeWord = outcome ? OUTCOME_WORD[outcome] : null;
+  const outcomeWordA11y = outcome ? OUTCOME_WORD_FULL[outcome] : null;
   const slotWord = statusWording ? null : kind ? MATCH_KIND_WORD[kind] : null;
 
   // The two layouts do not need the same amount of help, so they do not get
@@ -410,6 +420,10 @@ export function TeamAgendaRow({
   // reasoning never applied to it in the first place.
   const desktopKindWord = kind ? (outcomeWord ?? slotWord) : null;
   const mobileKindWord = outcomeWord ?? slotWord;
+  // The accessible-name twin of `mobileKindWord` above — same resolution
+  // order, but reads `outcomeWordA11y` so a drawn row's aria-label says
+  // "Gelijkspel", never the caption's width-driven "Gelijk" (#2656 review).
+  const mobileKindWordA11y = outcomeWordA11y ?? slotWord;
 
   // On jersey-deep every emphasised caption segment collapses to `warm`; only
   // the cream side gives each one its own tone.
@@ -481,8 +495,10 @@ export function TeamAgendaRow({
     [
       // The more informative of the two — an accessible name has no layout to
       // restate, so the desktop scoreboard's argument for staying quiet does
-      // not apply to it.
-      mobileKindWord ? `${mobileKindWord}: ` : "",
+      // not apply to it. `mobileKindWordA11y`, not `mobileKindWord`: this
+      // string has no column to protect, so a drawn row reads "Gelijkspel"
+      // here even though the caption beside it reads "Gelijk" (#2656 review).
+      mobileKindWordA11y ? `${mobileKindWordA11y}: ` : "",
       labelSubject,
       `, ${day} ${month}`,
       // `scheduled`, not merely `!isPlayed`: a postponed or cancelled match is

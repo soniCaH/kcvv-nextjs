@@ -8,9 +8,12 @@ import { getButtonClasses } from "@/components/design-system/Button";
 import { House, Bus } from "@/lib/icons.redesign";
 import {
   HOME_AWAY_A11Y_NAME,
+  isSettledMatch,
   MATCH_DAY_WORD,
   MATCH_KIND_WORD,
   OUTCOME_UNDERLINE,
+  OUTCOME_WORD,
+  OUTCOME_WORD_FULL,
   reservationRowLabel,
   reservationView,
   type MatchRowKind,
@@ -233,8 +236,10 @@ function VenueGlyph({ home, dark = false }: { home: boolean; dark?: boolean }) {
 }
 
 /**
- * The canonical outcome marker: a highlighter sweep behind the score, and
- * nothing at all on a draw. Never a rule underneath it.
+ * The canonical outcome marker: a highlighter sweep behind the score, one
+ * tint per outcome — win, draw and loss each get their own hue (#2512/#2656
+ * gave the draw its own ink-muted band; it used to render nothing at all).
+ * Never a rule underneath it.
  *
  * Only ever rendered on the result side, which since #2390 also carries a match
  * that has kicked off while PSD still owes the score. So a missing scoreline is
@@ -294,6 +299,7 @@ function StripDate({
   kind,
   today = false,
   dark = false,
+  outcomeWord = null,
 }: {
   date: Date;
   kind: MatchRowKind;
@@ -309,6 +315,17 @@ function StripDate({
    */
   today?: boolean;
   dark?: boolean;
+  /**
+   * The settled result's outcome word (#2512/#2656) — takes over the third
+   * line from `MATCH_KIND_WORD[kind]` when the row's match is settled. This
+   * mobile ledger row shows the opponent alone (no second club, no venue
+   * tag), so per the placement rule at `OUTCOME_WORD`'s docblock it is one
+   * of the two surfaces that must name the outcome rather than stay quiet.
+   * `null` for the fixture row, which is never settled, and on the
+   * match-day ground — #2512 didn't ask for the dark ledger to change, so
+   * `dark` keeps reading the plain `MATCH_KIND_WORD[kind]` it always did.
+   */
+  outcomeWord?: string | null;
 }) {
   // One span carrying the box classes and the ground colour, with only the
   // CHILDREN branching on `today` — `today` and `dark` are independent props,
@@ -338,22 +355,20 @@ function StripDate({
           >
             {month}
           </span>
-          {/* jersey-deep, not the stub's own ink/ink-muted pair: at 9px directly
-              under a bold date, an ink word reads as a third line of the date
-              rather than as a label. Green is the one accent this cream band
-              already carries (its top border), so it separates without adding a
-              hue. On `<TeamAgendaRow>` the same word takes ink instead, because
-              there it sits inside an ink-muted caption and emphasis runs darker.
-              On the match-day ground (#2616) this becomes a cream alpha instead —
-              the same "slide label" treatment the desktop switch's kind word
+          {/* ink, not jersey-deep (#2656): this line now carries a settled
+              match's outcome word as often as it carries the plain slot word,
+              and "Verlies" in the club's own green read as a celebration —
+              see `<TeamAgendaRow>`'s same ink choice for its mono caption.
+              On the match-day ground (#2616) this stays a cream alpha — the
+              same "slide label" treatment the desktop switch's kind word
               gets, since this caption is that same word in the mobile layout. */}
           <span
             className={cn(
               "block text-[9px] leading-tight tracking-[0.06em] uppercase",
-              dark ? "text-cream/70" : "text-jersey-deep",
+              dark ? "text-cream/70" : "text-ink",
             )}
           >
-            {MATCH_KIND_WORD[kind]}
+            {outcomeWord ?? MATCH_KIND_WORD[kind]}
           </span>
         </>
       )}
@@ -385,6 +400,29 @@ function LedgerLinkRow({
     ? MATCH_DAY_WORD.toLowerCase()
     : formatMatchWidgetDate(match.date);
 
+  // The outcome word (#2512/#2656) — `null` for the fixture row
+  // (`kind === "fixture"` is never settled) and on the match-day ground:
+  // #2512 asked for the light-ground ledger to name a settled result, not
+  // for the dark match-day ledger to change, so that ground keeps the
+  // plain slot word it already had.
+  //
+  // Two spellings, the same split `<TeamAgendaRow>` makes (#2656 review):
+  // `OUTCOME_WORD` ("Gelijk") is the fixed-width caption register, read
+  // into `<StripDate>`'s `w-14` stub below; `OUTCOME_WORD_FULL`
+  // ("Gelijkspel") has no column to protect and feeds the `aria-label`
+  // instead. `win`/`loss` are identical between the two, so `leadWord*`
+  // only actually diverges on a draw.
+  const outcome = isSettledMatch(match.status) ? outcomeOf(match) : null;
+  const outcomeWordVisual = !matchDay && outcome ? OUTCOME_WORD[outcome] : null;
+  const outcomeWordA11y =
+    !matchDay && outcome ? OUTCOME_WORD_FULL[outcome] : null;
+  // `leadWordA11y` (below) and `<StripDate>`'s own `outcomeWord ??
+  // MATCH_KIND_WORD[kind]` fallback (eight lines below) are the two single
+  // sources — one per register — this label and the visible stub each read,
+  // so neither can drift into an independently-gated copy the way #2404
+  // already had to fix once for the plain slot word.
+  const leadWordA11y = outcomeWordA11y ?? MATCH_KIND_WORD[kind];
+
   // The match-day ground's decided tokens (#2616 review) — one named pair per
   // concern, mirroring `<TeamAgendaRow>`'s `monoClass`/`stubBorder` for its
   // own light/dark (`featured`) split, hoisted once rather than re-typed at
@@ -408,16 +446,14 @@ function LedgerLinkRow({
         ? `${homeScore} - ${opponent.name} ${awayScore}`
         : `${awayScore} - ${opponent.name} ${homeScore}`
       : null;
-  // The words come from `MATCH_KIND_WORD`, the same source `<StripDate>` renders
-  // eight lines below — the visible stub and the accessible name for one row
-  // were two independent copies of "Uitslag" / "Volgende" until #2404, which is
-  // the drift the constant exists to end.
+  // `leadWordA11y` — see its declaration above for why this reads the full
+  // register rather than `leadWordVisual`.
   const label =
     kind === "result"
       ? scored
-        ? `${MATCH_KIND_WORD.result} ${dateLabel}: KCVV Elewijt ${scored}`
-        : `${MATCH_KIND_WORD.result} ${dateLabel}: KCVV Elewijt tegen ${opponent.name}`
-      : `${MATCH_KIND_WORD.fixture} wedstrijd ${dateLabel}${match.time ? ` om ${match.time}` : ""}: KCVV Elewijt tegen ${opponent.name}`;
+        ? `${leadWordA11y} ${dateLabel}: KCVV Elewijt ${scored}`
+        : `${leadWordA11y} ${dateLabel}: KCVV Elewijt tegen ${opponent.name}`
+      : `${leadWordA11y} wedstrijd ${dateLabel}${match.time ? ` om ${match.time}` : ""}: KCVV Elewijt tegen ${opponent.name}`;
 
   return (
     <Link
@@ -438,7 +474,13 @@ function LedgerLinkRow({
         !last && hairline,
       )}
     >
-      <StripDate date={match.date} kind={kind} today={today} dark={matchDay} />
+      <StripDate
+        date={match.date}
+        kind={kind}
+        today={today}
+        dark={matchDay}
+        outcomeWord={outcomeWordVisual}
+      />
       <Crest team={opponent} dark={matchDay} />
       <span
         className={cn(

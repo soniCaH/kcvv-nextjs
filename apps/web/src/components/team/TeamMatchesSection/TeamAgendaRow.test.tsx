@@ -5,7 +5,7 @@
  *  - Date stub day/month render
  *  - Score rendered for finished matches (desktop score slot)
  *  - Kickoff time rendered for upcoming matches
- *  - Outcome underline: win / draw (none) / loss box-shadow on the score
+ *  - Outcome underline: win / draw / loss box-shadow on the score, each its own tint
  *  - Featured (jersey-deep) vs normal card data-attribute
  *  - Mobile: home/away icon (House/Bus) visible
  *  - Long name truncation (title attribute)
@@ -287,10 +287,11 @@ describe("TeamAgendaRow", () => {
       expect(spans[0]?.getAttribute("style")).toContain("color-alert");
     });
 
-    it("applies no box-shadow for a draw", () => {
+    it("applies its own ink-muted shadow for a draw (#2512/#2656)", () => {
       const { container } = render(<TeamAgendaRow match={FINISHED_DRAW} />);
       const spans = container.querySelectorAll("[style*='box-shadow']");
-      expect(spans.length).toBe(0);
+      expect(spans.length).toBeGreaterThan(0);
+      expect(spans[0]?.getAttribute("style")).toContain("ink-muted");
     });
 
     it("tints a forfeit like any other win (#2423)", () => {
@@ -582,7 +583,7 @@ describe("TeamAgendaRow", () => {
     describe("when the surface names its rows (kind given)", () => {
       it.each([
         [FINISHED_WIN, "Winst"],
-        [FINISHED_DRAW, "Gelijkspel"],
+        [FINISHED_DRAW, "Gelijk"],
         [FINISHED_LOSS, "Verlies"],
       ] as const)("names the outcome on both layouts: %#", (match, word) => {
         render(<TeamAgendaRow match={match} kind="result" />);
@@ -638,7 +639,7 @@ describe("TeamAgendaRow", () => {
     describe("when the surface does not (kind omitted)", () => {
       it.each([
         [FINISHED_WIN, "Winst"],
-        [FINISHED_DRAW, "Gelijkspel"],
+        [FINISHED_DRAW, "Gelijk"],
         [FINISHED_LOSS, "Verlies"],
       ] as const)("names the outcome on mobile only: %#", (match, word) => {
         render(<TeamAgendaRow match={match} />);
@@ -658,6 +659,18 @@ describe("TeamAgendaRow", () => {
           expect(text).not.toContain("Volgende");
           expect(text).not.toContain("Uitslag");
         }
+      });
+
+      // Regression (#2656 review): `OUTCOME_WORD.draw` shortened to "Gelijk"
+      // only to fit `<MatchStripView>`'s `w-14` mobile-ledger stub — this
+      // row's own caption is not column-constrained the way that stub is
+      // (#2512 accepted "Gelijk" here anyway, for consistency), but its
+      // `aria-label` has no column at all, so the full word belongs there.
+      it("keeps 'Gelijkspel' — not the caption's shortened 'Gelijk' — in a drawn row's accessible name", () => {
+        render(<TeamAgendaRow match={FINISHED_DRAW} />);
+        const label = screen.getByRole("link").getAttribute("aria-label") ?? "";
+        expect(label).toMatch(/\bGelijkspel\b/);
+        expect(label).not.toMatch(/\bGelijk\b/);
       });
     });
   });

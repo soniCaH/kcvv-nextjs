@@ -91,7 +91,10 @@ export const ResultOnly: Story = {
   args: { data: { result: homeWin, fixture: null } },
 };
 
-/** A draw carries no outcome sweep at all — only wins and losses are marked. */
+/**
+ * A draw carries its own ink-muted outcome sweep (#2512/#2656) — no longer
+ * unmarked — and the mobile ledger's stub reads "Gelijk" instead of "Uitslag".
+ */
 export const Draw: Story = {
   args: {
     data: {
