@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { cn } from "@/lib/utils/cn";
 import type { SectionHeaderBase } from "./SectionHeader";
 import { SectionHeader } from "./SectionHeader";
 
@@ -45,8 +46,24 @@ const meta = {
     },
   },
   decorators: [
-    (Story) => (
-      <div className="bg-cream-soft border-paper-edge max-w-3xl border p-10">
+    // Demo frame width. Defaults to a compact 768px card — matches every
+    // pre-existing story's baseline, so it stays untouched. A ruled story
+    // whose title is long enough for the flanking hairlines to matter opts
+    // into `parameters.demoWidth: "index"`, the real width `ruled` is
+    // built for (#2618 is a chaptering device for long *index* pages) —
+    // same `max-w-[var(--container-index)]` spelling <SectionStack>'s
+    // stories already use for a full-width component. At the 768px
+    // default, a 33-character `display-lg` title leaves the hairlines as
+    // unreadable ~10px stubs; at 1280px it leaves a real, legible rule.
+    (Story, context) => (
+      <div
+        className={cn(
+          "bg-cream-soft border-paper-edge border p-10",
+          context.parameters.demoWidth === "index"
+            ? "mx-auto max-w-[var(--container-index)]"
+            : "max-w-3xl",
+        )}
+      >
         <Story />
       </div>
     ),
@@ -121,17 +138,21 @@ export const SizeDisplaySm: Story = {
  * docs/design/mockups/research-d-series/d10-section-openers.html — 33
  * characters, inside the `RULED_TITLE_MAX_LENGTH` guard.
  *
+ * `demoWidth: "index"` widens the demo frame to `--container-index`
+ * (1280px) — this variant's real home page width (#2618 is a chaptering
+ * device for long *index* pages) — rather than the file's default 768px
+ * card. At 768px this exact title leaves the flanking hairlines as
+ * unreadable ~10px stubs, which understates the treatment; at 1280px they
+ * read as real rules, matching production.
+ *
  * Captured at all three VR viewports on purpose: below the `lg` breakpoint
  * (this file's `mobile`/`tablet` viewports, 375/768) it proves the
  * responsive fallback — no hairlines, ranged-left, so a title that wraps to
  * two lines on a narrow screen never gets sliced by a rule. Only the
- * `desktop` viewport (1440, above `lg`) shows the ruled treatment. Rules
- * read thin there because this story's fixed 768px demo frame — shared by
- * every story in this file — leaves little slack once a 33-character title
- * fills it at `display-lg`; a real page's wider content column (1040/1280)
- * has considerably more room, per the math on `RULED_TITLE_MAX_LENGTH`.
+ * `desktop` viewport (1440, above `lg`) shows the ruled treatment.
  */
 export const Ruled: Story = {
+  parameters: { demoWidth: "index" },
   args: {
     title: "Negentien ploegen, van U6 tot U21",
     kicker: [{ label: "JEUGD" }],
@@ -166,8 +187,13 @@ export const RuledWithLink: Story = {
  * routes through `<HighlighterStroke>`, which adds `padding-bottom: 0.1em`
  * to the emphasised span and so grows the heading's own box — exactly the
  * kind of change that could shift where the flanking hairlines land.
+ * `demoWidth: "index"` per the same reasoning as the `Ruled` story above —
+ * this 27-character title is closer to the boundary than the two short
+ * ("Wedstrijden" / "Het rooster") ruled stories, so the wide frame keeps
+ * the rules legible here too.
  */
 export const RuledWithEmphasisAccent: Story = {
+  parameters: { demoWidth: "index" },
   args: {
     title: "Jeugdploegen van U6 tot U21",
     emphasis: { text: "U6 tot U21" },
@@ -177,6 +203,7 @@ export const RuledWithEmphasisAccent: Story = {
 };
 
 export const RuledWithEmphasisHighlighted: Story = {
+  parameters: { demoWidth: "index" },
   args: {
     title: "Jeugdploegen van U6 tot U21",
     emphasis: { text: "U6 tot U21", highlight: true },
