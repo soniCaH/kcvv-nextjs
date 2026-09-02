@@ -67,7 +67,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Phase 5 restyle (fileattachment-htmltable-locked §5.2). Extracted from `<SanityArticleBody>`. Jersey-deep header band over monospace body cells; first column italic Freight; dotted ink-muted dividers; 2.5% zebra; horizontal scroll + sticky first column preserved.",
+          "Phase 5 restyle (fileattachment-htmltable-locked §5.2). Extracted from `<SanityArticleBody>`. Jersey-deep header band over monospace body cells; first column italic Freight; dotted ink-muted dividers; 2.5% zebra; horizontal scroll + sticky first column preserved. On real overflow: a control-register (32×32, jersey-deep) right arrow overlays the edge with no reserved rail, and the edge fade is capped at `min(24px, remaining)` rather than a fixed width (#2444, as amended by #2476).",
       },
     },
   },

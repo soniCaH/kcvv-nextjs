@@ -3,6 +3,14 @@
 import sanitizeHtml from "sanitize-html";
 import { cn } from "@/lib/utils/cn";
 import { useScrollHint } from "@/components/design-system/ScrollHint/useScrollHint";
+import { ScrollArrowButton } from "@/components/design-system/ScrollHint/ScrollArrowButton";
+
+/** The edge fade never veils more than it needs to — capped at the pixels
+ *  actually left to scroll (#2476 amendment: "the 24px fade becomes a cap,
+ *  not a width" — a fixed-width fade over a narrower overflow veiled more
+ *  column than was actually cut, which is what made the points column
+ *  unreadable on the standings table on mobile). */
+const MAX_FADE_PX = 24;
 
 const TABLE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   allowedTags: [
@@ -40,11 +48,28 @@ export interface HtmlTableBlockProps {
  * - Body cells: monospace 13px; first column overrides to italic Freight.
  * - Dotted ink-muted dividers between rows and columns.
  * - Even rows: 2.5% ink-tint zebra.
- * - Horizontal scroll + sticky first column + scroll-hint affordance
- *   preserved verbatim from the legacy renderer.
+ * - Horizontal scroll + sticky first column preserved verbatim from the
+ *   legacy renderer. **Not** touched by this ticket (#2577) — the sticky
+ *   column's target (today: literally the first column) and the rest of
+ *   the "one quiet table skin" rework are #2476's own full scope; #2577
+ *   owns only #2476's arrow/fade amendment.
+ *
+ * **Scroll arrow — control register, overlaid, no reserved rail (#2444, as
+ * amended by #2476).** A table is content you scroll *past*, not a row of
+ * tap targets — unlike `<FilterTabs>`, it never reserves a gutter; the
+ * right arrow simply overlays the edge and mounts only on real overflow
+ * (`useScrollHint`'s `canScrollRight`, checked directly rather than the
+ * "holds space" `overflows` boolean). The edge fade is capped at
+ * `min(24px, remaining)` rather than a fixed width (#2476 amendment: a
+ * fixed fade over a narrow overflow veiled more column than was actually
+ * cut). **Right edge only**, same as before this ticket: the sticky first
+ * column (unchanged — see above) keeps the identifying column always in
+ * view, so there is nothing to cue on the left, and mounting a left arrow
+ * there would overlay that same sticky column.
  */
 export function HtmlTableBlock({ html, className }: HtmlTableBlockProps) {
-  const { scrollRef, canScrollRight } = useScrollHint<HTMLDivElement>();
+  const { scrollRef, canScrollRight, remainingRight, scrollRight } =
+    useScrollHint<HTMLDivElement>();
   const trimmed = typeof html === "string" ? html.trim() : "";
   if (trimmed.length === 0) return null;
 
@@ -106,10 +131,18 @@ export function HtmlTableBlock({ html, className }: HtmlTableBlockProps) {
         }}
       />
       {canScrollRight && (
-        <div
-          aria-hidden="true"
-          className="from-cream pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l to-transparent"
-        />
+        <>
+          <div
+            aria-hidden="true"
+            className="from-cream pointer-events-none absolute inset-y-0 right-0 bg-gradient-to-l to-transparent"
+            style={{ width: Math.min(MAX_FADE_PX, remainingRight) }}
+          />
+          <ScrollArrowButton
+            direction="right"
+            register="control"
+            onClick={scrollRight}
+          />
+        </>
       )}
     </div>
   );

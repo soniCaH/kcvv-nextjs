@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, act } from "@testing-library/react";
 import { HtmlTableBlock } from "./HtmlTableBlock";
 
 const SIMPLE_TABLE_HTML = `
@@ -85,5 +85,95 @@ describe("<HtmlTableBlock>", () => {
     render(<HtmlTableBlock html={nested} />);
     const tables = screen.getByRole("region").querySelectorAll("table");
     expect(tables.length).toBe(2);
+  });
+
+  describe("scroll arrow — control register, no reserved rail (#2444/#2476)", () => {
+    function mockScrollDimensions(scrollWidth: number, clientWidth: number) {
+      Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+        configurable: true,
+        value: scrollWidth,
+      });
+      Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+        configurable: true,
+        value: clientWidth,
+      });
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (HTMLElement.prototype as any).scrollWidth;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (HTMLElement.prototype as any).clientWidth;
+    });
+
+    it("mounts no right arrow and no fade when the table fits", () => {
+      mockScrollDimensions(500, 500);
+      render(<HtmlTableBlock html={SIMPLE_TABLE_HTML} />);
+
+      expect(screen.queryByLabelText("Scroll right")).not.toBeInTheDocument();
+    });
+
+    it("mounts a control-register right arrow overlaying the edge on real overflow", () => {
+      mockScrollDimensions(900, 500);
+      render(<HtmlTableBlock html={SIMPLE_TABLE_HTML} />);
+
+      const arrow = screen.getByLabelText("Scroll right");
+      expect(arrow).toBeInTheDocument();
+      expect(arrow).toHaveClass("bg-jersey-deep");
+      expect(arrow).toHaveClass("h-8");
+    });
+
+    it("never reserves a rail — the scrollable region carries no rail padding", () => {
+      mockScrollDimensions(900, 500);
+      render(<HtmlTableBlock html={SIMPLE_TABLE_HTML} />);
+
+      const region = screen.getByRole("region");
+      expect(region.className).not.toContain("pl-10");
+      expect(region.className).not.toContain("pr-10");
+    });
+
+    it("caps the fade at 24px when there is plenty of scroll left", () => {
+      mockScrollDimensions(900, 500);
+      const { container } = render(<HtmlTableBlock html={SIMPLE_TABLE_HTML} />);
+
+      const fade = container.querySelector(
+        '[aria-hidden="true"]',
+      ) as HTMLElement;
+      expect(fade.style.width).toBe("24px");
+    });
+
+    it("shrinks the fade below 24px as the end of the scroll nears", () => {
+      mockScrollDimensions(900, 500);
+      const { container } = render(<HtmlTableBlock html={SIMPLE_TABLE_HTML} />);
+
+      const region = screen.getByRole("region");
+      // 900 - 500 = 400 total overflow; scrolled to 385 leaves 15px — still
+      // over the 10px dead-zone (so the arrow/fade stay mounted) but under
+      // the 24px cap.
+      Object.defineProperty(region, "scrollLeft", { value: 385 });
+      act(() => {
+        region.dispatchEvent(new Event("scroll"));
+      });
+
+      const fade = container.querySelector(
+        '[aria-hidden="true"]',
+      ) as HTMLElement;
+      expect(fade.style.width).toBe("15px");
+    });
+
+    it("scrolls the region when the arrow is clicked", async () => {
+      mockScrollDimensions(900, 500);
+      const scrollToMock = vi.fn();
+      Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+        configurable: true,
+        value: scrollToMock,
+      });
+      render(<HtmlTableBlock html={SIMPLE_TABLE_HTML} />);
+
+      const arrow = screen.getByLabelText("Scroll right");
+      arrow.click();
+      expect(scrollToMock).toHaveBeenCalled();
+    });
   });
 });
