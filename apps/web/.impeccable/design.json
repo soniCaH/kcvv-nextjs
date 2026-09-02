@@ -581,7 +581,7 @@
       },
       {
         "name": "The Press-Down Rule",
-        "body": "Interactive paper does not rise on hover; it presses. The surface translates +1px, +1px (buttons and cards) or +1px/+2px (fields) and its shadow collapses to none, so it appears pushed flat against the page. The translate is gated behind motion-safe:; the shadow collapse is not, so reduced-motion users keep the affordance.",
+        "body": "Interactive paper does not rise on hover; it presses. The surface translates +1px, +1px (buttons and cards) or +1px/+2px (fields) and its shadow collapses to none, so it appears pushed flat against the page. The translate is gated behind motion-safe:; the shadow collapse is not, so reduced-motion users keep the affordance. This is the canonical hover for interactive paper; a list row (a full-width row in a vertical list of peers carrying no border-2/shadow frame of its own) is the one scoped exception — see The List Row Fill Rule.",
         "section": "elevation"
       },
       {
@@ -628,13 +628,18 @@
         "name": "The Alone Image Rule",
         "body": "An image with nothing else on the page to name it says its position and extent — Foto 12 van 55 — never the collection, which the <h1> already named in the same section.",
         "section": "imagery"
+      },
+      {
+        "name": "The List Row Fill Rule",
+        "body": "The canonical hover for interactive paper is the Press-Down Rule's translate-into-shadow, and that stays canonical everywhere except list rows — a full-width row in a vertical list of peers that carries no border-2/shadow frame of its own. Such a row fills its background toward an existing surface token instead of translating, with no change to its size or position. focus-visible gets the same fill as hover, plus an inset outline (outline-offset-[-2px]). This is a Chrome-speed (150ms, var(--ease-out)) colour change, not a fourth speed, and is never gated behind motion-safe: since colour transitions survive reduced motion. A card — anything carrying its own border-2 and shadow — is never a candidate for this rule and keeps the press-down. Built for <CalendarAgenda>'s AgendaMatchRow/AgendaEventRow (#2624).",
+        "section": "motion"
       }
     ],
     "dos": [
       "Do set every rectangle's border radius to 0 and reserve curves for true circles.",
       "Do give a shadow-casting surface a 2px ink border, or 1.5px on a stamp, badge or chip — never a 1px hairline underneath a shadow. A shadowless divider may still be 2px ink; the implication runs one way only.",
       "Do use hard offset shadows with 0 blur, in exactly the seven documented tokens.",
-      "Do press interactive surfaces into their shadow on hover (translate(1px, 1px) + shadow-none), gating only the translate behind motion-safe:.",
+      "Do press interactive surfaces into their shadow on hover (translate(1px, 1px) + shadow-none), gating only the translate behind motion-safe: — except a list row (a full-width row in a vertical list of peers with no border-2/shadow frame of its own), which fills its background toward an existing surface token instead of translating.",
       "Do pick the right green: jersey decorative only, jersey-deep for anything carrying text (headings, CTAs, inline prose links), jersey-bright for green text on ink.",
       "Do reach for an existing primitive — taped card, ticket stub, mono label, editorial heading, tape strip, stamp badge, striped seam — before writing new markup.",
       "Do route every page through the three container widths (680 / 1040 / 1280).",

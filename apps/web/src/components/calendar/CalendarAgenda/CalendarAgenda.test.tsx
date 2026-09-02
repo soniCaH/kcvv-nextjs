@@ -125,6 +125,44 @@ describe("CalendarAgenda", () => {
     );
   });
 
+  // List Row Fill Rule (DESIGN.md § Motion) — a hovered list row fills
+  // rather than moves, and AC 5 (#2624) requires keyboard focus to get the
+  // SAME treatment as hover, not merely an equivalent one: the identical
+  // background fill, plus the inset outline `<MatchStripView>` already uses
+  // for its own flush row list so the ring survives even where the fill
+  // alone would be easy to miss.
+  it("gives the match row the same fill on focus-visible as on hover, plus a matching inset outline, never a translate", () => {
+    render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[makeMatch({ id: 1 })]}
+        events={[]}
+      />,
+    );
+    const matchRow = screen.getByTestId("agenda-match-row");
+    expect(matchRow.className).toContain("hover:bg-cream-soft/50");
+    expect(matchRow.className).toContain("focus-visible:bg-cream-soft/50");
+    expect(matchRow.className).toContain("focus-visible:outline-offset-[-2px]");
+    expect(matchRow.className).toContain("focus-visible:outline-jersey-deep");
+    expect(matchRow.className).not.toContain("translate");
+  });
+
+  it("gives the event row the same fill on focus-visible as on hover, plus a matching inset outline, never a translate", () => {
+    render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[]}
+        events={[makeEvent({ id: "e1" })]}
+      />,
+    );
+    const eventRow = screen.getByTestId("agenda-event-row");
+    expect(eventRow.className).toContain("hover:bg-jersey-deep/12");
+    expect(eventRow.className).toContain("focus-visible:bg-jersey-deep/12");
+    expect(eventRow.className).toContain("focus-visible:outline-offset-[-2px]");
+    expect(eventRow.className).toContain("focus-visible:outline-jersey-deep");
+    expect(eventRow.className).not.toContain("translate");
+  });
+
   it("renders a pitch-reservation placeholder as a reduced row — no opponent, no link (#2606, #2688)", () => {
     // The bug this closes: before #2688, AgendaMatchRow rendered
     // `match.homeTeam.name — match.awayTeam.name` unconditionally, so a
