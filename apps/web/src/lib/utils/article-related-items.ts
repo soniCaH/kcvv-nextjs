@@ -5,15 +5,19 @@ import type {
   RelatedTeamItem,
   RelatedStaffItem,
   RelatedEventItem,
+  RelatedGalleryItem,
   RelatedContentItem,
+  RelatedRowItem,
 } from "@/components/related/types";
-import type { VerderLezenItem } from "@/components/article/VerderLezenRow";
 import { formatArticleDate } from "@/lib/utils/dates";
 import type {
   RelatedArticleRef,
   ArticleDetailVM,
   ArticleVM,
+  MatchArticleVM,
 } from "@/lib/repositories/article.repository";
+import type { GalleryCardVM } from "@/lib/repositories/photoGallery.repository";
+import type { EventVM } from "@/lib/repositories/event.repository";
 import type { RelatedItem } from "@kcvv/api-contract";
 
 function deduplicateById<T extends { _id: string }>(items: T[]): T[] {
@@ -233,43 +237,23 @@ function mapCuratedEntry(
   }
 }
 
-export interface MergeRelatedItemsInput {
-  curated: RelatedContentItem[];
-  /**
-   * Flat list of every auto-derived related item — articles (editorial or
-   * BFF), pages (BFF only), and entities (mentioned players/teams/staff).
-   * The merge does not care which source produced which item; it only
-   * preserves order and drops duplicates by `id`.
-   */
-  auto: RelatedContentItem[];
-}
-
-/**
- * Curated entries appear first and win on id collision — any auto-derived
- * item sharing an id with a curated entry is dropped so the same target
- * never renders twice.
- */
-export function mergeRelatedItems(
-  input: MergeRelatedItemsInput,
-): RelatedContentItem[] {
-  const curatedIds = new Set(input.curated.map((c) => c.id));
-  return [...input.curated, ...input.auto.filter((i) => !curatedIds.has(i.id))];
-}
-
 /**
  * Adapt `ArticleVM[]` — the `ArticleRepository.findRelated()` output rendered
- * on the player / staff / team detail pages — to `<VerderLezenRow>` cards.
+ * on the player / staff / team detail pages — to `<RelatedRow>` cards.
  *
- * Builds `reference`-source article items and delegates to
- * `mapRelatedToVerderLezen`, so the cards are shaped identically to the
- * `/nieuws/[slug]` article slider AND the `related_content_*` analytics keep
- * firing with `source: "reference"` / `target_type: "article"` — preserving
- * the contract of the retired `<RelatedArticlesSection>`. Shared so the three
- * detail pages don't each hand-roll the mapping.
+ * Builds `reference`-source article items (the query behind `findRelated`,
+ * `RELATED_ARTICLES_QUERY`, matches on `references($documentId)` — an
+ * explicit in-body mention, the same relation `mapMentionedPlayers` etc.
+ * represent for the article page) and delegates to `mapRelatedToRelatedRow`,
+ * so the cards are shaped identically to every other route AND the
+ * `related_content_*` analytics keep firing with `source: "reference"` /
+ * `target_type: "article"` — preserving the contract of the retired
+ * `<RelatedArticlesSection>`. Shared so the detail pages don't each
+ * hand-roll the mapping.
  */
-export function articleVMsToVerderLezenItems(
+export function articleVMsToRelatedRowItems(
   articles: ArticleVM[],
-): VerderLezenItem[] {
+): RelatedRowItem[] {
   const related: RelatedArticleItem[] = articles.map((article) => ({
     type: "article",
     source: "reference",
@@ -280,12 +264,84 @@ export function articleVMsToVerderLezenItems(
     date: article.publishedAt ?? null,
     excerpt: null,
   }));
-  return mapRelatedToVerderLezen(related);
+  return mapRelatedToRelatedRow(related);
+}
+
+/**
+ * Adapt `GalleryCardVM[]` — galleries linked to an event or a match — to
+ * `<RelatedRow>` cards, `source: "domain"` (#2443 rule 4: a match/event's own
+ * photo galleries are bounded and defining). Shared between `/evenementen/[slug]`
+ * and `/wedstrijd/[matchId]`, the two former `<GallerySection>` consumers.
+ */
+export function mapGalleriesToRelatedRow(
+  galleries: readonly GalleryCardVM[],
+): RelatedRowItem[] {
+  const items: RelatedGalleryItem[] = galleries.map((g) => ({
+    type: "gallery",
+    source: "domain",
+    id: g.id,
+    title: g.title,
+    slug: g.slug,
+    imageUrl: g.coverUrl ?? null,
+  }));
+  return mapRelatedToRelatedRow(items);
+}
+
+/**
+ * Adapt `EventVM[]` — other upcoming events — to `<RelatedRow>` cards for the
+ * siblings tier on `/evenementen/[slug]` (the former `<AndereEvents>` list).
+ * `source: "domain"`: like every siblings-tier item, this is a structural
+ * relation (same document type as the host page), never editorial, AI, or an
+ * in-body mention.
+ */
+export function eventVMsToSiblingItems(
+  events: readonly EventVM[],
+): RelatedRowItem[] {
+  const items: RelatedEventItem[] = events
+    .filter((e) => e.dateStart !== "")
+    .map((e) => ({
+      type: "event",
+      source: "domain",
+      id: e.id,
+      title: e.title,
+      slug: e.slug,
+      dateStart: e.dateStart,
+      dateEnd: e.dateEnd,
+      imageUrl: e.coverImageUrl,
+    }));
+  return mapRelatedToRelatedRow(items);
+}
+
+/**
+ * Adapt `MatchArticleVM[]` — the `matchPreview`/`matchRecap` article(s)
+ * linked to this specific match (`ArticleRepository.findByLinkedMatch`) — to
+ * `<RelatedRow>` cards for `/wedstrijd/[matchId]`'s domain tier. `source:
+ * "domain"`: the link is a structural field match (`linkedMatch ===
+ * matchId`), not an editorial pick, an AI score, or a body-text mention.
+ * Replaces `<MatchArticleLinkCard>` + `selectMatchArticle`'s recap-vs-preview
+ * truth table (#2443 resolution) — both linked articles simply become two
+ * items in the merged list rather than one hero card plus an inline
+ * secondary link.
+ */
+export function matchArticlesToRelatedRow(
+  articles: readonly MatchArticleVM[],
+): RelatedRowItem[] {
+  const items: RelatedArticleItem[] = articles.map((a) => ({
+    type: "article",
+    source: "domain",
+    id: a.id,
+    title: a.title,
+    slug: a.slug,
+    imageUrl: a.coverImageUrl,
+    date: a.publishedAt,
+    excerpt: null,
+  }));
+  return mapRelatedToRelatedRow(items);
 }
 
 /**
  * Adapt the discriminated `RelatedContentItem` union to the flat
- * `<VerderLezenRow>` card shape. Each variant maps to a card with the
+ * `<RelatedRow>` card shape. Each variant maps to a card with the
  * appropriate badge, href, image, and (where applicable) display date.
  *
  * Items that can't yield a clickable card (e.g. player without a
@@ -293,10 +349,10 @@ export function articleVMsToVerderLezenItems(
  * mappers already null-guard the resolvable fields, this layer just
  * picks the fallback labels and routes.
  */
-export function mapRelatedToVerderLezen(
+export function mapRelatedToRelatedRow(
   items: RelatedContentItem[],
-): VerderLezenItem[] {
-  const out: VerderLezenItem[] = [];
+): RelatedRowItem[] {
+  const out: RelatedRowItem[] = [];
   for (const item of items) {
     const mapped = mapRelatedItem(item);
     if (mapped) out.push(mapped);
@@ -304,7 +360,7 @@ export function mapRelatedToVerderLezen(
   return out;
 }
 
-function mapRelatedItem(item: RelatedContentItem): VerderLezenItem | null {
+function mapRelatedItem(item: RelatedContentItem): RelatedRowItem | null {
   switch (item.type) {
     case "article":
       return {
@@ -341,6 +397,9 @@ function mapRelatedItem(item: RelatedContentItem): VerderLezenItem | null {
         title: name,
         href: `/spelers/${item.psdId}`,
         imageUrl: item.imageUrl ?? undefined,
+        artefact: item.imageUrl
+          ? undefined
+          : { kind: "person", personType: "player", id: item.id },
         badge: item.position?.toUpperCase() ?? "SPELER",
         analyticsId: item.id,
         analyticsSource: item.source,
@@ -355,6 +414,7 @@ function mapRelatedItem(item: RelatedContentItem): VerderLezenItem | null {
         title: item.name,
         href: `/ploegen/${item.slug}`,
         imageUrl: item.imageUrl ?? undefined,
+        artefact: item.imageUrl ? undefined : { kind: "team" },
         badge: "PLOEG",
         analyticsId: item.id,
         analyticsSource: item.source,
@@ -362,12 +422,16 @@ function mapRelatedItem(item: RelatedContentItem): VerderLezenItem | null {
         analyticsTargetSlug: item.slug,
       };
     case "staff":
-      // Staff has no resolvable detail-page route today (the GROQ
-      // projection at apps/web/src/lib/repositories/article.repository.ts
-      // doesn't select a `slug`, and there's no /staf/[slug] page).
+      // Staff has no resolvable detail-page route from THIS union member:
+      // the mentioned/curated-staff GROQ projections
+      // (apps/web/src/lib/repositories/article.repository.ts) don't select
+      // a `psdId`, so there is no `/staf/[psdId]` target to link to.
       // Dropping the card rather than rendering a broken `href: "#"`.
-      // Restoring staff in the slider (and its analytics) is tracked at
-      // #1831 — needs both a route + the projection field.
+      // Restoring staff mentions in the row (and their analytics) is
+      // tracked at #1831 — needs the projection field. This does NOT
+      // affect `/staf/[slug]`'s own domain-tier "teams" cards
+      // (`team.repository.ts`'s `findByMemberId`), which link the other
+      // direction (a staff member's own team, not a mentioned staff member).
       return null;
     case "event":
       return {
@@ -379,6 +443,17 @@ function mapRelatedItem(item: RelatedContentItem): VerderLezenItem | null {
         analyticsId: item.id,
         analyticsSource: item.source,
         analyticsType: "event",
+        analyticsTargetSlug: item.slug,
+      };
+    case "gallery":
+      return {
+        title: item.title,
+        href: `/galerij/${item.slug}`,
+        imageUrl: item.imageUrl ?? undefined,
+        badge: "BEELDEN",
+        analyticsId: item.id,
+        analyticsSource: item.source,
+        analyticsType: "gallery",
         analyticsTargetSlug: item.slug,
       };
   }
