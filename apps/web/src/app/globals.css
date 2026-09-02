@@ -320,6 +320,14 @@
   --color-cream-soft: #ede8da;
   --color-cream-deep: #e1d7bf;
 
+  /* Manila — a non-semantic warm paper stock (#2614, decision D5/T6). Warmer
+     and more saturated than `--color-cream-deep`, with no Alert variant to
+     collide with (unlike `--color-alert-soft` / `-warning-soft` / `-success-soft`
+     below, which are reserved to the three Alert bodies). It chapters a long
+     index page — index pages only, once per page — and is never a step-down:
+     that job stays `cream-soft`'s. See DESIGN.md → Colors → Neutral. */
+  --color-manila: #f0e4c4;
+
   /* Ink */
   --color-ink: #0a0a0a;
   --color-ink-soft: #1f1f1f;

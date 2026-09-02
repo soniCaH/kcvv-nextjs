@@ -203,6 +203,7 @@ A print palette: one paper, one ink, one green, one warm accent, and a small set
 - **Cream** (`#f5f1e6`): the page. Every surface starts here.
 - **Cream Soft** (`#ede8da`): a card sitting on the page — the first step down.
 - **Cream Deep** (`#e1d7bf`): the deepest paper tone; section bands that need to recede.
+- **Manila** (`#f0e4c4`): a non-semantic warm paper stock — warmer and more saturated than Cream Deep, with no Alert variant to collide with. It chapters a long **index** page, once per page, marking where one part ends and the next begins. It is not a step-down — `cream-soft` keeps that job — and it is never the three soft status tints below, which are reserved to the Alert variants (see the Named Rules). Never on a detail page, never more than once. First used on `/inhoud`'s `nieuws` group (#2614).
 - **Paper Edge** (`#d9d2bd`): card outlines and dividers on cream, where a full ink border would be too loud.
 - **Ink** (`#0a0a0a`): primary text, every border, every hard shadow, and the fill for dark interlude panels.
 - **Ink Soft** (`#1f1f1f`): a dark surface layered on a dark surface.
@@ -227,6 +228,8 @@ Status tones, tuned for print rather than for a dashboard. Each pairs a saturate
 **The Whole-Cream Rule.** Cream on a jersey-deep surface is cream, never a fraction of it. `text-cream/90` costs more contrast than a whole shade step of green does (4.05 → 3.56, where the #2395 shade step bought 4.05 → 4.69), so the fraction is always the worse trade. Scoped to jersey-deep: on `jersey-deep-dark` (~10.9:1) and ink (17.5:1) cream has contrast to spare and a fraction is harmless. One known exception is still shipping — `<NumberDisplay tone="cream">` hardcodes `text-cream/70` on its label, which lands on jersey-deep wherever the component sits in a jersey-deep `<TapedCard>`. Fixing it means touching a shared primitive whose other callers are all on dark surfaces, so it is tracked separately rather than swept here.
 
 **The No-Grey-UI Rule.** There is no neutral grey in this system — not as a token, not as an option. A surface is cream, a step of cream, or ink. `gray-100` (`#f3f4f6`) was the last holdout, sitting under four homepage sections; #2342 deleted the token outright and reduced `SectionBg` to `jersey-deep | transparent`, so those sections now let the page cream through. If a section ever needs to step down from the page without going dark, add `cream-soft` to `SectionBg` — never reintroduce a grey.
+
+**The Manila Rule (#2614).** `cream-soft` is the step-down; `manila` is a chapter, and the two are not interchangeable. A section that only needs to sit back from the page still gets `cream-soft`. `manila` exists for the one long **index** page that needs a visible break between its parts, and it carries two conditions: **index pages only, and once per page** — the chaptering argument is strong on a long index and weak on a detail page, and a second tinted band on the same page stops reading as a chapter and starts reading as a colour scheme. It is applied the same way a section already takes `cream-soft`: a literal `bg-manila` class string at the one call site, never a new prop or component. Never reach for `alert-soft` / `warning-soft` / `success-soft` for this — they are semantic (see Tertiary, above) and a decorative section in one of them reads as an Alert.
 
 ## Typography
 
