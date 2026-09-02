@@ -126,17 +126,24 @@ export default async function StafPage({ params }: StaffPageProps) {
     ),
   ]);
 
-  const domainItems: RelatedRowItem[] = ownTeams.map((team) => ({
-    title: team.displayName,
-    href: `/ploegen/${team.slug}`,
-    imageUrl: team.teamImageUrl ?? undefined,
-    artefact: team.teamImageUrl ? undefined : { kind: "team" as const },
-    badge: "PLOEG",
-    analyticsId: team.id,
-    analyticsSource: "domain",
-    analyticsType: "team",
-    analyticsTargetSlug: team.slug,
-  }));
+  // `TeamRelationVM.displayName` runs through the same `teamDisplayName`
+  // fallthrough as the player page's `teamLabel` and can legitimately
+  // resolve to "" (CodeRabbit finding on PR #2788, round 2) — filter those
+  // out before mapping rather than emitting a titleless card that still
+  // links to /ploegen/[slug].
+  const domainItems: RelatedRowItem[] = ownTeams
+    .filter((team) => team.displayName !== "")
+    .map((team) => ({
+      title: team.displayName,
+      href: `/ploegen/${team.slug}`,
+      imageUrl: team.teamImageUrl ?? undefined,
+      artefact: team.teamImageUrl ? undefined : { kind: "team" as const },
+      badge: "PLOEG",
+      analyticsId: team.id,
+      analyticsSource: "domain",
+      analyticsType: "team",
+      analyticsTargetSlug: team.slug,
+    }));
 
   const relatedRowItems = mergeRelatedRow({
     domain: domainItems,

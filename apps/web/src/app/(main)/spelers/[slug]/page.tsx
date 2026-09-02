@@ -160,11 +160,16 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
     ),
   );
 
+  // `teamLabel` can legitimately resolve to "" — `teamDisplayName` falls
+  // through to the team's raw `name` when the slug carries no age/letter
+  // token, and that `name` can itself be null/empty in Sanity (CodeRabbit
+  // finding on PR #2788, round 2) — so the guard checks the label too,
+  // not just the id/slug pair, or an empty-titled card would still link.
   const domainItems: RelatedRowItem[] =
-    player.teamId && player.teamSlug
+    player.teamId && player.teamSlug && player.teamLabel
       ? [
           {
-            title: player.teamLabel ?? "",
+            title: player.teamLabel,
             href: `/ploegen/${player.teamSlug}`,
             imageUrl: player.teamImageUrl,
             artefact: player.teamImageUrl
