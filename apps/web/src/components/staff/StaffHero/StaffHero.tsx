@@ -1,9 +1,11 @@
-"use client";
-
 import type { ComponentType } from "react";
 import Image from "next/image";
 import { TapedFigure } from "@/components/design-system/TapedFigure";
 import { MonoLabel } from "@/components/design-system/MonoLabel";
+import {
+  JerseyIllustration,
+  playerFigureSeed,
+} from "@/components/design-system/JerseyIllustration";
 import { Envelope, Phone, type RedesignIconProps } from "@/lib/icons.redesign";
 
 /**
@@ -16,8 +18,13 @@ import { Envelope, Phone, type RedesignIconProps } from "@/lib/icons.redesign";
  * Staff carries different data, so the text column swaps the player's jersey
  * number + ticket-stub for role pills + a contact row:
  *   - Portrait → `<TapedFigure aspect="portrait-3-4" padding="none">`. No photo
- *     → a jersey-deep monogram (initials) in the same framed slot (NOT the
- *     player-only jersey illustration).
+ *     → `<JerseyIllustration variant="hero" garment="coat">` in the same
+ *     framed slot — the same coat-garment figure `<PlayerCard garment="coat">`
+ *     already renders for this person on the `getCardSubjectArtefact` path
+ *     (`<TeamStaff>` on `/ploegen/[slug]` and the three board routes, #2485
+ *     rule 5). The organigram's `<OrgPersonCard>`/`<MemberDetailPanel>` avatar
+ *     is a deliberate exception — it stays a monogram disc, untouched by this
+ *     ticket.
  *   - Kicker → `<MonoLabel variant="plain">` (ink), as on the player hero.
  *   - Name → first upright `font-display-big` black (`display-2xl`), last
  *     italic `font-display` (`display-xl`) + period.
@@ -28,9 +35,16 @@ import { Envelope, Phone, type RedesignIconProps } from "@/lib/icons.redesign";
  */
 
 export interface StaffHeroProps {
+  /**
+   * Stable identity — the Sanity `_id`. Seeds the illustration fallback via
+   * `playerFigureSeed` (#2485/#2635): never the display name, so this staff
+   * member draws the identical figure `<PlayerCard garment="coat">` drew for
+   * them on every card that links here.
+   */
+  id: string;
   firstName: string;
   lastName: string;
-  /** Portrait photo URL (newsprint-treated). Missing → jersey-deep monogram. */
+  /** Portrait photo URL (newsprint-treated). Missing → the coat-garment `<JerseyIllustration>` fallback. */
   imageUrl?: string;
   /**
    * Role pill labels (the staff member's organigram-position titles). The
@@ -39,12 +53,6 @@ export interface StaffHeroProps {
   roles?: string[];
   email?: string;
   phone?: string;
-}
-
-function monogram(firstName: string, lastName: string): string {
-  const f = firstName.trim().charAt(0);
-  const l = lastName.trim().charAt(0);
-  return `${f}${l}`.toLocaleUpperCase("nl-BE") || "·";
 }
 
 function ContactLink({
@@ -68,6 +76,7 @@ function ContactLink({
 }
 
 export function StaffHero({
+  id,
   firstName,
   lastName,
   imageUrl,
@@ -82,7 +91,7 @@ export function StaffHero({
   return (
     <section
       data-testid="staff-hero"
-      data-state={hasPhoto ? "photo" : "monogram"}
+      data-state={hasPhoto ? "photo" : "illustration"}
       className="grid grid-cols-1 items-start gap-x-10 gap-y-8 sm:grid-cols-[minmax(220px,320px)_1fr]"
     >
       {/* Figure — LEFT column (player mirrors this on the right). Same
@@ -106,13 +115,12 @@ export function StaffHero({
               className="block h-full w-full object-cover"
             />
           ) : (
-            <span
-              data-testid="staff-hero-monogram"
-              aria-hidden="true"
-              className="bg-jersey-deep text-cream font-display-big absolute inset-0 flex items-center justify-center text-6xl font-black"
-            >
-              {monogram(firstName, lastName)}
-            </span>
+            <JerseyIllustration
+              variant="hero"
+              garment="coat"
+              seed={playerFigureSeed({ id })}
+              data-testid="staff-hero-illustration"
+            />
           )}
         </TapedFigure>
       </div>

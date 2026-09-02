@@ -193,6 +193,7 @@ export default async function StafPage({ params }: StaffPageProps) {
           rhythm before the full-bleed seam. */}
       <PageContainer as="section" className="py-12 lg:py-16">
         <StaffHero
+          id={member.id}
           firstName={member.firstName}
           lastName={member.lastName}
           imageUrl={member.imageUrl}
