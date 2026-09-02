@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { MonoLabel } from "@/components/design-system/MonoLabel";
 import { PageContainer } from "@/components/design-system/PageContainer";
+import { UpLink, type UpLinkProps } from "@/components/design-system/UpLink";
 import { getButtonClasses } from "@/components/design-system/Button/button-styles";
 
 /**
@@ -17,13 +18,21 @@ import { getButtonClasses } from "@/components/design-system/Button/button-style
 export interface UltrasHeroProps {
   /** Facebook page URL — also the join CTA target. */
   joinHref: string;
+  /**
+   * The up-link to `/club` (#2428/#2442). This hero is one of the site's
+   * four dark, flush-against-the-header openings, so the chip renders
+   * *inside* the band, tone-swapped to cream, rather than above it — a
+   * cream strip here would turn the arrival into a section. Always the
+   * container's left edge, even though this hero is otherwise centred.
+   */
+  upLink?: Pick<UpLinkProps, "href" | "label">;
 }
 
 // `linear-gradient(0deg, …)` jersey-deep duotone wash, per 7u2 hero spec.
 const WASH =
   "linear-gradient(0deg, rgba(19, 61, 40, 0.82), rgba(19, 61, 40, 0.55))";
 
-export function UltrasHero({ joinHref }: UltrasHeroProps) {
+export function UltrasHero({ joinHref, upLink }: UltrasHeroProps) {
   return (
     <header className="bg-jersey-deep-dark relative isolate overflow-hidden">
       <Image
@@ -48,6 +57,15 @@ export function UltrasHero({ joinHref }: UltrasHeroProps) {
       />
 
       <PageContainer className="relative z-10 flex flex-col items-center gap-6 py-24 text-center sm:py-32">
+        {upLink ? (
+          <UpLink
+            href={upLink.href}
+            label={upLink.label}
+            tone="cream"
+            className="self-start"
+          />
+        ) : null}
+
         <MonoLabel variant="plain" tone="cream">
           Supporters · KCVV Ultra&apos;s 55
         </MonoLabel>

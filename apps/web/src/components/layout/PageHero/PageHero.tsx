@@ -11,6 +11,7 @@ import {
 import { DottedDivider } from "@/components/design-system/Divider";
 import { LinkButton } from "@/components/design-system/LinkButton";
 import { MonoLabel } from "@/components/design-system/MonoLabel";
+import { UpLink, type UpLinkProps } from "@/components/design-system/UpLink";
 import {
   PageContainer,
   type PageContainerWidth,
@@ -85,8 +86,13 @@ export type PageHeroRegister = "band" | "minimal";
 export type PageHeroTone = "cream" | "dark";
 
 export interface PageHeroProps {
-  /** Mono kicker above the headline. */
-  kicker: string;
+  /**
+   * Mono kicker above the headline. Optional — omit it where an up-link
+   * chip above/inside this opening already names the same parent, so the
+   * page doesn't say the parent's name twice (#2442 rule 6, e.g.
+   * `/club/[slug]`'s `kicker="Club"` vs its `‹ De club` up-link).
+   */
+  kicker?: string;
   /** Headline text. Rendered upright Freight via `<EditorialHeading>`. */
   headline: string;
   /**
@@ -145,6 +151,14 @@ export interface PageHeroProps {
    */
   size?: PageHeroSize;
   className?: string;
+  /**
+   * The up-link to this route's structural parent (#2428/#2442). **`band` ·
+   * `dark` only** — the other registers are page-owned (the page renders its
+   * own `<UpLink>` above this component), but the dark band has no cream
+   * strip for one to live in, so the band renders it itself, inside the
+   * field, tone-swapped to `cream` (#2442 rule 2).
+   */
+  upLink?: Pick<UpLinkProps, "href" | "label">;
 }
 
 /**
@@ -238,7 +252,7 @@ function MinimalOpening({
       // drifted (mb-10 / mb-8 / pb-8 / mt-10) while every route hand-rolled it.
       className={cn("mb-10 flex flex-col", className)}
     >
-      <Kicker tone={tone}>{kicker}</Kicker>
+      {kicker ? <Kicker tone={tone}>{kicker}</Kicker> : null}
 
       {/* `hyphens-auto` because this register is the one that runs in a prose
           column: "Privacyverklaring" is 17 characters and needs ~400px at
@@ -288,9 +302,17 @@ function DarkBand({
   image,
   width,
   className,
+  upLink,
 }: Pick<
   PageHeroProps,
-  "kicker" | "headline" | "accent" | "lead" | "image" | "width" | "className"
+  | "kicker"
+  | "headline"
+  | "accent"
+  | "lead"
+  | "image"
+  | "width"
+  | "className"
+  | "upLink"
 >) {
   return (
     <header
@@ -302,54 +324,64 @@ function DarkBand({
     >
       <PageContainer
         width={width}
-        className="grid gap-8 py-14 sm:py-20 md:grid-cols-[1fr_auto] md:items-center"
+        className="flex flex-col gap-6 py-14 sm:py-20"
       >
-        <div className="flex flex-col gap-4">
-          <Kicker tone="dark">{kicker}</Kicker>
-          <EditorialHeading
-            level={1}
-            size="display-2xl"
-            tone="cream"
-            emphasis={headlineEmphasis(headline, accent, "dark")}
-            className="mb-0"
-          >
-            {headline}
-          </EditorialHeading>
-          {lead ? (
-            <p
-              className={cn(
-                "font-display text-display-sm italic",
-                LEAD_TONE_CLASS.dark,
-              )}
+        {/* Rendered *inside* the band, tone-swapped to cream — the dark
+            routes have no cream strip above the header for a page-owned
+            `<UpLink>` to live in, and one would turn the flush arrival into
+            a section (#2442 rule 2). Always the container's left edge. */}
+        {upLink ? (
+          <UpLink href={upLink.href} label={upLink.label} tone="cream" />
+        ) : null}
+
+        <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
+          <div className="flex flex-col gap-4">
+            {kicker ? <Kicker tone="dark">{kicker}</Kicker> : null}
+            <EditorialHeading
+              level={1}
+              size="display-2xl"
+              tone="cream"
+              emphasis={headlineEmphasis(headline, accent, "dark")}
+              className="mb-0"
             >
-              {lead}
-            </p>
+              {headline}
+            </EditorialHeading>
+            {lead ? (
+              <p
+                className={cn(
+                  "font-display text-display-sm italic",
+                  LEAD_TONE_CLASS.dark,
+                )}
+              >
+                {lead}
+              </p>
+            ) : null}
+          </div>
+
+          {image ? (
+            <TapedFigure
+              aspect="landscape-3-2"
+              bg="cream-soft"
+              tint="newsprint"
+              rotation="b"
+              tape={{
+                color: "warm",
+                length: "md",
+                position: "left",
+                rotation: "a",
+              }}
+              className="w-full md:w-[24rem]"
+            >
+              <Image
+                src={image}
+                alt=""
+                fill
+                sizes="(min-width: 768px) 24rem, 100vw"
+                className="object-cover"
+              />
+            </TapedFigure>
           ) : null}
         </div>
-
-        {image ? (
-          <TapedFigure
-            aspect="landscape-3-2"
-            bg="cream-soft"
-            tint="newsprint"
-            rotation="b"
-            tape={{
-              color: "warm",
-              length: "md",
-              position: "left",
-              rotation: "a",
-            }}
-            className="w-full md:w-[24rem]"
-          >
-            <Image
-              src={image}
-              alt=""
-              fill
-              sizes="(min-width: 768px) 24rem, 100vw"
-              className="object-cover"
-            />
-          </TapedFigure>
-        ) : null}
       </PageContainer>
     </header>
   );
@@ -389,7 +421,7 @@ export function PageHero(props: PageHeroProps) {
 
   const headingBlock = (
     <div>
-      <Kicker tone="cream">{kicker}</Kicker>
+      {kicker ? <Kicker tone="cream">{kicker}</Kicker> : null}
 
       {/* `mb-0` neutralises the global base `h1–h6 { margin-bottom: 1em }`,
           which at display-xl is ~72px of dead space — the hero owns its own

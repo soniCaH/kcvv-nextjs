@@ -23,6 +23,10 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/club/bestuur",
+}));
+
 describe("PageHero", () => {
   const defaultProps = {
     kicker: "Kalender",
@@ -283,6 +287,51 @@ describe("PageHero", () => {
         </PageHero>,
       );
       expect(screen.getByText(/Laatst bijgewerkt/)).toBeInTheDocument();
+    });
+  });
+
+  describe("up-link (#2428/#2442)", () => {
+    it("band · cream omits the kicker row entirely when kicker is not passed", () => {
+      // #2442 rule 6 — dropped where a page-owned up-link above this
+      // opening would otherwise show the parent's name twice.
+      const { container } = render(
+        <PageHero headline="3de Prov. B kampioen" />,
+      );
+      expect(
+        container.querySelector('[data-testid="page-hero-kicker"]'),
+      ).not.toBeInTheDocument();
+    });
+
+    it("minimal omits the kicker row entirely when kicker is not passed", () => {
+      const { container } = render(
+        <PageHero register="minimal" headline="Wedstrijden" />,
+      );
+      expect(
+        container.querySelector('[data-testid="page-hero-kicker"]'),
+      ).not.toBeInTheDocument();
+    });
+
+    it("band · dark renders no up-link when none is passed", () => {
+      render(<PageHero kicker="De club" headline="Het bestuur" tone="dark" />);
+      expect(screen.queryByTestId("up-link")).not.toBeInTheDocument();
+    });
+
+    it("band · dark renders the up-link inside the band, tone-swapped to cream", () => {
+      render(
+        <PageHero
+          kicker="De club"
+          headline="Het bestuur"
+          tone="dark"
+          upLink={{ href: "/club", label: "De club" }}
+        />,
+      );
+      const upLink = screen.getByTestId("up-link");
+      expect(upLink).toHaveAttribute("data-tone", "cream");
+      expect(upLink).toHaveAttribute("href", "/club");
+      expect(upLink).toHaveTextContent("De club");
+      // Inside the same full-bleed dark header, not a separate cream strip
+      // above it.
+      expect(screen.getByTestId("page-hero").contains(upLink)).toBe(true);
     });
   });
 
