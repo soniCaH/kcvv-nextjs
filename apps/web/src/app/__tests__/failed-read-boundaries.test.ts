@@ -38,6 +38,7 @@ import { render, screen } from "@testing-library/react";
 import { Effect, Layer, Runtime, Cause } from "effect";
 import { HttpNotFound, HttpBadGateway } from "@kcvv/api-contract";
 import { createMatchDetail } from "@/app/(main)/wedstrijd/[matchId]/match-detail.fixtures";
+import { makeTaggedBffError } from "@/lib/effect/bff-error.fixtures";
 
 // Sanity is unreachable for every read in this file. Repositories left
 // unmocked below therefore die; the two mocked below are the page subjects
@@ -233,10 +234,16 @@ describe("/wedstrijd/[matchId] classifies a failed ranking read (#2778)", () => 
     expect(rejectedBffErrorTag(rejection)).toBe("HttpBadGateway");
   });
 
-  it("a permanent ranking failure (404) degrades to a failure notice instead of taking the page down (#2576)", async () => {
+  it("a 404 ranking read stays silent — indistinguishable from 'no table published yet', not a failure (#2576)", async () => {
     mockGetMatchDetail.mockReturnValue(
       Effect.succeed(leagueMatchFixture(9002)),
     );
+    // apps/api/src/handlers/ranking.ts maps BOTH an unknown psd team id AND
+    // an empty upstream table list to this same 404 — the BFF can never
+    // return a genuinely-empty ranking any other way. A 404 here must
+    // therefore stay silent, the same as the guards inside `fetchStandings`
+    // — never the failure notice (review finding 1, verified against the
+    // real handler rather than assumed).
     mockGetRanking.mockReturnValue(
       Effect.fail(new HttpNotFound({ error: "unknown psd team id" })),
     );
@@ -249,25 +256,28 @@ describe("/wedstrijd/[matchId] classifies a failed ranking read (#2778)", () => 
     // page survived it.
     expect(mockGetRanking).toHaveBeenCalledWith(1);
     render(element);
-    // The section renders (not `null`) and says so in its own voice, rather
-    // than the empty space a permanent failure rendered before #2576.
-    expect(screen.getByText("KLASSEMENT")).toBeInTheDocument();
-    expect(screen.getByText(/even niet beschikbaar/i)).toBeInTheDocument();
+    expect(screen.queryByText("KLASSEMENT")).toBeNull();
   });
 
-  it("a legitimately empty ranking read (no table for either club) stays silent — no notice (#2576)", async () => {
+  it("a genuine permanent ranking failure (decode error) renders a failure notice instead of nothing (#2576)", async () => {
     mockGetMatchDetail.mockReturnValue(
       Effect.succeed(leagueMatchFixture(9003)),
     );
-    // Read succeeds, but returns no table at all — off-season / cup leaked
-    // through, not a failure.
-    mockGetRanking.mockReturnValue(Effect.succeed([]));
+    // A tag PSD can plausibly send that this deploy cannot decode — the
+    // failure sentinel is reserved for exactly this class of error, not the
+    // 404 above.
+    mockGetRanking.mockReturnValue(
+      Effect.fail(makeTaggedBffError("HttpApiDecodeError")),
+    );
 
     const element = await MatchPage({
       params: Promise.resolve({ matchId: "9003" }),
     });
     expect(mockGetRanking).toHaveBeenCalledWith(1);
     render(element);
-    expect(screen.queryByText("KLASSEMENT")).toBeNull();
+    // The section renders (not `null`) and says so in its own voice, rather
+    // than the empty space a permanent failure rendered before #2576.
+    expect(screen.getByText("KLASSEMENT")).toBeInTheDocument();
+    expect(screen.getByText(/even niet beschikbaar/i)).toBeInTheDocument();
   });
 });

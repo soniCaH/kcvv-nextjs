@@ -6,7 +6,7 @@ import { EmptyState } from "./EmptyState";
  * #2427 / #2562 — one primitive, two tiers. State-coverage: tier-1 genuine
  * (the null path — default artefact, no undo), tier-1 filter-empty (with
  * the mandatory undo), tier-1's two non-default `surface` values, tier-2's
- * held-open register, and tier-2's `variant="notice"` failure register
+ * held-open register, and tier-2's `reason="unavailable"` failure register
  * (#2469/#2576). `vr`-tagged so every state acquires VR baselines per the
  * master-design VR contract — `surface="inverse"` exists specifically to
  * fix a shadow that was invisible on a dark ground, so it needs its own
@@ -145,7 +145,7 @@ export const SlotCreamSoft: Story = {
 };
 
 /**
- * Tier 2, `variant="notice"` (#2469/#2576) — a failure notice, not the
+ * Tier 2, `reason="unavailable"` (#2469/#2576) — a failure notice, not the
  * held-open register: a sentence in the section's own body copy, with a
  * display-italic accent on the words that failed, not the subject (#2469
  * resolution rule 3). Fixed `border-ink/30` dashed frame — the cream case
@@ -155,7 +155,7 @@ export const SlotNotice: Story = {
   name: "Tier 2 — failure notice",
   args: {
     tier: "slot",
-    variant: "notice",
+    reason: "unavailable",
     emphasis: { text: "even niet beschikbaar" },
     children:
       "Het klassement is even niet beschikbaar. Probeer het later opnieuw.",

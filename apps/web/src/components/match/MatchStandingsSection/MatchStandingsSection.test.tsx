@@ -2,6 +2,20 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { RankingEntry } from "@kcvv/api-contract";
 import { MatchStandingsSection } from "./MatchStandingsSection";
+import type { MatchStandingsSectionUnavailableProps } from "./MatchStandingsSection";
+
+// Type-level assertion (#2576 review finding 6) — TypeScript, not vitest, is
+// under test here. `@ts-expect-error` fails the type check if `unavailable:
+// true` ever grows an `entries` field again, which is what makes "rows
+// present AND unavailable" a compile error at the call site instead of a
+// component that has to decide which one silently wins.
+const _unavailableWithEntries: MatchStandingsSectionUnavailableProps = {
+  unavailable: true,
+  homeClubId: 1235,
+  awayClubId: 103,
+  // @ts-expect-error — the unavailable member carries no `entries` at all
+  entries: [],
+};
 
 function entry(
   position: number,
@@ -101,12 +115,7 @@ describe("MatchStandingsSection", () => {
 
   it("renders a failure notice instead of nothing when the read is permanently unavailable (#2576)", () => {
     render(
-      <MatchStandingsSection
-        entries={[]}
-        homeClubId={1235}
-        awayClubId={103}
-        unavailable
-      />,
+      <MatchStandingsSection unavailable homeClubId={1235} awayClubId={103} />,
     );
     expect(screen.getByText("KLASSEMENT")).toBeInTheDocument();
     expect(screen.getByText(/In de stand/i)).toBeInTheDocument();
@@ -119,28 +128,10 @@ describe("MatchStandingsSection", () => {
 
   it("accents only the failure clause, not the whole notice or the subject", () => {
     render(
-      <MatchStandingsSection
-        entries={[]}
-        homeClubId={1235}
-        awayClubId={103}
-        unavailable
-      />,
+      <MatchStandingsSection unavailable homeClubId={1235} awayClubId={103} />,
     );
     const accent = screen.getByText("even niet beschikbaar");
     expect(accent.tagName).toBe("EM");
-  });
-
-  it("does not render the failure notice when rows are actually present, even if unavailable were mistakenly passed", () => {
-    render(
-      <MatchStandingsSection
-        entries={fullDivision}
-        homeClubId={1235}
-        awayClubId={103}
-        unavailable
-      />,
-    );
-    expect(screen.queryByText(/niet beschikbaar/i)).toBeNull();
-    expect(screen.getByText("KCVV Elewijt")).toBeInTheDocument();
   });
 
   it("tints the KCVV row via highlightTeamId", () => {
