@@ -42,6 +42,13 @@ export const GALLERIES_QUERY =
  * formatting via <PortableText> (STUDIO-3). Each image resolves its credit at
  * query time — per-image `credit` overrides the gallery `defaultCredit` (`^`
  * is the parent doc). `lqip` feeds the `next/image` `placeholder="blur"`.
+ *
+ * `linkedEvent` is the gallery's own domain relation for `<RelatedRow>`
+ * (#2443/#2581) — bounded (a gallery links at most one event) and defining
+ * (the event this gallery documents). `linkedMatch` (a bare, unpicked
+ * string — see `GALLERIES_BY_MATCH_QUERY`) deliberately has no equivalent
+ * projection here: a match is not a Sanity document, so it never becomes a
+ * card from this side either ("Gallery in, match out", #2443 resolution).
  */
 export const GALLERY_BY_SLUG_QUERY =
   defineQuery(`*[_type == "photoGallery" && slug.current == $slug][0] {
@@ -58,6 +65,14 @@ export const GALLERY_BY_SLUG_QUERY =
     "alt": coalesce(alt, ""),
     "caption": coalesce(caption, ""),
     "credit": coalesce(credit, ^.defaultCredit, "")
+  },
+  "linkedEvent": linkedEvent-> {
+    "id": _id,
+    "title": coalesce(pt::text(title), title, ""),
+    "slug": coalesce(slug.current, ""),
+    "dateStart": coalesce(dateStart, ""),
+    dateEnd,
+    "coverImageUrl": coverImage.asset->url + "?w=800&h=450&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(coverImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(coverImage.hotspot.y, 0.5))
   }
 }`);
 

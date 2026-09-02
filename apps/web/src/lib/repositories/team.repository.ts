@@ -6,6 +6,7 @@ import type {
   TEAMS_QUERY_RESULT,
   TEAM_BY_SLUG_QUERY_RESULT,
   TEAMS_LANDING_QUERY_RESULT,
+  TEAMS_BY_MEMBER_QUERY_RESULT,
 } from "../sanity/sanity.types";
 import { teamDisplayName } from "../utils/team-display-name";
 import { toPlayerVM, type PlayerVM } from "./player.repository";
@@ -32,6 +33,20 @@ export const TEAM_BY_SLUG_QUERY =
     "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max"
   },
   staff[] { role, "member": member-> { _id, psdId, archived, firstName, lastName, functionTitle, "photoUrl": photo.asset->url + "?w=300&h=400&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(photo.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(photo.hotspot.y, 0.5)), "hasBio": count(bio) > 0 } }
+}`);
+
+// Reverse relation for the domain tier of `<RelatedRow>` (#2443/#2581): every
+// non-archived team whose `players[]` or `staff[].member` references
+// `$memberId`. One query serves both directions — GROQ's `references()`
+// scans the whole document tree, so it matches `players[]->` (a plain array
+// of references) exactly the same way it matches the nested
+// `staff[].member->` reference, with no need for a second query per caller.
+// Bounded (a member plays for 1–2 teams) and defining (#2443 rule 4) —
+// `teamImageUrl` is already selected so the card never needs a second fetch.
+export const TEAMS_BY_MEMBER_QUERY =
+  defineQuery(`*[_type == "team" && archived != true && references($memberId)] | order(name asc) {
+  _id, name, displayName, "slug": slug.current, tagline,
+  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5))
 }`);
 
 export const YOUTH_TEAMS_CONTACT_QUERY =
@@ -95,6 +110,19 @@ export interface TeamNavVM {
   teamImageUrl: string | null;
 }
 
+/**
+ * A team as rendered by the domain-tier "own team(s)" card on `<RelatedRow>`
+ * (#2443/#2581) — `TEAMS_BY_MEMBER_QUERY`'s result, resolved via
+ * `TeamRepository.findByMemberId`.
+ */
+export interface TeamRelationVM {
+  id: string;
+  displayName: string;
+  slug: string;
+  tagline: string | null;
+  teamImageUrl: string | null;
+}
+
 export interface StaffMemberVM {
   id: string;
   firstName: string;
@@ -143,6 +171,20 @@ export interface TeamDetailVM {
 type TEAM_BY_SLUG_DETAIL = Exclude<TEAM_BY_SLUG_QUERY_RESULT, null>;
 
 // ─── Transforms ──────────────────────────────────────────────────────────────
+
+function toTeamRelationVM(
+  row: TEAMS_BY_MEMBER_QUERY_RESULT[number],
+): TeamRelationVM {
+  const name = row.name ?? "";
+  const slug = row.slug ?? "";
+  return {
+    id: row._id,
+    displayName: teamDisplayName({ displayName: row.displayName, slug, name }),
+    slug,
+    tagline: row.tagline,
+    teamImageUrl: row.teamImageUrl,
+  };
+}
 
 export function toTeamNavVM(row: TEAMS_QUERY_RESULT[number]): TeamNavVM {
   const name = row.name ?? "";
@@ -289,6 +331,14 @@ export interface TeamRepositoryInterface {
   readonly findYouthTeamsForContact: () => Effect.Effect<
     YouthTeamForContactVM[]
   >;
+  /**
+   * Every non-archived team that references `memberId` — a player's or a
+   * staff member's own team(s) (#2443/#2581 domain tier). See
+   * `TEAMS_BY_MEMBER_QUERY`.
+   */
+  readonly findByMemberId: (
+    memberId: string,
+  ) => Effect.Effect<TeamRelationVM[]>;
 }
 
 export class TeamRepository extends Context.Tag("TeamRepository")<
@@ -314,4 +364,8 @@ export const TeamRepositoryLive = Layer.succeed(TeamRepository, {
     fetchGroq<YouthTeamContactRow[]>(YOUTH_TEAMS_CONTACT_QUERY).pipe(
       Effect.map((rows) => rows.map(toYouthTeamForContactVM)),
     ),
+  findByMemberId: (memberId) =>
+    fetchGroq<TEAMS_BY_MEMBER_QUERY_RESULT>(TEAMS_BY_MEMBER_QUERY, {
+      memberId,
+    }).pipe(Effect.map((rows) => rows.map(toTeamRelationVM))),
 });
