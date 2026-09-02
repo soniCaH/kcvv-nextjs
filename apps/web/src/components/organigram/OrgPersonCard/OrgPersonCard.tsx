@@ -6,9 +6,12 @@ import { cn } from "@/lib/utils/cn";
 /**
  * `<OrgPersonCard>` — the Phase 7 `/hulp` structure card (design lock `7o4`).
  *
- * Extends the 6.C `<TeamStaff>` idiom (round newsprint photo OR jersey-deep
- * monogram · first-semibold + last-italic name · mono function label) and
- * parameterises it by **occupancy state**:
+ * Round newsprint photo OR jersey-deep monogram · first-semibold +
+ * last-italic name · mono function label — the avatar idiom `<TeamStaff>`
+ * carried pre-#2575, kept here deliberately: `/hulp` is a chart of
+ * **positions**, not a directory of people (#2477 rule 7), so it never
+ * moved onto the shared 3:4 `<PlayerCard>`. Parameterised by
+ * **occupancy state**:
  *
  *  - `single`  — one holder: photo/monogram · person name · the position as the
  *                mono function label.
