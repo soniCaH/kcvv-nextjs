@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import Image from "next/image";
 import { TapedCardGrid } from "../TapedCardGrid";
 import { TapedFigure } from "./TapedFigure";
 
@@ -105,6 +106,57 @@ export const TintNone: Story = {
     tint: "none",
     caption: "Filter off (data-tint=none).",
     children: photoPlaceholder,
+  },
+};
+
+// A real photograph with faces in it — the D9 mockup's own skin-tone test
+// fixture (docs/design/mockups/research-d-series/d9-overprint.html). A
+// synthetic swatch cannot demonstrate "shadows move, faces pass through
+// unchanged" — that claim is only verifiable on real photography.
+//
+// Deliberately sourced from `public/images/youth-trainers.jpg` rather than
+// the `@test-fixtures/images` pool every other story here uses: this is the
+// exact photo the D9 mockup and decision sheet used for the skin-tone test,
+// and that parity with the evidence the decision was made against is worth
+// more than the small determinism risk. It does not fit the pool's curated,
+// hashed-filename webp set either. Coupling: these two stories' VR baselines
+// will move if `youth-trainers.jpg` is ever re-cropped, re-compressed, or
+// replaced.
+//
+// `alt=""` — both consuming stories set `caption`, so the caption is the
+// alt carrier per this component's own either-or rule (see TapedFigureProps
+// docblock above); an alt here too would be the same sentence read twice.
+const photoWithFaces = (
+  <Image
+    src="/images/youth-trainers.jpg"
+    alt=""
+    fill
+    sizes="480px"
+    className="object-cover"
+  />
+);
+
+// Baseline — no overprint (data-print="none", the default). Paired with
+// `Overprint` below so the two are directly comparable: the photo area
+// should be the only thing that differs between them (only the shadows
+// move). The caption row differs by design — it names which story you're
+// looking at — so it is not part of that comparison.
+export const PhotoBaseline: Story = {
+  args: {
+    caption: "Geen overprint (data-print=none, standaard).",
+    children: photoWithFaces,
+  },
+};
+
+// Overprint opt-in (D9 / T2, #2619) — `mix-blend-mode: lighten` against
+// the dark `--color-jersey-deep-dark` plate. Compare the photo area against
+// `PhotoBaseline` above: hair, shade and dark kit should move toward dark
+// green there; faces and mid-tones should read identically in both.
+export const Overprint: Story = {
+  args: {
+    print: "overprint",
+    caption: "Overprint aan (data-print=overprint).",
+    children: photoWithFaces,
   },
 };
 

@@ -105,6 +105,20 @@ describe("TapedFigure", () => {
     expect(fig).toHaveAttribute("data-tint", "none");
   });
 
+  it("defaults to data-print=none (overprint is opt-in, not global)", () => {
+    const { container } = render(<TapedFigure>{Img}</TapedFigure>);
+    const fig = container.firstChild as HTMLElement;
+    expect(fig).toHaveAttribute("data-print", "none");
+  });
+
+  it('print="overprint" emits data-print=overprint for per-instance opt-in', () => {
+    const { container } = render(
+      <TapedFigure print="overprint">{Img}</TapedFigure>,
+    );
+    const fig = container.firstChild as HTMLElement;
+    expect(fig).toHaveAttribute("data-print", "overprint");
+  });
+
   it("does not emit a data-lift attribute (R9 §7 lift hover retired in #1748)", () => {
     const { container } = render(<TapedFigure>{Img}</TapedFigure>);
     const fig = container.firstChild as HTMLElement;
