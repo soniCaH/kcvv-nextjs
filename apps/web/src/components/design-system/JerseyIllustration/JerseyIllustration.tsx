@@ -135,10 +135,11 @@ export function JerseyIllustration({
     ? "var(--color-jersey-deep)"
     : "var(--color-ink)";
 
-  // A Server Component (no "use client" in this file or either consumer) —
-  // React's Flight dispatcher runs `useMemo` as `(create) => create()`, no
-  // cache, so memoising here bought nothing but a hook dependency on an
-  // otherwise hook-free primitive. Plain computation instead.
+  // A Server Component (no "use client" in this file or any of its three
+  // consumers — <PlayerHero>, <PlayerCard>, <StaffHero>) — React's Flight
+  // dispatcher runs `useMemo` as `(create) => create()`, no cache, so
+  // memoising here bought nothing but a hook dependency on an otherwise
+  // hook-free primitive. Plain computation instead.
   const figure = computePlayerFigureVariant(seed);
   const baseTransformMatrix = buildBaseTransformMatrix(figure);
   const baseTransform = `matrix(${fx(baseTransformMatrix.a)} ${fx(baseTransformMatrix.b)} ${fx(baseTransformMatrix.c)} ${fx(baseTransformMatrix.d)} ${fx(baseTransformMatrix.e)} ${fx(baseTransformMatrix.f)})`;

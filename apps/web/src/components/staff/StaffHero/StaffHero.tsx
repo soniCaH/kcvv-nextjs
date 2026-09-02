@@ -1,5 +1,3 @@
-"use client";
-
 import type { ComponentType } from "react";
 import Image from "next/image";
 import { TapedFigure } from "@/components/design-system/TapedFigure";
@@ -21,8 +19,12 @@ import { Envelope, Phone, type RedesignIconProps } from "@/lib/icons.redesign";
  * number + ticket-stub for role pills + a contact row:
  *   - Portrait → `<TapedFigure aspect="portrait-3-4" padding="none">`. No photo
  *     → `<JerseyIllustration variant="hero" garment="coat">` in the same
- *     framed slot — the same coat-garment figure every card linking to this
- *     person already renders for them (#2485 rule 5).
+ *     framed slot — the same coat-garment figure `<PlayerCard garment="coat">`
+ *     already renders for this person on the `getCardSubjectArtefact` path
+ *     (`<TeamStaff>` on `/ploegen/[slug]` and the three board routes, #2485
+ *     rule 5). The organigram's `<OrgPersonCard>`/`<MemberDetailPanel>` avatar
+ *     is a deliberate exception — it stays a monogram disc, untouched by this
+ *     ticket.
  *   - Kicker → `<MonoLabel variant="plain">` (ink), as on the player hero.
  *   - Name → first upright `font-display-big` black (`display-2xl`), last
  *     italic `font-display` (`display-xl`) + period.
