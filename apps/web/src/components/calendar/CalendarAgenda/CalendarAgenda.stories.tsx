@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { within } from "storybook/test";
 import { CalendarAgenda } from "./CalendarAgenda";
 import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
 import { fixtureImage } from "@test-fixtures/images";
@@ -208,5 +209,35 @@ export const PlayedTournament: Story = {
       }),
     ],
     events: [],
+  },
+};
+
+/**
+ * The List Row Fill Rule's keyboard-focus half (DESIGN.md § Motion, #2624):
+ * a real `element.focus()` — not a synthetic pointer event — so it triggers
+ * genuine `:focus-visible` and lands the inset outline the static VR runner
+ * *can* capture, unlike a hovered pseudo-class (see `HoveredRow` below).
+ */
+export const FocusedRow: Story = {
+  args: { ...baseProps, matches: sparseMatches, events: sparseEvents },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [firstRow] = canvas.getAllByTestId("agenda-match-row");
+    firstRow.focus();
+  },
+};
+
+/**
+ * Documents the hover fill: the row deepens toward `cream-soft` instead of
+ * pressing down, so a dense day never reads as coming apart. Mirrors
+ * `<TicketStub>`'s `Hover` story — the hovered state can't be triggered by
+ * the static VR runner (synthetic events don't trigger CSS `:hover`), and
+ * the fill itself is asserted in `CalendarAgenda.test.tsx`.
+ */
+export const HoveredRow: Story = {
+  args: { ...baseProps, matches: sparseMatches, events: sparseEvents },
+  parameters: {
+    // vr.disable: see the docblock above — no real pointer in a story play().
+    vr: { disable: true },
   },
 };
