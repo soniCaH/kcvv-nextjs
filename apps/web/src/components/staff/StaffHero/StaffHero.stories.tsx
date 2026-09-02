@@ -20,6 +20,7 @@ const meta = {
     ),
   ],
   argTypes: {
+    id: { control: "text" },
     firstName: { control: "text" },
     lastName: { control: "text" },
     imageUrl: { control: "text", description: "Portrait photo (newsprint)" },
@@ -35,6 +36,7 @@ type Story = StoryObj<typeof meta>;
 /** Full profile — portrait photo, two role pills, email + phone. */
 export const WithPhoto: Story = {
   args: {
+    id: "staff-marc-de-coninck",
     firstName: "Marc",
     lastName: "De Coninck",
     imageUrl: "/images/youth-trainers.jpg",
@@ -44,9 +46,14 @@ export const WithPhoto: Story = {
   },
 };
 
-/** No photo → jersey-deep monogram (initials) in the same framed slot. */
-export const MonogramFallback: Story = {
+/**
+ * No photo → `<JerseyIllustration variant="hero" garment="coat">` in the
+ * same framed slot (#2485 rule 5 / #2789) — the identical coat figure every
+ * card linking to this person already renders for them.
+ */
+export const IllustrationFallback: Story = {
   args: {
+    id: "staff-marc-de-coninck",
     firstName: "Marc",
     lastName: "De Coninck",
     roles: ["Hoofdtrainer", "A-ploeg"],
@@ -57,6 +64,7 @@ export const MonogramFallback: Story = {
 /** Sparse data — name + single role only (no photo, no contact). */
 export const NameAndRoleOnly: Story = {
   args: {
+    id: "staff-bea-bijstand",
     firstName: "Bea",
     lastName: "Bijstand",
     roles: ["Afgevaardigde"],
@@ -66,6 +74,7 @@ export const NameAndRoleOnly: Story = {
 /** Board member — long single-word last name, contact only, no roles. */
 export const ContactOnly: Story = {
   args: {
+    id: "staff-greta-vandenberghe",
     firstName: "Greta",
     lastName: "Vandenberghe",
     email: "voorzitter@kcvvelewijt.be",
@@ -76,6 +85,7 @@ export const ContactOnly: Story = {
 /** Mobile viewport — the split collapses to stacked portrait → words. */
 export const Mobile: Story = {
   args: {
+    id: "staff-marc-de-coninck",
     firstName: "Marc",
     lastName: "De Coninck",
     imageUrl: "/images/youth-trainers.jpg",

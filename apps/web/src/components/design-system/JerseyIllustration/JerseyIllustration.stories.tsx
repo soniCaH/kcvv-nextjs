@@ -44,18 +44,19 @@ export const Card: Story = {
  * (lapels, placket, notch ticks) and the two-pass palette (inverted: ink
  * underprint, jersey-deep overprint) change.
  *
- * Not wired to any route today — `<StaffHero>` (`/staf/[slug]`) still
- * renders its own jersey-deep initials plate, explicitly "NOT the
- * player-only jersey illustration" per its docblock. This story covers the
- * hero-scale coat state in isolation, for a future `<StaffHero>` migration
- * to draw from.
+ * Wired to production since #2789 — `<StaffHero>` (`/staf/[slug]`) renders
+ * exactly this: `<JerseyIllustration variant="hero" garment="coat">`. This
+ * isolated story stays out of the VR-tagged set (see `tags` below) because
+ * `Features/Staff/StaffHero`'s own stories already carry the baseline for
+ * this exact rendered state in its real context.
  */
 export const CoatHero: Story = {
   args: { variant: "hero", seed: "a1b2c3d4", garment: "coat" },
-  // `!vr` negates the meta-level "vr" tag — this state renders nowhere in
-  // production (see the docblock above) and the AC doesn't ask for it;
-  // `CoatCard` below is the one `getCardSubjectArtefact` actually draws
-  // from and keeps its baseline.
+  // `!vr` negates the meta-level "vr" tag — `Features/Staff/StaffHero`'s
+  // `IllustrationFallback` story already captures this state in its real
+  // hero context, so this isolated instance skips VR to avoid a duplicate
+  // baseline; `CoatCard` below is the one `getCardSubjectArtefact` actually
+  // draws from and keeps its own baseline.
   tags: ["!vr"],
 };
 
