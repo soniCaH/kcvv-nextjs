@@ -110,9 +110,9 @@ export const Default: Story = {
   args: { teams: [aTeam, bTeam] },
 };
 
-// A draw + a loss, to exercise the no-underline (draw) vs the loss underline
-// alongside Default's win. Outcome is recomputed inside <TeamAgendaRow> from
-// scores + isHome + status.
+// A draw + a loss, to exercise the draw's own ink-muted underline (#2512/
+// #2656) against the loss underline, alongside Default's win. Outcome is
+// recomputed inside <TeamAgendaRow> from scores + isHome + status.
 export const Outcomes: Story = {
   args: {
     teams: [

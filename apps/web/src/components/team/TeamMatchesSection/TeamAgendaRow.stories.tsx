@@ -71,7 +71,7 @@ export const FinishedWin: Story = {
   args: { match: win },
 };
 
-/** Finished — draw (no underline). */
+/** Finished — draw (ink-muted underline, #2512/#2656). */
 export const FinishedDraw: Story = {
   args: { match: draw },
 };
@@ -141,7 +141,7 @@ export const KindLabelledResult: Story = {
   args: { match: win, kind: "result" },
 };
 
-/** `kind` on a draw — the one outcome the underline cannot draw at all. */
+/** `kind` on a draw — "Gelijk", the caption-register spelling (#2656). */
 export const KindLabelledDraw: Story = {
   args: { match: draw, kind: "result" },
 };
