@@ -3,11 +3,21 @@ import { render, screen } from "@testing-library/react";
 import ClubLoading from "./loading";
 
 describe("ClubLoading", () => {
-  it("renders the compact PageHero", () => {
+  it("renders no visible heading — the fallback also ships on every /club/* child (#2432)", () => {
+    const { container } = render(<ClubLoading />);
+    expect(container.querySelectorAll("h1, h2, h3")).toHaveLength(0);
+  });
+
+  it("renders the band · cream hero skeleton (bars only, no real PageHero text)", () => {
     render(<ClubLoading />);
-    const hero = screen.getByTestId("page-hero");
-    expect(hero).toHaveAttribute("data-size", "compact");
-    expect(screen.getByText("Onze club")).toBeInTheDocument();
+    expect(screen.getByTestId("page-hero-skeleton")).toBeInTheDocument();
+    expect(screen.queryByTestId("page-hero")).not.toBeInTheDocument();
+  });
+
+  it("announces the loading state without naming a specific child page", () => {
+    render(<ClubLoading />);
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Club laden…");
   });
 
   it("renders a full-bleed StripedSeam between hero and grid", () => {
@@ -17,10 +27,10 @@ describe("ClubLoading", () => {
     ).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders a nine-card skeleton nav grid on the cream field", () => {
+  it("renders a twelve-card skeleton nav grid on the cream field, matching CLUB_HUB_CARDS", () => {
     const { container } = render(<ClubLoading />);
     const skeleton = screen.getByTestId("club-hub-skeleton");
-    expect(skeleton.children).toHaveLength(9);
+    expect(skeleton.children).toHaveLength(12);
     expect(container.querySelector(".bg-cream")).not.toBeNull();
   });
 });

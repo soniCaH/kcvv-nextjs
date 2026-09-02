@@ -10,5 +10,5 @@
 import { BoardPageLoading } from "@/components/club/BestuurPage/BoardPageLoading";
 
 export default function JeugdbestuurLoading() {
-  return <BoardPageLoading label="Jeugdbestuur laden..." />;
+  return <BoardPageLoading label="Jeugdbestuur laden…" />;
 }

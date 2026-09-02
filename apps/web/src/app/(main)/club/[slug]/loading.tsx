@@ -1,17 +1,29 @@
 /**
- * Club Page (Dynamic) — Loading Skeleton
- * Mirrors the page: compact <PageHero> → <StripedSeam> → <ArticleBody>'s
- * cream shell + prose column.
+ * Club Page (Dynamic) — Loading Skeleton.
+ *
+ * Mirrors the page: band · cream `<PageHero>` → `<StripedSeam>` →
+ * `<ArticleBody>`'s cream shell + prose column. The headline is the CMS
+ * page's own `title` — data, not static copy — so per #2432 §2 this renders
+ * no heading text at all (`<PageHeroSkeleton register="band" tone="cream">`,
+ * bars only). `headline="Laden…"` was banned outright: a placeholder heading
+ * is announced, indexed, and read aloud, which is worse than none.
  */
 
-import { PageHero } from "@/components/layout/PageHero";
-import { PageContainer, StripedSeam } from "@/components/design-system";
+import { PageHeroSkeleton } from "@/components/layout/PageHero";
+import {
+  PageContainer,
+  StripedSeam,
+  Skeleton,
+  LoadingAnnouncement,
+} from "@/components/design-system";
 
 export default function ClubPageLoading() {
   return (
     <div className="bg-cream min-h-screen">
+      <LoadingAnnouncement label="Pagina laden…" />
+
       <PageContainer className="pt-10 pb-12">
-        <PageHero kicker="Club" headline="Laden…" size="compact" />
+        <PageHeroSkeleton register="band" tone="cream" />
       </PageContainer>
 
       <StripedSeam colorPair="ink-cream" height="md" />
@@ -20,16 +32,16 @@ export default function ClubPageLoading() {
           `--container-prose` reading column. */}
       <div className="bg-cream w-full px-4 py-12 lg:px-0 lg:py-16">
         <div
-          className="mx-auto w-full space-y-4 motion-safe:animate-pulse"
+          className="mx-auto w-full space-y-4"
           style={{ maxWidth: "var(--container-prose)" }}
         >
-          <div className="bg-cream-soft h-5 w-full" />
-          <div className="bg-cream-soft h-5 w-full" />
-          <div className="bg-cream-soft h-5 w-4/5" />
-          <div className="bg-cream-soft mt-6 h-48 w-full" />
-          <div className="bg-cream-soft mt-6 h-5 w-full" />
-          <div className="bg-cream-soft h-5 w-full" />
-          <div className="bg-cream-soft h-5 w-2/3" />
+          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-5 w-4/5" />
+          <Skeleton className="mt-6 h-48 w-full" />
+          <Skeleton className="mt-6 h-5 w-full" />
+          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-5 w-2/3" />
         </div>
       </div>
     </div>

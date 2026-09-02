@@ -3,6 +3,8 @@ import {
   PageContainer,
   type PageContainerWidth,
 } from "@/components/design-system/PageContainer";
+import { TapedCard } from "@/components/design-system/TapedCard";
+import { Skeleton } from "@/components/design-system/Skeleton";
 import type { PageHeroRegister, PageHeroTone } from "./PageHero";
 
 /**
@@ -16,9 +18,16 @@ import type { PageHeroRegister, PageHeroTone } from "./PageHero";
  * with the thing it stands in for is a layout shift by construction.
  *
  * Bar widths are fixed rather than per-route: a placeholder's job is to hold the
- * footprint, and a route-specific width is a value that drifts for nothing. The
- * band · cream register needs no entry here — its skeletons render the real
- * `<PageHero size="compact">`, which carries no data and so needs no shimmer.
+ * footprint, and a route-specific width is a value that drifts for nothing.
+ *
+ * `register="band"` · `tone="cream"` composes the real `<TapedCard>` shell
+ * (#2432 §7 — a skeleton composes the real container, never re-draws its
+ * chrome) with shimmer bars inside, rather than the real `<PageHero>`. Two
+ * of its three callers have a data-driven headline (`/club/[slug]`'s CMS
+ * title) or must never risk showing another page's real heading while
+ * leaking into a sibling segment (`/club`'s index) — #2432 §2 bans a
+ * skeleton from ever rendering a real `<h1>` it cannot be sure is correct,
+ * so this register renders no heading text at all, static or not.
  */
 
 export interface PageHeroSkeletonProps {
@@ -35,32 +44,14 @@ export interface PageHeroSkeletonProps {
   className?: string;
 }
 
-/** Bars read as paper on cream and as translucent cream on the dark field. */
-const BAR_CLASS: Record<
-  PageHeroTone,
-  { kicker: string; headline: string; lead: string }
-> = {
-  cream: {
-    kicker: "bg-paper-edge",
-    headline: "bg-paper-edge",
-    lead: "bg-paper-edge",
-  },
-  dark: {
-    kicker: "bg-cream/20",
-    headline: "bg-cream/25",
-    lead: "bg-cream/15",
-  },
-};
-
 /** Kicker → headline → lead, at `<PageHero>`'s own rhythm. */
 function OpeningBars({ tone, lead }: { tone: PageHeroTone; lead: boolean }) {
-  const bar = BAR_CLASS[tone];
   return (
     <>
-      <div className={cn("h-3 w-44", bar.kicker)} />
-      <div className={cn("mt-2 h-12 w-2/3 max-w-full", bar.headline)} />
+      <Skeleton tone={tone} className="h-3 w-44" />
+      <Skeleton tone={tone} className="mt-2 h-12 w-2/3 max-w-full" />
       {lead ? (
-        <div className={cn("mt-4 h-5 w-1/2 max-w-full", bar.lead)} />
+        <Skeleton tone={tone} className="mt-4 h-5 w-1/2 max-w-full" />
       ) : null}
     </>
   );
@@ -76,11 +67,23 @@ export function PageHeroSkeleton({
 }: PageHeroSkeletonProps) {
   if (register === "minimal") {
     return (
-      <div
-        aria-hidden="true"
-        className={cn("mb-10 motion-safe:animate-pulse", className)}
-      >
+      <div aria-hidden="true" className={cn("mb-10", className)}>
         <OpeningBars tone={tone} lead={lead} />
+      </div>
+    );
+  }
+
+  if (tone === "cream") {
+    return (
+      <div aria-hidden="true" data-testid="page-hero-skeleton">
+        <TapedCard
+          bg="cream"
+          padding="md"
+          tape={{ color: "warm", position: "left", length: "lg" }}
+          className={className}
+        >
+          <OpeningBars tone="cream" lead={lead} />
+        </TapedCard>
       </div>
     );
   }
@@ -89,7 +92,7 @@ export function PageHeroSkeleton({
     <header aria-hidden="true" className={cn("bg-jersey-deep-dark", className)}>
       <PageContainer
         width={width}
-        className="grid gap-8 py-14 motion-safe:animate-pulse sm:py-20 md:grid-cols-[1fr_auto] md:items-center"
+        className="grid gap-8 py-14 sm:py-20 md:grid-cols-[1fr_auto] md:items-center"
       >
         <div>
           <OpeningBars tone="dark" lead={lead} />
