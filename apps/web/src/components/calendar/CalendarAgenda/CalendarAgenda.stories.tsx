@@ -215,8 +215,11 @@ export const PlayedTournament: Story = {
 /**
  * The List Row Fill Rule's keyboard-focus half (DESIGN.md § Motion, #2624):
  * a real `element.focus()` — not a synthetic pointer event — so it triggers
- * genuine `:focus-visible` and lands the inset outline the static VR runner
- * *can* capture, unlike a hovered pseudo-class (see `HoveredRow` below).
+ * genuine `:focus-visible` and lands the fill + inset outline the static VR
+ * runner *can* capture, unlike a hovered pseudo-class (see `HoveredRow`
+ * below). Covers the cream ground; see `FocusedEventRow` for the
+ * jersey-deep-tinted ground, where the same `outline-jersey-deep` ring has
+ * the least contrast to spare.
  */
 export const FocusedRow: Story = {
   args: { ...baseProps, matches: sparseMatches, events: sparseEvents },
@@ -228,16 +231,41 @@ export const FocusedRow: Story = {
 };
 
 /**
+ * The same focus treatment on `AgendaEventRow`'s `bg-jersey-deep/6` ground —
+ * the one row type tinted before the fill/outline is ever applied. Exists to
+ * prove `outline-jersey-deep` still reads once the fill deepens that tint to
+ * `/12`, the way `<MatchStripView>` swaps to `outline-cream` on its own dark
+ * ground (`MatchStripView.tsx`) rather than assuming one ring colour works
+ * everywhere.
+ */
+export const FocusedEventRow: Story = {
+  args: { ...baseProps, matches: [], events: sparseEvents },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [firstRow] = canvas.getAllByTestId("agenda-event-row");
+    firstRow.focus();
+  },
+};
+
+/**
  * Documents the hover fill: the row deepens toward `cream-soft` instead of
- * pressing down, so a dense day never reads as coming apart. Mirrors
- * `<TicketStub>`'s `Hover` story — the hovered state can't be triggered by
- * the static VR runner (synthetic events don't trigger CSS `:hover`), and
- * the fill itself is asserted in `CalendarAgenda.test.tsx`.
+ * pressing down, so a dense day never reads as coming apart. The fill
+ * itself is asserted in `CalendarAgenda.test.tsx`; the identical
+ * `focus-visible` version of it is captured deterministically by
+ * `FocusedRow` above.
  */
 export const HoveredRow: Story = {
   args: { ...baseProps, matches: sparseMatches, events: sparseEvents },
   parameters: {
-    // vr.disable: see the docblock above — no real pointer in a story play().
+    // vr.disable: hovered state can't be triggered by the static screenshot
+    //   runner — `userEvent.hover()` only dispatches mouseenter/mouseover,
+    //   it doesn't move a real pointer, so CSS `:hover` never actually
+    //   engages. Open this story in Storybook and hover a row by hand to
+    //   see the fill.
+    // Repro: render HoveredRow, observe an identical-to-Default capture;
+    //   move a real mouse over a row in the Storybook UI to see the fill.
+    // Approved by: PR #2794 code review (mirrors <TicketStub>'s Hover story)
+    // Re-evaluate: when a pseudo-state VR helper lands repo-wide.
     vr: { disable: true },
   },
 };
