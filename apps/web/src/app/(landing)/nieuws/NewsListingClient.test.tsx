@@ -470,6 +470,58 @@ describe("NewsListingClient", () => {
     expect(pushStateSpy).not.toHaveBeenCalled();
   });
 
+  it("narrows a stale/bogus ?categorie= from back/forward instead of handing it to fetchArticles raw (PR #2783 review, finding 4)", async () => {
+    mockFetchArticles.mockResolvedValueOnce({
+      items: [makeArticle({ id: "j1", title: "Jeugd Article" })],
+      hasMore: false,
+    });
+
+    render(
+      <NewsListingClient
+        initialArticles={[makeArticle({ id: "a1", title: "Article One" })]}
+        categories={categories}
+        hasMore={false}
+        fetchArticles={mockFetchArticles}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Jeugd" }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { name: /^Jeugd Article\.?$/ }),
+      ).toBeInTheDocument(),
+    );
+
+    // A category since renamed or removed — nothing in `categories` matches
+    // it. The raw, unnarrowed slug must never reach fetchArticles.
+    mockFetchArticles.mockResolvedValueOnce({
+      items: [makeArticle({ id: "a2", title: "All Article" })],
+      hasMore: false,
+    });
+    window.history.pushState({}, "", "/nieuws?categorie=Verwijderd");
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { name: /^All Article\.?$/ }),
+      ).toBeInTheDocument(),
+    );
+    expect(mockFetchArticles).toHaveBeenLastCalledWith(
+      expect.objectContaining({ category: undefined }),
+    );
+
+    // Internal state landed on "all", consistent with what rendered — a
+    // subsequent "Toon alles" click (a no-op, since it's already showing
+    // "all") must not be needed to reach a coherent state, and the "Alles"
+    // tab reflects it.
+    expect(screen.getByRole("button", { name: "Alles" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
   it("shows loading indicator while fetching", async () => {
     // Make fetchArticles hang
     let resolvePromise: (value: unknown) => void;
