@@ -85,6 +85,36 @@ describe("Sanity image CDN optimization", () => {
     });
   }
 
+  it("staff photo (TEAM_BY_SLUG_QUERY) never over-fetches past the player photo's own width — amendment #2485", () => {
+    // The old `w=200` (sized for the 64px circle #2477 deleted) shipped
+    // every staff photo visibly softer than the player photo beside it on
+    // the shared 3:4 <PlayerCard>. Derived, not restated as a literal: a
+    // change to either query's width keeps this test meaningful instead of
+    // silently going stale.
+    const widthOf = (projection: string) => {
+      const match = projection.match(/w=(\d+)/);
+      return match ? Number(match[1]) : null;
+    };
+
+    const playerWidth = widthOf(
+      findImageUrlProjections(PLAYERS_QUERY).find(
+        (p) => p.field === "psdImageUrl",
+      )!.projection,
+    );
+    const staffWidth = widthOf(
+      findImageUrlProjections(TEAM_BY_SLUG_QUERY).find(
+        (p) => p.field === "photoUrl",
+      )!.projection,
+    );
+
+    expect(playerWidth).not.toBeNull();
+    expect(staffWidth).not.toBeNull();
+    // Widened well past the deleted circle's 200px floor…
+    expect(staffWidth!).toBeGreaterThan(200);
+    // …but never past the resolution the player photo itself fetches at.
+    expect(staffWidth!).toBeLessThanOrEqual(playerWidth!);
+  });
+
   it("fileUrl fields are NOT modified", () => {
     const queriesWithFiles = [
       TEAM_BY_SLUG_QUERY,

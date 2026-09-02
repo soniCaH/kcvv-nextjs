@@ -17,7 +17,6 @@ import { sanityClient } from "../sanity/client";
 import {
   TeamRepository,
   TeamRepositoryLive,
-  TEAM_BY_SLUG_QUERY,
   type TeamNavVM,
   type StaffMemberVM,
   type YouthTeamForContactVM,
@@ -107,17 +106,9 @@ describe("TeamRepository", () => {
   });
 
   describe("findBySlug", () => {
-    // Amendment #2485: the staff photo projection must match the player
-    // photo's width (`w=400`, `player.repository.ts:17`'s `psdImageUrl`) or
-    // every staff photo on the shared 3:4 <PlayerCard> ships visibly softer
-    // than the player photo beside it — the card is ~190px CSS, ~380px on a
-    // 2x screen, and the pre-#2575 `w=200` was sized for the 64px circle
-    // #2477 deleted.
-    it("projects the staff photo at the same width as the player photo (#2485)", () => {
-      expect(TEAM_BY_SLUG_QUERY).toContain(
-        '"photoUrl": photo.asset->url + "?w=400&q=80&fm=webp&fit=max"',
-      );
-    });
+    // The staff photo projection's CDN params (amendment #2485) are
+    // asserted in image-cdn-params.test.ts, derived from PLAYERS_QUERY's
+    // own width rather than restated as a literal here.
 
     // The generated type is `{ ... } | null`, so we need the non-null shape
     type TeamDetailRow = Exclude<TEAM_BY_SLUG_QUERY_RESULT, null>;
