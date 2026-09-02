@@ -6,7 +6,7 @@ import {
   FilterTabs,
   type FilterTab,
 } from "@/components/design-system";
-import { useFilterParam } from "@/hooks/useFilterParam";
+import { useHistoryFilterParam } from "@/hooks/useHistoryFilterParam";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import { filteredEmptyBody } from "@/lib/utils/empty-state-copy";
 import { EventMonthList } from "../EventMonthList";
@@ -55,7 +55,7 @@ export interface EventsBrowserProps {
  * stays visible against the dark field (round 3 review, A1: the default
  * hard ink shadow is invisible on this ground).
  *
- * The active facet is driven by `useFilterParam` in `"history"` mode —
+ * The active facet is driven by `useHistoryFilterParam` —
  * `window.history.pushState`, never `useSearchParams` / `router.push`
  * (#2564 review item 2, #2779). This component used to read the URL with
  * `useSearchParams`, which on this static/ISR route forced Next to bail the
@@ -85,16 +85,16 @@ export interface EventsBrowserProps {
  * `groupEventsByMonth` only buckets the events `<EventMonthList>` receives.
  */
 export function EventsBrowser({ events }: EventsBrowserProps) {
-  const [selected, setSelected] = useFilterParam<EventFilterValue>(
+  const [selected, setSelected] = useHistoryFilterParam<EventFilterValue>(
     TYPE_PARAM,
     EVENT_TYPE_ORDER,
-    { fallback: "all", route: "/evenementen", writeVia: "history" },
+    { fallback: "all", route: "/evenementen" },
   );
   const isGenuinelyEmpty = events.length === 0;
 
   // Dedup guard: re-pressing the active chip is a no-op, so neither the URL
   // push nor analytics fire twice for the same selection (repo analytics
-  // policy) — `useFilterParam`'s own internal dedup guard covers the URL
+  // policy) — `useHistoryFilterParam`'s own internal dedup guard covers the URL
   // write, but the analytics call is this component's own side effect, so
   // it needs its own guard too.
   const handleSelect = (value: EventFilterValue) => {
