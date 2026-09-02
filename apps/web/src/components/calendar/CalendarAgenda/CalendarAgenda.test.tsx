@@ -125,6 +125,40 @@ describe("CalendarAgenda", () => {
     );
   });
 
+  // List Row Fill Rule (DESIGN.md § Motion) — a hovered list row fills
+  // rather than moves, and keyboard focus gets the same non-motion,
+  // inset-outline treatment `<MatchStripView>` already uses for its own
+  // flush row list, so the affordance is never mouse-only (#2624).
+  it("gives the match row a hover fill and a matching inset focus-visible outline, never a translate", () => {
+    render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[makeMatch({ id: 1 })]}
+        events={[]}
+      />,
+    );
+    const matchRow = screen.getByTestId("agenda-match-row");
+    expect(matchRow.className).toContain("hover:bg-cream-soft/50");
+    expect(matchRow.className).toContain("focus-visible:outline-offset-[-2px]");
+    expect(matchRow.className).toContain("focus-visible:outline-jersey-deep");
+    expect(matchRow.className).not.toContain("translate");
+  });
+
+  it("gives the event row a matching inset focus-visible outline alongside its existing hover fill", () => {
+    render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[]}
+        events={[makeEvent({ id: "e1" })]}
+      />,
+    );
+    const eventRow = screen.getByTestId("agenda-event-row");
+    expect(eventRow.className).toContain("hover:bg-jersey-deep/12");
+    expect(eventRow.className).toContain("focus-visible:outline-offset-[-2px]");
+    expect(eventRow.className).toContain("focus-visible:outline-jersey-deep");
+    expect(eventRow.className).not.toContain("translate");
+  });
+
   it("renders a pitch-reservation placeholder as a reduced row — no opponent, no link (#2606, #2688)", () => {
     // The bug this closes: before #2688, AgendaMatchRow rendered
     // `match.homeTeam.name — match.awayTeam.name` unconditionally, so a
