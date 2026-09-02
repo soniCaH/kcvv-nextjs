@@ -91,4 +91,29 @@ describe("SiteContents", () => {
     const { container } = render(<SiteContents groups={[]} />);
     expect(container).toBeEmptyDOMElement();
   });
+
+  // #2614: a long index page (this one — ~240 rows across four groups) earns
+  // one chapter break in a warmer, non-semantic paper tint. `nieuws` is the
+  // largest group and sits second in print order, so it is the one section
+  // the page needs to visually set apart from its neighbours.
+  it("chapters the nieuws group in the manila tint and leaves the others on the page ground", () => {
+    const ALL_GROUPS: ContentsGroup[] = [
+      ...GROUPS,
+      { id: "evenementen", title: "Evenementen", entries: [] },
+      { id: "clubpaginas", title: "Clubpagina's", entries: [] },
+    ];
+    render(<SiteContents groups={ALL_GROUPS} />);
+
+    const nieuws = screen
+      .getByRole("heading", { level: 2, name: /Nieuws/ })
+      .closest("section")!;
+    expect(nieuws).toHaveClass("bg-manila");
+
+    for (const title of ["Ploegen", "Evenementen", "Clubpagina's"]) {
+      const section = screen
+        .getByRole("heading", { level: 2, name: new RegExp(title) })
+        .closest("section")!;
+      expect(section).not.toHaveClass("bg-manila");
+    }
+  });
 });

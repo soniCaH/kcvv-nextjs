@@ -30,6 +30,13 @@ export interface SiteContentsProps {
  * With no groups the component renders nothing at all: `/inhoud` is derived
  * from the content platform, so an empty site is an empty page rather than a
  * page of authored placeholders.
+ *
+ * **One chapter break (#2614).** `/inhoud` is the long index page the
+ * manila tint (`bg-manila`, DESIGN.md → Colors → Neutral) exists for — index
+ * pages only, once per page. `nieuws` is the largest group and the second in
+ * print order, so it is the one section given the warmer stock; the other
+ * three keep the page's own cream ground, the same "literal class string per
+ * site" mechanism `bg-cream-soft` already uses (#2571) — no new `ground` prop.
  */
 export function SiteContents({ groups }: SiteContentsProps) {
   if (groups.length === 0) return null;
@@ -40,7 +47,12 @@ export function SiteContents({ groups }: SiteContentsProps) {
     // group carrying air the page container already supplies.
     <div className="flex flex-col gap-12 sm:gap-16">
       {groups.map((group) => (
-        <section key={group.id}>
+        <section
+          key={group.id}
+          className={
+            group.id === "nieuws" ? "bg-manila py-12 sm:py-16" : undefined
+          }
+        >
           <div className="border-ink flex items-baseline justify-between gap-4 border-b-2 pb-2">
             <EditorialHeading level={2} size="display-sm">
               {group.title}
