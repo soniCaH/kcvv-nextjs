@@ -13,6 +13,7 @@ import {
   MATCH_KIND_WORD,
   OUTCOME_UNDERLINE,
   OUTCOME_WORD,
+  OUTCOME_WORD_FULL,
   reservationRowLabel,
   reservationView,
   type MatchRowKind,
@@ -320,7 +321,9 @@ function StripDate({
    * mobile ledger row shows the opponent alone (no second club, no venue
    * tag), so per the placement rule at `OUTCOME_WORD`'s docblock it is one
    * of the two surfaces that must name the outcome rather than stay quiet.
-   * `null` for the fixture row, which is never settled.
+   * `null` for the fixture row, which is never settled, and on the
+   * match-day ground — #2512 didn't ask for the dark ledger to change, so
+   * `dark` keeps reading the plain `MATCH_KIND_WORD[kind]` it always did.
    */
   outcomeWord?: string | null;
 }) {
@@ -397,11 +400,28 @@ function LedgerLinkRow({
     ? MATCH_DAY_WORD.toLowerCase()
     : formatMatchWidgetDate(match.date);
 
-  // The outcome word (#2512/#2656) — only ever reachable for a settled
-  // result, so it's `null` for the fixture row (`kind === "fixture"` is
-  // never settled) without needing a separate `kind` gate here.
+  // The outcome word (#2512/#2656) — `null` for the fixture row
+  // (`kind === "fixture"` is never settled) and on the match-day ground:
+  // #2512 asked for the light-ground ledger to name a settled result, not
+  // for the dark match-day ledger to change, so that ground keeps the
+  // plain slot word it already had.
+  //
+  // Two spellings, the same split `<TeamAgendaRow>` makes (#2656 review):
+  // `OUTCOME_WORD` ("Gelijk") is the fixed-width caption register, read
+  // into `<StripDate>`'s `w-14` stub below; `OUTCOME_WORD_FULL`
+  // ("Gelijkspel") has no column to protect and feeds the `aria-label`
+  // instead. `win`/`loss` are identical between the two, so `leadWord*`
+  // only actually diverges on a draw.
   const outcome = isSettledMatch(match.status) ? outcomeOf(match) : null;
-  const outcomeWord = outcome ? OUTCOME_WORD[outcome] : null;
+  const outcomeWordVisual = !matchDay && outcome ? OUTCOME_WORD[outcome] : null;
+  const outcomeWordA11y =
+    !matchDay && outcome ? OUTCOME_WORD_FULL[outcome] : null;
+  // `leadWordA11y` (below) and `<StripDate>`'s own `outcomeWord ??
+  // MATCH_KIND_WORD[kind]` fallback (eight lines below) are the two single
+  // sources — one per register — this label and the visible stub each read,
+  // so neither can drift into an independently-gated copy the way #2404
+  // already had to fix once for the plain slot word.
+  const leadWordA11y = outcomeWordA11y ?? MATCH_KIND_WORD[kind];
 
   // The match-day ground's decided tokens (#2616 review) — one named pair per
   // concern, mirroring `<TeamAgendaRow>`'s `monoClass`/`stubBorder` for its
@@ -426,16 +446,14 @@ function LedgerLinkRow({
         ? `${homeScore} - ${opponent.name} ${awayScore}`
         : `${awayScore} - ${opponent.name} ${homeScore}`
       : null;
-  // The words come from `MATCH_KIND_WORD`, the same source `<StripDate>` renders
-  // eight lines below — the visible stub and the accessible name for one row
-  // were two independent copies of "Uitslag" / "Volgende" until #2404, which is
-  // the drift the constant exists to end.
+  // `leadWordA11y` — see its declaration above for why this reads the full
+  // register rather than `leadWordVisual`.
   const label =
     kind === "result"
       ? scored
-        ? `${MATCH_KIND_WORD.result} ${dateLabel}: KCVV Elewijt ${scored}`
-        : `${MATCH_KIND_WORD.result} ${dateLabel}: KCVV Elewijt tegen ${opponent.name}`
-      : `${MATCH_KIND_WORD.fixture} wedstrijd ${dateLabel}${match.time ? ` om ${match.time}` : ""}: KCVV Elewijt tegen ${opponent.name}`;
+        ? `${leadWordA11y} ${dateLabel}: KCVV Elewijt ${scored}`
+        : `${leadWordA11y} ${dateLabel}: KCVV Elewijt tegen ${opponent.name}`
+      : `${leadWordA11y} wedstrijd ${dateLabel}${match.time ? ` om ${match.time}` : ""}: KCVV Elewijt tegen ${opponent.name}`;
 
   return (
     <Link
@@ -461,7 +479,7 @@ function LedgerLinkRow({
         kind={kind}
         today={today}
         dark={matchDay}
-        outcomeWord={outcomeWord}
+        outcomeWord={outcomeWordVisual}
       />
       <Crest team={opponent} dark={matchDay} />
       <span
