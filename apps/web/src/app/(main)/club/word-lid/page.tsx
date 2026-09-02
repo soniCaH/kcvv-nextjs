@@ -12,7 +12,7 @@ import { SITE_CONFIG } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import { PageContainer } from "@/components/design-system";
+import { PageContainer, UpLink } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
 import { MembershipForm } from "@/components/club/MembershipForm/MembershipForm";
 
@@ -42,11 +42,12 @@ export default function WordLidPage() {
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },
-          { name: "Club", url: `${SITE_CONFIG.siteUrl}/club` },
+          { name: "De club", url: `${SITE_CONFIG.siteUrl}/club` },
           { name: "Word lid", url: `${SITE_CONFIG.siteUrl}/club/word-lid` },
         ])}
       />
       <PageContainer width="prose">
+        <UpLink href="/club" label="De club" className="mb-6" />
         <PageHero
           register="minimal"
           kicker="Sluit je aan"

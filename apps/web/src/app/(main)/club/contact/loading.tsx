@@ -19,10 +19,10 @@ import {
   StripedSeam,
   Skeleton,
   LoadingAnnouncement,
+  UpLink,
 } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
 import {
-  CONTACT_KICKER,
   CONTACT_HEADLINE,
   CONTACT_LEAD,
 } from "@/components/club/ContactPage/contact-copy";
@@ -45,13 +45,11 @@ export default function ContactLoading() {
     <div className="bg-cream min-h-screen">
       <LoadingAnnouncement label="Contactpagina laden…" />
 
-      {/* PageHero — real, unshimmered (fixed copy). */}
+      {/* PageHero + up-link — real, unshimmered (fixed copy / a fixed
+          per-route fact, neither is data). */}
       <PageContainer className="pt-10 pb-12">
-        <PageHero
-          kicker={CONTACT_KICKER}
-          headline={CONTACT_HEADLINE}
-          lead={CONTACT_LEAD}
-        />
+        <UpLink href="/club" label="De club" className="mb-6" />
+        <PageHero headline={CONTACT_HEADLINE} lead={CONTACT_LEAD} />
       </PageContainer>
 
       <StripedSeam colorPair="ink-cream" height="md" />

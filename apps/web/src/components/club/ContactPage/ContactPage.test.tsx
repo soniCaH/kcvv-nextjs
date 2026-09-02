@@ -20,12 +20,20 @@ const KEY_CONTACTS: KeyContactVM[] = [
 ];
 
 describe("ContactPage — hero", () => {
-  it("renders the PageHero with the 'Contact' headline and 'Club' kicker", () => {
+  it("renders the PageHero with the 'Contact' headline and no kicker", () => {
     render(<ContactPage />);
     expect(
       screen.getByRole("heading", { level: 1, name: /contact/i }),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("page-hero-kicker")).toHaveTextContent("Club");
+    // No kicker: the up-link above already names the parent (#2442 rule 6).
+    expect(screen.queryByTestId("page-hero-kicker")).not.toBeInTheDocument();
+  });
+
+  it("renders the up-link to /club above the hero", () => {
+    render(<ContactPage />);
+    const upLink = screen.getByTestId("up-link");
+    expect(upLink).toHaveAttribute("href", "/club");
+    expect(upLink).toHaveTextContent("De club");
   });
 });
 

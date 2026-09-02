@@ -17,6 +17,7 @@ vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
+  usePathname: () => "/club/downloads",
 }));
 
 const mockFindBySlug = vi.fn<(slug: string) => Effect.Effect<PageVM | null>>();
@@ -75,9 +76,9 @@ describe("/club/[slug] page", () => {
     });
     const { container } = render(page);
 
-    // PageHero renders the title and kicker even without an image
+    // PageHero renders the title; no kicker — the up-link below already
+    // names the parent (#2442 rule 6).
     expect(screen.getByText("Downloads")).toBeInTheDocument();
-    expect(screen.getByText("Club")).toBeInTheDocument();
     // No hero image → typographic state (no img element)
     expect(container.querySelector("img")).not.toBeInTheDocument();
     expect(screen.getByTestId("page-hero")).toHaveAttribute(
@@ -101,13 +102,25 @@ describe("/club/[slug] page", () => {
     });
     render(page);
 
-    // PageHero renders the kicker, title, and the image (split state)
-    expect(screen.getByText("Club")).toBeInTheDocument();
+    // PageHero renders the title and the image (split state)
     expect(screen.getByText("Downloads")).toBeInTheDocument();
     expect(screen.getByTestId("page-hero")).toHaveAttribute(
       "data-state",
       "image",
     );
+  });
+
+  it("renders the up-link to /club above the hero, in place of the dropped kicker", async () => {
+    mockFindBySlug.mockReturnValue(Effect.succeed(makePage()));
+
+    const page = await DynamicClubPage({
+      params: Promise.resolve({ slug: "downloads" }),
+    });
+    render(page);
+
+    const upLink = screen.getByTestId("up-link");
+    expect(upLink).toHaveAttribute("href", "/club");
+    expect(upLink).toHaveTextContent("De club");
   });
 
   it("renders the body through <ArticleBody>", async () => {
@@ -197,6 +210,27 @@ describe("/club/[slug] page", () => {
     expect(
       screen.queryByRole("link", { name: /schrijf je in/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("corrects the breadcrumb JSON-LD parent label from 'Club' to 'De club' (#2570)", async () => {
+    mockFindBySlug.mockReturnValue(Effect.succeed(makePage()));
+
+    const page = await DynamicClubPage({
+      params: Promise.resolve({ slug: "downloads" }),
+    });
+    const { container } = render(page);
+
+    const script = container.querySelector(
+      'script[type="application/ld+json"]',
+    );
+    const data = JSON.parse(script?.innerHTML ?? "{}") as {
+      itemListElement: { name: string }[];
+    };
+    expect(data.itemListElement.map((item) => item.name)).toEqual([
+      "Home",
+      "De club",
+      "Downloads",
+    ]);
   });
 
   it("does not render SanityArticleBody / InteriorPageHero artefacts", async () => {

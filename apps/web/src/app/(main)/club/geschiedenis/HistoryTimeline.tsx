@@ -5,6 +5,7 @@ import { PageContainer } from "@/components/design-system/PageContainer";
 import { TapedCard } from "@/components/design-system/TapedCard";
 import { TapedFigure } from "@/components/design-system/TapedFigure";
 import { PageHero } from "@/components/layout/PageHero";
+import { UpLink } from "@/components/design-system/UpLink";
 
 /**
  * Presentational primitives for the `/club/geschiedenis` chronicle, reskinned
@@ -24,6 +25,7 @@ import { PageHero } from "@/components/layout/PageHero";
 export function HeritageHero() {
   return (
     <PageContainer className="pt-12 sm:pt-16">
+      <UpLink href="/club" label="De club" className="mb-6" />
       <PageHero
         register="minimal"
         kicker="De club · sinds 1909"

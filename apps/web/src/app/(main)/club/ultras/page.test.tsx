@@ -14,6 +14,14 @@ describe("/club/ultras page", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the up-link to /club inside the band", () => {
+    render(<UltrasPage />);
+
+    const upLink = screen.getByTestId("up-link");
+    expect(upLink).toHaveAttribute("href", "/club");
+    expect(upLink).toHaveTextContent("De club");
+  });
+
   it("renders editorial sections below the hero", () => {
     render(<UltrasPage />);
 

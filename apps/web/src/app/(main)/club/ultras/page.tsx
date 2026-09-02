@@ -34,13 +34,16 @@ export default function UltrasPage() {
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },
-          { name: "Club", url: `${SITE_CONFIG.siteUrl}/club` },
+          { name: "De club", url: `${SITE_CONFIG.siteUrl}/club` },
           { name: "Ultras", url: `${SITE_CONFIG.siteUrl}/club/ultras` },
         ])}
       />
 
       <UltrasAnalytics>
-        <UltrasHero joinHref={FACEBOOK_URL} />
+        <UltrasHero
+          joinHref={FACEBOOK_URL}
+          upLink={{ href: "/club", label: "De club" }}
+        />
 
         <PageContainer as="article" className="py-12 sm:py-16">
           <UltrasSection kicker="Ons verhaal" heading="Wie zijn we" accent=".">

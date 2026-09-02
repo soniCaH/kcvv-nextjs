@@ -10,7 +10,7 @@
  * ContactPage — `/club/contact` on the retro-terrace-fanzine system
  * (design contract 10k1, owner-approved 2026-06-15).
  *
- *   <PageHero> (kicker "Club", warm "." headline)
+ *   <UpLink> ("‹ De club") → <PageHero> (no kicker, warm "." headline; #2570)
  *     → <StripedSeam>
  *     → Clubgegevens (paper card: address · e-mail · cross-links) + <MapEmbed>
  *     → "Contacteer ons." — one merged grid of paper cards: dynamic
@@ -38,12 +38,13 @@ import {
   PageContainer,
   StripedSeam,
   TapedCard,
+  UpLink,
 } from "@/components/design-system";
 import { PageHero } from "@/components/layout";
 import { HtmlTableBlock } from "@/components/article/blocks/HtmlTableBlock/HtmlTableBlock";
 import { MapEmbed } from "./MapEmbed";
 import type { KeyContactVM } from "@/lib/repositories/staff.repository";
-import { CONTACT_KICKER, CONTACT_HEADLINE, CONTACT_LEAD } from "./contact-copy";
+import { CONTACT_HEADLINE, CONTACT_LEAD } from "./contact-copy";
 
 interface ContactPageProps {
   keyContacts?: KeyContactVM[];
@@ -182,13 +183,12 @@ export function ContactPage({ keyContacts }: ContactPageProps = {}) {
 
   return (
     <div className="bg-cream min-h-screen">
-      {/* Hero */}
+      {/* Hero — no kicker: the up-link above already names the parent
+          ("‹ De club"), so a "Club" kicker on the same line would say it
+          twice (#2442 rule 6). */}
       <PageContainer className="pt-10 pb-12">
-        <PageHero
-          kicker={CONTACT_KICKER}
-          headline={CONTACT_HEADLINE}
-          lead={CONTACT_LEAD}
-        />
+        <UpLink href="/club" label="De club" className="mb-6" />
+        <PageHero headline={CONTACT_HEADLINE} lead={CONTACT_LEAD} />
       </PageContainer>
 
       <StripedSeam colorPair="ink-cream" height="md" />
