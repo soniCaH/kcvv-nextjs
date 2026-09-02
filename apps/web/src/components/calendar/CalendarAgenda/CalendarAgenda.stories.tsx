@@ -105,6 +105,28 @@ export const Default: Story = {
   args: { ...baseProps, matches: sparseMatches, events: sparseEvents },
 };
 
+/**
+ * A drawn match (#2512/#2656) — the row now reads the shared, ink-muted
+ * `OUTCOME_UNDERLINE.light.draw` band instead of the local copy's
+ * `draw: undefined`. No outcome word is added: `<MatchVenueTag>` already
+ * assigns the score, the same way it does for the win/loss rows beside it.
+ */
+export const DrawResult: Story = {
+  args: {
+    ...baseProps,
+    matches: [
+      match(3, "2026-09-06T15:00:00", "A-ploeg", "SK Londerzeel", {
+        status: "finished",
+        homeScore: 1,
+        awayScore: 1,
+        scoreDisplay: { type: "score", home: 1, away: 1 },
+      }),
+      ...sparseMatches,
+    ],
+    events: sparseEvents,
+  },
+};
+
 export const DenseSaturday: Story = {
   args: { ...baseProps, matches: denseMatches, events: denseEvents },
 };
