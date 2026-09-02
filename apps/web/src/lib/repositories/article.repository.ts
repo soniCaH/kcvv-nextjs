@@ -242,7 +242,9 @@ export type ArticleDetailVM = ARTICLE_BY_SLUG_DETAIL;
 /** A `matchPreview` / `matchRecap` article linked to a PSD match (#1914).
  *  `articleType` is narrowed to the two match variants — the GROQ filter
  *  guarantees the row is one of them at runtime, so consumers
- *  (`selectMatchArticle`) can switch on it without a wider-union guard. */
+ *  (`matchArticlesToRelatedRow`, `lib/utils/article-related-items.ts`,
+ *  #2443/#2581 — the retired `selectMatchArticle`'s successor) can switch
+ *  on it without a wider-union guard. */
 export type MatchArticleVM = Omit<
   MATCH_ARTICLES_QUERY_RESULT[number],
   "title" | "slug" | "articleType"

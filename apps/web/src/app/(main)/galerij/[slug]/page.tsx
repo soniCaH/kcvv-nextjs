@@ -140,20 +140,31 @@ export default async function GalleryDetailPage({ params }: GalleryPageProps) {
   // Domain tier (#2443 rule 4): the event this gallery documents — bounded
   // (at most one) and defining. `linkedMatch` (a bare string) deliberately
   // has no equivalent here — see `GALLERY_BY_SLUG_QUERY`'s docblock.
-  const domainItems: RelatedRowItem[] = gallery.linkedEvent
+  // `title`/`slug` are both `coalesce(..., "")` in the query, so an event
+  // with a missing slug must be guarded here the same way
+  // `mapCuratedEntry`'s own event branch already does (review round 1,
+  // #2788) — otherwise it renders an empty-titled card linking to the
+  // `/evenementen` archive instead of a specific event.
+  const linkedEvent =
+    gallery.linkedEvent &&
+    gallery.linkedEvent.slug !== "" &&
+    gallery.linkedEvent.title !== ""
+      ? gallery.linkedEvent
+      : null;
+  const domainItems: RelatedRowItem[] = linkedEvent
     ? [
         {
-          title: gallery.linkedEvent.title,
-          href: `/evenementen/${gallery.linkedEvent.slug}`,
-          imageUrl: gallery.linkedEvent.coverImageUrl ?? undefined,
+          title: linkedEvent.title,
+          href: `/evenementen/${linkedEvent.slug}`,
+          imageUrl: linkedEvent.coverImageUrl ?? undefined,
           badge: "EVENEMENT",
-          date: gallery.linkedEvent.dateStart
-            ? formatArticleDate(gallery.linkedEvent.dateStart)
+          date: linkedEvent.dateStart
+            ? formatArticleDate(linkedEvent.dateStart)
             : undefined,
-          analyticsId: gallery.linkedEvent.id,
+          analyticsId: linkedEvent.id,
           analyticsSource: "domain",
           analyticsType: "event",
-          analyticsTargetSlug: gallery.linkedEvent.slug,
+          analyticsTargetSlug: linkedEvent.slug,
         },
       ]
     : [];

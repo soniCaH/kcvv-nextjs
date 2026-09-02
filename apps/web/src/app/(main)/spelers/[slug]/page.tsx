@@ -36,7 +36,6 @@ import { runPromise } from "@/lib/effect/runtime";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { PlayerRepository } from "@/lib/repositories/player.repository";
 import { ArticleRepository } from "@/lib/repositories/article.repository";
-import { TeamRepository } from "@/lib/repositories/team.repository";
 import { degradeSection } from "@/lib/effect/degrade";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd, buildPersonJsonLd } from "@/lib/seo/jsonld";
@@ -143,43 +142,42 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
   // "Blijf nog even hangen." is a section, not the subject (#2433 rule 3),
   // and its absence asserts nothing — the visitor was never promised a
   // read-next row — so it auto-hides rather than announcing the failure
-  // (rule 4). Two independent reads, run together (#2441): the player's own
-  // team(s) (domain tier, #2443 rule 4 — bounded + defining) and articles
-  // that mention this player (reference tier).
-  const [ownTeams, relatedArticles] = await Promise.all([
-    runPromise(
-      degradeSection(
-        Effect.gen(function* () {
-          const repo = yield* TeamRepository;
-          return yield* repo.findByMemberId(player.id);
-        }),
-        [],
-        "[spelers/[slug]] own-team lookup failed; rendering without the RelatedRow team card.",
-      ),
+  // (rule 4). Only one read left here: `PLAYER_BY_PSD_ID_QUERY` already
+  // resolves the player's own team (`player.teamId`/`teamSlug`/
+  // `teamImageUrl`) in the fetch above via the byte-identical
+  // `references()` subquery `TeamRepository.findByMemberId` runs — a
+  // second serial round-trip just to pick up `teamImageUrl` was redundant
+  // (review round 1, #2788). `/staf/[slug]` still needs its own call: staff
+  // has no equivalent projection.
+  const relatedArticles = await runPromise(
+    degradeSection(
+      Effect.gen(function* () {
+        const repo = yield* ArticleRepository;
+        return yield* repo.findRelated(player.id);
+      }),
+      [],
+      "[spelers/[slug]] related-articles lookup failed; rendering without the RelatedRow.",
     ),
-    runPromise(
-      degradeSection(
-        Effect.gen(function* () {
-          const repo = yield* ArticleRepository;
-          return yield* repo.findRelated(player.id);
-        }),
-        [],
-        "[spelers/[slug]] related-articles lookup failed; rendering without the RelatedRow.",
-      ),
-    ),
-  ]);
+  );
 
-  const domainItems: RelatedRowItem[] = ownTeams.map((team) => ({
-    title: team.displayName,
-    href: `/ploegen/${team.slug}`,
-    imageUrl: team.teamImageUrl ?? undefined,
-    artefact: team.teamImageUrl ? undefined : { kind: "team" as const },
-    badge: "PLOEG",
-    analyticsId: team.id,
-    analyticsSource: "domain",
-    analyticsType: "team",
-    analyticsTargetSlug: team.slug,
-  }));
+  const domainItems: RelatedRowItem[] =
+    player.teamId && player.teamSlug
+      ? [
+          {
+            title: player.teamLabel ?? "",
+            href: `/ploegen/${player.teamSlug}`,
+            imageUrl: player.teamImageUrl,
+            artefact: player.teamImageUrl
+              ? undefined
+              : { kind: "team" as const },
+            badge: "PLOEG",
+            analyticsId: player.teamId,
+            analyticsSource: "domain",
+            analyticsType: "team",
+            analyticsTargetSlug: player.teamSlug,
+          },
+        ]
+      : [];
 
   const relatedRowItems = mergeRelatedRow({
     domain: domainItems,

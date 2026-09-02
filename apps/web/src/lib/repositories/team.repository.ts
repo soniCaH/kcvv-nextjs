@@ -36,15 +36,22 @@ export const TEAM_BY_SLUG_QUERY =
 }`);
 
 // Reverse relation for the domain tier of `<RelatedRow>` (#2443/#2581): every
-// non-archived team whose `players[]` or `staff[].member` references
-// `$memberId`. One query serves both directions — GROQ's `references()`
-// scans the whole document tree, so it matches `players[]->` (a plain array
-// of references) exactly the same way it matches the nested
+// non-archived, nav-visible team whose `players[]` or `staff[].member`
+// references `$memberId`. One query serves both directions — GROQ's
+// `references()` scans the whole document tree, so it matches `players[]->`
+// (a plain array of references) exactly the same way it matches the nested
 // `staff[].member->` reference, with no need for a second query per caller.
 // Bounded (a member plays for 1–2 teams) and defining (#2443 rule 4) —
 // `teamImageUrl` is already selected so the card never needs a second fetch.
+//
+// `showInNavigation != false` matches every other team-listing query
+// (`TEAMS_QUERY`, `TEAMS_LANDING_QUERY`, `app/sitemap.ts`) — the flag is
+// club-wide, not nav-only (it already gates search/ICS/`/kalender`/the BFF's
+// `getNextMatches`), so a deliberately hidden team (e.g. `showInNavigation:
+// false`) must not resurface as a "PLOEG" card on a member's own profile
+// (review round 1, #2788).
 export const TEAMS_BY_MEMBER_QUERY =
-  defineQuery(`*[_type == "team" && archived != true && references($memberId)] | order(name asc) {
+  defineQuery(`*[_type == "team" && archived != true && showInNavigation != false && references($memberId)] | order(name asc) {
   _id, name, displayName, "slug": slug.current, tagline,
   "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5))
 }`);

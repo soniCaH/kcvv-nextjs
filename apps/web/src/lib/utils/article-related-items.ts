@@ -322,21 +322,28 @@ export function eventVMsToSiblingItems(
  * truth table (#2443 resolution) — both linked articles simply become two
  * items in the merged list rather than one hero card plus an inline
  * secondary link.
+ *
+ * Built directly as `RelatedRowItem`s rather than routed through
+ * `mapRelatedItem`'s generic `"article"` case, which hardcodes `badge:
+ * "NIEUWS"` — a finished match with both a preview and a recap would
+ * otherwise render two identical "NIEUWS" cards with no way to tell them
+ * apart (review round 1, #2788). Mirrors the retired `selectMatchArticle`'s
+ * `RECAP_KICKER` / `PREVIEW_KICKER` distinction.
  */
 export function matchArticlesToRelatedRow(
   articles: readonly MatchArticleVM[],
 ): RelatedRowItem[] {
-  const items: RelatedArticleItem[] = articles.map((a) => ({
-    type: "article",
-    source: "domain",
-    id: a.id,
+  return articles.map((a) => ({
     title: a.title,
-    slug: a.slug,
-    imageUrl: a.coverImageUrl,
-    date: a.publishedAt,
-    excerpt: null,
+    href: `/nieuws/${a.slug}`,
+    imageUrl: a.coverImageUrl ?? undefined,
+    badge: a.articleType === "matchRecap" ? "VERSLAG" : "VOORBESCHOUWING",
+    date: a.publishedAt ? formatArticleDate(a.publishedAt) : undefined,
+    analyticsId: a.id,
+    analyticsSource: "domain",
+    analyticsType: "article",
+    analyticsTargetSlug: a.slug,
   }));
-  return mapRelatedToRelatedRow(items);
 }
 
 /**

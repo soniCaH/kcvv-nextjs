@@ -54,7 +54,6 @@ import { TeamEditorial } from "@/components/team/TeamEditorial";
 import { SponsorsSection } from "@/components/home/SponsorsSection";
 import { RelatedRow } from "@/components/related/RelatedRow";
 import { mergeRelatedRow } from "@/components/related/mergeRelatedRow";
-import type { RelatedRowItem } from "@/components/related/types";
 import { articleVMsToRelatedRowItems } from "@/lib/utils/article-related-items";
 import { TeamRepository } from "@/lib/repositories/team.repository";
 import { hasRenderableBioContent } from "@/lib/portable-text/findPullquoteText";
@@ -332,31 +331,18 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
   const analyticsParams = { team_slug: slug };
 
-  // Domain tier (#2443 rule 4): the team's own fixture list is bounded (one
-  // destination) and defining (it says what this team's competitive
-  // schedule is) — but only when `#wedstrijden` itself has something to
-  // show; linking to an empty fixture-list page would fail rule 4's
-  // "defining" half. There is no Sanity document behind this destination
-  // (it's a route, `/ploegen/[slug]/wedstrijden`), so the card is built
-  // directly rather than through the `RelatedContentItem` union — see
-  // `<RelatedRow>`'s docblock.
-  const domainItems: RelatedRowItem[] = showWedstrijden
-    ? [
-        {
-          title: `Wedstrijden — ${displayName}`,
-          href: `/ploegen/${slug}/wedstrijden`,
-          artefact: { kind: "team" as const },
-          badge: "PLOEG",
-          analyticsId: `${team.id}-wedstrijden`,
-          analyticsSource: "domain",
-          analyticsType: "team",
-          analyticsTargetSlug: `${slug}/wedstrijden`,
-        },
-      ]
-    : [];
-
+  // #2443 rule 4 originally put the team's own fixture-list route
+  // (`/ploegen/[slug]/wedstrijden`) in the domain tier here. Dropped (review
+  // round 1, #2788): it has no Sanity document behind it, so the card was a
+  // synthetic `RelatedRowItem` whose `analyticsTargetSlug` embedded a `/`
+  // (`${slug}/wedstrijden`) — breaking the "slug for every type except
+  // players" contract every other card in the row honours — AND it
+  // duplicated the `#wedstrijden` section + its section-nav chip already
+  // rendered on this same page, both gated on the identical
+  // `showWedstrijden` flag. No domain items remain for this route; the row
+  // runs on the reference tier alone.
   const relatedRowItems = mergeRelatedRow({
-    domain: domainItems,
+    domain: [],
     curated: [],
     reference: articleVMsToRelatedRowItems(relatedArticles),
     semantic: [],

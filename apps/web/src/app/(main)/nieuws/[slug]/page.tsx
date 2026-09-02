@@ -39,6 +39,10 @@ import {
 } from "@/components/article/EditorialHero";
 import { MatchGoalsBlock } from "@/components/article/blocks/MatchGoalsBlock";
 import { parsePsdMatchId, toHeroMatchData } from "./utils";
+// Cross-route import: the match fold-in card (#2443/#2581) needs the same
+// title formatting `/wedstrijd/[matchId]` uses for its own hero — no reason
+// to hand-roll a second copy (review round 1, #2788).
+import { formatMatchTitle } from "@/app/(main)/wedstrijd/[matchId]/utils";
 import { ArticleMetadata } from "@/components/article/ArticleMetadata";
 import { ArticleBodyMotion } from "@/components/article/ArticleBodyMotion";
 import {
@@ -394,15 +398,21 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // in costs no extra BFF hop, unlike a gallery linking a match would.
   const domainItems: RelatedRowItem[] = [];
   if (isMatchArticle && matchDetail && article.linkedMatch) {
+    // The card's own name, not a call-to-action literal (apps/web/CLAUDE.md's
+    // render-time Writer Rule — review round 1, #2788): every other card in
+    // the row carries the destination's own name, so this one does too.
+    // The artefact follows the KCVV side of the fixture (falling back to the
+    // home team when the side can't be resolved) — it previously always
+    // showed `home_team`, which is the OPPONENT's crest on an away fixture.
+    const kcvvClub =
+      heroMatch?.kcvvSide === "away"
+        ? matchDetail.away_team
+        : matchDetail.home_team;
     domainItems.push({
-      title: "Bekijk de wedstrijd",
+      title: formatMatchTitle(matchDetail),
       href: `/wedstrijd/${article.linkedMatch}`,
       badge: "WEDSTRIJD",
-      artefact: {
-        kind: "club",
-        name: matchDetail.home_team.name,
-        logoUrl: matchDetail.home_team.logo,
-      },
+      artefact: { kind: "club", name: kcvvClub.name, logoUrl: kcvvClub.logo },
       analyticsId: article.linkedMatch,
       analyticsSource: "domain",
       analyticsType: "match",

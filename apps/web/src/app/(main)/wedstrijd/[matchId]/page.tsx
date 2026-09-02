@@ -424,9 +424,18 @@ export default async function MatchPage({ params }: MatchPageProps) {
   // The opponent card links to `/tegenstander/[clubId]` — an internal page,
   // not a Sanity document (opponent clubs have none). No card on a
   // pitch-reservation placeholder (#2606, both sides share KCVV's own club
-  // id) — "the opponent" is meaningless there.
+  // id) — "the opponent" is meaningless there. `/tegenstander/[clubId]`
+  // only ever queries the senior "A" team's opponent history and 404s
+  // (rather than rendering an empty history) when that team has never
+  // played the given club, so the card is additionally gated to a senior
+  // league fixture (review round 1, #2788) — a youth or cup match would
+  // otherwise link straight into a hard 404 on a noindex, off-nav page.
+  const isSeniorLeagueFixture =
+    match.competitionType === "league" && kcvvTeam?.age === "A";
   const opponentClub =
-    !match.is_placeholder && match.home_team.id !== match.away_team.id
+    isSeniorLeagueFixture &&
+    !match.is_placeholder &&
+    match.home_team.id !== match.away_team.id
       ? match.home_team.id === KCVV_CLUB_ID
         ? match.away_team
         : match.away_team.id === KCVV_CLUB_ID
@@ -439,13 +448,13 @@ export default async function MatchPage({ params }: MatchPageProps) {
           title: opponentClub.name,
           href: `/tegenstander/${opponentClub.id}`,
           imageUrl: opponentClub.logo,
+          // `opponentClub.logo` is truthy on the `imageUrl` branch above, so
+          // this artefact fallback only ever runs when it's falsy — no
+          // `logoUrl` to forward (review round 1, #2788); `<Crest>` falls
+          // back to an initialled disc.
           artefact: opponentClub.logo
             ? undefined
-            : {
-                kind: "club" as const,
-                name: opponentClub.name,
-                logoUrl: opponentClub.logo,
-              },
+            : { kind: "club" as const, name: opponentClub.name },
           badge: "TEGENSTANDER",
           analyticsId: String(opponentClub.id),
           analyticsSource: "domain",
