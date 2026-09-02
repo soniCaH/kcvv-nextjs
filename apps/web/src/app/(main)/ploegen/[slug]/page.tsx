@@ -469,7 +469,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
             id="staf"
             className="scroll-mt-[6.5rem] py-10"
           >
-            <TeamStaff staff={staff} />
+            <TeamStaff staff={staff} heading="Staf" />
           </PageContainer>
         </>
       ) : null}

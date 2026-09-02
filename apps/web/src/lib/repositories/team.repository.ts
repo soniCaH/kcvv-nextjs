@@ -31,7 +31,7 @@ export const TEAM_BY_SLUG_QUERY =
     "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",
     "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max"
   },
-  staff[] { role, "member": member-> { _id, psdId, archived, firstName, lastName, functionTitle, "photoUrl": photo.asset->url + "?w=200&q=80&fm=webp&fit=max", "hasBio": count(bio) > 0 } }
+  staff[] { role, "member": member-> { _id, psdId, archived, firstName, lastName, functionTitle, "photoUrl": photo.asset->url + "?w=300&h=400&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(photo.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(photo.hotspot.y, 0.5)), "hasBio": count(bio) > 0 } }
 }`);
 
 export const YOUTH_TEAMS_CONTACT_QUERY =

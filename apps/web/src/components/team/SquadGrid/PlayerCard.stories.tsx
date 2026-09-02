@@ -69,3 +69,44 @@ export const NoPosition: Story = {
     href: "/spelers/126",
   },
 };
+
+/** `garment="coat"` — the staff-document illustration fallback (#2485). */
+export const CoatGarment: Story = {
+  args: {
+    id: "staff-127",
+    firstName: "Karel",
+    lastName: "Coach",
+    position: "Hoofdtrainer",
+    garment: "coat",
+  },
+};
+
+/**
+ * `blendPhoto={false}` — a free-form staff upload skips the newsprint
+ * multiply blend (#2575 review), unlike a standardised PSD headshot.
+ */
+export const UnblendedPhoto: Story = {
+  args: {
+    id: "staff-128",
+    firstName: "Karel",
+    lastName: "Coach",
+    position: "Hoofdtrainer",
+    photoUrl: "/player-fixtures/player-schulz.jpg",
+    blendPhoto: false,
+  },
+};
+
+/**
+ * `linkAffordance` — the resting "Bekijk →" label for a linked card on a
+ * run that mixes linked and unlinked cards (BEST-1, #2575 review).
+ */
+export const LinkAffordance: Story = {
+  args: {
+    id: "staff-129",
+    firstName: "Karel",
+    lastName: "Coach",
+    position: "Hoofdtrainer",
+    href: "/staf/129",
+    linkAffordance: true,
+  },
+};

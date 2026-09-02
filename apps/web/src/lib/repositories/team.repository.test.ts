@@ -106,6 +106,10 @@ describe("TeamRepository", () => {
   });
 
   describe("findBySlug", () => {
+    // The staff photo projection's CDN params (amendment #2485) are
+    // asserted in image-cdn-params.test.ts, derived from PLAYERS_QUERY's
+    // own width rather than restated as a literal here.
+
     // The generated type is `{ ... } | null`, so we need the non-null shape
     type TeamDetailRow = Exclude<TEAM_BY_SLUG_QUERY_RESULT, null>;
 

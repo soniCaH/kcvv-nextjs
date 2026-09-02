@@ -2,9 +2,11 @@
 
 /**
  * ContactCard — the finder's single contact, in the locked **person vocabulary**
- * (7o6c · 4 / reuses the 6.C `<TeamStaff>` idiom): jersey-deep monogram · name
- * first-semibold + last-italic · mono function label · tappable ✉/☎ (only when
- * present). A `position` contact also gets a **"Toon in structuur →"** cross-link
+ * (7o6c · 4 / reuses `<OrgPersonCard>`'s round-avatar idiom — jersey-deep
+ * monogram · name first-semibold + last-italic · mono function label ·
+ * tappable ✉/☎ (only when present), NOT `<TeamStaff>`'s post-#2575 3:4
+ * card, which is a directory of people rather than a chart of positions).
+ * A `position` contact also gets a **"Toon in structuur →"** cross-link
  * that opens the `<MemberDetailPanel>` (handled by the finder via
  * `useHubMemberPanel()`); `team-role` gets a plain "Vind je ploeg →" link.
  *
