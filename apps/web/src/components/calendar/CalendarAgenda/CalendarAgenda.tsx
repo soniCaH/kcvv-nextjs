@@ -12,6 +12,7 @@ import {
   getResultColor,
   isPlayedMatch,
   isReducedMatchRow,
+  isSettledMatch,
   otherClubSide,
   OUTCOME_UNDERLINE,
   reservationView,
@@ -101,8 +102,16 @@ function AgendaMatchRow({ match }: { match: CalendarMatch }) {
   const isPlayed = isPlayedMatch(match.status);
   const hasScore =
     typeof match.homeScore === "number" && typeof match.awayScore === "number";
+  // `isSettledMatch`, not `isPlayed` (#2656 review) — `isPlayedMatch` also
+  // covers `stopped`, and an abandoned match's partial scoreline is not a
+  // result to tint. `<TeamAgendaRow>`'s `computeOutcome` gates the same way
+  // ("Settled, not merely finished" / "`stopped` stays out — nothing is
+  // settled"); this row rendering both the scoreline (via `isPlayed`, which
+  // must still show a stopped match's partial score) and the tint (via
+  // `isSettledMatch`) off two different predicates is deliberate, not a
+  // second drift the shared `OUTCOME_UNDERLINE` record just closed.
   const outcome =
-    isPlayed && hasScore
+    isSettledMatch(match.status) && hasScore
       ? getResultColor(match.homeScore!, match.awayScore!, isHome)
       : null;
   // #2656 — reads the shared `<TeamAgendaRow>`/`<MatchStripView>` record

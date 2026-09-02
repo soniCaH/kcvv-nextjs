@@ -280,6 +280,71 @@ describe("CalendarAgenda", () => {
     expect(row).toHaveTextContent("3 – 1");
   });
 
+  it("tints a settled result's score with the shared outcome band (#2656)", () => {
+    render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[
+          makeMatch({
+            id: 1,
+            status: "finished",
+            homeScore: 3,
+            awayScore: 1,
+            isHome: true,
+          }),
+        ]}
+        events={[]}
+      />,
+    );
+    const score = screen.getByText("3 – 1");
+    expect(score.getAttribute("style") ?? "").toContain("jersey-deep");
+  });
+
+  it("tints a draw with the shared ink-muted band, not the old solid alert copy", () => {
+    render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[
+          makeMatch({
+            id: 1,
+            status: "finished",
+            homeScore: 1,
+            awayScore: 1,
+            isHome: true,
+          }),
+        ]}
+        events={[]}
+      />,
+    );
+    const score = screen.getByText("1 – 1");
+    expect(score.getAttribute("style") ?? "").toContain("ink-muted");
+  });
+
+  // `isPlayedMatch` (which `<TeamAgendaRow>`'s own scoreline gate also uses)
+  // still shows a `stopped` match's partial score — only the *tint* narrows
+  // to `isSettledMatch`, matching `<TeamAgendaRow>`'s `computeOutcome`
+  // (#2656 review: the two surfaces read one shared `OUTCOME_UNDERLINE`
+  // record, but had drifted on which statuses may use it).
+  it("shows an abandoned match's partial score untinted — nothing is settled", () => {
+    render(
+      <CalendarAgenda
+        {...baseProps}
+        matches={[
+          makeMatch({
+            id: 1,
+            status: "stopped",
+            homeScore: 1,
+            awayScore: 1,
+            isHome: true,
+          }),
+        ]}
+        events={[]}
+      />,
+    );
+    const score = screen.getByText("1 – 1");
+    expect(score.getAttribute("style") ?? "").not.toContain("box-shadow");
+  });
+
   describe("kalender_item_click", () => {
     beforeEach(() => vi.clearAllMocks());
 
