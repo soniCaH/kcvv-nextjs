@@ -108,6 +108,13 @@ describe("SiteContents", () => {
       .getByRole("heading", { level: 2, name: /Nieuws/ })
       .closest("section")!;
     expect(nieuws).toHaveClass("bg-manila");
+    // #2793 review: the tint must bleed to the viewport, not clip to the
+    // content column — and the heading/rows must sit inside their own
+    // padded wrapper rather than touching the tint's edge directly.
+    expect(nieuws).toHaveClass("w-screen");
+    const paddedWrapper = nieuws.querySelector<HTMLElement>(":scope > div");
+    expect(paddedWrapper).toHaveClass("px-4");
+    expect(paddedWrapper).toContainElement(nieuws.querySelector("h2"));
 
     for (const title of ["Ploegen", "Evenementen", "Clubpagina's"]) {
       const section = screen
