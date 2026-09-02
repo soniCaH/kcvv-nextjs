@@ -182,7 +182,7 @@ export function isReducedMatchRow(match: ReducedRowInput): boolean {
  */
 export const OUTCOME_UNDERLINE: Record<
   "light" | "dark",
-  Record<MatchOutcome, string | undefined>
+  Record<MatchOutcome, string>
 > = {
   light: {
     win: "inset 0 -9px 0 color-mix(in srgb, var(--color-jersey-deep) 34%, var(--color-cream))",
@@ -197,10 +197,17 @@ export const OUTCOME_UNDERLINE: Record<
 };
 
 /**
- * The word for a settled match's outcome, KCVV-perspective — the label register
- * that names what `OUTCOME_UNDERLINE` above tints. Every surface that renders
- * the underline should be able to reach for the word from here rather than
- * inventing its own.
+ * The word for a settled match's outcome, KCVV-perspective, in its
+ * **fixed-width caption register** — the label that names what
+ * `OUTCOME_UNDERLINE` above tints, sized for a 9px mono caption in a
+ * narrow column (`<MatchStripView>`'s `w-14` mobile-ledger stub;
+ * `<TeamAgendaRow>`'s mobile caption, which #2512 accepted the same
+ * shorter spelling for even though it isn't itself column-constrained,
+ * so the shared constant doesn't fork over one consumer's width). For any
+ * spot that is *not* a fixed-width caption — an `aria-label`, or any other
+ * prose context — use `OUTCOME_WORD_FULL` below instead. Every surface
+ * that renders the underline should be able to reach for one of the two
+ * rather than inventing its own.
  *
  * Nouns, not the share card's verbs. `resolveResultMood`
  * (`components/share/shared/theme.ts`) says "Gewonnen" / "Verloren" because
@@ -231,6 +238,23 @@ export const OUTCOME_UNDERLINE: Record<
 export const OUTCOME_WORD: Record<MatchOutcome, string> = {
   win: "Winst",
   draw: "Gelijk",
+  loss: "Verlies",
+};
+
+/**
+ * `OUTCOME_WORD`'s full-length register, for anywhere the shortened caption
+ * spelling has no column to protect: an `aria-label` (`<TeamAgendaRow>`'s
+ * `buildRowLabel`, `<MatchStripView>`'s `<LedgerLinkRow>` label), or any
+ * other prose context. `win`/`loss` are identical to `OUTCOME_WORD` — only
+ * `draw` differs, "Gelijkspel" rather than the caption's "Gelijk". Reading
+ * `OUTCOME_WORD.draw` into an unconstrained accessible name would leak a
+ * visual-only abbreviation into a register that never needed it — the same
+ * class of mistake `OUTCOME_WORD`'s own docblock above warns against for the
+ * share card, just one hop closer to home.
+ */
+export const OUTCOME_WORD_FULL: Record<MatchOutcome, string> = {
+  win: "Winst",
+  draw: "Gelijkspel",
   loss: "Verlies",
 };
 
