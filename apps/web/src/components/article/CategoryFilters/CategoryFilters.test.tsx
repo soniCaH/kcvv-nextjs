@@ -302,7 +302,12 @@ describe("CategoryFilters", () => {
       const user = userEvent.setup();
       render(<CategoryFilters categories={mockCategories} />);
 
-      // Tab to first link (All tab should be active by default)
+      // The underlying FilterTabs scroll region is now a tab stop itself
+      // (tabIndex=0, #2444/#2476's "every scroll track is keyboard-
+      // reachable") — it precedes the first link in tab order.
+      await user.tab();
+      expect(screen.getByRole("group")).toHaveFocus();
+
       await user.tab();
       const allTab = screen.getByRole("link", { name: /alles/i });
       expect(allTab).toHaveFocus();
