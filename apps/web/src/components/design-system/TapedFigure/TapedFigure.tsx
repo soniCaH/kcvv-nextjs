@@ -4,11 +4,7 @@ import { TapedCard, type TapedCardProps } from "../TapedCard";
 import type { TapeStripProps } from "../TapeStrip/TapeStrip";
 
 export type TapedFigureAspect =
-  | "landscape-16-9"
-  | "landscape-3-2"
-  | "square"
-  | "portrait-3-4"
-  | "auto";
+  "landscape-16-9" | "landscape-3-2" | "square" | "portrait-3-4" | "auto";
 
 export type TapedFigureBg = "cream" | "cream-soft";
 
@@ -34,6 +30,29 @@ export type TapedFigurePadding = "sm" | "none";
  *   the sepia/hue-rotate would shift brand colours).
  */
 export type TapedFigureTint = "newsprint" | "none";
+
+/**
+ * Per-instance overprint opt-in (D9 / T2, #2619).
+ * - `"none"` (default) — no overprint. Untouched photograph (beyond the
+ *   `tint` warm shift, which is independent and orthogonal).
+ * - `"overprint"` — a second plate in the shadows only, via
+ *   `mix-blend-mode: lighten` against `--color-jersey-deep-dark`. Lighten
+ *   takes the per-channel maximum against the plate: a channel already
+ *   above the plate passes through untouched, so faces and mid-tones are
+ *   unaffected and only near-black shadows lift toward dark green.
+ *
+ *   **Caveat — saturated dark kit shifts hue, not just value.** A dark
+ *   *saturated* colour (e.g. a dark red or navy kit in shadow) has some
+ *   channels clamped by the plate and others not, so its hue shifts rather
+ *   than being preserved (`#6b1010` → `#6b3d28`, red toward brown). Look at
+ *   a photo with strong kit colour in shadow before opting a figure in.
+ *
+ *   **Cost — one promoted compositing layer per instance** (a blend-mode
+ *   pseudo-element). Fine on a single article hero; worth watching before
+ *   applying to a card grid, where the layer count multiplies per card.
+ *   Not applied to `NewsCard` for this reason (#2619).
+ */
+export type TapedFigurePrint = "overprint" | "none";
 
 /**
  * **The figure's either-or: a captioned figure needs no alt; an uncaptioned
@@ -72,6 +91,7 @@ export interface TapedFigureProps {
   tape?: TapeStripProps;
   bg?: TapedFigureBg;
   tint?: TapedFigureTint;
+  print?: TapedFigurePrint;
   padding?: TapedFigurePadding;
   className?: string;
 }
@@ -92,6 +112,7 @@ export function TapedFigure({
   tape,
   bg = "cream",
   tint = "newsprint",
+  print = "none",
   padding = "sm",
   className,
 }: TapedFigureProps) {
@@ -100,12 +121,14 @@ export function TapedFigure({
 
   const showFigcaption = Boolean(caption || credit);
 
-  // `data-tint` is read by the global `.taped-figure[data-tint]` rule
-  // in globals.css. Forwarded onto the TapedCard root so the same
-  // element anchors the `> .taped-figure__photo` selectors and the
-  // `::after` grain overlay.
+  // `data-tint` / `data-print` are read by the global
+  // `.taped-figure[data-tint]` / `.taped-figure[data-print="overprint"]`
+  // rules in globals.css. Forwarded onto the TapedCard root so the same
+  // element anchors the `> .taped-figure__photo` selectors, the `::after`
+  // grain overlay, and the overprint pseudo-element.
   const figureAttrs: Record<`data-${string}`, string> = {
     "data-tint": tint,
+    "data-print": print,
   };
 
   return (

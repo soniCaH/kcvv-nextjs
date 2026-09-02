@@ -233,6 +233,44 @@
   mix-blend-mode: multiply;
 }
 
+/* ===== <TapedFigure> overprint (D9 / T2, #2619) =====
+
+   A second plate in the shadows only — `data-print="overprint"` is the
+   per-instance opt-in, following the `data-tint="none"` precedent above.
+   Default is `data-print="none"`: no rule matches, so an un-opted-in
+   figure is byte-for-byte unchanged.
+
+   The operator is `lighten`, never `multiply`. `multiply` is a × b — a
+   white highlight multiplied by the plate becomes the plate colour, so
+   the whole frame goes green. `lighten` takes the PER-CHANNEL maximum
+   against the plate: it does not classify whole pixels — a pixel keeps
+   every channel already above the plate and has only its lower channels
+   raised. A pixel brighter than the plate in all three channels passes
+   through untouched; a near-neutral dark one lands on the plate.
+
+   The plate is `--color-jersey-deep-dark` (#133d28), the DARK plate —
+   never `--color-jersey-deep` (#007c46), which clamps shadowed skin to
+   green and is where the technique starts reading as a fault.
+
+   Scoped to `.taped-figure__photo` (not the outer `.taped-figure` root)
+   so the overlay covers only the photograph, not the cream card frame
+   or caption. Each opted-in instance promotes a compositing layer — fine
+   on a single article hero, worth watching before it is ever applied to
+   a card grid (not done in #2619; see TapedFigureProps.print docblock).
+
+   Source-of-record: docs/research/decision-sheet.md §8 (D9 / T2);
+   docs/design/mockups/research-d-series/d9-overprint.html.
+*/
+
+.taped-figure[data-print="overprint"] > .taped-figure__photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-jersey-deep-dark);
+  mix-blend-mode: lighten;
+  pointer-events: none;
+}
+
 /* Tailwind v4 Theme Configuration */
 @theme {
   /* ===== Color Palette ===== */
