@@ -1,4 +1,4 @@
-import { PlayerCard } from "@/components/team/SquadGrid/PlayerCard";
+import { PlayerCard, PersonCardRun } from "@/components/team/SquadGrid";
 
 export interface TeamStaffMemberData {
   id: string;
@@ -10,8 +10,7 @@ export interface TeamStaffMemberData {
   role?: string | null;
   /**
    * Photo URL (newsprint-treated). Missing → the coat-garment
-   * `<JerseyIllustration>` fallback (#2485), same as `<SquadGrid>`'s
-   * `<PlayerCard>` for a photoless player.
+   * `<JerseyIllustration>` fallback (#2485).
    */
   imageUrl?: string | null;
   /**
@@ -23,6 +22,8 @@ export interface TeamStaffMemberData {
 
 export interface TeamStaffProps {
   staff: readonly TeamStaffMemberData[];
+  /** The run's own word — forwarded to `<PersonCardRun>`'s `label` (#2575 review). "Staf" on the team page, "De leden" on a board page. */
+  heading: string;
 }
 
 // PSD function codes → readable Dutch labels. Mirrors the organigram role codes.
@@ -65,48 +66,29 @@ export function resolveFunctionLabel(
 }
 
 /**
- * `<TeamStaff>` — the staff/board run of the shared person-card directory
- * (#2477 / #2575). Renders on `/ploegen/[slug]` (team staff) and, via
- * `<BestuurPage>`, on `/club/bestuur`, `/club/angels` and
- * `/club/jeugdbestuur` (board members) — a `staffMember` document in every
- * case (`docs/ubiquitous-language.md` → Staff Member: "coaches, board,
- * admin"), so the run's own mono-caps heading reads "Staf" everywhere it
- * renders.
- *
- * Before #2575 this owned a bespoke 64px round-photo-or-monogram card on a
- * `minmax(150px)` grid with no run heading — a byte-for-byte near-clone of
- * `<SquadGrid>`'s `<PlayerCard>` on shell, type and role line, opposite on
- * portrait shape and column count (#2477). Both are now deleted in favour
- * of the shared `<PlayerCard>`, `garment="coat"` (#2485) for the imageless
- * fallback, on `<SquadGrid>`'s exact `minmax(140px,1fr)` grid — the two
- * runs on `/ploegen/[slug]` now break columns identically at every
- * viewport, which is the fault #2477 measured, not merely the round card.
+ * `<TeamStaff>` — one `<PersonCardRun>` of the shared `<PlayerCard>`
+ * (#2477), `garment="coat"` for the imageless fallback (#2485). Renders on
+ * `/ploegen/[slug]` and, via `<BestuurPage>`, on the three board routes.
  */
-export function TeamStaff({ staff }: TeamStaffProps) {
+export function TeamStaff({ staff, heading }: TeamStaffProps) {
   if (staff.length === 0) return null;
 
   return (
-    <section data-testid="team-staff" aria-label="Staf">
-      <h3 className="text-ink-muted border-paper-edge mb-3 border-b pb-1.5 font-mono text-[11px] tracking-[0.1em] uppercase">
-        Staf
-      </h3>
-      <div
-        data-testid="team-staff-grid"
-        className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-4"
-      >
-        {staff.map((member) => (
-          <PlayerCard
-            key={member.id}
-            id={member.id}
-            firstName={member.firstName}
-            lastName={member.lastName}
-            position={resolveFunctionLabel(member.functionTitle, member.role)}
-            photoUrl={member.imageUrl?.trim() || undefined}
-            href={member.href?.trim() || undefined}
-            garment="coat"
-          />
-        ))}
-      </div>
-    </section>
+    <PersonCardRun label={heading} data-testid="team-staff-grid">
+      {staff.map((member) => (
+        <PlayerCard
+          key={member.id}
+          id={member.id}
+          firstName={member.firstName}
+          lastName={member.lastName}
+          position={resolveFunctionLabel(member.functionTitle, member.role)}
+          photoUrl={member.imageUrl?.trim() || undefined}
+          href={member.href?.trim() || undefined}
+          garment="coat"
+          blendPhoto={false}
+          linkAffordance
+        />
+      ))}
+    </PersonCardRun>
   );
 }

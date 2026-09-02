@@ -1,5 +1,6 @@
 import type { PlayerVM } from "@/lib/repositories/player.repository";
 import { PlayerCard } from "./PlayerCard";
+import { PersonCardRun } from "./PersonCardRun";
 
 export interface SquadGridProps {
   players: readonly PlayerVM[];
@@ -54,25 +55,20 @@ export function SquadGrid({ players }: SquadGridProps) {
   return (
     <div data-testid="squad-grid" className="flex flex-col gap-8">
       {groups.map((group) => (
-        <section key={group.label} aria-label={group.label}>
-          <h3 className="text-ink-muted border-paper-edge mb-3 border-b pb-1.5 font-mono text-[11px] tracking-[0.1em] uppercase">
-            {group.label}
-          </h3>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-4">
-            {group.players.map((p) => (
-              <PlayerCard
-                key={p.id}
-                id={p.id}
-                firstName={p.firstName}
-                lastName={p.lastName}
-                position={p.position}
-                jerseyNumber={p.number}
-                photoUrl={p.imageUrl}
-                href={p.href}
-              />
-            ))}
-          </div>
-        </section>
+        <PersonCardRun key={group.label} label={group.label}>
+          {group.players.map((p) => (
+            <PlayerCard
+              key={p.id}
+              id={p.id}
+              firstName={p.firstName}
+              lastName={p.lastName}
+              position={p.position}
+              jerseyNumber={p.number}
+              photoUrl={p.imageUrl}
+              href={p.href}
+            />
+          ))}
+        </PersonCardRun>
       ))}
     </div>
   );

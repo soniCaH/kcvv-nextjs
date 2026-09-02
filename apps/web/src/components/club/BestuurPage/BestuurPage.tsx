@@ -102,7 +102,7 @@ export function BestuurPage({ header, body, staff = [] }: BestuurPageProps) {
           >
             De leden
           </EditorialHeading>
-          <TeamStaff staff={staff} />
+          <TeamStaff staff={staff} heading="De leden" />
         </PageContainer>
       ) : null}
 

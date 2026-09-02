@@ -4,10 +4,16 @@
  * Covers:
  *  - resolveFunctionLabel: code map / passthrough / role-bucket fallback / "Staf"
  *  - Auto-hides (null) when staff empty
- *  - One mono-caps "Staf" heading precedes the run (#2477 rule 3)
- *  - One shared <PlayerCard> per member, garment="coat" (#2477 rule 1, #2485)
- *  - The run's grid matches <SquadGrid>'s column arithmetic (#2477 rule 2)
- *  - Name rhythm (first semibold + last italic) + function caption
+ *  - `heading` drives the run's heading text + accessible name — no baked
+ *    default (#2575 review)
+ *  - One shared <PlayerCard> per member, garment="coat", blendPhoto={false},
+ *    linkAffordance (#2477 rule 1, #2485, #2575 review)
+ *  - Whitespace-only imageUrl/href normalise to absent
+ *  - Resolved function label reaches the card
+ *
+ * Card-level rendering (photo/illustration state, name rhythm, link-vs-div,
+ * the shared grid track) is `<PlayerCard>`'s and `<PersonCardRun>`'s own
+ * test responsibility — not restated here.
  */
 
 import { describe, it, expect } from "vitest";
@@ -80,78 +86,71 @@ const STAFF: TeamStaffMemberData[] = [
 
 describe("TeamStaff", () => {
   it("renders null when staff is empty", () => {
-    const { container } = render(<TeamStaff staff={[]} />);
+    const { container } = render(<TeamStaff staff={[]} heading="Staf" />);
     expect(container.firstChild).toBeNull();
   });
 
-  it("renders one mono-caps 'Staf' heading for the run (#2477 rule 3)", () => {
-    render(<TeamStaff staff={STAFF} />);
-    const headings = screen
-      .getAllByRole("heading", { level: 3 })
-      .map((h) => h.textContent);
-    expect(headings).toEqual(["Staf"]);
-  });
-
-  it("renders the run inside a landmark named 'Staf'", () => {
-    render(<TeamStaff staff={STAFF} />);
-    expect(screen.getByRole("region", { name: "Staf" })).toBeInTheDocument();
+  it("renders `heading` as both the run's heading text and its accessible name — no baked default (#2575 review)", () => {
+    render(<TeamStaff staff={STAFF} heading="De leden" />);
+    expect(screen.getByRole("heading", { level: 3 }).textContent).toBe(
+      "De leden",
+    );
+    expect(
+      screen.getByRole("region", { name: "De leden" }),
+    ).toBeInTheDocument();
   });
 
   it("renders one shared <PlayerCard> per staff member", () => {
-    render(<TeamStaff staff={STAFF} />);
+    render(<TeamStaff staff={STAFF} heading="Staf" />);
     expect(screen.getAllByTestId("player-card")).toHaveLength(2);
   });
 
-  it("matches <SquadGrid>'s auto-fill column arithmetic — minmax(140px,1fr) (#2477 rule 2)", () => {
-    render(<TeamStaff staff={STAFF} />);
-    expect(
-      screen.getByTestId("team-staff-grid").className.replace(/\s+/g, " "),
-    ).toContain("grid-cols-[repeat(auto-fill,minmax(140px,1fr))]");
-  });
-
-  it("renders the photo state when imageUrl is present", () => {
-    render(<TeamStaff staff={STAFF} />);
-    const figures = screen.getAllByTestId("player-card-figure");
-    expect(figures[0]?.getAttribute("data-state")).toBe("photo");
-  });
-
-  it("renders the coat-garment illustration when imageUrl is absent (#2485)", () => {
-    render(<TeamStaff staff={STAFF} />);
-    const figures = screen.getAllByTestId("player-card-figure");
-    expect(figures[1]?.getAttribute("data-state")).toBe("illustration");
+  it("renders the coat-garment illustration, unblended photo, and the link affordance (#2485 / #2575 review)", () => {
+    render(
+      <TeamStaff
+        staff={[{ ...STAFF[0]!, href: "/staf/12345" }, STAFF[1]!]}
+        heading="Staf"
+      />,
+    );
     const illustrations = screen.getAllByTestId("player-card-illustration");
     expect(illustrations[0]?.getAttribute("data-garment")).toBe("coat");
+
+    const photoImg = screen
+      .getAllByTestId("player-card-figure")[0]
+      ?.querySelector("img");
+    expect(photoImg?.className.split(/\s+/)).not.toContain(
+      "mix-blend-multiply",
+    );
+
+    expect(
+      screen.getByTestId("player-card-link-affordance"),
+    ).toBeInTheDocument();
   });
 
   it("renders the resolved function label", () => {
-    render(<TeamStaff staff={STAFF} />);
+    render(<TeamStaff staff={STAFF} heading="Staf" />);
     expect(screen.getByText("Hoofdtrainer")).toBeInTheDocument();
     expect(screen.getByText("Afgevaardigde")).toBeInTheDocument();
   });
 
-  it("renders the name with first semibold + last italic", () => {
-    render(<TeamStaff staff={STAFF} />);
-    const last = screen.getByText("Coach");
-    expect(last.tagName).toBe("EM");
-    expect(last.className).toContain("italic");
-  });
-
-  it("renders a card as a link to /staf/{psdId} when href is present", () => {
-    render(<TeamStaff staff={[{ ...STAFF[0]!, href: "/staf/12345" }]} />);
-    const card = screen.getByTestId("player-card");
-    expect(card.tagName).toBe("A");
-    expect(card).toHaveAttribute("href", "/staf/12345");
-  });
-
-  it("renders a card as a plain div when href is absent", () => {
-    render(<TeamStaff staff={[STAFF[0]!]} />);
-    const card = screen.getByTestId("player-card");
-    expect(card.tagName).toBe("DIV");
-    expect(card).not.toHaveAttribute("href");
-  });
-
-  it("never renders the round photo/monogram idiom TeamStaff used to own (#2477)", () => {
-    render(<TeamStaff staff={STAFF} />);
-    expect(screen.queryByText("BB")).toBeNull();
+  it("normalises a whitespace-only imageUrl/href to absent", () => {
+    render(
+      <TeamStaff
+        staff={[
+          {
+            id: "3",
+            firstName: "Wout",
+            lastName: "Wit",
+            imageUrl: "   ",
+            href: "  ",
+          },
+        ]}
+        heading="Staf"
+      />,
+    );
+    expect(
+      screen.getByTestId("player-card-figure").getAttribute("data-state"),
+    ).toBe("illustration");
+    expect(screen.getByTestId("player-card").tagName).toBe("DIV");
   });
 });

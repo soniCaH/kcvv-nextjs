@@ -354,7 +354,7 @@ function TeamDetailAssembly({ competitive = "live" }: TeamDetailAssemblyProps) {
 
       <StripedSeam colorPair="ink-cream" height="md" />
       <PageContainer as="section" className="py-10">
-        <TeamStaff staff={staff} />
+        <TeamStaff staff={staff} heading="Staf" />
       </PageContainer>
 
       <StripedSeam colorPair="ink-cream" height="md" />

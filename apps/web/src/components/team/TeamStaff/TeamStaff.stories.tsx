@@ -52,15 +52,13 @@ const meta = {
   component: TeamStaff,
   parameters: { layout: "padded" },
   tags: ["autodocs", "vr"],
+  args: { heading: "Staf" },
 } satisfies Meta<typeof TeamStaff>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * Mixed staff — the shared `<PlayerCard>` (#2477), photos + the coat-garment
- * illustration fallback (#2485); code + bucket labels.
- */
+/** Mixed staff — photos + the coat-garment illustration fallback (#2485). */
 export const WithPhotos: Story = {
   args: { staff: withPhotos },
 };
@@ -71,8 +69,8 @@ export const IllustrationsOnly: Story = {
 };
 
 /**
- * Reachable members link to their `/staf/{psdId}` profile (canonical paper
- * press-down on hover); members without a detail page stay as plain cards.
+ * Reachable members link to their `/staf/{psdId}` profile and carry the
+ * "Bekijk →" resting affordance; members without a detail page stay plain.
  */
 export const WithDetailLinks: Story = {
   args: {
@@ -82,4 +80,9 @@ export const WithDetailLinks: Story = {
       i < 2 ? { ...member, href: `/staf/1111${i}` } : member,
     ),
   },
+};
+
+/** A board page's word for the run — same heading `<BestuurPage>` passes (#2575 review). */
+export const BoardHeading: Story = {
+  args: { staff: withPhotos, heading: "De leden" },
 };
