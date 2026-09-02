@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import Image from "next/image";
 import { TapedCardGrid } from "../TapedCardGrid";
 import { TapedFigure } from "./TapedFigure";
 
@@ -105,6 +106,42 @@ export const TintNone: Story = {
     tint: "none",
     caption: "Filter off (data-tint=none).",
     children: photoPlaceholder,
+  },
+};
+
+// A real photograph with faces in it — the D9 mockup's own skin-tone test
+// fixture (docs/design/mockups/research-d-series/d9-overprint.html). A
+// synthetic swatch cannot demonstrate "shadows move, faces pass through
+// unchanged" — that claim is only verifiable on real photography.
+const photoWithFaces = (
+  <Image
+    src="/images/youth-trainers.jpg"
+    alt="Jeugdtrainers"
+    fill
+    sizes="480px"
+    className="object-cover"
+  />
+);
+
+// Baseline — no overprint (data-print="none", the default). Paired with
+// `Overprint` below so the two VR baselines are directly comparable: only
+// the shadows should differ between them.
+export const PhotoBaseline: Story = {
+  args: {
+    caption: "Geen overprint (data-print=none, standaard).",
+    children: photoWithFaces,
+  },
+};
+
+// Overprint opt-in (D9 / T2, #2619) — `mix-blend-mode: lighten` against
+// the dark `--color-jersey-deep-dark` plate. Compare against `PhotoBaseline`
+// above: hair, shade and dark kit should move toward dark green; faces and
+// mid-tones should read identically in both baselines.
+export const Overprint: Story = {
+  args: {
+    print: "overprint",
+    caption: "Overprint aan (data-print=overprint).",
+    children: photoWithFaces,
   },
 };
 
