@@ -6,7 +6,7 @@
  * SquadGrid → TeamStaff → TeamEditorial) with fixture data, mirroring the
  * server `page.tsx` body but WITHOUT the server-only chrome
  * (`<MatchStripSlot>`, `<TeamSectionNav>`, `<PageViewTracker>`, `<TrackInView>`,
- * `<JsonLd>`, `<VerderLezenRow>`, `<SponsorsSection>`), which require runtime
+ * `<JsonLd>`, `<RelatedRow>`, `<SponsorsSection>`), which require runtime
  * BFF / Sanity fetches and analytics context. Functional smoke for the
  * assembled route lives in the Playwright suite; the per-section visuals are
  * VR-tested under `Features/Teams/*`.

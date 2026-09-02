@@ -3,9 +3,12 @@
  *
  * The editorial, cream counterpoint to the dark ticket-wall list (design lock
  * 6e5 — variant D "Editoriaal"): a centred `<EventHero>` with the Reserveer /
- * "Zet in agenda" CTAs, followed by an "Andere evenementen" `<TicketStub>` grid.
- * `event_view` fires client-side via `<EventViewTracker>`; the CTAs fire
- * `event_detail_cta_click`. `/events/[slug]` 301s here (see `next.config.ts`).
+ * "Zet in agenda" CTAs, followed by `<RelatedRow>` (#2443/#2581) — galleries
+ * linked to this event (domain tier) above other upcoming events (siblings
+ * tier), replacing the former standalone `<AndereEvents>` list +
+ * `<GallerySection>` pair. `event_view` fires client-side via
+ * `<EventViewTracker>`; the CTAs fire `event_detail_cta_click`.
+ * `/events/[slug]` 301s here (see `next.config.ts`).
  */
 
 import type { Metadata } from "next";
@@ -25,8 +28,12 @@ import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { PageContainer } from "@/components/design-system";
 import { EventHero } from "@/components/event/EventHero";
 import { EventViewTracker } from "@/components/event/EventViewTracker";
-import { AndereEvents } from "@/components/event/AndereEvents";
-import { GallerySection } from "@/components/gallery/GallerySection/GallerySection";
+import { RelatedRow } from "@/components/related/RelatedRow";
+import { mergeRelatedRow } from "@/components/related/mergeRelatedRow";
+import {
+  mapGalleriesToRelatedRow,
+  eventVMsToSiblingItems,
+} from "@/lib/utils/article-related-items";
 
 import { EventDetailCtas } from "./EventDetailCtas";
 
@@ -116,6 +123,16 @@ export default async function EventDetailPage({ params }: EventPageProps) {
   const canonicalUrl = `${SITE_CONFIG.siteUrl}/evenementen/${event.slug}`;
   const otherEvents = upcoming.filter((other) => other.id !== event.id);
 
+  // #2443 rule 2: galleries above siblings — the opposite order from today's
+  // page, where <AndereEvents> renders above <GallerySection>.
+  const relatedRowItems = mergeRelatedRow({
+    domain: mapGalleriesToRelatedRow(galleries),
+    curated: [],
+    reference: [],
+    semantic: [],
+    siblings: eventVMsToSiblingItems(otherEvents),
+  });
+
   return (
     <div className="bg-cream">
       <JsonLd
@@ -172,12 +189,12 @@ export default async function EventDetailPage({ params }: EventPageProps) {
             />
           }
         />
-
-        <AndereEvents events={otherEvents} />
       </PageContainer>
 
-      {/* Photo galleries linked to this event (#1471) — auto-hides on empty. */}
-      <GallerySection galleries={galleries} kicker="KCVV Elewijt · Beelden" />
+      {/* One mixed, cross-type onward-navigation slot (#2443/#2581) —
+          galleries linked to this event, then other upcoming events.
+          Auto-hides on empty. */}
+      <RelatedRow items={relatedRowItems} pageType="event" pageSlug={slug} />
     </div>
   );
 }

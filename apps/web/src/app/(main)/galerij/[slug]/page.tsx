@@ -5,6 +5,12 @@
  * (`<GalleryLightbox>`), with an optional intro paragraph. `gallery_open`
  * fires client-side on mount via `<GalleryOpenTracker>`; the lightbox fires
  * `gallery_image_view` per navigation. Long (24h) ISR — galleries change rarely.
+ *
+ * Ends on `<RelatedRow>` (#2443/#2581) — this was the one true dead end on
+ * the site before this decision (every other detail page had *some* onward
+ * affordance). Domain tier: the event this gallery documents, when there is
+ * one (`linkedEvent`, a real Sanity reference). Auto-hides at zero, which is
+ * common here — most galleries have no linked event.
  */
 
 import type { Metadata } from "next";
@@ -23,6 +29,9 @@ import { PageHero } from "@/components/layout/PageHero";
 import { formatArticleDate } from "@/lib/utils/dates";
 import { GalleryLightbox } from "@/components/gallery/GalleryLightbox/GalleryLightbox";
 import { GalleryOpenTracker } from "@/components/gallery/GalleryOpenTracker/GalleryOpenTracker";
+import { RelatedRow } from "@/components/related/RelatedRow";
+import { mergeRelatedRow } from "@/components/related/mergeRelatedRow";
+import type { RelatedRowItem } from "@/components/related/types";
 
 interface GalleryPageProps {
   params: Promise<{ slug: string }>;
@@ -128,6 +137,35 @@ export default async function GalleryDetailPage({ params }: GalleryPageProps) {
   const images = gallery.images ?? [];
   const canonicalUrl = `${SITE_CONFIG.siteUrl}/galerij/${gallery.slug}`;
 
+  // Domain tier (#2443 rule 4): the event this gallery documents — bounded
+  // (at most one) and defining. `linkedMatch` (a bare string) deliberately
+  // has no equivalent here — see `GALLERY_BY_SLUG_QUERY`'s docblock.
+  const domainItems: RelatedRowItem[] = gallery.linkedEvent
+    ? [
+        {
+          title: gallery.linkedEvent.title,
+          href: `/evenementen/${gallery.linkedEvent.slug}`,
+          imageUrl: gallery.linkedEvent.coverImageUrl ?? undefined,
+          badge: "EVENEMENT",
+          date: gallery.linkedEvent.dateStart
+            ? formatArticleDate(gallery.linkedEvent.dateStart)
+            : undefined,
+          analyticsId: gallery.linkedEvent.id,
+          analyticsSource: "domain",
+          analyticsType: "event",
+          analyticsTargetSlug: gallery.linkedEvent.slug,
+        },
+      ]
+    : [];
+
+  const relatedRowItems = mergeRelatedRow({
+    domain: domainItems,
+    curated: [],
+    reference: [],
+    semantic: [],
+    siblings: [],
+  });
+
   return (
     <div className="bg-cream">
       <JsonLd
@@ -168,6 +206,14 @@ export default async function GalleryDetailPage({ params }: GalleryPageProps) {
 
         <GalleryLightbox gallerySlug={gallery.slug} images={images} />
       </PageContainer>
+
+      {/* This route was the one true dead end on the site (#2443
+          resolution) — auto-hides when the gallery has no linked event. */}
+      <RelatedRow
+        items={relatedRowItems}
+        pageType="gallery"
+        pageSlug={gallery.slug}
+      />
     </div>
   );
 }

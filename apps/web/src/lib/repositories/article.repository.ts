@@ -75,11 +75,12 @@ export const RELATED_ARTICLES_QUERY =
 // are BFF/PSD-native (not Sanity documents), so the link is the article's
 // `linkedMatch` string field holding the PSD match id — not a Sanity
 // `references()` edge. Returns 0–2 rows (at most one `matchPreview` + one
-// `matchRecap` per match); `selectMatchArticle` (component layer) applies the
-// per-state truth table to pick which one the `<MatchArticleLinkCard>` hero
-// features. Ordered newest-first so a same-type duplicate (data anomaly) keeps
-// the most recent. `pt::text(title)` flattens the constrained-PT title to a
-// plain string — the hero heading renders verbatim, no accent decorator.
+// `matchRecap` per match); both simply become two cards in `<RelatedRow>`'s
+// domain tier (#2443/#2581 — `matchArticlesToRelatedRow`), replacing the
+// retired `<MatchArticleLinkCard>`'s recap-vs-preview truth table. Ordered
+// newest-first so a same-type duplicate (data anomaly) keeps the most
+// recent. `pt::text(title)` flattens the constrained-PT title to a plain
+// string — the hero heading renders verbatim, no accent decorator.
 export const MATCH_ARTICLES_QUERY =
   defineQuery(`*[_type == "article" && linkedMatch == $matchId && articleType in ["matchPreview", "matchRecap"] && publishedAt <= now() && (!defined(unpublishAt) || unpublishAt > now())] | order(publishedAt desc) {
   "id": _id,

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import type { PortableTextBlock } from "@portabletext/react";
 import { fixtureImage } from "@test-fixtures/images";
 import { ArticleBody } from "./ArticleBody";
-import { VerderLezenRow } from "@/components/article/VerderLezenRow";
+import { RelatedRow } from "@/components/related/RelatedRow";
 
 const meta = {
   title: "Features/Articles/ArticleBody",
@@ -566,10 +566,10 @@ export const WithThreeConsecutiveTransferFacts: Story = {
   },
 };
 
-// Full body composition (PullQuote + EndMark + VerderLezenRow). Stitches
+// Full body composition (PullQuote + EndMark + RelatedRow). Stitches
 // the 5.A.2 surfaces together to show how `<ArticleBody>` and
-// `<VerderLezenRow>` compose inside the page template that lands at 5.C
-// (#1800). The article body ends at <EndMark>; <VerderLezenRow> sits
+// `<RelatedRow>` compose inside the page template that lands at 5.C
+// (#1800) / #2581. The article body ends at <EndMark>; <RelatedRow> sits
 // beneath as a sibling, wider than the body's prose width.
 export const BodyComposition: Story = {
   args: {
@@ -579,7 +579,7 @@ export const BodyComposition: Story = {
   render: (args) => (
     <>
       <ArticleBody {...args} />
-      <VerderLezenRow
+      <RelatedRow
         items={[
           {
             title: "Maxim Breugelmans versterkt Elewijt",
@@ -613,7 +613,7 @@ export const BodyComposition: Story = {
     docs: {
       description: {
         story:
-          "5.A.2 composition story — `<ArticleBody>` (with inline pull-quote + EndMark closer) followed by `<VerderLezenRow>` (3-up related articles). Mirrors the per-variant shell `/nieuws/[slug]` ships post-5.C (#1800).",
+          "5.A.2 composition story — `<ArticleBody>` (with inline pull-quote + EndMark closer) followed by `<RelatedRow>` (3-up related articles). Mirrors the per-variant shell `/nieuws/[slug]` ships post-5.C (#1800).",
       },
     },
   },

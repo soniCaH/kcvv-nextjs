@@ -10,7 +10,7 @@
  *   StripedSeam
  *   BioBlock                    ← auto-hides on empty bio
  *   QuotesBlock                 ← auto-hides on < 2 pullquote-marked spans
- *   VerderLezenRow              ← full-bleed "Verder lezen." slider; auto-hides on empty
+ *   RelatedRow                  ← full-bleed "Blijf nog even hangen." slider; auto-hides on empty (#2581)
  *
  * Deviations vs the issue AC, owner-approved at branch start:
  *  - `<PlayerShare>` removed entirely (component file deleted — never
@@ -36,12 +36,15 @@ import { runPromise } from "@/lib/effect/runtime";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { PlayerRepository } from "@/lib/repositories/player.repository";
 import { ArticleRepository } from "@/lib/repositories/article.repository";
+import { TeamRepository } from "@/lib/repositories/team.repository";
 import { degradeSection } from "@/lib/effect/degrade";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd, buildPersonJsonLd } from "@/lib/seo/jsonld";
 import { BioBlock, PlayerHero, QuotesBlock } from "@/components/player";
-import { VerderLezenRow } from "@/components/article/VerderLezenRow";
-import { articleVMsToVerderLezenItems } from "@/lib/utils/article-related-items";
+import { RelatedRow } from "@/components/related/RelatedRow";
+import { mergeRelatedRow } from "@/components/related/mergeRelatedRow";
+import type { RelatedRowItem } from "@/components/related/types";
+import { articleVMsToRelatedRowItems } from "@/lib/utils/article-related-items";
 import { PageContainer, StripedSeam } from "@/components/design-system";
 import { MatchStripSlot } from "@/components/layout/MatchStrip/MatchStripSlot";
 import { PageViewTracker, TrackInView } from "@/components/analytics";
@@ -137,19 +140,54 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
 
   if (!player) notFound();
 
-  // "Verder lezen." is a section, not the subject (#2433 rule 3), and its
-  // absence asserts nothing — the visitor was never promised a read-next row —
-  // so it auto-hides rather than announcing the failure (rule 4).
-  const relatedArticles = await runPromise(
-    degradeSection(
-      Effect.gen(function* () {
-        const repo = yield* ArticleRepository;
-        return yield* repo.findRelated(player.id);
-      }),
-      [],
-      "[spelers/[slug]] related-articles lookup failed; rendering without the Verder lezen row.",
+  // "Blijf nog even hangen." is a section, not the subject (#2433 rule 3),
+  // and its absence asserts nothing — the visitor was never promised a
+  // read-next row — so it auto-hides rather than announcing the failure
+  // (rule 4). Two independent reads, run together (#2441): the player's own
+  // team(s) (domain tier, #2443 rule 4 — bounded + defining) and articles
+  // that mention this player (reference tier).
+  const [ownTeams, relatedArticles] = await Promise.all([
+    runPromise(
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* TeamRepository;
+          return yield* repo.findByMemberId(player.id);
+        }),
+        [],
+        "[spelers/[slug]] own-team lookup failed; rendering without the RelatedRow team card.",
+      ),
     ),
-  );
+    runPromise(
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* ArticleRepository;
+          return yield* repo.findRelated(player.id);
+        }),
+        [],
+        "[spelers/[slug]] related-articles lookup failed; rendering without the RelatedRow.",
+      ),
+    ),
+  ]);
+
+  const domainItems: RelatedRowItem[] = ownTeams.map((team) => ({
+    title: team.displayName,
+    href: `/ploegen/${team.slug}`,
+    imageUrl: team.teamImageUrl ?? undefined,
+    artefact: team.teamImageUrl ? undefined : { kind: "team" as const },
+    badge: "PLOEG",
+    analyticsId: team.id,
+    analyticsSource: "domain",
+    analyticsType: "team",
+    analyticsTargetSlug: team.slug,
+  }));
+
+  const relatedRowItems = mergeRelatedRow({
+    domain: domainItems,
+    curated: [],
+    reference: articleVMsToRelatedRowItems(relatedArticles),
+    semantic: [],
+    siblings: [],
+  });
 
   const fullName = `${player.firstName} ${player.lastName}`.trim() || "Speler";
   const personJsonLdEnabled = isAdult(player.birthDate, new Date());
@@ -233,12 +271,9 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
           <QuotesBlock bio={bio} playerName={fullName} />
         </TrackInView>
       ) : null}
-      {/* Full-bleed cream "Verder lezen." slider — auto-hides when empty. */}
-      <VerderLezenRow
-        items={articleVMsToVerderLezenItems(relatedArticles)}
-        pageType="player"
-        pageSlug={slug}
-      />
+      {/* Full-bleed cream "Blijf nog even hangen." slider — auto-hides when
+          empty (#2443/#2581). */}
+      <RelatedRow items={relatedRowItems} pageType="player" pageSlug={slug} />
     </>
   );
 }

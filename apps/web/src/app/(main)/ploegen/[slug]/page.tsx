@@ -3,10 +3,14 @@
  *
  * SiteHeader → MatchStripSlot → TeamHero → sticky section-nav →
  * [competitive block: status line, or StandingsSection + TeamMatchesSection]
- * → SquadGrid → TeamStaff → TeamEditorial → VerderLezenRow →
- * global SponsorsBlock → footer.
+ * → SquadGrid → TeamStaff → TeamEditorial → global SponsorsBlock →
+ * RelatedRow → footer.
  * <StripedSeam> separates sections; every non-hero section auto-hides on
  * empty data (a U6 page degrades to hero + squad + staff).
+ *
+ * #2443 resolution reorders the last two sections: `SponsorsSection` now
+ * renders BEFORE `RelatedRow` (previously last) — the team page's last word
+ * was a sponsor logo wall, not an onward-navigation slot.
  *
  * The competitive block (`#klassement` + `#wedstrijden`) does not auto-hide
  * per section any more — it is gated as ONE unit by
@@ -48,8 +52,10 @@ import { TeamEnrolmentCta } from "@/components/team/TeamEnrolmentCta";
 import { TeamStaff } from "@/components/team/TeamStaff";
 import { TeamEditorial } from "@/components/team/TeamEditorial";
 import { SponsorsSection } from "@/components/home/SponsorsSection";
-import { VerderLezenRow } from "@/components/article/VerderLezenRow";
-import { articleVMsToVerderLezenItems } from "@/lib/utils/article-related-items";
+import { RelatedRow } from "@/components/related/RelatedRow";
+import { mergeRelatedRow } from "@/components/related/mergeRelatedRow";
+import type { RelatedRowItem } from "@/components/related/types";
+import { articleVMsToRelatedRowItems } from "@/lib/utils/article-related-items";
 import { TeamRepository } from "@/lib/repositories/team.repository";
 import { hasRenderableBioContent } from "@/lib/portable-text/findPullquoteText";
 import { transformMatchToSchedule } from "@/components/match";
@@ -226,8 +232,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
   // exactly the "cached lie" #2540/#2636 removed the two catches to avoid.
   const [relatedArticles, bffData] = await Promise.all([
     // Same section, same verdict as `/spelers/[slug]` and `/staf/[slug]`
-    // (#2433 rule 3/4): "Verder lezen." is polish, and its absence asserts
-    // nothing, so it hides rather than taking the team page down.
+    // (#2433 rule 3/4): "Blijf nog even hangen." is polish, and its absence
+    // asserts nothing, so it hides rather than taking the team page down.
     runPromise(
       degradeSection(
         Effect.gen(function* () {
@@ -235,7 +241,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
           return yield* repo.findRelated(team.id);
         }),
         [],
-        "[ploegen/[slug]] related-articles lookup failed; rendering without the Verder lezen row.",
+        "[ploegen/[slug]] related-articles lookup failed; rendering without the RelatedRow.",
       ),
     ),
     Number.isFinite(psdTeamId) && psdTeamId > 0
@@ -325,6 +331,37 @@ export default async function TeamPage({ params }: TeamPageProps) {
   ].filter((x): x is TeamSectionNavItem => x !== false);
 
   const analyticsParams = { team_slug: slug };
+
+  // Domain tier (#2443 rule 4): the team's own fixture list is bounded (one
+  // destination) and defining (it says what this team's competitive
+  // schedule is) — but only when `#wedstrijden` itself has something to
+  // show; linking to an empty fixture-list page would fail rule 4's
+  // "defining" half. There is no Sanity document behind this destination
+  // (it's a route, `/ploegen/[slug]/wedstrijden`), so the card is built
+  // directly rather than through the `RelatedContentItem` union — see
+  // `<RelatedRow>`'s docblock.
+  const domainItems: RelatedRowItem[] = showWedstrijden
+    ? [
+        {
+          title: `Wedstrijden — ${displayName}`,
+          href: `/ploegen/${slug}/wedstrijden`,
+          artefact: { kind: "team" as const },
+          badge: "PLOEG",
+          analyticsId: `${team.id}-wedstrijden`,
+          analyticsSource: "domain",
+          analyticsType: "team",
+          analyticsTargetSlug: `${slug}/wedstrijden`,
+        },
+      ]
+    : [];
+
+  const relatedRowItems = mergeRelatedRow({
+    domain: domainItems,
+    curated: [],
+    reference: articleVMsToRelatedRowItems(relatedArticles),
+    semantic: [],
+    siblings: [],
+  });
 
   return (
     <>
@@ -491,14 +528,14 @@ export default async function TeamPage({ params }: TeamPageProps) {
         </>
       ) : null}
 
-      {/* Full-bleed cream "Verder lezen." slider — auto-hides when empty. */}
-      <VerderLezenRow
-        items={articleVMsToVerderLezenItems(relatedArticles)}
-        pageType="team"
-        pageSlug={slug}
-      />
-
+      {/* Sponsor logo wall now renders BEFORE the onward-navigation row
+          (#2443 resolution) — the page's last word is a "keep going"
+          slot, not a sponsor band. */}
       <SponsorsSection />
+
+      {/* Full-bleed cream "Blijf nog even hangen." slider — auto-hides when
+          empty (#2443/#2581). Last section on the page. */}
+      <RelatedRow items={relatedRowItems} pageType="team" pageSlug={slug} />
     </>
   );
 }

@@ -3,17 +3,21 @@
  * detail composition.
  *
  * Renders the visible page sections (MatchHero → MatchLineupSection →
- * MatchEventsSection → MatchStandingsSection → MatchArticleLinkCard) with
- * fixture data, mirroring the server `page.tsx` body but WITHOUT the
- * server-only chrome (`<MatchStripSlot>`, `<PageViewTracker>`, `<TrackInView>`,
+ * MatchEventsSection → MatchStandingsSection → RelatedRow) with fixture
+ * data, mirroring the server `page.tsx` body but WITHOUT the server-only
+ * chrome (`<MatchStripSlot>`, `<PageViewTracker>`, `<TrackInView>`,
  * `<JsonLd>`), which require runtime BFF / Sanity fetches and analytics
  * context. Functional smoke for the assembled route lives in the Playwright
- * suite; the per-section visuals are VR-tested under `Features/Matches/*`.
+ * suite; the per-section visuals are VR-tested under `Features/Matches/*`
+ * and `Features/Related/RelatedRow`.
+ *
+ * `<MatchArticleLinkCard>` is retired (#2443/#2581) — the recap article now
+ * folds into `<RelatedRow>`'s domain tier as one card among the rest.
  *
  * Per `apps/web/CLAUDE.md`, Pages/* stories are NOT VR-tested. Add or change
  * visual baselines on the per-section stories
  * (`Features/Matches/MatchHero`, `…/MatchLineupSection`, `…/MatchEventsSection`,
- * `…/MatchStandingsSection`, `…/MatchArticleLinkCard`) instead.
+ * `…/MatchStandingsSection`, `Features/Related/RelatedRow`) instead.
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
@@ -25,8 +29,8 @@ import type { LineupPlayer } from "@/components/match/MatchLineup/MatchLineup";
 import { MatchEventsSection } from "@/components/match/MatchEventsSection";
 import type { MatchEvent } from "@/components/match/MatchEvents/MatchEvents";
 import { MatchStandingsSection } from "@/components/match/MatchStandingsSection";
-import { MatchArticleLinkCard } from "@/components/match/MatchArticleLinkCard";
-import { RECAP_KICKER } from "@/components/match/MatchArticleLinkCard/selectMatchArticle";
+import { RelatedRow } from "@/components/related/RelatedRow";
+import type { RelatedRowItem } from "@/components/related/types";
 import { StripedSeam } from "@/components/design-system";
 
 const KCVV_LOGO = fixtureImage("sponsor-logo", 0);
@@ -188,12 +192,26 @@ const standings: RankingEntry[] = [
   entry(6, KCVV_CLUB_ID, "KCVV Elewijt", 18, 8, 4, 6, 27, 25, 28),
 ];
 
-const recapArticle = {
-  title: "KCVV kopt zich in extremis langs RC Mechelen.",
-  slug: "kcvv-mechelen-verslag",
-  coverImageUrl: fixtureImage("article-hero-matchverslag", 0),
-  lead: "Een rommelige tweede helft kantelde pas in minuut 78 — Breugelmans besliste het duel met het hoofd.",
-};
+const relatedRowItems: RelatedRowItem[] = [
+  {
+    title: "KCVV kopt zich in extremis langs RC Mechelen.",
+    href: "/nieuws/kcvv-mechelen-verslag",
+    imageUrl: fixtureImage("article-hero-matchverslag", 0),
+    badge: "NIEUWS",
+  },
+  {
+    title: "KCVV Elewijt A",
+    href: "/ploegen/eerste-elftal-a",
+    imageUrl: fixtureImage("team-group", 0),
+    badge: "PLOEG",
+  },
+  {
+    title: "RC Mechelen",
+    href: "/tegenstander/103",
+    imageUrl: OPPONENT_LOGO,
+    badge: "TEGENSTANDER",
+  },
+];
 
 /**
  * Page-level composition of the finished-match detail route. Mirrors the
@@ -244,7 +262,7 @@ function MatchDetailAssembly() {
 
       <StripedSeam colorPair="ink-cream" height="md" />
 
-      <MatchArticleLinkCard article={recapArticle} kicker={RECAP_KICKER} />
+      <RelatedRow items={relatedRowItems} />
     </>
   );
 }
