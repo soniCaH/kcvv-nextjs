@@ -38,6 +38,7 @@ import { isPermanentBffFailure } from "@/lib/effect/classify-bff-failure";
 import { degradeIfPermanent } from "@/lib/effect/degrade-if-permanent";
 import { StripedSeam } from "@/components/design-system/StripedSeam";
 import { PageContainer } from "@/components/design-system/PageContainer";
+import { UpLink } from "@/components/design-system/UpLink";
 import { TeamHero } from "@/components/team/TeamHero";
 import { StandingsSection } from "@/components/team/StandingsSection";
 import { TeamMatchesSection } from "@/components/team/TeamMatchesSection";
@@ -372,7 +373,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
       <MatchStripSlot />
 
-      <PageContainer>
+      <PageContainer className="pt-6">
+        <UpLink href="/ploegen" label="Ploegen" className="mb-6" />
         <TeamHero
           displayName={displayName}
           teamType={team.teamType}

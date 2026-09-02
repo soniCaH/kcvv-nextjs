@@ -24,7 +24,7 @@ import { PhotoGalleryRepository } from "@/lib/repositories/photoGallery.reposito
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
-import { MonoLabel, PageContainer } from "@/components/design-system";
+import { MonoLabel, PageContainer, UpLink } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
 import { formatArticleDate } from "@/lib/utils/dates";
 import { GalleryLightbox } from "@/components/gallery/GalleryLightbox/GalleryLightbox";
@@ -193,6 +193,7 @@ export default async function GalleryDetailPage({ params }: GalleryPageProps) {
       />
 
       <PageContainer as="main" className="py-12 sm:py-16">
+        <UpLink href="/galerij" label="Fotogalerij" className="mb-6" />
         <PageHero
           register="minimal"
           kicker="KCVV Elewijt · Beelden"

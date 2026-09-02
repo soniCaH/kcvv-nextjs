@@ -37,6 +37,7 @@ import {
   EditorialHero,
   type HeroMatchData,
 } from "@/components/article/EditorialHero";
+import { PageContainer, UpLink } from "@/components/design-system";
 import { MatchGoalsBlock } from "@/components/article/blocks/MatchGoalsBlock";
 import { parsePsdMatchId, toHeroMatchData } from "./utils";
 // Cross-route import: the match fold-in card (#2443/#2581) needs the same
@@ -514,6 +515,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         subjectKind={subjectKind}
         subjectCount={subjectCount}
       />
+      {/* Same width + gutters as `<EditorialHeroShell width="wide">` below it,
+          so the chip lands at the container's left edge above the opening
+          (#2428/#2442). */}
+      <PageContainer width="default" className="pt-8">
+        <UpLink href="/nieuws" label="Nieuws" />
+      </PageContainer>
       {renderArticleHero({
         article,
         title: article.title,

@@ -25,7 +25,7 @@ import {
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd, buildEventJsonLd } from "@/lib/seo/jsonld";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
-import { PageContainer } from "@/components/design-system";
+import { PageContainer, UpLink } from "@/components/design-system";
 import { EventHero } from "@/components/event/EventHero";
 import { EventViewTracker } from "@/components/event/EventViewTracker";
 import { RelatedRow } from "@/components/related/RelatedRow";
@@ -156,6 +156,9 @@ export default async function EventDetailPage({ params }: EventPageProps) {
       <EventViewTracker eventSlug={event.slug} eventType={event.eventType} />
 
       <PageContainer as="main" className="py-12">
+        {/* Always the container's left edge, even though EventHero itself
+            is centred (#2442 rule 3). */}
+        <UpLink href="/evenementen" label="Evenementen" className="mb-6" />
         <EventHero
           title={event.title}
           eventType={event.eventType}

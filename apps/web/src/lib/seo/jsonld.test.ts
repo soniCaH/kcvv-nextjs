@@ -275,6 +275,76 @@ describe("buildBreadcrumbJsonLd", () => {
     expect(items).toHaveLength(1);
     expect(items[0].position).toBe(1);
   });
+
+  // Regression coverage for the three trail-label corrections #2570 makes at
+  // the call sites (`/spelers/[slug]`, `/staf/[slug]`, `/club/[slug]`) — the
+  // builder itself is generic, so these pin the corrected *shape* each page
+  // now passes in, matching the up-link chip #2570 adds above the opening.
+  describe("corrected trail labels (#2570)", () => {
+    it("/spelers/[slug] names its parent 'Ploegen', not the club name", () => {
+      const result = buildBreadcrumbJsonLd([
+        { name: "Home", url: "https://www.kcvvelewijt.be" },
+        { name: "Ploegen", url: "https://www.kcvvelewijt.be/ploegen" },
+        {
+          name: "Jan Janssens",
+          url: "https://www.kcvvelewijt.be/spelers/jan-janssens",
+        },
+      ]);
+      const items = result.itemListElement as Array<{
+        "@type": string;
+        position: number;
+        name: string;
+        item: string;
+      }>;
+      expect(items.map((i) => i.name)).toEqual([
+        "Home",
+        "Ploegen",
+        "Jan Janssens",
+      ]);
+    });
+
+    it("/staf/[slug] simplifies to Home → Hulp → name, dropping the Club/Staf segments and the #structuur anchor", () => {
+      const result = buildBreadcrumbJsonLd([
+        { name: "Home", url: "https://www.kcvvelewijt.be" },
+        { name: "Hulp", url: "https://www.kcvvelewijt.be/hulp" },
+        {
+          name: "Piet Pieters",
+          url: "https://www.kcvvelewijt.be/staf/piet-pieters",
+        },
+      ]);
+      const items = result.itemListElement as Array<{
+        "@type": string;
+        position: number;
+        name: string;
+        item: string;
+      }>;
+      expect(items).toHaveLength(3);
+      expect(items.map((i) => i.name)).toEqual([
+        "Home",
+        "Hulp",
+        "Piet Pieters",
+      ]);
+      expect(items[1]!.item).toBe("https://www.kcvvelewijt.be/hulp");
+    });
+
+    it("/club/[slug] and its leaves name the parent 'De club', not 'Club'", () => {
+      const result = buildBreadcrumbJsonLd([
+        { name: "Home", url: "https://www.kcvvelewijt.be" },
+        { name: "De club", url: "https://www.kcvvelewijt.be/club" },
+        {
+          name: "Praktische Informatie",
+          url: "https://www.kcvvelewijt.be/club/praktische-informatie",
+        },
+      ]);
+      const items = result.itemListElement as Array<{
+        "@type": string;
+        position: number;
+        name: string;
+        item: string;
+      }>;
+      expect(items[1]!.name).toBe("De club");
+    });
+  });
 });
 
 describe("buildItemListJsonLd", () => {

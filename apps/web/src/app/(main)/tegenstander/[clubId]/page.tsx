@@ -17,12 +17,16 @@ import { runPromise } from "@/lib/effect/runtime";
 import { BffService } from "@/lib/effect/services/BffService";
 import { TeamRepository } from "@/lib/repositories/team.repository";
 import type { Match, OpponentHistory } from "@kcvv/api-contract";
+import { SITE_CONFIG } from "@/lib/constants";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import {
   Crest,
   EditorialHeading,
   EmptyState,
   PageContainer,
   StripedSeam,
+  UpLink,
 } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
 import { TeamAgendaRow } from "@/components/team/TeamMatchesSection";
@@ -200,9 +204,22 @@ export default async function OpponentPage({ params }: OpponentPageProps) {
     matches.length === 1 ? "wedstrijd" : "wedstrijden"
   }`;
 
+  const pageUrl = `${SITE_CONFIG.siteUrl}/tegenstander/${clubId}`;
+
   return (
     <div className="bg-cream-deep flex-1">
+      {/* This was the one detail route with no breadcrumb trail at all
+          (#2428) — everything else already shipped one as JSON-LD before
+          this ticket's up-link could reuse it. */}
+      <JsonLd
+        data={buildBreadcrumbJsonLd([
+          { name: "Home", url: SITE_CONFIG.siteUrl },
+          { name: "Kalender", url: `${SITE_CONFIG.siteUrl}/kalender` },
+          { name: opponentName, url: pageUrl },
+        ])}
+      />
       <PageContainer className="pt-8 pb-8">
+        <UpLink href="/kalender" label="Kalender" className="mb-6" />
         <PageHero
           kicker="Onderlinge geschiedenis"
           headline={opponentName}

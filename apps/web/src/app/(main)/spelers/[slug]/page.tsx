@@ -44,7 +44,7 @@ import { RelatedRow } from "@/components/related/RelatedRow";
 import { mergeRelatedRow } from "@/components/related/mergeRelatedRow";
 import type { RelatedRowItem } from "@/components/related/types";
 import { articleVMsToRelatedRowItems } from "@/lib/utils/article-related-items";
-import { PageContainer, StripedSeam } from "@/components/design-system";
+import { PageContainer, StripedSeam, UpLink } from "@/components/design-system";
 import { MatchStripSlot } from "@/components/layout/MatchStrip/MatchStripSlot";
 import { PageViewTracker, TrackInView } from "@/components/analytics";
 import { findNthPullquoteText } from "@/lib/portable-text/findPullquoteText";
@@ -218,7 +218,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },
-          { name: "KCVV Elewijt", url: `${SITE_CONFIG.siteUrl}/ploegen` },
+          { name: "Ploegen", url: `${SITE_CONFIG.siteUrl}/ploegen` },
           { name: fullName, url: `${SITE_CONFIG.siteUrl}/spelers/${slug}` },
         ])}
       />
@@ -238,6 +238,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
       />
       <MatchStripSlot />
       <PageContainer as="section" className="py-12 lg:py-16">
+        <UpLink href="/ploegen" label="Ploegen" className="mb-6" />
         <PlayerHero
           id={player.id}
           firstName={player.firstName}
