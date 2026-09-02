@@ -32,6 +32,12 @@ import { PageContainer } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
 import { EventsBrowser } from "@/components/event/EventsBrowser";
 
+// Exported so `loading.tsx` can reuse the real, unshimmered opening (#2432
+// §2) instead of a second hand-typed copy that can silently drift from this
+// one.
+export const EVENEMENTEN_KICKER = "KCVV Elewijt · Agenda";
+export const EVENEMENTEN_HEADLINE = "Evenementen";
+
 export const metadata = buildPageMetadata({
   title: "Evenementen",
   description:
@@ -76,8 +82,8 @@ export default async function EvenementenPage() {
         <PageHero
           register="minimal"
           tone="dark"
-          kicker="KCVV Elewijt · Agenda"
-          headline="Evenementen"
+          kicker={EVENEMENTEN_KICKER}
+          headline={EVENEMENTEN_HEADLINE}
         />
         <EventsBrowser events={events} />
       </PageContainer>

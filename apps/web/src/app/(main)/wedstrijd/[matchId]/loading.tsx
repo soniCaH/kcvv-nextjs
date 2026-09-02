@@ -10,7 +10,15 @@
  *     → <StripedSeam>
  *     → <MatchStandingsSection>  ← kicker + heading + head-to-head table
  *     → <StripedSeam>
- *     → <MatchArticleLinkCard>   ← cover + body link card
+ *     → <RelatedRow>             ← full-bleed cream slider of w-72/w-80 cards
+ *       (#2581 replaces the old bordered `<MatchArticleLinkCard>` with the
+ *       shared cross-route related-content row; matched here on the
+ *       structural facts only — full-bleed outside `PageContainer`, a
+ *       horizontal row of card-width blocks — not #2581's exact card chrome,
+ *       which is still under review)
+ *
+ * `<MatchHero>` owns the page's `<h1>` from the two club names — data — so
+ * this renders no heading text at all, bars only.
  *
  * All wide (1040), cream-on-paper register. `min-h-screen` root preserved per
  * the envelope-drift guard in
@@ -18,14 +26,19 @@
  * routes pin to a contract root className.
  */
 
-import { PageContainer, StripedSeam } from "@/components/design-system";
+import {
+  PageContainer,
+  StripedSeam,
+  Skeleton,
+  LoadingAnnouncement,
+} from "@/components/design-system";
 
 /** Shared kicker + display-heading footprint for the cream body sections. */
 function SectionHeadingSkeleton() {
   return (
     <>
-      <div className="bg-paper-edge mb-3 h-3 w-32" />
-      <div className="bg-paper-edge mb-8 h-8 w-64 md:mb-10" />
+      <Skeleton className="mb-3 h-3 w-32" />
+      <Skeleton className="mb-8 h-8 w-64 md:mb-10" />
     </>
   );
 }
@@ -33,43 +46,36 @@ function SectionHeadingSkeleton() {
 export default function MatchDetailLoading() {
   return (
     <div className="min-h-screen">
-      <span
-        role="status"
-        aria-busy="true"
-        aria-live="polite"
-        className="sr-only"
-      >
-        Wedstrijd laden...
-      </span>
+      <LoadingAnnouncement label="Wedstrijd laden…" />
 
       {/* MatchHero — single TapedCard with a dashed stub + score body. */}
       <PageContainer
         as="section"
-        className="bg-cream-soft py-8 motion-safe:animate-pulse"
+        className="bg-cream-soft py-8"
         aria-hidden="true"
       >
         <div className="border-ink bg-cream shadow-paper-md grid grid-cols-1 border-2 md:grid-cols-[110px_1fr]">
           <div className="border-ink space-y-2 border-b-2 border-dashed p-5 md:border-r-2 md:border-b-0">
-            <div className="bg-cream-deep h-6 w-16" />
-            <div className="bg-cream-deep h-6 w-12" />
-            <div className="bg-cream-deep h-4 w-10" />
-            <div className="bg-cream-deep h-3 w-16" />
+            <Skeleton className="h-6 w-16" />
+            <Skeleton className="h-6 w-12" />
+            <Skeleton className="h-4 w-10" />
+            <Skeleton className="h-3 w-16" />
           </div>
           <div className="flex flex-col gap-6 p-5 md:p-6">
-            <div className="bg-cream-soft h-3 w-32" />
+            <Skeleton className="h-3 w-32" />
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="bg-cream-deep h-10 w-10 shrink-0 rounded-full" />
-                <div className="bg-cream-deep h-5 max-w-32 min-w-0 flex-1" />
+                <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                <Skeleton className="h-5 max-w-32 min-w-0 flex-1" />
               </div>
-              <div className="bg-cream-deep h-8 w-16" />
+              <Skeleton className="h-8 w-16" />
               <div className="flex min-w-0 flex-row-reverse items-center gap-3">
-                <div className="bg-cream-deep h-10 w-10 shrink-0 rounded-full" />
-                <div className="bg-cream-deep h-5 max-w-32 min-w-0 flex-1" />
+                <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                <Skeleton className="h-5 max-w-32 min-w-0 flex-1" />
               </div>
             </div>
             <div className="border-ink border-t pt-3">
-              <div className="bg-cream-soft h-3 w-48" />
+              <Skeleton className="h-3 w-48" />
             </div>
           </div>
         </div>
@@ -80,7 +86,7 @@ export default function MatchDetailLoading() {
       {/* MatchLineupSection — kicker + heading + 2 columns of 11 lineup rows. */}
       <PageContainer
         as="section"
-        className="bg-cream py-10 motion-safe:animate-pulse md:py-14"
+        className="bg-cream py-10 md:py-14"
         aria-hidden="true"
       >
         <SectionHeadingSkeleton />
@@ -88,13 +94,13 @@ export default function MatchDetailLoading() {
           {Array.from({ length: 2 }).map((_, col) => (
             <div key={col}>
               <div className="border-ink mb-3 border-t pt-2">
-                <div className="bg-cream-soft h-3 w-24" />
+                <Skeleton className="h-3 w-24" />
               </div>
               <div className="space-y-2">
                 {Array.from({ length: 11 }).map((_, row) => (
                   <div key={row} className="flex items-center gap-3 py-1.5">
-                    <div className="bg-cream-soft h-7 w-7" />
-                    <div className="bg-cream-soft h-4 flex-1" />
+                    <Skeleton className="h-7 w-7" />
+                    <Skeleton className="h-4 flex-1" />
                   </div>
                 ))}
               </div>
@@ -108,16 +114,16 @@ export default function MatchDetailLoading() {
       {/* MatchEventsSection — kicker + heading + timeline rows. */}
       <PageContainer
         as="section"
-        className="bg-cream py-10 motion-safe:animate-pulse md:py-14"
+        className="bg-cream py-10 md:py-14"
         aria-hidden="true"
       >
         <SectionHeadingSkeleton />
         <div className="space-y-2.5">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 py-1.5">
-              <div className="bg-cream-soft h-4 w-10" />
-              <div className="bg-cream-soft h-5 w-5 rounded-full" />
-              <div className="bg-cream-soft h-4 flex-1" />
+              <Skeleton className="h-4 w-10" />
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-4 flex-1" />
             </div>
           ))}
         </div>
@@ -128,7 +134,7 @@ export default function MatchDetailLoading() {
       {/* MatchStandingsSection — kicker + heading + head-to-head table rows. */}
       <PageContainer
         as="section"
-        className="bg-cream py-10 motion-safe:animate-pulse md:py-14"
+        className="bg-cream py-10 md:py-14"
         aria-hidden="true"
       >
         <SectionHeadingSkeleton />
@@ -138,9 +144,9 @@ export default function MatchDetailLoading() {
               key={i}
               className="border-ink flex items-center gap-4 border-b-2 px-4 py-3 last:border-b-0"
             >
-              <div className="bg-paper-edge h-4 w-5" />
-              <div className="bg-paper-edge h-4 flex-1" />
-              <div className="bg-paper-edge h-4 w-8" />
+              <Skeleton className="h-4 w-5" />
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-4 w-8" />
             </div>
           ))}
         </div>
@@ -148,24 +154,39 @@ export default function MatchDetailLoading() {
 
       <StripedSeam colorPair="ink-cream" height="md" />
 
-      {/* MatchArticleLinkCard — cover image + body link card. */}
-      <PageContainer
-        as="section"
-        className="bg-cream py-10 motion-safe:animate-pulse md:py-14"
+      {/* RelatedRow — full-bleed cream band OUTSIDE PageContainer (matches
+          RelatedRow.tsx's own root exactly: "bg-cream w-full px-4 pt-8
+          pb-16 lg:pt-10 lg:pb-24"), a heading bar, then a horizontal row of
+          w-72/md:w-80 card blocks — not wrapped in PageContainer, since the
+          real row isn't either. */}
+      <section
         aria-hidden="true"
+        className="bg-cream w-full px-4 pt-8 pb-16 lg:pt-10 lg:pb-24"
       >
-        <div className="border-ink bg-cream shadow-paper-md border-2">
-          <div className="bg-paper-edge border-ink aspect-[16/9] w-full border-b-2" />
-          <div className="flex flex-col gap-3 px-[18px] pt-4 pb-[18px] md:px-8 md:pt-6 md:pb-8">
-            <div className="bg-paper-edge h-3 w-40" />
-            <div className="bg-paper-edge h-8 w-3/4" />
-            <div className="bg-paper-edge h-4 w-5/6" />
-            <div className="border-paper-edge mt-2 border-t-2 pt-3">
-              <div className="bg-paper-edge h-3 w-44" />
-            </div>
+        <div
+          className="mx-auto w-full"
+          style={{ maxWidth: "var(--container-wide)" }}
+        >
+          <Skeleton className="mb-10 h-9 w-72 max-w-full" />
+          <div className="flex gap-6 overflow-hidden md:gap-8">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="border-ink bg-cream-soft shadow-paper-sm w-72 shrink-0 border-2 md:w-80"
+              >
+                <div className="border-ink aspect-[16/9] w-full border-b-2">
+                  <Skeleton className="h-full w-full" />
+                </div>
+                <div className="space-y-2 p-4">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </PageContainer>
+      </section>
     </div>
   );
 }

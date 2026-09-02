@@ -6,14 +6,17 @@
  */
 
 import { SearchMastheadSkeleton } from "@/components/search/SearchMastheadSkeleton";
-import { PageContainer, FilterTabsSkeleton } from "@/components/design-system";
+import {
+  PageContainer,
+  FilterTabsSkeleton,
+  Skeleton,
+  LoadingAnnouncement,
+} from "@/components/design-system";
 
 export default function SearchLoading() {
   return (
     <div className="bg-cream min-h-screen">
-      <span role="status" aria-live="polite" className="sr-only">
-        Zoekpagina laden...
-      </span>
+      <LoadingAnnouncement label="Zoekpagina laden…" />
 
       <SearchMastheadSkeleton />
 
@@ -24,18 +27,22 @@ export default function SearchLoading() {
             Staf · Ploegen) `gap-3` row. */}
         <FilterTabsSkeleton widths={["w-14", "w-16", "w-16", "w-12", "w-16"]} />
 
-        {/* Result rows */}
-        <div className="mt-8 space-y-4 motion-safe:animate-pulse">
+        {/* Result rows — matches SearchResult.tsx's own chrome exactly:
+            bg-cream-soft (not cream) and gap-3.5 (not gap-4) on the row, and
+            the image chip's own border-[1.5px] (not border-2). */}
+        <div className="mt-8 space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="border-ink/15 flex gap-4 rounded-none border-2 bg-white p-4 shadow-[2px_2px_0_0_var(--color-ink)]"
+              className="border-ink bg-cream-soft shadow-paper-sm flex gap-3.5 border-2 p-4"
             >
-              <div className="bg-ink/10 h-16 w-16 flex-none" />
+              <div className="border-ink bg-cream h-16 w-16 flex-shrink-0 border-[1.5px]">
+                <Skeleton className="h-full w-full" />
+              </div>
               <div className="flex-1 space-y-2">
-                <div className="bg-ink/10 h-3 w-24" />
-                <div className="bg-ink/10 h-4 w-3/4" />
-                <div className="bg-ink/10 h-3 w-1/2" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
               </div>
             </div>
           ))}

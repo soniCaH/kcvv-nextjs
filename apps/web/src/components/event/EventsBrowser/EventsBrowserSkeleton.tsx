@@ -1,4 +1,4 @@
-import { FilterTabsSkeleton } from "@/components/design-system";
+import { FilterTabsSkeleton, Skeleton } from "@/components/design-system";
 
 /**
  * `<EventsBrowser>` loading skeleton — the filter chip row + month-grouped
@@ -17,7 +17,7 @@ import { FilterTabsSkeleton } from "@/components/design-system";
  */
 export function EventsBrowserSkeleton() {
   return (
-    <div aria-hidden className="flex flex-col gap-8 motion-safe:animate-pulse">
+    <div aria-hidden className="flex flex-col gap-8">
       <FilterTabsSkeleton
         surface="inverse"
         widths={["w-16", "w-28", "w-32", "w-28", "w-20"]}
@@ -27,7 +27,7 @@ export function EventsBrowserSkeleton() {
       <div className="flex flex-col gap-12">
         {Array.from({ length: 2 }).map((_, m) => (
           <section key={m}>
-            <div className="bg-cream/25 mb-4 h-9 w-48" />
+            <Skeleton tone="dark" className="mb-4 h-9 w-48" />
             <ul className="flex flex-col gap-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <li
@@ -35,12 +35,12 @@ export function EventsBrowserSkeleton() {
                   className="border-cream/40 bg-cream/5 flex items-stretch border-2"
                 >
                   <div className="border-cream/40 flex w-[72px] shrink-0 flex-col items-center justify-center gap-1 border-r-2 border-dashed py-4">
-                    <div className="bg-cream/20 h-6 w-8" />
-                    <div className="bg-cream/15 h-2 w-10" />
+                    <Skeleton tone="dark" className="h-6 w-8" />
+                    <Skeleton tone="dark" className="h-2 w-10" />
                   </div>
                   <div className="flex flex-1 flex-col justify-center gap-2 px-4 py-4">
-                    <div className="bg-cream/20 h-4 w-1/2" />
-                    <div className="bg-cream/15 h-3 w-2/3" />
+                    <Skeleton tone="dark" className="h-4 w-1/2" />
+                    <Skeleton tone="dark" className="h-3 w-2/3" />
                   </div>
                 </li>
               ))}

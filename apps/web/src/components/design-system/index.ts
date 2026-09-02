@@ -314,3 +314,11 @@ export type { LoadMoreFooterProps } from "./LoadMoreFooter";
 
 // Press-down (canonical paper press-down hover)
 export { PRESS_DOWN_CLASSES } from "./press-down";
+
+// Skeleton
+export { Skeleton } from "./Skeleton";
+export type { SkeletonProps, SkeletonTone } from "./Skeleton";
+
+// LoadingAnnouncement
+export { LoadingAnnouncement } from "./LoadingAnnouncement";
+export type { LoadingAnnouncementProps } from "./LoadingAnnouncement";

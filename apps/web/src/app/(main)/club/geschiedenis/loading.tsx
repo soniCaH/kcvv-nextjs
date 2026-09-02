@@ -2,25 +2,34 @@
  * Geschiedenis Page — Loading Skeleton.
  *
  * Mirrors `HistoryContent` (`/club/geschiedenis`):
- *   <HeritageHero> (kicker + display headline + italic lead)
+ *   <HeritageHero> (kicker + display headline + italic lead — fixed copy)
  *     → <StripedSeam>
  *     → alternating timeline items — paper TapedCards on a dashed centre line
+ *
+ * `<HeritageHero>` is a pure, server-renderable wrapper over the shared
+ * opening with no data dependency, so per #2432 §2 this reuses it directly,
+ * unshimmered, rather than redrawing its bars.
  *
  * Default width (1040). Canonical paper-register chrome only — `border-2
  * border-ink`, square corners, `cream-soft`/`paper-edge` fills, pulse bars.
  */
 
-import { PageContainer, StripedSeam } from "@/components/design-system";
-import { PageHeroSkeleton } from "@/components/layout/PageHero";
+import {
+  PageContainer,
+  StripedSeam,
+  Skeleton,
+  LoadingAnnouncement,
+} from "@/components/design-system";
+import { HeritageHero } from "./HistoryTimeline";
 
 /** A timeline TapedCard footprint on one side of the centre line. */
 function TimelineItemSkeleton({ side }: { side: "left" | "right" }) {
   const card = (
     <div className="border-ink bg-cream-soft shadow-paper-md space-y-3 border-2 p-5">
-      <div className="bg-paper-edge h-5 w-28" />
-      <div className="bg-paper-edge h-3 w-full" />
-      <div className="bg-paper-edge h-3 w-full" />
-      <div className="bg-paper-edge h-3 w-3/4" />
+      <Skeleton className="h-5 w-28" />
+      <Skeleton className="h-3 w-full" />
+      <Skeleton className="h-3 w-full" />
+      <Skeleton className="h-3 w-3/4" />
     </div>
   );
   return (
@@ -42,23 +51,14 @@ function TimelineItemSkeleton({ side }: { side: "left" | "right" }) {
 export default function HistoryLoading() {
   return (
     <div className="min-h-screen">
-      <span
-        role="status"
-        aria-busy="true"
-        aria-live="polite"
-        className="sr-only"
-      >
-        Geschiedenis laden...
-      </span>
+      <LoadingAnnouncement label="Geschiedenis laden…" />
 
-      <PageContainer className="pt-12 sm:pt-16">
-        <PageHeroSkeleton register="minimal" lead />
-      </PageContainer>
+      <HeritageHero />
 
       <StripedSeam colorPair="ink-cream" height="md" />
 
       {/* Timeline — alternating paper cards on a dashed ink centre line. */}
-      <PageContainer className="py-8 motion-safe:animate-pulse">
+      <PageContainer className="py-8">
         <div className="relative py-4">
           <div
             className="border-ink/50 pointer-events-none absolute inset-y-0 left-1/2 hidden -translate-x-px border-l-2 border-dashed md:block"

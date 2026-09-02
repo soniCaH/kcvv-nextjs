@@ -9,25 +9,41 @@
  * The "Uitgelicht" featured row #2432 wrote this skeleton against is gone —
  * #2569 deleted it from the page, so shimmering it here would announce a shape
  * that never arrives.
+ *
+ * The opening's kicker + headline ("Nieuwsarchief") is fixed copy, not data —
+ * per #2432 §2 this reuses the real `<PageHero>` unshimmered, the `/zoeken`
+ * model: the `<h1>` is correct from the first byte and nothing reflows.
  */
 
 import {
   PageContainer,
   TapedCardGrid,
   FilterTabsSkeleton,
+  Skeleton,
+  LoadingAnnouncement,
 } from "@/components/design-system";
-import { PageHeroSkeleton } from "@/components/layout/PageHero";
+import { PageHero } from "@/components/layout/PageHero";
+import { NEWS_KICKER, NEWS_HEADLINE } from "./page";
 
-/** A flush-image card footprint — image atop a border-2 ink body. */
+/** A flush-image card footprint — image atop a border-2 ink body. The inline
+ *  `transform` mirrors `<TapedCard rotation="auto">`'s own non-interactive
+ *  style exactly — the `--taped-card-rotation` slot var a `<TapedCardGrid>`
+ *  sets, read the same way here as it will be by the real `<NewsCard>` on
+ *  arrival, so the card doesn't visibly snap from flat to tilted on swap. */
 function NewsCardSkeleton() {
   return (
-    <div className="border-ink bg-cream-soft shadow-paper-sm overflow-hidden border-2">
-      <div className="bg-paper-edge border-ink aspect-[3/2] border-b-2" />
+    <div
+      className="border-ink bg-cream-soft shadow-paper-sm overflow-hidden border-2"
+      style={{ transform: "rotate(var(--taped-card-rotation, 0deg))" }}
+    >
+      <div className="border-ink aspect-[3/2] border-b-2">
+        <Skeleton className="h-full w-full" />
+      </div>
       <div className="space-y-2 p-4">
-        <div className="bg-paper-edge h-3 w-16" />
-        <div className="bg-paper-edge h-5 w-full" />
-        <div className="bg-paper-edge h-5 w-2/3" />
-        <div className="bg-paper-edge h-3 w-1/3" />
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-2/3" />
+        <Skeleton className="h-3 w-1/3" />
       </div>
     </div>
   );
@@ -36,18 +52,15 @@ function NewsCardSkeleton() {
 export default function NewsLoading() {
   return (
     <div className="w-full">
-      <span
-        role="status"
-        aria-busy="true"
-        aria-live="polite"
-        className="sr-only"
-      >
-        Nieuws laden...
-      </span>
+      <LoadingAnnouncement label="Nieuws laden…" />
 
-      {/* The opening — kicker + headline, above the sticky bar. */}
+      {/* The opening — real, unshimmered (fixed copy). */}
       <PageContainer width="index" className="pt-12 sm:pt-16">
-        <PageHeroSkeleton register="minimal" />
+        <PageHero
+          register="minimal"
+          kicker={NEWS_KICKER}
+          headline={NEWS_HEADLINE}
+        />
       </PageContainer>
 
       {/* Sticky filter bar — mirrors the page's dark category-filter band.
@@ -67,11 +80,7 @@ export default function NewsLoading() {
       <PageContainer width="index" className="py-6">
         {/* Chronological listing — the same primitive the page renders, so the
             ladder and gutter cannot drift out of the loading state. */}
-        <TapedCardGrid
-          columns={3}
-          gap="md"
-          className="mb-6 motion-safe:animate-pulse"
-        >
+        <TapedCardGrid columns={3} gap="md" className="mb-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <NewsCardSkeleton key={i} />
           ))}

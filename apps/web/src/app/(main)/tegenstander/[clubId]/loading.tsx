@@ -3,28 +3,38 @@
  *
  * Paper-register skeleton mirroring the #2141 reskin: a light hero card, the
  * five-cell summary, a striped seam, and a season-grouped row placeholder.
- * Card chrome (borders + paper shadow) stays solid; only the gray content bars
- * pulse.
+ * The opponent's name is data, so this renders no heading text. Bars inside
+ * the `bg-cream` cards (hero, W/D/L cells, season rows) use `<Skeleton>`'s
+ * default `paper-edge` fill; the list header and season-band bars sit
+ * directly on the page's `bg-cream-deep` root and use `tone="deep"` instead
+ * — `paper-edge` is calibrated against plain cream and is an 8/5/2 RGB delta
+ * away from `cream-deep`, invisible once `animate-pulse` fades it. Card
+ * chrome (borders + paper shadow) stays solid.
  */
 
-import { PageContainer, StripedSeam } from "@/components/design-system";
+import {
+  PageContainer,
+  StripedSeam,
+  Skeleton,
+  LoadingAnnouncement,
+} from "@/components/design-system";
 
 export default function OpponentLoading() {
   return (
     <div className="bg-cream-deep min-h-screen">
+      <LoadingAnnouncement label="Tegenstander laden…" />
+
       <PageContainer className="pt-8 pb-8">
         {/* Hero card */}
         <div className="border-ink bg-cream shadow-paper-md border-2 p-6">
-          <div className="motion-safe:animate-pulse">
-            <div className="flex items-center gap-4">
-              <div className="bg-ink/10 h-16 w-16 shrink-0 rounded-full" />
-              <div className="flex-1 space-y-3">
-                <div className="bg-ink/10 h-3 w-40" />
-                <div className="bg-ink/15 h-9 w-2/3" />
-              </div>
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-16 w-16 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-3">
+              <Skeleton className="h-3 w-40" />
+              <Skeleton className="h-9 w-2/3" />
             </div>
-            <div className="bg-ink/10 mt-4 h-3 w-3/4" />
           </div>
+          <Skeleton className="mt-4 h-3 w-3/4" />
         </div>
 
         {/* W/D/L summary */}
@@ -32,10 +42,10 @@ export default function OpponentLoading() {
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="border-ink flex flex-col items-center gap-2 border-r-2 px-1.5 py-4 last:border-r-0 motion-safe:animate-pulse"
+              className="border-ink flex flex-col items-center gap-2 border-r-2 px-1.5 py-4 last:border-r-0"
             >
-              <div className="bg-ink/15 h-6 w-6" />
-              <div className="bg-ink/10 h-2 w-6" />
+              <Skeleton className="h-6 w-6" />
+              <Skeleton className="h-2 w-6" />
             </div>
           ))}
         </div>
@@ -45,14 +55,15 @@ export default function OpponentLoading() {
           <StripedSeam height="sm" />
         </div>
 
-        {/* List header */}
-        <div className="bg-ink/15 mb-4 h-6 w-44 motion-safe:animate-pulse" />
+        {/* List header — sits directly on the bg-cream-deep root, so the
+            deep tone is required (paper-edge is invisible here). */}
+        <Skeleton tone="deep" className="mb-4 h-6 w-44" />
 
         {/* Season band */}
-        <div className="mb-2.5 flex items-center gap-2.5 motion-safe:animate-pulse">
-          <div className="bg-ink/15 h-5 w-28" />
+        <div className="mb-2.5 flex items-center gap-2.5">
+          <Skeleton tone="deep" className="h-5 w-28" />
           <div className="border-ink/30 h-0 flex-1 border-t-2 border-dotted" />
-          <div className="bg-ink/10 h-2 w-16" />
+          <Skeleton tone="deep" className="h-2 w-16" />
         </div>
 
         {/* Rows */}
@@ -60,16 +71,16 @@ export default function OpponentLoading() {
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="border-ink bg-cream flex items-stretch border-2 shadow-[2px_2px_0_0_var(--color-ink)]"
+              className="border-ink bg-cream shadow-paper-sm flex items-stretch border-2"
             >
-              <div className="border-ink/30 flex w-[56px] shrink-0 flex-col items-center justify-center gap-1 border-r-2 border-dashed py-3 motion-safe:animate-pulse">
-                <div className="bg-ink/15 h-4 w-5" />
-                <div className="bg-ink/10 h-2 w-6" />
+              <div className="border-ink/30 flex w-[56px] shrink-0 flex-col items-center justify-center gap-1 border-r-2 border-dashed py-3">
+                <Skeleton className="h-4 w-5" />
+                <Skeleton className="h-2 w-6" />
               </div>
-              <div className="flex flex-1 items-center justify-between px-3 py-3 motion-safe:animate-pulse">
-                <div className="bg-ink/10 h-3 w-24" />
-                <div className="bg-ink/15 h-5 w-10" />
-                <div className="bg-ink/10 h-3 w-24" />
+              <div className="flex flex-1 items-center justify-between px-3 py-3">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-5 w-10" />
+                <Skeleton className="h-3 w-24" />
               </div>
             </div>
           ))}

@@ -5,40 +5,45 @@
  * `<PlayerHero>` block, `<StripedSeam>`, and a bio paragraph footprint.
  * Subject-specific surfaces (photo, name, bio text, ink quote card) are
  * intentionally NOT skeletonised: their auto-hide branches mean a single
- * skeleton can't accurately predict what will render.
+ * skeleton can't accurately predict what will render. The player's name is
+ * data, so `<PlayerHero>`'s own `<h1>` never renders here — bars only.
  */
 
-import { PageContainer } from "@/components/design-system";
+import {
+  PageContainer,
+  Skeleton,
+  LoadingAnnouncement,
+} from "@/components/design-system";
 
 export default function PlayerDetailLoading() {
   return (
-    <div className="min-h-screen" aria-hidden="true">
-      <PageContainer
-        as="section"
-        className="py-12 motion-safe:animate-pulse lg:py-16"
-      >
+    <div className="min-h-screen">
+      <LoadingAnnouncement label="Spelersprofiel laden…" />
+
+      <PageContainer as="section" className="py-12 lg:py-16" aria-hidden="true">
         <div className="grid grid-cols-1 items-start gap-x-10 gap-y-8 sm:grid-cols-[1fr_minmax(220px,320px)]">
           <div className="flex flex-col gap-5">
-            <div className="bg-paper-edge h-4 w-24" />
-            <div className="bg-paper-edge h-24 w-32" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-24 w-32" />
             <div className="space-y-2">
-              <div className="bg-paper-edge h-12 w-3/4" />
-              <div className="bg-paper-edge h-10 w-2/3" />
+              <Skeleton className="h-12 w-3/4" />
+              <Skeleton className="h-10 w-2/3" />
             </div>
-            <div className="bg-paper-edge h-3 w-48" />
+            <Skeleton className="h-3 w-48" />
           </div>
-          <div className="bg-paper-edge aspect-[3/4] w-full max-w-[320px] justify-self-start sm:justify-self-end" />
+          <Skeleton className="aspect-[3/4] w-full max-w-[320px] justify-self-start sm:justify-self-end" />
         </div>
       </PageContainer>
-      <div className="bg-paper-edge h-[18px] w-full" />
+      <Skeleton className="h-[18px] w-full" />
       <PageContainer
         as="section"
-        className="bg-cream py-12 motion-safe:animate-pulse lg:py-16"
+        className="bg-cream py-12 lg:py-16"
+        aria-hidden="true"
       >
         <div className="space-y-3">
-          <div className="bg-paper-edge h-4 w-full" />
-          <div className="bg-paper-edge h-4 w-11/12" />
-          <div className="bg-paper-edge h-4 w-10/12" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-11/12" />
+          <Skeleton className="h-4 w-10/12" />
         </div>
       </PageContainer>
     </div>

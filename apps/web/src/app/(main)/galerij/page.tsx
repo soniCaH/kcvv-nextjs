@@ -20,6 +20,12 @@ import { pendingEmptyBody } from "@/lib/utils/empty-state-copy";
 import { fetchGalleriesAction } from "./actions";
 import { GalleryListingClient } from "./GalleryListingClient";
 
+// Exported so `loading.tsx` can reuse the real, unshimmered opening (#2432
+// §2) instead of a second hand-typed copy that can silently drift from this
+// one.
+export const GALERIJ_KICKER = "KCVV Elewijt · Beelden";
+export const GALERIJ_HEADLINE = "Fotogalerij";
+
 export const metadata = buildPageMetadata({
   title: "Fotogalerij",
   description:
@@ -52,8 +58,8 @@ export default async function GalerijPage() {
       <PageContainer as="main" width="index" className="flex-1 py-12 sm:py-16">
         <PageHero
           register="minimal"
-          kicker="KCVV Elewijt · Beelden"
-          headline="Fotogalerij"
+          kicker={GALERIJ_KICKER}
+          headline={GALERIJ_HEADLINE}
         />
         {initial.items.length === 0 ? (
           <EmptyState tier="surface" heading="Nog geen fotogalerijen">

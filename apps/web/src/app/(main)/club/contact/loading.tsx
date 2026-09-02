@@ -10,11 +10,22 @@
  *     → <StripedSeam>
  *     → "Kom naar ons." venue card grid           ← 2-col
  *
- * Default width (1040). Canonical paper-register chrome only — `border-2
- * border-ink`, square corners, `paper-edge`/`cream` fills, pulse bars.
+ * Default width (1040). The hero's kicker/headline/lead are fixed copy, not
+ * data, so per #2432 §2 this reuses the real `<PageHero>` unshimmered.
  */
 
-import { PageContainer, StripedSeam } from "@/components/design-system";
+import {
+  PageContainer,
+  StripedSeam,
+  Skeleton,
+  LoadingAnnouncement,
+} from "@/components/design-system";
+import { PageHero } from "@/components/layout/PageHero";
+import {
+  CONTACT_KICKER,
+  CONTACT_HEADLINE,
+  CONTACT_LEAD,
+} from "@/components/club/ContactPage/contact-copy";
 
 /** A paper TapedCard footprint (border-2 ink + offset shadow). */
 function CardSkeleton({ className = "" }: { className?: string }) {
@@ -22,9 +33,9 @@ function CardSkeleton({ className = "" }: { className?: string }) {
     <div
       className={`border-ink bg-cream shadow-paper-sm space-y-3 border-2 p-5 ${className}`}
     >
-      <div className="bg-paper-edge h-3 w-24" />
-      <div className="bg-paper-edge h-4 w-2/3" />
-      <div className="bg-paper-edge h-3 w-4/5" />
+      <Skeleton className="h-3 w-24" />
+      <Skeleton className="h-4 w-2/3" />
+      <Skeleton className="h-3 w-4/5" />
     </div>
   );
 }
@@ -32,34 +43,27 @@ function CardSkeleton({ className = "" }: { className?: string }) {
 export default function ContactLoading() {
   return (
     <div className="bg-cream min-h-screen">
-      <span
-        role="status"
-        aria-busy="true"
-        aria-live="polite"
-        className="sr-only"
-      >
-        Contactpagina laden...
-      </span>
+      <LoadingAnnouncement label="Contactpagina laden…" />
 
-      {/* PageHero — kicker + headline + lead in a paper card. */}
+      {/* PageHero — real, unshimmered (fixed copy). */}
       <PageContainer className="pt-10 pb-12">
-        <div className="border-ink bg-cream shadow-paper-md space-y-4 border-2 p-6 motion-safe:animate-pulse md:p-8">
-          <div className="bg-paper-edge h-3 w-20" />
-          <div className="bg-paper-edge h-10 w-1/2" />
-          <div className="bg-paper-edge h-4 w-3/4" />
-        </div>
+        <PageHero
+          kicker={CONTACT_KICKER}
+          headline={CONTACT_HEADLINE}
+          lead={CONTACT_LEAD}
+        />
       </PageContainer>
 
       <StripedSeam colorPair="ink-cream" height="md" />
 
       {/* Clubgegevens card + map — 2-col. */}
-      <PageContainer className="py-12 motion-safe:animate-pulse">
+      <PageContainer className="py-12">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="border-ink bg-cream shadow-paper-sm space-y-4 border-2 p-6 md:p-8">
-            <div className="bg-paper-edge h-8 w-48" />
-            <div className="bg-paper-edge h-4 w-2/3" />
-            <div className="bg-paper-edge h-4 w-1/2" />
-            <div className="bg-paper-edge h-3 w-40" />
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-3 w-40" />
           </div>
           <div className="border-ink bg-cream-soft shadow-paper-sm min-h-[280px] border-2" />
         </div>
@@ -68,8 +72,8 @@ export default function ContactLoading() {
       <StripedSeam colorPair="ink-cream" height="md" />
 
       {/* Contacteer ons — 3-col contact-card grid. */}
-      <PageContainer className="py-12 motion-safe:animate-pulse">
-        <div className="bg-paper-edge mb-6 h-8 w-56" />
+      <PageContainer className="py-12">
+        <Skeleton className="mb-6 h-8 w-56" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <CardSkeleton key={i} />
@@ -80,8 +84,8 @@ export default function ContactLoading() {
       <StripedSeam colorPair="ink-cream" height="md" />
 
       {/* Kom naar ons — 2-col venue card grid. */}
-      <PageContainer className="py-12 motion-safe:animate-pulse">
-        <div className="bg-paper-edge mb-6 h-8 w-56" />
+      <PageContainer className="py-12">
+        <Skeleton className="mb-6 h-8 w-56" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
             <CardSkeleton key={i} />
