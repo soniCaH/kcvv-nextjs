@@ -143,11 +143,11 @@ describe("MatchStripView", () => {
     expect(score?.getAttribute("style") ?? "").toContain("inset");
   });
 
-  it("gives a draw no outcome sweep", () => {
+  it("marks a draw with its own ink-muted outcome sweep (#2512/#2656)", () => {
     const draw: ScheduleMatch = { ...result, homeScore: 2, awayScore: 2 };
     render(<MatchStripView data={{ result: draw, fixture: null }} />);
     const score = screen.getAllByText("2–2")[0];
-    expect(score?.getAttribute("style") ?? "").not.toContain("inset");
+    expect(score?.getAttribute("style") ?? "").toContain("ink-muted");
   });
 
   it("renders the fixture alone when there is no result", () => {
