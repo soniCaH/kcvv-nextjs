@@ -1022,4 +1022,68 @@ describe("SearchInterface", () => {
       );
     });
   });
+
+  describe("Filter/query race regressions (PR #2783 review, finding 1)", () => {
+    afterEach(() => {
+      window.location.search = "";
+    });
+
+    it("does not silently drop a filter click made before the previous push's useSearchParams() catches up (1a)", async () => {
+      const user = userEvent.setup();
+      mockSearchParams.set("q", "test");
+
+      render(<SearchInterface />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("group")).toBeInTheDocument();
+      });
+
+      // First click: "all" -> "article". `mockSearchParams` (what
+      // useSearchParams() returns) is deliberately NOT updated by this —
+      // exactly like a real router.push whose transition hasn't landed yet.
+      await user.click(screen.getByRole("button", { name: /nieuws/i }));
+      expect(mockPush).toHaveBeenCalledTimes(1);
+
+      // Second click, before the first "commits": "article" -> "all" again.
+      // A dedup guard comparing against the hook's still-stale internal
+      // value must not mistake this for a no-op.
+      await user.click(screen.getByRole("button", { name: /alles/i }));
+
+      expect(mockPush).toHaveBeenCalledTimes(2);
+      expect(mockPush).toHaveBeenLastCalledWith(
+        expect.not.stringContaining("type="),
+      );
+    });
+
+    it("does not let a stale address bar clobber the query just submitted, when a filter click follows it (1b)", async () => {
+      const user = userEvent.setup();
+      const mockResponse = createMockSearchResponse("nieuw");
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      render(<SearchInterface />);
+
+      const input = screen.getByRole("textbox");
+      await user.type(input, "nieuw");
+      await user.click(screen.getByRole("button", { name: /^zoeken$/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("group")).toBeInTheDocument();
+      });
+
+      // Simulate a real router.push whose address-bar update hasn't landed
+      // yet: the component has already moved on to "nieuw" (query state),
+      // but window.location.search still reports the previous query.
+      window.location.search = "q=oud";
+
+      await user.click(screen.getByRole("button", { name: /nieuws/i }));
+
+      const [lastUrl] = mockPush.mock.calls.at(-1)!;
+      expect(new URLSearchParams(String(lastUrl).split("?")[1]).get("q")).toBe(
+        "nieuw",
+      );
+    });
+  });
 });

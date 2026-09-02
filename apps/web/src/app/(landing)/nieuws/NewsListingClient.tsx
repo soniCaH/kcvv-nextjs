@@ -11,6 +11,7 @@ import {
 } from "@/components/design-system";
 import { formatArticleDate } from "@/lib/utils/dates";
 import { articleTypeCardLabel } from "@/lib/utils/article-type-label";
+import { narrowParam, writeHistoryFilterParam } from "@/hooks/filterParam";
 import { LISTING_BATCH_SIZE, LISTING_INITIAL_TOTAL } from "@/lib/constants";
 import { deduplicateById, type Paginated } from "@/lib/utils/pagination";
 import {
@@ -42,8 +43,17 @@ export function NewsListingClient({
   initialCategory,
   fetchArticles,
 }: NewsListingClientProps) {
-  const [activeCategory, setActiveCategory] = useState(
-    initialCategory ?? "all",
+  // Every valid `?categorie=` value — the same array both the initial seed
+  // below and the `popstate` listener further down narrow against, so a
+  // stale/bogus slug (e.g. a category since renamed or removed) can never
+  // desync this component's own `activeCategory` from what a
+  // `useHistoryFilterParam`-style read would derive (#2783 review finding 4).
+  const categorySlugs = useMemo(
+    () => categories.map((c) => c.attributes.slug),
+    [categories],
+  );
+  const [activeCategory, setActiveCategory] = useState(() =>
+    narrowParam(initialCategory ?? null, categorySlugs, "all"),
   );
   const [gridArticles, setGridArticles] = useState(initialArticles);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -116,17 +126,23 @@ export function NewsListingClient({
   // `loading.tsx` and unmounts this component, discarding the grid the
   // client fetch above just built (#2564 review finding 3, reproduced: every
   // chip click fired two fetches and flashed the loading skeleton).
-  // `window.history.pushState` updates the address bar and adds a real
-  // history entry (browser back undoes a filter, #2429 resolution rule 5)
-  // without going through Next's router at all, so no server re-render, no
-  // second fetch, no discarded grid. Passing the current `window.history.state`
-  // (not `{}`) keeps Next's internal `__NA` marker, so its own patched
-  // push/replaceState still treats this as an internal write rather than a
-  // fresh navigation to re-process — same precedent as
-  // `lib/utils/same-page-anchor.ts`. Because `pushState` doesn't itself
-  // notify React, a `popstate` listener re-runs this same fetch (with
-  // `updateUrl: false`, since the browser already moved the URL) so back/
-  // forward doesn't leave the grid out of sync with the address bar.
+  // `writeHistoryFilterParam` (#2779, #2783 review finding 5) writes
+  // `window.history.pushState` instead — updating the address bar and
+  // adding a real history entry (browser back undoes a filter, #2429
+  // resolution rule 5) without going through Next's router at all, so no
+  // server re-render, no second fetch, no discarded grid. Called directly
+  // as a plain function, not through `useHistoryFilterParam`'s own
+  // read/mount-effect/`popstate` machinery: this component's own async
+  // orchestration (request-id tracking, abort-on-stale, retry-on-error)
+  // already owns the read side (`activeCategory` above), so routing a
+  // discarded reactive value through that hook for a read nothing renders
+  // with would only run a second, weaker-narrowed popstate listener
+  // alongside this one. The URL write stays gated on fetch SUCCESS and
+  // happens only here, after the grid is already updated — never in the
+  // click handler itself. Because a `pushState`-driven write doesn't itself
+  // notify React, the `popstate` listener below re-runs this same fetch
+  // (with `updateUrl: false`, since the browser already moved the URL) so
+  // back/forward doesn't leave the grid out of sync with the address bar.
   const applyCategory = useCallback(
     async (category: string, { updateUrl }: { updateUrl: boolean }) => {
       if (category === activeCategory) return;
@@ -153,10 +169,9 @@ export function NewsListingClient({
         setHasMore(result.hasMore);
 
         if (updateUrl) {
-          const url = categoryFilter
-            ? `/nieuws?categorie=${encodeURIComponent(categoryFilter)}`
-            : "/nieuws";
-          window.history.pushState(window.history.state, "", url);
+          writeHistoryFilterParam("categorie", category, "all", {
+            route: "/nieuws",
+          });
         }
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (err) {
@@ -196,12 +211,25 @@ export function NewsListingClient({
   useEffect(() => {
     const onPopState = () => {
       const params = new URLSearchParams(window.location.search);
-      const urlCategory = params.get("categorie") ?? "all";
+      // Narrowed the same way `useHistoryFilterParam` narrows its own read
+      // (#2783 review finding 4) — an unrecognised/stale `?categorie=` (a
+      // category since renamed or removed) falls back to "all" here too,
+      // rather than being handed to `applyCategory` raw. Without this, a
+      // bogus slug in the URL and this component's own `activeCategory`
+      // could disagree forever: clicking "Toon alles" would see
+      // `activeCategory` (bogus) differ from "all" and proceed, but nothing
+      // would ever clear the bogus value FROM the address bar, since the
+      // resulting write always narrows the WRITE side to "all" too.
+      const urlCategory = narrowParam(
+        params.get("categorie"),
+        categorySlugs,
+        "all",
+      );
       applyCategoryRef.current(urlCategory, { updateUrl: false });
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, []);
+  }, [categorySlugs]);
 
   // The filtered EmptyState's undo action — defined here, not inline in the
   // JSX below, so the callback closes over `handleCategoryChange` at the
