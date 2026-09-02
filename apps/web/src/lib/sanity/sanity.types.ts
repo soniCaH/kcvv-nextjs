@@ -2301,7 +2301,7 @@ export type GALLERIES_QUERY_RESULT = Array<{
 
 // Source: ../web/src/lib/repositories/photoGallery.repository.ts
 // Variable: GALLERY_BY_SLUG_QUERY
-// Query: *[_type == "photoGallery" && slug.current == $slug][0] {  "id": _id,  "updatedAt": _updatedAt,  "title": coalesce(title, ""),  "slug": coalesce(slug.current, ""),  "publishedAt": coalesce(publishedAt, ""),  "descriptionText": pt::text(description),  "descriptionRich": description,  "images": images[]{    "url": asset->url,    "lqip": asset->metadata.lqip,    "alt": coalesce(alt, ""),    "caption": coalesce(caption, ""),    "credit": coalesce(credit, ^.defaultCredit, "")  }}
+// Query: *[_type == "photoGallery" && slug.current == $slug][0] {  "id": _id,  "updatedAt": _updatedAt,  "title": coalesce(title, ""),  "slug": coalesce(slug.current, ""),  "publishedAt": coalesce(publishedAt, ""),  "descriptionText": pt::text(description),  "descriptionRich": description,  "images": images[]{    "url": asset->url,    "lqip": asset->metadata.lqip,    "alt": coalesce(alt, ""),    "caption": coalesce(caption, ""),    "credit": coalesce(credit, ^.defaultCredit, "")  },  "linkedEvent": linkedEvent-> {    "id": _id,    "title": coalesce(pt::text(title), title, ""),    "slug": coalesce(slug.current, ""),    "dateStart": coalesce(dateStart, ""),    dateEnd,    "coverImageUrl": coverImage.asset->url + "?w=800&h=450&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(coverImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(coverImage.hotspot.y, 0.5))  }}
 export type GALLERY_BY_SLUG_QUERY_RESULT = {
   id: string;
   updatedAt: string;
@@ -2334,6 +2334,14 @@ export type GALLERY_BY_SLUG_QUERY_RESULT = {
     caption: string | "";
     credit: string | "";
   }> | null;
+  linkedEvent: {
+    id: string;
+    title: string;
+    slug: string | "";
+    dateStart: string | "";
+    dateEnd: string | null;
+    coverImageUrl: string | null;
+  } | null;
 } | null;
 
 // Source: ../web/src/lib/repositories/photoGallery.repository.ts
@@ -2409,7 +2417,7 @@ export type PLAYERS_QUERY_RESULT = Array<{
 
 // Source: ../web/src/lib/repositories/player.repository.ts
 // Variable: PLAYER_BY_PSD_ID_QUERY
-// Query: *[_type == "player" && psdId == $psdId][0] {  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,  birthDate,  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",  bio,  "currentTeam": *[_type == "team" && archived != true && references(^._id)] | order(name asc)[0] {    name, displayName, "slug": slug.current  }}
+// Query: *[_type == "player" && psdId == $psdId][0] {  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,  birthDate,  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",  bio,  "currentTeam": *[_type == "team" && archived != true && showInNavigation != false && references(^._id)] | order(name asc)[0] {    _id, name, displayName, "slug": slug.current,    "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5))  }}
 export type PLAYER_BY_PSD_ID_QUERY_RESULT = {
   _id: string;
   psdId: string | null;
@@ -2443,9 +2451,11 @@ export type PLAYER_BY_PSD_ID_QUERY_RESULT = {
     _key: string;
   }> | null;
   currentTeam: {
+    _id: string;
     name: string | null;
     displayName: string | null;
     slug: string | null;
+    teamImageUrl: string | null;
   } | null;
 } | null;
 
@@ -2723,6 +2733,18 @@ export type TEAM_BY_SLUG_QUERY_RESULT = {
 } | null;
 
 // Source: ../web/src/lib/repositories/team.repository.ts
+// Variable: TEAMS_BY_MEMBER_QUERY
+// Query: *[_type == "team" && archived != true && showInNavigation != false && references($memberId)] | order(name asc) {  _id, name, displayName, "slug": slug.current, tagline,  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5))}
+export type TEAMS_BY_MEMBER_QUERY_RESULT = Array<{
+  _id: string;
+  name: string | null;
+  displayName: string | null;
+  slug: string | null;
+  tagline: string | null;
+  teamImageUrl: string | null;
+}>;
+
+// Source: ../web/src/lib/repositories/team.repository.ts
 // Variable: YOUTH_TEAMS_CONTACT_QUERY
 // Query: *[_type == "team" && archived != true && defined(age) && age match "U*"] | order(name asc) {  _id, name, "slug": slug.current, age,  staff[defined(member) && !member->archived] { role, "member": member-> { _id, firstName, lastName, email, phone } }}
 export type YOUTH_TEAMS_CONTACT_QUERY_RESULT = Array<{
@@ -2787,12 +2809,12 @@ declare module "@sanity/client" {
     '*[_type == "page" && defined(slug.current)] | order(title asc) {\n  "id": _id, "title": coalesce(title, ""), "slug": coalesce(slug.current, ""),\n  "updatedAt": _updatedAt\n}': PAGES_QUERY_RESULT;
     '*[_type == "page" && slug.current == $slug][0] {\n  "id": _id, "title": coalesce(title, ""), "slug": coalesce(slug.current, ""),\n  "heroImageUrl": heroImage.asset->url + "?w=1600&q=80&fm=webp&fit=max",\n  metaDescription,\n  "ogImageUrl": ogImage.asset->url + "?w=1200&h=630&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(ogImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(ogImage.hotspot.y, 0.5)),\n  body[]{ ..., "fileUrl": file.asset->url, "fileSize": file.asset->size, "fileMimeType": file.asset->mimeType, "fileOriginalFilename": file.asset->originalFilename, "asset": select(_type == "image" => asset->{ "url": url + "?w=800&q=80&fm=webp&fit=max", title, description, creditLine, metadata{dimensions, lqip} }, _type == "articleImage" => image.asset->{ "url": url + "?w=800&q=80&fm=webp&fit=max", title, description, creditLine, metadata{dimensions, lqip} }) }\n}': PAGE_BY_SLUG_QUERY_RESULT;
     '*[_type == "photoGallery" && defined(slug.current)] | order(publishedAt desc) [$offset...$end] {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip\n}': GALLERIES_QUERY_RESULT;
-    '*[_type == "photoGallery" && slug.current == $slug][0] {\n  "id": _id,\n  "updatedAt": _updatedAt,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "descriptionText": pt::text(description),\n  "descriptionRich": description,\n  "images": images[]{\n    "url": asset->url,\n    "lqip": asset->metadata.lqip,\n    "alt": coalesce(alt, ""),\n    "caption": coalesce(caption, ""),\n    "credit": coalesce(credit, ^.defaultCredit, "")\n  }\n}': GALLERY_BY_SLUG_QUERY_RESULT;
+    '*[_type == "photoGallery" && slug.current == $slug][0] {\n  "id": _id,\n  "updatedAt": _updatedAt,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "descriptionText": pt::text(description),\n  "descriptionRich": description,\n  "images": images[]{\n    "url": asset->url,\n    "lqip": asset->metadata.lqip,\n    "alt": coalesce(alt, ""),\n    "caption": coalesce(caption, ""),\n    "credit": coalesce(credit, ^.defaultCredit, "")\n  },\n  "linkedEvent": linkedEvent-> {\n    "id": _id,\n    "title": coalesce(pt::text(title), title, ""),\n    "slug": coalesce(slug.current, ""),\n    "dateStart": coalesce(dateStart, ""),\n    dateEnd,\n    "coverImageUrl": coverImage.asset->url + "?w=800&h=450&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(coverImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(coverImage.hotspot.y, 0.5))\n  }\n}': GALLERY_BY_SLUG_QUERY_RESULT;
     '*[_type == "photoGallery" && defined(slug.current)] { "slug": coalesce(slug.current, ""), "updatedAt": _updatedAt }': GALLERY_SLUGS_QUERY_RESULT;
     '*[_type == "photoGallery" && linkedMatch == $matchId && defined(slug.current)] | order(publishedAt asc) {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip\n}': GALLERIES_BY_MATCH_QUERY_RESULT;
     '*[_type == "photoGallery" && linkedEvent._ref == $eventId && defined(slug.current)] | order(publishedAt asc) {\n  "id": _id,\n  "title": coalesce(title, ""),\n  "slug": coalesce(slug.current, ""),\n  "publishedAt": coalesce(publishedAt, ""),\n  "imageCount": coalesce(count(images), 0),\n  "coverUrl": images[0].asset->url,\n  "coverLqip": images[0].asset->metadata.lqip\n}': GALLERIES_BY_EVENT_QUERY_RESULT;
     '*[_type == "player" && archived != true] | order(lastName asc) {\n  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,\n  birthDate,\n  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",\n  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  bio\n}': PLAYERS_QUERY_RESULT;
-    '*[_type == "player" && psdId == $psdId][0] {\n  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,\n  birthDate,\n  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",\n  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  bio,\n  "currentTeam": *[_type == "team" && archived != true && references(^._id)] | order(name asc)[0] {\n    name, displayName, "slug": slug.current\n  }\n}': PLAYER_BY_PSD_ID_QUERY_RESULT;
+    '*[_type == "player" && psdId == $psdId][0] {\n  _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,\n  birthDate,\n  "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",\n  "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",\n  bio,\n  "currentTeam": *[_type == "team" && archived != true && showInNavigation != false && references(^._id)] | order(name asc)[0] {\n    _id, name, displayName, "slug": slug.current,\n    "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5))\n  }\n}': PLAYER_BY_PSD_ID_QUERY_RESULT;
     '*[_type == "player" && keeper == true && archived != true].psdId': KEEPER_PSD_IDS_QUERY_RESULT;
     '*[_type == "responsibility" && active == true] | order(title asc) {\n  "id": slug.current,\n  "role": audience,\n  question,\n  keywords,\n  summary,\n  category,\n  icon,\n  "primaryContact": primaryContact {\n    contactType,\n    teamRole,\n    teamRoleFallback,\n    "position": organigramNode->title,\n    "roleCode": organigramNode->roleCode,\n    "members": organigramNode->members[]->{\n      "id": _id,\n      "name": coalesce(firstName, "") + " " + coalesce(lastName, ""),\n      email, phone\n    },\n    "nodeId": organigramNode->_id,\n    "role": role,\n    "email": email,\n    "phone": phone,\n    "department": department\n  },\n  "steps": steps[] {\n    description,\n    link,\n    "contact": select(defined(contact) => contact {\n      contactType,\n      teamRole,\n      teamRoleFallback,\n      "position": organigramNode->title,\n      "roleCode": organigramNode->roleCode,\n      "members": organigramNode->members[]->{\n        "id": _id,\n        "name": coalesce(firstName, "") + " " + coalesce(lastName, ""),\n        email, phone\n      },\n      "nodeId": organigramNode->_id,\n      "role": role,\n      "email": email,\n      "phone": phone,\n      "department": department\n    }, null)\n  },\n  "relatedPaths": coalesce(relatedPaths[]->slug.current, [])\n}': RESPONSIBILITY_PATHS_QUERY_RESULT;
     '*[_type == "sponsor" && active == true] | order(name asc) {\n  "id": _id, "name": coalesce(name, ""), url, type, tier, "featured": coalesce(featured, false), description,\n  "logoUrl": logo.asset->url + "?w=400&q=80&fm=webp&fit=max"\n}': SPONSORS_QUERY_RESULT;
@@ -2802,6 +2824,7 @@ declare module "@sanity/client" {
     '*[_type == "staffMember" && archived != true && defined(psdId) && psdId != ""] | order(lastName asc) {\n  _id, psdId\n}': STAFF_MEMBERS_PSDID_QUERY_RESULT;
     '*[_type == "team" && archived != true && showInNavigation != false] | order(name asc) {\n  _id, psdId, name, displayName, "slug": slug.current, age, division, divisionFull,\n  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5))\n}': TEAMS_QUERY_RESULT;
     '*[_type == "team" && slug.current == $slug][0] {\n  _id, psdId, name, displayName, "slug": slug.current, age, gender, footbelId, division, divisionFull,\n  tagline, body[]{ ..., "fileUrl": file.asset->url }, contactInfo,\n  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),\n  trainingSchedule,\n  players[]-> {\n    _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,\n    "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",\n    "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max"\n  },\n  staff[] { role, "member": member-> { _id, psdId, archived, firstName, lastName, functionTitle, "photoUrl": photo.asset->url + "?w=300&h=400&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(photo.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(photo.hotspot.y, 0.5)), "hasBio": count(bio) > 0 } }\n}': TEAM_BY_SLUG_QUERY_RESULT;
+    '*[_type == "team" && archived != true && showInNavigation != false && references($memberId)] | order(name asc) {\n  _id, name, displayName, "slug": slug.current, tagline,\n  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5))\n}': TEAMS_BY_MEMBER_QUERY_RESULT;
     '*[_type == "team" && archived != true && defined(age) && age match "U*"] | order(name asc) {\n  _id, name, "slug": slug.current, age,\n  staff[defined(member) && !member->archived] { role, "member": member-> { _id, firstName, lastName, email, phone } }\n}': YOUTH_TEAMS_CONTACT_QUERY_RESULT;
     '*[_type == "team" && archived != true && showInNavigation != false && defined(age)] | order(name asc) {\n  _id, psdId, name, displayName, "slug": slug.current, age,\n  division, divisionFull, tagline,\n  "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),\n  staff[] { role, "member": member-> { firstName, lastName, functionTitle } }\n}': TEAMS_LANDING_QUERY_RESULT;
   }

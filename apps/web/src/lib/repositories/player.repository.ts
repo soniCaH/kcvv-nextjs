@@ -21,6 +21,15 @@ export const PLAYERS_QUERY =
   bio
 }`);
 
+/**
+ * `currentTeam`'s `showInNavigation != false` mirrors every other
+ * team-listing query (`TEAMS_QUERY`, `TEAMS_BY_MEMBER_QUERY`,
+ * `app/sitemap.ts`) — a deliberately hidden team should not surface as this
+ * player's `teamLabel` or as the "PLOEG" domain-tier card on `<RelatedRow>`
+ * (review round 1, #2788). `_id` + `teamImageUrl` feed that card directly —
+ * see `toPlayerVM` below — so `/spelers/[slug]` no longer needs a second,
+ * near-identical `TeamRepository.findByMemberId` round-trip.
+ */
 export const PLAYER_BY_PSD_ID_QUERY =
   defineQuery(`*[_type == "player" && psdId == $psdId][0] {
   _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,
@@ -29,8 +38,9 @@ export const PLAYER_BY_PSD_ID_QUERY =
   "transparentImageUrl": transparentImage.asset->url + "?w=600&q=80&fm=webp&fit=max",
   "celebrationImageUrl": celebrationImage.asset->url + "?w=600&q=80&fm=webp&fit=max",
   bio,
-  "currentTeam": *[_type == "team" && archived != true && references(^._id)] | order(name asc)[0] {
-    name, displayName, "slug": slug.current
+  "currentTeam": *[_type == "team" && archived != true && showInNavigation != false && references(^._id)] | order(name asc)[0] {
+    _id, name, displayName, "slug": slug.current,
+    "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5))
   }
 }`);
 
@@ -65,6 +75,16 @@ export interface PlayerVM {
    * share preview never disagree about what's known (#2567 review).
    */
   metaLabel?: string;
+  /**
+   * The same team `currentTeam` resolves, as a routable domain-tier
+   * `<RelatedRow>` card (#2443/#2581) — `_id` for the analytics payload,
+   * `slug` for the href, `teamImageUrl` for the card image (falls back to
+   * the `<JerseyShirt>` artefact when absent, same as every other imageless
+   * card, #2574). All three are set together or not at all.
+   */
+  teamId?: string;
+  teamSlug?: string;
+  teamImageUrl?: string;
 }
 
 /** A PlayerVM that has a valid href (i.e. has a psdId) */
@@ -76,9 +96,11 @@ export function toPlayerVM(
     bio?: PLAYERS_QUERY_RESULT[number]["bio"] | null;
     birthDate?: string | null;
     currentTeam?: {
+      _id?: string | null;
       name?: string | null;
       displayName?: string | null;
       slug?: string | null;
+      teamImageUrl?: string | null;
     } | null;
   },
 ): PlayerVM {
@@ -110,6 +132,9 @@ export function toPlayerVM(
     birthDate: row.birthDate ?? undefined,
     teamLabel,
     metaLabel: position ?? teamLabel,
+    teamId: row.currentTeam?._id ?? undefined,
+    teamSlug: row.currentTeam?.slug ?? undefined,
+    teamImageUrl: row.currentTeam?.teamImageUrl ?? undefined,
   };
 }
 

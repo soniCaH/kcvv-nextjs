@@ -18,9 +18,10 @@ import {
   mapMentionedTeams,
   mapMentionedStaff,
   mapCuratedRelatedContent,
-  mergeRelatedItems,
-  mapRelatedToVerderLezen,
+  mapRelatedToRelatedRow,
 } from "@/lib/utils/article-related-items";
+import { mergeRelatedRow } from "@/components/related/mergeRelatedRow";
+import type { RelatedRowItem } from "@/components/related/types";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
@@ -37,8 +38,11 @@ import {
   type HeroMatchData,
 } from "@/components/article/EditorialHero";
 import { MatchGoalsBlock } from "@/components/article/blocks/MatchGoalsBlock";
-import { LinkButton } from "@/components/design-system";
 import { parsePsdMatchId, toHeroMatchData } from "./utils";
+// Cross-route import: the match fold-in card (#2443/#2581) needs the same
+// title formatting `/wedstrijd/[matchId]` uses for its own hero — no reason
+// to hand-roll a second copy (review round 1, #2788).
+import { formatMatchTitle } from "@/app/(main)/wedstrijd/[matchId]/utils";
 import { ArticleMetadata } from "@/components/article/ArticleMetadata";
 import { ArticleBodyMotion } from "@/components/article/ArticleBodyMotion";
 import {
@@ -48,7 +52,7 @@ import {
 import { QaBlock } from "@/components/article/blocks/QaBlock";
 import { EditorialHeading } from "@/components/design-system/EditorialHeading";
 import { ArticleCredits } from "@/components/article/ArticleCredits";
-import { VerderLezenRow } from "@/components/article/VerderLezenRow";
+import { RelatedRow } from "@/components/related/RelatedRow";
 import {
   EventDetailBlock,
   deriveIsPast,
@@ -74,13 +78,16 @@ interface ArticlePageProps {
  *   <SanityArticleBody body />                ← legacy renderer; #1829 tracks migration
  *   <EventDetailBlock isPast />               ← event variant only, when skip-condition passes
  *   <ArticleCredits />                        ← interview always; others when author/photographer
- *   <VerderLezenRow items />                  ← slider of related content
+ *   <RelatedRow items />                      ← slider of merged, mixed-type related content (#2443/#2581)
  *
  * The single `switch (article.articleType)` lives in `renderArticleHero`
  * so the data shape of `<EditorialHero>`'s per-variant prop unions stays
  * inside one function. Variant-specific post-body blocks
- * (EventDetailBlock for events; MatchGoalsBlock + match CTA for the
- * match variants) live as straight conditional renders in the page body.
+ * (EventDetailBlock for events; MatchGoalsBlock for the match variants)
+ * live as straight conditional renders in the page body. The former
+ * standalone "Bekijk de wedstrijd" CTA band (#2443 resolution) is retired —
+ * on a match article it now folds into `<RelatedRow>` as one domain-tier
+ * card instead of a separate section.
  */
 interface RenderArticleHeroArgs {
   article: ArticleDetailVM;
@@ -348,7 +355,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // The linked match and the related-items block are independent of each
   // other, so they run as one wave rather than two serialized round-trips
   // (#2441).
-  const [matchDetail, articleRelatedItems] = await Promise.all([
+  const [matchDetail, semanticItems] = await Promise.all([
     matchId !== null
       ? runPromise(
           Effect.gen(function* () {
@@ -359,8 +366,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           ),
         )
       : null,
+    // Semantic (AI/vector-scored) tier — skipped entirely when the editor
+    // already curated `relatedArticles` (the legacy field, now folded into
+    // the curated tier below): querying the BFF for a suggestion nobody will
+    // see is wasted rate-limited quota.
     hasEditorialArticles
-      ? mapEditorialArticles(article.relatedArticles ?? undefined)
+      ? []
       : runPromise(
           Effect.gen(function* () {
             const bff = yield* BffService;
@@ -379,14 +390,52 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   ]);
   const heroMatch = matchDetail ? toHeroMatchData(matchDetail) : null;
 
-  const relatedItems = mergeRelatedItems({
-    curated: mapCuratedRelatedContent(article.relatedContent),
-    auto: [
-      ...articleRelatedItems,
-      ...mapMentionedPlayers(article.mentionedPlayers ?? undefined),
-      ...mapMentionedStaff(article.mentionedStaffMembers ?? undefined),
-      ...mapMentionedTeams(article.mentionedTeams ?? undefined),
-    ],
+  // Domain tier (#2443 rule 4): the match this article previews/recaps is
+  // bounded (one destination) and defining (it's THE match the article is
+  // about) — but a match is not a Sanity document (see `RelatedContentItem`'s
+  // docblock), so the card is built directly rather than through that union.
+  // Reuses `matchDetail`, already fetched above for the hero — folding this
+  // in costs no extra BFF hop, unlike a gallery linking a match would.
+  const domainItems: RelatedRowItem[] = [];
+  if (isMatchArticle && matchDetail && article.linkedMatch) {
+    // The card's own name, not a call-to-action literal (apps/web/CLAUDE.md's
+    // render-time Writer Rule — review round 1, #2788): every other card in
+    // the row carries the destination's own name, so this one does too.
+    // The artefact follows the KCVV side of the fixture (falling back to the
+    // home team when the side can't be resolved) — it previously always
+    // showed `home_team`, which is the OPPONENT's crest on an away fixture.
+    const kcvvClub =
+      heroMatch?.kcvvSide === "away"
+        ? matchDetail.away_team
+        : matchDetail.home_team;
+    domainItems.push({
+      title: formatMatchTitle(matchDetail),
+      href: `/wedstrijd/${article.linkedMatch}`,
+      badge: "WEDSTRIJD",
+      artefact: { kind: "club", name: kcvvClub.name, logoUrl: kcvvClub.logo },
+      analyticsId: article.linkedMatch,
+      analyticsSource: "domain",
+      analyticsType: "match",
+      analyticsTargetSlug: article.linkedMatch,
+    });
+  }
+
+  const curatedItems = [
+    ...mapCuratedRelatedContent(article.relatedContent),
+    ...mapEditorialArticles(article.relatedArticles ?? undefined),
+  ];
+  const referenceItems = [
+    ...mapMentionedPlayers(article.mentionedPlayers ?? undefined),
+    ...mapMentionedStaff(article.mentionedStaffMembers ?? undefined),
+    ...mapMentionedTeams(article.mentionedTeams ?? undefined),
+  ];
+
+  const relatedRowItems = mergeRelatedRow({
+    domain: domainItems,
+    curated: mapRelatedToRelatedRow(curatedItems),
+    reference: mapRelatedToRelatedRow(referenceItems),
+    semantic: mapRelatedToRelatedRow(semanticItems),
+    siblings: [],
   });
 
   const about = buildAboutFromSubject(article);
@@ -431,7 +480,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     // Page-level `bg-cream` so inter-section margins between
-    // <ArticleBody>, <VerderLezenRow>, and the footer composition resolve
+    // <ArticleBody>, <RelatedRow>, and the footer composition resolve
     // to cream rather than the viewport's default white. Each section
     // layers its own bg-cream on top — no visible diff inside sections,
     // and the gaps no longer show as white bands.
@@ -585,28 +634,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         />
       ) : null}
 
-      {/* Match-page CTA — both preview + recap. A centered paper-stamp button
-          (5.d-mat-refine Foot A) closes the article; only rendered when the
-          match resolved, since a 404'd id would dead-link. */}
-      {isMatchArticle && matchDetail ? (
-        <div className="bg-cream w-full px-4 pb-10 lg:px-0">
-          <div
-            className="mx-auto w-full"
-            style={{ maxWidth: "var(--container-prose)" }}
-          >
-            <div className="border-ink flex justify-center border-t pt-8">
-              <LinkButton
-                href={`/wedstrijd/${article.linkedMatch}`}
-                variant="primary"
-                size="md"
-                withArrow
-              >
-                Bekijk de wedstrijd
-              </LinkButton>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {/* The standalone "Bekijk de wedstrijd" CTA band (5.d-mat-refine Foot A)
+          is retired (#2443 resolution) — on a match article the same
+          destination now folds into <RelatedRow>'s domain tier below as one
+          card among the rest, rather than a separate section. */}
 
       {shouldRenderArticleCredits(article) ? (
         <ArticleCredits
@@ -617,8 +648,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         />
       ) : null}
 
-      <VerderLezenRow
-        items={mapRelatedToVerderLezen(relatedItems)}
+      <RelatedRow
+        items={relatedRowItems}
         pageType="article"
         pageSlug={article.slug}
         sourceArticleType={article.articleType}

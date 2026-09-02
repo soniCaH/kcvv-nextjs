@@ -9,9 +9,10 @@
  *   <MatchLineupSection>           ← auto-hides on empty (typically upcoming)
  *   <StripedSeam>                  ← only when both Lineup + Events render
  *   <MatchEventsSection>           ← auto-hides on empty
- *   <StripedSeam>                  ← only before the card when a body section rendered
- *   <MatchArticleLinkCard>         ← auto-hides; the matchPreview/matchRecap article
- *                                    linked to this match, in a <TrackInView> (#1914)
+ *   <StripedSeam>                  ← only before standings when a body section rendered
+ *   <MatchStandingsSection>        ← auto-hides on empty (league matches only)
+ *   <StripedSeam>                  ← only before the row when a body section rendered
+ *   <RelatedRow>                   ← one mixed, cross-type onward slot (#2443/#2581)
  *
  * Replaces the legacy `<MatchDetailView>` consumption (now orphaned;
  * retired by the #1913 cleanup ticket).
@@ -22,10 +23,12 @@
  * (rendered as JSON-LD only — visual breadcrumb would be a separate
  * deliberate add).
  *
- * Note: the match-filtered `<RelatedArticles>` slot reserved at the 6.B.d1
- * lock is not a separate section — a match has at most one *other* linked
- * article (the non-dominant preview/recap), so it's surfaced as the card's
- * inline `secondary` "Lees ook …" link instead (owner decision, #1914).
+ * #2443 resolution retires `<MatchArticleLinkCard>` + `<GallerySection>`
+ * (both deleted) and `selectMatchArticle`'s recap-vs-preview truth table:
+ * the linked article(s), the KCVV team, the opponent (a new
+ * `/tegenstander/[clubId]` link), and any linked galleries now all enter
+ * `<RelatedRow>`'s domain tier as separate cards in one merged, ordered,
+ * capped list instead of one hero card plus a secondary inline link.
  */
 
 import { cache } from "react";
@@ -33,7 +36,7 @@ import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { runPromise } from "@/lib/effect/runtime";
-import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
+import { SITE_CONFIG, DEFAULT_OG_IMAGE, KCVV_CLUB_ID } from "@/lib/constants";
 import { BffService } from "@/lib/effect/services/BffService";
 import { degradeIfPermanent } from "@/lib/effect/degrade-if-permanent";
 import { PlayerRepository } from "@/lib/repositories/player.repository";
@@ -41,6 +44,10 @@ import {
   ArticleRepository,
   type MatchArticleVM,
 } from "@/lib/repositories/article.repository";
+import {
+  TeamRepository,
+  type TeamNavVM,
+} from "@/lib/repositories/team.repository";
 import {
   PhotoGalleryRepository,
   type GalleryCardVM,
@@ -60,12 +67,14 @@ import { MatchHero } from "@/components/match/MatchHero";
 import { MatchLineupSection } from "@/components/match/MatchLineupSection";
 import { MatchEventsSection } from "@/components/match/MatchEventsSection";
 import { MatchStandingsSection } from "@/components/match/MatchStandingsSection";
-import {
-  MatchArticleLinkCard,
-  selectMatchArticle,
-} from "@/components/match/MatchArticleLinkCard";
 import { PageContainer, StripedSeam } from "@/components/design-system";
-import { GallerySection } from "@/components/gallery/GallerySection/GallerySection";
+import { RelatedRow } from "@/components/related/RelatedRow";
+import { mergeRelatedRow } from "@/components/related/mergeRelatedRow";
+import type { RelatedRowItem } from "@/components/related/types";
+import {
+  matchArticlesToRelatedRow,
+  mapGalleriesToRelatedRow,
+} from "@/lib/utils/article-related-items";
 import { MatchStripSlot } from "@/components/layout/MatchStrip/MatchStripSlot";
 import { PageViewTracker, TrackInView } from "@/components/analytics";
 import {
@@ -261,11 +270,11 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
   const match = await fetchMatchOrNotFound(numericId);
 
-  // These four depend only on `match` / `matchId` and never on each other, so
-  // they run as one wave instead of four serialized round-trips — `max()`
+  // These five depend only on `match` / `matchId` and never on each other, so
+  // they run as one wave instead of five serialized round-trips — `max()`
   // latency rather than `sum()` (#2441). Each keeps its own fallback: none of
   // them is load-bearing enough to take the page down.
-  const [keeperPsdIds, linkedArticles, galleries, standings] =
+  const [keeperPsdIds, linkedArticles, galleries, standings, allTeams] =
     await Promise.all([
       // Keeper PSD ids from Sanity (cached for 24h in the repo's module-scope
       // memo + Sanity CDN — see PlayerRepository.findKeeperPsdIds). Used to
@@ -325,6 +334,26 @@ export default async function MatchPage({ params }: MatchPageProps) {
         ),
       ),
       fetchStandings(match),
+      // Every one of KCVV's own teams (#2443 domain tier) — the established
+      // `findAll()` workaround (`TeamRepository` has no `findByPsdId`,
+      // matching `/tegenstander/[clubId]`'s own precedent) used below to
+      // resolve the team that actually played this match via
+      // `match.kcvv_team_id`. Resilient: a Sanity outage degrades to "no
+      // KCVV team card".
+      runPromise(
+        Effect.gen(function* () {
+          const repo = yield* TeamRepository;
+          return yield* repo.findAll();
+        }).pipe(
+          Effect.catchAllCause((cause) => {
+            console.warn(
+              "[wedstrijd/[matchId]] team lookup failed; rendering without the RelatedRow team card.",
+              { cause },
+            );
+            return Effect.succeed<TeamNavVM[]>([]);
+          }),
+        ),
+      ),
     ]);
 
   const homeTeam = transformHomeTeam(match);
@@ -363,14 +392,91 @@ export default async function MatchPage({ params }: MatchPageProps) {
     !match.is_placeholder && (homeLineup.length > 0 || awayLineup.length > 0);
   const hasEvents = !match.is_placeholder && events.length > 0;
 
-  // `selectMatchArticle` applies the per-state truth table to pick the hero
-  // article + (optional) inline secondary link.
-  const articleSelection = selectMatchArticle(linkedArticles, match.status);
-  const hasArticle = articleSelection !== null;
-  const hasGallery = galleries.length > 0;
   const hasStandings = standings.length > 0;
 
   const matchLabel = formatMatchTitle(match);
+
+  // Domain tier (#2443 rule 4) — every relation here is bounded (at most a
+  // handful of cards) and defining (they say what THIS match is/was, not
+  // what it did): the article(s) written about it, the KCVV squad that
+  // played it, the opponent, and any linked galleries.
+  const kcvvTeam = allTeams.find(
+    (t) => t.psdId !== null && Number(t.psdId) === match.kcvv_team_id,
+  );
+  const kcvvTeamItems: RelatedRowItem[] = kcvvTeam
+    ? [
+        {
+          title: kcvvTeam.displayName,
+          href: `/ploegen/${kcvvTeam.slug}`,
+          imageUrl: kcvvTeam.teamImageUrl ?? undefined,
+          artefact: kcvvTeam.teamImageUrl
+            ? undefined
+            : { kind: "team" as const },
+          badge: "PLOEG",
+          analyticsId: kcvvTeam.id,
+          analyticsSource: "domain",
+          analyticsType: "team",
+          analyticsTargetSlug: kcvvTeam.slug,
+        },
+      ]
+    : [];
+
+  // The opponent card links to `/tegenstander/[clubId]` — an internal page,
+  // not a Sanity document (opponent clubs have none). No card on a
+  // pitch-reservation placeholder (#2606, both sides share KCVV's own club
+  // id) — "the opponent" is meaningless there. `/tegenstander/[clubId]`
+  // only ever queries the senior "A" team's opponent history and 404s
+  // (rather than rendering an empty history) when that team has never
+  // played the given club, so the card is additionally gated to a senior
+  // league fixture (review round 1, #2788) — a youth or cup match would
+  // otherwise link straight into a hard 404 on a noindex, off-nav page.
+  const isSeniorLeagueFixture =
+    match.competitionType === "league" && kcvvTeam?.age === "A";
+  const opponentClub =
+    isSeniorLeagueFixture &&
+    !match.is_placeholder &&
+    match.home_team.id !== match.away_team.id
+      ? match.home_team.id === KCVV_CLUB_ID
+        ? match.away_team
+        : match.away_team.id === KCVV_CLUB_ID
+          ? match.home_team
+          : null
+      : null;
+  const opponentItems: RelatedRowItem[] = opponentClub
+    ? [
+        {
+          title: opponentClub.name,
+          href: `/tegenstander/${opponentClub.id}`,
+          imageUrl: opponentClub.logo,
+          // `opponentClub.logo` is truthy on the `imageUrl` branch above, so
+          // this artefact fallback only ever runs when it's falsy — no
+          // `logoUrl` to forward (review round 1, #2788); `<Crest>` falls
+          // back to an initialled disc.
+          artefact: opponentClub.logo
+            ? undefined
+            : { kind: "club" as const, name: opponentClub.name },
+          badge: "TEGENSTANDER",
+          analyticsId: String(opponentClub.id),
+          analyticsSource: "domain",
+          analyticsType: "team",
+          analyticsTargetSlug: String(opponentClub.id),
+        },
+      ]
+    : [];
+
+  const relatedRowItems = mergeRelatedRow({
+    domain: [
+      ...matchArticlesToRelatedRow(linkedArticles),
+      ...kcvvTeamItems,
+      ...opponentItems,
+      ...mapGalleriesToRelatedRow(galleries),
+    ],
+    curated: [],
+    reference: [],
+    semantic: [],
+    siblings: [],
+  });
+  const hasRelated = relatedRowItems.length > 0;
 
   const analyticsParams = {
     match_id: numericId,
@@ -427,7 +533,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
         />
       </PageContainer>
 
-      {(hasLineup || hasEvents || hasStandings || hasArticle || hasGallery) && (
+      {(hasLineup || hasEvents || hasStandings || hasRelated) && (
         <StripedSeam colorPair="ink-cream" height="md" />
       )}
 
@@ -486,49 +592,17 @@ export default async function MatchPage({ params }: MatchPageProps) {
         </TrackInView>
       )}
 
-      {/* Seam before the article card when a body section preceded it, so the
-          card isn't flush against the lineup/events/standings block. */}
-      {hasArticle && (hasLineup || hasEvents || hasStandings) && (
+      {/* Seam before the row when a body section preceded it, so it isn't
+          flush against the lineup/events/standings block. */}
+      {hasRelated && (hasLineup || hasEvents || hasStandings) && (
         <StripedSeam colorPair="ink-cream" height="md" />
       )}
 
-      {/* <MatchArticleLinkCard> (6.B.d4 lock) — the matchPreview/matchRecap
-          article written about this match. `articleSelection` is precomputed
-          server-side; <TrackInView> only mounts when the card will render, so
-          `match_article_link_card_in_view` never fires on the auto-hide branch
-          (Phase 6.A pattern). The truth-table pick (recap vs preview + the
-          optional inline "Lees ook …" secondary) lives in `selectMatchArticle`.
-
-          The match-filtered <RelatedArticles> slot reserved in 6.B.d1 is
-          intentionally NOT a separate section: a match has at most one *other*
-          linked article (the non-dominant preview/recap), so it's surfaced as
-          the card's inline `secondary` link instead (owner decision, #1914). */}
-      {articleSelection && (
-        <TrackInView
-          eventName="match_article_link_card_in_view"
-          params={analyticsParams}
-        >
-          <MatchArticleLinkCard
-            article={articleSelection.article}
-            kicker={articleSelection.kicker}
-            secondary={
-              articleSelection.secondary
-                ? {
-                    slug: articleSelection.secondary.article.slug,
-                    label: articleSelection.secondary.label,
-                  }
-                : null
-            }
-          />
-        </TrackInView>
-      )}
-
-      {/* Photo galleries linked to this match (#1471). Seam only when a body
-          section preceded it; <GallerySection> auto-hides on empty. */}
-      {hasGallery && (hasLineup || hasEvents || hasStandings || hasArticle) && (
-        <StripedSeam colorPair="ink-cream" height="md" />
-      )}
-      <GallerySection galleries={galleries} kicker="KCVV Elewijt · Beelden" />
+      {/* One mixed, cross-type onward-navigation slot (#2443/#2581) —
+          replaces <MatchArticleLinkCard> + <GallerySection>. Domain tier:
+          the linked article(s), the KCVV team, the opponent, and any linked
+          galleries. Auto-hides on empty. */}
+      <RelatedRow items={relatedRowItems} pageType="match" pageSlug={matchId} />
     </>
   );
 }

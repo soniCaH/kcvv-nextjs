@@ -6,7 +6,7 @@
  *     → <StripedSeam>
  *     → <ArticleMetadata>                ← wide metadata rule (date · leestijd · deel)
  *     → <ArticleBody>                    ← prose (680) reading column
- *     → <VerderLezenRow>                 ← cream "Verder lezen." related slider
+ *     → <RelatedRow>                      ← cream "Blijf nog even hangen." related slider (#2443/#2581)
  *
  * The headline is the article's own CMS title — data — so per #2432 §2 this
  * renders no heading text at all, bars only.
@@ -83,7 +83,7 @@ export default function ArticleDetailLoading() {
         </div>
       </PageContainer>
 
-      {/* "Verder lezen." related slider — cream band, wide (1040). */}
+      {/* "Blijf nog even hangen." related slider — cream band, wide (1040) (#2443/#2581). */}
       <section
         aria-hidden="true"
         className="bg-cream w-full px-4 py-16 lg:py-24"

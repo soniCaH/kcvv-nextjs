@@ -6,8 +6,7 @@ import {
   mapMentionedTeams,
   mapMentionedStaff,
   mapCuratedRelatedContent,
-  mergeRelatedItems,
-  articleVMsToVerderLezenItems,
+  articleVMsToRelatedRowItems,
 } from "./article-related-items";
 import type {
   RelatedArticleItem,
@@ -512,178 +511,7 @@ describe("mapCuratedRelatedContent", () => {
   });
 });
 
-describe("mergeRelatedItems", () => {
-  const curatedPlayer: RelatedPlayerItem = {
-    type: "player",
-    source: "editorial",
-    id: "player-1",
-    firstName: "Jan",
-    lastName: "Janssens",
-    position: "Aanvaller",
-    imageUrl: null,
-    psdId: "12345",
-  };
-  const mentionedSamePlayer: RelatedPlayerItem = {
-    ...curatedPlayer,
-    source: "reference",
-  };
-  const mentionedOtherPlayer: RelatedPlayerItem = {
-    type: "player",
-    source: "reference",
-    id: "player-2",
-    firstName: "Piet",
-    lastName: "Pieters",
-    position: "Verdediger",
-    imageUrl: null,
-    psdId: "67890",
-  };
-  const editorialArticle: RelatedArticleItem = {
-    type: "article",
-    source: "editorial",
-    id: "art-1",
-    title: "Article one",
-    slug: "article-one",
-    imageUrl: null,
-    date: null,
-    excerpt: null,
-  };
-
-  it("places curated entries first and drops auto-derived duplicates by id", () => {
-    const result = mergeRelatedItems({
-      curated: [curatedPlayer],
-      auto: [editorialArticle, mentionedSamePlayer, mentionedOtherPlayer],
-    });
-
-    expect(result).toEqual([
-      curatedPlayer,
-      editorialArticle,
-      mentionedOtherPlayer,
-    ]);
-  });
-
-  it("keeps all auto-derived entries when no curated overlap", () => {
-    const result = mergeRelatedItems({
-      curated: [],
-      auto: [editorialArticle, mentionedSamePlayer, mentionedOtherPlayer],
-    });
-
-    expect(result).toEqual([
-      editorialArticle,
-      mentionedSamePlayer,
-      mentionedOtherPlayer,
-    ]);
-  });
-
-  it("returns an empty array when curated and auto are both empty", () => {
-    expect(mergeRelatedItems({ curated: [], auto: [] })).toEqual([]);
-  });
-
-  it("dedupes a curated team against the same team surfaced via mentioned-teams", () => {
-    const sharedId = "team-shared";
-
-    const curated = mapCuratedRelatedContent([
-      {
-        _type: "team",
-        _id: sharedId,
-        name: "Eerste Elftal A",
-        slug: "eerste-elftal-a",
-        imageUrl: null,
-        tagline: "3e Nationale A",
-      },
-    ]);
-    const mentioned = mapMentionedTeams([
-      {
-        _id: sharedId,
-        name: "Eerste Elftal A",
-        slug: "eerste-elftal-a",
-        imageUrl: null,
-        tagline: null,
-      },
-    ]);
-
-    const merged = mergeRelatedItems({ curated, auto: [...mentioned] });
-
-    expect(merged).toHaveLength(1);
-    expect(merged[0]).toMatchObject({
-      type: "team",
-      source: "editorial",
-      id: sharedId,
-      tagline: "3e Nationale A",
-    });
-  });
-
-  it("dedupes a curated staffMember against the same person surfaced via mentioned-staff", () => {
-    const sharedId = "staff-shared";
-
-    const curated = mapCuratedRelatedContent([
-      {
-        _type: "staffMember",
-        _id: sharedId,
-        firstName: "Marc",
-        lastName: "Vermeulen",
-        imageUrl: null,
-        role: "Hoofdtrainer",
-      },
-    ]);
-    const mentioned = mapMentionedStaff([
-      {
-        _id: sharedId,
-        firstName: "Marc",
-        lastName: "Vermeulen",
-        imageUrl: null,
-        role: null,
-      },
-    ]);
-
-    const merged = mergeRelatedItems({ curated, auto: [...mentioned] });
-
-    expect(merged).toHaveLength(1);
-    expect(merged[0]).toMatchObject({
-      type: "staff",
-      source: "editorial",
-      id: sharedId,
-      role: "Hoofdtrainer",
-    });
-  });
-
-  it("dedupes a curated player against the same player surfaced via mentioned-players", () => {
-    const sharedId = "player-shared";
-    const sharedPsdId = "9999";
-
-    const curated = mapCuratedRelatedContent([
-      {
-        _type: "player",
-        _id: sharedId,
-        firstName: "Shared",
-        lastName: "Player",
-        position: "Middenvelder",
-        imageUrl: null,
-        psdId: sharedPsdId,
-      },
-    ]);
-    const mentioned = mapMentionedPlayers([
-      {
-        _id: sharedId,
-        firstName: "Shared",
-        lastName: "Player",
-        position: "Middenvelder",
-        imageUrl: null,
-        psdId: sharedPsdId,
-      },
-    ]);
-
-    const merged = mergeRelatedItems({ curated, auto: [...mentioned] });
-
-    expect(merged).toHaveLength(1);
-    expect(merged[0]).toMatchObject({
-      type: "player",
-      source: "editorial",
-      id: sharedId,
-    });
-  });
-});
-
-describe("articleVMsToVerderLezenItems", () => {
+describe("articleVMsToRelatedRowItems", () => {
   function makeArticle(
     overrides: Partial<ArticleVM> & { id: string },
   ): ArticleVM {
@@ -703,7 +531,7 @@ describe("articleVMsToVerderLezenItems", () => {
   }
 
   it("maps ArticleVM[] to reference-source article cards (parity with the retired related grid)", () => {
-    const items = articleVMsToVerderLezenItems([
+    const items = articleVMsToRelatedRowItems([
       makeArticle({ id: "a1", title: "Eerste", slug: "eerste" }),
     ]);
 
@@ -723,14 +551,14 @@ describe("articleVMsToVerderLezenItems", () => {
   });
 
   it("formats publishedAt as the card display date", () => {
-    const [item] = articleVMsToVerderLezenItems([
+    const [item] = articleVMsToRelatedRowItems([
       makeArticle({ id: "a1", publishedAt: "2026-05-01T10:00:00Z" }),
     ]);
     expect(item?.date).toBe(formatArticleDate("2026-05-01T10:00:00Z"));
   });
 
   it("preserves source order across multiple articles", () => {
-    const items = articleVMsToVerderLezenItems([
+    const items = articleVMsToRelatedRowItems([
       makeArticle({ id: "a1", slug: "een" }),
       makeArticle({ id: "a2", slug: "twee" }),
       makeArticle({ id: "a3", slug: "drie" }),
@@ -743,6 +571,6 @@ describe("articleVMsToVerderLezenItems", () => {
   });
 
   it("returns an empty array for no related articles (row auto-hides)", () => {
-    expect(articleVMsToVerderLezenItems([])).toEqual([]);
+    expect(articleVMsToRelatedRowItems([])).toEqual([]);
   });
 });

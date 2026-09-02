@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils/cn";
  * Round 2 lock, renamed from `<InterviewCredits>` for variant-agnostic
  * reuse).
  *
- * Centered framed block sitting between `<EndMark>` and `<VerderLezenRow>`
+ * Centered framed block sitting between `<EndMark>` and `<RelatedRow>`
  * in the article footer. Composes four optional rows in fixed order:
  *
  *   ─────────────────────────────────
@@ -116,7 +116,7 @@ export function ArticleCredits(props: ArticleCreditsProps) {
       aria-label="Credits"
       className={cn(
         // Tight `my-6` (1.5rem) on each side — the tail-Q&A section
-        // above ships `pb-12 lg:pb-16` and <VerderLezenRow> below ships
+        // above ships `pb-12 lg:pb-16` and <RelatedRow> below ships
         // `py-16 lg:py-24`, so the surrounding sections own the bigger
         // breathing room. The credits block only needs enough margin to
         // sit visually inside its own framed boundary.

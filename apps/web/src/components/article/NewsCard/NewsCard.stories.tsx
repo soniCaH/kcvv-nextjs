@@ -334,8 +334,8 @@ const artefactSharedArgs = {
   imageUrl: undefined,
 };
 
-// The real card width these artefacts render into — `<VerderLezenRow>`'s
-// slider slot is `w-72 md:w-80` (288/320px, see VerderLezenRow.tsx). The
+// The real card width these artefacts render into — `<RelatedRow>`'s
+// slider slot is `w-72 md:w-80` (288/320px, see RelatedRow.tsx). The
 // bare 1440px canvas these stories rendered on before (code review #2574
 // finding #4) locked baselines at a card width no page produces — the
 // exact gap that let finding #1's inert Tailwind override through

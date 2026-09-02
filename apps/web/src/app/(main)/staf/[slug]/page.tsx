@@ -17,11 +17,14 @@ import { runPromise } from "@/lib/effect/runtime";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { StaffRepository } from "@/lib/repositories/staff.repository";
 import { ArticleRepository } from "@/lib/repositories/article.repository";
+import { TeamRepository } from "@/lib/repositories/team.repository";
 import { degradeSection } from "@/lib/effect/degrade";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd, buildPersonJsonLd } from "@/lib/seo/jsonld";
-import { VerderLezenRow } from "@/components/article/VerderLezenRow";
-import { articleVMsToVerderLezenItems } from "@/lib/utils/article-related-items";
+import { RelatedRow } from "@/components/related/RelatedRow";
+import { mergeRelatedRow } from "@/components/related/mergeRelatedRow";
+import type { RelatedRowItem } from "@/components/related/types";
+import { articleVMsToRelatedRowItems } from "@/lib/utils/article-related-items";
 import { BioBlock, QuotesBlock } from "@/components/player";
 import { hasRenderableBioContent } from "@/lib/portable-text/findPullquoteText";
 import { StaffHero } from "@/components/staff/StaffHero";
@@ -94,19 +97,61 @@ export default async function StafPage({ params }: StaffPageProps) {
 
   if (!member) notFound();
 
-  // "Verder lezen." is a section, not the subject (#2433 rule 3), and its
-  // absence asserts nothing — the visitor was never promised a read-next row —
-  // so it auto-hides rather than announcing the failure (rule 4).
-  const relatedArticles = await runPromise(
-    degradeSection(
-      Effect.gen(function* () {
-        const repo = yield* ArticleRepository;
-        return yield* repo.findRelated(member.id);
-      }),
-      [],
-      "[staf/[slug]] related-articles lookup failed; rendering without the Verder lezen row.",
+  // "Blijf nog even hangen." is a section, not the subject (#2433 rule 3),
+  // and its absence asserts nothing — the visitor was never promised a
+  // read-next row — so it auto-hides rather than announcing the failure
+  // (rule 4). Two independent reads, run together (#2441): the staff
+  // member's own team(s) (domain tier, #2443 rule 4) and articles that
+  // mention them (reference tier).
+  const [ownTeams, relatedArticles] = await Promise.all([
+    runPromise(
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* TeamRepository;
+          return yield* repo.findByMemberId(member.id);
+        }),
+        [],
+        "[staf/[slug]] own-team lookup failed; rendering without the RelatedRow team card.",
+      ),
     ),
-  );
+    runPromise(
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* ArticleRepository;
+          return yield* repo.findRelated(member.id);
+        }),
+        [],
+        "[staf/[slug]] related-articles lookup failed; rendering without the RelatedRow.",
+      ),
+    ),
+  ]);
+
+  // `TeamRelationVM.displayName` runs through the same `teamDisplayName`
+  // fallthrough as the player page's `teamLabel` and can legitimately
+  // resolve to "" (CodeRabbit finding on PR #2788, round 2) — filter those
+  // out before mapping rather than emitting a titleless card that still
+  // links to /ploegen/[slug].
+  const domainItems: RelatedRowItem[] = ownTeams
+    .filter((team) => team.displayName !== "")
+    .map((team) => ({
+      title: team.displayName,
+      href: `/ploegen/${team.slug}`,
+      imageUrl: team.teamImageUrl ?? undefined,
+      artefact: team.teamImageUrl ? undefined : { kind: "team" as const },
+      badge: "PLOEG",
+      analyticsId: team.id,
+      analyticsSource: "domain",
+      analyticsType: "team",
+      analyticsTargetSlug: team.slug,
+    }));
+
+  const relatedRowItems = mergeRelatedRow({
+    domain: domainItems,
+    curated: [],
+    reference: articleVMsToRelatedRowItems(relatedArticles),
+    semantic: [],
+    siblings: [],
+  });
 
   const fullName = `${member.firstName} ${member.lastName}`.trim() || "Staf";
   const bioBlocks = (member.bio ?? []) as PortableTextBlock[];
@@ -117,7 +162,7 @@ export default async function StafPage({ params }: StaffPageProps) {
   const hasRoles =
     member.organigramPositions.length > 0 ||
     member.responsibilityPaths.length > 0;
-  const hasContentBelowHero = hasBio || hasRoles || relatedArticles.length > 0;
+  const hasContentBelowHero = hasBio || hasRoles || relatedRowItems.length > 0;
 
   return (
     // Bare fragment on the near-white page background, mirroring
@@ -185,12 +230,9 @@ export default async function StafPage({ params }: StaffPageProps) {
         />
       ) : null}
 
-      {/* Full-bleed cream "Verder lezen." slider — auto-hides when empty. */}
-      <VerderLezenRow
-        items={articleVMsToVerderLezenItems(relatedArticles)}
-        pageType="staff"
-        pageSlug={slug}
-      />
+      {/* Full-bleed cream "Blijf nog even hangen." slider — auto-hides when
+          empty (#2443/#2581). */}
+      <RelatedRow items={relatedRowItems} pageType="staff" pageSlug={slug} />
     </>
   );
 }
