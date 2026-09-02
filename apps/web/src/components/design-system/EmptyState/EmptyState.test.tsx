@@ -283,3 +283,67 @@ describe("EmptyState — tier: slot (Tier 2)", () => {
     expect(container.firstElementChild).not.toHaveClass("border-ink-muted");
   });
 });
+
+describe("EmptyState — tier: slot, variant: notice (#2469/#2576 failure notice)", () => {
+  it("renders the sentence as body copy, not the mono held-open label", () => {
+    const { container } = render(
+      <EmptyState
+        tier="slot"
+        variant="notice"
+        emphasis={{ text: "even niet beschikbaar" }}
+      >
+        Het klassement is even niet beschikbaar. Probeer het later opnieuw.
+      </EmptyState>,
+    );
+    const notice = container.querySelector("p");
+    expect(notice?.textContent).toBe(
+      "Het klassement is even niet beschikbaar. Probeer het later opnieuw.",
+    );
+  });
+
+  it("accents only the emphasis substring, in font-display italic + jersey-deep — not the whole sentence", () => {
+    render(
+      <EmptyState
+        tier="slot"
+        variant="notice"
+        emphasis={{ text: "even niet beschikbaar" }}
+      >
+        Het klassement is even niet beschikbaar. Probeer het later opnieuw.
+      </EmptyState>,
+    );
+    const accent = screen.getByText("even niet beschikbaar");
+    expect(accent.tagName).toBe("EM");
+    expect(accent).toHaveClass("font-display", "text-jersey-deep", "italic");
+  });
+
+  it("draws the fixed dashed ink/30 frame (#2469 rule 6) — not the held-open register's border-ink-muted", () => {
+    const { container } = render(
+      <EmptyState
+        tier="slot"
+        variant="notice"
+        emphasis={{ text: "niet beschikbaar" }}
+      >
+        Het klassement is niet beschikbaar.
+      </EmptyState>,
+    );
+    expect(container.firstElementChild).toHaveClass(
+      "border-ink/30",
+      "border-dashed",
+    );
+    expect(container.firstElementChild).not.toHaveClass("border-ink-muted");
+  });
+
+  it("renders no heading and no action, ever — same as the held-open register", () => {
+    const { container } = render(
+      <EmptyState
+        tier="slot"
+        variant="notice"
+        emphasis={{ text: "niet beschikbaar" }}
+      >
+        Het klassement is niet beschikbaar.
+      </EmptyState>,
+    );
+    expect(container.querySelector("h1,h2,h3,h4,h5,h6")).toBeNull();
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+});

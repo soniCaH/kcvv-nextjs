@@ -29,11 +29,26 @@
  *   flex-col` in the first place; the primitive cannot reach outside itself
  *   to do that part.
  *
+ *   `variant: "notice"` (#2469/#2576) swaps that held-open register for a
+ *   **failure notice**: a sentence in the section's own body copy instead of
+ *   a short mono label, still tier "slot" — "not a new primitive… it is
+ *   #2427's Tier 2 carrying different copy" (#2469 resolution rule 5). Frame
+ *   is fixed at `border-2 border-dashed border-ink/30` (rule 6 — the
+ *   already-precedented dashed value on cream, `tegenstander/[clubId]/
+ *   loading.tsx:65`), text `text-ink-soft text-body-md` matching
+ *   `<ErrorState>`'s own body line. The `background` prop only applies to
+ *   the held-open register — a notice's frame is not configurable, since
+ *   only the cream case is in scope here; a dark-ground register is #2690's
+ *   job. `emphasis` accents the failure itself, not the subject (rule 3) —
+ *   see below.
+ *
  * **The copy is the tell.** Both tiers share one visual register; only the
  * words distinguish genuine emptiness ("Nog geen …") from a filter that
  * emptied the surface ("Geen … in <facet>.", with the undo) from a fruitless
- * query (naming what was searched for). See the resolution comment on #2427
- * for the five copy rules this primitive exists to carry.
+ * query (naming what was searched for) from a failure notice (tier "slot",
+ * `variant: "notice"`). See the resolution comment on #2427 for the five
+ * copy rules this primitive exists to carry, and #2469's resolution for the
+ * failure-notice rules specifically.
  *
  * The artefact is never `<TapedCard>` — that primitive has no frameless
  * (`shadow: "none"`) or transparent-`bg` option today, and this slot needs
@@ -178,15 +193,64 @@ const SLOT_BACKGROUND_CLASS: Record<EmptyStateSlotBackground, string> = {
   "cream-soft": "border-ink bg-cream-soft",
 };
 
-export interface EmptyStateSlotProps extends EmptyStateSharedProps {
+/** Held-open register — the original tier "slot" (#2427/#2562). */
+export interface EmptyStateSlotHeldOpenProps extends EmptyStateSharedProps {
   tier: "slot";
+  variant?: undefined;
   /** The held-open label — short, mono, uppercase. No heading, no action. */
   children: ReactNode;
   /** @default "transparent" */
   background?: EmptyStateSlotBackground;
 }
 
+/**
+ * Accented substring within an `EmptyStateSlotNoticeProps.children` sentence
+ * — mirrors `<EditorialHeading>`'s `emphasis={{ text }}` (#2469 resolution
+ * rule 5) rather than inventing a second shape. No `tone`/`highlight`: the
+ * highlighter sweep is this site's *celebratory* register, wrong on an
+ * outage (rule 2), and a dark-ground tone is #2690's job, not wired here.
+ */
+export interface EmptyStateSlotEmphasis {
+  text: string;
+}
+
+/**
+ * A failure notice (#2469/#2576) — a sentence in the section's own body
+ * copy, with an accented substring on the words that failed, not the
+ * subject (#2469 resolution rule 3, e.g. *"Het klassement is `even niet
+ * beschikbaar`."*). Still tier "slot": no heading, no action, ever.
+ */
+export interface EmptyStateSlotNoticeProps extends EmptyStateSharedProps {
+  tier: "slot";
+  variant: "notice";
+  /** The full sentence. Must contain `emphasis.text` verbatim once — a
+   *  dev-only console warning fires otherwise, mirroring
+   *  `<EditorialHeading>`'s own `emphasis.text`-not-found warning. */
+  children: string;
+  emphasis: EmptyStateSlotEmphasis;
+}
+
+export type EmptyStateSlotProps =
+  EmptyStateSlotHeldOpenProps | EmptyStateSlotNoticeProps;
+
 export type EmptyStateProps = EmptyStateSurfaceProps | EmptyStateSlotProps;
+
+/** Mirrors `<EditorialHeading>`'s own (unexported) `splitOnEmphasis` — same
+ *  small pure function, kept local rather than sharing a util module across
+ *  two design-system components for one four-line helper. */
+function splitOnAccent(
+  text: string,
+  accentText: string,
+): { before: string; match: string; after: string } | null {
+  if (!accentText) return null;
+  const idx = text.indexOf(accentText);
+  if (idx < 0) return null;
+  return {
+    before: text.slice(0, idx),
+    match: text.slice(idx, idx + accentText.length),
+    after: text.slice(idx + accentText.length),
+  };
+}
 
 function headingLevelFor(
   as: EmptyStateSurfaceProps["as"],
@@ -207,12 +271,47 @@ function headingLevelFor(
   }
 }
 
-function SlotEmptyState({
+function SlotNoticeEmptyState({
+  children,
+  emphasis,
+  live,
+  className,
+}: EmptyStateSlotNoticeProps) {
+  const split = splitOnAccent(children, emphasis.text);
+  if (!split && process.env.NODE_ENV === "development") {
+    console.warn(
+      `[EmptyState] emphasis.text "${emphasis.text}" not found in notice children "${children}"`,
+    );
+  }
+  return (
+    <p
+      role={live ? "status" : undefined}
+      className={cn(
+        "border-ink/30 text-ink-soft text-body-md border-2 border-dashed px-6 py-8 text-center",
+        className,
+      )}
+    >
+      {split ? (
+        <>
+          {split.before}
+          <em className="font-display text-jersey-deep text-[1.09em] italic">
+            {split.match}
+          </em>
+          {split.after}
+        </>
+      ) : (
+        children
+      )}
+    </p>
+  );
+}
+
+function SlotHeldOpenEmptyState({
   children,
   live,
   className,
   background = "transparent",
-}: EmptyStateSlotProps) {
+}: EmptyStateSlotHeldOpenProps) {
   return (
     <div
       role={live ? "status" : undefined}
@@ -225,6 +324,11 @@ function SlotEmptyState({
       <MonoLabel tone="muted">{children}</MonoLabel>
     </div>
   );
+}
+
+function SlotEmptyState(props: EmptyStateSlotProps) {
+  if (props.variant === "notice") return <SlotNoticeEmptyState {...props} />;
+  return <SlotHeldOpenEmptyState {...props} />;
 }
 
 function SurfaceEmptyState(props: EmptyStateSurfaceProps) {
