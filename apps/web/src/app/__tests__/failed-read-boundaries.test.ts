@@ -34,6 +34,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen } from "@testing-library/react";
 import { Effect, Layer, Runtime, Cause } from "effect";
 import { HttpNotFound, HttpBadGateway } from "@kcvv/api-contract";
 import { createMatchDetail } from "@/app/(main)/wedstrijd/[matchId]/match-detail.fixtures";
@@ -232,7 +233,7 @@ describe("/wedstrijd/[matchId] classifies a failed ranking read (#2778)", () => 
     expect(rejectedBffErrorTag(rejection)).toBe("HttpBadGateway");
   });
 
-  it("a permanent ranking failure (404) degrades to no standings instead of taking the page down", async () => {
+  it("a permanent ranking failure (404) degrades to a failure notice instead of taking the page down (#2576)", async () => {
     mockGetMatchDetail.mockReturnValue(
       Effect.succeed(leagueMatchFixture(9002)),
     );
@@ -240,12 +241,33 @@ describe("/wedstrijd/[matchId] classifies a failed ranking read (#2778)", () => 
       Effect.fail(new HttpNotFound({ error: "unknown psd team id" })),
     );
 
-    await expect(
-      MatchPage({ params: Promise.resolve({ matchId: "9002" }) }),
-    ).resolves.toBeTruthy();
+    const element = await MatchPage({
+      params: Promise.resolve({ matchId: "9002" }),
+    });
     // Proves `getRanking` was actually reached (not short-circuited by the
     // is_placeholder/competitionType/kcvv_team_id guard) before asserting the
     // page survived it.
     expect(mockGetRanking).toHaveBeenCalledWith(1);
+    render(element);
+    // The section renders (not `null`) and says so in its own voice, rather
+    // than the empty space a permanent failure rendered before #2576.
+    expect(screen.getByText("KLASSEMENT")).toBeInTheDocument();
+    expect(screen.getByText(/even niet beschikbaar/i)).toBeInTheDocument();
+  });
+
+  it("a legitimately empty ranking read (no table for either club) stays silent — no notice (#2576)", async () => {
+    mockGetMatchDetail.mockReturnValue(
+      Effect.succeed(leagueMatchFixture(9003)),
+    );
+    // Read succeeds, but returns no table at all — off-season / cup leaked
+    // through, not a failure.
+    mockGetRanking.mockReturnValue(Effect.succeed([]));
+
+    const element = await MatchPage({
+      params: Promise.resolve({ matchId: "9003" }),
+    });
+    expect(mockGetRanking).toHaveBeenCalledWith(1);
+    render(element);
+    expect(screen.queryByText("KLASSEMENT")).toBeNull();
   });
 });

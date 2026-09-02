@@ -92,6 +92,57 @@ describe("MatchStandingsSection", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it("stays silent (no notice) on a genuinely empty ranking even though the section could show one", () => {
+    render(
+      <MatchStandingsSection entries={[]} homeClubId={1235} awayClubId={103} />,
+    );
+    expect(screen.queryByText(/niet beschikbaar/i)).toBeNull();
+  });
+
+  it("renders a failure notice instead of nothing when the read is permanently unavailable (#2576)", () => {
+    render(
+      <MatchStandingsSection
+        entries={[]}
+        homeClubId={1235}
+        awayClubId={103}
+        unavailable
+      />,
+    );
+    expect(screen.getByText("KLASSEMENT")).toBeInTheDocument();
+    expect(screen.getByText(/In de stand/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Het klassement is/).closest("p"),
+    ).toHaveTextContent(
+      "Het klassement is even niet beschikbaar. Probeer het later opnieuw.",
+    );
+  });
+
+  it("accents only the failure clause, not the whole notice or the subject", () => {
+    render(
+      <MatchStandingsSection
+        entries={[]}
+        homeClubId={1235}
+        awayClubId={103}
+        unavailable
+      />,
+    );
+    const accent = screen.getByText("even niet beschikbaar");
+    expect(accent.tagName).toBe("EM");
+  });
+
+  it("does not render the failure notice when rows are actually present, even if unavailable were mistakenly passed", () => {
+    render(
+      <MatchStandingsSection
+        entries={fullDivision}
+        homeClubId={1235}
+        awayClubId={103}
+        unavailable
+      />,
+    );
+    expect(screen.queryByText(/niet beschikbaar/i)).toBeNull();
+    expect(screen.getByText("KCVV Elewijt")).toBeInTheDocument();
+  });
+
   it("tints the KCVV row via highlightTeamId", () => {
     render(
       <MatchStandingsSection

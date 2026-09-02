@@ -10,7 +10,10 @@
  *   <StripedSeam>                  ← only when both Lineup + Events render
  *   <MatchEventsSection>           ← auto-hides on empty
  *   <StripedSeam>                  ← only before standings when a body section rendered
- *   <MatchStandingsSection>        ← auto-hides on empty (league matches only)
+ *   <MatchStandingsSection>        ← league matches only; auto-hides on a
+ *                                     genuinely empty ranking, renders a
+ *                                     failure notice on a permanently-failed
+ *                                     read instead (#2576)
  *   <StripedSeam>                  ← only before the row when a body section rendered
  *   <RelatedRow>                   ← one mixed, cross-type onward slot (#2443/#2581)
  *
@@ -197,12 +200,17 @@ const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
  * ticket fixes — trading a full-page throw (ISR keeps serving the last-good
  * page) for a successful-but-wrong render cached for the whole window.
  *
- * Owner call (#2778): a permanently-failed read degrades to the exact same
- * outcome as "no ranking fetched at all" below — an empty `RankingEntry[]`,
- * which `<MatchStandingsSection>` already auto-hides on. No new copy for this
- * state; deciding what the panel *says* in each state is explicitly out of
- * scope for #2778 (it's a single panel, not a section with its own nav
- * entry, unlike #2636's competitive block).
+ * Owner call (#2778, revisited by #2576): a permanently-failed read no
+ * longer collapses to the exact same outcome as "no ranking fetched at
+ * all" — that was the gap #2778 deliberately left open ("no new copy for
+ * this state… out of scope for #2778"). It now resolves to the literal
+ * `"unavailable"` sentinel instead of `[]`, so `<MatchStandingsSection>` can
+ * tell a permanent failure apart from a legitimately empty ranking and
+ * render a failure notice instead of auto-hiding on both alike (#2576) —
+ * the same `null`-sentinel idiom `/ploegen/[slug]/page.tsx`'s `fetchBffData`
+ * already uses for its own ranking read, a string literal here only because
+ * this function's success type is already an array, and `null` would read
+ * as "no rows" rather than "no read".
  *
  * The BFF now hands back every official table this team plays in (#2631), so
  * pick the one holding **both** sides of this match — a fixture belongs to
@@ -211,11 +219,11 @@ const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
  */
 async function fetchStandings(
   match: MatchDetail,
-): Promise<readonly RankingEntry[]> {
+): Promise<readonly RankingEntry[] | "unavailable"> {
   // A pitch-reservation placeholder (#2606) carries no result vocabulary — a
   // standings table is exactly that, so it never fetches for one, even on
   // the defensive off-chance a reservation is ever miscategorised `league`
-  // upstream.
+  // upstream. Not applicable, not unavailable: nothing failed here.
   if (
     match.is_placeholder ||
     match.competitionType !== "league" ||
@@ -224,20 +232,16 @@ async function fetchStandings(
     return [];
   }
   const standingsTeamId = match.kcvv_team_id;
-  // Unlike `/ploegen/[slug]`, this route makes no distinction between "the
-  // ranking read permanently failed" and "there is legitimately no table" —
-  // both already resolve to the same empty `RankingEntry[]` below, so the
-  // permanent fallback is `[]` directly rather than a `null` sentinel this
-  // function would immediately unwrap.
   const tables = await runPromise(
     degradeIfPermanent(
       Effect.gen(function* () {
         const bff = yield* BffService;
         return yield* bff.getRanking(standingsTeamId);
       }),
-      [] as readonly RankingTable[],
+      "unavailable" as const,
     ),
   );
+  if (tables === "unavailable") return "unavailable";
 
   const holds = (table: RankingTable, clubId: number) =>
     table.entries.some((e) => e.club_id === clubId);
@@ -274,7 +278,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
   // they run as one wave instead of five serialized round-trips — `max()`
   // latency rather than `sum()` (#2441). Each keeps its own fallback: none of
   // them is load-bearing enough to take the page down.
-  const [keeperPsdIds, linkedArticles, galleries, standings, allTeams] =
+  const [keeperPsdIds, linkedArticles, galleries, standingsResult, allTeams] =
     await Promise.all([
       // Keeper PSD ids from Sanity (cached for 24h in the repo's module-scope
       // memo + Sanity CDN — see PlayerRepository.findKeeperPsdIds). Used to
@@ -392,7 +396,12 @@ export default async function MatchPage({ params }: MatchPageProps) {
     !match.is_placeholder && (homeLineup.length > 0 || awayLineup.length > 0);
   const hasEvents = !match.is_placeholder && events.length > 0;
 
-  const hasStandings = standings.length > 0;
+  // "unavailable" (a permanently-failed ranking read, #2576) renders a
+  // failure notice rather than auto-hiding, so the section mounts for that
+  // case too even though `standings` itself is empty either way.
+  const standingsUnavailable = standingsResult === "unavailable";
+  const standings = standingsUnavailable ? [] : standingsResult;
+  const hasStandings = standings.length > 0 || standingsUnavailable;
 
   const matchLabel = formatMatchTitle(match);
 
@@ -588,6 +597,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
             homeClubId={match.home_team.id}
             awayClubId={match.away_team.id}
             highlightTeamId={match.kcvv_team_id}
+            unavailable={standingsUnavailable}
           />
         </TrackInView>
       )}
