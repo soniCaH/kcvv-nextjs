@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import type { OrgChartNode } from "@/types/organigram";
 import { cn } from "@/lib/utils/cn";
 import { PRESS_DOWN_CLASSES } from "@/components/design-system";
 import { deriveCardState } from "@/components/organigram/OrgPersonCard";
 import { ArrowsOut, DownloadSimple } from "@/lib/icons.redesign";
+import { useScrollHint } from "@/components/design-system/ScrollHint/useScrollHint";
+import { ScrollArrowButton } from "@/components/design-system/ScrollHint/ScrollArrowButton";
 import { holderLabel } from "./SpotlightNodeCard";
 import { buildSpotlightTree, childrenOf, CLUB_ROOT_ID } from "./spotlight-tree";
 
@@ -104,7 +106,18 @@ export function VolledigOrganigram({
   className,
 }: VolledigOrganigramProps) {
   const tree = useMemo(() => buildSpotlightTree(nodes), [nodes]);
-  const chartRef = useRef<HTMLDivElement>(null);
+  // Scroll arrow — control register, overlaid, no reserved rail (#2444, as
+  // amended by #2476): the chart is a diagram, content you scroll past
+  // rather than a row of tap targets, so it mounts only on real overflow
+  // and never holds a gutter. `scrollRef` doubles as the print-scaling
+  // measurement ref `handleDownload` already needed (`chartRef` below).
+  const {
+    scrollRef: chartRef,
+    canScrollLeft,
+    canScrollRight,
+    scrollLeft,
+    scrollRight,
+  } = useScrollHint<HTMLDivElement>();
   const childrenByParent = (id: string) => childrenOf(tree, id);
   const root = tree.byId.get(CLUB_ROOT_ID) ?? nodes[0];
 
@@ -193,18 +206,39 @@ export function VolledigOrganigram({
         </div>
       </div>
 
-      <div ref={chartRef} className="vo-chart overflow-x-auto pb-2">
-        {/* `safe center` centres a chart that fits but left-aligns (and stays
-            scrollable) when it's wider than the viewport — otherwise flex
-            centering pushes the left edge off-screen and out of scroll reach. */}
-        <ul className="vo-tree" style={{ justifyContent: "safe center" }}>
-          <OrgBranch
-            node={root}
-            childrenByParent={childrenByParent}
-            {...(onNodeClick ? { onNodeClick } : {})}
-            isRoot={root.id === CLUB_ROOT_ID}
+      <div className="relative">
+        {canScrollLeft && (
+          <ScrollArrowButton
+            direction="left"
+            register="control"
+            onClick={scrollLeft}
           />
-        </ul>
+        )}
+        <div
+          ref={chartRef}
+          tabIndex={0}
+          className="vo-chart overflow-x-auto pb-2"
+        >
+          {/* `safe center` centres a chart that fits but left-aligns (and
+              stays scrollable) when it's wider than the viewport —
+              otherwise flex centering pushes the left edge off-screen and
+              out of scroll reach. */}
+          <ul className="vo-tree" style={{ justifyContent: "safe center" }}>
+            <OrgBranch
+              node={root}
+              childrenByParent={childrenByParent}
+              {...(onNodeClick ? { onNodeClick } : {})}
+              isRoot={root.id === CLUB_ROOT_ID}
+            />
+          </ul>
+        </div>
+        {canScrollRight && (
+          <ScrollArrowButton
+            direction="right"
+            register="control"
+            onClick={scrollRight}
+          />
+        )}
       </div>
     </div>
   );
