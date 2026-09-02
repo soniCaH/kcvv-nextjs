@@ -5,8 +5,9 @@
  * Mirrors `BestuurPage` (the shared shell for all three routes):
  *   <PageHero register="band" tone="dark"> (kicker + headline + group photo)
  *     → <StripedSeam>
- *     → "De leden" — <TeamStaff> grid (auto-fill minmax(150px,1fr), border-2
- *       ink cards)
+ *     → "De leden" — one <PersonCardRun> (mono-caps run heading over
+ *       <TeamStaff>'s <PlayerCard> grid: auto-fill minmax(140px,1fr), each
+ *       card a 3:4 portrait photo/illustration slot, not a round avatar)
  *     → <BoardCtaBand> (jersey-deep-dark closing band)
  *
  * Canonical paper-register chrome only — square corners, `paper-edge`/`cream`
@@ -34,16 +35,24 @@ export function BoardPageLoading({ label }: { label: string }) {
 
       <StripedSeam colorPair="ink-cream" height="md" />
 
-      {/* "De leden" — staff grid: auto-fill minmax(150px,1fr), border-2 ink cards. */}
+      {/* "De leden" — one <PersonCardRun>: a mono-caps run heading over
+          <TeamStaff>'s grid. Track is exactly PersonCardRun.tsx's own
+          `grid-cols-[repeat(auto-fill,minmax(140px,1fr))]` — 140px, not
+          150px — and each card's photo slot is a 3:4 portrait block
+          (PlayerCard.tsx's own `aspect-[3/4]`), not a round avatar. Card
+          chrome beyond the track and the aspect ratio is deliberately not
+          mirrored here (#2575 is still applying review fixes to it). */}
       <PageContainer as="section" className="py-12">
-        <Skeleton className="mb-6 h-9 w-40" />
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
+        <div className="border-paper-edge mb-3 border-b pb-1.5">
+          <Skeleton className="h-3 w-24" />
+        </div>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
               className="border-ink bg-cream shadow-paper-sm flex flex-col items-center border-2 p-3 text-center"
             >
-              <div className="border-ink bg-cream-soft h-16 w-16 rounded-full border-2" />
+              <div className="border-ink bg-cream-soft aspect-[3/4] w-full border-2" />
               <Skeleton className="mt-2 h-4 w-3/4" />
               <Skeleton className="mt-1 h-2 w-1/2" />
             </div>

@@ -4,8 +4,16 @@
  * Mirrors `EventDetailPage` (`/evenementen/[slug]`):
  *   <EventHero> (centred 680: type pill → date kicker → display title →
  *     location → CTAs → optional taped cover figure)
- *     → <AndereEvents> ("Andere evenementen" heading + seam + single-column
- *       full-width `<TicketStub>` list)
+ *     → <RelatedRow> (full-bleed cream slider of w-72/w-80 cards, OUTSIDE
+ *       the `<PageContainer>` the hero sits in)
+ *
+ * #2581 replaces the old in-container "Andere evenementen" heading + seam +
+ * single-column `<TicketStub>` list (`<AndereEvents>`) with the shared
+ * cross-route `<RelatedRow>`, which is full-bleed and moves the container
+ * boundary. Matched here on the structural facts only — full-bleed outside
+ * `PageContainer`, a horizontal row of card-width blocks, no "Andere
+ * evenementen" heading — not #2581's exact card chrome, which is still
+ * under review.
  *
  * The title is the event's own CMS title — data — so per #2432 §2 this
  * renders no heading text at all, bars only.
@@ -16,7 +24,6 @@
 
 import {
   PageContainer,
-  StripedSeam,
   Skeleton,
   LoadingAnnouncement,
 } from "@/components/design-system";
@@ -42,32 +49,40 @@ export default function EventDetailLoading() {
           </div>
           <div className="border-ink bg-cream-soft shadow-paper-md mt-6 aspect-[16/9] w-full border-2" />
         </article>
-
-        {/* Andere evenementen — heading + seam + single-column ticket list. */}
-        <section aria-hidden="true" className="mt-16">
-          <div className="mb-5">
-            <Skeleton className="mb-4 h-8 w-48" />
-            <StripedSeam height="sm" colorPair="ink-cream" />
-          </div>
-          <ul className="flex flex-col gap-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <li
-                key={i}
-                className="border-ink bg-cream shadow-paper-sm flex items-stretch border-2"
-              >
-                <div className="border-ink flex w-[72px] shrink-0 flex-col items-center justify-center gap-1 border-r-2 border-dashed py-4">
-                  <Skeleton className="h-6 w-8" />
-                  <Skeleton className="h-2 w-10" />
-                </div>
-                <div className="flex flex-1 flex-col justify-center gap-2 px-4 py-4">
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-3 w-2/3" />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
       </PageContainer>
+
+      {/* RelatedRow — full-bleed cream band OUTSIDE PageContainer (matches
+          RelatedRow.tsx's own root exactly: "bg-cream w-full px-4 pt-8
+          pb-16 lg:pt-10 lg:pb-24"), a heading bar, then a horizontal row of
+          w-72/md:w-80 card blocks. */}
+      <section
+        aria-hidden="true"
+        className="bg-cream w-full px-4 pt-8 pb-16 lg:pt-10 lg:pb-24"
+      >
+        <div
+          className="mx-auto w-full"
+          style={{ maxWidth: "var(--container-wide)" }}
+        >
+          <Skeleton className="mb-10 h-9 w-72 max-w-full" />
+          <div className="flex gap-6 overflow-hidden md:gap-8">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="border-ink bg-cream-soft shadow-paper-sm w-72 shrink-0 border-2 md:w-80"
+              >
+                <div className="border-ink aspect-[16/9] w-full border-b-2">
+                  <Skeleton className="h-full w-full" />
+                </div>
+                <div className="space-y-2 p-4">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -19,6 +19,7 @@
 import { PageContainer, LoadingAnnouncement } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
 import { EventsBrowserSkeleton } from "@/components/event/EventsBrowser";
+import { EVENEMENTEN_KICKER, EVENEMENTEN_HEADLINE } from "./page";
 
 export default function EvenementenLoading() {
   return (
@@ -30,8 +31,8 @@ export default function EvenementenLoading() {
         <PageHero
           register="minimal"
           tone="dark"
-          kicker="KCVV Elewijt · Agenda"
-          headline="Evenementen"
+          kicker={EVENEMENTEN_KICKER}
+          headline={EVENEMENTEN_HEADLINE}
         />
 
         <EventsBrowserSkeleton />

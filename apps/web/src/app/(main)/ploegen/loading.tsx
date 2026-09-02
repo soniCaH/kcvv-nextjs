@@ -12,6 +12,7 @@ import {
   LoadingAnnouncement,
 } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
+import { PLOEGEN_KICKER, PLOEGEN_TITLE, PLOEGEN_LEAD } from "./page";
 
 function FlagshipSkeleton() {
   return (
@@ -34,9 +35,9 @@ export default function TeamsLoading() {
 
       <PageHero
         register="minimal"
-        kicker="KCVV Elewijt"
-        headline="Onze ploegen"
-        lead="Van de eerste ploeg tot de allerkleinsten — één plezante compagnie."
+        kicker={PLOEGEN_KICKER}
+        headline={PLOEGEN_TITLE}
+        lead={PLOEGEN_LEAD}
       />
 
       <div className="flex flex-col gap-10 sm:gap-16">

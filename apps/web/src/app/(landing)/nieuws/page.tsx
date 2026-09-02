@@ -21,6 +21,12 @@ import { LISTING_INITIAL_TOTAL } from "@/lib/constants";
 import { NewsListingClient } from "./NewsListingClient";
 import { fetchArticlesAction } from "./actions";
 
+// Exported so `loading.tsx` can reuse the real, unshimmered opening (#2432
+// §2 — static copy renders for real) without a second hand-typed copy that
+// can silently drift from this one.
+export const NEWS_KICKER = "KCVV Elewijt · Nieuws";
+export const NEWS_HEADLINE = "Nieuwsarchief";
+
 interface NewsPageProps {
   searchParams: Promise<{ categorie?: string }>;
 }
@@ -76,8 +82,8 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
       <PageContainer width="index" className="pt-12 sm:pt-16">
         <PageHero
           register="minimal"
-          kicker="KCVV Elewijt · Nieuws"
-          headline="Nieuwsarchief"
+          kicker={NEWS_KICKER}
+          headline={NEWS_HEADLINE}
         />
       </PageContainer>
       <JsonLd

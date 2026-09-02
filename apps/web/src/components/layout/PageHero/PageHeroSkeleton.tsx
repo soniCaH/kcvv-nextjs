@@ -4,8 +4,9 @@ import {
   type PageContainerWidth,
 } from "@/components/design-system/PageContainer";
 import { TapedCard } from "@/components/design-system/TapedCard";
+import { DottedDivider } from "@/components/design-system/Divider";
 import { Skeleton } from "@/components/design-system/Skeleton";
-import type { PageHeroRegister, PageHeroTone } from "./PageHero";
+import type { PageHeroRegister, PageHeroSize, PageHeroTone } from "./PageHero";
 
 /**
  * `<PageHeroSkeleton>` — the shared opening's loading footprint.
@@ -22,12 +23,16 @@ import type { PageHeroRegister, PageHeroTone } from "./PageHero";
  *
  * `register="band"` · `tone="cream"` composes the real `<TapedCard>` shell
  * (#2432 §7 — a skeleton composes the real container, never re-draws its
- * chrome) with shimmer bars inside, rather than the real `<PageHero>`. Two
- * of its three callers have a data-driven headline (`/club/[slug]`'s CMS
- * title) or must never risk showing another page's real heading while
- * leaking into a sibling segment (`/club`'s index) — #2432 §2 bans a
- * skeleton from ever rendering a real `<h1>` it cannot be sure is correct,
- * so this register renders no heading text at all, static or not.
+ * chrome) with shimmer bars inside, rather than the real `<PageHero>`. Its
+ * two callers (`/club`, `/club/[slug]`) either have a data-driven headline
+ * (`/club/[slug]`'s CMS title) or must never risk showing another page's real
+ * heading while leaking into a sibling segment (`/club`'s index) — #2432 §2
+ * bans a skeleton from ever rendering a real `<h1>` it cannot be sure is
+ * correct, so this register renders no heading text at all, static or not.
+ * `size` and `lead` must still match the real `<PageHero>` call each stands
+ * in for — a `size="default"` hero with a lead paragraph is a taller card
+ * than a `size="compact"` one without, and a mismatch reflows the seam and
+ * everything below it on swap.
  */
 
 export interface PageHeroSkeletonProps {
@@ -35,12 +40,19 @@ export interface PageHeroSkeletonProps {
   register?: PageHeroRegister;
   /** Matches the field the opening sits on — drives the bar fill. */
   tone?: PageHeroTone;
-  /** Band · dark only, mirroring `<PageHero>`'s own `width`. */
+  /**
+   * Band · dark only, mirroring `<PageHero>`'s own `width`.
+   */
   width?: PageContainerWidth;
   /** Draw the photo column. Band · dark only. */
   image?: boolean;
   /** Draw the lead bar. */
   lead?: boolean;
+  /**
+   * Band · cream only, mirroring `<PageHero>`'s own `size` — drives the
+   * `<TapedCard>` padding (`"compact"` → `md`, `"default"` → `lg`).
+   */
+  size?: PageHeroSize;
   className?: string;
 }
 
@@ -63,6 +75,7 @@ export function PageHeroSkeleton({
   width,
   image = false,
   lead = false,
+  size = "compact",
   className,
 }: PageHeroSkeletonProps) {
   if (register === "minimal") {
@@ -78,11 +91,17 @@ export function PageHeroSkeleton({
       <div aria-hidden="true" data-testid="page-hero-skeleton">
         <TapedCard
           bg="cream"
-          padding="md"
+          padding={size === "compact" ? "md" : "lg"}
           tape={{ color: "warm", position: "left", length: "lg" }}
           className={className}
         >
           <OpeningBars tone="cream" lead={lead} />
+          {/* The real typographic (no-image) state always shows this rule —
+              band · cream never carries an image — so the skeleton always
+              reserves the space for it too. */}
+          <div className="mt-4 w-[120px]">
+            <DottedDivider />
+          </div>
         </TapedCard>
       </div>
     );

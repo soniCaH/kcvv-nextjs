@@ -30,7 +30,19 @@ describe("ClubLoading", () => {
   it("renders a twelve-card skeleton nav grid on the cream field, matching CLUB_HUB_CARDS", () => {
     const { container } = render(<ClubLoading />);
     const skeleton = screen.getByTestId("club-hub-skeleton");
-    expect(skeleton.children).toHaveLength(12);
+    // Cards are TapedCardGrid slots now (each carries the per-card
+    // --taped-card-rotation var), not direct children of the testid wrapper.
+    expect(skeleton.querySelectorAll("[data-slot]")).toHaveLength(12);
     expect(container.querySelector(".bg-cream")).not.toBeNull();
+  });
+
+  it("composes the real <TapedCardGrid> so cards read the per-slot rotation var on arrival", () => {
+    const { container } = render(<ClubLoading />);
+    const grid = container.querySelector('[data-columns="3"][data-gap="sm"]');
+    expect(grid).not.toBeNull();
+    const firstCard = grid!.querySelector("[data-slot] > div");
+    expect(firstCard?.className).toContain(
+      "rotate-[var(--taped-card-rotation,0deg)]",
+    );
   });
 });

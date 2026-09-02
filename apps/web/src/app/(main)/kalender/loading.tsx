@@ -4,9 +4,10 @@
  * by-type chips on top, then a paper/ink panel (toolbar = view toggle · shared
  * period nav · subscribe) over a month grid.
  *
- * The hero's kicker/headline/lead are fixed copy, so per #2432 §2 this reuses
- * the real `<PageHero>` unshimmered — it renders compact (no image), matching
- * the real page's own `size="compact"` call.
+ * The hero's kicker/headline/lead and its `/images/youth-trainers.jpg` photo
+ * are all fixed copy/bundled assets, not data, so per #2432 §2 this reuses
+ * the real `<PageHero>` unshimmered — default size (not compact), with the
+ * image, matching the real page's own call exactly.
  */
 
 import { PageHero } from "@/components/layout/PageHero";
@@ -27,7 +28,7 @@ export default function CalendarLoading() {
           kicker="Kalender"
           headline="Wedstrijdkalender"
           lead="Bekijk alle wedstrijden en activiteiten van KCVV Elewijt."
-          size="compact"
+          image="/images/youth-trainers.jpg"
         />
       </PageContainer>
 

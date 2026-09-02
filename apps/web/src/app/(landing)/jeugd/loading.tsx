@@ -13,10 +13,10 @@ import {
   StripedSeam,
   Skeleton,
   LoadingAnnouncement,
+  TapedCardGrid,
 } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
-
-const YOUTH_PHOTO = "/images/youth-trainers.jpg";
+import { YOUTH_PHOTO, JEUGD_KICKER, JEUGD_HEADLINE, JEUGD_LEAD } from "./page";
 
 export default function JeugdLoading() {
   return (
@@ -28,9 +28,9 @@ export default function JeugdLoading() {
         register="band"
         tone="dark"
         width="index"
-        kicker="De jeugdopleiding · U6 tot U21"
-        headline="Beter worden begint met plezier"
-        lead="Een doordachte opleiding van Onderbouw tot Bovenbouw, met gediplomeerde trainers en plezier als motor. Want wie graag speelt, groeit vanzelf — op en naast het veld."
+        kicker={JEUGD_KICKER}
+        headline={JEUGD_HEADLINE}
+        lead={JEUGD_LEAD}
         image={YOUTH_PHOTO}
       />
 
@@ -45,11 +45,17 @@ export default function JeugdLoading() {
           <Skeleton className="h-32 w-full" />
         </div>
 
-        {/* Editorial nav grid */}
-        <div className="mt-16 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-[16/9]" />
-          ))}
+        {/* Editorial nav grid — the real <TapedCardGrid columns={3} gap="sm">
+            (JeugdEditorialGrid.tsx), so each slot's --taped-card-rotation
+            lands before the swap. Without it the rotation snaps in on
+            arrival: 12 skeleton cards sit flat, then EditorialHubCard reads
+            the grid's per-slot CSS var and tilts −1°…−6°. */}
+        <div className="mt-16">
+          <TapedCardGrid columns={3} gap="sm">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-[16/9]" />
+            ))}
+          </TapedCardGrid>
         </div>
 
         {/* Youth directory */}

@@ -10,7 +10,12 @@
  *     → <StripedSeam>
  *     → <MatchStandingsSection>  ← kicker + heading + head-to-head table
  *     → <StripedSeam>
- *     → <MatchArticleLinkCard>   ← cover + body link card
+ *     → <RelatedRow>             ← full-bleed cream slider of w-72/w-80 cards
+ *       (#2581 replaces the old bordered `<MatchArticleLinkCard>` with the
+ *       shared cross-route related-content row; matched here on the
+ *       structural facts only — full-bleed outside `PageContainer`, a
+ *       horizontal row of card-width blocks — not #2581's exact card chrome,
+ *       which is still under review)
  *
  * `<MatchHero>` owns the page's `<h1>` from the two club names — data — so
  * this renders no heading text at all, bars only.
@@ -149,26 +154,39 @@ export default function MatchDetailLoading() {
 
       <StripedSeam colorPair="ink-cream" height="md" />
 
-      {/* MatchArticleLinkCard — cover image + body link card. */}
-      <PageContainer
-        as="section"
-        className="bg-cream py-10 md:py-14"
+      {/* RelatedRow — full-bleed cream band OUTSIDE PageContainer (matches
+          RelatedRow.tsx's own root exactly: "bg-cream w-full px-4 pt-8
+          pb-16 lg:pt-10 lg:pb-24"), a heading bar, then a horizontal row of
+          w-72/md:w-80 card blocks — not wrapped in PageContainer, since the
+          real row isn't either. */}
+      <section
         aria-hidden="true"
+        className="bg-cream w-full px-4 pt-8 pb-16 lg:pt-10 lg:pb-24"
       >
-        <div className="border-ink bg-cream shadow-paper-md border-2">
-          <div className="border-ink aspect-[16/9] w-full border-b-2">
-            <Skeleton className="h-full w-full" />
-          </div>
-          <div className="flex flex-col gap-3 px-[18px] pt-4 pb-[18px] md:px-8 md:pt-6 md:pb-8">
-            <Skeleton className="h-3 w-40" />
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-4 w-5/6" />
-            <div className="border-paper-edge mt-2 border-t-2 pt-3">
-              <Skeleton className="h-3 w-44" />
-            </div>
+        <div
+          className="mx-auto w-full"
+          style={{ maxWidth: "var(--container-wide)" }}
+        >
+          <Skeleton className="mb-10 h-9 w-72 max-w-full" />
+          <div className="flex gap-6 overflow-hidden md:gap-8">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="border-ink bg-cream-soft shadow-paper-sm w-72 shrink-0 border-2 md:w-80"
+              >
+                <div className="border-ink aspect-[16/9] w-full border-b-2">
+                  <Skeleton className="h-full w-full" />
+                </div>
+                <div className="space-y-2 p-4">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </PageContainer>
+      </section>
     </div>
   );
 }

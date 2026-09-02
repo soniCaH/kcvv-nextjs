@@ -20,8 +20,7 @@ import {
   LoadingAnnouncement,
 } from "@/components/design-system";
 import { UltrasHero } from "./UltrasHero";
-
-const FACEBOOK_URL = "https://www.facebook.com/KCVV.ULTRAS.55/";
+import { FACEBOOK_URL } from "./page";
 
 /** An editorial section footprint: kicker + heading + paragraph bars. */
 function SectionSkeleton({ withImage = false }: { withImage?: boolean }) {

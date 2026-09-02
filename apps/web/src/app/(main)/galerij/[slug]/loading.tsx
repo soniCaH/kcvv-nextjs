@@ -15,6 +15,7 @@ import {
   Skeleton,
   LoadingAnnouncement,
 } from "@/components/design-system";
+import { PageHeroSkeleton } from "@/components/layout/PageHero";
 
 export default function GalleryDetailLoading() {
   return (
@@ -22,10 +23,13 @@ export default function GalleryDetailLoading() {
       <LoadingAnnouncement label="Fotogalerij laden…" />
 
       <PageContainer as="main" className="py-12 sm:py-16">
-        <div className="mb-10 flex flex-col" aria-hidden="true">
-          <Skeleton className="h-3 w-44" />
-          <Skeleton className="mt-2 h-12 w-2/3 max-w-full" />
-          <Skeleton className="mt-3 h-4 w-32" />
+        {/* Kicker + headline bars — the shared <PageHeroSkeleton
+            register="minimal"> rather than a second hand-drawn copy of its
+            OpeningBars. The date line below it is this route's own (the
+            real page's MonoLabel<time> child, not part of the opening). */}
+        <PageHeroSkeleton register="minimal" className="mb-0" />
+        <div className="mt-3 mb-10" aria-hidden="true">
+          <Skeleton className="h-4 w-32" />
         </div>
 
         <ul

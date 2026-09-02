@@ -21,6 +21,11 @@ import {
   LoadingAnnouncement,
 } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
+import {
+  CONTACT_KICKER,
+  CONTACT_HEADLINE,
+  CONTACT_LEAD,
+} from "@/components/club/ContactPage/contact-copy";
 
 /** A paper TapedCard footprint (border-2 ink + offset shadow). */
 function CardSkeleton({ className = "" }: { className?: string }) {
@@ -43,9 +48,9 @@ export default function ContactLoading() {
       {/* PageHero — real, unshimmered (fixed copy). */}
       <PageContainer className="pt-10 pb-12">
         <PageHero
-          kicker="Club"
-          headline="Contact"
-          lead="Heb je een vraag? We helpen je graag verder."
+          kicker={CONTACT_KICKER}
+          headline={CONTACT_HEADLINE}
+          lead={CONTACT_LEAD}
         />
       </PageContainer>
 

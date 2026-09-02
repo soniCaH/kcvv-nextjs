@@ -27,14 +27,18 @@ export default function SearchLoading() {
             Staf · Ploegen) `gap-3` row. */}
         <FilterTabsSkeleton widths={["w-14", "w-16", "w-16", "w-12", "w-16"]} />
 
-        {/* Result rows */}
+        {/* Result rows — matches SearchResult.tsx's own chrome exactly:
+            bg-cream-soft (not cream) and gap-3.5 (not gap-4) on the row, and
+            the image chip's own border-[1.5px] (not border-2). */}
         <div className="mt-8 space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="border-ink bg-cream shadow-paper-sm flex gap-4 border-2 p-4"
+              className="border-ink bg-cream-soft shadow-paper-sm flex gap-3.5 border-2 p-4"
             >
-              <Skeleton className="h-16 w-16 flex-none" />
+              <div className="border-ink bg-cream h-16 w-16 flex-shrink-0 border-[1.5px]">
+                <Skeleton className="h-full w-full" />
+              </div>
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-3 w-24" />
                 <Skeleton className="h-4 w-3/4" />

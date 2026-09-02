@@ -23,11 +23,19 @@ import {
   LoadingAnnouncement,
 } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
+import { NEWS_KICKER, NEWS_HEADLINE } from "./page";
 
-/** A flush-image card footprint — image atop a border-2 ink body. */
+/** A flush-image card footprint — image atop a border-2 ink body. The inline
+ *  `transform` mirrors `<TapedCard rotation="auto">`'s own non-interactive
+ *  style exactly — the `--taped-card-rotation` slot var a `<TapedCardGrid>`
+ *  sets, read the same way here as it will be by the real `<NewsCard>` on
+ *  arrival, so the card doesn't visibly snap from flat to tilted on swap. */
 function NewsCardSkeleton() {
   return (
-    <div className="border-ink bg-cream-soft shadow-paper-sm overflow-hidden border-2">
+    <div
+      className="border-ink bg-cream-soft shadow-paper-sm overflow-hidden border-2"
+      style={{ transform: "rotate(var(--taped-card-rotation, 0deg))" }}
+    >
       <div className="border-ink aspect-[3/2] border-b-2">
         <Skeleton className="h-full w-full" />
       </div>
@@ -50,8 +58,8 @@ export default function NewsLoading() {
       <PageContainer width="index" className="pt-12 sm:pt-16">
         <PageHero
           register="minimal"
-          kicker="KCVV Elewijt · Nieuws"
-          headline="Nieuwsarchief"
+          kicker={NEWS_KICKER}
+          headline={NEWS_HEADLINE}
         />
       </PageContainer>
 

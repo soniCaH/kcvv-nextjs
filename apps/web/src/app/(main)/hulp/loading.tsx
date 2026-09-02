@@ -27,10 +27,11 @@ export default function HulpLoading() {
       </div>
 
       <PageContainer width="index" className="py-10 sm:py-14">
-        {/* Hero band. */}
+        {/* Hero band — matches OrganigramHero.tsx's 6px offset shadow
+            exactly (the `shadow-paper-md` token IS that value). */}
         <div
           aria-hidden
-          className="bg-jersey-deep-dark border-ink shadow-paper-lift h-56 border-2"
+          className="bg-jersey-deep-dark border-ink shadow-paper-md h-56 border-2"
         />
 
         {/* Finder placeholder — heading · both <FilterTabs> rows (#2429/
@@ -46,17 +47,21 @@ export default function HulpLoading() {
             count={7}
             widths={["w-14", "w-20", "w-24", "w-20", "w-16", "w-20", "w-20"]}
           />
+          {/* QuestionCard.tsx's own shadow is a raw 3px arbitrary value, not
+              one of the shadow-paper-* tokens (its own offset, not ours to
+              round to the nearest token) — matched exactly rather than to
+              the nearest 4px token. */}
           <div
             aria-hidden
-            className="border-ink bg-cream shadow-paper-sm h-14 border-2"
+            className="border-ink bg-cream h-14 border-2 shadow-[3px_3px_0_0_var(--color-ink)]"
           />
           <div
             aria-hidden
-            className="border-ink bg-cream shadow-paper-sm h-14 border-2"
+            className="border-ink bg-cream h-14 border-2 shadow-[3px_3px_0_0_var(--color-ink)]"
           />
           <div
             aria-hidden
-            className="border-ink bg-cream shadow-paper-sm h-14 border-2"
+            className="border-ink bg-cream h-14 border-2 shadow-[3px_3px_0_0_var(--color-ink)]"
           />
         </div>
       </PageContainer>

@@ -11,12 +11,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** Default tone (`"cream"`), interactive via the controls panel. */
 export const Playground: Story = {
   args: { className: "h-4 w-48" },
-};
-
-export const Cream: Story = {
-  args: { tone: "cream", className: "h-4 w-48" },
 };
 
 export const Dark: Story = {
@@ -30,9 +27,21 @@ export const Dark: Story = {
   ],
 };
 
+/** The `cream-deep` field (e.g. `/tegenstander/[clubId]`'s root) — `paper-edge`
+ *  is invisible here, which is why this tone exists. */
+export const Deep: Story = {
+  args: { tone: "deep", className: "h-4 w-48" },
+  decorators: [
+    (Story) => (
+      <div className="bg-cream-deep p-6">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
 /** A composed heading footprint — kicker → headline → lead, at real widths. */
 export const BarStack: Story = {
-  args: { className: "h-4 w-48" },
   render: () => (
     <div className="flex flex-col gap-2">
       <Skeleton className="h-3 w-32" />

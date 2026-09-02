@@ -3,9 +3,13 @@
  *
  * Paper-register skeleton mirroring the #2141 reskin: a light hero card, the
  * five-cell summary, a striped seam, and a season-grouped row placeholder.
- * The opponent's name is data, so this renders no heading text — every bar
- * (including the crest placeholder) uses `<Skeleton>`'s canonical
- * `paper-edge` fill; card chrome (borders + paper shadow) stays solid.
+ * The opponent's name is data, so this renders no heading text. Bars inside
+ * the `bg-cream` cards (hero, W/D/L cells, season rows) use `<Skeleton>`'s
+ * default `paper-edge` fill; the list header and season-band bars sit
+ * directly on the page's `bg-cream-deep` root and use `tone="deep"` instead
+ * — `paper-edge` is calibrated against plain cream and is an 8/5/2 RGB delta
+ * away from `cream-deep`, invisible once `animate-pulse` fades it. Card
+ * chrome (borders + paper shadow) stays solid.
  */
 
 import {
@@ -51,14 +55,15 @@ export default function OpponentLoading() {
           <StripedSeam height="sm" />
         </div>
 
-        {/* List header */}
-        <Skeleton className="mb-4 h-6 w-44" />
+        {/* List header — sits directly on the bg-cream-deep root, so the
+            deep tone is required (paper-edge is invisible here). */}
+        <Skeleton tone="deep" className="mb-4 h-6 w-44" />
 
         {/* Season band */}
         <div className="mb-2.5 flex items-center gap-2.5">
-          <Skeleton className="h-5 w-28" />
+          <Skeleton tone="deep" className="h-5 w-28" />
           <div className="border-ink/30 h-0 flex-1 border-t-2 border-dotted" />
-          <Skeleton className="h-2 w-16" />
+          <Skeleton tone="deep" className="h-2 w-16" />
         </div>
 
         {/* Rows */}

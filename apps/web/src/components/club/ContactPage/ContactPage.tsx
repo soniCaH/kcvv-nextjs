@@ -43,6 +43,7 @@ import { PageHero } from "@/components/layout";
 import { HtmlTableBlock } from "@/components/article/blocks/HtmlTableBlock/HtmlTableBlock";
 import { MapEmbed } from "./MapEmbed";
 import type { KeyContactVM } from "@/lib/repositories/staff.repository";
+import { CONTACT_KICKER, CONTACT_HEADLINE, CONTACT_LEAD } from "./contact-copy";
 
 interface ContactPageProps {
   keyContacts?: KeyContactVM[];
@@ -184,9 +185,9 @@ export function ContactPage({ keyContacts }: ContactPageProps = {}) {
       {/* Hero */}
       <PageContainer className="pt-10 pb-12">
         <PageHero
-          kicker="Club"
-          headline="Contact"
-          lead="Heb je een vraag? We helpen je graag verder."
+          kicker={CONTACT_KICKER}
+          headline={CONTACT_HEADLINE}
+          lead={CONTACT_LEAD}
         />
       </PageContainer>
 

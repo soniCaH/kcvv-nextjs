@@ -7,6 +7,13 @@
  * no heading text at all (`<PageHeroSkeleton register="band" tone="cream">`,
  * bars only). `headline="Laden…"` was banned outright: a placeholder heading
  * is announced, indexed, and read aloud, which is worse than none.
+ *
+ * `size="default"` matches the real page's `<PageHero kicker="Club"
+ * headline={page.title} image={page.heroImageUrl} />` call (no `size` means
+ * the real card is `padding="lg"`). The page's `heroImageUrl` is optional
+ * per-CMS-page data the skeleton cannot predict — footprint (an image slot
+ * that may or may not render) is the one thing #2432 §7 explicitly leaves
+ * unfixed site-wide, same as card counts elsewhere.
  */
 
 import { PageHeroSkeleton } from "@/components/layout/PageHero";
@@ -23,7 +30,7 @@ export default function ClubPageLoading() {
       <LoadingAnnouncement label="Pagina laden…" />
 
       <PageContainer className="pt-10 pb-12">
-        <PageHeroSkeleton register="band" tone="cream" />
+        <PageHeroSkeleton register="band" tone="cream" size="default" />
       </PageContainer>
 
       <StripedSeam colorPair="ink-cream" height="md" />

@@ -29,6 +29,13 @@ describe("Skeleton", () => {
     expect(className).not.toContain("bg-paper-edge");
   });
 
+  it("deep tone renders the ink/15 fill calibrated against cream-deep, never paper-edge", () => {
+    const { container } = render(<Skeleton tone="deep" />);
+    const className = container.firstElementChild?.className ?? "";
+    expect(className).toContain("bg-ink/15");
+    expect(className).not.toContain("bg-paper-edge");
+  });
+
   it("merges caller className (sizing/position) alongside the owned classes", () => {
     const { container } = render(<Skeleton className="h-4 w-32" />);
     const className = container.firstElementChild?.className ?? "";

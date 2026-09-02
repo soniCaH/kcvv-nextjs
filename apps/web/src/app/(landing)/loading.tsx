@@ -155,8 +155,13 @@ export default function HomeLoading() {
           <Skeleton tone="dark" className="mb-4 h-3 w-28" />
           <Skeleton tone="dark" className="mb-3 h-10 w-72 max-w-full" />
           <Skeleton tone="dark" className="mb-8 h-4 w-96 max-w-full" />
-          <div className="flex gap-3 motion-safe:animate-pulse">
-            <div className="bg-warm/50 h-11 w-40" />
+          <div className="flex gap-3">
+            {/* Not a <Skeleton> (a distinct warm CTA accent, not the shared
+                bar fill), so it keeps its own motion-safe gate — the
+                sibling <Skeleton> already owns its. A shared parent gate
+                here would double the pulse on the Skeleton (nested
+                animate-pulse multiplies opacity). */}
+            <div className="bg-warm/50 h-11 w-40 motion-safe:animate-pulse" />
             <Skeleton tone="dark" className="h-11 w-40" />
           </div>
         </PageContainer>
