@@ -45,11 +45,16 @@ export interface CalendarAgendaProps {
  * The List Row Fill Rule's keyboard-focus half (DESIGN.md § Motion): a flush
  * list row (no border-2/shadow of its own — the shared dashed hairline is the
  * list's, not the row's) fills on hover rather than pressing down, and
- * `focus-visible` gets an inset outline rather than the same fill — the same
- * split `<MatchStripView>` already ships for its own flush row list, so a
- * keyboard user gets an equally salient, non-motion cue instead of nothing.
- * `-outline-offset-2` draws the ring inside the row, so it can never clip
- * into the row above or below in this borders-touch, gap-free list.
+ * `focus-visible` gets that same fill — each call site repeats its own
+ * `hover:bg-*` value under `focus-visible:` — plus this inset outline. The
+ * fill alone would be too easy to miss against a busy row, and the ring
+ * alone is not the literal "same treatment as hover" AC 5 asks for, so
+ * `focus-visible` carries both. `-outline-offset-2` draws the ring inside
+ * the row, so it can never clip into the row above or below in this
+ * borders-touch, gap-free list. `<MatchStripView>`'s own flush row list
+ * ships the outline half of this (`focus-visible:outline-2
+ * focus-visible:outline-offset-[-2px]`) but not the fill half — its rows
+ * predate this rule and were not revisited here.
  */
 const LIST_ROW_FOCUS_CLASSES =
   "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-jersey-deep";
@@ -144,7 +149,7 @@ function AgendaMatchRow({ match }: { match: CalendarMatch }) {
       onClick={() => trackKalenderItemClick("match")}
       className={cn(
         "border-paper-edge grid grid-cols-[52px_1fr_auto] items-center gap-3 border-b border-dashed px-2 py-2 no-underline transition-colors last:border-b-0",
-        "hover:bg-cream-soft/50",
+        "hover:bg-cream-soft/50 focus-visible:bg-cream-soft/50",
         LIST_ROW_FOCUS_CLASSES,
       )}
     >
@@ -198,7 +203,7 @@ function AgendaEventRow({ event }: { event: CalendarEvent }) {
       onClick={() => trackKalenderItemClick(event.source)}
       className={cn(
         "border-paper-edge bg-jersey-deep/6 grid grid-cols-[52px_1fr_auto] items-center gap-3 border-b border-dashed px-2 py-2 no-underline transition-colors last:border-b-0",
-        "hover:bg-jersey-deep/12",
+        "hover:bg-jersey-deep/12 focus-visible:bg-jersey-deep/12",
         LIST_ROW_FOCUS_CLASSES,
       )}
     >
