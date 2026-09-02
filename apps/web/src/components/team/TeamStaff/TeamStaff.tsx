@@ -1,7 +1,4 @@
-import Image from "next/image";
-import Link from "next/link";
-import { cn } from "@/lib/utils/cn";
-import { TapedCard } from "@/components/design-system/TapedCard";
+import { PlayerCard } from "@/components/team/SquadGrid/PlayerCard";
 
 export interface TeamStaffMemberData {
   id: string;
@@ -11,7 +8,11 @@ export interface TeamStaffMemberData {
   functionTitle?: string | null;
   /** Editorial role bucket fallback ("trainer" / "afgevaardigde"). */
   role?: string | null;
-  /** Round photo URL (newsprint-treated). Missing → monogram fallback. */
+  /**
+   * Photo URL (newsprint-treated). Missing → the coat-garment
+   * `<JerseyIllustration>` fallback (#2485), same as `<SquadGrid>`'s
+   * `<PlayerCard>` for a photoless player.
+   */
   imageUrl?: string | null;
   /**
    * Staff-detail URL (`/staf/{psdId}`). Set only when a detail page exists
@@ -63,116 +64,49 @@ export function resolveFunctionLabel(
   return "Staf";
 }
 
-function initials(firstName: string, lastName: string): string {
-  const f = firstName.trim().charAt(0);
-  const l = lastName.trim().charAt(0);
-  return `${f}${l}`.toLocaleUpperCase("nl-BE") || "·";
-}
-
-function StaffCard({ member }: { member: TeamStaffMemberData }) {
-  // Trim so a whitespace-only CMS value doesn't feed an invalid <Image> src.
-  const imageUrl = member.imageUrl?.trim() ?? "";
-  const hasPhoto = imageUrl !== "";
-  const fn = resolveFunctionLabel(member.functionTitle, member.role);
-  const href = member.href?.trim() ?? "";
-  const isLink = href !== "";
-
-  const content = (
-    <>
-      {/* Round photo or monogram */}
-      <div className="border-ink h-16 w-16 overflow-hidden rounded-full border-2">
-        {hasPhoto ? (
-          <Image
-            src={imageUrl}
-            alt=""
-            width={64}
-            height={64}
-            unoptimized
-            className="h-full w-full object-cover"
-            style={{ filter: "var(--filter-photo-newsprint)" }}
-          />
-        ) : (
-          <span
-            aria-hidden="true"
-            // 24px keeps the jersey-deep-on-cream-soft monogram (3.73:1) within
-            // axe's large-text 3:1 threshold — the locked colours stay intact.
-            className="bg-cream-soft text-jersey-deep font-display-big flex h-full w-full items-center justify-center text-2xl font-black"
-          >
-            {initials(member.firstName, member.lastName)}
-          </span>
-        )}
-      </div>
-
-      {/* Name — first semibold + last italic */}
-      <p className="font-display text-ink mt-2 leading-[1.05]">
-        <span className="font-semibold">{member.firstName}</span>{" "}
-        <em className="font-normal italic">{member.lastName}</em>
-      </p>
-
-      {/* Function */}
-      <p className="text-ink-muted mt-1 font-mono text-[9px] tracking-[0.06em] uppercase">
-        {fn}
-      </p>
-
-      {/* BEST-1: only clickable cards (with a detail page) get a visible
-          affordance, so clickable vs non-clickable no longer read identically. */}
-      {isLink ? (
-        <span className="text-jersey-deep mt-1.5 font-mono text-[9px] font-semibold tracking-[0.1em] uppercase">
-          Bekijk →
-        </span>
-      ) : null}
-    </>
-  );
-
-  const card = (
-    <TapedCard
-      bg="cream"
-      shadow="sm"
-      padding="sm"
-      interactive={isLink ? "press" : false}
-      className="flex flex-col items-center text-center"
-      dataAttrs={
-        isLink
-          ? undefined
-          : {
-              "data-testid": "team-staff-card",
-              "data-state": hasPhoto ? "photo" : "monogram",
-            }
-      }
-    >
-      {content}
-    </TapedCard>
-  );
-
-  if (isLink) {
-    return (
-      <Link
-        href={href}
-        data-testid="team-staff-card"
-        data-state={hasPhoto ? "photo" : "monogram"}
-        className="block"
-      >
-        {card}
-      </Link>
-    );
-  }
-
-  return card;
-}
-
+/**
+ * `<TeamStaff>` — the staff/board run of the shared person-card directory
+ * (#2477 / #2575). Renders on `/ploegen/[slug]` (team staff) and, via
+ * `<BestuurPage>`, on `/club/bestuur`, `/club/angels` and
+ * `/club/jeugdbestuur` (board members) — a `staffMember` document in every
+ * case (`docs/ubiquitous-language.md` → Staff Member: "coaches, board,
+ * admin"), so the run's own mono-caps heading reads "Staf" everywhere it
+ * renders.
+ *
+ * Before #2575 this owned a bespoke 64px round-photo-or-monogram card on a
+ * `minmax(150px)` grid with no run heading — a byte-for-byte near-clone of
+ * `<SquadGrid>`'s `<PlayerCard>` on shell, type and role line, opposite on
+ * portrait shape and column count (#2477). Both are now deleted in favour
+ * of the shared `<PlayerCard>`, `garment="coat"` (#2485) for the imageless
+ * fallback, on `<SquadGrid>`'s exact `minmax(140px,1fr)` grid — the two
+ * runs on `/ploegen/[slug]` now break columns identically at every
+ * viewport, which is the fault #2477 measured, not merely the round card.
+ */
 export function TeamStaff({ staff }: TeamStaffProps) {
   if (staff.length === 0) return null;
 
   return (
-    <div
-      data-testid="team-staff"
-      className={cn(
-        "grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4",
-      )}
-    >
-      {staff.map((member) => (
-        <StaffCard key={member.id} member={member} />
-      ))}
-    </div>
+    <section data-testid="team-staff" aria-label="Staf">
+      <h3 className="text-ink-muted border-paper-edge mb-3 border-b pb-1.5 font-mono text-[11px] tracking-[0.1em] uppercase">
+        Staf
+      </h3>
+      <div
+        data-testid="team-staff-grid"
+        className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-4"
+      >
+        {staff.map((member) => (
+          <PlayerCard
+            key={member.id}
+            id={member.id}
+            firstName={member.firstName}
+            lastName={member.lastName}
+            position={resolveFunctionLabel(member.functionTitle, member.role)}
+            photoUrl={member.imageUrl?.trim() || undefined}
+            href={member.href?.trim() || undefined}
+            garment="coat"
+          />
+        ))}
+      </div>
+    </section>
   );
 }

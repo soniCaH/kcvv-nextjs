@@ -4,7 +4,9 @@
  * Covers:
  *  - resolveFunctionLabel: code map / passthrough / role-bucket fallback / "Staf"
  *  - Auto-hides (null) when staff empty
- *  - Photo state vs monogram fallback
+ *  - One mono-caps "Staf" heading precedes the run (#2477 rule 3)
+ *  - One shared <PlayerCard> per member, garment="coat" (#2477 rule 1, #2485)
+ *  - The run's grid matches <SquadGrid>'s column arithmetic (#2477 rule 2)
  *  - Name rhythm (first semibold + last italic) + function caption
  */
 
@@ -82,23 +84,43 @@ describe("TeamStaff", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("renders a card per staff member", () => {
+  it("renders one mono-caps 'Staf' heading for the run (#2477 rule 3)", () => {
     render(<TeamStaff staff={STAFF} />);
-    expect(screen.getAllByTestId("team-staff-card")).toHaveLength(2);
+    const headings = screen
+      .getAllByRole("heading", { level: 3 })
+      .map((h) => h.textContent);
+    expect(headings).toEqual(["Staf"]);
+  });
+
+  it("renders the run inside a landmark named 'Staf'", () => {
+    render(<TeamStaff staff={STAFF} />);
+    expect(screen.getByRole("region", { name: "Staf" })).toBeInTheDocument();
+  });
+
+  it("renders one shared <PlayerCard> per staff member", () => {
+    render(<TeamStaff staff={STAFF} />);
+    expect(screen.getAllByTestId("player-card")).toHaveLength(2);
+  });
+
+  it("matches <SquadGrid>'s auto-fill column arithmetic — minmax(140px,1fr) (#2477 rule 2)", () => {
+    render(<TeamStaff staff={STAFF} />);
+    expect(
+      screen.getByTestId("team-staff-grid").className.replace(/\s+/g, " "),
+    ).toContain("grid-cols-[repeat(auto-fill,minmax(140px,1fr))]");
   });
 
   it("renders the photo state when imageUrl is present", () => {
     render(<TeamStaff staff={STAFF} />);
-    const cards = screen.getAllByTestId("team-staff-card");
-    expect(cards[0]?.getAttribute("data-state")).toBe("photo");
+    const figures = screen.getAllByTestId("player-card-figure");
+    expect(figures[0]?.getAttribute("data-state")).toBe("photo");
   });
 
-  it("renders the monogram fallback when imageUrl is absent", () => {
+  it("renders the coat-garment illustration when imageUrl is absent (#2485)", () => {
     render(<TeamStaff staff={STAFF} />);
-    const cards = screen.getAllByTestId("team-staff-card");
-    expect(cards[1]?.getAttribute("data-state")).toBe("monogram");
-    // Initials of "Bea Bijstand" → "BB"
-    expect(cards[1]?.textContent).toContain("BB");
+    const figures = screen.getAllByTestId("player-card-figure");
+    expect(figures[1]?.getAttribute("data-state")).toBe("illustration");
+    const illustrations = screen.getAllByTestId("player-card-illustration");
+    expect(illustrations[0]?.getAttribute("data-garment")).toBe("coat");
   });
 
   it("renders the resolved function label", () => {
@@ -116,15 +138,20 @@ describe("TeamStaff", () => {
 
   it("renders a card as a link to /staf/{psdId} when href is present", () => {
     render(<TeamStaff staff={[{ ...STAFF[0]!, href: "/staf/12345" }]} />);
-    const card = screen.getByTestId("team-staff-card");
+    const card = screen.getByTestId("player-card");
     expect(card.tagName).toBe("A");
     expect(card).toHaveAttribute("href", "/staf/12345");
   });
 
   it("renders a card as a plain div when href is absent", () => {
     render(<TeamStaff staff={[STAFF[0]!]} />);
-    const card = screen.getByTestId("team-staff-card");
+    const card = screen.getByTestId("player-card");
     expect(card.tagName).toBe("DIV");
     expect(card).not.toHaveAttribute("href");
+  });
+
+  it("never renders the round photo/monogram idiom TeamStaff used to own (#2477)", () => {
+    render(<TeamStaff staff={STAFF} />);
+    expect(screen.queryByText("BB")).toBeNull();
   });
 });
