@@ -322,3 +322,7 @@ export type { SkeletonProps, SkeletonTone } from "./Skeleton";
 // LoadingAnnouncement
 export { LoadingAnnouncement } from "./LoadingAnnouncement";
 export type { LoadingAnnouncementProps } from "./LoadingAnnouncement";
+
+// UpLink
+export { UpLink } from "./UpLink";
+export type { UpLinkProps, UpLinkTone } from "./UpLink";
