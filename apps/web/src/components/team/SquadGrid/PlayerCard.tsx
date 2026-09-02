@@ -5,6 +5,7 @@ import { TapedCard } from "@/components/design-system/TapedCard";
 import {
   JerseyIllustration,
   playerFigureSeed,
+  type JerseyIllustrationGarment,
 } from "@/components/design-system/JerseyIllustration";
 
 export interface PlayerCardProps {
@@ -18,9 +19,11 @@ export interface PlayerCardProps {
   firstName: string;
   lastName: string;
   /**
-   * Resolved, sentence-case position label (e.g. "Middenvelder"). Absent when
-   * no editor has authored one and PSD carries none either (#2567) — the
-   * label is omitted rather than defaulted, so an unfilled position is
+   * Resolved, sentence-case role/position label — a player's canonical
+   * position (e.g. "Middenvelder"), or (since #2575) a staff member's
+   * resolved function label (e.g. "Hoofdtrainer"). Absent when no editor
+   * has authored one and PSD carries none either (#2567) — the label is
+   * omitted rather than defaulted, so an unfilled position is
    * distinguishable from an authored one.
    */
   position?: string;
@@ -29,6 +32,15 @@ export interface PlayerCardProps {
   photoUrl?: string;
   /** Detail-page href. When absent the card is not a link. */
   href?: string;
+  /**
+   * Which garment the imageless-fallback figure wears (#2485). `"jersey"`
+   * (default) for a player document — every existing `<SquadGrid>` caller
+   * is unaffected. `"coat"` for a staff document — `<TeamStaff>` is the one
+   * caller that passes this (#2575): the card generalised from
+   * squad-only to every directory of people, and the key stays the
+   * document the card was built from, never the route or role text.
+   */
+  garment?: JerseyIllustrationGarment;
   className?: string;
 }
 
@@ -40,6 +52,7 @@ export function PlayerCard({
   jerseyNumber,
   photoUrl,
   href,
+  garment,
   className,
 }: PlayerCardProps) {
   const hasPhoto = photoUrl !== undefined && photoUrl !== "";
@@ -73,6 +86,7 @@ export function PlayerCard({
           <JerseyIllustration
             variant="card"
             seed={playerFigureSeed({ id })}
+            garment={garment}
             data-testid="player-card-illustration"
           />
         )}

@@ -9,6 +9,7 @@
  *  - Position label rendered
  *  - Whole card links to href when present; renders as non-link div otherwise
  *  - Cross-component agreement with <PlayerHero> for the same player id (#2635)
+ *  - Garment passthrough — jersey (default) vs coat (#2485/#2575)
  */
 
 import { describe, it, expect } from "vitest";
@@ -237,6 +238,35 @@ describe("PlayerCard", () => {
       expect(screen.getByTestId("player-card").getAttribute("aria-label")).toBe(
         "Maxim Breugelmans",
       );
+    });
+  });
+
+  describe("Garment (#2485 / #2575)", () => {
+    it("defaults to the jersey garment when no garment prop is passed", () => {
+      render(
+        <PlayerCard id="player-test" firstName="Lars" lastName="De Smet" />,
+      );
+      expect(
+        screen
+          .getByTestId("player-card-illustration")
+          .getAttribute("data-garment"),
+      ).toBe("jersey");
+    });
+
+    it('passes garment="coat" through to the illustration — the staff-document figure', () => {
+      render(
+        <PlayerCard
+          id="staff-test"
+          firstName="Karel"
+          lastName="Coach"
+          garment="coat"
+        />,
+      );
+      expect(
+        screen
+          .getByTestId("player-card-illustration")
+          .getAttribute("data-garment"),
+      ).toBe("coat");
     });
   });
 

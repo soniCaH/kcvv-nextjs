@@ -69,3 +69,18 @@ export const NoPosition: Story = {
     href: "/spelers/126",
   },
 };
+
+/**
+ * `garment="coat"` — the staff-document illustration fallback (#2485 /
+ * #2575). `<TeamStaff>` is the one caller that passes this; every existing
+ * `<SquadGrid>` player card keeps the default `"jersey"` garment.
+ */
+export const CoatGarment: Story = {
+  args: {
+    id: "staff-127",
+    firstName: "Karel",
+    lastName: "Coach",
+    position: "Hoofdtrainer",
+    garment: "coat",
+  },
+};
