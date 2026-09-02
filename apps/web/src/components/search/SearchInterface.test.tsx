@@ -10,34 +10,9 @@ import userEvent from "@testing-library/user-event";
 import { SearchInterface } from "./SearchInterface";
 import { createMockSearchResponse } from "@/../tests/helpers/search.helpers";
 
-// Mock Next.js navigation hooks. `useFilterParam`'s writer (#2779) reads the
-// LIVE `window.location.search` to merge in `?q=` — a facet it doesn't own —
-// when it writes `?type=`, so both `mockPush` and `mockSearchParams.set`/
-// `.delete` (the file's existing "seed the URL before render" idiom) keep
-// `window.location` in sync, the way a real `router.push` keeps the actual
-// address bar in sync. Neither touches `mockSearchParams` itself, though:
-// `activeType` keeps its own optimistic local state, updated directly by
-// `handleFilterChange` (only the URL-building inside it moves onto the
-// hook's setter) — not a pure `useSearchParams()` derivation, which would
-// need `push` to reactively feed back into `useSearchParams()` and would
-// resurface a latent, pre-existing, unrelated double-fetch in the plain
-// query-submit path (`currentUrlQueryValue`'s effect) that this file's
-// fetch mocks (one queued response per test) aren't built to tolerate.
-const mockPush = vi.fn((url: string) => {
-  window.location.search = url.split("?")[1] ?? "";
-});
+// Mock Next.js navigation hooks
+const mockPush = vi.fn();
 const mockSearchParams = new URLSearchParams();
-
-const realSet = mockSearchParams.set.bind(mockSearchParams);
-const realDelete = mockSearchParams.delete.bind(mockSearchParams);
-mockSearchParams.set = (key: string, value: string) => {
-  realSet(key, value);
-  window.location.search = mockSearchParams.toString();
-};
-mockSearchParams.delete = (key: string) => {
-  realDelete(key);
-  window.location.search = mockSearchParams.toString();
-};
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -241,10 +216,7 @@ describe("SearchInterface", () => {
       const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
-      // scroll:false — useFilterParam's own write, #2779.
-      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test&type=article", {
-        scroll: false,
-      });
+      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test&type=article");
     });
 
     it("should trim whitespace from query", async () => {
@@ -574,10 +546,7 @@ describe("SearchInterface", () => {
       const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
-      // scroll:false — useFilterParam's own write, #2779.
-      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test&type=article", {
-        scroll: false,
-      });
+      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test&type=article");
     });
 
     it("should not refetch when filter is changed", async () => {
@@ -625,10 +594,7 @@ describe("SearchInterface", () => {
       const allTab = screen.getByRole("button", { name: /alles/i });
       await user.click(allTab);
 
-      // scroll:false — useFilterParam's own write, #2779.
-      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test", {
-        scroll: false,
-      });
+      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=test");
     });
   });
 
@@ -1033,10 +999,7 @@ describe("SearchInterface", () => {
       const articleTab = screen.getByRole("button", { name: /nieuws/i });
       await user.click(articleTab);
 
-      // scroll:false — useFilterParam's own write, #2779.
-      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=first&type=article", {
-        scroll: false,
-      });
+      expect(mockPush).toHaveBeenCalledWith("/zoeken?q=first&type=article");
 
       // Second search
       const mockResponse2 = createMockSearchResponse("second");
@@ -1056,6 +1019,70 @@ describe("SearchInterface", () => {
       // Article filter should still be active
       expect(mockPush).toHaveBeenLastCalledWith(
         "/zoeken?q=second&type=article",
+      );
+    });
+  });
+
+  describe("Filter/query race regressions (PR #2783 review, finding 1)", () => {
+    afterEach(() => {
+      window.location.search = "";
+    });
+
+    it("does not silently drop a filter click made before the previous push's useSearchParams() catches up (1a)", async () => {
+      const user = userEvent.setup();
+      mockSearchParams.set("q", "test");
+
+      render(<SearchInterface />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("group")).toBeInTheDocument();
+      });
+
+      // First click: "all" -> "article". `mockSearchParams` (what
+      // useSearchParams() returns) is deliberately NOT updated by this —
+      // exactly like a real router.push whose transition hasn't landed yet.
+      await user.click(screen.getByRole("button", { name: /nieuws/i }));
+      expect(mockPush).toHaveBeenCalledTimes(1);
+
+      // Second click, before the first "commits": "article" -> "all" again.
+      // A dedup guard comparing against the hook's still-stale internal
+      // value must not mistake this for a no-op.
+      await user.click(screen.getByRole("button", { name: /alles/i }));
+
+      expect(mockPush).toHaveBeenCalledTimes(2);
+      expect(mockPush).toHaveBeenLastCalledWith(
+        expect.not.stringContaining("type="),
+      );
+    });
+
+    it("does not let a stale address bar clobber the query just submitted, when a filter click follows it (1b)", async () => {
+      const user = userEvent.setup();
+      const mockResponse = createMockSearchResponse("nieuw");
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      render(<SearchInterface />);
+
+      const input = screen.getByRole("textbox");
+      await user.type(input, "nieuw");
+      await user.click(screen.getByRole("button", { name: /^zoeken$/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("group")).toBeInTheDocument();
+      });
+
+      // Simulate a real router.push whose address-bar update hasn't landed
+      // yet: the component has already moved on to "nieuw" (query state),
+      // but window.location.search still reports the previous query.
+      window.location.search = "q=oud";
+
+      await user.click(screen.getByRole("button", { name: /nieuws/i }));
+
+      const [lastUrl] = mockPush.mock.calls.at(-1)!;
+      expect(new URLSearchParams(String(lastUrl).split("?")[1]).get("q")).toBe(
+        "nieuw",
       );
     });
   });

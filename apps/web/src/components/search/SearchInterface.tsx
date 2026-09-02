@@ -17,7 +17,6 @@ import { SearchRelated } from "./SearchRelated";
 import { useSemanticAugment } from "./useSemanticAugment";
 import { Alert, PageContainer, Spinner } from "@/components/design-system";
 import { useSearchAnalytics } from "@/hooks/useSearchAnalytics";
-import { useFilterParam } from "@/hooks/useFilterParam";
 import { filterByActiveType } from "./search-filter-utils";
 import type {
   SearchResultType,
@@ -26,16 +25,6 @@ import type {
 } from "@/types/search";
 
 export type { SearchResultType, SearchResult, SearchResponse };
-
-/** Every content type the `?type=` filter row can narrow to — the single
- *  source of truth `useFilterParam` (#2779) validates the URL param
- *  against (an unknown value falls back to "all"). */
-const ALLOWED_SEARCH_TYPES: readonly SearchResultType[] = [
-  "article",
-  "player",
-  "staff",
-  "team",
-];
 
 export interface SearchInterfaceProps {
   /**
@@ -64,25 +53,24 @@ export const SearchInterface = ({
   // URL is the source of truth for query + active type; `initialQuery` /
   // `initialType` props are ignored when the URL has no params (documented by
   // the "Initial Props" tests).
+  const allowedTypes: SearchResultType[] = [
+    "article",
+    "player",
+    "staff",
+    "team",
+  ];
   const currentUrlQueryValue = searchParams.get("q") || "";
-  // `useFilterParam` (#2779) owns the narrow-or-fallback this used to be a
-  // hand-rolled `allowedTypes.includes(...)` check for. Only its setter
-  // (`setActiveTypeParam`) is used for the actual write — `activeType`
-  // below stays this component's own optimistic local state (seeded from
-  // this same narrowed read), matching `query`'s shape, rather than a pure
-  // `useSearchParams()` derivation: `handleSearch`'s existing `?q=` write
-  // already has its own render-triggered refetch effect below, and a pure
-  // derivation here would need `router.push` to feed back into
-  // `useSearchParams()` synchronously to keep tests passing, which real
-  // Next.js doesn't do within the same tick either.
-  const [currentUrlTypeValue, setActiveTypeParam] = useFilterParam<
-    SearchResultType | "all"
-  >("type", ALLOWED_SEARCH_TYPES, { fallback: "all", route: "/zoeken" });
+  const currentRawUrlTypeValue = searchParams.get("type");
+  const currentUrlTypeValue =
+    currentRawUrlTypeValue &&
+    allowedTypes.includes(currentRawUrlTypeValue as SearchResultType)
+      ? (currentRawUrlTypeValue as SearchResultType)
+      : undefined;
 
   // State
   const [query, setQuery] = useState(currentUrlQueryValue);
   const [activeType, setActiveType] = useState<SearchResultType | "all">(
-    currentUrlTypeValue,
+    currentUrlTypeValue || "all",
   );
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -219,24 +207,28 @@ export const SearchInterface = ({
    */
   const handleFilterChange = useCallback(
     (type: SearchResultType | "all") => {
-      // Optimistic local update — matches this handler's behaviour before
-      // the hook (there was no call-site dedup guard on `trackFilterChanged`
-      // either, so analytics stays unconditional). `setActiveTypeParam`
-      // (`useFilterParam`'s setter, #2779) owns the actual URL write: the
-      // delete-on-default convention, its own dedup guard, the live
-      // `window.location.search` merge, and scroll:false.
       setActiveType(type);
       analytics.trackFilterChanged(type);
-      setActiveTypeParam(type);
+
+      // Update URL
+      const params = new URLSearchParams();
+      if (query.trim()) {
+        params.set("q", query.trim());
+      }
+      if (type && type !== "all") {
+        params.set("type", type);
+      }
+
+      router.push(`/zoeken${params.toString() ? `?${params.toString()}` : ""}`);
+
       // No need to re-fetch: SearchResults handles client-side filtering
     },
-    [setActiveTypeParam, analytics],
+    [query, router, analytics],
   );
 
   /**
-   * Sync `query` + `activeType` with URL params (handles back/forward
-   * navigation). Adjust state during render to avoid cascading
-   * effect-driven setStates.
+   * Sync state with URL params (handles back/forward navigation).
+   * Adjust state during render to avoid cascading effect-driven setStates.
    */
   const [trackedSearchParams, setTrackedSearchParams] = useState(searchParams);
 
@@ -245,8 +237,9 @@ export const SearchInterface = ({
     if (currentUrlQueryValue !== query) {
       setQuery(currentUrlQueryValue);
     }
-    if (currentUrlTypeValue !== activeType) {
-      setActiveType(currentUrlTypeValue);
+    const newActiveType = currentUrlTypeValue || "all";
+    if (newActiveType !== activeType) {
+      setActiveType(newActiveType);
     }
   }
 
