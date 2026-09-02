@@ -32,15 +32,12 @@ export interface PlayerCardProps {
   photoUrl?: string;
   /** Detail-page href. When absent the card is not a link. */
   href?: string;
-  /**
-   * Which garment the imageless-fallback figure wears (#2485). `"jersey"`
-   * (default) for a player document — every existing `<SquadGrid>` caller
-   * is unaffected. `"coat"` for a staff document — `<TeamStaff>` is the one
-   * caller that passes this (#2575): the card generalised from
-   * squad-only to every directory of people, and the key stays the
-   * document the card was built from, never the route or role text.
-   */
+  /** Which garment the imageless-fallback figure wears (#2485): `"jersey"` (default) for a player, `"coat"` for a staff document. */
   garment?: JerseyIllustrationGarment;
+  /** Blend the photo onto the card's cream via `mix-blend-multiply` (#2633). Default `true` for a standardised PSD headshot; `<TeamStaff>` passes `false` for a free-form staff upload (#2575 review). */
+  blendPhoto?: boolean;
+  /** Show a resting "Bekijk →" affordance under a linked card (BEST-1). Default `false`; `<TeamStaff>` passes `true` for its routinely-mixed linked/unlinked runs (#2575 review). */
+  linkAffordance?: boolean;
   className?: string;
 }
 
@@ -53,6 +50,8 @@ export function PlayerCard({
   photoUrl,
   href,
   garment,
+  blendPhoto = true,
+  linkAffordance = false,
   className,
 }: PlayerCardProps) {
   const hasPhoto = photoUrl !== undefined && photoUrl !== "";
@@ -70,16 +69,19 @@ export function PlayerCard({
         className="border-paper-edge bg-cream relative aspect-[3/4] overflow-hidden border"
       >
         {hasPhoto ? (
-          /* Every photo this card renders blends: multiply drops a studio
-             cutout's white matte onto the card's cream. No cutout branch and
-             no coverage threshold (#2633, deciding #2590). */
+          /* Multiply drops a studio cutout's white matte onto the card's
+             cream (#2633, deciding #2590) — see `blendPhoto` for why a
+             staff upload skips it. */
           <Image
             src={photoUrl!}
             alt=""
             width={300}
             height={400}
             unoptimized
-            className="block h-full w-full object-cover mix-blend-multiply"
+            className={cn(
+              "block h-full w-full object-cover",
+              blendPhoto && "mix-blend-multiply",
+            )}
             style={{ filter: "var(--filter-photo-newsprint)" }}
           />
         ) : (
@@ -113,6 +115,18 @@ export function PlayerCard({
         <p className="text-ink-muted mt-1 font-mono text-[9px] tracking-[0.06em] uppercase">
           {position}
         </p>
+      ) : null}
+
+      {/* BEST-1: only a clickable card gets a visible resting affordance,
+          so clickable vs non-clickable no longer read identically on a
+          mixed run — see `linkAffordance`'s doc comment. */}
+      {linkAffordance && href ? (
+        <span
+          data-testid="player-card-link-affordance"
+          className="text-jersey-deep mt-1.5 font-mono text-[9px] font-semibold tracking-[0.1em] uppercase"
+        >
+          Bekijk →
+        </span>
       ) : null}
     </>
   );

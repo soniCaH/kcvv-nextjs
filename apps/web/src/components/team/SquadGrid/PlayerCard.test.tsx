@@ -3,13 +3,15 @@
  *
  * Covers:
  *  - Photo state vs illustration fallback (data-state)
- *  - Photo treatment: cover + multiply, unconditionally (#2633)
+ *  - Photo treatment: cover + multiply by default, `blendPhoto={false}` skips it (#2633/#2575)
  *  - Number disc renders when jerseyNumber present, hidden when absent
  *  - Name rhythm: first semibold + last italic
  *  - Position label rendered
  *  - Whole card links to href when present; renders as non-link div otherwise
+ *  - `linkAffordance` resting "Bekijk →" label (BEST-1, #2575)
  *  - Cross-component agreement with <PlayerHero> for the same player id (#2635)
- *  - Garment passthrough — jersey (default) vs coat (#2485/#2575)
+ *  - Garment passthrough to coat (#2485/#2575) — the default is covered by
+ *    JerseyIllustration.test.tsx, not restated here
  */
 
 import { describe, it, expect } from "vitest";
@@ -101,8 +103,8 @@ describe("PlayerCard", () => {
     });
   });
 
-  describe("Photo treatment (#2633)", () => {
-    it("fills the window and multiplies onto the card's cream", () => {
+  describe("Photo treatment (#2633 / #2575)", () => {
+    it("fills the window and multiplies onto the card's cream by default", () => {
       const { container } = render(
         <PlayerCard
           id="player-test"
@@ -126,6 +128,21 @@ describe("PlayerCard", () => {
       expect(
         screen.getByTestId("player-card-figure").className.split(/\s+/),
       ).toContain("bg-cream");
+    });
+
+    it("blendPhoto={false} skips the multiply blend — a free-form staff upload has no matte to drop", () => {
+      const { container } = render(
+        <PlayerCard
+          id="staff-test"
+          firstName="Karel"
+          lastName="Coach"
+          photoUrl="/player-fixtures/player-schulz.jpg"
+          blendPhoto={false}
+        />,
+      );
+      const classes = container.querySelector("img")?.className.split(/\s+/);
+      expect(classes).toContain("object-cover");
+      expect(classes).not.toContain("mix-blend-multiply");
     });
   });
 
@@ -241,18 +258,48 @@ describe("PlayerCard", () => {
     });
   });
 
-  describe("Garment (#2485 / #2575)", () => {
-    it("defaults to the jersey garment when no garment prop is passed", () => {
+  describe("Link affordance (BEST-1, #2575)", () => {
+    it("omits the affordance by default even when linked", () => {
       render(
-        <PlayerCard id="player-test" firstName="Lars" lastName="De Smet" />,
+        <PlayerCard
+          id="player-test"
+          firstName="Maxim"
+          lastName="Breugelmans"
+          href="/spelers/123"
+        />,
       );
-      expect(
-        screen
-          .getByTestId("player-card-illustration")
-          .getAttribute("data-garment"),
-      ).toBe("jersey");
+      expect(screen.queryByTestId("player-card-link-affordance")).toBeNull();
     });
 
+    it("shows the resting affordance when linkAffordance and href are both set", () => {
+      render(
+        <PlayerCard
+          id="staff-test"
+          firstName="Karel"
+          lastName="Coach"
+          href="/staf/129"
+          linkAffordance
+        />,
+      );
+      expect(
+        screen.getByTestId("player-card-link-affordance").textContent,
+      ).toBe("Bekijk →");
+    });
+
+    it("omits the affordance when linkAffordance is set but href is absent — nothing to visit", () => {
+      render(
+        <PlayerCard
+          id="staff-test"
+          firstName="Karel"
+          lastName="Coach"
+          linkAffordance
+        />,
+      );
+      expect(screen.queryByTestId("player-card-link-affordance")).toBeNull();
+    });
+  });
+
+  describe("Garment (#2485 / #2575)", () => {
     it('passes garment="coat" through to the illustration — the staff-document figure', () => {
       render(
         <PlayerCard
