@@ -1,6 +1,7 @@
 import { createElement, type ReactNode } from "react";
 import type { PortableTextBlock } from "@portabletext/react";
 import { cn } from "@/lib/utils/cn";
+import { AccentEm, splitOnAccent, type AccentTone } from "../_internal/accent";
 
 interface TitleSpan {
   _type?: "span";
@@ -11,11 +12,7 @@ interface TitleSpan {
 import { HighlighterStroke } from "../HighlighterStroke";
 
 export type EditorialHeadingSize =
-  | "display-2xl"
-  | "display-xl"
-  | "display-lg"
-  | "display-md"
-  | "display-sm";
+  "display-2xl" | "display-xl" | "display-lg" | "display-md" | "display-sm";
 
 export type EditorialHeadingTone = "ink" | "jersey-deep" | "cream";
 
@@ -26,8 +23,12 @@ export type EditorialHeadingTone = "ink" | "jersey-deep" | "cream";
  * - `jersey-deep` (default) — readable on cream / paper surfaces.
  * - `warm` — readable on jersey-deep / ink surfaces (`text-warm` token
  *   landed in #1697). Used by `<FeaturedEventBand>` and `<YouthBlock>`.
+ *
+ * An alias of the shared `AccentTone` (`../_internal/accent`) — kept as its
+ * own exported name so this module's public API is unchanged for existing
+ * importers (#2576 review finding 8 moved the mechanism, not the name).
  */
-export type EditorialHeadingAccentTone = "jersey-deep" | "warm";
+export type EditorialHeadingAccentTone = AccentTone;
 
 export type EditorialHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -80,29 +81,10 @@ const TONE_CLASS: Record<EditorialHeadingTone, string> = {
   cream: "text-cream",
 };
 
-const ACCENT_TONE_CLASS: Record<EditorialHeadingAccentTone, string> = {
-  "jersey-deep": "text-jersey-deep",
-  warm: "text-warm",
-};
-
 function ensureTrailingPeriod(text: string): string {
   // A heading already terminated by sentence punctuation keeps it — appending a
   // period to a question ("…langs de lijn?") or exclamation would be wrong.
   return /[.?!]$/.test(text.trimEnd()) ? text : `${text}.`;
-}
-
-function splitOnEmphasis(
-  text: string,
-  emphasisText: string,
-): { before: string; match: string; after: string } | null {
-  if (!emphasisText) return null;
-  const idx = text.indexOf(emphasisText);
-  if (idx < 0) return null;
-  return {
-    before: text.slice(0, idx),
-    match: text.slice(idx, idx + emphasisText.length),
-    after: text.slice(idx + emphasisText.length),
-  };
 }
 
 function renderPortableTextTitle(
@@ -120,7 +102,6 @@ function renderPortableTextTitle(
   const flat = spans.map((s) => s.text ?? "").join("");
   const endsWithPeriod = flat.trim().endsWith(".");
   const lastIdx = spans.length - 1;
-  const accentClass = ACCENT_TONE_CLASS[accentTone];
   const body = (
     <>
       {spans.map((span, i) => {
@@ -131,12 +112,9 @@ function renderPortableTextTitle(
             : (span.text ?? "");
         if (isAccent) {
           return (
-            <em
-              key={span._key ?? i}
-              className={cn("font-display italic", accentClass)}
-            >
+            <AccentEm key={span._key ?? i} tone={accentTone}>
               {text}
-            </em>
+            </AccentEm>
           );
         }
         return <span key={span._key ?? i}>{text}</span>;
@@ -163,7 +141,7 @@ export function EditorialHeading({
     const display = ensureTrailingPeriod(children);
     body = display;
     if (emphasis) {
-      const split = splitOnEmphasis(display, emphasis.text);
+      const split = splitOnAccent(display, emphasis.text);
       if (!split) {
         if (process.env.NODE_ENV === "development") {
           console.warn(
@@ -173,15 +151,13 @@ export function EditorialHeading({
       } else {
         const isHighlight = !!emphasis.highlight;
         const emphasisTone = emphasis.tone ?? "jersey-deep";
-        const emEl = (
-          <em
-            className={cn(
-              "font-display italic",
-              !isHighlight && ACCENT_TONE_CLASS[emphasisTone],
-            )}
-          >
-            {split.match}
-          </em>
+        // The highlight (marker) variant owns its own colour — no tone
+        // class here, unlike the plain `<AccentEm>` register below — so it
+        // stays a bare inline `<em>` rather than going through `<AccentEm>`.
+        const emEl = isHighlight ? (
+          <em className="font-display italic">{split.match}</em>
+        ) : (
+          <AccentEm tone={emphasisTone}>{split.match}</AccentEm>
         );
         const wrapped = isHighlight ? (
           <HighlighterStroke>{emEl}</HighlighterStroke>

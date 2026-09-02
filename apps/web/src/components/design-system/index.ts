@@ -130,6 +130,9 @@ export type {
   EmptyStateSurfacePendingProps,
   EmptyStateSurfaceFilteredProps,
   EmptyStateSlotProps,
+  EmptyStateSlotHeldOpenProps,
+  EmptyStateSlotNoticeProps,
+  EmptyStateSlotEmphasis,
   EmptyStateSlotBackground,
   EmptyStateAction,
 } from "./EmptyState";

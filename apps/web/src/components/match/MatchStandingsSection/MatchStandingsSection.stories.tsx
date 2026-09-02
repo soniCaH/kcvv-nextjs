@@ -82,3 +82,13 @@ export const EmptyAutoHides: Story = {
   args: { entries: [], homeClubId: 1235, awayClubId: 103 },
   tags: ["vr-skip"],
 };
+
+/**
+ * The ranking read failed permanently (#2778 classifies it; the caller
+ * passes the verdict through) — a failure notice renders in place of the
+ * table instead of the section auto-hiding (#2576). `<EmptyState tier="slot"
+ * reason="unavailable">`: the accent falls on the failure, not the subject.
+ */
+export const Unavailable: Story = {
+  args: { homeClubId: 1235, awayClubId: 103, unavailable: true },
+};

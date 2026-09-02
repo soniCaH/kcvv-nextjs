@@ -2,6 +2,20 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { RankingEntry } from "@kcvv/api-contract";
 import { MatchStandingsSection } from "./MatchStandingsSection";
+import type { MatchStandingsSectionUnavailableProps } from "./MatchStandingsSection";
+
+// Type-level assertion (#2576 review finding 6) — TypeScript, not vitest, is
+// under test here. `@ts-expect-error` fails the type check if `unavailable:
+// true` ever grows an `entries` field again, which is what makes "rows
+// present AND unavailable" a compile error at the call site instead of a
+// component that has to decide which one silently wins.
+const _unavailableWithEntries: MatchStandingsSectionUnavailableProps = {
+  unavailable: true,
+  homeClubId: 1235,
+  awayClubId: 103,
+  // @ts-expect-error — the unavailable member carries no `entries` at all
+  entries: [],
+};
 
 function entry(
   position: number,
@@ -90,6 +104,34 @@ describe("MatchStandingsSection", () => {
       <MatchStandingsSection entries={[]} homeClubId={1235} awayClubId={103} />,
     );
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("stays silent (no notice) on a genuinely empty ranking even though the section could show one", () => {
+    render(
+      <MatchStandingsSection entries={[]} homeClubId={1235} awayClubId={103} />,
+    );
+    expect(screen.queryByText(/niet beschikbaar/i)).toBeNull();
+  });
+
+  it("renders a failure notice instead of nothing when the read is permanently unavailable (#2576)", () => {
+    render(
+      <MatchStandingsSection unavailable homeClubId={1235} awayClubId={103} />,
+    );
+    expect(screen.getByText("KLASSEMENT")).toBeInTheDocument();
+    expect(screen.getByText(/In de stand/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Het klassement is/).closest("p"),
+    ).toHaveTextContent(
+      "Het klassement is even niet beschikbaar. Probeer het later opnieuw.",
+    );
+  });
+
+  it("accents only the failure clause, not the whole notice or the subject", () => {
+    render(
+      <MatchStandingsSection unavailable homeClubId={1235} awayClubId={103} />,
+    );
+    const accent = screen.getByText("even niet beschikbaar");
+    expect(accent.tagName).toBe("EM");
   });
 
   it("tints the KCVV row via highlightTeamId", () => {

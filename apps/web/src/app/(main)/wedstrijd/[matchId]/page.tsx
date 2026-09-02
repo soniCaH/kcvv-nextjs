@@ -10,7 +10,10 @@
  *   <StripedSeam>                  ← only when both Lineup + Events render
  *   <MatchEventsSection>           ← auto-hides on empty
  *   <StripedSeam>                  ← only before standings when a body section rendered
- *   <MatchStandingsSection>        ← auto-hides on empty (league matches only)
+ *   <MatchStandingsSection>        ← league matches only; auto-hides on a
+ *                                     genuinely empty ranking, renders a
+ *                                     failure notice on a permanently-failed
+ *                                     read instead (#2576)
  *   <StripedSeam>                  ← only before the row when a body section rendered
  *   <RelatedRow>                   ← one mixed, cross-type onward slot (#2443/#2581)
  *
@@ -38,7 +41,6 @@ import type { Metadata } from "next";
 import { runPromise } from "@/lib/effect/runtime";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE, KCVV_CLUB_ID } from "@/lib/constants";
 import { BffService } from "@/lib/effect/services/BffService";
-import { degradeIfPermanent } from "@/lib/effect/degrade-if-permanent";
 import { PlayerRepository } from "@/lib/repositories/player.repository";
 import {
   ArticleRepository,
@@ -182,8 +184,11 @@ const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
  *
  * Deliberately no bare `catchAll` on the ranking read (#2778) — see
  * `/ploegen/[slug]/page.tsx`'s `fetchBffData` docstring for the full
- * transient-throws / permanent-degrades rationale shared via
- * `degradeIfPermanent` (`lib/effect/degrade-if-permanent.ts`).
+ * transient-throws / permanent-degrades rationale. This read classifies its
+ * own three permanent tags by hand below rather than through the shared
+ * `degradeIfPermanent` (`lib/effect/degrade-if-permanent.ts`, still
+ * `/ploegen/[slug]`'s tool) — see the `fetchStandings` docblock for why
+ * `HttpNotFound` needs different treatment here than the other two.
  *
  * This route's own facts: a 5-minute ISR window (below), and no cheaper
  * failure domain to isolate this one read into than the whole page. This
@@ -197,12 +202,35 @@ const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
  * ticket fixes — trading a full-page throw (ISR keeps serving the last-good
  * page) for a successful-but-wrong render cached for the whole window.
  *
- * Owner call (#2778): a permanently-failed read degrades to the exact same
- * outcome as "no ranking fetched at all" below — an empty `RankingEntry[]`,
- * which `<MatchStandingsSection>` already auto-hides on. No new copy for this
- * state; deciding what the panel *says* in each state is explicitly out of
- * scope for #2778 (it's a single panel, not a section with its own nav
- * entry, unlike #2636's competitive block).
+ * Owner call (#2778, revisited by #2576): a permanently-failed read no
+ * longer collapses to the exact same outcome as "no ranking fetched at
+ * all" — that was the gap #2778 deliberately left open ("no new copy for
+ * this state… out of scope for #2778"). It now resolves to `null` instead
+ * of `[]` for a genuine failure, so `<MatchStandingsSection>` can tell that
+ * apart from a legitimately empty ranking and render a failure notice
+ * instead of auto-hiding on both alike (#2576) — the same `null`-sentinel
+ * idiom `/ploegen/[slug]/page.tsx`'s `fetchBffData` already uses for its own
+ * ranking read. `null` rather than a string literal: `"unavailable"` shares
+ * `length`/`indexOf`/`slice`/… with `readonly RankingEntry[]`, so a stray
+ * `standingsResult.length` downstream would silently compile against the
+ * sentinel instead of failing loudly.
+ *
+ * **A 404 is deliberately NOT one of the failures this degrades to
+ * `null`.** `apps/api/src/handlers/ranking.ts` maps an *empty* upstream
+ * table list to the exact same `HttpNotFound` a genuinely-unknown
+ * `kcvv_team_id` would get — "no ranking published yet" and "no ranking
+ * read at all" are indistinguishable at this boundary. Degrading a 404 to
+ * the failure notice would show *"Het klassement is even niet
+ * beschikbaar"* on every youth fixture for weeks before the association
+ * publishes a table, which is exactly the silent case the AC protects.
+ * `HttpNotFound` therefore degrades to `[]` — not applicable, the same as
+ * the guards below — and the `null` sentinel is reserved for the failures
+ * that genuinely mean "PSD sent something this deploy could not read"
+ * (`ParseError`, `HttpApiDecodeError`). This is why this read cannot reuse
+ * the shared `degradeIfPermanent` (`lib/effect/degrade-if-permanent.ts`,
+ * still `/ploegen/[slug]`'s tool unchanged) — that helper treats all of
+ * `PERMANENT_BFF_TAGS` alike, and this route needs `HttpNotFound` split out
+ * from the other two.
  *
  * The BFF now hands back every official table this team plays in (#2631), so
  * pick the one holding **both** sides of this match — a fixture belongs to
@@ -211,11 +239,11 @@ const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
  */
 async function fetchStandings(
   match: MatchDetail,
-): Promise<readonly RankingEntry[]> {
+): Promise<readonly RankingEntry[] | null> {
   // A pitch-reservation placeholder (#2606) carries no result vocabulary — a
   // standings table is exactly that, so it never fetches for one, even on
   // the defensive off-chance a reservation is ever miscategorised `league`
-  // upstream.
+  // upstream. Not applicable, not a failure: nothing to read here.
   if (
     match.is_placeholder ||
     match.competitionType !== "league" ||
@@ -224,20 +252,20 @@ async function fetchStandings(
     return [];
   }
   const standingsTeamId = match.kcvv_team_id;
-  // Unlike `/ploegen/[slug]`, this route makes no distinction between "the
-  // ranking read permanently failed" and "there is legitimately no table" —
-  // both already resolve to the same empty `RankingEntry[]` below, so the
-  // permanent fallback is `[]` directly rather than a `null` sentinel this
-  // function would immediately unwrap.
   const tables = await runPromise(
-    degradeIfPermanent(
-      Effect.gen(function* () {
-        const bff = yield* BffService;
-        return yield* bff.getRanking(standingsTeamId);
+    Effect.gen(function* () {
+      const bff = yield* BffService;
+      return yield* bff.getRanking(standingsTeamId);
+    }).pipe(
+      Effect.catchTags({
+        HttpNotFound: () => Effect.succeed([] as readonly RankingTable[]),
+        ParseError: (error) => warnAndDegradeRankingRead("ParseError", error),
+        HttpApiDecodeError: (error) =>
+          warnAndDegradeRankingRead("HttpApiDecodeError", error),
       }),
-      [] as readonly RankingTable[],
     ),
   );
+  if (tables === null) return null;
 
   const holds = (table: RankingTable, clubId: number) =>
     table.entries.some((e) => e.club_id === clubId);
@@ -260,6 +288,20 @@ async function fetchStandings(
   return table?.entries ?? [];
 }
 
+/** Shared warn-and-degrade for `fetchStandings`'s two genuine-failure tags —
+ *  `ParseError`/`HttpApiDecodeError` mean this deploy cannot read what PSD
+ *  sent, unlike `HttpNotFound` (handled inline above; see the docblock). */
+function warnAndDegradeRankingRead(
+  tag: "ParseError" | "HttpApiDecodeError",
+  error: unknown,
+) {
+  console.warn(
+    `[fetchStandings] "${tag}" classified as permanent; degrading instead of retrying.`,
+    { error },
+  );
+  return Effect.succeed(null);
+}
+
 export default async function MatchPage({ params }: MatchPageProps) {
   const { matchId } = await params;
   const numericId = parseInt(matchId, 10);
@@ -274,7 +316,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
   // they run as one wave instead of five serialized round-trips — `max()`
   // latency rather than `sum()` (#2441). Each keeps its own fallback: none of
   // them is load-bearing enough to take the page down.
-  const [keeperPsdIds, linkedArticles, galleries, standings, allTeams] =
+  const [keeperPsdIds, linkedArticles, galleries, standingsResult, allTeams] =
     await Promise.all([
       // Keeper PSD ids from Sanity (cached for 24h in the repo's module-scope
       // memo + Sanity CDN — see PlayerRepository.findKeeperPsdIds). Used to
@@ -392,7 +434,10 @@ export default async function MatchPage({ params }: MatchPageProps) {
     !match.is_placeholder && (homeLineup.length > 0 || awayLineup.length > 0);
   const hasEvents = !match.is_placeholder && events.length > 0;
 
-  const hasStandings = standings.length > 0;
+  // `null` (a permanently-failed ranking read, #2576) renders a failure
+  // notice rather than auto-hiding, so the section mounts for that case too
+  // even though there is no table to show either way.
+  const hasStandings = standingsResult === null || standingsResult.length > 0;
 
   const matchLabel = formatMatchTitle(match);
 
@@ -575,21 +620,33 @@ export default async function MatchPage({ params }: MatchPageProps) {
         <StripedSeam colorPair="ink-cream" height="md" />
       )}
 
-      {/* Match-day standings (#2162) — league matches only; <TrackInView> only
-          mounts when the section renders, so `match_standings_in_view` never
-          fires on the auto-hide (cup/friendly/off-season) branch. */}
-      {hasStandings && (
-        <TrackInView
-          eventName="match_standings_in_view"
-          params={analyticsParams}
-        >
-          <MatchStandingsSection
-            entries={standings}
-            homeClubId={match.home_team.id}
-            awayClubId={match.away_team.id}
-            highlightTeamId={match.kcvv_team_id}
-          />
-        </TrackInView>
+      {/* Match-day standings (#2162) — league matches only. `<TrackInView>`
+          wraps only the table-rendered branch: `match_standings_in_view`
+          means "a standings table was shown", so it must not fire on the
+          auto-hide (cup/friendly/off-season) branch NOR on the failure-
+          notice branch, which mounts the section but never a table
+          (#2576 review finding 3). */}
+      {standingsResult === null ? (
+        <MatchStandingsSection
+          unavailable
+          homeClubId={match.home_team.id}
+          awayClubId={match.away_team.id}
+          highlightTeamId={match.kcvv_team_id}
+        />
+      ) : (
+        hasStandings && (
+          <TrackInView
+            eventName="match_standings_in_view"
+            params={analyticsParams}
+          >
+            <MatchStandingsSection
+              entries={standingsResult}
+              homeClubId={match.home_team.id}
+              awayClubId={match.away_team.id}
+              highlightTeamId={match.kcvv_team_id}
+            />
+          </TrackInView>
+        )
       )}
 
       {/* Seam before the row when a body section preceded it, so it isn't
