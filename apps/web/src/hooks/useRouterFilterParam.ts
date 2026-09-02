@@ -32,15 +32,26 @@ export interface UseRouterFilterParamOptions<T extends string> {
  * instead — merely calling `useSearchParams()`, whether or not the result is
  * used, opts the whole subtree into client-side rendering.
  *
- * **Single source of truth (#2783 review finding 1).** Both the returned
- * `value` and the setter's live-URL merge read from the SAME
- * `useSearchParams()` call this render — never `window.location.search`,
- * which can disagree with `useSearchParams()` for the entire span of a
- * pending transition (a `router.push` already in flight). Reading a second,
- * independently-timed "what is the URL right now" was what let a rapid
- * second click get silently dropped: the setter's dedup guard compared the
- * new value against a `value` that hadn't caught up yet, decided the click
- * was a no-op, and skipped the write.
+ * **Two different questions, two different correct sources (#2783 review,
+ * round 1 finding 1 + round 2).** `value` — and the setter's dedup guard,
+ * which compares against `value` — comes from `useSearchParams()`: the
+ * source that's actually reactive to `router.push`/`replace` and browser
+ * back/forward, so the guard stays consistent with what the hook just
+ * rendered. The setter's merge base for building the NEXT url is the live
+ * `window.location.search` instead: `useSearchParams()` cannot see a param
+ * written via a raw `history.replaceState` outside Next's router (e.g.
+ * `HubMemberPanel`'s `?member=`/`?holder=` deep-link on `/hulp`, which
+ * `HulpFinder`'s own filter chips share a route with) — merging from
+ * `useSearchParams()` would silently drop it from every filter write for as
+ * long as the member panel stayed open. The live URL has the opposite gap:
+ * it cannot see a `router.push` this hook itself already issued but that
+ * hasn't landed yet, so merging from it risks reverting an in-flight write
+ * to a sibling param on the SAME route (e.g. `/kalender`'s `?view=` versus
+ * `?type=`, both driven by `CalendarWidget`) — a narrow, same-widget race,
+ * and exactly what this write already did on `main` before #2779. Losing
+ * `?member=` deterministically for the panel's entire open duration is
+ * strictly worse than that race, so this hook accepts the race and keeps
+ * the live-URL merge.
  *
  * The setter accepts a per-call `{ hash, replace }` override — the wrinkle
  * that shaped this API: `HulpFinder`'s `#<slug>` deep-link needs to write the
@@ -59,10 +70,11 @@ export function useRouterFilterParam<T extends string>(
 
   const setValue = useCallback<SetFilterParam<T>>(
     (next, overrides) => {
-      if (next === value) return; // dedup guard
-      // Merge base is the SAME `searchParams` this render already read —
-      // never a second, independently-timed read (see docblock).
-      const params = new URLSearchParams(searchParams.toString());
+      if (next === value) return; // dedup guard — compares against the useSearchParams()-derived value above
+      // Merge base is the LIVE window.location.search, not `searchParams` —
+      // it's the only source that can see a param written via a raw
+      // history.replaceState outside Next's router (see docblock).
+      const params = new URLSearchParams(window.location.search);
       if (next === fallback) params.delete(name);
       else params.set(name, next);
       const qs = params.toString();
@@ -72,7 +84,7 @@ export function useRouterFilterParam<T extends string>(
       if (overrides?.replace) router.replace(path, { scroll: false });
       else router.push(path, { scroll: false });
     },
-    [value, fallback, name, route, hash, router, searchParams],
+    [value, fallback, name, route, hash, router],
   );
 
   return [value, setValue];

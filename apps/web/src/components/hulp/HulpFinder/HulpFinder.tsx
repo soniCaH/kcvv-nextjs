@@ -127,17 +127,16 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
   // (via the shared setter's `{ hash, replace }` override), so there is
   // nothing left to mirror.
   //
-  // Both hook instances merge a write from the SAME `useSearchParams()` this
-  // render already read, never a second, independently-timed
-  // `window.location.search` read (#2783 review finding 1 — two disagreeing
-  // answers to "what is the URL right now" is what let a rapid click get
-  // silently dropped elsewhere). One accepted consequence: `HubMemberPanel`'s
-  // `?member=`/`?holder=` deep-link (written via a raw `history.replaceState`
-  // `useSearchParams()` never observes) is no longer preserved across a
-  // filter click made while the panel is open — sharing that exact URL
-  // moment would no longer restore the panel on load. No existing test
-  // covers that combination; flagged in the PR body as a disclosed
-  // trade-off, not a silent regression.
+  // Both hook instances read `value` from `useSearchParams()` (reactive,
+  // consistent with what just rendered — #2783 review finding 1) but merge
+  // each WRITE from the live `window.location.search` instead (#2783 review
+  // round 2): `useSearchParams()` never observes `HubMemberPanel`'s
+  // `?member=`/`?holder=` deep-link, written via a raw `history.replaceState`
+  // outside Next's router, and this route hosts both — merging from
+  // `useSearchParams()` would silently drop it from the URL on every filter
+  // click made while the member panel is open. See `useRouterFilterParam`'s
+  // own docblock for the full reasoning and the (narrow, same-widget,
+  // pre-#2779-equivalent) trade-off that source choice accepts instead.
   const [category, setCategoryParam] = useRouterFilterParam<CategoryFilter>(
     CATEGORY_PARAM,
     CATEGORY_ORDER,
