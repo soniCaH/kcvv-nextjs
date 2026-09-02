@@ -40,7 +40,7 @@ import {
   FilterTabs,
   type FilterTab,
 } from "@/components/design-system";
-import { useFilterParam } from "@/hooks/useFilterParam";
+import { useRouterFilterParam } from "@/hooks/useRouterFilterParam";
 import { filteredEmptyBody } from "@/lib/utils/empty-state-copy";
 import { useResponsibilityAnalytics } from "@/hooks/useResponsibilityAnalytics";
 import { useHubMemberPanel } from "@/components/organigram/HubMemberPanel";
@@ -65,6 +65,13 @@ type CategoryFilter = "alles" | CategoryKey;
  *  row's own delete-on-default sentinel; `audience` (below) converts it to
  *  the `UserRole | null` shape the rest of the component already expects. */
 type AudienceFilter = "alles" | UserRole;
+/** Every valid `?audience=` value — hoisted to a module constant (rather
+ *  than computed inline at the hook call site) so it's referentially
+ *  stable across renders; `useRouterFilterParam` takes it as a plain
+ *  `values` array, not a dependency to re-derive (#2783 review finding 7). */
+const AUDIENCE_VALUES: readonly UserRole[] = HUB_AUDIENCE_FILTERS.map(
+  (option) => option.value,
+);
 
 /**
  * Both `/hulp` chip rows, absorbed into `<FilterTabs>` by #2429/#2564 —
@@ -108,8 +115,8 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
     trackStepLinkClicked,
   } = useResponsibilityAnalytics();
 
-  // Both facets are purely URL-derived via `useFilterParam` (#2779) — no
-  // local state, no render-phase resync of their own. `category` used to
+  // Both facets are purely URL-derived via `useRouterFilterParam` (#2779) —
+  // no local state, no render-phase resync of their own. `category` used to
   // carry both of those (#2564 review item 5) so that `reveal()` (the
   // `#<slug>` question deep-link) could set it without writing
   // `?categorie=`. That mirror is what let an unrelated `?audience=` push
@@ -119,7 +126,19 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
   // wrote. `reveal()` below writes the param it already implies instead
   // (via the shared setter's `{ hash, replace }` override), so there is
   // nothing left to mirror.
-  const [category, setCategoryParam] = useFilterParam<CategoryFilter>(
+  //
+  // Both hook instances merge a write from the SAME `useSearchParams()` this
+  // render already read, never a second, independently-timed
+  // `window.location.search` read (#2783 review finding 1 — two disagreeing
+  // answers to "what is the URL right now" is what let a rapid click get
+  // silently dropped elsewhere). One accepted consequence: `HubMemberPanel`'s
+  // `?member=`/`?holder=` deep-link (written via a raw `history.replaceState`
+  // `useSearchParams()` never observes) is no longer preserved across a
+  // filter click made while the panel is open — sharing that exact URL
+  // moment would no longer restore the panel on load. No existing test
+  // covers that combination; flagged in the PR body as a disclosed
+  // trade-off, not a silent regression.
+  const [category, setCategoryParam] = useRouterFilterParam<CategoryFilter>(
     CATEGORY_PARAM,
     CATEGORY_ORDER,
     { fallback: "alles", route: "/hulp", hash: "hulp" },
@@ -130,11 +149,12 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
   const finderRef = useRef<HTMLDivElement>(null);
   const scrollToTopRef = useRef(false);
 
-  const [audienceParam, setAudienceParam] = useFilterParam<AudienceFilter>(
-    AUDIENCE_PARAM,
-    HUB_AUDIENCE_FILTERS.map((option) => option.value),
-    { fallback: "alles", route: "/hulp", hash: "hulp" },
-  );
+  const [audienceParam, setAudienceParam] =
+    useRouterFilterParam<AudienceFilter>(AUDIENCE_PARAM, AUDIENCE_VALUES, {
+      fallback: "alles",
+      route: "/hulp",
+      hash: "hulp",
+    });
   const audience: UserRole | null =
     audienceParam === "alles" ? null : audienceParam;
 
@@ -167,7 +187,7 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
 
   // #<slug> deep-link: reveal + open the question (switching to its category so
   // it renders, since "Alles" only shows the top-3 per category). Writes
-  // `?categorie=` via the shared `useFilterParam` setter only when the
+  // `?categorie=` via the shared `useRouterFilterParam` setter only when the
   // category actually needs to change — the hash itself is already correct
   // by the time this runs (a real `hashchange`, or the hash present on
   // first load, both move `window.location.hash` natively before this
@@ -224,7 +244,7 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
   }, [category]);
 
   // Dedup guard: re-pressing the already-active audience chip is a no-op —
-  // no redundant history entry (repo analytics policy) — `useFilterParam`'s
+  // no redundant history entry (repo analytics policy) — `useRouterFilterParam`'s
   // own internal dedup guard covers this too, but this call site guard
   // documents the intent and matches every other absorbed row. The row's
   // own "Alles" chip (added on absorption into `<FilterTabs>`, #2429/#2564)
