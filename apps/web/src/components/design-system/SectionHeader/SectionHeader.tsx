@@ -169,14 +169,38 @@ export const SectionHeader = ({
   // Reused as two sibling children below (not array-rendered, so no `key`
   // is needed) rather than writing the same span out twice. `hidden
   // lg:block` is the responsive half of the constraint documented on
-  // RULED_TITLE_MAX_LENGTH: below `lg` the rule takes no part in layout at
-  // all, so the heading alone renders ranged-left, matching the default
-  // treatment exactly.
+  // RULED_TITLE_MAX_LENGTH: below `lg` the rule is `display: none`, so it
+  // takes no part in layout and the row falls back to the default
+  // heading-and-CTA treatment.
   const hairline = (
     <span
       aria-hidden="true"
       className={cn("hidden h-px flex-1 self-center lg:block", hairlineClass)}
     />
+  );
+
+  // One row, one DOM position for the CTA, in both treatments — a second
+  // copy behind a responsive `hidden` would put the same link in the tab
+  // order twice. The ruled treatment reflows that single row at `lg`
+  // instead: `lg:basis-full` pushes the CTA onto its own centred line under
+  // the ruled row, while below `lg` the wrapper is inert and the CTA sits
+  // beside the heading exactly as the default treatment does.
+  const row = (
+    <div
+      className={cn(
+        "flex flex-wrap items-end justify-between gap-x-6 gap-y-2",
+        isRuled && "w-full lg:items-center lg:gap-4",
+      )}
+    >
+      {isRuled && hairline}
+      {headingEl}
+      {isRuled && hairline}
+      {ctaEl && isRuled ? (
+        <span className="lg:basis-full lg:text-center">{ctaEl}</span>
+      ) : (
+        ctaEl
+      )}
+    </div>
   );
 
   return (
@@ -189,19 +213,7 @@ export const SectionHeader = ({
       data-ruled={isRuled || undefined}
     >
       {kicker && kicker.length > 0 && <MonoLabelRow items={kicker} />}
-      {isRuled ? (
-        <div className="flex w-full items-center gap-4">
-          {hairline}
-          {headingEl}
-          {hairline}
-        </div>
-      ) : (
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
-          {headingEl}
-          {ctaEl}
-        </div>
-      )}
-      {isRuled && ctaEl}
+      {row}
     </header>
   );
 };

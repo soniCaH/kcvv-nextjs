@@ -195,7 +195,7 @@ describe("SectionHeader", () => {
       vi.unstubAllEnvs();
     });
 
-    it("centres a link below the ruled row instead of beside the heading", () => {
+    it("keeps a ruled header's link beside the heading below lg, and reflows it onto its own line at lg", () => {
       render(
         <SectionHeader
           title="Nieuws"
@@ -206,8 +206,29 @@ describe("SectionHeader", () => {
       );
       const link = screen.getByRole("link", { name: /Alle berichten/i });
       const row = screen.getByRole("heading").parentElement;
-      // The link is a sibling of the ruled row, not inside it.
-      expect(row?.contains(link)).toBe(false);
+      // Below `lg` the hairlines are `display: none`, so the CTA has to sit
+      // in the same row as the heading or a ruled header would stack its
+      // link where the default treatment ranges it alongside.
+      expect(row?.contains(link)).toBe(true);
+      // At `lg` that single row reflows: the CTA takes a full basis, which
+      // pushes it onto its own centred line under the ruled row.
+      expect(link.parentElement).toHaveClass("lg:basis-full", "lg:text-center");
+    });
+
+    it("renders a ruled header's link exactly once", () => {
+      render(
+        <SectionHeader
+          title="Nieuws"
+          ruled
+          linkText="Alle berichten"
+          linkHref="/nieuws"
+        />,
+      );
+      // A responsive layout must not ship two copies of the same link — a
+      // second one behind a `hidden` utility is still in the tab order.
+      expect(
+        screen.getAllByRole("link", { name: /Alle berichten/i }),
+      ).toHaveLength(1);
     });
 
     it("draws cream hairlines on the dark variant", () => {
