@@ -13,23 +13,8 @@ import {
   formatMatchDescription,
 } from "./utils";
 import type { LineupPlayer } from "@/components/match/MatchLineup";
-import type {
-  MatchDetail,
-  MatchLineupPlayer,
-} from "@/lib/effect/schemas/match.schema";
-
-// Helper to create a minimal valid MatchDetail
-function createMatchDetail(overrides: Partial<MatchDetail> = {}): MatchDetail {
-  return {
-    id: 12345,
-    date: new Date("2025-12-07T15:00:00"),
-    home_team: { id: 1, name: "KCVV Elewijt" },
-    away_team: { id: 2, name: "KFC Turnhout" },
-    status: "scheduled",
-    hasReport: false,
-    ...overrides,
-  } as MatchDetail;
-}
+import type { MatchLineupPlayer } from "@/lib/effect/schemas/match.schema";
+import { createMatchDetail } from "./match-detail.fixtures";
 
 describe("transformHomeTeam", () => {
   it("transforms home team data", () => {

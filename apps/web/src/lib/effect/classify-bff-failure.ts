@@ -9,30 +9,47 @@ import type { BffError } from "@/lib/effect/services/BffService";
  * a generic client/network error — is a transient blip: retried by the next
  * ISR regeneration, which is exactly what letting it throw is for.
  *
- * Typed as `ReadonlySet<BffError["_tag"]>`, not a bare `Set<string>`: renaming
- * or removing a tag on `BffError` (`lib/effect/services/BffService.ts`) then
- * fails to compile here instead of silently narrowing this set to nothing —
- * every permanent failure would reclassify as transient, and `page.tsx`'s
- * competitive block would revert to the exact `error.tsx`-forever bug this
- * module exists to fix, with no red test (#2636 finding 2).
+ * **The single source of truth for this split.** `isPermanentBffFailure`
+ * below and `degradeIfPermanent` (`lib/effect/degrade-if-permanent.ts`) both
+ * build off this list rather than hand-typing their own copy of the same
+ * three tags. `/ploegen/[slug]/page.tsx`'s `fetchBffData` relies on both
+ * classifying identically for its two BFF reads — a fourth tag added to only
+ * one hand-typed copy would silently disagree between them, with no compiler
+ * or test signal (#2778 review finding 1).
+ *
+ * Typed `as const satisfies readonly BffError["_tag"][]`, not a bare
+ * `string[]`: renaming or removing a tag on `BffError`
+ * (`lib/effect/services/BffService.ts`) then fails to compile here instead of
+ * silently narrowing this list to nothing — every permanent failure would
+ * reclassify as transient, and `page.tsx`'s competitive block would revert to
+ * the exact `error.tsx`-forever bug this module exists to fix, with no red
+ * test (#2636 finding 2).
  *
  * This is genuinely the matches read's own tool now — `page.tsx`'s ranking
- * read still has its typed `BffError` channel at the call site, so it
- * classifies a permanent tag with `Effect.catchTags` directly, before it
- * ever becomes a rejected promise. The matches read goes through
+ * read has its typed `BffError` channel at the call site, so it classifies a
+ * permanent tag with `degradeIfPermanent`/`Effect.catchTags` directly, before
+ * it ever becomes a rejected promise. The matches read goes through
  * `getTeamMatches` (`lib/server/match-data.ts`), whose channel is already
  * flattened to a rejecting `Promise` by the #2441 dedupe, so it cannot do
- * the same — this function is what is left to classify it after the fact.
+ * the same — `isPermanentBffFailure` is what is left to classify it after
+ * the fact.
  */
-const PERMANENT_TAGS: ReadonlySet<BffError["_tag"]> = new Set([
+export const PERMANENT_BFF_TAGS = [
   "HttpNotFound",
   "ParseError",
   "HttpApiDecodeError",
-]);
+] as const satisfies readonly BffError["_tag"][];
+
+/** The literal union of `PERMANENT_BFF_TAGS` — the tags `degradeIfPermanent` catches. */
+export type PermanentBffTag = (typeof PERMANENT_BFF_TAGS)[number];
+
+const PERMANENT_TAGS: ReadonlySet<BffError["_tag"]> = new Set(
+  PERMANENT_BFF_TAGS,
+);
 
 /**
  * True when a value caught from a rejected `Effect.runPromise` carries one of
- * `PERMANENT_TAGS`.
+ * `PERMANENT_BFF_TAGS`.
  *
  * `Effect.runPromise` rejects with a `FiberFailure`, not the tagged error
  * itself — the tag is one `Cause.squash` away, behind the

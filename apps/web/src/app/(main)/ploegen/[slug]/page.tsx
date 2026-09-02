@@ -31,6 +31,7 @@ import { PageViewTracker, TrackInView } from "@/components/analytics";
 import { MatchStripSlot } from "@/components/layout/MatchStrip";
 import { getTeamMatches } from "@/lib/server/match-data";
 import { isPermanentBffFailure } from "@/lib/effect/classify-bff-failure";
+import { degradeIfPermanent } from "@/lib/effect/degrade-if-permanent";
 import { StripedSeam } from "@/components/design-system/StripedSeam";
 import { PageContainer } from "@/components/design-system/PageContainer";
 import { TeamHero } from "@/components/team/TeamHero";
@@ -134,11 +135,12 @@ interface BffData {
  *
  * The two reads are told apart differently (#2636 finding 2, review round 2):
  * - The **ranking** read still has its typed `BffError` channel here, so a
- *   permanent tag is caught *as an Effect*, exhaustiveness-checked against
- *   the union — the idiom this repo already uses at
- *   `wedstrijden/page.tsx`, `sitemap.ts` and three more call sites. A caught
- *   read resolves to `null` (a value, not a rejection) rather than the empty
- *   array a transient failure would be indistinguishable from.
+ *   permanent tag is caught *as an Effect* via the shared `degradeIfPermanent`
+ *   (`lib/effect/degrade-if-permanent.ts`, extracted in #2778 once
+ *   `/wedstrijd/[matchId]` needed the identical split), exhaustiveness-checked
+ *   against the union. A caught read resolves to `null` (a value, not a
+ *   rejection) rather than the empty array a transient failure would be
+ *   indistinguishable from.
  * - The **matches** read goes through `getTeamMatches`, whose channel is
  *   already flattened to a rejecting `Promise` by the #2441 dedupe below, so
  *   it cannot be classified before it becomes one. `isPermanentBffFailure`
@@ -146,6 +148,15 @@ interface BffData {
  *
  * Either way, a transient failure is rethrown unchanged, preserving the
  * throw-for-ISR-fallback behaviour above.
+ *
+ * `degradeIfPermanent` is not yet universal: `app/sitemap.ts`,
+ * `(main)/ploegen/[slug]/wedstrijden/page.tsx`, `(main)/share/page.tsx`, and
+ * `(main)/tegenstander/[clubId]/page.tsx` still hand-spell a narrower version
+ * of this split as a bare `Effect.catchTag("HttpNotFound", ...)` — catching
+ * only the 404 case, not the full three-tag permanent classifier. Converging
+ * them is deliberately not done here: it would widen what they catch to
+ * `ParseError`/`HttpApiDecodeError` too, a behaviour change beyond what those
+ * routes asked for. Tracked in #2782.
  */
 async function fetchBffData(
   psdTeamId: number,
@@ -157,15 +168,12 @@ async function fetchBffData(
     // homepage had (#2441).
     getTeamMatches(psdTeamId),
     runPromise(
-      Effect.gen(function* () {
-        const bff = yield* BffService;
-        return yield* bff.getRanking(psdTeamId);
-      }).pipe(
-        Effect.catchTags({
-          HttpNotFound: () => Effect.succeed(null),
-          ParseError: () => Effect.succeed(null),
-          HttpApiDecodeError: () => Effect.succeed(null),
+      degradeIfPermanent(
+        Effect.gen(function* () {
+          const bff = yield* BffService;
+          return yield* bff.getRanking(psdTeamId);
         }),
+        null,
       ),
     ),
   ]);

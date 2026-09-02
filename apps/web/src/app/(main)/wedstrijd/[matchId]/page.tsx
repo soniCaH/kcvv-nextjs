@@ -35,6 +35,7 @@ import type { Metadata } from "next";
 import { runPromise } from "@/lib/effect/runtime";
 import { SITE_CONFIG, DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { BffService } from "@/lib/effect/services/BffService";
+import { degradeIfPermanent } from "@/lib/effect/degrade-if-permanent";
 import { PlayerRepository } from "@/lib/repositories/player.repository";
 import {
   ArticleRepository,
@@ -169,8 +170,30 @@ const fetchMatchOrNotFound = cache(async function fetchMatchOrNotFound(
  * match has no meaningful league table, so we gate on the BFF-surfaced
  * structured `competitionType` (never on string-matching the Dutch label) and
  * a resolved `kcvv_team_id`; anything else triggers no ranking fetch at all.
- * Resilient: a BFF failure degrades to an empty table (auto-hidden), never a
- * 500 — mirrors the `/ploegen/[slug]` standings fetch.
+ *
+ * Deliberately no bare `catchAll` on the ranking read (#2778) — see
+ * `/ploegen/[slug]/page.tsx`'s `fetchBffData` docstring for the full
+ * transient-throws / permanent-degrades rationale shared via
+ * `degradeIfPermanent` (`lib/effect/degrade-if-permanent.ts`).
+ *
+ * This route's own facts: a 5-minute ISR window (below), and no cheaper
+ * failure domain to isolate this one read into than the whole page. This
+ * site has no PPR/streaming (root `CLAUDE.md`'s "Nothing streams" rule), so
+ * every read in this render's single `Promise.all` (below) fails the whole
+ * page the same way regardless of which one rejected — there is no partial-
+ * render escape hatch that lets only `<MatchStandingsSection>` go down while
+ * the hero and lineup still serve. A rejecting ranking read taking the route
+ * down is therefore not a choice this function makes so much as this render
+ * model's shape; the only alternative is catching it, which is the bug this
+ * ticket fixes — trading a full-page throw (ISR keeps serving the last-good
+ * page) for a successful-but-wrong render cached for the whole window.
+ *
+ * Owner call (#2778): a permanently-failed read degrades to the exact same
+ * outcome as "no ranking fetched at all" below — an empty `RankingEntry[]`,
+ * which `<MatchStandingsSection>` already auto-hides on. No new copy for this
+ * state; deciding what the panel *says* in each state is explicitly out of
+ * scope for #2778 (it's a single panel, not a section with its own nav
+ * entry, unlike #2636's competitive block).
  *
  * The BFF now hands back every official table this team plays in (#2631), so
  * pick the one holding **both** sides of this match — a fixture belongs to
@@ -192,16 +215,21 @@ async function fetchStandings(
     return [];
   }
   const standingsTeamId = match.kcvv_team_id;
+  // Unlike `/ploegen/[slug]`, this route makes no distinction between "the
+  // ranking read permanently failed" and "there is legitimately no table" —
+  // both already resolve to the same empty `RankingEntry[]` below, so the
+  // permanent fallback is `[]` directly rather than a `null` sentinel this
+  // function would immediately unwrap.
   const tables = await runPromise(
-    Effect.gen(function* () {
-      const bff = yield* BffService;
-      return yield* bff
-        .getRanking(standingsTeamId)
-        .pipe(
-          Effect.catchAll(() => Effect.succeed([] as readonly RankingTable[])),
-        );
-    }),
+    degradeIfPermanent(
+      Effect.gen(function* () {
+        const bff = yield* BffService;
+        return yield* bff.getRanking(standingsTeamId);
+      }),
+      [] as readonly RankingTable[],
+    ),
   );
+
   const holds = (table: RankingTable, clubId: number) =>
     table.entries.some((e) => e.club_id === clubId);
 
