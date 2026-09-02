@@ -660,6 +660,18 @@ describe("TeamAgendaRow", () => {
           expect(text).not.toContain("Uitslag");
         }
       });
+
+      // Regression (#2656 review): `OUTCOME_WORD.draw` shortened to "Gelijk"
+      // only to fit `<MatchStripView>`'s `w-14` mobile-ledger stub — this
+      // row's own caption is not column-constrained the way that stub is
+      // (#2512 accepted "Gelijk" here anyway, for consistency), but its
+      // `aria-label` has no column at all, so the full word belongs there.
+      it("keeps 'Gelijkspel' — not the caption's shortened 'Gelijk' — in a drawn row's accessible name", () => {
+        render(<TeamAgendaRow match={FINISHED_DRAW} />);
+        const label = screen.getByRole("link").getAttribute("aria-label") ?? "";
+        expect(label).toMatch(/\bGelijkspel\b/);
+        expect(label).not.toMatch(/\bGelijk\b/);
+      });
     });
   });
 
