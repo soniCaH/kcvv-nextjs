@@ -66,6 +66,7 @@ import type { ArticleDetailVM } from "@/lib/repositories/article.repository";
 import type { TransferFactValue } from "@/components/article/blocks/TransferFact";
 import type { EventFactValue } from "@/components/article/blocks/EventFact";
 import { toPortableTextBlocks } from "@/lib/sanity/portable-text-bridge";
+import { isReducedMatchRow } from "@/lib/utils/match-display";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -447,12 +448,26 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // param (reuses buildSportsEventJsonLd). The SportsEvent url is the
   // canonical match page, not the article.
   //
-  // No SportsEvent for a pitch-reservation placeholder (#2606/#2802,
-  // mirroring `/wedstrijd/[matchId]`'s own gate) — a self-match is a pitch
-  // booking, not a sporting event between two competitors, so publishing
-  // one here asserted "KCVV Elewijt vs KCVV Elewijt" to search engines.
+  // No SportsEvent for a pitch-reservation placeholder or a tournament
+  // fixture with no result yet (#2606/#2696/#2802 review, mirroring
+  // `/wedstrijd/[matchId]`'s own gate) — a self-match is a pitch booking,
+  // not a sporting event between two competitors, and an unconfirmed
+  // tournament opponent is the same unconfirmed claim, so publishing either
+  // here asserted a settled head-to-head to search engines that neither the
+  // article hero (`toHeroMatchData`, gated the same way) nor the match page
+  // itself makes.
+  const matchIsReduced =
+    !!matchDetail?.is_placeholder ||
+    (matchDetail !== null &&
+      isReducedMatchRow({
+        isPlaceholder: false,
+        competitionType: matchDetail.competitionType,
+        status: matchDetail.status,
+        homeScore: matchDetail.home_team.score,
+        awayScore: matchDetail.away_team.score,
+      }));
   const matchSportsEvent =
-    matchDetail && !matchDetail.is_placeholder && article.linkedMatch
+    matchDetail && !matchIsReduced && article.linkedMatch
       ? {
           relation:
             article.articleType === "matchRecap"

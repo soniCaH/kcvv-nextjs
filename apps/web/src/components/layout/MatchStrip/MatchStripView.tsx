@@ -163,10 +163,10 @@ function scoreboardScore(match: ScheduleMatch): string | null {
  * why it differed from the other — the same drift `isReducedMatchRow`'s
  * docblock in `match-display.ts` records for a different pair of call
  * sites). `kind === "fixture"` is enough on its own: `<MatchStrip>` is the
- * single place that ever sets `matchDay` true, and it only does so for a
- * genuine `ScheduleMatch` fixture, never a pitch-reservation placeholder —
- * re-checking `isPlaceholder` here would be the same re-derivation the
- * "one owner for the rule" convention forbids.
+ * single place that ever sets `matchDay` true, and it only does so when
+ * `fixture.kind === "match"` (#2802 review — `!isPlaceholder` alone would
+ * also pass a reduced tournament fixture) — re-checking here would be the
+ * same re-derivation the "one owner for the rule" convention forbids.
  */
 function isTodayFixture(matchDay: boolean, kind: MatchRowKind): boolean {
   return matchDay && kind === "fixture";
@@ -391,7 +391,10 @@ function LedgerLinkRow({
   /** The strip's match-day ground (#2616) — see `<MatchStripView>`'s own docblock. */
   matchDay?: boolean;
 }) {
-  if (match.kind !== "match") {
+  // Enumerated positively (#2802 review, finding 11) — a negated
+  // `kind !== "match"` catch-all would silently route any future fourth
+  // `kind` into the reduced row too, with no compile error.
+  if (match.kind === "reservation" || match.kind === "reduced") {
     return <ReservationLedgerRow match={match} kind={kind} last={last} />;
   }
   const today = isTodayFixture(matchDay, kind);
@@ -704,7 +707,7 @@ function DesktopSlider({
         data-tournament={showing.kind === "reduced" ? "true" : undefined}
         className="min-w-0 py-3"
       >
-        {showing.kind !== "match" ? (
+        {showing.kind === "reservation" || showing.kind === "reduced" ? (
           <ReservationDesktopSlide match={showing} />
         ) : (
           <>
@@ -770,7 +773,7 @@ function DesktopSlider({
           result too (#2696/#2802) rather than inventing a second rule. An
           empty cell keeps the three-column grid intact. */}
       <div className="flex items-center justify-end px-6">
-        {showing.kind !== "match" ? null : (
+        {showing.kind === "reservation" || showing.kind === "reduced" ? null : (
           <Link
             href={`/wedstrijd/${showing.id}`}
             className={getButtonClasses({
@@ -798,14 +801,18 @@ function DesktopSlider({
  * a tournament fixture with a hidden result (#2696/#2802) — one crest, the
  * subject/kickoff, no opponent slot. See `ReservationLedgerRow` for the
  * mobile equivalent and the shared rationale.
+ *
+ * No `otherClub` passed to `reservationView()` here (#2802 review) — unlike
+ * `ReservationLedgerRow` above (crest only, no name text), this slide also
+ * prints `match.team.name` as its own text node directly below the crest.
+ * Folding the club into "competition · club" too would print it twice.
  */
 function ReservationDesktopSlide({
   match,
 }: {
   match: ScheduleReservation | ScheduleReducedMatch;
 }) {
-  const otherClub = match.kind === "reduced" ? match.team : undefined;
-  const { subject, statusWording } = reservationView(match, otherClub);
+  const { subject, statusWording } = reservationView(match);
   return (
     <>
       <div className="flex min-w-0 items-center justify-center gap-3 px-6">

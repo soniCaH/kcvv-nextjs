@@ -242,26 +242,37 @@ export function TeamAgendaRow({
   kind,
   className,
 }: TeamAgendaRowProps) {
+  // The adapter (`transformMatchToSchedule`) has already asked
+  // `isReducedMatchRow()` once and baked the answer into `kind` — this reads
+  // that discriminant rather than re-deriving the same question a second
+  // time from raw match fields. Enumerated positively (#2802 review,
+  // finding 11) rather than `kind !== "match"`: a negated catch-all treats
+  // any *future* fourth `kind` as reduced too, silently, with no compile
+  // error; this way a new member falls through to the `match`-only branch
+  // below instead, where it fails loudly on the fields it doesn't carry.
+  // One definition, reused at every site below that used to re-spell
+  // `kind !== "match"` on its own.
+  const isReducedRow = match.kind === "reservation" || match.kind === "reduced";
+
   // Prefer match.is_home (provided by BFF); fall back to comparing kcvvTeamId
   // against the home team's id when the BFF field is absent. Meaningless for
   // a reservation or a hidden-result tournament fixture (neither carries a
   // `homeTeam` to compare — see `ScheduleReservation`/`ScheduleReducedMatch`),
-  // so this narrows on `match.kind` rather than reading `homeTeam` off a
+  // so this narrows on `isReducedRow` rather than reading `homeTeam` off a
   // shape that doesn't carry one.
-  const isHome: boolean | undefined =
-    match.kind !== "match"
-      ? undefined
-      : (match.isHome ??
-        (kcvvTeamId !== undefined
-          ? kcvvTeamId === match.homeTeam.id
-          : undefined));
+  const isHome: boolean | undefined = isReducedRow
+    ? undefined
+    : (match.isHome ??
+      (kcvvTeamId !== undefined
+        ? kcvvTeamId === match.homeTeam.id
+        : undefined));
 
   // Hoisted ahead of their other uses further down (`showUpcomingLabel`,
   // the normal row's `scoreOrTime`) — `isPlayed` and `hasScoreline` are
-  // needed standalone here, not just as inputs to `isReducedRow` below.
+  // needed standalone here, not just as inputs to `isReducedRow` above.
   const isPlayed = isPlayedMatch(match.status);
   const hasScoreline =
-    match.kind === "match" &&
+    !isReducedRow &&
     isPlayed &&
     typeof match.homeScore === "number" &&
     typeof match.awayScore === "number";
@@ -269,16 +280,11 @@ export function TeamAgendaRow({
   // The lawful tournament detector (#2696) — `competitionType === "tournament"`,
   // never a string match on the Dutch `competition` label, mirroring the
   // `competitionType === "league"` gate elsewhere in the codebase. Read
-  // directly for `data-tournament` below — `kind` (below) is the reduced
+  // directly for `data-tournament` below — `isReducedRow` is the reduced
   // question, not the tournament one: a settled tournament fixture is
   // `kind: "match"` but still `competitionType === "tournament"`.
   const isTournamentFixture =
     match.kind !== "reservation" && match.competitionType === "tournament";
-  // The adapter (`transformMatchToSchedule`) has already asked
-  // `isReducedMatchRow()` once and baked the answer into `kind` — this reads
-  // that discriminant rather than re-deriving the same question a second
-  // time from raw match fields.
-  const isReducedRow = match.kind !== "match";
 
   // White on jersey-deep, inherited from the pre-#2395 green when cream missed
   // AA there. Both clear it now (white 5.29:1, cream 4.69:1) — see DESIGN.md
@@ -340,7 +346,7 @@ export function TeamAgendaRow({
   // no score, so there is nothing for `computeOutcome` to read
   // (`ScheduleReservation`/`ScheduleReducedMatch` have no `homeScore`/
   // `awayScore`/`isHome` to pass it).
-  const outcome = match.kind !== "match" ? null : computeOutcome(match, isHome);
+  const outcome = isReducedRow ? null : computeOutcome(match, isHome);
 
   // Show the upcoming label ("Gepland") only for not-yet-played matches when one
   // was supplied. Gating on status (not merely the absence of a scoreline) keeps
@@ -540,7 +546,7 @@ export function TeamAgendaRow({
   const captionClass = (extra?: string) =>
     cn("font-mono text-[9px] tracking-wider uppercase", monoClass, extra);
 
-  if (match.kind !== "match") {
+  if (isReducedRow) {
     // `match.team` is already the row's crest — precomputed by the adapter
     // (`transformMatchToSchedule`) for both members: the club's own for a
     // reservation, the other club (via club-id equality, never home/away —

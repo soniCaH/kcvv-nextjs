@@ -411,12 +411,24 @@ export function reservationView(
  * opponent" tie-breaks — `MatchStripView`'s `opponentOf` uses
  * `isHome ?? id === KCVV_CLUB_ID`, `nieuws/[slug]/utils.ts` has a third —
  * those answer a different question for their own surface, on purpose.
+ *
+ * Takes the two sides positionally (#2802 review) rather than a
+ * `{ homeTeam, awayTeam }` object, so the same one definition serves both
+ * camelCase view-models (`otherClubSide(match.homeTeam, match.awayTeam)`)
+ * and the raw snake_case `Match` (`otherClubSide(match.home_team,
+ * match.away_team)`) — the reshape a caller with the "wrong" casing needed
+ * was one destructure, not a second hand-copied function. Four independent
+ * copies of this exact three-line ternary existed before this review
+ * (`transform.ts`, `match.mapper.ts`, `kalender/utils.ts`, `MatchHero.tsx`)
+ * — peer-drift risk this repo's own CLAUDE.md names as its most-flagged
+ * review class, since a rule change (e.g. a second club id after a merger)
+ * would silently miss whichever copies nobody remembered to update.
  */
-export function otherClubSide<Team extends { id: number }>(match: {
-  homeTeam: Team;
-  awayTeam: Team;
-}): Team {
-  return match.homeTeam.id === KCVV_CLUB_ID ? match.awayTeam : match.homeTeam;
+export function otherClubSide<Team extends { id: number }>(
+  home: Team,
+  away: Team,
+): Team {
+  return home.id === KCVV_CLUB_ID ? away : home;
 }
 
 /** The fields `reservationTitle()` needs, on top of `reservationView()`'s own. */

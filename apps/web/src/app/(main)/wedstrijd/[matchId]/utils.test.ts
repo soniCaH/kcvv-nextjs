@@ -286,6 +286,45 @@ describe("formatMatchTitle", () => {
     });
     expect(formatMatchTitle(match)).toBe("Tornooi — KCVV Elewijt");
   });
+
+  it("titles a tournament fixture with no result yet by subject and club, never a bare vs (#2696/#2802 review)", () => {
+    const match = createMatchDetail({
+      competitionType: "tournament",
+      status: "scheduled",
+      home_team: { id: 1235, name: "KCVV Elewijt" },
+      away_team: { id: 99, name: "FC Zemst Sportief" },
+      competition: "Tornooi",
+    });
+    expect(formatMatchTitle(match)).toBe(
+      "Tornooi · FC Zemst Sportief — KCVV Elewijt",
+    );
+  });
+
+  it("resolves the club suffix by id even when KCVV is listed away (#2802 review)", () => {
+    const match = createMatchDetail({
+      competitionType: "tournament",
+      status: "scheduled",
+      home_team: { id: 99, name: "FC Zemst Sportief" },
+      away_team: { id: 1235, name: "KCVV Elewijt" },
+      competition: "Tornooi",
+    });
+    expect(formatMatchTitle(match)).toBe(
+      "Tornooi · FC Zemst Sportief — KCVV Elewijt",
+    );
+  });
+
+  it("reverts to the ordinary scored title once a tournament fixture has a result (#2696 review)", () => {
+    const match = createMatchDetail({
+      competitionType: "tournament",
+      status: "finished",
+      home_team: { id: 1235, name: "KCVV Elewijt", score: 3 },
+      away_team: { id: 99, name: "FC Zemst Sportief", score: 1 },
+      competition: "Tornooi",
+    });
+    expect(formatMatchTitle(match)).toBe(
+      "KCVV Elewijt 3 - 1 FC Zemst Sportief",
+    );
+  });
 });
 
 describe("formatMatchDescription", () => {

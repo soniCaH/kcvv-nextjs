@@ -229,6 +229,32 @@ describe("mapMatchToUpcomingMatch", () => {
       expect(full.homeTeam.score).toBe(2);
       expect(full.awayTeam.score).toBe(0);
     });
+
+    it("resolves the other club by id, not by home/away side (#2802 review, finding 14)", () => {
+      // KCVV listed as away this time — the crest must still name the
+      // other club. `mapMatchToUpcomingMatch` is one of three hand-copied
+      // `otherClubSide()` call sites; only asserting the KCVV-home
+      // direction here would leave this one uncovered if it ever drifted
+      // to reading `away_team` unconditionally.
+      const pending: Match = {
+        id: 92,
+        date: new Date("2026-05-10T09:30:00.000Z"),
+        time: "09:30",
+        venue: undefined,
+        home_team: { id: 77, name: "FC Zemst Sportief", logo: "zemst.png" },
+        away_team: { id: 1235, name: "KCVV Elewijt", logo: "kcvv.png" },
+        status: "scheduled",
+        competition: "Tornooi",
+        competitionType: "tournament",
+      } as Match;
+
+      const reduced = asReduced(mapMatchToUpcomingMatch(pending));
+      expect(reduced.team).toEqual({
+        id: 77,
+        name: "FC Zemst Sportief",
+        logo: "zemst.png",
+      });
+    });
   });
 
   it("should handle stopped status", () => {

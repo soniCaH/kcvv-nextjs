@@ -88,6 +88,7 @@ import {
   formatMatchTitle,
   formatMatchDescription,
 } from "./utils";
+import { isReducedMatchRow } from "@/lib/utils/match-display";
 
 interface MatchPageProps {
   params: Promise<{ matchId: string }>;
@@ -402,6 +403,22 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const awayTeam = transformAwayTeam(match);
   const time = extractMatchTime(match);
 
+  // Whether the hero (and everything gated below it) is rendering the
+  // reduced register — a pitch-reservation placeholder OR a tournament
+  // fixture with no result yet (#2696/#2802 review). `!match.is_placeholder`
+  // alone let a tournament fixture through to every one of these gates,
+  // shipping a two-competitor `SportsEvent` and a real lineup/events section
+  // under a one-crest hero that names no confirmed opponent.
+  const isReduced =
+    !!match.is_placeholder ||
+    isReducedMatchRow({
+      isPlaceholder: false,
+      competitionType: match.competitionType,
+      status: match.status,
+      homeScore: match.home_team.score,
+      awayScore: match.away_team.score,
+    });
+
   // Resolve which side is KCVV from the BFF-supplied `is_home` flag. If
   // unset (legacy rows), enrichment falls back to the universal jersey-#1
   // heuristic for both sides.
@@ -426,13 +443,15 @@ export default async function MatchPage({ params }: MatchPageProps) {
       ) ?? [];
 
   const events: readonly MatchEvent[] = match.events ?? [];
-  // A pitch-reservation placeholder (#2606) shows no lineup, events, or
-  // result vocabulary — a self-match carries none of these upstream, but
-  // the guard is explicit rather than incidental so a stray BFF anomaly
-  // can't leak a lineup onto a reduced page.
+  // Neither a pitch-reservation placeholder nor a tournament fixture with no
+  // result yet shows a lineup, events, or result vocabulary (#2606/#2802
+  // review) — a self-match carries none of these upstream, and an
+  // unconfirmed tournament opponent has nothing genuinely tied to *this*
+  // fixture either. The guard is explicit rather than incidental so a stray
+  // BFF anomaly can't leak a lineup onto a reduced page.
   const hasLineup =
-    !match.is_placeholder && (homeLineup.length > 0 || awayLineup.length > 0);
-  const hasEvents = !match.is_placeholder && events.length > 0;
+    !isReduced && (homeLineup.length > 0 || awayLineup.length > 0);
+  const hasEvents = !isReduced && events.length > 0;
 
   // `null` (a permanently-failed ranking read, #2576) renders a failure
   // notice rather than auto-hiding, so the section mounts for that case too
@@ -541,14 +560,15 @@ export default async function MatchPage({ params }: MatchPageProps) {
           },
         ])}
       />
-      {/* No SportsEvent JSON-LD for a pitch-reservation placeholder (#2606)
-          — a self-match is a pitch booking, not a sporting event between two
-          competitors, so publishing one here would assert a real fixture
-          between the club and itself to search engines even though the
-          page's own <title> and OG already say "Gereserveerd". The
-          breadcrumb above still applies — it names this page, not a
-          match. */}
-      {!match.is_placeholder && (
+      {/* No SportsEvent JSON-LD for a pitch-reservation placeholder or a
+          tournament fixture with no result yet (#2606/#2696/#2802 review) —
+          a self-match is a pitch booking, not a sporting event between two
+          competitors, and an unconfirmed tournament opponent is the same
+          class of unconfirmed claim, so publishing either here would assert
+          a real fixture to search engines that the page's own <h1> and
+          <title> deliberately don't. The breadcrumb above still applies —
+          it names this page, not a match. */}
+      {!isReduced && (
         <JsonLd
           data={buildSportsEventJsonLd({
             name: `${match.home_team.name} vs ${match.away_team.name}`,

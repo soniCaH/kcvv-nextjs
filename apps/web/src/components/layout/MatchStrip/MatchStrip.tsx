@@ -23,18 +23,21 @@ import { MatchStripView } from "./MatchStripView";
  * on the UTC server and the next after hydration). Baking the boolean into
  * the server-rendered props sidesteps it entirely.
  *
- * Gated on a real `ScheduleMatch`, never a pitch-reservation placeholder
- * (#2606): "Match" is a defined term (`docs/ubiquitous-language.md`) with a
- * confirmed opponent and kickoff, which is exactly what a reservation is
- * entered *without*. Reading it match day and relabelling it "Vandaag" would
- * assert a certainty PSD hasn't given the club yet.
+ * Gated on a real `ScheduleMatch` (`kind: "match"`), never a
+ * pitch-reservation placeholder or a reduced tournament fixture with no
+ * result yet (#2606/#2802): "Match" is a defined term
+ * (`docs/ubiquitous-language.md`) with a confirmed opponent and kickoff,
+ * which is exactly what neither reduced state has yet. Reading either match
+ * day and relabelling it "Vandaag" would assert a certainty PSD hasn't given
+ * the club yet — `!fixture.isPlaceholder` alone would pass a reduced
+ * tournament fixture through, since it carries `isPlaceholder: false` too.
  */
 export async function MatchStrip() {
   const data = await getFirstTeamStripData();
   if (!data) return null;
   const { fixture } = data;
   const matchDay =
-    fixture !== null && !fixture.isPlaceholder
+    fixture !== null && fixture.kind === "match"
       ? isMatchDay(fixture.date, clubToday())
       : false;
   return <MatchStripView data={data} matchDay={matchDay} />;

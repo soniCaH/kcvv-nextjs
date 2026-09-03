@@ -2,8 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { MatchHero } from "./MatchHero";
 
-const homeTeam = { name: "KCVV Elewijt", logo: "/logos/kcvv.svg" };
-const awayTeam = { name: "RC Mechelen", logo: "/logos/rcm.svg" };
+const homeTeam = { id: 1235, name: "KCVV Elewijt", logo: "/logos/kcvv.svg" };
+const awayTeam = { id: 9999, name: "RC Mechelen", logo: "/logos/rcm.svg" };
 
 // Saturday 14 June 2025 → Belgian football season ’24/’25 (cutoff: month >= 7)
 const scheduledMatchDate = new Date("2025-06-14T13:30:00Z");
@@ -208,6 +208,7 @@ describe("MatchHero", () => {
   describe("team names", () => {
     it("exposes the full team name via title attribute (for truncated hover)", () => {
       const longHome = {
+        id: 4242,
         name: "KFC Sint-Stevens-Woluwe-Diegem",
         logo: homeTeam.logo,
       };
@@ -227,8 +228,8 @@ describe("MatchHero", () => {
     it("renders a typographic shield fallback when no logo is provided", () => {
       render(
         <MatchHero
-          homeTeam={{ name: "KCVV Elewijt" }}
-          awayTeam={{ name: "RC Mechelen" }}
+          homeTeam={{ id: 1235, name: "KCVV Elewijt" }}
+          awayTeam={{ id: 9999, name: "RC Mechelen" }}
           date={scheduledMatchDate}
           status="scheduled"
           isPlaceholder={false}
@@ -495,7 +496,11 @@ describe("MatchHero", () => {
       );
     });
 
-    it("composes the subject as 'competition · club' — distinct from a bare reservation", () => {
+    it("names the subject by competition alone — never repeating the club the <h1> already names (#2802 review)", () => {
+      // Unlike the caption-only reduced renderers (<TeamAgendaRow>,
+      // <CalendarAgenda>), the <h1> here already prints the full club name
+      // as its own text node — composing "competition · club" underneath it
+      // would print "FC Zemst Sportief" twice.
       render(
         <MatchHero
           homeTeam={kcvv}
@@ -507,9 +512,39 @@ describe("MatchHero", () => {
           isPlaceholder={false}
         />,
       );
-      expect(
-        screen.getByText("Tornooi · FC Zemst Sportief"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Tornooi")).toBeInTheDocument();
+      expect(screen.queryByText("Tornooi · FC Zemst Sportief")).toBeNull();
+      // The club name appears exactly once — the <h1>, not the meta line too.
+      expect(screen.getAllByText("FC Zemst Sportief")).toHaveLength(1);
+    });
+
+    it("keeps VOORBESCHOUWING/MATCHVERSLAG as the kicker, never 'GERESERVEERD' — a tournament fixture is a real dated match, not a booking (#2802 review)", () => {
+      const { rerender } = render(
+        <MatchHero
+          homeTeam={kcvv}
+          awayTeam={zemst}
+          date={scheduledMatchDate}
+          status="scheduled"
+          competition="Tornooi"
+          competitionType="tournament"
+          isPlaceholder={false}
+        />,
+      );
+      expect(screen.getByText(/VOORBESCHOUWING/)).toBeInTheDocument();
+      expect(screen.queryByText(/GERESERVEERD/)).toBeNull();
+
+      rerender(
+        <MatchHero
+          homeTeam={kcvv}
+          awayTeam={zemst}
+          date={finishedMatchDate}
+          status="finished"
+          competition="Tornooi"
+          competitionType="tournament"
+          isPlaceholder={false}
+        />,
+      );
+      expect(screen.getByText(/MATCHVERSLAG/)).toBeInTheDocument();
     });
 
     it("carries the data-tournament marker, not data-placeholder", () => {

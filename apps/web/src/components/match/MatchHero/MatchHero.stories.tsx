@@ -29,10 +29,12 @@ const KCVV_LOGO = fixtureImage("sponsor-logo", 0);
 const OPPONENT_LOGO = fixtureImage("sponsor-logo", 1);
 
 const defaultHomeTeam = {
+  id: 1235,
   name: "KCVV Elewijt",
   logo: KCVV_LOGO,
 };
 const defaultAwayTeam = {
+  id: 9999,
   name: "RC Mechelen",
   logo: OPPONENT_LOGO,
 };
@@ -106,11 +108,13 @@ export const LongTeamNames: Story = {
     ...baseArgs,
     date: finishedDate,
     homeTeam: {
+      id: defaultHomeTeam.id,
       name: "KFC Sint-Stevens-Woluwe-Diegem",
       logo: defaultHomeTeam.logo,
       score: 2,
     },
     awayTeam: {
+      id: defaultAwayTeam.id,
       name: "Royal Antwerpen-Borgerhout SK",
       logo: defaultAwayTeam.logo,
       score: 2,
@@ -122,8 +126,8 @@ export const LongTeamNames: Story = {
 export const NoLogos: Story = {
   args: {
     ...baseArgs,
-    homeTeam: { name: "KCVV Elewijt" },
-    awayTeam: { name: "RC Mechelen" },
+    homeTeam: { id: defaultHomeTeam.id, name: "KCVV Elewijt" },
+    awayTeam: { id: defaultAwayTeam.id, name: "RC Mechelen" },
     status: "scheduled",
   },
 };

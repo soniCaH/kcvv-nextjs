@@ -9,7 +9,12 @@ import type {
 import type { MatchHeroTeam } from "@/components/match/MatchHero";
 import type { LineupPlayer } from "@/components/match/MatchLineup";
 import { toMatchDisplayZone } from "@/lib/utils/dates";
-import { reservationTitle } from "@/lib/utils/match-display";
+import {
+  isReducedMatchRow,
+  otherClubSide,
+  reservationTitle,
+  reservationView,
+} from "@/lib/utils/match-display";
 
 /**
  * Convert a match's home team into props suitable for the MatchHero component.
@@ -110,6 +115,14 @@ export { extractMatchTime } from "@/lib/utils/match-time";
  * (`lib/utils/ical.ts`, the ICS feed) calls, so the wording can't drift
  * between the two surfaces (#2688/#2698).
  *
+ * Widened to a tournament fixture with no result yet (#2696/#2802 review):
+ * it is no more a confirmed "X vs Y" than a reservation is, so it gets the
+ * same subject-plus-club title ("Tornooi · FC Zemst Sportief — KCVV
+ * Elewijt") instead of asserting a head-to-head PSD hasn't confirmed. Once
+ * a scoreline lands, `isReducedMatchRow` flips and the ordinary score title
+ * below applies — the same reduced-to-full transition every other renderer
+ * of this predicate makes.
+ *
  * @returns `HomeTeam X - Y AwayTeam` if the match status is finished and both scores are present, otherwise `HomeTeam vs AwayTeam`
  */
 export function formatMatchTitle(match: MatchDetail): string {
@@ -118,6 +131,21 @@ export function formatMatchTitle(match: MatchDetail): string {
 
   if (match.is_placeholder) {
     return reservationTitle(match);
+  }
+
+  if (
+    isReducedMatchRow({
+      isPlaceholder: false,
+      competitionType: match.competitionType,
+      status: match.status,
+      homeScore: match.home_team.score,
+      awayScore: match.away_team.score,
+    })
+  ) {
+    const other = otherClubSide(match.home_team, match.away_team);
+    const kcvvTeam =
+      other === match.home_team ? match.away_team : match.home_team;
+    return `${reservationView(match, other).subject} — ${kcvvTeam.name}`;
   }
 
   // Only show score if match is finished AND both scores are defined

@@ -14,10 +14,10 @@ import type {
   MatchStatus,
   ScheduleRow,
 } from "@/components/match/types";
-import { KCVV_CLUB_ID } from "@/lib/constants";
 import {
   getScoreDisplay,
   isReducedMatchRow,
+  otherClubSide,
   reservationView,
   type ScoreDisplay,
 } from "@/lib/utils/match-display";
@@ -126,75 +126,90 @@ export interface CalendarTeamInfo {
   label: string;
 }
 
+function assertNever(value: never): never {
+  throw new Error(`Unhandled CalendarMatch kind: ${String(value)}`);
+}
+
+/**
+ * `kind` is resolved once and switched over explicitly (#2802 review) rather
+ * than three cascading `if`s ending in a bare fallthrough `return` — see
+ * `transformMatchToSchedule`'s docblock in `@/components/match/transform`
+ * for why the unreachable `default: assertNever(kind)` is load-bearing.
+ */
 export function transformMatchToCalendar(match: Match): CalendarMatch {
-  if (match.is_placeholder) {
-    return {
-      isPlaceholder: true,
-      kind: "reservation",
-      id: match.id,
-      date: match.date.toISOString(),
-      time: match.time,
-      club: {
-        id: match.home_team.id,
-        name: match.home_team.name,
-        logo: match.home_team.logo,
-      },
-      status: match.status,
-      competition: match.competition,
-      team: match.kcvv_team_label,
-    };
-  }
+  const kind: CalendarMatch["kind"] = match.is_placeholder
+    ? "reservation"
+    : isReducedMatchRow({
+          isPlaceholder: false,
+          competitionType: match.competitionType,
+          status: match.status,
+          homeScore: match.home_team.score,
+          awayScore: match.away_team.score,
+        })
+      ? "reduced"
+      : "match";
 
-  if (
-    isReducedMatchRow({
-      isPlaceholder: false,
-      competitionType: match.competitionType,
-      status: match.status,
-      homeScore: match.home_team.score,
-      awayScore: match.away_team.score,
-    })
-  ) {
-    const other =
-      match.home_team.id === KCVV_CLUB_ID ? match.away_team : match.home_team;
-    return {
-      isPlaceholder: false,
-      kind: "reduced",
-      id: match.id,
-      date: match.date.toISOString(),
-      time: match.time,
-      club: { id: other.id, name: other.name, logo: other.logo },
-      status: match.status,
-      competition: match.competition,
-      competitionType: match.competitionType,
-      team: match.kcvv_team_label,
-    };
+  switch (kind) {
+    case "reservation":
+      return {
+        isPlaceholder: true,
+        kind,
+        id: match.id,
+        date: match.date.toISOString(),
+        time: match.time,
+        club: {
+          id: match.home_team.id,
+          name: match.home_team.name,
+          logo: match.home_team.logo,
+        },
+        status: match.status,
+        competition: match.competition,
+        team: match.kcvv_team_label,
+      };
+    case "reduced": {
+      const other = otherClubSide(match.home_team, match.away_team);
+      return {
+        isPlaceholder: false,
+        kind,
+        id: match.id,
+        date: match.date.toISOString(),
+        time: match.time,
+        club: { id: other.id, name: other.name, logo: other.logo },
+        status: match.status,
+        competition: match.competition,
+        competitionType: match.competitionType,
+        team: match.kcvv_team_label,
+      };
+    }
+    case "match":
+      return {
+        isPlaceholder: false,
+        kind,
+        id: match.id,
+        date: match.date.toISOString(),
+        time: match.time,
+        homeTeam: {
+          id: match.home_team.id,
+          name: match.home_team.name,
+          logo: match.home_team.logo,
+        },
+        awayTeam: {
+          id: match.away_team.id,
+          name: match.away_team.name,
+          logo: match.away_team.logo,
+        },
+        homeScore: match.home_team.score,
+        awayScore: match.away_team.score,
+        scoreDisplay: getScoreDisplay(match),
+        status: match.status,
+        competition: match.competition,
+        competitionType: match.competitionType,
+        team: match.kcvv_team_label,
+        isHome: match.is_home,
+      };
+    default:
+      return assertNever(kind);
   }
-
-  return {
-    isPlaceholder: false,
-    kind: "match",
-    id: match.id,
-    date: match.date.toISOString(),
-    time: match.time,
-    homeTeam: {
-      id: match.home_team.id,
-      name: match.home_team.name,
-      logo: match.home_team.logo,
-    },
-    awayTeam: {
-      id: match.away_team.id,
-      name: match.away_team.name,
-      logo: match.away_team.logo,
-    },
-    homeScore: match.home_team.score,
-    awayScore: match.away_team.score,
-    scoreDisplay: getScoreDisplay(match),
-    status: match.status,
-    competition: match.competition,
-    competitionType: match.competitionType,
-    team: match.kcvv_team_label,
-    isHome: match.is_home,
-  };
 }
 
 /**
@@ -337,6 +352,26 @@ export function buildCalendarFeed(
  * capped at `limit`. Pure — `nowMs` is injectable for deterministic tests. The
  * entry shape (`ItemListEntry`) is owned by the seo builder it feeds.
  */
+/**
+ * The `ItemList` entry's label for one match — a `name`, not a fixture
+ * assertion, so (unlike `SportsEvent` JSON-LD) a reservation/reduced row
+ * isn't dropped, just named by its subject instead of "home — away" (#2606).
+ * Switched exhaustively over `kind` (#2802 review) rather than a nested
+ * ternary, so a fourth member is a compile error here too.
+ */
+function matchEntryName(match: CalendarMatch): string {
+  switch (match.kind) {
+    case "match":
+      return `${match.homeTeam.name} — ${match.awayTeam.name}`;
+    case "reservation":
+      return reservationView(match).subject;
+    case "reduced":
+      return reservationView(match, match.club).subject;
+    default:
+      return assertNever(match);
+  }
+}
+
 export function buildKalenderItemListEntries(
   feed: CalendarFeedItem[],
   siteUrl: string,
@@ -350,18 +385,7 @@ export function buildKalenderItemListEntries(
     .map((item) =>
       item.source === "match"
         ? {
-            // A reservation has no opponent to print "home — away" for
-            // (#2606) — unlike `SportsEvent` JSON-LD on `/wedstrijd/[matchId]`,
-            // this entry isn't dropped: an `ItemList` `name` is a label, not
-            // a fixture assertion, and the URL it points at is now a real
-            // reduced page (#2688).
-            name:
-              item.match.kind === "match"
-                ? `${item.match.homeTeam.name} — ${item.match.awayTeam.name}`
-                : reservationView(
-                    item.match,
-                    item.match.kind === "reduced" ? item.match.club : undefined,
-                  ).subject,
+            name: matchEntryName(item.match),
             url: `${siteUrl}/wedstrijd/${item.match.id}`,
           }
         : { name: item.event.title, url: `${siteUrl}${item.event.href}` },
@@ -480,12 +504,21 @@ export function getDaysInWeek(dateStr: string): string[] {
 export type MatchDotType = "home" | "away" | "reservation";
 
 export function getMatchDotType(match: CalendarMatch): MatchDotType {
-  if (match.kind !== "match") return "reservation";
-  if (match.isHome != null) {
-    return match.isHome ? "home" : "away";
+  switch (match.kind) {
+    case "reservation":
+    case "reduced":
+      return "reservation";
+    case "match":
+      if (match.isHome != null) {
+        return match.isHome ? "home" : "away";
+      }
+      // Fallback for matches without BFF-computed isHome
+      return match.homeTeam.name.toLowerCase().includes("kcvv")
+        ? "home"
+        : "away";
+    default:
+      return assertNever(match);
   }
-  // Fallback for matches without BFF-computed isHome
-  return match.homeTeam.name.toLowerCase().includes("kcvv") ? "home" : "away";
 }
 
 /**
@@ -528,59 +561,61 @@ export const MATCH_DOT_CLASS: Record<MatchDotType, string> = {
 export function calendarMatchToScheduleMatch(
   match: CalendarMatch,
 ): ScheduleRow {
-  if (match.kind === "reservation") {
-    return {
-      isPlaceholder: true,
-      kind: "reservation",
-      id: match.id,
-      date: new Date(match.date),
-      time: match.time,
-      team: match.club,
-      status: match.status,
-      competition: match.competition,
-    };
+  switch (match.kind) {
+    case "reservation":
+      return {
+        isPlaceholder: true,
+        kind: match.kind,
+        id: match.id,
+        date: new Date(match.date),
+        time: match.time,
+        team: match.club,
+        status: match.status,
+        competition: match.competition,
+      };
+    case "reduced":
+      return {
+        isPlaceholder: false,
+        kind: match.kind,
+        id: match.id,
+        date: new Date(match.date),
+        time: match.time,
+        team: match.club,
+        status: match.status,
+        competition: match.competition,
+        competitionType: match.competitionType,
+      };
+    case "match": {
+      const dotType = getMatchDotType(match);
+      return {
+        isPlaceholder: false,
+        kind: match.kind,
+        id: match.id,
+        date: new Date(match.date),
+        time: match.time,
+        homeTeam: {
+          id: match.homeTeam.id,
+          name: match.homeTeam.name,
+          logo: match.homeTeam.logo,
+          teamLabel: dotType === "home" ? match.team : undefined,
+        },
+        awayTeam: {
+          id: match.awayTeam.id,
+          name: match.awayTeam.name,
+          logo: match.awayTeam.logo,
+          teamLabel: dotType === "away" ? match.team : undefined,
+        },
+        homeScore: match.homeScore,
+        awayScore: match.awayScore,
+        status: match.status,
+        competition: match.competition,
+        competitionType: match.competitionType,
+        isHome: match.isHome ?? dotType === "home",
+      };
+    }
+    default:
+      return assertNever(match);
   }
-
-  if (match.kind === "reduced") {
-    return {
-      isPlaceholder: false,
-      kind: "reduced",
-      id: match.id,
-      date: new Date(match.date),
-      time: match.time,
-      team: match.club,
-      status: match.status,
-      competition: match.competition,
-      competitionType: match.competitionType,
-    };
-  }
-
-  const dotType = getMatchDotType(match);
-  return {
-    isPlaceholder: false,
-    kind: "match",
-    id: match.id,
-    date: new Date(match.date),
-    time: match.time,
-    homeTeam: {
-      id: match.homeTeam.id,
-      name: match.homeTeam.name,
-      logo: match.homeTeam.logo,
-      teamLabel: dotType === "home" ? match.team : undefined,
-    },
-    awayTeam: {
-      id: match.awayTeam.id,
-      name: match.awayTeam.name,
-      logo: match.awayTeam.logo,
-      teamLabel: dotType === "away" ? match.team : undefined,
-    },
-    homeScore: match.homeScore,
-    awayScore: match.awayScore,
-    status: match.status,
-    competition: match.competition,
-    competitionType: match.competitionType,
-    isHome: match.isHome ?? dotType === "home",
-  };
 }
 
 // The date labels below are route chrome, not site vocabulary — a week-range

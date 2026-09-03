@@ -156,6 +156,38 @@ describe("toHeroMatchData", () => {
     });
     expect(toHeroMatchData(placeholder)).toBeNull();
   });
+
+  it("returns null for a tournament fixture with no result yet — an unconfirmed opponent, not a settled two-crest match (#2696/#2802 review)", () => {
+    const pending = makeMatch({
+      is_placeholder: false,
+      competitionType: "tournament",
+      status: "scheduled",
+      home_team: { id: 1235, name: "KCVV Elewijt", logo: "kcvv.png" },
+      away_team: { id: 99, name: "FC Zemst Sportief", logo: "zemst.png" },
+      competition: "Tornooi",
+    });
+    expect(toHeroMatchData(pending)).toBeNull();
+  });
+
+  it("returns the ordinary hero data once a tournament fixture has a result (#2696 review)", () => {
+    const played = makeMatch({
+      is_placeholder: false,
+      competitionType: "tournament",
+      status: "finished",
+      home_team: { id: 1235, name: "KCVV Elewijt", logo: "kcvv.png", score: 3 },
+      away_team: {
+        id: 99,
+        name: "FC Zemst Sportief",
+        logo: "zemst.png",
+        score: 1,
+      },
+      competition: "Tornooi",
+    });
+    const data = assertHero(toHeroMatchData(played));
+    expect(data.awayTeam.name).toBe("FC Zemst Sportief");
+    expect(data.homeScore).toBe(3);
+    expect(data.awayScore).toBe(1);
+  });
 });
 
 describe("parsePsdMatchId", () => {

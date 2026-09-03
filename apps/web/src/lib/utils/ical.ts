@@ -9,7 +9,12 @@ import { SITE_CONFIG } from "@/lib/constants";
 import { CLUB_TIMEZONE as TIMEZONE, toMatchDisplayZone } from "./dates";
 import { resolveEventDateRange } from "./event-datetime";
 import { buildEventUid } from "./event-uid";
-import { reservationTitle, reservationView } from "./match-display";
+import {
+  isReducedMatchRow,
+  otherClubSide,
+  reservationTitle,
+  reservationView,
+} from "./match-display";
 
 const HOME_VENUE_FALLBACK = "Sportpark Elewijt, Elewijt, België";
 
@@ -125,11 +130,33 @@ function isHomeMatch(match: Match): boolean {
  * changed, and a subscriber's calendar app has no other way to show it.
  * Scoped to the placeholder branch only: an ordinary match has the same gap
  * today, but that is a separate, pre-existing concern (out of scope here).
+ *
+ * Widened to a tournament fixture with no result yet (#2696/#2802 review) —
+ * a subscriber's calendar app would otherwise show "KCVV Elewijt vs FC
+ * Zemst Sportief" for an opponent PSD hasn't confirmed, the same "X vs X"
+ * class of bug this function exists to prevent for a reservation.
  */
 function buildSummary(match: Match): string {
   if (match.is_placeholder) {
     const { statusWording } = reservationView(match);
     return `${reservationTitle(match)}${
+      statusWording ? ` — ${statusWording.longForm}` : ""
+    }`;
+  }
+  if (
+    isReducedMatchRow({
+      isPlaceholder: false,
+      competitionType: match.competitionType,
+      status: match.status,
+      homeScore: match.home_team.score,
+      awayScore: match.away_team.score,
+    })
+  ) {
+    const other = otherClubSide(match.home_team, match.away_team);
+    const kcvvTeam =
+      other === match.home_team ? match.away_team : match.home_team;
+    const { subject, statusWording } = reservationView(match, other);
+    return `${subject} — ${kcvvTeam.name}${
       statusWording ? ` — ${statusWording.longForm}` : ""
     }`;
   }
@@ -174,10 +201,26 @@ function buildDescription(match: Match): string {
  * to offer directions to a tournament that may be nowhere near it (#2698).
  * So the home-venue fallback is skipped for a placeholder; only a `venue`
  * PSD actually sent produces a `LOCATION` line.
+ *
+ * Widened to a tournament fixture with no result yet (#2696/#2802 review) —
+ * `isHomeMatch()`'s name-substring match reads `true` whenever KCVV happens
+ * to be listed as `home_team`, which says nothing about whether an
+ * unconfirmed tournament is actually played at the club's own pitch.
  */
 function buildLocation(match: Match): string | undefined {
   if (match.venue) return match.venue;
-  if (match.is_placeholder) return undefined;
+  if (
+    match.is_placeholder ||
+    isReducedMatchRow({
+      isPlaceholder: false,
+      competitionType: match.competitionType,
+      status: match.status,
+      homeScore: match.home_team.score,
+      awayScore: match.away_team.score,
+    })
+  ) {
+    return undefined;
+  }
   if (isHomeMatch(match)) return HOME_VENUE_FALLBACK;
   return undefined;
 }

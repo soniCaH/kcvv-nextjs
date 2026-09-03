@@ -19,8 +19,12 @@ import {
 } from "./utils";
 import type { Match } from "@/lib/effect/schemas/match.schema";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
-import type { CalendarMatch, CalendarEvent } from "./utils";
+import type { CalendarMatchFixture, CalendarEvent } from "./utils";
 import { asNonPlaceholder, asReduced } from "@/components/match/test-narrowing";
+import {
+  reservationMatch,
+  tournamentMatch,
+} from "@/components/calendar/calendar-mocks";
 
 function createMatch(overrides: Partial<Match> = {}): Match {
   return {
@@ -65,6 +69,21 @@ describe("transformMatchToCalendar", () => {
       transformMatchToCalendar(createMatch({ is_placeholder: true }))
         .isPlaceholder,
     ).toBe(true);
+  });
+
+  it('returns kind: "reservation" even when is_home is true — the discriminant is checked before isHome, not after (#2688 review)', () => {
+    // A self-match's is_home is typically true (home_team.id === team.id),
+    // so `getMatchDotType` must never fall through to a home/away read for
+    // one — the bug #2688 found when the two-hop chain crossed `isHome`
+    // but not `isPlaceholder`. Asserted at the boundary that actually
+    // carries `is_home`: the raw `Match`, not the `CalendarReservation`
+    // output, which has no `isHome` field to get the order wrong on
+    // (#2802 review, finding 14).
+    const result = transformMatchToCalendar(
+      createMatch({ is_placeholder: true, is_home: true }),
+    );
+    expect(result.kind).toBe("reservation");
+    expect("isHome" in result).toBe(false);
   });
 
   it("renames kcvv_team_label to team", () => {
@@ -155,6 +174,28 @@ describe("transformMatchToCalendar", () => {
       expect(result.awayScore).toBe(1);
       expect(result.awayTeam.name).toBe("FC Zemst Sportief");
     });
+
+    it("resolves the other club by id, not by home/away side (#2802 review, finding 14)", () => {
+      // KCVV listed as away this time — the crest must still name the
+      // other club. `transformMatchToCalendar` is one of three hand-copied
+      // `otherClubSide()` call sites; only asserting the KCVV-home
+      // direction here would leave this one uncovered if it ever drifted
+      // to reading `away_team` unconditionally.
+      const pending = createMatch({
+        competitionType: "tournament",
+        status: "scheduled",
+        home_team: { id: 77, name: "FC Zemst Sportief" },
+        away_team: { id: 1235, name: "KCVV Elewijt" },
+      });
+
+      const result = asReduced(transformMatchToCalendar(pending));
+
+      expect(result.club).toEqual({
+        id: 77,
+        name: "FC Zemst Sportief",
+        logo: undefined,
+      });
+    });
   });
 });
 
@@ -232,18 +273,20 @@ describe("eventListItemToCalendarEvent", () => {
 // ── Fixtures for new helpers ──────────────────────────────────────────────
 
 /**
- * Builds a `CalendarMatchFixture` (`kind: "match"`) by default — every
- * existing test constructs an ordinary fixture. `overrides` stays loosely
- * typed (`Record<string, unknown>`, not `Partial<CalendarMatch>`) because a
- * handful of tests deliberately switch to the `"reservation"` member, which
- * carries a `club` field the fixture member doesn't have — one helper
- * building three structurally different shapes can't keep the fixture
- * member's typed override without also rejecting the reservation overrides
- * that same helper needs to accept (#2802).
+ * Builds a `CalendarMatchFixture` (`kind: "match"`) — every caller here wants
+ * an ordinary fixture. Typed on the fixture member specifically (#2802
+ * review, finding 13), matching the peer factories `reservationMatch()`/
+ * `tournamentMatch()` (`calendar-mocks.ts`) that the handful of tests
+ * needing a reservation or reduced row call instead: `Partial` distributes
+ * over a union member fine on its own, so there was never a reason to widen
+ * this to `Record<string, unknown>` — doing so cost every call site its
+ * typo protection (`kimd` for `kind` compiles clean) and let a reservation
+ * override still carry `homeTeam`/`awayTeam`/`scoreDisplay` from the
+ * defaults below, a structurally impossible row no real adapter emits.
  */
 function makeCalendarMatch(
-  overrides: Record<string, unknown> & { id: number },
-): CalendarMatch {
+  overrides: Partial<CalendarMatchFixture> & { id: number },
+): CalendarMatchFixture {
   return {
     date: "2026-03-15T15:00:00",
     homeTeam: { id: 1, name: "KCVV Elewijt A", logo: "/kcvv.png" },
@@ -254,7 +297,7 @@ function makeCalendarMatch(
     isPlaceholder: false,
     kind: "match",
     ...overrides,
-  } as CalendarMatch;
+  };
 }
 
 function makeCalendarEvent(
@@ -370,16 +413,19 @@ describe("getMatchDotType", () => {
     expect(getMatchDotType(match)).toBe("away");
   });
 
-  it("returns 'reservation' for a pitch-reservation placeholder, even though isHome resolves true (#2606, #2688)", () => {
-    // A self-match's isHome is typically true (homeTeamId === teamId), so the
-    // dot must check isPlaceholder FIRST — the bug #2688 found.
-    const match = makeCalendarMatch({
-      id: 1,
-      isPlaceholder: true,
-      kind: "reservation",
-      club: { id: 1235, name: "KCVV Elewijt" },
-    });
-    expect(getMatchDotType(match)).toBe("reservation");
+  it("returns 'reservation' for a pitch-reservation placeholder (#2606, #2688)", () => {
+    // `CalendarReservation` carries no `isHome` at all (#2802) — the
+    // name-matching fallback this dot used to fall into for a self-match
+    // (both sides "KCVV Elewijt") is now a compile error, not just a wrong
+    // answer, which is the deeper fix #2688's bug report asked for.
+    expect(getMatchDotType(reservationMatch({ id: 1 }))).toBe("reservation");
+  });
+
+  it("returns 'reservation' (the dashed no-side-to-claim pip) for a tournament fixture with no result yet (#2696/#2802)", () => {
+    // PSD does not say whether the named club hosts the tournament or
+    // merely shares its bracket, so this fixture claims no side either —
+    // the same dashed pip a reservation gets, not a home/away one.
+    expect(getMatchDotType(tournamentMatch({ id: 1 }))).toBe("reservation");
   });
 });
 
@@ -566,12 +612,10 @@ describe("calendarMatchToScheduleMatch", () => {
   describe("pitch-reservation placeholder (#2606, #2688)", () => {
     it("returns a ScheduleReservation — the silent hole #2688 found: isHome crossed this adapter, isPlaceholder did not", () => {
       const result = calendarMatchToScheduleMatch(
-        makeCalendarMatch({
+        reservationMatch({
           id: 90,
           date: "2026-05-09T09:30:00.000Z",
           time: "09:30",
-          isPlaceholder: true,
-          kind: "reservation",
           club: { id: 1235, name: "KCVV Elewijt" },
           competition: "Tornooi",
         }),
@@ -591,15 +635,12 @@ describe("calendarMatchToScheduleMatch", () => {
   describe("a tournament fixture with no result yet (#2696/#2802)", () => {
     it("returns a ScheduleReducedMatch — the other club's crest, no awayTeam/scores", () => {
       const result = calendarMatchToScheduleMatch(
-        makeCalendarMatch({
+        tournamentMatch({
           id: 91,
           date: "2026-05-10T09:30:00.000Z",
           time: "09:30",
-          isPlaceholder: false,
-          kind: "reduced",
           club: { id: 77, name: "FC Zemst Sportief" },
           competition: "Tornooi",
-          competitionType: "tournament",
         }),
       );
 
@@ -793,11 +834,9 @@ describe("buildKalenderItemListEntries", () => {
     // this construction site compile clean without branching on it.
     const feed = buildCalendarFeed(
       [
-        makeCalendarMatch({
+        reservationMatch({
           id: 90,
           date: "2026-09-12T09:30:00.000Z",
-          isPlaceholder: true,
-          kind: "reservation",
           club: { id: 1235, name: "KCVV Elewijt" },
           competition: "Tornooi",
         }),
@@ -819,14 +858,11 @@ describe("buildKalenderItemListEntries", () => {
   it("names a tournament fixture with no result yet by 'competition · other club', never a fabricated 'home — away' (#2696/#2802)", () => {
     const feed = buildCalendarFeed(
       [
-        makeCalendarMatch({
+        tournamentMatch({
           id: 91,
           date: "2026-09-12T09:30:00.000Z",
-          isPlaceholder: false,
-          kind: "reduced",
           club: { id: 77, name: "FC Zemst Sportief" },
           competition: "Tornooi",
-          competitionType: "tournament",
         }),
       ],
       [],

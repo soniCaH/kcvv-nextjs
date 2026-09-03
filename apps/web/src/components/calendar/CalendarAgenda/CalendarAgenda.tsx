@@ -119,7 +119,12 @@ function ReservationAgendaRow({
 }
 
 function AgendaMatchRow({ match }: { match: CalendarMatch }) {
-  if (match.kind !== "match") return <ReservationAgendaRow match={match} />;
+  // Enumerated positively (#2802 review, finding 11), not `kind !== "match"`
+  // — a negated catch-all would silently route any future fourth `kind`
+  // into the reduced row too, with no compile error.
+  if (match.kind === "reservation" || match.kind === "reduced") {
+    return <ReservationAgendaRow match={match} />;
+  }
 
   const isHome = match.isHome ?? getMatchDotType(match) === "home";
   const when = match.time ?? formatMatchTime(match.date) ?? "";

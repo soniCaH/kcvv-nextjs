@@ -98,7 +98,11 @@ function ReservationWeekCard({
 }
 
 function WeekMatchCard({ match }: { match: CalendarMatch }) {
-  if (match.kind !== "match") return <ReservationWeekCard match={match} />;
+  // Enumerated positively (#2802 review, finding 11) — see the identical
+  // note on `CalendarAgenda`'s `AgendaMatchRow`.
+  if (match.kind === "reservation" || match.kind === "reduced") {
+    return <ReservationWeekCard match={match} />;
+  }
 
   const dotType = getMatchDotType(match);
   const isHome = dotType === "home";

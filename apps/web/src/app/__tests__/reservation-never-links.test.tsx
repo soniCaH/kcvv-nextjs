@@ -97,10 +97,15 @@ import { CalendarMonth } from "@/components/calendar/CalendarMonth/CalendarMonth
 import { UpcomingMatchesClient } from "@/components/home/UpcomingMatches/UpcomingMatchesClient";
 import { FirstTeamAgendaRow } from "@/components/home/FirstTeamsBlock/FirstTeamAgendaRow";
 import { MatchHero } from "@/components/match/MatchHero";
-import { reservationMatch } from "@/components/calendar/calendar-mocks";
+import {
+  reservationMatch,
+  tournamentMatch,
+} from "@/components/calendar/calendar-mocks";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import type {
+  ScheduleReducedMatch,
   ScheduleReservation,
+  UpcomingReducedMatch,
   UpcomingReservation,
 } from "@/components/match/types";
 
@@ -177,16 +182,56 @@ const upcomingReservation: UpcomingReservation = {
   kcvvTeamLabel: "U13",
 };
 
+/**
+ * A tournament fixture with no result yet (#2696/#2802) — not a self-match,
+ * but reduced the same way: no opponent link, no CTA. The `ScheduleRow`
+ * twin of `scheduleReservation` above, so `<TeamAgendaRow>`/
+ * `<MatchStripView>`/`<FirstTeamAgendaRow>`/`<MatchHero>` each get a second
+ * row asserting the *other* reduced member, not just the reservation one.
+ */
+const scheduleReduced: ScheduleReducedMatch = {
+  isPlaceholder: false,
+  kind: "reduced",
+  id: 91,
+  date: new Date("2026-08-30T09:30:00.000Z"),
+  time: "09:30",
+  team: { id: 1391, name: "FC Zemst Sportief" },
+  status: "scheduled",
+  competition: "Tornooi",
+  competitionType: "tournament",
+};
+
+/** The `UpcomingReducedMatch` twin of `upcomingReservation` above. */
+const upcomingReduced: UpcomingReducedMatch = {
+  isPlaceholder: false,
+  kind: "reduced",
+  id: 91,
+  date: new Date("2026-08-30T09:30:00.000Z"),
+  time: "09:30",
+  team: { id: 1391, name: "FC Zemst Sportief" },
+  status: "scheduled",
+  competition: "Tornooi",
+  competitionType: "tournament",
+  kcvvTeamLabel: "U9",
+};
+
 /** One table row: a name for the `it.each` title, and a closure that mounts
- *  the renderer with a reservation fixture. `render()` itself is the
- *  assertion target's *cause*; the shared `it.each` body below asserts the
- *  *effect* (no link role) so every row states only what differs. */
-interface ReservationRenderer {
+ *  the renderer with a reduced fixture (a reservation or a tournament
+ *  fixture with no result yet). `render()` itself is the assertion target's
+ *  *cause*; the shared `it.each` body below asserts the *effect* (no link
+ *  role) so every row states only what differs. */
+interface ReducedRenderer {
   name: string;
   render: () => void;
 }
 
-const RESERVATION_RENDERERS: ReservationRenderer[] = [
+// Within the same calendar week as `reservationMatch()`'s default date
+// (2026-03-15, a Sunday) so `CalendarWeek`'s `weekStart="2026-03-09"` and
+// `CalendarMonth`'s `currentMonth={3}` cover both fixtures without a second
+// window per state.
+const tournamentDate = "2026-03-13T09:30:00";
+
+const RESERVATION_RENDERERS: ReducedRenderer[] = [
   {
     name: "TeamAgendaRow",
     render: () => render(<TeamAgendaRow match={scheduleReservation} />),
@@ -264,8 +309,8 @@ const RESERVATION_RENDERERS: ReservationRenderer[] = [
     render: () =>
       render(
         <MatchHero
-          homeTeam={{ name: "KCVV Elewijt" }}
-          awayTeam={{ name: "KCVV Elewijt" }}
+          homeTeam={{ id: KCVV_CLUB_ID, name: "KCVV Elewijt" }}
+          awayTeam={{ id: KCVV_CLUB_ID, name: "KCVV Elewijt" }}
           date={scheduleReservation.date}
           time={scheduleReservation.time}
           status={scheduleReservation.status}
@@ -274,20 +319,116 @@ const RESERVATION_RENDERERS: ReservationRenderer[] = [
         />,
       ),
   },
+  // ── Tournament fixture, no result yet (#2696/#2802) — the union's other
+  // reduced member. Not a self-match, so it needs its own row per renderer
+  // rather than reusing the reservation fixtures above: a fix that only
+  // widens `isPlaceholder` to `kind !== "match"` at the reservation call
+  // site would leave this half unguarded.
+  {
+    name: "TeamAgendaRow (reduced tournament branch)",
+    render: () => render(<TeamAgendaRow match={scheduleReduced} />),
+  },
+  {
+    name: "MatchStripView (reduced tournament branch)",
+    render: () =>
+      render(
+        <MatchStripView data={{ result: null, fixture: scheduleReduced }} />,
+      ),
+  },
+  {
+    name: "CalendarWeek (reduced tournament branch)",
+    render: () =>
+      render(
+        <CalendarWeek
+          matches={[tournamentMatch({ date: tournamentDate })]}
+          events={[]}
+          weekStart="2026-03-09"
+        />,
+      ),
+  },
+  {
+    name: "CalendarAgenda (reduced tournament branch)",
+    render: () =>
+      render(
+        <CalendarAgenda
+          matches={[tournamentMatch({ date: tournamentDate })]}
+          events={[]}
+          currentMonth={3}
+          currentYear={2026}
+        />,
+      ),
+  },
+  {
+    name: "CalendarMonth (reduced tournament branch)",
+    render: () =>
+      render(
+        <CalendarMonth
+          matches={[tournamentMatch({ date: tournamentDate })]}
+          events={[]}
+          selectedDate="2026-03-13"
+          onSelectDate={() => {}}
+          currentMonth={3}
+          currentYear={2026}
+        />,
+      ),
+  },
+  {
+    name: "UpcomingMatchesClient (reduced tournament branch)",
+    render: () =>
+      render(
+        <UpcomingMatchesClient
+          matches={[upcomingReduced]}
+          initialVisible={5}
+          kcvvTeamId={KCVV_CLUB_ID}
+        />,
+      ),
+  },
+  {
+    name: "FirstTeamAgendaRow (reduced tournament branch)",
+    render: () =>
+      render(
+        <FirstTeamAgendaRow
+          match={scheduleReduced}
+          teamSlug="eerste-ploeg"
+          kind="fixture"
+        />,
+      ),
+  },
+  {
+    name: "MatchHero (reduced tournament branch)",
+    render: () =>
+      render(
+        <MatchHero
+          homeTeam={{ id: KCVV_CLUB_ID, name: "KCVV Elewijt" }}
+          awayTeam={{ id: 1391, name: "FC Zemst Sportief" }}
+          date={scheduleReduced.date}
+          time={scheduleReduced.time}
+          status={scheduleReduced.status}
+          competition={scheduleReduced.competition}
+          competitionType={scheduleReduced.competitionType}
+          isPlaceholder={false}
+        />,
+      ),
+  },
 ];
 
-describe("a pitch-reservation placeholder is never a link (#2801)", () => {
+describe("a reservation or a reduced tournament fixture is never a link (#2801/#2802)", () => {
   it.each(RESERVATION_RENDERERS)(
-    "$name — the reservation renders with no <Link>",
+    "$name — renders with no <Link>",
     ({ render: renderRow }) => {
       renderRow();
-      // Proves the reservation actually rendered before proving it renders no
-      // link — see the docblock above for why a shared accessible query
+      // Proves the row actually rendered before proving it renders no link —
+      // see the docblock above for why a shared accessible query
       // (`getByText`) can't reach every row's subject uniformly, and why this
       // half is what makes the `MatchHero` row (no `next/link` import at
-      // all) assert anything.
+      // all) assert anything. Either marker counts: `data-placeholder` for
+      // a genuine reservation, `data-tournament` for a hidden-result
+      // tournament fixture — the two states share this reduced treatment
+      // but are never both true on the same row (#2802).
       expect(
-        document.querySelector('[data-placeholder="true"]'),
+        document.querySelector(
+          '[data-placeholder="true"], [data-tournament="true"]',
+        ),
       ).not.toBeNull();
       expect(screen.queryByRole("link")).toBeNull();
     },

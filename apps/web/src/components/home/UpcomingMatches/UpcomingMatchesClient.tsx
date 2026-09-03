@@ -269,8 +269,12 @@ const ReservationMatchRow = ({
 }: {
   match: UpcomingReservation | UpcomingReducedMatch;
 }) => {
-  const otherClub = match.kind === "reduced" ? match.team : undefined;
-  const { subject, statusWording } = reservationView(match, otherClub);
+  // No `otherClub` here (#2802 review) — unlike the caption-only reduced
+  // renderers, this row already prints `match.team.name` as its own bold
+  // text node below. Composing "competition · club" into `subject` too
+  // would print the same club twice: bold "FC Zemst Sportief" directly
+  // above "U9 · Tornooi · FC Zemst Sportief".
+  const { subject, statusWording } = reservationView(match);
   const dateLabel = formatMatchWidgetDate(match.date);
   const label = reservationRowLabel({
     subject,
@@ -324,7 +328,12 @@ const ReservationMatchRow = ({
 };
 
 const MatchRow = ({ match, kcvvTeamId }: MatchRowProps) => {
-  if (match.kind !== "match") return <ReservationMatchRow match={match} />;
+  // Enumerated positively (#2802 review, finding 11) — a negated
+  // `kind !== "match"` catch-all would silently route any future fourth
+  // `kind` into the reduced row too, with no compile error.
+  if (match.kind === "reservation" || match.kind === "reduced") {
+    return <ReservationMatchRow match={match} />;
+  }
 
   const homeIsKcvv = match.homeTeam.id === kcvvTeamId;
   const awayIsKcvv = match.awayTeam.id === kcvvTeamId;
