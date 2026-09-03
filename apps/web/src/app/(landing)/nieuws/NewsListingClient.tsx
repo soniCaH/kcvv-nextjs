@@ -253,8 +253,20 @@ export function NewsListingClient({
 
   return (
     <div className="w-full">
-      {/* Sticky filter bar */}
-      <div className="bg-ink/95 sticky top-0 z-30 border-b border-white/10 py-3 backdrop-blur-sm">
+      {/* Sticky filter bar — paper ground, matching <TeamSectionNav>'s sticky
+          row (#2805): opaque cream + ink bottom rule, no translucency or
+          blur. The bar previously sat on `bg-ink/95`, a pre-redesign
+          leftover nothing in DESIGN.md ever authorised — on it the active
+          "Alles" chip's ink-on-ink fill vanished and `<ScrollRail>`'s
+          default cream fade read as a mismatched yellowish band.
+          `top-16` (not `top-0`, #2487): `<SiteHeader>` is itself
+          `sticky top-0 z-50` with `h-16` and an opaque `bg-cream` — at
+          `top-0` this bar parked entirely behind the header once both
+          stuck, and once it also shared the header's `bg-cream` the
+          occlusion was total. `top-16` clears the header's height, same
+          notch `<TeamSectionNav>` and `<OrganigramSectionNav>` already use
+          below the same header. z-index and padding are unchanged. */}
+      <div className="border-ink bg-cream sticky top-16 z-30 border-b-2 py-3">
         <PageContainer width="index">
           <CategoryFilters
             categories={categories}
