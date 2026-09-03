@@ -11,13 +11,16 @@
  * Sits below the global header, pinned at `--sticky-header-h` (rule 4). The
  * shared hook also derives `scroll-padding-top` from this bar's own
  * measured height (rule 7); no section carries a hand-written `scroll-mt-*`.
+ * The hero-reveal observer below reuses that same measured height (via the
+ * hook's `barHeight`) plus `getStickyHeaderHeight()` for its own, unrelated
+ * offset need — one source of truth for "header + bar", not two.
  */
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { PageContainer } from "@/components/design-system";
 import { HubSearch } from "../HubSearch";
-import { useSectionNav } from "@/hooks/useSectionNav";
+import { useSectionNav, getStickyHeaderHeight } from "@/hooks/useSectionNav";
 import type { OrgChartNode } from "@/types/organigram";
 import type { ResponsibilityPath } from "@/types/responsibility";
 
@@ -39,7 +42,7 @@ export function OrganigramSectionNav({
   responsibilityPaths,
   className,
 }: OrganigramSectionNavProps) {
-  const { navRef, activeId } = useSectionNav(SECTION_IDS);
+  const { navRef, activeId, barHeight } = useSectionNav(SECTION_IDS);
 
   // The repeated search stays hidden until the hero (which carries its own
   // search) scrolls out of view — so the page never shows two search fields at
@@ -55,15 +58,19 @@ export function OrganigramSectionNav({
     const hero = document.getElementById("hub-hero");
     if (!hero) return;
 
+    // Top inset clears the header + this bar so the search reveals exactly
+    // as the hero (and its own search) tucks behind them — derived from the
+    // same `--sticky-header-h` token and the bar's own measured height the
+    // hook already tracks, rather than a second, hand-copied number sitting
+    // beside the one source of truth AC 3 exists to establish (#2584 review
+    // finding 7).
     const observer = new IntersectionObserver(
       ([entry]) => setHeroOutOfView(!entry.isIntersecting),
-      // Top inset clears the header (64px) + this nav (~48px) so the search
-      // reveals exactly as the hero (and its search) tucks behind the bars.
-      { rootMargin: "-112px 0px 0px 0px" },
+      { rootMargin: `-${getStickyHeaderHeight() + barHeight}px 0px 0px 0px` },
     );
     observer.observe(hero);
     return () => observer.disconnect();
-  }, []);
+  }, [barHeight]);
 
   return (
     <nav

@@ -69,6 +69,10 @@ export function TeamSectionNav({ items }: TeamSectionNavProps) {
           as="ul"
           ariaLabel="Sectienavigatie"
           trackClassName="flex items-center gap-2 py-2"
+          // The bar is bg-cream-deep (rule 4) — the fade must match that
+          // ground, not <ScrollRail>'s cream default, or the overflow fade
+          // reads as a mismatched patch (#2584 review finding 2).
+          fadeFromClassName="from-cream-deep"
         >
           {items.map((item) => {
             const isActive = item.id === activeId;
