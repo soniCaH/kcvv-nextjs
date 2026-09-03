@@ -41,15 +41,19 @@
  * shadow is invisible there) — the same fact `<EmptyState surface="inverse">`
  * names for its own card, so the two use the same word for it.
  *
- * **`surface` also names the row's ground for `<ScrollRail>` (#2805).** The
- * overflow fade's gradient start colour must match what's actually behind
- * the track (`<ScrollRail>`'s own docblock), so `surface` now drives
- * `fadeFromClassName` too: `"paper"` → `from-cream`, `"inverse"` →
- * `from-jersey-deep-dark` — the same token the organigram breadcrumb passes
- * for its own dark panel. Before this, `<FilterTabs>` forwarded no
- * `fadeFromClassName` at all, so every row — including ones already on a
- * dark ground (`/evenementen`) — took the cream default, which painted a
- * cream smear over the arrow on any non-cream field.
+ * **`surface="inverse"` also fixes the row's `<ScrollRail>` fade to
+ * `from-jersey-deep-dark` (#2805).** The overflow fade's gradient start
+ * colour must match what's actually behind the track (`<ScrollRail>`'s own
+ * docblock), and `/evenementen`'s `jersey-deep-dark` field is the only
+ * `inverse` row on the site today — the same token the organigram
+ * breadcrumb passes for its own dark panel. Before this, `<FilterTabs>`
+ * forwarded no `fadeFromClassName` at all, so this row took the cream
+ * default and painted a cream smear over the arrow. This is a hardcoded
+ * colour, not a resolved ground: `<FilterTabs>` exposes no
+ * `fadeFromClassName` pass-through, so a future `inverse` row on a plain
+ * `bg-ink` field (not `jersey-deep-dark`) would need that axis widened at
+ * this call site first — don't assume `inverse` covers every dark ground
+ * for the fade the way it already does for the chip shadow below.
  *
  * **Overflow is plain scroll, on purpose.** Four alternatives (wrap-capped,
  * sticky "Alles", "Alles" outside the scroller, snap-back-on-empty) were
@@ -146,9 +150,15 @@ export interface FilterTab {
  *  shadow regardless of ground. Same word `<EmptyState surface>` /
  *  `<TapedCard shadow>` use for the same fact, so a row and a nearby empty
  *  state name their ground identically instead of two props disagreeing on
- *  one truth. Also drives `<ScrollRail>`'s overflow-fade start colour
- *  (#2805) — `"paper"` → `from-cream`, `"inverse"` → `from-jersey-deep-dark`
- *  — so the fade always matches the ground it's painted over. */
+ *  one truth.
+ *
+ *  Also drives `<ScrollRail>`'s overflow-fade start colour (#2805), but
+ *  narrower than the shadow axis above: `"inverse"` hardcodes
+ *  `from-jersey-deep-dark`, the one dark ground an `inverse` row actually
+ *  sits on today (`/evenementen`). It is not "any ink or dark-green
+ *  ground" for the fade — a row on plain `bg-ink` would need
+ *  `fadeFromClassName` exposed as its own pass-through prop first, which
+ *  this component does not do (no caller needs it yet). */
 export type FilterTabsSurface = "paper" | "inverse";
 
 export interface FilterTabsProps {
