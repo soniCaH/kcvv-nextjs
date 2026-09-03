@@ -177,10 +177,18 @@ const SURFACE_CLASS: Record<EmptyStateSurface, string> = {
 };
 
 interface EmptyStateSharedProps {
-  /** Renders `role="status"` so assistive tech announces a client-side
-   *  change (a filter emptying the surface, or a slot going empty after
-   *  load). Omit for an empty state already present on first render. */
-  live?: boolean;
+  /**
+   * Renders a live region so assistive tech announces a client-side change.
+   * `true` — `role="status"` (polite): a filter emptying the surface, or a
+   * slot going empty/failing after a page-load fetch nobody directly
+   * triggered. `"assertive"` — `role="alert"` + `aria-live="assertive"`
+   * (#2580 review finding 3): a failure notice answering an action the
+   * visitor just took (a submit, a search) needs an immediate announcement,
+   * the same urgency `<Alert variant="error">` and a bare `role="alert"
+   * aria-live="assertive"` paragraph already carried before this primitive
+   * replaced them. Omit for an empty state already present on first render.
+   */
+  live?: boolean | "assertive";
   className?: string;
 }
 
@@ -294,6 +302,19 @@ export type EmptyStateSlotProps =
 
 export type EmptyStateProps = EmptyStateSurfaceProps | EmptyStateSlotProps;
 
+/** `live` → the ARIA live-region attributes shared by all three renderers
+ *  (#2580 review finding 3) — one place to keep `"assertive"`'s `role="alert"`
+ *  + `aria-live="assertive"` pair in sync with plain `true`'s `role="status"`
+ *  (implicitly polite). */
+function liveRegionProps(live: boolean | "assertive" | undefined): {
+  role?: "alert" | "status";
+  "aria-live"?: "assertive";
+} {
+  if (live === "assertive") return { role: "alert", "aria-live": "assertive" };
+  if (live) return { role: "status" };
+  return {};
+}
+
 function headingLevelFor(
   as: EmptyStateSurfaceProps["as"],
 ): EditorialHeadingLevel {
@@ -338,7 +359,7 @@ function SlotNoticeEmptyState({
   }
   return (
     <p
-      role={live ? "status" : undefined}
+      {...liveRegionProps(live)}
       className={cn(
         "border-ink/30 text-ink-soft text-body-md border-2 border-dashed px-6 py-8 text-center",
         className,
@@ -367,7 +388,7 @@ function SlotHeldOpenEmptyState({
 }: EmptyStateSlotHeldOpenProps) {
   return (
     <div
-      role={live ? "status" : undefined}
+      {...liveRegionProps(live)}
       className={cn(
         "flex flex-1 items-center justify-center border-2 border-dashed px-3 py-3 text-center",
         SLOT_BACKGROUND_CLASS[background],
@@ -398,7 +419,7 @@ function SurfaceEmptyState(props: EmptyStateSurfaceProps) {
 
   return (
     <section
-      role={live ? "status" : undefined}
+      {...liveRegionProps(live)}
       className={cn(
         SURFACE_CLASS[surface],
         "relative text-center sm:text-left",

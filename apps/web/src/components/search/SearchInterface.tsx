@@ -324,9 +324,17 @@ export const SearchInterface = ({
                 (in <SearchMasthead>) already survives with the query intact,
                 so a second "probeer opnieuw" here would be redundant chrome
                 (#2470 resolution rule 4). Replaces the ticket-stub <Alert> —
-                its last production consumer (#2580). */}
+                its last production consumer (#2580). `live="assertive"`
+                (role="alert") matches the <Alert variant="error"> this
+                replaces: the visitor just pressed "Zoeken", so the failure
+                needs an immediate announcement, not a queued polite one
+                (#2580 review finding 3). */}
             {error && !isLoading && (
-              <EmptyState tier="surface" heading="Zoeken mislukt" live>
+              <EmptyState
+                tier="surface"
+                heading="Zoeken mislukt"
+                live="assertive"
+              >
                 {error}
               </EmptyState>
             )}
