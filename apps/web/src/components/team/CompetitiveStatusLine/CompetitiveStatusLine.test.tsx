@@ -12,7 +12,10 @@ describe("CompetitiveStatusLine", () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the unavailable line for a permanent PSD failure (#2636 finding 3), on the locked failure string (#2433 rule 9/#2804) — unaccented, since tier="slot" has no emphasis axis', () => {
+  // The string is #2433 rule 9's locked failure tell (#2804). It renders
+  // unaccented because this line goes through tier="slot"'s held-open shape,
+  // which has no `emphasis` axis — deliberate, not a second drift.
+  it("renders the unavailable line for a permanent PSD failure (#2636 finding 3)", () => {
     render(<CompetitiveStatusLine variant="unavailable" />);
     expect(
       screen.getByText(
