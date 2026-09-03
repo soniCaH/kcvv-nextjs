@@ -37,9 +37,11 @@
  *   discriminant, and the literal `"unavailable"` to match the vocabulary
  *   every neighbouring permanently-failed-PSD-read case already uses
  *   (`<CompetitiveStatusLine variant="unavailable">`,
- *   `/ploegen/[slug]/page.tsx`'s literal `"unavailable"` return) — #2690
- *   later widens tier "surface"'s `reason` to include this same value, so
- *   both tiers end up naming the one failure state the one way. Frame is
+ *   `/ploegen/[slug]/page.tsx`'s literal `"unavailable"` return). This is its
+ *   own tier-"slot" discriminant, not a value tier "surface"'s `reason` ever
+ *   admits — #2690 considered and rejected widening tier "surface" to reach
+ *   it (see the admission rule below), so the two tiers keep naming this one
+ *   failure state independently rather than sharing one wire value. Frame is
  *   fixed at `border-2 border-dashed border-ink/30` (rule 6 — the
  *   already-precedented dashed value on cream, `tegenstander/[clubId]/
  *   loading.tsx:65`), text `text-ink-soft text-body-md` matching
@@ -47,8 +49,24 @@
  *   member (`never`, mirroring `_internal/stateAction.ts`'s
  *   `href?: never`/`onClick?: never` mutual exclusion) — a notice's frame is
  *   not configurable, since only the cream case is in scope here; a
- *   dark-ground register is #2690's job. `emphasis` accents the failure
- *   itself, not the subject (rule 3) — see below.
+ *   dark-ground register is #2402's job (see below). `emphasis` accents the
+ *   failure itself, not the subject (rule 3) — see below.
+ *
+ * **The `reason` admission rule (#2690/#2804).** A `reason` value exists
+ * ONLY to make a companion prop compiler-required. It is never a label for
+ * copy. Tier "surface"'s `reason` stays exactly one value, `reason?:
+ * "filtered"` — it does not grow to `pending | filtered | query |
+ * unavailable`. Five candidates, one admitted:
+ *
+ * | Value           | Verdict                                                                                                                                                                                             |
+ * | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+ * | `filtered`        | **admitted** — forces `undo` + `analyticsSource` + `analyticsFacet`                                                                                                                              |
+ * | `query`           | **refused** — `SearchNoResultsCardProps.query` is already required at the owning boundary; adding `subject` to the primitive duplicates that guarantee for one caller. `HubSearch` is permanently excluded (#2427), so no second caller is coming |
+ * | `pending`         | **refused** — forces nothing; it is today's default                                                                                                                                              |
+ * | `unavailable`     | **refused** — forces nothing, and its only caller is `tier="slot"`, which has no `heading`/`artefact`/`undo` prop to force                                                                       |
+ * | a failure value   | **refused** — #2470's resolution: "This ticket adds no new API to `<EmptyState>`." #2469's one new API (the accented substring) lands in #2576                                                  |
+ *
+ * (Quoted from #2804's own table — do not re-derive these reasons.)
  *
  * **The copy is the tell.** Both tiers share one visual register; only the
  * words distinguish genuine emptiness ("Nog geen …") from a filter that
@@ -57,6 +75,19 @@
  * `reason: "unavailable"`). See the resolution comment on #2427 for the five
  * copy rules this primitive exists to carry, and #2469's resolution for the
  * failure-notice rules specifically.
+ *
+ * **Parked: the dark-ground slot register (#2690/#2804).** Tier "slot" is
+ * ink-only (`SLOT_BACKGROUND_CLASS` below: `border-ink-muted` /
+ * `border-ink bg-cream-soft`) — both wrong on a dark-green band. Tier
+ * "surface" already solved its own version via `surface="inverse"` (#2562);
+ * tier "slot" has no such axis yet. Exactly one place would use it:
+ * `FirstTeamsBlock`, on the homepage's `jersey-deep-dark` band — see its
+ * `HELD_OPEN_FRAME` docblock in `FirstTeamsBlock.tsx`. **Not built here**
+ * — the migration is #2402's call, not this primitive's. Values to carry
+ * verbatim when it is: frame `border-cream/40 border-2 border-dashed`,
+ * `SkipCard` `text-cream/65`, band note `text-cream/80`. VR guard to name:
+ * `FirstTeamsBlock` stories `NoMatches` and `FeedUnavailable`, three
+ * viewports each — ink-on-dark-green would be a loud diff.
  *
  * **Not every failure notice on cream goes through this register.**
  * `<CompetitiveStatusLine>` (#2540/#2636) is a deliberate non-adopter: its
@@ -227,7 +258,8 @@ export interface EmptyStateSlotHeldOpenProps extends EmptyStateSharedProps {
  * — mirrors `<EditorialHeading>`'s `emphasis={{ text }}` (#2469 resolution
  * rule 5) rather than inventing a second shape. No `tone`/`highlight`: the
  * highlighter sweep is this site's *celebratory* register, wrong on an
- * outage (rule 2), and a dark-ground tone is #2690's job, not wired here.
+ * outage (rule 2), and a dark-ground tone is #2402's job (parked via
+ * #2690/#2804 — see the file docblock above), not wired here.
  */
 export interface EmptyStateSlotEmphasis {
   text: string;

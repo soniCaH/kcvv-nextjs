@@ -12,10 +12,15 @@ describe("CompetitiveStatusLine", () => {
     ).toBeInTheDocument();
   });
 
+  // The string is #2433 rule 9's locked failure tell (#2804). It renders
+  // unaccented because this line goes through tier="slot"'s held-open shape,
+  // which has no `emphasis` axis — deliberate, not a second drift.
   it("renders the unavailable line for a permanent PSD failure (#2636 finding 3)", () => {
     render(<CompetitiveStatusLine variant="unavailable" />);
     expect(
-      screen.getByText("De wedstrijdgegevens zijn tijdelijk niet beschikbaar."),
+      screen.getByText(
+        "De wedstrijdgegevens zijn even niet beschikbaar. Probeer het later opnieuw.",
+      ),
     ).toBeInTheDocument();
     // Never the pre-season copy — a broken read must not read as silence.
     expect(
