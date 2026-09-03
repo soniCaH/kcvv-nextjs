@@ -109,6 +109,37 @@ describe("HorizontalSlider", () => {
       expect(scrollContainer.getAttribute("tabindex")).toBe("0");
     });
 
+    it("names the scroll track with a default accessible name", () => {
+      const { container } = render(
+        <HorizontalSlider>
+          <div>Item</div>
+        </HorizontalSlider>,
+      );
+
+      const scrollContainer = container.querySelector(
+        "[data-slot='scroll-track']",
+      ) as HTMLElement;
+      expect(scrollContainer.getAttribute("role")).toBe("group");
+      expect(scrollContainer.getAttribute("aria-label")).toBe(
+        "Scrollable cards",
+      );
+    });
+
+    it("accepts a caller-supplied accessible name", () => {
+      const { container } = render(
+        <HorizontalSlider ariaLabel="Gerelateerde artikelen">
+          <div>Item</div>
+        </HorizontalSlider>,
+      );
+
+      const scrollContainer = container.querySelector(
+        "[data-slot='scroll-track']",
+      ) as HTMLElement;
+      expect(scrollContainer.getAttribute("aria-label")).toBe(
+        "Gerelateerde artikelen",
+      );
+    });
+
     it("defaults the track gap to gap-6 md:gap-8", () => {
       const { container } = render(
         <HorizontalSlider>

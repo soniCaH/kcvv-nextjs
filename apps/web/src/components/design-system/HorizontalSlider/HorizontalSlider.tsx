@@ -52,6 +52,13 @@ import type { ReactNode } from "react";
 export interface HorizontalSliderProps {
   /** Content to scroll horizontally */
   children: ReactNode;
+  /** Accessible name for the scroll track — it is a keyboard tab stop
+   *  (`tabIndex=0`) in its own right, not just a wrapper around
+   *  already-named children (review finding #2577 part 8). Defaults to a
+   *  generic English name matching `<FilterTabs>`'s own default
+   *  (`"Filter tabs"`) — both are content-agnostic design-system
+   *  primitives; a domain consumer overrides with a Dutch label. */
+  ariaLabel?: string;
   /** Additional CSS classes */
   className?: string;
   /** Extra classes merged onto the inner flex track — e.g. a wider
@@ -84,6 +91,7 @@ function pickFadeMask(canScrollLeft: boolean, canScrollRight: boolean) {
 
 export const HorizontalSlider = ({
   children,
+  ariaLabel = "Scrollable cards",
   className,
   trackClassName,
 }: HorizontalSliderProps) => {
@@ -109,6 +117,8 @@ export const HorizontalSlider = ({
         <div
           ref={scrollRef}
           data-slot="scroll-track"
+          role="group"
+          aria-label={ariaLabel}
           tabIndex={0}
           className={cn("overflow-x-auto scroll-smooth pb-2", fadeMask)}
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
