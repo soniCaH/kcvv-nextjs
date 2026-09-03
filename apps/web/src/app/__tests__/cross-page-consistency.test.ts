@@ -885,8 +885,8 @@ const BREADCRUMB_CALL = /buildBreadcrumbJsonLd\(\s*\[([\s\S]*?)\]\s*\)/;
 // closing the *interpolation*, truncating the value before its own closing
 // backtick.
 const BREADCRUMB_URL = /\burl:\s*(`(?:\\.|[^`\\])*`|[^,}]+)/g;
-const UP_LINK_TAG_HREF = /<UpLink\b[^>]*\bhref=([^\s>]+)/;
-const UP_LINK_PROP_HREF = /\bupLink=\{\{\s*href:\s*([^,]+),/;
+const UP_LINK_TAG_HREF = /<UpLink\b[^>]*\bhref=([^\s>]+)/g;
+const UP_LINK_PROP_HREF = /\bupLink=\{\{\s*href:\s*([^,]+),/g;
 const IMPORT_SPECIFIER = /\bfrom\s+["']([^"']+)["']/g;
 
 /**
@@ -910,15 +910,30 @@ function breadcrumbUrls(source: string): string[] | undefined {
 }
 
 /**
- * The rendered up-link's `href`, in either shape #2570 uses — `undefined`
- * when the source renders neither. `upLink={{ href: … }}` is checked first:
- * it is always the call site that carries the real literal, where a
- * `<UpLink href={…}>` found first could be a component (`<UltrasHero>`,
- * `<PageHero>` itself) merely forwarding a prop it received — `href={upLink.href}`
- * is not a route's parent, it is the shape of the pass-through.
+ * A matched href is a route-owned literal — a quoted string or a template
+ * literal — only when it starts with a quote or a backtick. A bare
+ * identifier (`upLink.href`) is the shape `<PageHero>` and `<UltrasHero>`
+ * themselves use to *forward* a prop they received, not a route naming its
+ * parent, and both components' own source is reachable in a route's bundle
+ * (`<UltrasHero>` at hop 1 for `/club/ultras`, `<PageHero>` wherever its
+ * directory import happens to resolve). Discriminating by value shape, not
+ * by which pattern matched first, is what makes counting every match safe
+ * (#2799 review round 3) — a naive collect-and-count over-counts on every
+ * route whose bundle reaches either component's own pass-through line.
  */
-function upLinkHref(source: string): string | undefined {
-  return (UP_LINK_PROP_HREF.exec(source) ?? UP_LINK_TAG_HREF.exec(source))?.[1];
+function isLiteralHref(raw: string): boolean {
+  return /^[`"']/.test(raw.trim());
+}
+
+/**
+ * Every up-link href *literal* the bundle renders — real call sites only,
+ * pass-through forwards filtered out — in the order they appear. Empty when
+ * the source renders none.
+ */
+function upLinkHrefs(source: string): string[] {
+  const propHrefs = [...source.matchAll(UP_LINK_PROP_HREF)].map((m) => m[1]!);
+  const tagHrefs = [...source.matchAll(UP_LINK_TAG_HREF)].map((m) => m[1]!);
+  return [...propHrefs, ...tagHrefs].filter(isLiteralHref);
 }
 
 /** Resolve one `import … from "SPECIFIER"` to a repo-relative source path —
@@ -982,20 +997,26 @@ const breadcrumbRouteFiles = routeFiles.filter(
 
 describe("the up-link matches the route's own breadcrumb trail (#2570)", () => {
   it.each(breadcrumbRouteFiles)(
-    "%s — up-link presence and target follow the trail depth",
+    "%s — exactly one up-link, present and targeted exactly when the trail depth calls for it",
     (relPath) => {
       const source = bundleCode(relPath);
       const urls = breadcrumbUrls(source)!;
-      const href = upLinkHref(source);
+      const hrefs = upLinkHrefs(source);
 
       if (urls.length <= 2) {
-        expect(href).toBeUndefined();
+        // #2428's own rule: "Home -> self" renders none — not zero-or-more,
+        // exactly zero. A stray one here is the trail-depth exception this
+        // whole rule exists to hold routes to.
+        expect(hrefs).toHaveLength(0);
         return;
       }
 
-      expect(href).toBeDefined();
+      // The AC's "One up-link ... exactly when" — not "at least one": a
+      // route that accidentally rendered two would have had only the first
+      // validated before this counted every match.
+      expect(hrefs).toHaveLength(1);
       const parent = normalizeHref(urls[urls.length - 2]!);
-      expect(normalizeHref(href!)).toBe(parent);
+      expect(normalizeHref(hrefs[0]!)).toBe(parent);
     },
   );
 });
@@ -1046,16 +1067,43 @@ describe("rule 9 catches what it claims to (#2570)", () => {
   });
 
   it("reads both up-link shapes", () => {
-    expect(upLinkHref('<UpLink href="/nieuws" label="Nieuws" />')).toBe(
+    expect(upLinkHrefs('<UpLink href="/nieuws" label="Nieuws" />')).toEqual([
       '"/nieuws"',
-    );
-    expect(upLinkHref('upLink={{ href: "/club", label: "De club" }}')).toBe(
-      '"/club"',
+    ]);
+    expect(upLinkHrefs('upLink={{ href: "/club", label: "De club" }}')).toEqual(
+      ['"/club"'],
     );
     expect(
-      upLinkHref("upLink={{ href: `/ploegen/${slug}`, label: displayName }}"),
-    ).toBe("`/ploegen/${slug}`");
-    expect(upLinkHref("<PageHero headline={x} />")).toBeUndefined();
+      upLinkHrefs("upLink={{ href: `/ploegen/${slug}`, label: displayName }}"),
+    ).toEqual(["`/ploegen/${slug}`"]);
+    expect(upLinkHrefs("<PageHero headline={x} />")).toEqual([]);
+  });
+
+  it("filters a pass-through <UpLink> forwarding a prop it received", () => {
+    // The exact shape <PageHero> and <UltrasHero> render internally.
+    expect(
+      upLinkHrefs(
+        '<UpLink href={upLink.href} label={upLink.label} tone="cream" />',
+      ),
+    ).toEqual([]);
+  });
+
+  it("counts every real up-link literal, not just the first", () => {
+    const source = `
+      <UpLink href="/kalender" label="Kalender" />
+      <UpLink href="/ploegen" label="Ploegen" />
+    `;
+    expect(upLinkHrefs(source)).toEqual(['"/kalender"', '"/ploegen"']);
+  });
+
+  it("counts a route-owned literal alongside a pass-through it reaches via a hop", () => {
+    // /club/ultras's own shape: the page's real upLink prop, plus
+    // <UltrasHero>'s own pass-through line, both in the same bundle.
+    const source = `
+      upLink={{ href: "/club", label: "De club" }}
+      <UpLink href={upLink.href} label={upLink.label} tone="cream" className="self-start" />
+    `;
+    expect(upLinkHrefs(source)).toEqual(['"/club"']);
   });
 
   it("normalizes a template-literal trail URL and a plain href to the same string", () => {
@@ -1082,7 +1130,7 @@ describe("rule 9 catches what it claims to (#2570)", () => {
     `;
     const urls = breadcrumbUrls(source)!;
     expect(urls).toHaveLength(2);
-    expect(upLinkHref(source)).toBeDefined();
+    expect(upLinkHrefs(source)).toHaveLength(1);
   });
 
   it("flags a deeper trail whose up-link targets the wrong parent", () => {
@@ -1096,6 +1144,19 @@ describe("rule 9 catches what it claims to (#2570)", () => {
     `;
     const urls = breadcrumbUrls(source)!;
     const parent = normalizeHref(urls[urls.length - 2]!);
-    expect(normalizeHref(upLinkHref(source)!)).not.toBe(parent);
+    expect(normalizeHref(upLinkHrefs(source)[0]!)).not.toBe(parent);
+  });
+
+  it("flags a deeper trail that renders two up-links", () => {
+    const source = `
+      buildBreadcrumbJsonLd([
+        { name: "Home", url: SITE_CONFIG.siteUrl },
+        { name: "Kalender", url: \`\${SITE_CONFIG.siteUrl}/kalender\` },
+        { name: opponentName, url: pageUrl },
+      ])
+      <UpLink href="/kalender" label="Kalender" />
+      <UpLink href="/kalender" label="Kalender" />
+    `;
+    expect(upLinkHrefs(source)).toHaveLength(2);
   });
 });
