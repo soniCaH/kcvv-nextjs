@@ -184,6 +184,51 @@ describe("CalendarSubscribePanel", () => {
     });
   });
 
+  describe("copy failure (#2580)", () => {
+    it("shows a failure notice, logs to the console, and never surfaces the raw error", async () => {
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      const clipboardError = new Error("denied");
+      mockWriteText.mockRejectedValueOnce(clipboardError);
+
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
+
+      // The accented substring splits the sentence across DOM nodes, so
+      // assert on the notice's own status region's full text content.
+      const notice = await screen.findByRole("status");
+      expect(notice).toHaveTextContent(
+        "Kopiëren mislukt. Scan de QR-code hiernaast.",
+      );
+      // The visitor never sees the caught error's own text.
+      expect(screen.queryByText("denied")).not.toBeInTheDocument();
+      expect(consoleError).toHaveBeenCalledWith(
+        "Failed to copy to clipboard:",
+        clipboardError,
+      );
+
+      consoleError.mockRestore();
+    });
+
+    it("clears the failure notice after a subsequent successful copy", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      mockWriteText.mockRejectedValueOnce(new Error("denied"));
+
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      const copyButton = screen.getByRole("button", { name: /Kopieer link/ });
+      await user.click(copyButton);
+      await screen.findByRole("status");
+
+      mockWriteText.mockResolvedValueOnce(undefined);
+      await user.click(copyButton);
+
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+  });
+
   describe("copy feedback", () => {
     it("shows a confirmation after copying", async () => {
       const user = userEvent.setup();

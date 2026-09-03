@@ -60,3 +60,33 @@ export const CopiedFeedback: Story = {
     );
   },
 };
+
+/**
+ * The clipboard write rejects (#2580) — Tier 2 failure notice, no action (the
+ * copy button is its own retry). Unlike `CopiedFeedback`, forcing the
+ * rejection makes this deterministic, so it stays in the VR set.
+ */
+export const CopyFailed: Story = {
+  beforeEach: () => {
+    const original = navigator.clipboard;
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: () => Promise.reject(new Error("denied")) },
+      writable: true,
+      configurable: true,
+    });
+    return () => {
+      Object.defineProperty(navigator, "clipboard", {
+        value: original,
+        writable: true,
+        configurable: true,
+      });
+    };
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole("button", { name: /Kopieer link/i }),
+    );
+    await canvas.findByRole("status");
+  },
+};
