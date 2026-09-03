@@ -197,10 +197,13 @@ describe("CalendarSubscribePanel", () => {
       await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
 
       // The accented substring splits the sentence across DOM nodes, so
-      // assert on the notice's own status region's full text content.
-      const notice = await screen.findByRole("status");
+      // assert on the notice's own alert region's full text content.
+      // `role="alert"` (not "status"): the visitor just clicked "Kopieer
+      // link", so the failure is announced immediately (#2580 review
+      // finding 3).
+      const notice = await screen.findByRole("alert");
       expect(notice).toHaveTextContent(
-        "Kopiëren mislukt. Scan de QR-code hiernaast.",
+        "Kopiëren mislukt. Scan de QR-code om te abonneren.",
       );
       // The visitor never sees the caught error's own text.
       expect(screen.queryByText("denied")).not.toBeInTheDocument();
@@ -220,12 +223,31 @@ describe("CalendarSubscribePanel", () => {
       render(<CalendarSubscribePanel {...defaultProps} />);
       const copyButton = screen.getByRole("button", { name: /Kopieer link/ });
       await user.click(copyButton);
-      await screen.findByRole("status");
+      await screen.findByRole("alert");
 
       mockWriteText.mockResolvedValueOnce(undefined);
       await user.click(copyButton);
 
-      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+
+    it("clears the failure notice when the team selection changes (#2580 review finding 5)", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      mockWriteText.mockRejectedValueOnce(new Error("denied"));
+
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
+      await screen.findByRole("alert");
+
+      // Removing a team changes `webcalUrl` — the notice described a click
+      // against the URL as it stood before this change, so it must not
+      // survive describing a URL that no longer matches the selection.
+      await user.click(
+        screen.getAllByRole("button", { name: /Verwijder/ })[0]!,
+      );
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });
   });
 

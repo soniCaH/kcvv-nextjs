@@ -76,6 +76,19 @@ export function CalendarSubscribePanel({
 
   const webcalUrl = buildWebcalUrl(selectedPsdIds, side, host, includeEvents);
 
+  // A stale failure notice describing a URL that no longer matches the
+  // current selection is worse than no notice (#2580 review finding 5) —
+  // team/side/includeEvents changes all flow through `webcalUrl`, so tracking
+  // that one value clears it on any of them rather than four separate reset
+  // calls scattered across `removeTeam`/`addTeam`/`setSide`/the switch
+  // handler. Adjusted during render (mirrors `SearchInterface`'s URL-param
+  // sync) rather than in a `useEffect`, so there's no extra render/flash.
+  const [trackedWebcalUrl, setTrackedWebcalUrl] = useState(webcalUrl);
+  if (trackedWebcalUrl !== webcalUrl) {
+    setTrackedWebcalUrl(webcalUrl);
+    setCopyFailed(false);
+  }
+
   function removeTeam(teamId: string) {
     setSelectedTeamIds((prev) => {
       const next = new Set(prev);
@@ -245,16 +258,23 @@ export function CalendarSubscribePanel({
               above is its own retry, and the QR stub already carries the
               same URL — so nothing here is a control the visitor lost, only
               a fact worth telling them: the click didn't put it on their
-              clipboard. */}
+              clipboard. Direction-neutral copy ("om te abonneren", not
+              "hiernaast"/"hierboven"): the stub sits beside the body at
+              `sm+` but stacks above it below `sm` (#2580 review finding 4),
+              so a side-relative word is wrong on one of the two layouts.
+              `live="assertive"` (role="alert"): the visitor just pressed
+              "Kopieer link", so this answers a click, the same immediate-
+              announcement class as the search/submit failures elsewhere in
+              this ticket (#2580 review finding 3). */}
           {copyFailed && (
             <EmptyState
               tier="slot"
               reason="unavailable"
-              live
+              live="assertive"
               emphasis={{ text: "mislukt" }}
               className="mt-3"
             >
-              Kopiëren mislukt. Scan de QR-code hiernaast.
+              Kopiëren mislukt. Scan de QR-code om te abonneren.
             </EmptyState>
           )}
         </div>

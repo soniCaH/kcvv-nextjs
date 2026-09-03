@@ -87,6 +87,6 @@ export const CopyFailed: Story = {
     await userEvent.click(
       canvas.getByRole("button", { name: /Kopieer link/i }),
     );
-    await canvas.findByRole("status");
+    await canvas.findByRole("alert");
   },
 };
