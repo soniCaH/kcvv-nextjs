@@ -53,7 +53,7 @@ interface MembershipFormProps {
 // territory). "transport-error" is the one client-initiated failure this
 // ticket adds a notice for. Splitting the old bare "error" member this way
 // makes the two outcomes mutually exclusive by construction — no separate
-// boolean needed alongside it (#2580 review finding A2).
+// boolean needed alongside it.
 type SubmitState =
   "idle" | "submitting" | "success" | "invalid" | "transport-error";
 
@@ -201,9 +201,9 @@ export function MembershipForm({
         return;
       }
 
-      // `data.error` is authored Dutch copy from the BFF/route handler
-      // (#2580 review finding 1) — never a raw caught error — so it must
-      // survive; the fallback only covers a body with no `error` at all.
+      // `data.error` is authored Dutch copy from the BFF/route handler —
+      // never a raw caught error — so it must survive; the fallback only
+      // covers a body with no `error` at all.
       if (response.status === 400 && data.fields) {
         setFieldErrors(data.fields);
       }

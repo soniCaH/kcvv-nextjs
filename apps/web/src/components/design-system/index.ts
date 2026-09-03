@@ -37,8 +37,8 @@ export type { TextareaCounterProps } from "./TextareaCounter";
 export { Select } from "./Select";
 export type { SelectProps, SelectSize } from "./Select";
 
-// AlertBadge — `Alert` itself is not re-exported (#2580 review finding E2);
-// see Alert/index.ts's own comment.
+// AlertBadge — `Alert` itself is not re-exported (#2580); see Alert/index.ts's
+// own comment.
 export { AlertBadge } from "./Alert";
 export type {
   AlertBadgeProps,

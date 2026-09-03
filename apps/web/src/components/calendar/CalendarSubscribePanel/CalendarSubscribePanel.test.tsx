@@ -231,7 +231,7 @@ describe("CalendarSubscribePanel", () => {
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });
 
-    it("clears the failure notice when the team selection changes (#2580 review finding 5)", async () => {
+    it("clears the failure notice when the team selection changes", async () => {
       vi.spyOn(console, "error").mockImplementation(() => {});
       mockWriteText.mockRejectedValueOnce(new Error("denied"));
 

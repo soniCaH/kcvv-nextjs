@@ -119,7 +119,7 @@ describe("MembershipForm", () => {
     it("shows the server's own error, which is authored Dutch copy, not a raw caught error", async () => {
       // e.g. apps/api/src/handlers/forms.ts's stale-Turnstile message — this
       // instruction ("refresh the page") is the one that actually resolves
-      // the failure, so it must survive (#2580 review finding 1).
+      // the failure, so it must survive.
       vi.stubGlobal(
         "fetch",
         vi.fn(() =>
@@ -170,7 +170,7 @@ describe("MembershipForm", () => {
     });
   });
 
-  describe("stale notice cleared on resubmit (#2580 review finding 2)", () => {
+  describe("stale notice cleared on resubmit", () => {
     it("clears a prior transport-failure notice when a client-validation error blocks resubmit", async () => {
       const fetchMock = vi.fn(() => Promise.reject(new Error("offline")));
       vi.stubGlobal("fetch", fetchMock);

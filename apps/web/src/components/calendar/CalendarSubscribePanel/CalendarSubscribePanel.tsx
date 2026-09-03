@@ -66,8 +66,7 @@ export function CalendarSubscribePanel({
   // The URL a failed copy described — not a boolean. Comparing it against the
   // CURRENT `webcalUrl` below makes a stale notice impossible by
   // construction: change any selection (team/side/includeEvents) and the
-  // comparison itself goes false, so there is nothing to reset by hand
-  // (#2580 review finding A1).
+  // comparison itself goes false, so there is nothing to reset by hand.
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   const host =
@@ -250,7 +249,7 @@ export function CalendarSubscribePanel({
               above is its own retry, and the QR stub already carries the
               same URL. Direction-neutral copy ("om te abonneren", not
               "hiernaast"/"hierboven"): the stub sits beside the body at
-              `sm+` but stacks above it below `sm` (#2580 review finding 4). */}
+              `sm+` but stacks above it below `sm`. */}
           {failedUrl === webcalUrl && (
             <EmptyState
               tier="slot"

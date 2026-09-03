@@ -34,9 +34,9 @@
  * 2.A.5, 2026-04-30) is a design-system call, not a consistency ticket's —
  * and stays live via this file's own stories/tests, which import it directly
  * rather than through the barrel (dropped from both `Alert/index.ts` and
- * `design-system/index.ts` — review finding E2, so a component nothing
- * renders no longer ships in every route's shared chunk). `<AlertBadge>`,
- * the sibling inline form in this same folder, is unaffected, stays
+ * `design-system/index.ts`, so a component nothing renders no longer ships
+ * in every route's shared chunk). `<AlertBadge>`, the sibling inline form
+ * in this same folder, is unaffected, stays
  * barrel-exported, and stays in active use at three form-field sites.
  */
 

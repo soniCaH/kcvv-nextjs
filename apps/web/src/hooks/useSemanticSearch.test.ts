@@ -1,10 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useSemanticSearch } from "./useSemanticSearch";
 
 describe("useSemanticSearch", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
+  });
+
+  // Global config has no restoreMocks/clearMocks (apps/web/vitest.config.ts),
+  // so a console spy left un-restored on a failed assertion would otherwise
+  // leak into every later test in this file, not just this one.
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("returns empty results initially", () => {
@@ -46,9 +53,8 @@ describe("useSemanticSearch", () => {
   it("sets error when fetch fails, warns (not errors) on the console, and never stores the message", async () => {
     // console.warn, not console.error: both consumers (HubSearch's keyword
     // fallback, useSemanticAugment's silent degrade) treat this as routine
-    // degradation, not a real error (#2580 review finding 6) — a missing
-    // KCVV_API_URL 503s this endpoint on every debounced keystroke in local
-    // dev and preview.
+    // degradation, not a real error — a missing KCVV_API_URL 503s this
+    // endpoint on every debounced keystroke in local dev and preview.
     const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const consoleError = vi
       .spyOn(console, "error")
@@ -75,8 +81,6 @@ describe("useSemanticSearch", () => {
       networkError,
     );
     expect(consoleError).not.toHaveBeenCalled();
-    consoleWarn.mockRestore();
-    consoleError.mockRestore();
   });
 
   it("exposes answer from response", async () => {

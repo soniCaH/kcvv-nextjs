@@ -182,23 +182,22 @@ interface EmptyStateSharedProps {
    * Renders a live region so assistive tech announces a client-side change.
    * `true` — `role="status"` (polite): a filter emptying the surface, or a
    * slot going empty after a client change nobody needs alarmed about.
-   * `"assertive"` — `role="alert"` + `aria-live="assertive"` (#2580 review
-   * finding 3): a failure answering an action the visitor just took (a
-   * submit, a search) needs an immediate announcement, the same urgency
-   * `<Alert variant="error">` and a bare `role="alert" aria-live="assertive"`
-   * paragraph already carried before this primitive replaced them. Omit for
-   * an empty state already present on first render.
+   * `"assertive"` — `role="alert"` + `aria-live="assertive"`: a failure
+   * answering an action the visitor just took (a submit, a search) needs an
+   * immediate announcement, the same urgency `<Alert variant="error">` and a
+   * bare `role="alert" aria-live="assertive"` paragraph already carried
+   * before this primitive replaced them. Omit for an empty state already
+   * present on first render.
    *
    * At tier "slot"'s failure-notice member (`reason: "unavailable"`), `true`
    * is upgraded to `"assertive"` automatically — that member is *always* a
    * failure, so the discriminant is `reason`, not "did the visitor click
-   * something" (#2580 review finding B1: six existing filter-click call
-   * sites are visitor-initiated yet correctly polite — the actual 1:1
-   * correlation across all 24 call sites is failure vs. emptiness, not
-   * who triggered it). Pass `"assertive"` explicitly only where the tier has
-   * no failure discriminant to derive it from (tier "surface" — see
-   * `SearchInterface`'s "Zoeken mislukt", and follow-up issue for widening
-   * tier "surface" to carry one).
+   * something" (measured across all 24 `<EmptyState>` call sites in the app:
+   * several filter-click sites are visitor-initiated yet correctly polite —
+   * the 1:1 correlation is failure vs. emptiness, not who triggered it).
+   * Pass `"assertive"` explicitly only where the tier has no failure
+   * discriminant to derive it from (tier "surface" — see `SearchInterface`'s
+   * "Zoeken mislukt"; #2815 tracks widening tier "surface" to carry one).
    */
   live?: boolean | "assertive";
   className?: string;
@@ -314,10 +313,9 @@ export type EmptyStateSlotProps =
 
 export type EmptyStateProps = EmptyStateSurfaceProps | EmptyStateSlotProps;
 
-/** `live` → the ARIA live-region attributes shared by all three renderers
- *  (#2580 review finding 3) — one place to keep `"assertive"`'s `role="alert"`
- *  + `aria-live="assertive"` pair in sync with plain `true`'s `role="status"`
- *  (implicitly polite). */
+/** `live` → the ARIA live-region attributes shared by all three renderers —
+ *  one place to keep `"assertive"`'s `role="alert"` + `aria-live="assertive"`
+ *  pair in sync with plain `true`'s `role="status"` (implicitly polite). */
 function liveRegionProps(live: boolean | "assertive" | undefined): {
   role?: "alert" | "status";
   "aria-live"?: "assertive";
@@ -373,8 +371,7 @@ function SlotNoticeEmptyState({
     <p
       // This member is always a failure (`reason: "unavailable"` is its own
       // discriminant), so any truthy `live` upgrades to assertive here —
-      // the caller no longer spells out "assertive" at each of these two
-      // call sites (#2580 review finding B1).
+      // the caller no longer spells out "assertive" at each call site.
       {...liveRegionProps(live ? "assertive" : undefined)}
       className={cn(
         "border-ink/30 text-ink-soft text-body-md border-2 border-dashed px-6 py-8 text-center",

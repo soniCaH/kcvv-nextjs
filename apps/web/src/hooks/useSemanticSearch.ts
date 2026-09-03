@@ -28,9 +28,9 @@ export interface UseSemanticSearchReturn {
    * they only branch on presence/absence — so storing `err.message` was a
    * dead field carrying a raw technical string nobody read (#2580). The
    * caught error itself goes to `console.warn` only — both consumers treat
-   * this as routine, silent degradation (#2580 review finding 6: a missing
-   * `KCVV_API_URL` in local/preview makes `/api/search` 503 on every
-   * debounced keystroke, which is normal there, not an error).
+   * this as routine, silent degradation: a missing `KCVV_API_URL` in
+   * local/preview makes `/api/search` 503 on every debounced keystroke,
+   * which is normal there, not an error.
    */
   error: boolean;
   /**
