@@ -243,4 +243,74 @@ test.describe("scroll arrow — mounts only on real overflow at that width", () 
       }
     }
   });
+
+  test("organigram explorer stage — no arrow at A, an arrow once zoomed to A+/A++ overflows it", async ({
+    page,
+  }) => {
+    // Review finding #2577 part 6: the stage's zoom control applies a CSS
+    // `transform: scale()` to its tree, which never changes the stage's own
+    // border box — #2489's "cannot overflow horizontally at any width" was
+    // measured at scale 1 (button "A") only. At a narrow-enough viewport,
+    // zooming to A+ or A++ should overflow it and mount the arrow; "A"
+    // itself should not.
+    await page.setViewportSize({ width: 1024, height: 800 });
+    await page.goto("/hulp");
+
+    // The organigram section renders collapsed on /hulp
+    // (`<OrganigramOverview collapsible>`) — expand it first.
+    const expandTrigger = page.getByRole("button", {
+      name: /bekijk het volledige organigram/i,
+    });
+    if ((await expandTrigger.count()) === 0) {
+      test.skip(true, "no organigram section on /hulp today");
+      return;
+    }
+    await expandTrigger.click();
+
+    const openTrigger = page.getByRole("button", {
+      name: /blader door het organigram/i,
+    });
+    if ((await openTrigger.count()) === 0) {
+      test.skip(true, "no organigram explorer trigger on /hulp today");
+      return;
+    }
+    await openTrigger.click();
+
+    const dialog = page.getByTestId("organigram-explorer");
+    await expect(dialog).toBeVisible();
+
+    const stage = dialog.locator('[aria-label="Organigram-verkenner"]');
+    await expect(stage).toHaveCount(1);
+    // The arrows are the stage's own siblings inside ScrollOverlay's outer
+    // `relative` wrapper, not its descendants (same shape as ScrollRail —
+    // see the FilterTabs/HorizontalSlider cases above).
+    const stageWrapper = stage.locator("..");
+
+    // "A" (scaleStep 0) is the default on open — assert its own invariant
+    // first rather than assuming it never overflows.
+    const readOverflow = async () => {
+      const { scrollWidth, clientWidth } = await stage.evaluate((el) => ({
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+      }));
+      return scrollWidth - clientWidth > 10;
+    };
+
+    if (await readOverflow()) {
+      await expect(stageWrapper.getByLabel("Scroll right")).toBeVisible();
+    } else {
+      await expect(stageWrapper.getByLabel("Scroll right")).toHaveCount(0);
+    }
+
+    // Zoom to A++ — the transform grows the tree well past a 1024px stage.
+    await dialog.getByRole("button", { name: "A++", exact: true }).click();
+    // The zoom transition (`transition-transform duration-300`) must
+    // settle before scrollWidth reflects the target scale — useScrollHint's
+    // `transitionend` listener is what re-checks after it does, so wait
+    // past the transition rather than asserting immediately.
+    await page.waitForTimeout(500);
+
+    expect(await readOverflow()).toBe(true);
+    await expect(stageWrapper.getByLabel("Scroll right")).toBeVisible();
+  });
 });
