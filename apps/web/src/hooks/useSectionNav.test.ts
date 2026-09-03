@@ -4,17 +4,15 @@
  * The one shared hook behind every sticky in-page section nav (#2478 rules 3
  * and 7): scroll-spy active state, plus `scroll-padding-top` on `<html>`
  * derived at runtime from the header's height plus the bar's own measured
- * height — never a hand-written `scroll-mt-*` typed per section.
- *
- * Also covers the #2584 review fixes: the bar's own DOM node can change
- * (finding 3), the scroll-spy must rebuild when the bar resizes (finding 5),
- * and a hash navigation gets a corrective re-scroll while "armed" (findings
- * 1 and 4).
+ * height — never a hand-written `scroll-mt-*` typed per section. Also
+ * covers the scroll-spy rebuilding when the bar resizes, and the
+ * composition with `useHashLandingCorrection` (its own logic is tested in
+ * `useHashLandingCorrection.test.ts`; this file only proves the wiring).
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, act } from "@testing-library/react";
-import { createElement, useEffect, useState } from "react";
+import { createElement, useEffect } from "react";
 import {
   useSectionNav,
   getStickyHeaderHeight,
@@ -102,43 +100,23 @@ function mockHeight(el: Element, height: number) {
   });
 }
 
+// `useSectionNav` is contracted to be mounted only from a component that
+// renders its `<nav>` unconditionally whenever mounted at all (the ≤1
+// section check lives one level up, in `<TeamSectionNav>` — see its own
+// docblock) — so this host always renders the bar, matching every real
+// caller.
 function TestHost({
   ids,
-  showNav,
   onHook,
 }: {
   ids: readonly string[];
-  showNav: boolean;
   onHook: (h: UseSectionNavResult) => void;
 }) {
   const hook = useSectionNav(ids);
   useEffect(() => {
     onHook(hook);
   });
-  if (!showNav) return null;
   return createElement("nav", { ref: hook.navRef, "data-testid": "nav" }, null);
-}
-
-/** Wraps `TestHost` with its own `showNav` state so a test can toggle the
- *  bar's DOM node off and back on (simulating a client-side team→team
- *  navigation that flips a team between ≤1 section and several) without
- *  unmounting the host — the same shape React's own reconciliation takes
- *  when a component's return value flips between `null` and an element. */
-function TestHostToggle({
-  ids,
-  onHook,
-  onToggle,
-}: {
-  ids: readonly string[];
-  onHook: (h: UseSectionNavResult) => void;
-  onToggle: (toggle: () => void) => void;
-}) {
-  const [showNav, setShowNav] = useState(true);
-  useEffect(() => {
-    onToggle(() => setShowNav((v) => !v));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return createElement(TestHost, { ids, showNav, onHook });
 }
 
 function renderHook(ids: readonly string[]) {
@@ -146,7 +124,6 @@ function renderHook(ids: readonly string[]) {
   const utils = render(
     createElement(TestHost, {
       ids,
-      showNav: true,
       onHook: (h) => {
         result = h;
       },
@@ -267,51 +244,21 @@ describe("useSectionNav", () => {
   });
 
   describe("getStickyHeaderHeight", () => {
-    it("falls back to 65 when the CSS custom property can't be read (no stylesheet under vitest)", () => {
+    afterEach(() => {
+      document.documentElement.style.removeProperty("--sticky-header-h");
+    });
+
+    it("reads the --sticky-header-h custom property when one is set", () => {
+      document.documentElement.style.setProperty("--sticky-header-h", "80px");
+      expect(getStickyHeaderHeight()).toBe(80);
+    });
+
+    it("falls back to 65 when the custom property can't be read (no stylesheet under vitest)", () => {
       expect(getStickyHeaderHeight()).toBe(65);
     });
   });
 
-  describe("the bar's own DOM node changing (#2584 review finding 3)", () => {
-    it("resets the offset when the nav unmounts, and re-attaches a fresh watcher on the new node once it remounts", () => {
-      // ids intentionally empty — this test is about the nav's own DOM node
-      // (a team's <nav> can unmount at ≤1 section and remount for a
-      // different team, all without the *component* itself ever
-      // unmounting), not the section-target spy.
-      let toggle: (() => void) | undefined;
-      render(
-        createElement(TestHostToggle, {
-          ids: [],
-          onHook: () => {},
-          onToggle: (fn) => {
-            toggle = fn;
-          },
-        }),
-      );
-
-      expect(document.documentElement.style.scrollPaddingTop).toBe(
-        "calc(var(--sticky-header-h) + 0px)",
-      );
-      expect(resizeObservers.length).toBe(1);
-
-      // Team A → a team with ≤1 section: the component keeps its hook state
-      // (same fiber) but stops rendering the <nav> entirely. A `[]`-deps
-      // effect closing over the first node would never notice this and
-      // would leave scroll-padding-top stuck at team A's bar height.
-      act(() => toggle!());
-      expect(document.documentElement.style.scrollPaddingTop).toBe("");
-
-      // → a further team that has a nav again: a brand-new <nav> DOM node.
-      // A fresh watcher must attach to it — not the first, now-detached one.
-      act(() => toggle!());
-      expect(resizeObservers.length).toBe(2);
-      expect(document.documentElement.style.scrollPaddingTop).toBe(
-        "calc(var(--sticky-header-h) + 0px)",
-      );
-    });
-  });
-
-  describe("scroll-spy rebuilds when the bar resizes (#2584 review finding 5)", () => {
+  describe("scroll-spy rebuilds when the bar resizes", () => {
     it("disconnects the stale observer and builds a new one with the grown offset", () => {
       const target = document.createElement("div");
       target.id = "spelers";
@@ -336,7 +283,7 @@ describe("useSectionNav", () => {
     });
   });
 
-  describe("hash-landing correction wiring (#2584 review findings 1 and 4)", () => {
+  describe("hash-landing correction wiring", () => {
     // The correction logic itself (arming, the armed window, the cold-load
     // and webfont-swap triggers) is `useHashLandingCorrection`'s own
     // responsibility and is tested there — this just proves the composition:

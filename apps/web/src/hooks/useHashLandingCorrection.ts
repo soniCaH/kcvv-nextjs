@@ -19,20 +19,17 @@ export interface UseHashLandingCorrectionResult {
  * Corrects a hash navigation's landing spot when something above the target
  * changes size *after* the browser already computed its scroll target —
  * `scrollIntoView`/native fragment navigation compute a target once and
- * never retarget an in-flight or already-settled scroll (#2584 review
- * findings 1 and 4). Two triggers, both scoped to a short "armed" window
- * after a real hash navigation (never indefinitely, so a reader who has
- * since scrolled elsewhere is never snapped back):
+ * never retarget an in-flight or already-settled scroll. Two triggers,
+ * both scoped to a short "armed" window after a real hash navigation
+ * (never indefinitely, so a reader who has since scrolled elsewhere is
+ * never snapped back):
  *
- * - **`notifyLayoutChange()`**, called by a consumer that owns geometry of
- *   its own (`useSectionNav`'s sticky bar resizing, e.g. `<HubSearch>`
- *   mounting once the hero scrolls out of view).
- * - **A late webfont swap**, via the `FontFaceSet` `loadingdone` event. The
- *   Freight families load async via Adobe Typekit (`globals.css`'s own
- *   comment on this); a swap reflows whatever text sits above the target,
- *   which can shift it even on a route with no sticky bar at all — measured
- *   on `/jeugd#visie`, which has no section nav to notify a resize in the
- *   first place.
+ * - **`notifyLayoutChange()`**, called by a consumer with its own geometry
+ *   (`useSectionNav`'s sticky bar resizing, e.g. `<HubSearch>` mounting
+ *   once the hero scrolls out of view).
+ * - **A late webfont swap**, via the `FontFaceSet` `loadingdone` event —
+ *   see the note above `useEffect` below for why `fonts.ready` isn't used
+ *   instead. Matters even on a route with no bar at all (`/jeugd#visie`).
  *
  * `<useSectionNav>` composes this for its own bar-resize case;
  * `<JeugdVisie>` (no bar, no nav) uses it directly for the webfont case.
