@@ -460,7 +460,7 @@ describe("FilterTabs", () => {
       expect(HTMLElement.prototype.scrollTo).toHaveBeenCalled();
     });
 
-    it("should hide right arrow when scrolled to end", () => {
+    it("disables the right arrow in place when scrolled to end, rather than unmounting it", () => {
       const { container } = render(
         <FilterTabs tabs={mockTabs} activeTab="all" />,
       );
@@ -469,6 +469,8 @@ describe("FilterTabs", () => {
         '[role="group"]',
       ) as HTMLElement;
 
+      // Still overflows overall (scrollWidth 200 > clientWidth 100) — only
+      // the right direction is spent.
       Object.defineProperty(scrollContainer, "scrollLeft", { value: 100 });
       Object.defineProperty(scrollContainer, "scrollWidth", { value: 200 });
       Object.defineProperty(scrollContainer, "clientWidth", { value: 100 });
@@ -477,7 +479,60 @@ describe("FilterTabs", () => {
         scrollContainer.dispatchEvent(new Event("scroll"));
       });
 
+      const rightArrow = screen.getByLabelText("Scroll right");
+      expect(rightArrow).toBeInTheDocument();
+      expect(rightArrow).toBeDisabled();
+      expect(screen.getByLabelText("Scroll left")).toBeEnabled();
+    });
+
+    it("does not mount either arrow when the row does not overflow", () => {
+      // Override this describe's own overflowing default (1000/500) so the
+      // track fits exactly.
+      Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+        configurable: true,
+        value: 400,
+      });
+      Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+        configurable: true,
+        value: 400,
+      });
+
+      render(<FilterTabs tabs={mockTabs} activeTab="all" />);
+
+      expect(screen.queryByLabelText("Scroll left")).not.toBeInTheDocument();
       expect(screen.queryByLabelText("Scroll right")).not.toBeInTheDocument();
+    });
+
+    it("reserves a 40px rail on both sides only while the row overflows", () => {
+      const { container } = render(
+        <FilterTabs tabs={mockTabs} activeTab="all" />,
+      );
+
+      const scrollContainer = container.querySelector(
+        '[role="group"]',
+      ) as HTMLElement;
+      expect(scrollContainer).toHaveClass("pl-10");
+      expect(scrollContainer).toHaveClass("pr-10");
+    });
+
+    it("renders the arrow at the control register (32 × 32, jersey-deep)", () => {
+      render(<FilterTabs tabs={mockTabs} activeTab="all" />);
+
+      const rightArrow = screen.getByLabelText("Scroll right");
+      expect(rightArrow).toHaveClass("h-8");
+      expect(rightArrow).toHaveClass("w-8");
+      expect(rightArrow).toHaveClass("bg-jersey-deep");
+    });
+
+    it("makes the scroll track keyboard-reachable (tabIndex=0)", () => {
+      const { container } = render(
+        <FilterTabs tabs={mockTabs} activeTab="all" />,
+      );
+
+      const scrollContainer = container.querySelector(
+        '[role="group"]',
+      ) as HTMLElement;
+      expect(scrollContainer.getAttribute("tabindex")).toBe("0");
     });
   });
 
@@ -513,6 +568,13 @@ describe("FilterTabs", () => {
     it("should be keyboard navigable", async () => {
       const user = userEvent.setup();
       render(<FilterTabs tabs={mockTabs} activeTab="all" />);
+
+      // The scroll region itself is now a tab stop (tabIndex=0, #2444/#2476's
+      // "every scroll track is keyboard-reachable") — a keyboard user can
+      // scroll it directly, e.g. with arrow keys, without stepping through
+      // every chip first. The first chip follows on the next Tab.
+      await user.tab();
+      expect(screen.getByRole("group")).toHaveFocus();
 
       await user.tab();
       const activeTab = screen.getByRole("button", { name: /all/i });

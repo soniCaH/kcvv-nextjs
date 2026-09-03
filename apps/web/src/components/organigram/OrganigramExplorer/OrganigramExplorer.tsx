@@ -23,6 +23,8 @@ import {
   Envelope,
   X,
 } from "@/lib/icons.redesign";
+import { ScrollRail } from "@/components/design-system/ScrollHint/ScrollRail";
+import { ScrollOverlay } from "@/components/design-system/ScrollHint/ScrollOverlay";
 import { SpotlightNodeCard } from "./SpotlightNodeCard";
 import {
   buildSpotlightTree,
@@ -320,10 +322,19 @@ export function OrganigramExplorer({
         </button>
       </div>
 
-      {/* Breadcrumb — the reporting line */}
-      <nav
-        aria-label="Rapporteringslijn"
-        className="border-cream/10 text-cream/75 flex items-center gap-1 overflow-x-auto border-b px-4 py-2 font-mono text-[11px]"
+      {/* Breadcrumb — the reporting line. <ScrollRail>'s "row of discrete
+          things" idiom (crumbs) — held space follows real overflow (#2444,
+          as amended by #2489). Sits on an ink panel, so the arrow takes the
+          same soft-shadow override `<HorizontalSlider>`'s paper arrows use
+          on an ink panel — the hard `--shadow-paper-sm` is invisible
+          against a dark ground (DESIGN.md). */}
+      <ScrollRail
+        as="nav"
+        className="border-cream/10 border-b"
+        ariaLabel="Rapporteringslijn"
+        trackClassName="text-cream/75 flex items-center gap-1 px-4 py-2 font-mono text-[11px]"
+        arrowClassName="shadow-[var(--shadow-paper-sm-soft)] hover:shadow-[3px_3px_0_0_var(--color-ink-muted)]"
+        fadeFromClassName="from-jersey-deep-dark"
       >
         {view.trail.map((node, i) => {
           const isLast = i === view.trail.length - 1;
@@ -349,10 +360,17 @@ export function OrganigramExplorer({
             </span>
           );
         })}
-      </nav>
+      </ScrollRail>
 
       {/* Stage */}
-      <div className="relative flex-1 overflow-auto px-4 py-6">
+      <ScrollOverlay
+        direction="both"
+        remeasureOn={[scaleStep]}
+        overflowClassName="overflow-auto"
+        trackClassName="flex-1 px-4 py-6"
+        fadeFromClassName="from-jersey-deep-dark"
+        ariaLabel="Organigram-verkenner"
+      >
         <div
           role="tree"
           aria-label="Organisatiestructuur"
@@ -550,7 +568,7 @@ export function OrganigramExplorer({
             )}
           </div>
         </div>
-      </div>
+      </ScrollOverlay>
 
       {/* Polite live region — a brief breadcrumb-path re-orientation on each
           re-centre. The full node detail is announced by the centre treeitem's

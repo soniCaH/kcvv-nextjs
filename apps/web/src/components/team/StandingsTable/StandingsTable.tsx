@@ -1,6 +1,7 @@
 import { Crest, MonoLabel } from "@/components/design-system";
 import { isNumberlessTable } from "@/lib/utils/competitive-block-state";
 import { cn } from "@/lib/utils/cn";
+import { ScrollOverlay } from "@/components/design-system/ScrollHint/ScrollOverlay";
 import type { RankingEntry } from "@kcvv/api-contract";
 
 export interface StandingsTableProps {
@@ -118,131 +119,132 @@ export function StandingsTable({
   }
 
   return (
-    <div
-      data-testid="standings-table"
-      className="w-full overflow-x-auto"
-      role="region"
-      aria-label={caption ?? "Klassement"}
-    >
-      <table className="w-full border-collapse font-mono text-xs">
-        {caption ? (
-          <caption className="pb-2 text-left">
-            <MonoLabel>{caption}</MonoLabel>
-          </caption>
-        ) : null}
-        <thead>
-          <tr className="border-ink border-b-2">
-            <th
-              scope="col"
-              className="text-ink-muted py-2 pr-2 pl-4 text-left tracking-wider uppercase"
-            >
-              #
-            </th>
-            <th
-              scope="col"
-              className="text-ink-muted py-2 pr-3 text-left tracking-wider uppercase"
-            >
-              Ploeg
-            </th>
-            <th
-              scope="col"
-              className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
-            >
-              M
-            </th>
-            {/* W/G/V hidden on mobile */}
-            <th
-              scope="col"
-              className="text-ink-muted hidden py-2 pr-2 text-right tracking-wider uppercase sm:table-cell"
-            >
-              W
-            </th>
-            <th
-              scope="col"
-              className="text-ink-muted hidden py-2 pr-2 text-right tracking-wider uppercase sm:table-cell"
-            >
-              G
-            </th>
-            <th
-              scope="col"
-              className="text-ink-muted hidden py-2 pr-2 text-right tracking-wider uppercase sm:table-cell"
-            >
-              V
-            </th>
-            <th
-              scope="col"
-              className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
-            >
-              +/-
-            </th>
-            <th
-              scope="col"
-              className="text-ink-muted py-2 pr-4 text-right tracking-wider uppercase"
-            >
-              Ptn
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry) => {
-            const isKcvv = entry.team_id === highlightTeamId;
-            return (
-              <tr
-                key={entry.team_id}
-                data-testid={isKcvv ? "standings-kcvv-row" : undefined}
-                className={cn(
-                  "border-b border-[color:var(--color-paper-edge)]",
-                  isKcvv && KCVV_HIGHLIGHT_CLASS,
-                )}
+    <div data-testid="standings-table" className="w-full">
+      <ScrollOverlay
+        role="region"
+        ariaLabel={caption ?? "Klassement"}
+        direction="right"
+      >
+        <table className="w-full border-collapse font-mono text-xs">
+          {caption ? (
+            <caption className="pb-2 text-left">
+              <MonoLabel>{caption}</MonoLabel>
+            </caption>
+          ) : null}
+          <thead>
+            <tr className="border-ink border-b-2">
+              <th
+                scope="col"
+                className="text-ink-muted py-2 pr-2 pl-4 text-left tracking-wider uppercase"
               >
-                {/* Position */}
-                <td className="text-ink-muted py-2 pr-2 pl-4 tabular-nums">
-                  {entry.position}
-                </td>
+                #
+              </th>
+              <th
+                scope="col"
+                className="text-ink-muted py-2 pr-3 text-left tracking-wider uppercase"
+              >
+                Ploeg
+              </th>
+              <th
+                scope="col"
+                className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
+              >
+                M
+              </th>
+              {/* W/G/V hidden on mobile */}
+              <th
+                scope="col"
+                className="text-ink-muted hidden py-2 pr-2 text-right tracking-wider uppercase sm:table-cell"
+              >
+                W
+              </th>
+              <th
+                scope="col"
+                className="text-ink-muted hidden py-2 pr-2 text-right tracking-wider uppercase sm:table-cell"
+              >
+                G
+              </th>
+              <th
+                scope="col"
+                className="text-ink-muted hidden py-2 pr-2 text-right tracking-wider uppercase sm:table-cell"
+              >
+                V
+              </th>
+              <th
+                scope="col"
+                className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
+              >
+                +/-
+              </th>
+              <th
+                scope="col"
+                className="text-ink-muted py-2 pr-4 text-right tracking-wider uppercase"
+              >
+                Ptn
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map((entry) => {
+              const isKcvv = entry.team_id === highlightTeamId;
+              return (
+                <tr
+                  key={entry.team_id}
+                  data-testid={isKcvv ? "standings-kcvv-row" : undefined}
+                  className={cn(
+                    "border-b border-[color:var(--color-paper-edge)]",
+                    isKcvv && KCVV_HIGHLIGHT_CLASS,
+                  )}
+                >
+                  {/* Position */}
+                  <td className="text-ink-muted py-2 pr-2 pl-4 tabular-nums">
+                    {entry.position}
+                  </td>
 
-                {/* Team name + crest */}
-                <td className="py-2 pr-3">
-                  <span className="flex items-center gap-1.5">
-                    <ClubIdentity
-                      teamName={entry.team_name}
-                      teamLogo={entry.team_logo}
-                      isKcvv={isKcvv}
-                    />
-                  </span>
-                </td>
+                  {/* Team name + crest */}
+                  <td className="py-2 pr-3">
+                    <span className="flex items-center gap-1.5">
+                      <ClubIdentity
+                        teamName={entry.team_name}
+                        teamLogo={entry.team_logo}
+                        isKcvv={isKcvv}
+                      />
+                    </span>
+                  </td>
 
-                {/* M */}
-                <td className="text-ink py-2 pr-2 text-right tabular-nums">
-                  {entry.played}
-                </td>
+                  {/* M */}
+                  <td className="text-ink py-2 pr-2 text-right tabular-nums">
+                    {entry.played}
+                  </td>
 
-                {/* W/G/V — hidden on mobile */}
-                <td className="text-ink hidden py-2 pr-2 text-right tabular-nums sm:table-cell">
-                  {entry.won}
-                </td>
-                <td className="text-ink hidden py-2 pr-2 text-right tabular-nums sm:table-cell">
-                  {entry.drawn}
-                </td>
-                <td className="text-ink hidden py-2 pr-2 text-right tabular-nums sm:table-cell">
-                  {entry.lost}
-                </td>
+                  {/* W/G/V — hidden on mobile */}
+                  <td className="text-ink hidden py-2 pr-2 text-right tabular-nums sm:table-cell">
+                    {entry.won}
+                  </td>
+                  <td className="text-ink hidden py-2 pr-2 text-right tabular-nums sm:table-cell">
+                    {entry.drawn}
+                  </td>
+                  <td className="text-ink hidden py-2 pr-2 text-right tabular-nums sm:table-cell">
+                    {entry.lost}
+                  </td>
 
-                {/* Goal difference */}
-                <td className="text-ink py-2 pr-2 text-right tabular-nums">
-                  {entry.goal_difference > 0
-                    ? `+${entry.goal_difference}`
-                    : entry.goal_difference}
-                </td>
+                  {/* Goal difference */}
+                  <td className="text-ink py-2 pr-2 text-right tabular-nums">
+                    {entry.goal_difference > 0
+                      ? `+${entry.goal_difference}`
+                      : entry.goal_difference}
+                  </td>
 
-                {/* Points — display-big black */}
-                <td className="font-display-big text-ink py-2 pr-4 text-right font-black tabular-nums">
-                  {entry.points}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  {/* Points — display-big black */}
+                  <td className="font-display-big text-ink py-2 pr-4 text-right font-black tabular-nums">
+                    {entry.points}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </ScrollOverlay>
     </div>
   );
 }

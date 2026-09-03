@@ -2,9 +2,10 @@
  * HorizontalSlider Component Tests
  *
  * Direction D ("Paper chrome, ink emphasis") locked at the Phase 2 Track B
- * design checkpoint (2026-04-30). Arrows are now `<ScrollArrowButton>`
- * paper buttons; tests assert the new contract — incl. the `theme="dark"`
- * shadow override.
+ * design checkpoint (2026-04-30). Arrows are `<ScrollArrowButton
+ * register="paper">` — the card slider's own register (#2444, as amended
+ * by #2489). `title`/`theme` were deleted (#2444 resolution) — neither had
+ * a consumer.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -72,28 +73,6 @@ describe("HorizontalSlider", () => {
       expect(screen.getByTestId("child-2")).toBeInTheDocument();
     });
 
-    it("should render title when provided", () => {
-      render(
-        <HorizontalSlider title="Section Title">
-          <div>Item</div>
-        </HorizontalSlider>,
-      );
-
-      expect(
-        screen.getByRole("heading", { name: "Section Title" }),
-      ).toBeInTheDocument();
-    });
-
-    it("should not render title when not provided", () => {
-      render(
-        <HorizontalSlider>
-          <div>Item</div>
-        </HorizontalSlider>,
-      );
-
-      expect(screen.queryByRole("heading")).not.toBeInTheDocument();
-    });
-
     it("should accept custom className", () => {
       const { container } = render(
         <HorizontalSlider className="custom-class">
@@ -117,31 +96,79 @@ describe("HorizontalSlider", () => {
       expect(scrollContainer.style.scrollbarWidth).toBe("none");
     });
 
-    it('annotates the wrapper with data-slider-theme="dark" for the dark theme', () => {
-      const { container } = render(
-        <HorizontalSlider theme="dark">
-          <div>Item</div>
-        </HorizontalSlider>,
-      );
-
-      expect(container.firstChild).toHaveAttribute("data-slider-theme", "dark");
-    });
-
-    it('annotates the wrapper with data-slider-theme="light" by default', () => {
+    it("makes the scroll track keyboard-reachable (tabIndex=0)", () => {
       const { container } = render(
         <HorizontalSlider>
           <div>Item</div>
         </HorizontalSlider>,
       );
 
-      expect(container.firstChild).toHaveAttribute(
-        "data-slider-theme",
-        "light",
+      const scrollContainer = container.querySelector(
+        "[data-slot='scroll-track']",
+      ) as HTMLElement;
+      expect(scrollContainer.getAttribute("tabindex")).toBe("0");
+    });
+
+    it("names the scroll track with a default accessible name", () => {
+      const { container } = render(
+        <HorizontalSlider>
+          <div>Item</div>
+        </HorizontalSlider>,
       );
+
+      const scrollContainer = container.querySelector(
+        "[data-slot='scroll-track']",
+      ) as HTMLElement;
+      expect(scrollContainer.getAttribute("role")).toBe("group");
+      expect(scrollContainer.getAttribute("aria-label")).toBe(
+        "Scrollable cards",
+      );
+    });
+
+    it("accepts a caller-supplied accessible name", () => {
+      const { container } = render(
+        <HorizontalSlider ariaLabel="Gerelateerde artikelen">
+          <div>Item</div>
+        </HorizontalSlider>,
+      );
+
+      const scrollContainer = container.querySelector(
+        "[data-slot='scroll-track']",
+      ) as HTMLElement;
+      expect(scrollContainer.getAttribute("aria-label")).toBe(
+        "Gerelateerde artikelen",
+      );
+    });
+
+    it("defaults the track gap to gap-6 md:gap-8", () => {
+      const { container } = render(
+        <HorizontalSlider>
+          <div>Item</div>
+        </HorizontalSlider>,
+      );
+
+      const track = container.querySelector(
+        "[data-slot='scroll-track'] > div",
+      ) as HTMLElement;
+      expect(track).toHaveClass("gap-6");
+      expect(track).toHaveClass("md:gap-8");
+    });
+
+    it("merges trackClassName onto the inner track", () => {
+      const { container } = render(
+        <HorizontalSlider trackClassName="gap-3">
+          <div>Item</div>
+        </HorizontalSlider>,
+      );
+
+      const track = container.querySelector(
+        "[data-slot='scroll-track'] > div",
+      ) as HTMLElement;
+      expect(track).toHaveClass("gap-3");
     });
   });
 
-  describe("Scroll Arrows", () => {
+  describe("Scroll Arrows — paper register", () => {
     let restoreScrollDimensions: () => void;
 
     beforeEach(() => {
@@ -161,6 +188,31 @@ describe("HorizontalSlider", () => {
       );
 
       expect(screen.getByLabelText("Scroll right")).toBeInTheDocument();
+    });
+
+    it("renders the right arrow at 48 × 48 (paper register)", () => {
+      render(
+        <HorizontalSlider>
+          <div>Item 1</div>
+        </HorizontalSlider>,
+      );
+
+      const arrow = screen.getByLabelText("Scroll right");
+      expect(arrow).toHaveClass("h-12");
+      expect(arrow).toHaveClass("w-12");
+      expect(arrow).toHaveClass("bg-cream");
+    });
+
+    it("overhangs the right arrow at -16px", () => {
+      render(
+        <HorizontalSlider>
+          <div>Item 1</div>
+        </HorizontalSlider>,
+      );
+
+      expect(screen.getByLabelText("Scroll right").className).toContain(
+        "right-[-16px]",
+      );
     });
 
     it("should not show left arrow at initial position", () => {
@@ -193,6 +245,27 @@ describe("HorizontalSlider", () => {
       });
 
       expect(screen.getByLabelText("Scroll left")).toBeInTheDocument();
+    });
+
+    it("overhangs the left arrow at -16px", () => {
+      const { container } = render(
+        <HorizontalSlider>
+          <div>Item 1</div>
+          <div>Item 2</div>
+        </HorizontalSlider>,
+      );
+
+      const scrollContainer = container.querySelector(
+        "[data-slot='scroll-track']",
+      ) as HTMLElement;
+      Object.defineProperty(scrollContainer, "scrollLeft", { value: 100 });
+      act(() => {
+        scrollContainer.dispatchEvent(new Event("scroll"));
+      });
+
+      expect(screen.getByLabelText("Scroll left").className).toContain(
+        "left-[-16px]",
+      );
     });
 
     it("should hide right arrow when scrolled to end", () => {
@@ -230,8 +303,8 @@ describe("HorizontalSlider", () => {
       const scrollContainer = container.querySelector(
         "[data-slot='scroll-track']",
       ) as HTMLElement;
-      const scrollBySpy = vi.fn();
-      scrollContainer.scrollBy = scrollBySpy;
+      const scrollToSpy = vi.fn();
+      scrollContainer.scrollTo = scrollToSpy;
 
       Object.defineProperty(scrollContainer, "scrollLeft", { value: 200 });
       act(() => {
@@ -239,13 +312,13 @@ describe("HorizontalSlider", () => {
       });
 
       await user.click(screen.getByLabelText("Scroll left"));
-      expect(scrollBySpy).toHaveBeenCalledWith(
+      expect(scrollToSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           left: expect.any(Number),
           behavior: "smooth",
         }),
       );
-      expect(scrollBySpy.mock.calls[0][0].left).toBeLessThan(0);
+      expect(scrollToSpy.mock.calls[0][0].left).toBeLessThan(200);
     });
 
     it("should scroll right when right arrow is clicked", async () => {
@@ -260,77 +333,38 @@ describe("HorizontalSlider", () => {
       const scrollContainer = container.querySelector(
         "[data-slot='scroll-track']",
       ) as HTMLElement;
-      const scrollBySpy = vi.fn();
-      scrollContainer.scrollBy = scrollBySpy;
+      const scrollToSpy = vi.fn();
+      scrollContainer.scrollTo = scrollToSpy;
 
       await user.click(screen.getByLabelText("Scroll right"));
-      expect(scrollBySpy).toHaveBeenCalledWith(
+      expect(scrollToSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           left: expect.any(Number),
           behavior: "smooth",
         }),
       );
-      expect(scrollBySpy.mock.calls[0][0].left).toBeGreaterThan(0);
-    });
-  });
-
-  describe("Theme — paper-card arrows on both light and dark surfaces", () => {
-    let restoreScrollDimensions: () => void;
-
-    beforeEach(() => {
-      restoreScrollDimensions = mockScrollDimensions();
+      expect(scrollToSpy.mock.calls[0][0].left).toBeGreaterThan(0);
     });
 
-    afterEach(() => {
-      restoreScrollDimensions();
-    });
-
-    it("light theme uses the standard ink offset shadow on arrows", () => {
-      render(
+    it("scrolls by 0.8 × the track's clientWidth (proportional step)", async () => {
+      const user = userEvent.setup();
+      const { container } = render(
         <HorizontalSlider>
           <div>Item 1</div>
         </HorizontalSlider>,
       );
 
-      const rightArrow = screen.getByLabelText("Scroll right");
-      expect(rightArrow).toHaveClass("shadow-paper-sm");
-      expect(rightArrow.className).not.toContain("shadow-paper-sm-soft");
-    });
+      const scrollContainer = container.querySelector(
+        "[data-slot='scroll-track']",
+      ) as HTMLElement;
+      const scrollToSpy = vi.fn();
+      scrollContainer.scrollTo = scrollToSpy;
 
-    it("dark theme overrides the arrow shadow to the soft (ink-muted) sibling", () => {
-      render(
-        <HorizontalSlider theme="dark">
-          <div>Item 1</div>
-        </HorizontalSlider>,
-      );
-
-      const rightArrow = screen.getByLabelText("Scroll right");
-      expect(rightArrow).toHaveClass("shadow-paper-sm-soft");
-      expect(rightArrow).toHaveClass("hover:shadow-none");
-      // Dark-theme override must replace, not stack on top of, the light token.
-      expect(rightArrow).not.toHaveClass("shadow-paper-sm");
-    });
-
-    it("uses retro typography colours for the title (cream on dark, ink on light)", () => {
-      const { rerender } = render(
-        <HorizontalSlider title="Light Title">
-          <div>Item 1</div>
-        </HorizontalSlider>,
-      );
-
-      expect(screen.getByRole("heading", { name: "Light Title" })).toHaveClass(
-        "text-ink",
-      );
-
-      rerender(
-        <HorizontalSlider theme="dark" title="Dark Title">
-          <div>Item 1</div>
-        </HorizontalSlider>,
-      );
-
-      expect(screen.getByRole("heading", { name: "Dark Title" })).toHaveClass(
-        "text-cream",
-      );
+      await user.click(screen.getByLabelText("Scroll right"));
+      expect(scrollToSpy).toHaveBeenCalledWith({
+        left: 500 * 0.8,
+        behavior: "smooth",
+      });
     });
   });
 

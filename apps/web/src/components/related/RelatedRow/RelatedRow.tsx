@@ -274,9 +274,10 @@ export function RelatedRow({
         >
           {heading}
         </EditorialHeading>
-        {/* ART-2 (#2237): a roomier gap than the slider's default `gap-3`
-            so the related cards no longer read as cramped. */}
-        <HorizontalSlider trackClassName="gap-6 md:gap-8">
+        {/* ART-2 (#2237): a roomier gap than the cards need cramped in —
+            `gap-6 md:gap-8` is now `<HorizontalSlider>`'s own default
+            (#2444 resolution), so no override is needed here any more. */}
+        <HorizontalSlider>
           {items.map((item, i) => {
             const position = i + 1;
             return (

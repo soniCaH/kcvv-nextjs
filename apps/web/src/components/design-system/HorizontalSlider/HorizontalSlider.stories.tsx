@@ -3,10 +3,13 @@
  *
  * Direction D ("Paper chrome, ink emphasis") locked at the Phase 2 Track B
  * design checkpoint (2026-04-30). Generic horizontal scroll container with
- * paper-card prev/next arrows. Demonstrated with generic sample cards — no
- * production surface composes matches into a horizontal slider (the homepage
- * and `/kalender` both render vertical match rows), so the former match-card
- * showcase was removed.
+ * paper-card prev/next arrows (`<ScrollArrowButton register="paper">` —
+ * the card slider's sole register, #2444 as amended by #2489). Demonstrated
+ * with generic sample cards — no production surface composes matches into a
+ * horizontal slider (the homepage and `/kalender` both render vertical
+ * match rows), so the former match-card showcase was removed.
+ *
+ * `title`/`theme` were deleted (#2444 resolution) — neither had a consumer.
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
@@ -51,7 +54,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Generic horizontal scroll container with smooth scrolling, hidden scrollbar, and the canonical 48 × 48 paper-button arrows from `<ScrollArrowButton>`. Theme `"dark"` overrides the arrow shadow to the soft (ink-muted) sibling so the offset stays visible against an ink panel.',
+          "Generic horizontal scroll container with smooth scrolling, hidden scrollbar, and the paper-register arrows (48 × 48, cream, `-16px` overhang) from `<ScrollArrowButton>` — the card slider's only register.",
       },
     },
   },
@@ -64,8 +67,6 @@ type Story = StoryObj<typeof meta>;
 /** Interactive playground — adjust props in the controls panel. */
 export const Playground: Story = {
   args: {
-    title: "Horizontal Slider",
-    theme: "light",
     children: manyItems,
   },
 };
@@ -73,40 +74,12 @@ export const Playground: Story = {
 /** Few items — arrows may not appear if all items fit the viewport. */
 export const FewItems: Story = {
   args: {
-    title: "Drie items",
     children: fewItems,
   },
 };
 
-/** Many items — paper-card sample cards plus the canonical arrows. */
+/** Many items — paper-card sample cards plus the overhung paper arrows. */
 export const ManyItems: Story = {
-  args: {
-    title: "Acht items",
-    children: manyItems,
-  },
-};
-
-/**
- * Dark theme variant — arrows swap to the soft ink-muted shadow so the
- * offset stays visible against the ink panel.
- */
-export const DarkTheme: Story = {
-  args: {
-    title: "Dark Theme",
-    theme: "dark",
-    children: manyItems,
-  },
-  decorators: [
-    (Story) => (
-      <div className="bg-ink-soft p-6">
-        <Story />
-      </div>
-    ),
-  ],
-};
-
-/** No title — slider renders without a heading. */
-export const NoTitle: Story = {
   args: {
     children: manyItems,
   },

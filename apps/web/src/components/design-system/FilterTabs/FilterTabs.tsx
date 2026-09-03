@@ -16,8 +16,16 @@
  * (`hover:shadow-none`) and translates by 4 px on both axes
  * (`hover:translate-x-1 hover:translate-y-1`) over `transition-all
  * duration-300` — the canonical press-down hover shared with `<Button>`,
- * `<BrandedTabs>`, `<ScrollArrowButton>`, and the slider arrows. Counts
- * render inline after a 1 px hairline pipe — no pill, no badge.
+ * `<ScrollArrowButton>`, and the slider arrows. Counts render inline after
+ * a 1 px hairline pipe — no pill, no badge.
+ *
+ * **Stale-reference correction (#2444 resolution).** This docblock and
+ * `<HorizontalSlider>`'s used to still name `<BrandedTabs>` as a peer
+ * overflow scroller in three places below — that component no longer
+ * exists (retired pre-#2429); the mentions were historical rationale for
+ * specific pixel values (a gap, a shadow-clip fix) inherited from it, not
+ * a claim that it still ships. Corrected here rather than deleted outright
+ * so the numbers keep their provenance.
  *
  * **The single filter primitive (#2429 / #2564).** One `<FilterTabs>` now
  * absorbs every filter row on the site — News categories, search result
@@ -39,6 +47,23 @@
  * (#2429 resolution, rule 3) — this row never wraps and never traps the
  * reset off-screen behind different chrome. `overflow-x-auto` + the shared
  * absolute-positioned scroll arrows is the only overflow treatment.
+ *
+ * **The scroll arrow — `<ScrollRail>`'s "row of discrete things" idiom
+ * (#2444, as amended by #2489).** A chip is a tap target, and covered
+ * means unreachable — so unlike a table or a diagram, this row holds a
+ * 40px gutter on both sides exactly when the track overflows at the
+ * current width, never as a permanent breakpoint-gated rail, and the spent
+ * direction disables in place instead of unmounting. See `<ScrollRail>`'s
+ * own docblock for the full contract shared with `<TeamSectionNav>` and
+ * the organigram breadcrumb. This replaces the former `pl-0 ↔ pl-10` /
+ * `pr-0 ↔ pr-10` padding that toggled **mid-scroll** with the arrow's own
+ * direction — a shipped defect (#2447-adjacent): driving `scrollLeft` 0 →
+ * 40 left the first chip at exactly the same viewport x, because the 40px
+ * of new padding cancelled the 40px of scroll. The arrow itself is
+ * `register="control"` — 32 × 32, `jersey-deep` fill, cream glyph — a fill
+ * no chip can wear, so it reads as a control rather than a peer of the
+ * chips beside it (the `size="sm"` 32×32 override this row used to need is
+ * now the register's own default).
  *
  * **`role="group"` + `aria-pressed`, not `role="tablist"`/`"tab"`.** A
  * filter narrows a list in place — a set of toggles, not tabs — and this
@@ -74,8 +99,7 @@
  */
 
 import { cn } from "@/lib/utils/cn";
-import { useScrollHint } from "@/components/design-system/ScrollHint/useScrollHint";
-import { ScrollArrowButton } from "@/components/design-system/ScrollHint/ScrollArrowButton";
+import { ScrollRail } from "@/components/design-system/ScrollHint/ScrollRail";
 import type { RedesignIconProps } from "@/lib/icons.redesign";
 import type { ComponentType } from "react";
 
@@ -137,7 +161,8 @@ const CHIP_BASE_CLASSES = [
   // gap-2 (8 px) is the *internal* gap between the chip label and the
   // count `<span>` — matches the mockup's `.f-chip { gap: 8px }`. Don't
   // confuse with the row-level `gap-3` (12 px) below, which is the
-  // BrandedTabs-aligned breathing space *between* chips.
+  // breathing space *between* chips (a value inherited from the retired
+  // `<BrandedTabs>`, not a live consistency claim — see the docblock above).
   "inline-flex flex-shrink-0 items-center gap-2",
   "rounded-none border-2 border-ink",
   "font-mono font-semibold uppercase tracking-[0.08em]",
@@ -157,9 +182,6 @@ export function FilterTabs({
   renderAsLinks = false,
   surface = "paper",
 }: FilterTabsProps) {
-  const { scrollRef, canScrollLeft, canScrollRight, scrollLeft, scrollRight } =
-    useScrollHint<HTMLDivElement>();
-
   const renderTab = (tab: FilterTab) => {
     const isActive = activeTab === tab.value;
     const Icon = tab.icon;
@@ -226,42 +248,21 @@ export function FilterTabs({
   };
 
   return (
-    <div className={cn("relative", className)}>
-      {canScrollLeft && (
-        <ScrollArrowButton
-          direction="left"
-          onClick={scrollLeft}
-          className="h-10 w-10"
-        />
-      )}
-
-      <div
-        ref={scrollRef}
-        role="group"
-        aria-label={ariaLabel}
-        className={cn(
-          // scrollbar-hide @utility lives in globals.css. pb-1.5 (6 px)
-          // gives the 4 × 4 paper shadow room to render — `overflow-x: auto`
-          // is silently normalised by browsers to clip on both axes when
-          // the other axis would be `visible`, otherwise cropping the
-          // shadow's bottom edge (same fix as BrandedTabs #1576). Tab gap
-          // matches BrandedTabs (`gap-3` = 12 px) — overrides the mockup's
-          // 8 px to keep the two atoms visually consistent at the row level.
-          "scrollbar-hide flex gap-3 overflow-x-auto scroll-smooth pb-1.5",
-          canScrollLeft ? "pl-12" : "pl-0",
-          canScrollRight ? "pr-12" : "pr-0",
-        )}
-      >
-        {tabs.map(renderTab)}
-      </div>
-
-      {canScrollRight && (
-        <ScrollArrowButton
-          direction="right"
-          onClick={scrollRight}
-          className="h-10 w-10"
-        />
-      )}
-    </div>
+    <ScrollRail
+      className={className}
+      role="group"
+      ariaLabel={ariaLabel}
+      // scrollbar-hide @utility lives in globals.css. pb-1.5 (6 px) gives
+      // the 4 × 4 paper shadow room to render — `overflow-x: auto` is
+      // silently normalised by browsers to clip on both axes when the
+      // other axis would be `visible`, otherwise cropping the shadow's
+      // bottom edge (same fix the retired `<BrandedTabs>` used, #1576).
+      // Tab gap is `gap-3` = 12 px — overrides the mockup's 8 px, a value
+      // inherited from `<BrandedTabs>` at the time it still shipped
+      // alongside this component.
+      trackClassName="scrollbar-hide flex gap-3 scroll-smooth pb-1.5"
+    >
+      {tabs.map(renderTab)}
+    </ScrollRail>
   );
 }

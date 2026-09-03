@@ -13,8 +13,8 @@
  *    prop (#2636 finding 9)
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, act } from "@testing-library/react";
 import type { RankingEntry } from "@kcvv/api-contract";
 import { StandingsTable } from "./StandingsTable";
 
@@ -172,5 +172,70 @@ describe("StandingsTable", () => {
       "numberless",
     );
     expect(screen.getAllByRole("columnheader").length).toBeGreaterThan(0);
+  });
+
+  describe("scroll arrow — control register, no reserved rail (#2444/#2476)", () => {
+    function mockScrollDimensions(scrollWidth: number, clientWidth: number) {
+      Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+        configurable: true,
+        value: scrollWidth,
+      });
+      Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+        configurable: true,
+        value: clientWidth,
+      });
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (HTMLElement.prototype as any).scrollWidth;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (HTMLElement.prototype as any).clientWidth;
+    });
+
+    it("makes the scroll region keyboard-reachable (tabIndex=0)", () => {
+      render(<StandingsTable entries={DIVISION} />);
+      const region = screen.getByRole("region");
+      expect(region.getAttribute("tabindex")).toBe("0");
+    });
+
+    it("mounts no arrow when the table fits", () => {
+      mockScrollDimensions(500, 500);
+      render(<StandingsTable entries={DIVISION} />);
+      expect(screen.queryByLabelText("Scroll right")).not.toBeInTheDocument();
+    });
+
+    it("mounts a control-register right arrow, overlaying with no reserved rail, on real overflow", () => {
+      mockScrollDimensions(900, 500);
+      render(<StandingsTable entries={DIVISION} />);
+
+      const arrow = screen.getByLabelText("Scroll right");
+      expect(arrow).toBeInTheDocument();
+      expect(arrow).toHaveClass("bg-jersey-deep");
+      expect(arrow).toHaveClass("h-8");
+
+      const region = screen.getByRole("region");
+      expect(region.className).not.toContain("pl-10");
+      expect(region.className).not.toContain("pr-10");
+    });
+
+    it("caps the edge fade at 24px, shrinking as the scroll runs out", () => {
+      mockScrollDimensions(900, 500);
+      const { container } = render(<StandingsTable entries={DIVISION} />);
+
+      let fade = container.querySelector(".bg-gradient-to-l") as HTMLElement;
+      expect(fade.style.width).toBe("24px");
+
+      const region = screen.getByRole("region");
+      // 400px total overflow; scrolled to 385 leaves 15px.
+      Object.defineProperty(region, "scrollLeft", { value: 385 });
+      act(() => {
+        region.dispatchEvent(new Event("scroll"));
+      });
+
+      fade = container.querySelector(".bg-gradient-to-l") as HTMLElement;
+      expect(fade.style.width).toBe("15px");
+    });
   });
 });

@@ -91,8 +91,18 @@ export { LinkButton } from "./LinkButton";
 export type { LinkButtonProps } from "./LinkButton";
 
 // ScrollHint
-export { useScrollHint, ScrollArrowButton } from "./ScrollHint";
-export type { UseScrollHintReturn, ScrollArrowButtonProps } from "./ScrollHint";
+export {
+  useScrollHint,
+  ScrollArrowButton,
+  ScrollRail,
+  ScrollOverlay,
+} from "./ScrollHint";
+export type {
+  UseScrollHintReturn,
+  ScrollArrowButtonProps,
+  ScrollRailProps,
+  ScrollOverlayProps,
+} from "./ScrollHint";
 
 // PageContainer
 export { PageContainer } from "./PageContainer";
