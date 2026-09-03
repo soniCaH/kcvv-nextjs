@@ -29,6 +29,12 @@ export interface PageContainerProps {
    *  focusable so a nav click can move keyboard focus into it (#2478
    *  rule 8); pair with `focus:outline-none` in `className`. */
   tabIndex?: number;
+  /** Forwarded as `aria-label` — required alongside `tabIndex={-1}` on an
+   *  otherwise-unlabelled focus target (a `<section>` with no heading of
+   *  its own to associate via `aria-labelledby`), so a screen reader
+   *  announces something on focus instead of nothing (#2584 review
+   *  finding 8). */
+  ariaLabel?: string;
   className?: string;
 }
 
@@ -50,12 +56,14 @@ export function PageContainer({
   as: Tag = "div",
   id,
   tabIndex,
+  ariaLabel,
   className,
 }: PageContainerProps) {
   return (
     <Tag
       id={id}
       tabIndex={tabIndex}
+      aria-label={ariaLabel}
       className={cn(
         "mx-auto w-full px-4 md:px-8",
         WIDTH_CLASS[width],

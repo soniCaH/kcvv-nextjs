@@ -420,6 +420,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
               as="section"
               id="klassement"
               tabIndex={-1}
+              ariaLabel={klassementLabel ?? "Klassement"}
               className="py-10 focus:outline-none"
             >
               <StandingsSection
@@ -441,6 +442,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                   as="section"
                   id="wedstrijden"
                   tabIndex={-1}
+                  ariaLabel="Wedstrijden"
                   className="py-10 focus:outline-none"
                 >
                   <TeamMatchesSection
@@ -464,6 +466,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
               as="section"
               id="spelers"
               tabIndex={-1}
+              ariaLabel="Spelers"
               className="py-10 focus:outline-none"
             >
               <SquadGrid players={team.players} />
@@ -496,6 +499,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
             as="section"
             id="staf"
             tabIndex={-1}
+            ariaLabel="Staf"
             className="py-10 focus:outline-none"
           >
             <TeamStaff staff={staff} heading="Staf" />
@@ -510,6 +514,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
             as="section"
             id="info"
             tabIndex={-1}
+            ariaLabel="Info"
             className="py-10 focus:outline-none"
           >
             <TeamEditorial
