@@ -1,18 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useHashLandingCorrection } from "./useHashLandingCorrection";
 
 /**
  * Fallback for the `--sticky-header-h` token (`globals.css`) when it can't be
  * read off the DOM — no stylesheet is loaded under vitest/happy-dom. Exists
- * only so the scroll-spy's `rootMargin` degrades safely outside a real
- * browser; it is not a second source of truth for the header height in
- * production, where `scroll-padding-top` itself is set via the CSS `calc()`
- * expression below and never touches this constant.
+ * only so a caller degrades safely outside a real browser; it is not a
+ * second source of truth for the header height in production, where
+ * `scroll-padding-top` itself is set via the CSS `calc()` expression below
+ * and never touches this constant.
  */
 const FALLBACK_HEADER_HEIGHT_PX = 65;
 
-function readHeaderHeight(): number {
+/**
+ * Reads the header's sticky height off the single CSS token
+ * (`--sticky-header-h`) rather than a hand-copied number — exported so a
+ * consumer with its own, unrelated offset need (e.g.
+ * `<OrganigramSectionNav>`'s hero-reveal observer, #2584 review finding 7)
+ * reads the same source instead of hand-copying "65".
+ */
+export function getStickyHeaderHeight(): number {
   if (typeof window === "undefined") return FALLBACK_HEADER_HEIGHT_PX;
   const raw = window
     .getComputedStyle(document.documentElement)
@@ -25,11 +33,19 @@ function readHeaderHeight(): number {
 }
 
 export interface UseSectionNavResult {
-  /** Attach to the sticky bar's own outer element (its `<nav>`) — its
-   *  rendered height is what "derived from the bar" (#2478 rule 7) measures,
-   *  including a trailing slot (e.g. `<HubSearch>`) wrapping to its own
-   *  line at narrow widths. */
-  navRef: RefObject<HTMLElement | null>;
+  /** Ref-callback for the sticky bar's own outer element (its `<nav>`).
+   *  A callback rather than a plain `useRef` object so the hook's effects
+   *  re-run whenever the underlying DOM node itself changes — including
+   *  from one element to another, which a `RefObject` read once inside a
+   *  `[]`-effect would miss (#2584 review finding 3: a team page's nav can
+   *  unmount entirely at ≤1 section and remount for a different team via
+   *  client-side nav, without the *component* itself ever unmounting). */
+  navRef: (node: HTMLElement | null) => void;
+  /** The bar's own current rendered height in px, 0 before first measurement
+   *  or while unmounted. Exposed so a consumer with its own offset need
+   *  derived from the same bar (rule 7) never hand-copies a second number
+   *  (#2584 review finding 7). */
+  barHeight: number;
   /** The section currently being read, scroll-spy driven — the fill always
    *  means "the section I am reading now", never "the one I last jumped
    *  to" (#2478 rule 3). `null` before the first observer callback fires,
@@ -44,60 +60,83 @@ export interface UseSectionNavResult {
  * a chip's fill means the same thing — and lands at the same offset — on
  * every route.
  *
- * **Scroll-spy.** The topmost intersecting section among `ids` wins.
+ * **Derived anchor offset.** Sets `scroll-padding-top` on `<html>` to
+ * `calc(var(--sticky-header-h) + <bar height>px)`, `barHeight` tracked as
+ * proper React state (not a one-off measurement) so every effect that
+ * depends on it — the offset itself, the scroll-spy observer, the
+ * hash-landing correction (composed from `useHashLandingCorrection`) —
+ * re-runs whenever it changes, however that change happens: a resize, a
+ * wrap, or the bar's own DOM node being replaced entirely. No `scroll-mt-*`
+ * is ever typed per section.
  *
- * **Derived anchor offset.** Sets `scroll-padding-top` on `<html>` — the
- * single global scroll container every anchor jump honours, whether it's a
- * plain `<a href="#id">`, `Element.scrollIntoView()`, or Next.js's own
- * hash-navigation scroll — to `calc(var(--sticky-header-h) + <bar height>px)`,
- * remeasured via `ResizeObserver` whenever the bar's own box changes (a
- * trailing slot wrapping to its own line, a web-font swap). No
- * `scroll-mt-*` is ever typed per section; the offset instead tracks
- * whichever bar is actually on screen. Reset to `""` on unmount, since
- * `<html>` persists across App Router client-side navigations and a route
- * with no section nav must fall back to `globals.css`'s header-only base
- * rule rather than inherit a stale value from the page navigated away from.
+ * **Scroll-spy**, rebuilt whenever `barHeight` changes (#2584 review finding
+ * 5) — a stale, too-small `rootMargin` baked in at construction time would
+ * report a section "active" while its top is still genuinely covered by a
+ * since-grown bar. The topmost intersecting section among `ids` wins.
  */
 export function useSectionNav(ids: readonly string[]): UseSectionNavResult {
-  const navRef = useRef<HTMLElement | null>(null);
+  const [navEl, setNavEl] = useState<HTMLElement | null>(null);
+  const [barHeight, setBarHeight] = useState(0);
+  // A ref callback (not a plain `useRef`) so this can reset `barHeight`
+  // itself the moment the bar's DOM node detaches — a `setState` call here
+  // runs during commit (the same timing a ref attach/detach always has),
+  // never during render.
+  const navRef = useCallback((node: HTMLElement | null) => {
+    setNavEl(node);
+    if (!node) setBarHeight(0);
+  }, []);
   const [activeId, setActiveId] = useState<string | null>(null);
   const idsKey = ids.join("|");
 
+  // "Latest ref" pattern: read inside the scroll-spy effect below, which
+  // must not itself depend on `idsKey` recreating anything else. Synced in
+  // its own effect, never mutated during render.
+  const idListRef = useRef<string[]>([]);
   useEffect(() => {
-    const el = navRef.current;
-    if (!el) return;
+    idListRef.current = idsKey.split("|").filter(Boolean);
+  }, [idsKey]);
 
-    const applyOffset = () => {
-      const barHeight = el.getBoundingClientRect().height;
-      document.documentElement.style.scrollPaddingTop = `calc(var(--sticky-header-h) + ${barHeight}px)`;
-    };
+  // Tracks the bar's own rendered height as state — re-attaches whenever
+  // `navEl` itself changes (mount, or a swap to a different node), not just
+  // once for the hook's entire lifetime.
+  useEffect(() => {
+    if (!navEl) return;
+    const measure = () => setBarHeight(navEl.getBoundingClientRect().height);
+    measure();
+    const resizeObserver = new ResizeObserver(measure);
+    resizeObserver.observe(navEl);
+    return () => resizeObserver.disconnect();
+  }, [navEl]);
 
-    applyOffset();
-    const resizeObserver = new ResizeObserver(applyOffset);
-    resizeObserver.observe(el);
-
+  useEffect(() => {
+    if (!navEl) return;
+    document.documentElement.style.scrollPaddingTop = `calc(var(--sticky-header-h) + ${barHeight}px)`;
     return () => {
-      resizeObserver.disconnect();
       document.documentElement.style.scrollPaddingTop = "";
     };
-  }, []);
+  }, [navEl, barHeight]);
+
+  // #2584 review findings 1 and 4: a bar that resizes after the browser
+  // already computed a hash navigation's scroll target (e.g. `<HubSearch>`
+  // mounting once the hero leaves view) lands the target behind the
+  // since-grown bar. `notifyLayoutChange` re-verifies the landing while a
+  // hash navigation is still "armed" — see `useHashLandingCorrection` for
+  // why a resize is a separate trigger from the hashchange itself.
+  const { notifyLayoutChange } = useHashLandingCorrection(ids);
+  useEffect(() => {
+    notifyLayoutChange();
+  }, [barHeight, notifyLayoutChange]);
 
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
-    const targets = idsKey
-      .split("|")
-      .filter(Boolean)
+    const targets = idListRef.current
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
     if (targets.length === 0) return;
 
     // Top inset clears the header + this bar; the bottom inset flips
-    // "active" near the top third of the viewport, not the very bottom —
-    // same shape as the hub's original per-route observer, generalised to
-    // any section count.
-    const topInset =
-      readHeaderHeight() +
-      (navRef.current?.getBoundingClientRect().height ?? 0);
+    // "active" near the top third of the viewport, not the very bottom.
+    const topInset = getStickyHeaderHeight() + barHeight;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -113,7 +152,7 @@ export function useSectionNav(ids: readonly string[]): UseSectionNavResult {
 
     targets.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [idsKey]);
+  }, [idsKey, barHeight]);
 
-  return { navRef, activeId };
+  return { navRef, barHeight, activeId };
 }
