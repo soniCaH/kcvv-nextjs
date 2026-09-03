@@ -25,13 +25,24 @@ export interface ScheduleTeam {
 
 export interface ScheduleMatch {
   /**
-   * Discriminant against `ScheduleReservation` below. Required — an optional
-   * `isPlaceholder?: false` would let a construction site that simply omits
-   * the field type-check as `ScheduleMatch` with no complaint, defeating the
-   * entire point of the union. Required and literal `false` means every
-   * site that builds this object must say which kind of row it's building.
+   * Discriminant against `ScheduleReservation`/`ScheduleReducedMatch` below.
+   * Required — an optional `isPlaceholder?: false` would let a construction
+   * site that simply omits the field type-check as `ScheduleMatch` with no
+   * complaint, defeating the entire point of the union. Required and literal
+   * `false` means every site that builds this object must say which kind of
+   * row it's building.
+   *
+   * Not the full discriminant on its own once `ScheduleReducedMatch` exists —
+   * both it and `ScheduleMatch` carry `isPlaceholder: false` (a tournament
+   * fixture with a hidden result is not a reservation), so narrow on `kind`
+   * to tell them apart. Kept, rather than dropped in favour of `kind` alone,
+   * so every existing `match.isPlaceholder` narrowing site keeps working
+   * unchanged for the one distinction it always answered correctly: is this
+   * a self-match with no second side at all.
    */
   isPlaceholder: false;
+  /** Discriminant against `ScheduleReservation`/`ScheduleReducedMatch`. */
+  kind: "match";
   /** Match ID */
   id: number;
   /** Match date */
@@ -83,6 +94,8 @@ export interface ScheduleMatch {
  */
 export interface ScheduleReservation {
   isPlaceholder: true;
+  /** Discriminant against `ScheduleMatch`/`ScheduleReducedMatch`. */
+  kind: "reservation";
   /** Match ID */
   id: number;
   /** Match date */
@@ -102,12 +115,52 @@ export interface ScheduleReservation {
 }
 
 /**
- * Either a genuine fixture or a pitch-reservation placeholder. The one type
- * every match-row renderer and every `Match` → view-model adapter should
- * accept/return from here on — see `ScheduleReservation`'s doc for why the
- * split is a compile-time guardrail, not just documentation.
+ * A tournament fixture (#2696) with no result yet — `competitionType ===
+ * "tournament"` and no scoreline. Unlike `ScheduleReservation` the two sides
+ * really are different clubs, but PSD does not say whether the named club
+ * hosts the tournament or merely shares its bracket, so the row states only
+ * that the club is *where* the tournament is (`team`, resolved via club-id
+ * equality — never home/away), the same reduced treatment a reservation
+ * gets (#2693 decision: one shared layout, not a second one).
+ *
+ * `awayTeam`/`homeScore`/`awayScore` do not exist here for the same compile-
+ * time reason `ScheduleReservation` drops them — a renderer reaching for the
+ * scoreboard fields without narrowing `kind` first fails to compile. This is
+ * not data loss: `isReducedMatchRow()` is re-evaluated from the raw `Match`
+ * on every transform call, so the moment PSD publishes a scoreline the same
+ * fixture id transforms to a `ScheduleMatch` instead — the "reduced → full
+ * scoreboard" transition is the adapter picking a different union member on
+ * its next call, not a mutation of this one.
  */
-export type ScheduleRow = ScheduleMatch | ScheduleReservation;
+export interface ScheduleReducedMatch {
+  isPlaceholder: false;
+  /** Discriminant against `ScheduleMatch`/`ScheduleReservation`. */
+  kind: "reduced";
+  /** Match ID */
+  id: number;
+  /** Match date */
+  date: Date;
+  /** Match time (HH:MM). */
+  time?: string;
+  /** The other club's crest/name — see the class doc for why it's never "the opponent". */
+  team: ScheduleTeam;
+  /** Match status — a reduced fixture can be cancelled/postponed too. */
+  status: MatchStatus;
+  /** Competition name — composes the row's subject together with `team.name` (#2696). */
+  competition?: string;
+  /** Structured classification — always `"tournament"` in practice, kept for symmetry with `ScheduleMatch`. */
+  competitionType?: CompetitionType;
+}
+
+/**
+ * A genuine fixture, a pitch-reservation placeholder, or a tournament
+ * fixture with a hidden result. The one type every match-row renderer and
+ * every `Match` → view-model adapter should accept/return from here on — see
+ * `ScheduleReservation`/`ScheduleReducedMatch`'s docs for why the split is a
+ * compile-time guardrail, not just documentation.
+ */
+export type ScheduleRow =
+  ScheduleMatch | ScheduleReservation | ScheduleReducedMatch;
 
 export interface UpcomingMatch {
   /**
@@ -118,6 +171,12 @@ export interface UpcomingMatch {
    * youth tournaments are where reservations come from.
    */
   isPlaceholder: false;
+  /**
+   * Discriminant against `UpcomingReservation`/`UpcomingReducedMatch` — see
+   * `ScheduleMatch.kind` for why `isPlaceholder` alone can no longer tell
+   * `UpcomingMatch` and `UpcomingReducedMatch` apart.
+   */
+  kind: "match";
   /** Match ID */
   id: number;
   /** Match date */
@@ -176,7 +235,12 @@ export interface UpcomingMatch {
  * reads it (`<UpcomingMatchesClient>`'s own `kcvvTeamId` is always the
  * club-id prop, never a field read off a row).
  */
-export interface UpcomingReservation extends Omit<ScheduleReservation, "team"> {
+export interface UpcomingReservation extends Omit<
+  ScheduleReservation,
+  "team" | "kind"
+> {
+  /** Discriminant against `UpcomingMatch`/`UpcomingReducedMatch`. */
+  kind: "reservation";
   team: {
     id: number;
     name: string;
@@ -193,8 +257,41 @@ export interface UpcomingReservation extends Omit<ScheduleReservation, "team"> {
 }
 
 /**
- * Either a genuine upcoming fixture or a pitch-reservation placeholder — the
- * shape `<UpcomingMatchesClient>` and `mapMatchToUpcomingMatch` should
+ * A tournament fixture with a hidden result (#2696) on the homepage's
+ * other-teams agenda — `ScheduleReducedMatch`'s deltas for this surface,
+ * mirroring `UpcomingReservation`'s relationship to `ScheduleReservation`.
+ * `<UpcomingMatchesClient>` had no reduced treatment at all before this
+ * ticket (unlike `<TeamAgendaRow>`/`<MatchStripView>`/`/kalender`, which all
+ * call `isReducedMatchRow` already) — a not-yet-played tournament fixture
+ * for a non-senior team rendered the full linked scoreboard here, the exact
+ * gap the shared `kind` discriminant closes by construction.
+ */
+export interface UpcomingReducedMatch extends Omit<
+  ScheduleReducedMatch,
+  "team" | "kind"
+> {
+  /** Discriminant against `UpcomingMatch`/`UpcomingReservation`. */
+  kind: "reduced";
+  team: {
+    id: number;
+    name: string;
+    logo?: string;
+  };
+  /** Venue/location (optional) */
+  venue?: string;
+  /** Front-end squad short code (e.g. "U13") — see `UpcomingMatch.squadLabel`. */
+  squadLabel?: string;
+  /** Canonical human-readable squad label — see `UpcomingMatch.kcvvTeamLabel`. */
+  kcvvTeamLabel?: string;
+  /** Optional display-time team label set by the calling page. */
+  teamLabel?: string;
+}
+
+/**
+ * A genuine upcoming fixture, a pitch-reservation placeholder, or a
+ * tournament fixture with a hidden result — the shape
+ * `<UpcomingMatchesClient>` and `mapMatchToUpcomingMatch` should
  * accept/return from here on.
  */
-export type UpcomingRow = UpcomingMatch | UpcomingReservation;
+export type UpcomingRow =
+  UpcomingMatch | UpcomingReservation | UpcomingReducedMatch;
