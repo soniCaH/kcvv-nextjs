@@ -574,6 +574,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
           venue={match.venue}
           status={match.status}
           competition={match.competition}
+          competitionType={match.competitionType}
           kcvvTeamLabel={match.kcvv_team_label}
           isPlaceholder={match.is_placeholder ?? false}
         />

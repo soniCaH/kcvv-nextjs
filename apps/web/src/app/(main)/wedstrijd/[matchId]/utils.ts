@@ -15,10 +15,11 @@ import { reservationTitle } from "@/lib/utils/match-display";
  * Convert a match's home team into props suitable for the MatchHero component.
  *
  * @param match - The match detail containing the home team data
- * @returns The home team's `MatchHeroTeam` with `name`, `logo`, and `score`
+ * @returns The home team's `MatchHeroTeam` with `id`, `name`, `logo`, and `score`
  */
 export function transformHomeTeam(match: MatchDetail): MatchHeroTeam {
   return {
+    id: match.home_team.id,
     name: match.home_team.name,
     logo: match.home_team.logo,
     score: match.home_team.score,
@@ -28,10 +29,11 @@ export function transformHomeTeam(match: MatchDetail): MatchHeroTeam {
 /**
  * Converts the match's away team data into props for the MatchHero component.
  *
- * @returns An object containing the away team's name, logo, and score.
+ * @returns An object containing the away team's id, name, logo, and score.
  */
 export function transformAwayTeam(match: MatchDetail): MatchHeroTeam {
   return {
+    id: match.away_team.id,
     name: match.away_team.name,
     logo: match.away_team.logo,
     score: match.away_team.score,

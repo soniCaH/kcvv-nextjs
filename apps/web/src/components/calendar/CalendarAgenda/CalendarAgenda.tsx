@@ -12,9 +12,7 @@ import { cn } from "@/lib/utils/cn";
 import {
   getResultColor,
   isPlayedMatch,
-  isReducedMatchRow,
   isSettledMatch,
-  otherClubSide,
   OUTCOME_UNDERLINE,
   reservationView,
 } from "@/lib/utils/match-display";
@@ -31,6 +29,8 @@ import {
   getMatchDotType,
   type AgendaDayGroup,
   type CalendarMatch,
+  type CalendarReducedMatch,
+  type CalendarReservation,
   type CalendarEvent,
 } from "@/app/(main)/kalender/utils";
 
@@ -72,19 +72,24 @@ const LIST_ROW_FOCUS_CLASSES =
  * `[52px_1fr_auto]` grid as `AgendaMatchRow` so the two rows still line up in
  * the same day group.
  *
- * Also renders a tournament fixture (#2696/#2715, `competitionType ===
- * "tournament"` with no result yet — never a string match on the Dutch
- * `competition` label). The crest and subject then name the **other club**,
- * not KCVV's own — `otherClubSide()` derives it from the club id, never
- * home/away, since PSD does not say whether the named club hosts or merely
- * shares the bracket. `reservationView(match, otherClub)` composes the
- * "TORNOOI · FC ZEMST SPORTIEF" subject for that case; `undefined` for a
- * placeholder keeps its subject at the competition alone.
+ * Also renders a tournament fixture (#2696/#2715/#2802, `kind === "reduced"`
+ * — `competitionType === "tournament"` with no result yet, never a string
+ * match on the Dutch `competition` label). The crest and subject then name
+ * the **other club**, not KCVV's own — `match.club` is precomputed by
+ * `transformMatchToCalendar` via club-id equality, never home/away, since
+ * PSD does not say whether the named club hosts or merely shares the
+ * bracket. `reservationView(match, otherClub)` composes the "TORNOOI · FC
+ * ZEMST SPORTIEF" subject for that case; `undefined` for a placeholder keeps
+ * its subject at the competition alone.
  */
-function ReservationAgendaRow({ match }: { match: CalendarMatch }) {
-  const otherClub = match.isPlaceholder ? undefined : otherClubSide(match);
+function ReservationAgendaRow({
+  match,
+}: {
+  match: CalendarReservation | CalendarReducedMatch;
+}) {
+  const otherClub = match.kind === "reduced" ? match.club : undefined;
   const { subject } = reservationView(match, otherClub);
-  const crestTeam = otherClub ?? match.homeTeam;
+  const crestTeam = match.club;
   const when = match.time ?? formatMatchTime(match.date) ?? "";
   return (
     <div
@@ -114,7 +119,7 @@ function ReservationAgendaRow({ match }: { match: CalendarMatch }) {
 }
 
 function AgendaMatchRow({ match }: { match: CalendarMatch }) {
-  if (isReducedMatchRow(match)) return <ReservationAgendaRow match={match} />;
+  if (match.kind !== "match") return <ReservationAgendaRow match={match} />;
 
   const isHome = match.isHome ?? getMatchDotType(match) === "home";
   const when = match.time ?? formatMatchTime(match.date) ?? "";

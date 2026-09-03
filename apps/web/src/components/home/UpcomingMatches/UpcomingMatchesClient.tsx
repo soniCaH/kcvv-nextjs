@@ -12,6 +12,7 @@ import {
   reservationView,
 } from "@/lib/utils/match-display";
 import type {
+  UpcomingReducedMatch,
   UpcomingReservation,
   UpcomingRow,
 } from "@/components/match/types";
@@ -251,18 +252,25 @@ interface MatchRowProps {
 
 /**
  * The other-teams agenda's reduced row for a pitch-reservation placeholder
- * (#2606) — no opponent (a self-match has none), no `<Link>` (mirrors #2606
- * decision 5, the same rule every other reservation renderer in this repo
- * follows), the subject via `reservationView()` so the wording can't drift
- * from `<TeamAgendaRow>`/`<MatchStripView>`/`/kalender`. The squad chip
+ * (#2606) or a tournament fixture with a hidden result (#2696/#2802) — no
+ * opponent slot (a self-match has none, and a not-yet-played tournament
+ * fixture's opponent is deliberately unnamed as one), no `<Link>` (mirrors
+ * #2606 decision 5, the same rule every other reservation renderer in this
+ * repo follows), the subject via `reservationView()` so the wording can't
+ * drift from `<TeamAgendaRow>`/`<MatchStripView>`/`/kalender`. The squad chip
  * (`matchTeamLabel`) is kept so a reservation files under the same filter
  * chip a real fixture for that squad would.
  *
  * `<article>`, not a bare `<div>` — see the markup rule on
  * `reservationRowLabel` in `match-display.ts`.
  */
-const ReservationMatchRow = ({ match }: { match: UpcomingReservation }) => {
-  const { subject, statusWording } = reservationView(match);
+const ReservationMatchRow = ({
+  match,
+}: {
+  match: UpcomingReservation | UpcomingReducedMatch;
+}) => {
+  const otherClub = match.kind === "reduced" ? match.team : undefined;
+  const { subject, statusWording } = reservationView(match, otherClub);
   const dateLabel = formatMatchWidgetDate(match.date);
   const label = reservationRowLabel({
     subject,
@@ -286,7 +294,8 @@ const ReservationMatchRow = ({ match }: { match: UpcomingReservation }) => {
   return (
     <article
       aria-label={label}
-      data-placeholder="true"
+      data-placeholder={match.isPlaceholder ? "true" : undefined}
+      data-tournament={match.kind === "reduced" ? "true" : undefined}
       className={cn(
         "border-ink bg-cream relative grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 border-2 px-4 py-3",
         "sm:grid-cols-[auto_1fr_auto] sm:gap-x-4",
@@ -315,7 +324,7 @@ const ReservationMatchRow = ({ match }: { match: UpcomingReservation }) => {
 };
 
 const MatchRow = ({ match, kcvvTeamId }: MatchRowProps) => {
-  if (match.isPlaceholder) return <ReservationMatchRow match={match} />;
+  if (match.kind !== "match") return <ReservationMatchRow match={match} />;
 
   const homeIsKcvv = match.homeTeam.id === kcvvTeamId;
   const awayIsKcvv = match.awayTeam.id === kcvvTeamId;
