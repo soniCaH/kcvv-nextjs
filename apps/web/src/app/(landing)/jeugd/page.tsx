@@ -23,6 +23,7 @@ import { PageContainer, StripedSeam } from "@/components/design-system";
 import { PageViewTracker } from "@/components/analytics/PageViewTracker";
 import { PageHero } from "@/components/layout/PageHero";
 import { JeugdVisie } from "@/components/jeugd/JeugdVisie/JeugdVisie";
+import { VisieHashLandingCorrection } from "@/components/jeugd/JeugdVisie/VisieHashLandingCorrection";
 import { JeugdEditorialGrid } from "@/components/jeugd/JeugdEditorialGrid/JeugdEditorialGrid";
 import { EditorialHubAnalytics } from "@/components/editorial/EditorialHubAnalytics/EditorialHubAnalytics";
 import { JeugdCtaBand } from "@/components/jeugd/JeugdCtaBand/JeugdCtaBand";
@@ -144,6 +145,7 @@ export default async function JeugdPage() {
 
       <PageContainer width="index" className="py-12 sm:py-16">
         <JeugdVisie />
+        <VisieHashLandingCorrection />
 
         <EditorialHubAnalytics eventName="jeugd_card_click" className="mt-16">
           <JeugdEditorialGrid
