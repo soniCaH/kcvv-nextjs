@@ -9,6 +9,7 @@ import {
 import {
   Button,
   ClippedCard,
+  EmptyState,
   Input,
   Label,
   Select,
@@ -104,6 +105,11 @@ export function MembershipForm({
   const [state, setState] = useState<SubmitState>("idle");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState("");
+  // Distinct from `generalError`: a server rejection (400 + `fields`) is the
+  // form working correctly, per-field `<AlertBadge>` territory (#2580 rule
+  // 6). Only the transport `catch` below is a client-initiated failure, so
+  // it gets its own flag and its own Tier 2 notice register.
+  const [transportFailed, setTransportFailed] = useState(false);
 
   const minor = useMemo(() => isMinor(birthDate), [birthDate]);
   const isPlayer = role !== "" && MEDICAL_CERT_ROLES.includes(role);
@@ -152,6 +158,7 @@ export function MembershipForm({
     setState("submitting");
     setFieldErrors({});
     setGeneralError("");
+    setTransportFailed(false);
 
     try {
       const response = await fetch(SUBMIT_URL, {
@@ -193,18 +200,25 @@ export function MembershipForm({
         return;
       }
 
+      // A server rejection (400 + field-level `data.fields`) is the form
+      // working correctly — never the raw `data.error` text, which can carry
+      // whatever the API happened to say (#2580 rule 6 / #2433 rule 9's
+      // locked-copy discipline applies here too, even though this branch
+      // isn't a client-initiated failure).
       if (response.status === 400 && data.fields) {
         setFieldErrors(data.fields);
       }
       setGeneralError(
-        data.error ??
-          "Er ging iets mis. Controleer je gegevens en probeer opnieuw.",
+        "Er ging iets mis. Controleer je gegevens en probeer opnieuw.",
       );
       setState("error");
-    } catch {
-      setGeneralError(
-        "Verzenden mislukt. Controleer je internetverbinding en probeer opnieuw.",
-      );
+    } catch (err) {
+      // The caught error goes to the console only — the visitor sees the
+      // locked Dutch copy below, never the transport error's own text
+      // (#2580 rule 6). The submit button survives this failure (it's still
+      // on screen, re-enabled), so no retry action is added (#2580 rule 4).
+      console.error("[MembershipForm] Failed to submit:", err);
+      setTransportFailed(true);
       setState("error");
     }
   };
@@ -449,6 +463,23 @@ export function MembershipForm({
           >
             {generalError}
           </p>
+        ) : null}
+
+        {/* Tier 2, no action (#2580 rule 4): the submit button below already
+            survives this failure, so a second control here would be
+            redundant. Replaces the raw `<p className="text-alert">` this
+            branch used to share with the field-validation summary above. */}
+        {transportFailed ? (
+          <EmptyState
+            tier="slot"
+            reason="unavailable"
+            live
+            emphasis={{ text: "mislukt" }}
+            className="mt-5"
+          >
+            Verzenden mislukt. Controleer je internetverbinding en probeer
+            opnieuw.
+          </EmptyState>
         ) : null}
 
         <div className="border-paper-edge mt-7 flex items-center justify-between border-t border-dashed pt-4">

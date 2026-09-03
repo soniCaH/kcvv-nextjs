@@ -2,6 +2,28 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MembershipForm } from "./MembershipForm";
 
+function fillRequiredFields() {
+  fireEvent.change(screen.getByLabelText(/Voornaam/), {
+    target: { value: "Jan" },
+  });
+  fireEvent.change(screen.getByLabelText(/Achternaam/), {
+    target: { value: "Peeters" },
+  });
+  fireEvent.change(screen.getByLabelText(/Geboortedatum/), {
+    target: { value: "1990-06-15" },
+  });
+  fireEvent.change(screen.getByLabelText(/Geslacht/), {
+    target: { value: "m" },
+  });
+  fireEvent.change(screen.getByLabelText(/Gemeente/), {
+    target: { value: "Elewijt" },
+  });
+  fireEvent.change(screen.getByLabelText(/^E-mail/), {
+    target: { value: "jan@example.com" },
+  });
+  fireEvent.click(screen.getByLabelText(/privacyverklaring/i));
+}
+
 describe("MembershipForm", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -81,5 +103,64 @@ describe("MembershipForm", () => {
       "/api/membership",
       expect.objectContaining({ method: "POST" }),
     );
+  });
+
+  describe("transport failure (#2580)", () => {
+    it("shows the locked notice and logs the caught error to the console only", async () => {
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      const networkError = new Error("Failed to fetch");
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(() => Promise.reject(networkError)),
+      );
+
+      render(<MembershipForm defaultRole="vrijwilliger" />);
+      fillRequiredFields();
+      fireEvent.submit(screen.getByText(/Verstuur aanvraag/).closest("form")!);
+
+      const notice = await screen.findByRole("status");
+      expect(notice).toHaveTextContent(
+        "Verzenden mislukt. Controleer je internetverbinding en probeer opnieuw.",
+      );
+      // The visitor never sees the caught error's own text.
+      expect(screen.queryByText(/Failed to fetch/)).not.toBeInTheDocument();
+      expect(consoleError).toHaveBeenCalledWith(
+        expect.stringContaining("submit"),
+        networkError,
+      );
+    });
+  });
+
+  describe("server rejection", () => {
+    it("shows the locked fallback message, never the server's own error text", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(() =>
+          Promise.resolve({
+            ok: false,
+            status: 500,
+            json: () =>
+              Promise.resolve({ error: "Database connection pool exhausted" }),
+          }),
+        ),
+      );
+
+      render(<MembershipForm defaultRole="vrijwilliger" />);
+      fillRequiredFields();
+      fireEvent.submit(screen.getByText(/Verstuur aanvraag/).closest("form")!);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            "Er ging iets mis. Controleer je gegevens en probeer opnieuw.",
+          ),
+        ).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByText(/Database connection pool exhausted/),
+      ).not.toBeInTheDocument();
+    });
   });
 });
