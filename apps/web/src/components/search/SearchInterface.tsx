@@ -15,7 +15,7 @@ import { SearchPreSearchCard } from "./SearchPreSearchCard";
 import { SearchAnswerCard } from "./SearchAnswerCard";
 import { SearchRelated } from "./SearchRelated";
 import { useSemanticAugment } from "./useSemanticAugment";
-import { Alert, PageContainer, Spinner } from "@/components/design-system";
+import { EmptyState, PageContainer, Spinner } from "@/components/design-system";
 import { useSearchAnalytics } from "@/hooks/useSearchAnalytics";
 import { filterByActiveType } from "./search-filter-utils";
 import type {
@@ -317,11 +317,18 @@ export const SearchInterface = ({
               </div>
             )}
 
-            {/* Error State — paper ticket-stub Alert (8s4). */}
+            {/* Error state — Tier 1: the whole results surface is gone (no
+                filters, no results, nothing recovers the search), so this is
+                #2427's tier "surface", not the tier "slot" notice (#2470
+                resolution rule 3/4). No action row: the search form above
+                (in <SearchMasthead>) already survives with the query intact,
+                so a second "probeer opnieuw" here would be redundant chrome
+                (#2470 resolution rule 4). Replaces the ticket-stub <Alert> —
+                its last production consumer (#2580). */}
             {error && !isLoading && (
-              <Alert variant="error" title="Zoeken mislukt">
+              <EmptyState tier="surface" heading="Zoeken mislukt" live>
                 {error}
-              </Alert>
+              </EmptyState>
             )}
 
             {/* Results */}
