@@ -60,7 +60,7 @@ function ReservationWeekCard({
   return (
     <div
       data-placeholder={match.isPlaceholder ? "true" : undefined}
-      data-tournament={match.isPlaceholder ? undefined : "true"}
+      data-tournament={match.kind === "reduced" ? "true" : undefined}
       className="border-ink bg-cream shadow-paper-sm block border-2 p-1.5"
     >
       {match.team && (
