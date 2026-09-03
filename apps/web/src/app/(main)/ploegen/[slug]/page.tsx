@@ -317,17 +317,37 @@ export default async function TeamPage({ params }: TeamPageProps) {
     (team.trainingSchedule?.length ?? 0) > 0 ||
     (teamContact !== null && hasRenderableBioContent(teamContact));
 
+  // One record for every section's label — the nav chip and each section's
+  // own `aria-label` (on its focus target below) read from the same value,
+  // so the two can never drift and there is nothing to fall back to if
+  // `klassementLabel` were ever null here (it can't be: `inCompetition`
+  // is exactly `klassementLabel !== null`, and only the `inCompetition`
+  // branch ever reads it).
+  const sectionLabels = {
+    klassement: klassementLabel,
+    wedstrijden: "Wedstrijden",
+    spelers: "Spelers",
+    staf: "Staf",
+    info: "Info",
+  } as const;
+
   // The status line states (`not-in-competition` / `unavailable`) are the
   // ONE deliberate exception to the nav/render invariant below: neither is a
   // section, so neither earns a nav entry even though one renders in the
   // section-nav's stead (#2540/#2636 decision). Every other item here is
   // kept in exact sync with what actually renders further down.
   const navItems: TeamSectionNavItem[] = [
-    klassementLabel !== null && { id: "klassement", label: klassementLabel },
-    showWedstrijden && { id: "wedstrijden", label: "Wedstrijden" },
-    showSquad && { id: "spelers", label: "Spelers" },
-    showStaff && { id: "staf", label: "Staf" },
-    showEditorial && { id: "info", label: "Info" },
+    // `sectionLabels.klassement` is the same value as `klassementLabel`,
+    // but TS narrows the bare variable, not a property read off it — the
+    // guard stays on the variable, the label comes from the shared record.
+    klassementLabel !== null && {
+      id: "klassement",
+      label: klassementLabel,
+    },
+    showWedstrijden && { id: "wedstrijden", label: sectionLabels.wedstrijden },
+    showSquad && { id: "spelers", label: sectionLabels.spelers },
+    showStaff && { id: "staf", label: sectionLabels.staf },
+    showEditorial && { id: "info", label: sectionLabels.info },
   ].filter((x): x is TeamSectionNavItem => x !== false);
 
   const analyticsParams = { team_slug: slug };
@@ -420,7 +440,10 @@ export default async function TeamPage({ params }: TeamPageProps) {
               as="section"
               id="klassement"
               tabIndex={-1}
-              ariaLabel={klassementLabel ?? "Klassement"}
+              // Non-null: this branch only renders when `inCompetition` —
+              // exactly `klassementLabel !== null` — is true, but TS
+              // narrows the variable, not a property read off the record.
+              ariaLabel={sectionLabels.klassement!}
               className="py-10 focus:outline-none"
             >
               <StandingsSection
@@ -442,7 +465,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                   as="section"
                   id="wedstrijden"
                   tabIndex={-1}
-                  ariaLabel="Wedstrijden"
+                  ariaLabel={sectionLabels.wedstrijden}
                   className="py-10 focus:outline-none"
                 >
                   <TeamMatchesSection
@@ -466,7 +489,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
               as="section"
               id="spelers"
               tabIndex={-1}
-              ariaLabel="Spelers"
+              ariaLabel={sectionLabels.spelers}
               className="py-10 focus:outline-none"
             >
               <SquadGrid players={team.players} />
@@ -499,7 +522,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
             as="section"
             id="staf"
             tabIndex={-1}
-            ariaLabel="Staf"
+            ariaLabel={sectionLabels.staf}
             className="py-10 focus:outline-none"
           >
             <TeamStaff staff={staff} heading="Staf" />
@@ -514,7 +537,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
             as="section"
             id="info"
             tabIndex={-1}
-            ariaLabel="Info"
+            ariaLabel={sectionLabels.info}
             className="py-10 focus:outline-none"
           >
             <TeamEditorial

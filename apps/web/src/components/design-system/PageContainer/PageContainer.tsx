@@ -32,8 +32,7 @@ export interface PageContainerProps {
   /** Forwarded as `aria-label` — required alongside `tabIndex={-1}` on an
    *  otherwise-unlabelled focus target (a `<section>` with no heading of
    *  its own to associate via `aria-labelledby`), so a screen reader
-   *  announces something on focus instead of nothing (#2584 review
-   *  finding 8). */
+   *  announces something on focus instead of nothing. */
   ariaLabel?: string;
   className?: string;
 }
