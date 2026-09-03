@@ -150,22 +150,29 @@ export function PageHeroSkeleton({
 }: PageHeroSkeletonProps) {
   if (register === "minimal") {
     return (
-      <div aria-hidden="true" className={cn("mb-10", className)}>
+      <>
+        {/* Outside the hidden subtree — when `upLink` is set this is a real,
+            focusable <a>, and aria-hidden must never contain one (#2799
+            review). Margin collapse through the bar-only div below keeps
+            the rendered gap identical to when this sat inside it. */}
         <UpLinkSlot
           upLink={upLink}
           shimmer={upLinkShimmer}
           tone={tone === "dark" ? "cream" : "ink"}
         />
-        <OpeningBars tone={tone} lead={lead} kicker={kicker} />
-      </div>
+        <div aria-hidden="true" className={cn("mb-10", className)}>
+          <OpeningBars tone={tone} lead={lead} kicker={kicker} />
+        </div>
+      </>
     );
   }
 
   if (tone === "cream") {
     return (
-      <div aria-hidden="true">
+      <>
+        {/* Outside the hidden subtree — see the minimal register above. */}
         <UpLinkSlot upLink={upLink} shimmer={upLinkShimmer} tone="ink" />
-        <div data-testid="page-hero-skeleton">
+        <div aria-hidden="true" data-testid="page-hero-skeleton">
           <TapedCard
             bg="cream"
             padding={size === "compact" ? "md" : "lg"}
@@ -181,18 +188,24 @@ export function PageHeroSkeleton({
             </div>
           </TapedCard>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <header aria-hidden="true" className={cn("bg-jersey-deep-dark", className)}>
+    // Not aria-hidden itself — when `upLink` is set, `<UpLinkSlot>` below is
+    // a real focusable <a> and must stay outside any aria-hidden subtree
+    // (#2799 review). Only the shimmer grid is hidden now, individually.
+    <header className={cn("bg-jersey-deep-dark", className)}>
       <PageContainer
         width={width}
         className="flex flex-col gap-6 py-14 sm:py-20"
       >
         <UpLinkSlot upLink={upLink} shimmer={upLinkShimmer} tone="cream" />
-        <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
+        <div
+          aria-hidden="true"
+          className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center"
+        >
           <div>
             <OpeningBars tone="dark" lead={lead} kicker={kicker} />
           </div>
