@@ -445,6 +445,24 @@ A row in the league standings table.
 | `goals_for` / `goals_against` / `goal_difference` | Goal record                     |
 | `points`                                          | Total points                    |
 
+### Competitive Block
+
+The `#klassement` + `#wedstrijden` pair on a team page, gated as **one unit** rather than two independent sections. What it shows is keyed to the data — never to the age group, and never to last season.
+
+| Code                 | Dutch surface | Meaning                                                                                     |
+| -------------------- | ------------- | ------------------------------------------------------------------------------------------- |
+| `not-in-competition` | status line   | The club has no official league fixture for this team this season. Neither section renders. |
+| `unavailable`        | status line   | A PSD read failed **permanently**. Neither section renders.                                 |
+| `no-table`           | De reeks      | In competition; the association has published no row yet.                                   |
+| `numberless`         | De reeks      | In competition; every published entry reads zero played and zero points.                    |
+| `live`               | Klassement    | At least one published table carries real numbers.                                          |
+
+**The gate** is at least one fixture whose competition type is `league` in the current season — never "the ranking has rows" (the ranking arrives months after the fixtures) and never the phase's association code.
+
+**Rule: a failure is not a section.** The two status-line states carry no `<h2>`, no `id` and no sticky-nav chip. This is the one deliberate exception to the team page's rule that every nav chip leads to a section that renders.
+
+**Pending:** [#2795] splits `unavailable` into `fixtures-unavailable` and `ranking-unavailable`, so a permanently-failed ranking read stops hiding fixtures that loaded fine. Update this table when it lands.
+
 ---
 
 ## Infrastructure
@@ -472,6 +490,19 @@ Legacy name for the PSD API integration layer in the BFF, now renamed to `PsdSer
 Nightly cron job that synchronises player, team, and staff data from PSD into Sanity documents. Cursor-based: one team per invocation, full rotation over N nights.
 
 **Rule:** Sync only writes PSD-owned fields. Editorial fields (position, images, bio, training schedule, etc.) are never overwritten.
+
+### Permanent vs Transient Read Failure
+
+Every BFF read failure is one of exactly two kinds, and the kind decides what the page does. This split is the reason a broken team page degrades instead of going dark forever.
+
+| Kind          | Meaning                                                                                                     | What the page does                                                         |
+| ------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Permanent** | A stale or mistyped PSD id, or a response this deploy can no longer decode. Every retry fails the same way. | Degrade to a value and render. There is no last-good page to fall back to. |
+| **Transient** | A timeout, a 502/503, a network blip. The next regeneration will probably succeed.                          | Let it reject, so the render throws and ISR serves the last-good page.     |
+
+**Rule:** one list owns the split (`PERMANENT_BFF_TAGS`). Nothing hand-types a second copy — a tag added to only one copy would silently disagree, with no compiler or test signal.
+
+**Known hole:** a permanent classification is inferred from the error tag, and one tag is ambiguous — a response that fails to decode looks the same whether PSD changed its shape (genuinely permanent) or the Worker died mid-response (transient). Tracked in [#2782].
 
 ---
 
@@ -525,3 +556,5 @@ Each content type has its own visibility logic. There is no universal "published
 
 [#819]: https://github.com/soniCaH/www.kcvvelewijt.be/issues/819
 [#2699]: https://github.com/soniCaH/www.kcvvelewijt.be/issues/2699
+[#2782]: https://github.com/soniCaH/www.kcvvelewijt.be/issues/2782
+[#2795]: https://github.com/soniCaH/www.kcvvelewijt.be/issues/2795
