@@ -27,7 +27,10 @@ export interface UseSemanticSearchReturn {
    * fallback, `useSemanticAugment`'s silent degrade) renders error text —
    * they only branch on presence/absence — so storing `err.message` was a
    * dead field carrying a raw technical string nobody read (#2580). The
-   * caught error itself goes to `console.error` only.
+   * caught error itself goes to `console.warn` only — both consumers treat
+   * this as routine, silent degradation (#2580 review finding 6: a missing
+   * `KCVV_API_URL` in local/preview makes `/api/search` 503 on every
+   * debounced keystroke, which is normal there, not an error).
    */
   error: boolean;
   /**
@@ -112,7 +115,7 @@ export function useSemanticSearch(
           }
         } catch (err) {
           if ((err as Error).name === "AbortError") return;
-          console.error("[useSemanticSearch] semantic search failed:", err);
+          console.warn("[useSemanticSearch] semantic search failed:", err);
           setError(true);
           setResults([]);
           setAnswer(undefined);

@@ -152,7 +152,13 @@ describe("useSemanticSearch", () => {
     expect(result.current.error).toBe(false);
   });
 
-  it("logs the caught error to the console without storing its message (#2580)", async () => {
+  it("warns (not errors) on the console without storing the message (#2580)", async () => {
+    // console.warn, not console.error: both consumers (HubSearch's keyword
+    // fallback, useSemanticAugment's silent degrade) treat this as routine
+    // degradation, not a real error (#2580 review finding 6) — a missing
+    // KCVV_API_URL 503s this endpoint on every debounced keystroke in local
+    // dev and preview.
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const consoleError = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
@@ -170,10 +176,12 @@ describe("useSemanticSearch", () => {
     // The failure flag is a boolean, never the raw fetch/Error message — no
     // consumer renders it, and #2580 rule 6 keeps technical text out of the
     // visitor's view entirely.
-    expect(consoleError).toHaveBeenCalledWith(
+    expect(consoleWarn).toHaveBeenCalledWith(
       expect.stringContaining("semantic search"),
       networkError,
     );
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleWarn.mockRestore();
     consoleError.mockRestore();
   });
 });
