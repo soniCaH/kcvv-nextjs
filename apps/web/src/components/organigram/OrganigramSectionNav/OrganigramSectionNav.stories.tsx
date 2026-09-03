@@ -32,10 +32,7 @@ const meta = {
         >
           Hero — scroll voorbij om de nav-zoekbalk te onthullen
         </div>
-        <section
-          id="hulp"
-          className="mx-auto max-w-[70rem] scroll-mt-32 px-4 py-20"
-        >
+        <section id="hulp" className="mx-auto max-w-[70rem] px-4 py-20">
           <h2 className="font-display text-ink text-3xl font-bold">Hulp</h2>
           <p className="text-ink-muted mt-2">
             Placeholder Hulp-sectie (scroll verder voor Structuur).
@@ -44,7 +41,7 @@ const meta = {
         </section>
         <section
           id="structuur"
-          className="bg-cream-soft mx-auto max-w-[70rem] scroll-mt-32 px-4 py-20"
+          className="bg-cream-soft mx-auto max-w-[70rem] px-4 py-20"
         >
           <h2 className="font-display text-ink text-3xl font-bold">
             Structuur

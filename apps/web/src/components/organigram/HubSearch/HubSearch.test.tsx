@@ -104,6 +104,33 @@ describe("HubSearch", () => {
     ).toBeInTheDocument();
   });
 
+  it("wears the section-nav chip's paper weight in the nav variant — 1px border, 1px shadow (#2478 rule 5 addendum)", () => {
+    render(
+      <HubSearch
+        members={HUB_SEARCH_MEMBERS}
+        responsibilityPaths={HUB_SEARCH_PATHS}
+        variant="nav"
+      />,
+    );
+    const box = screen.getByLabelText(
+      "Zoek een persoon of hulpvraag",
+    ).parentElement!;
+
+    expect(box).toHaveClass("border");
+    expect(box).not.toHaveClass("border-2");
+    expect(box.className).toContain("shadow-[1px_1px_0_0_var(--color-ink)]");
+  });
+
+  it("keeps the hero variant's 2px border and 4px shadow byte-unchanged", () => {
+    renderSearch();
+    const box = screen.getByLabelText(
+      "Zoek een persoon of hulpvraag",
+    ).parentElement!;
+
+    expect(box).toHaveClass("border-2");
+    expect(box.className).toContain("shadow-[4px_4px_0_0_var(--color-ink)]");
+  });
+
   it("interleaves keyword people with semantic answers", async () => {
     setSemantic({ results: [hit("inschrijven", 0.42)], executedQuery: "in" });
     renderSearch();

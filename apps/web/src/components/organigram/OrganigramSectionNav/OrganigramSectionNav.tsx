@@ -2,16 +2,22 @@
 
 /**
  * <OrganigramSectionNav> — the hub's sticky in-page section nav (lock 7o2 /
- * 7o7). Two doors ("Hulp" → `#hulp`, "Structuur" → `#structuur`) with a
- * scroll-driven active state, plus the unified `<HubSearch>` repeated compactly.
+ * 7o7, refined by #2478). Two doors ("Hulp" → `#hulp`, "Structuur" →
+ * `#structuur`), each the light chip (rule 1), filled by the shared
+ * `useSectionNav` hook's scroll-spy (rule 3) — the same hook
+ * `<TeamSectionNav>` consumes, so a fill means the same thing on every
+ * route — plus the unified `<HubSearch>` repeated compactly.
  *
- * Sits below the global header (`sticky top-16`, a notch under the header's
- * `top-0 z-50`). Sections carry `scroll-mt-32` so hash jumps clear both bars.
+ * Sits below the global header, pinned at `--sticky-header-h` (rule 4). The
+ * shared hook also derives `scroll-padding-top` from this bar's own
+ * measured height (rule 7); no section carries a hand-written `scroll-mt-*`.
  */
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils/cn";
+import { PageContainer } from "@/components/design-system";
 import { HubSearch } from "../HubSearch";
+import { useSectionNav } from "@/hooks/useSectionNav";
 import type { OrgChartNode } from "@/types/organigram";
 import type { ResponsibilityPath } from "@/types/responsibility";
 
@@ -20,7 +26,7 @@ const SECTIONS = [
   { id: "structuur", label: "Structuur" },
 ] as const;
 
-type SectionId = (typeof SECTIONS)[number]["id"];
+const SECTION_IDS = SECTIONS.map((s) => s.id);
 
 export interface OrganigramSectionNavProps {
   members: OrgChartNode[];
@@ -33,34 +39,7 @@ export function OrganigramSectionNav({
   responsibilityPaths,
   className,
 }: OrganigramSectionNavProps) {
-  const [active, setActive] = useState<SectionId>("hulp");
-
-  useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return;
-
-    const els = SECTIONS.map((s) => document.getElementById(s.id)).filter(
-      (el): el is HTMLElement => el !== null,
-    );
-    if (els.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (visible.length === 0) return;
-        // The topmost intersecting section wins.
-        const topmost = visible.reduce((a, b) =>
-          a.boundingClientRect.top <= b.boundingClientRect.top ? a : b,
-        );
-        setActive(topmost.target.id as SectionId);
-      },
-      // Top inset clears the header (64px) + this nav (~48px); the bottom inset
-      // flips "active" near the top third of the viewport, not the very bottom.
-      { rootMargin: "-120px 0px -55% 0px", threshold: [0, 0.25, 0.6] },
-    );
-
-    els.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
+  const { navRef, activeId } = useSectionNav(SECTION_IDS);
 
   // The repeated search stays hidden until the hero (which carries its own
   // search) scrolls out of view — so the page never shows two search fields at
@@ -88,27 +67,35 @@ export function OrganigramSectionNav({
 
   return (
     <nav
+      ref={navRef}
       aria-label="Secties van de hub"
       className={cn(
-        "bg-cream-deep border-ink sticky top-16 z-30 border-b-2",
+        "bg-cream-deep border-ink sticky top-[var(--sticky-header-h)] z-30 border-b-2",
         className,
       )}
     >
-      <div className="mx-auto flex max-w-[var(--container-index)] flex-wrap items-center gap-3 px-4 py-2 md:px-8">
+      <PageContainer
+        width="index"
+        className="flex flex-wrap items-center gap-3 py-2"
+      >
         <ul className="flex items-center gap-2">
           {SECTIONS.map((section) => {
-            const isActive = active === section.id;
+            const isActive = activeId === section.id;
             return (
               <li key={section.id}>
+                {/* The light chip (#2478 rule 1) — a mirror of
+                    <TeamSectionNav>'s item; a change to this recipe needs
+                    the same change there. */}
                 <a
                   href={`#${section.id}`}
                   aria-current={isActive ? "location" : undefined}
                   onClick={() => {
-                    setActive(section.id);
                     // Move keyboard focus into the target section (it's
                     // tabIndex=-1) so a keyboard/SR user actually lands there —
                     // the hash anchor alone leaves focus on the door (B3). The
                     // hash navigation handles the scroll (preventScroll here).
+                    // Active state is scroll-spy driven only (rule 3) — a
+                    // click never sets it directly.
                     document
                       .getElementById(section.id)
                       ?.focus({ preventScroll: true });
@@ -136,7 +123,7 @@ export function OrganigramSectionNav({
             className="ml-auto w-full max-w-[240px] min-w-0"
           />
         )}
-      </div>
+      </PageContainer>
     </nav>
   );
 }

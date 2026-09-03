@@ -17,11 +17,17 @@ export default function HulpLoading() {
     <div className="bg-cream min-h-screen">
       <LoadingAnnouncement label="Hulppagina laden…" />
 
-      {/* Sticky two-door nav placeholder. */}
-      <div className="border-ink bg-cream border-b-2" aria-hidden>
-        <div className="mx-auto flex max-w-[var(--container-index)] items-center gap-3 px-4 py-3 md:px-8">
-          <Skeleton className="h-5 w-16" />
-          <Skeleton className="h-5 w-24" />
+      {/* Sticky two-door nav placeholder — the real bar is `bg-cream-deep`
+          at `py-2` (#2478 rule 4), and its two items are the light chip
+          (rule 1), not bare bars. */}
+      <div className="border-ink bg-cream-deep border-b-2" aria-hidden>
+        <div className="mx-auto flex max-w-[var(--container-index)] items-center gap-3 px-4 py-2 md:px-8">
+          <div className="border-ink border px-3 py-1.5 shadow-[1px_1px_0_0_var(--color-ink)]">
+            <Skeleton className="h-3 w-10" />
+          </div>
+          <div className="border-ink border px-3 py-1.5 shadow-[1px_1px_0_0_var(--color-ink)]">
+            <Skeleton className="h-3 w-16" />
+          </div>
           <Skeleton className="ml-auto h-9 w-44" />
         </div>
       </div>

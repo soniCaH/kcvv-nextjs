@@ -386,9 +386,15 @@ export function HubSearch({
         : "Geen resultaten";
 
   const isHero = variant === "hero";
+  // #2478 rule 5 addendum: the `nav` instance sits in a section nav's chip
+  // row (<OrganigramSectionNav>) and takes the light chip's exact paper
+  // weight — 1px border, 1px shadow — so the bar reads as one row of one
+  // kind of object instead of the search wearing double the chips' border
+  // and shadow. `variant="hero"` is byte-unchanged.
+  const boxBorder = isHero ? "border-2" : "border";
   const boxShadow = isHero
     ? "shadow-[4px_4px_0_0_var(--color-ink)]"
-    : "shadow-[2px_2px_0_0_var(--color-ink)]";
+    : "shadow-[1px_1px_0_0_var(--color-ink)]";
   const iconSize = isHero ? 20 : 16;
   const dropdownWidth = isHero
     ? "w-full"
@@ -453,7 +459,7 @@ export function HubSearch({
   return (
     <div className={`relative ${className}`}>
       <div
-        className={`border-ink bg-cream flex items-center gap-2 border-2 ${boxShadow} ${
+        className={`border-ink bg-cream flex items-center gap-2 ${boxBorder} ${boxShadow} ${
           isHero ? "px-3 py-3" : "px-2.5 py-2"
         }`}
       >

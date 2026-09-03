@@ -42,6 +42,9 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   document.getElementById("hub-hero")?.remove();
+  document.getElementById("hulp")?.remove();
+  document.getElementById("structuur")?.remove();
+  document.documentElement.style.scrollPaddingTop = "";
 });
 
 function renderNav() {
@@ -51,6 +54,18 @@ function renderNav() {
       responsibilityPaths={HUB_SEARCH_PATHS}
     />,
   );
+}
+
+/** Appends real `#hulp`/`#structuur` targets so the shared `useSectionNav`
+ *  hook's scroll-spy observer actually mounts (it bails on zero targets) —
+ *  mirroring the two sections the hub always renders. */
+function appendSectionTargets() {
+  const hulp = document.createElement("div");
+  hulp.id = "hulp";
+  const structuur = document.createElement("div");
+  structuur.id = "structuur";
+  document.body.append(hulp, structuur);
+  return { hulp, structuur };
 }
 
 describe("OrganigramSectionNav", () => {
@@ -69,16 +84,72 @@ describe("OrganigramSectionNav", () => {
     expect(structuur).toHaveAttribute("href", "#structuur");
   });
 
-  it("marks Hulp active by default and moves active on click", () => {
-    renderNav();
-    const hulp = screen.getByRole("link", { name: "Hulp" });
-    const structuur = screen.getByRole("link", { name: "Structuur" });
-    expect(hulp).toHaveAttribute("aria-current", "location");
-    expect(structuur).not.toHaveAttribute("aria-current");
+  describe("scroll-spy — the fill means the section being read, not the one last clicked (#2478 rule 3)", () => {
+    it("fills the chip for the topmost intersecting section", () => {
+      const { structuur } = appendSectionTargets();
+      renderNav();
 
-    fireEvent.click(structuur);
-    expect(structuur).toHaveAttribute("aria-current", "location");
-    expect(hulp).not.toHaveAttribute("aria-current");
+      act(() => {
+        observerCb?.(
+          [
+            {
+              isIntersecting: true,
+              target: structuur,
+              boundingClientRect: { top: 5 },
+            } as unknown as IntersectionObserverEntry,
+          ],
+          {} as IntersectionObserver,
+        );
+      });
+
+      expect(screen.getByRole("link", { name: "Structuur" })).toHaveAttribute(
+        "aria-current",
+        "location",
+      );
+      expect(screen.getByRole("link", { name: "Hulp" })).not.toHaveAttribute(
+        "aria-current",
+      );
+    });
+
+    it("does not change the fill on click by itself — only a later intersection does", () => {
+      const { structuur } = appendSectionTargets();
+      renderNav();
+
+      act(() => {
+        observerCb?.(
+          [
+            {
+              isIntersecting: true,
+              target: structuur,
+              boundingClientRect: { top: 5 },
+            } as unknown as IntersectionObserverEntry,
+          ],
+          {} as IntersectionObserver,
+        );
+      });
+
+      // Clicking "Hulp" navigates, but the fill still means "the section
+      // being read" — which the observer has not yet reported as Hulp.
+      fireEvent.click(screen.getByRole("link", { name: "Hulp" }));
+
+      expect(screen.getByRole("link", { name: "Structuur" })).toHaveAttribute(
+        "aria-current",
+        "location",
+      );
+      expect(screen.getByRole("link", { name: "Hulp" })).not.toHaveAttribute(
+        "aria-current",
+      );
+    });
+
+    it("moves focus into the clicked section (#2478 rule 8)", () => {
+      const { hulp } = appendSectionTargets();
+      const focusSpy = vi.spyOn(hulp, "focus");
+      renderNav();
+
+      fireEvent.click(screen.getByRole("link", { name: "Hulp" }));
+
+      expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+    });
   });
 
   it("keeps the repeated search hidden by default (hero in view)", () => {
