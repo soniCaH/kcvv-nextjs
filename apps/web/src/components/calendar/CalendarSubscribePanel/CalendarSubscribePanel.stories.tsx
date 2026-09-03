@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { within, userEvent } from "storybook/test";
+import { within, userEvent, spyOn } from "storybook/test";
 import { CalendarSubscribePanel } from "./CalendarSubscribePanel";
 import type { CalendarTeamInfo } from "@/app/(main)/kalender/utils";
 
@@ -68,19 +68,10 @@ export const CopiedFeedback: Story = {
  */
 export const CopyFailed: Story = {
   beforeEach: () => {
-    const original = navigator.clipboard;
-    Object.defineProperty(navigator, "clipboard", {
-      value: { writeText: () => Promise.reject(new Error("denied")) },
-      writable: true,
-      configurable: true,
-    });
-    return () => {
-      Object.defineProperty(navigator, "clipboard", {
-        value: original,
-        writable: true,
-        configurable: true,
-      });
-    };
+    // storybook/test restores spies between stories automatically.
+    spyOn(navigator.clipboard, "writeText").mockRejectedValue(
+      new Error("denied"),
+    );
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

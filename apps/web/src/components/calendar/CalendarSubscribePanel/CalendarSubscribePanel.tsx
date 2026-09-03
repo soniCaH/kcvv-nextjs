@@ -63,7 +63,12 @@ export function CalendarSubscribePanel({
   // default, which stays off (#2704).
   const [includeEvents, setIncludeEvents] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [copyFailed, setCopyFailed] = useState(false);
+  // The URL a failed copy described — not a boolean. Comparing it against the
+  // CURRENT `webcalUrl` below makes a stale notice impossible by
+  // construction: change any selection (team/side/includeEvents) and the
+  // comparison itself goes false, so there is nothing to reset by hand
+  // (#2580 review finding A1).
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   const host =
     typeof window !== "undefined"
@@ -75,19 +80,6 @@ export function CalendarSubscribePanel({
     .map((t) => t.psdId);
 
   const webcalUrl = buildWebcalUrl(selectedPsdIds, side, host, includeEvents);
-
-  // A stale failure notice describing a URL that no longer matches the
-  // current selection is worse than no notice (#2580 review finding 5) —
-  // team/side/includeEvents changes all flow through `webcalUrl`, so tracking
-  // that one value clears it on any of them rather than four separate reset
-  // calls scattered across `removeTeam`/`addTeam`/`setSide`/the switch
-  // handler. Adjusted during render (mirrors `SearchInterface`'s URL-param
-  // sync) rather than in a `useEffect`, so there's no extra render/flash.
-  const [trackedWebcalUrl, setTrackedWebcalUrl] = useState(webcalUrl);
-  if (trackedWebcalUrl !== webcalUrl) {
-    setTrackedWebcalUrl(webcalUrl);
-    setCopyFailed(false);
-  }
 
   function removeTeam(teamId: string) {
     setSelectedTeamIds((prev) => {
@@ -105,7 +97,7 @@ export function CalendarSubscribePanel({
     try {
       await navigator.clipboard.writeText(webcalUrl);
       setCopied(true);
-      setCopyFailed(false);
+      setFailedUrl(null);
       setTimeout(() => setCopied(false), 2000);
       trackEvent("kalender_subscribe_copy", {
         teams_count: selectedPsdIds.length,
@@ -116,7 +108,7 @@ export function CalendarSubscribePanel({
       // The caught error goes to the console only — the visitor sees the
       // locked Dutch copy below, never `err`'s own text (#2580 rule 6).
       console.error("Failed to copy to clipboard:", err);
-      setCopyFailed(true);
+      setFailedUrl(webcalUrl);
     }
   }
 
@@ -256,21 +248,14 @@ export function CalendarSubscribePanel({
 
           {/* Tier 2, no action (#2470 resolution rule 7): the copy button
               above is its own retry, and the QR stub already carries the
-              same URL — so nothing here is a control the visitor lost, only
-              a fact worth telling them: the click didn't put it on their
-              clipboard. Direction-neutral copy ("om te abonneren", not
+              same URL. Direction-neutral copy ("om te abonneren", not
               "hiernaast"/"hierboven"): the stub sits beside the body at
-              `sm+` but stacks above it below `sm` (#2580 review finding 4),
-              so a side-relative word is wrong on one of the two layouts.
-              `live="assertive"` (role="alert"): the visitor just pressed
-              "Kopieer link", so this answers a click, the same immediate-
-              announcement class as the search/submit failures elsewhere in
-              this ticket (#2580 review finding 3). */}
-          {copyFailed && (
+              `sm+` but stacks above it below `sm` (#2580 review finding 4). */}
+          {failedUrl === webcalUrl && (
             <EmptyState
               tier="slot"
               reason="unavailable"
-              live="assertive"
+              live
               emphasis={{ text: "mislukt" }}
               className="mt-3"
             >
