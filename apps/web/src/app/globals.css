@@ -496,11 +496,10 @@
   --container-wide: 1040px; /* canonical body — detail pages (PageContainer default) */
   --container-index: 1280px; /* card-grid index / listing / landing pages (PageContainer width="index") */
 
-  /* <SiteHeader>'s sticky height: h-16 (64px) + its own border-b (1px).
-     Every sticky in-page section nav pins directly below this (#2478 rule
-     4 — "Not top-16"), and it is the base term `useSectionNav` reads back
-     via `getComputedStyle` to derive `scroll-padding-top` (rule 7). Changing
-     the header's own height means updating this token, not the navs. */
+  /* The single source of truth for the header's sticky height —
+     `<SiteHeader>` derives its own `h-[calc(var(--sticky-header-h)-1px)]`
+     from this (the 1px is its `border-b`); every in-page section nav pins
+     directly below it. Change this token first, then verify the header. */
   --sticky-header-h: 65px;
 
   /* Pool tuned twice on 2026-04-29 per owner feedback. Original master
