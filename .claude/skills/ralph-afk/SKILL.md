@@ -145,10 +145,46 @@ When the wave is done, present a table: issue · PR URL · status (draft / block
 
 Wave agents run on a cheaper tier than you do and stop at a **draft** PR, because `/code-review` pins no model of its own: run inside a wave agent it would inherit that agent's tier and grade its own homework. You are the Opus context in this pipeline, so the review sits here.
 
-Per branch, against `../kcvv-issue-<N>`:
+#### 5a. Price the branch before you review it
 
-1. `/code-review high ../kcvv-issue-<N>`
-2. `/simplify ../kcvv-issue-<N>`
+The review level is **derived from the diff, not chosen by feel, and never chosen by the agent that wrote the code**. Run this probe in the worktree — four greps, near-zero cost:
+
+```bash
+cd ../kcvv-issue-<N>
+# 1. Shared reach — did something with many consumers change?
+git diff --name-only origin/main...HEAD | grep -E 'lib/(utils|repositories|mappers)/|components/design-system/|packages/|globals\.css|DESIGN\.md|api-contract'
+# 2. Deletions and renames — did a component with consumers go away?
+git diff --diff-filter=DR --name-only origin/main...HEAD
+# 3. Reachability and exposure — hrefs, query filters, data gates
+git diff origin/main...HEAD -- '*.ts' '*.tsx' | grep -E '^\+.*(href:|href=|notFound\(|showInNavigation|archived|filter\(|robots)'
+# 4. Resting pixels — how many baselines moved?
+git diff --name-only origin/main...HEAD | grep -c '__snapshots__'
+```
+
+Read the result as a ladder — **the first rung that matches wins**:
+
+| Level      | Trips when                                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------- |
+| **high**   | Probe 1 hits · or probe 2 hits · or probe 3 hits · or probe 4 is ≥ 20                                         |
+| **medium** | New self-contained code only: no shared edits, no deletions, no reachability changes, fewer than 20 baselines |
+| **low**    | Docs, comments, config or stories only, and zero baselines                                                    |
+
+Then:
+
+1. `/code-review <level> ../kcvv-issue-<N>`.
+2. A **single altitude agent** — only at `high`, and only when the branch introduces a new abstraction, a shared primitive, or a second copy of something.
+
+**Diff size is not a risk signal, and treating it as one is the trap this section exists to close.** On the 2026-09-02 wave, #2656 had the _narrowest_ diff — four files the issue named individually — and produced the wave's most severe finding: 16 stale VR baselines that would have failed CI, caught only by pixel-scanning the committed PNGs. It trips probe 1 (a shared `OUTCOME_UNDERLINE` in `lib/utils/match-display.ts`, read by four surfaces) and probe 4. Meanwhile #2581's 66-file diff was high for a different reason — probe 3, an `href` that 404s on youth fixtures.
+
+Set expectations honestly: on a wave of four real feature branches, most or all will price as `high` and this saves nothing. It pays on waves carrying doc, config, story or single-literal issues, where a `high` pass is pure waste. **The fan-out cut above is the change that saves money on a normal wave; this one stops you overpaying on a quiet one.**
+
+Never let the level be argued down by how confident the implementing agent sounds. It has not seen its own blind spots — that is the entire reason the review is here and not there.
+
+**Do not run `/simplify` as written here.** Its four-agent fan-out is the most expensive thing in the whole pipeline and the worst value in it. Measured on the 2026-09-02 wave (#2575): 438k tokens for one branch — more than three `/code-review` passes — and three of its four angles either duplicated findings `/code-review` had already reported or returned trivia (an import path, some comment trimming). The **altitude** angle alone produced both findings that mattered: the duplicated grid track that the "One grid" AC forbade, and the class-string test that violated an explicit "never compare class strings" criterion.
+
+So run the altitude angle as one `Agent()` call with the diff and the issue's own acceptance criteria, and skip the other three. Reuse and simplification findings that matter show up in `/code-review high` anyway; efficiency findings are worth a separate agent only when the diff touches an image projection, a query, or a hot path.
+
+Budget context, so this stays a judgement and not a superstition: on that wave the review layer was ~1.09M tokens against ~1.58M for the four implementers — 41% of the run. Review agents run on Opus while wave agents run on Sonnet, so review tokens cost more _and_ there are more of them. Cutting the fan-out takes the review layer to roughly 25% without giving up a single finding that caught a real bug.
 
 Send the confirmed findings back to that issue's agent with `SendMessage` — it still holds the full context of its own change and applies fixes far more cheaply than you can re-derive them. Refute false positives with a one-line reason instead of forwarding them. Apply the fixes in the worktree yourself only when the agent is no longer reachable.
 

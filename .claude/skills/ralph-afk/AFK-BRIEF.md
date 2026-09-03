@@ -17,6 +17,16 @@ A fresh shell here defaults to Node 16, which breaks commitlint and Playwright w
 
   source ~/.nvm/nvm.sh && nvm use >/dev/null 2>&1 && <your command>
 
+Also: zsh has `noclobber` set — use `>|` not `>` when redirecting to an existing file. `timeout` does not exist on macOS. Use `/bin/cp -f` not `cp -f`.
+
+## Run slow commands in the FOREGROUND — never background and wait
+
+Run `check-all`, `vitest`, `next build` and every VR Docker capture in the foreground and read the output directly. They take minutes; wait them out.
+
+Do NOT background one and end your turn expecting a notification. **Your monitors die when you stop**, so the notification never arrives and you strand yourself — the orchestrator has to `ps` the machine and wake you, which costs it more than the wait would have cost you. This happened four times in the 2026-09-02 wave, on three different agents.
+
+If you have genuinely already backgrounded something and stopped, do not wait again on resume: re-run the command in the foreground.
+
 ## Read first (in this order)
 
 1. /Users/kevinvanransbeeck/Sites/KCVV/www.kcvvelewijt.be/.claude/CLAUDE.md   (project-wide rules: git workflow, commit scopes, package conventions)
@@ -75,7 +85,24 @@ Before writing any new file that lands in a folder with two or more existing pee
 - New user-facing feature? It needs analytics — events, GTM, and GA4 — per the PRD requirement.
 - Schema change? Edit packages/sanity-schemas/src/<file>.ts only. Both studios consume it; there are no per-studio copies.
 - Adding or removing a dependency? Do NOT let pnpm rewrite the lockfile. Run the add once to resolve the version, then `git checkout origin/main -- pnpm-lock.yaml`, hand-insert the 3 blocks (importers / packages / snapshots) in prettier style at their alphabetical positions, and validate with `corepack pnpm install --frozen-lockfile` — it must print "Already up to date" without rewriting.
-- Visual change to a VR-tagged story? Capture the new baselines in THIS PR, scoped: `-u <story-id-prefix>`. Never run an unscoped update — it rewrites unrelated baselines.
+- Visual change to a VR-tagged story? Capture the new baselines in THIS PR, scoped: `-u <story-id-prefix>`. Never run an unscoped update — it rewrites unrelated baselines. **A green `-u` run is NOT evidence the baseline matches** — see the threshold trap below.
+
+### The VR threshold trap — read this before you trust a capture
+
+`-u` rewrites a baseline only when the comparison **fails**. `jest-image-snapshot`'s `failureThreshold` is `0.0005` (0.05% of pixels), and it is *relative to canvas size*. So a subtle change — a colour-only band, a short caption word, a small glyph — is under tolerance on the 1440×900 desktop and 768×1024 tablet canvases and over it on 375×667 mobile. The runner reports desktop and tablet as **passing**, `-u` leaves them untouched, and you commit a stale baseline while believing you captured the prefix.
+
+**The tell:** only `--mobile` shows up in `git status` after a capture, or CI names only mobile. That is not "mobile was the only thing that changed" — it is the two large canvases silently keeping the old image.
+
+**The fix — delete, then capture.** A *missing* baseline is always written fresh, which sidesteps the threshold entirely:
+
+```bash
+rm apps/web/test/vr/__snapshots__/<prefix>--<story>--{desktop,tablet,mobile}.png
+cd apps/web && docker compose -f docker-compose.vr.yml run --rm vr -u -- --testPathPatterns=<prefix>
+```
+
+Then **read the results back** — confirm all three PNGs exist, that dimensions match the viewport, and that your actual change is visible in the desktop and tablet images. Never conclude from a passing run alone.
+
+This repo has been bitten by it in at least four waves (#2620, #2641, and both #2656 and #2573 on 2026-09-02). Do not re-derive it — one agent spent an hour rebuilding the test runner in Docker to rediscover this exact behaviour.
 - Changed the architecture CLAUDE.md describes (new package, renamed path, schema ownership)? Update .claude/CLAUDE.md in this PR.
 - Renamed or removed a route, or changed a club fact? Re-verify apps/web/public/llms.txt against the live route tree.
 - Touched a plan or doc file? Re-read it and confirm its paths, script names, and snippets still match the tree.
