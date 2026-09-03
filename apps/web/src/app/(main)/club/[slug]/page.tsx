@@ -14,7 +14,6 @@ import {
   CtaBand,
   PageContainer,
   StripedSeam,
-  UpLink,
 } from "@/components/design-system";
 
 /**
@@ -87,15 +86,16 @@ export default async function DynamicClubPage({ params }: Props) {
         ])}
       />
       {/* Hero — headline = page.title, optional heroImage (typographic state
-          when absent). No kicker: the up-link below already names the
-          parent ("‹ De club"), so a "Club" kicker would say it twice
-          (#2442 rule 6). `pb-12` reserves the rhythm before the full-bleed
-          seam (StripedSeam carries no margin of its own). */}
+          when absent). No kicker: the up-link `<PageHero>` renders above
+          itself already names the parent ("‹ De club"), so a "Club" kicker
+          would say it twice (#2442 rule 6). `pb-12` reserves the rhythm
+          before the full-bleed seam (StripedSeam carries no margin of its
+          own). */}
       <PageContainer className="pt-10 pb-12">
-        <UpLink href="/club" label="De club" className="mb-6" />
         <PageHero
           headline={page.title}
           image={page.heroImageUrl ?? undefined}
+          upLink={{ href: "/club", label: "De club" }}
         />
       </PageContainer>
 

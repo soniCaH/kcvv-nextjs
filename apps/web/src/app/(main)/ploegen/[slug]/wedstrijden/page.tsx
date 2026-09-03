@@ -10,7 +10,6 @@ import { TeamRepository } from "@/lib/repositories/team.repository";
 import { TeamAgendaRow } from "@/components/team/TeamMatchesSection/TeamAgendaRow";
 import { EmptyState } from "@/components/design-system/EmptyState";
 import { PageContainer } from "@/components/design-system/PageContainer";
-import { UpLink } from "@/components/design-system/UpLink";
 import { pendingEmptyBody } from "@/lib/utils/empty-state-copy";
 import { PageHero } from "@/components/layout/PageHero";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -148,17 +147,16 @@ export default async function WedstrijdenPage({
       <AgendaScrollToNext nextMatchId={nextMatch?.id ?? null} />
 
       <PageContainer className="py-12 sm:py-16">
-        {/* No kicker: the up-link below already names the parent team, so a
-            second `{displayName}` label would say it twice (#2442 rule 6 —
-            this is the route's own originally-named instance, the inert
-            `<p>{team.name}</p>` that predated the current PageHero
-            composition). */}
-        <UpLink
-          href={`/ploegen/${slug}`}
-          label={displayName}
-          className="mb-6"
+        {/* No kicker: the up-link `<PageHero>` renders above itself already
+            names the parent team, so a second `{displayName}` label would
+            say it twice (#2442 rule 6 — this is the route's own
+            originally-named instance, the inert `<p>{team.name}</p>` that
+            predated the current PageHero composition). */}
+        <PageHero
+          register="minimal"
+          headline="Wedstrijden"
+          upLink={{ href: `/ploegen/${slug}`, label: displayName }}
         />
-        <PageHero register="minimal" headline="Wedstrijden" />
 
         {matches.length === 0 ? (
           // "Nog geen", not "Geen": fixtures still arrive mid-season once the

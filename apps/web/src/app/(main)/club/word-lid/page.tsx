@@ -12,7 +12,7 @@ import { SITE_CONFIG } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import { PageContainer, UpLink } from "@/components/design-system";
+import { PageContainer } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
 import { MembershipForm } from "@/components/club/MembershipForm/MembershipForm";
 
@@ -47,13 +47,13 @@ export default function WordLidPage() {
         ])}
       />
       <PageContainer width="prose">
-        <UpLink href="/club" label="De club" className="mb-6" />
         <PageHero
           register="minimal"
           kicker="Sluit je aan"
           headline="Doe mee"
           accent="mee"
           lead="Speler, jeugdspeler, vrijwilliger, trainer of scheidsrechter — vul het formulier in en we nemen binnenkort contact met je op. Dit is een aanvraag: sommige ploegen zitten vol, dus een plekje is niet altijd gegarandeerd."
+          upLink={{ href: "/club", label: "De club" }}
         >
           <p className="text-body-md mt-4">
             <Link href="/club/praktische-informatie" className="prose-link">

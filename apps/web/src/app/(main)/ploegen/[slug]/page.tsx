@@ -373,7 +373,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
       <MatchStripSlot />
 
-      <PageContainer className="pt-6">
+      <PageContainer>
         <UpLink href="/ploegen" label="Ploegen" className="mb-6" />
         <TeamHero
           displayName={displayName}

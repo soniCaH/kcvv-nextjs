@@ -517,8 +517,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       />
       {/* Same width + gutters as `<EditorialHeroShell width="wide">` below it,
           so the chip lands at the container's left edge above the opening
-          (#2428/#2442). */}
-      <PageContainer width="default" className="pt-8">
+          (#2428/#2442). No invented top/bottom padding of its own (review
+          round 2) — the hero's own `pt-12` immediately below already
+          supplies the gap, the same way `<TeamHero>`'s own `py-8` does for
+          `/ploegen/[slug]`. */}
+      <PageContainer width="default">
         <UpLink href="/nieuws" label="Nieuws" />
       </PageContainer>
       {renderArticleHero({

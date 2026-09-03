@@ -26,7 +26,6 @@ import {
   EmptyState,
   PageContainer,
   StripedSeam,
-  UpLink,
 } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
 import { TeamAgendaRow } from "@/components/team/TeamMatchesSection";
@@ -219,7 +218,6 @@ export default async function OpponentPage({ params }: OpponentPageProps) {
         ])}
       />
       <PageContainer className="pt-8 pb-8">
-        <UpLink href="/kalender" label="Kalender" className="mb-6" />
         <PageHero
           kicker="Onderlinge geschiedenis"
           headline={opponentName}
@@ -232,6 +230,7 @@ export default async function OpponentPage({ params }: OpponentPageProps) {
               className="border-ink bg-cream-soft shadow-paper-sm rounded-full border-2"
             />
           }
+          upLink={{ href: "/kalender", label: "Kalender" }}
         />
 
         <OpponentSummaryCard summary={summary} className="mt-7" />

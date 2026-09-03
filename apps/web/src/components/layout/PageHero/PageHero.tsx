@@ -152,11 +152,14 @@ export interface PageHeroProps {
   size?: PageHeroSize;
   className?: string;
   /**
-   * The up-link to this route's structural parent (#2428/#2442). **`band` ·
-   * `dark` only** — the other registers are page-owned (the page renders its
-   * own `<UpLink>` above this component), but the dark band has no cream
-   * strip for one to live in, so the band renders it itself, inside the
-   * field, tone-swapped to `cream` (#2442 rule 2).
+   * The up-link to this route's structural parent (#2428/#2442). `PageHero`
+   * owns its placement on every register, so a caller never hand-places its
+   * own `<UpLink>` or invents container padding to host one: `band` ·
+   * `cream` and `minimal` render it as its own element above the opening,
+   * tone `ink`; `band` · `dark` has no cream strip for one to live in, so it
+   * renders *inside* the field instead, tone-swapped to `cream` (#2442 rule
+   * 2). The opening owns the gap either way, the same reasoning that put
+   * `mb-10` here instead of at nine call sites.
    */
   upLink?: Pick<UpLinkProps, "href" | "label">;
 }
@@ -236,55 +239,79 @@ function MinimalOpening({
   tone,
   children,
   className,
+  upLink,
 }: Pick<
   PageHeroProps,
-  "kicker" | "headline" | "accent" | "lead" | "children" | "className"
+  | "kicker"
+  | "headline"
+  | "accent"
+  | "lead"
+  | "children"
+  | "className"
+  | "upLink"
 > & {
   tone: PageHeroTone;
 }) {
   return (
-    <header
-      data-testid="page-hero"
-      data-register="minimal"
-      data-tone={tone}
-      // The opening owns its own bottom air. Putting it here rather than at nine
-      // call sites is the whole point of the register — that gap is exactly what
-      // drifted (mb-10 / mb-8 / pb-8 / mt-10) while every route hand-rolled it.
-      className={cn("mb-10 flex flex-col", className)}
-    >
-      {kicker ? <Kicker tone={tone}>{kicker}</Kicker> : null}
-
-      {/* `hyphens-auto` because this register is the one that runs in a prose
-          column: "Privacyverklaring" is 17 characters and needs ~400px at
-          display-xl, while `width="prose"` offers 328px on a 360px screen — it
-          overflowed and pushed horizontal scroll. `globals.css` already tunes
-          `hyphenate-limit-chars` for it. Alone, never with `break-words`. */}
-      <EditorialHeading
-        level={1}
-        size="display-xl"
-        tone={tone === "dark" ? "cream" : "ink"}
-        emphasis={headlineEmphasis(headline, accent, tone)}
-        className="mt-2 mb-0 hyphens-auto"
-      >
-        {headline}
-      </EditorialHeading>
-
-      {lead ? (
-        // The reading measure is `--container-prose`, never a hand-picked `ch`
-        // value — an opening that invents its own is how the site ended up with
-        // several.
-        <p
-          className={cn(
-            "font-display text-display-sm mt-4 max-w-[var(--container-prose)] italic",
-            LEAD_TONE_CLASS[tone],
-          )}
-        >
-          {lead}
-        </p>
+    <>
+      {/* Its own element above the opening, not inside the <header> — the
+          up-link names the parent, the header opens this page (#2428 §5).
+          The opening owns the gap below it, same reasoning as `mb-10` below. */}
+      {upLink ? (
+        <UpLink
+          href={upLink.href}
+          label={upLink.label}
+          tone={tone === "dark" ? "cream" : "ink"}
+          className="mb-6"
+        />
       ) : null}
+      <header
+        data-testid="page-hero"
+        data-register="minimal"
+        data-tone={tone}
+        // The opening owns its own bottom air. Putting it here rather than at nine
+        // call sites is the whole point of the register — that gap is exactly what
+        // drifted (mb-10 / mb-8 / pb-8 / mt-10) while every route hand-rolled it.
+        className={cn("mb-10 flex flex-col", className)}
+      >
+        {kicker ? <Kicker tone={tone}>{kicker}</Kicker> : null}
 
-      {children}
-    </header>
+        {/* `hyphens-auto` because this register is the one that runs in a prose
+            column: "Privacyverklaring" is 17 characters and needs ~400px at
+            display-xl, while `width="prose"` offers 328px on a 360px screen — it
+            overflowed and pushed horizontal scroll. `globals.css` already tunes
+            `hyphenate-limit-chars` for it. Alone, never with `break-words`. */}
+        <EditorialHeading
+          level={1}
+          size="display-xl"
+          tone={tone === "dark" ? "cream" : "ink"}
+          emphasis={headlineEmphasis(headline, accent, tone)}
+          // The kicker→headline gap only exists when there is a kicker to
+          // clear — otherwise it strands the h1 8px below the card's own
+          // padding for nothing (a gap the kicker's absence should not
+          // leave behind).
+          className={cn(kicker ? "mt-2" : undefined, "mb-0 hyphens-auto")}
+        >
+          {headline}
+        </EditorialHeading>
+
+        {lead ? (
+          // The reading measure is `--container-prose`, never a hand-picked `ch`
+          // value — an opening that invents its own is how the site ended up with
+          // several.
+          <p
+            className={cn(
+              "font-display text-display-sm mt-4 max-w-[var(--container-prose)] italic",
+              LEAD_TONE_CLASS[tone],
+            )}
+          >
+            {lead}
+          </p>
+        ) : null}
+
+        {children}
+      </header>
+    </>
   );
 }
 
@@ -406,6 +433,7 @@ export function PageHero(props: PageHeroProps) {
     adornment,
     size = "default",
     className,
+    upLink,
   } = props;
 
   const isCompact = size === "compact";
@@ -425,12 +453,14 @@ export function PageHero(props: PageHeroProps) {
 
       {/* `mb-0` neutralises the global base `h1–h6 { margin-bottom: 1em }`,
           which at display-xl is ~72px of dead space — the hero owns its own
-          rhythm (the lead's `mt-3.5` / the divider's `mt-4`). */}
+          rhythm (the lead's `mt-3.5` / the divider's `mt-4`). `mt-2` only
+          applies when a kicker actually rendered above — otherwise it is a
+          gap clearing nothing. */}
       <EditorialHeading
         level={1}
         size={headingSize}
         emphasis={headlineEmphasis(headline, accent, "cream")}
-        className="mt-2 mb-0"
+        className={cn(kicker ? "mt-2" : undefined, "mb-0")}
       >
         {headline}
       </EditorialHeading>
@@ -479,42 +509,54 @@ export function PageHero(props: PageHeroProps) {
   );
 
   return (
-    <TapedCard
-      as="section"
-      bg="cream"
-      padding={isCompact ? "md" : "lg"}
-      tape={{ color: "warm", position: "left", length: "lg" }}
-      dataAttrs={{
-        "data-testid": "page-hero",
-        "data-register": "band",
-        "data-tone": "cream",
-        "data-size": size,
-        "data-state": showImage ? "image" : "typographic",
-      }}
-      className={className}
-    >
-      {showImage ? (
-        // Words first in the DOM so mobile stacks text → photo (m1); desktop
-        // grid places the wider words column left and the photo right.
-        <div className="grid items-center gap-6 md:grid-cols-[1.3fr_1fr]">
-          {textColumn}
-          <TapedFigure
-            aspect="landscape-16-9"
-            tape={{ color: "warm", position: "right", length: "md" }}
-          >
-            <Image
-              src={image!}
-              alt=""
-              fill
-              priority
-              sizes="(min-width: 768px) 40vw, 100vw"
-              className="object-cover"
-            />
-          </TapedFigure>
-        </div>
-      ) : (
-        textColumn
-      )}
-    </TapedCard>
+    <>
+      {/* Its own element above the card, not inside it — the up-link names
+          the parent, the card is this page's own front door (#2428 §5). */}
+      {upLink ? (
+        <UpLink
+          href={upLink.href}
+          label={upLink.label}
+          tone="ink"
+          className="mb-6"
+        />
+      ) : null}
+      <TapedCard
+        as="section"
+        bg="cream"
+        padding={isCompact ? "md" : "lg"}
+        tape={{ color: "warm", position: "left", length: "lg" }}
+        dataAttrs={{
+          "data-testid": "page-hero",
+          "data-register": "band",
+          "data-tone": "cream",
+          "data-size": size,
+          "data-state": showImage ? "image" : "typographic",
+        }}
+        className={className}
+      >
+        {showImage ? (
+          // Words first in the DOM so mobile stacks text → photo (m1); desktop
+          // grid places the wider words column left and the photo right.
+          <div className="grid items-center gap-6 md:grid-cols-[1.3fr_1fr]">
+            {textColumn}
+            <TapedFigure
+              aspect="landscape-16-9"
+              tape={{ color: "warm", position: "right", length: "md" }}
+            >
+              <Image
+                src={image!}
+                alt=""
+                fill
+                priority
+                sizes="(min-width: 768px) 40vw, 100vw"
+                className="object-cover"
+              />
+            </TapedFigure>
+          </div>
+        ) : (
+          textColumn
+        )}
+      </TapedCard>
+    </>
   );
 }
