@@ -103,7 +103,7 @@ export function createBoardPage({
         <JsonLd
           data={buildBreadcrumbJsonLd([
             { name: "Home", url: SITE_CONFIG.siteUrl },
-            { name: "Club", url: `${SITE_CONFIG.siteUrl}/club` },
+            { name: "De club", url: `${SITE_CONFIG.siteUrl}/club` },
             { name: team.name, url: `${SITE_CONFIG.siteUrl}/club/${slug}` },
           ])}
         />

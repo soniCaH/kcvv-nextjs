@@ -23,6 +23,10 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/club/bestuur",
+}));
+
 describe("PageHero", () => {
   const defaultProps = {
     kicker: "Kalender",
@@ -283,6 +287,122 @@ describe("PageHero", () => {
         </PageHero>,
       );
       expect(screen.getByText(/Laatst bijgewerkt/)).toBeInTheDocument();
+    });
+  });
+
+  describe("up-link (#2428/#2442)", () => {
+    it("band · cream omits the kicker row entirely when kicker is not passed", () => {
+      // #2442 rule 6 — dropped where a page-owned up-link above this
+      // opening would otherwise show the parent's name twice.
+      const { container } = render(
+        <PageHero headline="3de Prov. B kampioen" />,
+      );
+      expect(
+        container.querySelector('[data-testid="page-hero-kicker"]'),
+      ).not.toBeInTheDocument();
+    });
+
+    it("minimal omits the kicker row entirely when kicker is not passed", () => {
+      const { container } = render(
+        <PageHero register="minimal" headline="Wedstrijden" />,
+      );
+      expect(
+        container.querySelector('[data-testid="page-hero-kicker"]'),
+      ).not.toBeInTheDocument();
+    });
+
+    it("band · dark renders no up-link when none is passed", () => {
+      render(<PageHero kicker="De club" headline="Het bestuur" tone="dark" />);
+      expect(screen.queryByTestId("up-link")).not.toBeInTheDocument();
+    });
+
+    it("band · dark renders the up-link inside the band, tone-swapped to cream", () => {
+      render(
+        <PageHero
+          kicker="De club"
+          headline="Het bestuur"
+          tone="dark"
+          upLink={{ href: "/club", label: "De club" }}
+        />,
+      );
+      const upLink = screen.getByTestId("up-link");
+      expect(upLink).toHaveAttribute("data-tone", "cream");
+      expect(upLink).toHaveAttribute("href", "/club");
+      expect(upLink).toHaveTextContent("De club");
+      // Inside the same full-bleed dark header, not a separate cream strip
+      // above it.
+      expect(screen.getByTestId("page-hero").contains(upLink)).toBe(true);
+    });
+
+    it("band · cream renders no up-link when none is passed", () => {
+      render(<PageHero headline="Downloads" />);
+      expect(screen.queryByTestId("up-link")).not.toBeInTheDocument();
+    });
+
+    it("band · cream places the up-link itself, above the card, tone ink", () => {
+      // #2570 review round 2 — PageHero owns placement on every register; a
+      // page never hand-renders its own <UpLink> above this component.
+      render(
+        <PageHero
+          headline="Downloads"
+          upLink={{ href: "/club", label: "De club" }}
+        />,
+      );
+      const upLink = screen.getByTestId("up-link");
+      const card = screen.getByTestId("page-hero");
+      expect(upLink).toHaveAttribute("data-tone", "ink");
+      expect(upLink).toHaveAttribute("href", "/club");
+      // Above the card — a sibling, not a descendant.
+      expect(card.contains(upLink)).toBe(false);
+    });
+
+    it("minimal renders no up-link when none is passed", () => {
+      render(<PageHero register="minimal" headline="Wedstrijden" />);
+      expect(screen.queryByTestId("up-link")).not.toBeInTheDocument();
+    });
+
+    it("minimal places the up-link itself, above the header, tone ink on cream", () => {
+      render(
+        <PageHero
+          register="minimal"
+          headline="Wedstrijden"
+          upLink={{ href: "/ploegen/a-ploeg", label: "A-ploeg" }}
+        />,
+      );
+      const upLink = screen.getByTestId("up-link");
+      const header = screen.getByTestId("page-hero");
+      expect(upLink).toHaveAttribute("data-tone", "ink");
+      expect(header.contains(upLink)).toBe(false);
+    });
+
+    it("minimal on a dark field places the up-link itself, tone cream", () => {
+      render(
+        <PageHero
+          register="minimal"
+          tone="dark"
+          headline="Wedstrijden"
+          upLink={{ href: "/ploegen/a-ploeg", label: "A-ploeg" }}
+        />,
+      );
+      expect(screen.getByTestId("up-link")).toHaveAttribute(
+        "data-tone",
+        "cream",
+      );
+    });
+
+    it("band · cream drops the kicker→headline mt-2 gap when there is no kicker", () => {
+      render(<PageHero headline="Downloads" />);
+      expect(screen.getByRole("heading", { level: 1 })).not.toHaveClass("mt-2");
+    });
+
+    it("minimal drops the kicker→headline mt-2 gap when there is no kicker", () => {
+      render(<PageHero register="minimal" headline="Wedstrijden" />);
+      expect(screen.getByRole("heading", { level: 1 })).not.toHaveClass("mt-2");
+    });
+
+    it("keeps the mt-2 gap when a kicker is present", () => {
+      render(<PageHero {...defaultProps} />);
+      expect(screen.getByRole("heading", { level: 1 })).toHaveClass("mt-2");
     });
   });
 

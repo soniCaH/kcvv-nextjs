@@ -68,13 +68,17 @@ export function BestuurPage({ header, body, staff = [] }: BestuurPageProps) {
 
   return (
     <>
+      {/* No kicker: the up-link inside the band already names the parent
+          ("‹ De club"), so a "De club" kicker on the same line would say it
+          twice (#2442 rule 6, applied here — not one of the two routes the
+          rule originally named, but the same duplication). */}
       <PageHero
         register="band"
         tone="dark"
-        kicker="De club"
         headline={header.name}
         lead={header.tagline?.trim() || BOARD_LEAD_FALLBACK}
         image={header.imageUrl}
+        upLink={{ href: "/club", label: "De club" }}
       />
 
       <StripedSeam colorPair="ink-cream" height="md" />

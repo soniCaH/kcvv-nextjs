@@ -13,6 +13,7 @@ import {
   PageContainer,
   Skeleton,
   LoadingAnnouncement,
+  UpLink,
 } from "@/components/design-system";
 
 export default function PlayerDetailLoading() {
@@ -20,8 +21,14 @@ export default function PlayerDetailLoading() {
     <div className="min-h-screen">
       <LoadingAnnouncement label="Spelersprofiel laden…" />
 
-      <PageContainer as="section" className="py-12 lg:py-16" aria-hidden="true">
-        <div className="grid grid-cols-1 items-start gap-x-10 gap-y-8 sm:grid-cols-[1fr_minmax(220px,320px)]">
+      <PageContainer as="section" className="py-12 lg:py-16">
+        {/* Real, unshimmered — its label is fixed copy, not data
+            (review round 2, #2570). */}
+        <UpLink href="/ploegen" label="Ploegen" className="mb-6" />
+        <div
+          aria-hidden="true"
+          className="grid grid-cols-1 items-start gap-x-10 gap-y-8 sm:grid-cols-[1fr_minmax(220px,320px)]"
+        >
           <div className="flex flex-col gap-5">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-24 w-32" />

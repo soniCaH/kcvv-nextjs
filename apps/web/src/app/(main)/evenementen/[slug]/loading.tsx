@@ -26,6 +26,7 @@ import {
   PageContainer,
   Skeleton,
   LoadingAnnouncement,
+  UpLink,
 } from "@/components/design-system";
 
 export default function EventDetailLoading() {
@@ -34,6 +35,11 @@ export default function EventDetailLoading() {
       <LoadingAnnouncement label="Evenement laden…" />
 
       <PageContainer as="main" className="py-12">
+        {/* Real, unshimmered — its label is fixed copy, not data (review
+            round 2, #2570). Always the container's left edge, even though
+            EventHero itself is centred (#2442 rule 3). */}
+        <UpLink href="/evenementen" label="Evenementen" className="mb-6" />
+
         {/* EventHero — centred 680 footprint. */}
         <article
           aria-hidden="true"

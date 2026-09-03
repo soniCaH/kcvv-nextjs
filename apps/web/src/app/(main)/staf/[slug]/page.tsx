@@ -29,7 +29,7 @@ import { BioBlock, QuotesBlock } from "@/components/player";
 import { hasRenderableBioContent } from "@/lib/portable-text/findPullquoteText";
 import { StaffHero } from "@/components/staff/StaffHero";
 import { StaffRoles } from "@/components/staff/StaffRoles";
-import { PageContainer, StripedSeam } from "@/components/design-system";
+import { PageContainer, StripedSeam, UpLink } from "@/components/design-system";
 
 interface StaffPageProps {
   params: Promise<{ slug: string }>;
@@ -174,8 +174,7 @@ export default async function StafPage({ params }: StaffPageProps) {
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },
-          { name: "Club", url: `${SITE_CONFIG.siteUrl}/club` },
-          { name: "Staf", url: `${SITE_CONFIG.siteUrl}/hulp#structuur` },
+          { name: "Hulp", url: `${SITE_CONFIG.siteUrl}/hulp` },
           { name: fullName, url: `${SITE_CONFIG.siteUrl}/staf/${slug}` },
         ])}
       />
@@ -192,6 +191,7 @@ export default async function StafPage({ params }: StaffPageProps) {
           `/spelers/[slug]` hero section; the bottom padding reserves the
           rhythm before the full-bleed seam. */}
       <PageContainer as="section" className="py-12 lg:py-16">
+        <UpLink href="/hulp" label="Hulp" className="mb-6" />
         <StaffHero
           id={member.id}
           firstName={member.firstName}

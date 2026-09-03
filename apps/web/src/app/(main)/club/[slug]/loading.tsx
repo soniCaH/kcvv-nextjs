@@ -8,12 +8,16 @@
  * bars only). `headline="Laden…"` was banned outright: a placeholder heading
  * is announced, indexed, and read aloud, which is worse than none.
  *
- * `size="default"` matches the real page's `<PageHero kicker="Club"
- * headline={page.title} image={page.heroImageUrl} />` call (no `size` means
- * the real card is `padding="lg"`). The page's `heroImageUrl` is optional
- * per-CMS-page data the skeleton cannot predict — footprint (an image slot
- * that may or may not render) is the one thing #2432 §7 explicitly leaves
- * unfixed site-wide, same as card counts elsewhere.
+ * `size="default"` matches the real page's `<PageHero headline={page.title}
+ * image={page.heroImageUrl} />` call (no `size` means the real card is
+ * `padding="lg"`). No kicker either way — the real page dropped it in favour
+ * of the up-link above it (#2442 rule 6, #2570). The up-link itself renders
+ * real and unshimmered, same as `/club/contact`'s loading state: its label
+ * ("De club") is fixed copy, not data, so per #2432 §2 it is not something
+ * this route needs to hide behind a shimmer bar. The page's `heroImageUrl` is
+ * optional per-CMS-page data the skeleton cannot predict — footprint (an
+ * image slot that may or may not render) is the one thing #2432 §7
+ * explicitly leaves unfixed site-wide, same as card counts elsewhere.
  */
 
 import { PageHeroSkeleton } from "@/components/layout/PageHero";
@@ -30,7 +34,12 @@ export default function ClubPageLoading() {
       <LoadingAnnouncement label="Pagina laden…" />
 
       <PageContainer className="pt-10 pb-12">
-        <PageHeroSkeleton register="band" tone="cream" size="default" />
+        <PageHeroSkeleton
+          register="band"
+          tone="cream"
+          size="default"
+          upLink={{ href: "/club", label: "De club" }}
+        />
       </PageContainer>
 
       <StripedSeam colorPair="ink-cream" height="md" />

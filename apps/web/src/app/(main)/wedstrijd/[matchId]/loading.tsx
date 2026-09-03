@@ -31,6 +31,7 @@ import {
   StripedSeam,
   Skeleton,
   LoadingAnnouncement,
+  UpLink,
 } from "@/components/design-system";
 
 /** Shared kicker + display-heading footprint for the cream body sections. */
@@ -49,12 +50,14 @@ export default function MatchDetailLoading() {
       <LoadingAnnouncement label="Wedstrijd laden…" />
 
       {/* MatchHero — single TapedCard with a dashed stub + score body. */}
-      <PageContainer
-        as="section"
-        className="bg-cream-soft py-8"
-        aria-hidden="true"
-      >
-        <div className="border-ink bg-cream shadow-paper-md grid grid-cols-1 border-2 md:grid-cols-[110px_1fr]">
+      <PageContainer as="section" className="bg-cream-soft py-8">
+        {/* Real, unshimmered — its label is fixed copy, not data
+            (review round 2, #2570). */}
+        <UpLink href="/kalender" label="Kalender" className="mb-6" />
+        <div
+          aria-hidden="true"
+          className="border-ink bg-cream shadow-paper-md grid grid-cols-1 border-2 md:grid-cols-[110px_1fr]"
+        >
           <div className="border-ink space-y-2 border-b-2 border-dashed p-5 md:border-r-2 md:border-b-0">
             <Skeleton className="h-6 w-16" />
             <Skeleton className="h-6 w-12" />

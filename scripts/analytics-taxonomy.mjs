@@ -151,6 +151,10 @@ export const params = [
   // rows); the banner families overload it with the a/b/c slot letter, which
   // matches the Sanity field names (`bannerSlotA`) an editor would change.
   // Any report on `position` therefore has to filter by `event_name` first.
+  // `nav_parent_click` (#2570, the up-link to a route's structural parent)
+  // is the same shape: no new params, `page_slug` (the source route) +
+  // `destination` (the parent href), both already registered above — the
+  // 50-dimension cap this family is already past applies here too.
   // ── Jeugd nav hub ───────────────────────────────────────────────────────
   { parameterName: "card_type", displayName: "Card type" },
   { parameterName: "tag", displayName: "Card tag" },

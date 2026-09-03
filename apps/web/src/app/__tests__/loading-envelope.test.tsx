@@ -63,6 +63,7 @@ import PrivacyLoading from "../(main)/privacy/loading";
 import ShareLoading from "../(main)/share/loading";
 import GalerijLoading from "../(main)/galerij/loading";
 import GalerijDetailLoading from "../(main)/galerij/[slug]/loading";
+import WordLidLoading from "../(main)/club/word-lid/loading";
 
 describe("loading.tsx envelope drift guard", () => {
   // -------------------------------------------------------------------------
@@ -275,6 +276,16 @@ describe("loading.tsx envelope drift guard", () => {
       Loading: GalerijDetailLoading,
       expectedRootClass: "bg-cream",
       announcement: "Fotogalerij laden…",
+    },
+    {
+      name: "/club/word-lid",
+      Loading: WordLidLoading,
+      // The route is fully static (no data fetch), so this reuses the real
+      // `<PageHero>` + `<MembershipForm>` unshimmered — new in #2570 review
+      // round 2, replacing the absence that made it fall through to
+      // `/club`'s own skeleton.
+      expectedRootClass: "bg-cream py-12 sm:py-16",
+      announcement: "Word lid laden…",
     },
   ];
 

@@ -36,7 +36,10 @@ export default function ClubPage() {
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },
-          { name: "Club", url: `${SITE_CONFIG.siteUrl}/club` },
+          // "De club" (review round 2, #2570) — the same URL is emitted
+          // under two different names otherwise: this page's own
+          // Home → self entry, and its seven children's up-link parent.
+          { name: "De club", url: `${SITE_CONFIG.siteUrl}/club` },
         ])}
       />
 

@@ -8,6 +8,5 @@
  * inside `<PageHero>`'s emphasis logic. Keeping the copy here, imported by
  * both `ContactPage.tsx` and `loading.tsx`, avoids the boundary entirely.
  */
-export const CONTACT_KICKER = "Club";
 export const CONTACT_HEADLINE = "Contact";
 export const CONTACT_LEAD = "Heb je een vraag? We helpen je graag verder.";

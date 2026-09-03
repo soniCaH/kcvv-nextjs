@@ -26,9 +26,14 @@ export function HeritageHero() {
     <PageContainer className="pt-12 sm:pt-16">
       <PageHero
         register="minimal"
-        kicker="De club · sinds 1909"
+        // "De club" dropped from the kicker (review round 2, #2570): the
+        // up-link below already says it — "Sinds 1909" keeps the one datum
+        // the chip doesn't carry, matching the same fix on the other three
+        // routes where a kicker and the up-link repeated the parent name.
+        kicker="Sinds 1909"
         headline="Meer dan een eeuw"
         lead="Van de Jonge Footbalclub in 1909 tot het nationale voetbal vandaag — de rijke geschiedenis van één plezante compagnie."
+        upLink={{ href: "/club", label: "De club" }}
       />
     </PageContainer>
   );

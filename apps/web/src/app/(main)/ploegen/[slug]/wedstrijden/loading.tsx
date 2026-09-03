@@ -27,7 +27,12 @@ export default function WedstrijdenLoading() {
       <LoadingAnnouncement label="Wedstrijden laden…" />
 
       <PageContainer className="py-12 sm:py-16">
-        <PageHeroSkeleton register="minimal" />
+        {/* No kicker (the real hero has none — the up-link carries the team
+            name instead, #2442 rule 6) and a shimmer stand-in for the
+            up-link itself: unlike every other route's up-link label, this
+            one *is* data (the team display name), so it cannot render real
+            before the fetch resolves (review round 2, #2570). */}
+        <PageHeroSkeleton register="minimal" kicker={false} upLinkShimmer />
 
         {/* Month bands — display-big heading + agenda rows. */}
         <div className="flex flex-col gap-10">

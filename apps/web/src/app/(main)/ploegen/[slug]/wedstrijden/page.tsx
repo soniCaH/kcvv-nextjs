@@ -147,10 +147,15 @@ export default async function WedstrijdenPage({
       <AgendaScrollToNext nextMatchId={nextMatch?.id ?? null} />
 
       <PageContainer className="py-12 sm:py-16">
+        {/* No kicker: the up-link `<PageHero>` renders above itself already
+            names the parent team, so a second `{displayName}` label would
+            say it twice (#2442 rule 6 — this is the route's own
+            originally-named instance, the inert `<p>{team.name}</p>` that
+            predated the current PageHero composition). */}
         <PageHero
           register="minimal"
-          kicker={displayName}
           headline="Wedstrijden"
+          upLink={{ href: `/ploegen/${slug}`, label: displayName }}
         />
 
         {matches.length === 0 ? (

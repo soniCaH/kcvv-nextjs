@@ -69,7 +69,7 @@ import { MatchHero } from "@/components/match/MatchHero";
 import { MatchLineupSection } from "@/components/match/MatchLineupSection";
 import { MatchEventsSection } from "@/components/match/MatchEventsSection";
 import { MatchStandingsSection } from "@/components/match/MatchStandingsSection";
-import { PageContainer, StripedSeam } from "@/components/design-system";
+import { PageContainer, StripedSeam, UpLink } from "@/components/design-system";
 import { RelatedRow } from "@/components/related/RelatedRow";
 import { mergeRelatedRow } from "@/components/related/mergeRelatedRow";
 import type { RelatedRowItem } from "@/components/related/types";
@@ -565,6 +565,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
       <MatchStripSlot />
 
       <PageContainer className="py-12 lg:py-16">
+        <UpLink href="/kalender" label="Kalender" className="mb-6" />
         <MatchHero
           homeTeam={homeTeam}
           awayTeam={awayTeam}

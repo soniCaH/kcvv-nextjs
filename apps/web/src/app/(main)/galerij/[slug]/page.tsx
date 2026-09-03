@@ -197,6 +197,7 @@ export default async function GalleryDetailPage({ params }: GalleryPageProps) {
           register="minimal"
           kicker="KCVV Elewijt · Beelden"
           headline={gallery.title}
+          upLink={{ href: "/galerij", label: "Fotogalerij" }}
         >
           {gallery.publishedAt && (
             <p className="mt-3">

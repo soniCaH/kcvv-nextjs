@@ -25,7 +25,7 @@ export default function HistoryPage() {
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },
-          { name: "Club", url: `${SITE_CONFIG.siteUrl}/club` },
+          { name: "De club", url: `${SITE_CONFIG.siteUrl}/club` },
           {
             name: "Geschiedenis",
             url: `${SITE_CONFIG.siteUrl}/club/geschiedenis`,

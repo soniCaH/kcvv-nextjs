@@ -20,12 +20,21 @@ import {
   StripedSeam,
   Skeleton,
   LoadingAnnouncement,
+  UpLink,
 } from "@/components/design-system";
 
 export default function ArticleDetailLoading() {
   return (
     <div className="min-h-screen">
       <LoadingAnnouncement label="Artikel laden…" />
+
+      {/* Up-link — real, unshimmered: its label is fixed copy, not data
+          (review round 2, #2570). Mirrors the real page's own bare
+          container (no invented padding — `EditorialHero`'s own `pt-10`
+          below already supplies the gap). */}
+      <PageContainer width="default">
+        <UpLink href="/nieuws" label="Nieuws" />
+      </PageContainer>
 
       {/* EditorialHero footprint — wide (1040): kicker + headline + lead beside
           a framed cover figure. */}

@@ -42,7 +42,7 @@ export default function WordLidPage() {
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },
-          { name: "Club", url: `${SITE_CONFIG.siteUrl}/club` },
+          { name: "De club", url: `${SITE_CONFIG.siteUrl}/club` },
           { name: "Word lid", url: `${SITE_CONFIG.siteUrl}/club/word-lid` },
         ])}
       />
@@ -53,6 +53,7 @@ export default function WordLidPage() {
           headline="Doe mee"
           accent="mee"
           lead="Speler, jeugdspeler, vrijwilliger, trainer of scheidsrechter — vul het formulier in en we nemen binnenkort contact met je op. Dit is een aanvraag: sommige ploegen zitten vol, dus een plekje is niet altijd gegarandeerd."
+          upLink={{ href: "/club", label: "De club" }}
         >
           <p className="text-body-md mt-4">
             <Link href="/club/praktische-informatie" className="prose-link">

@@ -81,18 +81,21 @@ export default async function DynamicClubPage({ params }: Props) {
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: "Home", url: SITE_CONFIG.siteUrl },
-          { name: "Club", url: `${SITE_CONFIG.siteUrl}/club` },
+          { name: "De club", url: `${SITE_CONFIG.siteUrl}/club` },
           { name: page.title, url: `${SITE_CONFIG.siteUrl}/club/${slug}` },
         ])}
       />
-      {/* Hero — kicker "Club", headline = page.title, optional heroImage
-          (typographic state when absent). `pb-12` reserves the rhythm before
-          the full-bleed seam (StripedSeam carries no margin of its own). */}
+      {/* Hero — headline = page.title, optional heroImage (typographic state
+          when absent). No kicker: the up-link `<PageHero>` renders above
+          itself already names the parent ("‹ De club"), so a "Club" kicker
+          would say it twice (#2442 rule 6). `pb-12` reserves the rhythm
+          before the full-bleed seam (StripedSeam carries no margin of its
+          own). */}
       <PageContainer className="pt-10 pb-12">
         <PageHero
-          kicker="Club"
           headline={page.title}
           image={page.heroImageUrl ?? undefined}
+          upLink={{ href: "/club", label: "De club" }}
         />
       </PageContainer>
 

@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 import {
   buildSportsClubJsonLd,
@@ -274,6 +276,54 @@ describe("buildBreadcrumbJsonLd", () => {
     }>;
     expect(items).toHaveLength(1);
     expect(items[0].position).toBe(1);
+  });
+
+  // Regression coverage for the three trail-label corrections #2570 makes.
+  // `buildBreadcrumbJsonLd` itself is generic — it echoes whatever array a
+  // caller hands it — so pinning a hand-typed literal here would only prove
+  // the builder works, never guard the correction: it cannot fail if
+  // `/spelers/[slug]` reverts its label back to the club name. These read
+  // each route's own source instead. `cross-page-consistency.test.ts`'s
+  // Rule 9 (#2570) already reads the same three files to check the
+  // up-link's *target* URL against the trail, but Rule 9 never extracts
+  // `name:` — a route whose URL stays correct while its label regresses is
+  // invisible to it. This is that other half, kept here rather than folded
+  // into Rule 9 because it is a `name:`-shape review of jsonld's own callers,
+  // not a route/up-link agreement check. Reads the route's own file directly
+  // rather than a second parent map (#2428 §4 forbids one).
+  describe("corrected trail labels (#2570)", () => {
+    const appDir = resolve(__dirname, "../../app");
+
+    /** Every `name:` value in a route file's first
+     *  `buildBreadcrumbJsonLd([...])` call, in trail order. */
+    function routeBreadcrumbNames(relPath: string): string[] {
+      const source = readFileSync(resolve(appDir, relPath), "utf8");
+      const call = /buildBreadcrumbJsonLd\(\s*\[([\s\S]*?)\]\s*\)/.exec(source);
+      if (!call) {
+        throw new Error(
+          `${relPath}: no buildBreadcrumbJsonLd([...]) call found`,
+        );
+      }
+      return [
+        ...call[1]!.matchAll(/\bname:\s*("(?:\\.|[^"\\])*"|[^,}]+)/g),
+      ].map((m) => m[1]!.trim());
+    }
+
+    it("/spelers/[slug] names its parent 'Ploegen', not the club name", () => {
+      const names = routeBreadcrumbNames("(main)/spelers/[slug]/page.tsx");
+      expect(names[names.length - 2]).toBe('"Ploegen"');
+    });
+
+    it("/staf/[slug] simplifies to Home → Hulp → name, dropping the Club/Staf segments and the #structuur anchor", () => {
+      const names = routeBreadcrumbNames("(main)/staf/[slug]/page.tsx");
+      expect(names).toHaveLength(3);
+      expect(names[1]).toBe('"Hulp"');
+    });
+
+    it("/club/[slug] and its leaves name the parent 'De club', not 'Club'", () => {
+      const names = routeBreadcrumbNames("(main)/club/[slug]/page.tsx");
+      expect(names[names.length - 2]).toBe('"De club"');
+    });
   });
 });
 

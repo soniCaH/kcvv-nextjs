@@ -1,6 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { UltrasHero } from "./UltrasHero";
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/club/ultras",
+}));
 
 const FB = "https://www.facebook.com/KCVV.ULTRAS.55/";
 
@@ -22,5 +26,24 @@ describe("UltrasHero", () => {
     expect(cta).toHaveAttribute("target", "_blank");
     expect(cta).toHaveAttribute("rel", "noopener noreferrer");
     expect(cta).toHaveAttribute("data-ultras-join");
+  });
+
+  it("renders no up-link when none is passed", () => {
+    render(<UltrasHero joinHref={FB} />);
+    expect(screen.queryByTestId("up-link")).not.toBeInTheDocument();
+  });
+
+  it("renders the up-link inside the band, tone-swapped to cream, left-aligned", () => {
+    // #2428/#2442 — this hero is one of the site's four dark, flush
+    // openings; the chip lives inside the band, and always at the
+    // container's left edge even though this hero is centred.
+    render(
+      <UltrasHero joinHref={FB} upLink={{ href: "/club", label: "De club" }} />,
+    );
+    const upLink = screen.getByTestId("up-link");
+    expect(upLink).toHaveAttribute("data-tone", "cream");
+    expect(upLink).toHaveAttribute("href", "/club");
+    expect(upLink).toHaveTextContent("De club");
+    expect(upLink).toHaveClass("self-start");
   });
 });

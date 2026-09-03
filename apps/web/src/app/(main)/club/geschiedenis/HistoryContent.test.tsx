@@ -5,10 +5,19 @@ import { HistoryContent } from "./HistoryContent";
 describe("HistoryContent", () => {
   it("renders the heritage hero kicker and headline", () => {
     render(<HistoryContent />);
-    expect(screen.getByText("De club · sinds 1909")).toBeInTheDocument();
+    // "De club" dropped from the kicker (review round 2, #2570) — the
+    // up-link below already says it.
+    expect(screen.getByText("Sinds 1909")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { level: 1, name: /meer dan een eeuw/i }),
     ).toBeInTheDocument();
+  });
+
+  it("renders the up-link to /club above the hero", () => {
+    render(<HistoryContent />);
+    const upLink = screen.getByTestId("up-link");
+    expect(upLink).toHaveAttribute("href", "/club");
+    expect(upLink).toHaveTextContent("De club");
   });
 
   it("renders the timeline content inside the page body container", () => {
