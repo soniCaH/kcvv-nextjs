@@ -17,6 +17,7 @@ import {
   StripedSeam,
   Skeleton,
   LoadingAnnouncement,
+  UpLink,
 } from "@/components/design-system";
 
 export default function OpponentLoading() {
@@ -25,6 +26,10 @@ export default function OpponentLoading() {
       <LoadingAnnouncement label="Tegenstander laden…" />
 
       <PageContainer className="pt-8 pb-8">
+        {/* Real, unshimmered — its label is fixed copy, not data (review
+            round 2, #2570). */}
+        <UpLink href="/kalender" label="Kalender" className="mb-6" />
+
         {/* Hero card */}
         <div className="border-ink bg-cream shadow-paper-md border-2 p-6">
           <div className="flex items-center gap-4">

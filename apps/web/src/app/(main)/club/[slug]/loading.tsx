@@ -26,7 +26,6 @@ import {
   StripedSeam,
   Skeleton,
   LoadingAnnouncement,
-  UpLink,
 } from "@/components/design-system";
 
 export default function ClubPageLoading() {
@@ -35,8 +34,12 @@ export default function ClubPageLoading() {
       <LoadingAnnouncement label="Pagina laden…" />
 
       <PageContainer className="pt-10 pb-12">
-        <UpLink href="/club" label="De club" className="mb-6" />
-        <PageHeroSkeleton register="band" tone="cream" size="default" />
+        <PageHeroSkeleton
+          register="band"
+          tone="cream"
+          size="default"
+          upLink={{ href: "/club", label: "De club" }}
+        />
       </PageContainer>
 
       <StripedSeam colorPair="ink-cream" height="md" />

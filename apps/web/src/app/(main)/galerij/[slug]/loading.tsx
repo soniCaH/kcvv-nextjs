@@ -27,7 +27,11 @@ export default function GalleryDetailLoading() {
             register="minimal"> rather than a second hand-drawn copy of its
             OpeningBars. The date line below it is this route's own (the
             real page's MonoLabel<time> child, not part of the opening). */}
-        <PageHeroSkeleton register="minimal" className="mb-0" />
+        <PageHeroSkeleton
+          register="minimal"
+          className="mb-0"
+          upLink={{ href: "/galerij", label: "Fotogalerij" }}
+        />
         <div className="mt-3 mb-10" aria-hidden="true">
           <Skeleton className="h-4 w-32" />
         </div>

@@ -49,7 +49,10 @@ export default function UltrasLoading() {
     <div className="min-h-screen">
       <LoadingAnnouncement label="Ultras laden…" />
 
-      <UltrasHero joinHref={FACEBOOK_URL} />
+      <UltrasHero
+        joinHref={FACEBOOK_URL}
+        upLink={{ href: "/club", label: "De club" }}
+      />
 
       {/* Editorial sections — kicker + heading + paragraph bars + figures. */}
       <PageContainer as="article" className="py-12 sm:py-16">

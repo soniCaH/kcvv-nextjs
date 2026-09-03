@@ -19,7 +19,6 @@ import {
   StripedSeam,
   Skeleton,
   LoadingAnnouncement,
-  UpLink,
 } from "@/components/design-system";
 import { PageHero } from "@/components/layout/PageHero";
 import {
@@ -48,8 +47,11 @@ export default function ContactLoading() {
       {/* PageHero + up-link — real, unshimmered (fixed copy / a fixed
           per-route fact, neither is data). */}
       <PageContainer className="pt-10 pb-12">
-        <UpLink href="/club" label="De club" className="mb-6" />
-        <PageHero headline={CONTACT_HEADLINE} lead={CONTACT_LEAD} />
+        <PageHero
+          headline={CONTACT_HEADLINE}
+          lead={CONTACT_LEAD}
+          upLink={{ href: "/club", label: "De club" }}
+        />
       </PageContainer>
 
       <StripedSeam colorPair="ink-cream" height="md" />

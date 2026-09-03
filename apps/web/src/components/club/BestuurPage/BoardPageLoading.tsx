@@ -31,7 +31,18 @@ export function BoardPageLoading({ label }: { label: string }) {
     <div className="min-h-screen space-y-12">
       <LoadingAnnouncement label={label} />
 
-      <PageHeroSkeleton register="band" tone="dark" image lead />
+      {/* No kicker (the real hero dropped it in favour of the up-link
+          inside the band, #2442 rule 6) and the up-link renders real,
+          unshimmered — its "De club" label is fixed copy, not data
+          (review round 2, #2570). */}
+      <PageHeroSkeleton
+        register="band"
+        tone="dark"
+        image
+        lead
+        kicker={false}
+        upLink={{ href: "/club", label: "De club" }}
+      />
 
       <StripedSeam colorPair="ink-cream" height="md" />
 

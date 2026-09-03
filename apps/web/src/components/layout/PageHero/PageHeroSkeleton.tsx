@@ -6,6 +6,7 @@ import {
 import { TapedCard } from "@/components/design-system/TapedCard";
 import { DottedDivider } from "@/components/design-system/Divider";
 import { Skeleton } from "@/components/design-system/Skeleton";
+import { UpLink, type UpLinkProps } from "@/components/design-system/UpLink";
 import type { PageHeroRegister, PageHeroSize, PageHeroTone } from "./PageHero";
 
 /**
@@ -49,6 +50,27 @@ export interface PageHeroSkeletonProps {
   /** Draw the lead bar. */
   lead?: boolean;
   /**
+   * Draw the kicker bar. Default `true` — set `false` when the real
+   * `<PageHero>` this stands in for renders no kicker (#2442 rule 6, e.g.
+   * `/club/[slug]`, the board routes): the real hero is one bar shorter, so
+   * the skeleton must be too, or the page reflows on swap-in.
+   */
+  kicker?: boolean;
+  /**
+   * The up-link this loading state stands in for — real and unshimmered,
+   * because its label is a fixed per-route fact, not data (the same reason
+   * the real `<PageHero kicker=…>` copy already renders unshimmered on this
+   * component's two existing callers). Omit on a route with no up-link.
+   */
+  upLink?: Pick<UpLinkProps, "href" | "label">;
+  /**
+   * A shimmer placeholder for the up-link instead of the real thing — the
+   * one route (`/ploegen/[slug]/wedstrijden`) whose up-link label *is* data
+   * (the team display name) and so cannot render real before the fetch
+   * resolves. Ignored when `upLink` is also passed.
+   */
+  upLinkShimmer?: boolean;
+  /**
    * Band · cream only, mirroring `<PageHero>`'s own `size` — drives the
    * `<TapedCard>` padding (`"compact"` → `md`, `"default"` → `lg`).
    */
@@ -57,16 +79,61 @@ export interface PageHeroSkeletonProps {
 }
 
 /** Kicker → headline → lead, at `<PageHero>`'s own rhythm. */
-function OpeningBars({ tone, lead }: { tone: PageHeroTone; lead: boolean }) {
+function OpeningBars({
+  tone,
+  lead,
+  kicker,
+}: {
+  tone: PageHeroTone;
+  lead: boolean;
+  kicker: boolean;
+}) {
   return (
     <>
-      <Skeleton tone={tone} className="h-3 w-44" />
-      <Skeleton tone={tone} className="mt-2 h-12 w-2/3 max-w-full" />
+      {kicker ? <Skeleton tone={tone} className="h-3 w-44" /> : null}
+      <Skeleton
+        tone={tone}
+        className={cn(kicker ? "mt-2" : undefined, "h-12 w-2/3 max-w-full")}
+      />
       {lead ? (
         <Skeleton tone={tone} className="mt-4 h-5 w-1/2 max-w-full" />
       ) : null}
     </>
   );
+}
+
+/** The up-link footprint — real (unshimmered) when the label is fixed copy,
+ *  a shimmer bar the same size when it is data. */
+function UpLinkSlot({
+  upLink,
+  shimmer,
+  tone,
+}: {
+  upLink: Pick<UpLinkProps, "href" | "label"> | undefined;
+  shimmer: boolean | undefined;
+  tone: "ink" | "cream";
+}) {
+  if (upLink) {
+    return (
+      <UpLink
+        href={upLink.href}
+        label={upLink.label}
+        tone={tone}
+        className="mb-6"
+      />
+    );
+  }
+  if (shimmer) {
+    // Matches <UpLink>'s own footprint: border-2 + py-2 around an 11px line
+    // box ≈ 31px tall, chip-width rather than full-bleed.
+    return (
+      <Skeleton
+        tone={tone === "cream" ? "dark" : "cream"}
+        className="mb-6 h-[31px] w-28"
+      />
+    );
+  }
+  return null;
 }
 
 export function PageHeroSkeleton({
@@ -75,34 +142,45 @@ export function PageHeroSkeleton({
   width,
   image = false,
   lead = false,
+  kicker = true,
+  upLink,
+  upLinkShimmer,
   size = "compact",
   className,
 }: PageHeroSkeletonProps) {
   if (register === "minimal") {
     return (
       <div aria-hidden="true" className={cn("mb-10", className)}>
-        <OpeningBars tone={tone} lead={lead} />
+        <UpLinkSlot
+          upLink={upLink}
+          shimmer={upLinkShimmer}
+          tone={tone === "dark" ? "cream" : "ink"}
+        />
+        <OpeningBars tone={tone} lead={lead} kicker={kicker} />
       </div>
     );
   }
 
   if (tone === "cream") {
     return (
-      <div aria-hidden="true" data-testid="page-hero-skeleton">
-        <TapedCard
-          bg="cream"
-          padding={size === "compact" ? "md" : "lg"}
-          tape={{ color: "warm", position: "left", length: "lg" }}
-          className={className}
-        >
-          <OpeningBars tone="cream" lead={lead} />
-          {/* The real typographic (no-image) state always shows this rule —
-              band · cream never carries an image — so the skeleton always
-              reserves the space for it too. */}
-          <div className="mt-4 w-[120px]">
-            <DottedDivider />
-          </div>
-        </TapedCard>
+      <div aria-hidden="true">
+        <UpLinkSlot upLink={upLink} shimmer={upLinkShimmer} tone="ink" />
+        <div data-testid="page-hero-skeleton">
+          <TapedCard
+            bg="cream"
+            padding={size === "compact" ? "md" : "lg"}
+            tape={{ color: "warm", position: "left", length: "lg" }}
+            className={className}
+          >
+            <OpeningBars tone="cream" lead={lead} kicker={kicker} />
+            {/* The real typographic (no-image) state always shows this rule —
+                band · cream never carries an image — so the skeleton always
+                reserves the space for it too. */}
+            <div className="mt-4 w-[120px]">
+              <DottedDivider />
+            </div>
+          </TapedCard>
+        </div>
       </div>
     );
   }
@@ -111,14 +189,17 @@ export function PageHeroSkeleton({
     <header aria-hidden="true" className={cn("bg-jersey-deep-dark", className)}>
       <PageContainer
         width={width}
-        className="grid gap-8 py-14 sm:py-20 md:grid-cols-[1fr_auto] md:items-center"
+        className="flex flex-col gap-6 py-14 sm:py-20"
       >
-        <div>
-          <OpeningBars tone="dark" lead={lead} />
+        <UpLinkSlot upLink={upLink} shimmer={upLinkShimmer} tone="cream" />
+        <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <OpeningBars tone="dark" lead={lead} kicker={kicker} />
+          </div>
+          {image ? (
+            <div className="border-ink bg-cream-soft shadow-paper-md aspect-[3/2] w-full border-2 md:w-[24rem]" />
+          ) : null}
         </div>
-        {image ? (
-          <div className="border-ink bg-cream-soft shadow-paper-md aspect-[3/2] w-full border-2 md:w-[24rem]" />
-        ) : null}
       </PageContainer>
     </header>
   );

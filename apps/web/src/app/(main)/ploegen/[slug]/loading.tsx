@@ -22,12 +22,20 @@ import {
   StripedSeam,
   Skeleton,
   LoadingAnnouncement,
+  UpLink,
 } from "@/components/design-system";
 
 export default function TeamDetailLoading() {
   return (
     <div className="min-h-screen">
       <LoadingAnnouncement label="Ploeg laden…" />
+
+      {/* Real, unshimmered — its label is fixed copy, not data (review
+          round 2, #2570). Same container width as the section below
+          (default = container-wide), no invented padding of its own. */}
+      <PageContainer>
+        <UpLink href="/ploegen" label="Ploegen" className="mb-6" />
+      </PageContainer>
 
       {/* TeamHero — wide (1040): words column + taped team figure. */}
       <section
