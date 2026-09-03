@@ -41,6 +41,16 @@
  * shadow is invisible there) — the same fact `<EmptyState surface="inverse">`
  * names for its own card, so the two use the same word for it.
  *
+ * **`surface` also names the row's ground for `<ScrollRail>` (#2805).** The
+ * overflow fade's gradient start colour must match what's actually behind
+ * the track (`<ScrollRail>`'s own docblock), so `surface` now drives
+ * `fadeFromClassName` too: `"paper"` → `from-cream`, `"inverse"` →
+ * `from-jersey-deep-dark` — the same token the organigram breadcrumb passes
+ * for its own dark panel. Before this, `<FilterTabs>` forwarded no
+ * `fadeFromClassName` at all, so every row — including ones already on a
+ * dark ground (`/evenementen`) — took the cream default, which painted a
+ * cream smear over the arrow on any non-cream field.
+ *
  * **Overflow is plain scroll, on purpose.** Four alternatives (wrap-capped,
  * sticky "Alles", "Alles" outside the scroller, snap-back-on-empty) were
  * prototyped on the real `/kalender` route and rejected as unintuitive
@@ -132,10 +142,13 @@ export interface FilterTab {
  *  hard ink shadow reads correctly; `"inverse"` for a row hosted on an ink
  *  or dark-green ground, where DESIGN.md's rule is that the hard shadow is
  *  invisible and the soft one is used instead. Only INACTIVE chips read
- *  this — the active chip is unconditionally the soft shadow regardless of
- *  ground. Same word `<EmptyState surface>` / `<TapedCard shadow>` use for
- *  the same fact, so a row and a nearby empty state name their ground
- *  identically instead of two props disagreeing on one truth. */
+ *  this for their shadow — the active chip is unconditionally the soft
+ *  shadow regardless of ground. Same word `<EmptyState surface>` /
+ *  `<TapedCard shadow>` use for the same fact, so a row and a nearby empty
+ *  state name their ground identically instead of two props disagreeing on
+ *  one truth. Also drives `<ScrollRail>`'s overflow-fade start colour
+ *  (#2805) — `"paper"` → `from-cream`, `"inverse"` → `from-jersey-deep-dark`
+ *  — so the fade always matches the ground it's painted over. */
 export type FilterTabsSurface = "paper" | "inverse";
 
 export interface FilterTabsProps {
@@ -153,7 +166,9 @@ export interface FilterTabsProps {
   ariaLabel?: string;
   /** Render as links instead of buttons (for Next.js Link / SSR routing) */
   renderAsLinks?: boolean;
-  /** The row's ground — `"inverse"` for a row hosted on an ink/dark ground. */
+  /** The row's ground — `"inverse"` for a row hosted on an ink/dark ground.
+   *  Drives both the inactive chip's shadow and the `<ScrollRail>` overflow
+   *  fade's start colour (#2805). */
   surface?: FilterTabsSurface;
 }
 
@@ -252,6 +267,11 @@ export function FilterTabs({
       className={className}
       role="group"
       ariaLabel={ariaLabel}
+      // The fade must match the row's own ground (#2805) — see the
+      // `surface` doc comment above.
+      fadeFromClassName={
+        surface === "inverse" ? "from-jersey-deep-dark" : "from-cream"
+      }
       // scrollbar-hide @utility lives in globals.css. pb-1.5 (6 px) gives
       // the 4 × 4 paper shadow room to render — `overflow-x: auto` is
       // silently normalised by browsers to clip on both axes when the
