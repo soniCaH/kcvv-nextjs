@@ -22,11 +22,22 @@ test.beforeAll(async ({ baseURL }) => {
   }
 
   const sitemapResponse = await fetch(`${baseURL}/sitemap.xml`);
+  if (!sitemapResponse.ok) {
+    throw new Error(
+      `Failed to fetch sitemap.xml: ${sitemapResponse.status} ${sitemapResponse.statusText}`,
+    );
+  }
   const sitemapXml = await sitemapResponse.text();
   const teamSlugs = Array.from(
     sitemapXml.matchAll(/<loc>\s*[^<]*\/ploegen\/([a-z0-9-]+)\s*<\/loc>/g),
     (m) => m[1]!,
   );
+  if (teamSlugs.length === 0) {
+    throw new Error(
+      "sitemap.xml carries zero /ploegen/[slug] entries — every test below " +
+        "would silently skip and this suite would still report green.",
+    );
+  }
 
   // Not every team ships the nav today (it auto-hides at ≤1 section — #2444/
   // #2478's pre-season blindness). Scan for one that does rather than
@@ -53,12 +64,12 @@ async function stickyBarBottom(page: Page, testId: string) {
 /**
  * Waits until `window.scrollY` has stopped changing for a short quiet
  * period, rather than a fixed timeout. A fixed wait can read the geometry
- * mid-animation and pass "by accident" — #2584 review finding 1 caught
- * exactly this: a bar that grows *after* a native smooth-scroll already
- * started (e.g. `<HubSearch>` mounting once the hero leaves view) keeps
- * scrolling well past 600ms, and the version of this spec that waited a
- * flat 600ms observed an intermediate, still-in-flight position instead of
- * where the page actually settles.
+ * mid-animation and pass "by accident": a bar that grows *after* a native
+ * smooth-scroll already started (e.g. `<HubSearch>` mounting once the hero
+ * leaves view) keeps scrolling well past 600ms, and an earlier version of
+ * this spec that waited a flat 600ms observed an intermediate,
+ * still-in-flight position instead of where the page actually settles —
+ * measured on `/hulp` at 375px, where the settle takes closer to 900ms.
  */
 async function waitForScrollSettled(page: Page) {
   await page.waitForFunction(
@@ -102,7 +113,7 @@ test.describe("scroll-spy fills the chip that is actually being read (#2478 rule
     // Explicit `block: "start"` rather than `scrollIntoViewIfNeeded()` — the
     // latter scrolls the *minimum* distance needed, which for a short
     // trailing section can leave it short of the spy's `-55%` bottom band
-    // entirely, so `aria-current` never appears (#2584 review finding 6).
+    // entirely, so `aria-current` never appears.
     await page
       .locator(`#${targetId}`)
       .evaluate((el) => el.scrollIntoView({ block: "start" }));
@@ -178,8 +189,9 @@ test.describe("an anchor jump lands below the bar, at the derived offset (#2478 
     page,
   }) => {
     // 375px is where `<HubSearch>` reveals as its own wrapped row once the
-    // hero scrolls out of view — the exact mid-scroll bar-growth race
-    // #2584 review finding 1 named (measured on this route at this width).
+    // hero scrolls out of view — the exact mid-scroll bar-growth race that
+    // makes this landing worth its own test (measured on this route at
+    // this width).
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto("/hulp");
 
@@ -201,11 +213,11 @@ test.describe("an anchor jump lands below the bar, at the derived offset (#2478 
   test("a cold load with a hash already in the URL, on a route that HAS a section nav, still lands below the bar", async ({
     page,
   }) => {
-    // #2584 review finding 4: the hand-written `scroll-mt-*` fallbacks this
-    // ticket deletes used to cover a hard/cold load's pre-hydration jump.
-    // The derived offset only exists once this hook's effect has run, so
-    // this is the direct regression test for that gap — on a route that
-    // actually has a nav, not `/jeugd#visie` (which has none).
+    // The hand-written `scroll-mt-*` fallbacks this ticket deletes used to
+    // cover a hard/cold load's pre-hydration jump. The derived offset only
+    // exists once this hook's effect has run, so this is the regression
+    // test for that gap — on a route that actually has a nav, not
+    // `/jeugd#visie` (which has none).
     test.skip(
       !teamSlugWithNav,
       "no team in the sitemap renders TeamSectionNav today (pre-season)",
