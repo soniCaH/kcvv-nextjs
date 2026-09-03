@@ -45,8 +45,22 @@ describe("UpLink", () => {
     expect(window.dataLayer).toHaveLength(1);
     expect(window.dataLayer![0]).toEqual({
       event: "nav_parent_click",
-      path: "/nieuws/een-artikel",
+      // Reuses the already-registered `page_slug` dimension, not a new
+      // `path` key (review round 2, #2570).
+      page_slug: "/nieuws/een-artikel",
       destination: "/kalender",
     });
+  });
+
+  it("shows a visible focus ring on keyboard focus, per tone", () => {
+    const { rerender } = render(<UpLink href="/nieuws" label="Nieuws" />);
+    expect(screen.getByTestId("up-link").className).toContain(
+      "focus-visible:outline-jersey-deep",
+    );
+
+    rerender(<UpLink href="/club" label="De club" tone="cream" />);
+    expect(screen.getByTestId("up-link").className).toContain(
+      "focus-visible:outline-warm",
+    );
   });
 });
