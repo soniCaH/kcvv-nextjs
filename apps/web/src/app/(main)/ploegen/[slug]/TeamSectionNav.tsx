@@ -2,9 +2,7 @@
 
 import { cn } from "@/lib/utils/cn";
 import { PageContainer } from "@/components/design-system";
-import { useScrollHint } from "@/components/design-system/ScrollHint/useScrollHint";
-import { ScrollArrowButton } from "@/components/design-system/ScrollHint/ScrollArrowButton";
-import { SCROLL_RAIL_CLASSES } from "@/components/design-system/ScrollHint/scrollRail";
+import { ScrollRail } from "@/components/design-system/ScrollHint/ScrollRail";
 
 export interface TeamSectionNavItem {
   /** Anchor target id (matches the section's `id`). */
@@ -32,12 +30,12 @@ export interface TeamSectionNavProps {
  * five auto-hiding sections (`Klassement`, `Info`) are currently absent
  * because no team has published klassement or editorial data yet, not
  * because they don't exist. #2489's final rule replaces the fixed rail with
- * one that follows real overflow at every width: like `<FilterTabs>`, this
- * is a "row of discrete things" (nav items a visitor taps), so it holds a
- * 40px gutter on both sides exactly when `useScrollHint`'s `overflows` is
- * true, and the spent direction disables in place rather than unmounting.
- * On today's three-item data the arrow essentially never mounts; it is
- * ready the moment a fourth or fifth section makes the row overflow.
+ * one that follows real overflow at every width — the same `<ScrollRail>`
+ * "row of discrete things" idiom `<FilterTabs>` uses (nav items a visitor
+ * taps): a 40px gutter on both sides exactly when the track overflows, the
+ * spent direction disabled in place rather than unmounted. On today's
+ * three-item data the arrow essentially never mounts; it is ready the
+ * moment a fourth or fifth section makes the row overflow.
  *
  * Only the scroll-arrow behaviour is this ticket's (#2577) — the light chip
  * item register, scroll-spy active state and derived anchor offset that
@@ -46,15 +44,6 @@ export interface TeamSectionNavProps {
  * unchanged.
  */
 export function TeamSectionNav({ items }: TeamSectionNavProps) {
-  const {
-    scrollRef,
-    canScrollLeft,
-    canScrollRight,
-    overflows,
-    scrollLeft,
-    scrollRight,
-  } = useScrollHint<HTMLUListElement>();
-
   if (items.length <= 1) return null;
 
   return (
@@ -67,23 +56,11 @@ export function TeamSectionNav({ items }: TeamSectionNavProps) {
         "border-ink bg-cream sticky top-16 z-20 border-b-2",
       )}
     >
-      <PageContainer className="relative">
-        {overflows && (
-          <ScrollArrowButton
-            direction="left"
-            register="control"
-            onClick={scrollLeft}
-            disabled={!canScrollLeft}
-          />
-        )}
-
-        <ul
-          ref={scrollRef}
-          tabIndex={0}
-          className={cn(
-            "flex items-center gap-1 overflow-x-auto py-2",
-            overflows && SCROLL_RAIL_CLASSES,
-          )}
+      <PageContainer>
+        <ScrollRail
+          as="ul"
+          ariaLabel="Sectienavigatie"
+          trackClassName="flex items-center gap-1 py-2"
         >
           {items.map((item) => (
             <li key={item.id}>
@@ -95,16 +72,7 @@ export function TeamSectionNav({ items }: TeamSectionNavProps) {
               </a>
             </li>
           ))}
-        </ul>
-
-        {overflows && (
-          <ScrollArrowButton
-            direction="right"
-            register="control"
-            onClick={scrollRight}
-            disabled={!canScrollRight}
-          />
-        )}
+        </ScrollRail>
       </PageContainer>
     </nav>
   );

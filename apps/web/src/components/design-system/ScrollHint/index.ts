@@ -8,4 +8,7 @@ export type {
   ScrollArrowButtonProps,
   ScrollArrowButtonRegister,
 } from "./ScrollArrowButton";
-export { SCROLL_RAIL_CLASSES } from "./scrollRail";
+export { ScrollRail } from "./ScrollRail";
+export type { ScrollRailProps } from "./ScrollRail";
+export { ScrollOverlay } from "./ScrollOverlay";
+export type { ScrollOverlayProps } from "./ScrollOverlay";

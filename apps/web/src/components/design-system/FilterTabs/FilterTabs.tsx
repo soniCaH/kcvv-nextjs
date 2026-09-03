@@ -48,16 +48,15 @@
  * reset off-screen behind different chrome. `overflow-x-auto` + the shared
  * absolute-positioned scroll arrows is the only overflow treatment.
  *
- * **The scroll arrow — control register, reserved rail on real overflow
- * (#2444, as amended by #2489).** The row is a "row of discrete things":
- * a chip is a tap target, and covered means unreachable — so unlike a
- * table or a diagram, it holds a 40px gutter on **both** sides exactly
- * when the track overflows at the current width (`useScrollHint`'s
- * `overflows`), never as a permanent breakpoint-gated rail. Both arrows
- * mount together and the spent direction **disables in place**
- * (`ScrollArrowButton`'s `disabled` prop) instead of unmounting, so the
- * row never jolts. This replaces the former `pl-0 ↔ pl-10` / `pr-0 ↔
- * pr-10` padding that toggled **mid-scroll** with the arrow's own
+ * **The scroll arrow — `<ScrollRail>`'s "row of discrete things" idiom
+ * (#2444, as amended by #2489).** A chip is a tap target, and covered
+ * means unreachable — so unlike a table or a diagram, this row holds a
+ * 40px gutter on both sides exactly when the track overflows at the
+ * current width, never as a permanent breakpoint-gated rail, and the spent
+ * direction disables in place instead of unmounting. See `<ScrollRail>`'s
+ * own docblock for the full contract shared with `<TeamSectionNav>` and
+ * the organigram breadcrumb. This replaces the former `pl-0 ↔ pl-10` /
+ * `pr-0 ↔ pr-10` padding that toggled **mid-scroll** with the arrow's own
  * direction — a shipped defect (#2447-adjacent): driving `scrollLeft` 0 →
  * 40 left the first chip at exactly the same viewport x, because the 40px
  * of new padding cancelled the 40px of scroll. The arrow itself is
@@ -100,9 +99,7 @@
  */
 
 import { cn } from "@/lib/utils/cn";
-import { useScrollHint } from "@/components/design-system/ScrollHint/useScrollHint";
-import { ScrollArrowButton } from "@/components/design-system/ScrollHint/ScrollArrowButton";
-import { SCROLL_RAIL_CLASSES } from "@/components/design-system/ScrollHint/scrollRail";
+import { ScrollRail } from "@/components/design-system/ScrollHint/ScrollRail";
 import type { RedesignIconProps } from "@/lib/icons.redesign";
 import type { ComponentType } from "react";
 
@@ -185,15 +182,6 @@ export function FilterTabs({
   renderAsLinks = false,
   surface = "paper",
 }: FilterTabsProps) {
-  const {
-    scrollRef,
-    canScrollLeft,
-    canScrollRight,
-    overflows,
-    scrollLeft,
-    scrollRight,
-  } = useScrollHint<HTMLDivElement>();
-
   const renderTab = (tab: FilterTab) => {
     const isActive = activeTab === tab.value;
     const Icon = tab.icon;
@@ -260,45 +248,21 @@ export function FilterTabs({
   };
 
   return (
-    <div className={cn("relative", className)}>
-      {overflows && (
-        <ScrollArrowButton
-          direction="left"
-          register="control"
-          onClick={scrollLeft}
-          disabled={!canScrollLeft}
-        />
-      )}
-
-      <div
-        ref={scrollRef}
-        role="group"
-        aria-label={ariaLabel}
-        tabIndex={0}
-        className={cn(
-          // scrollbar-hide @utility lives in globals.css. pb-1.5 (6 px)
-          // gives the 4 × 4 paper shadow room to render — `overflow-x: auto`
-          // is silently normalised by browsers to clip on both axes when
-          // the other axis would be `visible`, otherwise cropping the
-          // shadow's bottom edge (same fix the retired `<BrandedTabs>` used,
-          // #1576). Tab gap is `gap-3` = 12 px — overrides the mockup's 8 px,
-          // a value inherited from `<BrandedTabs>` at the time it still
-          // shipped alongside this component.
-          "scrollbar-hide flex gap-3 overflow-x-auto scroll-smooth pb-1.5",
-          overflows && SCROLL_RAIL_CLASSES,
-        )}
-      >
-        {tabs.map(renderTab)}
-      </div>
-
-      {overflows && (
-        <ScrollArrowButton
-          direction="right"
-          register="control"
-          onClick={scrollRight}
-          disabled={!canScrollRight}
-        />
-      )}
-    </div>
+    <ScrollRail
+      className={className}
+      role="group"
+      ariaLabel={ariaLabel}
+      // scrollbar-hide @utility lives in globals.css. pb-1.5 (6 px) gives
+      // the 4 × 4 paper shadow room to render — `overflow-x: auto` is
+      // silently normalised by browsers to clip on both axes when the
+      // other axis would be `visible`, otherwise cropping the shadow's
+      // bottom edge (same fix the retired `<BrandedTabs>` used, #1576).
+      // Tab gap is `gap-3` = 12 px — overrides the mockup's 8 px, a value
+      // inherited from `<BrandedTabs>` at the time it still shipped
+      // alongside this component.
+      trackClassName="scrollbar-hide flex gap-3 scroll-smooth pb-1.5"
+    >
+      {tabs.map(renderTab)}
+    </ScrollRail>
   );
 }

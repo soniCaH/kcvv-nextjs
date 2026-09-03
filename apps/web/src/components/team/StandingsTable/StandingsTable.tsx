@@ -1,7 +1,7 @@
 import { Crest, MonoLabel } from "@/components/design-system";
 import { isNumberlessTable } from "@/lib/utils/competitive-block-state";
 import { cn } from "@/lib/utils/cn";
-import { StandingsTableScroller } from "./StandingsTableScroller";
+import { ScrollOverlay } from "@/components/design-system/ScrollHint/ScrollOverlay";
 import type { RankingEntry } from "@kcvv/api-contract";
 
 export interface StandingsTableProps {
@@ -120,7 +120,11 @@ export function StandingsTable({
 
   return (
     <div data-testid="standings-table" className="w-full">
-      <StandingsTableScroller ariaLabel={caption ?? "Klassement"}>
+      <ScrollOverlay
+        role="region"
+        ariaLabel={caption ?? "Klassement"}
+        direction="right"
+      >
         <table className="w-full border-collapse font-mono text-xs">
           {caption ? (
             <caption className="pb-2 text-left">
@@ -240,7 +244,7 @@ export function StandingsTable({
             })}
           </tbody>
         </table>
-      </StandingsTableScroller>
+      </ScrollOverlay>
     </div>
   );
 }
