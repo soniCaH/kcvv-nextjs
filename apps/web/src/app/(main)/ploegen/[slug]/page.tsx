@@ -419,7 +419,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
             <PageContainer
               as="section"
               id="klassement"
-              className="scroll-mt-[6.5rem] py-10"
+              tabIndex={-1}
+              className="py-10 focus:outline-none"
             >
               <StandingsSection
                 tables={standings}
@@ -439,7 +440,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
                 <PageContainer
                   as="section"
                   id="wedstrijden"
-                  className="scroll-mt-[6.5rem] py-10"
+                  tabIndex={-1}
+                  className="py-10 focus:outline-none"
                 >
                   <TeamMatchesSection
                     matches={scheduleMatches}
@@ -461,7 +463,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
             <PageContainer
               as="section"
               id="spelers"
-              className="scroll-mt-[6.5rem] py-10"
+              tabIndex={-1}
+              className="py-10 focus:outline-none"
             >
               <SquadGrid players={team.players} />
             </PageContainer>
@@ -476,7 +479,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
       {team.teamType === "youth" ? (
         <>
           <StripedSeam colorPair="ink-cream" height="md" />
-          <PageContainer as="section" className="scroll-mt-[6.5rem] py-10">
+          <PageContainer as="section" className="py-10">
             <TeamEnrolmentCta
               teamType={team.teamType}
               teamSlug={slug}
@@ -492,7 +495,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
           <PageContainer
             as="section"
             id="staf"
-            className="scroll-mt-[6.5rem] py-10"
+            tabIndex={-1}
+            className="py-10 focus:outline-none"
           >
             <TeamStaff staff={staff} heading="Staf" />
           </PageContainer>
@@ -505,7 +509,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
           <PageContainer
             as="section"
             id="info"
-            className="scroll-mt-[6.5rem] py-10"
+            tabIndex={-1}
+            className="py-10 focus:outline-none"
           >
             <TeamEditorial
               body={teamBody}

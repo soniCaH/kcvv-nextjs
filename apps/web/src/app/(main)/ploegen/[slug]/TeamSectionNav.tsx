@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils/cn";
 import { PageContainer } from "@/components/design-system";
 import { ScrollRail } from "@/components/design-system/ScrollHint/ScrollRail";
+import { useSectionNav } from "@/hooks/useSectionNav";
 
 export interface TeamSectionNavItem {
   /** Anchor target id (matches the section's `id`). */
@@ -17,9 +18,16 @@ export interface TeamSectionNavProps {
 }
 
 /**
- * Sticky in-page section navigation for the team detail page. Native anchor
- * links (no JS) — `scroll-margin-top` on the section targets keeps headings
- * clear of the sticky bar. Renders nothing when one or fewer sections exist.
+ * Sticky in-page section navigation for the team detail page (#2478
+ * resolution). Each item is the **light** chip — `border` (1px), `bg-cream`,
+ * a 1px shadow, no press-down — deliberately quieter than `<FilterTabs>`
+ * (rule 1); today's bare colour-only link is gone. Active is scroll-spy
+ * driven via the shared `useSectionNav` hook (rule 3): the fill always means
+ * "the section being read", never "the one last clicked". The bar itself
+ * pins at `--sticky-header-h` (rule 4) and the same hook derives
+ * `scroll-padding-top` from its own measured height (rule 7) — no
+ * `scroll-mt-*` on any section target. Renders nothing when one or fewer
+ * sections exist.
  *
  * **Not permanently inert (#2444, corrected by #2478 and #2489).** #2444
  * originally reasoned this row "ships three items forever" and gave it a
@@ -36,42 +44,62 @@ export interface TeamSectionNavProps {
  * spent direction disabled in place rather than unmounted. On today's
  * three-item data the arrow essentially never mounts; it is ready the
  * moment a fourth or fifth section makes the row overflow.
- *
- * Only the scroll-arrow behaviour is this ticket's (#2577) — the light chip
- * item register, scroll-spy active state and derived anchor offset that
- * #2478's full resolution also describes belong to whichever ticket
- * implements the rest of that decision; this component's link markup is
- * unchanged.
  */
 export function TeamSectionNav({ items }: TeamSectionNavProps) {
+  const ids = items.map((item) => item.id);
+  const { navRef, activeId } = useSectionNav(ids);
+
   if (items.length <= 1) return null;
 
   return (
     <nav
+      ref={navRef}
       data-testid="team-section-nav"
       aria-label="Sectienavigatie"
       className={cn(
         // TEAM-1: bottom border only — the StripedSeam above already divides
         // the nav from the hero, so a top border doubled the line.
-        "border-ink bg-cream sticky top-16 z-20 border-b-2",
+        // #2478 rule 4: bg-cream-deep, pinned at the derived header token,
+        // not top-16.
+        "bg-cream-deep border-ink sticky top-[var(--sticky-header-h)] z-30 border-b-2",
       )}
     >
       <PageContainer>
         <ScrollRail
           as="ul"
           ariaLabel="Sectienavigatie"
-          trackClassName="flex items-center gap-1 py-2"
+          trackClassName="flex items-center gap-2 py-2"
         >
-          {items.map((item) => (
-            <li key={item.id}>
-              <a
-                href={`#${item.id}`}
-                className="text-ink hover:bg-jersey-deep hover:text-cream inline-block px-3 py-1 font-mono text-[11px] tracking-[0.1em] whitespace-nowrap uppercase transition-colors"
-              >
-                {item.label}
-              </a>
-            </li>
-          ))}
+          {items.map((item) => {
+            const isActive = item.id === activeId;
+            return (
+              <li key={item.id}>
+                {/* The light chip (#2478 rule 1) — a mirror of
+                    <OrganigramSectionNav>'s item; a change to this recipe
+                    needs the same change there. */}
+                <a
+                  href={`#${item.id}`}
+                  aria-current={isActive ? "location" : undefined}
+                  onClick={() => {
+                    // Move keyboard focus into the target section — the
+                    // hash anchor alone leaves focus on <body> (#2478 rule
+                    // 8). Hash navigation handles the scroll itself.
+                    document
+                      .getElementById(item.id)
+                      ?.focus({ preventScroll: true });
+                  }}
+                  className={cn(
+                    "border-ink inline-block border px-3 py-1.5 font-mono text-[11px] font-semibold tracking-[0.06em] whitespace-nowrap uppercase transition-all duration-150",
+                    isActive
+                      ? "bg-jersey-deep text-cream"
+                      : "bg-cream text-ink hover:bg-cream-soft shadow-[1px_1px_0_0_var(--color-ink)]",
+                  )}
+                >
+                  {item.label}
+                </a>
+              </li>
+            );
+          })}
         </ScrollRail>
       </PageContainer>
     </nav>
