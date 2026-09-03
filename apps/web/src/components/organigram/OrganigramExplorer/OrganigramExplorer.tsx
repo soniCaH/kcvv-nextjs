@@ -23,9 +23,8 @@ import {
   Envelope,
   X,
 } from "@/lib/icons.redesign";
-import { useScrollHint } from "@/components/design-system/ScrollHint/useScrollHint";
-import { ScrollArrowButton } from "@/components/design-system/ScrollHint/ScrollArrowButton";
-import { SCROLL_RAIL_CLASSES } from "@/components/design-system/ScrollHint/scrollRail";
+import { ScrollRail } from "@/components/design-system/ScrollHint/ScrollRail";
+import { ScrollOverlay } from "@/components/design-system/ScrollHint/ScrollOverlay";
 import { SpotlightNodeCard } from "./SpotlightNodeCard";
 import {
   buildSpotlightTree,
@@ -142,22 +141,6 @@ export function OrganigramExplorer({
   // (arrows/Tab) — never on open or mouse use, where it reads as a heavy,
   // unwanted selection outline. The centre stays focusable throughout (a11y).
   const [keyboardNav, setKeyboardNav] = useState(false);
-
-  // Breadcrumb ("the reporting line") scroll arrow — control register, held
-  // space exactly while it overflows (#2444, as amended by #2489: a
-  // breadcrumb is a "row of discrete things" — crumbs — so it holds a 40px
-  // gutter on both sides only when the trail actually overflows at the
-  // current width, and the spent direction disables in place). Measured
-  // (#2489): the trail overflows only at its 6-deep worst case, at 768px
-  // and below.
-  const {
-    scrollRef: breadcrumbRef,
-    canScrollLeft: breadcrumbCanScrollLeft,
-    canScrollRight: breadcrumbCanScrollRight,
-    overflows: breadcrumbOverflows,
-    scrollLeft: breadcrumbScrollLeft,
-    scrollRight: breadcrumbScrollRight,
-  } = useScrollHint<HTMLElement>();
 
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -339,69 +322,55 @@ export function OrganigramExplorer({
         </button>
       </div>
 
-      {/* Breadcrumb — the reporting line. Scroll arrow: control register on
-          an ink panel, so it takes the same soft-shadow className override
-          `<HorizontalSlider theme="dark">` uses — the hard `--shadow-paper-sm`
-          is invisible against a dark ground (DESIGN.md). Held space follows
-          real overflow, same "row of discrete things" rule as `<FilterTabs>`
-          (#2444, as amended by #2489). */}
-      <div className="border-cream/10 relative border-b">
-        {breadcrumbOverflows && (
-          <ScrollArrowButton
-            direction="left"
-            register="control"
-            onClick={breadcrumbScrollLeft}
-            disabled={!breadcrumbCanScrollLeft}
-            className="shadow-[var(--shadow-paper-sm-soft)] hover:shadow-[3px_3px_0_0_var(--color-ink-muted)]"
-          />
-        )}
-        <nav
-          ref={breadcrumbRef}
-          aria-label="Rapporteringslijn"
-          tabIndex={0}
-          className={cn(
-            "text-cream/75 flex items-center gap-1 overflow-x-auto px-4 py-2 font-mono text-[11px]",
-            breadcrumbOverflows && SCROLL_RAIL_CLASSES,
-          )}
-        >
-          {view.trail.map((node, i) => {
-            const isLast = i === view.trail.length - 1;
-            return (
-              <span
-                key={node.id}
-                className="flex items-center gap-1 whitespace-nowrap"
-              >
-                {i > 0 && <span className="text-cream/40">▸</span>}
-                {isLast ? (
-                  <span aria-current="true" className="text-warm font-semibold">
-                    {node.title}
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => navigate(node.id)}
-                    className="decoration-cream/40 hover:text-cream underline underline-offset-2"
-                  >
-                    {node.title}
-                  </button>
-                )}
-              </span>
-            );
-          })}
-        </nav>
-        {breadcrumbOverflows && (
-          <ScrollArrowButton
-            direction="right"
-            register="control"
-            onClick={breadcrumbScrollRight}
-            disabled={!breadcrumbCanScrollRight}
-            className="shadow-[var(--shadow-paper-sm-soft)] hover:shadow-[3px_3px_0_0_var(--color-ink-muted)]"
-          />
-        )}
-      </div>
+      {/* Breadcrumb — the reporting line. <ScrollRail>'s "row of discrete
+          things" idiom (crumbs) — held space follows real overflow (#2444,
+          as amended by #2489). Sits on an ink panel, so the arrow takes the
+          same soft-shadow override `<HorizontalSlider>`'s paper arrows use
+          on an ink panel — the hard `--shadow-paper-sm` is invisible
+          against a dark ground (DESIGN.md). */}
+      <ScrollRail
+        as="nav"
+        className="border-cream/10 border-b"
+        ariaLabel="Rapporteringslijn"
+        trackClassName="text-cream/75 flex items-center gap-1 px-4 py-2 font-mono text-[11px]"
+        arrowClassName="shadow-[var(--shadow-paper-sm-soft)] hover:shadow-[3px_3px_0_0_var(--color-ink-muted)]"
+        fadeFromClassName="from-jersey-deep-dark"
+      >
+        {view.trail.map((node, i) => {
+          const isLast = i === view.trail.length - 1;
+          return (
+            <span
+              key={node.id}
+              className="flex items-center gap-1 whitespace-nowrap"
+            >
+              {i > 0 && <span className="text-cream/40">▸</span>}
+              {isLast ? (
+                <span aria-current="true" className="text-warm font-semibold">
+                  {node.title}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate(node.id)}
+                  className="decoration-cream/40 hover:text-cream underline underline-offset-2"
+                >
+                  {node.title}
+                </button>
+              )}
+            </span>
+          );
+        })}
+      </ScrollRail>
 
       {/* Stage */}
-      <div className="relative flex-1 overflow-auto px-4 py-6">
+      <ScrollOverlay
+        direction="both"
+        remeasureOn={[scaleStep]}
+        overflowClassName="overflow-auto"
+        trackClassName="flex-1 px-4 py-6"
+        fadeFromClassName="from-jersey-deep-dark"
+        ariaLabel="Organigram-verkenner"
+      >
         <div
           role="tree"
           aria-label="Organisatiestructuur"
@@ -599,7 +568,7 @@ export function OrganigramExplorer({
             )}
           </div>
         </div>
-      </div>
+      </ScrollOverlay>
 
       {/* Polite live region — a brief breadcrumb-path re-orientation on each
           re-centre. The full node detail is announced by the centre treeitem's

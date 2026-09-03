@@ -6,8 +6,7 @@ import { cn } from "@/lib/utils/cn";
 import { PRESS_DOWN_CLASSES } from "@/components/design-system";
 import { deriveCardState } from "@/components/organigram/OrgPersonCard";
 import { ArrowsOut, DownloadSimple } from "@/lib/icons.redesign";
-import { useScrollHint } from "@/components/design-system/ScrollHint/useScrollHint";
-import { ScrollArrowButton } from "@/components/design-system/ScrollHint/ScrollArrowButton";
+import { ScrollOverlay } from "@/components/design-system/ScrollHint/ScrollOverlay";
 import { holderLabel } from "./SpotlightNodeCard";
 import { buildSpotlightTree, childrenOf, CLUB_ROOT_ID } from "./spotlight-tree";
 
@@ -106,18 +105,6 @@ export function VolledigOrganigram({
   className,
 }: VolledigOrganigramProps) {
   const tree = useMemo(() => buildSpotlightTree(nodes), [nodes]);
-  // Scroll arrow — control register, overlaid, no reserved rail (#2444, as
-  // amended by #2476): the chart is a diagram, content you scroll past
-  // rather than a row of tap targets, so it mounts only on real overflow
-  // and never holds a gutter. `scrollRef` doubles as the print-scaling
-  // measurement ref `handleDownload` already needed (`chartRef` below).
-  const {
-    scrollRef: chartRef,
-    canScrollLeft,
-    canScrollRight,
-    scrollLeft,
-    scrollRight,
-  } = useScrollHint<HTMLDivElement>();
   const childrenByParent = (id: string) => childrenOf(tree, id);
   const root = tree.byId.get(CLUB_ROOT_ID) ?? nodes[0];
 
@@ -125,7 +112,12 @@ export function VolledigOrganigram({
     // Idempotent — clear any leftover from a previous (or cancelled) print.
     document.getElementById("vo-print-style")?.remove();
 
-    const chart = chartRef.current;
+    // `<ScrollOverlay>` owns its scroll ref internally (deliberately not
+    // exposed — see its own docblock), so the print-scaling measurement
+    // reaches the track the same way the print stylesheet below already
+    // targets it: the `.vo-chart` class, which this component keeps
+    // globally unique by design (one organigram chart renders per page).
+    const chart = document.querySelector<HTMLElement>(".vo-chart");
     if (chart) {
       const scale = Math.min(
         A4_LANDSCAPE_PX.width / chart.scrollWidth,
@@ -206,40 +198,32 @@ export function VolledigOrganigram({
         </div>
       </div>
 
-      <div className="relative">
-        {canScrollLeft && (
-          <ScrollArrowButton
-            direction="left"
-            register="control"
-            onClick={scrollLeft}
+      {/* Scroll arrow — `<ScrollOverlay>`'s "content scrolled past" idiom
+          (#2444, as amended by #2476): the chart is a diagram, not a row of
+          tap targets, so it mounts only on real overflow and never holds a
+          gutter. `chromeClassName="vo-no-print"` keeps the arrows and their
+          fades out of the exported PDF — `.vo-print`'s print stylesheet
+          makes everything inside it visible by default, arrows included,
+          unless marked `vo-no-print` same as the toolbar above. */}
+      <ScrollOverlay
+        direction="both"
+        ariaLabel="Volledig organigram"
+        chromeClassName="vo-no-print"
+        trackClassName="vo-chart pb-2"
+      >
+        {/* `safe center` centres a chart that fits but left-aligns (and
+            stays scrollable) when it's wider than the viewport — otherwise
+            flex centering pushes the left edge off-screen and out of
+            scroll reach. */}
+        <ul className="vo-tree" style={{ justifyContent: "safe center" }}>
+          <OrgBranch
+            node={root}
+            childrenByParent={childrenByParent}
+            {...(onNodeClick ? { onNodeClick } : {})}
+            isRoot={root.id === CLUB_ROOT_ID}
           />
-        )}
-        <div
-          ref={chartRef}
-          tabIndex={0}
-          className="vo-chart overflow-x-auto pb-2"
-        >
-          {/* `safe center` centres a chart that fits but left-aligns (and
-              stays scrollable) when it's wider than the viewport —
-              otherwise flex centering pushes the left edge off-screen and
-              out of scroll reach. */}
-          <ul className="vo-tree" style={{ justifyContent: "safe center" }}>
-            <OrgBranch
-              node={root}
-              childrenByParent={childrenByParent}
-              {...(onNodeClick ? { onNodeClick } : {})}
-              isRoot={root.id === CLUB_ROOT_ID}
-            />
-          </ul>
-        </div>
-        {canScrollRight && (
-          <ScrollArrowButton
-            direction="right"
-            register="control"
-            onClick={scrollRight}
-          />
-        )}
-      </div>
+        </ul>
+      </ScrollOverlay>
     </div>
   );
 }
