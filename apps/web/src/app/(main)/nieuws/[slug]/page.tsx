@@ -446,8 +446,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // a played one. Nested inline via buildNewsArticleJsonLd's `sportsEvent`
   // param (reuses buildSportsEventJsonLd). The SportsEvent url is the
   // canonical match page, not the article.
+  //
+  // No SportsEvent for a pitch-reservation placeholder (#2606/#2802,
+  // mirroring `/wedstrijd/[matchId]`'s own gate) — a self-match is a pitch
+  // booking, not a sporting event between two competitors, so publishing
+  // one here asserted "KCVV Elewijt vs KCVV Elewijt" to search engines.
   const matchSportsEvent =
-    matchDetail && article.linkedMatch
+    matchDetail && !matchDetail.is_placeholder && article.linkedMatch
       ? {
           relation:
             article.articleType === "matchRecap"

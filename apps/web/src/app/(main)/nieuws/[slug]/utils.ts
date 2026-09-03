@@ -34,8 +34,18 @@ export function parsePsdMatchId(
  *      fall back to matching the KCVV club id against the two sides' ids.
  * Without (2) the KCVV crest ring + Doelpunten highlight would never render
  * on the real article page (the flag is only ever set by `/matches/*`).
+ *
+ * `null` for a pitch-reservation placeholder (#2606/#2802) — a self-match
+ * has no opponent to put on either side of the score bar, and building one
+ * anyway rendered "KCVV Elewijt vs KCVV Elewijt". `HeroMatchData` itself
+ * stays a plain (non-union) shape rather than growing a third member for
+ * this one caller: `EditorialHero` already degrades gracefully to the
+ * kicker-only shell for `match: null` (a 404'd match reaches the same
+ * path), so a reservation reuses that existing, correct fallback instead of
+ * a bespoke reduced hero.
  */
-export function toHeroMatchData(match: MatchDetail): HeroMatchData {
+export function toHeroMatchData(match: MatchDetail): HeroMatchData | null {
+  if (match.is_placeholder) return null;
   const kcvvSide =
     match.is_home === true
       ? "home"
