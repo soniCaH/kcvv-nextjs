@@ -10,7 +10,10 @@ const VISIE_TAGS = [
 /**
  * <JeugdVisie> — the `/jeugd` filosofie/visie block (Phase 7 / Phase 2, design
  * contract 7j0b + 7j-final-page). Carries the `#visie` anchor — the repointed
- * "jeugdvisie" nav card (Phase 3) lands here.
+ * "jeugdvisie" nav card (Phase 3) lands here. No section nav of its own, so
+ * the anchor offset it lands at is `globals.css`'s header-only
+ * `scroll-padding-top` base rule (#2478 rule 7) rather than a hand-written
+ * `scroll-mt-*`.
  *
  * Folded into `<PullQuote>` (#2566, decision #2515 rule 4): the visie
  * statement and a mono tag row (the `labels` slot — a nameless quote with
@@ -24,7 +27,7 @@ const VISIE_TAGS = [
  */
 export function JeugdVisie() {
   return (
-    <section id="visie" className="scroll-mt-24">
+    <section id="visie">
       <SectionKicker className="mb-4">Onze jeugdvisie</SectionKicker>
 
       <PullQuote labels={VISIE_TAGS}>
