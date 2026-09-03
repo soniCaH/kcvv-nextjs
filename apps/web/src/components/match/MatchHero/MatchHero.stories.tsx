@@ -164,6 +164,50 @@ export const Reservation: Story = {
 };
 
 /**
+ * A tournament fixture with no result yet (#2696/#2802) — a real named
+ * opponent, not a self-match. Same one-crest reduced register as
+ * `Reservation` above, but the subject names the other club ("TORNOOI · FC
+ * ZEMST SPORTIEF") and the crest is the opponent's, resolved by club id
+ * (`homeTeam.id`/`awayTeam.id`), never home/away — the gap this ticket
+ * closes: before it, `/wedstrijd/[matchId]` rendered an ordinary two-crest
+ * "vs" scoreboard against a club PSD hasn't confirmed as a genuine
+ * opponent.
+ */
+export const TournamentPending: Story = {
+  args: {
+    homeTeam: { ...defaultHomeTeam, id: 1235 },
+    awayTeam: { name: "FC Zemst Sportief", id: 1391 },
+    date: upcomingDate,
+    time: "09:30",
+    venue: "Sportpark Elewijt",
+    competition: "Tornooi",
+    competitionType: "tournament",
+    kcvvTeamLabel: "U9",
+    status: "scheduled",
+    isPlaceholder: false,
+  },
+};
+
+/**
+ * The same tournament fixture once a result exists (#2696 review) — the
+ * named club really was the opponent, so the hero reverts to the ordinary
+ * two-crest scoreboard instead of staying reduced.
+ */
+export const TournamentPlayed: Story = {
+  args: {
+    homeTeam: { ...defaultHomeTeam, id: 1235, score: 4 },
+    awayTeam: { name: "FC Zemst Sportief", id: 1391, score: 1 },
+    date: finishedDate,
+    venue: "Sportpark Elewijt",
+    competition: "Tornooi",
+    competitionType: "tournament",
+    kcvvTeamLabel: "U9",
+    status: "finished",
+    isPlaceholder: false,
+  },
+};
+
+/**
  * Mobile collapse — at narrow widths the two-zone grid stacks vertically,
  * the divider rotates from vertical-right to horizontal-bottom, and the
  * status badge stays anchored to the card's top-right.
