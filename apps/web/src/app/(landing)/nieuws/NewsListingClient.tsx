@@ -253,8 +253,14 @@ export function NewsListingClient({
 
   return (
     <div className="w-full">
-      {/* Sticky filter bar */}
-      <div className="bg-ink/95 sticky top-0 z-30 border-b border-white/10 py-3 backdrop-blur-sm">
+      {/* Sticky filter bar — paper ground, matching <TeamSectionNav>'s sticky
+          row (#2805): opaque cream + ink bottom rule, no translucency or
+          blur. The bar previously sat on `bg-ink/95`, a pre-redesign
+          leftover nothing in DESIGN.md ever authorised — on it the active
+          "Alles" chip's ink-on-ink fill vanished and `<ScrollRail>`'s
+          default cream fade read as a mismatched yellowish band. Sticky
+          offset, z-index and padding are unchanged. */}
+      <div className="border-ink bg-cream sticky top-0 z-30 border-b-2 py-3">
         <PageContainer width="index">
           <CategoryFilters
             categories={categories}

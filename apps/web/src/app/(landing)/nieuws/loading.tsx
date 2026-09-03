@@ -63,15 +63,17 @@ export default function NewsLoading() {
         />
       </PageContainer>
 
-      {/* Sticky filter bar — mirrors the page's dark category-filter band.
-          The shared <FilterTabsSkeleton> (#2564 review items 3 + 4): the
-          real row dropped its `size="sm"` (~29px) chip for the one `md`
-          (~36px) size on absorption, and this skeleton — still drawing
-          `h-8` (32px) — used to reflow on every /nieuws load. */}
-      <div className="bg-ink/95 sticky top-0 z-30 border-b border-white/10 py-3 backdrop-blur-sm">
+      {/* Sticky filter bar — mirrors the live page's paper category-filter
+          band (#2805: the bar moved off a pre-redesign `bg-ink/95` onto
+          <TeamSectionNav>'s sticky ground). The shared <FilterTabsSkeleton>
+          (#2564 review items 3 + 4): the real row dropped its `size="sm"`
+          (~29px) chip for the one `md` (~36px) size on absorption, and this
+          skeleton — still drawing `h-8` (32px) — used to reflow on every
+          /nieuws load. `surface` is omitted (default `"paper"`) to keep the
+          skeleton and the live row's beliefs about the ground in sync. */}
+      <div className="border-ink bg-cream sticky top-0 z-30 border-b-2 py-3">
         <PageContainer width="index">
           <FilterTabsSkeleton
-            surface="inverse"
             widths={["w-16", "w-20", "w-24", "w-20", "w-16"]}
           />
         </PageContainer>
