@@ -74,7 +74,7 @@ export const SearchInterface = ({
   );
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
 
   // AbortController ref for cancelling in-flight requests
@@ -92,7 +92,7 @@ export const SearchInterface = ({
       }
       setResults([]);
       setTotalCount(0);
-      setError(null);
+      setError(false);
       setIsLoading(false);
       return;
     }
@@ -107,7 +107,7 @@ export const SearchInterface = ({
     abortControllerRef.current = controller;
 
     setIsLoading(true);
-    setError(null);
+    setError(false);
 
     try {
       // Always fetch unfiltered results (no type param)
@@ -135,7 +135,7 @@ export const SearchInterface = ({
         return;
       }
 
-      setError("Er ging iets mis bij het zoeken — probeer opnieuw.");
+      setError(true);
       setResults([]);
       setTotalCount(0);
     } finally {
@@ -325,17 +325,18 @@ export const SearchInterface = ({
                 so a second "probeer opnieuw" here would be redundant chrome
                 (#2470 resolution rule 4). Replaces the ticket-stub <Alert> —
                 its last production consumer (#2580). `live="assertive"`
-                (role="alert") matches the <Alert variant="error"> this
-                replaces: the visitor just pressed "Zoeken", so the failure
-                needs an immediate announcement, not a queued polite one
-                (#2580 review finding 3). */}
+                stays explicit here (tier "surface" has no failure discriminant
+                to derive it from, unlike tier "slot"'s `reason="unavailable"`
+                — #2580 review finding 3/follow-up F1) and matches the <Alert
+                variant="error"> this replaces: the visitor just pressed
+                "Zoeken", so the failure needs an immediate announcement. */}
             {error && !isLoading && (
               <EmptyState
                 tier="surface"
                 heading="Zoeken mislukt"
                 live="assertive"
               >
-                {error}
+                Er ging iets mis bij het zoeken — probeer opnieuw.
               </EmptyState>
             )}
 
