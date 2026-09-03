@@ -12,10 +12,12 @@ describe("CompetitiveStatusLine", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the unavailable line for a permanent PSD failure (#2636 finding 3)", () => {
+  it("renders the unavailable line for a permanent PSD failure (#2636 finding 3), on the locked failure tell (#2433 rule 9/#2804)", () => {
     render(<CompetitiveStatusLine variant="unavailable" />);
     expect(
-      screen.getByText("De wedstrijdgegevens zijn tijdelijk niet beschikbaar."),
+      screen.getByText(
+        "De wedstrijdgegevens zijn even niet beschikbaar. Probeer het later opnieuw.",
+      ),
     ).toBeInTheDocument();
     // Never the pre-season copy — a broken read must not read as silence.
     expect(

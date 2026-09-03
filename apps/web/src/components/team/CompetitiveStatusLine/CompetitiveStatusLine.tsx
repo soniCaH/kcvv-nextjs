@@ -7,9 +7,14 @@ const COPY: Record<CompetitiveStatusLineVariant, string> = {
     "De kalender voor dit seizoen is nog niet bekendgemaakt.",
   // A permanent PSD read failure (#2636 finding 3) — distinct wording from
   // the line above on purpose, so a genuine pre-season silence is never
-  // confused with a broken read. Present tense, names the outage rather than
-  // promising a fix, the same register as the pre-publication line.
-  unavailable: "De wedstrijdgegevens zijn tijdelijk niet beschikbaar.",
+  // confused with a broken read. #2433 rule 9's locked failure tell is the
+  // full phrase `… is even niet beschikbaar` + `Probeer het later opnieuw` —
+  // this site had drifted to `tijdelijk` with no retry line (#2804). Note
+  // that "beschikbaar" itself is not reserved vocabulary (#2690's sweep
+  // found the empty states each keep their own tell, e.g. "Nog geen …"); the
+  // tell is `even` plus the retry sentence, not the word "beschikbaar".
+  unavailable:
+    "De wedstrijdgegevens zijn even niet beschikbaar. Probeer het later opnieuw.",
 };
 
 export interface CompetitiveStatusLineProps {
