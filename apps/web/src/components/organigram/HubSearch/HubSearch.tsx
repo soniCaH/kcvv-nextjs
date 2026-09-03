@@ -34,6 +34,7 @@ import { trackEvent } from "@/lib/analytics/track-event";
 import { getCategoryInfo } from "@/lib/responsibility-utils";
 import { useSemanticSearch } from "@/hooks/useSemanticSearch";
 import { useHubMemberPanel } from "@/components/organigram/HubMemberPanel";
+import { SECTION_NAV_CHIP_SHADOW_CLASS } from "@/components/design-system/section-nav";
 import type { OrgChartNode } from "@/types/organigram";
 import type { ResponsibilityPath } from "@/types/responsibility";
 import {
@@ -394,7 +395,7 @@ export function HubSearch({
   const boxBorder = isHero ? "border-2" : "border";
   const boxShadow = isHero
     ? "shadow-[4px_4px_0_0_var(--color-ink)]"
-    : "shadow-[1px_1px_0_0_var(--color-ink)]";
+    : SECTION_NAV_CHIP_SHADOW_CLASS;
   const iconSize = isHero ? 20 : 16;
   const dropdownWidth = isHero
     ? "w-full"

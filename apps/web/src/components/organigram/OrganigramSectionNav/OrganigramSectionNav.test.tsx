@@ -8,9 +8,11 @@ import {
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
-// IntersectionObserver stub that captures the latest callback so tests can drive
-// hero-visibility transitions. Only the hero observer is created when a
-// `#hub-hero` element is present (the section observer bails with no sections).
+// IntersectionObserver stub that captures the *latest* callback — safe only
+// because no single test here needs both observers at once: the hero-reveal
+// one exists when `#hub-hero` is in the DOM, the scroll-spy one when
+// `appendSectionTargets()` has added `#hulp`/`#structuur` — and each test
+// below sets up exactly one of the two.
 let observerCb: IntersectionObserverCallback | null = null;
 
 class FakeIntersectionObserver {

@@ -17,12 +17,15 @@
  * the envelope-drift guard.
  */
 
+import { cn } from "@/lib/utils/cn";
 import {
   PageContainer,
   StripedSeam,
   Skeleton,
   LoadingAnnouncement,
   UpLink,
+  SECTION_NAV_CHIP_BASE_CLASSES,
+  SECTION_NAV_CHIP_SHADOW_CLASS,
 } from "@/components/design-system";
 
 export default function TeamDetailLoading() {
@@ -60,7 +63,10 @@ export default function TeamDetailLoading() {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="border-ink border px-3 py-1.5 shadow-[1px_1px_0_0_var(--color-ink)]"
+              className={cn(
+                SECTION_NAV_CHIP_BASE_CLASSES,
+                SECTION_NAV_CHIP_SHADOW_CLASS,
+              )}
             >
               <Skeleton className="h-3 w-16" />
             </div>

@@ -1,7 +1,10 @@
 "use client";
 
-import { cn } from "@/lib/utils/cn";
-import { PageContainer } from "@/components/design-system";
+import {
+  PageContainer,
+  SectionNavChip,
+  SECTION_NAV_BAR_CLASSES,
+} from "@/components/design-system";
 import { ScrollRail } from "@/components/design-system/ScrollHint/ScrollRail";
 import { useSectionNav } from "@/hooks/useSectionNav";
 
@@ -19,15 +22,22 @@ export interface TeamSectionNavProps {
 
 /**
  * Sticky in-page section navigation for the team detail page (#2478
- * resolution). Each item is the **light** chip — `border` (1px), `bg-cream`,
- * a 1px shadow, no press-down — deliberately quieter than `<FilterTabs>`
- * (rule 1); today's bare colour-only link is gone. Active is scroll-spy
- * driven via the shared `useSectionNav` hook (rule 3): the fill always means
- * "the section being read", never "the one last clicked". The bar itself
- * pins at `--sticky-header-h` (rule 4) and the same hook derives
- * `scroll-padding-top` from its own measured height (rule 7) — no
- * `scroll-mt-*` on any section target. Renders nothing when one or fewer
- * sections exist.
+ * resolution). Each item is `<SectionNavChip>` — the light chip, the same
+ * one `<OrganigramSectionNav>` uses, so the recipe is typed once rather
+ * than hand-copied per route. Active is scroll-spy driven via the shared
+ * `useSectionNav` hook (rule 3): the fill always means "the section being
+ * read", never "the one last clicked". The bar pins at `--sticky-header-h`
+ * and the same hook derives `scroll-padding-top` from its own measured
+ * height — no `scroll-mt-*` on any section target. Renders nothing when one
+ * or fewer sections exist.
+ *
+ * The `≤1 section` check lives in this outer component, one level above
+ * `useSectionNav` — `<TeamSectionNavBar>` only ever mounts when the bar
+ * itself does, so the hook's own mount/unmount tracks the bar's exactly
+ * (a team with a nav today can navigate, client-side, to one with ≤1
+ * section and back; hoisting the check here means that is an ordinary
+ * unmount + remount, not a live component whose bar quietly disappears out
+ * from under it).
  *
  * **Not permanently inert (#2444, corrected by #2478 and #2489).** #2444
  * originally reasoned this row "ships three items forever" and gave it a
@@ -46,64 +56,45 @@ export interface TeamSectionNavProps {
  * moment a fourth or fifth section makes the row overflow.
  */
 export function TeamSectionNav({ items }: TeamSectionNavProps) {
+  if (items.length <= 1) return null;
+  return <TeamSectionNavBar items={items} />;
+}
+
+function TeamSectionNavBar({
+  items,
+}: {
+  items: readonly TeamSectionNavItem[];
+}) {
   const ids = items.map((item) => item.id);
   const { navRef, activeId } = useSectionNav(ids);
-
-  if (items.length <= 1) return null;
 
   return (
     <nav
       ref={navRef}
       data-testid="team-section-nav"
       aria-label="Sectienavigatie"
-      className={cn(
-        // TEAM-1: bottom border only — the StripedSeam above already divides
-        // the nav from the hero, so a top border doubled the line.
-        // #2478 rule 4: bg-cream-deep, pinned at the derived header token,
-        // not top-16.
-        "bg-cream-deep border-ink sticky top-[var(--sticky-header-h)] z-30 border-b-2",
-      )}
+      // TEAM-1: bottom border only — the StripedSeam above already divides
+      // the nav from the hero, so a top border doubled the line.
+      className={SECTION_NAV_BAR_CLASSES}
     >
       <PageContainer>
         <ScrollRail
           as="ul"
           ariaLabel="Sectienavigatie"
           trackClassName="flex items-center gap-2 py-2"
-          // The bar is bg-cream-deep (rule 4) — the fade must match that
-          // ground, not <ScrollRail>'s cream default, or the overflow fade
-          // reads as a mismatched patch (#2584 review finding 2).
+          // The bar is bg-cream-deep — the fade must match that ground, not
+          // <ScrollRail>'s cream default, or the overflow fade reads as a
+          // mismatched patch.
           fadeFromClassName="from-cream-deep"
         >
-          {items.map((item) => {
-            const isActive = item.id === activeId;
-            return (
-              <li key={item.id}>
-                {/* The light chip (#2478 rule 1) — a mirror of
-                    <OrganigramSectionNav>'s item; a change to this recipe
-                    needs the same change there. */}
-                <a
-                  href={`#${item.id}`}
-                  aria-current={isActive ? "location" : undefined}
-                  onClick={() => {
-                    // Move keyboard focus into the target section — the
-                    // hash anchor alone leaves focus on <body> (#2478 rule
-                    // 8). Hash navigation handles the scroll itself.
-                    document
-                      .getElementById(item.id)
-                      ?.focus({ preventScroll: true });
-                  }}
-                  className={cn(
-                    "border-ink inline-block border px-3 py-1.5 font-mono text-[11px] font-semibold tracking-[0.06em] whitespace-nowrap uppercase transition-all duration-150",
-                    isActive
-                      ? "bg-jersey-deep text-cream"
-                      : "bg-cream text-ink hover:bg-cream-soft shadow-[1px_1px_0_0_var(--color-ink)]",
-                  )}
-                >
-                  {item.label}
-                </a>
-              </li>
-            );
-          })}
+          {items.map((item) => (
+            <SectionNavChip
+              key={item.id}
+              id={item.id}
+              label={item.label}
+              isActive={item.id === activeId}
+            />
+          ))}
         </ScrollRail>
       </PageContainer>
     </nav>
