@@ -29,15 +29,21 @@ export function LoadMoreFooter({
   onLoadMore,
 }: LoadMoreFooterProps) {
   if (error) {
+    // Tier 2 + action (#2470/#2580): the batch failed, but the page around it
+    // survives, and the load-more button this replaces is hidden by the
+    // if-chain below — so the retry is a substitution, not an addition
+    // (#2470 resolution rule 4). `text-alert` is the palette's error token;
+    // the previous `text-red-400` was a raw, off-palette Tailwind colour.
+    // "Probeer opnieuw" — the locked phrasing (#2433 rule 9's 4-to-2 collapse).
     return (
       <div className="py-4 text-center">
-        <p className="mb-2 text-red-400">{error}</p>
+        <p className="text-alert mb-2">{error}</p>
         <button
           type="button"
           className="text-jersey-deep text-sm underline hover:no-underline"
           onClick={onLoadMore}
         >
-          Opnieuw proberen
+          Probeer opnieuw
         </button>
       </div>
     );

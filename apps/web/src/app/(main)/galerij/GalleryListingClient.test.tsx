@@ -163,7 +163,7 @@ describe("GalleryListingClient", () => {
       items: [makeGallery("g2", "Bal")],
       hasMore: false,
     });
-    fireEvent.click(screen.getByRole("button", { name: "Opnieuw proberen" }));
+    fireEvent.click(screen.getByRole("button", { name: "Probeer opnieuw" }));
 
     await waitFor(() => {
       expect(
