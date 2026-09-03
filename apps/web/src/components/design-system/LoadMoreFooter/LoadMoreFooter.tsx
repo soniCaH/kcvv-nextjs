@@ -29,31 +29,26 @@ export function LoadMoreFooter({
   onLoadMore,
 }: LoadMoreFooterProps) {
   if (error) {
-    // This is the failed-batch treatment #2470's own copy table calls "Tier 2
-    // + action" — but it stays this bespoke `<p>` + text button, NOT a
-    // migration to the `<EmptyState tier="slot">` register (#2580 review
-    // finding 7): a future reader should not assume this site was moved onto
-    // that primitive. The batch failed, but the page around it survives, and
-    // the load-more button this replaces is hidden by the if-chain below — so
-    // the retry is a substitution, not an addition (#2470 resolution rule 4).
-    // `text-alert` is the palette's error token; the previous `text-red-400`
-    // was a raw, off-palette Tailwind colour. "Probeer opnieuw" — the locked
-    // phrasing (#2433 rule 9's 4-to-2 collapse). `min-h-6` + padding on the
-    // retry button meets the 24px WCAG 2.5.8 target minimum — it is the only
-    // control in this state, since the load-more button above is unreachable
-    // (#2470's own mockup already flagged this exact underlined-text-button
-    // site as under-target: docs/design/mockups/2470-client-failure/
-    // candidates.html:655-657).
+    // #2470's copy table calls this "Tier 2 + action", but the register it
+    // specifies doesn't exist yet: `<EmptyState tier="slot">`'s
+    // failure-notice member has no action prop at all, and `<ErrorState>` is
+    // a `min-h-[70vh]` full-page composition, not an in-flow footer. Staying
+    // bespoke here is a deliberate stopgap, not a style choice — see
+    // follow-up F2. The retry is a substitution, not an addition: the
+    // load-more button it replaces is unreachable behind the if-chain below
+    // (#2470 resolution rule 4). `text-alert` is the palette's error token;
+    // `<Button variant="ghost" size="sm">` is the same in-surface action
+    // `<EmptyState reason="filtered">`'s own undo renders — reaching for the
+    // primitive already imported below rather than a hand-rolled underlined
+    // link gets the 24px WCAG 2.5.8 tap target for free (#2580 review
+    // findings 7/C1). "Probeer opnieuw" — the locked phrasing (#2433 rule 9's
+    // 4-to-2 collapse).
     return (
       <div className="py-4 text-center">
         <p className="text-alert mb-2">{error}</p>
-        <button
-          type="button"
-          className="text-jersey-deep inline-flex min-h-6 items-center px-1 text-sm underline hover:no-underline"
-          onClick={onLoadMore}
-        >
+        <Button variant="ghost" size="sm" onClick={onLoadMore}>
           Probeer opnieuw
-        </button>
+        </Button>
       </div>
     );
   }
