@@ -488,11 +488,13 @@ Decided on [#2548](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2548), b
 
 ## Failure & Emptiness
 
-### Named Rules
-
 **The Silence Is An Answer Rule (#2470/#2580).** A client-initiated failure — a search, a submit, a copy-to-clipboard — gets a visible notice only when nothing else already recovers the visitor's intent. The test: does anything else on screen still let the visitor finish what they were doing? If yes, render nothing; the silence **is** the answer, not a gap to fill. Three sites are ratified under this test, by name, and stay silent on purpose: `/hulp`'s `HubSearch` (falls back to keyword search — the PRD floor, #2057 decision 7o8), `/zoeken`'s semantic augment (`useSemanticAugment` — the lexical results below still serve), and `/nieuws/[slug]`'s `navigator.share` rejection (`ArticleMetadata` — a dismissed share sheet is not a failure, and the sibling Facebook link is the explicit alternative). A fourth site follows the same test, not the shape of these three.
 
 Where a notice is warranted, two more splits apply. **The tier follows the scope of the loss** — the whole surface gone (`<EmptyState tier="surface">`, e.g. `/zoeken`'s failed search) or one slot gone with the page around it intact (`<EmptyState tier="slot" reason="unavailable">`, e.g. a submit or a clipboard copy) — the same split `<EmptyState>`'s two tiers already draw for emptiness, so the visitor learns the register once. **An action appears only where the control it replaced is hidden** — a retry is a substitution, never an addition; a control that still works beside the notice (a submit button, a copy button, a populated search field) means no second control is added.
+
+## Do's and Don'ts
+
+### Do:
 
 - **Do** set every rectangle's border radius to `0` and reserve curves for true circles.
 - **Do** give a shadow-casting surface a `2px` ink border, or `1.5px` on a stamp, badge or chip — never a `1px` hairline underneath a shadow. A shadowless divider may still be `2px` ink; the implication runs one way only.
