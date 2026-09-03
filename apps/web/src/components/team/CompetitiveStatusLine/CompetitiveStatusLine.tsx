@@ -13,6 +13,12 @@ const COPY: Record<CompetitiveStatusLineVariant, string> = {
   // that "beschikbaar" itself is not reserved vocabulary (#2690's sweep
   // found the empty states each keep their own tell, e.g. "Nog geen …"); the
   // tell is `even` plus the retry sentence, not the word "beschikbaar".
+  // Only the string matches #2469 rule 3's accented register (see
+  // MatchStandingsSection.tsx / EmptyState.tsx's `reason: "unavailable"`
+  // notice) — this line renders through `tier="slot"`'s held-open shape,
+  // which has no `emphasis` prop, so the sentence stays unaccented here.
+  // Deliberate (EmptyState.tsx's "Not every failure notice on cream goes
+  // through this register" note), not a second drift to fix.
   unavailable:
     "De wedstrijdgegevens zijn even niet beschikbaar. Probeer het later opnieuw.",
 };

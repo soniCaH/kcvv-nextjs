@@ -82,7 +82,7 @@
  * "surface" already solved its own version via `surface="inverse"` (#2562);
  * tier "slot" has no such axis yet. Exactly one place would use it:
  * `FirstTeamsBlock`, on the homepage's `jersey-deep-dark` band — see its
- * `HELD_OPEN_FRAME` docblock in `FirstTeamsBlock.tsx:44`. **Not built here**
+ * `HELD_OPEN_FRAME` docblock in `FirstTeamsBlock.tsx`. **Not built here**
  * — the migration is #2402's call, not this primitive's. Values to carry
  * verbatim when it is: frame `border-cream/40 border-2 border-dashed`,
  * `SkipCard` `text-cream/65`, band note `text-cream/80`. VR guard to name:
