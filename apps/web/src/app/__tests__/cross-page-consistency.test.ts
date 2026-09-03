@@ -832,3 +832,270 @@ describe("rule 8 catches what it claims to (#2645)", () => {
     expect(chOccurrences(withASecondOne)).toBe(2);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Rule 9 (#2570) — a route's up-link matches its own breadcrumb trail
+// ---------------------------------------------------------------------------
+
+/**
+ * #2428 §2 picked the trail-depth rule *because* it is "machine-checkable,
+ * and needs no per-route judgement" — every route already builds its own
+ * `buildBreadcrumbJsonLd([...])` array, so the trail's own length says
+ * whether the route gets an up-link, and its own second-to-last entry says
+ * where that up-link points. None of that was ever checked: #2570 shipped
+ * 17 routes by hand, and #2428 §4's whole justification for not centralising
+ * a parent map — "drift stays visible inside one file" — only holds where
+ * the trail and the chip live in the same file. Six of the 17 do not
+ * (`/club/contact`, `/club/geschiedenis`, and the three board routes split
+ * the trail-authoring `page.tsx` from the component that renders the chip),
+ * so "visible" needed a reader, not just proximity.
+ *
+ * Two arms, on every route (a `page.tsx` plus what it imports, see
+ * `routeBundleSources` below):
+ *
+ * - **`Home → self` (2 entries) renders no up-link.** #2428's own rule — an
+ *   up-link "exactly when" the trail is deeper than that.
+ * - **A deeper trail renders one, pointed at the trail's own parent.** The
+ *   up-link's `href` — a page-owned `<UpLink href=…>` or a
+ *   `upLink={{ href: … }}` passed to `<PageHero>` / `<UltrasHero>` — must
+ *   equal the trail's second-to-last `url`, `SITE_CONFIG.siteUrl` stripped.
+ *
+ * **Two hops, not a full import graph.** A route's `page.tsx` reaches its
+ * up-link through at most two local imports today — `createBoardPage.tsx`
+ * (hop 1) → `BestuurPage.tsx` (hop 2) is the deepest of the three splits —
+ * so `routeBundleSources` follows same-package specifiers (`@/…` and
+ * relative) two hops from the route file and stops. Barrel re-exports
+ * (`@/components/design-system`, `@/components/layout` — anything resolving
+ * to an `index.ts`) are dropped rather than followed: nearly every route
+ * imports one, and walking into it would pull unrelated components' own
+ * `<UpLink>` usage into every route's bundle, which is over-inclusive in the
+ * direction that hides a real miss rather than flags a false one.
+ *
+ * **What this cannot see**, named so nobody reads it as more: a route whose
+ * trail and up-link both point at the wrong place, *consistently* — the
+ * rule checks the two agree with each other, not that either is correct
+ * against the site's real structure. And a route with no
+ * `buildBreadcrumbJsonLd` call reachable within two hops is invisible to it
+ * entirely (`/jeugd/[slug]`'s 308 resolver, which renders no UI to carry
+ * either).
+ */
+const BREADCRUMB_CALL = /buildBreadcrumbJsonLd\(\s*\[([\s\S]*?)\]\s*\)/;
+// The template-literal alternative comes first — `[^,}]+` alone stops at the
+// first `}`, which for `` `${SITE_CONFIG.siteUrl}/kalender` `` is the one
+// closing the *interpolation*, truncating the value before its own closing
+// backtick.
+const BREADCRUMB_URL = /\burl:\s*(`(?:\\.|[^`\\])*`|[^,}]+)/g;
+const UP_LINK_TAG_HREF = /<UpLink\b[^>]*\bhref=([^\s>]+)/;
+const UP_LINK_PROP_HREF = /\bupLink=\{\{\s*href:\s*([^,]+),/;
+const IMPORT_SPECIFIER = /\bfrom\s+["']([^"']+)["']/g;
+
+/**
+ * Strip the wrapping quote/backtick and the site-origin interpolation, so a
+ * trail's literal `` `${SITE_CONFIG.siteUrl}/kalender` `` and an up-link's
+ * `"/kalender"` — or both sides' `` `/ploegen/${slug}` `` — compare equal.
+ */
+function normalizeHref(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^[`"']|[`"']$/g, "")
+    .replace(/\$\{SITE_CONFIG\.siteUrl\}/g, "");
+}
+
+/** Every `url:` value in a route's first `buildBreadcrumbJsonLd([...])` call,
+ *  in trail order — `undefined` when the source makes no such call. */
+function breadcrumbUrls(source: string): string[] | undefined {
+  const call = BREADCRUMB_CALL.exec(source);
+  if (!call) return undefined;
+  return [...call[1]!.matchAll(BREADCRUMB_URL)].map((m) => m[1]!.trim());
+}
+
+/**
+ * The rendered up-link's `href`, in either shape #2570 uses — `undefined`
+ * when the source renders neither. `upLink={{ href: … }}` is checked first:
+ * it is always the call site that carries the real literal, where a
+ * `<UpLink href={…}>` found first could be a component (`<UltrasHero>`,
+ * `<PageHero>` itself) merely forwarding a prop it received — `href={upLink.href}`
+ * is not a route's parent, it is the shape of the pass-through.
+ */
+function upLinkHref(source: string): string | undefined {
+  return (UP_LINK_PROP_HREF.exec(source) ?? UP_LINK_TAG_HREF.exec(source))?.[1];
+}
+
+/** Resolve one `import … from "SPECIFIER"` to a repo-relative source path —
+ *  `@/x` → `x`, `./x` / `../x` → resolved against `fromPath`'s own
+ *  directory — or `undefined` for a package specifier (`next/…`, `effect`,
+ *  …) or a target this tree doesn't have (an asset, a type-only `.json`).
+ *  Barrel `index.ts` targets resolve to `undefined` too — see the docblock
+ *  above. */
+function resolveImport(
+  fromPath: string,
+  specifier: string,
+): string | undefined {
+  let target: string | undefined;
+  if (specifier.startsWith("@/")) {
+    target = specifier.slice(2);
+  } else if (specifier.startsWith(".")) {
+    const dir = fromPath.split("/").slice(0, -1).join("/");
+    target = new URL(specifier, `file:///${dir}/`).pathname.slice(1);
+  }
+  if (target === undefined) return undefined;
+  for (const ext of [".tsx", ".ts"]) {
+    if (code.has(`${target}${ext}`)) return `${target}${ext}`;
+  }
+  return undefined;
+}
+
+/** Every source a route file imports directly — package specifiers and
+ *  barrels dropped, per `resolveImport`. */
+function importedSources(relPath: string): string[] {
+  const specifiers = [
+    ...(code.get(relPath) ?? "").matchAll(IMPORT_SPECIFIER),
+  ].map((m) => m[1]!);
+  const resolved = specifiers
+    .map((spec) => resolveImport(relPath, spec))
+    .filter((f): f is string => f !== undefined);
+  return [...new Set(resolved)];
+}
+
+/** The route file's own source, plus everything it imports (hop 1) and
+ *  everything *those* import (hop 2) — see the docblock above for why two
+ *  hops and why barrels are excluded rather than walked. */
+function routeBundleSources(relPath: string): string[] {
+  const hop1 = importedSources(relPath);
+  const hop2 = hop1.flatMap((f) => importedSources(f));
+  return [relPath, ...hop1, ...hop2];
+}
+
+/** A route's own source concatenated with its two-hop import bundle. */
+function bundleCode(relPath: string): string {
+  return routeBundleSources(relPath)
+    .map((f) => code.get(f))
+    .filter((s): s is string => s !== undefined)
+    .join("\n");
+}
+
+/** Route files whose bundle reaches a `buildBreadcrumbJsonLd` call — the
+ *  ones this rule can hold to anything. */
+const breadcrumbRouteFiles = routeFiles.filter(
+  (relPath) => breadcrumbUrls(bundleCode(relPath)) !== undefined,
+);
+
+describe("the up-link matches the route's own breadcrumb trail (#2570)", () => {
+  it.each(breadcrumbRouteFiles)(
+    "%s — up-link presence and target follow the trail depth",
+    (relPath) => {
+      const source = bundleCode(relPath);
+      const urls = breadcrumbUrls(source)!;
+      const href = upLinkHref(source);
+
+      if (urls.length <= 2) {
+        expect(href).toBeUndefined();
+        return;
+      }
+
+      expect(href).toBeDefined();
+      const parent = normalizeHref(urls[urls.length - 2]!);
+      expect(normalizeHref(href!)).toBe(parent);
+    },
+  );
+});
+
+/**
+ * The list is derived, so an edit that emptied it would read as a pass on
+ * every route — the same coverage pin rule 5 carries. Named here are the
+ * routes that motivated the two-hop bundle in the first place: without it,
+ * every one of these five is invisible to the rule (`club/bestuur/page.tsx`
+ * does not even contain the string `buildBreadcrumbJsonLd`).
+ */
+describe("rule 9 catches what it claims to (#2570)", () => {
+  it.each([
+    ["app/(main)/club/contact/page.tsx"],
+    ["app/(main)/club/geschiedenis/page.tsx"],
+    ["app/(main)/club/bestuur/page.tsx"],
+    ["app/(main)/club/jeugdbestuur/page.tsx"],
+    ["app/(main)/club/angels/page.tsx"],
+    ["app/(main)/club/[slug]/page.tsx"],
+    ["app/(main)/nieuws/[slug]/page.tsx"],
+    ["app/(main)/tegenstander/[clubId]/page.tsx"],
+  ])("covers %s", (relPath) => {
+    expect(breadcrumbRouteFiles).toContain(relPath);
+  });
+
+  it("reaches BestuurPage.tsx from a board route two hops away", () => {
+    const bundle = routeBundleSources("app/(main)/club/bestuur/page.tsx");
+    expect(bundle).toContain("components/club/BestuurPage/BestuurPage.tsx");
+  });
+
+  it("does not walk into a barrel it imports", () => {
+    expect(importedSources("app/(main)/club/word-lid/page.tsx")).not.toContain(
+      "components/design-system/index.ts",
+    );
+  });
+
+  it("extracts url: values in trail order", () => {
+    const source = `buildBreadcrumbJsonLd([
+      { name: "Home", url: SITE_CONFIG.siteUrl },
+      { name: "Kalender", url: \`\${SITE_CONFIG.siteUrl}/kalender\` },
+      { name: opponentName, url: pageUrl },
+    ])`;
+    expect(breadcrumbUrls(source)).toEqual([
+      "SITE_CONFIG.siteUrl",
+      "`${SITE_CONFIG.siteUrl}/kalender`",
+      "pageUrl",
+    ]);
+  });
+
+  it("reads both up-link shapes", () => {
+    expect(upLinkHref('<UpLink href="/nieuws" label="Nieuws" />')).toBe(
+      '"/nieuws"',
+    );
+    expect(upLinkHref('upLink={{ href: "/club", label: "De club" }}')).toBe(
+      '"/club"',
+    );
+    expect(
+      upLinkHref("upLink={{ href: `/ploegen/${slug}`, label: displayName }}"),
+    ).toBe("`/ploegen/${slug}`");
+    expect(upLinkHref("<PageHero headline={x} />")).toBeUndefined();
+  });
+
+  it("normalizes a template-literal trail URL and a plain href to the same string", () => {
+    expect(normalizeHref("`${SITE_CONFIG.siteUrl}/kalender`")).toBe(
+      "/kalender",
+    );
+    expect(normalizeHref('"/kalender"')).toBe("/kalender");
+  });
+
+  it("normalizes a dynamic trail segment and a dynamic href to the same string", () => {
+    expect(normalizeHref("`${SITE_CONFIG.siteUrl}/ploegen/${slug}`")).toBe(
+      "/ploegen/${slug}",
+    );
+    expect(normalizeHref("`/ploegen/${slug}`")).toBe("/ploegen/${slug}");
+  });
+
+  it("flags a 2-entry trail that renders an up-link anyway", () => {
+    const source = `
+      buildBreadcrumbJsonLd([
+        { name: "Home", url: SITE_CONFIG.siteUrl },
+        { name: "Ploegen", url: \`\${SITE_CONFIG.siteUrl}/ploegen\` },
+      ])
+      <UpLink href="/ploegen" label="Ploegen" />
+    `;
+    const urls = breadcrumbUrls(source)!;
+    expect(urls).toHaveLength(2);
+    expect(upLinkHref(source)).toBeDefined();
+  });
+
+  it("flags a deeper trail whose up-link targets the wrong parent", () => {
+    const source = `
+      buildBreadcrumbJsonLd([
+        { name: "Home", url: SITE_CONFIG.siteUrl },
+        { name: "Kalender", url: \`\${SITE_CONFIG.siteUrl}/kalender\` },
+        { name: opponentName, url: pageUrl },
+      ])
+      <UpLink href="/ploegen" label="Kalender" />
+    `;
+    const urls = breadcrumbUrls(source)!;
+    const parent = normalizeHref(urls[urls.length - 2]!);
+    expect(normalizeHref(upLinkHref(source)!)).not.toBe(parent);
+  });
+});
