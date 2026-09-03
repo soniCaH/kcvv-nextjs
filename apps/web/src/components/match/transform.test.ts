@@ -5,7 +5,34 @@
 import { describe, it, expect } from "vitest";
 import { transformMatchToSchedule } from "./transform";
 import type { Match } from "@/lib/effect/schemas";
+import type { ScheduleReservation, ScheduleReducedMatch } from "./types";
 import { asNonPlaceholder, asReduced } from "./test-narrowing";
+
+// Type-level assertion (#2802 review) — TypeScript, not vitest, is under
+// test here. `@ts-expect-error` fails the type check if `ScheduleReservation`
+// or `ScheduleReducedMatch` ever grow a `homeTeam` field, which is what makes
+// "a renderer reaches for the two-team scoreboard on a reservation/reduced
+// row" a compile error at the call site instead of `undefined.id` at runtime.
+const _reservationHasNoHomeTeam: ScheduleReservation = {
+  isPlaceholder: true,
+  kind: "reservation",
+  id: 1,
+  date: new Date(),
+  team: { id: 1235, name: "KCVV Elewijt" },
+  status: "scheduled",
+  // @ts-expect-error — a reservation has one `team`, never a `homeTeam`
+  homeTeam: { id: 1235, name: "KCVV Elewijt" },
+};
+const _reducedHasNoHomeTeam: ScheduleReducedMatch = {
+  isPlaceholder: false,
+  kind: "reduced",
+  id: 1,
+  date: new Date(),
+  team: { id: 99, name: "FC Zemst Sportief" },
+  status: "scheduled",
+  // @ts-expect-error — a reduced row has one `team`, never a `homeTeam`
+  homeTeam: { id: 1235, name: "KCVV Elewijt" },
+};
 
 // Mock Match factory
 function createMockMatch(overrides: Partial<Match> = {}): Match {

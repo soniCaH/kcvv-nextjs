@@ -16,11 +16,12 @@ import type {
 } from "@/components/match/types";
 import {
   getScoreDisplay,
-  isReducedMatchRow,
+  matchRowKind,
   otherClubSide,
   reservationView,
   type ScoreDisplay,
 } from "@/lib/utils/match-display";
+import { assertNever } from "@/lib/utils/assert-never";
 import { capitalize } from "@/lib/utils/capitalize";
 import {
   CLUB_TIMEZONE,
@@ -126,28 +127,15 @@ export interface CalendarTeamInfo {
   label: string;
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unhandled CalendarMatch kind: ${String(value)}`);
-}
-
 /**
- * `kind` is resolved once and switched over explicitly (#2802 review) rather
- * than three cascading `if`s ending in a bare fallthrough `return` — see
- * `transformMatchToSchedule`'s docblock in `@/components/match/transform`
- * for why the unreachable `default: assertNever(kind)` is load-bearing.
+ * `kind` is resolved once via the shared `matchRowKind()` and switched over
+ * explicitly (#2802 review) rather than three cascading `if`s ending in a
+ * bare fallthrough `return` — see `transformMatchToSchedule`'s docblock in
+ * `@/components/match/transform` for why the unreachable
+ * `default: assertNever(kind)` is load-bearing.
  */
 export function transformMatchToCalendar(match: Match): CalendarMatch {
-  const kind: CalendarMatch["kind"] = match.is_placeholder
-    ? "reservation"
-    : isReducedMatchRow({
-          isPlaceholder: false,
-          competitionType: match.competitionType,
-          status: match.status,
-          homeScore: match.home_team.score,
-          awayScore: match.away_team.score,
-        })
-      ? "reduced"
-      : "match";
+  const kind = matchRowKind(match);
 
   switch (kind) {
     case "reservation":
@@ -345,14 +333,6 @@ export function buildCalendarFeed(
 }
 
 /**
- * Project the feed onto upcoming `{ name, url }` entries for the page's
- * `ItemList` JSON-LD (SEO summary, not per-item Event schema). Matches link to
- * `/wedstrijd/[id]`, events/articles to their resolved `href`. Filtered to items
- * at/after `nowMs` (matches are full-season, so past ones are dropped) and
- * capped at `limit`. Pure — `nowMs` is injectable for deterministic tests. The
- * entry shape (`ItemListEntry`) is owned by the seo builder it feeds.
- */
-/**
  * The `ItemList` entry's label for one match — a `name`, not a fixture
  * assertion, so (unlike `SportsEvent` JSON-LD) a reservation/reduced row
  * isn't dropped, just named by its subject instead of "home — away" (#2606).
@@ -372,6 +352,14 @@ function matchEntryName(match: CalendarMatch): string {
   }
 }
 
+/**
+ * Project the feed onto upcoming `{ name, url }` entries for the page's
+ * `ItemList` JSON-LD (SEO summary, not per-item Event schema). Matches link to
+ * `/wedstrijd/[id]`, events/articles to their resolved `href`. Filtered to items
+ * at/after `nowMs` (matches are full-season, so past ones are dropped) and
+ * capped at `limit`. Pure — `nowMs` is injectable for deterministic tests. The
+ * entry shape (`ItemListEntry`) is owned by the seo builder it feeds.
+ */
 export function buildKalenderItemListEntries(
   feed: CalendarFeedItem[],
   siteUrl: string,

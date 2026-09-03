@@ -29,8 +29,8 @@ import type { ScheduleRow } from "@/components/match/types";
 import { transformMatchToSchedule } from "@/components/match/transform";
 import {
   hasScore,
-  isReducedMatchRow,
   isSettledMatch,
+  matchRowKind,
 } from "@/lib/utils/match-display";
 import { RESERVEN_PSD_ID } from "@/lib/utils/group-teams";
 
@@ -138,22 +138,14 @@ function matchSlot(match: Match, now: Date): "result" | "fixture" | null {
   // where-do-I-go-next" rule the switch below already applies to a real
   // match in the same statuses.
   //
-  // Widened to the shared `isReducedMatchRow` predicate, not merely
+  // Widened to the shared `matchRowKind` discriminant, not merely
   // `is_placeholder` (#2802 review): a tournament fixture with no scoreline
-  // yet is reduced too, and the same contradiction it exists to prevent —
-  // "UITSLAG" over a row with no result — reappears for it if this stays
-  // placeholder-only. `reservationRowLabel` already refuses that exact
-  // pairing in the accessible name; this is the sighted half of the same
-  // rule.
-  if (
-    isReducedMatchRow({
-      isPlaceholder: !!match.is_placeholder,
-      competitionType: match.competitionType,
-      status: match.status,
-      homeScore: match.home_team?.score,
-      awayScore: match.away_team?.score,
-    })
-  ) {
+  // yet (`kind === "reduced"`) is reduced too, and the same contradiction it
+  // exists to prevent — "UITSLAG" over a row with no result — reappears for
+  // it if this stays placeholder-only. `reservationRowLabel` already refuses
+  // that exact pairing in the accessible name; this is the sighted half of
+  // the same rule.
+  if (matchRowKind(match) !== "match") {
     return match.status === "scheduled" ? "fixture" : null;
   }
   if (isSettledMatch(match.status)) return "result";

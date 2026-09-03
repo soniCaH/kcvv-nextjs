@@ -309,13 +309,15 @@ const RESERVATION_RENDERERS: ReducedRenderer[] = [
     render: () =>
       render(
         <MatchHero
-          homeTeam={{ id: KCVV_CLUB_ID, name: "KCVV Elewijt" }}
-          awayTeam={{ id: KCVV_CLUB_ID, name: "KCVV Elewijt" }}
-          date={scheduleReservation.date}
-          time={scheduleReservation.time}
-          status={scheduleReservation.status}
-          competition={scheduleReservation.competition}
-          isPlaceholder
+          match={{
+            kind: "reservation",
+            isPlaceholder: true,
+            team: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
+            date: scheduleReservation.date,
+            time: scheduleReservation.time,
+            status: scheduleReservation.status,
+            competition: scheduleReservation.competition,
+          }}
         />,
       ),
   },
@@ -399,14 +401,15 @@ const RESERVATION_RENDERERS: ReducedRenderer[] = [
     render: () =>
       render(
         <MatchHero
-          homeTeam={{ id: KCVV_CLUB_ID, name: "KCVV Elewijt" }}
-          awayTeam={{ id: 1391, name: "FC Zemst Sportief" }}
-          date={scheduleReduced.date}
-          time={scheduleReduced.time}
-          status={scheduleReduced.status}
-          competition={scheduleReduced.competition}
-          competitionType={scheduleReduced.competitionType}
-          isPlaceholder={false}
+          match={{
+            kind: "reduced",
+            isPlaceholder: false,
+            team: { id: 1391, name: "FC Zemst Sportief" },
+            date: scheduleReduced.date,
+            time: scheduleReduced.time,
+            status: scheduleReduced.status,
+            competition: scheduleReduced.competition,
+          }}
         />,
       ),
   },
@@ -421,13 +424,13 @@ describe("a reservation or a reduced tournament fixture is never a link (#2801/#
       // see the docblock above for why a shared accessible query
       // (`getByText`) can't reach every row's subject uniformly, and why this
       // half is what makes the `MatchHero` row (no `next/link` import at
-      // all) assert anything. Either marker counts: `data-placeholder` for
-      // a genuine reservation, `data-tournament` for a hidden-result
-      // tournament fixture — the two states share this reduced treatment
-      // but are never both true on the same row (#2802).
+      // all) assert anything. `MatchHero` marks its reduced state with a
+      // single `data-row-kind`; every other renderer still carries the
+      // older two-boolean `data-placeholder`/`data-tournament` pair — either
+      // family counts here, they are never all true on the same row (#2802).
       expect(
         document.querySelector(
-          '[data-placeholder="true"], [data-tournament="true"]',
+          '[data-placeholder="true"], [data-tournament="true"], [data-row-kind="reservation"], [data-row-kind="reduced"]',
         ),
       ).not.toBeNull();
       expect(screen.queryByRole("link")).toBeNull();

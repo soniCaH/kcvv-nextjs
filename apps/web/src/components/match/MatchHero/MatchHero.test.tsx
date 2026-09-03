@@ -1,6 +1,35 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { MatchHero } from "./MatchHero";
+import {
+  MatchHero,
+  type MatchHeroRow,
+  type MatchHeroReservation,
+  type MatchHeroReduced,
+} from "./MatchHero";
+
+// Type-level assertion (#2802 review) — TypeScript, not vitest, is under
+// test here. `@ts-expect-error` fails the type check if `MatchHeroReservation`
+// or `MatchHeroReduced` ever grow a `homeTeam` field, which is what makes a
+// renderer reaching for the two-crest scoreboard on a reservation/reduced
+// row a compile error instead of a runtime crash.
+const _reservationHasNoHomeTeam: MatchHeroReservation = {
+  isPlaceholder: true,
+  kind: "reservation",
+  team: { id: 1235, name: "KCVV Elewijt" },
+  date: new Date(),
+  status: "scheduled",
+  // @ts-expect-error — a reservation has one `team`, never a `homeTeam`
+  homeTeam: { id: 1235, name: "KCVV Elewijt" },
+};
+const _reducedHasNoHomeTeam: MatchHeroReduced = {
+  isPlaceholder: false,
+  kind: "reduced",
+  team: { id: 99, name: "FC Zemst Sportief" },
+  date: new Date(),
+  status: "scheduled",
+  // @ts-expect-error — a reduced row has one `team`, never a `homeTeam`
+  homeTeam: { id: 1235, name: "KCVV Elewijt" },
+};
 
 const homeTeam = { id: 1235, name: "KCVV Elewijt", logo: "/logos/kcvv.svg" };
 const awayTeam = { id: 9999, name: "RC Mechelen", logo: "/logos/rcm.svg" };
@@ -10,17 +39,30 @@ const scheduledMatchDate = new Date("2025-06-14T13:30:00Z");
 // Saturday 13 September 2025 → ’25/’26 season
 const finishedMatchDate = new Date("2025-09-13T13:30:00Z");
 
+const baseMatch = {
+  kind: "match",
+  isPlaceholder: false,
+  homeTeam,
+  awayTeam,
+} as const;
+
+const baseReservation = {
+  kind: "reservation",
+  isPlaceholder: true,
+  team: homeTeam,
+} as const;
+
 describe("MatchHero", () => {
   describe("page headline (#2555)", () => {
     it("owns the route's only <h1> — the scoreline itself", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          time="14:30"
-          status="scheduled"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: scheduledMatchDate,
+            time: "14:30",
+            status: "scheduled",
+          }}
         />,
       );
       const headings = screen.getAllByRole("heading", { level: 1 });
@@ -34,12 +76,14 @@ describe("MatchHero", () => {
     it("reads the scoreline once the match is played", () => {
       render(
         <MatchHero
-          homeTeam={{ ...homeTeam, score: 3 }}
-          awayTeam={{ ...awayTeam, score: 1 }}
-          date={finishedMatchDate}
-          time="14:30"
-          status="finished"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            homeTeam: { ...homeTeam, score: 3 },
+            awayTeam: { ...awayTeam, score: 1 },
+            date: finishedMatchDate,
+            time: "14:30",
+            status: "finished",
+          }}
         />,
       );
       expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
@@ -52,11 +96,7 @@ describe("MatchHero", () => {
       (status) => {
         render(
           <MatchHero
-            homeTeam={homeTeam}
-            awayTeam={awayTeam}
-            date={finishedMatchDate}
-            status={status}
-            isPlaceholder={false}
+            match={{ ...baseMatch, date: finishedMatchDate, status }}
           />,
         );
         // The em-dash placeholders still paint — `textContent` keeps them — so
@@ -70,11 +110,11 @@ describe("MatchHero", () => {
     it("keeps the crests out of the name — they are decorative", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          status="scheduled"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: scheduledMatchDate,
+            status: "scheduled",
+          }}
         />,
       );
       const heading = screen.getByRole("heading", { level: 1 });
@@ -88,12 +128,12 @@ describe("MatchHero", () => {
     it("renders VOORBESCHOUWING for scheduled matches", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          time="14:30"
-          status="scheduled"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: scheduledMatchDate,
+            time: "14:30",
+            status: "scheduled",
+          }}
         />,
       );
       expect(screen.getByText(/VOORBESCHOUWING/)).toBeInTheDocument();
@@ -108,12 +148,14 @@ describe("MatchHero", () => {
     ] as const)("renders MATCHVERSLAG for %s", (status) => {
       render(
         <MatchHero
-          homeTeam={{ ...homeTeam, score: 3 }}
-          awayTeam={{ ...awayTeam, score: 1 }}
-          date={finishedMatchDate}
-          time="14:30"
-          status={status}
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            homeTeam: { ...homeTeam, score: 3 },
+            awayTeam: { ...awayTeam, score: 1 },
+            date: finishedMatchDate,
+            time: "14:30",
+            status,
+          }}
         />,
       );
       expect(screen.getByText(/MATCHVERSLAG/)).toBeInTheDocument();
@@ -124,11 +166,11 @@ describe("MatchHero", () => {
     it("renders 'vs' for scheduled matches", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          status="scheduled"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: scheduledMatchDate,
+            status: "scheduled",
+          }}
         />,
       );
       const scoreEl = screen.getByText("vs");
@@ -142,11 +184,13 @@ describe("MatchHero", () => {
     it("renders numeric score for finished matches", () => {
       render(
         <MatchHero
-          homeTeam={{ ...homeTeam, score: 3 }}
-          awayTeam={{ ...awayTeam, score: 1 }}
-          date={finishedMatchDate}
-          status="finished"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            homeTeam: { ...homeTeam, score: 3 },
+            awayTeam: { ...awayTeam, score: 1 },
+            date: finishedMatchDate,
+            status: "finished",
+          }}
         />,
       );
       expect(screen.getByText("3")).toBeInTheDocument();
@@ -161,11 +205,11 @@ describe("MatchHero", () => {
     it("renders em-dash placeholders when score is missing on a finished status", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={finishedMatchDate}
-          status="cancelled"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: finishedMatchDate,
+            status: "cancelled",
+          }}
         />,
       );
       // The score region itself + the em-dash separator all use "—".
@@ -178,11 +222,11 @@ describe("MatchHero", () => {
     it("does not render a badge for scheduled matches", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          status="scheduled"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: scheduledMatchDate,
+            status: "scheduled",
+          }}
         />,
       );
       expect(screen.queryByText("FT")).not.toBeInTheDocument();
@@ -192,11 +236,11 @@ describe("MatchHero", () => {
     it("renders the CANC badge for cancelled matches", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={finishedMatchDate}
-          status="cancelled"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: finishedMatchDate,
+            status: "cancelled",
+          }}
         />,
       );
       const badge = screen.getByText("CANC");
@@ -214,11 +258,12 @@ describe("MatchHero", () => {
       };
       render(
         <MatchHero
-          homeTeam={longHome}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          status="scheduled"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            homeTeam: longHome,
+            date: scheduledMatchDate,
+            status: "scheduled",
+          }}
         />,
       );
       const nameEl = screen.getByText(longHome.name);
@@ -228,11 +273,14 @@ describe("MatchHero", () => {
     it("renders a typographic shield fallback when no logo is provided", () => {
       render(
         <MatchHero
-          homeTeam={{ id: 1235, name: "KCVV Elewijt" }}
-          awayTeam={{ id: 9999, name: "RC Mechelen" }}
-          date={scheduledMatchDate}
-          status="scheduled"
-          isPlaceholder={false}
+          match={{
+            kind: "match",
+            isPlaceholder: false,
+            homeTeam: { id: 1235, name: "KCVV Elewijt" },
+            awayTeam: { id: 9999, name: "RC Mechelen" },
+            date: scheduledMatchDate,
+            status: "scheduled",
+          }}
         />,
       );
       // First-letter initials in the shield fallback (aria-hidden span).
@@ -249,13 +297,13 @@ describe("MatchHero", () => {
     it("renders venue when present", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          time="14:30"
-          venue="Sportpark Elewijt"
-          status="scheduled"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: scheduledMatchDate,
+            time: "14:30",
+            venue: "Sportpark Elewijt",
+            status: "scheduled",
+          }}
         />,
       );
       expect(screen.getByText("Sportpark Elewijt")).toBeInTheDocument();
@@ -264,12 +312,12 @@ describe("MatchHero", () => {
     it("omits venue when missing", () => {
       const { container } = render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          time="14:30"
-          status="scheduled"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: scheduledMatchDate,
+            time: "14:30",
+            status: "scheduled",
+          }}
         />,
       );
       expect(container.textContent).not.toContain("Sportpark");
@@ -280,12 +328,12 @@ describe("MatchHero", () => {
     it("keeps the date wrapper inline on mobile and stacked from md up", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          time="14:30"
-          status="scheduled"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: scheduledMatchDate,
+            time: "14:30",
+            status: "scheduled",
+          }}
         />,
       );
       // "ZA 14" and "JUN" share a wrapper that is a horizontal baseline-aligned
@@ -314,13 +362,13 @@ describe("MatchHero", () => {
     it("composes competition · kcvvTeamLabel · season", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={finishedMatchDate}
-          status="finished"
-          competition="3e provinciale A"
-          kcvvTeamLabel="KCVV-A"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: finishedMatchDate,
+            status: "finished",
+            competition: "3e provinciale A",
+            kcvvTeamLabel: "KCVV-A",
+          }}
         />,
       );
       expect(screen.getByText("3e provinciale A")).toBeInTheDocument();
@@ -332,11 +380,11 @@ describe("MatchHero", () => {
     it("drops missing parts gracefully", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={finishedMatchDate}
-          status="finished"
-          isPlaceholder={false}
+          match={{
+            ...baseMatch,
+            date: finishedMatchDate,
+            status: "finished",
+          }}
         />,
       );
       // Season label is always present (derived from date).
@@ -348,13 +396,13 @@ describe("MatchHero", () => {
     it("names one club in the <h1>, never 'vs' a second one", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          time="09:30"
-          status="scheduled"
-          competition="Tornooi"
-          isPlaceholder
+          match={{
+            ...baseReservation,
+            date: scheduledMatchDate,
+            time: "09:30",
+            status: "scheduled",
+            competition: "Tornooi",
+          }}
         />,
       );
       const heading = screen.getByRole("heading", { level: 1 });
@@ -366,30 +414,30 @@ describe("MatchHero", () => {
     it("carries the one marker every reservation renderer carries (#2688)", () => {
       const { container } = render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          status="scheduled"
-          competition="Tornooi"
-          isPlaceholder
+          match={{
+            ...baseReservation,
+            date: scheduledMatchDate,
+            status: "scheduled",
+            competition: "Tornooi",
+          }}
         />,
       );
       expect(
-        container.querySelector('[data-placeholder="true"]'),
+        container.querySelector('[data-row-kind="reservation"]'),
       ).not.toBeNull();
     });
 
     it("shows the real date/time/venue it has, no score region", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          time="09:30"
-          venue="Sportpark Elewijt"
-          status="scheduled"
-          competition="Tornooi"
-          isPlaceholder
+          match={{
+            ...baseReservation,
+            date: scheduledMatchDate,
+            time: "09:30",
+            venue: "Sportpark Elewijt",
+            status: "scheduled",
+            competition: "Tornooi",
+          }}
         />,
       );
       expect(screen.getByText("09:30")).toBeInTheDocument();
@@ -401,12 +449,12 @@ describe("MatchHero", () => {
     it("renders the competition label as the subject — the same vocabulary <TeamAgendaRow> uses", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          status="scheduled"
-          competition="Tornooi"
-          isPlaceholder
+          match={{
+            ...baseReservation,
+            date: scheduledMatchDate,
+            status: "scheduled",
+            competition: "Tornooi",
+          }}
         />,
       );
       expect(screen.getByText("Tornooi")).toBeInTheDocument();
@@ -415,13 +463,13 @@ describe("MatchHero", () => {
     it("names the squad that reserved the slot — the one useful fact this deliberately empty page owes a visitor", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          status="scheduled"
-          competition="Tornooi"
-          kcvvTeamLabel="U13"
-          isPlaceholder
+          match={{
+            ...baseReservation,
+            date: scheduledMatchDate,
+            status: "scheduled",
+            competition: "Tornooi",
+            kcvvTeamLabel: "U13",
+          }}
         />,
       );
       expect(screen.getByText("U13")).toBeInTheDocument();
@@ -430,11 +478,11 @@ describe("MatchHero", () => {
     it("falls back to the RESERVATION_SUBJECT_FALLBACK wording when no competition label is sent", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          status="scheduled"
-          isPlaceholder
+          match={{
+            ...baseReservation,
+            date: scheduledMatchDate,
+            status: "scheduled",
+          }}
         />,
       );
       expect(screen.getByText("Gereserveerd")).toBeInTheDocument();
@@ -443,12 +491,12 @@ describe("MatchHero", () => {
     it("names an exceptional status via the same MatchStatusBadge table — a reservation can be called off too", () => {
       render(
         <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={scheduledMatchDate}
-          status="cancelled"
-          competition="Tornooi"
-          isPlaceholder
+          match={{
+            ...baseReservation,
+            date: scheduledMatchDate,
+            status: "cancelled",
+            competition: "Tornooi",
+          }}
         />,
       );
       expect(screen.getByText("Geannuleerd")).toBeInTheDocument();
@@ -459,17 +507,21 @@ describe("MatchHero", () => {
   describe("tournament fixture with no result yet (#2696/#2802)", () => {
     const zemst = { id: 77, name: "FC Zemst Sportief", logo: awayTeam.logo };
     const kcvv = { id: 1235, name: "KCVV Elewijt", logo: homeTeam.logo };
+    const baseReduced = {
+      kind: "reduced",
+      isPlaceholder: false,
+      team: zemst,
+    } as const;
 
     it("names the other club in the <h1>, never 'vs' — never KCVV's own crest", () => {
       render(
         <MatchHero
-          homeTeam={kcvv}
-          awayTeam={zemst}
-          date={scheduledMatchDate}
-          status="scheduled"
-          competition="Tornooi"
-          competitionType="tournament"
-          isPlaceholder={false}
+          match={{
+            ...baseReduced,
+            date: scheduledMatchDate,
+            status: "scheduled",
+            competition: "Tornooi",
+          }}
         />,
       );
       const heading = screen.getByRole("heading", { level: 1 });
@@ -478,23 +530,11 @@ describe("MatchHero", () => {
       expect(screen.queryByText("KCVV Elewijt")).toBeNull();
     });
 
-    it("resolves the other club by id, not by home/away side", () => {
-      // KCVV listed as away this time — the same club must still show.
-      render(
-        <MatchHero
-          homeTeam={zemst}
-          awayTeam={kcvv}
-          date={scheduledMatchDate}
-          status="scheduled"
-          competition="Tornooi"
-          competitionType="tournament"
-          isPlaceholder={false}
-        />,
-      );
-      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-        "FC Zemst Sportief",
-      );
-    });
+    // Resolving the other club by id (regardless of which PSD side it lands
+    // on) is the adapter's job now — `matchDetailToHeroRow` hands MatchHero
+    // an already-resolved `team`. Covered at the source: `otherClubSide`
+    // (`lib/utils/match-display.test.ts`) and `matchDetailToHeroRow`
+    // (`wedstrijd/[matchId]/utils.test.ts`).
 
     it("names the subject by competition alone — never repeating the club the <h1> already names (#2802 review)", () => {
       // Unlike the caption-only reduced renderers (<TeamAgendaRow>,
@@ -503,13 +543,12 @@ describe("MatchHero", () => {
       // would print "FC Zemst Sportief" twice.
       render(
         <MatchHero
-          homeTeam={kcvv}
-          awayTeam={zemst}
-          date={scheduledMatchDate}
-          status="scheduled"
-          competition="Tornooi"
-          competitionType="tournament"
-          isPlaceholder={false}
+          match={{
+            ...baseReduced,
+            date: scheduledMatchDate,
+            status: "scheduled",
+            competition: "Tornooi",
+          }}
         />,
       );
       expect(screen.getByText("Tornooi")).toBeInTheDocument();
@@ -521,13 +560,12 @@ describe("MatchHero", () => {
     it("keeps VOORBESCHOUWING/MATCHVERSLAG as the kicker, never 'GERESERVEERD' — a tournament fixture is a real dated match, not a booking (#2802 review)", () => {
       const { rerender } = render(
         <MatchHero
-          homeTeam={kcvv}
-          awayTeam={zemst}
-          date={scheduledMatchDate}
-          status="scheduled"
-          competition="Tornooi"
-          competitionType="tournament"
-          isPlaceholder={false}
+          match={{
+            ...baseReduced,
+            date: scheduledMatchDate,
+            status: "scheduled",
+            competition: "Tornooi",
+          }}
         />,
       );
       expect(screen.getByText(/VOORBESCHOUWING/)).toBeInTheDocument();
@@ -535,63 +573,68 @@ describe("MatchHero", () => {
 
       rerender(
         <MatchHero
-          homeTeam={kcvv}
-          awayTeam={zemst}
-          date={finishedMatchDate}
-          status="finished"
-          competition="Tornooi"
-          competitionType="tournament"
-          isPlaceholder={false}
+          match={{
+            ...baseReduced,
+            date: finishedMatchDate,
+            status: "finished",
+            competition: "Tornooi",
+          }}
         />,
       );
       expect(screen.getByText(/MATCHVERSLAG/)).toBeInTheDocument();
     });
 
-    it("carries the data-tournament marker, not data-placeholder", () => {
+    it("carries the data-row-kind=reduced marker, not reservation", () => {
       const { container } = render(
         <MatchHero
-          homeTeam={kcvv}
-          awayTeam={zemst}
-          date={scheduledMatchDate}
-          status="scheduled"
-          competition="Tornooi"
-          competitionType="tournament"
-          isPlaceholder={false}
+          match={{
+            ...baseReduced,
+            date: scheduledMatchDate,
+            status: "scheduled",
+            competition: "Tornooi",
+          }}
         />,
       );
       expect(
-        container.querySelector('[data-tournament="true"]'),
+        container.querySelector('[data-row-kind="reduced"]'),
       ).not.toBeNull();
-      expect(container.querySelector('[data-placeholder="true"]')).toBeNull();
+      expect(
+        container.querySelector('[data-row-kind="reservation"]'),
+      ).toBeNull();
     });
 
     it("reverts to the full two-crest scoreboard once a result exists", () => {
-      render(
-        <MatchHero
-          homeTeam={{ ...kcvv, score: 3 }}
-          awayTeam={{ ...zemst, score: 1 }}
-          date={finishedMatchDate}
-          status="finished"
-          competition="Tornooi"
-          competitionType="tournament"
-          isPlaceholder={false}
-        />,
-      );
+      const row: MatchHeroRow = {
+        kind: "match",
+        isPlaceholder: false,
+        homeTeam: { ...kcvv, score: 3 },
+        awayTeam: { ...zemst, score: 1 },
+        date: finishedMatchDate,
+        status: "finished",
+        competition: "Tornooi",
+      };
+      render(<MatchHero match={row} />);
       expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
         /KCVV Elewijt\s*3\s*—\s*1\s*FC Zemst Sportief/,
       );
     });
 
-    it("never reduces an ordinary league fixture, even before kickoff", () => {
+    it("renders an ordinary league fixture as the full two-crest scoreboard, even before kickoff", () => {
+      // Classification (league vs. tournament, reduced vs. match) happens
+      // upstream in `matchRowKind` — covered by `match-display.test.ts` and
+      // `utils.test.ts`'s `matchDetailToHeroRow` suite. This only checks
+      // that MatchHero renders the "match" kind it was actually handed.
       render(
         <MatchHero
-          homeTeam={kcvv}
-          awayTeam={zemst}
-          date={scheduledMatchDate}
-          status="scheduled"
-          competition="3e Provinciale"
-          competitionType="league"
-          isPlaceholder={false}
+          match={{
+            kind: "match",
+            isPlaceholder: false,
+            homeTeam: kcvv,
+            awayTeam: zemst,
+            date: scheduledMatchDate,
+            status: "scheduled",
+            competition: "3e Provinciale",
+          }}
         />,
       );
       const heading = screen.getByRole("heading", { level: 1 });

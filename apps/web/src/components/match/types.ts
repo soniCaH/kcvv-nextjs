@@ -23,7 +23,15 @@ export interface ScheduleTeam {
   teamLabel?: string;
 }
 
-export interface ScheduleMatch {
+/** Fields every `ScheduleRow` member carries regardless of `kind` (#2802 review). */
+interface ScheduleRowCommon {
+  /** Match ID */
+  id: number;
+  /** Match date */
+  date: Date;
+}
+
+export interface ScheduleMatch extends ScheduleRowCommon {
   /**
    * Discriminant against `ScheduleReservation`/`ScheduleReducedMatch` below.
    * Required — an optional `isPlaceholder?: false` would let a construction
@@ -43,10 +51,6 @@ export interface ScheduleMatch {
   isPlaceholder: false;
   /** Discriminant against `ScheduleReservation`/`ScheduleReducedMatch`. */
   kind: "match";
-  /** Match ID */
-  id: number;
-  /** Match date */
-  date: Date;
   /** Match time (HH:MM) */
   time?: string;
   /** Home team */
@@ -92,14 +96,10 @@ export interface ScheduleMatch {
  * renderer of this shape should use — `<TeamAgendaRow>` (#2606) is the prior
  * art for the reduced treatment itself.
  */
-export interface ScheduleReservation {
+export interface ScheduleReservation extends ScheduleRowCommon {
   isPlaceholder: true;
   /** Discriminant against `ScheduleMatch`/`ScheduleReducedMatch`. */
   kind: "reservation";
-  /** Match ID */
-  id: number;
-  /** Match date */
-  date: Date;
   /** Match time (HH:MM) — the real kickoff/meeting time, never "hele dag". */
   time?: string;
   /**
@@ -132,14 +132,10 @@ export interface ScheduleReservation {
  * scoreboard" transition is the adapter picking a different union member on
  * its next call, not a mutation of this one.
  */
-export interface ScheduleReducedMatch {
+export interface ScheduleReducedMatch extends ScheduleRowCommon {
   isPlaceholder: false;
   /** Discriminant against `ScheduleMatch`/`ScheduleReservation`. */
   kind: "reduced";
-  /** Match ID */
-  id: number;
-  /** Match date */
-  date: Date;
   /** Match time (HH:MM). */
   time?: string;
   /** The other club's crest/name — see the class doc for why it's never "the opponent". */
@@ -162,7 +158,45 @@ export interface ScheduleReducedMatch {
 export type ScheduleRow =
   ScheduleMatch | ScheduleReservation | ScheduleReducedMatch;
 
-export interface UpcomingMatch {
+/**
+ * Fields every `UpcomingRow` member carries regardless of `kind` (#2802
+ * review) — mirrors `CalendarMatchCommon`
+ * (`apps/web/src/app/(main)/kalender/utils.ts`), this surface's sibling
+ * adapter output.
+ */
+interface UpcomingRowCommon {
+  /** Match ID */
+  id: number;
+  /** Match date */
+  date: Date;
+  /** Match time (optional) */
+  time?: string;
+  /** Venue/location (optional) */
+  venue?: string;
+  /** Match status */
+  status: MatchStatus;
+  /** Competition name (optional) */
+  competition?: string;
+  /**
+   * Front-end squad short code (e.g. "A-Ploeg", "U21") used for internal
+   * identification of which KCVV squad is playing. Prefer `kcvvTeamLabel`
+   * for display when available.
+   */
+  squadLabel?: string;
+  /**
+   * Canonical human-readable label for the KCVV team (e.g. "A-Ploeg", "U21")
+   * provided by the BFF via `kcvv_team_label`. Preferred for display over
+   * `squadLabel`.
+   */
+  kcvvTeamLabel?: string;
+  /**
+   * Optional display-time team label set by the calling page. When present,
+   * overrides `kcvvTeamLabel` for rendering.
+   */
+  teamLabel?: string;
+}
+
+export interface UpcomingMatch extends UpcomingRowCommon {
   /**
    * Discriminant against `UpcomingReservation` below — required, mirroring
    * `ScheduleMatch`/`ScheduleReservation` (#2688). The homepage's other-teams
@@ -177,14 +211,6 @@ export interface UpcomingMatch {
    * `UpcomingMatch` and `UpcomingReducedMatch` apart.
    */
   kind: "match";
-  /** Match ID */
-  id: number;
-  /** Match date */
-  date: Date;
-  /** Match time (optional) */
-  time?: string;
-  /** Venue/location (optional) */
-  venue?: string;
   /** Home team */
   homeTeam: {
     id: number;
@@ -199,92 +225,51 @@ export interface UpcomingMatch {
     logo?: string;
     score?: number;
   };
-  /** Match status */
-  status: MatchStatus;
-  /**
-   * Front-end squad short code (e.g. "A-Ploeg", "U21") used for internal
-   * identification of which KCVV squad is playing. Prefer `kcvvTeamLabel`
-   * for display when available.
-   */
-  squadLabel?: string;
-  /** Competition name (optional) */
-  competition?: string;
   /** PSD team ID identifying which KCVV team plays (A-team, U21, etc.) */
   kcvvTeamId?: number;
-  /**
-   * Canonical human-readable label for the KCVV team (e.g. "A-Ploeg", "U21")
-   * provided by the BFF via `kcvv_team_label`. Preferred for display over
-   * `squadLabel`.
-   */
-  kcvvTeamLabel?: string;
-  /**
-   * Optional display-time team label set by the calling page. When present,
-   * overrides `kcvvTeamLabel` for rendering.
-   */
-  teamLabel?: string;
 }
 
 /**
  * A pitch-reservation placeholder (#2606) on the homepage's other-teams
- * agenda (`<UpcomingMatchesClient>`). `ScheduleReservation` plus the deltas
- * this surface actually needs: `venue` (this route's own field) and the
- * squad-identifying fields (`squadLabel`/`kcvvTeamLabel`/`teamLabel`) —
- * kept because this surface's filter chips bucket every row by squad and a
- * reservation still belongs to exactly one squad, so it must file under the
- * same chip a real fixture for that squad would. No `kcvvTeamId`: nothing
- * reads it (`<UpcomingMatchesClient>`'s own `kcvvTeamId` is always the
- * club-id prop, never a field read off a row).
+ * agenda (`<UpcomingMatchesClient>`). `UpcomingRowCommon` plus the one
+ * reserving club — no `kcvvTeamId`: nothing reads it
+ * (`<UpcomingMatchesClient>`'s own `kcvvTeamId` is always the club-id prop,
+ * never a field read off a row).
  */
-export interface UpcomingReservation extends Omit<
-  ScheduleReservation,
-  "team" | "kind"
-> {
+export interface UpcomingReservation extends UpcomingRowCommon {
+  isPlaceholder: true;
   /** Discriminant against `UpcomingMatch`/`UpcomingReducedMatch`. */
   kind: "reservation";
+  /** The club's own crest/name — a self-match has no second side. */
   team: {
     id: number;
     name: string;
     logo?: string;
   };
-  /** Venue/location (optional) */
-  venue?: string;
-  /** Front-end squad short code (e.g. "U13") — see `UpcomingMatch.squadLabel`. */
-  squadLabel?: string;
-  /** Canonical human-readable squad label — see `UpcomingMatch.kcvvTeamLabel`. */
-  kcvvTeamLabel?: string;
-  /** Optional display-time team label set by the calling page. */
-  teamLabel?: string;
 }
 
 /**
  * A tournament fixture with a hidden result (#2696) on the homepage's
- * other-teams agenda — `ScheduleReducedMatch`'s deltas for this surface,
- * mirroring `UpcomingReservation`'s relationship to `ScheduleReservation`.
- * `<UpcomingMatchesClient>` had no reduced treatment at all before this
- * ticket (unlike `<TeamAgendaRow>`/`<MatchStripView>`/`/kalender`, which all
- * call `isReducedMatchRow` already) — a not-yet-played tournament fixture
- * for a non-senior team rendered the full linked scoreboard here, the exact
- * gap the shared `kind` discriminant closes by construction.
+ * other-teams agenda — `UpcomingRowCommon` plus the other club, mirroring
+ * `UpcomingReservation`'s shape. `<UpcomingMatchesClient>` had no reduced
+ * treatment at all before this ticket (unlike
+ * `<TeamAgendaRow>`/`<MatchStripView>`/`/kalender`, which all call
+ * `isReducedMatchRow` already) — a not-yet-played tournament fixture for a
+ * non-senior team rendered the full linked scoreboard here, the exact gap
+ * the shared `kind` discriminant closes by construction.
  */
-export interface UpcomingReducedMatch extends Omit<
-  ScheduleReducedMatch,
-  "team" | "kind"
-> {
+export interface UpcomingReducedMatch extends UpcomingRowCommon {
+  isPlaceholder: false;
   /** Discriminant against `UpcomingMatch`/`UpcomingReservation`. */
   kind: "reduced";
+  /** The other club's crest/name — resolved via club-id equality, never home/away. */
   team: {
     id: number;
     name: string;
     logo?: string;
   };
-  /** Venue/location (optional) */
-  venue?: string;
-  /** Front-end squad short code (e.g. "U13") — see `UpcomingMatch.squadLabel`. */
-  squadLabel?: string;
-  /** Canonical human-readable squad label — see `UpcomingMatch.kcvvTeamLabel`. */
-  kcvvTeamLabel?: string;
-  /** Optional display-time team label set by the calling page. */
-  teamLabel?: string;
+  /** Structured classification — always `"tournament"` in practice, kept for symmetry with `UpcomingMatch`. */
+  competitionType?: CompetitionType;
 }
 
 /**

@@ -221,20 +221,23 @@ function MatchDetailAssembly() {
   return (
     <>
       <MatchHero
-        homeTeam={{
-          id: KCVV_CLUB_ID,
-          name: HOME_NAME,
-          logo: KCVV_LOGO,
-          score: 3,
+        match={{
+          kind: "match",
+          isPlaceholder: false,
+          homeTeam: {
+            id: KCVV_CLUB_ID,
+            name: HOME_NAME,
+            logo: KCVV_LOGO,
+            score: 3,
+          },
+          awayTeam: { id: 103, name: AWAY_NAME, logo: OPPONENT_LOGO, score: 1 },
+          date: finishedDate,
+          time: "14:30",
+          venue: "Sportpark Elewijt",
+          status: "finished",
+          competition: "3e provinciale A",
+          kcvvTeamLabel: "KCVV-A",
         }}
-        awayTeam={{ id: 103, name: AWAY_NAME, logo: OPPONENT_LOGO, score: 1 }}
-        date={finishedDate}
-        time="14:30"
-        venue="Sportpark Elewijt"
-        status="finished"
-        competition="3e provinciale A"
-        kcvvTeamLabel="KCVV-A"
-        isPlaceholder={false}
       />
 
       <StripedSeam colorPair="ink-cream" height="md" />

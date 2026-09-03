@@ -4,28 +4,24 @@
  */
 
 import type { Match } from "@/lib/effect/schemas/match.schema";
-import { isReducedMatchRow, otherClubSide } from "@/lib/utils/match-display";
+import { matchRowKind, otherClubSide } from "@/lib/utils/match-display";
+import { assertNever } from "@/lib/utils/assert-never";
 import type { UpcomingRow } from "@/components/match/types";
-
-function assertNever(value: never): never {
-  throw new Error(`Unhandled UpcomingRow kind: ${String(value)}`);
-}
 
 /**
  * Map Match (domain model) to the homepage other-teams agenda's row shape.
  *
- * Branches on `match.is_placeholder` and `isReducedMatchRow()` (#2606/#2696)
- * into the three `UpcomingRow` members (#2688/#2802) — a pitch reservation
- * has no opponent to map onto `homeTeam`/`awayTeam`, so building one
- * unconditionally rendered "KCVV Elewijt — KCVV Elewijt" on
- * `<UpcomingMatchesClient>`, the surface most likely to carry one (it
- * renders exactly the non-senior/youth matches, and youth tournaments are
- * where reservations come from). A tournament fixture with no result yet
- * gets the same reduced treatment for the same reason every other renderer
- * of this predicate does — `<UpcomingMatchesClient>` had no such branch
- * before this ticket.
+ * Branches on `matchRowKind()` (#2606/#2696) into the three `UpcomingRow`
+ * members (#2688/#2802) — a pitch reservation has no opponent to map onto
+ * `homeTeam`/`awayTeam`, so building one unconditionally rendered
+ * "KCVV Elewijt — KCVV Elewijt" on `<UpcomingMatchesClient>`, the surface
+ * most likely to carry one (it renders exactly the non-senior/youth
+ * matches, and youth tournaments are where reservations come from). A
+ * tournament fixture with no result yet gets the same reduced treatment for
+ * the same reason every other renderer of this predicate does —
+ * `<UpcomingMatchesClient>` had no such branch before this ticket.
  *
- * `kind` is resolved once and switched over explicitly (#2802 review) — see
+ * `kind` is switched over explicitly (#2802 review) — see
  * `transformMatchToSchedule`'s docblock in `@/components/match/transform`
  * for why the `default: assertNever(kind)` below is load-bearing, not
  * ceremony.
@@ -34,17 +30,7 @@ function assertNever(value: never): never {
  * @returns UpcomingRow object for UI consumption
  */
 export function mapMatchToUpcomingMatch(match: Match): UpcomingRow {
-  const kind: UpcomingRow["kind"] = match.is_placeholder
-    ? "reservation"
-    : isReducedMatchRow({
-          isPlaceholder: false,
-          competitionType: match.competitionType,
-          status: match.status,
-          homeScore: match.home_team.score,
-          awayScore: match.away_team.score,
-        })
-      ? "reduced"
-      : "match";
+  const kind = matchRowKind(match);
 
   switch (kind) {
     case "reservation":

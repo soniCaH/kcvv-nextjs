@@ -8,7 +8,37 @@ import {
   mapMatchesToUpcomingMatches,
 } from "./match.mapper";
 import type { Match } from "@/lib/effect/schemas/match.schema";
+import type {
+  UpcomingReservation,
+  UpcomingReducedMatch,
+} from "@/components/match/types";
 import { asNonPlaceholder, asReduced } from "@/components/match/test-narrowing";
+
+// Type-level assertion (#2802 review) — TypeScript, not vitest, is under
+// test here. `@ts-expect-error` fails the type check if `UpcomingReservation`
+// or `UpcomingReducedMatch` ever grow a `homeTeam` field, which is what makes
+// a renderer reaching for the two-team scoreboard on a reservation/reduced
+// row a compile error instead of a runtime crash.
+const _reservationHasNoHomeTeam: UpcomingReservation = {
+  isPlaceholder: true,
+  kind: "reservation",
+  id: 1,
+  date: new Date(),
+  team: { id: 1235, name: "KCVV Elewijt" },
+  status: "scheduled",
+  // @ts-expect-error — a reservation has one `team`, never a `homeTeam`
+  homeTeam: { id: 1235, name: "KCVV Elewijt" },
+};
+const _reducedHasNoHomeTeam: UpcomingReducedMatch = {
+  isPlaceholder: false,
+  kind: "reduced",
+  id: 1,
+  date: new Date(),
+  team: { id: 99, name: "FC Zemst Sportief" },
+  status: "scheduled",
+  // @ts-expect-error — a reduced row has one `team`, never a `homeTeam`
+  homeTeam: { id: 1235, name: "KCVV Elewijt" },
+};
 
 describe("mapMatchToUpcomingMatch", () => {
   it("should map a scheduled match correctly", () => {
@@ -230,7 +260,7 @@ describe("mapMatchToUpcomingMatch", () => {
       expect(full.awayTeam.score).toBe(0);
     });
 
-    it("resolves the other club by id, not by home/away side (#2802 review, finding 14)", () => {
+    it("resolves the other club by id, not by home/away side (#2802 review)", () => {
       // KCVV listed as away this time — the crest must still name the
       // other club. `mapMatchToUpcomingMatch` is one of three hand-copied
       // `otherClubSide()` call sites; only asserting the KCVV-home

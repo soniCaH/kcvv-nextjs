@@ -19,12 +19,43 @@ import {
 } from "./utils";
 import type { Match } from "@/lib/effect/schemas/match.schema";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
-import type { CalendarMatchFixture, CalendarEvent } from "./utils";
+import type {
+  CalendarMatchFixture,
+  CalendarEvent,
+  CalendarReservation,
+  CalendarReducedMatch,
+} from "./utils";
 import { asNonPlaceholder, asReduced } from "@/components/match/test-narrowing";
 import {
   reservationMatch,
   tournamentMatch,
 } from "@/components/calendar/calendar-mocks";
+
+// Type-level assertion (#2802 review) — TypeScript, not vitest, is under
+// test here. `@ts-expect-error` fails the type check if `CalendarReservation`
+// or `CalendarReducedMatch` ever grow a `homeTeam` field, which is what makes
+// a renderer reaching for the two-team scoreboard on a reservation/reduced
+// row a compile error instead of a runtime crash.
+const _reservationHasNoHomeTeam: CalendarReservation = {
+  isPlaceholder: true,
+  kind: "reservation",
+  id: 1,
+  date: "2026-03-13",
+  club: { id: 1235, name: "KCVV Elewijt" },
+  status: "scheduled",
+  // @ts-expect-error — a reservation has one `club`, never a `homeTeam`
+  homeTeam: { id: 1235, name: "KCVV Elewijt" },
+};
+const _reducedHasNoHomeTeam: CalendarReducedMatch = {
+  isPlaceholder: false,
+  kind: "reduced",
+  id: 1,
+  date: "2026-03-13",
+  club: { id: 99, name: "FC Zemst Sportief" },
+  status: "scheduled",
+  // @ts-expect-error — a reduced row has one `club`, never a `homeTeam`
+  homeTeam: { id: 1235, name: "KCVV Elewijt" },
+};
 
 function createMatch(overrides: Partial<Match> = {}): Match {
   return {
@@ -78,7 +109,7 @@ describe("transformMatchToCalendar", () => {
     // but not `isPlaceholder`. Asserted at the boundary that actually
     // carries `is_home`: the raw `Match`, not the `CalendarReservation`
     // output, which has no `isHome` field to get the order wrong on
-    // (#2802 review, finding 14).
+    // (#2802 review).
     const result = transformMatchToCalendar(
       createMatch({ is_placeholder: true, is_home: true }),
     );
@@ -153,9 +184,10 @@ describe("transformMatchToCalendar", () => {
         logo: undefined,
       });
       expect(result.competitionType).toBe("tournament");
-      expect("homeTeam" in result).toBe(false);
-      expect("awayTeam" in result).toBe(false);
-      expect("scoreDisplay" in result).toBe(false);
+      // `homeTeam`/`awayTeam`/`scoreDisplay` don't exist on this member at
+      // all (#2802 review) — proven at compile time by the
+      // `_reducedHasNoHomeTeam` `@ts-expect-error` assertion above, not a
+      // runtime `"x" in result` check on a shape the type already forbids.
     });
 
     it('reverts to kind: "match" the moment both scores are present, same fixture id', () => {
@@ -175,7 +207,7 @@ describe("transformMatchToCalendar", () => {
       expect(result.awayTeam.name).toBe("FC Zemst Sportief");
     });
 
-    it("resolves the other club by id, not by home/away side (#2802 review, finding 14)", () => {
+    it("resolves the other club by id, not by home/away side (#2802 review)", () => {
       // KCVV listed as away this time — the crest must still name the
       // other club. `transformMatchToCalendar` is one of three hand-copied
       // `otherClubSide()` call sites; only asserting the KCVV-home
@@ -275,7 +307,7 @@ describe("eventListItemToCalendarEvent", () => {
 /**
  * Builds a `CalendarMatchFixture` (`kind: "match"`) — every caller here wants
  * an ordinary fixture. Typed on the fixture member specifically (#2802
- * review, finding 13), matching the peer factories `reservationMatch()`/
+ * review), matching the peer factories `reservationMatch()`/
  * `tournamentMatch()` (`calendar-mocks.ts`) that the handful of tests
  * needing a reservation or reduced row call instead: `Partial` distributes
  * over a union member fine on its own, so there was never a reason to widen

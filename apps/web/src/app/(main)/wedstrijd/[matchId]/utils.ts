@@ -6,15 +6,16 @@ import type {
   MatchDetail,
   MatchLineupPlayer,
 } from "@/lib/effect/schemas/match.schema";
-import type { MatchHeroTeam } from "@/components/match/MatchHero";
+import type { MatchHeroRow, MatchHeroTeam } from "@/components/match/MatchHero";
 import type { LineupPlayer } from "@/components/match/MatchLineup";
 import { toMatchDisplayZone } from "@/lib/utils/dates";
 import {
-  isReducedMatchRow,
+  matchRowKind,
   otherClubSide,
   reservationTitle,
-  reservationView,
 } from "@/lib/utils/match-display";
+import { assertNever } from "@/lib/utils/assert-never";
+import { extractMatchTime } from "@/lib/utils/match-time";
 
 /**
  * Convert a match's home team into props suitable for the MatchHero component.
@@ -43,6 +44,54 @@ export function transformAwayTeam(match: MatchDetail): MatchHeroTeam {
     logo: match.away_team.logo,
     score: match.away_team.score,
   };
+}
+
+/**
+ * The fourth adapter (#2699 decision 1 named `CalendarMatch`, `MatchHeroProps`
+ * and `MatchDetail` as the three types becoming a union at the web
+ * boundary — `CalendarMatch` got its adapter with the other two in the same
+ * pass this one did not, until #2802 review). Branches on `matchRowKind()`
+ * into the three `MatchHeroRow` members, exactly like the other three
+ * adapters — `<MatchHero>` itself narrows and renders, it never asks
+ * `isReducedMatchRow`/`otherClubSide` again.
+ */
+export function matchDetailToHeroRow(match: MatchDetail): MatchHeroRow {
+  const common = {
+    date: match.date,
+    time: extractMatchTime(match),
+    venue: match.venue,
+    status: match.status,
+    competition: match.competition,
+    kcvvTeamLabel: match.kcvv_team_label,
+  };
+  const kind = matchRowKind(match);
+
+  switch (kind) {
+    case "reservation":
+      return {
+        ...common,
+        isPlaceholder: true,
+        kind,
+        team: transformHomeTeam(match),
+      };
+    case "reduced":
+      return {
+        ...common,
+        isPlaceholder: false,
+        kind,
+        team: otherClubSide(transformHomeTeam(match), transformAwayTeam(match)),
+      };
+    case "match":
+      return {
+        ...common,
+        isPlaceholder: false,
+        kind,
+        homeTeam: transformHomeTeam(match),
+        awayTeam: transformAwayTeam(match),
+      };
+    default:
+      return assertNever(kind);
+  }
 }
 
 /**
@@ -119,34 +168,20 @@ export { extractMatchTime } from "@/lib/utils/match-time";
  * it is no more a confirmed "X vs Y" than a reservation is, so it gets the
  * same subject-plus-club title ("Tornooi · FC Zemst Sportief — KCVV
  * Elewijt") instead of asserting a head-to-head PSD hasn't confirmed. Once
- * a scoreline lands, `isReducedMatchRow` flips and the ordinary score title
- * below applies — the same reduced-to-full transition every other renderer
- * of this predicate makes.
+ * a scoreline lands, `matchRowKind` flips to `"match"` and the ordinary
+ * score title below applies — the same reduced-to-full transition every
+ * other renderer of this predicate makes. `reservationTitle()` now owns
+ * both reduced branches itself, so this only has to ask which one it is.
  *
  * @returns `HomeTeam X - Y AwayTeam` if the match status is finished and both scores are present, otherwise `HomeTeam vs AwayTeam`
  */
 export function formatMatchTitle(match: MatchDetail): string {
-  const homeTeam = match.home_team.name;
-  const awayTeam = match.away_team.name;
-
-  if (match.is_placeholder) {
+  if (matchRowKind(match) !== "match") {
     return reservationTitle(match);
   }
 
-  if (
-    isReducedMatchRow({
-      isPlaceholder: false,
-      competitionType: match.competitionType,
-      status: match.status,
-      homeScore: match.home_team.score,
-      awayScore: match.away_team.score,
-    })
-  ) {
-    const other = otherClubSide(match.home_team, match.away_team);
-    const kcvvTeam =
-      other === match.home_team ? match.away_team : match.home_team;
-    return `${reservationView(match, other).subject} — ${kcvvTeam.name}`;
-  }
+  const homeTeam = match.home_team.name;
+  const awayTeam = match.away_team.name;
 
   // Only show score if match is finished AND both scores are defined
   if (

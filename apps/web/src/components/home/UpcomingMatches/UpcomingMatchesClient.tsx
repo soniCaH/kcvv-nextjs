@@ -328,7 +328,7 @@ const ReservationMatchRow = ({
 };
 
 const MatchRow = ({ match, kcvvTeamId }: MatchRowProps) => {
-  // Enumerated positively (#2802 review, finding 11) — a negated
+  // Enumerated positively (#2802 review) — a negated
   // `kind !== "match"` catch-all would silently route any future fourth
   // `kind` into the reduced row too, with no compile error.
   if (match.kind === "reservation" || match.kind === "reduced") {

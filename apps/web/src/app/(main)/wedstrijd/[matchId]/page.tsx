@@ -80,15 +80,12 @@ import {
 import { MatchStripSlot } from "@/components/layout/MatchStrip/MatchStripSlot";
 import { PageViewTracker, TrackInView } from "@/components/analytics";
 import {
-  transformHomeTeam,
-  transformAwayTeam,
+  matchDetailToHeroRow,
   transformLineupPlayer,
   enrichLineupWithKeeperFlag,
-  extractMatchTime,
   formatMatchTitle,
   formatMatchDescription,
 } from "./utils";
-import { isReducedMatchRow } from "@/lib/utils/match-display";
 
 interface MatchPageProps {
   params: Promise<{ matchId: string }>;
@@ -399,25 +396,14 @@ export default async function MatchPage({ params }: MatchPageProps) {
       ),
     ]);
 
-  const homeTeam = transformHomeTeam(match);
-  const awayTeam = transformAwayTeam(match);
-  const time = extractMatchTime(match);
-
-  // Whether the hero (and everything gated below it) is rendering the
-  // reduced register — a pitch-reservation placeholder OR a tournament
-  // fixture with no result yet (#2696/#2802 review). `!match.is_placeholder`
-  // alone let a tournament fixture through to every one of these gates,
-  // shipping a two-competitor `SportsEvent` and a real lineup/events section
-  // under a one-crest hero that names no confirmed opponent.
-  const isReduced =
-    !!match.is_placeholder ||
-    isReducedMatchRow({
-      isPlaceholder: false,
-      competitionType: match.competitionType,
-      status: match.status,
-      homeScore: match.home_team.score,
-      awayScore: match.away_team.score,
-    });
+  // The fourth adapter's output (#2802 review) — `<MatchHero>` renders this
+  // directly, and everything gated below it reads `heroRow.kind` rather
+  // than re-deriving the reduced question from raw fields. `!isPlaceholder`
+  // alone used to let a tournament fixture through every one of these
+  // gates, shipping a two-competitor `SportsEvent` and a real lineup/events
+  // section under a one-crest hero that names no confirmed opponent.
+  const heroRow = matchDetailToHeroRow(match);
+  const isReduced = heroRow.kind !== "match";
 
   // Resolve which side is KCVV from the BFF-supplied `is_home` flag. If
   // unset (legacy rows), enrichment falls back to the universal jersey-#1
@@ -586,18 +572,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
       <PageContainer className="py-12 lg:py-16">
         <UpLink href="/kalender" label="Kalender" className="mb-6" />
-        <MatchHero
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          date={match.date}
-          time={time}
-          venue={match.venue}
-          status={match.status}
-          competition={match.competition}
-          competitionType={match.competitionType}
-          kcvvTeamLabel={match.kcvv_team_label}
-          isPlaceholder={match.is_placeholder ?? false}
-        />
+        <MatchHero match={heroRow} />
       </PageContainer>
 
       {(hasLineup || hasEvents || hasStandings || hasRelated) && (

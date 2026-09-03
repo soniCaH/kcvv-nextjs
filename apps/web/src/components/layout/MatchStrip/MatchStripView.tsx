@@ -391,7 +391,7 @@ function LedgerLinkRow({
   /** The strip's match-day ground (#2616) — see `<MatchStripView>`'s own docblock. */
   matchDay?: boolean;
 }) {
-  // Enumerated positively (#2802 review, finding 11) — a negated
+  // Enumerated positively (#2802 review) — a negated
   // `kind !== "match"` catch-all would silently route any future fourth
   // `kind` into the reduced row too, with no compile error.
   if (match.kind === "reservation" || match.kind === "reduced") {

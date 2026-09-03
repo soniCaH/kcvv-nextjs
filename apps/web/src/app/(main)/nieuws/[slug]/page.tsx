@@ -66,7 +66,7 @@ import type { ArticleDetailVM } from "@/lib/repositories/article.repository";
 import type { TransferFactValue } from "@/components/article/blocks/TransferFact";
 import type { EventFactValue } from "@/components/article/blocks/EventFact";
 import { toPortableTextBlocks } from "@/lib/sanity/portable-text-bridge";
-import { isReducedMatchRow } from "@/lib/utils/match-display";
+import { matchRowKind } from "@/lib/utils/match-display";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -457,15 +457,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // article hero (`toHeroMatchData`, gated the same way) nor the match page
   // itself makes.
   const matchIsReduced =
-    !!matchDetail?.is_placeholder ||
-    (matchDetail !== null &&
-      isReducedMatchRow({
-        isPlaceholder: false,
-        competitionType: matchDetail.competitionType,
-        status: matchDetail.status,
-        homeScore: matchDetail.home_team.score,
-        awayScore: matchDetail.away_team.score,
-      }));
+    matchDetail !== null && matchRowKind(matchDetail) !== "match";
   const matchSportsEvent =
     matchDetail && !matchIsReduced && article.linkedMatch
       ? {

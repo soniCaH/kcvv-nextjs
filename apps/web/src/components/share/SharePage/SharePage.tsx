@@ -58,13 +58,7 @@ export interface PlayerForShare {
   psdImageUrl?: string;
 }
 
-/**
- * Deliberately out of scope for the #2802 reservation/reduced union: this
- * staff-only tool (`/share`, `robots: { index: false, follow: false }`)
- * reads the raw contract `Match` directly and stays that way — a
- * KCVV-vs-KCVV `matchName` here is ugly, not wrong, and not worth widening
- * the widest type in the contract for.
- */
+/** Deliberately out of scope for the #2802 reservation/reduced union — staff-only, `noindex`, reads the raw contract `Match` directly; a KCVV-vs-KCVV `matchName` here is ugly, not wrong. */
 export interface MatchOption {
   id: number;
   label: string;

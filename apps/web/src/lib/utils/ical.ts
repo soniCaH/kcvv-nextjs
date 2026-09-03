@@ -10,8 +10,7 @@ import { CLUB_TIMEZONE as TIMEZONE, toMatchDisplayZone } from "./dates";
 import { resolveEventDateRange } from "./event-datetime";
 import { buildEventUid } from "./event-uid";
 import {
-  isReducedMatchRow,
-  otherClubSide,
+  matchRowKind,
   reservationTitle,
   reservationView,
 } from "./match-display";
@@ -128,35 +127,20 @@ function isHomeMatch(match: Match): boolean {
  * `<MatchHero>`, `<CalendarWeek>`, `<UpcomingMatchesClient>`) — a cancelled
  * reservation carries no opponent or score to otherwise hint that anything
  * changed, and a subscriber's calendar app has no other way to show it.
- * Scoped to the placeholder branch only: an ordinary match has the same gap
+ * Scoped to the reduced branch only: an ordinary match has the same gap
  * today, but that is a separate, pre-existing concern (out of scope here).
  *
- * Widened to a tournament fixture with no result yet (#2696/#2802 review) —
- * a subscriber's calendar app would otherwise show "KCVV Elewijt vs FC
- * Zemst Sportief" for an opponent PSD hasn't confirmed, the same "X vs X"
- * class of bug this function exists to prevent for a reservation.
+ * One branch, not two (#2802 review) — a tournament fixture with no result
+ * yet (#2696) gets the exact same treatment as a reservation, since
+ * `reservationTitle()` already resolves both members of `matchRowKind()`
+ * (subject-only for a reservation, "subject · other club" for a reduced
+ * fixture) and `statusWording` reads only `match.status`, which neither
+ * branch needed the other's `otherClub` lookup for in the first place.
  */
 function buildSummary(match: Match): string {
-  if (match.is_placeholder) {
+  if (matchRowKind(match) !== "match") {
     const { statusWording } = reservationView(match);
     return `${reservationTitle(match)}${
-      statusWording ? ` — ${statusWording.longForm}` : ""
-    }`;
-  }
-  if (
-    isReducedMatchRow({
-      isPlaceholder: false,
-      competitionType: match.competitionType,
-      status: match.status,
-      homeScore: match.home_team.score,
-      awayScore: match.away_team.score,
-    })
-  ) {
-    const other = otherClubSide(match.home_team, match.away_team);
-    const kcvvTeam =
-      other === match.home_team ? match.away_team : match.home_team;
-    const { subject, statusWording } = reservationView(match, other);
-    return `${subject} — ${kcvvTeam.name}${
       statusWording ? ` — ${statusWording.longForm}` : ""
     }`;
   }
@@ -209,18 +193,7 @@ function buildDescription(match: Match): string {
  */
 function buildLocation(match: Match): string | undefined {
   if (match.venue) return match.venue;
-  if (
-    match.is_placeholder ||
-    isReducedMatchRow({
-      isPlaceholder: false,
-      competitionType: match.competitionType,
-      status: match.status,
-      homeScore: match.home_team.score,
-      awayScore: match.away_team.score,
-    })
-  ) {
-    return undefined;
-  }
+  if (matchRowKind(match) !== "match") return undefined;
   if (isHomeMatch(match)) return HOME_VENUE_FALLBACK;
   return undefined;
 }

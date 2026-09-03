@@ -2,17 +2,10 @@ import Image from "next/image";
 import { toMatchDisplayZone } from "@/lib/utils/dates";
 import { TapedCard } from "@/components/design-system/TapedCard";
 import { cn } from "@/lib/utils/cn";
-import {
-  isReducedMatchRow,
-  otherClubSide,
-  reservationView,
-} from "@/lib/utils/match-display";
-import type { CompetitionType, MatchStatus } from "../types";
+import { reservationView } from "@/lib/utils/match-display";
+import { assertNever } from "@/lib/utils/assert-never";
+import type { MatchStatus } from "../types";
 import { MatchStatusBadge } from "../MatchStatusBadge";
-
-function assertNever(value: never): never {
-  throw new Error(`Unhandled MatchStatus variant: ${String(value)}`);
-}
 
 type MatchHeroKicker = "VOORBESCHOUWING" | "MATCHVERSLAG";
 
@@ -32,56 +25,71 @@ function getKicker(status: MatchStatus): MatchHeroKicker {
 }
 
 export interface MatchHeroTeam {
-  /**
-   * PSD club id (#2802) — required, not optional. The reduced-tournament
-   * branch derives the non-KCVV crest by id, never by home/away side
-   * (#2696); an optional `id` let it default to `undefined === KCVV_CLUB_ID`
-   * (`false`), silently naming `homeTeam` as "the other club" whenever
-   * `homeTeam` genuinely *was* KCVV — i.e. exactly the case that matters.
-   * That is the same defect `ScheduleMatch.isPlaceholder` was made required
-   * to close, one review round later, on the same file (#2802 review — a
-   * full discriminated union over `MatchHeroProps` remains the deeper fix,
-   * tracked separately; this is the minimal version of it).
-   */
   id: number;
   name: string;
   logo?: string;
   score?: number;
 }
 
-export interface MatchHeroProps {
-  homeTeam: MatchHeroTeam;
-  awayTeam: MatchHeroTeam;
+/** Fields every `MatchHeroRow` member carries regardless of `kind`. */
+interface MatchHeroCommon {
   date: Date;
   time?: string;
   venue?: string;
   status: MatchStatus;
   competition?: string;
-  /**
-   * Structured league/cup/friendly/tournament classification (#2692/#2802),
-   * mirroring `ScheduleMatch.competitionType`. Combined with `isPlaceholder`
-   * below to decide the reduced register via the shared `isReducedMatchRow`
-   * predicate — a tournament fixture with no result yet gets the same
-   * one-crest treatment a reservation does (#2696), rather than rendering a
-   * "vs" scoreboard against a club PSD hasn't confirmed as a genuine
-   * opponent.
-   */
-  competitionType?: CompetitionType;
   kcvvTeamLabel?: string;
-  /**
-   * Whether this fixture is a pitch-reservation placeholder (#2606) — a
-   * self-match where `homeTeam`/`awayTeam` are the same club. Renders the
-   * reduced treatment (`<ReservationHero>`): one crest, the date/time/venue
-   * it actually has, and no opponent, score, or result vocabulary — matching
-   * `<TeamAgendaRow>`'s prior-art wording rather than inventing a second one
-   * (#2688). `homeTeam` is reused as the club side; `awayTeam` carries the
-   * same club upstream and is not read in this mode.
-   *
-   * Required, not optional — a caller that forgets it renders "KCVV Elewijt
-   * vs KCVV Elewijt" with two crests with no compile error, the same defect
-   * `ScheduleMatch.isPlaceholder` was made required to close.
-   */
-  isPlaceholder: boolean;
+}
+
+export interface MatchHeroMatch extends MatchHeroCommon {
+  isPlaceholder: false;
+  /** Discriminant against `MatchHeroReservation`/`MatchHeroReduced`. */
+  kind: "match";
+  homeTeam: MatchHeroTeam;
+  awayTeam: MatchHeroTeam;
+}
+
+/**
+ * A pitch-reservation placeholder (#2606) — both sides upstream are the same
+ * club. `homeTeam`/`awayTeam` do not exist here, mirroring
+ * `ScheduleReservation`: a renderer reaching for them without narrowing
+ * `kind` first fails to compile (AC 1).
+ */
+export interface MatchHeroReservation extends MatchHeroCommon {
+  isPlaceholder: true;
+  /** Discriminant against `MatchHeroMatch`/`MatchHeroReduced`. */
+  kind: "reservation";
+  /** The club's own crest/name — a self-match has no second side. */
+  team: MatchHeroTeam;
+}
+
+/**
+ * A tournament fixture with no result yet (#2696) — see
+ * `ScheduleReducedMatch` for the full rationale. `team` is the *other* club,
+ * resolved via club-id equality, never home/away.
+ */
+export interface MatchHeroReduced extends MatchHeroCommon {
+  isPlaceholder: false;
+  /** Discriminant against `MatchHeroMatch`/`MatchHeroReservation`. */
+  kind: "reduced";
+  team: MatchHeroTeam;
+}
+
+/**
+ * A genuine fixture, a pitch-reservation placeholder, or a tournament
+ * fixture with a hidden result — the fourth adapter's output (#2699
+ * decision 1 named `CalendarMatch`, `MatchHeroProps` and `MatchDetail` as
+ * the three types becoming a union; `CalendarMatch` got its adapter in the
+ * same pass this one did not, until now). Built by
+ * `matchDetailToHeroRow()` (`/wedstrijd/[matchId]/utils.ts`) so `<MatchHero>`
+ * itself never re-derives `kind` from raw fields — the one thing every
+ * other renderer of this union already stopped doing.
+ */
+export type MatchHeroRow =
+  MatchHeroMatch | MatchHeroReservation | MatchHeroReduced;
+
+export interface MatchHeroProps {
+  match: MatchHeroRow;
   className?: string;
 }
 
@@ -264,46 +272,31 @@ function TeamSlot({
  * unlike the caption-only reduced renderers (`<TeamAgendaRow>`,
  * `<CalendarAgenda>`) — those never print the club's name as its own text
  * node, so folding it into "competition · club" is the only place it
- * appears. Here the `<h1>` already names `team` in full; passing `otherClub`
- * through would print the same club twice — "FC Zemst Sportief" as the
- * headline, then "TORNOOI · FC ZEMST SPORTIEF" directly beneath it (#2802
- * review, findings 8/9).
+ * appears. Here the `<h1>` already names `match.team` in full; passing
+ * `otherClub` through would print the same club twice.
  *
- * The kicker is the other half of that same review: a genuine reservation
- * has no preview/report to speak of, so it keeps `reservationView()`'s fixed
- * "GERESERVEERD". A tournament fixture is a real, dated match that merely
- * hasn't confirmed its opponent — it *is* a preview or report, so it keeps
- * `getKicker(status)` like the full hero, rather than also being announced
- * as "GERESERVEERD" (finding 2).
+ * The kicker is the other half: a genuine reservation has no preview/report
+ * to speak of, so it keeps `reservationView()`'s fixed "GERESERVEERD". A
+ * tournament fixture is a real, dated match that merely hasn't confirmed
+ * its opponent — it *is* a preview or report, so it keeps `getKicker(status)`
+ * like the full hero, rather than also being announced as "GERESERVEERD".
  */
 function ReservationHero({
-  team,
-  isPlaceholder,
-  date,
-  time,
-  venue,
-  status,
-  competition,
-  kcvvTeamLabel,
+  match,
   className,
 }: {
-  team: MatchHeroTeam;
-  isPlaceholder: boolean;
-  date: Date;
-  time?: string;
-  venue?: string;
-  status: MatchStatus;
-  competition?: string;
-  kcvvTeamLabel?: string;
+  match: MatchHeroReservation | MatchHeroReduced;
   className?: string;
 }) {
+  const { team, date, time, venue, status, competition, kcvvTeamLabel } = match;
   const stubDate = formatStubDate(date);
   const {
     subject,
     statusWording,
     kicker: reservationKicker,
   } = reservationView({ status, competition });
-  const kicker = isPlaceholder ? reservationKicker : getKicker(status);
+  const kicker =
+    match.kind === "reservation" ? reservationKicker : getKicker(status);
 
   return (
     <TapedCard
@@ -313,11 +306,7 @@ function ReservationHero({
       padding="none"
       rotation="none"
       className={cn("relative overflow-visible", className)}
-      dataAttrs={
-        isPlaceholder
-          ? { "data-placeholder": "true" }
-          : { "data-tournament": "true" }
-      }
+      dataAttrs={{ "data-row-kind": match.kind }}
     >
       <div className="grid grid-cols-1 md:grid-cols-[110px_1fr]">
         {/* ── Stub (left zone) ─────────────────────────────────────── */}
@@ -377,57 +366,23 @@ function ReservationHero({
   );
 }
 
-export function MatchHero({
-  homeTeam,
-  awayTeam,
-  date,
-  time,
-  venue,
-  status,
-  competition,
-  competitionType,
-  kcvvTeamLabel,
-  isPlaceholder,
+function FullHero({
+  match,
   className,
-}: MatchHeroProps) {
-  // Reduced for a reservation (no second side at all) or a tournament
-  // fixture with no result yet (#2696) — the shared predicate every other
-  // renderer's adapter already gates on. A settled tournament fixture
-  // (`isReducedMatchRow` false once both scores land) falls through to the
-  // ordinary two-crest hero below.
-  const isReduced =
-    isPlaceholder ||
-    isReducedMatchRow({
-      isPlaceholder,
-      competitionType,
-      status,
-      homeScore: homeTeam.score,
-      awayScore: awayTeam.score,
-    });
-
-  if (isReduced) {
-    // The crest to show: the club itself for a reservation (`homeTeam` and
-    // `awayTeam` carry the same club upstream, so either works), or the
-    // non-KCVV side for a tournament fixture — derived by id via the shared
-    // `otherClubSide()`, never home/away (#2696). Using the same helper
-    // every other reduced renderer uses, rather than a fifth hand-copied
-    // ternary (#2802 review, finding 15).
-    const team = isPlaceholder ? homeTeam : otherClubSide(homeTeam, awayTeam);
-    return (
-      <ReservationHero
-        team={team}
-        isPlaceholder={isPlaceholder}
-        date={date}
-        time={time}
-        venue={venue}
-        status={status}
-        competition={competition}
-        kcvvTeamLabel={kcvvTeamLabel}
-        className={className}
-      />
-    );
-  }
-
+}: {
+  match: MatchHeroMatch;
+  className?: string;
+}) {
+  const {
+    homeTeam,
+    awayTeam,
+    date,
+    time,
+    venue,
+    status,
+    competition,
+    kcvvTeamLabel,
+  } = match;
   const stubDate = formatStubDate(date);
   const kicker = getKicker(status);
   const metaParts = buildCompetitionMeta(competition, kcvvTeamLabel, date);
@@ -504,4 +459,22 @@ export function MatchHero({
       </div>
     </TapedCard>
   );
+}
+
+/**
+ * The match-detail page's hero — state-aware, never auto-hides (#2802
+ * review). Dispatches on `match.kind`, already resolved by
+ * `matchDetailToHeroRow()`; this component narrows and renders, it never
+ * asks `isReducedMatchRow` or `otherClubSide` itself.
+ */
+export function MatchHero({ match, className }: MatchHeroProps) {
+  switch (match.kind) {
+    case "reservation":
+    case "reduced":
+      return <ReservationHero match={match} className={className} />;
+    case "match":
+      return <FullHero match={match} className={className} />;
+    default:
+      return assertNever(match);
+  }
 }

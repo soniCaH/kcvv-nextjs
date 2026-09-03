@@ -29,13 +29,7 @@ import { SHEET_WIDTH_PX, WIDTH_FIT_SCALE } from "./poster-geometry";
 import { PrintButton } from "./PrintButton";
 import { PrintDate } from "./PrintDate";
 
-/**
- * Deliberately out of scope for the #2802 reservation/reduced union: this
- * page's own docblock already says "Not a public page: `noindex` +
- * unlinked", it reads the raw contract `Match` directly, and it renders
- * only senior league fixtures — the placeholder/reduced states this ticket
- * models don't reach it in practice, so it stays plain.
- */
+/** Deliberately out of scope for the #2802 reservation/reduced union — `noindex`/unlinked, reads the raw contract `Match` directly, renders only senior league fixtures. */
 export interface ScheurkalenderMatch {
   id: number;
   /**

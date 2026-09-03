@@ -119,7 +119,7 @@ function ReservationAgendaRow({
 }
 
 function AgendaMatchRow({ match }: { match: CalendarMatch }) {
-  // Enumerated positively (#2802 review, finding 11), not `kind !== "match"`
+  // Enumerated positively (#2802 review), not `kind !== "match"`
   // — a negated catch-all would silently route any future fourth `kind`
   // into the reduced row too, with no compile error.
   if (match.kind === "reservation" || match.kind === "reduced") {

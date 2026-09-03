@@ -245,8 +245,8 @@ export function TeamAgendaRow({
   // The adapter (`transformMatchToSchedule`) has already asked
   // `isReducedMatchRow()` once and baked the answer into `kind` — this reads
   // that discriminant rather than re-deriving the same question a second
-  // time from raw match fields. Enumerated positively (#2802 review,
-  // finding 11) rather than `kind !== "match"`: a negated catch-all treats
+  // time from raw match fields. Enumerated positively (#2802 review)
+  // rather than `kind !== "match"`: a negated catch-all treats
   // any *future* fourth `kind` as reduced too, silently, with no compile
   // error; this way a new member falls through to the `match`-only branch
   // below instead, where it fails loudly on the fields it doesn't carry.
@@ -276,15 +276,6 @@ export function TeamAgendaRow({
     isPlayed &&
     typeof match.homeScore === "number" &&
     typeof match.awayScore === "number";
-
-  // The lawful tournament detector (#2696) — `competitionType === "tournament"`,
-  // never a string match on the Dutch `competition` label, mirroring the
-  // `competitionType === "league"` gate elsewhere in the codebase. Read
-  // directly for `data-tournament` below — `isReducedRow` is the reduced
-  // question, not the tournament one: a settled tournament fixture is
-  // `kind: "match"` but still `competitionType === "tournament"`.
-  const isTournamentFixture =
-    match.kind !== "reservation" && match.competitionType === "tournament";
 
   // White on jersey-deep, inherited from the pre-#2395 green when cream missed
   // AA there. Both clear it now (white 5.29:1, cream 4.69:1) — see DESIGN.md
@@ -553,26 +544,15 @@ export function TeamAgendaRow({
     // #2696) for a tournament fixture with a hidden result. TypeScript still
     // needs `match.kind` to narrow which of the two this is, for the
     // lead-word/label-kind values the two states disagree on.
-    const {
-      otherClub,
-      leadWord: reducedLeadWord,
-      labelKind: reducedKind,
-    } = match.kind === "reservation"
-      ? {
-          otherClub: undefined,
-          leadWord: mobileKindWord,
-          labelKind: kind,
-        }
-      : {
-          otherClub: match.team,
-          // No slot word, ever, unlike the placeholder case: the featured
-          // green ground already says the row is next, and at narrow
-          // widths the word pushed the club name — the one part this row
-          // exists to carry — into the ellipsis (#2693 decision, round 3).
-          leadWord: null,
-          // Same "no slot word, ever" rule reaches the accessible name.
-          labelKind: undefined,
-        };
+    const isReservation = match.kind === "reservation";
+    const otherClub = isReservation ? undefined : match.team;
+    // No slot word, ever, on the reduced (non-reservation) side, unlike the
+    // placeholder case: the featured green ground already says the row is
+    // next, and at narrow widths the word pushed the club name — the one
+    // part this row exists to carry — into the ellipsis (#2693 decision,
+    // round 3). Same rule reaches the accessible name via `reducedKind`.
+    const reducedLeadWord = isReservation ? mobileKindWord : null;
+    const reducedKind = isReservation ? kind : undefined;
     const rowTeam = match.team;
 
     // The competition label is the default subject ("Tornooi" /
@@ -611,12 +591,15 @@ export function TeamAgendaRow({
       "text-[16px] sm:text-[18px]",
     );
 
+    // Inside this branch `match.kind` is only ever "reservation" or
+    // "reduced" (`isReducedRow`), so "the other one" is exactly
+    // `kind === "reduced"` — no separate tournament detector needed.
     return (
       <article
         data-testid="team-agenda-row"
         data-featured={featured}
         data-placeholder={match.isPlaceholder ? "true" : undefined}
-        data-tournament={isTournamentFixture ? "true" : undefined}
+        data-tournament={match.kind === "reduced" ? "true" : undefined}
         aria-label={placeholderLabel}
         className={cardBase}
       >

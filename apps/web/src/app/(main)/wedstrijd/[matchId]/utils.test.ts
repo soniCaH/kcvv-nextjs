@@ -11,6 +11,7 @@ import {
   extractMatchTime,
   formatMatchTitle,
   formatMatchDescription,
+  matchDetailToHeroRow,
 } from "./utils";
 import type { LineupPlayer } from "@/components/match/MatchLineup";
 import type { MatchLineupPlayer } from "@/lib/effect/schemas/match.schema";
@@ -324,6 +325,59 @@ describe("formatMatchTitle", () => {
     expect(formatMatchTitle(match)).toBe(
       "KCVV Elewijt 3 - 1 FC Zemst Sportief",
     );
+  });
+});
+
+describe("matchDetailToHeroRow (#2802 review — the fourth adapter)", () => {
+  it("builds the match branch for an ordinary two-team fixture", () => {
+    const match = createMatchDetail({
+      home_team: { id: 1235, name: "KCVV Elewijt" },
+      away_team: { id: 2, name: "KFC Turnhout" },
+    });
+    const row = matchDetailToHeroRow(match);
+    expect(row.kind).toBe("match");
+    if (row.kind !== "match") throw new Error("expected match kind");
+    expect(row.homeTeam.name).toBe("KCVV Elewijt");
+    expect(row.awayTeam.name).toBe("KFC Turnhout");
+  });
+
+  it("builds the reservation branch with the single reserving team, never a fabricated opponent", () => {
+    const match = createMatchDetail({
+      is_placeholder: true,
+      home_team: { id: 1235, name: "KCVV Elewijt" },
+      away_team: { id: 1235, name: "KCVV Elewijt" },
+    });
+    const row = matchDetailToHeroRow(match);
+    expect(row.kind).toBe("reservation");
+    if (row.kind !== "reservation")
+      throw new Error("expected reservation kind");
+    expect(row.team.name).toBe("KCVV Elewijt");
+  });
+
+  it("builds the reduced branch resolving the other club by id, even when KCVV is listed away", () => {
+    const match = createMatchDetail({
+      competitionType: "tournament",
+      status: "scheduled",
+      home_team: { id: 99, name: "FC Zemst Sportief" },
+      away_team: { id: 1235, name: "KCVV Elewijt" },
+      competition: "Tornooi",
+    });
+    const row = matchDetailToHeroRow(match);
+    expect(row.kind).toBe("reduced");
+    if (row.kind !== "reduced") throw new Error("expected reduced kind");
+    expect(row.team.name).toBe("FC Zemst Sportief");
+  });
+
+  it("reverts a tournament fixture to the match branch once a result exists", () => {
+    const match = createMatchDetail({
+      competitionType: "tournament",
+      status: "finished",
+      home_team: { id: 1235, name: "KCVV Elewijt", score: 3 },
+      away_team: { id: 99, name: "FC Zemst Sportief", score: 1 },
+      competition: "Tornooi",
+    });
+    const row = matchDetailToHeroRow(match);
+    expect(row.kind).toBe("match");
   });
 });
 

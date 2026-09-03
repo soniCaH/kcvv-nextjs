@@ -7,7 +7,7 @@ import type { MatchDetail } from "@kcvv/api-contract";
 import type { HeroMatchData } from "@/components/article/EditorialHero";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import { formatMatchWidgetDate } from "@/lib/utils/dates";
-import { isReducedMatchRow } from "@/lib/utils/match-display";
+import { matchRowKind } from "@/lib/utils/match-display";
 import { extractMatchTime } from "@/lib/utils/match-time";
 
 /**
@@ -48,16 +48,7 @@ export function parsePsdMatchId(
  * correct fallback instead of a bespoke reduced hero.
  */
 export function toHeroMatchData(match: MatchDetail): HeroMatchData | null {
-  if (
-    match.is_placeholder ||
-    isReducedMatchRow({
-      isPlaceholder: false,
-      competitionType: match.competitionType,
-      status: match.status,
-      homeScore: match.home_team.score,
-      awayScore: match.away_team.score,
-    })
-  ) {
+  if (matchRowKind(match) !== "match") {
     return null;
   }
   const kcvvSide =
