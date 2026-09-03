@@ -536,25 +536,34 @@ describe("FilterTabs", () => {
     });
 
     // #2805 — the overflow fade must match the row's ground, or it paints a
-    // mismatched coloured patch beside the arrow instead of a soften.
-    it("fades from cream on the default (paper) surface", () => {
+    // mismatched coloured patch beside the arrow instead of a soften. Both
+    // fades (left = .bg-gradient-to-r, right = .bg-gradient-to-l) are
+    // asserted — a fix that only threads `fadeFromClassName` to one of the
+    // two would still leave the suite green if just the left one is checked.
+    it("fades from cream on both sides on the default (paper) surface", () => {
       const { container } = render(
         <FilterTabs tabs={mockTabs} activeTab="all" />,
       );
 
-      const fade = container.querySelector(".bg-gradient-to-r");
-      expect(fade).toHaveClass("from-cream");
-      expect(fade).not.toHaveClass("from-jersey-deep-dark");
+      const leftFade = container.querySelector(".bg-gradient-to-r");
+      const rightFade = container.querySelector(".bg-gradient-to-l");
+      expect(leftFade).toHaveClass("from-cream");
+      expect(leftFade).not.toHaveClass("from-jersey-deep-dark");
+      expect(rightFade).toHaveClass("from-cream");
+      expect(rightFade).not.toHaveClass("from-jersey-deep-dark");
     });
 
-    it("fades from jersey-deep-dark on surface='inverse'", () => {
+    it("fades from jersey-deep-dark on both sides on surface='inverse'", () => {
       const { container } = render(
         <FilterTabs tabs={mockTabs} activeTab="all" surface="inverse" />,
       );
 
-      const fade = container.querySelector(".bg-gradient-to-r");
-      expect(fade).toHaveClass("from-jersey-deep-dark");
-      expect(fade).not.toHaveClass("from-cream");
+      const leftFade = container.querySelector(".bg-gradient-to-r");
+      const rightFade = container.querySelector(".bg-gradient-to-l");
+      expect(leftFade).toHaveClass("from-jersey-deep-dark");
+      expect(leftFade).not.toHaveClass("from-cream");
+      expect(rightFade).toHaveClass("from-jersey-deep-dark");
+      expect(rightFade).not.toHaveClass("from-cream");
     });
   });
 
