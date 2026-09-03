@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { TeamAgendaRow } from "./TeamAgendaRow";
 import type {
   ScheduleMatch,
+  ScheduleReducedMatch,
   ScheduleReservation,
 } from "@/components/match/types";
 
@@ -10,6 +11,7 @@ const OPP = { id: 42, name: "KSV Schoonbeek-Beverst A" };
 
 const upcoming: ScheduleMatch = {
   isPlaceholder: false,
+  kind: "match",
   id: 1,
   date: new Date("2026-09-20T15:00:00.000Z"),
   time: "15:00",
@@ -204,6 +206,7 @@ export const WithOpponentTeamLabel: Story = {
 
 const placeholderTournament: ScheduleReservation = {
   isPlaceholder: true,
+  kind: "reservation",
   id: 90,
   date: new Date("2026-05-09T09:30:00.000Z"),
   time: "09:30",
@@ -269,14 +272,20 @@ export const PlaceholderLongSubjectNarrow: Story = {
 // from the club id, "competition · club" subject, no slot word even
 // featured).
 
-// Spreads `upcoming` — its `isHome: true` rides along inert, since the
-// tournament row derives its crest from the club id, never home/away.
-const tournamentFixture: ScheduleMatch = {
-  ...upcoming,
+// A tournament fixture with no result yet is `kind: "reduced"` (#2802) —
+// the adapter (`transformMatchToSchedule`) has already resolved the crest
+// to the non-KCVV side via `otherClubSide()`/club-id equality, so this
+// fixture spells that resolved shape out directly rather than a `ScheduleMatch`
+// the row would now render as an ordinary two-crest scoreboard (the row
+// trusts `kind`, not a re-derivation of `isReducedMatchRow` from raw fields).
+const tournamentFixture: ScheduleReducedMatch = {
+  isPlaceholder: false,
+  kind: "reduced",
   id: 93,
   date: new Date("2026-08-30T09:30:00.000Z"),
   time: "09:30",
-  awayTeam: { id: 1391, name: "FC Zemst Sportief" },
+  team: { id: 1391, name: "FC Zemst Sportief" },
+  status: "scheduled",
   competition: "Tornooi",
   competitionType: "tournament",
 };

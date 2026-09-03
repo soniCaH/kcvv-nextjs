@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { MatchStripView } from "./MatchStripView";
 import type {
   ScheduleMatch,
+  ScheduleReducedMatch,
   ScheduleReservation,
 } from "@/components/match/types";
 import { KCVV_CLUB_ID } from "@/lib/constants";
@@ -25,6 +26,7 @@ const OPPONENT = {
 
 const homeWin: ScheduleMatch = {
   isPlaceholder: false,
+  kind: "match",
   id: 12345,
   date: new Date("2026-08-03T15:00:00Z"),
   status: "finished",
@@ -38,6 +40,7 @@ const homeWin: ScheduleMatch = {
 
 const awayFixture: ScheduleMatch = {
   isPlaceholder: false,
+  kind: "match",
   id: 12346,
   date: new Date("2026-08-08T18:00:00Z"),
   time: "18:00",
@@ -67,6 +70,7 @@ export const ResultAndFixture: Story = {
  */
 const todaysFixture: ScheduleMatch = {
   isPlaceholder: false,
+  kind: "match",
   id: 12349,
   date: new Date("2026-08-15T15:00:00Z"),
   time: "15:00",
@@ -154,6 +158,7 @@ export const AwaitingResult: Story = {
  */
 const reservation: ScheduleReservation = {
   isPlaceholder: true,
+  kind: "reservation",
   id: 12348,
   date: new Date("2026-05-09T09:30:00Z"),
   time: "09:30",
@@ -164,6 +169,30 @@ const reservation: ScheduleReservation = {
 
 export const ReservationFixture: Story = {
   args: { data: { result: homeWin, fixture: reservation } },
+};
+
+/**
+ * A tournament fixture with no result yet (#2696/#2802) as the next fixture
+ * — the gap this ticket closes: `<MatchStripView>` never called
+ * `isReducedMatchRow`, so this rendered the ordinary linked two-crest
+ * scoreboard against a club PSD hasn't confirmed as a genuine opponent.
+ * Same reduced treatment as `ReservationFixture` above, but the crest and
+ * subject name the other club, not KCVV's own.
+ */
+const tournamentFixture: ScheduleReducedMatch = {
+  isPlaceholder: false,
+  kind: "reduced",
+  id: 12349,
+  date: new Date("2026-08-30T09:30:00Z"),
+  time: "09:30",
+  team: { id: 1391, name: "FC Zemst Sportief" },
+  status: "scheduled",
+  competition: "Tornooi",
+  competitionType: "tournament",
+};
+
+export const TournamentFixture: Story = {
+  args: { data: { result: homeWin, fixture: tournamentFixture } },
 };
 
 /** No opponent logo, no kickoff time, no competition — the fallback path. */

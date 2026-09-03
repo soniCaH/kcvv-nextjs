@@ -20,7 +20,7 @@ import {
 import type { Match } from "@/lib/effect/schemas/match.schema";
 import type { EventListItemVM } from "@/lib/repositories/event.repository";
 import type { CalendarMatch, CalendarEvent } from "./utils";
-import { asNonPlaceholder } from "@/components/match/test-narrowing";
+import { asNonPlaceholder, asReduced } from "@/components/match/test-narrowing";
 
 function createMatch(overrides: Partial<Match> = {}): Match {
   return {
@@ -55,6 +55,7 @@ describe("transformMatchToCalendar", () => {
       team: "A-Ploeg",
       isHome: undefined,
       isPlaceholder: false,
+      kind: "match",
     });
   });
 
@@ -84,20 +85,22 @@ describe("transformMatchToCalendar", () => {
 
   it("passes through is_home as isHome", () => {
     const home = createMatch({ is_home: true } as Partial<Match>);
-    expect(transformMatchToCalendar(home).isHome).toBe(true);
+    expect(asNonPlaceholder(transformMatchToCalendar(home)).isHome).toBe(true);
 
     const away = createMatch({ is_home: false } as Partial<Match>);
-    expect(transformMatchToCalendar(away).isHome).toBe(false);
+    expect(asNonPlaceholder(transformMatchToCalendar(away)).isHome).toBe(false);
   });
 
   it("passes competitionType through when present (#2696)", () => {
     const match = createMatch({ competitionType: "tournament" });
-    expect(transformMatchToCalendar(match).competitionType).toBe("tournament");
+    expect(
+      asNonPlaceholder(transformMatchToCalendar(match)).competitionType,
+    ).toBe("tournament");
   });
 
   it("leaves competitionType undefined when absent", () => {
     expect(
-      transformMatchToCalendar(createMatch()).competitionType,
+      asNonPlaceholder(transformMatchToCalendar(createMatch())).competitionType,
     ).toBeUndefined();
   });
 
@@ -107,11 +110,51 @@ describe("transformMatchToCalendar", () => {
       away_team: { id: 2, name: "KFC Turnhout" },
       status: "scheduled",
     });
-    const result = transformMatchToCalendar(match);
+    const result = asNonPlaceholder(transformMatchToCalendar(match));
 
     expect(result.homeScore).toBeUndefined();
     expect(result.awayScore).toBeUndefined();
     expect(result.scoreDisplay).toEqual({ type: "vs" });
+  });
+
+  describe("a tournament fixture with no result yet reverts to the full scoreboard once a score arrives (#2696/#2802)", () => {
+    it("returns the CalendarReducedMatch shape — the other club's crest, no homeTeam/awayTeam/scores", () => {
+      const pending = createMatch({
+        competitionType: "tournament",
+        status: "scheduled",
+        home_team: { id: 1235, name: "KCVV Elewijt" },
+        away_team: { id: 77, name: "FC Zemst Sportief" },
+      });
+
+      const result = asReduced(transformMatchToCalendar(pending));
+
+      expect(result.club).toEqual({
+        id: 77,
+        name: "FC Zemst Sportief",
+        logo: undefined,
+      });
+      expect(result.competitionType).toBe("tournament");
+      expect("homeTeam" in result).toBe(false);
+      expect("awayTeam" in result).toBe(false);
+      expect("scoreDisplay" in result).toBe(false);
+    });
+
+    it('reverts to kind: "match" the moment both scores are present, same fixture id', () => {
+      const played = createMatch({
+        id: 555,
+        competitionType: "tournament",
+        status: "finished",
+        home_team: { id: 1235, name: "KCVV Elewijt", score: 3 },
+        away_team: { id: 77, name: "FC Zemst Sportief", score: 1 },
+      });
+
+      const result = asNonPlaceholder(transformMatchToCalendar(played));
+
+      expect(result.id).toBe(555);
+      expect(result.homeScore).toBe(3);
+      expect(result.awayScore).toBe(1);
+      expect(result.awayTeam.name).toBe("FC Zemst Sportief");
+    });
   });
 });
 
@@ -188,8 +231,18 @@ describe("eventListItemToCalendarEvent", () => {
 
 // ── Fixtures for new helpers ──────────────────────────────────────────────
 
+/**
+ * Builds a `CalendarMatchFixture` (`kind: "match"`) by default — every
+ * existing test constructs an ordinary fixture. `overrides` stays loosely
+ * typed (`Record<string, unknown>`, not `Partial<CalendarMatch>`) because a
+ * handful of tests deliberately switch to the `"reservation"` member, which
+ * carries a `club` field the fixture member doesn't have — one helper
+ * building three structurally different shapes can't keep the fixture
+ * member's typed override without also rejecting the reservation overrides
+ * that same helper needs to accept (#2802).
+ */
 function makeCalendarMatch(
-  overrides: Partial<CalendarMatch> & { id: number },
+  overrides: Record<string, unknown> & { id: number },
 ): CalendarMatch {
   return {
     date: "2026-03-15T15:00:00",
@@ -199,8 +252,9 @@ function makeCalendarMatch(
     team: "A-ploeg",
     scoreDisplay: { type: "vs" },
     isPlaceholder: false,
+    kind: "match",
     ...overrides,
-  };
+  } as CalendarMatch;
 }
 
 function makeCalendarEvent(
@@ -321,10 +375,9 @@ describe("getMatchDotType", () => {
     // dot must check isPlaceholder FIRST — the bug #2688 found.
     const match = makeCalendarMatch({
       id: 1,
-      isHome: true,
       isPlaceholder: true,
-      homeTeam: { id: 1235, name: "KCVV Elewijt" },
-      awayTeam: { id: 1235, name: "KCVV Elewijt" },
+      kind: "reservation",
+      club: { id: 1235, name: "KCVV Elewijt" },
     });
     expect(getMatchDotType(match)).toBe("reservation");
   });
@@ -518,8 +571,8 @@ describe("calendarMatchToScheduleMatch", () => {
           date: "2026-05-09T09:30:00.000Z",
           time: "09:30",
           isPlaceholder: true,
-          homeTeam: { id: 1235, name: "KCVV Elewijt" },
-          awayTeam: { id: 1235, name: "KCVV Elewijt" },
+          kind: "reservation",
+          club: { id: 1235, name: "KCVV Elewijt" },
           competition: "Tornooi",
         }),
       );
@@ -529,10 +582,32 @@ describe("calendarMatchToScheduleMatch", () => {
       expect(result.team).toEqual({
         id: 1235,
         name: "KCVV Elewijt",
-        logo: undefined,
       });
       expect(result.competition).toBe("Tornooi");
       expect("awayTeam" in result).toBe(false);
+    });
+  });
+
+  describe("a tournament fixture with no result yet (#2696/#2802)", () => {
+    it("returns a ScheduleReducedMatch — the other club's crest, no awayTeam/scores", () => {
+      const result = calendarMatchToScheduleMatch(
+        makeCalendarMatch({
+          id: 91,
+          date: "2026-05-10T09:30:00.000Z",
+          time: "09:30",
+          isPlaceholder: false,
+          kind: "reduced",
+          club: { id: 77, name: "FC Zemst Sportief" },
+          competition: "Tornooi",
+          competitionType: "tournament",
+        }),
+      );
+
+      const reduced = asReduced(result);
+      expect(reduced.team).toEqual({ id: 77, name: "FC Zemst Sportief" });
+      expect(reduced.competition).toBe("Tornooi");
+      expect(reduced.competitionType).toBe("tournament");
+      expect("awayTeam" in reduced).toBe(false);
     });
   });
 });
@@ -722,8 +797,8 @@ describe("buildKalenderItemListEntries", () => {
           id: 90,
           date: "2026-09-12T09:30:00.000Z",
           isPlaceholder: true,
-          homeTeam: { id: 1235, name: "KCVV Elewijt" },
-          awayTeam: { id: 1235, name: "KCVV Elewijt" },
+          kind: "reservation",
+          club: { id: 1235, name: "KCVV Elewijt" },
           competition: "Tornooi",
         }),
       ],
@@ -739,6 +814,30 @@ describe("buildKalenderItemListEntries", () => {
     expect(entries.some((e) => /KCVV Elewijt.*KCVV Elewijt/.test(e.name))).toBe(
       false,
     );
+  });
+
+  it("names a tournament fixture with no result yet by 'competition · other club', never a fabricated 'home — away' (#2696/#2802)", () => {
+    const feed = buildCalendarFeed(
+      [
+        makeCalendarMatch({
+          id: 91,
+          date: "2026-09-12T09:30:00.000Z",
+          isPlaceholder: false,
+          kind: "reduced",
+          club: { id: 77, name: "FC Zemst Sportief" },
+          competition: "Tornooi",
+          competitionType: "tournament",
+        }),
+      ],
+      [],
+    );
+
+    const entries = buildKalenderItemListEntries(feed, SITE, { nowMs: NOW });
+
+    expect(entries).toContainEqual({
+      name: "Tornooi · FC Zemst Sportief",
+      url: "https://kcvvelewijt.be/wedstrijd/91",
+    });
   });
 
   it("drops past items and caps at the limit", () => {

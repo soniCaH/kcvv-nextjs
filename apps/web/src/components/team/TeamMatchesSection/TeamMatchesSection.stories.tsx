@@ -35,6 +35,7 @@ function m(
 ): ScheduleMatch {
   return {
     isPlaceholder: false,
+    kind: "match",
     id,
     date: dateFromAnchor(daysOffset),
     time: "15:00",
@@ -105,6 +106,7 @@ export const PlaceholderNextMatch: Story = {
       m(3, -7, "finished", [3, 0], true, OPP_B),
       {
         isPlaceholder: true,
+        kind: "reservation",
         id: 20,
         date: dateFromAnchor(10),
         time: "09:30",

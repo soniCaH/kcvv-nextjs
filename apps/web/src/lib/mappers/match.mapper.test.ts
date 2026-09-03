@@ -8,7 +8,7 @@ import {
   mapMatchesToUpcomingMatches,
 } from "./match.mapper";
 import type { Match } from "@/lib/effect/schemas/match.schema";
-import { asNonPlaceholder } from "@/components/match/test-narrowing";
+import { asNonPlaceholder, asReduced } from "@/components/match/test-narrowing";
 
 describe("mapMatchToUpcomingMatch", () => {
   it("should map a scheduled match correctly", () => {
@@ -36,6 +36,7 @@ describe("mapMatchToUpcomingMatch", () => {
 
     expect(result).toEqual({
       isPlaceholder: false,
+      kind: "match",
       id: 1,
       date: new Date("2025-12-06T09:00:00"),
       time: "09:00",
@@ -54,6 +55,8 @@ describe("mapMatchToUpcomingMatch", () => {
       },
       status: "scheduled",
       squadLabel: "U9",
+      kcvvTeamId: undefined,
+      kcvvTeamLabel: undefined,
       competition: "Competitie",
     });
   });
@@ -176,6 +179,56 @@ describe("mapMatchToUpcomingMatch", () => {
     expect("awayTeam" in result).toBe(false);
     expect("homeScore" in result).toBe(false);
     expect("awayScore" in result).toBe(false);
+    expect(result.kind).toBe("reservation");
+  });
+
+  describe("a tournament fixture with no result yet (#2696/#2802)", () => {
+    it('returns the UpcomingReducedMatch shape and reverts to kind: "match" once scored', () => {
+      const pending: Match = {
+        id: 91,
+        date: new Date("2026-05-10T09:30:00.000Z"),
+        time: "09:30",
+        venue: undefined,
+        home_team: { id: 1235, name: "KCVV Elewijt", logo: "kcvv.png" },
+        away_team: { id: 77, name: "FC Zemst Sportief", logo: "zemst.png" },
+        status: "scheduled",
+        competition: "Tornooi",
+        squadLabel: "U13",
+        kcvv_team_id: 7,
+        kcvv_team_label: "U13",
+        competitionType: "tournament",
+      } as Match;
+
+      const reduced = asReduced(mapMatchToUpcomingMatch(pending));
+      expect(reduced.team).toEqual({
+        id: 77,
+        name: "FC Zemst Sportief",
+        logo: "zemst.png",
+      });
+      expect(reduced.kcvvTeamLabel).toBe("U13");
+      expect("awayTeam" in reduced).toBe(false);
+      expect("homeScore" in reduced).toBe(false);
+
+      const played: Match = {
+        ...pending,
+        status: "finished",
+        home_team: {
+          id: 1235,
+          name: "KCVV Elewijt",
+          logo: "kcvv.png",
+          score: 2,
+        },
+        away_team: {
+          id: 77,
+          name: "FC Zemst Sportief",
+          logo: "zemst.png",
+          score: 0,
+        },
+      };
+      const full = asNonPlaceholder(mapMatchToUpcomingMatch(played));
+      expect(full.homeTeam.score).toBe(2);
+      expect(full.awayTeam.score).toBe(0);
+    });
   });
 
   it("should handle stopped status", () => {

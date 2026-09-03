@@ -1,9 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { within } from "storybook/test";
 import { CalendarAgenda } from "./CalendarAgenda";
-import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
+import type {
+  CalendarMatch,
+  CalendarMatchFixture,
+  CalendarEvent,
+} from "@/app/(main)/kalender/utils";
 import { fixtureImage } from "@test-fixtures/images";
-import { tournamentMatch } from "../calendar-mocks";
+import {
+  reservationMatch,
+  tournamentMatch,
+  tournamentOpponent,
+} from "../calendar-mocks";
 
 const meta = {
   title: "Features/Calendar/CalendarAgenda",
@@ -35,11 +43,12 @@ function match(
   date: string,
   team: string,
   opponent: string,
-  opts: Partial<CalendarMatch> = {},
-): CalendarMatch {
+  opts: Partial<CalendarMatchFixture> = {},
+): CalendarMatchFixture {
   const isHome = opts.isHome ?? true;
   return {
     id,
+    kind: "match",
     date,
     time: date.slice(11, 16),
     homeTeam: isHome ? kcvv : { id: 100 + id, name: opponent },
@@ -161,11 +170,12 @@ export const WithReservation: Story = {
     ...baseProps,
     matches: [
       ...sparseMatches,
-      match(90, "2026-09-13T09:30:00", "U8", "KCVV Elewijt", {
-        homeTeam: kcvv,
-        awayTeam: kcvv,
+      reservationMatch({
+        id: 90,
+        date: "2026-09-13T09:30:00",
+        team: "U8",
+        club: kcvv,
         competition: "Tornooi",
-        isPlaceholder: true,
       }),
     ],
     events: sparseEvents,
@@ -200,12 +210,17 @@ export const PlayedTournament: Story = {
   args: {
     ...baseProps,
     matches: [
-      tournamentMatch({
-        date: "2026-09-13T09:30:00",
+      match(92, "2026-09-13T09:30:00", "U9", "FC Zemst Sportief", {
         status: "finished",
         homeScore: 4,
         awayScore: 1,
         scoreDisplay: { type: "score", home: 4, away: 1 },
+        competition: "Tornooi",
+        competitionType: "tournament",
+        // The same crested opponent `tournamentMatch()` carries, so this
+        // story's pixels are unchanged by #2802's fixture reshape (a bare
+        // `{ id, name }` would swap the logo for an initialled disc).
+        awayTeam: tournamentOpponent,
       }),
     ],
     events: [],

@@ -5,7 +5,7 @@
 import { describe, it, expect } from "vitest";
 import { transformMatchToSchedule } from "./transform";
 import type { Match } from "@/lib/effect/schemas";
-import { asNonPlaceholder } from "./test-narrowing";
+import { asNonPlaceholder, asReduced } from "./test-narrowing";
 
 // Mock Match factory
 function createMockMatch(overrides: Partial<Match> = {}): Match {
@@ -155,5 +155,112 @@ describe("transformMatchToSchedule", () => {
     expect("awayTeam" in result).toBe(false);
     expect("homeScore" in result).toBe(false);
     expect("awayScore" in result).toBe(false);
+    expect(result.kind).toBe("reservation");
+  });
+
+  it('emits kind: "match" for an ordinary fixture (#2802)', () => {
+    expect(
+      asNonPlaceholder(transformMatchToSchedule(createMockMatch())).kind,
+    ).toBe("match");
+  });
+
+  describe("a tournament fixture with no result yet reverts to the full scoreboard once a score arrives (#2696/#2802)", () => {
+    it("returns the ScheduleReducedMatch shape — one `team` (the other club), no awayTeam/scores", () => {
+      const pending = createMockMatch({
+        competitionType: "tournament",
+        status: "scheduled",
+        home_team: {
+          id: 1235,
+          name: "KCVV Elewijt",
+          logo: "https://example.com/kcvv.png",
+        },
+        away_team: {
+          id: 99,
+          name: "FC Zemst Sportief",
+          logo: "https://example.com/zemst.png",
+        },
+        competition: "Tornooi",
+      });
+
+      const result = asReduced(transformMatchToSchedule(pending));
+
+      expect(result.team).toEqual({
+        id: 99,
+        name: "FC Zemst Sportief",
+        logo: "https://example.com/zemst.png",
+        teamLabel: undefined,
+      });
+      expect(result.competition).toBe("Tornooi");
+      expect(result.competitionType).toBe("tournament");
+      expect("awayTeam" in result).toBe(false);
+      expect("homeScore" in result).toBe(false);
+      expect("awayScore" in result).toBe(false);
+    });
+
+    it('reverts to kind: "match" the moment both scores are present, same fixture id', () => {
+      const played = createMockMatch({
+        id: 555,
+        competitionType: "tournament",
+        status: "finished",
+        home_team: { id: 1235, name: "KCVV Elewijt", score: 3 },
+        away_team: { id: 99, name: "FC Zemst Sportief", score: 1 },
+        competition: "Tornooi",
+      });
+
+      const result = asNonPlaceholder(transformMatchToSchedule(played));
+
+      expect(result.id).toBe(555);
+      expect(result.homeScore).toBe(3);
+      expect(result.awayScore).toBe(1);
+      expect(result.awayTeam.name).toBe("FC Zemst Sportief");
+    });
+
+    it("stays reduced for a played tournament fixture whose scores are missing from the feed", () => {
+      const played = createMockMatch({
+        competitionType: "tournament",
+        status: "finished",
+        home_team: { id: 1235, name: "KCVV Elewijt" },
+        away_team: { id: 99, name: "FC Zemst Sportief" },
+      });
+
+      expect(transformMatchToSchedule(played).kind).toBe("reduced");
+    });
+
+    it("never applies to an ordinary league fixture, even before kickoff", () => {
+      const scheduled = createMockMatch({
+        competitionType: "league",
+        status: "scheduled",
+        home_team: { id: 1235, name: "KCVV Elewijt", score: undefined },
+        away_team: { id: 99, name: "FC Zemst Sportief", score: undefined },
+      });
+
+      expect(transformMatchToSchedule(scheduled).kind).toBe("match");
+    });
+
+    it("resolves the other club by id, not by home/away side (#2696)", () => {
+      // KCVV listed as away this time — the crest must still name the other
+      // club, proving the derivation reads the club id, never the side PSD
+      // happened to list it on.
+      const pending = createMockMatch({
+        competitionType: "tournament",
+        status: "scheduled",
+        home_team: {
+          id: 99,
+          name: "FC Zemst Sportief",
+          logo: "https://example.com/zemst.png",
+        },
+        away_team: { id: 1235, name: "KCVV Elewijt" },
+        competition: "Tornooi",
+      });
+
+      const result = asReduced(transformMatchToSchedule(pending));
+
+      expect(result.team).toEqual({
+        id: 99,
+        name: "FC Zemst Sportief",
+        logo: "https://example.com/zemst.png",
+        teamLabel: undefined,
+      });
+    });
   });
 });

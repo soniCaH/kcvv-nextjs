@@ -34,6 +34,7 @@ const matches: CalendarMatch[] = [
     competition: "Nationale 1",
     team: "A-ploeg",
     isPlaceholder: false,
+    kind: "match" as const,
   },
   {
     id: 2,
@@ -46,6 +47,7 @@ const matches: CalendarMatch[] = [
     competition: "Nationale 1",
     team: "A-ploeg",
     isPlaceholder: false,
+    kind: "match" as const,
   },
   {
     id: 3,
@@ -58,6 +60,7 @@ const matches: CalendarMatch[] = [
     competition: "Jeugd",
     team: "U15 A",
     isPlaceholder: false,
+    kind: "match" as const,
   },
 ];
 

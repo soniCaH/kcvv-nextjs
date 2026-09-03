@@ -4,6 +4,7 @@ import { MatchStripView } from "./MatchStripView";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import type {
   ScheduleMatch,
+  ScheduleReducedMatch,
   ScheduleReservation,
 } from "@/components/match/types";
 
@@ -11,6 +12,7 @@ const OPPONENT = { id: 9999, name: "RC Mechelen", logo: "https://psd/rc.png" };
 
 const result: ScheduleMatch = {
   isPlaceholder: false,
+  kind: "match",
   id: 42,
   date: new Date("2026-08-03T15:00:00Z"),
   status: "finished",
@@ -24,6 +26,7 @@ const result: ScheduleMatch = {
 
 const fixture: ScheduleMatch = {
   isPlaceholder: false,
+  kind: "match",
   id: 43,
   date: new Date("2026-08-08T18:00:00Z"),
   time: "18:00",
@@ -248,6 +251,7 @@ describe("MatchStripView", () => {
   describe("pitch-reservation placeholder (#2606, #2688)", () => {
     const reservation: ScheduleReservation = {
       isPlaceholder: true,
+      kind: "reservation",
       id: 90,
       date: new Date("2026-05-09T09:30:00Z"),
       time: "09:30",
@@ -347,6 +351,47 @@ describe("MatchStripView", () => {
       expect(container.querySelectorAll('[aria-live="polite"]')).toHaveLength(
         1,
       );
+    });
+  });
+
+  // #2696/#2802 — the gap this ticket closes: `<MatchStripView>` never
+  // called `isReducedMatchRow`, so a not-yet-played tournament fixture
+  // rendered the ordinary linked two-crest scoreboard against a club PSD
+  // hasn't confirmed as a genuine opponent.
+  describe("tournament fixture with no result yet (#2696/#2802)", () => {
+    const tournament: ScheduleReducedMatch = {
+      isPlaceholder: false,
+      kind: "reduced",
+      id: 91,
+      date: new Date("2026-08-30T09:30:00Z"),
+      time: "09:30",
+      team: { id: 1391, name: "FC Zemst Sportief" },
+      status: "scheduled",
+      competition: "Tornooi",
+      competitionType: "tournament",
+    };
+
+    it("renders the mobile ledger row as reduced — no <Link>, names the other club", () => {
+      render(<MatchStripView data={{ result: null, fixture: tournament }} />);
+      expect(screen.queryByRole("link")).toBeNull();
+      expect(
+        screen.getByText("Tornooi · FC Zemst Sportief"),
+      ).toBeInTheDocument();
+    });
+
+    it("marks the row data-tournament, not data-placeholder", () => {
+      render(<MatchStripView data={{ result: null, fixture: tournament }} />);
+      const article = screen.getByRole("article", { name: /Tornooi/ });
+      expect(article).toHaveAttribute("data-tournament", "true");
+      expect(article).not.toHaveAttribute("data-placeholder");
+    });
+
+    it("desktop slide: no CTA, no second crest", () => {
+      render(<MatchStripView data={{ result: null, fixture: tournament }} />);
+      expect(
+        screen.queryByRole("link", { name: /Wedstrijddetails/i }),
+      ).toBeNull();
+      expect(screen.queryByText("RC Mechelen")).toBeNull();
     });
   });
 

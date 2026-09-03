@@ -454,4 +454,115 @@ describe("MatchHero", () => {
       expect(screen.getAllByText("CANC").length).toBeGreaterThan(0);
     });
   });
+
+  describe("tournament fixture with no result yet (#2696/#2802)", () => {
+    const zemst = { id: 77, name: "FC Zemst Sportief", logo: awayTeam.logo };
+    const kcvv = { id: 1235, name: "KCVV Elewijt", logo: homeTeam.logo };
+
+    it("names the other club in the <h1>, never 'vs' — never KCVV's own crest", () => {
+      render(
+        <MatchHero
+          homeTeam={kcvv}
+          awayTeam={zemst}
+          date={scheduledMatchDate}
+          status="scheduled"
+          competition="Tornooi"
+          competitionType="tournament"
+          isPlaceholder={false}
+        />,
+      );
+      const heading = screen.getByRole("heading", { level: 1 });
+      expect(heading).toHaveTextContent("FC Zemst Sportief");
+      expect(heading.textContent).not.toMatch(/vs/i);
+      expect(screen.queryByText("KCVV Elewijt")).toBeNull();
+    });
+
+    it("resolves the other club by id, not by home/away side", () => {
+      // KCVV listed as away this time — the same club must still show.
+      render(
+        <MatchHero
+          homeTeam={zemst}
+          awayTeam={kcvv}
+          date={scheduledMatchDate}
+          status="scheduled"
+          competition="Tornooi"
+          competitionType="tournament"
+          isPlaceholder={false}
+        />,
+      );
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+        "FC Zemst Sportief",
+      );
+    });
+
+    it("composes the subject as 'competition · club' — distinct from a bare reservation", () => {
+      render(
+        <MatchHero
+          homeTeam={kcvv}
+          awayTeam={zemst}
+          date={scheduledMatchDate}
+          status="scheduled"
+          competition="Tornooi"
+          competitionType="tournament"
+          isPlaceholder={false}
+        />,
+      );
+      expect(
+        screen.getByText("Tornooi · FC Zemst Sportief"),
+      ).toBeInTheDocument();
+    });
+
+    it("carries the data-tournament marker, not data-placeholder", () => {
+      const { container } = render(
+        <MatchHero
+          homeTeam={kcvv}
+          awayTeam={zemst}
+          date={scheduledMatchDate}
+          status="scheduled"
+          competition="Tornooi"
+          competitionType="tournament"
+          isPlaceholder={false}
+        />,
+      );
+      expect(
+        container.querySelector('[data-tournament="true"]'),
+      ).not.toBeNull();
+      expect(container.querySelector('[data-placeholder="true"]')).toBeNull();
+    });
+
+    it("reverts to the full two-crest scoreboard once a result exists", () => {
+      render(
+        <MatchHero
+          homeTeam={{ ...kcvv, score: 3 }}
+          awayTeam={{ ...zemst, score: 1 }}
+          date={finishedMatchDate}
+          status="finished"
+          competition="Tornooi"
+          competitionType="tournament"
+          isPlaceholder={false}
+        />,
+      );
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+        /KCVV Elewijt\s*3\s*—\s*1\s*FC Zemst Sportief/,
+      );
+    });
+
+    it("never reduces an ordinary league fixture, even before kickoff", () => {
+      render(
+        <MatchHero
+          homeTeam={kcvv}
+          awayTeam={zemst}
+          date={scheduledMatchDate}
+          status="scheduled"
+          competition="3e Provinciale"
+          competitionType="league"
+          isPlaceholder={false}
+        />,
+      );
+      const heading = screen.getByRole("heading", { level: 1 });
+      expect(heading).toHaveTextContent(
+        /KCVV Elewijt\s*vs\s*FC Zemst Sportief/,
+      );
+    });
+  });
 });

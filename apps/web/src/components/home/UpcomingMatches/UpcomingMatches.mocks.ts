@@ -1,5 +1,6 @@
 import type {
   UpcomingMatch,
+  UpcomingReducedMatch,
   UpcomingReservation,
   UpcomingRow,
 } from "@/components/match/types";
@@ -31,6 +32,7 @@ const makeMatch = (
   options: Partial<UpcomingMatch> = {},
 ): UpcomingMatch => ({
   isPlaceholder: false,
+  kind: "match",
   id,
   date: new Date(date),
   time,
@@ -170,6 +172,7 @@ export const mockUpcomingSingleTeam: UpcomingMatch[] =
  */
 const mockUpcomingReservation: UpcomingReservation = {
   isPlaceholder: true,
+  kind: "reservation",
   id: 90,
   date: new Date("2026-05-09T09:30:00Z"),
   time: "09:30",
@@ -182,4 +185,33 @@ const mockUpcomingReservation: UpcomingReservation = {
 export const mockUpcomingWithReservation: UpcomingRow[] = [
   ...mockUpcomingFive,
   mockUpcomingReservation,
+];
+
+/**
+ * A tournament fixture with no result yet (#2696/#2802) — a real named
+ * opponent, not a self-match. Renders the same reduced `<ReservationMatchRow>`
+ * as a placeholder, but `team` is the *other* club (never KCVV's own): the
+ * gap `<UpcomingMatchesClient>` had before this ticket — it never called
+ * `isReducedMatchRow`, so a not-yet-played tournament fixture for a
+ * non-senior team rendered the ordinary linked two-crest scoreboard here.
+ */
+const mockUpcomingTournament: UpcomingReducedMatch = {
+  isPlaceholder: false,
+  kind: "reduced",
+  id: 91,
+  // Dated earlier than every `mockUpcomingFive` fixture (earliest 05-16), so
+  // it takes one of the 5 visible (collapsed) slots — mirroring
+  // `mockUpcomingReservation`'s 05-09 date above.
+  date: new Date("2026-05-10T09:30:00Z"),
+  time: "09:30",
+  team: opponent(1391, "FC Zemst Sportief"),
+  status: "scheduled",
+  competition: "Tornooi",
+  competitionType: "tournament",
+  kcvvTeamLabel: "U9",
+};
+
+export const mockUpcomingWithTournament: UpcomingRow[] = [
+  ...mockUpcomingFive,
+  mockUpcomingTournament,
 ];

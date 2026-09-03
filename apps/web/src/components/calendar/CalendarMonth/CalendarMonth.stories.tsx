@@ -44,6 +44,7 @@ const marchMatches: CalendarMatch[] = [
     team: "A-ploeg",
     isHome: true,
     isPlaceholder: false,
+    kind: "match" as const,
   },
   {
     id: 2,
@@ -57,6 +58,7 @@ const marchMatches: CalendarMatch[] = [
     team: "A-ploeg",
     isHome: false,
     isPlaceholder: false,
+    kind: "match" as const,
   },
   {
     id: 3,
@@ -70,6 +72,7 @@ const marchMatches: CalendarMatch[] = [
     team: "U15 A",
     isHome: true,
     isPlaceholder: false,
+    kind: "match" as const,
   },
 ];
 
@@ -99,6 +102,7 @@ const denseSaturdayMatches: CalendarMatch[] = Array.from(
     team: `U${7 + i}`,
     isHome: i % 3 !== 0,
     isPlaceholder: false,
+    kind: "match" as const,
   }),
 );
 

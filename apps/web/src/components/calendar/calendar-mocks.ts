@@ -1,6 +1,8 @@
-import type { CalendarMatch } from "@/app/(main)/kalender/utils";
+import type {
+  CalendarReducedMatch,
+  CalendarReservation,
+} from "@/app/(main)/kalender/utils";
 import { fixtureImage } from "@test-fixtures/images";
-import { KCVV_CLUB_ID } from "@/lib/constants";
 
 export const kcvv = {
   id: 1,
@@ -28,15 +30,14 @@ export const tournamentOpponent = {
  * `isHome` is left unset deliberately: a reservation has no side to name.
  */
 export function reservationMatch(
-  overrides: Partial<CalendarMatch> = {},
-): CalendarMatch {
+  overrides: Partial<CalendarReservation> = {},
+): CalendarReservation {
   return {
     id: 90,
+    kind: "reservation",
     date: "2026-03-15T09:30:00",
     time: "09:30",
-    homeTeam: kcvv,
-    awayTeam: kcvv,
-    scoreDisplay: { type: "vs" },
+    club: kcvv,
     status: "scheduled",
     competition: "Tornooi",
     team: "U8",
@@ -46,29 +47,26 @@ export function reservationMatch(
 }
 
 /**
- * A tournament fixture (#2696/#2715) — `competitionType === "tournament"`, a
- * real named opponent, not a self-match. Renders the same reduced
- * row/card as `reservationMatch()` above, but the crest and subject name
- * the opponent, not KCVV — see `otherClubSide()`/`isReducedMatchRow()` in
- * `match-display.ts`. `homeTeam.id` is `KCVV_CLUB_ID`, not this file's
- * `kcvv` fixture's id `1` — `otherClubSide()` keys off the real club id,
- * which the local mock team objects elsewhere in this file don't carry.
+ * A tournament fixture (#2696/#2715/#2802) — `competitionType ===
+ * "tournament"`, a real named opponent, not a self-match. Renders the same
+ * reduced row/card as `reservationMatch()` above, but the crest and subject
+ * name the opponent, not KCVV — `club` is precomputed via club-id equality
+ * by `transformMatchToCalendar` (see `match-display.ts`'s `isReducedMatchRow`
+ * for the predicate deciding this member applies).
  */
 export function tournamentMatch(
-  overrides: Partial<CalendarMatch> = {},
-): CalendarMatch {
+  overrides: Partial<CalendarReducedMatch> = {},
+): CalendarReducedMatch {
   return {
     id: 91,
+    kind: "reduced",
     date: "2026-08-30T09:30:00",
     time: "09:30",
-    homeTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt", logo: kcvv.logo },
-    awayTeam: tournamentOpponent,
-    scoreDisplay: { type: "vs" },
+    club: tournamentOpponent,
     status: "scheduled",
     competition: "Tornooi",
     competitionType: "tournament",
     team: "U9",
-    isHome: true,
     isPlaceholder: false,
     ...overrides,
   };

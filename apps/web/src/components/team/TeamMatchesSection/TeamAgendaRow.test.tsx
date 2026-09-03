@@ -18,6 +18,7 @@ import userEvent from "@testing-library/user-event";
 import { TeamAgendaRow } from "./TeamAgendaRow";
 import type {
   ScheduleMatch,
+  ScheduleReducedMatch,
   ScheduleReservation,
 } from "@/components/match/types";
 
@@ -41,6 +42,7 @@ vi.mock("next/link", () => ({
 
 const BASE: ScheduleMatch = {
   isPlaceholder: false,
+  kind: "match",
   id: 1,
   date: new Date("2026-08-15T15:00:00.000Z"),
   time: "15:00",
@@ -98,6 +100,7 @@ const mobileText = () =>
 /** A pitch-reservation placeholder (#2606) — both sides are the same club. */
 const PLACEHOLDER: ScheduleReservation = {
   isPlaceholder: true,
+  kind: "reservation",
   id: 99,
   date: new Date("2026-05-09T09:30:00.000Z"),
   time: "09:30",
@@ -106,14 +109,21 @@ const PLACEHOLDER: ScheduleReservation = {
   competition: "Tornooi",
 };
 
-/** A genuine tournament fixture (#2696) — not a self-match. */
-const TOURNAMENT: ScheduleMatch = {
+/**
+ * A genuine tournament fixture (#2696) with no result yet — not a
+ * self-match, but reduced all the same until a scoreline arrives. The
+ * adapter (`transformMatchToSchedule`) is what decides `kind: "reduced"`
+ * for a raw `Match` shaped this way; this fixture spells out that decision
+ * directly since the component now trusts `kind` rather than re-deriving it
+ * from `competitionType`/`status`/scores (#2802).
+ */
+const TOURNAMENT: ScheduleReducedMatch = {
   isPlaceholder: false,
+  kind: "reduced",
   id: 200,
   date: new Date("2026-08-30T09:30:00.000Z"),
   time: "09:30",
-  homeTeam: { id: 1235, name: "KCVV Elewijt" },
-  awayTeam: {
+  team: {
     id: 77,
     name: "FC Zemst Sportief",
     logo: "https://example.com/zemst.png",
@@ -1028,29 +1038,17 @@ describe("TeamAgendaRow", () => {
       expect(onNavigate).not.toHaveBeenCalled();
     });
 
-    it("shows the crest of the named club, not KCVV's — derived from club id, not home/away", () => {
-      // KCVV is homeTeam here; the opponent (away) crest must show.
-      const { container: kcvvHome } = render(
-        <TeamAgendaRow match={TOURNAMENT} />,
-      );
+    it("shows the crest of the named club, not KCVV's", () => {
+      // `TOURNAMENT.team` is already the resolved non-KCVV side — the
+      // home/away-vs-club-id derivation this test used to exercise at the
+      // render layer happens once now, in the adapter
+      // (`transformMatchToSchedule`'s `otherClub()`), not per-renderer: the
+      // row only ever sees the already-resolved crest, so it can no longer
+      // get the side wrong. See `transform.test.ts` for the derivation
+      // itself, exercised both ways (#2802).
+      const { container } = render(<TeamAgendaRow match={TOURNAMENT} />);
       expect(
-        kcvvHome.querySelector('img[src="https://example.com/zemst.png"]'),
-      ).not.toBeNull();
-
-      // Swap sides — KCVV away this time. Same club must still show, proving
-      // the derivation reads club id, not the home/away slot.
-      const { container: kcvvAway } = render(
-        <TeamAgendaRow
-          match={{
-            ...TOURNAMENT,
-            id: 201,
-            homeTeam: TOURNAMENT.awayTeam,
-            awayTeam: TOURNAMENT.homeTeam,
-          }}
-        />,
-      );
-      expect(
-        kcvvAway.querySelector('img[src="https://example.com/zemst.png"]'),
+        container.querySelector('img[src="https://example.com/zemst.png"]'),
       ).not.toBeNull();
     });
 
@@ -1104,9 +1102,22 @@ describe("TeamAgendaRow", () => {
      * review).
      */
     it("reverts to the full scoreboard once played — score, outcome tint, and a link", () => {
+      // The same underlying fixture as `TOURNAMENT`, but shaped the way
+      // `transformMatchToSchedule` would emit it once PSD reports a
+      // scoreline: `kind: "match"`, with `homeTeam`/`awayTeam` restored —
+      // not a mutation of `TOURNAMENT` itself, which as `kind: "reduced"`
+      // no longer carries those fields to spread (#2802).
       const played: ScheduleMatch = {
-        ...TOURNAMENT,
+        isPlaceholder: false,
+        kind: "match",
+        id: TOURNAMENT.id,
+        date: TOURNAMENT.date,
+        time: TOURNAMENT.time,
+        homeTeam: { id: 1235, name: "KCVV Elewijt" },
+        awayTeam: TOURNAMENT.team,
         status: "finished",
+        competition: TOURNAMENT.competition,
+        competitionType: TOURNAMENT.competitionType,
         homeScore: 3,
         awayScore: 1,
         isHome: true,

@@ -23,6 +23,7 @@ describe("transformHomeTeam", () => {
     });
     const result = transformHomeTeam(match);
     expect(result).toEqual({
+      id: 1,
       name: "KCVV Elewijt",
       logo: "/logo.png",
       score: 3,
@@ -35,6 +36,7 @@ describe("transformHomeTeam", () => {
     });
     const result = transformHomeTeam(match);
     expect(result).toEqual({
+      id: 1,
       name: "KCVV Elewijt",
       logo: undefined,
       score: undefined,
@@ -54,6 +56,7 @@ describe("transformAwayTeam", () => {
     });
     const result = transformAwayTeam(match);
     expect(result).toEqual({
+      id: 2,
       name: "KFC Turnhout",
       logo: "/away-logo.png",
       score: 1,
@@ -66,6 +69,7 @@ describe("transformAwayTeam", () => {
     });
     const result = transformAwayTeam(match);
     expect(result).toEqual({
+      id: 2,
       name: "KFC Turnhout",
       logo: undefined,
       score: undefined,

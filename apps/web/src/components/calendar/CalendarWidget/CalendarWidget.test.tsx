@@ -10,7 +10,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CalendarWidget } from "./CalendarWidget";
 import type {
-  CalendarMatch,
+  CalendarMatchFixture,
   CalendarTeamInfo,
 } from "@/app/(main)/kalender/utils";
 import { buildCalendarFeed } from "@/app/(main)/kalender/utils";
@@ -57,16 +57,17 @@ vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 // ── Fixtures ───────────────────────────────────────────────────────────────
 
 function makeMatch(
-  overrides: Partial<CalendarMatch> & { id: number },
-): CalendarMatch {
+  overrides: Partial<CalendarMatchFixture> & { id: number },
+): CalendarMatchFixture {
   const merged = {
     date: "2026-03-15T15:00:00",
     homeTeam: { id: 1, name: "KCVV Elewijt A", logo: "/kcvv.png" },
     awayTeam: { id: 2, name: "Racing Mechelen" },
-    status: "scheduled" as CalendarMatch["status"],
+    status: "scheduled" as CalendarMatchFixture["status"],
     team: "A-ploeg",
     isHome: true,
-    isPlaceholder: false,
+    isPlaceholder: false as const,
+    kind: "match" as const,
     ...overrides,
   };
   return {

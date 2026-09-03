@@ -105,6 +105,7 @@ function scheduleMatch(
   date.setDate(date.getDate() + daysOffset);
   return {
     isPlaceholder: false,
+    kind: "match",
     id,
     date,
     time: "15:00",

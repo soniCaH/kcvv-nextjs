@@ -154,6 +154,7 @@ vi.mock("next/image", () => ({
  *  two files' own local tests do. */
 const scheduleReservation: ScheduleReservation = {
   isPlaceholder: true,
+  kind: "reservation",
   id: 90,
   date: new Date("2026-05-09T09:30:00.000Z"),
   time: "09:30",
@@ -166,6 +167,7 @@ const scheduleReservation: ScheduleReservation = {
  *  mirrors `UpcomingMatches.mocks.ts`'s (unexported) `mockUpcomingReservation`. */
 const upcomingReservation: UpcomingReservation = {
   isPlaceholder: true,
+  kind: "reservation",
   id: 90,
   date: new Date("2026-05-09T09:30:00.000Z"),
   time: "09:30",
