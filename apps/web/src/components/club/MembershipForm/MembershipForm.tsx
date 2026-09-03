@@ -48,7 +48,14 @@ interface MembershipFormProps {
   defaultBirthDate?: string;
 }
 
-type SubmitState = "idle" | "submitting" | "success" | "error";
+// "invalid" covers both client-side validation and a server rejection —
+// #2470 rule 6 already treats those as one family (per-field `<AlertBadge>`
+// territory). "transport-error" is the one client-initiated failure this
+// ticket adds a notice for. Splitting the old bare "error" member this way
+// makes the two outcomes mutually exclusive by construction — no separate
+// boolean needed alongside it (#2580 review finding A2).
+type SubmitState =
+  "idle" | "submitting" | "success" | "invalid" | "transport-error";
 
 function CheckboxField({
   id,
@@ -105,11 +112,6 @@ export function MembershipForm({
   const [state, setState] = useState<SubmitState>("idle");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState("");
-  // Distinct from `generalError`: a server rejection (400 + `fields`) is the
-  // form working correctly, per-field `<AlertBadge>` territory (#2580 rule
-  // 6). Only the transport `catch` below is a client-initiated failure, so
-  // it gets its own flag and its own Tier 2 notice register.
-  const [transportFailed, setTransportFailed] = useState(false);
 
   const minor = useMemo(() => isMinor(birthDate), [birthDate]);
   const isPlayer = role !== "" && MEDICAL_CERT_ROLES.includes(role);
@@ -151,15 +153,13 @@ export function MembershipForm({
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors);
       setGeneralError("Controleer de gemarkeerde velden.");
-      setTransportFailed(false);
-      setState("error");
+      setState("invalid");
       return;
     }
 
     setState("submitting");
     setFieldErrors({});
     setGeneralError("");
-    setTransportFailed(false);
 
     try {
       const response = await fetch(SUBMIT_URL, {
@@ -201,13 +201,9 @@ export function MembershipForm({
         return;
       }
 
-      // A server rejection (400 + field-level `data.fields`) is the form
-      // working correctly. `data.error` here is authored Dutch copy from the
-      // BFF/route handler (e.g. "Verificatie mislukt. Vernieuw de pagina en
-      // probeer opnieuw." for a stale Turnstile token) — never a raw caught
-      // error — so it already satisfies the locked-copy rule (#2580 rule 6)
-      // and must survive; the generic fallback only covers a response body
-      // with no `error` field at all.
+      // `data.error` is authored Dutch copy from the BFF/route handler
+      // (#2580 review finding 1) — never a raw caught error — so it must
+      // survive; the fallback only covers a body with no `error` at all.
       if (response.status === 400 && data.fields) {
         setFieldErrors(data.fields);
       }
@@ -215,15 +211,14 @@ export function MembershipForm({
         data.error ??
           "Er ging iets mis. Controleer je gegevens en probeer opnieuw.",
       );
-      setState("error");
+      setState("invalid");
     } catch (err) {
       // The caught error goes to the console only — the visitor sees the
       // locked Dutch copy below, never the transport error's own text
       // (#2580 rule 6). The submit button survives this failure (it's still
       // on screen, re-enabled), so no retry action is added (#2580 rule 4).
       console.error("[MembershipForm] Failed to submit:", err);
-      setTransportFailed(true);
-      setState("error");
+      setState("transport-error");
     }
   };
 
@@ -473,14 +468,12 @@ export function MembershipForm({
             survives this failure, so a second control here would be
             redundant. Replaces the raw `<p role="alert" aria-live="assertive"
             className="text-alert">` this branch used to share with the
-            field-validation summary above — `live="assertive"` keeps the same
-            immediate announcement for a failure answering the visitor's own
-            submit click (#2580 review finding 3). */}
-        {transportFailed ? (
+            field-validation summary above. */}
+        {state === "transport-error" ? (
           <EmptyState
             tier="slot"
             reason="unavailable"
-            live="assertive"
+            live
             emphasis={{ text: "mislukt" }}
             className="mt-5"
           >

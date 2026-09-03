@@ -73,25 +73,7 @@ describe("MembershipForm", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     render(<MembershipForm defaultRole="vrijwilliger" />);
-    fireEvent.change(screen.getByLabelText(/Voornaam/), {
-      target: { value: "Jan" },
-    });
-    fireEvent.change(screen.getByLabelText(/Achternaam/), {
-      target: { value: "Peeters" },
-    });
-    fireEvent.change(screen.getByLabelText(/Geboortedatum/), {
-      target: { value: "1990-06-15" },
-    });
-    fireEvent.change(screen.getByLabelText(/Geslacht/), {
-      target: { value: "m" },
-    });
-    fireEvent.change(screen.getByLabelText(/Gemeente/), {
-      target: { value: "Elewijt" },
-    });
-    fireEvent.change(screen.getByLabelText(/^E-mail/), {
-      target: { value: "jan@example.com" },
-    });
-    fireEvent.click(screen.getByLabelText(/privacyverklaring/i));
+    fillRequiredFields();
     fireEvent.submit(screen.getByText(/Verstuur aanvraag/).closest("form")!);
 
     await waitFor(() =>
