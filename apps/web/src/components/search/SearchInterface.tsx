@@ -317,19 +317,25 @@ export const SearchInterface = ({
               </div>
             )}
 
-            {/* Error state — Tier 1: the whole results surface is gone (no
-                filters, no results, nothing recovers the search), so this is
-                #2427's tier "surface", not the tier "slot" notice (#2470
-                resolution rule 3/4). No action row: the search form above
-                (in <SearchMasthead>) already survives with the query intact,
-                so a second "probeer opnieuw" here would be redundant chrome
-                (#2470 resolution rule 4). Replaces the ticket-stub <Alert> —
-                its last production consumer (#2580). `live="assertive"`
-                stays explicit here (tier "surface" has no failure discriminant
-                to derive it from, unlike tier "slot"'s `reason="unavailable"`
-                — #2580 review finding 3/follow-up F1) and matches the <Alert
-                variant="error"> this replaces: the visitor just pressed
-                "Zoeken", so the failure needs an immediate announcement. */}
+            {/* Error state — only <SearchResults> below is gone on this
+                branch (filters, a semantic answer card, and "Gerelateerd"
+                links above/below this slot are NOT guarded by `error` and
+                keep rendering). tier "surface" is still the right register
+                for it: it's the exact same slot `<SearchNoResultsCard>`
+                already occupies for the "genuinely zero matches" case
+                (also tier "surface", SearchNoResultsCard.tsx), so a failed
+                fetch and an empty one read as the same weight in the same
+                place, per #2427's tier split. No action row: the search
+                form above (in <SearchMasthead>) already survives with the
+                query intact, so a second "probeer opnieuw" here would be
+                redundant chrome (#2470 resolution rule 4). Replaces the
+                ticket-stub <Alert> — its last production consumer (#2580).
+                `live="assertive"` stays explicit here (tier "surface" has
+                no failure discriminant to derive it from, unlike tier
+                "slot"'s `reason="unavailable"` — #2815) and matches the
+                <Alert variant="error"> this replaces: the visitor just
+                pressed "Zoeken", so the failure needs an immediate
+                announcement. */}
             {error && !isLoading && (
               <EmptyState
                 tier="surface"
