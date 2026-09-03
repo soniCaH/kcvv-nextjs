@@ -38,17 +38,47 @@
  * are regression cover against a future host that stops delegating, not
  * proof of a second implementation.
  *
+ * **The shared assertion has two parts, and the first is load-bearing.**
+ * `expect(...queryByRole("link")).toBeNull()` alone passes on an empty DOM —
+ * a row whose fixture misses its own renderer's date/month/selected-day
+ * window renders nothing at all, and "renders nothing" satisfies "no link"
+ * for free. `data-placeholder="true"` is the one marker every reservation
+ * renderer carries (#2688) regardless of role (`<article>`, `<div>`,
+ * `<section>`) or whether the subject text is its own text node — several
+ * renderers, e.g. `UpcomingMatchesClient`'s row, compose it into a joined
+ * caption string (`"U13 · Tornooi"`), so a shared `screen.getByText` check
+ * can't reach it uniformly the way `MatchStripView.test.tsx:259`'s own
+ * local `getByText("Tornooi")` can for that one component. Every row below
+ * asserts *both*: the reservation actually rendered, then that it renders no
+ * link. `MatchHero` has no `next/link` import anywhere in its 400+ lines, so
+ * its null-link half is a tautology on its own — the presence half is what
+ * makes that row assert anything at all; without it, flipping its fixture to
+ * `isPlaceholder={false}` (the full two-crest scoreboard #2606 exists to
+ * prevent) still passed.
+ *
  * **What this file found, not just what it guards.** Every one of the eight
  * was already correct when this file was written — #2606/#2688 built the
  * reduced (`isPlaceholder` / `isReducedMatchRow`) branch into all of them
- * before this ticket existed. Confirmed red first by hand: temporarily
- * forcing `CalendarWeek`'s `WeekMatchCard` to skip its `isReducedMatchRow`
- * branch (so a reservation fell through to the normal `<Link>` row) turned
- * this file's `CalendarWeek` case red, for exactly the reason expected — see
- * the PR body for the exact diff and the restored/green rerun. Every case
- * here was green on its first real run against production code, which on
- * its own proves nothing about the six that were previously untested; the
- * hand mutation above is what stands in for a real red run.
+ * before this ticket existed. Confirmed red by hand, twice over:
+ *
+ * - **A real production regression.** Temporarily forcing `CalendarWeek`'s
+ *   `WeekMatchCard` to skip its `isReducedMatchRow` branch (so a reservation
+ *   fell through to the normal `<Link>` row) turned that one case red.
+ *   `CalendarWeek` was the renderer mutated, not a stand-in for all eight —
+ *   the other seven were not independently regressed this way; see the PR
+ *   body for the exact diff and the restored/green rerun.
+ * - **A vacuous pass, before the presence assertion existed.** Pointing
+ *   `CalendarWeek` at `weekStart="2026-06-15"`, `CalendarAgenda`/
+ *   `CalendarMonth` at `currentMonth={7}` (`CalendarMonth` also needs
+ *   `selectedDate="2026-07-15"` — its day-detail panel looks up
+ *   `selectedDate` independently of `currentMonth`), and `MatchHero` at
+ *   `isPlaceholder={false}` — windows/fixtures that render nothing or the
+ *   wrong thing — still reported 8/8 passed with only the null-link check.
+ *   With the presence assertion added, the same four mutations now fail.
+ *
+ * Every case here was green on its first real run against production code,
+ * which on its own proves nothing about the six that were previously
+ * untested; the hand mutations above are what stand in for a real red run.
  *
  * **Not in scope** (#2801): the view-model union (#2699 decisions 1-2 /
  * #2802) — a `<Link>` is a render choice no data shape can forbid, so this
@@ -101,12 +131,16 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-// `CalendarAgenda`'s reservation row renders a `<Crest>`, which reaches for
-// `next/image` whenever a fixture carries a `logo`. None of the fixtures
-// below do, so no case here actually needs this — mocked regardless to match
-// `CalendarWeek.test.tsx` / `CalendarAgenda.test.tsx` / `CalendarMonth.test.tsx`,
-// the three files this table's `reservationMatch()` fixture and its
-// `Calendar*` props convention come from.
+// Load-bearing for `CalendarAgenda` and `CalendarMonth` (its delegated
+// `<TeamAgendaRow>` crest): both rows' fixture is `reservationMatch()`,
+// whose `homeTeam`/`awayTeam` (`calendar-mocks.ts`'s `kcvv`) carry a real
+// `logo` path, and `<Crest>` (`Crest.tsx:27`) reaches for `next/image`
+// whenever `logo` is truthy. `CalendarWeek`'s reduced card renders no crest
+// at all, so it doesn't need this — mocked anyway to match
+// `CalendarWeek.test.tsx` / `CalendarAgenda.test.tsx` /
+// `CalendarMonth.test.tsx`, the three files this table's
+// `reservationMatch()` fixture and its `Calendar*` props convention come
+// from.
 vi.mock("next/image", () => ({
   default: ({ src, alt }: { src: string; alt: string }) => (
     <img src={src} alt={alt} />
@@ -171,7 +205,7 @@ const RESERVATION_RENDERERS: ReservationRenderer[] = [
         <CalendarWeek
           matches={[reservationMatch()]}
           events={[]}
-          weekStart="2026-03-15"
+          weekStart="2026-03-09" // Monday March 9
         />,
       ),
   },
@@ -245,6 +279,14 @@ describe("a pitch-reservation placeholder is never a link (#2801)", () => {
     "$name — the reservation renders with no <Link>",
     ({ render: renderRow }) => {
       renderRow();
+      // Proves the reservation actually rendered before proving it renders no
+      // link — see the docblock above for why a shared accessible query
+      // (`getByText`) can't reach every row's subject uniformly, and why this
+      // half is what makes the `MatchHero` row (no `next/link` import at
+      // all) assert anything.
+      expect(
+        document.querySelector('[data-placeholder="true"]'),
+      ).not.toBeNull();
       expect(screen.queryByRole("link")).toBeNull();
     },
   );
