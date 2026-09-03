@@ -120,7 +120,7 @@ describe("MembershipForm", () => {
       fillRequiredFields();
       fireEvent.submit(screen.getByText(/Verstuur aanvraag/).closest("form")!);
 
-      const notice = await screen.findByRole("status");
+      const notice = await screen.findByRole("alert");
       expect(notice).toHaveTextContent(
         "Verzenden mislukt. Controleer je internetverbinding en probeer opnieuw.",
       );
@@ -134,15 +134,21 @@ describe("MembershipForm", () => {
   });
 
   describe("server rejection", () => {
-    it("shows the locked fallback message, never the server's own error text", async () => {
+    it("shows the server's own error, which is authored Dutch copy, not a raw caught error", async () => {
+      // e.g. apps/api/src/handlers/forms.ts's stale-Turnstile message — this
+      // instruction ("refresh the page") is the one that actually resolves
+      // the failure, so it must survive (#2580 review finding 1).
       vi.stubGlobal(
         "fetch",
         vi.fn(() =>
           Promise.resolve({
             ok: false,
-            status: 500,
+            status: 400,
             json: () =>
-              Promise.resolve({ error: "Database connection pool exhausted" }),
+              Promise.resolve({
+                error:
+                  "Verificatie mislukt. Vernieuw de pagina en probeer opnieuw.",
+              }),
           }),
         ),
       );
@@ -151,16 +157,66 @@ describe("MembershipForm", () => {
       fillRequiredFields();
       fireEvent.submit(screen.getByText(/Verstuur aanvraag/).closest("form")!);
 
-      await waitFor(() => {
-        expect(
-          screen.getByText(
-            "Er ging iets mis. Controleer je gegevens en probeer opnieuw.",
-          ),
-        ).toBeInTheDocument();
-      });
       expect(
-        screen.queryByText(/Database connection pool exhausted/),
-      ).not.toBeInTheDocument();
+        await screen.findByText(
+          "Verificatie mislukt. Vernieuw de pagina en probeer opnieuw.",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it("falls back to the locked generic message when the response carries no error field", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(() =>
+          Promise.resolve({
+            ok: false,
+            status: 500,
+            json: () => Promise.resolve({}),
+          }),
+        ),
+      );
+
+      render(<MembershipForm defaultRole="vrijwilliger" />);
+      fillRequiredFields();
+      fireEvent.submit(screen.getByText(/Verstuur aanvraag/).closest("form")!);
+
+      expect(
+        await screen.findByText(
+          "Er ging iets mis. Controleer je gegevens en probeer opnieuw.",
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("stale notice cleared on resubmit (#2580 review finding 2)", () => {
+    it("clears a prior transport-failure notice when a client-validation error blocks resubmit", async () => {
+      const fetchMock = vi.fn(() => Promise.reject(new Error("offline")));
+      vi.stubGlobal("fetch", fetchMock);
+      vi.spyOn(console, "error").mockImplementation(() => {});
+
+      render(<MembershipForm defaultRole="vrijwilliger" />);
+      fillRequiredFields();
+      fireEvent.submit(screen.getByText(/Verstuur aanvraag/).closest("form")!);
+      // The accented "mislukt" splits this sentence across DOM nodes, so
+      // assert via the notice's own role rather than a text regex spanning it.
+      const transportNotice = await screen.findByRole("alert");
+      expect(transportNotice).toHaveTextContent(/Verzenden mislukt/);
+
+      // Clear a required field so the next submit is blocked client-side.
+      fireEvent.change(screen.getByLabelText(/Voornaam/), {
+        target: { value: "" },
+      });
+      fireEvent.submit(screen.getByText(/Verstuur aanvraag/).closest("form")!);
+
+      await screen.findByText("Controleer de gemarkeerde velden.");
+      // Blocking the resubmit also re-populates the field-level `<AlertBadge
+      // variant="error">` under the now-empty "Voornaam" field, which is its
+      // own `role="alert"` region — so assert on content, not count: no
+      // surviving alert may still carry the stale transport notice's text.
+      const staleNotice = screen
+        .getAllByRole("alert")
+        .find((el) => el.textContent?.includes("Verzenden mislukt"));
+      expect(staleNotice).toBeUndefined();
     });
   });
 });

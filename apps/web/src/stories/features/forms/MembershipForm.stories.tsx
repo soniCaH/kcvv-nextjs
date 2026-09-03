@@ -69,6 +69,6 @@ export const TransportFailure: Story = {
     await userEvent.type(canvas.getByLabelText(/^E-mail/), "jan@example.com");
     await userEvent.click(canvas.getByLabelText(/privacyverklaring/i));
     await userEvent.click(canvas.getByText(/Verstuur aanvraag/));
-    await canvas.findByRole("status");
+    await canvas.findByRole("alert");
   },
 };

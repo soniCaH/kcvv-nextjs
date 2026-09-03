@@ -151,6 +151,7 @@ export function MembershipForm({
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors);
       setGeneralError("Controleer de gemarkeerde velden.");
+      setTransportFailed(false);
       setState("error");
       return;
     }
@@ -201,15 +202,18 @@ export function MembershipForm({
       }
 
       // A server rejection (400 + field-level `data.fields`) is the form
-      // working correctly — never the raw `data.error` text, which can carry
-      // whatever the API happened to say (#2580 rule 6 / #2433 rule 9's
-      // locked-copy discipline applies here too, even though this branch
-      // isn't a client-initiated failure).
+      // working correctly. `data.error` here is authored Dutch copy from the
+      // BFF/route handler (e.g. "Verificatie mislukt. Vernieuw de pagina en
+      // probeer opnieuw." for a stale Turnstile token) — never a raw caught
+      // error — so it already satisfies the locked-copy rule (#2580 rule 6)
+      // and must survive; the generic fallback only covers a response body
+      // with no `error` field at all.
       if (response.status === 400 && data.fields) {
         setFieldErrors(data.fields);
       }
       setGeneralError(
-        "Er ging iets mis. Controleer je gegevens en probeer opnieuw.",
+        data.error ??
+          "Er ging iets mis. Controleer je gegevens en probeer opnieuw.",
       );
       setState("error");
     } catch (err) {
@@ -467,13 +471,16 @@ export function MembershipForm({
 
         {/* Tier 2, no action (#2580 rule 4): the submit button below already
             survives this failure, so a second control here would be
-            redundant. Replaces the raw `<p className="text-alert">` this
-            branch used to share with the field-validation summary above. */}
+            redundant. Replaces the raw `<p role="alert" aria-live="assertive"
+            className="text-alert">` this branch used to share with the
+            field-validation summary above — `live="assertive"` keeps the same
+            immediate announcement for a failure answering the visitor's own
+            submit click (#2580 review finding 3). */}
         {transportFailed ? (
           <EmptyState
             tier="slot"
             reason="unavailable"
-            live
+            live="assertive"
             emphasis={{ text: "mislukt" }}
             className="mt-5"
           >
