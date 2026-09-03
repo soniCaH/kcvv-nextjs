@@ -5,19 +5,48 @@ interface AnyPortableChild {
   text?: string;
 }
 
+/**
+ * One respondent inside a `qaPair`. The answer lives here, per respondent —
+ * NOT on the pair. Two respondents on one pair is two people answering the
+ * same question (`packages/sanity-schemas/src/qaBlock.ts` → `qaPairRespondent`).
+ */
+interface AnyQaRespondent {
+  answer?: AnyBlockItem[];
+}
+
+/**
+ * One question and everyone who answered it. Mirrors the `qaPair` schema.
+ *
+ * This shape is load-bearing. Until #2521 it declared `answer?: AnyBlockItem[]`
+ * directly on the pair — a field the CMS has never produced. The traversal read
+ * it, always got `undefined`, and silently counted questions only, so a
+ * 1,190-word interview advertised "1 min lezen". Neither type-checker could see
+ * it: the type described the bug rather than the data.
+ */
+interface AnyQaPair {
+  question?: string;
+  respondents?: AnyQaRespondent[];
+}
+
 interface AnyBlockItem {
   _type?: string;
   children?: AnyPortableChild[];
-  pairs?: {
-    question?: string;
-    answer?: AnyBlockItem[];
-  }[];
+  pairs?: AnyQaPair[];
 }
 
 /**
  * Recursively collect visible text from a Sanity article body — handles the
- * standard `block` type and the custom `qaBlock` (whose pairs nest their own
- * `answer` block array). Returns a single whitespace-joined string.
+ * standard `block` type and the custom `qaBlock`, whose pairs nest their
+ * answers one level deeper, inside each respondent. Returns a single
+ * whitespace-joined string.
+ *
+ * The estimate is over **authored** text, not rendered text, and deliberately
+ * so — it is a reading estimate, not a layout measurement. Two known gaps, both
+ * small and both in `QaBlock.tsx`: a `key`/`quote`-tagged pair renders only
+ * `respondents[0]` (`:210`), and a pair whose `respondentKey` resolves to no
+ * subject is dropped entirely (`:249`). Both cases count text the page does not
+ * show. Chasing exact parity would mean duplicating the renderer's subject
+ * resolution here, which costs more than the minute it could shift.
  */
 function extractBodyText(body: AnyBlockItem[] | null | undefined): string {
   if (!Array.isArray(body)) return "";
@@ -32,8 +61,10 @@ function extractBodyText(body: AnyBlockItem[] | null | undefined): string {
         return item.pairs
           .map((pair) => {
             const q = pair.question ?? "";
-            const a = extractBodyText(pair.answer);
-            return `${q} ${a}`;
+            const answers = (pair.respondents ?? [])
+              .map((respondent) => extractBodyText(respondent.answer))
+              .join(" ");
+            return `${q} ${answers}`;
           })
           .join(" ");
       }
