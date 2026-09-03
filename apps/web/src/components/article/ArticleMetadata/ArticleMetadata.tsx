@@ -83,11 +83,10 @@ export const ArticleMetadata = ({
           url: shareConfig.url,
         })
         .catch(() => {
-          // User dismissed the sheet — leave the click as a no-op. The
-          // sibling Facebook link remains available. Ratified, not fixed
-          // (#2580 rule 1): a dismissal is not a failure, and the explicit
-          // Facebook alternative beside this button is the way forward, so
-          // no notice is shown.
+          // User dismissed the sheet — leave the click as a no-op. Ratified
+          // silence, one of three: DESIGN.md → "The Silence Is An Answer
+          // Rule" (#2470/#2580) — a dismissal is not a failure, and the
+          // sibling Facebook link is the explicit alternative.
         });
       return;
     }
