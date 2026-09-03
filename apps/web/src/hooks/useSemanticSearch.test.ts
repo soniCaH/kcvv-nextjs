@@ -149,6 +149,31 @@ describe("useSemanticSearch", () => {
     const { result } = renderHook(() => useSemanticSearch());
     act(() => result.current.clear());
     expect(result.current.results).toEqual([]);
-    expect(result.current.error).toBeNull();
+    expect(result.current.error).toBe(false);
+  });
+
+  it("logs the caught error to the console without storing its message (#2580)", async () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const networkError = new Error("Network error");
+    vi.mocked(fetch).mockRejectedValueOnce(networkError);
+
+    const { result } = renderHook(() =>
+      useSemanticSearch({ type: "responsibility", debounceMs: 0 }),
+    );
+
+    act(() => result.current.search("test query"));
+
+    await waitFor(() => expect(result.current.error).toBe(true));
+
+    // The failure flag is a boolean, never the raw fetch/Error message — no
+    // consumer renders it, and #2580 rule 6 keeps technical text out of the
+    // visitor's view entirely.
+    expect(consoleError).toHaveBeenCalledWith(
+      expect.stringContaining("semantic search"),
+      networkError,
+    );
+    consoleError.mockRestore();
   });
 });

@@ -13,7 +13,7 @@ const mockSemantic: {
   results: SemanticSearchResult[];
   answer: string | undefined;
   loading: boolean;
-  error: string | null;
+  error: boolean;
   executedQuery: string;
   search: ReturnType<typeof vi.fn>;
   clear: ReturnType<typeof vi.fn>;
@@ -21,7 +21,7 @@ const mockSemantic: {
   results: [],
   answer: undefined,
   loading: false,
-  error: null,
+  error: false,
   executedQuery: "",
   search: vi.fn(),
   clear: vi.fn(),
@@ -79,7 +79,7 @@ describe("HubSearch", () => {
     setSemantic({
       results: [],
       loading: false,
-      error: null,
+      error: false,
       executedQuery: "",
     });
   });
@@ -215,7 +215,7 @@ describe("HubSearch", () => {
   });
 
   it("falls back to keyword (no smart hint) when the endpoint errors", async () => {
-    setSemantic({ error: "boom" });
+    setSemantic({ error: true });
     renderSearch();
     typeQuery("blessure");
     // Keyword fallback still finds the answer by its keyword.

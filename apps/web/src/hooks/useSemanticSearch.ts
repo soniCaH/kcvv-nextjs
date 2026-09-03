@@ -21,7 +21,15 @@ export interface UseSemanticSearchReturn {
   results: SemanticSearchResult[];
   answer: string | undefined;
   loading: boolean;
-  error: string | null;
+  /**
+   * Whether the last settled fetch failed. A flag, not the raw error
+   * message: neither of today's two consumers (`HubSearch`'s keyword
+   * fallback, `useSemanticAugment`'s silent degrade) renders error text —
+   * they only branch on presence/absence — so storing `err.message` was a
+   * dead field carrying a raw technical string nobody read (#2580). The
+   * caught error itself goes to `console.error` only.
+   */
+  error: boolean;
   /**
    * The query that produced the current `results`/`error` state.
    * Updated only when a fetch settles (success or error), so consumers
@@ -43,7 +51,7 @@ export interface UseSemanticSearchReturn {
  * @returns An object with:
  *   - `results` — array of `SemanticSearchResult` matched by the query.
  *   - `loading` — `true` while a request is in flight, `false` otherwise.
- *   - `error` — error message string when a request fails, or `null`.
+ *   - `error` — `true` when the last settled fetch failed, `false` otherwise.
  *   - `search` — function that initiates a debounced search for a given query string.
  *   - `clear` — function that clears `results` and `error`.
  */
@@ -54,7 +62,7 @@ export function useSemanticSearch(
   const [results, setResults] = useState<SemanticSearchResult[]>([]);
   const [answer, setAnswer] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
   const [executedQuery, setExecutedQuery] = useState("");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -68,7 +76,7 @@ export function useSemanticSearch(
         abortRef.current = null;
         setResults([]);
         setAnswer(undefined);
-        setError(null);
+        setError(false);
         setLoading(false);
         setExecutedQuery("");
         return;
@@ -82,7 +90,7 @@ export function useSemanticSearch(
         abortRef.current = controller;
 
         setLoading(true);
-        setError(null);
+        setError(false);
 
         try {
           const res = await fetch("/api/search", {
@@ -104,7 +112,8 @@ export function useSemanticSearch(
           }
         } catch (err) {
           if ((err as Error).name === "AbortError") return;
-          setError((err as Error).message);
+          console.error("[useSemanticSearch] semantic search failed:", err);
+          setError(true);
           setResults([]);
           setAnswer(undefined);
           setExecutedQuery(query);
@@ -124,7 +133,7 @@ export function useSemanticSearch(
     abortRef.current = null;
     setResults([]);
     setAnswer(undefined);
-    setError(null);
+    setError(false);
     setLoading(false);
     setExecutedQuery("");
   }, []);

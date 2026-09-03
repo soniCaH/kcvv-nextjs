@@ -24,6 +24,11 @@
  * The `executedQuery` gate avoids acting on stale/in-flight results, so there's
  * no empty-state flash mid-flight. A POST error / 503 settles with empty
  * results → `none`, so lexical search is never affected (PRD silent-fallback).
+ *
+ * Ratified, not fixed (#2580 rule 1): the lexical results below still serve,
+ * so this augment's own failure recovers nothing worth telling the visitor
+ * about. `error` is deliberately not destructured from `useSemanticSearch`
+ * below — there is no failure notice to wire it into.
  */
 
 import { useEffect } from "react";

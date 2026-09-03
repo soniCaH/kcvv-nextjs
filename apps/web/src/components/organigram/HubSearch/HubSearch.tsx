@@ -256,8 +256,10 @@ export function HubSearch({
   );
 
   // On endpoint failure, fall back to keyword for the answer lane (PRD floor) —
-  // no answer-forward, no smart hint.
-  const usingFallback = semanticError !== null;
+  // no answer-forward, no smart hint. Silence here is a ratified decision, not
+  // a gap (#2580 rule 1 / #2057 decision 7o8): this fallback recovers the
+  // visitor's intent completely, so no failure notice is shown.
+  const usingFallback = semanticError;
   const answerForward =
     !usingFallback &&
     semanticAnswers[0] &&

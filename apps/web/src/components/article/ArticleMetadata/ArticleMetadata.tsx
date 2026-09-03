@@ -84,7 +84,10 @@ export const ArticleMetadata = ({
         })
         .catch(() => {
           // User dismissed the sheet — leave the click as a no-op. The
-          // sibling Facebook link remains available.
+          // sibling Facebook link remains available. Ratified, not fixed
+          // (#2580 rule 1): a dismissal is not a failure, and the explicit
+          // Facebook alternative beside this button is the way forward, so
+          // no notice is shown.
         });
       return;
     }
