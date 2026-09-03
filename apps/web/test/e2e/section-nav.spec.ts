@@ -50,6 +50,37 @@ async function stickyBarBottom(page: Page, testId: string) {
   return box.y + box.height;
 }
 
+/**
+ * Waits until `window.scrollY` has stopped changing for a short quiet
+ * period, rather than a fixed timeout. A fixed wait can read the geometry
+ * mid-animation and pass "by accident" — #2584 review finding 1 caught
+ * exactly this: a bar that grows *after* a native smooth-scroll already
+ * started (e.g. `<HubSearch>` mounting once the hero leaves view) keeps
+ * scrolling well past 600ms, and the version of this spec that waited a
+ * flat 600ms observed an intermediate, still-in-flight position instead of
+ * where the page actually settles.
+ */
+async function waitForScrollSettled(page: Page) {
+  await page.waitForFunction(
+    () => {
+      const w = window as unknown as {
+        __scrollSettleY?: number;
+        __scrollSettleAt?: number;
+      };
+      const y = window.scrollY;
+      const now = performance.now();
+      if (w.__scrollSettleY !== y) {
+        w.__scrollSettleY = y;
+        w.__scrollSettleAt = now;
+        return false;
+      }
+      return now - (w.__scrollSettleAt ?? now) > 250;
+    },
+    undefined,
+    { timeout: 5000, polling: 50 },
+  );
+}
+
 test.describe("scroll-spy fills the chip that is actually being read (#2478 rule 3)", () => {
   test("TeamSectionNav on /ploegen/[slug]", async ({ page }) => {
     test.skip(
@@ -68,7 +99,13 @@ test.describe("scroll-spy fills the chip that is actually being read (#2478 rule
     const lastHref = await lastLink.getAttribute("href");
     const targetId = lastHref!.slice(1);
 
-    await page.locator(`#${targetId}`).scrollIntoViewIfNeeded();
+    // Explicit `block: "start"` rather than `scrollIntoViewIfNeeded()` — the
+    // latter scrolls the *minimum* distance needed, which for a short
+    // trailing section can leave it short of the spy's `-55%` bottom band
+    // entirely, so `aria-current` never appears (#2584 review finding 6).
+    await page
+      .locator(`#${targetId}`)
+      .evaluate((el) => el.scrollIntoView({ block: "start" }));
     // The scroll-spy IntersectionObserver settles asynchronously.
     await expect(lastLink).toHaveAttribute("aria-current", "location");
 
@@ -89,13 +126,17 @@ test.describe("scroll-spy fills the chip that is actually being read (#2478 rule
     const structuur = nav.getByRole("link", { name: "Structuur" });
     const hulp = nav.getByRole("link", { name: "Hulp" });
 
-    await page.locator("#structuur").scrollIntoViewIfNeeded();
+    await page
+      .locator("#structuur")
+      .evaluate((el) => el.scrollIntoView({ block: "start" }));
     await expect(structuur).toHaveAttribute("aria-current", "location");
     await expect(hulp).not.toHaveAttribute("aria-current");
 
     // Scrolling back up flips the fill again — it tracks reading position on
     // every pass, not just the first jump.
-    await page.locator("#hulp").scrollIntoViewIfNeeded();
+    await page
+      .locator("#hulp")
+      .evaluate((el) => el.scrollIntoView({ block: "start" }));
     await expect(hulp).toHaveAttribute("aria-current", "location");
     await expect(structuur).not.toHaveAttribute("aria-current");
   });
@@ -122,8 +163,7 @@ test.describe("an anchor jump lands below the bar, at the derived offset (#2478 
     const targetId = href!.slice(1);
 
     await lastLink.click();
-    // Smooth-scroll needs to settle before the geometry read is meaningful.
-    await page.waitForTimeout(600);
+    await waitForScrollSettled(page);
 
     const barBottom = await stickyBarBottom(page, "team-section-nav");
     const targetTop = await page
@@ -134,15 +174,18 @@ test.describe("an anchor jump lands below the bar, at the derived offset (#2478 
     expect(targetTop).toBeGreaterThanOrEqual(barBottom - 2);
   });
 
-  test("clicking an OrganigramSectionNav door lands its section below the bar", async ({
+  test("clicking an OrganigramSectionNav door lands its section below the bar, even once HubSearch mounts mid-scroll", async ({
     page,
   }) => {
+    // 375px is where `<HubSearch>` reveals as its own wrapped row once the
+    // hero scrolls out of view — the exact mid-scroll bar-growth race
+    // #2584 review finding 1 named (measured on this route at this width).
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto("/hulp");
 
     const nav = page.getByRole("navigation", { name: "Secties van de hub" });
     await nav.getByRole("link", { name: "Structuur" }).click();
-    await page.waitForTimeout(600);
+    await waitForScrollSettled(page);
 
     const barBox = await nav.boundingBox();
     if (!barBox) throw new Error("OrganigramSectionNav has no bounding box");
@@ -155,15 +198,47 @@ test.describe("an anchor jump lands below the bar, at the derived offset (#2478 
     expect(targetTop).toBeGreaterThanOrEqual(barBottom - 2);
   });
 
+  test("a cold load with a hash already in the URL, on a route that HAS a section nav, still lands below the bar", async ({
+    page,
+  }) => {
+    // #2584 review finding 4: the hand-written `scroll-mt-*` fallbacks this
+    // ticket deletes used to cover a hard/cold load's pre-hydration jump.
+    // The derived offset only exists once this hook's effect has run, so
+    // this is the direct regression test for that gap — on a route that
+    // actually has a nav, not `/jeugd#visie` (which has none).
+    test.skip(
+      !teamSlugWithNav,
+      "no team in the sitemap renders TeamSectionNav today (pre-season)",
+    );
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    // Discover a real section id first (a fresh, unscrolled load).
+    await page.goto(`/ploegen/${teamSlugWithNav}`);
+    const nav = page.getByTestId("team-section-nav");
+    const links = nav.getByRole("link");
+    const count = await links.count();
+    test.skip(count < 1, "no sections render");
+    const targetId = (await links.nth(count - 1).getAttribute("href"))!.slice(
+      1,
+    );
+
+    await page.goto(`/ploegen/${teamSlugWithNav}#${targetId}`);
+    await waitForScrollSettled(page);
+
+    const barBottom = await stickyBarBottom(page, "team-section-nav");
+    const targetTop = await page
+      .locator(`#${targetId}`)
+      .evaluate((el) => el.getBoundingClientRect().top);
+
+    expect(targetTop).toBeGreaterThanOrEqual(barBottom - 2);
+  });
+
   test("/jeugd#visie — no section nav on this route, lands below the header alone", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/jeugd#visie");
-    // The browser's own fragment navigation + globals.css's base
-    // scroll-padding-top rule do the work here — no JS to wait on beyond
-    // hydration completing.
-    await page.waitForTimeout(300);
+    await waitForScrollSettled(page);
 
     const header = page.locator("header").first();
     const headerBox = await header.boundingBox();

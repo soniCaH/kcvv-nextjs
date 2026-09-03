@@ -4,8 +4,8 @@
  * Corrects a hash navigation's landing spot when something above the target
  * changes size after the browser already computed its scroll target
  * (#2584 review findings 1 and 4) — a bar resize (notified explicitly) or a
- * late webfont swap (`document.fonts.ready`), both scoped to a short
- * "armed" window after a real hash navigation.
+ * late webfont swap (a `FontFaceSet` `loadingdone` event), both scoped to a
+ * short "armed" window after a real hash navigation.
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest";
