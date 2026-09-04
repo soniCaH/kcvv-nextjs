@@ -14,8 +14,16 @@ export type SearchError = EmbeddingError | VectorizeError;
  * The types the response contract admits. Vectorize outlives the schema: a
  * retired type's vectors stay until something names them, and one of those
  * rows fails the entire SearchResponse. Drop the row, keep the search.
+ *
+ * A row with no `type` at all is dropped too — the metadata is the only writer
+ * of that slot, so an absent one has no value to stand in for it.
  */
 const RESULT_TYPES = new Set<string>(SearchResultType.literals);
+
+const isResultType = (
+  value: string | undefined,
+): value is typeof SearchResultType.Type =>
+  value !== undefined && RESULT_TYPES.has(value);
 
 const TYPE_FILTER: Record<string, string> = {
   responsibility: "responsibility",
@@ -47,21 +55,21 @@ export const handleSearch = (
       ...(filter ? { filter } : {}),
     });
 
-    const results = matches
-      .filter(
-        (m) =>
-          m.score >= MIN_SCORE &&
-          RESULT_TYPES.has(String(m.metadata?.["type"] ?? "responsibility")),
-      )
-      .map((m) => ({
-        id: m.id,
-        slug: m.metadata?.["slug"] ?? "",
-        type: (m.metadata?.["type"] ?? "responsibility") as
-          "responsibility" | "article" | "page",
-        score: m.score,
-        title: m.metadata?.["title"] ?? "",
-        excerpt: m.metadata?.["excerpt"] ?? "",
-      }));
+    const results = matches.flatMap((m) => {
+      const type = m.metadata?.["type"];
+      if (m.score < MIN_SCORE || !isResultType(type)) return [];
+
+      return [
+        {
+          id: m.id,
+          slug: m.metadata?.["slug"] ?? "",
+          type,
+          score: m.score,
+          title: m.metadata?.["title"] ?? "",
+          excerpt: m.metadata?.["excerpt"] ?? "",
+        },
+      ];
+    });
 
     const topScore = results[0]?.score ?? 0;
     let answer: string | undefined;

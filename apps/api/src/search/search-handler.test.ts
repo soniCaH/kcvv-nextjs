@@ -128,6 +128,27 @@ describe("handleSearch", () => {
     expect(result.results.map((r) => r.id)).toEqual(["kept"]);
   });
 
+  it("drops a vector that carries no type at all", async () => {
+    const result = await Effect.runPromise(
+      provideAllServices(handleSearch({ query: "transfers", limit: 5 }), {
+        matches: [
+          makeHit("kept", 0.9),
+          {
+            id: "no-type",
+            score: 0.88,
+            metadata: {
+              slug: "untyped",
+              title: "Untyped",
+              excerpt: "Metadata never wrote a type",
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(result.results.map((r) => r.id)).toEqual(["kept"]);
+  });
+
   it("returns empty results when no matches", async () => {
     const result = await Effect.runPromise(
       provideAllServices(handleSearch({ query: "unknown", limit: 5 })),
