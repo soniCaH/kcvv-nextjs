@@ -301,7 +301,7 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
   );
 
   const renderCard = (path: ResponsibilityPath) => (
-    <div id={path.id} key={path.id} className="scroll-mt-32">
+    <div id={path.id} key={path.id}>
       <QuestionCard
         path={path}
         open={openId === path.id}
@@ -409,7 +409,7 @@ export function HulpFinder({ responsibilityPaths }: HulpFinderProps) {
   };
 
   return (
-    <div ref={finderRef} className="scroll-mt-32">
+    <div ref={finderRef}>
       {/* Audience filter — mirrors the hero chips; drives ?audience. Gains an
           explicit "Alles" leading facet on absorption (#2429/#2564) — it
           previously had none, and the active chip toggled itself off; every

@@ -206,6 +206,14 @@ export {
   type RemovableChipTone,
 } from "./RemovableChip";
 
+// SectionNavChip
+export { SectionNavChip, type SectionNavChipProps } from "./SectionNavChip";
+export {
+  SECTION_NAV_BAR_CLASSES,
+  SECTION_NAV_CHIP_BASE_CLASSES,
+  SECTION_NAV_CHIP_SHADOW_CLASS,
+} from "./section-nav";
+
 // StripedSeam
 export { StripedSeam } from "./StripedSeam";
 export type {

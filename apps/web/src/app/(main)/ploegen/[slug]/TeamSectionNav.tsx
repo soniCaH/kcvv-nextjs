@@ -1,8 +1,12 @@
 "use client";
 
-import { cn } from "@/lib/utils/cn";
-import { PageContainer } from "@/components/design-system";
+import {
+  PageContainer,
+  SectionNavChip,
+  SECTION_NAV_BAR_CLASSES,
+} from "@/components/design-system";
 import { ScrollRail } from "@/components/design-system/ScrollHint/ScrollRail";
+import { useSectionNav } from "@/hooks/useSectionNav";
 
 export interface TeamSectionNavItem {
   /** Anchor target id (matches the section's `id`). */
@@ -17,9 +21,23 @@ export interface TeamSectionNavProps {
 }
 
 /**
- * Sticky in-page section navigation for the team detail page. Native anchor
- * links (no JS) — `scroll-margin-top` on the section targets keeps headings
- * clear of the sticky bar. Renders nothing when one or fewer sections exist.
+ * Sticky in-page section navigation for the team detail page (#2478
+ * resolution). Each item is `<SectionNavChip>` — the light chip, the same
+ * one `<OrganigramSectionNav>` uses, so the recipe is typed once rather
+ * than hand-copied per route. Active is scroll-spy driven via the shared
+ * `useSectionNav` hook (rule 3): the fill always means "the section being
+ * read", never "the one last clicked". The bar pins at `--sticky-header-h`
+ * and the same hook derives `scroll-padding-top` from its own measured
+ * height — no `scroll-mt-*` on any section target. Renders nothing when one
+ * or fewer sections exist.
+ *
+ * The `≤1 section` check lives in this outer component, one level above
+ * `useSectionNav` — `<TeamSectionNavBar>` only ever mounts when the bar
+ * itself does, so the hook's own mount/unmount tracks the bar's exactly
+ * (a team with a nav today can navigate, client-side, to one with ≤1
+ * section and back; hoisting the check here means that is an ordinary
+ * unmount + remount, not a live component whose bar quietly disappears out
+ * from under it).
  *
  * **Not permanently inert (#2444, corrected by #2478 and #2489).** #2444
  * originally reasoned this row "ships three items forever" and gave it a
@@ -36,41 +54,46 @@ export interface TeamSectionNavProps {
  * spent direction disabled in place rather than unmounted. On today's
  * three-item data the arrow essentially never mounts; it is ready the
  * moment a fourth or fifth section makes the row overflow.
- *
- * Only the scroll-arrow behaviour is this ticket's (#2577) — the light chip
- * item register, scroll-spy active state and derived anchor offset that
- * #2478's full resolution also describes belong to whichever ticket
- * implements the rest of that decision; this component's link markup is
- * unchanged.
  */
 export function TeamSectionNav({ items }: TeamSectionNavProps) {
   if (items.length <= 1) return null;
+  return <TeamSectionNavBar items={items} />;
+}
+
+function TeamSectionNavBar({
+  items,
+}: {
+  items: readonly TeamSectionNavItem[];
+}) {
+  const ids = items.map((item) => item.id);
+  const { navRef, activeId } = useSectionNav(ids);
 
   return (
     <nav
+      ref={navRef}
       data-testid="team-section-nav"
       aria-label="Sectienavigatie"
-      className={cn(
-        // TEAM-1: bottom border only — the StripedSeam above already divides
-        // the nav from the hero, so a top border doubled the line.
-        "border-ink bg-cream sticky top-16 z-20 border-b-2",
-      )}
+      // TEAM-1: bottom border only — the StripedSeam above already divides
+      // the nav from the hero, so a top border doubled the line.
+      className={SECTION_NAV_BAR_CLASSES}
     >
       <PageContainer>
         <ScrollRail
           as="ul"
           ariaLabel="Sectienavigatie"
-          trackClassName="flex items-center gap-1 py-2"
+          trackClassName="flex items-center gap-2 py-2"
+          // The bar is bg-cream-deep — the fade must match that ground, not
+          // <ScrollRail>'s cream default, or the overflow fade reads as a
+          // mismatched patch.
+          fadeFromClassName="from-cream-deep"
         >
           {items.map((item) => (
-            <li key={item.id}>
-              <a
-                href={`#${item.id}`}
-                className="text-ink hover:bg-jersey-deep hover:text-cream inline-block px-3 py-1 font-mono text-[11px] tracking-[0.1em] whitespace-nowrap uppercase transition-colors"
-              >
-                {item.label}
-              </a>
-            </li>
+            <SectionNavChip
+              key={item.id}
+              id={item.id}
+              label={item.label}
+              isActive={item.id === activeId}
+            />
           ))}
         </ScrollRail>
       </PageContainer>

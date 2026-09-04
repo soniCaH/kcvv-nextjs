@@ -5,11 +5,14 @@
  * band · finder), shown for cold navigations before the RSC payload arrives.
  * Mirrors the hub shell (page.tsx) rather than the retired section-stack layout.
  */
+import { cn } from "@/lib/utils/cn";
 import {
   PageContainer,
   FilterTabsSkeleton,
   Skeleton,
   LoadingAnnouncement,
+  SECTION_NAV_CHIP_BASE_CLASSES,
+  SECTION_NAV_CHIP_SHADOW_CLASS,
 } from "@/components/design-system";
 
 export default function HulpLoading() {
@@ -17,13 +20,30 @@ export default function HulpLoading() {
     <div className="bg-cream min-h-screen">
       <LoadingAnnouncement label="Hulppagina laden…" />
 
-      {/* Sticky two-door nav placeholder. */}
-      <div className="border-ink bg-cream border-b-2" aria-hidden>
-        <div className="mx-auto flex max-w-[var(--container-index)] items-center gap-3 px-4 py-3 md:px-8">
-          <Skeleton className="h-5 w-16" />
-          <Skeleton className="h-5 w-24" />
+      {/* Sticky two-door nav placeholder — the real bar is `bg-cream-deep`
+          at `py-2` (#2478 rule 4); `<PageContainer width="index">` and the
+          light chip's own classes so this can never drift from the real
+          bar's shape. */}
+      <div className="border-ink bg-cream-deep border-b-2" aria-hidden>
+        <PageContainer width="index" className="flex items-center gap-3 py-2">
+          <div
+            className={cn(
+              SECTION_NAV_CHIP_BASE_CLASSES,
+              SECTION_NAV_CHIP_SHADOW_CLASS,
+            )}
+          >
+            <Skeleton className="h-3 w-10" />
+          </div>
+          <div
+            className={cn(
+              SECTION_NAV_CHIP_BASE_CLASSES,
+              SECTION_NAV_CHIP_SHADOW_CLASS,
+            )}
+          >
+            <Skeleton className="h-3 w-16" />
+          </div>
           <Skeleton className="ml-auto h-9 w-44" />
-        </div>
+        </PageContainer>
       </div>
 
       <PageContainer width="index" className="py-10 sm:py-14">

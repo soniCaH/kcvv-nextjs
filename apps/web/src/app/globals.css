@@ -496,6 +496,12 @@
   --container-wide: 1040px; /* canonical body — detail pages (PageContainer default) */
   --container-index: 1280px; /* card-grid index / listing / landing pages (PageContainer width="index") */
 
+  /* The single source of truth for the header's sticky height —
+     `<SiteHeader>` derives its own `h-[calc(var(--sticky-header-h)-1px)]`
+     from this (the 1px is its `border-b`); every in-page section nav pins
+     directly below it. Change this token first, then verify the header. */
+  --sticky-header-h: 65px;
+
   /* Pool tuned twice on 2026-04-29 per owner feedback. Original master
      design pool (-2.5/-1.5/1/2) produced "seasick" rendering when applied
      to 6+ cards in <TapedCardGrid>; first iteration (-1/-0.5/0.5/1) still
@@ -1065,12 +1071,27 @@
    not requested reduced motion, and only when the page opts in via
    `data-scroll-behavior="smooth"` on <html> (set in app/layout.tsx) — the same
    signal Next.js reads to keep full route transitions instant while
-   same-document hash jumps animate. Section offset is handled per-section via
-   `scroll-mt-*`. */
+   same-document hash jumps animate.
+   Anchor offset is `scroll-padding-top` (#2478 rule 7), not a per-section
+   `scroll-mt-*` — see the rule immediately below. */
 @media (prefers-reduced-motion: no-preference) {
   html[data-scroll-behavior="smooth"] {
     scroll-behavior: smooth;
   }
+}
+
+/* Base anchor offset — clears the global header alone. A route with a sticky
+   in-page section nav (`useSectionNav`, `src/hooks/useSectionNav.ts`)
+   overrides this at runtime with `calc(var(--sticky-header-h) + <bar
+   height>px)`, derived from the bar's own measured height rather than a
+   hand-written value; this rule is what a route with NO section nav
+   (`/jeugd#visie`) falls back to, and what any nav-bearing route falls back
+   to once its nav unmounts (`<html>` persists across client-side
+   navigations — #2478 rule 7 / #2584). Not gated behind
+   `prefers-reduced-motion`: it changes *where* a jump lands, not whether it
+   animates. */
+html {
+  scroll-padding-top: var(--sticky-header-h);
 }
 
 /* The consent modal never belongs on a printed page. It needs its own rule

@@ -108,7 +108,11 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
         )}
       >
         {/* Mobile / Tablet (<1024px) */}
-        <div className="relative flex h-16 items-center justify-between px-4 lg:hidden">
+        {/* Height is `--sticky-header-h` (65px, `globals.css`) minus this
+            header's own 1px `border-b` — every sticky in-page section nav
+            derives its own pinned offset from that token, so the header's
+            actual height is the one thing that must never drift from it. */}
+        <div className="relative flex h-[calc(var(--sticky-header-h)-1px)] items-center justify-between px-4 lg:hidden">
           <Button
             ref={hamburgerRef}
             variant="ghost"
@@ -136,8 +140,8 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
           </Link>
         </div>
 
-        {/* Desktop (≥1024px) */}
-        <div className="mx-auto hidden h-16 max-w-[1440px] items-center justify-between gap-4 px-4 lg:grid lg:grid-cols-[auto_1fr_auto] xl:gap-8 xl:px-8 2xl:gap-10">
+        {/* Desktop (≥1024px) — same derived height as the mobile row above. */}
+        <div className="mx-auto hidden h-[calc(var(--sticky-header-h)-1px)] max-w-[1440px] items-center justify-between gap-4 px-4 lg:grid lg:grid-cols-[auto_1fr_auto] xl:gap-8 xl:px-8 2xl:gap-10">
           <Wordmark />
 
           <nav aria-label="Hoofdnavigatie" className="flex w-full">

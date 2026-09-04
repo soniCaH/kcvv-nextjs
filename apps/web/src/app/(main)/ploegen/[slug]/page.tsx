@@ -317,17 +317,37 @@ export default async function TeamPage({ params }: TeamPageProps) {
     (team.trainingSchedule?.length ?? 0) > 0 ||
     (teamContact !== null && hasRenderableBioContent(teamContact));
 
+  // One record for every section's label — the nav chip and each section's
+  // own `aria-label` (on its focus target below) read from the same value,
+  // so the two can never drift and there is nothing to fall back to if
+  // `klassementLabel` were ever null here (it can't be: `inCompetition`
+  // is exactly `klassementLabel !== null`, and only the `inCompetition`
+  // branch ever reads it).
+  const sectionLabels = {
+    klassement: klassementLabel,
+    wedstrijden: "Wedstrijden",
+    spelers: "Spelers",
+    staf: "Staf",
+    info: "Info",
+  } as const;
+
   // The status line states (`not-in-competition` / `unavailable`) are the
   // ONE deliberate exception to the nav/render invariant below: neither is a
   // section, so neither earns a nav entry even though one renders in the
   // section-nav's stead (#2540/#2636 decision). Every other item here is
   // kept in exact sync with what actually renders further down.
   const navItems: TeamSectionNavItem[] = [
-    klassementLabel !== null && { id: "klassement", label: klassementLabel },
-    showWedstrijden && { id: "wedstrijden", label: "Wedstrijden" },
-    showSquad && { id: "spelers", label: "Spelers" },
-    showStaff && { id: "staf", label: "Staf" },
-    showEditorial && { id: "info", label: "Info" },
+    // `sectionLabels.klassement` is the same value as `klassementLabel`,
+    // but TS narrows the bare variable, not a property read off it — the
+    // guard stays on the variable, the label comes from the shared record.
+    klassementLabel !== null && {
+      id: "klassement",
+      label: klassementLabel,
+    },
+    showWedstrijden && { id: "wedstrijden", label: sectionLabels.wedstrijden },
+    showSquad && { id: "spelers", label: sectionLabels.spelers },
+    showStaff && { id: "staf", label: sectionLabels.staf },
+    showEditorial && { id: "info", label: sectionLabels.info },
   ].filter((x): x is TeamSectionNavItem => x !== false);
 
   const analyticsParams = { team_slug: slug };
@@ -419,7 +439,12 @@ export default async function TeamPage({ params }: TeamPageProps) {
             <PageContainer
               as="section"
               id="klassement"
-              className="scroll-mt-[6.5rem] py-10"
+              tabIndex={-1}
+              // Non-null: this branch only renders when `inCompetition` —
+              // exactly `klassementLabel !== null` — is true, but TS
+              // narrows the variable, not a property read off the record.
+              ariaLabel={sectionLabels.klassement!}
+              className="py-10 focus:outline-none"
             >
               <StandingsSection
                 tables={standings}
@@ -439,7 +464,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
                 <PageContainer
                   as="section"
                   id="wedstrijden"
-                  className="scroll-mt-[6.5rem] py-10"
+                  tabIndex={-1}
+                  ariaLabel={sectionLabels.wedstrijden}
+                  className="py-10 focus:outline-none"
                 >
                   <TeamMatchesSection
                     matches={scheduleMatches}
@@ -461,7 +488,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
             <PageContainer
               as="section"
               id="spelers"
-              className="scroll-mt-[6.5rem] py-10"
+              tabIndex={-1}
+              ariaLabel={sectionLabels.spelers}
+              className="py-10 focus:outline-none"
             >
               <SquadGrid players={team.players} />
             </PageContainer>
@@ -476,7 +505,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
       {team.teamType === "youth" ? (
         <>
           <StripedSeam colorPair="ink-cream" height="md" />
-          <PageContainer as="section" className="scroll-mt-[6.5rem] py-10">
+          <PageContainer as="section" className="py-10">
             <TeamEnrolmentCta
               teamType={team.teamType}
               teamSlug={slug}
@@ -492,7 +521,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
           <PageContainer
             as="section"
             id="staf"
-            className="scroll-mt-[6.5rem] py-10"
+            tabIndex={-1}
+            ariaLabel={sectionLabels.staf}
+            className="py-10 focus:outline-none"
           >
             <TeamStaff staff={staff} heading="Staf" />
           </PageContainer>
@@ -505,7 +536,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
           <PageContainer
             as="section"
             id="info"
-            className="scroll-mt-[6.5rem] py-10"
+            tabIndex={-1}
+            ariaLabel={sectionLabels.info}
+            className="py-10 focus:outline-none"
           >
             <TeamEditorial
               body={teamBody}

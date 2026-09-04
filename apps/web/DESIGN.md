@@ -301,6 +301,8 @@ Enforced statically: `cross-page-consistency.test.ts` fails on any bare `ch` max
 
 **The Full-Bleed Never Wraps Rule.** Striped seams and coloured bands are viewport-wide by definition. Wrapping one in a max-width container is always a bug.
 
+**The Derived Anchor Offset Rule.** An in-page anchor's landing offset is `scroll-padding-top` on `<html>`, published at runtime by whichever sticky bar sits above the target — never a hand-written `scroll-mt-*` typed on the target itself. `useSectionNav` measures its own bar's rendered height and adds it to `--sticky-header-h` (the header's own token), so the offset tracks the bar's real, current height — including a trailing slot wrapping to its own line — instead of a typed guess that drifts the moment the bar's content changes. Three different hand-written values (`scroll-mt-24`, `scroll-mt-32`, `scroll-mt-[6.5rem]`) existed before this rule and were all wrong in different directions, which is the evidence a typed-per-section number does not stay correct. A route with no section nav (`/jeugd#visie`) falls back to a header-only base rule in `globals.css`. Decided on [#2478](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2478), built by [#2584](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2584).
+
 ## Elevation & Depth
 
 The system is **flat-graphic, not lifted**. Depth is drawn, not simulated: a hard offset rectangle of pure ink with zero blur radius, exactly as a print designer would fake a drop shadow with a second black box. There is no ambient light, no spread, no colour bleed.
@@ -320,7 +322,7 @@ Only three weights exist, plus a muted sibling for surfaces where black-on-black
 
 **The No Blur Rule.** Every shadow in this system has a blur radius of `0`. A blurred shadow is from a different design language and does not belong here — no exceptions, including "just a subtle one".
 
-**The Press-Down Rule.** Interactive paper does not rise on hover; it presses. The surface translates `+1px, +1px` (buttons and cards) or `+1px/+2px` (fields) and its shadow collapses to `none`, so it appears pushed flat against the page. The translate is gated behind `motion-safe:`; the shadow collapse is not, so reduced-motion users keep the affordance.
+**The Press-Down Rule.** Interactive paper does not rise on hover; it presses. The surface translates `+1px, +1px` (buttons and cards) or `+1px/+2px` (fields) and its shadow collapses to `none`, so it appears pushed flat against the page. The translate is gated behind `motion-safe:`; the shadow collapse is not, so reduced-motion users keep the affordance. **One named exception:** the in-page section-nav chip (`<SectionNavChip>`, § Navigation) never presses — no translate, no shadow collapse, at rest or active — because it is chrome rather than the content-you-operate register the press-down exists for. It is deliberately quieter than `<FilterTabs>`'s chip, which keeps the full press-down. [#2478](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2478).
 
 **The Complete Vocabulary Rule.** The seven tokens above are the entire shadow system — there is nothing else to reach for. The pre-redesign blurred family (`--shadow-sm`, `--shadow-DEFAULT`, `--shadow-md`, `--shadow-lg`, `--shadow-card-hover`, `--shadow-input`, `--shadow-input-focus`, `--shadow-soft`) and the orphaned asymmetric pair (`--shadow-photo-tape`, `--shadow-photo-tape-lift`) were removed from `globals.css`; all ten had zero consumers. Adding a blurred token back is a change to the design language, not a convenience.
 
@@ -370,7 +372,7 @@ Photographs get a newsprint treatment: a warm-tint filter (`sepia(0.06) saturate
 
 **The Sub-Degree Rule.** Grid card and tape rotations live in a −0.5° to +0.5° pool. Individual tilt should be barely perceptible; the effect is only that the grid stops being perfect. Steeper angles are reserved for explicitly named polaroid compositions.
 
-**The Shadow Needs Ink Rule.** Measured order-independently in `apps/web/src` product code (Storybook and tests excluded, since a demo wrapper is not a shipped surface, and counted per class attribute so Tailwind's arbitrary ordering — or a `cva()` variant split across a base class and a state class — can't hide a match): a `2px` ink border appears **163** times against a combined **96** for the three ways a `1px` hairline is drawn (`border-paper-edge` 32, alpha-ink `ink/10`–`ink/15` 10, full-opacity `border-ink` 54). `2px` ink is the more common weight, not the rarer one — the reverse of what an earlier draft of this rule stated, which counted only the literal adjacent string `border-2 border-ink` and so missed most real uses. The one direction that does hold: nothing that casts a shadow in this codebase uses a `1px` hairline border — a shadow-casting surface takes `2px` ink, or `1.5px` on a stamp, badge or chip, with no exception found. The converse does not hold: a `2px` ink border does not imply a shadow. Of the 163, only 71 also carry a shadow token; the other 92 are shadowless dividers, mostly loading-skeleton frames and `border-t-2`/`border-b-2` section rules. So the test a reviewer can actually run is one-directional — **giving a surface a shadow means giving it `2px` ink (or `1.5px` on a small badge) underneath; the absence of a shadow says nothing about the border weight.**
+**The Shadow Needs Ink Rule.** Measured order-independently in `apps/web/src` product code (Storybook and tests excluded, since a demo wrapper is not a shipped surface, and counted per class attribute so Tailwind's arbitrary ordering — or a `cva()` variant split across a base class and a state class — can't hide a match): a `2px` ink border appears **163** times against a combined **96** for the three ways a `1px` hairline is drawn (`border-paper-edge` 32, alpha-ink `ink/10`–`ink/15` 10, full-opacity `border-ink` 54). `2px` ink is the more common weight, not the rarer one — the reverse of what an earlier draft of this rule stated, which counted only the literal adjacent string `border-2 border-ink` and so missed most real uses. The one direction that does hold, with one named exception: a shadow-casting surface takes `2px` ink, or `1.5px` on a stamp, badge or chip. **The exception is the in-page section-nav chip** (`<SectionNavChip>`, § Navigation) — `border` (1px) with a 1px offset shadow, on purpose: it is deliberately quieter than every other shadow-casting object on the site, chrome rather than content, so it takes the chip's own lighter weight instead of the `1.5px` a badge-scale object would otherwise use. [#2478](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2478). The converse does not hold either way: a `2px` ink border does not imply a shadow. Of the 163, only 71 also carry a shadow token; the other 92 are shadowless dividers, mostly loading-skeleton frames and `border-t-2`/`border-b-2` section rules. So the test a reviewer can actually run is one-directional — **giving a surface a shadow means giving it `2px` ink (or `1.5px` on a small badge, or `1px` on the section-nav chip) underneath; the absence of a shadow says nothing about the border weight.**
 
 `border-jersey-deep` (12 uses in product code, plus 2 opacity variants) still stays on the object side, never the hairline side — it marks an active filter chip, a hovered link, a focused tab, never a passive divider by convention. The visually darker `border-jersey-deep-dark` is a distinct token and appears only in Storybook, not in product code. An accent-hairline variant was rendered and rejected on the convention (C2): at the density a divider actually renders — a stacked list, a run of section rules — a line of green hairlines stops reading as individual separators and starts reading as a green section, which is exactly what the Rare Green Rule exists to prevent. What C2 rejected is the _rhythm_, not the colour: green fails when it repeats down a list, because repetition is what turns a line into a field. A single green rule under a heading that labels a group does not repeat and does not read as a wash. That is why `SiteFooter`'s three column headings and `HulpFinder`'s category header (`1.5px` / `2px` under a static label) sit inside the convention rather than against it — three headings labelling three different groups is not a run of rows. Decided on [#2689](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2689).
 
@@ -416,10 +418,25 @@ An eight-state machine shared identically by text input, select and textarea —
 
 ### Navigation
 
+The global top-level bar (`<SiteHeader>`) and the sticky in-page section nav are two different registers, not one description stretched over both — see below for why they differ before assuming either applies to the other.
+
+**Global top-level bar:**
+
 - Uppercase mono, weight 600, tracking 0.04em, 11px scaling to 14px on wide viewports, no underline.
 - Default ink; hover and active shift to jersey-deep, colour only, 150ms.
 - The utility action carries a 1px ink border that recolours to jersey-deep on hover.
 - **The nav is flat — no dropdowns.** Every top-level entry is a plain link. Mobile uses a full takeover drawer of the same flat list, not a squeezed menu.
+
+#### In-page section navigation is the light chip, not the top-level bar's bare link
+
+A sticky in-page section nav (`<TeamSectionNav>` on `/ploegen/[slug]`, `<OrganigramSectionNav>` on `/hulp`) is **chrome, not content** — quieter than both the top-level bar above and `<FilterTabs>`'s heavy chip, which a visitor actively operates. Its item, `<SectionNavChip>`, is one recipe consumed by both navs and both loading skeletons:
+
+- `border` (1px), `bg-cream`, a 1px offset shadow at rest — never `<FilterTabs>`'s `border-2` + Paper Small shadow.
+- Active fills `bg-jersey-deep text-cream`, `aria-current="location"`, **and drops the shadow entirely** — no press-down, at rest or active (the chip's one named exception to the Press-Down Rule and the Shadow Needs Ink Rule; see § Elevation & Depth and § Shapes).
+- Filled by scroll-spy on every route: the fill means "the section being read right now", never "the one last clicked".
+- The bar itself pins at `--sticky-header-h`, `bg-cream-deep`, `border-b-2`; a trailing slot (`<HubSearch variant="nav">` on `/hulp`) takes the chip's exact paper weight so the bar reads as one row of one kind of object.
+
+Decided on [#2478](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2478), built by [#2584](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2584). This is a distinct, lighter weight beside `<FilterTabs>` — see § Chips / Labels — not a variant of it.
 
 #### The top-level bar is exempt from the ≤4 working-memory limit
 
@@ -491,9 +508,9 @@ Decided on [#2548](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2548), b
 ### Do:
 
 - **Do** set every rectangle's border radius to `0` and reserve curves for true circles.
-- **Do** give a shadow-casting surface a `2px` ink border, or `1.5px` on a stamp, badge or chip — never a `1px` hairline underneath a shadow. A shadowless divider may still be `2px` ink; the implication runs one way only.
+- **Do** give a shadow-casting surface a `2px` ink border, or `1.5px` on a stamp, badge or chip — never a `1px` hairline underneath a shadow, except the in-page section-nav chip, which is deliberately `1px`/`1px` (chrome, not content). A shadowless divider may still be `2px` ink; the implication runs one way only.
 - **Do** use hard offset shadows with `0` blur, in exactly the seven documented tokens.
-- **Do** press interactive surfaces into their shadow on hover (`translate(1px, 1px)` + `shadow-none`), gating only the translate behind `motion-safe:`.
+- **Do** press interactive surfaces into their shadow on hover (`translate(1px, 1px)` + `shadow-none`), gating only the translate behind `motion-safe:` — except the in-page section-nav chip, which never presses at all.
 - **Do** pick the right green: `jersey` decorative only, `jersey-deep` for anything carrying text (headings, CTAs, inline prose links), `jersey-bright` for green text on ink.
 - **Do** reach for an existing primitive — taped card, ticket stub, mono label, editorial heading, tape strip, stamp badge, striped seam — before writing new markup.
 - **Do** route every page through the three container widths (680 / 1040 / 1280).

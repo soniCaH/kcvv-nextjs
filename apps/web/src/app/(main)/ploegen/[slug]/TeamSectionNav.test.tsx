@@ -7,12 +7,45 @@
  * ceiling, and the arrow's reserved 40px rail on both sides tracks
  * `useScrollHint`'s `overflows`, the same "row of discrete things" rule
  * `<FilterTabs>` uses, rather than a breakpoint-gated rail.
+ *
+ * The item itself is the *light* chip (#2478 rule 1), filled by scroll-spy
+ * on every route (rule 3) via the shared `useSectionNav` hook — not the
+ * heavier `<FilterTabs>` chip, and not a colour-only bare link.
  */
 
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TeamSectionNav, type TeamSectionNavItem } from "./TeamSectionNav";
+
+// IntersectionObserver stub — happy-dom doesn't implement it. Only the
+// `useSectionNav` scroll-spy tests below register a section target with a
+// matching id, so every other test in this file simply never creates an
+// observer instance (see the hook's own early-return on zero targets).
+let observerCb: IntersectionObserverCallback | null = null;
+
+class FakeIntersectionObserver {
+  constructor(cb: IntersectionObserverCallback) {
+    observerCb = cb;
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
+  }
+}
+
+function emitIntersecting(target: Element, top: number) {
+  act(() => {
+    observerCb?.(
+      [
+        { isIntersecting: true, target, boundingClientRect: { top } },
+      ] as IntersectionObserverEntry[],
+      {} as IntersectionObserver,
+    );
+  });
+}
 
 const THREE_ITEMS: TeamSectionNavItem[] = [
   { id: "wedstrijden", label: "Wedstrijden" },
@@ -72,8 +105,18 @@ function mockScrollDimensions(scrollWidth: number, clientWidth: number) {
 }
 
 describe("TeamSectionNav", () => {
+  beforeEach(() => {
+    observerCb = null;
+    vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
+  });
+
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    document.documentElement.style.scrollPaddingTop = "";
+    document
+      .querySelectorAll("[data-team-section-nav-test]")
+      .forEach((el) => el.remove());
   });
 
   it("renders nothing with zero sections", () => {
@@ -102,6 +145,55 @@ describe("TeamSectionNav", () => {
       "href",
       "#staf",
     );
+  });
+
+  it("renders the light chip recipe — 1px border, 1px shadow, no press-down — never the filter chip's weight", () => {
+    render(<TeamSectionNav items={THREE_ITEMS} />);
+    const link = screen.getByRole("link", { name: "Spelers" });
+
+    expect(link).toHaveClass("border");
+    expect(link).not.toHaveClass("border-2");
+    expect(link.className).toContain("shadow-[1px_1px_0_0_var(--color-ink)]");
+    // No press-down: the filter chip's canonical hover translate is absent.
+    expect(link).not.toHaveClass("hover:translate-x-1");
+  });
+
+  describe("scroll-spy — the fill means the section being read, not the one last clicked", () => {
+    function renderWithSections(items: TeamSectionNavItem[]) {
+      for (const item of items) {
+        const el = document.createElement("div");
+        el.id = item.id;
+        el.setAttribute("data-team-section-nav-test", "");
+        document.body.appendChild(el);
+      }
+      return render(<TeamSectionNav items={items} />);
+    }
+
+    it("fills the chip for the topmost intersecting section", () => {
+      renderWithSections(THREE_ITEMS);
+
+      const spelersSection = document.getElementById("spelers")!;
+      emitIntersecting(spelersSection, 10);
+
+      const spelersLink = screen.getByRole("link", { name: "Spelers" });
+      const stafLink = screen.getByRole("link", { name: "Staf" });
+
+      expect(spelersLink).toHaveAttribute("aria-current", "location");
+      expect(spelersLink).toHaveClass("bg-jersey-deep");
+      expect(stafLink).not.toHaveAttribute("aria-current");
+    });
+
+    it("moves focus into the target section on click, unlike today's bare link", async () => {
+      const user = userEvent.setup();
+      renderWithSections(THREE_ITEMS);
+
+      const stafSection = document.getElementById("staf")!;
+      const focusSpy = vi.spyOn(stafSection, "focus");
+
+      await user.click(screen.getByRole("link", { name: "Staf" }));
+
+      expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+    });
   });
 
   describe("scroll arrow — real overflow, not a permanent ceiling", () => {

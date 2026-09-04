@@ -3,7 +3,7 @@
  *
  * Mirrors the Phase 6.C single-scroll composition of `ploegen/[slug]/page.tsx`:
  *   <TeamHero>               ← wide (1040) hero: words + taped team figure
- *     → <TeamSectionNav>      ← sticky border-y-2 ink pill bar
+ *     → <TeamSectionNav>      ← sticky border-b-2 ink chip bar (#2478 TEAM-1)
  *     → <StripedSeam>
  *     → <SquadGrid>           ← position-grouped squad (auto-fill minmax(140px,
  *       1fr), border-2 ink cards)
@@ -17,12 +17,15 @@
  * the envelope-drift guard.
  */
 
+import { cn } from "@/lib/utils/cn";
 import {
   PageContainer,
   StripedSeam,
   Skeleton,
   LoadingAnnouncement,
   UpLink,
+  SECTION_NAV_CHIP_BASE_CLASSES,
+  SECTION_NAV_CHIP_SHADOW_CLASS,
 } from "@/components/design-system";
 
 export default function TeamDetailLoading() {
@@ -51,11 +54,22 @@ export default function TeamDetailLoading() {
         <div className="border-ink bg-cream-soft shadow-paper-md order-first aspect-[3/2] w-full border-2 sm:order-last" />
       </section>
 
-      {/* TeamSectionNav — sticky border-y-2 ink pill bar. */}
-      <div aria-hidden="true" className="border-ink bg-cream border-y-2">
+      {/* TeamSectionNav — sticky border-b-2 ink chip bar (#2478 TEAM-1: no
+          top border, the StripedSeam above already divides it from the
+          hero). Chips, not bare bars — the real bar's items are the light
+          chip (rule 1). */}
+      <div aria-hidden="true" className="border-ink bg-cream-deep border-b-2">
         <PageContainer className="flex items-center gap-2 py-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-5 w-20" />
+            <div
+              key={i}
+              className={cn(
+                SECTION_NAV_CHIP_BASE_CLASSES,
+                SECTION_NAV_CHIP_SHADOW_CLASS,
+              )}
+            >
+              <Skeleton className="h-3 w-16" />
+            </div>
           ))}
         </PageContainer>
       </div>

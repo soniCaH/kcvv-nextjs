@@ -32,6 +32,18 @@ describe("PageContainer", () => {
     expect(screen.getByText("anchor").id).toBe("klassement");
   });
 
+  it("forwards an ariaLabel so a tabIndex=-1 focus target announces itself", () => {
+    render(
+      <PageContainer as="section" tabIndex={-1} ariaLabel="Klassement">
+        section
+      </PageContainer>,
+    );
+    expect(screen.getByText("section")).toHaveAttribute(
+      "aria-label",
+      "Klassement",
+    );
+  });
+
   it("renders as a custom element via `as`", () => {
     render(<PageContainer as="section">section</PageContainer>);
     expect(screen.getByText("section").tagName).toBe("SECTION");
