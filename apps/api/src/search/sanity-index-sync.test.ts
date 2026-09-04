@@ -30,7 +30,11 @@ const mockArticle = {
   slug: "kcvv-wint-derby",
   title: "KCVV wint derby",
   tags: ["verslag", "derby"],
-  bodyText: "KCVV Elewijt won de derby met 3-1.",
+  lead: "Een late kopbal besliste de derby.",
+  prose: "KCVV Elewijt won de derby met 3-1.",
+  qaQuestions: [] as string[],
+  qaAnswers: "",
+  tableHtml: [] as string[],
   imageUrl: null as string | null,
 };
 
@@ -169,7 +173,9 @@ describe("runSanityIndexSync", () => {
     expect(doc!.metadata["slug"]).toBe("kcvv-wint-derby");
     expect(doc!.metadata["type"]).toBe("article");
     expect(doc!.metadata["title"]).toBe("KCVV wint derby");
-    expect(doc!.metadata["excerpt"]).toBe("KCVV Elewijt won de derby met 3-1.");
+    // The excerpt is the editor's lead, not a slice of the index text — that
+    // blob now carries Q&A and table words behind the prose (#2806).
+    expect(doc!.metadata["excerpt"]).toBe("Een late kopbal besliste de derby.");
     expect(doc!.metadata["imageUrl"]).toBeUndefined();
   });
 
@@ -246,7 +252,8 @@ describe("runSanityIndexSync", () => {
     const articleNoBody = {
       ...mockArticle,
       _id: "article-no-body",
-      bodyText: null,
+      lead: "",
+      prose: "",
     };
 
     await Effect.runPromise(
@@ -381,7 +388,8 @@ describe("runSanityIndexSync", () => {
             _id: "article-002",
             title: "Gelijkspel",
             tags: ["verslag"],
-            bodyText: "KCVV Elewijt speelde 1-1 gelijk.",
+            lead: "Een puntendeling op bezoek.",
+            prose: "KCVV Elewijt speelde 1-1 gelijk.",
           },
         ]),
         fetchPages: noopFetch([]),

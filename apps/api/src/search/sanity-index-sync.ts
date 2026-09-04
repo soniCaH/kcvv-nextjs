@@ -4,8 +4,10 @@ import { WorkerEnvTag } from "../env";
 import { sanityClientConfig } from "../sanity/config";
 import { EmbeddingService } from "./embedding";
 import {
-  ARTICLE_COVER_IMAGE_PROJECTION,
+  ARTICLE_INDEX_PROJECTION,
+  ARTICLE_PUBLISHED_FILTER,
   buildArticleIndexText,
+  buildArticleMetadata,
   buildPageIndexText,
   buildResponsibilityIndexText,
 } from "./index-text";
@@ -26,8 +28,12 @@ interface SanityArticleDoc {
   _id: string;
   slug: string;
   title: string;
+  lead: string;
   tags: string[];
-  bodyText: string | null;
+  prose: string;
+  qaQuestions: string[];
+  qaAnswers: string;
+  tableHtml: string[];
   imageUrl: string | null;
 }
 
@@ -49,13 +55,10 @@ const RESPONSIBILITY_QUERY = `*[_type == "responsibility" && active == true] {
   "summary": coalesce(summary, "")
 }`;
 
-const ARTICLE_QUERY = `*[_type == "article" && publishAt <= now() && (!defined(unpublishAt) || unpublishAt > now())] {
-  _id,
-  "slug": coalesce(slug.current, ""),
-  title,
-  "tags": coalesce(tags, []),
-  "bodyText": pt::text(body),
-  ${ARTICLE_COVER_IMAGE_PROJECTION}
+// Exported for the test that pins the `publishedAt` field name — the
+// reconciliation injects its fetcher, so nothing else exercises this string.
+export const ARTICLE_QUERY = `*[_type == "article" && ${ARTICLE_PUBLISHED_FILTER}] {
+  ${ARTICLE_INDEX_PROJECTION}
 }`;
 
 const PAGE_QUERY = `*[_type == "page"] {
@@ -204,14 +207,11 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
     const articleVectors = yield* Effect.forEach(
       articleResult,
       (doc) =>
-        embedDoc(doc._id, buildArticleIndexText(doc), {
-          slug: doc.slug,
-          type: "article",
-          title: doc.title,
-          excerpt: (doc.bodyText ?? "").slice(0, 200),
-          tags: (doc.tags ?? []).join(","),
-          ...(doc.imageUrl ? { imageUrl: doc.imageUrl } : {}),
-        }),
+        embedDoc(
+          doc._id,
+          buildArticleIndexText(doc),
+          buildArticleMetadata(doc),
+        ),
       { concurrency: 3 },
     );
 

@@ -1,0 +1,190 @@
+import { describe, it, expect } from "vitest";
+import { evaluate, parse } from "groq-js";
+import {
+  ARTICLE_INDEX_PROJECTION,
+  ARTICLE_PUBLISHED_FILTER,
+  buildArticleExcerpt,
+  buildArticleIndexText,
+} from "./index-text";
+import { ARTICLE_QUERY } from "./sanity-index-sync";
+
+/**
+ * The projection's own tests assert on the query text. That is what let two
+ * null-propagation defects through review in #2806: GROQ answers a misspelled
+ * field with an empty result and a null operand with a null value, and no
+ * string assertion can see either. These cases run the real query through
+ * groq-js against fixture documents shaped like `packages/sanity-schemas`,
+ * then compose the result exactly as the indexers do.
+ */
+
+const block = (text: string) => ({
+  _type: "block",
+  children: [{ _type: "span", text }],
+});
+
+const qaBlock = (question: string, answer: string) => ({
+  _type: "qaBlock",
+  pairs: [{ question, respondents: [{ answer: [block(answer)] }] }],
+});
+
+const PAST = "2020-01-01T00:00:00Z";
+const FUTURE = "2999-01-01T00:00:00Z";
+
+interface Article {
+  readonly _id: string;
+  readonly _type: string;
+  readonly publishedAt?: string;
+  readonly unpublishAt?: string;
+  readonly slug?: { current: string };
+  readonly title?: unknown;
+  readonly lead?: string;
+  readonly tags?: string[];
+  readonly body?: unknown[];
+}
+
+const article = (over: Partial<Article> & { _id: string }): Article => ({
+  _type: "article",
+  publishedAt: PAST,
+  slug: { current: over._id },
+  title: [block("Een titel")],
+  body: [block("Inleidend proza.")],
+  ...over,
+});
+
+async function runQuery(query: string, dataset: readonly Article[]) {
+  const result = await evaluate(parse(query), { dataset });
+  return (await result.get()) as Record<string, unknown>[];
+}
+
+const projectOne = async (doc: Article) => {
+  const [row] = await runQuery(
+    `*[_type == "article"]{ ${ARTICLE_INDEX_PROJECTION} }`,
+    [doc],
+  );
+  return row!;
+};
+
+// Mirrors what both indexers do with a projected row.
+const indexTextFor = (row: Record<string, unknown>) =>
+  buildArticleIndexText(
+    row as unknown as Parameters<typeof buildArticleIndexText>[0],
+  );
+
+describe("ARTICLE_INDEX_PROJECTION evaluated against fixture documents", () => {
+  it("never returns null for any composed field", async () => {
+    const bodies: [string, unknown[] | undefined][] = [
+      ["prose and Q&A", [block("Inleidend proza."), qaBlock("Hoe?", "Goed.")]],
+      ["Q&A only", [qaBlock("Hoe ging het?", "Uitstekend, echt waar.")]],
+      ["table only", [{ _type: "htmlTable", html: "<td>Sarr</td>" }]],
+      ["image only", [{ _type: "articleImage", alt: "een foto" }]],
+      ["table without html", [block("Proza."), { _type: "htmlTable" }]],
+      ["pair without a question", [{ _type: "qaBlock", pairs: [{}] }]],
+      ["qaBlock without pairs", [{ _type: "qaBlock" }]],
+      ["empty body", []],
+      ["no body at all", undefined],
+    ];
+
+    for (const [name, body] of bodies) {
+      const row = await projectOne(article({ _id: "a", body }));
+
+      for (const field of ["title", "lead", "prose", "qaAnswers"]) {
+        expect(row[field], `${name} → ${field}`).toBeTypeOf("string");
+      }
+      for (const field of ["tags", "qaQuestions", "tableHtml"]) {
+        expect(row[field], `${name} → ${field}`).toBeInstanceOf(Array);
+      }
+      expect(() => indexTextFor(row), `${name} → compose`).not.toThrow();
+    }
+  });
+
+  it("keeps the whole interview for an article whose body is only Q&A", async () => {
+    // pt::text(body) is null here, not "". A GROQ-side join would blank the
+    // entire document — the exact articles this projection exists to rescue.
+    const row = await projectOne(
+      article({
+        _id: "interview",
+        body: [qaBlock("Hoe ging het?", "Uitstekend, echt waar.")],
+      }),
+    );
+
+    expect(row["prose"]).toBe("");
+    expect(indexTextFor(row)).toContain("Hoe ging het?");
+    expect(indexTextFor(row)).toContain("Uitstekend, echt waar.");
+  });
+
+  it("keeps the good table when a sibling htmlTable has no html", async () => {
+    const row = await projectOne(
+      article({
+        _id: "overzicht",
+        body: [
+          { _type: "htmlTable" },
+          { _type: "htmlTable", html: "<tr><td>Bocar&nbsp;Sarr</td></tr>" },
+        ],
+      }),
+    );
+
+    const text = indexTextFor(row);
+    expect(text).toContain("Bocar Sarr");
+    expect(text).not.toContain("<");
+    expect(text).not.toContain("null");
+  });
+
+  it("flattens a Portable Text title and passes a legacy string one through", async () => {
+    const rich = await projectOne(
+      article({ _id: "rich", title: [block('Vincent: "Geen afscheid"')] }),
+    );
+    const legacy = await projectOne(
+      article({ _id: "legacy", title: "Een oude titel" }),
+    );
+
+    expect(rich["title"]).toBe('Vincent: "Geen afscheid"');
+    expect(legacy["title"]).toBe("Een oude titel");
+  });
+
+  it("draws the excerpt from the prose, never from the Q&A", async () => {
+    const row = await projectOne(
+      article({
+        _id: "interview",
+        lead: "",
+        body: [block("Inleidend proza."), qaBlock("Hoe?", "Uitstekend.")],
+      }),
+    );
+
+    expect(
+      buildArticleExcerpt(
+        row as unknown as Parameters<typeof buildArticleExcerpt>[0],
+      ),
+    ).toBe("Inleidend proza.");
+  });
+});
+
+describe("ARTICLE_QUERY evaluated against fixture documents", () => {
+  const dataset = [
+    article({ _id: "published" }),
+    article({ _id: "scheduled", publishedAt: FUTURE }),
+    article({ _id: "expired", unpublishAt: PAST }),
+    article({ _id: "still-running", unpublishAt: FUTURE }),
+    { _id: "not-an-article", _type: "page" } as unknown as Article,
+  ];
+
+  it("matches the published articles and only those", async () => {
+    const rows = await runQuery(ARTICLE_QUERY, dataset);
+
+    expect(rows.map((r) => r["slug"]).sort()).toEqual([
+      "published",
+      "still-running",
+    ]);
+  });
+
+  it("matches nothing at all if the field name regresses", async () => {
+    // The whole defect: `publishAt` is not a schema field, and GROQ reports
+    // that as an empty result rather than an error, so the nightly sweep read
+    // as a clean run while indexing zero of 125 articles.
+    const misspelled = ARTICLE_QUERY.replace(
+      ARTICLE_PUBLISHED_FILTER,
+      ARTICLE_PUBLISHED_FILTER.replace("publishedAt", "publishAt"),
+    );
+
+    expect(await runQuery(misspelled, dataset)).toHaveLength(0);
+  });
+});

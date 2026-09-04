@@ -5,6 +5,10 @@ import type { WorkerEnv } from "../env";
 import { TEST_SECRET, signPayload } from "../test-helpers/svix-signing";
 import { EmbeddingService } from "../search/embedding";
 import { VectorizeService } from "../search/vectorize";
+import {
+  ARTICLE_INDEX_PROJECTION,
+  ARTICLE_PUBLISHED_FILTER,
+} from "../search/index-text";
 
 // Mock @sanity/client so the inlined webhook fetch returns controlled docs.
 const mockSanityFetch = vi.fn();
@@ -213,6 +217,24 @@ describe("handleIndexWebhook", () => {
     expect(response.status).toBe(200);
     const json = await response.json();
     expect(json).toEqual({ ok: true, action: "skipped_not_found" });
+    expect(deleteByIdsSpy).toHaveBeenCalledWith(["deleted-doc"]);
+  });
+
+  it("drops the vector of an article the published filter now holds out", async () => {
+    const body = JSON.stringify({ _id: "expired-article", _type: "article" });
+    const request = await makeSignedRequest(body);
+
+    mockSanityFetch.mockResolvedValue(null);
+
+    const response = await handleIndexWebhook(request, makeEnv(), defaultLayer);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      action: "skipped_not_found",
+    });
+    expect(deleteByIdsSpy).toHaveBeenCalledWith(["expired-article"]);
+    expect(upsertSpy).not.toHaveBeenCalled();
   });
 
   it("indexes an article with correct metadata", async () => {
@@ -220,8 +242,12 @@ describe("handleIndexWebhook", () => {
       _id: "article-001",
       slug: "kcvv-wint",
       title: "KCVV wint!",
+      lead: "Een late kopbal besliste de derby.",
       tags: ["verslag"],
-      bodyText: "KCVV won met 3-1.",
+      prose: "KCVV won met 3-1.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: [],
     };
 
     mockSanityFetch.mockResolvedValue(articleDoc);
@@ -248,8 +274,12 @@ describe("handleIndexWebhook", () => {
       _id: "article-001",
       slug: "kcvv-wint",
       title: "KCVV wint!",
+      lead: "Een late kopbal besliste de derby.",
       tags: ["verslag"],
-      bodyText: "KCVV won met 3-1.",
+      prose: "KCVV won met 3-1.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: [],
       imageUrl: "https://cdn.example.com/cover.jpg",
     };
 
@@ -274,8 +304,12 @@ describe("handleIndexWebhook", () => {
       _id: "article-001",
       slug: "kcvv-wint",
       title: "KCVV wint!",
+      lead: "Een late kopbal besliste de derby.",
       tags: ["verslag"],
-      bodyText: "KCVV won met 3-1.",
+      prose: "KCVV won met 3-1.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: [],
     };
 
     mockSanityFetch.mockResolvedValue(articleDoc);
@@ -290,6 +324,121 @@ describe("handleIndexWebhook", () => {
       metadata: Record<string, string>;
     };
     expect(call.metadata).not.toHaveProperty("imageUrl");
+  });
+
+  it("asks Sanity for a flattened title so the decode is never handed Portable Text", async () => {
+    // All 125 published articles carry a Portable Text title. Projected raw it
+    // decodes as an array against `S.String`, and index-handler wraps the
+    // decode in Effect.try — so the webhook rejected the document outright and
+    // the article never reached the index (#2806).
+    mockSanityFetch.mockResolvedValue(null);
+    const body = JSON.stringify({ _id: "article-001", _type: "article" });
+
+    await handleIndexWebhook(
+      await makeSignedRequest(body),
+      makeEnv(),
+      defaultLayer,
+    );
+
+    expect(mockSanityFetch.mock.calls[0]?.[0]).toContain("pt::text(title)");
+  });
+
+  it("gates the webhook on the same publish window as the nightly reindex", async () => {
+    // The sync only upserts, so anything the webhook admits early — a
+    // future-dated article, or one past its unpublishAt — would sit in the
+    // index until something deleted it.
+    mockSanityFetch.mockResolvedValue(null);
+    const body = JSON.stringify({ _id: "article-001", _type: "article" });
+
+    await handleIndexWebhook(
+      await makeSignedRequest(body),
+      makeEnv(),
+      defaultLayer,
+    );
+
+    expect(mockSanityFetch.mock.calls[0]?.[0]).toContain(
+      ARTICLE_PUBLISHED_FILTER,
+    );
+  });
+
+  it("shares one article projection with the nightly reindex", async () => {
+    mockSanityFetch.mockResolvedValue(null);
+    const body = JSON.stringify({ _id: "article-001", _type: "article" });
+
+    await handleIndexWebhook(
+      await makeSignedRequest(body),
+      makeEnv(),
+      defaultLayer,
+    );
+
+    expect(mockSanityFetch.mock.calls[0]?.[0]).toContain(
+      ARTICLE_INDEX_PROJECTION,
+    );
+  });
+
+  it("indexes a squad name that appears only inside a table", async () => {
+    mockSanityFetch.mockResolvedValue({
+      _id: "article-002",
+      slug: "transferoverzicht-kern-2024-2025",
+      title: "Transferoverzicht kern 2024-2025",
+      lead: "",
+      tags: ["transfers"],
+      prose: "Een overzicht van de kern.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: ["<table><tr><td>Bocar Sarr</td></tr></table>"],
+    });
+    const embedded: string[] = [];
+    const layer = Layer.mergeAll(
+      Layer.succeed(EmbeddingService, {
+        embed: (text: string) =>
+          Effect.sync(() => {
+            embedded.push(text);
+            return FAKE_VECTOR;
+          }),
+      }),
+      Layer.succeed(VectorizeService, {
+        upsert: () => Effect.void,
+        deleteByIds: () => Effect.void,
+        query: () => Effect.succeed([]),
+        getByIds: () => Effect.succeed([]),
+      }),
+    ) as WebhookLayer;
+
+    const body = JSON.stringify({ _id: "article-002", _type: "article" });
+    await handleIndexWebhook(await makeSignedRequest(body), makeEnv(), layer);
+
+    expect(embedded[0]).toContain("Bocar Sarr");
+    expect(embedded[0]).not.toContain("<td>");
+  });
+
+  it("draws the article excerpt from the lead, not from the index text", async () => {
+    mockSanityFetch.mockResolvedValue({
+      _id: "article-003",
+      slug: "kcvv-wint",
+      title: "KCVV wint!",
+      lead: "Een late kopbal besliste de derby.",
+      tags: ["verslag"],
+      prose: "KCVV won met 3-1.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: [],
+    });
+
+    const body = JSON.stringify({ _id: "article-003", _type: "article" });
+    await handleIndexWebhook(
+      await makeSignedRequest(body),
+      makeEnv(),
+      defaultLayer,
+    );
+
+    expect(upsertSpy).toHaveBeenCalledWith([
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          excerpt: "Een late kopbal besliste de derby.",
+        }),
+      }),
+    ]);
   });
 
   it("indexes a page with correct metadata", async () => {

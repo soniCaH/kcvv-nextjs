@@ -5,8 +5,10 @@ import { WorkerEnvTag } from "../env";
 import { sanityClientConfig } from "../sanity/config";
 import { EmbeddingService, EmbeddingServiceLive } from "../search/embedding";
 import {
-  ARTICLE_COVER_IMAGE_PROJECTION,
+  ARTICLE_INDEX_PROJECTION,
+  ARTICLE_PUBLISHED_FILTER,
   buildArticleIndexText,
+  buildArticleMetadata,
   buildPageIndexText,
   buildResponsibilityIndexText,
 } from "../search/index-text";
@@ -63,10 +65,16 @@ const ResponsibilityDoc = S.Struct({
   slug: S.String,
 });
 
+// Every field below is coalesced in ARTICLE_INDEX_PROJECTION, so the declared
+// shape is what GROQ returns rather than a cast over it (#2806).
 const ArticleDoc = S.Struct({
   title: S.String,
+  lead: S.String,
   tags: S.Array(S.String),
-  bodyText: S.NullOr(S.String),
+  prose: S.String,
+  qaQuestions: S.Array(S.String),
+  qaAnswers: S.String,
+  tableHtml: S.Array(S.String),
   slug: S.String,
   imageUrl: S.optional(S.NullOr(S.String)),
 });
@@ -102,18 +110,12 @@ const typeDescriptors: Record<AllowedType, TypeDescriptor> = {
     },
   },
   article: {
-    query: `*[_id == $id][0]{ _id, "slug": coalesce(slug.current,""), title, "tags": coalesce(tags,[]), "bodyText": pt::text(body), ${ARTICLE_COVER_IMAGE_PROJECTION} }`,
+    query: `*[_id == $id && ${ARTICLE_PUBLISHED_FILTER}][0]{ ${ARTICLE_INDEX_PROJECTION} }`,
     buildIndex: (doc) => {
       const r = S.decodeUnknownSync(ArticleDoc)(doc);
       return {
         indexText: buildArticleIndexText(r),
-        metadata: {
-          slug: r.slug,
-          type: "article",
-          title: r.title,
-          excerpt: (r.bodyText ?? "").slice(0, 200),
-          ...(r.imageUrl ? { imageUrl: r.imageUrl } : {}),
-        },
+        metadata: buildArticleMetadata(r),
       };
     },
   },
@@ -246,7 +248,19 @@ const webhookEffect = (request: Request, webhookSecret: string) =>
         new WebhookServiceError("sanity_fetch_failed", errorMessage(err)),
     });
 
+    // No document came back: it is gone, or ARTICLE_PUBLISHED_FILTER now holds
+    // it out because it expired or is future-dated. Either way its vector must
+    // go — runSanityIndexSync only upserts, so nothing else would ever remove
+    // it and search would keep serving an article the site no longer shows.
     if (!doc) {
+      yield* vectorize
+        .deleteByIds([_id])
+        .pipe(
+          Effect.mapError(
+            (err) =>
+              new WebhookServiceError("delete_failed", errorMessage(err)),
+          ),
+        );
       return Response.json({ ok: true, action: "skipped_not_found" });
     }
 
