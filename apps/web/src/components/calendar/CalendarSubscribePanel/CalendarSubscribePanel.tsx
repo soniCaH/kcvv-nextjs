@@ -96,7 +96,11 @@ export function CalendarSubscribePanel({
     try {
       await navigator.clipboard.writeText(webcalUrl);
       setCopied(true);
-      setFailedUrl(null);
+      // Only clear the notice this attempt's own URL put up — an EARLIER,
+      // now-stale attempt resolving after a LATER one already failed for a
+      // different URL must not clear that later failure (#2580: two
+      // overlapping copies can settle out of order).
+      setFailedUrl((prev) => (prev === webcalUrl ? null : prev));
       setTimeout(() => setCopied(false), 2000);
       trackEvent("kalender_subscribe_copy", {
         teams_count: selectedPsdIds.length,

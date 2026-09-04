@@ -6,7 +6,7 @@
  * surfaced, so URL generation is asserted through the clipboard.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CalendarSubscribePanel } from "./CalendarSubscribePanel";
 import { trackEvent } from "@/lib/analytics/track-event";
@@ -248,6 +248,45 @@ describe("CalendarSubscribePanel", () => {
       );
 
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+
+    it("keeps a later failure's notice when an earlier, now-stale attempt resolves successfully afterwards", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      const copyButton = screen.getByRole("button", { name: /Kopieer link/ });
+
+      // Attempt A: all three teams selected, held pending — resolves later.
+      let resolveA!: () => void;
+      const pendingA = new Promise<void>((resolve) => {
+        resolveA = resolve;
+      });
+      mockWriteText.mockReturnValueOnce(pendingA);
+      await user.click(copyButton);
+
+      // Change the selection while A is still in flight — webcalUrl now
+      // differs from what A captured.
+      await user.click(
+        screen.getAllByRole("button", { name: /Verwijder/ })[0]!,
+      );
+
+      // Attempt B: the new (smaller) selection, fails immediately.
+      mockWriteText.mockRejectedValueOnce(new Error("denied"));
+      await user.click(copyButton);
+      await screen.findByRole("alert");
+
+      // A now resolves successfully, for a URL that is no longer current —
+      // it must not clear B's still-accurate failure notice (#2580: this
+      // used to be an unconditional `setFailedUrl(null)` on any success).
+      resolveA();
+      await waitFor(() => expect(mockWriteText).toHaveBeenCalledTimes(2));
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+
+      // The reverse order — B (the later click) succeeding while A (the
+      // earlier one) is still pending — is already correct by construction:
+      // `prev === webcalUrl` only ever compares against the CURRENT
+      // `webcalUrl` a settling attempt itself captured, so it needs no
+      // separate case here.
     });
   });
 
