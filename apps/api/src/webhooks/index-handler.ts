@@ -248,7 +248,19 @@ const webhookEffect = (request: Request, webhookSecret: string) =>
         new WebhookServiceError("sanity_fetch_failed", errorMessage(err)),
     });
 
+    // No document came back: it is gone, or ARTICLE_PUBLISHED_FILTER now holds
+    // it out because it expired or is future-dated. Either way its vector must
+    // go — runSanityIndexSync only upserts, so nothing else would ever remove
+    // it and search would keep serving an article the site no longer shows.
     if (!doc) {
+      yield* vectorize
+        .deleteByIds([_id])
+        .pipe(
+          Effect.mapError(
+            (err) =>
+              new WebhookServiceError("delete_failed", errorMessage(err)),
+          ),
+        );
       return Response.json({ ok: true, action: "skipped_not_found" });
     }
 

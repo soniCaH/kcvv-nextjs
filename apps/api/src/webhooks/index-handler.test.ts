@@ -217,6 +217,24 @@ describe("handleIndexWebhook", () => {
     expect(response.status).toBe(200);
     const json = await response.json();
     expect(json).toEqual({ ok: true, action: "skipped_not_found" });
+    expect(deleteByIdsSpy).toHaveBeenCalledWith(["deleted-doc"]);
+  });
+
+  it("drops the vector of an article the published filter now holds out", async () => {
+    const body = JSON.stringify({ _id: "expired-article", _type: "article" });
+    const request = await makeSignedRequest(body);
+
+    mockSanityFetch.mockResolvedValue(null);
+
+    const response = await handleIndexWebhook(request, makeEnv(), defaultLayer);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      action: "skipped_not_found",
+    });
+    expect(deleteByIdsSpy).toHaveBeenCalledWith(["expired-article"]);
+    expect(upsertSpy).not.toHaveBeenCalled();
   });
 
   it("indexes an article with correct metadata", async () => {

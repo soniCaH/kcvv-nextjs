@@ -45,6 +45,11 @@ describe("stripTableHtml", () => {
     expect(stripTableHtml("<td>&nbsp;</td>")).toBe("");
   });
 
+  it("turns hex references into spaces too, not just named and decimal ones", () => {
+    expect(stripTableHtml("<td>Jan&#x26;Piet</td>")).toBe("Jan Piet");
+    expect(stripTableHtml("<td>A&#X27;B</td>")).toBe("A B");
+  });
+
   it("collapses the whitespace the tags leave behind", () => {
     const result = stripTableHtml("<tr>\n  <td>A</td>\n  <td>B</td>\n</tr>");
 

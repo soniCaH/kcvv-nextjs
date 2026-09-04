@@ -78,11 +78,13 @@ export const ARTICLE_INDEX_PROJECTION = `_id,
  *
  * ponytail: three replaces, no parser and no dependency. Entities become
  * spaces rather than their characters: this text is embedded, never rendered,
- * so a stray `&` would only be a dead token.
+ * so a stray `&` would only be a dead token. All three reference forms are
+ * matched — named, decimal and hex — because an unmatched `&#x26;` would glue
+ * the cells on either side of it into one nonsense token.
  */
 export function stripTableHtml(html: string): string {
   return html
-    .replace(/&[a-z]+;|&#\d+;/gi, " ")
+    .replace(/&[a-z]+;|&#\d+;|&#x[0-9a-f]+;/gi, " ")
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
