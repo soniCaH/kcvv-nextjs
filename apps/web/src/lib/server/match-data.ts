@@ -34,9 +34,12 @@ export const RESULT_RECENCY_MS = 15 * 24 * 60 * 60 * 1000;
 export interface MatchStripData {
   /**
    * Most recent played match, only when inside `RESULT_RECENCY_MS`. Never a
-   * pitch-reservation placeholder: a booking carries no score, so `matchSlot`
-   * never routes one to the result slot and `pickLastResult` cannot return it
-   * (#2688). Guarded there, not re-checked here — one owner for the rule.
+   * pitch-reservation placeholder or a reduced tournament fixture with no
+   * scoreline yet: a booking carries no score, and neither does an
+   * unconfirmed tournament opponent, so `matchSlot`'s shared
+   * `isReducedMatchRow` guard never routes either to the result slot and
+   * `pickLastResult` cannot return one (#2688/#2802). Guarded there, not
+   * re-checked here — one owner for the rule.
    */
   result: ScheduleRow | null;
   /**

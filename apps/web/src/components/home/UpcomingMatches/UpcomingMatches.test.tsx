@@ -8,6 +8,7 @@ import {
   mockUpcomingTwelve,
   mockUpcomingSingleTeam,
   mockUpcomingWithReservation,
+  mockUpcomingWithTournament,
 } from "./UpcomingMatches.mocks";
 import { trackEvent } from "@/lib/analytics/track-event";
 import type { UpcomingMatch } from "@/components/match/types";
@@ -343,6 +344,34 @@ describe("UpcomingMatches", () => {
     it("still buckets the reservation under its own squad's filter chip", () => {
       render(<UpcomingMatches matches={mockUpcomingWithReservation} />);
       expect(chip(/U13/)).toBeInTheDocument();
+    });
+  });
+
+  // #2696/#2802 — the gap this ticket closes: `<UpcomingMatchesClient>`
+  // never called `isReducedMatchRow`, so a not-yet-played tournament
+  // fixture for a non-senior team rendered the ordinary linked two-crest
+  // scoreboard here, even though every other reservation-aware renderer
+  // already reduced it.
+  describe("tournament fixture with no result yet (#2696/#2802)", () => {
+    it("renders the tournament fixture as a reduced, non-linking row naming the other club", () => {
+      const { container } = render(
+        <UpcomingMatches matches={mockUpcomingWithTournament} />,
+      );
+      expect(rowLinks()).toHaveLength(4);
+      expect(container).toHaveTextContent("Tornooi");
+      expect(container).toHaveTextContent("FC Zemst Sportief");
+    });
+
+    it("gives the tournament row its own accessible name, marked data-tournament not data-placeholder", () => {
+      render(<UpcomingMatches matches={mockUpcomingWithTournament} />);
+      const article = screen.getByRole("article", { name: /Tornooi/ });
+      expect(article).toHaveAttribute("data-tournament", "true");
+      expect(article).not.toHaveAttribute("data-placeholder");
+    });
+
+    it("still buckets the tournament fixture under its own squad's filter chip", () => {
+      render(<UpcomingMatches matches={mockUpcomingWithTournament} />);
+      expect(chip(/U9/)).toBeInTheDocument();
     });
   });
 });

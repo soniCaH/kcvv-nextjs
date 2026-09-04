@@ -7,6 +7,7 @@ import type { MatchDetail } from "@kcvv/api-contract";
 import type { HeroMatchData } from "@/components/article/EditorialHero";
 import { KCVV_CLUB_ID } from "@/lib/constants";
 import { formatMatchWidgetDate } from "@/lib/utils/dates";
+import { matchRowKind } from "@/lib/utils/match-display";
 import { extractMatchTime } from "@/lib/utils/match-time";
 
 /**
@@ -34,8 +35,22 @@ export function parsePsdMatchId(
  *      fall back to matching the KCVV club id against the two sides' ids.
  * Without (2) the KCVV crest ring + Doelpunten highlight would never render
  * on the real article page (the flag is only ever set by `/matches/*`).
+ *
+ * `null` for a pitch-reservation placeholder or a tournament fixture with no
+ * result yet (#2606/#2696/#2802 review) — a self-match has no opponent to
+ * put on either side of the score bar, and an unconfirmed tournament
+ * opponent is the same unconfirmed claim, so building either anyway
+ * rendered a two-crest bar naming a club as a settled opponent it isn't
+ * (AC 3). `HeroMatchData` itself stays a plain (non-union) shape rather than
+ * growing a third member for this one caller: `EditorialHero` already
+ * degrades gracefully to the kicker-only shell for `match: null` (a 404'd
+ * match reaches the same path), so both reduced states reuse that existing,
+ * correct fallback instead of a bespoke reduced hero.
  */
-export function toHeroMatchData(match: MatchDetail): HeroMatchData {
+export function toHeroMatchData(match: MatchDetail): HeroMatchData | null {
+  if (matchRowKind(match) !== "match") {
+    return null;
+  }
   const kcvvSide =
     match.is_home === true
       ? "home"

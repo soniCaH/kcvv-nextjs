@@ -285,23 +285,25 @@ describe("reservationView", () => {
   });
 });
 
-describe("otherClubSide (#2696)", () => {
+describe("otherClubSide (#2696, positional since #2802 review)", () => {
   const KCVV_CLUB_ID = 1235;
 
   it("returns the away side when KCVV is home", () => {
-    const match = {
-      homeTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
-      awayTeam: { id: 1391, name: "FC Zemst Sportief" },
-    };
-    expect(otherClubSide(match)).toEqual(match.awayTeam);
+    const home = { id: KCVV_CLUB_ID, name: "KCVV Elewijt" };
+    const away = { id: 1391, name: "FC Zemst Sportief" };
+    expect(otherClubSide(home, away)).toEqual(away);
   });
 
   it("returns the home side when KCVV is away — derived from the id, never isHome", () => {
-    const match = {
-      homeTeam: { id: 1391, name: "FC Zemst Sportief" },
-      awayTeam: { id: KCVV_CLUB_ID, name: "KCVV Elewijt" },
-    };
-    expect(otherClubSide(match)).toEqual(match.homeTeam);
+    const home = { id: 1391, name: "FC Zemst Sportief" };
+    const away = { id: KCVV_CLUB_ID, name: "KCVV Elewijt" };
+    expect(otherClubSide(home, away)).toEqual(home);
+  });
+
+  it("works directly on the raw snake_case Match sides — no reshape needed", () => {
+    const home_team = { id: KCVV_CLUB_ID, name: "KCVV Elewijt" };
+    const away_team = { id: 1391, name: "FC Zemst Sportief" };
+    expect(otherClubSide(home_team, away_team)).toEqual(away_team);
   });
 });
 

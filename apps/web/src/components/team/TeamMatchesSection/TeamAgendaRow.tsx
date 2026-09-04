@@ -55,10 +55,8 @@ import {
   getResultColor,
   HOME_AWAY_A11Y_NAME,
   isPlayedMatch,
-  isReducedMatchRow,
   isSettledMatch,
   MATCH_KIND_WORD,
-  otherClubSide,
   OUTCOME_UNDERLINE,
   OUTCOME_WORD,
   OUTCOME_WORD_FULL,
@@ -244,12 +242,25 @@ export function TeamAgendaRow({
   kind,
   className,
 }: TeamAgendaRowProps) {
+  // The adapter (`transformMatchToSchedule`) has already asked
+  // `isReducedMatchRow()` once and baked the answer into `kind` — this reads
+  // that discriminant rather than re-deriving the same question a second
+  // time from raw match fields. Enumerated positively (#2802 review)
+  // rather than `kind !== "match"`: a negated catch-all treats
+  // any *future* fourth `kind` as reduced too, silently, with no compile
+  // error; this way a new member falls through to the `match`-only branch
+  // below instead, where it fails loudly on the fields it doesn't carry.
+  // One definition, reused at every site below that used to re-spell
+  // `kind !== "match"` on its own.
+  const isReducedRow = match.kind === "reservation" || match.kind === "reduced";
+
   // Prefer match.is_home (provided by BFF); fall back to comparing kcvvTeamId
   // against the home team's id when the BFF field is absent. Meaningless for
-  // a reservation (both sides are the same club — see `ScheduleReservation`),
-  // so this narrows on `match.isPlaceholder` rather than reading `homeTeam`
-  // off a shape that doesn't carry one.
-  const isHome: boolean | undefined = match.isPlaceholder
+  // a reservation or a hidden-result tournament fixture (neither carries a
+  // `homeTeam` to compare — see `ScheduleReservation`/`ScheduleReducedMatch`),
+  // so this narrows on `isReducedRow` rather than reading `homeTeam` off a
+  // shape that doesn't carry one.
+  const isHome: boolean | undefined = isReducedRow
     ? undefined
     : (match.isHome ??
       (kcvvTeamId !== undefined
@@ -258,29 +269,13 @@ export function TeamAgendaRow({
 
   // Hoisted ahead of their other uses further down (`showUpcomingLabel`,
   // the normal row's `scoreOrTime`) — `isPlayed` and `hasScoreline` are
-  // needed standalone here, not just as inputs to `isReducedRow` below.
+  // needed standalone here, not just as inputs to `isReducedRow` above.
   const isPlayed = isPlayedMatch(match.status);
   const hasScoreline =
-    !match.isPlaceholder &&
+    !isReducedRow &&
     isPlayed &&
     typeof match.homeScore === "number" &&
     typeof match.awayScore === "number";
-
-  // The lawful tournament detector (#2696) — `competitionType === "tournament"`,
-  // never a string match on the Dutch `competition` label, mirroring the
-  // `competitionType === "league"` gate elsewhere in the codebase. Read
-  // directly for `data-tournament` below; `isReducedRow` goes through the
-  // shared `isReducedMatchRow` instead of re-deriving the same question,
-  // which is also what `<CalendarMonth>`'s `captionLabel` gate calls — the
-  // two answers had already drifted apart once when each kept its own copy.
-  const isTournamentFixture =
-    !match.isPlaceholder && match.competitionType === "tournament";
-  // `match.isPlaceholder ||` first: TypeScript's control-flow narrowing of
-  // `match` in the non-reduced branch further down needs a literal test on
-  // the discriminant it can alias, which an opaque function call alone
-  // can't provide — `isReducedMatchRow(match)` still decides the tournament
-  // half, so the rule itself has exactly one definition.
-  const isReducedRow = match.isPlaceholder || isReducedMatchRow(match);
 
   // White on jersey-deep, inherited from the pre-#2395 green when cream missed
   // AA there. Both clear it now (white 5.29:1, cream 4.69:1) — see DESIGN.md
@@ -338,10 +333,11 @@ export function TeamAgendaRow({
     </div>
   ) : null;
 
-  // Never settled: a reservation carries no score, so there is nothing for
-  // `computeOutcome` to read (`ScheduleReservation` has no `homeScore`/
+  // Never settled: a reservation or hidden-result tournament fixture carries
+  // no score, so there is nothing for `computeOutcome` to read
+  // (`ScheduleReservation`/`ScheduleReducedMatch` have no `homeScore`/
   // `awayScore`/`isHome` to pass it).
-  const outcome = match.isPlaceholder ? null : computeOutcome(match, isHome);
+  const outcome = isReducedRow ? null : computeOutcome(match, isHome);
 
   // Show the upcoming label ("Gepland") only for not-yet-played matches when one
   // was supplied. Gating on status (not merely the absence of a scoreline) keeps
@@ -354,7 +350,7 @@ export function TeamAgendaRow({
   const kickoff = formatKickoff(match);
   const timeOrLabel = showUpcomingLabel ? upcomingLabel : kickoff;
   const scoreOrTime =
-    !match.isPlaceholder && hasScoreline
+    match.kind === "match" && hasScoreline
       ? `${match.homeScore} – ${match.awayScore}`
       : timeOrLabel;
 
@@ -542,37 +538,22 @@ export function TeamAgendaRow({
     cn("font-mono text-[9px] tracking-wider uppercase", monoClass, extra);
 
   if (isReducedRow) {
-    // TypeScript needs `match.isPlaceholder` to narrow `ScheduleReservation`'s
-    // `team` from `ScheduleMatch`'s `homeTeam`/`awayTeam` — asked once here,
-    // producing every value the two states disagree on, rather than re-asked
-    // at each site below (an earlier version asked it four times, in two
-    // spellings, and the two answers had already drifted apart by review).
-    const {
-      rowTeam,
-      otherClub,
-      leadWord: reducedLeadWord,
-      labelKind: reducedKind,
-    } = match.isPlaceholder
-      ? {
-          rowTeam: match.team,
-          otherClub: undefined,
-          leadWord: mobileKindWord,
-          labelKind: kind,
-        }
-      : {
-          // The non-KCVV side, derived from the club id — never home/away,
-          // since which side PSD lists as home is not the question a
-          // tournament fixture can answer (#2696).
-          rowTeam: otherClubSide(match),
-          otherClub: otherClubSide(match),
-          // No slot word, ever, unlike the placeholder case: the featured
-          // green ground already says the row is next, and at narrow
-          // widths the word pushed the club name — the one part this row
-          // exists to carry — into the ellipsis (#2693 decision, round 3).
-          leadWord: null,
-          // Same "no slot word, ever" rule reaches the accessible name.
-          labelKind: undefined,
-        };
+    // `match.team` is already the row's crest — precomputed by the adapter
+    // (`transformMatchToSchedule`) for both members: the club's own for a
+    // reservation, the other club (via club-id equality, never home/away —
+    // #2696) for a tournament fixture with a hidden result. TypeScript still
+    // needs `match.kind` to narrow which of the two this is, for the
+    // lead-word/label-kind values the two states disagree on.
+    const isReservation = match.kind === "reservation";
+    const otherClub = isReservation ? undefined : match.team;
+    // No slot word, ever, on the reduced (non-reservation) side, unlike the
+    // placeholder case: the featured green ground already says the row is
+    // next, and at narrow widths the word pushed the club name — the one
+    // part this row exists to carry — into the ellipsis (#2693 decision,
+    // round 3). Same rule reaches the accessible name via `reducedKind`.
+    const reducedLeadWord = isReservation ? mobileKindWord : null;
+    const reducedKind = isReservation ? kind : undefined;
+    const rowTeam = match.team;
 
     // The competition label is the default subject ("Tornooi" /
     // "Vriendschappelijk"), rendered in the row's existing mono-uppercase
@@ -610,12 +591,15 @@ export function TeamAgendaRow({
       "text-[16px] sm:text-[18px]",
     );
 
+    // Inside this branch `match.kind` is only ever "reservation" or
+    // "reduced" (`isReducedRow`), so "the other one" is exactly
+    // `kind === "reduced"` — no separate tournament detector needed.
     return (
       <article
         data-testid="team-agenda-row"
         data-featured={featured}
         data-placeholder={match.isPlaceholder ? "true" : undefined}
-        data-tournament={isTournamentFixture ? "true" : undefined}
+        data-tournament={match.kind === "reduced" ? "true" : undefined}
         aria-label={placeholderLabel}
         className={cardBase}
       >

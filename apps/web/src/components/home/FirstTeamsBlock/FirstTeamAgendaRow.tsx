@@ -45,16 +45,18 @@ export function FirstTeamAgendaRow({
       // row would label "Volgende" right beside the actual fixture.
       kind={kind}
       // `match_card_click` is documented as "a homepage card clicked through
-      // to its match detail" — a placeholder reservation never clicks
-      // through (the row has no `<Link>`), so constructing this closure for
-      // one would inflate the event with clicks that reached no match page,
-      // invisibly: the event name is unchanged, so nothing downstream would
-      // ever flag it. `<TeamAgendaRow>` also never wires the click handler
-      // for a placeholder row, but the skip belongs here too — the caller is
-      // the one that knows this row is a reservation before it hands
-      // anything over.
+      // to its match detail" — a reservation or a reduced tournament fixture
+      // never clicks through (the row has no `<Link>`), so constructing this
+      // closure for one would inflate the event with clicks that reached no
+      // match page, invisibly: the event name is unchanged, so nothing
+      // downstream would ever flag it. `<TeamAgendaRow>` also never wires the
+      // click handler for a reduced row, but the skip belongs here too — the
+      // caller is the one that knows this row won't link before it hands
+      // anything over. Tests `match.kind`, not `match.isPlaceholder` (#2802
+      // review) — a reduced tournament fixture carries `isPlaceholder: false`
+      // too, and the guard exists for both.
       onNavigate={
-        match.isPlaceholder
+        match.kind !== "match"
           ? undefined
           : () =>
               trackFirstTeamsCardClick({ teamSlug, matchId: match.id, kind })

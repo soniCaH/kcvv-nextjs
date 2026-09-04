@@ -6,6 +6,7 @@ import {
   mockUpcomingThree,
   mockUpcomingSingleTeam,
   mockUpcomingWithReservation,
+  mockUpcomingWithTournament,
 } from "./UpcomingMatches.mocks";
 
 const meta = {
@@ -110,6 +111,25 @@ export const WithReservation: Story = {
       description: {
         story:
           "A pitch-reservation placeholder in the mix — the reduced row (#2688), not an ordinary linked fixture between the club and itself.",
+      },
+    },
+  },
+};
+
+/**
+ * A tournament fixture with no result yet (#2696/#2802) — a real named
+ * opponent, not a self-match. The gap this ticket closes: before it,
+ * `<UpcomingMatchesClient>` never called `isReducedMatchRow`, so this row
+ * rendered as an ordinary linked scoreboard here even though every other
+ * reservation-aware renderer already reduced it.
+ */
+export const WithTournament: Story = {
+  args: { matches: mockUpcomingWithTournament },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A tournament fixture with a hidden result in the mix — the reduced row names the other club, never KCVV's own crest twice (#2696/#2802).",
       },
     },
   },

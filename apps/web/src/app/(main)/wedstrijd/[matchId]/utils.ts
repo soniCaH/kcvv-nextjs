@@ -6,19 +6,26 @@ import type {
   MatchDetail,
   MatchLineupPlayer,
 } from "@/lib/effect/schemas/match.schema";
-import type { MatchHeroTeam } from "@/components/match/MatchHero";
+import type { MatchHeroRow, MatchHeroTeam } from "@/components/match/MatchHero";
 import type { LineupPlayer } from "@/components/match/MatchLineup";
 import { toMatchDisplayZone } from "@/lib/utils/dates";
-import { reservationTitle } from "@/lib/utils/match-display";
+import {
+  matchRowKind,
+  otherClubSide,
+  reservationTitle,
+} from "@/lib/utils/match-display";
+import { assertNever } from "@/lib/utils/assert-never";
+import { extractMatchTime } from "@/lib/utils/match-time";
 
 /**
  * Convert a match's home team into props suitable for the MatchHero component.
  *
  * @param match - The match detail containing the home team data
- * @returns The home team's `MatchHeroTeam` with `name`, `logo`, and `score`
+ * @returns The home team's `MatchHeroTeam` with `id`, `name`, `logo`, and `score`
  */
 export function transformHomeTeam(match: MatchDetail): MatchHeroTeam {
   return {
+    id: match.home_team.id,
     name: match.home_team.name,
     logo: match.home_team.logo,
     score: match.home_team.score,
@@ -28,14 +35,63 @@ export function transformHomeTeam(match: MatchDetail): MatchHeroTeam {
 /**
  * Converts the match's away team data into props for the MatchHero component.
  *
- * @returns An object containing the away team's name, logo, and score.
+ * @returns An object containing the away team's id, name, logo, and score.
  */
 export function transformAwayTeam(match: MatchDetail): MatchHeroTeam {
   return {
+    id: match.away_team.id,
     name: match.away_team.name,
     logo: match.away_team.logo,
     score: match.away_team.score,
   };
+}
+
+/**
+ * The fourth adapter (#2699 decision 1 named `CalendarMatch`, `MatchHeroProps`
+ * and `MatchDetail` as the three types becoming a union at the web
+ * boundary — `CalendarMatch` got its adapter with the other two in the same
+ * pass this one did not, until #2802 review). Branches on `matchRowKind()`
+ * into the three `MatchHeroRow` members, exactly like the other three
+ * adapters — `<MatchHero>` itself narrows and renders, it never asks
+ * `isReducedMatchRow`/`otherClubSide` again.
+ */
+export function matchDetailToHeroRow(match: MatchDetail): MatchHeroRow {
+  const common = {
+    date: match.date,
+    time: extractMatchTime(match),
+    venue: match.venue,
+    status: match.status,
+    competition: match.competition,
+    kcvvTeamLabel: match.kcvv_team_label,
+  };
+  const kind = matchRowKind(match);
+
+  switch (kind) {
+    case "reservation":
+      return {
+        ...common,
+        isPlaceholder: true,
+        kind,
+        team: transformHomeTeam(match),
+      };
+    case "reduced":
+      return {
+        ...common,
+        isPlaceholder: false,
+        kind,
+        team: otherClubSide(transformHomeTeam(match), transformAwayTeam(match)),
+      };
+    case "match":
+      return {
+        ...common,
+        isPlaceholder: false,
+        kind,
+        homeTeam: transformHomeTeam(match),
+        awayTeam: transformAwayTeam(match),
+      };
+    default:
+      return assertNever(kind);
+  }
 }
 
 /**
@@ -108,15 +164,24 @@ export { extractMatchTime } from "@/lib/utils/match-time";
  * (`lib/utils/ical.ts`, the ICS feed) calls, so the wording can't drift
  * between the two surfaces (#2688/#2698).
  *
+ * Widened to a tournament fixture with no result yet (#2696/#2802 review):
+ * it is no more a confirmed "X vs Y" than a reservation is, so it gets the
+ * same subject-plus-club title ("Tornooi · FC Zemst Sportief — KCVV
+ * Elewijt") instead of asserting a head-to-head PSD hasn't confirmed. Once
+ * a scoreline lands, `matchRowKind` flips to `"match"` and the ordinary
+ * score title below applies — the same reduced-to-full transition every
+ * other renderer of this predicate makes. `reservationTitle()` now owns
+ * both reduced branches itself, so this only has to ask which one it is.
+ *
  * @returns `HomeTeam X - Y AwayTeam` if the match status is finished and both scores are present, otherwise `HomeTeam vs AwayTeam`
  */
 export function formatMatchTitle(match: MatchDetail): string {
-  const homeTeam = match.home_team.name;
-  const awayTeam = match.away_team.name;
-
-  if (match.is_placeholder) {
+  if (matchRowKind(match) !== "match") {
     return reservationTitle(match);
   }
+
+  const homeTeam = match.home_team.name;
+  const awayTeam = match.away_team.name;
 
   // Only show score if match is finished AND both scores are defined
   if (

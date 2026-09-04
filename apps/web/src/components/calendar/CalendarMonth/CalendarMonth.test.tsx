@@ -10,9 +10,13 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DateTime } from "luxon";
 import { CalendarMonth } from "./CalendarMonth";
-import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
+import type {
+  CalendarMatchFixture,
+  CalendarEvent,
+} from "@/app/(main)/kalender/utils";
 import { getScoreDisplay } from "@/lib/utils/match-display";
 import { trackEvent } from "@/lib/analytics/track-event";
+import { reservationMatch, tournamentMatch } from "../calendar-mocks";
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
@@ -44,16 +48,17 @@ vi.mock("next/link", () => ({
 // ── Fixtures ───────────────────────────────────────────────────────────────
 
 function makeMatch(
-  overrides: Partial<CalendarMatch> & { id: number },
-): CalendarMatch {
+  overrides: Partial<CalendarMatchFixture> & { id: number },
+): CalendarMatchFixture {
   const merged = {
     date: "2026-03-15T15:00:00",
     homeTeam: { id: 1, name: "KCVV Elewijt A", logo: "/kcvv.png" },
     awayTeam: { id: 2, name: "Racing Mechelen" },
-    status: "scheduled" as CalendarMatch["status"],
+    status: "scheduled" as CalendarMatchFixture["status"],
     team: "A-ploeg",
     isHome: true,
-    isPlaceholder: false,
+    isPlaceholder: false as const,
+    kind: "match" as const,
     ...overrides,
   };
   return {
@@ -133,17 +138,18 @@ describe("CalendarMonth", () => {
       expect(pip.className).toContain("border-card-red");
     });
 
-    it("renders a dashed ring pip for a pitch-reservation placeholder, not a home pip, even when isHome is true (#2606, #2688)", () => {
+    it("renders a dashed ring pip for a pitch-reservation placeholder, not a home pip (#2606, #2688, #2802)", () => {
+      // `CalendarReservation` carries no `isHome` at all (#2802) — the old
+      // "even when isHome is true" bug this test named is now a compile
+      // error, not a runtime one.
       render(
         <CalendarMonth
           {...baseProps}
           matches={[
-            makeMatch({
+            reservationMatch({
               id: 3,
-              isHome: true,
-              isPlaceholder: true,
-              homeTeam: { id: 1235, name: "KCVV Elewijt" },
-              awayTeam: { id: 1235, name: "KCVV Elewijt" },
+              date: "2026-03-15T15:00:00",
+              club: { id: 1235, name: "KCVV Elewijt" },
             }),
           ]}
           events={[]}
@@ -204,12 +210,12 @@ describe("CalendarMonth", () => {
         <CalendarMonth
           {...baseProps}
           matches={[
-            makeMatch({
+            reservationMatch({
               id: 90,
-              isPlaceholder: true,
-              homeTeam: { id: 1235, name: "KCVV Elewijt" },
-              awayTeam: { id: 1235, name: "KCVV Elewijt" },
+              date: "2026-03-15T15:00:00",
+              club: { id: 1235, name: "KCVV Elewijt" },
               competition: "Tornooi",
+              team: "A-ploeg",
             }),
           ]}
           events={[]}
@@ -241,12 +247,11 @@ describe("CalendarMonth", () => {
         <CalendarMonth
           {...baseProps}
           matches={[
-            makeMatch({
+            tournamentMatch({
               id: 91,
-              homeTeam: { id: 1235, name: "KCVV Elewijt" },
-              awayTeam: { id: 1391, name: "FC Zemst Sportief" },
+              date: "2026-03-15T15:00:00",
+              club: { id: 1391, name: "FC Zemst Sportief" },
               competition: "Tornooi",
-              competitionType: "tournament",
               team: "U9",
             }),
           ]}

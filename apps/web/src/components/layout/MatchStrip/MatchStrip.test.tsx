@@ -10,6 +10,7 @@ import { MatchStrip } from "./MatchStrip";
 import { clubToday } from "@/lib/utils/dates";
 import type {
   ScheduleMatch,
+  ScheduleReducedMatch,
   ScheduleReservation,
 } from "@/components/match/types";
 
@@ -17,6 +18,7 @@ const mocked = vi.mocked(getFirstTeamStripData);
 
 const fixture: ScheduleMatch = {
   isPlaceholder: false,
+  kind: "match",
   id: 1,
   date: new Date("2026-05-10T19:30:00Z"),
   time: "19:30",
@@ -82,6 +84,7 @@ describe("MatchStrip (server component)", () => {
     it("is false when the next fixture is a pitch-reservation placeholder dated today", async () => {
       const todaysReservation: ScheduleReservation = {
         isPlaceholder: true,
+        kind: "reservation",
         id: 99,
         date: new Date(`${clubToday()}T09:30:00Z`),
         team: { id: 1235, name: "KCVV Elewijt" },
@@ -91,6 +94,27 @@ describe("MatchStrip (server component)", () => {
       mocked.mockResolvedValueOnce({
         result: null,
         fixture: todaysReservation,
+      });
+      expect(await matchDayProp()).toBe(false);
+    });
+
+    // #2802 review — `!fixture.isPlaceholder` alone let this one through:
+    // a reduced tournament fixture carries `isPlaceholder: false` too, but
+    // is no more a confirmed "Match" than a reservation is.
+    it("is false when the next fixture is a reduced tournament fixture dated today", async () => {
+      const todaysTournament: ScheduleReducedMatch = {
+        isPlaceholder: false,
+        kind: "reduced",
+        id: 91,
+        date: new Date(`${clubToday()}T09:30:00Z`),
+        team: { id: 1391, name: "FC Zemst Sportief" },
+        status: "scheduled",
+        competition: "Tornooi",
+        competitionType: "tournament",
+      };
+      mocked.mockResolvedValueOnce({
+        result: null,
+        fixture: todaysTournament,
       });
       expect(await matchDayProp()).toBe(false);
     });

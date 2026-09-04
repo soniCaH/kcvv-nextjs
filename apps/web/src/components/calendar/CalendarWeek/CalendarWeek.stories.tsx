@@ -40,6 +40,7 @@ const weekMatches: CalendarMatch[] = [
     team: "A-ploeg",
     isHome: true,
     isPlaceholder: false,
+    kind: "match",
   },
   {
     id: 2,
@@ -53,6 +54,7 @@ const weekMatches: CalendarMatch[] = [
     team: "U15 A",
     isHome: true,
     isPlaceholder: false,
+    kind: "match",
   },
 ];
 

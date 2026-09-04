@@ -21,7 +21,6 @@ import {
   EMPTY_DAY_FEED,
 } from "@/app/(main)/kalender/utils";
 import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
-import { isReducedMatchRow } from "@/lib/utils/match-display";
 
 export interface CalendarMonthProps {
   matches: CalendarMatch[];
@@ -158,8 +157,13 @@ function SelectedDayDetail({
               // Crest+caption tree has no equivalent slot, so it's supplied
               // the same way `/tegenstander` supplies one (#2688). Gating on
               // `isPlaceholder` alone left a tournament row's squad label
-              // off — widened rather than adding a second prop.
-              captionLabel={isReducedMatchRow(match) ? match.team : undefined}
+              // off — widened rather than adding a second prop. Reads
+              // `match.kind` directly (#2802 review), not a re-derivation
+              // via `isReducedMatchRow`: the adapter already decided this
+              // once, and `CalendarReducedMatch.competitionType` being
+              // optional means re-asking the question here could disagree
+              // with the `kind` the row itself renders under.
+              captionLabel={match.kind !== "match" ? match.team : undefined}
             />
           ))}
           {dayEvents.map((event) => {

@@ -50,18 +50,35 @@ A participant in a match — either the home or away side. Could be a KCVV team 
 
 A fixture where both sides are the same club (`home_team.id === away_team.id`). The association's device for "this team has something on the calendar that day, the details aren't settled yet" — used for the club's own youth tournaments and for external tournaments/friendlies alike (#2606). Not a bug in the feed; not derivable from `competition`/`competitionType` (a genuine tournament fixture with a real opponent carries the same values).
 
-| Code                          | Notes                                                                                                                                                                  |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Match.is_placeholder`        | Contract field (optional boolean), computed by the BFF from club-id equality                                                                                           |
-| `ScheduleReservation`         | Web view-model — a `ScheduleRow` union member distinct from `ScheduleMatch`, carrying one `team` (never `homeTeam`/`awayTeam`) and no score (#2688)                    |
-| `UpcomingReservation`         | Web view-model — the `UpcomingRow` union member distinct from `UpcomingMatch`, used by the homepage's other-teams agenda (#2688)                                       |
-| `CalendarMatch.isPlaceholder` | Required boolean on `/kalender`'s route VM — the two-hop chain (`transformMatchToCalendar`) that carries `Match.is_placeholder` through to every calendar view (#2688) |
-| `reservationView()`           | `apps/web/src/lib/utils/match-display.ts` — the shared subject/status derivation every renderer of a reservation uses                                                  |
-| `reservationRowLabel()`       | `apps/web/src/lib/utils/match-display.ts` — the shared accessible-name sentence every reservation row's `aria-label` builds from (#2688)                               |
+| Code                    | Notes                                                                                                                                                    |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Match.is_placeholder`  | Contract field (optional boolean), computed by the BFF from club-id equality                                                                             |
+| `ScheduleReservation`   | Web view-model — the `kind: "reservation"` member of `ScheduleRow`, carrying one `team` (never `homeTeam`/`awayTeam`) and no score (#2688)               |
+| `UpcomingReservation`   | Web view-model — the `UpcomingRow` reservation member, used by the homepage's other-teams agenda (#2688)                                                 |
+| `CalendarReservation`   | Web view-model — the `CalendarMatch` reservation member on `/kalender`, carrying one `club` (#2802). Replaced the flat `isPlaceholder: boolean` route VM |
+| `reservationView()`     | `apps/web/src/lib/utils/match-display.ts` — the shared subject/status derivation every renderer of a reservation uses                                    |
+| `reservationRowLabel()` | `apps/web/src/lib/utils/match-display.ts` — the shared accessible-name sentence every reservation row's `aria-label` builds from (#2688)                 |
 
 **Render rule:** never a second crest, a score slot, a home/away side, a reason line for the missing opponent, or a click-through link — the row/page states only what it has (date, subject, real time). `<TeamAgendaRow>` (#2606) is the prior art every other surface (`<MatchStripView>`, `<UpcomingMatchesClient>`, `/kalender`'s three view modes, `/wedstrijd/[matchId]`) matches rather than re-deriving (#2688).
 
-**Enforcement is per-type, not per-domain-concept:** `ScheduleMatch`/`ScheduleReservation` and `UpcomingMatch`/`UpcomingReservation` make `isPlaceholder` a required, literal discriminant — a construction site that omits it does not type-check. `CalendarMatch` and `MatchHeroProps` only carry a required `boolean`, which stops a _dropped_ flag but not a _misread_ one; `MatchDetail` and several unreached surfaces (`MatchOption`, `ScheurkalenderMatch`, `HeroMatchData`, article `SportsEvent` JSON-LD) have no `isPlaceholder` typing at all. "Never a click-through" is enforced only by convention/comments across the reservation renderers, not by the type system. Tracked in [#2699].
+**Enforcement (as of [#2802]):** all three row families — `ScheduleRow`, `UpcomingRow` and `/kalender`'s `CalendarMatch` — are three-member discriminated unions over a literal `kind` (`"match"` / `"reservation"` / `"reduced"`), built once by the three adapters (`components/match/transform.ts`, `app/(main)/kalender/utils.ts`, `lib/mappers/match.mapper.ts`). The reservation and reduced members do not carry `homeTeam`/`awayTeam`/scores at all, so a renderer reaching for the scoreboard without narrowing `kind` fails to compile rather than printing "KCVV Elewijt — KCVV Elewijt". The wire contract itself (`packages/api-contract`, `apps/api/src/psd/transforms.ts`) stays untouched by this — `transforms.ts` documents the byte-size half of why (`|| undefined` sparing every KV-cached payload), but the sharper reason this union is strictly a web-side boundary is deploy safety: a `Match`/`MatchDetail` shape change decoded against payloads a still-warm KV cache wrote under the old shape risks a wave of decode failures landing at once, each one re-fetching PSD and stampeding it with 429s.
+
+`isPlaceholder` stays on every member and still answers its own question (is this a self-match), but it no longer separates every case: a reduced row carries `false` too, so `kind` is the discriminant for the three-way split.
+
+Two surfaces stay deliberately outside the union, both `noindex` and unlinked, both reading the raw contract `Match`: `/share`'s `MatchOption` and `/scheurkalender`'s `ScheurkalenderMatch` ([#2699] decision 2 — a KCVV-vs-KCVV row there is ugly, not wrong). `MatchHeroProps` keeps a plain `isPlaceholder: boolean` plus `competitionType`, and derives the reduced register through the shared predicate; it is fed field-by-field from `MatchDetail`, not by an adapter. Both of `/nieuws/[slug]`'s public `MatchDetail` surfaces are covered the same way: `toHeroMatchData` (`nieuws/[slug]/utils.ts`) returns `null` for either reduced state, and the article `SportsEvent` JSON-LD (`nieuws/[slug]/page.tsx`) is gated on the same `isReducedMatchRow` check `/wedstrijd/[matchId]` applies to its own `SportsEvent`. "Never a click-through" is locked by the table-driven test in `app/__tests__/reservation-never-links.test.tsx` ([#2801]).
+
+### Reduced Row
+
+The **register** a row/page renders in when it has no confirmed two-sided fixture to show: one crest, a mono subject line, the real time, no score slot, no home/away side, no link. Distinct from the two **states** that render in it — a [Pitch-Reservation Placeholder](#pitch-reservation-placeholder) (no opponent exists) and a not-yet-played tournament fixture (an opponent exists but PSD does not say whether the named club hosts the tournament or merely shares its bracket, #2696).
+
+| Code                   | Notes                                                                                                                                              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isReducedMatchRow()`  | `apps/web/src/lib/utils/match-display.ts` — the one predicate deciding the register. Gated on a scoreline existing, not on `isPlayedMatch` (#2696) |
+| `ScheduleReducedMatch` | The `kind: "reduced"` member of `ScheduleRow` — one `team` (the other club, by club id), no `homeTeam`/`awayTeam`/scores (#2802)                   |
+| `UpcomingReducedMatch` | The same member on the homepage other-teams agenda ([#2802])                                                                                       |
+| `CalendarReducedMatch` | The same member on `/kalender`, carrying one `club` ([#2802])                                                                                      |
+
+**A reduced row is not a permanent classification.** The three adapters re-ask `isReducedMatchRow()` on every call, so the moment PSD publishes a scoreline the same fixture id transforms into the `"match"` member and the row reverts to the full scoreboard — the club really was the opponent after all. That transition is asserted in all three adapters' tests ([#2802]).
 
 ### Lineup
 
@@ -558,3 +575,5 @@ Each content type has its own visibility logic. There is no universal "published
 [#2699]: https://github.com/soniCaH/www.kcvvelewijt.be/issues/2699
 [#2782]: https://github.com/soniCaH/www.kcvvelewijt.be/issues/2782
 [#2795]: https://github.com/soniCaH/www.kcvvelewijt.be/issues/2795
+[#2801]: https://github.com/soniCaH/www.kcvvelewijt.be/issues/2801
+[#2802]: https://github.com/soniCaH/www.kcvvelewijt.be/issues/2802

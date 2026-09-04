@@ -23,19 +23,34 @@ export interface ScheduleTeam {
   teamLabel?: string;
 }
 
-export interface ScheduleMatch {
-  /**
-   * Discriminant against `ScheduleReservation` below. Required — an optional
-   * `isPlaceholder?: false` would let a construction site that simply omits
-   * the field type-check as `ScheduleMatch` with no complaint, defeating the
-   * entire point of the union. Required and literal `false` means every
-   * site that builds this object must say which kind of row it's building.
-   */
-  isPlaceholder: false;
+/** Fields every `ScheduleRow` member carries regardless of `kind` (#2802 review). */
+interface ScheduleRowCommon {
   /** Match ID */
   id: number;
   /** Match date */
   date: Date;
+}
+
+export interface ScheduleMatch extends ScheduleRowCommon {
+  /**
+   * Discriminant against `ScheduleReservation`/`ScheduleReducedMatch` below.
+   * Required — an optional `isPlaceholder?: false` would let a construction
+   * site that simply omits the field type-check as `ScheduleMatch` with no
+   * complaint, defeating the entire point of the union. Required and literal
+   * `false` means every site that builds this object must say which kind of
+   * row it's building.
+   *
+   * Not the full discriminant on its own once `ScheduleReducedMatch` exists —
+   * both it and `ScheduleMatch` carry `isPlaceholder: false` (a tournament
+   * fixture with a hidden result is not a reservation), so narrow on `kind`
+   * to tell them apart. Kept, rather than dropped in favour of `kind` alone,
+   * so every existing `match.isPlaceholder` narrowing site keeps working
+   * unchanged for the one distinction it always answered correctly: is this
+   * a self-match with no second side at all.
+   */
+  isPlaceholder: false;
+  /** Discriminant against `ScheduleReservation`/`ScheduleReducedMatch`. */
+  kind: "match";
   /** Match time (HH:MM) */
   time?: string;
   /** Home team */
@@ -81,12 +96,10 @@ export interface ScheduleMatch {
  * renderer of this shape should use — `<TeamAgendaRow>` (#2606) is the prior
  * art for the reduced treatment itself.
  */
-export interface ScheduleReservation {
+export interface ScheduleReservation extends ScheduleRowCommon {
   isPlaceholder: true;
-  /** Match ID */
-  id: number;
-  /** Match date */
-  date: Date;
+  /** Discriminant against `ScheduleMatch`/`ScheduleReducedMatch`. */
+  kind: "reservation";
   /** Match time (HH:MM) — the real kickoff/meeting time, never "hele dag". */
   time?: string;
   /**
@@ -102,22 +115,56 @@ export interface ScheduleReservation {
 }
 
 /**
- * Either a genuine fixture or a pitch-reservation placeholder. The one type
- * every match-row renderer and every `Match` → view-model adapter should
- * accept/return from here on — see `ScheduleReservation`'s doc for why the
- * split is a compile-time guardrail, not just documentation.
+ * A tournament fixture (#2696) with no result yet — `competitionType ===
+ * "tournament"` and no scoreline. Unlike `ScheduleReservation` the two sides
+ * really are different clubs, but PSD does not say whether the named club
+ * hosts the tournament or merely shares its bracket, so the row states only
+ * that the club is *where* the tournament is (`team`, resolved via club-id
+ * equality — never home/away), the same reduced treatment a reservation
+ * gets (#2693 decision: one shared layout, not a second one).
+ *
+ * `awayTeam`/`homeScore`/`awayScore` do not exist here for the same compile-
+ * time reason `ScheduleReservation` drops them — a renderer reaching for the
+ * scoreboard fields without narrowing `kind` first fails to compile. This is
+ * not data loss: `isReducedMatchRow()` is re-evaluated from the raw `Match`
+ * on every transform call, so the moment PSD publishes a scoreline the same
+ * fixture id transforms to a `ScheduleMatch` instead — the "reduced → full
+ * scoreboard" transition is the adapter picking a different union member on
+ * its next call, not a mutation of this one.
  */
-export type ScheduleRow = ScheduleMatch | ScheduleReservation;
-
-export interface UpcomingMatch {
-  /**
-   * Discriminant against `UpcomingReservation` below — required, mirroring
-   * `ScheduleMatch`/`ScheduleReservation` (#2688). The homepage's other-teams
-   * agenda (`<UpcomingMatchesClient>`) is the surface most likely to carry a
-   * pitch reservation: it renders exactly the non-senior/youth matches, and
-   * youth tournaments are where reservations come from.
-   */
+export interface ScheduleReducedMatch extends ScheduleRowCommon {
   isPlaceholder: false;
+  /** Discriminant against `ScheduleMatch`/`ScheduleReservation`. */
+  kind: "reduced";
+  /** Match time (HH:MM). */
+  time?: string;
+  /** The other club's crest/name — see the class doc for why it's never "the opponent". */
+  team: ScheduleTeam;
+  /** Match status — a reduced fixture can be cancelled/postponed too. */
+  status: MatchStatus;
+  /** Competition name — composes the row's subject together with `team.name` (#2696). */
+  competition?: string;
+  /** Structured classification — always `"tournament"` in practice, kept for symmetry with `ScheduleMatch`. */
+  competitionType?: CompetitionType;
+}
+
+/**
+ * A genuine fixture, a pitch-reservation placeholder, or a tournament
+ * fixture with a hidden result. The one type every match-row renderer and
+ * every `Match` → view-model adapter should accept/return from here on — see
+ * `ScheduleReservation`/`ScheduleReducedMatch`'s docs for why the split is a
+ * compile-time guardrail, not just documentation.
+ */
+export type ScheduleRow =
+  ScheduleMatch | ScheduleReservation | ScheduleReducedMatch;
+
+/**
+ * Fields every `UpcomingRow` member carries regardless of `kind` (#2802
+ * review) — mirrors `CalendarMatchCommon`
+ * (`apps/web/src/app/(main)/kalender/utils.ts`), this surface's sibling
+ * adapter output.
+ */
+interface UpcomingRowCommon {
   /** Match ID */
   id: number;
   /** Match date */
@@ -126,6 +173,44 @@ export interface UpcomingMatch {
   time?: string;
   /** Venue/location (optional) */
   venue?: string;
+  /** Match status */
+  status: MatchStatus;
+  /** Competition name (optional) */
+  competition?: string;
+  /**
+   * Front-end squad short code (e.g. "A-Ploeg", "U21") used for internal
+   * identification of which KCVV squad is playing. Prefer `kcvvTeamLabel`
+   * for display when available.
+   */
+  squadLabel?: string;
+  /**
+   * Canonical human-readable label for the KCVV team (e.g. "A-Ploeg", "U21")
+   * provided by the BFF via `kcvv_team_label`. Preferred for display over
+   * `squadLabel`.
+   */
+  kcvvTeamLabel?: string;
+  /**
+   * Optional display-time team label set by the calling page. When present,
+   * overrides `kcvvTeamLabel` for rendering.
+   */
+  teamLabel?: string;
+}
+
+export interface UpcomingMatch extends UpcomingRowCommon {
+  /**
+   * Discriminant against `UpcomingReservation` below — required, mirroring
+   * `ScheduleMatch`/`ScheduleReservation` (#2688). The homepage's other-teams
+   * agenda (`<UpcomingMatchesClient>`) is the surface most likely to carry a
+   * pitch reservation: it renders exactly the non-senior/youth matches, and
+   * youth tournaments are where reservations come from.
+   */
+  isPlaceholder: false;
+  /**
+   * Discriminant against `UpcomingReservation`/`UpcomingReducedMatch` — see
+   * `ScheduleMatch.kind` for why `isPlaceholder` alone can no longer tell
+   * `UpcomingMatch` and `UpcomingReducedMatch` apart.
+   */
+  kind: "match";
   /** Home team */
   homeTeam: {
     id: number;
@@ -140,61 +225,58 @@ export interface UpcomingMatch {
     logo?: string;
     score?: number;
   };
-  /** Match status */
-  status: MatchStatus;
-  /**
-   * Front-end squad short code (e.g. "A-Ploeg", "U21") used for internal
-   * identification of which KCVV squad is playing. Prefer `kcvvTeamLabel`
-   * for display when available.
-   */
-  squadLabel?: string;
-  /** Competition name (optional) */
-  competition?: string;
   /** PSD team ID identifying which KCVV team plays (A-team, U21, etc.) */
   kcvvTeamId?: number;
-  /**
-   * Canonical human-readable label for the KCVV team (e.g. "A-Ploeg", "U21")
-   * provided by the BFF via `kcvv_team_label`. Preferred for display over
-   * `squadLabel`.
-   */
-  kcvvTeamLabel?: string;
-  /**
-   * Optional display-time team label set by the calling page. When present,
-   * overrides `kcvvTeamLabel` for rendering.
-   */
-  teamLabel?: string;
 }
 
 /**
  * A pitch-reservation placeholder (#2606) on the homepage's other-teams
- * agenda (`<UpcomingMatchesClient>`). `ScheduleReservation` plus the deltas
- * this surface actually needs: `venue` (this route's own field) and the
- * squad-identifying fields (`squadLabel`/`kcvvTeamLabel`/`teamLabel`) —
- * kept because this surface's filter chips bucket every row by squad and a
- * reservation still belongs to exactly one squad, so it must file under the
- * same chip a real fixture for that squad would. No `kcvvTeamId`: nothing
- * reads it (`<UpcomingMatchesClient>`'s own `kcvvTeamId` is always the
- * club-id prop, never a field read off a row).
+ * agenda (`<UpcomingMatchesClient>`). `UpcomingRowCommon` plus the one
+ * reserving club — no `kcvvTeamId`: nothing reads it
+ * (`<UpcomingMatchesClient>`'s own `kcvvTeamId` is always the club-id prop,
+ * never a field read off a row).
  */
-export interface UpcomingReservation extends Omit<ScheduleReservation, "team"> {
+export interface UpcomingReservation extends UpcomingRowCommon {
+  isPlaceholder: true;
+  /** Discriminant against `UpcomingMatch`/`UpcomingReducedMatch`. */
+  kind: "reservation";
+  /** The club's own crest/name — a self-match has no second side. */
   team: {
     id: number;
     name: string;
     logo?: string;
   };
-  /** Venue/location (optional) */
-  venue?: string;
-  /** Front-end squad short code (e.g. "U13") — see `UpcomingMatch.squadLabel`. */
-  squadLabel?: string;
-  /** Canonical human-readable squad label — see `UpcomingMatch.kcvvTeamLabel`. */
-  kcvvTeamLabel?: string;
-  /** Optional display-time team label set by the calling page. */
-  teamLabel?: string;
 }
 
 /**
- * Either a genuine upcoming fixture or a pitch-reservation placeholder — the
- * shape `<UpcomingMatchesClient>` and `mapMatchToUpcomingMatch` should
+ * A tournament fixture with a hidden result (#2696) on the homepage's
+ * other-teams agenda — `UpcomingRowCommon` plus the other club, mirroring
+ * `UpcomingReservation`'s shape. `<UpcomingMatchesClient>` had no reduced
+ * treatment at all before this ticket (unlike
+ * `<TeamAgendaRow>`/`<MatchStripView>`/`/kalender`, which all call
+ * `isReducedMatchRow` already) — a not-yet-played tournament fixture for a
+ * non-senior team rendered the full linked scoreboard here, the exact gap
+ * the shared `kind` discriminant closes by construction.
+ */
+export interface UpcomingReducedMatch extends UpcomingRowCommon {
+  isPlaceholder: false;
+  /** Discriminant against `UpcomingMatch`/`UpcomingReservation`. */
+  kind: "reduced";
+  /** The other club's crest/name — resolved via club-id equality, never home/away. */
+  team: {
+    id: number;
+    name: string;
+    logo?: string;
+  };
+  /** Structured classification — always `"tournament"` in practice, kept for symmetry with `UpcomingMatch`. */
+  competitionType?: CompetitionType;
+}
+
+/**
+ * A genuine upcoming fixture, a pitch-reservation placeholder, or a
+ * tournament fixture with a hidden result — the shape
+ * `<UpcomingMatchesClient>` and `mapMatchToUpcomingMatch` should
  * accept/return from here on.
  */
-export type UpcomingRow = UpcomingMatch | UpcomingReservation;
+export type UpcomingRow =
+  UpcomingMatch | UpcomingReservation | UpcomingReducedMatch;

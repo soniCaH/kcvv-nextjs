@@ -27,6 +27,7 @@ function makeMatch(
 ): ScheduleMatch {
   return {
     isPlaceholder: false,
+    kind: "match",
     date: new Date("2026-09-20T15:00:00.000Z"),
     time: "15:00",
     homeTeam: { id: 10, name: "KCVV Elewijt" },

@@ -2,6 +2,7 @@ import type { CompetitionType } from "@kcvv/api-contract";
 import type { MatchStatus } from "@/lib/effect/schemas/match.schema";
 import { matchStatusWording } from "@/components/match/MatchStatusBadge";
 import { KCVV_CLUB_ID } from "@/lib/constants";
+import type { ScheduleRow } from "@/components/match/types";
 
 interface HasScoreMatch {
   home_team: { score?: number };
@@ -143,6 +144,46 @@ export function isReducedMatchRow(match: ReducedRowInput): boolean {
     typeof match.homeScore === "number" &&
     typeof match.awayScore === "number";
   return !hasScoreline;
+}
+
+/** The raw `Match`/`MatchDetail` fields `matchRowKind()` needs — both share
+ *  this shape via `BaseMatchFields` (`packages/api-contract/src/schemas/match.ts`). */
+export interface MatchRowKindSource {
+  is_placeholder?: boolean;
+  competitionType?: CompetitionType;
+  status: MatchStatus;
+  home_team: { score?: number };
+  away_team: { score?: number };
+}
+
+/**
+ * The one place a raw `Match`/`MatchDetail` is asked "reservation, reduced,
+ * or an ordinary match?" (#2802 review) — the three adapters
+ * (`transformMatchToSchedule`, `mapMatchToUpcomingMatch`,
+ * `transformMatchToCalendar`) and every other reader of a raw match
+ * (`toHeroMatchData`, the article `SportsEvent` gate, `/wedstrijd`'s own
+ * gates, `matchSlot`, the ICS feed) had each hand-copied the same six-field
+ * `isReducedMatchRow({...})` literal — nine of eleven copies byte-identical,
+ * four re-`||`ing the placeholder half back on outside the call even though
+ * this function already returns `true` for one. A caller that forgot to wire
+ * `homeScore`/`awayScore` (both optional on `ReducedRowInput`) type-checked
+ * anyway and silently read "reduced" forever for a played tournament fixture
+ * — the mechanism behind five of the fifteen findings the first review round
+ * found. One function, one return type (`ScheduleRow["kind"]`, identical
+ * across all three adapters' `kind`), makes a fifth hand-copy a one-line
+ * diff instead of a six-field one.
+ */
+export function matchRowKind(match: MatchRowKindSource): ScheduleRow["kind"] {
+  if (match.is_placeholder) return "reservation";
+  return isReducedMatchRow({
+    isPlaceholder: false,
+    competitionType: match.competitionType,
+    status: match.status,
+    homeScore: match.home_team.score,
+    awayScore: match.away_team.score,
+  })
+    ? "reduced"
+    : "match";
 }
 
 /**
@@ -411,29 +452,60 @@ export function reservationView(
  * opponent" tie-breaks — `MatchStripView`'s `opponentOf` uses
  * `isHome ?? id === KCVV_CLUB_ID`, `nieuws/[slug]/utils.ts` has a third —
  * those answer a different question for their own surface, on purpose.
+ *
+ * Takes the two sides positionally (#2802 review) rather than a
+ * `{ homeTeam, awayTeam }` object, so the same one definition serves both
+ * camelCase view-models (`otherClubSide(match.homeTeam, match.awayTeam)`)
+ * and the raw snake_case `Match` (`otherClubSide(match.home_team,
+ * match.away_team)`) — the reshape a caller with the "wrong" casing needed
+ * was one destructure, not a second hand-copied function. Four independent
+ * copies of this exact three-line ternary existed before this review
+ * (`transform.ts`, `match.mapper.ts`, `kalender/utils.ts`, `MatchHero.tsx`)
+ * — peer-drift risk this repo's own CLAUDE.md names as its most-flagged
+ * review class, since a rule change (e.g. a second club id after a merger)
+ * would silently miss whichever copies nobody remembered to update.
  */
-export function otherClubSide<Team extends { id: number }>(match: {
-  homeTeam: Team;
-  awayTeam: Team;
-}): Team {
-  return match.homeTeam.id === KCVV_CLUB_ID ? match.awayTeam : match.homeTeam;
+export function otherClubSide<Team extends { id: number }>(
+  home: Team,
+  away: Team,
+): Team {
+  return home.id === KCVV_CLUB_ID ? away : home;
 }
 
-/** The fields `reservationTitle()` needs, on top of `reservationView()`'s own. */
-export interface ReservationTitleInput extends ReservationSubjectInput {
-  home_team: { name: string };
+/** The fields `reservationTitle()` needs, on top of `matchRowKind()`'s own. */
+export interface ReservationTitleInput extends MatchRowKindSource {
+  competition?: string;
+  home_team: MatchRowKindSource["home_team"] & { id: number; name: string };
+  away_team: MatchRowKindSource["away_team"] & { id: number; name: string };
 }
 
 /**
- * A pitch-reservation placeholder's title/summary: `reservationView()`'s
- * subject plus the club's own name, the shape both `formatMatchTitle()`
- * (`/wedstrijd/[matchId]/utils.ts`, the match detail page's SEO title) and
- * `buildSummary()` (`lib/utils/ical.ts`, the ICS feed) need. Shared here
- * rather than hand-spelled twice so the separator between the two halves
- * can't diverge silently between the two surfaces (#2698).
+ * A pitch-reservation placeholder's or a hidden-result tournament fixture's
+ * title/summary: `reservationView()`'s subject plus the KCVV side's own
+ * name, the shape both `formatMatchTitle()` (`/wedstrijd/[matchId]/utils.ts`,
+ * the match detail page's SEO title) and `buildSummary()` (`lib/utils/ical.ts`,
+ * the ICS feed) need. Shared here rather than hand-spelled twice so the
+ * separator between the two halves can't diverge silently between the two
+ * surfaces (#2698), and widened to the reduced branch (#2696/#2802 review)
+ * so that promise holds for a tournament fixture too — both surfaces used to
+ * hand-copy an identical three-line "otherClubSide → subject → join" branch
+ * for it.
+ *
+ * A genuine reservation passes no `otherClub` to `reservationView()` (both
+ * sides are the same club, so there is no other club to name); a reduced
+ * tournament fixture does, naming the real opponent.
  */
 export function reservationTitle(match: ReservationTitleInput): string {
-  return `${reservationView(match).subject} — ${match.home_team.name}`;
+  const kind = matchRowKind(match);
+  const otherClub =
+    kind === "reduced"
+      ? otherClubSide(match.home_team, match.away_team)
+      : undefined;
+  const kcvvTeam =
+    otherClub && otherClub === match.home_team
+      ? match.away_team
+      : match.home_team;
+  return `${reservationView(match, otherClub).subject} — ${kcvvTeam.name}`;
 }
 
 /**

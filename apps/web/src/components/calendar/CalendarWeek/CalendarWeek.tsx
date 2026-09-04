@@ -9,8 +9,6 @@ import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { EVENT_TYPE_FILL } from "@/components/event/event-type-style";
 import {
   isExceptionalMatchStatus,
-  isReducedMatchRow,
-  otherClubSide,
   reservationView,
 } from "@/lib/utils/match-display";
 import { trackKalenderItemClick } from "../calendar-analytics";
@@ -22,7 +20,12 @@ import {
   groupFeedByDay,
   EMPTY_DAY_FEED,
 } from "@/app/(main)/kalender/utils";
-import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
+import type {
+  CalendarMatch,
+  CalendarReducedMatch,
+  CalendarReservation,
+  CalendarEvent,
+} from "@/app/(main)/kalender/utils";
 
 export interface CalendarWeekProps {
   matches: CalendarMatch[];
@@ -38,22 +41,26 @@ const SHORT_DAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
  * just the club crest, the subject, and the real time. Same card chrome as
  * `WeekMatchCard` so it still reads as one system in the grid.
  *
- * Also renders a tournament fixture (#2696/#2715, `competitionType ===
- * "tournament"` with no result yet). The subject then names the **other
- * club**, not KCVV's own — `otherClubSide()` derives it from the club id,
- * never home/away, since PSD does not say whether the named club hosts or
- * merely shares the bracket. The dot is always the dashed "reservation"
- * treatment here, never home/away — a tournament sheds the home/away claim
- * the same way a placeholder does (#2693): neither state in this card knows
- * which side, if either, was "home".
+ * Also renders a tournament fixture (#2696/#2715/#2802, `kind === "reduced"`).
+ * The subject then names the **other club**, not KCVV's own — `match.club`
+ * is precomputed by `transformMatchToCalendar` via club-id equality, never
+ * home/away, since PSD does not say whether the named club hosts or merely
+ * shares the bracket. The dot is always the dashed "reservation" treatment
+ * here, never home/away — a tournament sheds the home/away claim the same
+ * way a placeholder does (#2693): neither state in this card knows which
+ * side, if either, was "home".
  */
-function ReservationWeekCard({ match }: { match: CalendarMatch }) {
-  const otherClub = match.isPlaceholder ? undefined : otherClubSide(match);
+function ReservationWeekCard({
+  match,
+}: {
+  match: CalendarReservation | CalendarReducedMatch;
+}) {
+  const otherClub = match.kind === "reduced" ? match.club : undefined;
   const { subject, statusWording } = reservationView(match, otherClub);
   return (
     <div
       data-placeholder={match.isPlaceholder ? "true" : undefined}
-      data-tournament={match.isPlaceholder ? undefined : "true"}
+      data-tournament={match.kind === "reduced" ? "true" : undefined}
       className="border-ink bg-cream shadow-paper-sm block border-2 p-1.5"
     >
       {match.team && (
@@ -91,7 +98,11 @@ function ReservationWeekCard({ match }: { match: CalendarMatch }) {
 }
 
 function WeekMatchCard({ match }: { match: CalendarMatch }) {
-  if (isReducedMatchRow(match)) return <ReservationWeekCard match={match} />;
+  // Enumerated positively (#2802 review) — see the identical
+  // note on `CalendarAgenda`'s `AgendaMatchRow`.
+  if (match.kind === "reservation" || match.kind === "reduced") {
+    return <ReservationWeekCard match={match} />;
+  }
 
   const dotType = getMatchDotType(match);
   const isHome = dotType === "home";

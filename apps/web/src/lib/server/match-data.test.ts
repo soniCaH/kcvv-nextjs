@@ -18,6 +18,7 @@ vi.mock("@/components/match/transform", () => ({
 }));
 
 import { runPromise } from "@/lib/effect/runtime";
+import type { Match } from "@/lib/effect/schemas";
 import {
   getFirstTeamStripData,
   getTeamMatches,
@@ -37,8 +38,15 @@ const TEAMS = [
   { psdId: "112", age: null, slug: "eerste-elftallen-b" },
 ];
 
-/** First call resolves the team list, second the A side's season feed. */
-function mockFetches(teams: unknown, matches: unknown) {
+/**
+ * First call resolves the team list, second the A side's season feed.
+ *
+ * `matches` is typed `readonly Match[]` (#2802 review), not `unknown` — a
+ * fixture missing `home_team`/`away_team` is exactly the shape `matchSlot`
+ * (`first-teams.ts`) crashed on before it grew defensive `?.`s, and an
+ * `unknown` seam let every fixture below skip that check silently.
+ */
+function mockFetches(teams: unknown, matches: readonly Match[]) {
   runPromiseMock.mockResolvedValueOnce(teams).mockResolvedValueOnce(matches);
 }
 
@@ -95,9 +103,21 @@ describe("getTeamMatches", () => {
 describe("getFirstTeamStripData", () => {
   it("returns the last result and the next fixture", async () => {
     mockFetches(TEAMS, [
-      { id: 1, status: "finished", date: hoursAgo(24) },
-      { id: 2, status: "scheduled", date: hoursAhead(48) },
-    ]);
+      {
+        id: 1,
+        status: "finished",
+        date: hoursAgo(24),
+        home_team: {},
+        away_team: {},
+      },
+      {
+        id: 2,
+        status: "scheduled",
+        date: hoursAhead(48),
+        home_team: {},
+        away_team: {},
+      },
+    ] as Match[]);
 
     const data = await getFirstTeamStripData();
 
@@ -106,7 +126,15 @@ describe("getFirstTeamStripData", () => {
   });
 
   it("runs exactly two fetches: the team list, then that team's feed", async () => {
-    mockFetches(TEAMS, [{ id: 2, status: "scheduled", date: hoursAhead(48) }]);
+    mockFetches(TEAMS, [
+      {
+        id: 2,
+        status: "scheduled",
+        date: hoursAhead(48),
+        home_team: {},
+        away_team: {},
+      },
+    ] as Match[]);
 
     await getFirstTeamStripData();
 
@@ -118,9 +146,21 @@ describe("getFirstTeamStripData", () => {
   it("drops a result older than the recency window", async () => {
     const staleHours = RESULT_RECENCY_MS / (60 * 60 * 1000) + 1;
     mockFetches(TEAMS, [
-      { id: 1, status: "finished", date: hoursAgo(staleHours) },
-      { id: 2, status: "scheduled", date: hoursAhead(48) },
-    ]);
+      {
+        id: 1,
+        status: "finished",
+        date: hoursAgo(staleHours),
+        home_team: {},
+        away_team: {},
+      },
+      {
+        id: 2,
+        status: "scheduled",
+        date: hoursAhead(48),
+        home_team: {},
+        away_team: {},
+      },
+    ] as Match[]);
 
     const data = await getFirstTeamStripData();
 
@@ -130,9 +170,22 @@ describe("getFirstTeamStripData", () => {
 
   it("never headlines a pitch reservation as the last result (#2688)", async () => {
     mockFetches(TEAMS, [
-      { id: 1, status: "scheduled", date: hoursAgo(24), is_placeholder: true },
-      { id: 2, status: "scheduled", date: hoursAhead(48) },
-    ]);
+      {
+        id: 1,
+        status: "scheduled",
+        date: hoursAgo(24),
+        is_placeholder: true,
+        home_team: {},
+        away_team: {},
+      },
+      {
+        id: 2,
+        status: "scheduled",
+        date: hoursAhead(48),
+        home_team: {},
+        away_team: {},
+      },
+    ] as Match[]);
 
     const data = await getFirstTeamStripData();
 
@@ -142,8 +195,14 @@ describe("getFirstTeamStripData", () => {
   it("keeps a result exactly on the recency boundary", async () => {
     const edgeHours = RESULT_RECENCY_MS / (60 * 60 * 1000);
     mockFetches(TEAMS, [
-      { id: 1, status: "finished", date: hoursAgo(edgeHours) },
-    ]);
+      {
+        id: 1,
+        status: "finished",
+        date: hoursAgo(edgeHours),
+        home_team: {},
+        away_team: {},
+      },
+    ] as Match[]);
 
     const data = await getFirstTeamStripData();
 
@@ -157,9 +216,21 @@ describe("getFirstTeamStripData", () => {
     // point, since the window's whole job is to outlast a gap in the calendar.
     // Ten days back is a fortnight-ago Saturday seen from the next weekend.
     mockFetches(TEAMS, [
-      { id: 1, status: "finished", date: hoursAgo(10 * 24) },
-      { id: 2, status: "scheduled", date: hoursAhead(48) },
-    ]);
+      {
+        id: 1,
+        status: "finished",
+        date: hoursAgo(10 * 24),
+        home_team: {},
+        away_team: {},
+      },
+      {
+        id: 2,
+        status: "scheduled",
+        date: hoursAhead(48),
+        home_team: {},
+        away_team: {},
+      },
+    ] as Match[]);
 
     const data = await getFirstTeamStripData();
 
@@ -168,7 +239,15 @@ describe("getFirstTeamStripData", () => {
   });
 
   it("returns the fixture alone when there is no recent result", async () => {
-    mockFetches(TEAMS, [{ id: 2, status: "scheduled", date: hoursAhead(6) }]);
+    mockFetches(TEAMS, [
+      {
+        id: 2,
+        status: "scheduled",
+        date: hoursAhead(6),
+        home_team: {},
+        away_team: {},
+      },
+    ] as Match[]);
 
     const data = await getFirstTeamStripData();
 
@@ -179,7 +258,15 @@ describe("getFirstTeamStripData", () => {
   });
 
   it("returns the result alone when there is no upcoming fixture", async () => {
-    mockFetches(TEAMS, [{ id: 1, status: "finished", date: hoursAgo(2) }]);
+    mockFetches(TEAMS, [
+      {
+        id: 1,
+        status: "finished",
+        date: hoursAgo(2),
+        home_team: {},
+        away_team: {},
+      },
+    ] as Match[]);
 
     const data = await getFirstTeamStripData();
 
@@ -199,8 +286,14 @@ describe("getFirstTeamStripData", () => {
         home_team: { score: 5 },
         away_team: { score: 0 },
       },
-      { id: 2, status: "scheduled", date: hoursAhead(48) },
-    ]);
+      {
+        id: 2,
+        status: "scheduled",
+        date: hoursAhead(48),
+        home_team: {},
+        away_team: {},
+      },
+    ] as Match[]);
 
     const data = await getFirstTeamStripData();
 

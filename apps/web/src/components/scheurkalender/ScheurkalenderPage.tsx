@@ -29,6 +29,7 @@ import { SHEET_WIDTH_PX, WIDTH_FIT_SCALE } from "./poster-geometry";
 import { PrintButton } from "./PrintButton";
 import { PrintDate } from "./PrintDate";
 
+/** Deliberately out of scope for the #2802 reservation/reduced union — `noindex`/unlinked, reads the raw contract `Match` directly, renders only senior league fixtures. */
 export interface ScheurkalenderMatch {
   id: number;
   /**

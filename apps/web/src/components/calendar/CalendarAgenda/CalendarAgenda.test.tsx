@@ -9,10 +9,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CalendarAgenda } from "./CalendarAgenda";
-import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
+import type {
+  CalendarMatchFixture,
+  CalendarEvent,
+} from "@/app/(main)/kalender/utils";
 import { getScoreDisplay } from "@/lib/utils/match-display";
 import { trackEvent } from "@/lib/analytics/track-event";
-import { tournamentMatch, tournamentOpponent } from "../calendar-mocks";
+import {
+  reservationMatch,
+  tournamentMatch,
+  tournamentOpponent,
+} from "../calendar-mocks";
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
@@ -44,16 +51,17 @@ vi.mock("next/link", () => ({
 // ── Fixtures ───────────────────────────────────────────────────────────────
 
 function makeMatch(
-  overrides: Partial<CalendarMatch> & { id: number },
-): CalendarMatch {
+  overrides: Partial<CalendarMatchFixture> & { id: number },
+): CalendarMatchFixture {
   const merged = {
     date: "2026-09-12T10:00:00", // Saturday
     homeTeam: { id: 1, name: "KCVV Elewijt", logo: "/kcvv.png" },
     awayTeam: { id: 2, name: "Zemst" },
-    status: "scheduled" as CalendarMatch["status"],
+    status: "scheduled" as CalendarMatchFixture["status"],
     team: "U7",
     isHome: true,
-    isPlaceholder: false,
+    isPlaceholder: false as const,
+    kind: "match" as const,
     ...overrides,
   };
   return {
@@ -171,13 +179,12 @@ describe("CalendarAgenda", () => {
       <CalendarAgenda
         {...baseProps}
         matches={[
-          makeMatch({
+          reservationMatch({
             id: 90,
             date: "2026-09-12T09:30:00",
-            homeTeam: { id: 1235, name: "KCVV Elewijt" },
-            awayTeam: { id: 1235, name: "KCVV Elewijt" },
+            club: { id: 1235, name: "KCVV Elewijt" },
             competition: "Tornooi",
-            isPlaceholder: true,
+            team: "U7",
           }),
         ]}
         events={[]}
@@ -220,18 +227,24 @@ describe("CalendarAgenda", () => {
 
   it("renders a played tournament fixture (a real scoreline exists) as an ordinary linked row (#2696 review)", () => {
     // Once a result exists, the named club really was the opponent, so the
-    // row reverts to the full scoreboard — `isReducedMatchRow` gates on
-    // `hasScoreline`, not merely on the tournament competitionType.
+    // row reverts to the full scoreboard — `transformMatchToCalendar`
+    // (`kalender/utils.test.ts`) is where this transition is actually
+    // exercised end-to-end (a raw `Match` gaining a scoreline flips `kind`
+    // from `"reduced"` to `"match"`); this render-level test only guards
+    // that a `kind: "match"` row with a tournament `competitionType` still
+    // renders the ordinary linked scoreboard rather than the reduced one.
     render(
       <CalendarAgenda
         {...baseProps}
         matches={[
-          tournamentMatch({
+          makeMatch({
             id: 92,
             date: "2026-09-12T09:30:00",
             status: "finished",
             homeScore: 4,
             awayScore: 1,
+            competitionType: "tournament",
+            awayTeam: tournamentOpponent,
           }),
         ]}
         events={[]}

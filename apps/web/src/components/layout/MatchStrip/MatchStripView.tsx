@@ -23,6 +23,7 @@ import { formatMatchWidgetDate, formatMatchDayMonth } from "@/lib/utils/dates";
 import type { MatchStripData } from "@/lib/server/match-data";
 import type {
   ScheduleMatch,
+  ScheduleReducedMatch,
   ScheduleReservation,
   ScheduleRow,
   ScheduleTeam,
@@ -162,10 +163,10 @@ function scoreboardScore(match: ScheduleMatch): string | null {
  * why it differed from the other — the same drift `isReducedMatchRow`'s
  * docblock in `match-display.ts` records for a different pair of call
  * sites). `kind === "fixture"` is enough on its own: `<MatchStrip>` is the
- * single place that ever sets `matchDay` true, and it only does so for a
- * genuine `ScheduleMatch` fixture, never a pitch-reservation placeholder —
- * re-checking `isPlaceholder` here would be the same re-derivation the
- * "one owner for the rule" convention forbids.
+ * single place that ever sets `matchDay` true, and it only does so when
+ * `fixture.kind === "match"` (#2802 review — `!isPlaceholder` alone would
+ * also pass a reduced tournament fixture) — re-checking here would be the
+ * same re-derivation the "one owner for the rule" convention forbids.
  */
 function isTodayFixture(matchDay: boolean, kind: MatchRowKind): boolean {
   return matchDay && kind === "fixture";
@@ -390,7 +391,10 @@ function LedgerLinkRow({
   /** The strip's match-day ground (#2616) — see `<MatchStripView>`'s own docblock. */
   matchDay?: boolean;
 }) {
-  if (match.isPlaceholder) {
+  // Enumerated positively (#2802 review) — a negated
+  // `kind !== "match"` catch-all would silently route any future fourth
+  // `kind` into the reduced row too, with no compile error.
+  if (match.kind === "reservation" || match.kind === "reduced") {
     return <ReservationLedgerRow match={match} kind={kind} last={last} />;
   }
   const today = isTodayFixture(matchDay, kind);
@@ -514,24 +518,27 @@ function LedgerLinkRow({
 
 /**
  * The mobile ledger's reduced row for a pitch-reservation placeholder
- * (#2606). Mirrors `<TeamAgendaRow>`'s prior-art treatment — one crest (the
- * club's own, never an opponent), the competition subject via
- * `reservationView()`, and the real kickoff time — but no `<Link>`: #2606
- * decision 5 ruled a reservation out as a navigation target, and that holds
- * here even though `/wedstrijd/[matchId]` now renders a reduced page for one
- * (#2688) — there is still nothing worth clicking through to from a widget
- * that has no room to explain what a reservation is.
+ * (#2606) or a tournament fixture with a hidden result (#2696/#2802).
+ * Mirrors `<TeamAgendaRow>`'s prior-art treatment — one crest (the club's
+ * own for a reservation, the other club for a tournament fixture — never a
+ * second, opposing crest), the competition subject via `reservationView()`,
+ * and the real kickoff time — but no `<Link>`: #2606 decision 5 ruled a
+ * reservation out as a navigation target, and that holds here even though
+ * `/wedstrijd/[matchId]` now renders a reduced page for one (#2688) — there
+ * is still nothing worth clicking through to from a widget that has no room
+ * to explain what a reservation is.
  */
 function ReservationLedgerRow({
   match,
   kind,
   last = false,
 }: {
-  match: ScheduleReservation;
+  match: ScheduleReservation | ScheduleReducedMatch;
   kind: MatchRowKind;
   last?: boolean;
 }) {
-  const { subject, statusWording } = reservationView(match);
+  const otherClub = match.kind === "reduced" ? match.team : undefined;
+  const { subject, statusWording } = reservationView(match, otherClub);
   const dateLabel = formatMatchWidgetDate(match.date);
   const label = reservationRowLabel({
     kind,
@@ -547,7 +554,8 @@ function ReservationLedgerRow({
     // `reservationRowLabel` in `match-display.ts`.
     <article
       aria-label={label}
-      data-placeholder="true"
+      data-placeholder={match.isPlaceholder ? "true" : undefined}
+      data-tournament={match.kind === "reduced" ? "true" : undefined}
       className={cn(
         "flex min-w-0 items-center gap-2.5 px-4 py-2.5",
         last ? "" : "border-ink/15 border-b",
@@ -696,9 +704,10 @@ function DesktopSlider({
       <div
         aria-live="polite"
         data-placeholder={showing.isPlaceholder ? "true" : undefined}
+        data-tournament={showing.kind === "reduced" ? "true" : undefined}
         className="min-w-0 py-3"
       >
-        {showing.isPlaceholder ? (
+        {showing.kind === "reservation" || showing.kind === "reduced" ? (
           <ReservationDesktopSlide match={showing} />
         ) : (
           <>
@@ -757,12 +766,14 @@ function DesktopSlider({
         )}
       </div>
 
-      {/* No CTA for a reservation — mirrors the mobile ledger row: #2606
-          decision 5 ruled it out as a navigation target, and the desktop
-          slide follows the same rule rather than inventing a second one.
-          An empty cell keeps the three-column grid intact. */}
+      {/* No CTA for a reservation or a hidden-result tournament fixture —
+          mirrors the mobile ledger row: #2606 decision 5 ruled a reservation
+          out as a navigation target, and every other reduced renderer in
+          this repo extends that to a tournament fixture with a hidden
+          result too (#2696/#2802) rather than inventing a second rule. An
+          empty cell keeps the three-column grid intact. */}
       <div className="flex items-center justify-end px-6">
-        {showing.isPlaceholder ? null : (
+        {showing.kind === "reservation" || showing.kind === "reduced" ? null : (
           <Link
             href={`/wedstrijd/${showing.id}`}
             className={getButtonClasses({
@@ -786,11 +797,21 @@ function DesktopSlider({
 }
 
 /**
- * The desktop slide's reduced content for a pitch-reservation placeholder —
- * one crest, the subject/kickoff, no opponent slot. See `ReservationLedgerRow`
- * for the mobile equivalent and the shared rationale.
+ * The desktop slide's reduced content for a pitch-reservation placeholder or
+ * a tournament fixture with a hidden result (#2696/#2802) — one crest, the
+ * subject/kickoff, no opponent slot. See `ReservationLedgerRow` for the
+ * mobile equivalent and the shared rationale.
+ *
+ * No `otherClub` passed to `reservationView()` here (#2802 review) — unlike
+ * `ReservationLedgerRow` above (crest only, no name text), this slide also
+ * prints `match.team.name` as its own text node directly below the crest.
+ * Folding the club into "competition · club" too would print it twice.
  */
-function ReservationDesktopSlide({ match }: { match: ScheduleReservation }) {
+function ReservationDesktopSlide({
+  match,
+}: {
+  match: ScheduleReservation | ScheduleReducedMatch;
+}) {
   const { subject, statusWording } = reservationView(match);
   return (
     <>

@@ -27,7 +27,11 @@
 import type { Match } from "@/lib/effect/schemas";
 import type { ScheduleRow } from "@/components/match/types";
 import { transformMatchToSchedule } from "@/components/match/transform";
-import { hasScore, isSettledMatch } from "@/lib/utils/match-display";
+import {
+  hasScore,
+  isSettledMatch,
+  matchRowKind,
+} from "@/lib/utils/match-display";
 import { RESERVEN_PSD_ID } from "@/lib/utils/group-teams";
 
 export interface FirstTeamInput {
@@ -133,7 +137,15 @@ function matchSlot(match: Match, now: Date): "result" | "fixture" | null {
   // `cancelled` / `stopped` join the "answers neither what-happened nor
   // where-do-I-go-next" rule the switch below already applies to a real
   // match in the same statuses.
-  if (match.is_placeholder) {
+  //
+  // Widened to the shared `matchRowKind` discriminant, not merely
+  // `is_placeholder` (#2802 review): a tournament fixture with no scoreline
+  // yet (`kind === "reduced"`) is reduced too, and the same contradiction it
+  // exists to prevent — "UITSLAG" over a row with no result — reappears for
+  // it if this stays placeholder-only. `reservationRowLabel` already refuses
+  // that exact pairing in the accessible name; this is the sighted half of
+  // the same rule.
+  if (matchRowKind(match) !== "match") {
     return match.status === "scheduled" ? "fixture" : null;
   }
   if (isSettledMatch(match.status)) return "result";

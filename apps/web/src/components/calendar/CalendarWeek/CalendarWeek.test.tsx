@@ -8,10 +8,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CalendarWeek } from "./CalendarWeek";
-import type { CalendarMatch, CalendarEvent } from "@/app/(main)/kalender/utils";
+import type {
+  CalendarMatch,
+  CalendarMatchFixture,
+  CalendarEvent,
+} from "@/app/(main)/kalender/utils";
 import { getScoreDisplay } from "@/lib/utils/match-display";
 import { trackEvent } from "@/lib/analytics/track-event";
-import { tournamentMatch, tournamentOpponent } from "../calendar-mocks";
+import {
+  reservationMatch,
+  tournamentMatch,
+  tournamentOpponent,
+} from "../calendar-mocks";
 
 vi.mock("@/lib/analytics/track-event", () => ({ trackEvent: vi.fn() }));
 
@@ -43,16 +51,17 @@ vi.mock("next/link", () => ({
 // ── Fixtures ───────────────────────────────────────────────────────────────
 
 function makeMatch(
-  overrides: Partial<CalendarMatch> & { id: number },
-): CalendarMatch {
+  overrides: Partial<CalendarMatchFixture> & { id: number },
+): CalendarMatchFixture {
   const merged = {
     date: "2026-03-28T15:00:00", // Saturday
     homeTeam: { id: 1, name: "KCVV Elewijt A", logo: "/kcvv.png" },
     awayTeam: { id: 2, name: "Racing Mechelen" },
-    status: "scheduled" as CalendarMatch["status"],
+    status: "scheduled" as CalendarMatchFixture["status"],
     team: "A-ploeg",
     isHome: true,
-    isPlaceholder: false,
+    isPlaceholder: false as const,
+    kind: "match" as const,
     ...overrides,
   };
   return {
@@ -108,14 +117,12 @@ describe("CalendarWeek", () => {
 
   it("renders a pitch-reservation placeholder without an opponent name or a link (#2606, #2688)", () => {
     const matches = [
-      makeMatch({
+      reservationMatch({
         id: 90,
         date: "2026-03-28T09:30:00",
         time: "09:30",
-        homeTeam: { id: 1235, name: "KCVV Elewijt" },
-        awayTeam: { id: 1235, name: "KCVV Elewijt" },
+        club: { id: 1235, name: "KCVV Elewijt" },
         competition: "Tornooi",
-        isPlaceholder: true,
       }),
     ];
     render(<CalendarWeek {...defaultProps} matches={matches} />);
@@ -130,15 +137,13 @@ describe("CalendarWeek", () => {
 
   it("marks a cancelled reservation with the same status badge a real match gets — a cancelled slot must not read as live (#2688)", () => {
     const matches = [
-      makeMatch({
+      reservationMatch({
         id: 91,
         date: "2026-03-28T09:30:00",
         time: "09:30",
-        homeTeam: { id: 1235, name: "KCVV Elewijt" },
-        awayTeam: { id: 1235, name: "KCVV Elewijt" },
+        club: { id: 1235, name: "KCVV Elewijt" },
         competition: "Tornooi",
         status: "cancelled",
-        isPlaceholder: true,
       }),
     ];
     render(<CalendarWeek {...defaultProps} matches={matches} />);
@@ -162,14 +167,20 @@ describe("CalendarWeek", () => {
   });
 
   it("renders a played tournament fixture (a real scoreline exists) as an ordinary linked card (#2696 review)", () => {
+    // Once a result exists, `transformMatchToCalendar` (`kalender/utils.test.ts`)
+    // is where the reduced-to-full transition is actually exercised; this
+    // render-level test only guards that a `kind: "match"` row with a
+    // tournament `competitionType` still renders the ordinary linked card.
     const matches = [
-      tournamentMatch({
+      makeMatch({
         id: 92,
         date: "2026-03-28T09:30:00",
         status: "finished",
         homeScore: 4,
         awayScore: 1,
         scoreDisplay: { type: "score", home: 4, away: 1 },
+        competitionType: "tournament",
+        awayTeam: tournamentOpponent,
       }),
     ];
     render(<CalendarWeek {...defaultProps} matches={matches} />);
