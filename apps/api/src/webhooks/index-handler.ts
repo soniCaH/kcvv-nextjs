@@ -7,8 +7,8 @@ import { EmbeddingService, EmbeddingServiceLive } from "../search/embedding";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
-  buildArticleExcerpt,
   buildArticleIndexText,
+  buildArticleMetadata,
   buildPageIndexText,
   buildResponsibilityIndexText,
 } from "../search/index-text";
@@ -72,11 +72,9 @@ const ArticleDoc = S.Struct({
   lead: S.String,
   tags: S.Array(S.String),
   prose: S.String,
-  // GROQ leaves a null element for a `pairs[]` entry with no question, or an
-  // `htmlTable` with no html. Declaring that is what keeps the type honest.
-  qaQuestions: S.Array(S.NullOr(S.String)),
+  qaQuestions: S.Array(S.String),
   qaAnswers: S.String,
-  tableHtml: S.Array(S.NullOr(S.String)),
+  tableHtml: S.Array(S.String),
   slug: S.String,
   imageUrl: S.optional(S.NullOr(S.String)),
 });
@@ -117,13 +115,7 @@ const typeDescriptors: Record<AllowedType, TypeDescriptor> = {
       const r = S.decodeUnknownSync(ArticleDoc)(doc);
       return {
         indexText: buildArticleIndexText(r),
-        metadata: {
-          slug: r.slug,
-          type: "article",
-          title: r.title,
-          excerpt: buildArticleExcerpt(r),
-          ...(r.imageUrl ? { imageUrl: r.imageUrl } : {}),
-        },
+        metadata: buildArticleMetadata(r),
       };
     },
   },

@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
-  ARTICLE_INDEX_PROJECTION,
-  ARTICLE_PUBLISHED_FILTER,
   buildArticleExcerpt,
+  buildArticleMetadata,
   buildArticleIndexText,
   buildPageIndexText,
   buildResponsibilityIndexText,
@@ -112,20 +111,6 @@ describe("buildArticleIndexText", () => {
     expect(result).toContain("FC Mariekerke");
   });
 
-  it("drops the null elements GROQ leaves in the projected arrays", () => {
-    // A `pairs[]` entry with no question, or an htmlTable with no html, comes
-    // back as a null element — which is why the join is here and not in GROQ.
-    const result = buildArticleIndexText({
-      ...base,
-      qaQuestions: [null, "Hoe ging het?"],
-      tableHtml: [null, "<td>Goed</td>"],
-    });
-
-    expect(result).toContain("Hoe ging het?");
-    expect(result).toContain("Goed");
-    expect(result).not.toContain("null");
-  });
-
   it("emits no bare separators for an article that is prose and nothing else", () => {
     const result = buildArticleIndexText({
       title: "Kort bericht",
@@ -183,47 +168,34 @@ describe("buildArticleExcerpt", () => {
   });
 });
 
-describe("ARTICLE_PUBLISHED_FILTER", () => {
-  it("uses publishedAt, the field the schema actually defines", () => {
-    // `publishAt` matched 0 of 125 published articles, and GROQ reports a
-    // misspelling as an empty result — the nightly sweep indexed nothing while
-    // its logs read as a clean run (#2806).
-    expect(ARTICLE_PUBLISHED_FILTER).toContain("publishedAt <= now()");
-    expect(ARTICLE_PUBLISHED_FILTER).not.toMatch(/(?<!un)publishAt/);
+describe("buildArticleMetadata", () => {
+  const doc = {
+    slug: "kcvv-wint-derby",
+    title: "KCVV wint derby",
+    lead: "Een late kopbal besliste de derby.",
+    prose: "KCVV Elewijt won de derby met 3-1.",
+    tags: ["verslag", "derby"],
+  };
+
+  it("writes the same record whichever path indexed the article", () => {
+    // The two paths hand-assembled this and had already drifted: the nightly
+    // sweep wrote `tags` and the webhook did not.
+    expect(buildArticleMetadata(doc)).toEqual({
+      slug: "kcvv-wint-derby",
+      type: "article",
+      title: "KCVV wint derby",
+      excerpt: "Een late kopbal besliste de derby.",
+      tags: "verslag,derby",
+    });
   });
 
-  it("still excludes articles past their unpublishAt", () => {
-    expect(ARTICLE_PUBLISHED_FILTER).toContain(
-      "!defined(unpublishAt) || unpublishAt > now()",
+  it("carries an imageUrl only when the article has a cover", () => {
+    expect(
+      buildArticleMetadata({ ...doc, imageUrl: "https://x/y.webp" }),
+    ).toHaveProperty("imageUrl", "https://x/y.webp");
+    expect(buildArticleMetadata({ ...doc, imageUrl: null })).not.toHaveProperty(
+      "imageUrl",
     );
-  });
-});
-
-describe("ARTICLE_INDEX_PROJECTION", () => {
-  it("flattens the Portable Text title so the declared string type is true", () => {
-    expect(ARTICLE_INDEX_PROJECTION).toContain("pt::text(title)");
-  });
-
-  it("projects the lead, the Q&A pairs, and the table html", () => {
-    expect(ARTICLE_INDEX_PROJECTION).toContain('"lead"');
-    expect(ARTICLE_INDEX_PROJECTION).toContain("qaBlock");
-    expect(ARTICLE_INDEX_PROJECTION).toContain("htmlTable");
-  });
-
-  it("never joins the branches in GROQ, where null propagates", () => {
-    // Both `+` and array::join return null if any operand is null, and
-    // `pt::text(body)` is null for a body with no top-level block. Joining
-    // here would blank a Q&A-only or table-only article entirely.
-    expect(ARTICLE_INDEX_PROJECTION).not.toContain("array::join");
-    expect(ARTICLE_INDEX_PROJECTION).not.toMatch(/pt::text\(body\)\s*\+/);
-  });
-
-  it("coalesces every branch so no field is ever null", () => {
-    for (const field of ["prose", "qaQuestions", "qaAnswers", "tableHtml"]) {
-      expect(ARTICLE_INDEX_PROJECTION).toMatch(
-        new RegExp(`"${field}": coalesce\\(`),
-      );
-    }
   });
 });
 

@@ -368,7 +368,7 @@ describe("handleIndexWebhook", () => {
       prose: "Een overzicht van de kern.",
       qaQuestions: [],
       qaAnswers: "",
-      tableHtml: [null, "<table><tr><td>Bocar Sarr</td></tr></table>"],
+      tableHtml: ["<table><tr><td>Bocar Sarr</td></tr></table>"],
     });
     const embedded: string[] = [];
     const layer = Layer.mergeAll(

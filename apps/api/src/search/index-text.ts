@@ -43,11 +43,12 @@ export const ARTICLE_PUBLISHED_FILTER = `publishedAt <= now() && (!defined(unpub
  * null sources here are not hypothetical: `pt::text(body)` returns null (not
  * `""`) for a body holding no top-level `block`, so a Q&A-only or table-only
  * article would blank out entirely — the exact articles this projection
- * exists to rescue. A `pairs[]` entry with no `question`, or an `htmlTable`
- * with no `html`, puts a null *element* in an array, which `array::join` also
- * propagates. `coalesce` on the outer value does not reach either case.
- * Composing in TypeScript sidesteps the whole class; `buildArticleIndexText`
- * filters the nulls out.
+ * exists to rescue. Composing in TypeScript sidesteps the whole class.
+ *
+ * The `array::compact` calls are the other half: a `pairs[]` entry with no
+ * `question`, or an `htmlTable` with no `html`, leaves a null *element* that
+ * the surrounding `coalesce` never sees. Dropping them here is what lets the
+ * declared types be plain `string[]`.
  *
  * ponytail: six of the eight non-`block` body types stay out, measured against
  * production in #2806, not guessed. `transferFact` (9 articles) would add only
@@ -64,9 +65,9 @@ export const ARTICLE_INDEX_PROJECTION = `_id,
   "lead": coalesce(lead, ""),
   "tags": coalesce(tags, []),
   "prose": coalesce(pt::text(body), ""),
-  "qaQuestions": coalesce(body[_type=="qaBlock"].pairs[].question, []),
+  "qaQuestions": array::compact(coalesce(body[_type=="qaBlock"].pairs[].question, [])),
   "qaAnswers": coalesce(pt::text(body[_type=="qaBlock"].pairs[].respondents[].answer), ""),
-  "tableHtml": coalesce(body[_type=="htmlTable"].html, []),
+  "tableHtml": array::compact(coalesce(body[_type=="htmlTable"].html, [])),
   ${ARTICLE_COVER_IMAGE_PROJECTION}`;
 
 /**
@@ -98,32 +99,30 @@ export function buildResponsibilityIndexText(doc: {
     .join(". ");
 }
 
-/**
- * The text an article is embedded from. The `filter(Boolean)` calls are load
- * bearing twice over: they drop the null elements GROQ leaves in
- * `qaQuestions` and `tableHtml`, and they keep an absent branch from leaving
- * a bare separator behind.
- */
+/** The text an article is embedded from. */
 export function buildArticleIndexText(doc: {
   title: string;
   tags: readonly string[];
   lead: string;
   prose: string;
-  qaQuestions: readonly (string | null)[];
+  qaQuestions: readonly string[];
   qaAnswers: string;
-  tableHtml: readonly (string | null)[];
+  tableHtml: readonly string[];
 }): string {
-  return [
-    doc.title,
-    doc.tags.join(" "),
-    doc.lead,
-    doc.prose,
-    doc.qaQuestions.filter(Boolean).join(" "),
-    doc.qaAnswers,
-    stripTableHtml(doc.tableHtml.filter(Boolean).join(" ")),
-  ]
-    .filter(Boolean)
-    .join(". ");
+  return (
+    [
+      doc.title,
+      doc.tags.join(" "),
+      doc.lead,
+      doc.prose,
+      doc.qaQuestions.join(" "),
+      doc.qaAnswers,
+      stripTableHtml(doc.tableHtml.join(" ")),
+    ]
+      // An absent branch must not leave a bare ". " separator behind.
+      .filter(Boolean)
+      .join(". ")
+  );
 }
 
 /**
@@ -141,6 +140,32 @@ export function buildArticleExcerpt(doc: {
   prose: string;
 }): string {
   return (doc.lead || doc.prose).slice(0, 200);
+}
+
+/**
+ * The vector metadata for an article, built once for both index paths.
+ *
+ * Sharing the projection was only half the drift: the two paths still hand-
+ * assembled this record, and it had already diverged — the nightly sweep wrote
+ * `tags` and the webhook did not, so an article's tag metadata depended on
+ * which path last touched it.
+ */
+export function buildArticleMetadata(doc: {
+  slug: string;
+  title: string;
+  lead: string;
+  prose: string;
+  tags: readonly string[];
+  imageUrl?: string | null;
+}): Record<string, string> {
+  return {
+    slug: doc.slug,
+    type: "article",
+    title: doc.title,
+    excerpt: buildArticleExcerpt(doc),
+    tags: doc.tags.join(","),
+    ...(doc.imageUrl ? { imageUrl: doc.imageUrl } : {}),
+  };
 }
 
 export function buildPageIndexText(doc: {

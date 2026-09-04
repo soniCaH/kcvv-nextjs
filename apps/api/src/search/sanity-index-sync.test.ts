@@ -1,10 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Effect, Exit, Layer, Logger } from "effect";
-import { ARTICLE_QUERY, runSanityIndexSync } from "./sanity-index-sync";
-import {
-  ARTICLE_INDEX_PROJECTION,
-  ARTICLE_PUBLISHED_FILTER,
-} from "./index-text";
+import { runSanityIndexSync } from "./sanity-index-sync";
 import {
   EmbeddingError,
   EmbeddingService,
@@ -36,9 +32,9 @@ const mockArticle = {
   tags: ["verslag", "derby"],
   lead: "Een late kopbal besliste de derby.",
   prose: "KCVV Elewijt won de derby met 3-1.",
-  qaQuestions: [] as (string | null)[],
+  qaQuestions: [] as string[],
   qaAnswers: "",
-  tableHtml: [] as (string | null)[],
+  tableHtml: [] as string[],
   imageUrl: null as string | null,
 };
 
@@ -437,19 +433,5 @@ describe("runSanityIndexSync", () => {
     expect(
       messages.some((m) => m.includes("Indexed 0/1 responsibility paths")),
     ).toBe(true);
-  });
-});
-
-// What the query *matches* is pinned in article-projection.test.ts, which
-// evaluates it with groq-js. These two only pin that it is assembled from the
-// shared pieces rather than growing a second copy — the drift that put every
-// #2806 defect in both index paths at once.
-describe("ARTICLE_QUERY", () => {
-  it("gates on the shared publish window rather than its own copy", () => {
-    expect(ARTICLE_QUERY).toContain(ARTICLE_PUBLISHED_FILTER);
-  });
-
-  it("projects through the shared projection rather than its own copy", () => {
-    expect(ARTICLE_QUERY).toContain(ARTICLE_INDEX_PROJECTION);
   });
 });

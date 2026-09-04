@@ -6,8 +6,8 @@ import { EmbeddingService } from "./embedding";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
-  buildArticleExcerpt,
   buildArticleIndexText,
+  buildArticleMetadata,
   buildPageIndexText,
   buildResponsibilityIndexText,
 } from "./index-text";
@@ -31,9 +31,9 @@ interface SanityArticleDoc {
   lead: string;
   tags: string[];
   prose: string;
-  qaQuestions: (string | null)[];
+  qaQuestions: string[];
   qaAnswers: string;
-  tableHtml: (string | null)[];
+  tableHtml: string[];
   imageUrl: string | null;
 }
 
@@ -207,14 +207,11 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
     const articleVectors = yield* Effect.forEach(
       articleResult,
       (doc) =>
-        embedDoc(doc._id, buildArticleIndexText(doc), {
-          slug: doc.slug,
-          type: "article",
-          title: doc.title,
-          excerpt: buildArticleExcerpt(doc),
-          tags: (doc.tags ?? []).join(","),
-          ...(doc.imageUrl ? { imageUrl: doc.imageUrl } : {}),
-        }),
+        embedDoc(
+          doc._id,
+          buildArticleIndexText(doc),
+          buildArticleMetadata(doc),
+        ),
       { concurrency: 3 },
     );
 
