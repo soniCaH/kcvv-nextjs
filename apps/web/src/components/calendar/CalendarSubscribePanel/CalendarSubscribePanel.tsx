@@ -4,7 +4,7 @@ import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { cn } from "@/lib/utils/cn";
 import { trackEvent } from "@/lib/analytics/track-event";
-import { RemovableChip } from "@/components/design-system";
+import { EmptyState, RemovableChip } from "@/components/design-system";
 import {
   CALENDAR_EVENTS_PARAM,
   CALENDAR_EVENTS_PARAM_VALUE,
@@ -63,6 +63,11 @@ export function CalendarSubscribePanel({
   // default, which stays off (#2704).
   const [includeEvents, setIncludeEvents] = useState(true);
   const [copied, setCopied] = useState(false);
+  // The URL a failed copy described — not a boolean. Comparing it against the
+  // CURRENT `webcalUrl` below makes a stale notice impossible by
+  // construction: change any selection (team/side/includeEvents) and the
+  // comparison itself goes false, so there is nothing to reset by hand.
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   const host =
     typeof window !== "undefined"
@@ -91,6 +96,11 @@ export function CalendarSubscribePanel({
     try {
       await navigator.clipboard.writeText(webcalUrl);
       setCopied(true);
+      // Only clear the notice this attempt's own URL put up — an EARLIER,
+      // now-stale attempt resolving after a LATER one already failed for a
+      // different URL must not clear that later failure (#2580: two
+      // overlapping copies can settle out of order).
+      setFailedUrl((prev) => (prev === webcalUrl ? null : prev));
       setTimeout(() => setCopied(false), 2000);
       trackEvent("kalender_subscribe_copy", {
         teams_count: selectedPsdIds.length,
@@ -98,7 +108,10 @@ export function CalendarSubscribePanel({
         events: includeEvents,
       });
     } catch (err) {
+      // The caught error goes to the console only — the visitor sees the
+      // locked Dutch copy below, never `err`'s own text (#2580 rule 6).
       console.error("Failed to copy to clipboard:", err);
+      setFailedUrl(webcalUrl);
     }
   }
 
@@ -235,6 +248,23 @@ export function CalendarSubscribePanel({
               {copied ? "Gekopieerd" : "Kopieer link"}
             </button>
           </div>
+
+          {/* Tier 2, no action (#2470 resolution rule 7): the copy button
+              above is its own retry, and the QR stub already carries the
+              same URL. Direction-neutral copy ("om te abonneren", not
+              "hiernaast"/"hierboven"): the stub sits beside the body at
+              `sm+` but stacks above it below `sm`. */}
+          {failedUrl === webcalUrl && (
+            <EmptyState
+              tier="slot"
+              reason="unavailable"
+              live
+              emphasis={{ text: "mislukt" }}
+              className="mt-3"
+            >
+              Kopiëren mislukt. Scan de QR-code om te abonneren.
+            </EmptyState>
+          )}
         </div>
       </div>
     </div>

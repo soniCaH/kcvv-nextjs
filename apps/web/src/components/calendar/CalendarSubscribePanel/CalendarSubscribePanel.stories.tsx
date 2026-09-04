@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { within, userEvent } from "storybook/test";
+import { within, userEvent, spyOn } from "storybook/test";
 import { CalendarSubscribePanel } from "./CalendarSubscribePanel";
 import type { CalendarTeamInfo } from "@/app/(main)/kalender/utils";
 
@@ -58,5 +58,26 @@ export const CopiedFeedback: Story = {
     await userEvent.click(
       canvas.getByRole("button", { name: /Kopieer link/i }),
     );
+  },
+};
+
+/**
+ * The clipboard write rejects (#2580) — Tier 2 failure notice, no action (the
+ * copy button is its own retry). Unlike `CopiedFeedback`, forcing the
+ * rejection makes this deterministic, so it stays in the VR set.
+ */
+export const CopyFailed: Story = {
+  beforeEach: () => {
+    // storybook/test restores spies between stories automatically.
+    spyOn(navigator.clipboard, "writeText").mockRejectedValue(
+      new Error("denied"),
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole("button", { name: /Kopieer link/i }),
+    );
+    await canvas.findByRole("alert");
   },
 };

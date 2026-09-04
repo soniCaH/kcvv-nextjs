@@ -83,8 +83,10 @@ export const ArticleMetadata = ({
           url: shareConfig.url,
         })
         .catch(() => {
-          // User dismissed the sheet — leave the click as a no-op. The
-          // sibling Facebook link remains available.
+          // User dismissed the sheet — leave the click as a no-op. Ratified
+          // silence, one of three: DESIGN.md → "The Silence Is An Answer
+          // Rule" (#2470/#2580) — a dismissal is not a failure, and the
+          // sibling Facebook link is the explicit alternative.
         });
       return;
     }

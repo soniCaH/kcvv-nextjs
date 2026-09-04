@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { userEvent, within } from "storybook/test";
 import { MembershipForm } from "@/components/club/MembershipForm/MembershipForm";
 
 /**
@@ -42,4 +43,32 @@ export const Vrijwilliger: Story = {
 /** Minor youth player — medical cert + parent-consent block both visible. */
 export const MinderjarigeJeugdspeler: Story = {
   args: { defaultRole: "jeugdspeler", defaultBirthDate: "2014-05-01" },
+};
+
+/**
+ * The transport `fetch` rejects (#2580) — a Tier 2 `<EmptyState>` notice, no
+ * action (the submit button below it already survives). Forcing the
+ * rejection via `beforeEach` keeps this deterministic for VR.
+ */
+export const TransportFailure: Story = {
+  args: { defaultRole: "vrijwilliger" },
+  beforeEach: () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = () => Promise.reject(new Error("Network error"));
+    return () => {
+      globalThis.fetch = original;
+    };
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText(/Voornaam/), "Jan");
+    await userEvent.type(canvas.getByLabelText(/Achternaam/), "Peeters");
+    await userEvent.type(canvas.getByLabelText(/Geboortedatum/), "1990-06-15");
+    await userEvent.selectOptions(canvas.getByLabelText(/Geslacht/), "m");
+    await userEvent.type(canvas.getByLabelText(/Gemeente/), "Elewijt");
+    await userEvent.type(canvas.getByLabelText(/^E-mail/), "jan@example.com");
+    await userEvent.click(canvas.getByLabelText(/privacyverklaring/i));
+    await userEvent.click(canvas.getByText(/Verstuur aanvraag/));
+    await canvas.findByRole("alert");
+  },
 };

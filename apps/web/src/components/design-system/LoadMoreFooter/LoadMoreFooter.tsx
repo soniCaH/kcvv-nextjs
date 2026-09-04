@@ -29,16 +29,25 @@ export function LoadMoreFooter({
   onLoadMore,
 }: LoadMoreFooterProps) {
   if (error) {
+    // #2470's copy table calls this "Tier 2 + action", but the register it
+    // specifies doesn't exist yet: `<EmptyState tier="slot">`'s
+    // failure-notice member has no action prop at all, and `<ErrorState>` is
+    // a `min-h-[70vh]` full-page composition, not an in-flow footer. Staying
+    // bespoke here is a deliberate stopgap, not a style choice — see #2816.
+    // The retry is a substitution, not an addition: the load-more button it
+    // replaces is unreachable behind the if-chain below (#2470 resolution
+    // rule 4). `text-alert` is the palette's error token; `<Button
+    // variant="ghost" size="sm">` is the same in-surface action
+    // `<EmptyState reason="filtered">`'s own undo renders — reaching for the
+    // primitive already imported below rather than a hand-rolled underlined
+    // link gets the 24px WCAG 2.5.8 tap target for free. "Probeer opnieuw" —
+    // the locked phrasing (#2433 rule 9's 4-to-2 collapse).
     return (
       <div className="py-4 text-center">
-        <p className="mb-2 text-red-400">{error}</p>
-        <button
-          type="button"
-          className="text-jersey-deep text-sm underline hover:no-underline"
-          onClick={onLoadMore}
-        >
-          Opnieuw proberen
-        </button>
+        <p className="text-alert mb-2">{error}</p>
+        <Button variant="ghost" size="sm" onClick={onLoadMore}>
+          Probeer opnieuw
+        </Button>
       </div>
     );
   }

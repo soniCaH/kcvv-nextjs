@@ -15,7 +15,7 @@ import { SearchPreSearchCard } from "./SearchPreSearchCard";
 import { SearchAnswerCard } from "./SearchAnswerCard";
 import { SearchRelated } from "./SearchRelated";
 import { useSemanticAugment } from "./useSemanticAugment";
-import { Alert, PageContainer, Spinner } from "@/components/design-system";
+import { EmptyState, PageContainer, Spinner } from "@/components/design-system";
 import { useSearchAnalytics } from "@/hooks/useSearchAnalytics";
 import { filterByActiveType } from "./search-filter-utils";
 import type {
@@ -74,7 +74,7 @@ export const SearchInterface = ({
   );
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
 
   // AbortController ref for cancelling in-flight requests
@@ -92,7 +92,7 @@ export const SearchInterface = ({
       }
       setResults([]);
       setTotalCount(0);
-      setError(null);
+      setError(false);
       setIsLoading(false);
       return;
     }
@@ -107,7 +107,7 @@ export const SearchInterface = ({
     abortControllerRef.current = controller;
 
     setIsLoading(true);
-    setError(null);
+    setError(false);
 
     try {
       // Always fetch unfiltered results (no type param)
@@ -135,7 +135,7 @@ export const SearchInterface = ({
         return;
       }
 
-      setError("Er ging iets mis bij het zoeken — probeer opnieuw.");
+      setError(true);
       setResults([]);
       setTotalCount(0);
     } finally {
@@ -317,11 +317,33 @@ export const SearchInterface = ({
               </div>
             )}
 
-            {/* Error State — paper ticket-stub Alert (8s4). */}
+            {/* Error state — only <SearchResults> below is gone on this
+                branch (filters, a semantic answer card, and "Gerelateerd"
+                links above/below this slot are NOT guarded by `error` and
+                keep rendering). tier "surface" is still the right register
+                for it: it's the exact same slot `<SearchNoResultsCard>`
+                already occupies for the "genuinely zero matches" case
+                (also tier "surface", SearchNoResultsCard.tsx), so a failed
+                fetch and an empty one read as the same weight in the same
+                place, per #2427's tier split. No action row: the search
+                form above (in <SearchMasthead>) already survives with the
+                query intact, so a second "probeer opnieuw" here would be
+                redundant chrome (#2470 resolution rule 4). Replaces the
+                ticket-stub <Alert> — its last production consumer (#2580).
+                `live="assertive"` stays explicit here (tier "surface" has
+                no failure discriminant to derive it from, unlike tier
+                "slot"'s `reason="unavailable"` — #2815) and matches the
+                <Alert variant="error"> this replaces: the visitor just
+                pressed "Zoeken", so the failure needs an immediate
+                announcement. */}
             {error && !isLoading && (
-              <Alert variant="error" title="Zoeken mislukt">
-                {error}
-              </Alert>
+              <EmptyState
+                tier="surface"
+                heading="Zoeken mislukt"
+                live="assertive"
+              >
+                Er ging iets mis bij het zoeken — probeer opnieuw.
+              </EmptyState>
             )}
 
             {/* Results */}

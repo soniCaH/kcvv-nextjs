@@ -9,6 +9,7 @@ import {
 import {
   Button,
   ClippedCard,
+  EmptyState,
   Input,
   Label,
   Select,
@@ -47,7 +48,14 @@ interface MembershipFormProps {
   defaultBirthDate?: string;
 }
 
-type SubmitState = "idle" | "submitting" | "success" | "error";
+// "invalid" covers both client-side validation and a server rejection —
+// #2470 rule 6 already treats those as one family (per-field `<AlertBadge>`
+// territory). "transport-error" is the one client-initiated failure this
+// ticket adds a notice for. Splitting the old bare "error" member this way
+// makes the two outcomes mutually exclusive by construction — no separate
+// boolean needed alongside it.
+type SubmitState =
+  "idle" | "submitting" | "success" | "invalid" | "transport-error";
 
 function CheckboxField({
   id,
@@ -145,7 +153,7 @@ export function MembershipForm({
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors);
       setGeneralError("Controleer de gemarkeerde velden.");
-      setState("error");
+      setState("invalid");
       return;
     }
 
@@ -193,6 +201,9 @@ export function MembershipForm({
         return;
       }
 
+      // `data.error` is authored Dutch copy from the BFF/route handler —
+      // never a raw caught error — so it must survive; the fallback only
+      // covers a body with no `error` at all.
       if (response.status === 400 && data.fields) {
         setFieldErrors(data.fields);
       }
@@ -200,12 +211,14 @@ export function MembershipForm({
         data.error ??
           "Er ging iets mis. Controleer je gegevens en probeer opnieuw.",
       );
-      setState("error");
-    } catch {
-      setGeneralError(
-        "Verzenden mislukt. Controleer je internetverbinding en probeer opnieuw.",
-      );
-      setState("error");
+      setState("invalid");
+    } catch (err) {
+      // The caught error goes to the console only — the visitor sees the
+      // locked Dutch copy below, never the transport error's own text
+      // (#2580 rule 6). The submit button survives this failure (it's still
+      // on screen, re-enabled), so no retry action is added (#2580 rule 4).
+      console.error("[MembershipForm] Failed to submit:", err);
+      setState("transport-error");
     }
   };
 
@@ -449,6 +462,24 @@ export function MembershipForm({
           >
             {generalError}
           </p>
+        ) : null}
+
+        {/* Tier 2, no action (#2580 rule 4): the submit button below already
+            survives this failure, so a second control here would be
+            redundant. Replaces the raw `<p role="alert" aria-live="assertive"
+            className="text-alert">` this branch used to share with the
+            field-validation summary above. */}
+        {state === "transport-error" ? (
+          <EmptyState
+            tier="slot"
+            reason="unavailable"
+            live
+            emphasis={{ text: "mislukt" }}
+            className="mt-5"
+          >
+            Verzenden mislukt. Controleer je internetverbinding en probeer
+            opnieuw.
+          </EmptyState>
         ) : null}
 
         <div className="border-paper-edge mt-7 flex items-center justify-between border-t border-dashed pt-4">

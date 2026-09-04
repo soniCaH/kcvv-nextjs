@@ -6,7 +6,7 @@
  * surfaced, so URL generation is asserted through the clipboard.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CalendarSubscribePanel } from "./CalendarSubscribePanel";
 import { trackEvent } from "@/lib/analytics/track-event";
@@ -181,6 +181,112 @@ describe("CalendarSubscribePanel", () => {
       const toggle = screen.getByRole("switch", { name: /clubactiviteiten/i });
       await user.click(toggle);
       expect(toggle).toHaveAttribute("aria-checked", "false");
+    });
+  });
+
+  describe("copy failure (#2580)", () => {
+    it("shows a failure notice, logs to the console, and never surfaces the raw error", async () => {
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      const clipboardError = new Error("denied");
+      mockWriteText.mockRejectedValueOnce(clipboardError);
+
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
+
+      // The accented substring splits the sentence across DOM nodes, so
+      // assert on the notice's own alert region's full text content.
+      // `role="alert"` (not "status"): the visitor just clicked "Kopieer
+      // link", so the failure is announced immediately (#2580 review
+      // finding 3).
+      const notice = await screen.findByRole("alert");
+      expect(notice).toHaveTextContent(
+        "Kopiëren mislukt. Scan de QR-code om te abonneren.",
+      );
+      // The visitor never sees the caught error's own text.
+      expect(screen.queryByText("denied")).not.toBeInTheDocument();
+      expect(consoleError).toHaveBeenCalledWith(
+        "Failed to copy to clipboard:",
+        clipboardError,
+      );
+
+      consoleError.mockRestore();
+    });
+
+    it("clears the failure notice after a subsequent successful copy", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      mockWriteText.mockRejectedValueOnce(new Error("denied"));
+
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      const copyButton = screen.getByRole("button", { name: /Kopieer link/ });
+      await user.click(copyButton);
+      await screen.findByRole("alert");
+
+      mockWriteText.mockResolvedValueOnce(undefined);
+      await user.click(copyButton);
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+
+    it("clears the failure notice when the team selection changes", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      mockWriteText.mockRejectedValueOnce(new Error("denied"));
+
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      await user.click(screen.getByRole("button", { name: /Kopieer link/ }));
+      await screen.findByRole("alert");
+
+      // Removing a team changes `webcalUrl` — the notice described a click
+      // against the URL as it stood before this change, so it must not
+      // survive describing a URL that no longer matches the selection.
+      await user.click(
+        screen.getAllByRole("button", { name: /Verwijder/ })[0]!,
+      );
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+
+    it("keeps a later failure's notice when an earlier, now-stale attempt resolves successfully afterwards", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const user = userEvent.setup();
+      render(<CalendarSubscribePanel {...defaultProps} />);
+      const copyButton = screen.getByRole("button", { name: /Kopieer link/ });
+
+      // Attempt A: all three teams selected, held pending — resolves later.
+      let resolveA!: () => void;
+      const pendingA = new Promise<void>((resolve) => {
+        resolveA = resolve;
+      });
+      mockWriteText.mockReturnValueOnce(pendingA);
+      await user.click(copyButton);
+
+      // Change the selection while A is still in flight — webcalUrl now
+      // differs from what A captured.
+      await user.click(
+        screen.getAllByRole("button", { name: /Verwijder/ })[0]!,
+      );
+
+      // Attempt B: the new (smaller) selection, fails immediately.
+      mockWriteText.mockRejectedValueOnce(new Error("denied"));
+      await user.click(copyButton);
+      await screen.findByRole("alert");
+
+      // A now resolves successfully, for a URL that is no longer current —
+      // it must not clear B's still-accurate failure notice (#2580: this
+      // used to be an unconditional `setFailedUrl(null)` on any success).
+      resolveA();
+      await waitFor(() => expect(mockWriteText).toHaveBeenCalledTimes(2));
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+
+      // The reverse order — B (the later click) succeeding while A (the
+      // earlier one) is still pending — is already correct by construction:
+      // `prev === webcalUrl` only ever compares against the CURRENT
+      // `webcalUrl` a settling attempt itself captured, so it needs no
+      // separate case here.
     });
   });
 

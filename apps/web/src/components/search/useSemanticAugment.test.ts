@@ -43,7 +43,7 @@ function setHook(partial: Partial<UseSemanticSearchReturn>) {
     results: [],
     answer: undefined,
     loading: false,
-    error: null,
+    error: false,
     executedQuery: "voetbal",
     search: vi.fn(),
     clear: vi.fn(),
@@ -113,7 +113,7 @@ describe("useSemanticAugment", () => {
   });
 
   it("returns 'none' (silent failure) when there are no results", () => {
-    setHook({ results: [], error: "Search failed: 503" });
+    setHook({ results: [], error: true });
     expect(run().kind).toBe("none");
   });
 
