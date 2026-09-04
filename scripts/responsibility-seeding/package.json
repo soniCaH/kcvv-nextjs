@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "create-gc-node": "tsx src/create-gc-node.ts",
-    "seed": "tsx src/seed-responsibilities.ts"
+    "seed": "tsx src/seed-responsibilities.ts",
+    "restore-missing": "tsx src/restore-missing-responsibilities.ts"
   },
   "dependencies": {
     "@sanity/client": "8.4.0"
