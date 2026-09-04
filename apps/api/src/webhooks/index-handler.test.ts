@@ -154,6 +154,23 @@ describe("handleIndexWebhook", () => {
     expect(deleteByIdsSpy).toHaveBeenCalledWith(["doc-to-delete"]);
   });
 
+  it("deletes the vector of a retired type the schema no longer knows", async () => {
+    // responsibilityPath was indexed, then retired. Its delete webhook is the
+    // only event that will ever name its vector; gating it on ALLOWED_TYPES
+    // stranded the vector and one stranded vector failed all of search.
+    const body = JSON.stringify({
+      _id: "path-legacy",
+      _type: "responsibilityPath",
+    });
+    const request = await makeSignedRequest(body, { operation: "delete" });
+
+    const response = await handleIndexWebhook(request, makeEnv(), defaultLayer);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true, action: "deleted" });
+    expect(deleteByIdsSpy).toHaveBeenCalledWith(["path-legacy"]);
+  });
+
   it("returns 200 with skipped_unknown_type for unknown document type", async () => {
     const body = JSON.stringify({ _id: "doc-1", _type: "unknownType" });
     const request = await makeSignedRequest(body);

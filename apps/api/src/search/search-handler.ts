@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import { SearchResultType } from "@kcvv/api-contract";
 import type { SearchRequest, SearchResponse } from "@kcvv/api-contract";
 import { EmbeddingService, type EmbeddingError } from "./embedding";
 import { VectorizeService, type VectorizeError } from "./vectorize";
@@ -8,6 +9,13 @@ export const MIN_SCORE = 0.35;
 export const LLM_SCORE_THRESHOLD = 0.5;
 
 export type SearchError = EmbeddingError | VectorizeError;
+
+/**
+ * The types the response contract admits. Vectorize outlives the schema: a
+ * retired type's vectors stay until something names them, and one of those
+ * rows fails the entire SearchResponse. Drop the row, keep the search.
+ */
+const RESULT_TYPES = new Set<string>(SearchResultType.literals);
 
 const TYPE_FILTER: Record<string, string> = {
   responsibility: "responsibility",
@@ -40,14 +48,16 @@ export const handleSearch = (
     });
 
     const results = matches
-      .filter((m) => m.score >= MIN_SCORE)
+      .filter(
+        (m) =>
+          m.score >= MIN_SCORE &&
+          RESULT_TYPES.has(String(m.metadata?.["type"] ?? "responsibility")),
+      )
       .map((m) => ({
         id: m.id,
         slug: m.metadata?.["slug"] ?? "",
         type: (m.metadata?.["type"] ?? "responsibility") as
-          | "responsibility"
-          | "article"
-          | "page",
+          "responsibility" | "article" | "page",
         score: m.score,
         title: m.metadata?.["title"] ?? "",
         excerpt: m.metadata?.["excerpt"] ?? "",
