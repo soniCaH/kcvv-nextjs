@@ -214,13 +214,12 @@ const webhookEffect = (request: Request, webhookSecret: string) =>
       return Response.json({ ok: true, action: "skipped_unknown_operation" });
     }
 
-    // 6. Check document type
-    if (!isAllowedType(_type)) {
-      return Response.json({ ok: true, action: "skipped_unknown_type" });
-    }
-    const docType = _type;
-
-    // 7. Delete path
+    // 6. Delete path — ahead of the type gate on purpose. A retired type still
+    // has vectors in the index from when it was indexed, and its delete
+    // webhook is the only event that will ever name them; gating it on the
+    // current ALLOWED_TYPES stranded every `responsibilityPath` vector, and one
+    // stranded vector fails the whole search response, not just its own row.
+    // Deleting an id the index does not hold is a no-op.
     if (operation === "delete") {
       yield* vectorize
         .deleteByIds([_id])
@@ -232,6 +231,12 @@ const webhookEffect = (request: Request, webhookSecret: string) =>
         );
       return Response.json({ ok: true, action: "deleted" });
     }
+
+    // 7. Check document type
+    if (!isAllowedType(_type)) {
+      return Response.json({ ok: true, action: "skipped_unknown_type" });
+    }
+    const docType = _type;
 
     // 8. Fetch document from Sanity
     const sanityClient = createClient({

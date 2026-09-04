@@ -106,6 +106,49 @@ describe("handleSearch", () => {
     expect(result.results[0]!.score).toBe(0.95);
   });
 
+  it("drops a vector whose type the response contract no longer admits", async () => {
+    const result = await Effect.runPromise(
+      provideAllServices(handleSearch({ query: "transfers", limit: 5 }), {
+        matches: [
+          makeHit("kept", 0.9),
+          {
+            id: "path-legacy",
+            score: 0.88,
+            metadata: {
+              slug: "legacy",
+              type: "responsibilityPath",
+              title: "Legacy",
+              excerpt: "Retired type still in the index",
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(result.results.map((r) => r.id)).toEqual(["kept"]);
+  });
+
+  it("drops a vector that carries no type at all", async () => {
+    const result = await Effect.runPromise(
+      provideAllServices(handleSearch({ query: "transfers", limit: 5 }), {
+        matches: [
+          makeHit("kept", 0.9),
+          {
+            id: "no-type",
+            score: 0.88,
+            metadata: {
+              slug: "untyped",
+              title: "Untyped",
+              excerpt: "Metadata never wrote a type",
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(result.results.map((r) => r.id)).toEqual(["kept"]);
+  });
+
   it("returns empty results when no matches", async () => {
     const result = await Effect.runPromise(
       provideAllServices(handleSearch({ query: "unknown", limit: 5 })),
@@ -221,8 +264,7 @@ describe("handleSearch — LLM answer", () => {
     const generateAnswer = vi.fn(() =>
       Effect.succeed(
         "De kantine wordt beheerd door de kantineverantwoordelijke." as
-          | string
-          | undefined,
+          string | undefined,
       ),
     );
 
