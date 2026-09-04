@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   ARTICLE_INDEX_PROJECTION,
+  ARTICLE_PUBLISHED_FILTER,
   buildArticleExcerpt,
   buildArticleIndexText,
   buildPageIndexText,
@@ -38,11 +39,11 @@ describe("stripTableHtml", () => {
     expect(result).toContain("Zondag 15:00");
   });
 
-  it("turns &nbsp; into a space rather than an index token", () => {
-    const result = stripTableHtml("<td>KFC&nbsp;Herent</td>");
-
-    expect(result).toBe("KFC Herent");
-    expect(result).not.toContain("nbsp");
+  it("turns entities into spaces rather than index tokens", () => {
+    expect(stripTableHtml("<td>KFC&nbsp;Herent</td>")).toBe("KFC Herent");
+    expect(stripTableHtml("<td>Jan&amp;Piet</td>")).toBe("Jan Piet");
+    expect(stripTableHtml("<td>A&#39;B</td>")).toBe("A B");
+    expect(stripTableHtml("<td>&nbsp;</td>")).toBe("");
   });
 
   it("collapses the whitespace the tags leave behind", () => {
@@ -57,21 +58,41 @@ describe("stripTableHtml", () => {
 });
 
 describe("buildArticleIndexText", () => {
-  it("combines title, tags, lead, body text, and table text", () => {
-    const result = buildArticleIndexText({
-      title: "Verslag: KCVV wint derby",
-      tags: ["verslag", "derby"],
-      lead: "Een late kopbal besliste de derby.",
-      bodyText: "KCVV Elewijt won de derby met 3-1.",
-      tableHtml: "<table><tr><td>Jef Janssens</td></tr></table>",
-    });
+  const base = {
+    title: "Verslag: KCVV wint derby",
+    tags: ["verslag", "derby"],
+    lead: "Een late kopbal besliste de derby.",
+    prose: "KCVV Elewijt won de derby met 3-1.",
+    qaQuestions: ["Hoe ging het?"],
+    qaAnswers: "Uitstekend, echt waar.",
+    tableHtml: ["<table><tr><td>Jef Janssens</td></tr></table>"],
+  };
+
+  it("combines title, tags, lead, prose, Q&A, and table text", () => {
+    const result = buildArticleIndexText(base);
 
     expect(result).toContain("Verslag: KCVV wint derby");
     expect(result).toContain("verslag derby");
     expect(result).toContain("Een late kopbal besliste de derby.");
     expect(result).toContain("KCVV Elewijt won de derby met 3-1.");
+    expect(result).toContain("Hoe ging het?");
+    expect(result).toContain("Uitstekend, echt waar.");
     expect(result).toContain("Jef Janssens");
     expect(result).not.toContain("<td>");
+  });
+
+  it("keeps the whole interview when the body holds no prose at all", () => {
+    // `pt::text(body)` returns null, not "", for a body with no top-level
+    // block, so a Q&A-only article is exactly the case a GROQ-side join would
+    // blank out — the article this fix exists for.
+    const result = buildArticleIndexText({
+      ...base,
+      prose: "",
+      tableHtml: [],
+    });
+
+    expect(result).toContain("Hoe ging het?");
+    expect(result).toContain("Uitstekend, echt waar.");
   });
 
   it("indexes a squad name that lives only inside a table", () => {
@@ -79,67 +100,102 @@ describe("buildArticleIndexText", () => {
       title: "Transferoverzicht kern 2024-2025",
       tags: ["transfers"],
       lead: "",
-      bodyText: "Een overzicht van de kern.",
-      tableHtml:
+      prose: "Een overzicht van de kern.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: [
         "<table><tr><td>Bocar Sarr</td><td>FC Mariekerke</td></tr></table>",
+      ],
     });
 
     expect(result).toContain("Bocar Sarr");
     expect(result).toContain("FC Mariekerke");
   });
 
-  it("handles null body text gracefully", () => {
+  it("drops the null elements GROQ leaves in the projected arrays", () => {
+    // A `pairs[]` entry with no question, or an htmlTable with no html, comes
+    // back as a null element — which is why the join is here and not in GROQ.
     const result = buildArticleIndexText({
-      title: "Kort bericht",
-      tags: ["nieuws"],
-      lead: "",
-      bodyText: null,
-      tableHtml: "",
+      ...base,
+      qaQuestions: [null, "Hoe ging het?"],
+      tableHtml: [null, "<td>Goed</td>"],
     });
 
-    expect(result).toContain("Kort bericht");
-    expect(result).toContain("nieuws");
+    expect(result).toContain("Hoe ging het?");
+    expect(result).toContain("Goed");
     expect(result).not.toContain("null");
   });
 
-  it("adds nothing for an article with no table and no lead", () => {
+  it("emits no bare separators for an article that is prose and nothing else", () => {
     const result = buildArticleIndexText({
       title: "Kort bericht",
       tags: [],
       lead: "",
-      bodyText: "Enkel proza.",
-      tableHtml: "",
+      prose: "Enkel proza.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: [],
     });
 
     expect(result).toBe("Kort bericht. Enkel proza.");
     expect(result).not.toContain("undefined");
+    expect(result).not.toContain("null");
+  });
+
+  it("yields an empty string for an article with nothing indexable", () => {
+    expect(
+      buildArticleIndexText({
+        title: "",
+        tags: [],
+        lead: "",
+        prose: "",
+        qaQuestions: [],
+        qaAnswers: "",
+        tableHtml: [],
+      }),
+    ).toBe("");
   });
 });
 
 describe("buildArticleExcerpt", () => {
   it("prefers the editor's lead", () => {
-    const result = buildArticleExcerpt({
-      lead: "Een late kopbal besliste de derby.",
-      bodyText: "KCVV Elewijt won de derby met 3-1.",
-    });
-
-    expect(result).toBe("Een late kopbal besliste de derby.");
+    expect(
+      buildArticleExcerpt({
+        lead: "Een late kopbal besliste de derby.",
+        prose: "KCVV Elewijt won de derby met 3-1.",
+      }),
+    ).toBe("Een late kopbal besliste de derby.");
   });
 
-  it("falls back to the body when the lead is empty", () => {
-    const result = buildArticleExcerpt({
-      lead: "",
-      bodyText: "KCVV Elewijt won de derby met 3-1.",
-    });
-
-    expect(result).toBe("KCVV Elewijt won de derby met 3-1.");
+  it("falls back to the prose, never to the Q&A or the table text", () => {
+    // The fallback is the article's own opening paragraph. An interview with
+    // an empty lead must not show "Hoe ging het? Uitstekend" as its summary.
+    expect(buildArticleExcerpt({ lead: "", prose: "Inleidend proza." })).toBe(
+      "Inleidend proza.",
+    );
   });
 
   it("caps at 200 characters and never yields null", () => {
     expect(
-      buildArticleExcerpt({ lead: "x".repeat(300), bodyText: null }),
+      buildArticleExcerpt({ lead: "x".repeat(300), prose: "" }),
     ).toHaveLength(200);
-    expect(buildArticleExcerpt({ lead: "", bodyText: null })).toBe("");
+    expect(buildArticleExcerpt({ lead: "", prose: "" })).toBe("");
+  });
+});
+
+describe("ARTICLE_PUBLISHED_FILTER", () => {
+  it("uses publishedAt, the field the schema actually defines", () => {
+    // `publishAt` matched 0 of 125 published articles, and GROQ reports a
+    // misspelling as an empty result — the nightly sweep indexed nothing while
+    // its logs read as a clean run (#2806).
+    expect(ARTICLE_PUBLISHED_FILTER).toContain("publishedAt <= now()");
+    expect(ARTICLE_PUBLISHED_FILTER).not.toMatch(/(?<!un)publishAt/);
+  });
+
+  it("still excludes articles past their unpublishAt", () => {
+    expect(ARTICLE_PUBLISHED_FILTER).toContain(
+      "!defined(unpublishAt) || unpublishAt > now()",
+    );
   });
 });
 
@@ -154,13 +210,20 @@ describe("ARTICLE_INDEX_PROJECTION", () => {
     expect(ARTICLE_INDEX_PROJECTION).toContain("htmlTable");
   });
 
-  it("wraps the Q&A branches in coalesce so a prose-only article keeps its body", () => {
-    // `pt::text(body) + " " + pt::text(body[_type=="qaBlock"]...)` returns null
-    // on the 121 of 125 articles that carry no qaBlock — GROQ propagates null
-    // through `+`. array::join over coalesced branches is what avoids that.
-    expect(ARTICLE_INDEX_PROJECTION).toContain("array::join");
-    expect(ARTICLE_INDEX_PROJECTION).toContain("coalesce(body[_type==");
+  it("never joins the branches in GROQ, where null propagates", () => {
+    // Both `+` and array::join return null if any operand is null, and
+    // `pt::text(body)` is null for a body with no top-level block. Joining
+    // here would blank a Q&A-only or table-only article entirely.
+    expect(ARTICLE_INDEX_PROJECTION).not.toContain("array::join");
     expect(ARTICLE_INDEX_PROJECTION).not.toMatch(/pt::text\(body\)\s*\+/);
+  });
+
+  it("coalesces every branch so no field is ever null", () => {
+    for (const field of ["prose", "qaQuestions", "qaAnswers", "tableHtml"]) {
+      expect(ARTICLE_INDEX_PROJECTION).toMatch(
+        new RegExp(`"${field}": coalesce\\(`),
+      );
+    }
   });
 });
 

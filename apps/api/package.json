@@ -25,6 +25,7 @@
     "@cloudflare/workers-types": "5.20260901.1",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitest/coverage-v8": "4.1.11",
+    "groq-js": "2.0.0",
     "typescript": "6.0.3",
     "typescript-eslint": "8.68.0",
     "vitest": "4.1.11",

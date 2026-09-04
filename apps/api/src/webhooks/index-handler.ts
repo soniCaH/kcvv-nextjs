@@ -6,6 +6,7 @@ import { sanityClientConfig } from "../sanity/config";
 import { EmbeddingService, EmbeddingServiceLive } from "../search/embedding";
 import {
   ARTICLE_INDEX_PROJECTION,
+  ARTICLE_PUBLISHED_FILTER,
   buildArticleExcerpt,
   buildArticleIndexText,
   buildPageIndexText,
@@ -70,8 +71,12 @@ const ArticleDoc = S.Struct({
   title: S.String,
   lead: S.String,
   tags: S.Array(S.String),
-  bodyText: S.NullOr(S.String),
-  tableHtml: S.String,
+  prose: S.String,
+  // GROQ leaves a null element for a `pairs[]` entry with no question, or an
+  // `htmlTable` with no html. Declaring that is what keeps the type honest.
+  qaQuestions: S.Array(S.NullOr(S.String)),
+  qaAnswers: S.String,
+  tableHtml: S.Array(S.NullOr(S.String)),
   slug: S.String,
   imageUrl: S.optional(S.NullOr(S.String)),
 });
@@ -107,7 +112,7 @@ const typeDescriptors: Record<AllowedType, TypeDescriptor> = {
     },
   },
   article: {
-    query: `*[_id == $id][0]{ ${ARTICLE_INDEX_PROJECTION} }`,
+    query: `*[_id == $id && ${ARTICLE_PUBLISHED_FILTER}][0]{ ${ARTICLE_INDEX_PROJECTION} }`,
     buildIndex: (doc) => {
       const r = S.decodeUnknownSync(ArticleDoc)(doc);
       return {

@@ -5,6 +5,7 @@ import { sanityClientConfig } from "../sanity/config";
 import { EmbeddingService } from "./embedding";
 import {
   ARTICLE_INDEX_PROJECTION,
+  ARTICLE_PUBLISHED_FILTER,
   buildArticleExcerpt,
   buildArticleIndexText,
   buildPageIndexText,
@@ -29,8 +30,10 @@ interface SanityArticleDoc {
   title: string;
   lead: string;
   tags: string[];
-  bodyText: string | null;
-  tableHtml: string;
+  prose: string;
+  qaQuestions: (string | null)[];
+  qaAnswers: string;
+  tableHtml: (string | null)[];
   imageUrl: string | null;
 }
 
@@ -54,7 +57,7 @@ const RESPONSIBILITY_QUERY = `*[_type == "responsibility" && active == true] {
 
 // Exported for the test that pins the `publishedAt` field name — the
 // reconciliation injects its fetcher, so nothing else exercises this string.
-export const ARTICLE_QUERY = `*[_type == "article" && publishedAt <= now() && (!defined(unpublishAt) || unpublishAt > now())] {
+export const ARTICLE_QUERY = `*[_type == "article" && ${ARTICLE_PUBLISHED_FILTER}] {
   ${ARTICLE_INDEX_PROJECTION}
 }`;
 

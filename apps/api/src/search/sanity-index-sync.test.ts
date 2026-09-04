@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { Effect, Exit, Layer, Logger } from "effect";
 import { ARTICLE_QUERY, runSanityIndexSync } from "./sanity-index-sync";
-import { ARTICLE_INDEX_PROJECTION } from "./index-text";
+import {
+  ARTICLE_INDEX_PROJECTION,
+  ARTICLE_PUBLISHED_FILTER,
+} from "./index-text";
 import {
   EmbeddingError,
   EmbeddingService,
@@ -32,8 +35,10 @@ const mockArticle = {
   title: "KCVV wint derby",
   tags: ["verslag", "derby"],
   lead: "Een late kopbal besliste de derby.",
-  bodyText: "KCVV Elewijt won de derby met 3-1.",
-  tableHtml: "",
+  prose: "KCVV Elewijt won de derby met 3-1.",
+  qaQuestions: [] as (string | null)[],
+  qaAnswers: "",
+  tableHtml: [] as (string | null)[],
   imageUrl: null as string | null,
 };
 
@@ -252,7 +257,7 @@ describe("runSanityIndexSync", () => {
       ...mockArticle,
       _id: "article-no-body",
       lead: "",
-      bodyText: null,
+      prose: "",
     };
 
     await Effect.runPromise(
@@ -388,7 +393,7 @@ describe("runSanityIndexSync", () => {
             title: "Gelijkspel",
             tags: ["verslag"],
             lead: "Een puntendeling op bezoek.",
-            bodyText: "KCVV Elewijt speelde 1-1 gelijk.",
+            prose: "KCVV Elewijt speelde 1-1 gelijk.",
           },
         ]),
         fetchPages: noopFetch([]),
@@ -435,19 +440,13 @@ describe("runSanityIndexSync", () => {
   });
 });
 
+// What the query *matches* is pinned in article-projection.test.ts, which
+// evaluates it with groq-js. These two only pin that it is assembled from the
+// shared pieces rather than growing a second copy — the drift that put every
+// #2806 defect in both index paths at once.
 describe("ARTICLE_QUERY", () => {
-  // The field is `publishedAt`. `publishAt` matched 0 of 125 published
-  // articles and GROQ reports a misspelling as an empty result, so the nightly
-  // reconciliation indexed nothing while its logs read as a clean run (#2806).
-  it("filters on publishedAt, the field the schema actually defines", () => {
-    expect(ARTICLE_QUERY).toContain("publishedAt <= now()");
-    expect(ARTICLE_QUERY).not.toMatch(/(?<!un)publishAt/);
-  });
-
-  it("still excludes articles past their unpublishAt", () => {
-    expect(ARTICLE_QUERY).toContain(
-      "!defined(unpublishAt) || unpublishAt > now()",
-    );
+  it("gates on the shared publish window rather than its own copy", () => {
+    expect(ARTICLE_QUERY).toContain(ARTICLE_PUBLISHED_FILTER);
   });
 
   it("projects through the shared projection rather than its own copy", () => {

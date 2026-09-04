@@ -5,7 +5,10 @@ import type { WorkerEnv } from "../env";
 import { TEST_SECRET, signPayload } from "../test-helpers/svix-signing";
 import { EmbeddingService } from "../search/embedding";
 import { VectorizeService } from "../search/vectorize";
-import { ARTICLE_INDEX_PROJECTION } from "../search/index-text";
+import {
+  ARTICLE_INDEX_PROJECTION,
+  ARTICLE_PUBLISHED_FILTER,
+} from "../search/index-text";
 
 // Mock @sanity/client so the inlined webhook fetch returns controlled docs.
 const mockSanityFetch = vi.fn();
@@ -223,8 +226,10 @@ describe("handleIndexWebhook", () => {
       title: "KCVV wint!",
       lead: "Een late kopbal besliste de derby.",
       tags: ["verslag"],
-      bodyText: "KCVV won met 3-1.",
-      tableHtml: "",
+      prose: "KCVV won met 3-1.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: [],
     };
 
     mockSanityFetch.mockResolvedValue(articleDoc);
@@ -253,8 +258,10 @@ describe("handleIndexWebhook", () => {
       title: "KCVV wint!",
       lead: "Een late kopbal besliste de derby.",
       tags: ["verslag"],
-      bodyText: "KCVV won met 3-1.",
-      tableHtml: "",
+      prose: "KCVV won met 3-1.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: [],
       imageUrl: "https://cdn.example.com/cover.jpg",
     };
 
@@ -281,8 +288,10 @@ describe("handleIndexWebhook", () => {
       title: "KCVV wint!",
       lead: "Een late kopbal besliste de derby.",
       tags: ["verslag"],
-      bodyText: "KCVV won met 3-1.",
-      tableHtml: "",
+      prose: "KCVV won met 3-1.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: [],
     };
 
     mockSanityFetch.mockResolvedValue(articleDoc);
@@ -316,6 +325,24 @@ describe("handleIndexWebhook", () => {
     expect(mockSanityFetch.mock.calls[0]?.[0]).toContain("pt::text(title)");
   });
 
+  it("gates the webhook on the same publish window as the nightly reindex", async () => {
+    // The sync only upserts, so anything the webhook admits early — a
+    // future-dated article, or one past its unpublishAt — would sit in the
+    // index until something deleted it.
+    mockSanityFetch.mockResolvedValue(null);
+    const body = JSON.stringify({ _id: "article-001", _type: "article" });
+
+    await handleIndexWebhook(
+      await makeSignedRequest(body),
+      makeEnv(),
+      defaultLayer,
+    );
+
+    expect(mockSanityFetch.mock.calls[0]?.[0]).toContain(
+      ARTICLE_PUBLISHED_FILTER,
+    );
+  });
+
   it("shares one article projection with the nightly reindex", async () => {
     mockSanityFetch.mockResolvedValue(null);
     const body = JSON.stringify({ _id: "article-001", _type: "article" });
@@ -338,8 +365,10 @@ describe("handleIndexWebhook", () => {
       title: "Transferoverzicht kern 2024-2025",
       lead: "",
       tags: ["transfers"],
-      bodyText: "Een overzicht van de kern.",
-      tableHtml: "<table><tr><td>Bocar Sarr</td></tr></table>",
+      prose: "Een overzicht van de kern.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: [null, "<table><tr><td>Bocar Sarr</td></tr></table>"],
     });
     const embedded: string[] = [];
     const layer = Layer.mergeAll(
@@ -372,8 +401,10 @@ describe("handleIndexWebhook", () => {
       title: "KCVV wint!",
       lead: "Een late kopbal besliste de derby.",
       tags: ["verslag"],
-      bodyText: "KCVV won met 3-1.",
-      tableHtml: "",
+      prose: "KCVV won met 3-1.",
+      qaQuestions: [],
+      qaAnswers: "",
+      tableHtml: [],
     });
 
     const body = JSON.stringify({ _id: "article-003", _type: "article" });

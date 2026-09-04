@@ -13,28 +13,41 @@
 export const ARTICLE_COVER_IMAGE_PROJECTION = `"imageUrl": coverImage.asset->url + "?w=800&h=450&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(coverImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(coverImage.hotspot.y, 0.5))`;
 
 /**
+ * The window an article is searchable in. Both index paths share it so a
+ * future-dated or expired article cannot enter the index down one path while
+ * the other holds it out — `runSanityIndexSync` only upserts, so anything the
+ * webhook admits early stays until something deletes it.
+ */
+export const ARTICLE_PUBLISHED_FILTER = `publishedAt <= now() && (!defined(unpublishAt) || unpublishAt > now())`;
+
+/**
  * The one article projection, shared by the nightly reindex
  * (sanity-index-sync) and the per-doc webhook. Both carried their own copy
  * until #2806, and every one of that issue's defects was present in both.
  *
- * Three of those defects live in this string:
+ * What it fixes:
  *
  * - `title` is Portable Text on all 125 published articles, so it is flattened
  *   here. Projected raw it decodes as an array against a declared `string` —
  *   the webhook's `S.decodeUnknownSync` then rejects the document outright and
  *   the article never reaches the index at all.
- * - `pt::text` renders top-level `block` nodes only, so a `qaBlock` answer
- *   contributes nothing. That hid ~90% of every interview.
+ * - `pt::text` renders top-level `block` nodes only, so `qaBlock` answers
+ *   contributed nothing. That hid roughly 90% of every interview.
+ * - `htmlTable` was invisible too, and on the transfer overviews and season
+ *   calendars the table *is* the article — 51 words of prose over an 11,000
+ *   character table.
  * - `lead` is the editor's standfirst and was indexed nowhere.
  *
- * The Q&A branches must be coalesced and joined, never concatenated with `+`:
- * GROQ propagates null through `+`, so `pt::text(body) + pt::text(body[...])`
- * blanks the body of the 121 of 125 articles that carry no `qaBlock`. Measured
- * across every published article, this projection yields zero nulls on every
- * field and takes the corpus from 49,568 to 52,331 indexed words.
- *
- * `tableHtml` comes back as raw HTML because GROQ cannot strip tags — see
- * `stripTableHtml`.
+ * **Every branch is projected separately and joined in TypeScript, never in
+ * GROQ.** GROQ propagates null through both `+` and `array::join`, and the
+ * null sources here are not hypothetical: `pt::text(body)` returns null (not
+ * `""`) for a body holding no top-level `block`, so a Q&A-only or table-only
+ * article would blank out entirely — the exact articles this projection
+ * exists to rescue. A `pairs[]` entry with no `question`, or an `htmlTable`
+ * with no `html`, puts a null *element* in an array, which `array::join` also
+ * propagates. `coalesce` on the outer value does not reach either case.
+ * Composing in TypeScript sidesteps the whole class; `buildArticleIndexText`
+ * filters the nulls out.
  *
  * ponytail: six of the eight non-`block` body types stay out, measured against
  * production in #2806, not guessed. `transferFact` (9 articles) would add only
@@ -50,27 +63,25 @@ export const ARTICLE_INDEX_PROJECTION = `_id,
   "title": coalesce(pt::text(title), title, ""),
   "lead": coalesce(lead, ""),
   "tags": coalesce(tags, []),
-  "bodyText": array::join([
-    pt::text(body),
-    array::join(coalesce(body[_type=="qaBlock"].pairs[].question, []), " "),
-    coalesce(pt::text(body[_type=="qaBlock"].pairs[].respondents[].answer), "")
-  ], " "),
-  "tableHtml": array::join(coalesce(body[_type=="htmlTable"].html, []), " "),
+  "prose": coalesce(pt::text(body), ""),
+  "qaQuestions": coalesce(body[_type=="qaBlock"].pairs[].question, []),
+  "qaAnswers": coalesce(pt::text(body[_type=="qaBlock"].pairs[].respondents[].answer), ""),
+  "tableHtml": coalesce(body[_type=="htmlTable"].html, []),
   ${ARTICLE_COVER_IMAGE_PROJECTION}`;
 
 /**
- * Flattens an authored `htmlTable` to indexable words. On the transfer
+ * Flattens authored `htmlTable` markup to indexable words. On the transfer
  * overviews and season calendars the table *is* the article — 51 words of
  * prose over an 11,000-character table — so without this every squad list the
  * club has published is unfindable by the names inside it.
  *
- * ponytail: three replaces, no parser and no dependency. The only entity
- * present across all 10 published tables is `&nbsp;`; add to the first replace
- * if a future table introduces others.
+ * ponytail: three replaces, no parser and no dependency. Entities become
+ * spaces rather than their characters: this text is embedded, never rendered,
+ * so a stray `&` would only be a dead token.
  */
 export function stripTableHtml(html: string): string {
   return html
-    .replace(/&nbsp;/g, " ")
+    .replace(/&[a-z]+;|&#\d+;/gi, " ")
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -87,19 +98,29 @@ export function buildResponsibilityIndexText(doc: {
     .join(". ");
 }
 
+/**
+ * The text an article is embedded from. The `filter(Boolean)` calls are load
+ * bearing twice over: they drop the null elements GROQ leaves in
+ * `qaQuestions` and `tableHtml`, and they keep an absent branch from leaving
+ * a bare separator behind.
+ */
 export function buildArticleIndexText(doc: {
   title: string;
   tags: readonly string[];
   lead: string;
-  bodyText: string | null;
-  tableHtml: string;
+  prose: string;
+  qaQuestions: readonly (string | null)[];
+  qaAnswers: string;
+  tableHtml: readonly (string | null)[];
 }): string {
   return [
     doc.title,
     doc.tags.join(" "),
     doc.lead,
-    doc.bodyText ?? "",
-    stripTableHtml(doc.tableHtml),
+    doc.prose,
+    doc.qaQuestions.filter(Boolean).join(" "),
+    doc.qaAnswers,
+    stripTableHtml(doc.tableHtml.filter(Boolean).join(" ")),
   ]
     .filter(Boolean)
     .join(". ");
@@ -110,17 +131,16 @@ export function buildArticleIndexText(doc: {
  * a result, the context handed to the AI answer, and the related-card blurb;
  * it never affects what matches.
  *
- * Drawn from the editor's `lead` rather than sliced off the index text, which
- * now leads with prose but also carries Q&A and table words behind it. Slicing
- * that blob means the excerpt silently changes the next time the projection is
- * reordered. Table text is deliberately excluded — it is index fodder, not a
- * readable summary.
+ * Drawn from the editor's `lead`, falling back to the article's prose. Neither
+ * the Q&A text nor the table text can reach it: an interview whose lead is
+ * empty should show its opening paragraph, not "Hoe ging het? Uitstekend", and
+ * a transfer overview should not show a run of table cells.
  */
 export function buildArticleExcerpt(doc: {
   lead: string;
-  bodyText: string | null;
+  prose: string;
 }): string {
-  return (doc.lead || doc.bodyText || "").slice(0, 200);
+  return (doc.lead || doc.prose).slice(0, 200);
 }
 
 export function buildPageIndexText(doc: {
