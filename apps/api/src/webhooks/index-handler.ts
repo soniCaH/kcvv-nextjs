@@ -5,7 +5,8 @@ import { WorkerEnvTag } from "../env";
 import { sanityClientConfig } from "../sanity/config";
 import { EmbeddingService, EmbeddingServiceLive } from "../search/embedding";
 import {
-  ARTICLE_COVER_IMAGE_PROJECTION,
+  ARTICLE_INDEX_PROJECTION,
+  buildArticleExcerpt,
   buildArticleIndexText,
   buildPageIndexText,
   buildResponsibilityIndexText,
@@ -63,10 +64,14 @@ const ResponsibilityDoc = S.Struct({
   slug: S.String,
 });
 
+// Every field below is coalesced in ARTICLE_INDEX_PROJECTION, so the declared
+// shape is what GROQ returns rather than a cast over it (#2806).
 const ArticleDoc = S.Struct({
   title: S.String,
+  lead: S.String,
   tags: S.Array(S.String),
   bodyText: S.NullOr(S.String),
+  tableHtml: S.String,
   slug: S.String,
   imageUrl: S.optional(S.NullOr(S.String)),
 });
@@ -102,7 +107,7 @@ const typeDescriptors: Record<AllowedType, TypeDescriptor> = {
     },
   },
   article: {
-    query: `*[_id == $id][0]{ _id, "slug": coalesce(slug.current,""), title, "tags": coalesce(tags,[]), "bodyText": pt::text(body), ${ARTICLE_COVER_IMAGE_PROJECTION} }`,
+    query: `*[_id == $id][0]{ ${ARTICLE_INDEX_PROJECTION} }`,
     buildIndex: (doc) => {
       const r = S.decodeUnknownSync(ArticleDoc)(doc);
       return {
@@ -111,7 +116,7 @@ const typeDescriptors: Record<AllowedType, TypeDescriptor> = {
           slug: r.slug,
           type: "article",
           title: r.title,
-          excerpt: (r.bodyText ?? "").slice(0, 200),
+          excerpt: buildArticleExcerpt(r),
           ...(r.imageUrl ? { imageUrl: r.imageUrl } : {}),
         },
       };

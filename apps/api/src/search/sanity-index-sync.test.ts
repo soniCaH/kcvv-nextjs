@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Effect, Exit, Layer, Logger } from "effect";
-import { runSanityIndexSync } from "./sanity-index-sync";
+import { ARTICLE_QUERY, runSanityIndexSync } from "./sanity-index-sync";
+import { ARTICLE_INDEX_PROJECTION } from "./index-text";
 import {
   EmbeddingError,
   EmbeddingService,
@@ -30,7 +31,9 @@ const mockArticle = {
   slug: "kcvv-wint-derby",
   title: "KCVV wint derby",
   tags: ["verslag", "derby"],
+  lead: "Een late kopbal besliste de derby.",
   bodyText: "KCVV Elewijt won de derby met 3-1.",
+  tableHtml: "",
   imageUrl: null as string | null,
 };
 
@@ -169,7 +172,9 @@ describe("runSanityIndexSync", () => {
     expect(doc!.metadata["slug"]).toBe("kcvv-wint-derby");
     expect(doc!.metadata["type"]).toBe("article");
     expect(doc!.metadata["title"]).toBe("KCVV wint derby");
-    expect(doc!.metadata["excerpt"]).toBe("KCVV Elewijt won de derby met 3-1.");
+    // The excerpt is the editor's lead, not a slice of the index text — that
+    // blob now carries Q&A and table words behind the prose (#2806).
+    expect(doc!.metadata["excerpt"]).toBe("Een late kopbal besliste de derby.");
     expect(doc!.metadata["imageUrl"]).toBeUndefined();
   });
 
@@ -246,6 +251,7 @@ describe("runSanityIndexSync", () => {
     const articleNoBody = {
       ...mockArticle,
       _id: "article-no-body",
+      lead: "",
       bodyText: null,
     };
 
@@ -381,6 +387,7 @@ describe("runSanityIndexSync", () => {
             _id: "article-002",
             title: "Gelijkspel",
             tags: ["verslag"],
+            lead: "Een puntendeling op bezoek.",
             bodyText: "KCVV Elewijt speelde 1-1 gelijk.",
           },
         ]),
@@ -425,5 +432,25 @@ describe("runSanityIndexSync", () => {
     expect(
       messages.some((m) => m.includes("Indexed 0/1 responsibility paths")),
     ).toBe(true);
+  });
+});
+
+describe("ARTICLE_QUERY", () => {
+  // The field is `publishedAt`. `publishAt` matched 0 of 125 published
+  // articles and GROQ reports a misspelling as an empty result, so the nightly
+  // reconciliation indexed nothing while its logs read as a clean run (#2806).
+  it("filters on publishedAt, the field the schema actually defines", () => {
+    expect(ARTICLE_QUERY).toContain("publishedAt <= now()");
+    expect(ARTICLE_QUERY).not.toMatch(/(?<!un)publishAt/);
+  });
+
+  it("still excludes articles past their unpublishAt", () => {
+    expect(ARTICLE_QUERY).toContain(
+      "!defined(unpublishAt) || unpublishAt > now()",
+    );
+  });
+
+  it("projects through the shared projection rather than its own copy", () => {
+    expect(ARTICLE_QUERY).toContain(ARTICLE_INDEX_PROJECTION);
   });
 });
