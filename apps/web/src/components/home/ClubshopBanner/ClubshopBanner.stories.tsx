@@ -35,6 +35,9 @@ export const Mobile: Story = {
   args: {},
   parameters: {
     viewport: { defaultViewport: "mobile1" },
+    // Locks the JerseyShirt-hidden layout, which only exists below 640px —
+    // the VR capture is scoped to match (#2803).
+    vr: { viewports: ["mobile"] },
     docs: {
       description: {
         story:

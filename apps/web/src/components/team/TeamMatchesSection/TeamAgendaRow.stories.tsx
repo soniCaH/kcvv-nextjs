@@ -252,7 +252,8 @@ export const PlaceholderFriendlyLowercaseLabel: Story = {
  * `.storybook/test-runner.ts` ignores `parameters.viewport` and captures
  * all three VR viewports regardless, so this story's baselines exist at
  * tablet/desktop too even though only the mobile one can ever show the
- * truncation it exists to lock.
+ * truncation it exists to lock. `vr.viewports` below declares that as the
+ * informed choice it is, rather than leaving it implicit (#2803).
  */
 export const PlaceholderLongSubjectNarrow: Story = {
   args: {
@@ -262,7 +263,10 @@ export const PlaceholderLongSubjectNarrow: Story = {
       competition: "Beker van Vlaams-Brabant en Omstreken",
     },
   },
-  parameters: { viewport: { defaultViewport: "kcvvMobile" } },
+  parameters: {
+    viewport: { defaultViewport: "kcvvMobile" },
+    vr: { viewports: ["mobile", "tablet", "desktop"] },
+  },
 };
 
 // ─── Tournament fixture (#2696) ─────────────────────────────────────────────
