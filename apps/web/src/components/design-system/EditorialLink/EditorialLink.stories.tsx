@@ -26,7 +26,13 @@ export const Playground: Story = {
   },
 };
 
+// Renders the identical code path as Playground (light tone is the default,
+// arrow-on is the default) — kept for autodocs completeness only. Story
+// tags merge with the meta's by default, so dropping "vr" here requires the
+// explicit negation `"!vr"` (see JerseyIllustration.stories.tsx) — a bare
+// `tags: ["autodocs"]` still inherits "vr" and gets captured anyway.
 export const Light: Story = {
+  tags: ["autodocs", "!vr"],
   args: {
     href: "/nieuws",
     tone: "light",
