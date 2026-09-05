@@ -90,6 +90,19 @@ export function stripTableHtml(html: string): string {
     .trim();
 }
 
+/**
+ * The one responsibility projection, shared by the nightly reindex
+ * (sanity-index-sync) and the per-doc webhook. Both carried their own copy
+ * until #2832; unlike article and page, none of the fields here are
+ * Portable Text, so there is no `pt::text` null to guard against.
+ */
+export const RESPONSIBILITY_INDEX_PROJECTION = `_id,
+  "slug": coalesce(slug.current, ""),
+  title,
+  question,
+  "keywords": coalesce(keywords, []),
+  "summary": coalesce(summary, "")`;
+
 export function buildResponsibilityIndexText(doc: {
   title: string;
   question: string;
@@ -99,6 +112,24 @@ export function buildResponsibilityIndexText(doc: {
   return [doc.title, doc.question, doc.keywords.join(" "), doc.summary]
     .filter(Boolean)
     .join(". ");
+}
+
+/**
+ * The vector metadata for a responsibility, built once for both index paths.
+ * Mirrors `buildArticleMetadata` — the two paths hand-assembled this record
+ * before #2832.
+ */
+export function buildResponsibilityMetadata(doc: {
+  slug: string;
+  title: string;
+  summary: string;
+}): Record<string, string> {
+  return {
+    slug: doc.slug,
+    type: "responsibility",
+    title: doc.title,
+    excerpt: doc.summary.slice(0, 200),
+  };
 }
 
 /** The text an article is embedded from. */
@@ -170,9 +201,65 @@ export function buildArticleMetadata(doc: {
   };
 }
 
+/**
+ * The one page projection, shared by the nightly reindex
+ * (sanity-index-sync) and the per-doc webhook. Both carried their own copy
+ * of the same four fields until #2832.
+ *
+ * `pt::text(body)` returns null (not `""`) for a body holding no top-level
+ * `block` — the same defect class `ARTICLE_INDEX_PROJECTION` exists to
+ * rescue (#2806), and it is not hypothetical here either: `downloads` is a
+ * published page whose body carries `fileAttachment` items alongside its
+ * `block`s, and a page built from `fileAttachment`s alone would project a
+ * null `bodyText`.
+ *
+ * **`page` was never blanked out by that null**, unlike article before
+ * #2806, because of two things this projection depends on rather than
+ * fixes: `buildPageIndexText` composes `bodyText` with `doc.bodyText ?? ""`
+ * in TypeScript — never joined with `+` in GROQ — and
+ * `page.title` (`packages/sanity-schemas/src/page.ts`) is a required plain
+ * `string` field, never Portable Text, so it can never itself be empty or
+ * decode as an array. A null `bodyText` therefore still leaves a non-empty
+ * composed text from the title alone.
+ *
+ * What a null `bodyText` *did* cost: `downloads`'s three `fileAttachment`
+ * labels ("Ongevalsaangifte", "Reglement van Inwendige Orde", "De 'ideale'
+ * voetbal(groot)ouders") reached no field at all — the page was findable
+ * only by semantic proximity to its section headings, not by the document
+ * names themselves. The coalesced `fileAttachmentLabels` branch below closes
+ * that, composed in TypeScript like every other branch here.
+ */
+export const PAGE_INDEX_PROJECTION = `_id,
+  "slug": coalesce(slug.current, ""),
+  "title": coalesce(title, ""),
+  "bodyText": pt::text(body),
+  "fileAttachmentLabels": array::compact(coalesce(body[_type == "fileAttachment"].label, []))`;
+
 export function buildPageIndexText(doc: {
   title: string;
   bodyText: string | null;
+  fileAttachmentLabels: readonly string[];
 }): string {
-  return [doc.title, doc.bodyText ?? ""].filter(Boolean).join(". ");
+  return [doc.title, doc.bodyText ?? "", doc.fileAttachmentLabels.join(" ")]
+    .filter(Boolean)
+    .join(". ");
+}
+
+/**
+ * The vector metadata for a page, built once for both index paths. Mirrors
+ * `buildArticleMetadata` — the two paths hand-assembled this record before
+ * #2832. The excerpt stays body-only, matching the existing display
+ * contract: fileAttachment labels are indexable text, not summary prose.
+ */
+export function buildPageMetadata(doc: {
+  slug: string;
+  title: string;
+  bodyText: string | null;
+}): Record<string, string> {
+  return {
+    slug: doc.slug,
+    type: "page",
+    title: doc.title,
+    excerpt: (doc.bodyText ?? "").slice(0, 200),
+  };
 }

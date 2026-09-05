@@ -4,7 +4,9 @@ import {
   buildArticleMetadata,
   buildArticleIndexText,
   buildPageIndexText,
+  buildPageMetadata,
   buildResponsibilityIndexText,
+  buildResponsibilityMetadata,
   stripTableHtml,
 } from "./index-queries";
 
@@ -209,6 +211,7 @@ describe("buildPageIndexText", () => {
     const result = buildPageIndexText({
       title: "Over KCVV Elewijt",
       bodyText: "KCVV Elewijt is een voetbalclub uit Elewijt.",
+      fileAttachmentLabels: [],
     });
 
     expect(result).toContain("Over KCVV Elewijt");
@@ -219,8 +222,100 @@ describe("buildPageIndexText", () => {
     const result = buildPageIndexText({
       title: "Lege pagina",
       bodyText: null,
+      fileAttachmentLabels: [],
     });
 
     expect(result).toBe("Lege pagina");
+  });
+
+  it("indexes fileAttachment labels alongside the body text", () => {
+    // The `downloads` page: two section-heading blocks over three
+    // fileAttachments. Without this branch the document names themselves
+    // ("Ongevalsaangifte") never reach the index (#2832).
+    const result = buildPageIndexText({
+      title: "Downloads",
+      bodyText: "Aangiftes. Reglementen",
+      fileAttachmentLabels: [
+        "Ongevalsaangifte",
+        "Reglement van Inwendige Orde",
+      ],
+    });
+
+    expect(result).toContain("Ongevalsaangifte");
+    expect(result).toContain("Reglement van Inwendige Orde");
+  });
+
+  it("keeps the fileAttachment labels when the body has no top-level block", () => {
+    // pt::text(body) is null here, not "" — a body built only from
+    // fileAttachment items has no top-level `block` at all.
+    const result = buildPageIndexText({
+      title: "Downloads",
+      bodyText: null,
+      fileAttachmentLabels: ["Ongevalsaangifte"],
+    });
+
+    expect(result).not.toBe("");
+    expect(result).toContain("Downloads");
+    expect(result).toContain("Ongevalsaangifte");
+  });
+});
+
+describe("buildPageMetadata", () => {
+  it("writes the same record whichever path indexed the page", () => {
+    expect(
+      buildPageMetadata({
+        slug: "over-kcvv",
+        title: "Over KCVV Elewijt",
+        bodyText: "KCVV Elewijt is een voetbalclub uit Elewijt.",
+      }),
+    ).toEqual({
+      slug: "over-kcvv",
+      type: "page",
+      title: "Over KCVV Elewijt",
+      excerpt: "KCVV Elewijt is een voetbalclub uit Elewijt.",
+    });
+  });
+
+  it("falls back to an empty excerpt for a null body", () => {
+    expect(
+      buildPageMetadata({ slug: "leeg", title: "Lege pagina", bodyText: null }),
+    ).toHaveProperty("excerpt", "");
+  });
+
+  it("caps the excerpt at 200 characters", () => {
+    expect(
+      buildPageMetadata({
+        slug: "lang",
+        title: "Lange pagina",
+        bodyText: "x".repeat(300),
+      }),
+    ).toHaveProperty("excerpt", "x".repeat(200));
+  });
+});
+
+describe("buildResponsibilityMetadata", () => {
+  it("writes the same record whichever path indexed the responsibility", () => {
+    expect(
+      buildResponsibilityMetadata({
+        slug: "kantine-evenementen",
+        title: "Kantine & evenementen",
+        summary: "De kantine wordt beheerd door de evenementencommissie.",
+      }),
+    ).toEqual({
+      slug: "kantine-evenementen",
+      type: "responsibility",
+      title: "Kantine & evenementen",
+      excerpt: "De kantine wordt beheerd door de evenementencommissie.",
+    });
+  });
+
+  it("caps the excerpt at 200 characters", () => {
+    expect(
+      buildResponsibilityMetadata({
+        slug: "lang",
+        title: "Lang",
+        summary: "x".repeat(300),
+      }),
+    ).toHaveProperty("excerpt", "x".repeat(200));
   });
 });
