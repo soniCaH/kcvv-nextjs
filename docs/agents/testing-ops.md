@@ -569,6 +569,43 @@ determinism needs fixing instead. A custom viewport set is also supported —
 `parameters.vr.viewports = ["desktop"]` — for stories that only render
 meaningfully at one breakpoint.
 
+### Scoping a story's viewports (#2803)
+
+A story can point the Storybook **preview pane** at a narrow width two ways —
+`globals: { viewport: { value: "…" } }` (the live Storybook 10 API) or the
+Storybook-10-**removed** `parameters: { viewport: { defaultViewport: "…" } }`
+(inert: it scopes neither the preview nor the VR capture, kept around only by
+copy-paste habit). **Neither one scopes the VR capture.** The runner
+(`.storybook/test-runner.ts`) reads `parameters.vr.viewports` — or every
+viewport — regardless of what `globals.viewport` or `parameters.viewport` say.
+A story that sets a preview viewport without declaring `vr.viewports` (or
+opting out via `vr.disable`, see above) still gets every viewport captured; a
+`postVisit` throw catches this class of mistake and names both escapes:
+
+```typescript
+export const Mobile: Story = {
+  globals: { viewport: { value: "kcvvMobile" } },
+  // Declares the escape the throw above is asking for — required whenever
+  // globals.viewport (or the removed parameters.viewport.defaultViewport) is
+  // set on a `vr`-tagged story.
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
+};
+```
+
+**The stale-baseline trap:** narrowing a story from three viewports to one
+does not delete the tablet/desktop PNGs it already has — a green scoped `-u`
+run only writes the viewports it actually requests, so the other two stay on
+disk, untouched and uncompared, forever. Delete them by hand after narrowing:
+
+```bash
+rm test/vr/__snapshots__/<story-id>--{desktop,tablet}.png
+```
+
+then re-run the scoped capture to confirm nothing else in the same component
+moved.
+
 ### `vr-skip` — discovery-time skip for crashing stories
 
 `parameters.vr.disable = true` only suppresses **screenshot capture** in
