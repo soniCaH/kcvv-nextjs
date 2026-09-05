@@ -7,11 +7,16 @@ import { EmbeddingService, EmbeddingServiceLive } from "../search/embedding";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
+  PAGE_INDEX_PROJECTION,
+  RESPONSIBILITY_ACTIVE_FILTER,
+  RESPONSIBILITY_INDEX_PROJECTION,
   buildArticleIndexText,
   buildArticleMetadata,
   buildPageIndexText,
+  buildPageMetadata,
   buildResponsibilityIndexText,
-} from "../search/index-text";
+  buildResponsibilityMetadata,
+} from "../search/index-queries";
 import { VectorizeService, VectorizeServiceLive } from "../search/vectorize";
 import { WebhookPayload } from "./schemas";
 import { verifySvixSignature } from "./svix-verify";
@@ -82,6 +87,7 @@ const ArticleDoc = S.Struct({
 const PageDoc = S.Struct({
   title: S.String,
   bodyText: S.NullOr(S.String),
+  fileAttachmentLabels: S.Array(S.String),
   slug: S.String,
 });
 
@@ -95,17 +101,12 @@ interface TypeDescriptor {
 
 const typeDescriptors: Record<AllowedType, TypeDescriptor> = {
   responsibility: {
-    query: `*[_id == $id][0]{ _id, "slug": coalesce(slug.current,""), title, question, "keywords": coalesce(keywords,[]), "summary": coalesce(summary,"") }`,
+    query: `*[_id == $id && ${RESPONSIBILITY_ACTIVE_FILTER}][0]{ ${RESPONSIBILITY_INDEX_PROJECTION} }`,
     buildIndex: (doc) => {
       const r = S.decodeUnknownSync(ResponsibilityDoc)(doc);
       return {
         indexText: buildResponsibilityIndexText(r),
-        metadata: {
-          slug: r.slug,
-          type: "responsibility",
-          title: r.title,
-          excerpt: r.summary.slice(0, 200),
-        },
+        metadata: buildResponsibilityMetadata(r),
       };
     },
   },
@@ -120,17 +121,12 @@ const typeDescriptors: Record<AllowedType, TypeDescriptor> = {
     },
   },
   page: {
-    query: `*[_id == $id][0]{ _id, "slug": coalesce(slug.current,""), title, "bodyText": pt::text(body) }`,
+    query: `*[_id == $id][0]{ ${PAGE_INDEX_PROJECTION} }`,
     buildIndex: (doc) => {
       const r = S.decodeUnknownSync(PageDoc)(doc);
       return {
         indexText: buildPageIndexText(r),
-        metadata: {
-          slug: r.slug,
-          type: "page",
-          title: r.title,
-          excerpt: (r.bodyText ?? "").slice(0, 200),
-        },
+        metadata: buildPageMetadata(r),
       };
     },
   },

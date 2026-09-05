@@ -6,11 +6,16 @@ import { EmbeddingService } from "./embedding";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
+  PAGE_INDEX_PROJECTION,
+  RESPONSIBILITY_ACTIVE_FILTER,
+  RESPONSIBILITY_INDEX_PROJECTION,
   buildArticleIndexText,
   buildArticleMetadata,
   buildPageIndexText,
+  buildPageMetadata,
   buildResponsibilityIndexText,
-} from "./index-text";
+  buildResponsibilityMetadata,
+} from "./index-queries";
 import { VectorizeService, type VectorRecord } from "./vectorize";
 
 // ─── Types (only fields needed for indexing) ──────────────────────────────────
@@ -42,17 +47,13 @@ interface SanityPageDoc {
   slug: string;
   title: string;
   bodyText: string | null;
+  fileAttachmentLabels: string[];
 }
 
 // ─── Sanity GROQ queries ─────────────────────────────────────────────────────
 
-const RESPONSIBILITY_QUERY = `*[_type == "responsibility" && active == true] {
-  _id,
-  "slug": coalesce(slug.current, ""),
-  title,
-  question,
-  "keywords": coalesce(keywords, []),
-  "summary": coalesce(summary, "")
+const RESPONSIBILITY_QUERY = `*[_type == "responsibility" && ${RESPONSIBILITY_ACTIVE_FILTER}] {
+  ${RESPONSIBILITY_INDEX_PROJECTION}
 }`;
 
 // Exported for the test that pins the `publishedAt` field name — the
@@ -62,10 +63,7 @@ export const ARTICLE_QUERY = `*[_type == "article" && ${ARTICLE_PUBLISHED_FILTER
 }`;
 
 const PAGE_QUERY = `*[_type == "page"] {
-  _id,
-  "slug": coalesce(slug.current, ""),
-  title,
-  "bodyText": pt::text(body)
+  ${PAGE_INDEX_PROJECTION}
 }`;
 
 // ─── Batching ────────────────────────────────────────────────────────────────
@@ -165,12 +163,11 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
     const responsibilityVectors = yield* Effect.forEach(
       docs,
       (doc) =>
-        embedDoc(doc._id, buildResponsibilityIndexText(doc), {
-          slug: doc.slug,
-          type: "responsibility",
-          title: doc.title,
-          excerpt: doc.summary.slice(0, 200),
-        }),
+        embedDoc(
+          doc._id,
+          buildResponsibilityIndexText(doc),
+          buildResponsibilityMetadata(doc),
+        ),
       { concurrency: 5 },
     );
 
@@ -246,12 +243,7 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
     const pageVectors = yield* Effect.forEach(
       pageResult,
       (doc) =>
-        embedDoc(doc._id, buildPageIndexText(doc), {
-          slug: doc.slug,
-          type: "page",
-          title: doc.title,
-          excerpt: (doc.bodyText ?? "").slice(0, 200),
-        }),
+        embedDoc(doc._id, buildPageIndexText(doc), buildPageMetadata(doc)),
       { concurrency: 3 },
     );
 

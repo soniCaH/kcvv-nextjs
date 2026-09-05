@@ -3,9 +3,13 @@ import { evaluate, parse } from "groq-js";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
+  PAGE_INDEX_PROJECTION,
+  RESPONSIBILITY_INDEX_PROJECTION,
   buildArticleExcerpt,
   buildArticleIndexText,
-} from "./index-text";
+  buildPageIndexText,
+  buildResponsibilityIndexText,
+} from "./index-queries";
 import { ARTICLE_QUERY } from "./sanity-index-sync";
 
 /**
@@ -51,7 +55,7 @@ const article = (over: Partial<Article> & { _id: string }): Article => ({
   ...over,
 });
 
-async function runQuery(query: string, dataset: readonly Article[]) {
+async function runQuery(query: string, dataset: readonly unknown[]) {
   const result = await evaluate(parse(query), { dataset });
   return (await result.get()) as Record<string, unknown>[];
 }
@@ -59,6 +63,32 @@ async function runQuery(query: string, dataset: readonly Article[]) {
 const projectOne = async (doc: Article) => {
   const [row] = await runQuery(
     `*[_type == "article"]{ ${ARTICLE_INDEX_PROJECTION} }`,
+    [doc],
+  );
+  return row!;
+};
+
+const fileAttachment = (label: string) => ({ _type: "fileAttachment", label });
+
+interface Page {
+  readonly _id: string;
+  readonly _type: string;
+  readonly slug?: { current: string };
+  readonly title?: string;
+  readonly body?: unknown[];
+}
+
+const page = (over: Partial<Page> & { _id: string }): Page => ({
+  _type: "page",
+  slug: { current: over._id },
+  title: "Een pagina",
+  body: [block("Wat proza.")],
+  ...over,
+});
+
+const projectPage = async (doc: Page) => {
+  const [row] = await runQuery(
+    `*[_type == "page"]{ ${PAGE_INDEX_PROJECTION} }`,
     [doc],
   );
   return row!;
@@ -155,6 +185,128 @@ describe("ARTICLE_INDEX_PROJECTION evaluated against fixture documents", () => {
         row as unknown as Parameters<typeof buildArticleExcerpt>[0],
       ),
     ).toBe("Inleidend proza.");
+  });
+});
+
+describe("PAGE_INDEX_PROJECTION evaluated against fixture documents", () => {
+  const indexTextForPage = (row: Record<string, unknown>) =>
+    buildPageIndexText(
+      row as unknown as Parameters<typeof buildPageIndexText>[0],
+    );
+
+  it("never returns null for any composed field", async () => {
+    const bodies: [string, unknown[] | undefined][] = [
+      ["prose only", [block("Wat proza.")]],
+      ["fileAttachment only", [fileAttachment("Reglement van Inwendige Orde")]],
+      [
+        "prose and fileAttachment",
+        [block("Wat proza."), fileAttachment("Ongevalsaangifte")],
+      ],
+      ["fileAttachment without a label", [{ _type: "fileAttachment" }]],
+      ["empty body", []],
+      ["no body at all", undefined],
+    ];
+
+    for (const [name, body] of bodies) {
+      const row = await projectPage(page({ _id: "p", body }));
+
+      expect(row["title"], `${name} → title`).toBeTypeOf("string");
+      expect(
+        row["fileAttachmentLabels"],
+        `${name} → fileAttachmentLabels`,
+      ).toBeInstanceOf(Array);
+      expect(() => indexTextForPage(row), `${name} → compose`).not.toThrow();
+    }
+  });
+
+  it("keeps a page whose body has no top-level block", async () => {
+    // pt::text(body) is null here, not "" — a body built only from
+    // fileAttachment items carries no top-level `block`. This is the
+    // `downloads` page's real shape: three fileAttachments, and — in this
+    // fixture — no surrounding prose at all.
+    const row = await projectPage(
+      page({
+        _id: "downloads",
+        title: "Downloads",
+        body: [fileAttachment("Ongevalsaangifte")],
+      }),
+    );
+
+    expect(row["bodyText"]).toBeNull();
+    const text = indexTextForPage(row);
+    expect(text).not.toBe("");
+    expect(text).toContain("Downloads");
+    expect(text).toContain("Ongevalsaangifte");
+  });
+
+  it("indexes a fileAttachment label alongside its section prose", async () => {
+    const row = await projectPage(
+      page({
+        _id: "downloads",
+        title: "Downloads",
+        body: [block("Aangiftes"), fileAttachment("Ongevalsaangifte")],
+      }),
+    );
+
+    const text = indexTextForPage(row);
+    expect(text).toContain("Aangiftes");
+    expect(text).toContain("Ongevalsaangifte");
+  });
+});
+
+describe("RESPONSIBILITY_INDEX_PROJECTION evaluated against fixture documents", () => {
+  interface Responsibility {
+    readonly _id: string;
+    readonly _type: string;
+    readonly slug?: { current: string };
+    readonly title?: string;
+    readonly question?: string;
+    readonly keywords?: string[];
+    readonly summary?: string;
+  }
+
+  const responsibility = (
+    over: Partial<Responsibility> & { _id: string },
+  ): Responsibility => ({
+    _type: "responsibility",
+    slug: { current: over._id },
+    title: "Kantine",
+    question: "Wie regelt de kantine?",
+    keywords: ["kantine"],
+    summary: "De kantine wordt beheerd door de evenementencommissie.",
+    ...over,
+  });
+
+  const projectResponsibility = async (doc: Responsibility) => {
+    const [row] = await runQuery(
+      `*[_type == "responsibility"]{ ${RESPONSIBILITY_INDEX_PROJECTION} }`,
+      [doc],
+    );
+    return row!;
+  };
+
+  it("coalesces title and question to a string when the source document omits them", async () => {
+    // ResponsibilityDoc (webhooks/index-handler.ts) declares both required,
+    // non-nullable S.String. A responsibility written without one — a
+    // script `createOrReplace` bypasses Studio's own Rule.required() —
+    // would otherwise project `title`/`question` as `undefined`, and
+    // S.decodeUnknownSync would throw: invalid_document -> 500 -> Sanity
+    // retries the webhook indefinitely.
+    const row = await projectResponsibility(
+      responsibility({
+        _id: "incomplete",
+        title: undefined,
+        question: undefined,
+      }),
+    );
+
+    expect(row["title"]).toBeTypeOf("string");
+    expect(row["question"]).toBeTypeOf("string");
+    expect(() =>
+      buildResponsibilityIndexText(
+        row as unknown as Parameters<typeof buildResponsibilityIndexText>[0],
+      ),
+    ).not.toThrow();
   });
 });
 

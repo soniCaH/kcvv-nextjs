@@ -8,7 +8,10 @@ import { VectorizeService } from "../search/vectorize";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
-} from "../search/index-text";
+  PAGE_INDEX_PROJECTION,
+  RESPONSIBILITY_ACTIVE_FILTER,
+  RESPONSIBILITY_INDEX_PROJECTION,
+} from "../search/index-queries";
 
 // Mock @sanity/client so the inlined webhook fetch returns controlled docs.
 const mockSanityFetch = vi.fn();
@@ -254,6 +257,33 @@ describe("handleIndexWebhook", () => {
     expect(upsertSpy).not.toHaveBeenCalled();
   });
 
+  it("drops the vector of a responsibility the active filter now holds out", async () => {
+    // Deactivating a responsibility ("tijdelijk verbergen") must not make it
+    // MORE findable: without the active filter on the webhook's own query,
+    // the update fires, the fetch (with no filter) returns the still-active
+    // document unchanged, and the vector is re-upserted forever — the sweep
+    // never removes it either, since it only upserts. Gating the webhook's
+    // query the same way the article query is gated means a deactivated
+    // responsibility projects null and falls into the existing delete path.
+    const body = JSON.stringify({
+      _id: "hidden-responsibility",
+      _type: "responsibility",
+    });
+    const request = await makeSignedRequest(body);
+
+    mockSanityFetch.mockResolvedValue(null);
+
+    const response = await handleIndexWebhook(request, makeEnv(), defaultLayer);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      action: "skipped_not_found",
+    });
+    expect(deleteByIdsSpy).toHaveBeenCalledWith(["hidden-responsibility"]);
+    expect(upsertSpy).not.toHaveBeenCalled();
+  });
+
   it("indexes an article with correct metadata", async () => {
     const articleDoc = {
       _id: "article-001",
@@ -393,6 +423,55 @@ describe("handleIndexWebhook", () => {
     );
   });
 
+  it("shares one responsibility projection with the nightly reindex", async () => {
+    mockSanityFetch.mockResolvedValue(null);
+    const body = JSON.stringify({
+      _id: "resp-123",
+      _type: "responsibility",
+    });
+
+    await handleIndexWebhook(
+      await makeSignedRequest(body),
+      makeEnv(),
+      defaultLayer,
+    );
+
+    expect(mockSanityFetch.mock.calls[0]?.[0]).toContain(
+      RESPONSIBILITY_INDEX_PROJECTION,
+    );
+  });
+
+  it("gates the webhook on the same active filter as the nightly reindex", async () => {
+    mockSanityFetch.mockResolvedValue(null);
+    const body = JSON.stringify({
+      _id: "resp-123",
+      _type: "responsibility",
+    });
+
+    await handleIndexWebhook(
+      await makeSignedRequest(body),
+      makeEnv(),
+      defaultLayer,
+    );
+
+    expect(mockSanityFetch.mock.calls[0]?.[0]).toContain(
+      RESPONSIBILITY_ACTIVE_FILTER,
+    );
+  });
+
+  it("shares one page projection with the nightly reindex", async () => {
+    mockSanityFetch.mockResolvedValue(null);
+    const body = JSON.stringify({ _id: "page-001", _type: "page" });
+
+    await handleIndexWebhook(
+      await makeSignedRequest(body),
+      makeEnv(),
+      defaultLayer,
+    );
+
+    expect(mockSanityFetch.mock.calls[0]?.[0]).toContain(PAGE_INDEX_PROJECTION);
+  });
+
   it("indexes a squad name that appears only inside a table", async () => {
     mockSanityFetch.mockResolvedValue({
       _id: "article-002",
@@ -464,6 +543,7 @@ describe("handleIndexWebhook", () => {
       slug: "over-kcvv",
       title: "Over KCVV",
       bodyText: "KCVV Elewijt is een voetbalclub.",
+      fileAttachmentLabels: [] as string[],
     };
 
     mockSanityFetch.mockResolvedValue(pageDoc);
