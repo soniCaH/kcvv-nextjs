@@ -5,6 +5,7 @@ import {
 } from "@storybook/test-runner";
 import { toMatchImageSnapshot } from "jest-image-snapshot";
 import { VR_FROZEN_NOW_ISO } from "../test/vr/frozen-clock.ts";
+import { unscopedDefaultViewportMessage } from "../test/vr/viewport-scoping.ts";
 
 const VIEWPORTS = {
   mobile: { width: 375, height: 667 },
@@ -203,9 +204,12 @@ const config: TestRunnerConfig = {
     const requestedViewports = vrParams.viewports ?? allViewportNames;
 
     // Fail fast on bad inputs: an empty array is almost certainly a typo (the
-    // story author meant to disable VR via `vr.disable: true` instead), and
-    // unknown names would silently no-op the screenshot — exactly the kind of
-    // silent skip VR is supposed to catch.
+    // story author meant to disable VR via `vr.disable: true` instead),
+    // unknown names would silently no-op the screenshot, and a
+    // `viewport.defaultViewport` with no matching `vr.viewports`/`vr.disable`
+    // looks scoped but isn't (the runner ignores `parameters.viewport`
+    // entirely) — all three are exactly the kind of silent skip VR is
+    // supposed to catch.
     if (requestedViewports.length === 0) {
       throw new Error(
         `[VR] Story "${context.id}" declared parameters.vr.viewports = []. ` +
@@ -218,6 +222,15 @@ const config: TestRunnerConfig = {
         `[VR] Story "${context.id}" requested unknown viewport(s): ` +
           `${unknown.join(", ")}. Valid: ${allViewportNames.join(", ")}.`,
       );
+    }
+    const unscopedMessage = unscopedDefaultViewportMessage(
+      context.id,
+      (story.parameters?.viewport as { defaultViewport?: string } | undefined)
+        ?.defaultViewport,
+      vrParams.viewports !== undefined,
+    );
+    if (unscopedMessage) {
+      throw new Error(unscopedMessage);
     }
 
     await page.addStyleTag({ content: DETERMINISM_STYLESHEET });
