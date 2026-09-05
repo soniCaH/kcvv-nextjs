@@ -3,6 +3,7 @@ import { Effect, Layer, Schema as S } from "effect";
 import type { WorkerEnv } from "../env";
 import { WorkerEnvTag } from "../env";
 import { sanityClientConfig } from "../sanity/config";
+import { datasetIndexMismatch } from "../search/dataset-index-guard";
 import { EmbeddingService, EmbeddingServiceLive } from "../search/embedding";
 import {
   ARTICLE_INDEX_PROJECTION,
@@ -147,34 +148,6 @@ function queryForType(type: AllowedType): string {
 const errorMessage = (err: unknown) =>
   err instanceof Error ? err.message : String(err);
 
-// ─── Dataset/index guard (#2833) ───────────────────────────────────────────
-//
-// Wrangler binds SEARCH_INDEX to whatever `index_name` wrangler.toml declares
-// for the deployed environment, but never exposes that name to the worker at
-// runtime — so the worker cannot ask its own binding "which index am I
-// pointed at?" `SEARCH_INDEX_NAME` (env.ts) is a second var, set alongside
-// SANITY_DATASET per environment, that mirrors the binding's declared
-// `index_name`. This map is the single hardcoded source of truth for which
-// index each dataset is allowed to write to; wrangler.toml must agree with
-// it for every environment (a mismatch — e.g. someone edits one but not the
-// other — is exactly what this guard exists to catch instead of trusting the
-// config to stay correct).
-const EXPECTED_INDEX_BY_DATASET: Record<string, string> = {
-  production: "kcvv-search",
-  staging: "kcvv-search-staging",
-};
-
-function datasetIndexMismatch(env: WorkerEnv): string | null {
-  const expected = EXPECTED_INDEX_BY_DATASET[env.SANITY_DATASET];
-  if (!expected) {
-    return `no known Vectorize index is registered for SANITY_DATASET "${env.SANITY_DATASET}"`;
-  }
-  if (env.SEARCH_INDEX_NAME !== expected) {
-    return `SANITY_DATASET "${env.SANITY_DATASET}" must write to index "${expected}", but SEARCH_INDEX_NAME is "${env.SEARCH_INDEX_NAME ?? "unset"}"`;
-  }
-  return null;
-}
-
 // ─── Error → Response mapping ──────────────────────────────────────────────
 
 const toErrorResponse = (
@@ -189,10 +162,20 @@ const toErrorResponse = (
     case "WebhookAuthError":
       return new Response("Unauthorized", { status: 401 });
     case "WebhookServiceError":
+      // dataset_mismatch is a deploy-time misconfiguration, identical on
+      // every retry — never transient like the other codes below it. 409
+      // (not 500) so Sanity's webhook delivery fails fast instead of
+      // retrying with backoff and eventually disabling the endpoint, which
+      // would also take down delivery for a correctly-configured deploy
+      // sharing the same webhook config (review finding 5 on #2833).
+      if (error.code === "dataset_mismatch") {
+        return Response.json(
+          { ok: false, error: error.detail, code: error.code },
+          { status: 409 },
+        );
+      }
       return Response.json(
-        error.code === "dataset_mismatch"
-          ? { ok: false, error: error.detail, code: error.code }
-          : { ok: false, error: "Internal server error" },
+        { ok: false, error: "Internal server error" },
         { status: 500 },
       );
   }

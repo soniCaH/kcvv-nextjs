@@ -614,7 +614,9 @@ describe("handleIndexWebhook", () => {
       defaultLayer,
     );
 
-    expect(response.status).not.toBe(200);
+    // 409, not 500: this is a deploy-time misconfiguration, identical on
+    // every retry, not a transient failure Sanity should keep retrying.
+    expect(response.status).toBe(409);
     const json = (await response.json()) as { ok: boolean };
     expect(json.ok).toBe(false);
     expect(upsertSpy).not.toHaveBeenCalled();
@@ -634,7 +636,7 @@ describe("handleIndexWebhook", () => {
       defaultLayer,
     );
 
-    expect(response.status).not.toBe(200);
+    expect(response.status).toBe(409);
     expect(upsertSpy).not.toHaveBeenCalled();
     expect(deleteByIdsSpy).not.toHaveBeenCalled();
   });
@@ -667,16 +669,23 @@ describe("handleIndexWebhook", () => {
   });
 
   it("refuses when SEARCH_INDEX_NAME is unset, failing closed rather than assuming production", async () => {
+    // Isolates the unset branch: SANITY_DATASET is "production" here, so if
+    // the `?? "unset"` fallback were wrong (e.g. it silently treated a
+    // missing var as "matches whatever production expects"), this is the
+    // one combination that would let it slip through. Pairing "staging"
+    // with an unset name (as an earlier version of this test did) fails on
+    // the dataset mismatch regardless of how the unset case is handled, so
+    // it never actually exercised this branch.
     const body = JSON.stringify({ _id: "resp-123", _type: "responsibility" });
     const request = await makeSignedRequest(body);
 
     const response = await handleIndexWebhook(
       request,
-      makeEnv({ SANITY_DATASET: "staging", SEARCH_INDEX_NAME: undefined }),
+      makeEnv({ SANITY_DATASET: "production", SEARCH_INDEX_NAME: undefined }),
       defaultLayer,
     );
 
-    expect(response.status).not.toBe(200);
+    expect(response.status).toBe(409);
     expect(upsertSpy).not.toHaveBeenCalled();
   });
 
