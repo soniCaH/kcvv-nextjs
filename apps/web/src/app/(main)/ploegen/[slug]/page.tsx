@@ -123,10 +123,13 @@ export async function generateMetadata({
 
 interface BffData {
   matches: readonly Match[];
-  // Nullable (#2795): `null` means the ranking read failed *permanently*
-  // while the fixtures read fulfilled — a value `deriveCompetitiveBlockState`
-  // reads into `ranking-unavailable`, never `no-table`. A genuine "no table
-  // published yet" is the fulfilled value `[]`, not `null`.
+  // Nullable (#2795): `null` means the ranking read failed *permanently* —
+  // specifically a `ParseError`/`HttpApiDecodeError`, a response this
+  // deploy can no longer decode — while the fixtures read fulfilled. A value
+  // `deriveCompetitiveBlockState` reads into `ranking-unavailable`, never
+  // `no-table`. A genuine "no table published yet" (including the BFF's own
+  // 404 for that case — see `fetchBffData`'s docblock) is the fulfilled
+  // value `[]`, not `null`.
   standings: readonly RankingTable[] | null;
   teamId: number;
 }
@@ -165,6 +168,21 @@ interface BffData {
  *   indistinguishable from. That `null` now flows all the way to `BffData`
  *   as `standings: null` — it is no longer collapsed to the `"unavailable"`
  *   sentinel, so the fixtures already in hand are never discarded.
+ *
+ *   **`HttpNotFound` is resolved to `[]` before it ever reaches
+ *   `degradeIfPermanent`** (#2795 review round). `apps/api/src/handlers/
+ *   ranking.ts` maps an *empty* upstream table list to the exact same 404 a
+ *   genuinely-unknown PSD team id would get — the handler's own
+ *   `tables.length === 0` guard and `apps/api/src/psd/service.ts`'s
+ *   `classifyHttpError` both funnel into `ResourceNotFoundError` →
+ *   `HttpNotFound`, indistinguishable at this boundary. Because the
+ *   fixtures read alongside this one already fulfilled for this exact
+ *   `psdTeamId`, a same-id 404 here overwhelmingly means "not published
+ *   yet," so it degrades to `no-table`, never `ranking-unavailable` — the
+ *   identical carve-out `/wedstrijd/[matchId]`'s `fetchStandings` makes
+ *   (#2576/#2778). Only `ParseError`/`HttpApiDecodeError` — a response this
+ *   deploy genuinely cannot decode — still reach `degradeIfPermanent` and
+ *   degrade to `null`.
  * - The **matches** read goes through `getTeamMatches`, whose channel is
  *   already flattened to a rejecting `Promise` by the #2441 dedupe below, so
  *   it cannot be classified before it becomes one. `isPermanentBffFailure`
@@ -199,7 +217,24 @@ async function fetchBffData(
         Effect.gen(function* () {
           const bff = yield* BffService;
           return yield* bff.getRanking(psdTeamId);
-        }),
+        }).pipe(
+          // `apps/api/src/handlers/ranking.ts` maps BOTH "no ranking
+          // published yet" (an empty upstream table list — the handler's own
+          // `tables.length === 0` guard) AND a genuinely unknown/stale PSD
+          // team id (`classifyHttpError` in `apps/api/src/psd/service.ts`,
+          // any upstream 404) to the exact same `HttpNotFound` — the two
+          // are indistinguishable from the HTTP status alone (verified
+          // against both source files, #2795 review). This read already
+          // knows the team exists in PSD: the fixtures read alongside it
+          // fulfilled for this very `psdTeamId`, so a same-id 404 here
+          // overwhelmingly means "not published yet," not "no such team."
+          // Resolve it to `[]` BEFORE `degradeIfPermanent` classifies it,
+          // the same split `/wedstrijd/[matchId]`'s `fetchStandings` already
+          // makes for the identical BFF ambiguity (#2576/#2778) — so
+          // `no-table` stays reachable against real data, instead of every
+          // not-yet-published youth ranking reading as `ranking-unavailable`.
+          Effect.catchTag("HttpNotFound", () => Effect.succeed([])),
+        ),
         null,
       ),
     ),
