@@ -406,6 +406,10 @@ export const Mobile: Story = {
   globals: {
     viewport: { value: "kcvvMobile" },
   },
+  // #2803
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };
 
 /**
@@ -422,5 +426,9 @@ export const Tablet: Story = {
   },
   globals: {
     viewport: { value: "tablet" },
+  },
+  // #2803
+  parameters: {
+    vr: { viewports: ["tablet"] },
   },
 };

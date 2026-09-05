@@ -84,7 +84,9 @@ export const ContactOnly: Story = {
   },
 };
 
-/** Mobile viewport — the split collapses to stacked portrait → words. */
+/**
+ * Mobile viewport — the split collapses to stacked portrait → words (#2803).
+ */
 export const Mobile: Story = {
   args: {
     id: "staff-marc-de-coninck",
@@ -97,5 +99,8 @@ export const Mobile: Story = {
   },
   globals: {
     viewport: { value: "kcvvMobile" },
+  },
+  parameters: {
+    vr: { viewports: ["mobile"] },
   },
 };
