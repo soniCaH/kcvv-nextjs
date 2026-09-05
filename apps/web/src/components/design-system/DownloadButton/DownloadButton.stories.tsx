@@ -185,5 +185,8 @@ export const CardMobileNarrow: Story = {
     mimeType: "application/pdf",
     fileSize: 245_600,
   },
-  parameters: { viewport: { defaultViewport: "mobile1" } },
+  // Locks the card variant's mobile layout (#2803).
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };

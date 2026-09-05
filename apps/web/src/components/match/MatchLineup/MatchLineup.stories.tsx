@@ -413,7 +413,8 @@ export const ShirtNumberStates: Story = {
 };
 
 /**
- * Mobile viewport
+ * Mobile viewport — locks the single-column stack below the `md` breakpoint
+ * (`grid-cols-1 md:grid-cols-2` in `MatchLineup.tsx`) (#2803).
  */
 export const MobileView: Story = {
   args: {
@@ -424,5 +425,8 @@ export const MobileView: Story = {
   },
   globals: {
     viewport: { value: "mobile1" },
+  },
+  parameters: {
+    vr: { viewports: ["mobile"] },
   },
 };

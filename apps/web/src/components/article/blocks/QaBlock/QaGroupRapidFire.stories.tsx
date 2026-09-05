@@ -203,5 +203,8 @@ export const MobileNarrow: Story = {
       },
     ],
   },
-  parameters: { viewport: { defaultViewport: "mobile1" } },
+  // Locks rapid-fire pair wrapping at narrow width (#2803).
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };

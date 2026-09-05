@@ -28,7 +28,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** Narrow viewport — heading wraps, button stays centred. */
+/** Narrow viewport — heading wraps, button stays centred (#2803). */
 export const MobileViewport: Story = {
   globals: { viewport: { value: "kcvvMobile" } },
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };

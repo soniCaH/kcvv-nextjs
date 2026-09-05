@@ -5,14 +5,19 @@ import {
 } from "@storybook/test-runner";
 import { toMatchImageSnapshot } from "jest-image-snapshot";
 import { VR_FROZEN_NOW_ISO } from "../test/vr/frozen-clock.ts";
+import {
+  VR_VIEWPORT_NAMES,
+  type VrViewportName,
+  unscopedViewportOverrideMessage,
+} from "../test/vr/viewport-scoping.ts";
 
-const VIEWPORTS = {
+const VIEWPORTS: Record<VrViewportName, { width: number; height: number }> = {
   mobile: { width: 375, height: 667 },
   tablet: { width: 768, height: 1024 },
   desktop: { width: 1440, height: 900 },
-} as const;
+};
 
-type ViewportName = keyof typeof VIEWPORTS;
+type ViewportName = VrViewportName;
 
 // Stories that derive "today" or relative dates render against this exact
 // moment so baselines don't churn day-to-day. Shared with any story fixture
@@ -199,13 +204,17 @@ const config: TestRunnerConfig = {
     };
     if (vrParams.disable) return;
 
-    const allViewportNames = Object.keys(VIEWPORTS) as ViewportName[];
+    const allViewportNames = VR_VIEWPORT_NAMES;
     const requestedViewports = vrParams.viewports ?? allViewportNames;
 
     // Fail fast on bad inputs: an empty array is almost certainly a typo (the
-    // story author meant to disable VR via `vr.disable: true` instead), and
-    // unknown names would silently no-op the screenshot — exactly the kind of
-    // silent skip VR is supposed to catch.
+    // story author meant to disable VR via `vr.disable: true` instead),
+    // unknown names would silently no-op the screenshot, and a Storybook
+    // viewport override — `globals.viewport.value` (the live Storybook 10
+    // API) or `parameters.viewport.defaultViewport` (removed in Storybook
+    // 10, inert either way) — with no matching `vr.viewports`/`vr.disable`
+    // looks scoped but isn't (the runner reads neither) — all three are
+    // exactly the kind of silent skip VR is supposed to catch.
     if (requestedViewports.length === 0) {
       throw new Error(
         `[VR] Story "${context.id}" declared parameters.vr.viewports = []. ` +
@@ -218,6 +227,21 @@ const config: TestRunnerConfig = {
         `[VR] Story "${context.id}" requested unknown viewport(s): ` +
           `${unknown.join(", ")}. Valid: ${allViewportNames.join(", ")}.`,
       );
+    }
+    const storyGlobals = (
+      story as { storyGlobals?: { viewport?: { value?: string } } }
+    ).storyGlobals;
+    const effectiveViewport =
+      storyGlobals?.viewport?.value ??
+      (story.parameters?.viewport as { defaultViewport?: string } | undefined)
+        ?.defaultViewport;
+    const unscopedMessage = unscopedViewportOverrideMessage(
+      context.id,
+      effectiveViewport,
+      vrParams.viewports !== undefined,
+    );
+    if (unscopedMessage) {
+      throw new Error(unscopedMessage);
     }
 
     await page.addStyleTag({ content: DETERMINISM_STYLESHEET });

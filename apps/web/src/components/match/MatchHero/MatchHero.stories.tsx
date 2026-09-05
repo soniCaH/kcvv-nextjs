@@ -233,7 +233,11 @@ export const MobileCollapse: Story = {
       status: "finished",
     },
   },
-  parameters: { viewport: { defaultViewport: "mobile1" } },
+  parameters: {
+    // Locks the stacked-grid collapse, which only shows at narrow widths
+    // (#2803).
+    vr: { viewports: ["mobile"] },
+  },
   decorators: [
     (Story) => (
       <div className="bg-cream-soft min-h-[600px] p-4">

@@ -29,7 +29,13 @@ type Story = StoryObj<typeof meta>;
 /** The filosofie/visie block as it renders below the hero seam. */
 export const Default: Story = {};
 
-/** Mobile viewport — the quote-mark + body grid holds on narrow screens. */
+/**
+ * Mobile viewport — the quote-mark + body grid holds on narrow screens
+ * (#2803).
+ */
 export const MobileViewport: Story = {
   globals: { viewport: { value: "kcvvMobile" } },
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };

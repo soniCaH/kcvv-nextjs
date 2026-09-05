@@ -67,7 +67,10 @@ export const LongRowWraps: Story = {
       { label: "EINDSTAND 3-1" },
     ],
   },
-  parameters: { viewport: { defaultViewport: "mobile1" } },
+  // Locks the row wrap, which only triggers at narrow width (#2803).
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };
 
 export const OrderedList: Story = {

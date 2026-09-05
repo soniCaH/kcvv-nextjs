@@ -248,11 +248,11 @@ export const PlaceholderFriendlyLowercaseLabel: Story = {
  * `min-w-0` fix on this content box (see the comment on it in
  * `TeamAgendaRow.tsx`). Same box the tournament row below reuses.
  *
- * `defaultViewport` below scopes the Storybook UI preview only —
- * `.storybook/test-runner.ts` ignores `parameters.viewport` and captures
- * all three VR viewports regardless, so this story's baselines exist at
- * tablet/desktop too even though only the mobile one can ever show the
- * truncation it exists to lock.
+ * Only the mobile viewport can ever show the truncation this story exists to
+ * lock — at tablet/desktop width a long subject fits without wrapping, same
+ * as `Placeholder`/`PlaceholderFeatured` above, so a tablet/desktop capture
+ * here would only duplicate what those siblings already cover. `vr.viewports`
+ * scopes the capture to match (#2803).
  */
 export const PlaceholderLongSubjectNarrow: Story = {
   args: {
@@ -262,7 +262,9 @@ export const PlaceholderLongSubjectNarrow: Story = {
       competition: "Beker van Vlaams-Brabant en Omstreken",
     },
   },
-  parameters: { viewport: { defaultViewport: "kcvvMobile" } },
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };
 
 // ─── Tournament fixture (#2696) ─────────────────────────────────────────────

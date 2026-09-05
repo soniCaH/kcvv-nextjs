@@ -112,5 +112,8 @@ export const Empty: Story = {
 export const MobileNarrow: Story = {
   name: "Mobile — narrow viewport (375px)",
   args: { html: WIDE_TABLE_HTML },
-  parameters: { viewport: { defaultViewport: "mobile1" } },
+  // Locks the wide-table scroll behaviour at narrow width (#2803).
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };

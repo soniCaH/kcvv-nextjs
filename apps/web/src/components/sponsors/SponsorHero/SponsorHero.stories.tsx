@@ -48,8 +48,11 @@ export const Collapsed: Story = {
   args: { featured: null },
 };
 
-/** Mobile viewport — the split stacks to a single column. */
+/** Mobile viewport — the split stacks to a single column (#2803). */
 export const MobileViewport: Story = {
   args: Featured.args,
   globals: { viewport: { value: "kcvvMobile" } },
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };

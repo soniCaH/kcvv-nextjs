@@ -158,5 +158,8 @@ export const ThreeConsecutive: Story = {
 export const MobileNarrow: Story = {
   name: "Mobile — narrow viewport (375px)",
   args: { value: BASE, isPast: false },
-  parameters: { viewport: { defaultViewport: "mobile1" } },
+  // Locks narrow-width wrapping (#2803).
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };

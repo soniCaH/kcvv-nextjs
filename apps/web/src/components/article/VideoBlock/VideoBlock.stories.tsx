@@ -323,5 +323,8 @@ export const MobileNarrow: Story = {
       caption: "Mobile — 16:9 frame clamps to viewport.",
     },
   },
-  parameters: { viewport: { defaultViewport: "mobile1" } },
+  // Locks the 16:9 frame clamping to the mobile viewport (#2803).
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };

@@ -128,8 +128,11 @@ export const Vacant: Story = {
   args: { node: vacant },
 };
 
-/** Full-width bottom sheet under the mobile breakpoint. */
+/** Full-width bottom sheet under the mobile breakpoint (#2803). */
 export const MobileSheet: Story = {
   args: { node: single },
   globals: { viewport: { value: "mobile1" } },
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
 };

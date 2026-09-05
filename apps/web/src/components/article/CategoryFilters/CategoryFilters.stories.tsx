@@ -86,6 +86,7 @@ export const ActiveCategory: Story = {
   },
 };
 
+/** Narrow viewport — a full 12-category set exercises row wrap/scroll (#2803). */
 export const ManyCategories: Story = {
   render: (args) => <InteractiveCategoryFilters {...args} />,
   args: {
@@ -93,6 +94,9 @@ export const ManyCategories: Story = {
   },
   globals: {
     viewport: { value: "mobile1" },
+  },
+  parameters: {
+    vr: { viewports: ["mobile"] },
   },
 };
 

@@ -186,7 +186,10 @@ export const MinimalDark: Story = {
   },
 };
 
-/** Mobile viewport — the split collapses to stacked words → photo (m1). */
+/**
+ * Mobile viewport — the split collapses to stacked words → photo (m1)
+ * (#2803).
+ */
 export const Mobile: Story = {
   args: {
     kicker: "Kalender",
@@ -196,5 +199,8 @@ export const Mobile: Story = {
   },
   globals: {
     viewport: { value: "kcvvMobile" },
+  },
+  parameters: {
+    vr: { viewports: ["mobile"] },
   },
 };
