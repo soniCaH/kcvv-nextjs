@@ -110,9 +110,16 @@ const ICON_TITLE = "text-ink text-[1.05rem] font-bold";
 // elsewhere on the site, so it takes no arrow-CTA treatment — it is
 // lowercase body type, which is what lets the highlighter marker
 // (`.prose-link`) bind (#2474 rule 4). The icon (Envelope/ArrowRight) is
-// each call site's own, kept as-is.
-const INLINE_LINK =
-  "prose-link mt-2 inline-flex items-center gap-1.5 text-sm font-semibold";
+// each call site's own, kept as-is — spaced with its own margin, not a
+// flex gap: `.prose-link`'s marker relies on `box-decoration-break: clone`
+// to repaint per line fragment on a wrapped link (the `break-all` mailtos
+// below can wrap), which only works on a normal inline box. `inline-flex`
+// makes the anchor atomic — it never fragments, so a wrapped address would
+// only ever get a marker under its last line. `font-semibold` is dropped
+// too: `.prose-link` is deliberately unlayered (globals.css) so it beats
+// the typography plugin, which also means it beats any `@layer utilities`
+// class on the same property — a font-weight utility here never applied.
+const INLINE_LINK = "prose-link mt-2 text-sm";
 const CARD_BODY = "text-ink-soft text-[0.95rem] leading-relaxed";
 const CROSS_LINK =
   "group border-ink bg-cream-soft hover:bg-cream-deep flex items-center justify-between gap-3 border p-3 transition-colors";
@@ -233,7 +240,11 @@ export function ContactPage({ keyContacts }: ContactPageProps = {}) {
                   className={INLINE_LINK}
                 >
                   Routebeschrijving
-                  <ArrowRight size={14} className="shrink-0" aria-hidden />
+                  <ArrowRight
+                    size={14}
+                    className="ml-1.5 align-middle"
+                    aria-hidden
+                  />
                 </a>
               </div>
 
@@ -297,7 +308,11 @@ export function ContactPage({ keyContacts }: ContactPageProps = {}) {
                 href={`mailto:${card.email}`}
                 className={`${INLINE_LINK} break-all`}
               >
-                <Envelope size={16} className="shrink-0" aria-hidden />
+                <Envelope
+                  size={16}
+                  className="mr-1.5 align-middle"
+                  aria-hidden
+                />
                 {card.email}
               </a>
             </TapedCard>
