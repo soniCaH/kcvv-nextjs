@@ -43,6 +43,7 @@ const mockPage = {
   slug: "over-kcvv",
   title: "Over KCVV Elewijt",
   bodyText: "KCVV Elewijt is een voetbalclub uit Elewijt.",
+  fileAttachmentLabels: [] as string[],
 };
 
 function makeEnvLayer() {
