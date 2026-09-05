@@ -67,10 +67,8 @@ export const LongRowWraps: Story = {
       { label: "EINDSTAND 3-1" },
     ],
   },
-  // Locks the row wrap, which only triggers at narrow width — the VR capture
-  // is scoped to match (#2803).
+  // Locks the row wrap, which only triggers at narrow width (#2803).
   parameters: {
-    viewport: { defaultViewport: "mobile1" },
     vr: { viewports: ["mobile"] },
   },
 };

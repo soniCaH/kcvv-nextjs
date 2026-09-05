@@ -47,9 +47,8 @@ export const Mobile: Story = {
   args: {},
   render: () => withBackdrop(<YouthSection />),
   parameters: {
-    viewport: { defaultViewport: "mobile1" },
-    // Locks the flex-wrap CTA stacking, which only shows below 640px — the
-    // VR capture is scoped to match (#2803).
+    // Locks the flex-wrap CTA stacking, which only shows below 640px
+    // (#2803).
     vr: { viewports: ["mobile"] },
     docs: {
       description: {

@@ -185,10 +185,8 @@ export const CardMobileNarrow: Story = {
     mimeType: "application/pdf",
     fileSize: 245_600,
   },
-  // Locks the card variant's mobile layout — the VR capture is scoped to
-  // match (#2803).
+  // Locks the card variant's mobile layout (#2803).
   parameters: {
-    viewport: { defaultViewport: "mobile1" },
     vr: { viewports: ["mobile"] },
   },
 };

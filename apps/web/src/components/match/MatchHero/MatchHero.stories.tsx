@@ -234,9 +234,8 @@ export const MobileCollapse: Story = {
     },
   },
   parameters: {
-    viewport: { defaultViewport: "mobile1" },
-    // Locks the stacked-grid collapse, which only shows at narrow widths —
-    // the VR capture is scoped to match (#2803).
+    // Locks the stacked-grid collapse, which only shows at narrow widths
+    // (#2803).
     vr: { viewports: ["mobile"] },
   },
   decorators: [

@@ -158,9 +158,8 @@ export const ThreeConsecutive: Story = {
 export const MobileNarrow: Story = {
   name: "Mobile — narrow viewport (375px)",
   args: { value: BASE, isPast: false },
-  // Locks narrow-width wrapping — the VR capture is scoped to match (#2803).
+  // Locks narrow-width wrapping (#2803).
   parameters: {
-    viewport: { defaultViewport: "mobile1" },
     vr: { viewports: ["mobile"] },
   },
 };
