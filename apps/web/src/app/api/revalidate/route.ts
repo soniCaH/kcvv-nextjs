@@ -78,9 +78,13 @@ function targets(
       return { paths: ["/"], tags: [SANITY_TAGS.banners] };
     case "page":
       return { paths: [CONTENTS, ...detail("/club")], tags: [] };
+    // The homepage's FeaturedEventBand reads the next upcoming event
+    // (NEXT_FEATURED_EVENT_QUERY), so publishing one must bust '/' too — that
+    // read is untagged, so without this a new event stayed invisible on the
+    // homepage until the segment's own 15-minute `revalidate` came round.
     case "event":
       return {
-        paths: ["/evenementen", CONTENTS, ...detail("/evenementen")],
+        paths: ["/", "/evenementen", CONTENTS, ...detail("/evenementen")],
         tags: [],
       };
     case "photoGallery":

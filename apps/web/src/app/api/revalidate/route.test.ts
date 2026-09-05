@@ -100,6 +100,16 @@ describe("POST /api/revalidate", () => {
     expect(revalidatePath).toHaveBeenCalledWith("/inhoud");
   });
 
+  it("busts the homepage on an event change", async () => {
+    // The homepage's FeaturedEventBand reads the next upcoming event, and that
+    // read is untagged — only the path bust clears it.
+    const res = await POST(makeRequest({ _type: "event", slug: "quiznight" }));
+    expect(res.status).toBe(200);
+    expect(revalidatePath).toHaveBeenCalledWith("/");
+    expect(revalidatePath).toHaveBeenCalledWith("/evenementen");
+    expect(revalidatePath).toHaveBeenCalledWith("/evenementen/quiznight");
+  });
+
   it("routes players by psdId, not slug", async () => {
     const res = await POST(makeRequest({ _type: "player", psdId: 42 }));
     expect(res.status).toBe(200);
