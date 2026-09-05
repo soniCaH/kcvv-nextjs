@@ -82,6 +82,51 @@ behaviour — but the drift check reads it as "refreshes are not landing" and nu
 per day per key, forever. With the secret absent, `postSlack` no-ops and staging stays
 silent. Don't re-add it.
 
+### Staging Vectorize index — one-time setup (#2833)
+
+`env.staging.vectorize.index_name` in `wrangler.toml` points at `kcvv-search-staging`,
+a separate index from production's `kcvv-search`. **It must exist before the first
+staging deploy that carries this config** — Cloudflare rejects a `[[vectorize]]`
+binding whose `index_name` doesn't exist yet, and staging deploys on every PR
+(`wrangler deploy --env staging` above, run from CI), not on demand. Run this once,
+before merging any change that lands `index_name = "kcvv-search-staging"`:
+
+```bash
+# Dimensions and metric must match production's model, @cf/baai/bge-m3
+# (src/search/embedding.ts) — 1024 dims, cosine. They are not arbitrary.
+wrangler vectorize create kcvv-search-staging --dimensions=1024 --metric=cosine
+
+# Then, before any vector lands in it: search-handler.ts filters queries on
+# the `type` metadata field, and Vectorize v2 only honours a filter on a
+# property that has an explicit metadata index — one created AFTER vectors
+# already exist does not apply to them retroactively. Get this order wrong
+# and the failure is silent: a filtered search just returns zero rows.
+wrangler vectorize create-metadata-index kcvv-search-staging --property-name=type --type=string
+```
+
+**Nothing populates the new index automatically.** `env.staging.triggers.crons` is
+`[]` by design (staging shares PSD's API quota with production), so
+`runSanityIndexSync` — the only bulk writer, dispatched from the `30 2 * * *` cron in
+`index.ts` — never runs on staging. The only other writer is the per-document
+webhook. Before this change, staging's `/search` and `/related` read production's
+data through the shared index; after it, **staging search returns nothing until
+someone runs a one-off backfill.** `docs/agents/testing-ops.md` and
+`.github/workflows/e2e.yml` both point `KCVV_API_URL` at the staging worker, so this
+is a real gap for anyone exercising search there, not a theoretical one.
+
+To backfill once, run the same nightly job on demand against real staging bindings:
+
+```bash
+pnpm wrangler dev --env staging --remote --test-scheduled
+# in another terminal, or a browser:
+curl "http://localhost:8787/__scheduled?cron=30+2+*+*+*"
+```
+
+Re-run the same command any time staging's index needs to catch up (e.g. after the
+one-time setup above, or after a long staging Studio session). A guarded HTTP route
+that does the same thing without a local `wrangler dev` session would be cheaper to
+run repeatedly — proposed, not built, in #2833's PR.
+
 ## Cache
 
 `TypedKvCache` uses a two-TTL pattern (stale-on-error):
