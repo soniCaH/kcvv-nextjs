@@ -239,7 +239,10 @@ export function EventFactInline({
           {linkedSlug ? (
             // A link onward on the site — uppercase mono CTA, no marker
             // (#2474 rule 3).
-            <EditorialLink href={`/evenementen/${linkedSlug}`}>
+            <EditorialLink
+              href={`/evenementen/${linkedSlug}`}
+              data-event-fact-inline="linked-event"
+            >
               <span aria-hidden="true">★ </span>Ook in agenda
             </EditorialLink>
           ) : null}

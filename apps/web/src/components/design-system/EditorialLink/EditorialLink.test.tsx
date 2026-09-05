@@ -71,4 +71,17 @@ describe("EditorialLink", () => {
     );
     expect(container.querySelector("[style*='mask-image']")).toBeNull();
   });
+
+  // Arbitrary anchor attributes (e.g. a `data-*` selector a consumer needs)
+  // pass through — the component has no dedicated prop for every possible
+  // selector, so it forwards what it doesn't recognise instead of dropping
+  // it (EventFactInline's linked-event line relies on this).
+  it("forwards unrecognised props to the rendered anchor", () => {
+    render(
+      <EditorialLink href="/x" data-testid="onward-link">
+        X
+      </EditorialLink>,
+    );
+    expect(screen.getByTestId("onward-link")).toBeInTheDocument();
+  });
 });

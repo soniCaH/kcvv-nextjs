@@ -1,9 +1,12 @@
-import Link from "next/link";
+import Link, { type LinkProps } from "next/link";
 import { cn } from "@/lib/utils/cn";
 
 export type EditorialLinkTone = "light" | "dark";
 
-export interface EditorialLinkProps {
+export interface EditorialLinkProps extends Omit<
+  LinkProps,
+  "className" | "href"
+> {
   href: string;
   children: React.ReactNode;
   tone?: EditorialLinkTone;
@@ -46,6 +49,7 @@ export const EditorialLink = ({
   tone = "light",
   withArrow = true,
   className,
+  ...rest
 }: EditorialLinkProps) => {
   return (
     <Link
@@ -58,6 +62,7 @@ export const EditorialLink = ({
         TEXT_TONE[tone],
         className,
       )}
+      {...rest}
     >
       {children}
       {withArrow && (
