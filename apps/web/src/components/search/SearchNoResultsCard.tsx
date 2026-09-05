@@ -19,8 +19,10 @@ export interface SearchNoResultsCardProps {
   query: string;
 }
 
-const WAY_FORWARD_LINK_CLASS =
-  "text-jersey-deep font-bold underline-offset-2 hover:underline";
+// The three links sit inside a running sentence, so they are body copy and
+// join `.prose-link` (#2474 rule 2) rather than the affordance-chip styling
+// (`underline-offset-2 hover:underline`) they carried before.
+const WAY_FORWARD_LINK_CLASS = "prose-link font-bold";
 
 /**
  * No-results paper card with taped jersey artefact + way-forward links.

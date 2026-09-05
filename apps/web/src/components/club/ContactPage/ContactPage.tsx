@@ -105,10 +105,14 @@ interface ContactGridCard {
 const MONO_TAG =
   "text-jersey-deep font-mono text-[10px] font-semibold tracking-[0.12em] uppercase";
 const ICON_TITLE = "text-ink text-[1.05rem] font-bold";
-// Generic jersey-deep inline-action chrome — shared by the mailto links AND
-// the "Routebeschrijving" map link.
+// Shared by the mailto links AND the "Routebeschrijving" map link. An
+// action link (opening a mail client or Google Maps) is not going
+// elsewhere on the site, so it takes no arrow-CTA treatment — it is
+// lowercase body type, which is what lets the highlighter marker
+// (`.prose-link`) bind (#2474 rule 4). The icon (Envelope/ArrowRight) is
+// each call site's own, kept as-is.
 const INLINE_LINK =
-  "text-jersey-deep mt-2 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline";
+  "prose-link mt-2 inline-flex items-center gap-1.5 text-sm font-semibold";
 const CARD_BODY = "text-ink-soft text-[0.95rem] leading-relaxed";
 const CROSS_LINK =
   "group border-ink bg-cream-soft hover:bg-cream-deep flex items-center justify-between gap-3 border p-3 transition-colors";
