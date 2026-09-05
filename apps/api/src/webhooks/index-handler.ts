@@ -43,7 +43,8 @@ class WebhookServiceError {
       | "embedding_failed"
       | "upsert_failed"
       | "delete_failed"
-      | "invalid_document",
+      | "invalid_document"
+      | "dataset_mismatch",
     readonly detail: string,
   ) {}
 }
@@ -146,6 +147,34 @@ function queryForType(type: AllowedType): string {
 const errorMessage = (err: unknown) =>
   err instanceof Error ? err.message : String(err);
 
+// ─── Dataset/index guard (#2833) ───────────────────────────────────────────
+//
+// Wrangler binds SEARCH_INDEX to whatever `index_name` wrangler.toml declares
+// for the deployed environment, but never exposes that name to the worker at
+// runtime — so the worker cannot ask its own binding "which index am I
+// pointed at?" `SEARCH_INDEX_NAME` (env.ts) is a second var, set alongside
+// SANITY_DATASET per environment, that mirrors the binding's declared
+// `index_name`. This map is the single hardcoded source of truth for which
+// index each dataset is allowed to write to; wrangler.toml must agree with
+// it for every environment (a mismatch — e.g. someone edits one but not the
+// other — is exactly what this guard exists to catch instead of trusting the
+// config to stay correct).
+const EXPECTED_INDEX_BY_DATASET: Record<string, string> = {
+  production: "kcvv-search",
+  staging: "kcvv-search-staging",
+};
+
+function datasetIndexMismatch(env: WorkerEnv): string | null {
+  const expected = EXPECTED_INDEX_BY_DATASET[env.SANITY_DATASET];
+  if (!expected) {
+    return `no known Vectorize index is registered for SANITY_DATASET "${env.SANITY_DATASET}"`;
+  }
+  if (env.SEARCH_INDEX_NAME !== expected) {
+    return `SANITY_DATASET "${env.SANITY_DATASET}" must write to index "${expected}", but SEARCH_INDEX_NAME is "${env.SEARCH_INDEX_NAME ?? "unset"}"`;
+  }
+  return null;
+}
+
 // ─── Error → Response mapping ──────────────────────────────────────────────
 
 const toErrorResponse = (
@@ -161,7 +190,9 @@ const toErrorResponse = (
       return new Response("Unauthorized", { status: 401 });
     case "WebhookServiceError":
       return Response.json(
-        { ok: false, error: "Internal server error" },
+        error.code === "dataset_mismatch"
+          ? { ok: false, error: error.detail, code: error.code }
+          : { ok: false, error: "Internal server error" },
         { status: 500 },
       );
   }
@@ -187,6 +218,19 @@ const webhookEffect = (request: Request, webhookSecret: string) =>
       catch: () => new WebhookAuthError(),
     });
     if (!valid) return yield* Effect.fail(new WebhookAuthError());
+
+    // 2.5. Refuse when this worker's dataset doesn't match the index its
+    // SEARCH_INDEX binding is configured for — the config-level guarantee in
+    // wrangler.toml is not enough on its own (#2833). Gated ahead of both the
+    // upsert and the delete paths: a delete from a mismatched worker could
+    // just as easily remove a production vector that happens to share an id
+    // with a staging document.
+    const mismatch = datasetIndexMismatch(env);
+    if (mismatch) {
+      return yield* Effect.fail(
+        new WebhookServiceError("dataset_mismatch", mismatch),
+      );
+    }
 
     // 3. Parse JSON
     const parsed = yield* Effect.try({
