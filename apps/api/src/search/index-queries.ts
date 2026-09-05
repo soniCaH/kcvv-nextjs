@@ -57,7 +57,11 @@ export const ARTICLE_PUBLISHED_FILTER = `publishedAt <= now() && (!defined(unpub
  * `qaSectionDivider` (1) and `videoBlock` (1) are furniture. `fileAttachment`
  * and `eventFact` have no published articles at all. Re-run that survey if
  * event articles start shipping: `eventFact` carries a title, location,
- * address and note, and would belong here.
+ * address and note, and would belong here. `fileAttachment` is also a body
+ * type on `page` (`packages/sanity-schemas/src/page.ts`) — `page` indexes its
+ * labels via `PAGE_INDEX_PROJECTION`'s `fileAttachmentLabels` branch (#2832),
+ * article deliberately still does not, for the reason measured above: no
+ * published article carries one to lose.
  */
 export const ARTICLE_INDEX_PROJECTION = `_id,
   "slug": coalesce(slug.current, ""),
@@ -91,15 +95,44 @@ export function stripTableHtml(html: string): string {
 }
 
 /**
+ * Whether a responsibility is currently visible on `/hulp`
+ * (`active: false` is "tijdelijk verbergen" —
+ * packages/sanity-schemas/src/responsibility.ts). Both index paths share it
+ * so deactivating one cannot leave it MORE findable than before:
+ * `runSanityIndexSync` only upserts, so a webhook that admitted a hidden
+ * responsibility despite `active: false` would keep re-upserting its vector
+ * on every future edit, while `/hulp`'s own finder (`RESPONSIBILITY_PATHS_QUERY`)
+ * already filters it out — a semantic-search hit would then point at a slug
+ * the finder never renders. Composed into each path's query the same way
+ * `ARTICLE_PUBLISHED_FILTER` is: as part of the `*[_id == $id && …][0]`
+ * clause, so a document the filter now excludes projects `null` and falls
+ * into the existing `!doc` delete branch — deactivating a responsibility
+ * evicts its vector, the same way an article leaving its publish window
+ * does.
+ */
+export const RESPONSIBILITY_ACTIVE_FILTER = `active == true`;
+
+/**
  * The one responsibility projection, shared by the nightly reindex
  * (sanity-index-sync) and the per-doc webhook. Both carried their own copy
- * until #2832; unlike article and page, none of the fields here are
- * Portable Text, so there is no `pt::text` null to guard against.
+ * until #2832.
+ *
+ * None of these fields are Portable Text, so there is no `pt::text` null to
+ * guard against — but `title` and `question` are coalesced here like every
+ * other field, because `ResponsibilityDoc`
+ * (apps/api/src/webhooks/index-handler.ts) declares both as required,
+ * non-nullable `S.String`. A responsibility written without one — a script
+ * `createOrReplace` bypasses Studio's own `Rule.required()` — projects
+ * `null` for that field, `S.decodeUnknownSync` throws on it, and that maps
+ * to `invalid_document` → a 500 Sanity retries indefinitely. Coalescing to
+ * `""` is the plain-string equivalent of `ARTICLE_INDEX_PROJECTION`
+ * coalescing every branch so the declared shape is what GROQ actually
+ * returns.
  */
 export const RESPONSIBILITY_INDEX_PROJECTION = `_id,
   "slug": coalesce(slug.current, ""),
-  title,
-  question,
+  "title": coalesce(title, ""),
+  "question": coalesce(question, ""),
   "keywords": coalesce(keywords, []),
   "summary": coalesce(summary, "")`;
 
@@ -248,18 +281,30 @@ export function buildPageIndexText(doc: {
 /**
  * The vector metadata for a page, built once for both index paths. Mirrors
  * `buildArticleMetadata` — the two paths hand-assembled this record before
- * #2832. The excerpt stays body-only, matching the existing display
- * contract: fileAttachment labels are indexable text, not summary prose.
+ * #2832.
+ *
+ * The excerpt prefers the body prose, falling back to the joined
+ * `fileAttachmentLabels` only when there is none — the same page a null
+ * `bodyText` makes findable by its attachment names (`downloads`) would
+ * otherwise render a search-result card with a title over a blank line, and
+ * hand `search-handler.ts`'s AI-answer context nothing but `"Downloads: "`.
+ * A page with both prose and attachments still shows its prose, matching
+ * the existing contract: fileAttachment labels are a fallback, not
+ * preferred summary text.
  */
 export function buildPageMetadata(doc: {
   slug: string;
   title: string;
   bodyText: string | null;
+  fileAttachmentLabels: readonly string[];
 }): Record<string, string> {
   return {
     slug: doc.slug,
     type: "page",
     title: doc.title,
-    excerpt: (doc.bodyText ?? "").slice(0, 200),
+    excerpt: (doc.bodyText || doc.fileAttachmentLabels.join(", ")).slice(
+      0,
+      200,
+    ),
   };
 }

@@ -267,6 +267,7 @@ describe("buildPageMetadata", () => {
         slug: "over-kcvv",
         title: "Over KCVV Elewijt",
         bodyText: "KCVV Elewijt is een voetbalclub uit Elewijt.",
+        fileAttachmentLabels: [],
       }),
     ).toEqual({
       slug: "over-kcvv",
@@ -276,9 +277,14 @@ describe("buildPageMetadata", () => {
     });
   });
 
-  it("falls back to an empty excerpt for a null body", () => {
+  it("falls back to an empty excerpt for a null body and no attachments", () => {
     expect(
-      buildPageMetadata({ slug: "leeg", title: "Lege pagina", bodyText: null }),
+      buildPageMetadata({
+        slug: "leeg",
+        title: "Lege pagina",
+        bodyText: null,
+        fileAttachmentLabels: [],
+      }),
     ).toHaveProperty("excerpt", "");
   });
 
@@ -288,8 +294,41 @@ describe("buildPageMetadata", () => {
         slug: "lang",
         title: "Lange pagina",
         bodyText: "x".repeat(300),
+        fileAttachmentLabels: [],
       }),
     ).toHaveProperty("excerpt", "x".repeat(200));
+  });
+
+  it("falls back to the joined fileAttachment labels when there is no prose", () => {
+    // The exact `downloads` case: pt::text(body) is null for a body built
+    // only from fileAttachment items. Without this fallback the search
+    // result card renders a title over a blank line, and the AI-answer
+    // context gets nothing but "Downloads: ".
+    expect(
+      buildPageMetadata({
+        slug: "downloads",
+        title: "Downloads",
+        bodyText: null,
+        fileAttachmentLabels: [
+          "Ongevalsaangifte",
+          "Reglement van Inwendige Orde",
+        ],
+      }),
+    ).toHaveProperty(
+      "excerpt",
+      "Ongevalsaangifte, Reglement van Inwendige Orde",
+    );
+  });
+
+  it("prefers the body prose over the attachment labels when both exist", () => {
+    expect(
+      buildPageMetadata({
+        slug: "downloads",
+        title: "Downloads",
+        bodyText: "Aangiftes. Reglementen",
+        fileAttachmentLabels: ["Ongevalsaangifte"],
+      }),
+    ).toHaveProperty("excerpt", "Aangiftes. Reglementen");
   });
 });
 

@@ -8,6 +8,7 @@ import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
   PAGE_INDEX_PROJECTION,
+  RESPONSIBILITY_ACTIVE_FILTER,
   RESPONSIBILITY_INDEX_PROJECTION,
   buildArticleIndexText,
   buildArticleMetadata,
@@ -100,7 +101,7 @@ interface TypeDescriptor {
 
 const typeDescriptors: Record<AllowedType, TypeDescriptor> = {
   responsibility: {
-    query: `*[_id == $id][0]{ ${RESPONSIBILITY_INDEX_PROJECTION} }`,
+    query: `*[_id == $id && ${RESPONSIBILITY_ACTIVE_FILTER}][0]{ ${RESPONSIBILITY_INDEX_PROJECTION} }`,
     buildIndex: (doc) => {
       const r = S.decodeUnknownSync(ResponsibilityDoc)(doc);
       return {

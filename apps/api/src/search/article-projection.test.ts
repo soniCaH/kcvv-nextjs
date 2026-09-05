@@ -4,9 +4,11 @@ import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
   PAGE_INDEX_PROJECTION,
+  RESPONSIBILITY_INDEX_PROJECTION,
   buildArticleExcerpt,
   buildArticleIndexText,
   buildPageIndexText,
+  buildResponsibilityIndexText,
 } from "./index-queries";
 import { ARTICLE_QUERY } from "./sanity-index-sync";
 
@@ -249,6 +251,62 @@ describe("PAGE_INDEX_PROJECTION evaluated against fixture documents", () => {
     const text = indexTextForPage(row);
     expect(text).toContain("Aangiftes");
     expect(text).toContain("Ongevalsaangifte");
+  });
+});
+
+describe("RESPONSIBILITY_INDEX_PROJECTION evaluated against fixture documents", () => {
+  interface Responsibility {
+    readonly _id: string;
+    readonly _type: string;
+    readonly slug?: { current: string };
+    readonly title?: string;
+    readonly question?: string;
+    readonly keywords?: string[];
+    readonly summary?: string;
+  }
+
+  const responsibility = (
+    over: Partial<Responsibility> & { _id: string },
+  ): Responsibility => ({
+    _type: "responsibility",
+    slug: { current: over._id },
+    title: "Kantine",
+    question: "Wie regelt de kantine?",
+    keywords: ["kantine"],
+    summary: "De kantine wordt beheerd door de evenementencommissie.",
+    ...over,
+  });
+
+  const projectResponsibility = async (doc: Responsibility) => {
+    const [row] = await runQuery(
+      `*[_type == "responsibility"]{ ${RESPONSIBILITY_INDEX_PROJECTION} }`,
+      [doc],
+    );
+    return row!;
+  };
+
+  it("coalesces title and question to a string when the source document omits them", async () => {
+    // ResponsibilityDoc (webhooks/index-handler.ts) declares both required,
+    // non-nullable S.String. A responsibility written without one — a
+    // script `createOrReplace` bypasses Studio's own Rule.required() —
+    // would otherwise project `title`/`question` as `undefined`, and
+    // S.decodeUnknownSync would throw: invalid_document -> 500 -> Sanity
+    // retries the webhook indefinitely.
+    const row = await projectResponsibility(
+      responsibility({
+        _id: "incomplete",
+        title: undefined,
+        question: undefined,
+      }),
+    );
+
+    expect(row["title"]).toBeTypeOf("string");
+    expect(row["question"]).toBeTypeOf("string");
+    expect(() =>
+      buildResponsibilityIndexText(
+        row as unknown as Parameters<typeof buildResponsibilityIndexText>[0],
+      ),
+    ).not.toThrow();
   });
 });
 

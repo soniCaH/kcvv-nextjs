@@ -7,6 +7,7 @@ import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
   PAGE_INDEX_PROJECTION,
+  RESPONSIBILITY_ACTIVE_FILTER,
   RESPONSIBILITY_INDEX_PROJECTION,
   buildArticleIndexText,
   buildArticleMetadata,
@@ -51,7 +52,7 @@ interface SanityPageDoc {
 
 // ─── Sanity GROQ queries ─────────────────────────────────────────────────────
 
-const RESPONSIBILITY_QUERY = `*[_type == "responsibility" && active == true] {
+const RESPONSIBILITY_QUERY = `*[_type == "responsibility" && ${RESPONSIBILITY_ACTIVE_FILTER}] {
   ${RESPONSIBILITY_INDEX_PROJECTION}
 }`;
 
