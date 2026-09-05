@@ -8,7 +8,7 @@ import { VectorizeService } from "../search/vectorize";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
-} from "../search/index-text";
+} from "../search/index-queries";
 
 // Mock @sanity/client so the inlined webhook fetch returns controlled docs.
 const mockSanityFetch = vi.fn();

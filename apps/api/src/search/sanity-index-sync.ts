@@ -10,7 +10,7 @@ import {
   buildArticleMetadata,
   buildPageIndexText,
   buildResponsibilityIndexText,
-} from "./index-text";
+} from "./index-queries";
 import { VectorizeService, type VectorRecord } from "./vectorize";
 
 // ─── Types (only fields needed for indexing) ──────────────────────────────────

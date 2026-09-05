@@ -6,7 +6,7 @@ import {
   buildPageIndexText,
   buildResponsibilityIndexText,
   stripTableHtml,
-} from "./index-text";
+} from "./index-queries";
 
 describe("buildResponsibilityIndexText", () => {
   it("combines title, question, keywords, and summary", () => {

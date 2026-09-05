@@ -11,7 +11,7 @@ import {
   buildArticleMetadata,
   buildPageIndexText,
   buildResponsibilityIndexText,
-} from "../search/index-text";
+} from "../search/index-queries";
 import { VectorizeService, VectorizeServiceLive } from "../search/vectorize";
 import { WebhookPayload } from "./schemas";
 import { verifySvixSignature } from "./svix-verify";

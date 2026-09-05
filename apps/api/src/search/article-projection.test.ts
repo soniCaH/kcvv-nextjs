@@ -5,7 +5,7 @@ import {
   ARTICLE_PUBLISHED_FILTER,
   buildArticleExcerpt,
   buildArticleIndexText,
-} from "./index-text";
+} from "./index-queries";
 import { ARTICLE_QUERY } from "./sanity-index-sync";
 
 /**
