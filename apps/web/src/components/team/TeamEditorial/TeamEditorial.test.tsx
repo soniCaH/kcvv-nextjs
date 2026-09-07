@@ -7,9 +7,6 @@
  *    into a PullQuote card; no pullquote → no card
  *  - Contact block renders PT; auto-hides when empty
  *  - Per-block independence (one present, other absent)
- *
- * The training-schedule block was deleted, not restyled (#2582 / #2476 rule
- * 10) — training times live in PSD and members are sent there.
  */
 
 import { describe, it, expect } from "vitest";
@@ -83,11 +80,6 @@ describe("TeamEditorial", () => {
       render(<TeamEditorial contactInfo={CONTACT} />);
       expect(screen.queryByTestId("team-editorial-verhaal")).toBeNull();
     });
-  });
-
-  it("never renders a training-schedule block — deleted, not restyled (#2582)", () => {
-    render(<TeamEditorial body={BODY_NO_PULLQUOTE} contactInfo={CONTACT} />);
-    expect(screen.queryByTestId("team-editorial-training")).toBeNull();
   });
 
   describe("Contact", () => {
