@@ -2,13 +2,10 @@ import { createClient } from "@sanity/client";
 import { Array as Arr, Effect, Schedule } from "effect";
 import { WorkerEnvTag } from "../env";
 import { sanityClientConfig } from "../sanity/config";
-import {
-  HARD_TTL_LONG,
-  KvCacheService,
-  type KvCacheInterface,
-} from "../cache/kv-cache";
+import { KvCacheService } from "../cache/kv-cache";
 import { datasetIndexMismatch } from "./dataset-index-guard";
 import { EmbeddingService } from "./embedding";
+import { readManifest, writeManifest } from "./index-manifest";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
@@ -94,6 +91,18 @@ const UPSERT_RETRY = Schedule.exponential("100 millis").pipe(
 const MAX_IDS_PER_DELETE = MAX_VECTORS_PER_UPSERT;
 const DELETE_RETRY = UPSERT_RETRY;
 
+// A fetch that succeeds but returns an incomplete result (a truncated GROQ
+// response as the corpus grows, a stray slice, a projection regression that
+// drops `_id`) is indistinguishable from "these documents stopped matching"
+// — `reconciliationSafe` only guards a fetch that throws, not one that lies.
+// Refusing to prune past this fraction of the previous manifest in one sweep
+// is a cheap ceiling on the blast radius: recovery from an over-prune needs a
+// full reindex, recovery from a skipped prune needs nothing (it just retries
+// next sweep). 50% is deliberately generous — current real drift is single
+// digits against a ~200-id manifest; tighten it if a real false positive
+// ever shows up (#2831 review finding 4).
+const PRUNE_SAFETY_CAP_FRACTION = 0.5;
+
 // ─── Reconciliation (#2831) ────────────────────────────────────────────────
 //
 // Vectorize exposes exactly upsert / query / getByIds / deleteByIds — no
@@ -101,56 +110,37 @@ const DELETE_RETRY = UPSERT_RETRY;
 // delete must always be addressed by an id this worker already knows, so
 // "what should be pruned" has to come from somewhere other than the index.
 //
-// Chosen mechanism: after a sweep whose Sanity fetches ALL succeeded, write
-// the id set it just saw (across all three types) to KV as a manifest. The
-// next sweep deletes `previousManifest − currentIds` — anything the last
-// successful sweep saw that this one no longer does. That covers every way
-// a document can drop out of its query without the sweep needing to know
-// which one happened: it expired (`unpublishAt`), it was deactivated
-// (`active == false`, RESPONSIBILITY_ACTIVE_FILTER), or it was deleted from
-// Sanity outright.
+// Chosen mechanism: a KV manifest (index-manifest.ts) of ids the index is
+// believed to hold. Every successful upsert — this sweep's, or the
+// webhook's (webhooks/index-handler.ts) — adds its id to it. After a sweep
+// whose Sanity fetches ALL succeeded, the manifest becomes
+// `(previousManifest ∪ currentIds) − confirmedDeleted`: anything the
+// manifest named that this sweep's current query results no longer contain
+// is a delete candidate, and only ids Vectorize actually confirmed deleting
+// are dropped from the manifest — a dry run, a failed chunk, or a
+// cap-refused sweep (below) confirms nothing, so those ids stay pending and
+// get retried next time. That covers every way a document can drop out of a
+// query without the sweep needing to know which one happened: it expired
+// (`unpublishAt`), it was deactivated (`active == false`,
+// RESPONSIBILITY_ACTIVE_FILTER), or it was deleted from Sanity outright —
+// and, via the webhook's own manifest write, a document whose entire
+// visible life fit between two sweeps with no sweep ever observing it as
+// current (review finding 3).
 //
-// What it does NOT cover: a vector that predates the first manifest this
-// mechanism ever writes. Nothing can name that id after the fact — Vectorize
-// has no list-ids call, and if the Sanity document is also gone, nothing
-// there names it either. Cleaning up that pre-existing population is a
-// separate, one-off, manually-run exercise (see the PR description for the
-// measured count) — a recurring diff can only prune drift from the point it
-// starts running, never retroactively.
+// What it does NOT cover: a vector already in the index before the first
+// write this mechanism ever made to the manifest — the pre-existing backlog
+// measured on this issue. Nothing can name that id after the fact —
+// Vectorize has no list-ids call, and if the Sanity document is also gone,
+// nothing there names it either. Cleaning up that pre-existing population is
+// a separate, one-off, manually-run exercise (see the PR description for the
+// measured count); everything indexed from this mechanism's first write
+// onward is tracked and therefore prunable.
 //
 // Cost per sweep: one extra KV read + one KV write (a single JSON array of
 // ids — currently ~200, far under KV's 25 MB value cap), plus
 // ceil(prunedCount / MAX_IDS_PER_DELETE) additional deleteByIds calls.
 // Nightly drift is normally zero to a handful of ids; even the one-time
 // backlog measured on this issue (37) is a single batch.
-const MANIFEST_KEY = "search-index:manifest";
-
-// Reuses PSD_CACHE rather than provisioning a dedicated KV namespace for a
-// ~200-id list: no new wrangler.toml binding, nothing for a human to create
-// before merge.
-// ponytail: revisit only if PSD_CACHE's own eviction/TTL policy (built for
-// PSD response caching) ever conflicts with a value this sweep expects to
-// persist indefinitely — HARD_TTL_LONG (365 days) is refreshed every
-// successful sweep, so in practice it never lapses on a nightly cron.
-const readManifest = (
-  kvCache: KvCacheInterface,
-): Effect.Effect<string[] | null> =>
-  kvCache.get(MANIFEST_KEY).pipe(
-    Effect.map((raw) => {
-      if (raw === null) return null;
-      try {
-        const parsed = JSON.parse(raw) as unknown;
-        return Array.isArray(parsed)
-          ? parsed.filter((id): id is string => typeof id === "string")
-          : null;
-      } catch {
-        return null;
-      }
-    }),
-  );
-
-const writeManifest = (kvCache: KvCacheInterface, ids: readonly string[]) =>
-  kvCache.set(MANIFEST_KEY, JSON.stringify(ids), HARD_TTL_LONG);
 
 // ─── Options ─────────────────────────────────────────────────────────────────
 
@@ -243,25 +233,30 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
 
     /**
      * Deletes ids in ≤1000-sized chunks, sequentially — same shape as
-     * upsertBatched, same reason (one write-ahead-log slot per index). A
-     * chunk that keeps failing after retries is logged and skipped rather
-     * than aborting the rest: a stuck delete must not block the sweep, the
-     * same tradeoff upsertBatched already makes.
+     * upsertBatched, same reason (one write-ahead-log slot per index).
+     * Returns the ids actually confirmed deleted: a chunk that keeps failing
+     * after retries is logged and skipped rather than aborting the rest (a
+     * stuck delete must not block the sweep, the same tradeoff
+     * upsertBatched already makes), and its ids are NOT included in the
+     * result — the caller must not drop them from the manifest, or a
+     * Vectorize outage during the prune window would forget them forever
+     * (#2831 review finding 2).
      */
-    const deleteBatched = (ids: readonly string[]) =>
+    const deleteBatched = (ids: readonly string[]): Effect.Effect<string[]> =>
       Effect.forEach(
         Arr.chunksOf(ids, MAX_IDS_PER_DELETE),
         (chunk) =>
           vectorize.deleteByIds([...chunk]).pipe(
             Effect.retry(DELETE_RETRY),
+            Effect.as([...chunk]),
             Effect.catchAll((e) =>
               Effect.logError(
                 `[search-sync] Prune failed after retries — could not delete ${chunk.length} of ${ids.length} orphaned vectors: ${String(e)}`,
-              ),
+              ).pipe(Effect.as([] as string[])),
             ),
           ),
-        { concurrency: 1, discard: true },
-      );
+        { concurrency: 1 },
+      ).pipe(Effect.map((confirmed) => confirmed.flat()));
 
     // ── Responsibility paths ──────────────────────────────────────────────
 
@@ -399,30 +394,52 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
         ...pageResult.map((d) => d._id),
       ];
 
-      const previousManifest = yield* readManifest(kvCache);
+      const previousManifest = yield* readManifest(kvCache, env.SANITY_DATASET);
 
       if (previousManifest === null) {
         yield* Effect.log(
           "[search-sync] No previous manifest — bootstrap sweep, nothing pruned",
         );
+        yield* writeManifest(kvCache, env.SANITY_DATASET, currentIds);
       } else {
         const currentIdSet = new Set(currentIds);
         const toDelete = previousManifest.filter((id) => !currentIdSet.has(id));
 
+        // Only ids Vectorize actually confirmed deleting leave the manifest
+        // (#2831 review findings 1 & 2) — a dry run, a failed chunk, or a
+        // cap-refused sweep confirms nothing, so this stays empty and
+        // everything in toDelete survives into the next manifest to be
+        // retried.
+        let confirmedDeleted: string[] = [];
+
         if (toDelete.length === 0) {
           yield* Effect.log("[search-sync] Reconciliation: nothing to prune");
+        } else if (
+          toDelete.length >
+          previousManifest.length * PRUNE_SAFETY_CAP_FRACTION
+        ) {
+          yield* Effect.logWarning(
+            `[search-sync] Refusing to prune ${toDelete.length} of ${previousManifest.length} manifest entries — exceeds the ${PRUNE_SAFETY_CAP_FRACTION * 100}% safety cap. Skipping this sweep's prune; investigate before the next one runs.`,
+          );
         } else if (dryRun) {
           yield* Effect.log(
             `[search-sync] DRY RUN — would prune ${toDelete.length} orphaned vector(s): ${toDelete.join(", ")}`,
           );
         } else {
-          yield* deleteBatched(toDelete);
+          confirmedDeleted = yield* deleteBatched(toDelete);
           yield* Effect.log(
-            `[search-sync] Pruned ${toDelete.length} orphaned vector(s)`,
+            `[search-sync] Pruned ${confirmedDeleted.length} orphaned vector(s)`,
           );
         }
-      }
 
-      yield* writeManifest(kvCache, currentIds);
+        // Union, not overwrite: a document this sweep saw for the first
+        // time must be added even though it's absent from the OLD manifest.
+        // Only confirmedDeleted ids are removed — everything else the
+        // manifest already named (including anything just refused above)
+        // carries forward untouched.
+        const nextManifest = new Set([...previousManifest, ...currentIds]);
+        for (const id of confirmedDeleted) nextManifest.delete(id);
+        yield* writeManifest(kvCache, env.SANITY_DATASET, [...nextManifest]);
+      }
     }
   });

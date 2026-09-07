@@ -3,8 +3,10 @@ import { Effect, Layer, Schema as S } from "effect";
 import type { WorkerEnv } from "../env";
 import { WorkerEnvTag } from "../env";
 import { sanityClientConfig } from "../sanity/config";
+import { KvCacheService, KvCacheLive } from "../cache/kv-cache";
 import { datasetIndexMismatch } from "../search/dataset-index-guard";
 import { EmbeddingService, EmbeddingServiceLive } from "../search/embedding";
+import { addToManifest } from "../search/index-manifest";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
@@ -188,6 +190,7 @@ const webhookEffect = (request: Request, webhookSecret: string) =>
     const env = yield* WorkerEnvTag;
     const embedding = yield* EmbeddingService;
     const vectorize = yield* VectorizeService;
+    const kvCache = yield* KvCacheService;
 
     // 1. Read raw body
     const rawBody = yield* Effect.tryPromise({
@@ -276,10 +279,17 @@ const webhookEffect = (request: Request, webhookSecret: string) =>
         new WebhookServiceError("sanity_fetch_failed", errorMessage(err)),
     });
 
-    // No document came back: it is gone, or ARTICLE_PUBLISHED_FILTER now holds
-    // it out because it expired or is future-dated. Either way its vector must
-    // go — runSanityIndexSync only upserts, so nothing else would ever remove
-    // it and search would keep serving an article the site no longer shows.
+    // No document came back: it is gone, or ARTICLE_PUBLISHED_FILTER (or
+    // RESPONSIBILITY_ACTIVE_FILTER) now holds it out because it expired, is
+    // future-dated, or was deactivated. Either way its vector must go now,
+    // synchronously — an edit that flips `active` or sets `unpublishAt` in
+    // the past still fires this very webhook, so this branch is what deletes
+    // it immediately rather than waiting on anything else. The nightly
+    // sweep's reconciliation step (search/sanity-index-sync.ts, #2831) is
+    // the backstop for the case this branch can't reach: `unpublishAt`
+    // simply passing is a time transition, not a Sanity mutation, so it
+    // fires no webhook of its own — the sweep after it runs is the only
+    // thing that ever prunes it.
     if (!doc) {
       yield* vectorize
         .deleteByIds([_id])
@@ -321,12 +331,23 @@ const webhookEffect = (request: Request, webhookSecret: string) =>
         ),
       );
 
+    // 12. Track the id in the reconciliation manifest (#2831 review finding
+    // 3) — a document whose entire visible life fits between two nightly
+    // sweeps (published and unpublished the same day) would otherwise never
+    // appear in any sweep's current-ids set, so no sweep could ever notice
+    // it dropped out. KvCacheLive's get/set never fail (they swallow
+    // transient KV errors internally), so this can't turn a successful
+    // index into a failed webhook response.
+    yield* addToManifest(kvCache, env.SANITY_DATASET, _id);
+
     return Response.json({ ok: true, action: "indexed" });
   });
 
 // ─── Public handler ────────────────────────────────────────────────────────
 
-export type WebhookLayer = Layer.Layer<EmbeddingService | VectorizeService>;
+export type WebhookLayer = Layer.Layer<
+  EmbeddingService | VectorizeService | KvCacheService
+>;
 
 export async function handleIndexWebhook(
   request: Request,
@@ -335,7 +356,8 @@ export async function handleIndexWebhook(
 ): Promise<Response> {
   const envLayer = Layer.succeed(WorkerEnvTag, env);
   const serviceLayer =
-    layer ?? Layer.mergeAll(EmbeddingServiceLive, VectorizeServiceLive);
+    layer ??
+    Layer.mergeAll(EmbeddingServiceLive, VectorizeServiceLive, KvCacheLive);
 
   return Effect.runPromise(
     webhookEffect(request, env.SANITY_WEBHOOK_SECRET).pipe(

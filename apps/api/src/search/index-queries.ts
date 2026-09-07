@@ -15,8 +15,12 @@ export const ARTICLE_COVER_IMAGE_PROJECTION = `"imageUrl": coverImage.asset->url
 /**
  * The window an article is searchable in. Both index paths share it so a
  * future-dated or expired article cannot enter the index down one path while
- * the other holds it out — `runSanityIndexSync` only upserts, so anything the
- * webhook admits early stays until something deletes it.
+ * the other holds it out. The webhook deletes synchronously the moment it
+ * next touches the document (`webhooks/index-handler.ts`'s `!doc` branch);
+ * `runSanityIndexSync`'s manifest-based reconciliation step (#2831) is the
+ * backstop for everything that branch can't reach — an `unpublishAt` simply
+ * passing fires no webhook event of its own, so the sweep after it runs is
+ * the only thing that ever prunes it.
  */
 export const ARTICLE_PUBLISHED_FILTER = `publishedAt <= now() && (!defined(unpublishAt) || unpublishAt > now())`;
 
@@ -98,17 +102,19 @@ export function stripTableHtml(html: string): string {
  * Whether a responsibility is currently visible on `/hulp`
  * (`active: false` is "tijdelijk verbergen" —
  * packages/sanity-schemas/src/responsibility.ts). Both index paths share it
- * so deactivating one cannot leave it MORE findable than before:
- * `runSanityIndexSync` only upserts, so a webhook that admitted a hidden
- * responsibility despite `active: false` would keep re-upserting its vector
- * on every future edit, while `/hulp`'s own finder (`RESPONSIBILITY_PATHS_QUERY`)
- * already filters it out — a semantic-search hit would then point at a slug
- * the finder never renders. Composed into each path's query the same way
- * `ARTICLE_PUBLISHED_FILTER` is: as part of the `*[_id == $id && …][0]`
- * clause, so a document the filter now excludes projects `null` and falls
- * into the existing `!doc` delete branch — deactivating a responsibility
- * evicts its vector, the same way an article leaving its publish window
- * does.
+ * so deactivating one cannot leave it MORE findable than before. Composed
+ * into each path's query the same way `ARTICLE_PUBLISHED_FILTER` is: as part
+ * of the `*[_id == $id && …][0]` clause, so a document the filter now
+ * excludes projects `null` and falls into the existing `!doc` delete branch
+ * — deactivating a responsibility evicts its vector synchronously, the same
+ * way an article leaving its publish window does. Without this filter at
+ * write time, a webhook edit on a hidden responsibility would keep
+ * re-upserting its vector between sweeps, and `/hulp`'s own finder
+ * (`RESPONSIBILITY_PATHS_QUERY`) already filters it out — a semantic-search
+ * hit would then point at a slug the finder never renders. (The nightly
+ * sweep's manifest-based reconciliation, #2831, would eventually catch a
+ * stray re-upserted vector too, but only on the sweep after the mistake —
+ * this filter is what stops it happening in the first place.)
  */
 export const RESPONSIBILITY_ACTIVE_FILTER = `active == true`;
 

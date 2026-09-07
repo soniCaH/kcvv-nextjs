@@ -5,6 +5,8 @@ import type { WorkerEnv } from "../env";
 import { TEST_SECRET, signPayload } from "../test-helpers/svix-signing";
 import { EmbeddingService } from "../search/embedding";
 import { VectorizeService } from "../search/vectorize";
+import { KvCacheService, type KvCacheInterface } from "../cache/kv-cache";
+import { readManifest } from "../search/index-manifest";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
@@ -90,7 +92,32 @@ function makeEnv(overrides: Partial<WorkerEnv> = {}): WorkerEnv {
 const upsertSpy = vi.fn<(vectors: unknown[]) => void>();
 const deleteByIdsSpy = vi.fn<(ids: string[]) => void>();
 
-function makeTestLayer(): WebhookLayer {
+/** No-op by default — most tests don't care about the manifest. */
+const noopKvCache: KvCacheInterface = {
+  get: () => Effect.succeed(null),
+  set: () => Effect.succeed(undefined),
+  delete: () => Effect.succeed(undefined),
+  increment: () => Effect.succeed(undefined),
+};
+
+/** Stateful in-memory KV, for tests that need to read back what the webhook wrote. */
+function makeKvCacheMock(): KvCacheInterface {
+  const store = new Map<string, string>();
+  return {
+    get: (key) => Effect.succeed(store.get(key) ?? null),
+    set: (key, value) =>
+      Effect.sync(() => {
+        store.set(key, value);
+      }),
+    delete: (key) =>
+      Effect.sync(() => {
+        store.delete(key);
+      }),
+    increment: () => Effect.succeed(undefined),
+  };
+}
+
+function makeTestLayer(kv: KvCacheInterface = noopKvCache): WebhookLayer {
   return Layer.mergeAll(
     Layer.succeed(EmbeddingService, {
       embed: () => Effect.succeed(FAKE_VECTOR),
@@ -107,6 +134,7 @@ function makeTestLayer(): WebhookLayer {
       query: () => Effect.succeed([]),
       getByIds: () => Effect.succeed([]),
     }),
+    Layer.succeed(KvCacheService, kv),
   );
 }
 
@@ -225,6 +253,37 @@ describe("handleIndexWebhook", () => {
         }),
       }),
     ]);
+  });
+
+  it("records the id in the reconciliation manifest on a successful upsert (#2831 review finding 3)", async () => {
+    // A document whose entire visible life fits between two nightly sweeps
+    // (published and unpublished the same day) is never seen as "current" by
+    // any sweep — the webhook's own upsert is the only thing that can ever
+    // register it, so the sweep after it drops out can still prune it.
+    const kv = makeKvCacheMock();
+    const layer = makeTestLayer(kv);
+
+    const sanityDoc = {
+      _id: "resp-transient",
+      slug: "kantine",
+      title: "Kantine",
+      question: "Wie regelt de kantine?",
+      keywords: ["kantine", "bar"],
+      summary: "De kantine wordt beheerd door de evenementencommissie.",
+    };
+    mockSanityFetch.mockResolvedValue(sanityDoc);
+
+    const body = JSON.stringify({
+      _id: "resp-transient",
+      _type: "responsibility",
+    });
+    const request = await makeSignedRequest(body);
+
+    const response = await handleIndexWebhook(request, makeEnv(), layer);
+    expect(response.status).toBe(200);
+
+    const manifest = await Effect.runPromise(readManifest(kv, "production"));
+    expect(manifest).toEqual(["resp-transient"]);
   });
 
   it("returns skipped_not_found when document is not in Sanity", async () => {
@@ -503,7 +562,8 @@ describe("handleIndexWebhook", () => {
         query: () => Effect.succeed([]),
         getByIds: () => Effect.succeed([]),
       }),
-    ) as WebhookLayer;
+      Layer.succeed(KvCacheService, noopKvCache),
+    );
 
     const body = JSON.stringify({ _id: "article-002", _type: "article" });
     await handleIndexWebhook(await makeSignedRequest(body), makeEnv(), layer);
