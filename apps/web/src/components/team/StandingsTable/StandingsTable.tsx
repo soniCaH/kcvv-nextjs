@@ -22,6 +22,39 @@ export interface StandingsTableProps {
 const KCVV_HIGHLIGHT_CLASS =
   "bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))] shadow-[inset_3px_0_0_var(--color-jersey-deep)]";
 
+/**
+ * Anchor group (#2476 rule 3): "a table declares its anchors; position
+ * never decides." `#` + `Ploeg` are a declared *leading group* of two —
+ * pinned left so they never scroll away — and `Ptn` is the one declared
+ * *concluding* column, pinned right. The middle columns (M/W/G/V/+/-)
+ * scroll underneath both.
+ *
+ * Applied via `overflowsClassName`, not `scrollableRightClassName`: the
+ * anchor has to hold for the whole scroll session, including its last few
+ * pixels where `canScrollRight` already reads false — `overflows` (#2489)
+ * is the static "does this track overflow at all" signal built for that.
+ *
+ * ponytail: the pinned cells always paint a flat `bg-cream`, not the KCVV
+ * row's tinted highlight — that tint (and its inset accent rule) still
+ * shows on every un-pinned column of that row. Give the pinned cells the
+ * tint too if a reviewer wants full-row parity while scrolled; leaving it
+ * out keeps this to one background value instead of a per-row conditional
+ * class computed inside `.map()`.
+ */
+const ANCHOR_TRACK_CLASSES = [
+  "[&>table>thead>tr>th:nth-child(-n+2)]:sticky [&>table>thead>tr>th:nth-child(-n+2)]:z-10 [&>table>thead>tr>th:nth-child(-n+2)]:bg-cream",
+  "[&>table>tbody>tr>td:nth-child(-n+2)]:sticky [&>table>tbody>tr>td:nth-child(-n+2)]:z-10 [&>table>tbody>tr>td:nth-child(-n+2)]:bg-cream",
+  "[&>table>thead>tr>th:first-child]:left-0 [&>table>tbody>tr>td:first-child]:left-0",
+  "[&>table>thead>tr>th:first-child]:w-12 [&>table>tbody>tr>td:first-child]:w-12",
+  "[&>table>thead>tr>th:nth-child(2)]:left-12 [&>table>tbody>tr>td:nth-child(2)]:left-12",
+  "[&>table>thead>tr>th:nth-child(2)]:shadow-[2px_0_4px_-1px_rgba(0,0,0,0.12)]",
+  "[&>table>tbody>tr>td:nth-child(2)]:shadow-[2px_0_4px_-1px_rgba(0,0,0,0.12)]",
+  "[&>table>thead>tr>th:last-child]:sticky [&>table>thead>tr>th:last-child]:right-0 [&>table>thead>tr>th:last-child]:z-10 [&>table>thead>tr>th:last-child]:bg-cream",
+  "[&>table>tbody>tr>td:last-child]:sticky [&>table>tbody>tr>td:last-child]:right-0 [&>table>tbody>tr>td:last-child]:z-10 [&>table>tbody>tr>td:last-child]:bg-cream",
+  "[&>table>thead>tr>th:last-child]:shadow-[-2px_0_4px_-1px_rgba(0,0,0,0.12)]",
+  "[&>table>tbody>tr>td:last-child]:shadow-[-2px_0_4px_-1px_rgba(0,0,0,0.12)]",
+].join(" ");
+
 /** Crest + truncating team name, italic unless it's the KCVV row. The one
  * piece both the numbered table and the numberless list render identically. */
 function ClubIdentity({
@@ -68,7 +101,7 @@ function NumberlessClubList({
     >
       {caption ? (
         <p className="pb-2 text-left">
-          <MonoLabel>{caption}</MonoLabel>
+          <MonoLabel tone="muted">{caption}</MonoLabel>
         </p>
       ) : null}
       <ul className="font-mono text-xs">
@@ -124,11 +157,12 @@ export function StandingsTable({
         role="region"
         ariaLabel={caption ?? "Klassement"}
         direction="right"
+        overflowsClassName={ANCHOR_TRACK_CLASSES}
       >
         <table className="w-full border-collapse font-mono text-xs">
           {caption ? (
             <caption className="pb-2 text-left">
-              <MonoLabel>{caption}</MonoLabel>
+              <MonoLabel tone="muted">{caption}</MonoLabel>
             </caption>
           ) : null}
           <thead>
@@ -151,22 +185,21 @@ export function StandingsTable({
               >
                 M
               </th>
-              {/* W/G/V hidden on mobile */}
               <th
                 scope="col"
-                className="text-ink-muted hidden py-2 pr-2 text-right tracking-wider uppercase sm:table-cell"
+                className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
               >
                 W
               </th>
               <th
                 scope="col"
-                className="text-ink-muted hidden py-2 pr-2 text-right tracking-wider uppercase sm:table-cell"
+                className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
               >
                 G
               </th>
               <th
                 scope="col"
-                className="text-ink-muted hidden py-2 pr-2 text-right tracking-wider uppercase sm:table-cell"
+                className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
               >
                 V
               </th>
@@ -217,14 +250,13 @@ export function StandingsTable({
                     {entry.played}
                   </td>
 
-                  {/* W/G/V — hidden on mobile */}
-                  <td className="text-ink hidden py-2 pr-2 text-right tabular-nums sm:table-cell">
+                  <td className="text-ink py-2 pr-2 text-right tabular-nums">
                     {entry.won}
                   </td>
-                  <td className="text-ink hidden py-2 pr-2 text-right tabular-nums sm:table-cell">
+                  <td className="text-ink py-2 pr-2 text-right tabular-nums">
                     {entry.drawn}
                   </td>
-                  <td className="text-ink hidden py-2 pr-2 text-right tabular-nums sm:table-cell">
+                  <td className="text-ink py-2 pr-2 text-right tabular-nums">
                     {entry.lost}
                   </td>
 

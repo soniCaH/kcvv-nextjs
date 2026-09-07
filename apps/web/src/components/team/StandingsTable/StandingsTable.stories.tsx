@@ -72,6 +72,17 @@ export const Empty: Story = {
   args: { entries: [] },
 };
 
+/** Mobile — narrow viewport (375px). All 8 columns render (no `hidden
+ *  sm:table-cell`, #2582); `#` + `Ploeg` stay pinned left and `Ptn` pinned
+ *  right as the middle columns scroll underneath (#2476 rule 3). */
+export const MobileNarrow: Story = {
+  name: "Mobile — narrow viewport (375px)",
+  args: { entries: fullDivision, highlightTeamId: 1235 },
+  parameters: {
+    vr: { viewports: ["mobile"] },
+  },
+};
+
 // Every row published, none scored — the state before matchday 1.
 const numberlessDivision: RankingEntry[] = [
   entry(0, 101, "KSK Kampenhout", 0, 0, 0, 0, 0, 0, 0),

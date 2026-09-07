@@ -121,6 +121,16 @@ describe("StandingsTable", () => {
     expect(screen.getByText("-3")).toBeInTheDocument();
   });
 
+  it("never hides W/G/V behind a responsive class — scrolling answers overflow, not hiding (#2582)", () => {
+    render(<StandingsTable entries={DIVISION} />);
+    const headers = screen.getAllByRole("columnheader");
+    for (const label of ["W", "G", "V"]) {
+      const header = headers.find((h) => h.textContent === label);
+      expect(header?.className).not.toContain("hidden");
+      expect(header?.className).not.toContain("sm:table-cell");
+    }
+  });
+
   it("does not render a Vorm/form column", () => {
     render(<StandingsTable entries={DIVISION} />);
     const headers = screen
@@ -236,6 +246,75 @@ describe("StandingsTable", () => {
 
       fade = container.querySelector(".bg-gradient-to-l") as HTMLElement;
       expect(fade.style.width).toBe("15px");
+    });
+  });
+
+  describe("anchoring — declared, not positional (#2476 rule 3)", () => {
+    function mockScrollDimensions(scrollWidth: number, clientWidth: number) {
+      Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+        configurable: true,
+        value: scrollWidth,
+      });
+      Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+        configurable: true,
+        value: clientWidth,
+      });
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (HTMLElement.prototype as any).scrollWidth;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (HTMLElement.prototype as any).clientWidth;
+    });
+
+    // The anchor is implemented as arbitrary-variant selectors on the
+    // scroll TRACK (e.g. `[&>table>thead>tr>th:first-child]:sticky`) rather
+    // than a literal "sticky" class on each `<th>`/`<td>` — Tailwind
+    // compiles that into a CSS rule keyed off the track's own class, so the
+    // track (the `role="region"` element) is what carries it, not the
+    // individual header/cell nodes.
+    it("pins the leading group (#, Ploeg) and the concluding column (Ptn) once the table overflows", () => {
+      mockScrollDimensions(900, 500);
+      render(<StandingsTable entries={DIVISION} />);
+
+      const region = screen.getByRole("region");
+      expect(region.className).toContain(
+        "[&>table>thead>tr>th:nth-child(-n+2)]:sticky",
+      );
+      expect(region.className).toContain(
+        "[&>table>thead>tr>th:last-child]:sticky",
+      );
+      expect(region.className).toContain(
+        "[&>table>tbody>tr>td:nth-child(-n+2)]:sticky",
+      );
+      expect(region.className).toContain(
+        "[&>table>tbody>tr>td:last-child]:sticky",
+      );
+    });
+
+    it("does not pin any column when the table fits", () => {
+      mockScrollDimensions(500, 500);
+      render(<StandingsTable entries={DIVISION} />);
+
+      const region = screen.getByRole("region");
+      expect(region.className).not.toContain("sticky");
+    });
+
+    it("keeps the anchor pinned even once scrolled to the very end (overflows, not canScrollRight)", () => {
+      mockScrollDimensions(900, 500);
+      render(<StandingsTable entries={DIVISION} />);
+      const region = screen.getByRole("region");
+
+      Object.defineProperty(region, "scrollLeft", { value: 400 });
+      act(() => {
+        region.dispatchEvent(new Event("scroll"));
+      });
+
+      expect(region.className).toContain(
+        "[&>table>thead>tr>th:nth-child(-n+2)]:sticky",
+      );
     });
   });
 });
