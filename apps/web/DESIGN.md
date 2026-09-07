@@ -453,6 +453,14 @@ Decided on [#2409](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2409), b
 
 The footer is a second, intent-based organisation of the same site and is **not** required to mirror the nav. The rule binding them: **every top-level nav destination appears somewhere in the footer as that same href**; the footer may hold more. One alias is supported, and only one — a `/ploegen/<slug>` team entry is covered by the footer's `/ploegen` index, because a per-team footer link would grow with the roster. Anything else must match exactly: a general "same branch of the route tree" rule reads well but cannot fail where it matters, since `/club` would then count as covered by an unrelated `/club/*` CTA in another column. Enforced by `footerLinks.test.ts`.
 
+### Tables
+
+**The One Table Skin Rule (#2476/#2582).** There is one register for a table, the quiet one, on cream: `font-mono text-xs` throughout, `border-b-2 border-ink` under the header row, `border-b border-paper-edge` between body rows, uppercase tracked headers at `font-normal` weight (never the UA-default bold a bare `<th>` inherits when nothing else says otherwise), no frame, no zebra, no dotted dividers. A `<caption>` takes the kicker register — `font-mono`, `text-label`, `font-medium`, `leading-none`, uppercase, `text-ink-muted`, left-aligned, `pb-2` below it — identically wherever it appears.
+
+Exactly two call sites, and the recipe is a literal class string at each rather than a shared component or prop, per the Manila Rule's precedent: one styles arbitrary injected HTML through `<HtmlTableBlock>`'s arbitrary-variant selectors, the other styles known JSX columns directly in `<StandingsTable>` — there is no shared class string to extract, only a shared set of property _values_ to keep in sync by hand.
+
+What varies between them is not the skin but the **anchoring**: `<StandingsTable>` is typed, so it knows which columns are the identifying ones and pins them (#2476 rule 3); `<HtmlTableBlock>` renders an editor's arbitrary columns and anchors none. A typed table may also align its known first/last columns against the table's own edges with extra padding on those two cells — an authored table, not knowing which column is which, does not attempt it and keeps uniform `px-2 py-2` cell padding throughout instead. Both are deliberate, named exceptions to a shared base, not drift.
+
 ### Stamp Badge
 
 A rotated, content-bearing paper stamp that pins over the edge of a card — 14px above the parent, 36px in from its anchoring side, rotated ~2°. Uppercase mono 11px bold at 0.1em tracking, `1.5px` ink border, Paper Small shadow, in jersey-deep, ink or alert tone. Distinct from a tape strip: the stamp carries text, the tape is purely graphic.
