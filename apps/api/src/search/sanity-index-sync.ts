@@ -96,6 +96,9 @@ const UPSERT_RETRY = Schedule.exponential("100 millis").pipe(
 // looks identical to "these documents stopped matching" — reconciliationSafe
 // only catches a fetch that throws, not one that lies. Refusing to prune
 // above this threshold in one sweep is a cheap ceiling on the blast radius.
+// Applies only to the manifest-diff portion of a sweep's deletes (below) —
+// the excluded-ids queries are authoritative, not an inference from a diff
+// a truncated fetch could inflate, so they're never subject to this cap.
 //
 // The threshold is `max(FLOOR, previousManifest.length * FRACTION)`, not the
 // fraction alone: against a small manifest, a single legitimate drop (e.g.
@@ -105,11 +108,11 @@ const UPSERT_RETRY = Schedule.exponential("100 millis").pipe(
 // backlog) while giving a small manifest room to shrink normally.
 //
 // A genuine trip past this — a true bulk deactivation, or a truncated fetch
-// — is NOT self-healing: `toDelete` is recomputed identically every sweep
-// until the underlying data changes, so it refuses again every night rather
-// than one-time skip. Clearing it is a human decision, not a retry — see
-// apps/api/CLAUDE.md, "Releasing a stuck prune safety cap", for the release
-// lever once the refusal has been investigated.
+// — is NOT self-healing: the manifest-diff is recomputed identically every
+// sweep until the underlying data changes, so it refuses again every night
+// rather than one-time skip. Clearing it is a human decision, not a retry —
+// see apps/api/CLAUDE.md, "Releasing a stuck prune safety cap", for the
+// release lever once the refusal has been investigated.
 const PRUNE_SAFETY_CAP_FRACTION = 0.5;
 const PRUNE_SAFETY_FLOOR = 25;
 
@@ -424,9 +427,33 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
         const droppedFromManifest = previousManifest.filter(
           (id) => !currentIdSet.has(id),
         );
+
+        // The safety cap applies only to droppedFromManifest, not to the
+        // excluded-ids sets below. droppedFromManifest is an INFERENCE from
+        // a diff — a truncated or regressed fetch can inflate it, which is
+        // exactly what the cap guards against. The excluded-ids queries are
+        // AUTHORITATIVE — Sanity directly confirming "this document exists
+        // and does not match" — so a truncated excluded-ids fetch can only
+        // yield FEWER deletes, never more, and never needs the cap.
+        //
+        // Excluded ids also recur in every sweep's toDelete by design:
+        // nothing removes an id from Sanity's exclusion set once excluded,
+        // and there is no local record of "already asked Vectorize to
+        // delete this one" to consult. That's deliberately not a problem —
+        // deleteByIds on an id Vectorize no longer holds is a documented
+        // no-op, and these ids ride inside a deleteBatched call already
+        // batched at ≤1000 ids, so re-including them costs zero extra
+        // Vectorize requests. A tombstone/pending store to suppress the
+        // repeat would add persistent state to save nothing.
+        const manifestDropExceedsCap =
+          droppedFromManifest.length >
+          Math.max(
+            PRUNE_SAFETY_FLOOR,
+            previousManifest.length * PRUNE_SAFETY_CAP_FRACTION,
+          );
         const toDelete = [
           ...new Set([
-            ...droppedFromManifest,
+            ...(manifestDropExceedsCap ? [] : droppedFromManifest),
             ...excludedResponsibilityIds,
             ...excludedArticleIds,
           ]),
@@ -434,18 +461,14 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
 
         let confirmedDeleted: string[] = [];
 
+        if (manifestDropExceedsCap) {
+          yield* Effect.logWarning(
+            `[search-sync] Refusing to prune ${droppedFromManifest.length} of ${previousManifest.length} manifest entries — exceeds the safety cap (max(${PRUNE_SAFETY_FLOOR}, ${PRUNE_SAFETY_CAP_FRACTION * 100}%)). Skipping the manifest-diff portion of this sweep's prune (excluded-ids deletes, if any, still proceed below — they're authoritative, not subject to this cap). This does not self-heal: investigate, then see apps/api/CLAUDE.md ("Releasing a stuck prune safety cap") for the release lever once the cause is understood.`,
+          );
+        }
+
         if (toDelete.length === 0) {
           yield* Effect.log("[search-sync] Reconciliation: nothing to prune");
-        } else if (
-          toDelete.length >
-          Math.max(
-            PRUNE_SAFETY_FLOOR,
-            previousManifest.length * PRUNE_SAFETY_CAP_FRACTION,
-          )
-        ) {
-          yield* Effect.logWarning(
-            `[search-sync] Refusing to prune ${toDelete.length} of ${previousManifest.length} manifest entries — exceeds the safety cap (max(${PRUNE_SAFETY_FLOOR}, ${PRUNE_SAFETY_CAP_FRACTION * 100}%)). Skipping this sweep's prune. This does not self-heal: investigate, then see apps/api/CLAUDE.md ("Releasing a stuck prune safety cap") for the release lever once the cause is understood.`,
-          );
         } else if (dryRun) {
           yield* Effect.log(
             `[search-sync] DRY RUN — would prune ${toDelete.length} orphaned vector(s): ${toDelete.join(", ")}`,

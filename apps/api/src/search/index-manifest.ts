@@ -1,5 +1,15 @@
-import { Effect } from "effect";
+import { Effect, Schedule } from "effect";
 import { HARD_TTL_LONG } from "../cache/kv-cache";
+
+// Same shape as sanity-index-sync.ts's UPSERT_RETRY — duplicated rather than
+// imported, since sanity-index-sync.ts imports from this module and the
+// reverse would be circular. Unifying the two retry schedules belongs to
+// #2854 (consolidating this reconciliation shape with psd-sanity-sync's),
+// not here.
+const MANIFEST_RETRY = Schedule.exponential("100 millis").pipe(
+  Schedule.jittered,
+  Schedule.intersect(Schedule.recurs(3)),
+);
 
 /**
  * The manifest of ids the search index is believed to hold. Shared by the
@@ -26,8 +36,12 @@ import { HARD_TTL_LONG } from "../cache/kv-cache";
  * `preview_id` vs `[[env.staging.kv_namespaces]].id`), so an unscoped key
  * would have a local `wrangler dev` sweep and staging read and write the
  * exact same manifest.
+ *
+ * Exported so tests can derive the exact key instead of hard-coding a
+ * parallel copy of this string that could silently drift from it.
  */
-const manifestKey = (dataset: string) => `search-index:manifest:${dataset}`;
+export const manifestKey = (dataset: string) =>
+  `search-index:manifest:${dataset}`;
 
 export class ManifestError extends Error {
   readonly _tag = "ManifestError" as const;
@@ -110,29 +124,38 @@ export const writeManifest = (
  * an already-indexed document would otherwise re-write the whole manifest
  * to change nothing.
  *
- * Never fails the caller: a read or write error is logged and swallowed —
- * this is best-effort bookkeeping riding along on a successful index write,
- * not something a KV blip should turn into a failed webhook response.
- * Read-modify-write, not atomic: a race with a concurrent sweep write can
- * drop one side's addition. Bounded and self-healing rather than silent —
- * the dropped id reappears the next time anything re-upserts it (another
- * edit, or a sweep that still matches it), it does not stay lost the way a
- * sweep-only observation would.
+ * Retries the whole read-modify-write on a transient failure (same backoff
+ * as `UPSERT_RETRY`, above) before giving up. Still never fails the caller
+ * even after retries exhaust: this is best-effort bookkeeping riding along
+ * on a successful index write, not something a KV blip should turn into a
+ * failed webhook response — and the write already moved off that response
+ * path via `ctx.waitUntil` (`webhooks/index-handler.ts`), so there is no
+ * budget here to wait on a durable queue even if one existed. Read-modify-
+ * write, not atomic: a race with a concurrent sweep write can still drop one
+ * side's addition after retries. Bounded and self-healing rather than
+ * silent — the dropped id reappears the next time anything re-upserts it
+ * (another edit, or a sweep that still matches it), it does not stay lost
+ * the way a sweep-only observation would. Logged at ERROR once retries are
+ * exhausted (not WARN) — by that point it's no longer routine.
  */
 export const addToManifest = (
   kv: KVNamespace,
   dataset: string,
   id: string,
 ): Effect.Effect<void> =>
-  readManifest(kv, dataset).pipe(
-    Effect.flatMap((existing) =>
-      existing.includes(id)
-        ? Effect.void
-        : writeManifest(kv, dataset, [...existing, id]),
-    ),
-    Effect.catchAll((e) =>
-      Effect.logWarning(
-        `[index-manifest] skipping manifest update for ${id}: ${String(e)}`,
+  readManifest(kv, dataset)
+    .pipe(
+      Effect.flatMap((existing) =>
+        existing.includes(id)
+          ? Effect.void
+          : writeManifest(kv, dataset, [...existing, id]),
       ),
-    ),
-  );
+      Effect.retry(MANIFEST_RETRY),
+    )
+    .pipe(
+      Effect.catchAll((e) =>
+        Effect.logError(
+          `[index-manifest] giving up on manifest update for ${id} after retries: ${String(e)}`,
+        ),
+      ),
+    );

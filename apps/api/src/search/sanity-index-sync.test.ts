@@ -13,11 +13,11 @@ import {
   type VectorRecord,
 } from "./vectorize";
 import { WorkerEnvTag, type WorkerEnv } from "../env";
-import { addToManifest, readManifest } from "./index-manifest";
+import { addToManifest, manifestKey, readManifest } from "./index-manifest";
 
 const FAKE_VECTOR = Array(1024).fill(0.1);
 
-const MANIFEST_KEY = "search-index:manifest:production";
+const MANIFEST_KEY = manifestKey("production");
 
 const mockDoc = {
   _id: "sanity-abc-123",
@@ -670,6 +670,46 @@ describe("runSanityIndexSync", () => {
         }),
       );
       expect(deleteCalls4).toHaveLength(0);
+    });
+
+    it("lets an oversized excluded-ids set through the safety cap while still refusing an oversized manifest diff — scoped independently", async () => {
+      const kv = makeKvNamespaceMock();
+      const stableDocs = [mockDoc, { ...mockDoc, _id: "stable-2" }];
+
+      // Bootstrap: 2 responsibilities tracked, and every later sweep below
+      // keeps fetching the exact same 2 — droppedFromManifest is always 0,
+      // so the manifest-diff cap has nothing to ever refuse here.
+      const { mock: mock1 } = makeVectorizeCapture();
+      await Effect.runPromise(
+        sweep({ fetchResponsibility: noopFetch(stableDocs) }, mock1, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
+      );
+
+      // 30 excluded ids is, by itself, larger than the safety cap's floor
+      // (25). If the cap wrongly applied to the excluded set (as it did
+      // before scoping it to droppedFromManifest only), this sweep would
+      // refuse to prune any of them — they're authoritative, not an
+      // inference from a diff a truncated fetch could inflate, so they must
+      // pass through regardless of size.
+      const manyExcluded = Array.from(
+        { length: 30 },
+        (_, i) => `excluded-${i}`,
+      );
+      const { deleteCalls, mock } = makeVectorizeCapture();
+      await Effect.runPromise(
+        sweep(
+          {
+            fetchResponsibility: noopFetch(stableDocs),
+            fetchExcludedResponsibilityIds: noopFetch(manyExcluded),
+          },
+          mock,
+          { SEARCH_INDEX_PRUNE_DRY_RUN: "false", PSD_CACHE: kv },
+        ),
+      );
+
+      expect(new Set(deleteCalls.flat())).toEqual(new Set(manyExcluded));
     });
 
     it("writes the union of every type's ids to the manifest on the very first sweep", async () => {

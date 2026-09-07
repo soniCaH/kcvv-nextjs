@@ -68,7 +68,11 @@ pnpm --filter @kcvv/api dev                        # wrangler dev on :8787
 The sweep refuses to prune (and logs a WARN) when a sweep's delete set exceeds `max(PRUNE_SAFETY_FLOOR, previousManifest.length × PRUNE_SAFETY_CAP_FRACTION)` (`search/sanity-index-sync.ts`) — a truncated fetch and a genuine bulk deactivation look identical from inside the sweep. **This does not self-heal**: the same input recomputes the same refusal every night until something changes. After investigating and confirming the delete set is legitimate (not a truncated/regressed fetch), release it with:
 
 ```bash
-wrangler kv key delete "search-index:manifest:<dataset>" --binding=PSD_CACHE [--env staging]
+# Production (SANITY_DATASET=production)
+wrangler kv key delete "search-index:manifest:production" --binding=PSD_CACHE
+
+# Staging (SANITY_DATASET=staging)
+wrangler kv key delete "search-index:manifest:staging" --binding=PSD_CACHE --env staging
 ```
 
 This deletes the whole manifest, not just the over-cap entries — the next sweep bootstraps fresh (prunes nothing, just re-learns the current state) rather than resuming a partial one. Safe: nothing in the manifest is unrecoverable except the pre-existing backlog this mechanism could never see anyway (see #2831's PR description).

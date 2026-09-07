@@ -109,6 +109,26 @@ function makeKvNamespaceMock(): KVNamespace {
   } as unknown as KVNamespace;
 }
 
+/**
+ * Like `makeKvNamespaceMock`, but `put` throws on the first `failCount`
+ * calls before succeeding — simulates a transient KV failure for
+ * `addToManifest`'s retry (index-manifest.ts's `MANIFEST_RETRY`).
+ */
+function makeFlakyKvNamespaceMock(failCount: number): KVNamespace {
+  const store = new Map<string, string>();
+  let attempts = 0;
+  return {
+    get: (async (key: string) => store.get(key) ?? null) as KVNamespace["get"],
+    put: (async (key: string, value: string) => {
+      attempts++;
+      if (attempts <= failCount) {
+        throw new Error(`KV put failed (simulated attempt ${attempts})`);
+      }
+      store.set(key, value);
+    }) as KVNamespace["put"],
+  } as unknown as KVNamespace;
+}
+
 function makeTestLayer(): WebhookLayer {
   return Layer.mergeAll(
     Layer.succeed(EmbeddingService, {
@@ -281,6 +301,60 @@ describe("handleIndexWebhook", () => {
 
     const manifest = await Effect.runPromise(readManifest(kv, "production"));
     expect(manifest).toEqual(["resp-transient"]);
+  });
+
+  it("retries a transient manifest-write failure and still records the id", async () => {
+    const kv = makeFlakyKvNamespaceMock(1); // fails once, succeeds after
+
+    mockSanityFetch.mockResolvedValue({
+      _id: "resp-retry",
+      slug: "kantine",
+      title: "Kantine",
+      question: "Wie regelt de kantine?",
+      keywords: ["kantine", "bar"],
+      summary: "De kantine wordt beheerd door de evenementencommissie.",
+    });
+
+    const body = JSON.stringify({ _id: "resp-retry", _type: "responsibility" });
+    const request = await makeSignedRequest(body);
+
+    const response = await handleIndexWebhook(
+      request,
+      makeEnv({ PSD_CACHE: kv }),
+      defaultLayer,
+    );
+    expect(response.status).toBe(200);
+
+    const manifest = await Effect.runPromise(readManifest(kv, "production"));
+    expect(manifest).toEqual(["resp-retry"]);
+  });
+
+  it("does not fail the webhook response when every manifest-write retry is exhausted", async () => {
+    const kv = makeFlakyKvNamespaceMock(Infinity); // never succeeds
+
+    mockSanityFetch.mockResolvedValue({
+      _id: "resp-unlucky",
+      slug: "kantine",
+      title: "Kantine",
+      question: "Wie regelt de kantine?",
+      keywords: ["kantine", "bar"],
+      summary: "De kantine wordt beheerd door de evenementencommissie.",
+    });
+
+    const body = JSON.stringify({
+      _id: "resp-unlucky",
+      _type: "responsibility",
+    });
+    const request = await makeSignedRequest(body);
+
+    const response = await handleIndexWebhook(
+      request,
+      makeEnv({ PSD_CACHE: kv }),
+      defaultLayer,
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true, action: "indexed" });
   });
 
   it("hands the manifest write to ctx.waitUntil when an ExecutionContext is given", async () => {
