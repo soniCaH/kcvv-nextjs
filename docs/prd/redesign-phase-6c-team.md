@@ -160,10 +160,10 @@ Phase 1 (tracer: <TeamHero>)
 - [ ] Handles a 40–50-fixture season; Beker/Oefen distinguished by the competition caption text
 - [ ] Playwright e2e smoke: route renders + console clean; asserts the **empty-state UI** when there are no fixtures, and that **auto-scroll is skipped** when there is no next match
 
-#### `<TeamEditorial>` (body / training / contact)
+#### `<TeamEditorial>` (body / contact — training deleted in #2582)
 
 - [ ] **Schema (additive):** add the 6.A `pullquote` decorator to `team.body` block marks in `packages/sanity-schemas/src/team.ts` (reuse the existing decorator + web serializer; no migration)
-- [ ] Renders `team.body` (Portable Text) via a prose serializer **incl. the `pullquote` decorator → a styled "Het verhaal" pull-quote** (reuse the 6.A `<BioBlock>` serializer), `team.trainingSchedule[]` (day/time/location/type) as a compact list/table, `team.contactInfo` (PT); each block auto-hides when empty
+- [ ] Renders `team.body` (Portable Text) via a prose serializer **incl. the `pullquote` decorator → a styled "Het verhaal" pull-quote** (reuse the 6.A `<BioBlock>` serializer) and `team.contactInfo` (PT); each block auto-hides when empty. ~~`team.trainingSchedule[]` (day/time/location/type) as a compact list/table~~ — deleted, not restyled, in #2582 (training times live in PSD)
 - [ ] Uses article-prose primitives (`<EditorialHeading>` subheads + prose width); no new PT block types beyond reusing the pullquote decorator. Story + unit test for the empty/auto-hide path + the pull-quote render
 
 #### `/ploegen/[slug]` page assembly + e2e
