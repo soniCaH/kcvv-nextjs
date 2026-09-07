@@ -46,10 +46,13 @@ export interface FirstTeamsBlockProps {
   /**
    * The Studio-authored off-season notice (#2505) — countdown, mededeling and
    * highlight image, read only on the no-rows path and only when `unavailable`
-   * is false. `null`/`undefined` when nothing is authored (or the read
-   * itself failed, which the caller folds into `unavailable` rather than a
-   * separate signal) — either way the band falls back to its unchanged
-   * "Nog geen wedstrijden ingepland."
+   * is false. `null`/`undefined` when nothing is authored — the band falls
+   * back to its unchanged "Nog geen wedstrijden ingepland." A failed
+   * placeholder read degrades to `null` at the call site too
+   * (`degradeSection`, `(landing)/page.tsx`), so it lands here
+   * indistinguishable from "nothing authored" and produces the same
+   * fallback copy — it is `unavailable` above, not this prop, that carries
+   * the match-feed outage signal (review finding 2 on #2505/PR #2852).
    */
   placeholder?: MatchesSliderPlaceholderVM | null;
   /**

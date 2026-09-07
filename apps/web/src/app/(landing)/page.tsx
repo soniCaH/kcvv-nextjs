@@ -25,6 +25,7 @@
 
 import { Effect } from "effect";
 import { runPromise } from "@/lib/effect/runtime";
+import { degradeSection } from "@/lib/effect/degrade";
 import {
   ArticleRepository,
   type ArticleVM,
@@ -34,7 +35,6 @@ import { formatArticleDate } from "@/lib/utils/dates";
 import {
   HomepageRepository,
   type BannerSlotVM,
-  type MatchesSliderPlaceholderVM,
 } from "@/lib/repositories/homepage.repository";
 import { TrackInView } from "@/components/analytics";
 import {
@@ -185,16 +185,19 @@ export default async function HomePage() {
       ),
     ),
     runPromise(
-      Effect.gen(function* () {
-        const repo = yield* HomepageRepository;
-        return yield* repo.getPlaceholder();
-      }).pipe(
-        // No `revalidate`/`tags` here unlike `getBanners` — and needs none:
-        // `/api/revalidate`'s `case "homePage"` already clears the whole
-        // page on an editor's publish (#2505).
-        Effect.catchAll(() =>
-          Effect.succeed<MatchesSliderPlaceholderVM | null>(null),
-        ),
+      // No `revalidate`/`tags` here unlike `getBanners` — and needs none:
+      // `/api/revalidate`'s `case "homePage"` already clears the whole page
+      // on an editor's publish (#2505). `degradeSection`, not `Effect.catchAll`
+      // — every Sanity read ends in `Effect.orDie` (`fetch-groq.ts`), so a
+      // repository method's error channel is `never` and a `catchAll` on one
+      // type-checks but never runs (review finding 1 on #2505/PR #2852).
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* HomepageRepository;
+          return yield* repo.getPlaceholder();
+        }),
+        null,
+        "[HomePage] placeholder read failed; falling back to null.",
       ),
     ),
     runPromise(
