@@ -63,8 +63,10 @@ const Wordmark = () => (
     aria-label="KCVV Elewijt — home"
     // `py-1 -my-1` — hit area only, no layout shift (#2394). The 20/24/28px
     // ramp is exempt under DESIGN.md "The Chrome Fits The Bar Rule" (#2664):
-    // a fit constraint, not a ramp step. Rendered in three places, but only
-    // the desktop row is still on screen at the xl/2xl steps.
+    // a fit constraint, not a ramp step. Rendered in three places; normally
+    // only the desktop row reaches the xl/2xl steps, but that is convention,
+    // not enforcement — an already-open takeover keeps this wordmark across
+    // a viewport change and renders them too.
     className="font-display -my-1 inline-block py-1 text-[20px] leading-none font-black whitespace-nowrap italic no-underline xl:text-[24px] 2xl:text-[28px]"
   >
     <span className="text-ink">
