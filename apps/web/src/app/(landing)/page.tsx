@@ -37,10 +37,7 @@ import {
   type BannerSlotVM,
 } from "@/lib/repositories/homepage.repository";
 import { TrackInView } from "@/components/analytics";
-import {
-  EventRepository,
-  type EventVM,
-} from "@/lib/repositories/event.repository";
+import { EventRepository } from "@/lib/repositories/event.repository";
 import { BffService } from "@/lib/effect/services/BffService";
 import {
   TeamRepository,
@@ -148,15 +145,19 @@ export default async function HomePage() {
     teamsResult,
   ] = await Promise.all([
     runPromise(
-      Effect.gen(function* () {
-        const repo = yield* ArticleRepository;
-        const all = yield* repo.findAll();
-        // Slice [0..10] per the R1.B + R2.B + R1.6 spine:
-        //   • position 1 (index 0) feeds the static <EditorialHero>.
-        //   • positions 2..4 (index 1..3) fill <FeaturedUitgelichtRow>.
-        //   • positions 5..10 (index 4..9) fill the 3×2 <NewsGrid>.
-        return all.slice(0, 10);
-      }).pipe(Effect.catchAll(() => Effect.succeed<ArticleVM[]>([]))),
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* ArticleRepository;
+          const all = yield* repo.findAll();
+          // Slice [0..10] per the R1.B + R2.B + R1.6 spine:
+          //   • position 1 (index 0) feeds the static <EditorialHero>.
+          //   • positions 2..4 (index 1..3) fill <FeaturedUitgelichtRow>.
+          //   • positions 5..10 (index 4..9) fill the 3×2 <NewsGrid>.
+          return all.slice(0, 10);
+        }),
+        [] as ArticleVM[],
+        "[HomePage] articles read failed; falling back to an empty list.",
+      ),
     ),
     runPromise(
       Effect.gen(function* () {
@@ -171,17 +172,13 @@ export default async function HomePage() {
       ),
     ),
     runPromise(
-      Effect.gen(function* () {
-        const repo = yield* HomepageRepository;
-        return yield* repo.getBanners();
-      }).pipe(
-        Effect.catchAll(() =>
-          Effect.succeed({
-            bannerSlotA: null,
-            bannerSlotB: null,
-            bannerSlotC: null,
-          }),
-        ),
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* HomepageRepository;
+          return yield* repo.getBanners();
+        }),
+        { bannerSlotA: null, bannerSlotB: null, bannerSlotC: null },
+        "[HomePage] banners read failed; falling back to empty slots.",
       ),
     ),
     runPromise(
@@ -201,16 +198,24 @@ export default async function HomePage() {
       ),
     ),
     runPromise(
-      Effect.gen(function* () {
-        const repo = yield* EventRepository;
-        return yield* repo.findNextFeatured();
-      }).pipe(Effect.catchAll(() => Effect.succeed<EventVM | null>(null))),
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* EventRepository;
+          return yield* repo.findNextFeatured();
+        }),
+        null,
+        "[HomePage] featured-event read failed; falling back to null.",
+      ),
     ),
     runPromise(
-      Effect.gen(function* () {
-        const repo = yield* TeamRepository;
-        return yield* repo.findAll();
-      }).pipe(Effect.catchAll(() => Effect.succeed<TeamNavVM[]>([]))),
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* TeamRepository;
+          return yield* repo.findAll();
+        }),
+        [] as TeamNavVM[],
+        "[HomePage] teams read failed; falling back to an empty list.",
+      ),
     ),
   ]);
 
