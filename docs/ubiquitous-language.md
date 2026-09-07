@@ -384,6 +384,20 @@ A generic static content page.
 
 A promotional image shown on the homepage in designated slots (A, B, C).
 
+### Off-Season Notice
+
+The Studio-authored content that lets an editor fill the homepage "Eerste ploegen" band during the off-season, when the match feed genuinely holds nothing: a countdown to the next season's kickoff, a short mededeling (with an optional link), and a highlight image (#2505).
+
+| Code                         | Notes                                                                                                                                                      |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `matchesSliderPlaceholder`   | Sanity object field on `homePage` (`packages/sanity-schemas/src/matchesSliderPlaceholder.ts`). Studio title: "Tussenseizoen-bericht (blok Eerste ploegen)" |
+| `MatchesSliderPlaceholderVM` | Web view-model (`apps/web/src/lib/repositories/homepage.repository.ts`)                                                                                    |
+| `resolvePlaceholderState()`  | `apps/web/src/components/home/FirstTeamsBlock/placeholder-rule.ts` — the countdown/today/mededeling/empty decision rule                                    |
+
+**Name collision, deliberate (#2505/#2844):** `matchesSliderPlaceholder` has **nothing to do** with [Pitch-Reservation Placeholder](#pitch-reservation-placeholder) (`Match.is_placeholder`) above. That term names a self-match with no opponent on the competitive-data side; this one names Studio-authored off-season copy on the editorial side. Same word, unrelated meanings — the field predates this glossary entry and its `name` is kept unchanged on purpose (a rename would mean migrating the one document a club editor already authored, for zero reader benefit), so the collision is written down here rather than left for the next reader to conflate the two.
+
+**Render rule:** read only on `<FirstTeamsBlock>`'s no-rows path, and only when the match read did not fail — a failed read (`unavailable`) always wins and suppresses this notice, image included, so an outage never claims the feed is merely empty.
+
 ### Responsibility
 
 A help/guidance topic that directs users to the right contact person. Displayed at `/hulp`.
