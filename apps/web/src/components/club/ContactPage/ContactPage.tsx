@@ -16,7 +16,7 @@
  *     → "Contacteer ons." — one merged grid of paper cards: dynamic
  *       `keyContacts` + static `CONTACT_CATEGORIES`, deduped on e-mail
  *       (a key contact covering an address drops the matching category).
- *     → "Kom naar ons." — Parking · Inkom (jersey-deep prices table) ·
+ *     → "Kom naar ons." — Parking · Inkom (prices table, quiet skin) ·
  *       Kantine · Toegankelijkheid.
  *
  * Replaces the legacy gradient-hero + Lucide + green-icon-box composition.
@@ -78,8 +78,11 @@ const CONTACT_CATEGORIES: ContactCategory[] = [
   },
 ];
 
-/** Inkom prices rendered through the `<HtmlTableBlock>` idiom (jersey-deep
- *  header band). Sanitised on render; only structural table tags survive. */
+/** Inkom prices rendered through the `<HtmlTableBlock>` idiom — the quiet
+ *  skin (#2582), same register as `<StandingsTable>`. Never overflows at
+ *  this 2×3 size, so it borrows the skin and none of the overflow/anchor
+ *  machinery (#2476 rule 1 — correct reuse, not a defect). Sanitised on
+ *  render; only structural table tags survive. */
 const PRICES_TABLE_HTML = `<table>
   <thead><tr><th>Wedstrijd</th><th>Prijs</th></tr></thead>
   <tbody>
