@@ -24,22 +24,24 @@ export interface ScrollOverlayProps {
   /** Classes for the track, in ADDITION to the overflow classes
    *  `<ScrollOverlay>` applies itself (see `overflowClassName`). */
   trackClassName?: string;
-  /** Extra track classes applied only while the track can still scroll
-   *  right — e.g. `HtmlTableBlock`'s sticky-first-column treatment, which
-   *  should only engage once there is a right edge to anchor against. Lets
-   *  a caller react to `canScrollRight` without needing it as a value —
-   *  `<ScrollOverlay>` owns the hook, so the caller never sees the boolean
-   *  itself. */
-  scrollableRightClassName?: string;
   /** Extra track classes applied whenever the track overflows at this
-   *  width AT ALL — unlike `scrollableRightClassName`, this does not flip
-   *  off near the end of a scroll session (`canScrollRight` goes false in
-   *  the track's last few pixels). For a pinned column group that must
-   *  hold for the *whole* scroll, not just while there is still more to
-   *  reveal — `<StandingsTable>`'s leading/trailing anchor columns
-   *  (#2476 rule 3). Reuses `useScrollHint`'s `overflows` (#2489), the same
-   *  static "does this track overflow at all" signal a chip row's rail
-   *  reservation already keys off. */
+   *  width at all. Unlike a hypothetical `canScrollRight`-gated variant,
+   *  this does not flip off near the end of a scroll session
+   *  (`canScrollRight` goes false in the track's last few pixels) — the
+   *  property under test is "does this track overflow", not "is there
+   *  more to scroll right now". For a pinned column group that must hold
+   *  for the *whole* scroll, not just while there is still more to reveal
+   *  — `<StandingsTable>`'s leading/trailing anchor columns (#2476 rule
+   *  3). Reuses `useScrollHint`'s `overflows` (#2489), the same static
+   *  "does this track overflow at all" signal a chip row's rail
+   *  reservation already keys off.
+   *
+   *  `<HtmlTableBlock>` used to have a `scrollableRightClassName` sibling
+   *  prop here for its sticky-first-column treatment, gated on
+   *  `canScrollRight` instead — removed with that treatment (#2582: an
+   *  authored table anchors nothing). Add it back only if a future
+   *  consumer genuinely needs the "only while there's still more to the
+   *  right" gating this prop deliberately does not have. */
   overflowsClassName?: string;
   /** Overrides the default `overflow-x-auto` — e.g. `"overflow-auto"` for
    *  a scroller that also scrolls vertically (the organigram explorer's
@@ -90,7 +92,6 @@ export function ScrollOverlay({
   children,
   dangerouslySetInnerHTML,
   trackClassName,
-  scrollableRightClassName,
   overflowsClassName,
   overflowClassName = "overflow-x-auto",
   ariaLabel,
@@ -128,7 +129,6 @@ export function ScrollOverlay({
         className={cn(
           overflowClassName,
           trackClassName,
-          canScrollRight && scrollableRightClassName,
           overflows && overflowsClassName,
         )}
         {...trackProps}
