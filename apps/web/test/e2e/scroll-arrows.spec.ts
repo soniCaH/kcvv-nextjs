@@ -222,9 +222,10 @@ test.describe("scroll arrow — mounts only on real overflow at that width", () 
       await page.goto(`/nieuws/${slug}`);
       const region = page.locator('[data-html-table="true"] [role="region"]');
       if ((await region.count()) === 0) continue;
-      // HtmlTableBlock never mounts a left arrow (sticky first column
-      // covers that edge, see the component's own docblock) — only assert
-      // the right side.
+      // HtmlTableBlock never mounts a left arrow — `direction="right"`,
+      // unconditionally (#2582: an authored table anchors nothing, so
+      // there is no sticky column to justify a left cue either) — only
+      // assert the right side.
       const { scrollWidth, clientWidth } = await region
         .first()
         .evaluate((el) => ({
