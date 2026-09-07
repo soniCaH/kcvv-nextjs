@@ -72,16 +72,12 @@ export const Empty: Story = {
   args: { entries: [] },
 };
 
-/** Mobile — narrow viewport (375px). All 8 columns render (no `hidden
- *  sm:table-cell`, #2582); `#` + `Ploeg` stay pinned left and `Ptn` pinned
- *  right as the middle columns scroll underneath (#2476 rule 3). */
-export const MobileNarrow: Story = {
-  name: "Mobile — narrow viewport (375px)",
-  args: { entries: fullDivision, highlightTeamId: 1235 },
-  parameters: {
-    vr: { viewports: ["mobile"] },
-  },
-};
+// A dedicated "Mobile — narrow viewport" story was removed here (review
+// finding 4): every VR-tagged story already captures at desktop/tablet/
+// mobile by default, so `FullDivision`'s own mobile capture is this
+// story's narrow-viewport proof — the arrow, the fade and the pinned #/
+// Ploeg/Ptn columns all show there once the table genuinely overflows
+// (#2582 review finding 1).
 
 // Every row published, none scored — the state before matchday 1.
 const numberlessDivision: RankingEntry[] = [

@@ -106,6 +106,27 @@ describe("StandingsTable", () => {
     expect(screen.queryByTestId("standings-kcvv-row")).toBeNull();
   });
 
+  it("gives the team name a real min-width, not min-w-0 (review finding 1)", () => {
+    // min-w-0 let this column shrink to nothing, so a w-full table could
+    // always satisfy its width by squeezing the name instead of ever
+    // overflowing — `overflows` stayed false at every viewport and the
+    // anchor/arrow never mounted. A real numeric floor is what makes the
+    // table actually wider than its container at narrow widths.
+    render(<StandingsTable entries={DIVISION} />);
+    const nameSpan = screen.getByTitle("Leader FC");
+    expect(nameSpan.className).not.toContain("min-w-0");
+    expect(nameSpan.className).toMatch(/min-w-\[?\d/);
+  });
+
+  it("marks the KCVV row with data-kcvv, read by the pinned-cell tint (review finding 2)", () => {
+    render(<StandingsTable entries={DIVISION} highlightTeamId={1235} />);
+    const kcvvRow = screen.getByTestId("standings-kcvv-row");
+    expect(kcvvRow).toHaveAttribute("data-kcvv", "true");
+
+    const otherRow = screen.getByText("Leader FC").closest("tr");
+    expect(otherRow).not.toHaveAttribute("data-kcvv");
+  });
+
   it("does not highlight a non-matching team", () => {
     render(<StandingsTable entries={DIVISION} highlightTeamId={9999} />);
     expect(screen.queryByTestId("standings-kcvv-row")).toBeNull();
@@ -315,6 +336,38 @@ describe("StandingsTable", () => {
       expect(region.className).toContain(
         "[&>table>thead>tr>th:nth-child(-n+2)]:sticky",
       );
+    });
+
+    it("gives the pinned cells the KCVV row's own tint, not a flat bg-cream (review finding 2)", () => {
+      mockScrollDimensions(900, 500);
+      render(<StandingsTable entries={DIVISION} />);
+      const region = screen.getByRole("region");
+
+      expect(region.className).toContain(
+        "[&>table>tbody>tr[data-kcvv='true']>td:nth-child(-n+2)]:bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))]",
+      );
+      expect(region.className).toContain(
+        "[&>table>tbody>tr[data-kcvv='true']>td:last-child]:bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))]",
+      );
+    });
+
+    it("gives Ptn a fixed width and insets the arrow/fade past it (review finding 3)", () => {
+      mockScrollDimensions(900, 500);
+      render(<StandingsTable entries={DIVISION} />);
+      const region = screen.getByRole("region");
+
+      // Fixed width is what makes the arrow's offset a known number rather
+      // than "however wide today's longest point total renders".
+      expect(region.className).toContain(
+        "[&>table>thead>tr>th:last-child]:w-14",
+      );
+      expect(region.className).toContain(
+        "[&>table>tbody>tr>td:last-child]:w-14",
+      );
+
+      const arrow = screen.getByLabelText("Scroll right");
+      expect(arrow).toHaveClass("right-14");
+      expect(arrow).not.toHaveClass("right-0");
     });
   });
 });
