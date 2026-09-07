@@ -16,12 +16,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { EditorialHeading, StripedSeam } from "@/components/design-system";
+import { assertNever } from "@/lib/utils/assert-never";
 import type { MatchesSliderPlaceholderVM } from "@/lib/repositories/homepage.repository";
 import { FirstTeamAgendaRow } from "./FirstTeamAgendaRow";
 import type { FirstTeamVM } from "./first-teams";
 import {
   formatDaysUntil,
   resolvePlaceholderState,
+  type Mededeling as MededelingVM,
   type PlaceholderState,
 } from "./placeholder-rule";
 
@@ -36,11 +38,11 @@ export interface FirstTeamsBlockProps {
   heading?: string;
   /**
    * A match read failed (BFF/PSD down or quota-exhausted), as opposed to the
-   * feed genuinely holding no matches. Only picks which copy the held-open
-   * notice carries; it is read solely on the no-rows path. Wins over
-   * `placeholder` below and suppresses its image with it (#2505/#2844) — a
-   * "new season in 23 days" notice rendered during an outage would claim the
-   * feed is empty when the truth is that it could not be read.
+   * feed genuinely holding no matches. Read solely on the no-rows path, where
+   * it is folded into `resolvePlaceholderState`'s own `{ kind: "unavailable"
+   * }` member — that member carries neither a mededeling nor an image, so an
+   * outage structurally cannot render either (#2505/#2844, round-3 review
+   * finding M4).
    */
   unavailable?: boolean;
   /**
@@ -51,15 +53,18 @@ export interface FirstTeamsBlockProps {
    * placeholder read degrades to `null` at the call site too
    * (`degradeSection`, `(landing)/page.tsx`), so it lands here
    * indistinguishable from "nothing authored" and produces the same
-   * fallback copy — it is `unavailable` above, not this prop, that carries
-   * the match-feed outage signal (review finding 2 on #2505/PR #2852).
+   * fallback copy.
    */
   placeholder?: MatchesSliderPlaceholderVM | null;
   /**
    * Render reference time for the countdown. Defaults to now; the homepage
    * passes the same `now` it already computed for `firstTeamsHeading` /
    * `deriveFirstTeamVM` so every date-derived value on the page agrees.
-   * Stories and tests override it for a deterministic day count.
+   * Stories and tests override it for a deterministic day count — a default
+   * here is harmless (unlike `resolvePlaceholderState`'s own signature,
+   * which drops it per #2505 round-3 review finding S6): this prop is read
+   * only on the no-rows path, so every populated-row test that never passes
+   * it is correctly indifferent to what it defaults to.
    */
   now?: Date;
 }
@@ -79,8 +84,8 @@ export interface FirstTeamsBlockProps {
  * **Not migrated here** — that is #2402's call. Values to carry verbatim if
  * it happens: frame `border-cream/40 border-2 border-dashed` (this const),
  * `SkipCard` `text-cream/65`, band note `text-cream/80`. VR guard to name:
- * this file's `NoMatches` and `FeedUnavailable` stories, three viewports
- * each — ink-on-dark-green would be a loud diff.
+ * this file's `NoMatches`, `FeedUnavailable` and the five `Placeholder*`
+ * stories, three viewports each — ink-on-dark-green would be a loud diff.
  */
 const HELD_OPEN_FRAME = "border-cream/40 border-2 border-dashed text-center";
 
@@ -136,7 +141,7 @@ export const FIRST_TEAMS_ROW_GRID =
  * `<FirstTeamsBlock>`'s held-open notice only, not a candidate for the
  * shared roster (review finding 7).
  */
-function Mededeling({ text, href }: { text: string; href?: string }) {
+function Mededeling({ text, href }: MededelingVM) {
   if (!href) return <>{text}</>;
   const isExternal = href.startsWith("http");
   return (
@@ -150,10 +155,17 @@ function Mededeling({ text, href }: { text: string; href?: string }) {
   );
 }
 
-/** The five non-outage states from #2844's copy table — the outage state is
- *  decided by `<FirstTeamsBlock>` itself and never reaches this function. */
+/**
+ * The whole six-state copy table in one place — `state.kind` is the single
+ * source of truth for which sentence renders, including the outage line
+ * (#2505 round-3 review finding M4 folded `unavailable` into
+ * `PlaceholderState` precisely so this switch could be the only place the
+ * table is spelled out).
+ */
 function renderPlaceholderCopy(state: PlaceholderState): React.ReactNode {
   switch (state.kind) {
+    case "unavailable":
+      return "Uitslagen en wedstrijden zijn even niet beschikbaar. Probeer het later opnieuw.";
     case "today":
       return "Vandaag de aftrap van het nieuwe seizoen.";
     case "countdown":
@@ -163,43 +175,43 @@ function renderPlaceholderCopy(state: PlaceholderState): React.ReactNode {
           {state.mededeling ? (
             <>
               {" "}
-              <Mededeling text={state.mededeling} href={state.href} />
+              <Mededeling {...state.mededeling} />
             </>
           ) : null}
         </>
       );
     case "mededeling":
-      return <Mededeling text={state.text} href={state.href} />;
+      return <Mededeling {...state.mededeling} />;
     case "empty":
       return "Nog geen wedstrijden ingepland.";
-    default: {
-      const _exhaustive: never = state;
-      throw new Error(
-        `renderPlaceholderCopy: unhandled state ${JSON.stringify(_exhaustive)}`,
-      );
-    }
+    default:
+      return assertNever(state);
   }
 }
 
 /**
- * The no-rows notice when the read succeeded (as opposed to `unavailable`,
- * handled by the caller before this is reached). Renders the authored
- * `highlightImage` inside the dashed frame, above the sentence, at a capped
- * height well under the populated band's three-row height — never a
- * decorative backdrop: `highlightImage.alt` is `rule.required()` in the
- * Studio schema, so a `role="presentation"` treatment would leave a required
- * editor field feeding nothing, which is this ticket's own bug one level
- * down (#2844).
+ * The no-rows notice, for every state including the outage (#2505 round-3
+ * review finding M4 — one rendered box, not two spellings of the dashed
+ * frame kept in sync by eye). Renders the authored `highlightImage` inside
+ * the dashed frame, above the sentence, at a capped height well under the
+ * populated band's three-row height — never a decorative backdrop:
+ * `highlightImage.alt` is `rule.required()` in the Studio schema, so a
+ * `role="presentation"` treatment would leave a required editor field
+ * feeding nothing, which is this ticket's own bug one level down (#2844).
+ * `resolvePlaceholderState`'s `unavailable` member carries no `image` field
+ * at all, so the outage state structurally cannot render one.
  */
 function PlaceholderNotice({
   placeholder,
   now,
+  unavailable,
 }: {
   placeholder?: MatchesSliderPlaceholderVM | null;
   now: Date;
+  unavailable: boolean;
 }) {
-  const state = resolvePlaceholderState(placeholder, now);
-  const image = placeholder?.highlightImage;
+  const state = resolvePlaceholderState(placeholder, now, unavailable);
+  const image = state.kind === "unavailable" ? undefined : state.image;
 
   return (
     <div className={`${HELD_OPEN_FRAME} px-4 py-8`}>
@@ -216,7 +228,7 @@ function PlaceholderNotice({
             // same reasoning `<YouthBackdrop>` already uses for its own
             // 16:9 crop (review finding 4 on #2505/PR #2852).
             className="object-cover object-top"
-            sizes="(max-width: 768px) 100vw, 672px"
+            sizes="(max-width: 768px) calc(100vw - 4rem), 672px"
             placeholder={image.lqip ? "blur" : "empty"}
             blurDataURL={image.lqip ?? undefined}
           />
@@ -311,21 +323,12 @@ export function FirstTeamsBlock({
               <FirstTeamRow key={team.slug} team={team} />
             ))}
           </div>
-        ) : unavailable ? (
-          // Body type rather than `<SkipCard>`'s mono uppercase — this is a
-          // sentence, not a two-word label. This outage line wins over every
-          // other no-rows state and is checked before `placeholder` is even
-          // read, so a BFF outage never shows a "new season in N days"
-          // notice the page cannot vouch for (#2505/#2844).
-          <p className={`${HELD_OPEN_FRAME} text-cream/80 px-4 py-8`}>
-            Uitslagen en wedstrijden zijn even niet beschikbaar. Probeer het
-            later opnieuw.
-          </p>
         ) : (
-          // The mededeling can carry its own link (`announcementHref`), so
-          // this notice is no longer only reachable via the band's own
-          // "Volledige kalender →" above — see `Mededeling` (#2505).
-          <PlaceholderNotice placeholder={placeholder} now={now} />
+          <PlaceholderNotice
+            placeholder={placeholder}
+            now={now}
+            unavailable={unavailable}
+          />
         )}
       </div>
       <StripedSeam colorPair="cream-jersey-deep" height="md" flip />

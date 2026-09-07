@@ -302,34 +302,35 @@ describe("FirstTeamsBlock", () => {
     describe("the authored placeholder", () => {
       const now = new Date("2026-07-10T12:00:00Z");
 
-      it("shows the countdown when the kickoff is in the future", () => {
-        const placeholder: MatchesSliderPlaceholderVM = {
-          nextSeasonKickoff: new Date("2026-08-02T00:00:00Z"),
-        };
-        render(
+      // #2505 round-3 review finding S9 — the render call itself carried no
+      // assertion, so factoring it out costs nothing every one of these
+      // tests was already checking.
+      function renderNoRows(
+        placeholder: MatchesSliderPlaceholderVM | null,
+        extra?: { unavailable?: boolean },
+      ) {
+        return render(
           <FirstTeamsBlock
             teams={noMatches}
             placeholder={placeholder}
             now={now}
+            {...extra}
           />,
         );
+      }
+
+      it("shows the countdown when the kickoff is in the future", () => {
+        renderNoRows({ nextSeasonKickoff: new Date("2026-08-02T00:00:00Z") });
         expect(
           screen.getByText("Nog 23 dagen tot de aftrap."),
         ).toBeInTheDocument();
       });
 
       it("appends the mededeling to the countdown when both are authored", () => {
-        const placeholder: MatchesSliderPlaceholderVM = {
+        renderNoRows({
           nextSeasonKickoff: new Date("2026-08-02T00:00:00Z"),
           announcementText: "Kalender 25-26 volgende week online.",
-        };
-        render(
-          <FirstTeamsBlock
-            teams={noMatches}
-            placeholder={placeholder}
-            now={now}
-          />,
-        );
+        });
         expect(
           screen.getByText(
             "Nog 23 dagen tot de aftrap. Kalender 25-26 volgende week online.",
@@ -338,34 +339,18 @@ describe("FirstTeamsBlock", () => {
       });
 
       it("shows the today copy when the kickoff is the current calendar day", () => {
-        const placeholder: MatchesSliderPlaceholderVM = {
-          nextSeasonKickoff: new Date("2026-07-10T18:00:00Z"),
-        };
-        render(
-          <FirstTeamsBlock
-            teams={noMatches}
-            placeholder={placeholder}
-            now={now}
-          />,
-        );
+        renderNoRows({ nextSeasonKickoff: new Date("2026-07-10T18:00:00Z") });
         expect(
           screen.getByText("Vandaag de aftrap van het nieuwe seizoen."),
         ).toBeInTheDocument();
       });
 
       it("falls through a past kickoff to the mededeling", () => {
-        const placeholder: MatchesSliderPlaceholderVM = {
+        renderNoRows({
           nextSeasonKickoff: new Date("2026-07-01T00:00:00Z"),
           announcementText:
             "Groenwit maakt zich klaar voor seizoen 2026-2027 in 3e Nationale.",
-        };
-        render(
-          <FirstTeamsBlock
-            teams={noMatches}
-            placeholder={placeholder}
-            now={now}
-          />,
-        );
+        });
         expect(
           screen.getByText(
             "Groenwit maakt zich klaar voor seizoen 2026-2027 in 3e Nationale.",
@@ -374,17 +359,10 @@ describe("FirstTeamsBlock", () => {
       });
 
       it("renders the mededeling as a link when announcementHref is authored", () => {
-        const placeholder: MatchesSliderPlaceholderVM = {
+        renderNoRows({
           announcementText: "Groenwit maakt zich klaar voor seizoen 2026-2027.",
           announcementHref: "/kalender",
-        };
-        render(
-          <FirstTeamsBlock
-            teams={noMatches}
-            placeholder={placeholder}
-            now={now}
-          />,
-        );
+        });
         const link = screen.getByRole("link", {
           name: "Groenwit maakt zich klaar voor seizoen 2026-2027.",
         });
@@ -399,17 +377,10 @@ describe("FirstTeamsBlock", () => {
       // and an authored external one must get the same treatment every
       // other CMS-authored link in the app applies.
       it("opens an external announcementHref in a new tab with rel=noopener noreferrer", () => {
-        const placeholder: MatchesSliderPlaceholderVM = {
+        renderNoRows({
           announcementText: "Lees het volledige verhaal op onze partnerpagina.",
           announcementHref: "https://example.org/nieuws",
-        };
-        render(
-          <FirstTeamsBlock
-            teams={noMatches}
-            placeholder={placeholder}
-            now={now}
-          />,
-        );
+        });
         const link = screen.getByRole("link", {
           name: "Lees het volledige verhaal op onze partnerpagina.",
         });
@@ -419,16 +390,9 @@ describe("FirstTeamsBlock", () => {
       });
 
       it("renders the mededeling as plain text when no href is authored", () => {
-        const placeholder: MatchesSliderPlaceholderVM = {
+        renderNoRows({
           announcementText: "Groenwit maakt zich klaar voor seizoen 2026-2027.",
-        };
-        render(
-          <FirstTeamsBlock
-            teams={noMatches}
-            placeholder={placeholder}
-            now={now}
-          />,
-        );
+        });
         expect(
           screen.queryByRole("link", {
             name: "Groenwit maakt zich klaar voor seizoen 2026-2027.",
@@ -440,29 +404,20 @@ describe("FirstTeamsBlock", () => {
       });
 
       it("falls back to the unchanged empty copy when nothing is authored", () => {
-        render(
-          <FirstTeamsBlock teams={noMatches} placeholder={null} now={now} />,
-        );
+        renderNoRows(null);
         expect(
           screen.getByText("Nog geen wedstrijden ingepland."),
         ).toBeInTheDocument();
       });
 
       it("renders the highlight image above the sentence, at a capped height", () => {
-        const placeholder: MatchesSliderPlaceholderVM = {
+        renderNoRows({
           announcementText: "Groenwit maakt zich klaar voor seizoen 2026-2027.",
           highlightImage: {
             alt: "Ploegfoto zomerstage",
             url: "https://example.com/zomer.jpg",
           },
-        };
-        render(
-          <FirstTeamsBlock
-            teams={noMatches}
-            placeholder={placeholder}
-            now={now}
-          />,
-        );
+        });
         const image = screen.getByAltText("Ploegfoto zomerstage");
         expect(image).toBeInTheDocument();
         expect(image).toHaveAttribute("src", "https://example.com/zomer.jpg");
@@ -472,20 +427,16 @@ describe("FirstTeamsBlock", () => {
       });
 
       it("suppresses the placeholder image when the read is unavailable", () => {
-        const placeholder: MatchesSliderPlaceholderVM = {
-          announcementText: "Groenwit maakt zich klaar voor seizoen 2026-2027.",
-          highlightImage: {
-            alt: "Ploegfoto zomerstage",
-            url: "https://example.com/zomer.jpg",
+        renderNoRows(
+          {
+            announcementText:
+              "Groenwit maakt zich klaar voor seizoen 2026-2027.",
+            highlightImage: {
+              alt: "Ploegfoto zomerstage",
+              url: "https://example.com/zomer.jpg",
+            },
           },
-        };
-        render(
-          <FirstTeamsBlock
-            teams={noMatches}
-            placeholder={placeholder}
-            unavailable
-            now={now}
-          />,
+          { unavailable: true },
         );
         expect(
           screen.queryByAltText("Ploegfoto zomerstage"),

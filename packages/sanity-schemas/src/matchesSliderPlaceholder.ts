@@ -35,7 +35,7 @@ export const matchesSliderPlaceholder = defineType({
       title: 'Afbeelding',
       type: 'image',
       description:
-        'Optionele foto boven de mededeling. Er is geen standaardfoto — laat leeg om geen afbeelding te tonen. Liefst horizontaal, min. 1280x720.',
+        'Optionele foto bovenaan het bericht (bv. boven de mededeling, of boven de aftelling). Er is geen standaardfoto — laat leeg om geen afbeelding te tonen. Liefst horizontaal, min. 1280x720.',
       options: {hotspot: true},
       fields: [
         defineField({

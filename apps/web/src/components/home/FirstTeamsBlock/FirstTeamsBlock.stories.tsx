@@ -6,7 +6,6 @@ import type {
   ScheduleMatch,
   ScheduleReservation,
 } from "@/components/match/types";
-import type { MatchesSliderPlaceholderVM } from "@/lib/repositories/homepage.repository";
 import { fixtureImage } from "@test-fixtures/images";
 
 const meta = {
@@ -280,14 +279,19 @@ export const FeedUnavailable: Story = {
 // #2505/#2844 — the Studio-authored off-season notice. `now` is fixed so the
 // countdown's day count doesn't drift between renders/CI runs.
 const PLACEHOLDER_NOW = new Date("2026-07-10T12:00:00Z");
+// The live production mededeling as of 2026-07-13 (#2844), shared by every
+// story below that authors one — `satisfies MatchesSliderPlaceholderVM` on
+// each `placeholder` object was redundant (#2505 round-3 review finding S8):
+// `StoryObj<typeof meta>` already type-checks `args`, excess properties
+// included.
+const MEDEDELING_TEXT =
+  "Groenwit maakt zich klaar voor seizoen 2026-2027 in 3e Nationale.";
 
 /** Kickoff authored, in the future, no mededeling. */
 export const PlaceholderCountdown: Story = {
   args: {
     ...NO_ROWS_ARGS,
-    placeholder: {
-      nextSeasonKickoff: new Date("2026-08-02T00:00:00Z"),
-    } satisfies MatchesSliderPlaceholderVM,
+    placeholder: { nextSeasonKickoff: new Date("2026-08-02T00:00:00Z") },
     now: PLACEHOLDER_NOW,
   },
 };
@@ -296,23 +300,17 @@ export const PlaceholderCountdown: Story = {
 export const PlaceholderToday: Story = {
   args: {
     ...NO_ROWS_ARGS,
-    placeholder: {
-      nextSeasonKickoff: new Date("2026-07-10T18:00:00Z"),
-    } satisfies MatchesSliderPlaceholderVM,
+    placeholder: { nextSeasonKickoff: new Date("2026-07-10T18:00:00Z") },
     now: PLACEHOLDER_NOW,
   },
 };
 
-/** No kickoff authored (or already past) — falls through to the mededeling,
- *  the live production case as of 2026-07-13 (#2844). Plain text: no
- *  `announcementHref` authored. */
+/** No kickoff authored (or already past) — falls through to the mededeling.
+ *  Plain text: no `announcementHref` authored. */
 export const PlaceholderMededeling: Story = {
   args: {
     ...NO_ROWS_ARGS,
-    placeholder: {
-      announcementText:
-        "Groenwit maakt zich klaar voor seizoen 2026-2027 in 3e Nationale.",
-    } satisfies MatchesSliderPlaceholderVM,
+    placeholder: { announcementText: MEDEDELING_TEXT },
     now: PLACEHOLDER_NOW,
   },
 };
@@ -323,10 +321,9 @@ export const PlaceholderMededelingWithLink: Story = {
   args: {
     ...NO_ROWS_ARGS,
     placeholder: {
-      announcementText:
-        "Groenwit maakt zich klaar voor seizoen 2026-2027 in 3e Nationale.",
+      announcementText: MEDEDELING_TEXT,
       announcementHref: "/kalender",
-    } satisfies MatchesSliderPlaceholderVM,
+    },
     now: PLACEHOLDER_NOW,
   },
 };
@@ -337,13 +334,12 @@ export const PlaceholderWithImage: Story = {
   args: {
     ...NO_ROWS_ARGS,
     placeholder: {
-      announcementText:
-        "Groenwit maakt zich klaar voor seizoen 2026-2027 in 3e Nationale.",
+      announcementText: MEDEDELING_TEXT,
       highlightImage: {
         alt: "De A-kern tijdens de eerste training van het nieuwe seizoen",
         url: fixtureImage("team-group"),
       },
-    } satisfies MatchesSliderPlaceholderVM,
+    },
     now: PLACEHOLDER_NOW,
   },
 };

@@ -86,8 +86,9 @@
  * — the migration is #2402's call, not this primitive's. Values to carry
  * verbatim when it is: frame `border-cream/40 border-2 border-dashed`,
  * `SkipCard` `text-cream/65`, band note `text-cream/80`. VR guard to name:
- * `FirstTeamsBlock` stories `NoMatches` and `FeedUnavailable`, three
- * viewports each — ink-on-dark-green would be a loud diff.
+ * `FirstTeamsBlock` stories `NoMatches`, `FeedUnavailable` and the five
+ * `Placeholder*` stories (#2505), three viewports each — ink-on-dark-green
+ * would be a loud diff.
  *
  * **Not every failure notice on cream goes through this register.**
  * `<CompetitiveStatusLine>` (#2540/#2636) is a deliberate non-adopter: its
