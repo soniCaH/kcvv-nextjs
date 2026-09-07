@@ -63,6 +63,16 @@ pnpm --filter @kcvv/api dev                        # wrangler dev on :8787
 | `SEARCH_INDEX_NAME`          | `wrangler.toml [vars]` / `[env.staging.vars]` | Public, safe to commit — mirrors the `SEARCH_INDEX` binding's `[[vectorize]].index_name` for the same environment. Wrangler never exposes a binding's target index name to the worker at runtime, so this is the value the webhook's dataset/index guard (`webhooks/index-handler.ts`, #2833) reads instead. Keep it in sync with the `index_name` on the matching `[[vectorize]]` block by hand — nothing else enforces the pairing except the guard's own hardcoded `EXPECTED_INDEX_BY_DATASET` map |
 | `SEARCH_INDEX_PRUNE_DRY_RUN` | `wrangler.toml [vars]` / `[env.staging.vars]` | Public, safe to commit — `"true"` (default) makes the nightly sweep's prune step (`search/sanity-index-sync.ts`, #2831) log the ids it would delete instead of calling `deleteByIds`. Flip to `"false"` only after a dry-run sweep's logged delete set has been checked against the live index. Anything other than the literal string `"false"` is treated as dry-run — fails safe on a typo or an absent var                                                                                        |
 
+### Releasing a stuck prune safety cap
+
+The sweep refuses to prune (and logs a WARN) when a sweep's delete set exceeds `max(PRUNE_SAFETY_FLOOR, previousManifest.length × PRUNE_SAFETY_CAP_FRACTION)` (`search/sanity-index-sync.ts`) — a truncated fetch and a genuine bulk deactivation look identical from inside the sweep. **This does not self-heal**: the same input recomputes the same refusal every night until something changes. After investigating and confirming the delete set is legitimate (not a truncated/regressed fetch), release it with:
+
+```bash
+wrangler kv key delete "search-index:manifest:<dataset>" --binding=PSD_CACHE [--env staging]
+```
+
+This deletes the whole manifest, not just the over-cap entries — the next sweep bootstraps fresh (prunes nothing, just re-learns the current state) rather than resuming a partial one. Safe: nothing in the manifest is unrecoverable except the pre-existing backlog this mechanism could never see anyway (see #2831's PR description).
+
 ## Deployment
 
 - **Staging** (on pull requests from this repository): `wrangler deploy --env staging` → `kcvv-api-staging`

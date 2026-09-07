@@ -5,7 +5,6 @@ import type { WorkerEnv } from "../env";
 import { TEST_SECRET, signPayload } from "../test-helpers/svix-signing";
 import { EmbeddingService } from "../search/embedding";
 import { VectorizeService } from "../search/vectorize";
-import { KvCacheService, type KvCacheInterface } from "../cache/kv-cache";
 import { readManifest } from "../search/index-manifest";
 import {
   ARTICLE_INDEX_PROJECTION,
@@ -92,32 +91,25 @@ function makeEnv(overrides: Partial<WorkerEnv> = {}): WorkerEnv {
 const upsertSpy = vi.fn<(vectors: unknown[]) => void>();
 const deleteByIdsSpy = vi.fn<(ids: string[]) => void>();
 
-/** No-op by default — most tests don't care about the manifest. */
-const noopKvCache: KvCacheInterface = {
-  get: () => Effect.succeed(null),
-  set: () => Effect.succeed(undefined),
-  delete: () => Effect.succeed(undefined),
-  increment: () => Effect.succeed(undefined),
-};
-
-/** Stateful in-memory KV, for tests that need to read back what the webhook wrote. */
-function makeKvCacheMock(): KvCacheInterface {
+/**
+ * Stateful in-memory KVNamespace, for the one test that reads back what the
+ * webhook's manifest write produced. Every other test uses `makeEnv()`'s
+ * default `PSD_CACHE: {} as KVNamespace` — `addToManifest` swallows its own
+ * KV errors, so a namespace that can't actually do the job still can't fail
+ * the webhook response, which every other test's 200/expected-json assertion
+ * already exercises for free.
+ */
+function makeKvNamespaceMock(): KVNamespace {
   const store = new Map<string, string>();
   return {
-    get: (key) => Effect.succeed(store.get(key) ?? null),
-    set: (key, value) =>
-      Effect.sync(() => {
-        store.set(key, value);
-      }),
-    delete: (key) =>
-      Effect.sync(() => {
-        store.delete(key);
-      }),
-    increment: () => Effect.succeed(undefined),
-  };
+    get: (async (key: string) => store.get(key) ?? null) as KVNamespace["get"],
+    put: (async (key: string, value: string) => {
+      store.set(key, value);
+    }) as KVNamespace["put"],
+  } as unknown as KVNamespace;
 }
 
-function makeTestLayer(kv: KvCacheInterface = noopKvCache): WebhookLayer {
+function makeTestLayer(): WebhookLayer {
   return Layer.mergeAll(
     Layer.succeed(EmbeddingService, {
       embed: () => Effect.succeed(FAKE_VECTOR),
@@ -134,7 +126,6 @@ function makeTestLayer(kv: KvCacheInterface = noopKvCache): WebhookLayer {
       query: () => Effect.succeed([]),
       getByIds: () => Effect.succeed([]),
     }),
-    Layer.succeed(KvCacheService, kv),
   );
 }
 
@@ -255,13 +246,15 @@ describe("handleIndexWebhook", () => {
     ]);
   });
 
-  it("records the id in the reconciliation manifest on a successful upsert (#2831 review finding 3)", async () => {
+  it("records the id in the reconciliation manifest on a successful upsert (#2831)", async () => {
     // A document whose entire visible life fits between two nightly sweeps
     // (published and unpublished the same day) is never seen as "current" by
     // any sweep — the webhook's own upsert is the only thing that can ever
     // register it, so the sweep after it drops out can still prune it.
-    const kv = makeKvCacheMock();
-    const layer = makeTestLayer(kv);
+    // No ctx passed here, so handleIndexWebhook awaits the manifest write
+    // inline rather than firing it via ctx.waitUntil — see the "still
+    // returns a normal response" test below for the ctx-present path.
+    const kv = makeKvNamespaceMock();
 
     const sanityDoc = {
       _id: "resp-transient",
@@ -279,11 +272,52 @@ describe("handleIndexWebhook", () => {
     });
     const request = await makeSignedRequest(body);
 
-    const response = await handleIndexWebhook(request, makeEnv(), layer);
+    const response = await handleIndexWebhook(
+      request,
+      makeEnv({ PSD_CACHE: kv }),
+      defaultLayer,
+    );
     expect(response.status).toBe(200);
 
     const manifest = await Effect.runPromise(readManifest(kv, "production"));
     expect(manifest).toEqual(["resp-transient"]);
+  });
+
+  it("hands the manifest write to ctx.waitUntil when an ExecutionContext is given", async () => {
+    const kv = makeKvNamespaceMock();
+    const waitUntilCalls: Promise<unknown>[] = [];
+    const ctx = {
+      waitUntil: (p: Promise<unknown>) => {
+        waitUntilCalls.push(p);
+      },
+    } as unknown as ExecutionContext;
+
+    mockSanityFetch.mockResolvedValue({
+      _id: "resp-async",
+      slug: "kantine",
+      title: "Kantine",
+      question: "Wie regelt de kantine?",
+      keywords: ["kantine", "bar"],
+      summary: "De kantine wordt beheerd door de evenementencommissie.",
+    });
+
+    const body = JSON.stringify({ _id: "resp-async", _type: "responsibility" });
+    const request = await makeSignedRequest(body);
+
+    const response = await handleIndexWebhook(
+      request,
+      makeEnv({ PSD_CACHE: kv }),
+      defaultLayer,
+      ctx,
+    );
+
+    // The response does not wait on the manifest write.
+    expect(response.status).toBe(200);
+    expect(waitUntilCalls).toHaveLength(1);
+
+    await waitUntilCalls[0];
+    const manifest = await Effect.runPromise(readManifest(kv, "production"));
+    expect(manifest).toEqual(["resp-async"]);
   });
 
   it("returns skipped_not_found when document is not in Sanity", async () => {
@@ -562,7 +596,6 @@ describe("handleIndexWebhook", () => {
         query: () => Effect.succeed([]),
         getByIds: () => Effect.succeed([]),
       }),
-      Layer.succeed(KvCacheService, noopKvCache),
     );
 
     const body = JSON.stringify({ _id: "article-002", _type: "article" });

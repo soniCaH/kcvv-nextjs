@@ -13,10 +13,11 @@ import {
   type VectorRecord,
 } from "./vectorize";
 import { WorkerEnvTag, type WorkerEnv } from "../env";
-import { KvCacheService, type KvCacheInterface } from "../cache/kv-cache";
-import { addToManifest } from "./index-manifest";
+import { addToManifest, readManifest } from "./index-manifest";
 
 const FAKE_VECTOR = Array(1024).fill(0.1);
+
+const MANIFEST_KEY = "search-index:manifest:production";
 
 const mockDoc = {
   _id: "sanity-abc-123",
@@ -26,13 +27,6 @@ const mockDoc = {
   keywords: ["kantine", "bar", "evenementen"],
   summary: "De kantine wordt beheerd door de evenementencommissie.",
 };
-
-// Two more responsibilities that stay put across sweeps — padding the
-// manifest so a single doc dropping out doesn't itself trip the
-// PRUNE_SAFETY_CAP_FRACTION guard (finding 4). Not the thing under test in
-// most of these cases, just enough manifest weight to isolate it.
-const stableDoc1 = { ...mockDoc, _id: "stable-1" };
-const stableDoc2 = { ...mockDoc, _id: "stable-2" };
 
 const mockArticle = {
   _id: "article-001",
@@ -112,33 +106,26 @@ function makeVectorizeCapture(overrides?: Partial<VectorizeServiceInterface>) {
   return { upsertCalls, deleteCalls, probe, mock };
 }
 
-/** No manifest, no-op writes — the default for tests that don't exercise
- * the prune/reconciliation step at all. */
-const noopKvCache: KvCacheInterface = {
-  get: () => Effect.succeed(null),
-  set: () => Effect.succeed(undefined),
-  delete: () => Effect.succeed(undefined),
-  increment: () => Effect.succeed(undefined),
-};
-
 /**
- * Stateful, in-memory KV so a test can run two sweeps back to back and have
- * the second see the manifest the first one wrote — real KV persists between
- * scheduled invocations, a plain no-op mock cannot exercise that.
+ * Stateful, in-memory KVNamespace so a test can run sweeps back to back and
+ * have each see the manifest the last one wrote — real KV persists between
+ * scheduled invocations, `{} as KVNamespace` (the env default) cannot
+ * exercise that. `get`/`put` are mutable properties so a test can swap in a
+ * failing implementation for one sweep and restore it afterward.
  */
-function makeKvCacheMock(): KvCacheInterface {
+function makeKvNamespaceMock(): KVNamespace & {
+  readonly store: Map<string, string>;
+} {
   const store = new Map<string, string>();
-  return {
-    get: (key) => Effect.succeed(store.get(key) ?? null),
-    set: (key, value) =>
-      Effect.sync(() => {
-        store.set(key, value);
-      }),
-    delete: (key) =>
-      Effect.sync(() => {
-        store.delete(key);
-      }),
-    increment: () => Effect.succeed(undefined),
+  const mock = {
+    store,
+    get: (async (key: string) => store.get(key) ?? null) as KVNamespace["get"],
+    put: (async (key: string, value: string) => {
+      store.set(key, value);
+    }) as KVNamespace["put"],
+  };
+  return mock as unknown as KVNamespace & {
+    readonly store: Map<string, string>;
   };
 }
 
@@ -146,19 +133,37 @@ function noopFetch<T>(data: T[]) {
   return async () => data;
 }
 
+/**
+ * Runs one sweep with sensible defaults for every fetcher (all empty), so a
+ * test only spells out the ones it cares about. Reduces every call site to
+ * "what's different about this sweep" instead of re-listing all five
+ * fetchers plus three provides every time.
+ */
+function sweep(
+  options: Parameters<typeof runSanityIndexSync>[0],
+  vectorize: VectorizeServiceInterface,
+  envOverrides: Partial<WorkerEnv> = {},
+) {
+  return runSanityIndexSync({
+    fetchResponsibility: noopFetch([]),
+    fetchArticles: noopFetch([]),
+    fetchPages: noopFetch([]),
+    fetchExcludedResponsibilityIds: noopFetch([]),
+    fetchExcludedArticleIds: noopFetch([]),
+    ...options,
+  }).pipe(
+    Effect.provide(makeEnvLayer(envOverrides)),
+    Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
+    Effect.provide(Layer.succeed(VectorizeService, vectorize)),
+  );
+}
+
 describe("runSanityIndexSync", () => {
   it("embeds and upserts each responsibility path with correct metadata", async () => {
     const { upsertCalls, mock } = makeVectorizeCapture();
 
     await Effect.runPromise(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([mockDoc]),
-      }).pipe(
-        Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, mock)),
-      ),
+      sweep({ fetchResponsibility: noopFetch([mockDoc]) }, mock),
     );
 
     const upserted = upsertCalls.flat();
@@ -184,7 +189,6 @@ describe("runSanityIndexSync", () => {
         fetchResponsibility: noopFetch([mockDoc]),
       }).pipe(
         Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
         Effect.provide(Layer.succeed(EmbeddingService, captureEmbed)),
         Effect.provide(
           Layer.succeed(VectorizeService, {
@@ -207,16 +211,7 @@ describe("runSanityIndexSync", () => {
     const { upsertCalls, mock } = makeVectorizeCapture();
 
     await Effect.runPromise(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([]),
-        fetchArticles: noopFetch([mockArticle]),
-        fetchPages: noopFetch([]),
-      }).pipe(
-        Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, mock)),
-      ),
+      sweep({ fetchArticles: noopFetch([mockArticle]) }, mock),
     );
 
     const upserted = upsertCalls.flat();
@@ -235,20 +230,13 @@ describe("runSanityIndexSync", () => {
     const { upsertCalls, mock } = makeVectorizeCapture();
 
     await Effect.runPromise(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([]),
-        fetchArticles: noopFetch([
-          {
-            ...mockArticle,
-            imageUrl: "https://cdn.example.com/cover.jpg",
-          },
-        ]),
-        fetchPages: noopFetch([]),
-      }).pipe(
-        Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, mock)),
+      sweep(
+        {
+          fetchArticles: noopFetch([
+            { ...mockArticle, imageUrl: "https://cdn.example.com/cover.jpg" },
+          ]),
+        },
+        mock,
       ),
     );
 
@@ -261,15 +249,9 @@ describe("runSanityIndexSync", () => {
     const { upsertCalls, mock } = makeVectorizeCapture();
 
     await Effect.runPromise(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([]),
-        fetchArticles: noopFetch([{ ...mockArticle, imageUrl: null }]),
-        fetchPages: noopFetch([]),
-      }).pipe(
-        Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, mock)),
+      sweep(
+        { fetchArticles: noopFetch([{ ...mockArticle, imageUrl: null }]) },
+        mock,
       ),
     );
 
@@ -281,18 +263,7 @@ describe("runSanityIndexSync", () => {
   it("indexes pages with correct metadata", async () => {
     const { upsertCalls, mock } = makeVectorizeCapture();
 
-    await Effect.runPromise(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([]),
-        fetchArticles: noopFetch([]),
-        fetchPages: noopFetch([mockPage]),
-      }).pipe(
-        Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, mock)),
-      ),
-    );
+    await Effect.runPromise(sweep({ fetchPages: noopFetch([mockPage]) }, mock));
 
     const upserted = upsertCalls.flat();
     const doc = upserted.find((v) => v.id === "page-001");
@@ -312,16 +283,7 @@ describe("runSanityIndexSync", () => {
     };
 
     await Effect.runPromise(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([]),
-        fetchArticles: noopFetch([articleNoBody]),
-        fetchPages: noopFetch([]),
-      }).pipe(
-        Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, mock)),
-      ),
+      sweep({ fetchArticles: noopFetch([articleNoBody]) }, mock),
     );
 
     const upserted = upsertCalls.flat();
@@ -334,17 +296,15 @@ describe("runSanityIndexSync", () => {
     const { upsertCalls, mock } = makeVectorizeCapture();
 
     await Effect.runPromise(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([mockDoc]),
-        fetchArticles: async () => {
-          throw new Error("Sanity timeout");
+      sweep(
+        {
+          fetchResponsibility: noopFetch([mockDoc]),
+          fetchArticles: async () => {
+            throw new Error("Sanity timeout");
+          },
+          fetchPages: noopFetch([mockPage]),
         },
-        fetchPages: noopFetch([mockPage]),
-      }).pipe(
-        Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, mock)),
+        mock,
       ),
     );
 
@@ -358,17 +318,15 @@ describe("runSanityIndexSync", () => {
     const { upsertCalls, mock } = makeVectorizeCapture();
 
     await Effect.runPromise(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([mockDoc]),
-        fetchArticles: noopFetch([mockArticle]),
-        fetchPages: async () => {
-          throw new Error("Sanity timeout");
+      sweep(
+        {
+          fetchResponsibility: noopFetch([mockDoc]),
+          fetchArticles: noopFetch([mockArticle]),
+          fetchPages: async () => {
+            throw new Error("Sanity timeout");
+          },
         },
-      }).pipe(
-        Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, mock)),
+        mock,
       ),
     );
 
@@ -381,22 +339,20 @@ describe("runSanityIndexSync", () => {
     const { upsertCalls, mock } = makeVectorizeCapture();
 
     await Effect.runPromise(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([
-          mockDoc,
-          { ...mockDoc, _id: "resp-002" },
-          { ...mockDoc, _id: "resp-003" },
-        ]),
-        fetchArticles: noopFetch([
-          mockArticle,
-          { ...mockArticle, _id: "article-002" },
-        ]),
-        fetchPages: noopFetch([mockPage, { ...mockPage, _id: "page-002" }]),
-      }).pipe(
-        Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, mock)),
+      sweep(
+        {
+          fetchResponsibility: noopFetch([
+            mockDoc,
+            { ...mockDoc, _id: "resp-002" },
+            { ...mockDoc, _id: "resp-003" },
+          ]),
+          fetchArticles: noopFetch([
+            mockArticle,
+            { ...mockArticle, _id: "article-002" },
+          ]),
+          fetchPages: noopFetch([mockPage, { ...mockPage, _id: "page-002" }]),
+        },
+        mock,
       ),
     );
 
@@ -412,18 +368,7 @@ describe("runSanityIndexSync", () => {
       _id: `page-${i}`,
     }));
 
-    await Effect.runPromise(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([]),
-        fetchArticles: noopFetch([]),
-        fetchPages: noopFetch(manyPages),
-      }).pipe(
-        Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, mock)),
-      ),
-    );
+    await Effect.runPromise(sweep({ fetchPages: noopFetch(manyPages) }, mock));
 
     expect(upsertCalls.map((batch) => batch.length)).toEqual([1000, 1]);
     expect(probe.maxInFlight).toBe(1);
@@ -455,7 +400,6 @@ describe("runSanityIndexSync", () => {
         fetchPages: noopFetch([]),
       }).pipe(
         Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
         Effect.provide(Layer.succeed(EmbeddingService, flakyEmbed)),
         Effect.provide(Layer.succeed(VectorizeService, mock)),
       ),
@@ -475,17 +419,10 @@ describe("runSanityIndexSync", () => {
     });
 
     const exit = await Effect.runPromiseExit(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([mockDoc]),
-        fetchArticles: noopFetch([]),
-        fetchPages: noopFetch([]),
-      }).pipe(
-        Effect.provide(makeEnvLayer()),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, failingVectorize)),
-        Effect.provide(Logger.replace(Logger.defaultLogger, TestLogger)),
-      ),
+      sweep(
+        { fetchResponsibility: noopFetch([mockDoc]) },
+        failingVectorize,
+      ).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, TestLogger))),
     );
 
     expect(Exit.isSuccess(exit)).toBe(true);
@@ -498,26 +435,17 @@ describe("runSanityIndexSync", () => {
   });
 
   it("refuses to sync when the worker's dataset doesn't match its configured index", async () => {
-    // Reproduces #2833 review finding 7: the bulk sync writes to the same
-    // SEARCH_INDEX binding as the webhook but had no equivalent guard. It is
-    // unreachable on staging today only because crons are [] there — the
-    // same reasoning this issue was filed to retire for the webhook.
+    // Reproduces #2833: the bulk sync writes to the same SEARCH_INDEX
+    // binding as the webhook but had no equivalent guard. It is unreachable
+    // on staging today only because crons are [] there — the same reasoning
+    // this issue was filed to retire for the webhook.
     const { upsertCalls, mock } = makeVectorizeCapture();
 
     const exit = await Effect.runPromiseExit(
-      runSanityIndexSync({
-        fetchResponsibility: noopFetch([mockDoc]),
-      }).pipe(
-        Effect.provide(
-          makeEnvLayer({
-            SANITY_DATASET: "staging",
-            SEARCH_INDEX_NAME: "kcvv-search",
-          }),
-        ),
-        Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-        Effect.provide(Layer.succeed(VectorizeService, mock)),
-        Effect.provide(Layer.succeed(KvCacheService, noopKvCache)),
-      ),
+      sweep({ fetchResponsibility: noopFetch([mockDoc]) }, mock, {
+        SANITY_DATASET: "staging",
+        SEARCH_INDEX_NAME: "kcvv-search",
+      }),
     );
 
     expect(Exit.isFailure(exit)).toBe(true);
@@ -526,80 +454,49 @@ describe("runSanityIndexSync", () => {
 
   describe("reconciliation (#2831) — pruning what no longer matches", () => {
     it("deletes the vector for a document that drops out of the query on the next sweep", async () => {
-      const kv = makeKvCacheMock();
-      const { deleteCalls, mock: mock1 } = makeVectorizeCapture();
+      const kv = makeKvNamespaceMock();
 
-      // Sweep 1: three responsibilities are active and get indexed. No
-      // previous manifest exists yet, so nothing is deleted.
+      // Sweep 1: indexed. No previous manifest exists yet, so nothing is
+      // deleted.
+      const { deleteCalls, mock: mock1 } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([mockDoc, stableDoc1, stableDoc2]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock1)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
+        sweep({ fetchResponsibility: noopFetch([mockDoc]) }, mock1, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
       );
       expect(deleteCalls).toHaveLength(0);
 
       // Sweep 2: mockDoc went inactive (or was deleted) and no longer
-      // matches RESPONSIBILITY_QUERY — the fetcher now omits it, the other
-      // two are still there.
+      // matches RESPONSIBILITY_QUERY — the fetcher now omits it.
       const { deleteCalls: deleteCalls2, mock: mock2 } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([stableDoc1, stableDoc2]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock2)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
+        sweep({}, mock2, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
       );
 
       expect(deleteCalls2.flat()).toEqual(["sanity-abc-123"]);
     });
 
-    it("keeps a dropped id pending across a dry-run sweep and prunes it once the flag flips to false (review finding 1)", async () => {
-      const kv = makeKvCacheMock();
+    it("keeps a dropped id pending across a dry-run sweep and prunes it once the flag flips to false", async () => {
+      const kv = makeKvNamespaceMock();
 
-      // Sweep 1 (bootstrap): three responsibilities indexed.
+      // Sweep 1 (bootstrap): indexed.
       const { mock: mock1 } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([mockDoc, stableDoc1, stableDoc2]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer()),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock1)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
+        sweep({ fetchResponsibility: noopFetch([mockDoc]) }, mock1, {
+          PSD_CACHE: kv,
+        }),
       );
 
-      // Sweep 2: mockDoc drops out, but dry-run is on (the default) — nothing
-      // is actually deleted. Before the fix, the manifest was overwritten
-      // with currentIds regardless of dry-run, silently losing mockDoc from
-      // tracking; this sweep's dry-run pass must not do that.
+      // Sweep 2: mockDoc drops out, but dry-run is on (the default) —
+      // nothing is actually deleted. The manifest must not be overwritten
+      // with (empty) currentIds regardless — that would silently lose
+      // mockDoc from tracking.
       const { deleteCalls: deleteCalls2, mock: mock2 } = makeVectorizeCapture();
-      await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([stableDoc1, stableDoc2]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer()), // dry-run stays on (unset → true)
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock2)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
-      );
+      await Effect.runPromise(sweep({}, mock2, { PSD_CACHE: kv }));
       expect(deleteCalls2).toHaveLength(0);
 
       // Sweep 3: same fetch result, dry-run flipped to "false". mockDoc must
@@ -607,37 +504,25 @@ describe("runSanityIndexSync", () => {
       // during sweep 2's dry-run pass.
       const { deleteCalls: deleteCalls3, mock: mock3 } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([stableDoc1, stableDoc2]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock3)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
+        sweep({}, mock3, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
       );
 
       expect(deleteCalls3.flat()).toEqual(["sanity-abc-123"]);
     });
 
-    it("keeps a dropped id pending after a failed delete and retries it on the next sweep (review finding 2)", async () => {
-      const kv = makeKvCacheMock();
+    it("keeps a dropped id pending after a failed delete and retries it on the next sweep", async () => {
+      const kv = makeKvNamespaceMock();
 
-      // Sweep 1 (bootstrap): three responsibilities indexed.
+      // Sweep 1 (bootstrap): indexed.
       const { mock: mock1 } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([mockDoc, stableDoc1, stableDoc2]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock1)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
+        sweep({ fetchResponsibility: noopFetch([mockDoc]) }, mock1, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
       );
 
       // Sweep 2: mockDoc drops out, dry-run off, but Vectorize's delete is
@@ -650,15 +535,10 @@ describe("runSanityIndexSync", () => {
         deleteByIds: () => Effect.fail(new VectorizeError("Vectorize outage")),
       });
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([stableDoc1, stableDoc2]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
+        sweep({}, failingVectorize, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
         }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, failingVectorize)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
           Effect.provide(Logger.replace(Logger.defaultLogger, TestLogger)),
         ),
       );
@@ -672,150 +552,159 @@ describe("runSanityIndexSync", () => {
       // must not have dropped it from tracking.
       const { deleteCalls: deleteCalls3, mock: mock3 } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([stableDoc1, stableDoc2]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock3)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
+        sweep({}, mock3, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
       );
 
       expect(deleteCalls3.flat()).toEqual(["sanity-abc-123"]);
     });
 
-    it("prunes a document whose entire visible life fit between two sweeps, tracked only via the webhook's addToManifest (review finding 3)", async () => {
-      const kv = makeKvCacheMock();
+    it("prunes a document whose entire visible life fit between two sweeps, tracked only via the webhook's addToManifest", async () => {
+      const kv = makeKvNamespaceMock();
 
       // No sweep has ever observed "transient-doc" as current — simulate the
       // webhook's upsert path (webhooks/index-handler.ts) registering it the
       // moment it was published, the same way it registers every successful
-      // upsert. Two more ids are added the same way to keep the eventual
-      // drop under the safety cap.
+      // upsert.
       await Effect.runPromise(addToManifest(kv, "production", "transient-doc"));
-      await Effect.runPromise(addToManifest(kv, "production", "stable-1"));
-      await Effect.runPromise(addToManifest(kv, "production", "stable-2"));
 
       // A sweep runs after "transient-doc" has both published AND expired
       // (its whole visible life fit between two sweeps) — no query returns
-      // it. The other two ids are still current.
+      // it.
       const { deleteCalls, mock } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([stableDoc1, stableDoc2]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
+        sweep({}, mock, { SEARCH_INDEX_PRUNE_DRY_RUN: "false", PSD_CACHE: kv }),
       );
 
       expect(deleteCalls.flat()).toEqual(["transient-doc"]);
     });
 
-    it("refuses to prune when the delete set exceeds the safety cap, to guard against a truncated fetch (review finding 4)", async () => {
-      const kv = makeKvCacheMock();
-      const fourDocs = [
-        mockDoc,
-        stableDoc1,
-        stableDoc2,
-        { ...mockDoc, _id: "stable-3" },
-      ];
-
-      // Sweep 1 (bootstrap): four responsibilities indexed.
-      const { mock: mock1 } = makeVectorizeCapture();
-      await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch(fourDocs),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock1)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
-      );
-
-      // Sweep 2: the fetch comes back with only 1 of the 4 — as if a
-      // truncated GROQ response or a projection regression dropped the
-      // other three, not a real mass deactivation. 3 of 4 (75%) exceeds the
-      // 50% cap, so nothing must be deleted.
-      const { deleteCalls: deleteCalls2, mock: mock2 } = makeVectorizeCapture();
-      await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([mockDoc]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock2)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
-      );
-      expect(deleteCalls2).toHaveLength(0);
-
-      // Sweep 3: the fetch recovers to all 4 — the three "missing" ids must
-      // still be tracked (the refused sweep must not have dropped them).
-      const { deleteCalls: deleteCalls3, mock: mock3 } = makeVectorizeCapture();
-      await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch(fourDocs),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock3)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
-      );
-      expect(deleteCalls3).toHaveLength(0);
-    });
-
-    it("deletes nothing on the very first sweep — there is no previous manifest to diff against", async () => {
-      const kv = makeKvCacheMock();
+    it("deletes an inactive responsibility that predates the first manifest, via the excluded-ids query", async () => {
+      // No bootstrap sweep at all — the manifest has never tracked this id,
+      // so a diff against it could never find it. Only the stateless
+      // excluded-ids query (EXCLUDED_RESPONSIBILITY_QUERY) can, since it
+      // asks Sanity directly rather than a history nothing wrote yet.
       const { deleteCalls, mock } = makeVectorizeCapture();
 
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([mockDoc]),
-          fetchArticles: noopFetch([mockArticle]),
-          fetchPages: noopFetch([mockPage]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
+        sweep(
+          { fetchExcludedResponsibilityIds: noopFetch(["inactive-resp"]) },
+          mock,
+          {
+            SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+            PSD_CACHE: makeKvNamespaceMock(),
+          },
+        ),
+      );
+
+      expect(deleteCalls.flat()).toEqual(["inactive-resp"]);
+    });
+
+    it("deletes an article the published-window query now excludes, via the excluded-ids query", async () => {
+      const { deleteCalls, mock } = makeVectorizeCapture();
+
+      await Effect.runPromise(
+        sweep(
+          { fetchExcludedArticleIds: noopFetch(["expired-article"]) },
+          mock,
+          {
+            SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+            PSD_CACHE: makeKvNamespaceMock(),
+          },
+        ),
+      );
+
+      expect(deleteCalls.flat()).toEqual(["expired-article"]);
+    });
+
+    it("refuses to prune when the delete set exceeds the safety cap, and the refusal does not self-heal", async () => {
+      const kv = makeKvNamespaceMock();
+      const manyDocs = Array.from({ length: 30 }, (_, i) => ({
+        ...mockDoc,
+        _id: `resp-${i}`,
+      }));
+
+      // Sweep 1 (bootstrap): 30 responsibilities indexed.
+      const { mock: mock1 } = makeVectorizeCapture();
+      await Effect.runPromise(
+        sweep({ fetchResponsibility: noopFetch(manyDocs) }, mock1, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
+      );
+
+      // Sweep 2: the fetch comes back with only 4 of the 30 — as if a
+      // truncated GROQ response or a projection regression dropped the
+      // rest, not a real mass deactivation. 26 dropped exceeds
+      // max(25, 30*50%=15)=25, so nothing must be deleted.
+      const fourRemain = manyDocs.slice(0, 4);
+      const { deleteCalls: deleteCalls2, mock: mock2 } = makeVectorizeCapture();
+      await Effect.runPromise(
+        sweep({ fetchResponsibility: noopFetch(fourRemain) }, mock2, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
+      );
+      expect(deleteCalls2).toHaveLength(0);
+
+      // Sweep 3: nothing about the underlying data changed — the refusal
+      // must NOT have quietly resolved itself. Same input, same refusal.
+      const { deleteCalls: deleteCalls3, mock: mock3 } = makeVectorizeCapture();
+      await Effect.runPromise(
+        sweep({ fetchResponsibility: noopFetch(fourRemain) }, mock3, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
+      );
+      expect(deleteCalls3).toHaveLength(0);
+
+      // Sweep 4: the fetch recovers to all 30 — the 26 "missing" ids must
+      // still be tracked (the refused sweeps must not have dropped them).
+      const { deleteCalls: deleteCalls4, mock: mock4 } = makeVectorizeCapture();
+      await Effect.runPromise(
+        sweep({ fetchResponsibility: noopFetch(manyDocs) }, mock4, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
+      );
+      expect(deleteCalls4).toHaveLength(0);
+    });
+
+    it("writes the union of every type's ids to the manifest on the very first sweep", async () => {
+      const kv = makeKvNamespaceMock();
+      const { deleteCalls, mock } = makeVectorizeCapture();
+
+      await Effect.runPromise(
+        sweep(
+          {
+            fetchResponsibility: noopFetch([mockDoc]),
+            fetchArticles: noopFetch([mockArticle]),
+            fetchPages: noopFetch([mockPage]),
+          },
+          mock,
+          { SEARCH_INDEX_PRUNE_DRY_RUN: "false", PSD_CACHE: kv },
         ),
       );
 
       expect(deleteCalls).toHaveLength(0);
+      const manifest = await Effect.runPromise(readManifest(kv, "production"));
+      expect(new Set(manifest)).toEqual(
+        new Set(["sanity-abc-123", "article-001", "page-001"]),
+      );
     });
 
     it("writes no manifest and deletes nothing when the article phase fails — the partial-sweep trap", async () => {
-      const kv = makeKvCacheMock();
+      const kv = makeKvNamespaceMock();
 
       // Sweep 1 succeeds fully and writes a manifest containing the article.
       const { mock: mock1 } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([]),
-          fetchArticles: noopFetch([mockArticle]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock1)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
+        sweep({ fetchArticles: noopFetch([mockArticle]) }, mock1, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
       );
 
       // Sweep 2: the article phase's Sanity fetch fails outright. Even
@@ -824,20 +713,16 @@ describe("runSanityIndexSync", () => {
       // article stopped matching the query" — it's unknown, not gone.
       const { deleteCalls, mock: mock2 } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([]),
-          fetchArticles: async () => {
-            throw new Error("Sanity timeout");
+        sweep(
+          {
+            fetchArticles: async () => {
+              throw new Error("Sanity timeout");
+            },
           },
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock2)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
+          mock2,
+          { SEARCH_INDEX_PRUNE_DRY_RUN: "false", PSD_CACHE: kv },
         ),
       );
-
       expect(deleteCalls).toHaveLength(0);
 
       // Sweep 3, fetches succeed again with nothing changed: if sweep 2 had
@@ -845,23 +730,76 @@ describe("runSanityIndexSync", () => {
       // sweep would now (wrongly) delete article-001.
       const { deleteCalls: deleteCalls3, mock: mock3 } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([]),
-          fetchArticles: noopFetch([mockArticle]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock3)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
+        sweep({ fetchArticles: noopFetch([mockArticle]) }, mock3, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
       );
-
       expect(deleteCalls3).toHaveLength(0);
     });
 
+    it("writes no manifest and deletes nothing when the page phase fails, even though an unrelated drop looks real", async () => {
+      // The footgun this guards: reconciliationSafe is one flag shared by
+      // every phase. A page-fetch failure must suppress pruning for
+      // EVERY type, not just pages — including a genuine responsibility
+      // drop that happened in the very same sweep.
+      const kv = makeKvNamespaceMock();
+
+      const { mock: mock1 } = makeVectorizeCapture();
+      await Effect.runPromise(
+        sweep({ fetchResponsibility: noopFetch([mockDoc]) }, mock1, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
+      );
+
+      const { deleteCalls, mock: mock2 } = makeVectorizeCapture();
+      await Effect.runPromise(
+        sweep(
+          {
+            fetchResponsibility: noopFetch([]), // a genuine drop
+            fetchPages: async () => {
+              throw new Error("Sanity timeout");
+            },
+          },
+          mock2,
+          { SEARCH_INDEX_PRUNE_DRY_RUN: "false", PSD_CACHE: kv },
+        ),
+      );
+
+      expect(deleteCalls).toHaveLength(0);
+    });
+
+    it("writes no manifest and deletes nothing when the excluded-ids phase fails, even though an unrelated drop looks real", async () => {
+      const kv = makeKvNamespaceMock();
+
+      const { mock: mock1 } = makeVectorizeCapture();
+      await Effect.runPromise(
+        sweep({ fetchResponsibility: noopFetch([mockDoc]) }, mock1, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
+      );
+
+      const { deleteCalls, mock: mock2 } = makeVectorizeCapture();
+      await Effect.runPromise(
+        sweep(
+          {
+            fetchResponsibility: noopFetch([]), // a genuine drop
+            fetchExcludedResponsibilityIds: async () => {
+              throw new Error("Sanity timeout");
+            },
+          },
+          mock2,
+          { SEARCH_INDEX_PRUNE_DRY_RUN: "false", PSD_CACHE: kv },
+        ),
+      );
+
+      expect(deleteCalls).toHaveLength(0);
+    });
+
     it("logs the delete set without calling deleteByIds when the dry-run flag is on", async () => {
-      const kv = makeKvCacheMock();
+      const kv = makeKvNamespaceMock();
       const messages: string[] = [];
       const TestLogger = Logger.make(({ message }) => {
         messages.push(String(message));
@@ -869,30 +807,16 @@ describe("runSanityIndexSync", () => {
 
       const { mock: mock1 } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([mockDoc, stableDoc1, stableDoc2]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer({ SEARCH_INDEX_PRUNE_DRY_RUN: "false" })),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock1)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
-        ),
+        sweep({ fetchResponsibility: noopFetch([mockDoc]) }, mock1, {
+          SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+          PSD_CACHE: kv,
+        }),
       );
 
       // Sweep 2: dry-run left at its default ("true" when unset — fail safe).
       const { deleteCalls, mock: mock2 } = makeVectorizeCapture();
       await Effect.runPromise(
-        runSanityIndexSync({
-          fetchResponsibility: noopFetch([stableDoc1, stableDoc2]),
-          fetchArticles: noopFetch([]),
-          fetchPages: noopFetch([]),
-        }).pipe(
-          Effect.provide(makeEnvLayer()),
-          Effect.provide(Layer.succeed(EmbeddingService, makeEmbeddingMock())),
-          Effect.provide(Layer.succeed(VectorizeService, mock2)),
-          Effect.provide(Layer.succeed(KvCacheService, kv)),
+        sweep({}, mock2, { PSD_CACHE: kv }).pipe(
           Effect.provide(Logger.replace(Logger.defaultLogger, TestLogger)),
         ),
       );
@@ -903,6 +827,52 @@ describe("runSanityIndexSync", () => {
           (m) => m.includes("DRY RUN") && m.includes("sanity-abc-123"),
         ),
       ).toBe(true);
+    });
+
+    describe("manifest read failures (#2831) — unreadable is not the same as empty", () => {
+      it("skips reconciliation and leaves the manifest untouched when the KV read throws", async () => {
+        const kv = makeKvNamespaceMock();
+        kv.store.set(MANIFEST_KEY, JSON.stringify(["existing-id"]));
+        const originalGet = kv.get;
+        kv.get = (() =>
+          Promise.reject(new Error("KV unavailable"))) as KVNamespace["get"];
+
+        const { deleteCalls, mock } = makeVectorizeCapture();
+        await Effect.runPromise(
+          sweep({}, mock, {
+            SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+            PSD_CACHE: kv,
+          }),
+        );
+
+        expect(deleteCalls).toHaveLength(0);
+        kv.get = originalGet;
+        expect(kv.store.get(MANIFEST_KEY)).toBe(
+          JSON.stringify(["existing-id"]),
+        );
+      });
+
+      it.each([
+        ["not valid JSON", "not valid json{{{"],
+        ["valid JSON but not an array", JSON.stringify({ not: "an array" })],
+      ])(
+        "skips reconciliation and leaves the manifest untouched when the stored value is %s",
+        async (_label, corruptValue) => {
+          const kv = makeKvNamespaceMock();
+          kv.store.set(MANIFEST_KEY, corruptValue);
+
+          const { deleteCalls, mock } = makeVectorizeCapture();
+          await Effect.runPromise(
+            sweep({}, mock, {
+              SEARCH_INDEX_PRUNE_DRY_RUN: "false",
+              PSD_CACHE: kv,
+            }),
+          );
+
+          expect(deleteCalls).toHaveLength(0);
+          expect(kv.store.get(MANIFEST_KEY)).toBe(corruptValue);
+        },
+      );
     });
   });
 });
