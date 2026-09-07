@@ -166,7 +166,7 @@ export default async function HomePage() {
       }).pipe(
         Effect.catchAll((error) => {
           console.error("[HomePage] Failed to fetch matches:", error);
-          // `null`, not `[]` — see `matchReadFailed` below (#2399).
+          // `null`, not `[]` — see `firstTeamsReadFailed` & `upcomingMatchesReadFailed` below (#2399).
           return Effect.succeed(null);
         }),
       ),
@@ -257,24 +257,12 @@ export default async function HomePage() {
   // feed — and the page used to render both by dropping the match sections and
   // looking finished. Both BFF reads therefore fall back to `null` rather than
   // `[]`, so the bands below can name which one happened. `<MatchStrip>` still
-  // drops silently; it takes neither signal.
-  //
-  // `<FirstTeamsBlock>`'s rows come from the per-team fan-out
-  // (`firstTeamsMatches`), so ANY senior team's BFF read failing is enough to
-  // make its copy honest about an outage — the club-wide `getNextMatches()`
-  // read failing on its own is also enough, since that call feeds the "most
-  // recent match" fallback `deriveFirstTeamVM` reads when a team's own fetch
-  // 404s (see `getTeamMatches`, #2441).
-  const matchReadFailed =
+  // drops silently; it takes neither signal. Two bands, two signals, named
+  // for what each one actually reads (review finding 3 on #2505/PR #2852 —
+  // a shared `matchReadFailed` let a senior team's own 502 make the agenda
+  // falsely claim an outage on a read that had actually succeeded).
+  const firstTeamsReadFailed =
     matchesResult === null || firstTeamsMatches.some((m) => m === null);
-  // `<UpcomingMatches>` reads the *other*-teams agenda straight off the
-  // club-wide `getNextMatches()` call — the per-team fan-out above never
-  // contributes to `upcomingMatches` (#2211) — so it must not claim an
-  // outage on a per-team 502 that never touched its own feed. Using the
-  // combined `matchReadFailed` here would (review finding 3 on #2505/PR
-  // #2852): any midweek where every live fixture belongs to A/B empties
-  // `upcomingMatches` on its own, and a failed senior-team read would then
-  // print "even niet beschikbaar" about a read that actually succeeded.
   const upcomingMatchesReadFailed = matchesResult === null;
 
   const heroArticle = articles[0];
@@ -348,10 +336,12 @@ export default async function HomePage() {
   // result→next-fixture transition. Self-contained dark band (own StripedSeam
   // top/bottom + padding), so the SectionStack wrapper stays flush (#2211).
   // HP-4: `firstTeamsHeading` owns when the block may claim "Dit weekend."
-  // #2399: unconditional. The band is the one slot that acknowledges the match
-  // feed at all, so it holds its shape open and names the reason when there is
-  // nothing to show — dropping it shortened the spine to 7 bands and read as
-  // "the club never posted the result".
+  // #2399: unconditional. The band holds its shape open and names the reason
+  // when there is nothing to show — dropping it shortened the spine to 7
+  // bands and read as "the club never posted the result". A band that
+  // acknowledges a remote match feed holds its shape and names the reason on
+  // a failed read; `<UpcomingMatches>` below follows the same rule
+  // (#2505/#2844) — this band is no longer the only one that does.
   const heading = firstTeamsHeading(firstTeamVMs, now);
   const firstTeamsSection: SectionConfig = {
     key: "first-teams",
@@ -360,7 +350,7 @@ export default async function HomePage() {
       <FirstTeamsBlock
         teams={firstTeamVMs}
         heading={heading}
-        unavailable={matchReadFailed}
+        unavailable={firstTeamsReadFailed}
         placeholder={placeholder}
         now={now}
       />
@@ -398,7 +388,7 @@ export default async function HomePage() {
         }
       : null;
 
-  // Unconditional (#2505/#2844) — unlike `featuredEventSection` below, this
+  // Unconditional (#2505/#2844) — unlike `featuredEventSection` above, this
   // band holds its shape on a failed read: `<UpcomingMatches>` itself decides
   // null-vs-notice from `matches.length` + `unavailable`, so the section
   // config here never nulls out. One rule, one guard.
