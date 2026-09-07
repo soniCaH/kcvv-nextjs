@@ -36,10 +36,8 @@ export const HOMEPAGE_PLACEHOLDER_QUERY =
       "highlightImage": highlightImage {
         alt,
         "asset": asset->{
-          _id,
-          "url": url + "?w=1280&h=400&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(^.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(^.hotspot.y, 0.5)),
-          "lqip": metadata.lqip,
-          "dimensions": metadata.dimensions
+          "url": url + "?w=1344&h=320&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(^.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(^.hotspot.y, 0.5)),
+          "lqip": metadata.lqip
         }
       }
     }
@@ -89,8 +87,6 @@ export interface MatchesSliderPlaceholderVM {
     alt: string;
     url: string;
     lqip?: string;
-    width?: number;
-    height?: number;
   };
 }
 
@@ -114,8 +110,6 @@ export function toPlaceholderVM(
           alt: image.alt!,
           url: image.asset!.url!,
           lqip: image.asset!.lqip ?? undefined,
-          width: image.asset!.dimensions?.width ?? undefined,
-          height: image.asset!.dimensions?.height ?? undefined,
         }
       : undefined,
   };
@@ -141,8 +135,18 @@ export const HomepageRepositoryLive = Layer.succeed(HomepageRepository, {
         tags: [SANITY_TAGS.banners],
       },
     ).pipe(Effect.map(toBannersVM)),
+  // Same options as `getBanners` above — same document (`homePage`), so the
+  // same Data Cache entry and the same webhook already clears both
+  // (`/api/revalidate`'s `case "homePage"` emits `SANITY_TAGS.banners` for
+  // exactly this document). Not a new tag — reusing the one that already
+  // covers this read (#2505 round-3 review finding S4).
   getPlaceholder: () =>
     fetchGroq<HOMEPAGE_PLACEHOLDER_QUERY_RESULT>(
       HOMEPAGE_PLACEHOLDER_QUERY,
+      undefined,
+      {
+        revalidate: SANITY_LIST_REVALIDATE,
+        tags: [SANITY_TAGS.banners],
+      },
     ).pipe(Effect.map(toPlaceholderVM)),
 });

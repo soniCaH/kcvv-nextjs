@@ -2163,7 +2163,7 @@ export type HOMEPAGE_BANNERS_QUERY_RESULT = {
 
 // Source: ../web/src/lib/repositories/homepage.repository.ts
 // Variable: HOMEPAGE_PLACEHOLDER_QUERY
-// Query: *[_type == "homePage"][0] {    "matchesSliderPlaceholder": matchesSliderPlaceholder {      nextSeasonKickoff,      announcementText,      announcementHref,      "highlightImage": highlightImage {        alt,        "asset": asset->{          _id,          "url": url + "?w=1280&h=400&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(^.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(^.hotspot.y, 0.5)),          "lqip": metadata.lqip,          "dimensions": metadata.dimensions        }      }    }  }
+// Query: *[_type == "homePage"][0] {    "matchesSliderPlaceholder": matchesSliderPlaceholder {      nextSeasonKickoff,      announcementText,      announcementHref,      "highlightImage": highlightImage {        alt,        "asset": asset->{          "url": url + "?w=1344&h=320&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(^.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(^.hotspot.y, 0.5)),          "lqip": metadata.lqip        }      }    }  }
 export type HOMEPAGE_PLACEHOLDER_QUERY_RESULT = {
   matchesSliderPlaceholder: {
     nextSeasonKickoff: string | null;
@@ -2172,10 +2172,8 @@ export type HOMEPAGE_PLACEHOLDER_QUERY_RESULT = {
     highlightImage: {
       alt: string | null;
       asset: {
-        _id: string;
         url: string | null;
         lqip: string | null;
-        dimensions: SanityImageDimensions | null;
       } | null;
     } | null;
   } | null;
@@ -2804,7 +2802,7 @@ declare module "@sanity/client" {
     '*[_type == "event" && defined(slug.current)] { "slug": coalesce(slug.current, ""), "updatedAt": _updatedAt }': EVENT_SLUGS_QUERY_RESULT;
     '*[_type == "article" && articleType == "event" && publishedAt <= now() && (!defined(unpublishAt) || unpublishAt > now()) && coalesce(body[_type == "eventFact"][0].endDate, body[_type == "eventFact"][0].date) >= $today] {\n  "id": _id,\n  "title": coalesce(pt::text(title), title, ""),\n  "slug": coalesce(slug.current, ""),\n  "fact": body[_type == "eventFact"][0]{ date, endDate, startTime, location, eventType }\n}': EVENT_ARTICLES_QUERY_RESULT;
     '*[_type == "homePage"][0] {\n    "bannerSlotA": bannerSlotA-> {\n      "imageUrl": image.asset->url + "?w=1200&h=200&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(image.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(image.hotspot.y, 0.5)),\n      alt,\n      href\n    },\n    "bannerSlotB": bannerSlotB-> {\n      "imageUrl": image.asset->url + "?w=1200&h=200&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(image.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(image.hotspot.y, 0.5)),\n      alt,\n      href\n    },\n    "bannerSlotC": bannerSlotC-> {\n      "imageUrl": image.asset->url + "?w=1200&h=200&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(image.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(image.hotspot.y, 0.5)),\n      alt,\n      href\n    }\n  }': HOMEPAGE_BANNERS_QUERY_RESULT;
-    '*[_type == "homePage"][0] {\n    "matchesSliderPlaceholder": matchesSliderPlaceholder {\n      nextSeasonKickoff,\n      announcementText,\n      announcementHref,\n      "highlightImage": highlightImage {\n        alt,\n        "asset": asset->{\n          _id,\n          "url": url + "?w=1280&h=400&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(^.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(^.hotspot.y, 0.5)),\n          "lqip": metadata.lqip,\n          "dimensions": metadata.dimensions\n        }\n      }\n    }\n  }': HOMEPAGE_PLACEHOLDER_QUERY_RESULT;
+    '*[_type == "homePage"][0] {\n    "matchesSliderPlaceholder": matchesSliderPlaceholder {\n      nextSeasonKickoff,\n      announcementText,\n      announcementHref,\n      "highlightImage": highlightImage {\n        alt,\n        "asset": asset->{\n          "url": url + "?w=1344&h=320&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(^.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(^.hotspot.y, 0.5)),\n          "lqip": metadata.lqip\n        }\n      }\n    }\n  }': HOMEPAGE_PLACEHOLDER_QUERY_RESULT;
     '*[_type == "jeugdLandingPage"][0] {\n  editorialCards[] {\n    tag, title, description, arrowText, href,\n    "imageUrl": image.asset->url + "?w=900&q=80&fm=webp",\n    position, cardType\n  }\n}': JEUGD_LANDING_PAGE_QUERY_RESULT;
     '*[_type == "page" && defined(slug.current)] | order(title asc) {\n  "id": _id, "title": coalesce(title, ""), "slug": coalesce(slug.current, ""),\n  "updatedAt": _updatedAt\n}': PAGES_QUERY_RESULT;
     '*[_type == "page" && slug.current == $slug][0] {\n  "id": _id, "title": coalesce(title, ""), "slug": coalesce(slug.current, ""),\n  "heroImageUrl": heroImage.asset->url + "?w=1600&q=80&fm=webp&fit=max",\n  metaDescription,\n  "ogImageUrl": ogImage.asset->url + "?w=1200&h=630&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(ogImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(ogImage.hotspot.y, 0.5)),\n  body[]{ ..., "fileUrl": file.asset->url, "fileSize": file.asset->size, "fileMimeType": file.asset->mimeType, "fileOriginalFilename": file.asset->originalFilename, "asset": select(_type == "image" => asset->{ "url": url + "?w=800&q=80&fm=webp&fit=max", title, description, creditLine, metadata{dimensions, lqip} }, _type == "articleImage" => image.asset->{ "url": url + "?w=800&q=80&fm=webp&fit=max", title, description, creditLine, metadata{dimensions, lqip} }) }\n}': PAGE_BY_SLUG_QUERY_RESULT;
