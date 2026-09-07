@@ -68,7 +68,7 @@ is redundant (dropped, see decision record).
   ranking row covers W/D/L + GF/GA.
 - **Youth competitive data** — PSD frequently returns empty standings/schedule
   for U-teams. Those sections **auto-hide**; a U-team page can degrade to
-  hero + squad + staff (+ training/body when present).
+  hero + squad + staff (+ body when present).
 
 ## Locked composition (direction, per decision record)
 
