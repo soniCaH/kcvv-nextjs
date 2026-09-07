@@ -10,6 +10,7 @@
 **Master plan:** `docs/plans/2026-04-27-redesign-master-design.md` §6.4 (listing) + §6.5 (detail) — both carry status-notes pointing here.
 **Precedent:** `docs/prd/redesign-phase-6b-match-detail.md` (structure, AC style, analytics + VR + CLAUDE.md conventions).
 **Drill artefacts:** `docs/design/mockups/phase-6-team/6cd{1..6}-*/` — comparison HTML per drill. Historical record; lock docs supersede.
+**Field inventory (review S8, #2582):** this PRD's `team` field lists below are a snapshot at authoring time (2026-05-29) and are not maintained — `season` (#2535/#2567) and `trainingSchedule` (#2582) have both since been deleted from the schema. `apps/web/src/lib/sanity/sanity.types.ts` is the live authority; do not restate a field list here or in a future PRD as if it tracks the schema.
 
 ---
 

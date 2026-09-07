@@ -21,20 +21,19 @@ editorial backlog beyond what already exists on the `team` document.
 
 ### Sanity `team` document (`TEAM_BY_SLUG_QUERY`)
 
-| Field                       | Type                             | Availability           | Notes                                                                                                                        |
-| --------------------------- | -------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `name`                      | string                           | ✓ (PSD-synced)         | e.g. "KCVV Elewijt"                                                                                                          |
-| `slug`                      | slug                             | ✓                      | route key                                                                                                                    |
-| `age`                       | string                           | ✓ (PSD-synced)         | "A", "U17", …                                                                                                                |
-| `division` / `divisionFull` | string                           | ✓ editorial            | "3NA" / "Eerste Elftal A – 3e Nat. A"                                                                                        |
-| `season`                    | string                           | ✓ (PSD-synced)         | "25/26"                                                                                                                      |
-| `tagline`                   | string                           | optional editorial     |                                                                                                                              |
-| `body`                      | Portable Text                    | optional editorial     | team description                                                                                                             |
-| `contactInfo`               | Portable Text                    | optional editorial     |                                                                                                                              |
-| `teamImage`                 | image (hotspot)                  | optional               | squad photo                                                                                                                  |
-| `trainingSchedule`          | `trainingSession[]`              | ~~optional editorial~~ | ~~day/time/location/type~~ — deleted in #2582 (rule 10: training times live in PSD; 0/26 production teams ever populated it) |
-| `players`                   | ref[] → player                   | ✓ (PSD-synced)         | squad (forward refs)                                                                                                         |
-| `staff`                     | `{ member→staffMember, role }[]` | ✓ (PSD-synced refs)    | role = trainer \| afgevaardigde                                                                                              |
+| Field                       | Type                             | Availability        | Notes                                 |
+| --------------------------- | -------------------------------- | ------------------- | ------------------------------------- |
+| `name`                      | string                           | ✓ (PSD-synced)      | e.g. "KCVV Elewijt"                   |
+| `slug`                      | slug                             | ✓                   | route key                             |
+| `age`                       | string                           | ✓ (PSD-synced)      | "A", "U17", …                         |
+| `division` / `divisionFull` | string                           | ✓ editorial         | "3NA" / "Eerste Elftal A – 3e Nat. A" |
+| `season`                    | string                           | ✓ (PSD-synced)      | "25/26"                               |
+| `tagline`                   | string                           | optional editorial  |                                       |
+| `body`                      | Portable Text                    | optional editorial  | team description                      |
+| `contactInfo`               | Portable Text                    | optional editorial  |                                       |
+| `teamImage`                 | image (hotspot)                  | optional            | squad photo                           |
+| `players`                   | ref[] → player                   | ✓ (PSD-synced)      | squad (forward refs)                  |
+| `staff`                     | `{ member→staffMember, role }[]` | ✓ (PSD-synced refs) | role = trainer \| afgevaardigde       |
 
 `player` fields available via the team query: `firstName`, `lastName`,
 `jerseyNumber`, `keeper`, `positionPsd`, `position` (Keeper / Verdediger /
@@ -74,10 +73,10 @@ is redundant (dropped, see decision record).
 
 `TeamHero` → `StandingsTable` (this team highlighted) → `MatchSchedule`
 (upcoming + past) → `SquadGrid` of `PlayerCard` → Staff → `team.body` /
-~~`trainingSchedule`~~ / `contactInfo` when present → **global**
-`SponsorsBlock`. No standalone `StatsStrip`. All non-hero sections auto-hide
-on empty data. (`trainingSchedule` deleted in #2582 — see the field table
-above.)
+`contactInfo` when present → **global** `SponsorsBlock`. No standalone
+`StatsStrip`. All non-hero sections auto-hide on empty data.
+(`trainingSchedule` was in this list; deleted in #2582 — training times
+live in PSD, not the schema, per that ticket's rule 10.)
 
 **Open (this is 6.C.d1):** is the detail IA a **single-scroll** stack (6.A/6.B
 precedent) or **reskinned tabs**? Resolved by the side-by-side in
