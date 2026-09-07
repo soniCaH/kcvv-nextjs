@@ -118,13 +118,32 @@ export const FIRST_TEAMS_ROW_GRID =
  * band's own "Volledige kalender →" already offers — so the link changes
  * nothing for that content and exists for a future summer whose mededeling
  * points elsewhere (a news item, say).
+ *
+ * The schema admits absolute `http(s)` URLs alongside relative ones
+ * (`matchesSliderPlaceholder.ts`'s `rule.uri({ scheme: ["http", "https"],
+ * allowRelative: true })`), so an authored external URL gets the same
+ * `target="_blank"`/`rel="noopener noreferrer"` treatment every other
+ * CMS-authored link in the app applies — the shared `href.startsWith("http")`
+ * check `ArticleBody.tsx`, `galerij/[slug]/page.tsx` and `QuestionCard.tsx`
+ * each already re-derive locally (review finding 6 on #2505/PR #2852).
+ *
+ * **Named exception (#2565 register, cf. commit 7d393bd6):** this is a
+ * fourth inline-link treatment, not a drift back into the three `.prose-link`
+ * cut #2565 down to. `.prose-link` hardcodes `color:
+ * var(--color-jersey-deep)` (`globals.css`), unusable on this band's
+ * `jersey-deep-dark` ground, so `underline decoration-cream/50` is this
+ * band's own deliberate cream-on-dark link style — scoped to
+ * `<FirstTeamsBlock>`'s held-open notice only, not a candidate for the
+ * shared roster (review finding 7).
  */
 function Mededeling({ text, href }: { text: string; href?: string }) {
   if (!href) return <>{text}</>;
+  const isExternal = href.startsWith("http");
   return (
     <Link
       href={href}
       className="decoration-cream/50 hover:decoration-cream underline underline-offset-2"
+      {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
     >
       {text}
     </Link>

@@ -385,11 +385,37 @@ describe("FirstTeamsBlock", () => {
             now={now}
           />,
         );
-        expect(
-          screen.getByRole("link", {
-            name: "Groenwit maakt zich klaar voor seizoen 2026-2027.",
-          }),
-        ).toHaveAttribute("href", "/kalender");
+        const link = screen.getByRole("link", {
+          name: "Groenwit maakt zich klaar voor seizoen 2026-2027.",
+        });
+        expect(link).toHaveAttribute("href", "/kalender");
+        // Internal route — no target/rel, `next/link` handles it natively.
+        expect(link).not.toHaveAttribute("target");
+        expect(link).not.toHaveAttribute("rel");
+      });
+
+      // #2505 review finding 6 — the schema admits absolute http(s) URLs
+      // too (`rule.uri({ scheme: ["http", "https"], allowRelative: true })`),
+      // and an authored external one must get the same treatment every
+      // other CMS-authored link in the app applies.
+      it("opens an external announcementHref in a new tab with rel=noopener noreferrer", () => {
+        const placeholder: MatchesSliderPlaceholderVM = {
+          announcementText: "Lees het volledige verhaal op onze partnerpagina.",
+          announcementHref: "https://example.org/nieuws",
+        };
+        render(
+          <FirstTeamsBlock
+            teams={noMatches}
+            placeholder={placeholder}
+            now={now}
+          />,
+        );
+        const link = screen.getByRole("link", {
+          name: "Lees het volledige verhaal op onze partnerpagina.",
+        });
+        expect(link).toHaveAttribute("href", "https://example.org/nieuws");
+        expect(link).toHaveAttribute("target", "_blank");
+        expect(link).toHaveAttribute("rel", "noopener noreferrer");
       });
 
       it("renders the mededeling as plain text when no href is authored", () => {
