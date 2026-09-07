@@ -32,10 +32,10 @@ export const matchesSliderPlaceholder = defineType({
     }),
     defineField({
       name: 'highlightImage',
-      title: 'Afbeelding (overschrijft standaard)',
+      title: 'Afbeelding',
       type: 'image',
       description:
-        'Optionele afbeelding die de standaardfoto vervangt. Liefst horizontaal, min. 1280x720.',
+        'Optionele foto boven de mededeling. Er is geen standaardfoto — laat leeg om geen afbeelding te tonen. Liefst horizontaal, min. 1280x720.',
       options: {hotspot: true},
       fields: [
         defineField({
