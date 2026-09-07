@@ -1160,3 +1160,257 @@ describe("rule 9 catches what it claims to (#2570)", () => {
     expect(upLinkHrefs(source)).toHaveLength(2);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Rule 10 (#2505) — a repository method with no caller renders nothing, silently
+// ---------------------------------------------------------------------------
+
+/**
+ * The exact bug #2505's own round 1 shipped, generalised: `getPlaceholder()`
+ * was declared on `HomepageRepositoryInterface`, implemented against real
+ * GROQ, and exercised three times by its own `homepage.repository.test.ts` —
+ * so `pnpm test:coverage` reported it fully covered while its only intended
+ * caller, `(landing)/page.tsx`, had not been written yet. Coverage measures
+ * that a line ran, not that anything outside the test file depends on it
+ * running; a repository method invoked only by its own unit test is
+ * structurally indistinguishable, to that number, from one wired into a
+ * live page.
+ *
+ * Same silent-failure shape `ArticleBody.serializer-completeness.test.tsx`'s
+ * docblock already names for a schema type declared but missing from the
+ * serializer map (#2275's `qaSectionDivider`): declared, never wired,
+ * nothing catches it. That guard holds one surface (Portable Text body
+ * blocks) to "every declared type resolves to a handler." This one holds
+ * every repository to the mirror rule: every declared method resolves to a
+ * caller.
+ *
+ * `failed-read-boundaries.test.ts` calls itself a pin for the specific
+ * routes #2563 touched and names rule 5 in this file as "the rule that
+ * scales." This is that rule for the repository layer: it covers all 11
+ * repositories under `lib/repositories/`, forever, the way rules 1-9 above
+ * cover their own bug class site-wide rather than one ticket's routes.
+ *
+ * **Two independent signals, not one.** `findAll` and `findBySlug` are not
+ * unique to one repository — `ArticleRepository`, `TeamRepository` and
+ * others all declare a `findAll`. A file counts as a caller of
+ * `Repo.method` only when it contains BOTH the repository's own Context.Tag
+ * identifier (`ArticleRepository`, say) AND a `.method(` call —
+ * `referencesCaller` below — the same two-part shape every real call site
+ * in this codebase already has (`const repo = yield* ArticleRepository;`
+ * paired with `repo.findAll()`, `articleRepo.findAll()`, …: the variable
+ * name varies, the tag reference and the dotted call don't).
+ *
+ * **What this cannot see**, named so nobody reads it as more: a caller that
+ * destructures the yielded service (`const { findAll } = yield* X`) instead
+ * of binding it to a variable and dotting off it — no call site in this
+ * codebase does that today, but a future one that did would read as an
+ * orphan. And a method called only from a Storybook story or another
+ * repository's `.test.ts` file reads as covered when it arguably still
+ * lacks a production reader — this rule's bar is "outside the repository's
+ * own test file," not "outside every test file," deliberately the
+ * narrower, provable claim: a real orphan (#2505's own) has *zero* callers
+ * anywhere outside its own repository's test, not merely zero *production*
+ * callers.
+ */
+const REPOSITORY_FILE = /\.repository\.ts$/;
+const repositoryFiles = scannableSources.filter((relPath) =>
+  REPOSITORY_FILE.test(relPath),
+);
+
+const REPOSITORY_TAG = /export class (\w+) extends Context\.Tag/;
+const INTERFACE_METHOD = /readonly (\w+):/g;
+
+interface RepositoryDeclaration {
+  file: string;
+  tag: string;
+  methods: string[];
+}
+
+/** One entry per `*.repository.ts` file — its own Context.Tag identifier and
+ *  every method its own interface declares, in source order. */
+const repositories: RepositoryDeclaration[] = repositoryFiles.map((file) => {
+  const source = code.get(file)!;
+  const tag = REPOSITORY_TAG.exec(source)?.[1];
+  if (!tag) {
+    throw new Error(
+      `${file}: expected "export class X extends Context.Tag(...)" — the tag this rule keys callers off of.`,
+    );
+  }
+  return {
+    file,
+    tag,
+    methods: [...source.matchAll(INTERFACE_METHOD)].map((m) => m[1]!),
+  };
+});
+
+/** True when a source file both references `tag` and calls `.method(` — see
+ *  the docblock's "two independent signals" paragraph for why both are
+ *  required together (a bare `.findAll(` match alone is not repository-
+ *  specific enough to mean anything). */
+function referencesCaller(
+  source: string,
+  tag: string,
+  method: string,
+): boolean {
+  return (
+    new RegExp(`\\b${tag}\\b`).test(source) &&
+    new RegExp(`\\.${method}\\(`).test(source)
+  );
+}
+
+/** Every scannable source that could plausibly call `repo`'s methods —
+ *  everything except the repository's own declaration file and its own
+ *  test file (see the docblock's "what this cannot see" for the boundary). */
+function callerCandidates(repo: RepositoryDeclaration): string[] {
+  const ownTest = repo.file.replace(/\.ts$/, ".test.ts");
+  return scannableSources.filter(
+    (relPath) => relPath !== repo.file && relPath !== ownTest,
+  );
+}
+
+function hasCaller(repo: RepositoryDeclaration, method: string): boolean {
+  return callerCandidates(repo).some((relPath) =>
+    referencesCaller(code.get(relPath)!, repo.tag, method),
+  );
+}
+
+/**
+ * Pinned by declaration, not by file — rule 8's own convention (see that
+ * rule's docblock for why a file-wide carve-out would hide a *second*,
+ * undocumented orphan landing in the same file). Each entry here is a real
+ * orphan this rule found, deliberately not fixed inside the PR that added
+ * the rule, with a follow-up issue tracking its resolution.
+ */
+const ORPHAN_EXEMPTIONS: Record<string, readonly string[]> = {
+  // Pre-existing, unrelated to #2505's own change — a `/hulp`-style youth-
+  // team-contact feature that was either never wired up or lost its caller
+  // in a refactor. https://github.com/soniCaH/www.kcvvelewijt.be/issues/2859
+  "lib/repositories/team.repository.ts": ["findYouthTeamsForContact"],
+};
+
+function isExempt(file: string, method: string): boolean {
+  return (ORPHAN_EXEMPTIONS[file] ?? []).includes(method);
+}
+
+describe("a repository method with no caller renders nothing, silently (#2505)", () => {
+  const cases = repositories.flatMap((repo) =>
+    repo.methods
+      .filter((method) => !isExempt(repo.file, method))
+      .map((method) => [repo.file, repo.tag, method] as const),
+  );
+  it.each(cases)(
+    "%s — %s.%s has at least one caller outside its own test file",
+    (file, _tag, method) => {
+      const repo = repositories.find((r) => r.file === file)!;
+      expect(hasCaller(repo, method)).toBe(true);
+    },
+  );
+
+  // The exemption list is itself pinned: an orphan that gains a real caller
+  // must have its exemption removed (rule 8's own "no fewer, no more" bar),
+  // and this fails loudly the day that happens rather than quietly stop
+  // testing a method that no longer needs the carve-out.
+  describe("exemptions stay pinned to a real, still-live orphan", () => {
+    const exempted = Object.entries(ORPHAN_EXEMPTIONS).flatMap(
+      ([file, methods]) => methods.map((method) => [file, method] as const),
+    );
+    it.each(exempted)("%s — %s is still actually orphaned", (file, method) => {
+      const repo = repositories.find((r) => r.file === file)!;
+      expect(hasCaller(repo, method)).toBe(false);
+    });
+  });
+});
+
+/**
+ * The list is derived, so an edit that emptied it would read as a pass on
+ * every repository — the same coverage pin rules 5 and 9 carry.
+ * `referencesCaller` gets its own cases too, since it is what makes a
+ * same-named method on an unrelated repository a non-match instead of a
+ * false pass (mirrors rule 9's own `chOccurrences`/`upLinkHrefs` self-tests).
+ */
+describe("rule 10 catches what it claims to (#2505)", () => {
+  it("covers every repository under lib/repositories/", () => {
+    expect(repositoryFiles).toHaveLength(11);
+    expect(repositoryFiles).toContain(
+      "lib/repositories/homepage.repository.ts",
+    );
+  });
+
+  it("extracts every readonly method off an interface, ignoring an unrelated `readonly` type annotation", () => {
+    const source = `
+      export interface FooRepositoryInterface {
+        readonly findAll: () => Effect.Effect<Foo[]>;
+        readonly findBySlug: (slug: string) => Effect.Effect<Foo | null>;
+      }
+      function widen(articles: readonly Foo[]) {}
+    `;
+    expect([...source.matchAll(INTERFACE_METHOD)].map((m) => m[1]!)).toEqual([
+      "findAll",
+      "findBySlug",
+    ]);
+  });
+
+  it("matches a real call site regardless of the local variable name", () => {
+    expect(
+      referencesCaller(
+        "const repo = yield* ArticleRepository; repo.findAll();",
+        "ArticleRepository",
+        "findAll",
+      ),
+    ).toBe(true);
+    expect(
+      referencesCaller(
+        "const articleRepo = yield* ArticleRepository; return yield* articleRepo.findAll();",
+        "ArticleRepository",
+        "findAll",
+      ),
+    ).toBe(true);
+  });
+
+  it("refuses a same-named method whose only match is an unrelated repository's own tag", () => {
+    // The false-pass this rule exists to refuse: this source calls
+    // `.findAll(` and mentions a repository tag, but never ArticleRepository.
+    const teamCallerOnly =
+      "const repo = yield* TeamRepository; return yield* repo.findAll();";
+    expect(
+      referencesCaller(teamCallerOnly, "ArticleRepository", "findAll"),
+    ).toBe(false);
+  });
+
+  it("refuses a bare `.method(` call with no repository tag anywhere in the file", () => {
+    expect(
+      referencesCaller(
+        "someUnrelatedThing.findAll();",
+        "ArticleRepository",
+        "findAll",
+      ),
+    ).toBe(false);
+  });
+
+  it("does not count a repository's own test file as a caller", () => {
+    const homepageRepo = repositories.find(
+      (r) => r.file === "lib/repositories/homepage.repository.ts",
+    )!;
+    expect(callerCandidates(homepageRepo)).not.toContain(
+      "lib/repositories/homepage.repository.test.ts",
+    );
+  });
+
+  it("reproduces #2505's own regression: getPlaceholder had a caller only in its own test file, before this branch wired it in", () => {
+    // Structural reproduction, not a live orphan: this is true today only
+    // because `(landing)/page.tsx` (this branch's own fix) calls it. Asserts
+    // the mechanism the rule runs on, the same way rule 9's self-tests
+    // exercise `breadcrumbUrls`/`upLinkHrefs` against synthetic sources
+    // rather than only the real tree.
+    const testOnlySource = `
+      describe("getPlaceholder", () => {
+        it("maps the raw GROQ result", () => {
+          expect(toPlaceholderVM(HomepageRepositoryLive)).toBeTruthy();
+        });
+      });
+    `;
+    expect(
+      referencesCaller(testOnlySource, "HomepageRepository", "getPlaceholder"),
+    ).toBe(false);
+  });
+});
