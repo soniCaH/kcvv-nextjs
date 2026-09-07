@@ -153,7 +153,15 @@ export default {
         SanityMutationLive,
         SanityProjectionLive,
         envLayer,
-      ).pipe(Layer.provide(KvCacheLive), Layer.provide(envLayer));
+      ).pipe(
+        // PsdGateLive paces this job's PSD calls against the same global ≤5/s
+        // budget the request path uses — without it the nightly fan-out is
+        // unmetered. Pacing only: incident alerting still does not cover this
+        // path (see the note in sync/psd-team-client.ts).
+        Layer.provide(PsdGateLive),
+        Layer.provide(KvCacheLive),
+        Layer.provide(envLayer),
+      );
       ctx.waitUntil(
         Effect.runPromise(Effect.provide(runSync, layer)).catch((e) => {
           console.error(
