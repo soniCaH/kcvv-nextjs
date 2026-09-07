@@ -2,12 +2,14 @@
  * TeamEditorial unit tests.
  *
  * Covers:
- *  - Whole-section auto-hide when body + training + contact all empty
+ *  - Whole-section auto-hide when body + contact both empty
  *  - "Het verhaal" block: renders body prose; lifts the first pullquote run
  *    into a PullQuote card; no pullquote → no card
- *  - Training table renders rows; auto-hides when empty
  *  - Contact block renders PT; auto-hides when empty
- *  - Per-block independence (one present, others absent)
+ *  - Per-block independence (one present, other absent)
+ *
+ * The training-schedule block was deleted, not restyled (#2582 / #2476 rule
+ * 10) — training times live in PSD and members are sent there.
  */
 
 import { describe, it, expect } from "vitest";
@@ -47,15 +49,10 @@ const CONTACT: PortableTextBlock[] = [
   block({ text: "Secretariaat: info@kcvvelewijt.be" }),
 ];
 
-const TRAINING = [
-  { day: "Dinsdag", time: "19:30", location: "Veld 1", type: "Training" },
-  { day: "Donderdag", time: "20:00", location: "Veld 2", type: "Tactisch" },
-];
-
 describe("TeamEditorial", () => {
   it("auto-hides the whole section when everything is empty", () => {
     const { container } = render(
-      <TeamEditorial body={[]} trainingSchedule={[]} contactInfo={null} />,
+      <TeamEditorial body={[]} contactInfo={null} />,
     );
     expect(container.firstChild).toBeNull();
   });
@@ -88,19 +85,9 @@ describe("TeamEditorial", () => {
     });
   });
 
-  describe("Trainingsschema", () => {
-    it("renders a row per training session", () => {
-      render(<TeamEditorial trainingSchedule={TRAINING} />);
-      const section = screen.getByTestId("team-editorial-training");
-      expect(section.textContent).toContain("Dinsdag");
-      expect(section.textContent).toContain("19:30");
-      expect(section.textContent).toContain("Veld 2");
-    });
-
-    it("auto-hides when the schedule is empty", () => {
-      render(<TeamEditorial body={BODY_NO_PULLQUOTE} />);
-      expect(screen.queryByTestId("team-editorial-training")).toBeNull();
-    });
+  it("never renders a training-schedule block — deleted, not restyled (#2582)", () => {
+    render(<TeamEditorial body={BODY_NO_PULLQUOTE} contactInfo={CONTACT} />);
+    expect(screen.queryByTestId("team-editorial-training")).toBeNull();
   });
 
   describe("Contact", () => {

@@ -1,5 +1,5 @@
 export {player} from './player'
-export {team, trainingDay} from './team'
+export {team} from './team'
 export {staffMember} from './staffMember'
 export {organigramNode} from './organigramNode'
 export {responsibility} from './responsibility'
@@ -45,7 +45,7 @@ export {membershipApplication} from './membershipApplication'
 export {formRoutingConfig} from './formRoutingConfig'
 
 import {player} from './player'
-import {team, trainingDay} from './team'
+import {team} from './team'
 import {staffMember} from './staffMember'
 import {organigramNode} from './organigramNode'
 import {responsibility} from './responsibility'
@@ -74,7 +74,6 @@ import {formRoutingConfig} from './formRoutingConfig'
 export const schemaTypes = [
   player,
   team,
-  trainingDay,
   staffMember,
   organigramNode,
   responsibility,

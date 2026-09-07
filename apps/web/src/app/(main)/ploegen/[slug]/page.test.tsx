@@ -159,7 +159,6 @@ function teamFixture(psdId: string): TeamDetailVM {
     teamImageUrl: null,
     body: null,
     contactInfo: null,
-    trainingSchedule: null,
     players: [],
     staff: [],
   };

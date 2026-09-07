@@ -34,21 +34,6 @@ const body: PortableTextBlock[] = [
   }),
 ];
 
-const trainingSchedule = [
-  {
-    day: "Dinsdag",
-    time: "19:30",
-    location: "Sportpark Elewijt — Veld 1",
-    type: "Training",
-  },
-  {
-    day: "Donderdag",
-    time: "20:00",
-    location: "Sportpark Elewijt — Veld 1",
-    type: "Tactisch",
-  },
-];
-
 const contactInfo: PortableTextBlock[] = [
   block({ text: "Ploegafgevaardigde: Jan Janssens — 0470 12 34 56" }),
   block({ text: "Secretariaat: info@kcvvelewijt.be" }),
@@ -64,14 +49,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** All three blocks present, body carries a "Het verhaal" pull-quote. */
+/** Both blocks present, body carries a "Het verhaal" pull-quote. */
 export const FullEditorial: Story = {
-  args: { body, trainingSchedule, contactInfo },
+  args: { body, contactInfo },
 };
 
-/** Only the training schedule — verhaal + contact auto-hide. */
-export const TrainingOnly: Story = {
-  args: { trainingSchedule },
+/** Only the contact block — verhaal auto-hides. */
+export const ContactOnly: Story = {
+  args: { contactInfo },
 };
 
 /** Body without a pullquote — prose renders, no lifted quote card. */

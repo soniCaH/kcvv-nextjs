@@ -391,7 +391,6 @@ export default async function TeamPage({ params }: TeamPageProps) {
     inCompetition && hasVisibleMatches(scheduleMatches, now);
   const showEditorial =
     (teamBody !== null && hasRenderableBioContent(teamBody)) ||
-    (team.trainingSchedule?.length ?? 0) > 0 ||
     (teamContact !== null && hasRenderableBioContent(teamContact));
 
   // One record for every section's label — the nav chip and each section's
@@ -645,11 +644,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
             ariaLabel={sectionLabels.info}
             className="py-10 focus:outline-none"
           >
-            <TeamEditorial
-              body={teamBody}
-              trainingSchedule={team.trainingSchedule}
-              contactInfo={teamContact}
-            />
+            <TeamEditorial body={teamBody} contactInfo={teamContact} />
           </PageContainer>
         </>
       ) : null}
