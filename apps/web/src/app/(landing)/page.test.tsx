@@ -9,8 +9,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { Effect, Layer } from "effect";
-import { HttpBadGateway } from "@kcvv/api-contract";
+import { HttpBadGateway, type Match } from "@kcvv/api-contract";
 import type { ArticleVM } from "@/lib/repositories/article.repository";
+import type { TeamNavVM } from "@/lib/repositories/team.repository";
 
 const minimalArticle: ArticleVM = {
   id: "art-1",
@@ -59,8 +60,13 @@ vi.mock("@/lib/repositories/article.repository", async (importOriginal) => {
   };
 });
 
-const { mockGetNextMatches } = vi.hoisted(() => ({
+const { mockGetNextMatches, mockGetMatches } = vi.hoisted(() => ({
   mockGetNextMatches: vi.fn(),
+  // Backs the per-senior-team fan-out (`getTeamMatches`, via `lib/server/
+  // match-data.ts`) — each describe block sets its own default in
+  // `beforeEach` and overrides it per-test to discriminate finding 3 from
+  // finding 1's combined `firstTeamsReadFailed`.
+  mockGetMatches: vi.fn(),
 }));
 
 vi.mock("@/lib/effect/services/BffService", async (importOriginal) => {
@@ -69,7 +75,7 @@ vi.mock("@/lib/effect/services/BffService", async (importOriginal) => {
   return {
     ...mod,
     BffServiceLive: Layer.succeed(mod.BffService, {
-      getMatches: () => Effect.die("not used by this suite"),
+      getMatches: mockGetMatches,
       getNextMatches: mockGetNextMatches,
       getMatchesWindow: () => Effect.die("not used by this suite"),
       getMatchDetail: () => Effect.die("not used by this suite"),
@@ -121,16 +127,20 @@ vi.mock("@/lib/repositories/event.repository", async (importOriginal) => {
   };
 });
 
+const { mockTeamsFindAll } = vi.hoisted(() => ({
+  // Each describe block sets its own default in `beforeEach` — empty (no
+  // senior teams, so no per-team BFF fan-out via `getTeamMatches`) unless a
+  // test opts one in (finding 3's discriminating case below).
+  mockTeamsFindAll: vi.fn(),
+}));
+
 vi.mock("@/lib/repositories/team.repository", async (importOriginal) => {
   const mod =
     await importOriginal<typeof import("@/lib/repositories/team.repository")>();
   return {
     ...mod,
-    // Empty on purpose: no senior teams means no per-team BFF fan-out
-    // (`getTeamMatches`), which keeps this suite's own mocks the only ones
-    // in play.
     TeamRepositoryLive: Layer.succeed(mod.TeamRepository, {
-      findAll: () => Effect.succeed([]),
+      findAll: mockTeamsFindAll,
       findBySlug: () => Effect.die("not used by this suite"),
       findAllForLanding: () => Effect.die("not used by this suite"),
       findYouthTeamsForContact: () => Effect.die("not used by this suite"),
@@ -149,6 +159,7 @@ describe("/ — a failed placeholder read keeps the page (#2505 review finding 1
   beforeEach(() => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     mockGetNextMatches.mockReturnValue(Effect.succeed([]));
+    mockTeamsFindAll.mockReturnValue(Effect.succeed([]));
   });
   afterEach(() => {
     vi.restoreAllMocks();
@@ -189,10 +200,54 @@ describe("/ — a failed placeholder read keeps the page (#2505 review finding 1
   });
 });
 
+// One senior team, so the per-team fan-out (`getTeamMatches` → `bff.getMatches`)
+// actually fires — needed to discriminate `upcomingMatchesReadFailed` from
+// the combined `firstTeamsReadFailed` (#2505 round-3 review finding M2: with zero
+// senior teams, `firstTeamsMatches` is always `[]` and the two booleans are
+// provably equal, so a suite that never gives the fan-out anything to fail
+// cannot tell the fix from a revert).
+const seniorTeamFixture: TeamNavVM = {
+  id: "team-a",
+  name: "KCVV Elewijt",
+  displayName: "A-ploeg",
+  slug: "a-ploeg",
+  age: null,
+  psdId: "101",
+  division: "3e Nationale",
+  divisionFull: "3e Nationale",
+  teamImageUrl: null,
+};
+
+// A match belonging to the senior team above (`kcvv_team_id` matches its
+// `psdId`) — `page.tsx`'s senior-team dedupe (#2211) filters it OUT of
+// `upcomingMatches`, so the agenda's own filtered list ends up empty even
+// though the raw `getNextMatches()` read succeeded with a row. That is the
+// exact shape review finding 3 named: "any midweek where every live fixture
+// belongs to A/B empties `upcomingMatches` on its own" — enough fields for
+// `matchRowKind` + `mapMatchToUpcomingMatch`, though its content is never
+// rendered (it's filtered before reaching `<UpcomingMatches>`).
+const seniorTeamOnlyMatchFixture = {
+  id: 501,
+  date: new Date("2026-07-15T20:00:00Z"),
+  time: "20:00",
+  venue: null,
+  home_team: { id: 1235, name: "KCVV Elewijt", logo: null, score: null },
+  away_team: { id: 628, name: "City Pirates", logo: null, score: null },
+  status: "scheduled",
+  competition: "3e Nationale",
+  competitionType: "league",
+  squadLabel: null,
+  kcvv_team_id: 101,
+  kcvv_team_label: null,
+  is_placeholder: false,
+} as unknown as Match;
+
 describe("/ — the agenda's outage signal is its own read (#2505 review finding 3)", () => {
   beforeEach(() => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     mockGetPlaceholder.mockReturnValue(Effect.succeed(null));
+    mockTeamsFindAll.mockReturnValue(Effect.succeed([]));
+    mockGetMatches.mockReturnValue(Effect.die("not used by this suite"));
   });
   afterEach(() => {
     vi.restoreAllMocks();
@@ -200,7 +255,7 @@ describe("/ — the agenda's outage signal is its own read (#2505 review finding
 
   it("does not claim the agenda is unavailable when getNextMatches succeeds empty", async () => {
     // No senior teams in this suite, so `firstTeamsMatches` is always `[]`
-    // and can never itself flip `matchReadFailed` — this isolates the one
+    // and can never itself flip `firstTeamsReadFailed` — this isolates the one
     // signal under test: `matchesResult === null` vs. `[]`.
     mockGetNextMatches.mockReturnValue(Effect.succeed([]));
 
@@ -235,5 +290,48 @@ describe("/ — the agenda's outage signal is its own read (#2505 review finding
     ).toHaveTextContent(
       "Komende wedstrijden zijn even niet beschikbaar. Probeer het later opnieuw.",
     );
+  });
+
+  it("does not claim the agenda is unavailable when only a senior team's own fan-out fails", async () => {
+    // The discriminating case: the agenda's own read (getNextMatches)
+    // succeeds — with a row, even — but every one of those rows belongs to
+    // a senior team, so the senior-team dedupe (#2211) filters
+    // `upcomingMatches` down to empty on its own. Meanwhile that same
+    // senior team's per-team fetch (getMatches, via getTeamMatches) fails,
+    // which flips the combined `firstTeamsReadFailed` (and so
+    // <FirstTeamsBlock>'s own `unavailable`) without the agenda's own
+    // signal (`matchesResult === null`) ever going true. Reverting
+    // `upcomingMatchesReadFailed` back to `firstTeamsReadFailed` turns this test
+    // red: the agenda would wrongly print the outage notice.
+    mockTeamsFindAll.mockReturnValue(Effect.succeed([seniorTeamFixture]));
+    mockGetMatches.mockReturnValue(
+      Effect.fail(new HttpBadGateway({ error: "upstream is down" })),
+    );
+    mockGetNextMatches.mockReturnValue(
+      Effect.succeed([seniorTeamOnlyMatchFixture]),
+    );
+
+    const element = await HomePage();
+    render(element);
+
+    // <FirstTeamsBlock> DOES claim the outage — its `unavailable` still
+    // reads the combined signal, correctly, since its own rows come from
+    // the failed per-team fan-out.
+    const firstTeams = screen.getByRole("region", { name: "Eerste ploegen" });
+    expect(
+      within(firstTeams).getByText(/even niet beschikbaar/i),
+    ).toBeInTheDocument();
+
+    // The agenda must NOT: its own read succeeded (the row that emptied its
+    // filtered list is real, not a failure), so it drops silently — the
+    // outage notice must be absent everywhere on the page, and since
+    // `<UpcomingMatches>` returns `null` on a genuinely empty, available
+    // feed, its own "Komende wedstrijden" region shouldn't render at all.
+    expect(
+      screen.queryByText(/Komende wedstrijden zijn even niet beschikbaar/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("region", { name: "Komende wedstrijden" }),
+    ).not.toBeInTheDocument();
   });
 });
