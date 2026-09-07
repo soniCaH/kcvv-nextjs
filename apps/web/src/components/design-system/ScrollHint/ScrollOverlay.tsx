@@ -31,6 +31,16 @@ export interface ScrollOverlayProps {
    *  `<ScrollOverlay>` owns the hook, so the caller never sees the boolean
    *  itself. */
   scrollableRightClassName?: string;
+  /** Extra track classes applied whenever the track overflows at this
+   *  width AT ALL — unlike `scrollableRightClassName`, this does not flip
+   *  off near the end of a scroll session (`canScrollRight` goes false in
+   *  the track's last few pixels). For a pinned column group that must
+   *  hold for the *whole* scroll, not just while there is still more to
+   *  reveal — `<StandingsTable>`'s leading/trailing anchor columns
+   *  (#2476 rule 3). Reuses `useScrollHint`'s `overflows` (#2489), the same
+   *  static "does this track overflow at all" signal a chip row's rail
+   *  reservation already keys off. */
+  overflowsClassName?: string;
   /** Overrides the default `overflow-x-auto` — e.g. `"overflow-auto"` for
    *  a scroller that also scrolls vertically (the organigram explorer's
    *  stage). */
@@ -81,6 +91,7 @@ export function ScrollOverlay({
   dangerouslySetInnerHTML,
   trackClassName,
   scrollableRightClassName,
+  overflowsClassName,
   overflowClassName = "overflow-x-auto",
   ariaLabel,
   role,
@@ -94,6 +105,7 @@ export function ScrollOverlay({
     scrollRef,
     canScrollLeft,
     canScrollRight,
+    overflows,
     remainingLeft,
     remainingRight,
     scrollLeft,
@@ -117,6 +129,7 @@ export function ScrollOverlay({
           overflowClassName,
           trackClassName,
           canScrollRight && scrollableRightClassName,
+          overflows && overflowsClassName,
         )}
         {...trackProps}
       />
