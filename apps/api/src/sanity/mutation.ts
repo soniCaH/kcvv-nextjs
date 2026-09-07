@@ -135,7 +135,7 @@ export class SanityMutation extends Context.Tag("SanityMutation")<
 /**
  * Upsert strategy: createIfNotExists sets the document skeleton on first run.
  * patch().set() overwrites only PSD-sourced fields — never touches editorial
- * fields (transparentImage, celebrationImage, position, bio, trainingSchedule).
+ * fields (transparentImage, celebrationImage, position, bio).
  * Both `players` and `staff` on team documents are sync-owned (readOnly in Studio).
  */
 export const SanityMutationLive = Layer.effect(

@@ -11,6 +11,8 @@
  *  - Numberless entries (played 0 / points 0, #2605): no columns at all,
  *    just crest + name — derived from `entries` itself, not a caller-set
  *    prop (#2636 finding 9)
+ *  - Anchoring: #, Ploeg and Ptn are pinned on the cell itself, not by
+ *    position (#2582 review M1)
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest";
@@ -72,7 +74,26 @@ const NUMBERLESS_DIVISION: RankingEntry[] = [
   }),
 ];
 
+function mockScrollDimensions(scrollWidth: number, clientWidth: number) {
+  Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+    configurable: true,
+    value: scrollWidth,
+  });
+  Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+    configurable: true,
+    value: clientWidth,
+  });
+}
+
 describe("StandingsTable", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (HTMLElement.prototype as any).scrollWidth;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (HTMLElement.prototype as any).clientWidth;
+  });
+
   it("renders null when entries is empty", () => {
     const { container } = render(<StandingsTable entries={[]} />);
     expect(container.firstChild).toBeNull();
@@ -106,6 +127,21 @@ describe("StandingsTable", () => {
     expect(screen.queryByTestId("standings-kcvv-row")).toBeNull();
   });
 
+  it("puts the overflow floor on the Ploeg column, not the name leaf (review M4)", () => {
+    // The floor forces the TABLE to overflow at narrow widths — it has
+    // nothing to do with truncation, which is what min-w-0 on the leaf
+    // itself already provides (the canonical way to make `truncate` work
+    // inside a flex row). Asserting the exact tokens, not a regex that
+    // would equally match the 112px value already proven insufficient.
+    render(<StandingsTable entries={DIVISION} />);
+    const headers = screen.getAllByRole("columnheader");
+    const ploeg = headers.find((h) => h.textContent === "Ploeg");
+    expect(ploeg).toHaveClass("min-w-44");
+
+    const nameSpan = screen.getByTitle("Leader FC");
+    expect(nameSpan).toHaveClass("min-w-0");
+  });
+
   it("does not highlight a non-matching team", () => {
     render(<StandingsTable entries={DIVISION} highlightTeamId={9999} />);
     expect(screen.queryByTestId("standings-kcvv-row")).toBeNull();
@@ -119,6 +155,16 @@ describe("StandingsTable", () => {
   it("renders negative goal difference without a + prefix", () => {
     render(<StandingsTable entries={DIVISION} />);
     expect(screen.getByText("-3")).toBeInTheDocument();
+  });
+
+  it("never hides W/G/V behind a responsive class — scrolling answers overflow, not hiding (#2582)", () => {
+    render(<StandingsTable entries={DIVISION} />);
+    const headers = screen.getAllByRole("columnheader");
+    for (const label of ["W", "G", "V"]) {
+      const header = headers.find((h) => h.textContent === label);
+      expect(header?.className).not.toContain("hidden");
+      expect(header?.className).not.toContain("sm:table-cell");
+    }
   });
 
   it("does not render a Vorm/form column", () => {
@@ -175,25 +221,6 @@ describe("StandingsTable", () => {
   });
 
   describe("scroll arrow — control register, no reserved rail (#2444/#2476)", () => {
-    function mockScrollDimensions(scrollWidth: number, clientWidth: number) {
-      Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
-        configurable: true,
-        value: scrollWidth,
-      });
-      Object.defineProperty(HTMLElement.prototype, "clientWidth", {
-        configurable: true,
-        value: clientWidth,
-      });
-    }
-
-    afterEach(() => {
-      vi.restoreAllMocks();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (HTMLElement.prototype as any).scrollWidth;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (HTMLElement.prototype as any).clientWidth;
-    });
-
     it("makes the scroll region keyboard-reachable (tabIndex=0)", () => {
       render(<StandingsTable entries={DIVISION} />);
       const region = screen.getByRole("region");
@@ -236,6 +263,61 @@ describe("StandingsTable", () => {
 
       fade = container.querySelector(".bg-gradient-to-l") as HTMLElement;
       expect(fade.style.width).toBe("15px");
+    });
+  });
+
+  describe("anchoring — on the cell that is the anchor, not by position (#2476 rule 3 / review M1)", () => {
+    it("pins #, Ploeg and Ptn unconditionally — sticky is inert without a scroll, so there is nothing to gate", () => {
+      render(<StandingsTable entries={DIVISION} />);
+      const headers = screen.getAllByRole("columnheader");
+      const byLabel = (label: string) =>
+        headers.find((h) => h.textContent === label)!;
+
+      expect(byLabel("#")).toHaveClass("sticky", "left-0", "w-12");
+      expect(byLabel("Ploeg")).toHaveClass("sticky", "left-12");
+      expect(byLabel("Ptn")).toHaveClass("sticky", "right-0", "w-14");
+      for (const label of ["M", "W", "G", "V", "+/-"]) {
+        expect(byLabel(label)).not.toHaveClass("sticky");
+      }
+    });
+
+    it("gives the KCVV row's pinned cells its own tint, never a flat bg-cream (review finding 2)", () => {
+      render(<StandingsTable entries={DIVISION} highlightTeamId={1235} />);
+      const kcvvRow = screen.getByTestId("standings-kcvv-row");
+      const pinnedCells = kcvvRow.querySelectorAll("td.sticky");
+      expect(pinnedCells).toHaveLength(3); // #, Ploeg, Ptn
+
+      const otherRow = screen.getByText("Leader FC").closest("tr")!;
+      const otherPinnedCells = otherRow.querySelectorAll("td.sticky");
+
+      for (const cell of pinnedCells) {
+        expect(cell.className).toContain("bg-[color-mix");
+        expect(cell.className).not.toContain("bg-cream");
+      }
+      for (const cell of otherPinnedCells) {
+        expect(cell.className).toContain("bg-cream");
+        expect(cell.className).not.toContain("bg-[color-mix");
+      }
+    });
+
+    it("does not show a divider shadow at the anchor edge when the table fits", () => {
+      mockScrollDimensions(500, 500);
+      render(<StandingsTable entries={DIVISION} />);
+      const region = screen.getByRole("region");
+      expect(region.className).not.toContain("shadow-[2px_0_4px");
+      expect(region.className).not.toContain("shadow-[-2px_0_4px");
+    });
+
+    it("shows the divider shadow and insets the arrow/fade past the pinned Ptn column once the table overflows (review finding 3)", () => {
+      mockScrollDimensions(900, 500);
+      render(<StandingsTable entries={DIVISION} />);
+      const region = screen.getByRole("region");
+      expect(region.className).toContain("shadow-[2px_0_4px");
+      expect(region.className).toContain("shadow-[-2px_0_4px");
+
+      const arrow = screen.getByLabelText("Scroll right");
+      expect(arrow).toHaveClass("right-14");
+      expect(arrow).not.toHaveClass("right-0");
     });
   });
 });

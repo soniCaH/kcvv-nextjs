@@ -131,7 +131,6 @@ describe("TeamRepository", () => {
         teamImageUrl: "https://cdn.sanity.io/team.webp",
         body: null,
         contactInfo: null,
-        trainingSchedule: null,
         players: [
           {
             _id: "player-1",

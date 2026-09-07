@@ -59,6 +59,17 @@ const NO_THEAD_TABLE_HTML = `
 </table>
 `;
 
+const CAPTIONED_TABLE_HTML = `
+<table>
+  <caption>Poule A</caption>
+  <thead><tr><th>Datum</th><th>Tegenstander</th></tr></thead>
+  <tbody>
+    <tr><td>Za 12 jul</td><td>VK Veltem</td></tr>
+    <tr><td>Za 19 jul</td><td>SK Berg</td></tr>
+  </tbody>
+</table>
+`;
+
 const meta = {
   title: "Features/Articles/Blocks/HtmlTableBlock",
   component: HtmlTableBlock,
@@ -67,7 +78,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Phase 5 restyle (fileattachment-htmltable-locked §5.2). Extracted from `<SanityArticleBody>`. Jersey-deep header band over monospace body cells; first column italic Freight; dotted ink-muted dividers; 2.5% zebra; horizontal scroll + sticky first column preserved. On real overflow: a control-register (32×32, jersey-deep) right arrow overlays the edge with no reserved rail, and the edge fade is capped at `min(24px, remaining)` rather than a fixed width (#2444, as amended by #2476).",
+          "The quiet skin (#2582, reversing the fileattachment-htmltable-locked §5.2 card). Extracted from `<SanityArticleBody>`. Shares `<StandingsTable>`'s register — mono on cream, `border-b-2` ink under the header, `border-b` paper-edge between rows, no frame — and anchors nothing (#2476 rule 3: only a typed table knows what a column means). On real overflow: a control-register (32×32, jersey-deep) right arrow overlays the edge with no reserved rail, and the edge fade is capped at `min(24px, remaining)` rather than a fixed width (#2444, as amended by #2476/#2577).",
       },
     },
   },
@@ -102,6 +113,14 @@ export const SingleColumn: Story = {
 export const WithoutThead: Story = {
   name: "Without <thead>",
   args: { html: NO_THEAD_TABLE_HTML },
+};
+
+/** A `<caption>` renders in the kicker register — font-mono, uppercase,
+ *  ink-muted, left-aligned — instead of the browser-default centred text
+ *  (#2476 rule 8; three published tables ship one, e.g. "Poule A"). */
+export const WithCaption: Story = {
+  name: "With <caption> (kicker register)",
+  args: { html: CAPTIONED_TABLE_HTML },
 };
 
 export const Empty: Story = {

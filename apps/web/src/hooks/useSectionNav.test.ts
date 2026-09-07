@@ -283,6 +283,66 @@ describe("useSectionNav", () => {
     });
   });
 
+  describe("scroll-spy tracks full state across deliveries, not just the latest delta (#2582 review)", () => {
+    // Reproduces a real, measured sequence (a fast/native-smooth scroll past
+    // a short section straight into the next): the observer's callback only
+    // carries targets whose OWN intersection ratio crossed a threshold in
+    // that exact delivery — not a full snapshot of every observed target.
+    // A batch mentioning only an already-superseded earlier section (its
+    // last sliver of overlap finally crossing a threshold) must not
+    // overwrite a later section that is still genuinely intersecting but
+    // simply wasn't mentioned in that particular batch.
+    it("does not let a stale, delta-only re-report of an earlier section override a later one that is still intersecting", () => {
+      const a = document.createElement("div");
+      a.id = "a";
+      a.setAttribute("data-section-nav-test-target", "");
+      const b = document.createElement("div");
+      b.id = "b";
+      b.setAttribute("data-section-nav-test-target", "");
+      document.body.append(a, b);
+
+      const rendered = renderHook(["a", "b"]);
+      const spyObserverIndex = intersectionObservers.length - 1;
+
+      // "b" (the later section) is read first — its own batch doesn't
+      // mention "a" at all.
+      emit(spyObserverIndex, [
+        {
+          isIntersecting: true,
+          target: b,
+          boundingClientRect: { top: 100 } as DOMRectReadOnly,
+        },
+      ]);
+      expect(rendered.result.activeId).toBe("b");
+
+      // "a" — already mostly scrolled past — briefly re-crosses a
+      // threshold with its last sliver of overlap. This transient flip is
+      // not itself wrong (it genuinely still overlaps at this instant).
+      emit(spyObserverIndex, [
+        {
+          isIntersecting: true,
+          target: a,
+          boundingClientRect: { top: -50 } as DOMRectReadOnly,
+        },
+      ]);
+      expect(rendered.result.activeId).toBe("a");
+
+      // "a" finally exits. This batch mentions ONLY "a" — the previous,
+      // entries-only reducer saw an empty `visible` array here and simply
+      // returned, permanently stuck on "a" even though "b" was still known
+      // to be intersecting. The fixed version recomputes from the full
+      // state map and falls back to "b".
+      emit(spyObserverIndex, [
+        {
+          isIntersecting: false,
+          target: a,
+          boundingClientRect: { top: -50 } as DOMRectReadOnly,
+        },
+      ]);
+      expect(rendered.result.activeId).toBe("b");
+    });
+  });
+
   describe("hash-landing correction wiring", () => {
     // The correction logic itself (arming, the armed window, the cold-load
     // and webfont-swap triggers) is `useHashLandingCorrection`'s own

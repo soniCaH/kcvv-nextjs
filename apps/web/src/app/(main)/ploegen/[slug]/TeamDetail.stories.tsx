@@ -254,21 +254,6 @@ const teamBody: PortableTextBlock[] = [
   }),
 ];
 
-const trainingSchedule = [
-  {
-    day: "Dinsdag",
-    time: "19:30",
-    location: "Sportpark Elewijt — Veld 1",
-    type: "Training",
-  },
-  {
-    day: "Donderdag",
-    time: "20:00",
-    location: "Sportpark Elewijt — Veld 1",
-    type: "Tactisch",
-  },
-];
-
 const contactInfo: PortableTextBlock[] = [
   block({ text: "Ploegafgevaardigde: Jan Janssens — 0470 12 34 56" }),
   block({ text: "Secretariaat: info@kcvvelewijt.be" }),
@@ -409,11 +394,7 @@ function TeamDetailAssembly({ competitive = "live" }: TeamDetailAssemblyProps) {
 
       <StripedSeam colorPair="ink-cream" height="md" />
       <PageContainer as="section" className="py-10">
-        <TeamEditorial
-          body={teamBody}
-          trainingSchedule={trainingSchedule}
-          contactInfo={contactInfo}
-        />
+        <TeamEditorial body={teamBody} contactInfo={contactInfo} />
       </PageContainer>
     </>
   );

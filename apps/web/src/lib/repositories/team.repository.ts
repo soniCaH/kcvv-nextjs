@@ -26,7 +26,6 @@ export const TEAM_BY_SLUG_QUERY =
   _id, psdId, name, displayName, "slug": slug.current, age, gender, footbelId, division, divisionFull,
   tagline, body[]{ ..., "fileUrl": file.asset->url }, contactInfo,
   "teamImageUrl": teamImage.asset->url + "?w=1200&h=800&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(teamImage.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(teamImage.hotspot.y, 0.5)),
-  trainingSchedule,
   players[]-> {
     _id, psdId, firstName, lastName, jerseyNumber, keeper, positionPsd, position,
     "psdImageUrl": psdImage.asset->url + "?w=400&q=80&fm=webp&fit=max",
@@ -169,7 +168,6 @@ export interface TeamDetailVM {
   teamImageUrl: string | null;
   body: TEAM_BY_SLUG_DETAIL["body"];
   contactInfo: TEAM_BY_SLUG_DETAIL["contactInfo"];
-  trainingSchedule: TEAM_BY_SLUG_DETAIL["trainingSchedule"];
   players: PlayerVM[];
   staff: StaffMemberVM[];
 }
@@ -267,7 +265,6 @@ function toTeamDetailVM(row: TEAM_BY_SLUG_DETAIL): TeamDetailVM {
     teamImageUrl: row.teamImageUrl,
     body: row.body,
     contactInfo: row.contactInfo,
-    trainingSchedule: row.trainingSchedule,
     players: (row.players ?? []).map(toPlayerVM),
     staff: (row.staff ?? [])
       .map(toStaffMemberVM)

@@ -24,13 +24,12 @@ export interface ScrollOverlayProps {
   /** Classes for the track, in ADDITION to the overflow classes
    *  `<ScrollOverlay>` applies itself (see `overflowClassName`). */
   trackClassName?: string;
-  /** Extra track classes applied only while the track can still scroll
-   *  right — e.g. `HtmlTableBlock`'s sticky-first-column treatment, which
-   *  should only engage once there is a right edge to anchor against. Lets
-   *  a caller react to `canScrollRight` without needing it as a value —
-   *  `<ScrollOverlay>` owns the hook, so the caller never sees the boolean
-   *  itself. */
-  scrollableRightClassName?: string;
+  /** Extra track classes applied whenever the track overflows at this
+   *  width at all — unlike `canScrollRight`, this does not flip off near
+   *  the end of a scroll session, so it holds for the *whole* session.
+   *  Reuses `useScrollHint`'s `overflows` (#2489), the same signal a chip
+   *  row's rail reservation keys off. */
+  overflowsClassName?: string;
   /** Overrides the default `overflow-x-auto` — e.g. `"overflow-auto"` for
    *  a scroller that also scrolls vertically (the organigram explorer's
    *  stage). */
@@ -80,7 +79,7 @@ export function ScrollOverlay({
   children,
   dangerouslySetInnerHTML,
   trackClassName,
-  scrollableRightClassName,
+  overflowsClassName,
   overflowClassName = "overflow-x-auto",
   ariaLabel,
   role,
@@ -94,6 +93,7 @@ export function ScrollOverlay({
     scrollRef,
     canScrollLeft,
     canScrollRight,
+    overflows,
     remainingLeft,
     remainingRight,
     scrollLeft,
@@ -116,7 +116,7 @@ export function ScrollOverlay({
         className={cn(
           overflowClassName,
           trackClassName,
-          canScrollRight && scrollableRightClassName,
+          overflows && overflowsClassName,
         )}
         {...trackProps}
       />

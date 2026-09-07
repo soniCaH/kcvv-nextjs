@@ -124,34 +124,36 @@ describe("ScrollOverlay", () => {
     expect(fade.style.width).toBe("15px");
   });
 
-  it("applies scrollableRightClassName to the track only while scrollable right", () => {
+  it("applies overflowsClassName whenever the track overflows at all, even once scrolled to the end", () => {
     mockScrollDimensions(400, 400);
     const { container: fitContainer, unmount } = render(
-      <ScrollOverlay
-        trackClassName="base"
-        scrollableRightClassName="sticky-col"
-      >
+      <ScrollOverlay trackClassName="base" overflowsClassName="anchor-col">
         <span>Item</span>
       </ScrollOverlay>,
     );
     const fitTrack = fitContainer.querySelector(
       '[tabindex="0"]',
     ) as HTMLElement;
-    expect(fitTrack.className).not.toContain("sticky-col");
+    expect(fitTrack.className).not.toContain("anchor-col");
     unmount();
 
     mockScrollDimensions(900, 400);
     const { container } = render(
-      <ScrollOverlay
-        trackClassName="base"
-        scrollableRightClassName="sticky-col"
-      >
+      <ScrollOverlay trackClassName="base" overflowsClassName="anchor-col">
         <span>Item</span>
       </ScrollOverlay>,
     );
     const track = container.querySelector('[tabindex="0"]') as HTMLElement;
-    expect(track.className).toContain("sticky-col");
-    expect(track.className).toContain("base");
+    expect(track.className).toContain("anchor-col");
+
+    // Scrolled all the way to the end — `canScrollRight` is now false, but
+    // the track still overflows at this width, so the anchor must not
+    // un-pin (#2582: this reacts to `overflows`, not `canScrollRight`).
+    Object.defineProperty(track, "scrollLeft", { value: 500 });
+    act(() => {
+      track.dispatchEvent(new Event("scroll"));
+    });
+    expect(track.className).toContain("anchor-col");
   });
 
   it("renders dangerouslySetInnerHTML on the track instead of children", () => {

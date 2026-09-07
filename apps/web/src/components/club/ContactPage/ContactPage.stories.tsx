@@ -4,7 +4,7 @@
  * `/club/contact` on the retro-terrace-fanzine system (10k1): <PageHero>,
  * paper-stamp cards, plain Phosphor-Fill icons, a merged "Contacteer ons."
  * grid (dynamic key contacts + static categories, deduped on e-mail), and a
- * jersey-deep prices table.
+ * prices table in the quiet skin (#2582).
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
@@ -42,7 +42,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Full contact page for /club/contact on the retro-terrace-fanzine system. Hero + paper-stamp cards, an OpenStreetMap embed (paper-framed, pinned on Driesstraat 32), a merged 'Contacteer ons.' grid (key contacts + categories, deduped on e-mail), and a jersey-deep prices table.",
+          "Full contact page for /club/contact on the retro-terrace-fanzine system. Hero + paper-stamp cards, an OpenStreetMap embed (paper-framed, pinned on Driesstraat 32), a merged 'Contacteer ons.' grid (key contacts + categories, deduped on e-mail), and a prices table in the quiet skin (#2582).",
       },
     },
   },

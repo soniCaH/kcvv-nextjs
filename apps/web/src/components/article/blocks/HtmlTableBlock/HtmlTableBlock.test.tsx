@@ -12,7 +12,26 @@ const SIMPLE_TABLE_HTML = `
 </table>
 `;
 
+function mockScrollDimensions(scrollWidth: number, clientWidth: number) {
+  Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+    configurable: true,
+    value: scrollWidth,
+  });
+  Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+    configurable: true,
+    value: clientWidth,
+  });
+}
+
 describe("<HtmlTableBlock>", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (HTMLElement.prototype as any).scrollWidth;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (HTMLElement.prototype as any).clientWidth;
+  });
+
   it("returns null on whitespace-only html", () => {
     const { container } = render(<HtmlTableBlock html="   " />);
     expect(container.firstChild).toBeNull();
@@ -31,13 +50,32 @@ describe("<HtmlTableBlock>", () => {
     expect(region.querySelector("table")).toBeTruthy();
   });
 
-  it("wraps the table inside a paper-card wrapper (border + shadow)", () => {
+  it("gives up its card chrome — no border, no shadow, no frame (#2582 rule 1)", () => {
     const { container } = render(<HtmlTableBlock html={SIMPLE_TABLE_HTML} />);
     const wrapper = container.querySelector("[data-html-table='true']");
     expect(wrapper).not.toBeNull();
-    expect(wrapper?.className).toContain("border-2");
-    expect(wrapper?.className).toContain("border-ink");
-    expect(wrapper?.className).toContain("shadow-paper-md");
+    expect(wrapper?.className).not.toContain("border-2");
+    expect(wrapper?.className).not.toContain("border-ink");
+    expect(wrapper?.className).not.toContain("shadow-paper-md");
+  });
+
+  it("renders the quiet skin — StandingsTable's register, not a jersey-deep header band", () => {
+    render(<HtmlTableBlock html={SIMPLE_TABLE_HTML} />);
+    const region = screen.getByRole("region");
+    expect(region.className).toContain("border-b-2");
+    expect(region.className).not.toContain("bg-jersey-deep");
+    // The old zebra's actual value (a literal "zebra" class never existed).
+    expect(region.className).not.toContain("rgba(0,0,0,0.025)");
+  });
+
+  it("does not anchor any column — an authored table simply scrolls (#2582 rule 3)", () => {
+    // No scroll-dimension mock: HtmlTableBlock never passes
+    // `overflowsClassName` at all, so "sticky" cannot appear regardless of
+    // overflow state — this is a static check on the class string, not a
+    // scroll-state one.
+    render(<HtmlTableBlock html={SIMPLE_TABLE_HTML} />);
+    const region = screen.getByRole("region");
+    expect(region.className).not.toContain("sticky");
   });
 
   it("sanitizes the html (strips disallowed tags + attributes)", () => {
@@ -72,6 +110,26 @@ describe("<HtmlTableBlock>", () => {
     expect(region.querySelector("td")?.getAttribute("rowspan")).toBe("2");
   });
 
+  it("styles a <tfoot> row the same as tbody — every allowed row container, by construction (review M6)", () => {
+    // The skin is applied via arbitrary-variant selectors on the wrapping
+    // track (see HtmlTableBlock.tsx), not literal classes on the injected
+    // HTML itself, so — same as StandingsTable's anchor tests — the track's
+    // own className is what carries the selector, not the `<tfoot>`/`<td>`
+    // elements it targets.
+    const withFoot = `
+      <table>
+        <thead><tr><th>Datum</th></tr></thead>
+        <tbody><tr><td>Za 12 jul</td></tr></tbody>
+        <tfoot><tr><td>Totaal</td></tr></tfoot>
+      </table>
+    `;
+    render(<HtmlTableBlock html={withFoot} />);
+    const region = screen.getByRole("region");
+    expect(region.className).toContain("[&_tfoot_tr]:border-b");
+    expect(region.className).toContain("[&_td]:text-ink");
+    expect(region.querySelector("tfoot td")).toBeTruthy();
+  });
+
   it("renders nested tables without errors", () => {
     const nested = `
       <table>
@@ -88,25 +146,6 @@ describe("<HtmlTableBlock>", () => {
   });
 
   describe("scroll arrow — control register, no reserved rail (#2444/#2476)", () => {
-    function mockScrollDimensions(scrollWidth: number, clientWidth: number) {
-      Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
-        configurable: true,
-        value: scrollWidth,
-      });
-      Object.defineProperty(HTMLElement.prototype, "clientWidth", {
-        configurable: true,
-        value: clientWidth,
-      });
-    }
-
-    afterEach(() => {
-      vi.restoreAllMocks();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (HTMLElement.prototype as any).scrollWidth;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (HTMLElement.prototype as any).clientWidth;
-    });
-
     it("mounts no right arrow and no fade when the table fits", () => {
       mockScrollDimensions(500, 500);
       render(<HtmlTableBlock html={SIMPLE_TABLE_HTML} />);

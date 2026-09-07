@@ -1,44 +1,6 @@
 import {defineField, defineType} from 'sanity'
 import {editorialBioOf, PULLQUOTE_BIO_HELP} from './blocks/editorial-marks'
 
-export const trainingDay = defineType({
-  name: 'trainingSession',
-  title: 'Training session',
-  type: 'object',
-  fields: [
-    defineField({
-      name: 'day',
-      title: 'Day',
-      type: 'string',
-      description: 'Dag van de training.',
-      options: {
-        list: ['Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag', 'Zondag'],
-      },
-    }),
-    defineField({
-      name: 'time',
-      title: 'Time',
-      type: 'string',
-      description: 'Aanvangsuur (bijv. "19:30").',
-    }),
-    defineField({
-      name: 'location',
-      title: 'Location',
-      type: 'string',
-      description: 'Locatie van de training (bijv. "Sportpark Elewijt - Veld 1").',
-    }),
-    defineField({
-      name: 'type',
-      title: 'Type',
-      type: 'string',
-      description: 'Soort training.',
-      options: {
-        list: ['Training', 'Fysiek', 'Tactisch', 'Keeperstraining', 'Andere'],
-      },
-    }),
-  ],
-})
-
 export const team = defineType({
   name: 'team',
   title: 'Team',
@@ -48,7 +10,6 @@ export const team = defineType({
   groups: [
     {name: 'identiteit', title: 'Identiteit', default: true},
     {name: 'redactioneel', title: 'Redactioneel'},
-    {name: 'trainingen', title: 'Trainingen'},
     {name: 'staf', title: 'Staf'},
     {name: 'seo', title: 'SEO'},
   ],
@@ -193,15 +154,6 @@ export const team = defineType({
       group: 'redactioneel',
       options: {hotspot: true},
       description: 'Ploegfoto, in kleur getoond bovenaan de ploegpagina. Redactioneel.',
-    }),
-    // ── Trainingen ──────────────────────────────────────────────────────────
-    defineField({
-      name: 'trainingSchedule',
-      title: 'Training schedule',
-      type: 'array',
-      group: 'trainingen',
-      description: 'Trainingsmomenten van de ploeg. Voeg per training dag, uur, locatie en type toe. Getoond op de ploegpagina.',
-      of: [{type: 'trainingSession'}],
     }),
     // ── Staf ────────────────────────────────────────────────────────────────
     defineField({

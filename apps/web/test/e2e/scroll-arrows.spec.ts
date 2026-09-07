@@ -27,6 +27,25 @@ let fixtures: RouteFixtures;
  * below exercise the real thing instead of silently no-op-ing on whichever
  * team happens to sort first. */
 let teamSlugs: string[] = [];
+/** The first `/ploegen/[slug]` or `/wedstrijd/[matchId]` whose SSR HTML
+ * carries a numbered `<StandingsTable>` (not the numberless list variant),
+ * or `null` if none does today (review S5: `StandingsTable` is a Server
+ * Component, so this is discoverable from the raw HTML — a plain HTTP GET
+ * per candidate, no browser, no hydration — instead of `page.goto()`-ing
+ * up to 19 routes just to throw most of them away). */
+let standingsTableUrl: string | null = null;
+/** The first `/ploegen/[slug]` whose SSR HTML carries `TeamSectionNav`
+ * (auto-hides at ≤1 section — the same pre-season dependency), found the
+ * same way and in the same sweep as `standingsTableUrl` above. */
+let teamSectionNavSlug: string | null = null;
+
+/** The numbered table's wrapper carries `data-testid="standings-table"`
+ * with no `data-variant` attribute; the numberless list carries both. JSX
+ * attribute order is stable, so "not immediately followed by a
+ * `data-variant`" is a precise, hydration-free signature for "numbered". */
+function hasNumberedStandingsTable(html: string): boolean {
+  return /data-testid="standings-table"(?!\s+data-variant)/.test(html);
+}
 
 test.beforeAll(async ({ baseURL }) => {
   if (!baseURL) {
@@ -40,6 +59,33 @@ test.beforeAll(async ({ baseURL }) => {
     sitemapXml.matchAll(/<loc>\s*[^<]*\/ploegen\/([a-z0-9-]+)\s*<\/loc>/g),
     (m) => m[1]!,
   );
+
+  // Both `StandingsTable` and `TeamSectionNav` are Server Components, so
+  // one GET per team slug settles both discoveries — no `page.goto()`, no
+  // hydration (review S5: this used to be two independent full-navigation
+  // sweeps over the same up-to-18 team pages).
+  for (const slug of teamSlugs) {
+    const response = await fetch(`${baseURL}/ploegen/${slug}`);
+    if (!response.ok) continue;
+    const html = await response.text();
+    if (!standingsTableUrl && hasNumberedStandingsTable(html)) {
+      standingsTableUrl = `/ploegen/${slug}`;
+    }
+    if (
+      !teamSectionNavSlug &&
+      html.includes('data-testid="team-section-nav"')
+    ) {
+      teamSectionNavSlug = slug;
+    }
+    if (standingsTableUrl && teamSectionNavSlug) break;
+  }
+  if (!standingsTableUrl && fixtures.matchId) {
+    const url = `/wedstrijd/${fixtures.matchId}`;
+    const response = await fetch(`${baseURL}${url}`);
+    if (response.ok && hasNumberedStandingsTable(await response.text())) {
+      standingsTableUrl = url;
+    }
+  }
 });
 
 async function readOverflow(track: Locator) {
@@ -181,29 +227,66 @@ test.describe("scroll arrow — mounts only on real overflow at that width", () 
   test("TeamSectionNav on /ploegen/[slug] — narrow phone (360px)", async ({
     page,
   }) => {
-    test.skip(teamSlugs.length === 0, "no team slugs in sitemap");
-    await page.setViewportSize({ width: 360, height: 800 });
-
     // Not every team ships the nav today (it auto-hides at ≤1 section,
-    // #2444/#2478's pre-season blindness) — scan for a team that does
-    // rather than asserting only against the first sitemap entry, which is
-    // routinely a senior side with no nav at all.
-    let nav;
-    for (const slug of teamSlugs) {
-      await page.goto(`/ploegen/${slug}`);
-      const candidate = page.getByTestId("team-section-nav");
-      if ((await candidate.count()) > 0) {
-        nav = candidate;
-        break;
-      }
-    }
+    // #2444/#2478's pre-season blindness) — `teamSectionNavSlug` is
+    // whichever team in the sitemap does, found by `beforeAll`'s HTTP
+    // sweep rather than a second full-navigation scan here (review S5).
     test.skip(
-      !nav,
+      !teamSectionNavSlug,
       "no team in the sitemap renders TeamSectionNav today (≤1 section on every team — pre-season)",
     );
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto(`/ploegen/${teamSectionNavSlug}`);
+    const nav = page.getByTestId("team-section-nav");
 
-    const list = nav!.locator("ul").first();
-    await assertRailArrowMatchesOverflow(nav!, list);
+    const list = nav.locator("ul").first();
+    await assertRailArrowMatchesOverflow(nav, list);
+  });
+
+  test("StandingsTable on /ploegen/[slug] or /wedstrijd/[matchId] — phone viewport (360px)", async ({
+    page,
+  }) => {
+    test.skip(
+      !standingsTableUrl,
+      "no team or match in the sitemap renders a numbered StandingsTable today (pre-season / numberless-only data)",
+    );
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto(standingsTableUrl!);
+
+    // Scoped to the standings table itself, not `page` — a team page also
+    // ships `TeamSectionNav`'s own "Scroll right" control, and asserting
+    // against the whole page matches both (strict-mode violation).
+    const table = page
+      .locator(
+        '[data-testid="standings-table"]:not([data-variant="numberless"])',
+      )
+      .first();
+    const track = table.locator('[role="region"]');
+
+    // Review finding 1 / M2: this is the only place in the suite that
+    // proves the table *actually* overflows at 360px — not a Storybook or
+    // vitest mock of scrollWidth/clientWidth, which proves the arrow-mount
+    // wiring but nothing about whether the table ever gets there. An
+    // 8-column numbered division either overflows a 360px phone or the
+    // fix is dead; asserted unconditionally, not `if (overflows)`, so a
+    // regression here fails the test instead of skipping the check.
+    const { overflows } = await readOverflow(track);
+    expect(overflows).toBe(true);
+
+    await assertOverlayArrowMatchesOverflow(table, track);
+
+    // Anchoring (#2476 rule 3): the leading group (#, Ploeg) and the
+    // trailing column (Ptn) stay pinned — unconditionally, now that they
+    // are declared on the cell itself rather than gated behind overflow
+    // (review M1).
+    const headers = track.locator("th");
+    const pinned = [headers.nth(0), headers.nth(1), headers.last()];
+    for (const cell of pinned) {
+      const position = await cell.evaluate(
+        (el) => getComputedStyle(el).position,
+      );
+      expect(position).toBe("sticky");
+    }
   });
 
   test("HtmlTableBlock in an article body — desktop and mobile", async ({
@@ -222,9 +305,10 @@ test.describe("scroll arrow — mounts only on real overflow at that width", () 
       await page.goto(`/nieuws/${slug}`);
       const region = page.locator('[data-html-table="true"] [role="region"]');
       if ((await region.count()) === 0) continue;
-      // HtmlTableBlock never mounts a left arrow (sticky first column
-      // covers that edge, see the component's own docblock) — only assert
-      // the right side.
+      // HtmlTableBlock never mounts a left arrow — `direction="right"`,
+      // unconditionally (#2582: an authored table anchors nothing, so
+      // there is no sticky column to justify a left cue either) — only
+      // assert the right side.
       const { scrollWidth, clientWidth } = await region
         .first()
         .evaluate((el) => ({

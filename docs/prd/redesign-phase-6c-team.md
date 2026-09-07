@@ -10,6 +10,7 @@
 **Master plan:** `docs/plans/2026-04-27-redesign-master-design.md` §6.4 (listing) + §6.5 (detail) — both carry status-notes pointing here.
 **Precedent:** `docs/prd/redesign-phase-6b-match-detail.md` (structure, AC style, analytics + VR + CLAUDE.md conventions).
 **Drill artefacts:** `docs/design/mockups/phase-6-team/6cd{1..6}-*/` — comparison HTML per drill. Historical record; lock docs supersede.
+**Field inventory (review S8, #2582):** this PRD's `team` field lists below are a snapshot at authoring time (2026-05-29) and are not maintained — `season` (#2535/#2567) and `trainingSchedule` (#2582) have both since been deleted from the schema. `apps/web/src/lib/sanity/sanity.types.ts` is the live authority; do not restate a field list here or in a future PRD as if it tracks the schema.
 
 ---
 
@@ -160,10 +161,10 @@ Phase 1 (tracer: <TeamHero>)
 - [ ] Handles a 40–50-fixture season; Beker/Oefen distinguished by the competition caption text
 - [ ] Playwright e2e smoke: route renders + console clean; asserts the **empty-state UI** when there are no fixtures, and that **auto-scroll is skipped** when there is no next match
 
-#### `<TeamEditorial>` (body / training / contact)
+#### `<TeamEditorial>` (body / contact — training deleted in #2582)
 
 - [ ] **Schema (additive):** add the 6.A `pullquote` decorator to `team.body` block marks in `packages/sanity-schemas/src/team.ts` (reuse the existing decorator + web serializer; no migration)
-- [ ] Renders `team.body` (Portable Text) via a prose serializer **incl. the `pullquote` decorator → a styled "Het verhaal" pull-quote** (reuse the 6.A `<BioBlock>` serializer), `team.trainingSchedule[]` (day/time/location/type) as a compact list/table, `team.contactInfo` (PT); each block auto-hides when empty
+- [ ] Renders `team.body` (Portable Text) via a prose serializer **incl. the `pullquote` decorator → a styled "Het verhaal" pull-quote** (reuse the 6.A `<BioBlock>` serializer) and `team.contactInfo` (PT); each block auto-hides when empty. ~~`team.trainingSchedule[]` (day/time/location/type) as a compact list/table~~ — deleted, not restyled, in #2582 (training times live in PSD)
 - [ ] Uses article-prose primitives (`<EditorialHeading>` subheads + prose width); no new PT block types beyond reusing the pullquote decorator. Story + unit test for the empty/auto-hide path + the pull-quote render
 
 #### `/ploegen/[slug]` page assembly + e2e
