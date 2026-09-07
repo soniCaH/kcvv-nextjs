@@ -34,6 +34,7 @@ import { formatArticleDate } from "@/lib/utils/dates";
 import {
   HomepageRepository,
   type BannerSlotVM,
+  type MatchesSliderPlaceholderVM,
 } from "@/lib/repositories/homepage.repository";
 import { TrackInView } from "@/components/analytics";
 import {
@@ -142,6 +143,7 @@ export default async function HomePage() {
     articlesResult,
     matchesResult,
     bannersResult,
+    placeholderResult,
     featuredEventResult,
     teamsResult,
   ] = await Promise.all([
@@ -184,6 +186,19 @@ export default async function HomePage() {
     ),
     runPromise(
       Effect.gen(function* () {
+        const repo = yield* HomepageRepository;
+        return yield* repo.getPlaceholder();
+      }).pipe(
+        // No `revalidate`/`tags` here unlike `getBanners` — and needs none:
+        // `/api/revalidate`'s `case "homePage"` already clears the whole
+        // page on an editor's publish (#2505).
+        Effect.catchAll(() =>
+          Effect.succeed<MatchesSliderPlaceholderVM | null>(null),
+        ),
+      ),
+    ),
+    runPromise(
+      Effect.gen(function* () {
         const repo = yield* EventRepository;
         return yield* repo.findNextFeatured();
       }).pipe(Effect.catchAll(() => Effect.succeed<EventVM | null>(null))),
@@ -199,6 +214,7 @@ export default async function HomePage() {
   const articles = articlesResult;
   const matches = matchesResult ?? [];
   const banners = bannersResult;
+  const placeholder = placeholderResult;
   const featuredEvent = featuredEventResult;
 
   // Senior teams (A/B) — drive the "Eerste ploegen" block and are de-duplicated
@@ -321,6 +337,8 @@ export default async function HomePage() {
         teams={firstTeamVMs}
         heading={heading}
         unavailable={matchReadFailed}
+        placeholder={placeholder}
+        now={now}
       />
     ),
     paddingTop: "pt-0",
@@ -356,16 +374,22 @@ export default async function HomePage() {
         }
       : null;
 
-  const upcomingMatchesSection: SectionConfig | null =
-    upcomingMatches.length > 0
-      ? {
-          key: "upcoming-matches",
-          bg: "transparent",
-          content: <UpcomingMatches matches={upcomingMatches} />,
-          paddingTop: "pt-0",
-          paddingBottom: "pb-0",
-        }
-      : null;
+  // Unconditional (#2505/#2844) — unlike `featuredEventSection` below, this
+  // band holds its shape on a failed read: `<UpcomingMatches>` itself decides
+  // null-vs-notice from `matches.length` + `unavailable`, so the section
+  // config here never nulls out. One rule, one guard.
+  const upcomingMatchesSection: SectionConfig = {
+    key: "upcoming-matches",
+    bg: "transparent",
+    content: (
+      <UpcomingMatches
+        matches={upcomingMatches}
+        unavailable={matchReadFailed}
+      />
+    ),
+    paddingTop: "pt-0",
+    paddingBottom: "pb-0",
+  };
 
   const bannerSlotBSection = toBannerSection("b", banners.bannerSlotB);
 
