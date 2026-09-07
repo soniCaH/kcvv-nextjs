@@ -206,6 +206,65 @@ test.describe("scroll arrow — mounts only on real overflow at that width", () 
     await assertRailArrowMatchesOverflow(nav!, list);
   });
 
+  test("StandingsTable on /ploegen/[slug] or /wedstrijd/[matchId] — phone viewport (360px)", async ({
+    page,
+  }) => {
+    // Review finding 1: a Storybook/vitest mock of scrollWidth/clientWidth
+    // proves the arrow-mount wiring but nothing about whether the table
+    // ever actually overflows at real layout — only a real browser can. The
+    // standings table is pre-season-blind on both surfaces that can render
+    // it (#2476 findings 2/5), so scan every team slug plus the one known
+    // match id rather than asserting a specific route.
+    await page.setViewportSize({ width: 360, height: 800 });
+
+    const candidateUrls = [
+      ...teamSlugs.map((slug) => `/ploegen/${slug}`),
+      ...(fixtures.matchId ? [`/wedstrijd/${fixtures.matchId}`] : []),
+    ];
+
+    // Scoped to the standings table itself, not `page` — a team page also
+    // ships `TeamSectionNav`'s own "Scroll right" control, and asserting
+    // against the whole page matches both (strict-mode violation).
+    let table: Locator | undefined;
+    let track: Locator | undefined;
+    for (const url of candidateUrls) {
+      await page.goto(url);
+      const candidateTable = page
+        .locator(
+          '[data-testid="standings-table"]:not([data-variant="numberless"])',
+        )
+        .first();
+      const candidateTrack = candidateTable.locator('[role="region"]');
+      if ((await candidateTrack.count()) > 0) {
+        table = candidateTable;
+        track = candidateTrack;
+        break;
+      }
+    }
+    test.skip(
+      !track,
+      "no team or match in the sitemap renders a numbered StandingsTable today (pre-season / numberless-only data)",
+    );
+
+    await assertOverlayArrowMatchesOverflow(table!, track!);
+
+    // Anchoring (#2476 rule 3): the leading group (#, Ploeg) and the
+    // trailing column (Ptn) stay pinned regardless of scroll position —
+    // only checked when the table actually overflows, since the anchor
+    // classes only mount then (review findings 1-3).
+    const { overflows } = await readOverflow(track!);
+    if (overflows) {
+      const headers = track!.locator("th");
+      const pinned = [headers.nth(0), headers.nth(1), headers.last()];
+      for (const cell of pinned) {
+        const position = await cell.evaluate(
+          (el) => getComputedStyle(el).position,
+        );
+        expect(position).toBe("sticky");
+      }
+    }
+  });
+
   test("HtmlTableBlock in an article body — desktop and mobile", async ({
     page,
   }) => {
