@@ -11,6 +11,8 @@
  *  - Numberless entries (played 0 / points 0, #2605): no columns at all,
  *    just crest + name — derived from `entries` itself, not a caller-set
  *    prop (#2636 finding 9)
+ *  - Anchoring: #, Ploeg and Ptn are pinned on the cell itself, not by
+ *    position (#2582 review M1)
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest";
@@ -72,7 +74,26 @@ const NUMBERLESS_DIVISION: RankingEntry[] = [
   }),
 ];
 
+function mockScrollDimensions(scrollWidth: number, clientWidth: number) {
+  Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+    configurable: true,
+    value: scrollWidth,
+  });
+  Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+    configurable: true,
+    value: clientWidth,
+  });
+}
+
 describe("StandingsTable", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (HTMLElement.prototype as any).scrollWidth;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (HTMLElement.prototype as any).clientWidth;
+  });
+
   it("renders null when entries is empty", () => {
     const { container } = render(<StandingsTable entries={[]} />);
     expect(container.firstChild).toBeNull();
@@ -106,25 +127,19 @@ describe("StandingsTable", () => {
     expect(screen.queryByTestId("standings-kcvv-row")).toBeNull();
   });
 
-  it("gives the team name a real min-width, not min-w-0 (review finding 1)", () => {
-    // min-w-0 let this column shrink to nothing, so a w-full table could
-    // always satisfy its width by squeezing the name instead of ever
-    // overflowing — `overflows` stayed false at every viewport and the
-    // anchor/arrow never mounted. A real numeric floor is what makes the
-    // table actually wider than its container at narrow widths.
+  it("puts the overflow floor on the Ploeg column, not the name leaf (review M4)", () => {
+    // The floor forces the TABLE to overflow at narrow widths — it has
+    // nothing to do with truncation, which is what min-w-0 on the leaf
+    // itself already provides (the canonical way to make `truncate` work
+    // inside a flex row). Asserting the exact tokens, not a regex that
+    // would equally match the 112px value already proven insufficient.
     render(<StandingsTable entries={DIVISION} />);
+    const headers = screen.getAllByRole("columnheader");
+    const ploeg = headers.find((h) => h.textContent === "Ploeg");
+    expect(ploeg).toHaveClass("min-w-44");
+
     const nameSpan = screen.getByTitle("Leader FC");
-    expect(nameSpan.className).not.toContain("min-w-0");
-    expect(nameSpan.className).toMatch(/min-w-\[?\d/);
-  });
-
-  it("marks the KCVV row with data-kcvv, read by the pinned-cell tint (review finding 2)", () => {
-    render(<StandingsTable entries={DIVISION} highlightTeamId={1235} />);
-    const kcvvRow = screen.getByTestId("standings-kcvv-row");
-    expect(kcvvRow).toHaveAttribute("data-kcvv", "true");
-
-    const otherRow = screen.getByText("Leader FC").closest("tr");
-    expect(otherRow).not.toHaveAttribute("data-kcvv");
+    expect(nameSpan).toHaveClass("min-w-0");
   });
 
   it("does not highlight a non-matching team", () => {
@@ -206,25 +221,6 @@ describe("StandingsTable", () => {
   });
 
   describe("scroll arrow — control register, no reserved rail (#2444/#2476)", () => {
-    function mockScrollDimensions(scrollWidth: number, clientWidth: number) {
-      Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
-        configurable: true,
-        value: scrollWidth,
-      });
-      Object.defineProperty(HTMLElement.prototype, "clientWidth", {
-        configurable: true,
-        value: clientWidth,
-      });
-    }
-
-    afterEach(() => {
-      vi.restoreAllMocks();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (HTMLElement.prototype as any).scrollWidth;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (HTMLElement.prototype as any).clientWidth;
-    });
-
     it("makes the scroll region keyboard-reachable (tabIndex=0)", () => {
       render(<StandingsTable entries={DIVISION} />);
       const region = screen.getByRole("region");
@@ -270,100 +266,54 @@ describe("StandingsTable", () => {
     });
   });
 
-  describe("anchoring — declared, not positional (#2476 rule 3)", () => {
-    function mockScrollDimensions(scrollWidth: number, clientWidth: number) {
-      Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
-        configurable: true,
-        value: scrollWidth,
-      });
-      Object.defineProperty(HTMLElement.prototype, "clientWidth", {
-        configurable: true,
-        value: clientWidth,
-      });
-    }
-
-    afterEach(() => {
-      vi.restoreAllMocks();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (HTMLElement.prototype as any).scrollWidth;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (HTMLElement.prototype as any).clientWidth;
-    });
-
-    // The anchor is implemented as arbitrary-variant selectors on the
-    // scroll TRACK (e.g. `[&>table>thead>tr>th:first-child]:sticky`) rather
-    // than a literal "sticky" class on each `<th>`/`<td>` — Tailwind
-    // compiles that into a CSS rule keyed off the track's own class, so the
-    // track (the `role="region"` element) is what carries it, not the
-    // individual header/cell nodes.
-    it("pins the leading group (#, Ploeg) and the concluding column (Ptn) once the table overflows", () => {
-      mockScrollDimensions(900, 500);
+  describe("anchoring — on the cell that is the anchor, not by position (#2476 rule 3 / review M1)", () => {
+    it("pins #, Ploeg and Ptn unconditionally — sticky is inert without a scroll, so there is nothing to gate", () => {
       render(<StandingsTable entries={DIVISION} />);
+      const headers = screen.getAllByRole("columnheader");
+      const byLabel = (label: string) =>
+        headers.find((h) => h.textContent === label)!;
 
-      const region = screen.getByRole("region");
-      expect(region.className).toContain(
-        "[&>table>thead>tr>th:nth-child(-n+2)]:sticky",
-      );
-      expect(region.className).toContain(
-        "[&>table>thead>tr>th:last-child]:sticky",
-      );
-      expect(region.className).toContain(
-        "[&>table>tbody>tr>td:nth-child(-n+2)]:sticky",
-      );
-      expect(region.className).toContain(
-        "[&>table>tbody>tr>td:last-child]:sticky",
-      );
+      expect(byLabel("#")).toHaveClass("sticky", "left-0", "w-12");
+      expect(byLabel("Ploeg")).toHaveClass("sticky", "left-12");
+      expect(byLabel("Ptn")).toHaveClass("sticky", "right-0", "w-14");
+      for (const label of ["M", "W", "G", "V", "+/-"]) {
+        expect(byLabel(label)).not.toHaveClass("sticky");
+      }
     });
 
-    it("does not pin any column when the table fits", () => {
+    it("gives the KCVV row's pinned cells its own tint, never a flat bg-cream (review finding 2)", () => {
+      render(<StandingsTable entries={DIVISION} highlightTeamId={1235} />);
+      const kcvvRow = screen.getByTestId("standings-kcvv-row");
+      const pinnedCells = kcvvRow.querySelectorAll("td.sticky");
+      expect(pinnedCells).toHaveLength(3); // #, Ploeg, Ptn
+
+      const otherRow = screen.getByText("Leader FC").closest("tr")!;
+      const otherPinnedCells = otherRow.querySelectorAll("td.sticky");
+
+      for (const cell of pinnedCells) {
+        expect(cell.className).toContain("bg-[color-mix");
+        expect(cell.className).not.toContain("bg-cream");
+      }
+      for (const cell of otherPinnedCells) {
+        expect(cell.className).toContain("bg-cream");
+        expect(cell.className).not.toContain("bg-[color-mix");
+      }
+    });
+
+    it("does not show a divider shadow at the anchor edge when the table fits", () => {
       mockScrollDimensions(500, 500);
       render(<StandingsTable entries={DIVISION} />);
-
       const region = screen.getByRole("region");
-      expect(region.className).not.toContain("sticky");
+      expect(region.className).not.toContain("shadow-[2px_0_4px");
+      expect(region.className).not.toContain("shadow-[-2px_0_4px");
     });
 
-    it("keeps the anchor pinned even once scrolled to the very end (overflows, not canScrollRight)", () => {
+    it("shows the divider shadow and insets the arrow/fade past the pinned Ptn column once the table overflows (review finding 3)", () => {
       mockScrollDimensions(900, 500);
       render(<StandingsTable entries={DIVISION} />);
       const region = screen.getByRole("region");
-
-      Object.defineProperty(region, "scrollLeft", { value: 400 });
-      act(() => {
-        region.dispatchEvent(new Event("scroll"));
-      });
-
-      expect(region.className).toContain(
-        "[&>table>thead>tr>th:nth-child(-n+2)]:sticky",
-      );
-    });
-
-    it("gives the pinned cells the KCVV row's own tint, not a flat bg-cream (review finding 2)", () => {
-      mockScrollDimensions(900, 500);
-      render(<StandingsTable entries={DIVISION} />);
-      const region = screen.getByRole("region");
-
-      expect(region.className).toContain(
-        "[&>table>tbody>tr[data-kcvv='true']>td:nth-child(-n+2)]:bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))]",
-      );
-      expect(region.className).toContain(
-        "[&>table>tbody>tr[data-kcvv='true']>td:last-child]:bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))]",
-      );
-    });
-
-    it("gives Ptn a fixed width and insets the arrow/fade past it (review finding 3)", () => {
-      mockScrollDimensions(900, 500);
-      render(<StandingsTable entries={DIVISION} />);
-      const region = screen.getByRole("region");
-
-      // Fixed width is what makes the arrow's offset a known number rather
-      // than "however wide today's longest point total renders".
-      expect(region.className).toContain(
-        "[&>table>thead>tr>th:last-child]:w-14",
-      );
-      expect(region.className).toContain(
-        "[&>table>tbody>tr>td:last-child]:w-14",
-      );
+      expect(region.className).toContain("shadow-[2px_0_4px");
+      expect(region.className).toContain("shadow-[-2px_0_4px");
 
       const arrow = screen.getByLabelText("Scroll right");
       expect(arrow).toHaveClass("right-14");

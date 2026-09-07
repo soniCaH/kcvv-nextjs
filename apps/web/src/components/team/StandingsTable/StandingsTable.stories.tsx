@@ -72,13 +72,6 @@ export const Empty: Story = {
   args: { entries: [] },
 };
 
-// A dedicated "Mobile — narrow viewport" story was removed here (review
-// finding 4): every VR-tagged story already captures at desktop/tablet/
-// mobile by default, so `FullDivision`'s own mobile capture is this
-// story's narrow-viewport proof — the arrow, the fade and the pinned #/
-// Ploeg/Ptn columns all show there once the table genuinely overflows
-// (#2582 review finding 1).
-
 // Every row published, none scored — the state before matchday 1.
 const numberlessDivision: RankingEntry[] = [
   entry(0, 101, "KSK Kampenhout", 0, 0, 0, 0, 0, 0, 0),

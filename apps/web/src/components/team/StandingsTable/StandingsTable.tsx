@@ -14,71 +14,45 @@ export interface StandingsTableProps {
   caption?: string;
 }
 
-/**
- * The KCVV row/item accent — a tinted background with an inset left rule in
- * jersey green. Shared between the numbered table and the numberless list so
- * the two registers read as the same accent, not two independent ones.
- */
-const KCVV_HIGHLIGHT_CLASS =
-  "bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))] shadow-[inset_3px_0_0_var(--color-jersey-deep)]";
+/** The KCVV row/item tint. Shared between the numbered table's row, its
+ * numberless-list equivalent, and (#2582 review M1) the three pinned cells
+ * of the numbered table, which need the tint on the cell itself — a pinned
+ * `<td>` paints its own opaque background over whatever the `<tr>` behind
+ * it carries. */
+const KCVV_TINT =
+  "bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))]";
+/** The inset left rule that reads as "this is the row" — drawn once, at the
+ * row's true left edge, so it never needs repeating on more than one cell. */
+const KCVV_ACCENT_RULE = "shadow-[inset_3px_0_0_var(--color-jersey-deep)]";
 
 /**
- * Anchor group (#2476 rule 3): "a table declares its anchors; position
- * never decides." `#` + `Ploeg` are a declared *leading group* of two —
- * pinned left so they never scroll away — and `Ptn` is the one declared
- * *concluding* column, pinned right. The middle columns (M/W/G/V/+/-)
- * scroll underneath both.
+ * The anchor group (#2476 rule 3): `#` + `Ploeg` pinned left, `Ptn` pinned
+ * right, the middle columns (M/W/G/V/+/-) scrolling underneath. Applied
+ * directly on those three columns' `<th>`/`<td>` elements (#2582 review
+ * M1) rather than by position (`:nth-child`, `:last-child`) — position and
+ * column identity happen to coincide today, but a `:last-child` selector
+ * pins whatever is written last, not `Ptn`; an inserted ninth column would
+ * silently move the pin without a single test noticing.
  *
- * Applied via `overflowsClassName`: the anchor has to hold for the whole
- * scroll session, including its last few pixels where `canScrollRight`
- * already reads false — `overflows` (#2489) is the static "does this
- * track overflow at all" signal built for that.
- *
- * The pinned cells paint `bg-cream` by default, EXCEPT on the KCVV row
- * (`tr[data-kcvv='true']`, review finding 2): a plain `bg-cream` there
- * would erase the highlight on exactly the columns a supporter scans to
- * find their own club. The row's own tint and inset accent rule are drawn
- * on the `<tr>` (`KCVV_HIGHLIGHT_CLASS`), but a pinned `<td>` needs an
- * opaque background to occlude the columns scrolling underneath it — table
- * cell backgrounds paint above the row's — so the tint (and, on the
- * leading cell, the accent rule) has to be repeated at the cell level or
- * it is hidden behind that opaque `bg-cream` the moment the row is pinned.
- * The higher-specificity `tr[data-kcvv='true'] > td` selectors below win
- * over the plain ones regardless of source order.
- *
- * `Ptn` also gets a fixed `w-14` for the same reason `#` gets `w-12`: the
- * scroll arrow and fade are absolutely positioned against the track's own
- * right edge, which is exactly where the pinned `Ptn` column now always
- * sits — an unmoved `right-0` arrow paints on top of it, defeating the
- * pin for whichever rows sit at the button's vertical centre (review
- * finding 3). `StandingsTable` passes `chromeClassName="right-14"` to
- * `<ScrollOverlay>` to inset both past it; a fixed width is what makes
- * that offset a known, stable number instead of "however wide today's
- * longest point total happens to render."
+ * `sticky`/`w-*`/`bg-cream` are unconditional: `position: sticky` is inert
+ * in a track that isn't scrolling, and `bg-cream` already matches the
+ * track's own background, so there is nothing to gate. Only the divider
+ * shadows below are genuinely conditional — they mark a cut edge that
+ * exists only once the table actually overflows.
  */
-// The KCVV tint, repeated literally below (not interpolated) — Tailwind's
-// scanner needs the full class string to appear verbatim in source; a
-// template-literal composed at runtime is invisible to it.
-const ANCHOR_TRACK_CLASSES = [
-  "[&>table>thead>tr>th:nth-child(-n+2)]:sticky [&>table>thead>tr>th:nth-child(-n+2)]:z-10 [&>table>thead>tr>th:nth-child(-n+2)]:bg-cream",
-  "[&>table>tbody>tr>td:nth-child(-n+2)]:sticky [&>table>tbody>tr>td:nth-child(-n+2)]:z-10 [&>table>tbody>tr>td:nth-child(-n+2)]:bg-cream",
-  "[&>table>tbody>tr[data-kcvv='true']>td:nth-child(-n+2)]:bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))]",
-  "[&>table>thead>tr>th:first-child]:left-0 [&>table>tbody>tr>td:first-child]:left-0",
-  "[&>table>thead>tr>th:first-child]:w-12 [&>table>tbody>tr>td:first-child]:w-12",
-  "[&>table>thead>tr>th:nth-child(2)]:left-12 [&>table>tbody>tr>td:nth-child(2)]:left-12",
+const ANCHOR_DIVIDER_CLASSES = [
   "[&>table>thead>tr>th:nth-child(2)]:shadow-[2px_0_4px_-1px_rgba(0,0,0,0.12)]",
   "[&>table>tbody>tr>td:nth-child(2)]:shadow-[2px_0_4px_-1px_rgba(0,0,0,0.12)]",
-  "[&>table>tbody>tr[data-kcvv='true']>td:first-child]:shadow-[inset_3px_0_0_var(--color-jersey-deep)]",
-  "[&>table>thead>tr>th:last-child]:sticky [&>table>thead>tr>th:last-child]:right-0 [&>table>thead>tr>th:last-child]:z-10 [&>table>thead>tr>th:last-child]:bg-cream",
-  "[&>table>tbody>tr>td:last-child]:sticky [&>table>tbody>tr>td:last-child]:right-0 [&>table>tbody>tr>td:last-child]:z-10 [&>table>tbody>tr>td:last-child]:bg-cream",
-  "[&>table>thead>tr>th:last-child]:w-14 [&>table>tbody>tr>td:last-child]:w-14",
-  "[&>table>tbody>tr[data-kcvv='true']>td:last-child]:bg-[color-mix(in_srgb,var(--color-jersey-deep)_12%,var(--color-cream))]",
   "[&>table>thead>tr>th:last-child]:shadow-[-2px_0_4px_-1px_rgba(0,0,0,0.12)]",
   "[&>table>tbody>tr>td:last-child]:shadow-[-2px_0_4px_-1px_rgba(0,0,0,0.12)]",
 ].join(" ");
 
 /** Crest + truncating team name, italic unless it's the KCVV row. The one
- * piece both the numbered table and the numberless list render identically. */
+ * piece both the numbered table and the numberless list render identically.
+ * `min-w-0` (not a positive floor) is what a flex item needs for `truncate`
+ * to engage at all — the numbered table's overflow floor lives on the
+ * `Ploeg` column itself (#2582 review M4), not here, since the numberless
+ * list renders this same identity outside any scroll container. */
 function ClubIdentity({
   teamName,
   teamLogo,
@@ -93,28 +67,7 @@ function ClubIdentity({
       <Crest name={teamName} logo={teamLogo} size={16} />
       <span
         className={cn(
-          // `min-w-44` (not `min-w-0`) is load-bearing: a flex item's
-          // default min-width is its content's full nowrap width, so
-          // `truncate` never actually truncates without SOME numeric
-          // floor. `min-w-0` set that floor to zero, which let this column
-          // shrink to nothing — a `table-layout: auto` table only needs to
-          // fit its container, so it shrank the name instead of ever
-          // overflowing (#2582 review finding 1: `overflows` stayed false
-          // at every viewport, so `ANCHOR_TRACK_CLASSES` never mounted).
-          //
-          // 176px is not a guess: measured live (Playwright, 375px
-          // viewport, the real `<ScrollOverlay>` track, not a JSDOM mock)
-          // against `StandingsTable.stories.tsx`'s `fullDivision` fixture,
-          // the other seven columns' own natural minimums sum to ~194px
-          // out of a 343px track (Storybook's own page padding removed),
-          // so anything the browser can shrink this column to at or below
-          // ~149px lets the table fit without ever overflowing — a first
-          // attempt at `min-w-28` (112px) proved exactly that, byte-
-          // identical before/after. 176px clears that equilibrium with
-          // margin (~18-20 readable characters) and reliably forces
-          // overflow at 375px while changing nothing at tablet/desktop,
-          // where the column was never the bottleneck.
-          "font-display text-ink min-w-44 truncate",
+          "font-display text-ink min-w-0 truncate",
           isKcvv ? "font-semibold not-italic" : "italic",
         )}
         title={teamName}
@@ -156,7 +109,7 @@ function NumberlessClubList({
               data-testid={isKcvv ? "standings-kcvv-row" : undefined}
               className={cn(
                 "flex items-center gap-1.5 border-b border-[color:var(--color-paper-edge)] py-2 pr-4 pl-4",
-                isKcvv && KCVV_HIGHLIGHT_CLASS,
+                isKcvv && cn(KCVV_TINT, KCVV_ACCENT_RULE),
               )}
             >
               <ClubIdentity
@@ -200,10 +153,9 @@ export function StandingsTable({
         role="region"
         ariaLabel={caption ?? "Klassement"}
         direction="right"
-        overflowsClassName={ANCHOR_TRACK_CLASSES}
+        overflowsClassName={ANCHOR_DIVIDER_CLASSES}
         // Insets the arrow + fade past the pinned `Ptn` column (fixed at
-        // `w-14` above) so they no longer overlay it — see the
-        // ANCHOR_TRACK_CLASSES docblock, review finding 3.
+        // `w-14` below) so they no longer overlay it (#2582 review finding 3).
         chromeClassName="right-14"
       >
         <table className="w-full border-collapse font-mono text-xs">
@@ -216,49 +168,49 @@ export function StandingsTable({
             <tr className="border-ink border-b-2">
               <th
                 scope="col"
-                className="text-ink-muted py-2 pr-2 pl-4 text-left tracking-wider uppercase"
+                className="text-ink-muted bg-cream sticky left-0 z-10 w-12 py-2 pr-2 pl-4 text-left font-normal tracking-wider uppercase"
               >
                 #
               </th>
               <th
                 scope="col"
-                className="text-ink-muted py-2 pr-3 text-left tracking-wider uppercase"
+                className="text-ink-muted bg-cream sticky left-12 z-10 min-w-44 py-2 pr-3 text-left font-normal tracking-wider uppercase"
               >
                 Ploeg
               </th>
               <th
                 scope="col"
-                className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
+                className="text-ink-muted py-2 pr-2 text-right font-normal tracking-wider uppercase"
               >
                 M
               </th>
               <th
                 scope="col"
-                className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
+                className="text-ink-muted py-2 pr-2 text-right font-normal tracking-wider uppercase"
               >
                 W
               </th>
               <th
                 scope="col"
-                className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
+                className="text-ink-muted py-2 pr-2 text-right font-normal tracking-wider uppercase"
               >
                 G
               </th>
               <th
                 scope="col"
-                className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
+                className="text-ink-muted py-2 pr-2 text-right font-normal tracking-wider uppercase"
               >
                 V
               </th>
               <th
                 scope="col"
-                className="text-ink-muted py-2 pr-2 text-right tracking-wider uppercase"
+                className="text-ink-muted py-2 pr-2 text-right font-normal tracking-wider uppercase"
               >
                 +/-
               </th>
               <th
                 scope="col"
-                className="text-ink-muted py-2 pr-4 text-right tracking-wider uppercase"
+                className="text-ink-muted bg-cream sticky right-0 z-10 w-14 py-2 pr-4 text-right font-normal tracking-wider uppercase"
               >
                 Ptn
               </th>
@@ -271,23 +223,28 @@ export function StandingsTable({
                 <tr
                   key={entry.team_id}
                   data-testid={isKcvv ? "standings-kcvv-row" : undefined}
-                  // Read by ANCHOR_TRACK_CLASSES so the pinned cells can
-                  // carry this row's own tint (review finding 2) — a plain
-                  // attribute hook rather than threading `isKcvv` into a
-                  // static class string computed once for the whole track.
-                  data-kcvv={isKcvv || undefined}
                   className={cn(
                     "border-b border-[color:var(--color-paper-edge)]",
-                    isKcvv && KCVV_HIGHLIGHT_CLASS,
+                    isKcvv && cn(KCVV_TINT, KCVV_ACCENT_RULE),
                   )}
                 >
-                  {/* Position */}
-                  <td className="text-ink-muted py-2 pr-2 pl-4 tabular-nums">
+                  {/* Position — pinned left (anchor group) */}
+                  <td
+                    className={cn(
+                      "text-ink-muted bg-cream sticky left-0 z-10 w-12 py-2 pr-2 pl-4 tabular-nums",
+                      isKcvv && cn(KCVV_TINT, KCVV_ACCENT_RULE),
+                    )}
+                  >
                     {entry.position}
                   </td>
 
-                  {/* Team name + crest */}
-                  <td className="py-2 pr-3">
+                  {/* Team name + crest — pinned left (anchor group) */}
+                  <td
+                    className={cn(
+                      "bg-cream sticky left-12 z-10 min-w-44 py-2 pr-3",
+                      isKcvv && KCVV_TINT,
+                    )}
+                  >
                     <span className="flex items-center gap-1.5">
                       <ClubIdentity
                         teamName={entry.team_name}
@@ -319,8 +276,13 @@ export function StandingsTable({
                       : entry.goal_difference}
                   </td>
 
-                  {/* Points — display-big black */}
-                  <td className="font-display-big text-ink py-2 pr-4 text-right font-black tabular-nums">
+                  {/* Points — display-big black, pinned right (anchor group) */}
+                  <td
+                    className={cn(
+                      "font-display-big text-ink bg-cream sticky right-0 z-10 w-14 py-2 pr-4 text-right font-black tabular-nums",
+                      isKcvv && KCVV_TINT,
+                    )}
+                  >
                     {entry.points}
                   </td>
                 </tr>
