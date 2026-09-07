@@ -256,10 +256,26 @@ export default async function HomePage() {
   // #2399: "no matches" has two causes — a failed read and a genuinely empty
   // feed — and the page used to render both by dropping the match sections and
   // looking finished. Both BFF reads therefore fall back to `null` rather than
-  // `[]`, so the band below can name which one happened. Only the band consumes
-  // this; `<UpcomingMatches>` and `<MatchStrip>` still drop silently.
+  // `[]`, so the bands below can name which one happened. `<MatchStrip>` still
+  // drops silently; it takes neither signal.
+  //
+  // `<FirstTeamsBlock>`'s rows come from the per-team fan-out
+  // (`firstTeamsMatches`), so ANY senior team's BFF read failing is enough to
+  // make its copy honest about an outage — the club-wide `getNextMatches()`
+  // read failing on its own is also enough, since that call feeds the "most
+  // recent match" fallback `deriveFirstTeamVM` reads when a team's own fetch
+  // 404s (see `getTeamMatches`, #2441).
   const matchReadFailed =
     matchesResult === null || firstTeamsMatches.some((m) => m === null);
+  // `<UpcomingMatches>` reads the *other*-teams agenda straight off the
+  // club-wide `getNextMatches()` call — the per-team fan-out above never
+  // contributes to `upcomingMatches` (#2211) — so it must not claim an
+  // outage on a per-team 502 that never touched its own feed. Using the
+  // combined `matchReadFailed` here would (review finding 3 on #2505/PR
+  // #2852): any midweek where every live fixture belongs to A/B empties
+  // `upcomingMatches` on its own, and a failed senior-team read would then
+  // print "even niet beschikbaar" about a read that actually succeeded.
+  const upcomingMatchesReadFailed = matchesResult === null;
 
   const heroArticle = articles[0];
   const heroProps = heroArticle ? toEditorialHeroProps(heroArticle) : null;
@@ -392,7 +408,7 @@ export default async function HomePage() {
     content: (
       <UpcomingMatches
         matches={upcomingMatches}
-        unavailable={matchReadFailed}
+        unavailable={upcomingMatchesReadFailed}
       />
     ),
     paddingTop: "pt-0",
