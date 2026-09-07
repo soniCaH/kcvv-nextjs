@@ -35,10 +35,14 @@ export interface HtmlTableBlockProps {
  * Extracted from `<SanityArticleBody>` so the new `<ArticleBody>` PT
  * serializer (Part C / #1850) can consume the same component. It shares
  * `<StandingsTable>`'s register rather than keeping one of its own — "one
- * table skin, the quiet one" (#2476 rule 1) — mono on cream, `border-b-2`
- * ink under the header, `border-b` paper-edge between rows, no frame: no
- * 2px ink border, no `--shadow-paper-md`, no jersey-deep header band, no
- * zebra, no dotted dividers, no italic-serif first column.
+ * table skin, the quiet one" (#2476 rule 1), named in full as **The One
+ * Table Skin Rule** in `apps/web/DESIGN.md` § Components → Tables (review
+ * M5): no 2px ink border, no `--shadow-paper-md`, no jersey-deep header
+ * band, no zebra, no dotted dividers, no italic-serif first column. The
+ * two call sites repeat the recipe as a literal class string each, per the
+ * Manila Rule's own precedent for legitimate repetition — this is
+ * arbitrary-variant CSS over injected HTML on one side and JSX on the
+ * other, so there is no shared class string to extract into a component.
  *
  * **No anchoring.** #2476 rule 3: what varies between an authored table and
  * a *typed* one is not the skin but the anchoring, and anchoring has to
@@ -49,12 +53,15 @@ export interface HtmlTableBlockProps {
  *
  * **Column-agnostic styling only.** No selector here reaches into a
  * cell's *content* (no `:first-child` font override, no per-position
- * assumption) — only `table`/`thead`/`tbody`/`th`/`td` structure. That is
- * what "must not assume sanitized content" (#2582) means in practice: an
- * authored `<a>` or `<strong>` that one day survives `sanitizeHtml`
- * (`TABLE_SANITIZE_OPTIONS` below is untouched here — restoring them is
- * #2481's job) renders through this skin exactly as plain text does today,
- * with no rework needed on this end.
+ * assumption) — only `th`/`td`/row structure, reached by descendant
+ * selectors (`[&_th]`, `[&_tbody_tr]`, …) rather than an enumerated
+ * `>thead>tr>th` chain, so every row container `TABLE_SANITIZE_OPTIONS`
+ * allows — `thead`, `tbody`, `tfoot` — is covered by construction, not by
+ * remembering to list it (review M6: a `<tfoot>` row rendered half-skinned
+ * under the old chained selectors). This does **not** mean an authored
+ * `<a>` or `<strong>` renders correctly today — `TABLE_SANITIZE_OPTIONS`
+ * strips both before they ever reach this markup, and restoring them
+ * (allowlist plus a link/bold recipe) is #2481's job, not started here.
  *
  * A `<caption>` (three published tables ship one) renders in the kicker
  * register per #2476 rule 8 — `font-mono`, `text-label`, uppercase,
@@ -87,21 +94,31 @@ export function HtmlTableBlock({ html, className }: HtmlTableBlockProps) {
         direction="right"
         trackClassName={cn(
           "focus:outline-jersey-deep focus:outline-2 focus:outline-offset-2",
-          // Table & cells — StandingsTable's quiet register.
+          // Table — StandingsTable's quiet register. Direct child of the
+          // track (`[&>table]`), not a descendant: a nested table (an
+          // editor's own, inside a cell) keeps its own plain markup rather
+          // than inheriting the block-level skin a second time.
           "[&>table]:w-full [&>table]:border-collapse [&>table]:font-mono [&>table]:text-xs",
-          "[&>table>thead>tr]:border-ink [&>table>thead>tr]:border-b-2",
-          "[&>table>thead>tr>th]:text-ink-muted [&>table>thead>tr>th]:px-2 [&>table>thead>tr>th]:py-2",
-          "[&>table>thead>tr>th]:text-left [&>table>thead>tr>th]:font-normal",
-          "[&>table>thead>tr>th]:tracking-wider [&>table>thead>tr>th]:uppercase",
-          "[&>table>tbody>tr]:border-b [&>table>tbody>tr]:border-[color:var(--color-paper-edge)]",
-          "[&>table>tbody>tr>td]:text-ink [&>table>tbody>tr>td]:px-2 [&>table>tbody>tr>td]:py-2 [&>table>tbody>tr>td]:align-top",
-          // Body th (rare — used when an editor uses th as a row header).
-          "[&>table>tbody>tr>th]:text-ink-muted [&>table>tbody>tr>th]:px-2 [&>table>tbody>tr>th]:py-2",
-          "[&>table>tbody>tr>th]:text-left [&>table>tbody>tr>th]:font-normal [&>table>tbody>tr>th]:uppercase",
+          // th/td — descendant selectors, so every row container the
+          // sanitizer allows (`thead`, `tbody`, `tfoot`) is styled by
+          // construction rather than by enumerating each one (review M6).
+          "[&_th]:text-ink-muted [&_th]:px-2 [&_th]:py-2 [&_th]:text-left [&_th]:font-normal [&_th]:uppercase",
+          "[&_td]:text-ink [&_td]:px-2 [&_td]:py-2 [&_td]:align-top",
+          // Header row — heavier rule + letter-spacing, thead only.
+          "[&_thead_tr]:border-ink [&_thead_tr]:border-b-2",
+          "[&_thead_th]:tracking-wider",
+          // Body/footer rows — the quiet paper-edge divider.
+          "[&_tbody_tr]:border-b [&_tbody_tr]:border-[color:var(--color-paper-edge)]",
+          "[&_tfoot_tr]:border-b [&_tfoot_tr]:border-[color:var(--color-paper-edge)]",
           // Caption — kicker register (#2476 rule 8), above and left, not
-          // the browser-default centred text.
+          // the browser-default centred text. Same recipe as
+          // <MonoLabel tone="muted"> — StandingsTable's own caption — down
+          // to `pb-2` (not `mb-2`): the same "Poule A" label should not
+          // read differently depending on which table it landed in
+          // (review M5).
           "[&>table>caption]:text-label [&>table>caption]:text-ink-muted",
-          "[&>table>caption]:mb-2 [&>table>caption]:text-left [&>table>caption]:uppercase",
+          "[&>table>caption]:font-medium [&>table>caption]:leading-none",
+          "[&>table>caption]:pb-2 [&>table>caption]:text-left [&>table>caption]:uppercase",
         )}
         dangerouslySetInnerHTML={{
           __html: sanitizeHtml(trimmed, TABLE_SANITIZE_OPTIONS),

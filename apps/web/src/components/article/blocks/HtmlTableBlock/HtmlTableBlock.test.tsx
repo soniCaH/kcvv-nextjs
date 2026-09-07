@@ -64,11 +64,15 @@ describe("<HtmlTableBlock>", () => {
     const region = screen.getByRole("region");
     expect(region.className).toContain("border-b-2");
     expect(region.className).not.toContain("bg-jersey-deep");
-    expect(region.className).not.toContain("zebra");
+    // The old zebra's actual value (a literal "zebra" class never existed).
+    expect(region.className).not.toContain("rgba(0,0,0,0.025)");
   });
 
   it("does not anchor any column — an authored table simply scrolls (#2582 rule 3)", () => {
-    mockScrollDimensions(900, 500);
+    // No scroll-dimension mock: HtmlTableBlock never passes
+    // `overflowsClassName` at all, so "sticky" cannot appear regardless of
+    // overflow state — this is a static check on the class string, not a
+    // scroll-state one.
     render(<HtmlTableBlock html={SIMPLE_TABLE_HTML} />);
     const region = screen.getByRole("region");
     expect(region.className).not.toContain("sticky");
@@ -104,6 +108,26 @@ describe("<HtmlTableBlock>", () => {
     expect(region.querySelector("th")?.getAttribute("scope")).toBe("col");
     expect(region.querySelector("th")?.getAttribute("colspan")).toBe("2");
     expect(region.querySelector("td")?.getAttribute("rowspan")).toBe("2");
+  });
+
+  it("styles a <tfoot> row the same as tbody — every allowed row container, by construction (review M6)", () => {
+    // The skin is applied via arbitrary-variant selectors on the wrapping
+    // track (see HtmlTableBlock.tsx), not literal classes on the injected
+    // HTML itself, so — same as StandingsTable's anchor tests — the track's
+    // own className is what carries the selector, not the `<tfoot>`/`<td>`
+    // elements it targets.
+    const withFoot = `
+      <table>
+        <thead><tr><th>Datum</th></tr></thead>
+        <tbody><tr><td>Za 12 jul</td></tr></tbody>
+        <tfoot><tr><td>Totaal</td></tr></tfoot>
+      </table>
+    `;
+    render(<HtmlTableBlock html={withFoot} />);
+    const region = screen.getByRole("region");
+    expect(region.className).toContain("[&_tfoot_tr]:border-b");
+    expect(region.className).toContain("[&_td]:text-ink");
+    expect(region.querySelector("tfoot td")).toBeTruthy();
   });
 
   it("renders nested tables without errors", () => {
