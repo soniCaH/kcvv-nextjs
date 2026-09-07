@@ -29,6 +29,30 @@ describe("UpcomingMatches", () => {
     expect(container.firstChild).toBeNull();
   });
 
+  // #2505/#2844 — the neighbouring bug: a genuinely empty feed still
+  // collapses (above), but a failed read now holds the band's shape.
+  describe("unavailable", () => {
+    it("holds the band's shape and shows the failure notice when the read failed", () => {
+      render(<UpcomingMatches matches={[]} unavailable />);
+      expect(
+        screen.getByRole("region", { name: "Komende wedstrijden" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Komende wedstrijden zijn/).closest("p"),
+      ).toHaveTextContent(
+        "Komende wedstrijden zijn even niet beschikbaar. Probeer het later opnieuw.",
+      );
+    });
+
+    it("renders the normal list, ignoring `unavailable`, when rows are present", () => {
+      render(<UpcomingMatches matches={mockUpcomingThree} unavailable />);
+      expect(rowLinks()).toHaveLength(mockUpcomingThree.length);
+      expect(
+        screen.queryByText(/even niet beschikbaar/),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("renders the first 5 rows collapsed when total > 5", () => {
     render(<UpcomingMatches matches={mockUpcomingTwelve} />);
     expect(rowLinks()).toHaveLength(5);

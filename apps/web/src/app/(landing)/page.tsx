@@ -25,6 +25,7 @@
 
 import { Effect } from "effect";
 import { runPromise } from "@/lib/effect/runtime";
+import { degradeSection } from "@/lib/effect/degrade";
 import {
   ArticleRepository,
   type ArticleVM,
@@ -36,10 +37,7 @@ import {
   type BannerSlotVM,
 } from "@/lib/repositories/homepage.repository";
 import { TrackInView } from "@/components/analytics";
-import {
-  EventRepository,
-  type EventVM,
-} from "@/lib/repositories/event.repository";
+import { EventRepository } from "@/lib/repositories/event.repository";
 import { BffService } from "@/lib/effect/services/BffService";
 import {
   TeamRepository,
@@ -142,19 +140,24 @@ export default async function HomePage() {
     articlesResult,
     matchesResult,
     bannersResult,
+    placeholderResult,
     featuredEventResult,
     teamsResult,
   ] = await Promise.all([
     runPromise(
-      Effect.gen(function* () {
-        const repo = yield* ArticleRepository;
-        const all = yield* repo.findAll();
-        // Slice [0..10] per the R1.B + R2.B + R1.6 spine:
-        //   • position 1 (index 0) feeds the static <EditorialHero>.
-        //   • positions 2..4 (index 1..3) fill <FeaturedUitgelichtRow>.
-        //   • positions 5..10 (index 4..9) fill the 3×2 <NewsGrid>.
-        return all.slice(0, 10);
-      }).pipe(Effect.catchAll(() => Effect.succeed<ArticleVM[]>([]))),
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* ArticleRepository;
+          const all = yield* repo.findAll();
+          // Slice [0..10] per the R1.B + R2.B + R1.6 spine:
+          //   • position 1 (index 0) feeds the static <EditorialHero>.
+          //   • positions 2..4 (index 1..3) fill <FeaturedUitgelichtRow>.
+          //   • positions 5..10 (index 4..9) fill the 3×2 <NewsGrid>.
+          return all.slice(0, 10);
+        }),
+        [] as ArticleVM[],
+        "[HomePage] articles read failed; falling back to an empty list.",
+      ),
     ),
     runPromise(
       Effect.gen(function* () {
@@ -163,42 +166,63 @@ export default async function HomePage() {
       }).pipe(
         Effect.catchAll((error) => {
           console.error("[HomePage] Failed to fetch matches:", error);
-          // `null`, not `[]` — see `matchReadFailed` below (#2399).
+          // `null`, not `[]` — see `firstTeamsReadFailed` & `upcomingMatchesReadFailed` below (#2399).
           return Effect.succeed(null);
         }),
       ),
     ),
     runPromise(
-      Effect.gen(function* () {
-        const repo = yield* HomepageRepository;
-        return yield* repo.getBanners();
-      }).pipe(
-        Effect.catchAll(() =>
-          Effect.succeed({
-            bannerSlotA: null,
-            bannerSlotB: null,
-            bannerSlotC: null,
-          }),
-        ),
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* HomepageRepository;
+          return yield* repo.getBanners();
+        }),
+        { bannerSlotA: null, bannerSlotB: null, bannerSlotC: null },
+        "[HomePage] banners read failed; falling back to empty slots.",
       ),
     ),
     runPromise(
-      Effect.gen(function* () {
-        const repo = yield* EventRepository;
-        return yield* repo.findNextFeatured();
-      }).pipe(Effect.catchAll(() => Effect.succeed<EventVM | null>(null))),
+      // No `revalidate`/`tags` here unlike `getBanners` — and needs none:
+      // `/api/revalidate`'s `case "homePage"` already clears the whole page
+      // on an editor's publish (#2505). `degradeSection`, not `Effect.catchAll`
+      // — every Sanity read ends in `Effect.orDie` (`fetch-groq.ts`), so a
+      // repository method's error channel is `never` and a `catchAll` on one
+      // type-checks but never runs (review finding 1 on #2505/PR #2852).
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* HomepageRepository;
+          return yield* repo.getPlaceholder();
+        }),
+        null,
+        "[HomePage] placeholder read failed; falling back to null.",
+      ),
     ),
     runPromise(
-      Effect.gen(function* () {
-        const repo = yield* TeamRepository;
-        return yield* repo.findAll();
-      }).pipe(Effect.catchAll(() => Effect.succeed<TeamNavVM[]>([]))),
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* EventRepository;
+          return yield* repo.findNextFeatured();
+        }),
+        null,
+        "[HomePage] featured-event read failed; falling back to null.",
+      ),
+    ),
+    runPromise(
+      degradeSection(
+        Effect.gen(function* () {
+          const repo = yield* TeamRepository;
+          return yield* repo.findAll();
+        }),
+        [] as TeamNavVM[],
+        "[HomePage] teams read failed; falling back to an empty list.",
+      ),
     ),
   ]);
 
   const articles = articlesResult;
   const matches = matchesResult ?? [];
   const banners = bannersResult;
+  const placeholder = placeholderResult;
   const featuredEvent = featuredEventResult;
 
   // Senior teams (A/B) — drive the "Eerste ploegen" block and are de-duplicated
@@ -232,10 +256,14 @@ export default async function HomePage() {
   // #2399: "no matches" has two causes — a failed read and a genuinely empty
   // feed — and the page used to render both by dropping the match sections and
   // looking finished. Both BFF reads therefore fall back to `null` rather than
-  // `[]`, so the band below can name which one happened. Only the band consumes
-  // this; `<UpcomingMatches>` and `<MatchStrip>` still drop silently.
-  const matchReadFailed =
+  // `[]`, so the bands below can name which one happened. `<MatchStrip>` still
+  // drops silently; it takes neither signal. Two bands, two signals, named
+  // for what each one actually reads (review finding 3 on #2505/PR #2852 —
+  // a shared `matchReadFailed` let a senior team's own 502 make the agenda
+  // falsely claim an outage on a read that had actually succeeded).
+  const firstTeamsReadFailed =
     matchesResult === null || firstTeamsMatches.some((m) => m === null);
+  const upcomingMatchesReadFailed = matchesResult === null;
 
   const heroArticle = articles[0];
   const heroProps = heroArticle ? toEditorialHeroProps(heroArticle) : null;
@@ -308,10 +336,12 @@ export default async function HomePage() {
   // result→next-fixture transition. Self-contained dark band (own StripedSeam
   // top/bottom + padding), so the SectionStack wrapper stays flush (#2211).
   // HP-4: `firstTeamsHeading` owns when the block may claim "Dit weekend."
-  // #2399: unconditional. The band is the one slot that acknowledges the match
-  // feed at all, so it holds its shape open and names the reason when there is
-  // nothing to show — dropping it shortened the spine to 7 bands and read as
-  // "the club never posted the result".
+  // #2399: unconditional. The band holds its shape open and names the reason
+  // when there is nothing to show — dropping it shortened the spine to 7
+  // bands and read as "the club never posted the result". A band that
+  // acknowledges a remote match feed holds its shape and names the reason on
+  // a failed read; `<UpcomingMatches>` below follows the same rule
+  // (#2505/#2844) — this band is no longer the only one that does.
   const heading = firstTeamsHeading(firstTeamVMs, now);
   const firstTeamsSection: SectionConfig = {
     key: "first-teams",
@@ -320,7 +350,9 @@ export default async function HomePage() {
       <FirstTeamsBlock
         teams={firstTeamVMs}
         heading={heading}
-        unavailable={matchReadFailed}
+        unavailable={firstTeamsReadFailed}
+        placeholder={placeholder}
+        now={now}
       />
     ),
     paddingTop: "pt-0",
@@ -356,16 +388,22 @@ export default async function HomePage() {
         }
       : null;
 
-  const upcomingMatchesSection: SectionConfig | null =
-    upcomingMatches.length > 0
-      ? {
-          key: "upcoming-matches",
-          bg: "transparent",
-          content: <UpcomingMatches matches={upcomingMatches} />,
-          paddingTop: "pt-0",
-          paddingBottom: "pb-0",
-        }
-      : null;
+  // Unconditional (#2505/#2844) — unlike `featuredEventSection` above, this
+  // band holds its shape on a failed read: `<UpcomingMatches>` itself decides
+  // null-vs-notice from `matches.length` + `unavailable`, so the section
+  // config here never nulls out. One rule, one guard.
+  const upcomingMatchesSection: SectionConfig = {
+    key: "upcoming-matches",
+    bg: "transparent",
+    content: (
+      <UpcomingMatches
+        matches={upcomingMatches}
+        unavailable={upcomingMatchesReadFailed}
+      />
+    ),
+    paddingTop: "pt-0",
+    paddingBottom: "pb-0",
+  };
 
   const bannerSlotBSection = toBannerSection("b", banners.bannerSlotB);
 

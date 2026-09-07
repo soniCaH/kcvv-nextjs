@@ -69,7 +69,22 @@ export const Empty: Story = {
     docs: {
       description: {
         story:
-          "Zero upcoming matches — entire section returns null. Matches the NewsGrid E.1 convention.",
+          "Zero upcoming matches, the read succeeded — entire section returns null. Matches the NewsGrid E.1 convention. `unavailable: true` (see FeedUnavailable) is the one case that holds the band's shape instead.",
+      },
+    },
+  },
+};
+
+/** #2505/#2844 — the read failed rather than the feed genuinely being empty.
+ *  Holds the band's shape with `<EmptyState tier="slot" reason="unavailable">`
+ *  instead of returning null. */
+export const FeedUnavailable: Story = {
+  args: { matches: [], unavailable: true },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Zero upcoming matches because the BFF/PSD read failed — the band holds its shape and names the reason instead of vanishing (#2505/#2844).",
       },
     },
   },

@@ -41,11 +41,15 @@ export const homePage = defineType({
     }),
     defineField({
       name: 'matchesSliderPlaceholder',
-      title: 'Placeholder wedstrijdenblok',
+      // No field-level `title` — a field label wins over the referenced
+      // type's own `title` in Sanity's resolution order, so setting one
+      // here would silently shadow `matchesSliderPlaceholder.ts`'s title
+      // ("Tussenseizoen-bericht (blok Eerste ploegen)") and make renaming
+      // it there invisible to editors (#2505 review finding 5).
       type: 'matchesSliderPlaceholder',
       group: 'widgets',
       description:
-        'Optioneel tekstblok dat het wedstrijdenblok vervangt wanneer er geen aankomende wedstrijden zijn (bijv. tijdens de winterstop). Laat leeg om het blok dan gewoon te verbergen.',
+        'Optionele inhoud voor het blok "Eerste ploegen" tijdens het tussenseizoen — een aftelling, een korte mededeling en/of een foto. Als er geen aankomende wedstrijden zijn, toont dat blok anders altijd "Nog geen wedstrijden ingepland.".',
     }),
   ],
   preview: {

@@ -2,7 +2,7 @@ import {defineField, defineType} from 'sanity'
 
 export const matchesSliderPlaceholder = defineType({
   name: 'matchesSliderPlaceholder',
-  title: 'Placeholder wedstrijdenblok (tussenseizoen)',
+  title: 'Tussenseizoen-bericht (blok Eerste ploegen)',
   type: 'object',
   description:
     'Optionele inhoud voor het wedstrijdenblok wanneer er geen aankomende wedstrijden zijn. Laat leeg voor de standaardweergave.',
@@ -32,10 +32,10 @@ export const matchesSliderPlaceholder = defineType({
     }),
     defineField({
       name: 'highlightImage',
-      title: 'Afbeelding (overschrijft standaard)',
+      title: 'Afbeelding',
       type: 'image',
       description:
-        'Optionele afbeelding die de standaardfoto vervangt. Liefst horizontaal, min. 1280x720.',
+        'Optionele foto bovenaan het bericht (bv. boven de mededeling, of boven de aftelling). Er is geen standaardfoto — laat leeg om geen afbeelding te tonen. Liefst horizontaal, min. 1280x720.',
       options: {hotspot: true},
       fields: [
         defineField({

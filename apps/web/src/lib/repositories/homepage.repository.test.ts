@@ -191,10 +191,8 @@ describe("HomepageRepository", () => {
           highlightImage: {
             alt: "Supporters op de Driesstraat",
             asset: {
-              _id: "image-abc",
               url: "https://cdn.sanity.io/images/abc.jpg",
               lqip: "data:image/jpeg;base64,/9j...",
-              dimensions: { width: 1920, height: 1080 },
             },
           },
         },
@@ -215,8 +213,6 @@ describe("HomepageRepository", () => {
           alt: "Supporters op de Driesstraat",
           url: "https://cdn.sanity.io/images/abc.jpg",
           lqip: "data:image/jpeg;base64,/9j...",
-          width: 1920,
-          height: 1080,
         },
       });
     });
@@ -230,10 +226,8 @@ describe("HomepageRepository", () => {
           highlightImage: {
             alt: null,
             asset: {
-              _id: "image-x",
               url: "https://cdn.sanity.io/images/x.jpg",
               lqip: null,
-              dimensions: null,
             },
           },
         },

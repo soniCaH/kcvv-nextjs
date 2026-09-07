@@ -83,9 +83,18 @@ Official **home–away** (matches `TeamAgendaRow` site convention), KCVV bolded 
 - **Amended by #2399:** when that leaves _no_ rows, the band no longer disappears. Chrome
   (seams, kicker, heading, "Volledige kalender →") stays and the rows region holds its shape
   open with a dashed notice — #2427's tier-2 register. A vanished band made a PSD outage
-  indistinguishable from a club that never posted the result, so the notice names which it is:
-  - feed genuinely empty → "Nog geen wedstrijden ingepland."
+  indistinguishable from a club that never posted the result, so the notice names which it is.
+- **Amended by #2505/#2844:** the no-rows notice grew from two states to six, driven by the
+  Studio-authored `matchesSliderPlaceholder` (off-season countdown, mededeling, optional highlight
+  image) still rendering inside this same dashed frame. The BFF-outage line always wins and
+  suppresses the image with it:
   - BFF read failed → "Uitslagen en wedstrijden zijn even niet beschikbaar. Probeer het later opnieuw."
+  - Kickoff authored, in the future, with a mededeling → "Nog N dagen tot de aftrap. `<mededeling>`"
+  - Kickoff authored, in the future, no mededeling → "Nog N dagen tot de aftrap."
+  - Kickoff authored, today → "Vandaag de aftrap van het nieuwe seizoen."
+  - Kickoff past/unset, mededeling authored → the mededeling itself (linked when `announcementHref`
+    is set)
+  - Nothing authored → "Nog geen wedstrijden ingepland." (the original #2399 copy, unchanged)
 
 ## Plumbing
 

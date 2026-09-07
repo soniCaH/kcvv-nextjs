@@ -38,27 +38,28 @@ with standings for one team is incoherent. Resolved with **S.4 — drop standing
 
 ## Data flow
 
-| Aspect | Value | Source |
-| --- | --- | --- |
-| Source endpoint | `bff.getNextMatches()` | Already used by today's homepage; same call |
-| Filter | None — all KCVV teams across competitions | Per S.4 lock (community schedule scope) |
-| Sort | `date asc` (chronological) | BFF default |
-| Default count | 5 | Round 6b D.5 lock |
-| Expand trigger | `totalUpcoming > 5` | Hide button if ≤ 5 upcoming |
-| Expanded view | All upcoming matches in the same chronological list | No grouping |
-| `/kalender` link | Visible only when expanded | Round 6b D.5 lock |
-| Empty state (0 upcoming) | Return null (entire section hidden) | Same convention as NewsGrid E.1 |
-| Per-row click target | Whole row → `Link` to `/match/{id}` | Standard match-detail route |
-| KCVV team highlight | KCVV team name rendered with `font-weight: 700` per team-side (home or away) | Comparison via `home_team.id === 1235 \|\| away_team.id === 1235` |
-| Home / away badge | THUIS (jersey-deep bg) or UIT (ink bg), monospace caps | Match `is_home` field |
+| Aspect                                   | Value                                                                                       | Source                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Source endpoint                          | `bff.getNextMatches()`                                                                      | Already used by today's homepage; same call                       |
+| Filter                                   | None — all KCVV teams across competitions                                                   | Per S.4 lock (community schedule scope)                           |
+| Sort                                     | `date asc` (chronological)                                                                  | BFF default                                                       |
+| Default count                            | 5                                                                                           | Round 6b D.5 lock                                                 |
+| Expand trigger                           | `totalUpcoming > 5`                                                                         | Hide button if ≤ 5 upcoming                                       |
+| Expanded view                            | All upcoming matches in the same chronological list                                         | No grouping                                                       |
+| `/kalender` link                         | Visible only when expanded                                                                  | Round 6b D.5 lock                                                 |
+| Empty state (0 upcoming, read succeeded) | Return null (entire section hidden)                                                         | Same convention as NewsGrid E.1                                   |
+| Empty state (0 upcoming, read failed)    | `<EmptyState tier="slot" reason="unavailable">` — band holds its shape and names the outage | #2505/#2844                                                       |
+| Per-row click target                     | Whole row → `Link` to `/match/{id}`                                                         | Standard match-detail route                                       |
+| KCVV team highlight                      | KCVV team name rendered with `font-weight: 700` per team-side (home or away)                | Comparison via `home_team.id === 1235 \|\| away_team.id === 1235` |
+| Home / away badge                        | THUIS (jersey-deep bg) or UIT (ink bg), monospace caps                                      | Match `is_home` field                                             |
 
 ## Locked decisions
 
-| Round | Decision | Rationale |
-| --- | --- | --- |
-| 6 | ~~L.2 tabs~~ → **superseded** | Round 6a dropped one of the two tabs; tabs no longer needed |
-| 6a | **S.4 · Drop standings, schedule-only** | Mismatch between all-team schedule and single-team standings; resolved by removing standings |
-| 6b | **D.5 · 5 default + inline expand to all + /kalender link visible only when expanded** | User-specified hybrid pattern |
+| Round | Decision                                                                               | Rationale                                                                                    |
+| ----- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 6     | ~~L.2 tabs~~ → **superseded**                                                          | Round 6a dropped one of the two tabs; tabs no longer needed                                  |
+| 6a    | **S.4 · Drop standings, schedule-only**                                                | Mismatch between all-team schedule and single-team standings; resolved by removing standings |
+| 6b    | **D.5 · 5 default + inline expand to all + /kalender link visible only when expanded** | User-specified hybrid pattern                                                                |
 
 ## Rotation + hover + paper treatment
 
