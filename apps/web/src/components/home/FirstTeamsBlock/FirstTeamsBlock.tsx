@@ -13,10 +13,17 @@
  * Design lock: docs/design/mockups/eerste-ploegen/eerste-ploegen-locked.md
  * (visual record: docs/design/mockups/eerste-ploegen/04-b3-ia.html).
  */
+import Image from "next/image";
 import Link from "next/link";
 import { EditorialHeading, StripedSeam } from "@/components/design-system";
+import type { MatchesSliderPlaceholderVM } from "@/lib/repositories/homepage.repository";
 import { FirstTeamAgendaRow } from "./FirstTeamAgendaRow";
 import type { FirstTeamVM } from "./first-teams";
+import {
+  formatDaysUntil,
+  resolvePlaceholderState,
+  type PlaceholderState,
+} from "./placeholder-rule";
 
 export interface FirstTeamsBlockProps {
   teams: FirstTeamVM[];
@@ -30,9 +37,28 @@ export interface FirstTeamsBlockProps {
   /**
    * A match read failed (BFF/PSD down or quota-exhausted), as opposed to the
    * feed genuinely holding no matches. Only picks which copy the held-open
-   * notice carries; it is read solely on the no-rows path.
+   * notice carries; it is read solely on the no-rows path. Wins over
+   * `placeholder` below and suppresses its image with it (#2505/#2844) — a
+   * "new season in 23 days" notice rendered during an outage would claim the
+   * feed is empty when the truth is that it could not be read.
    */
   unavailable?: boolean;
+  /**
+   * The Studio-authored off-season notice (#2505) — countdown, mededeling and
+   * highlight image, read only on the no-rows path and only when `unavailable`
+   * is false. `null`/`undefined` when nothing is authored (or the read
+   * itself failed, which the caller folds into `unavailable` rather than a
+   * separate signal) — either way the band falls back to its unchanged
+   * "Nog geen wedstrijden ingepland."
+   */
+  placeholder?: MatchesSliderPlaceholderVM | null;
+  /**
+   * Render reference time for the countdown. Defaults to now; the homepage
+   * passes the same `now` it already computed for `firstTeamsHeading` /
+   * `deriveFirstTeamVM` so every date-derived value on the page agrees.
+   * Stories and tests override it for a deterministic day count.
+   */
+  now?: Date;
 }
 
 /**
@@ -82,6 +108,95 @@ function SkipCard({ children }: { children: React.ReactNode }) {
 export const FIRST_TEAMS_ROW_GRID =
   "border-cream/20 grid gap-3 border-t py-5 first:border-t-0 xl:grid-cols-[minmax(0,11rem)_1fr_1fr] xl:gap-5";
 
+/**
+ * Renders a mededeling as a link when the Studio editor authored an
+ * `announcementHref` beside it, plain text otherwise (#2505). The authored
+ * production value today points at `/kalender` — the same destination the
+ * band's own "Volledige kalender →" already offers — so the link changes
+ * nothing for that content and exists for a future summer whose mededeling
+ * points elsewhere (a news item, say).
+ */
+function Mededeling({ text, href }: { text: string; href?: string }) {
+  if (!href) return <>{text}</>;
+  return (
+    <Link
+      href={href}
+      className="decoration-cream/50 hover:decoration-cream underline underline-offset-2"
+    >
+      {text}
+    </Link>
+  );
+}
+
+/** The five non-outage states from #2844's copy table — the outage state is
+ *  decided by `<FirstTeamsBlock>` itself and never reaches this function. */
+function renderPlaceholderCopy(state: PlaceholderState): React.ReactNode {
+  switch (state.kind) {
+    case "today":
+      return "Vandaag de aftrap van het nieuwe seizoen.";
+    case "countdown":
+      return (
+        <>
+          {`Nog ${formatDaysUntil(state.daysUntil)} tot de aftrap.`}
+          {state.mededeling ? (
+            <>
+              {" "}
+              <Mededeling text={state.mededeling} href={state.href} />
+            </>
+          ) : null}
+        </>
+      );
+    case "mededeling":
+      return <Mededeling text={state.text} href={state.href} />;
+    case "empty":
+      return "Nog geen wedstrijden ingepland.";
+    default: {
+      const _exhaustive: never = state;
+      throw new Error(
+        `renderPlaceholderCopy: unhandled state ${JSON.stringify(_exhaustive)}`,
+      );
+    }
+  }
+}
+
+/**
+ * The no-rows notice when the read succeeded (as opposed to `unavailable`,
+ * handled by the caller before this is reached). Renders the authored
+ * `highlightImage` inside the dashed frame, above the sentence, at a capped
+ * height well under the populated band's three-row height — never a
+ * decorative backdrop: `highlightImage.alt` is `rule.required()` in the
+ * Studio schema, so a `role="presentation"` treatment would leave a required
+ * editor field feeding nothing, which is this ticket's own bug one level
+ * down (#2844).
+ */
+function PlaceholderNotice({
+  placeholder,
+  now,
+}: {
+  placeholder?: MatchesSliderPlaceholderVM | null;
+  now: Date;
+}) {
+  const state = resolvePlaceholderState(placeholder, now);
+  const image = placeholder?.highlightImage;
+
+  return (
+    <div className={`${HELD_OPEN_FRAME} px-4 py-8`}>
+      {image ? (
+        <div className="relative mx-auto mb-4 h-40 w-full max-w-2xl overflow-hidden">
+          <Image
+            src={image.url}
+            alt={image.alt}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 672px"
+          />
+        </div>
+      ) : null}
+      <p className="text-cream/80">{renderPlaceholderCopy(state)}</p>
+    </div>
+  );
+}
+
 function FirstTeamRow({ team }: { team: FirstTeamVM }) {
   return (
     <div className={`${FIRST_TEAMS_ROW_GRID} xl:items-stretch`}>
@@ -129,6 +244,8 @@ export function FirstTeamsBlock({
   teams,
   heading = "Dit weekend.",
   unavailable = false,
+  placeholder = null,
+  now = new Date(),
 }: FirstTeamsBlockProps) {
   const rows = teams.filter((t) => t.result || t.fixture);
 
@@ -164,15 +281,21 @@ export function FirstTeamsBlock({
               <FirstTeamRow key={team.slug} team={team} />
             ))}
           </div>
-        ) : (
+        ) : unavailable ? (
           // Body type rather than `<SkipCard>`'s mono uppercase — this is a
-          // sentence, not a two-word label. No action of its own: the band's
-          // "Volledige kalender →" above is already the way out.
+          // sentence, not a two-word label. This outage line wins over every
+          // other no-rows state and is checked before `placeholder` is even
+          // read, so a BFF outage never shows a "new season in N days"
+          // notice the page cannot vouch for (#2505/#2844).
           <p className={`${HELD_OPEN_FRAME} text-cream/80 px-4 py-8`}>
-            {unavailable
-              ? "Uitslagen en wedstrijden zijn even niet beschikbaar. Probeer het later opnieuw."
-              : "Nog geen wedstrijden ingepland."}
+            Uitslagen en wedstrijden zijn even niet beschikbaar. Probeer het
+            later opnieuw.
           </p>
+        ) : (
+          // The mededeling can carry its own link (`announcementHref`), so
+          // this notice is no longer only reachable via the band's own
+          // "Volledige kalender →" above — see `Mededeling` (#2505).
+          <PlaceholderNotice placeholder={placeholder} now={now} />
         )}
       </div>
       <StripedSeam colorPair="cream-jersey-deep" height="md" flip />

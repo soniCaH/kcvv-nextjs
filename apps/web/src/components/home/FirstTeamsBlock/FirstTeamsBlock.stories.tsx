@@ -6,6 +6,8 @@ import type {
   ScheduleMatch,
   ScheduleReservation,
 } from "@/components/match/types";
+import type { MatchesSliderPlaceholderVM } from "@/lib/repositories/homepage.repository";
+import { fixtureImage } from "@test-fixtures/images";
 
 const meta = {
   title: "Features/Home/FirstTeamsBlock",
@@ -273,6 +275,77 @@ export const NoMatches: Story = { args: NO_ROWS_ARGS };
 /** #2399 — the same empty band, but the BFF read failed. Only the copy differs. */
 export const FeedUnavailable: Story = {
   args: { ...NO_ROWS_ARGS, unavailable: true },
+};
+
+// #2505/#2844 — the Studio-authored off-season notice. `now` is fixed so the
+// countdown's day count doesn't drift between renders/CI runs.
+const PLACEHOLDER_NOW = new Date("2026-07-10T12:00:00Z");
+
+/** Kickoff authored, in the future, no mededeling. */
+export const PlaceholderCountdown: Story = {
+  args: {
+    ...NO_ROWS_ARGS,
+    placeholder: {
+      nextSeasonKickoff: new Date("2026-08-02T00:00:00Z"),
+    } satisfies MatchesSliderPlaceholderVM,
+    now: PLACEHOLDER_NOW,
+  },
+};
+
+/** Kickoff falls on the current calendar day. */
+export const PlaceholderToday: Story = {
+  args: {
+    ...NO_ROWS_ARGS,
+    placeholder: {
+      nextSeasonKickoff: new Date("2026-07-10T18:00:00Z"),
+    } satisfies MatchesSliderPlaceholderVM,
+    now: PLACEHOLDER_NOW,
+  },
+};
+
+/** No kickoff authored (or already past) — falls through to the mededeling,
+ *  the live production case as of 2026-07-13 (#2844). Plain text: no
+ *  `announcementHref` authored. */
+export const PlaceholderMededeling: Story = {
+  args: {
+    ...NO_ROWS_ARGS,
+    placeholder: {
+      announcementText:
+        "Groenwit maakt zich klaar voor seizoen 2026-2027 in 3e Nationale.",
+    } satisfies MatchesSliderPlaceholderVM,
+    now: PLACEHOLDER_NOW,
+  },
+};
+
+/** Same mededeling, this time with `announcementHref` authored — renders as
+ *  a link rather than plain text. */
+export const PlaceholderMededelingWithLink: Story = {
+  args: {
+    ...NO_ROWS_ARGS,
+    placeholder: {
+      announcementText:
+        "Groenwit maakt zich klaar voor seizoen 2026-2027 in 3e Nationale.",
+      announcementHref: "/kalender",
+    } satisfies MatchesSliderPlaceholderVM,
+    now: PLACEHOLDER_NOW,
+  },
+};
+
+/** `highlightImage` authored alongside the mededeling — renders inside the
+ *  dashed frame, above the sentence, at a capped height (#2844). */
+export const PlaceholderWithImage: Story = {
+  args: {
+    ...NO_ROWS_ARGS,
+    placeholder: {
+      announcementText:
+        "Groenwit maakt zich klaar voor seizoen 2026-2027 in 3e Nationale.",
+      highlightImage: {
+        alt: "De A-kern tijdens de eerste training van het nieuwe seizoen",
+        url: fixtureImage("team-group"),
+      },
+    } satisfies MatchesSliderPlaceholderVM,
+    now: PLACEHOLDER_NOW,
+  },
 };
 
 // Graceful skip: A has no upcoming fixture (season end), B has no recent result.
