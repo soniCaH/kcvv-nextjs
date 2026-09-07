@@ -128,10 +128,14 @@ export default {
     const envLayer = Layer.succeed(WorkerEnvTag, env);
 
     if (event.cron === "30 2 * * *") {
-      // Search embedding index sync — separate invocation budget
+      // Search embedding index sync — separate invocation budget. Needs
+      // KvCacheLive too now: the sweep's reconciliation step (#2831) reads
+      // and writes its id manifest through KvCacheService, backed by the
+      // same PSD_CACHE KV binding psd-sanity-sync already uses below.
       const layer = Layer.mergeAll(
         EmbeddingServiceLive,
         VectorizeServiceLive,
+        KvCacheLive,
         envLayer,
       ).pipe(Layer.provide(envLayer));
       ctx.waitUntil(

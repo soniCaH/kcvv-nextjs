@@ -16,6 +16,11 @@ SANITY_DATASET = "production"
 # dataset/index guard (src/webhooks/index-handler.ts) reads this var instead
 # of trusting the binding to point where this file says it does (#2833).
 SEARCH_INDEX_NAME = "kcvv-search"
+# The nightly sweep's prune step (#2831) is unverified in production — leave
+# this "true" until a dry-run sweep's logged delete set has been checked
+# against the live index, then flip to "false" to let it actually call
+# deleteByIds. Anything other than the literal "false" is dry-run (fail safe).
+SEARCH_INDEX_PRUNE_DRY_RUN = "true"
 # SANITY_API_TOKEN is a secret — set via: wrangler secret put SANITY_API_TOKEN
 # SANITY_WEBHOOK_SECRET is a secret — set via: wrangler secret put SANITY_WEBHOOK_SECRET
 # RESEND_API_KEY is a secret — set via: wrangler secret put RESEND_API_KEY (see docs/prd/email-delivery.md)
@@ -71,6 +76,9 @@ CACHE_LONG_TTL = "true"
 # Mirrors [[env.staging.vectorize]].index_name below — see the guard note on
 # the top-level SEARCH_INDEX_NAME above (#2833).
 SEARCH_INDEX_NAME = "kcvv-search-staging"
+# Mirrors the top-level SEARCH_INDEX_PRUNE_DRY_RUN — relevant here too since
+# the manual backfill documented above runs the same runSanityIndexSync (#2831).
+SEARCH_INDEX_PRUNE_DRY_RUN = "true"
 # SANITY_API_TOKEN is a secret — set via: wrangler secret put SANITY_API_TOKEN --env staging
 # SANITY_WEBHOOK_SECRET is a secret — set via: wrangler secret put SANITY_WEBHOOK_SECRET --env staging
 # RESEND_API_KEY is a secret — set via: wrangler secret put RESEND_API_KEY --env staging (see docs/prd/email-delivery.md)
