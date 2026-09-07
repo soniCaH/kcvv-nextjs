@@ -190,8 +190,16 @@ function PlaceholderNotice({
             src={image.url}
             alt={image.alt}
             fill
-            className="object-cover"
+            // `object-top`: a same-origin safety net for whatever the
+            // server-side `fp-x`/`fp-y` crop (`homepage.repository.ts`) still
+            // hands the browser to fit responsively — team/action photos put
+            // their subject upper-frame far more often than centred, the
+            // same reasoning `<YouthBackdrop>` already uses for its own
+            // 16:9 crop (review finding 4 on #2505/PR #2852).
+            className="object-cover object-top"
             sizes="(max-width: 768px) 100vw, 672px"
+            placeholder={image.lqip ? "blur" : "empty"}
+            blurDataURL={image.lqip ?? undefined}
           />
         </div>
       ) : null}

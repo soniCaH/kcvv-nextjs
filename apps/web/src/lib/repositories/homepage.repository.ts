@@ -37,7 +37,7 @@ export const HOMEPAGE_PLACEHOLDER_QUERY =
         alt,
         "asset": asset->{
           _id,
-          url,
+          "url": url + "?w=1280&h=400&q=80&fm=webp&fit=crop&crop=focalpoint&fp-x=" + string(coalesce(^.hotspot.x, 0.5)) + "&fp-y=" + string(coalesce(^.hotspot.y, 0.5)),
           "lqip": metadata.lqip,
           "dimensions": metadata.dimensions
         }
