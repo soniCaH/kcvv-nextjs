@@ -101,17 +101,50 @@ export function useSectionNav(ids: readonly string[]): UseSectionNavResult {
       .filter((el): el is HTMLElement => el !== null);
     if (targets.length === 0) return;
 
-    // Top inset clears the header + this bar; the bottom inset flips
-    // "active" near the top third of the viewport, not the very bottom.
+    // A `IntersectionObserverCallback`'s `entries` is a DELTA, not a
+    // snapshot — it carries only the targets whose intersection state
+    // crossed a threshold since the *previous* delivery, not every
+    // observed target's current state. During a single scroll (especially
+    // a native smooth-scroll animation, which delivers several batches in
+    // quick succession as different targets cross thresholds at different
+    // moments), a later batch can carry only an *earlier* section — one
+    // that is already mostly scrolled past, its last sliver of overlap
+    // finally crossing a threshold — while the section actually being read
+    // isn't mentioned at all because its own ratio didn't cross a new
+    // threshold in that exact frame. Picking "topmost" from only that
+    // batch's entries (the previous approach) then overwrites a correct,
+    // still-current pick with a stale one — and if the very next batch
+    // reports that same earlier section finally exiting (no longer
+    // intersecting), an entries-only reducer has nothing left to fall
+    // back to and simply stops updating, leaving the wrong section active.
+    //
+    // Fixed by keeping every target's own last-known state in a map,
+    // updated incrementally by each delivery, and recomputing "topmost
+    // currently intersecting" from that complete map every time — so a
+    // batch that only mentions one target can never lose track of what
+    // every other target most recently reported.
+    const state = new Map<string, { intersecting: boolean; top: number }>();
+
     const observer = new IntersectionObserver(
       (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (visible.length === 0) return;
-        const topmost = visible.reduce((a, b) =>
-          a.boundingClientRect.top <= b.boundingClientRect.top ? a : b,
-        );
-        setActiveId(topmost.target.id);
+        for (const entry of entries) {
+          state.set(entry.target.id, {
+            intersecting: entry.isIntersecting,
+            top: entry.boundingClientRect.top,
+          });
+        }
+        let topId: string | null = null;
+        let topValue = Infinity;
+        for (const [id, s] of state) {
+          if (s.intersecting && s.top <= topValue) {
+            topId = id;
+            topValue = s.top;
+          }
+        }
+        if (topId !== null) setActiveId(topId);
       },
+      // Top inset clears the header + this bar; the bottom inset flips
+      // "active" near the top third of the viewport, not the very bottom.
       { rootMargin: `-${topInset}px 0px -55% 0px`, threshold: [0, 0.25, 0.6] },
     );
 
