@@ -48,8 +48,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/api-contract
       '@sanity/client':
-        specifier: 7.26.2
-        version: 7.26.2
+        specifier: 8.6.0
+        version: 8.6.0(vitest@4.1.11)
       effect:
         specifier: 3.22.1
         version: 3.22.1
@@ -174,8 +174,8 @@ importers:
         specifier: 8.0.1
         version: 8.0.1(react@19.2.8)
       '@sanity/client':
-        specifier: 7.26.2
-        version: 7.26.2
+        specifier: 8.6.0
+        version: 8.6.0(vitest@4.1.11)
       '@sanity/webhook':
         specifier: 4.0.4
         version: 4.0.4
