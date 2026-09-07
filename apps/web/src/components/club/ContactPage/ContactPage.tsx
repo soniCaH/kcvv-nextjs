@@ -105,10 +105,24 @@ interface ContactGridCard {
 const MONO_TAG =
   "text-jersey-deep font-mono text-[10px] font-semibold tracking-[0.12em] uppercase";
 const ICON_TITLE = "text-ink text-[1.05rem] font-bold";
-// Generic jersey-deep inline-action chrome — shared by the mailto links AND
-// the "Routebeschrijving" map link.
-const INLINE_LINK =
-  "text-jersey-deep mt-2 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline";
+// Shared by the mailto links AND the "Routebeschrijving" map link. An
+// action link (opening a mail client or Google Maps) is not going
+// elsewhere on the site, so it takes no arrow-CTA treatment — it is
+// lowercase body type, which is what lets the highlighter marker
+// (`.prose-link`) bind (#2474 rule 4). The icon (Envelope/ArrowRight) is
+// each call site's own, kept as-is — spaced with its own margin, not a
+// flex gap: `.prose-link`'s marker relies on `box-decoration-break: clone`
+// to repaint per line fragment on a wrapped link (the `break-all` mailtos
+// below can wrap), which only works on a normal inline box. `inline-flex`
+// makes the anchor atomic — it never fragments, so a wrapped address would
+// only ever get a marker under its last line. `font-semibold` is dropped
+// too: `.prose-link` is deliberately unlayered (globals.css) so it beats
+// the typography plugin, which also means it beats any `@layer utilities`
+// class on the same property — a font-weight utility here never applied.
+// The top margin lives on a block wrapper at each call site, never here:
+// vertical margins do not apply to a non-replaced inline box, so `mt-2` on
+// this anchor silently did nothing once it stopped being `inline-flex`.
+const INLINE_LINK = "prose-link text-sm";
 const CARD_BODY = "text-ink-soft text-[0.95rem] leading-relaxed";
 const CROSS_LINK =
   "group border-ink bg-cream-soft hover:bg-cream-deep flex items-center justify-between gap-3 border p-3 transition-colors";
@@ -222,15 +236,21 @@ export function ContactPage({ keyContacts }: ContactPageProps = {}) {
                   <p className={CARD_BODY}>Driesstraat 32</p>
                   <p className={CARD_BODY}>1982 Elewijt (Zemst)</p>
                 </div>
-                <a
-                  href="https://maps.google.com/?q=Driesstraat+32,+1982+Elewijt"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={INLINE_LINK}
-                >
-                  Routebeschrijving
-                  <ArrowRight size={14} className="shrink-0" aria-hidden />
-                </a>
+                <div className="mt-2">
+                  <a
+                    href="https://maps.google.com/?q=Driesstraat+32,+1982+Elewijt"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={INLINE_LINK}
+                  >
+                    Routebeschrijving
+                    <ArrowRight
+                      size={14}
+                      className="ml-1.5 align-middle"
+                      aria-hidden
+                    />
+                  </a>
+                </div>
               </div>
 
               {/* E-mail */}
@@ -243,12 +263,14 @@ export function ContactPage({ keyContacts }: ContactPageProps = {}) {
                   />
                   <span className={ICON_TITLE}>E-mail</span>
                 </div>
-                <a
-                  href="mailto:info@kcvvelewijt.be"
-                  className={`${INLINE_LINK} break-all`}
-                >
-                  info@kcvvelewijt.be
-                </a>
+                <div className="mt-2">
+                  <a
+                    href="mailto:info@kcvvelewijt.be"
+                    className={`${INLINE_LINK} break-all`}
+                  >
+                    info@kcvvelewijt.be
+                  </a>
+                </div>
               </div>
 
               {/* Cross-links */}
@@ -289,13 +311,19 @@ export function ContactPage({ keyContacts }: ContactPageProps = {}) {
                   {card.description}
                 </p>
               ) : null}
-              <a
-                href={`mailto:${card.email}`}
-                className={`${INLINE_LINK} break-all`}
-              >
-                <Envelope size={16} className="shrink-0" aria-hidden />
-                {card.email}
-              </a>
+              <div className="mt-2">
+                <a
+                  href={`mailto:${card.email}`}
+                  className={`${INLINE_LINK} break-all`}
+                >
+                  <Envelope
+                    size={16}
+                    className="mr-1.5 align-middle"
+                    aria-hidden
+                  />
+                  {card.email}
+                </a>
+              </div>
             </TapedCard>
           ))}
         </div>
