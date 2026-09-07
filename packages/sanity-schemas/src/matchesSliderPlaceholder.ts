@@ -2,7 +2,7 @@ import {defineField, defineType} from 'sanity'
 
 export const matchesSliderPlaceholder = defineType({
   name: 'matchesSliderPlaceholder',
-  title: 'Placeholder wedstrijdenblok (tussenseizoen)',
+  title: 'Tussenseizoen-bericht (blok Eerste ploegen)',
   type: 'object',
   description:
     'Optionele inhoud voor het wedstrijdenblok wanneer er geen aankomende wedstrijden zijn. Laat leeg voor de standaardweergave.',
