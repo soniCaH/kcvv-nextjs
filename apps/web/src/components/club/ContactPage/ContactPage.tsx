@@ -119,7 +119,10 @@ const ICON_TITLE = "text-ink text-[1.05rem] font-bold";
 // too: `.prose-link` is deliberately unlayered (globals.css) so it beats
 // the typography plugin, which also means it beats any `@layer utilities`
 // class on the same property — a font-weight utility here never applied.
-const INLINE_LINK = "prose-link mt-2 text-sm";
+// The top margin lives on a block wrapper at each call site, never here:
+// vertical margins do not apply to a non-replaced inline box, so `mt-2` on
+// this anchor silently did nothing once it stopped being `inline-flex`.
+const INLINE_LINK = "prose-link text-sm";
 const CARD_BODY = "text-ink-soft text-[0.95rem] leading-relaxed";
 const CROSS_LINK =
   "group border-ink bg-cream-soft hover:bg-cream-deep flex items-center justify-between gap-3 border p-3 transition-colors";
@@ -233,19 +236,21 @@ export function ContactPage({ keyContacts }: ContactPageProps = {}) {
                   <p className={CARD_BODY}>Driesstraat 32</p>
                   <p className={CARD_BODY}>1982 Elewijt (Zemst)</p>
                 </div>
-                <a
-                  href="https://maps.google.com/?q=Driesstraat+32,+1982+Elewijt"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={INLINE_LINK}
-                >
-                  Routebeschrijving
-                  <ArrowRight
-                    size={14}
-                    className="ml-1.5 align-middle"
-                    aria-hidden
-                  />
-                </a>
+                <div className="mt-2">
+                  <a
+                    href="https://maps.google.com/?q=Driesstraat+32,+1982+Elewijt"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={INLINE_LINK}
+                  >
+                    Routebeschrijving
+                    <ArrowRight
+                      size={14}
+                      className="ml-1.5 align-middle"
+                      aria-hidden
+                    />
+                  </a>
+                </div>
               </div>
 
               {/* E-mail */}
@@ -258,12 +263,14 @@ export function ContactPage({ keyContacts }: ContactPageProps = {}) {
                   />
                   <span className={ICON_TITLE}>E-mail</span>
                 </div>
-                <a
-                  href="mailto:info@kcvvelewijt.be"
-                  className={`${INLINE_LINK} break-all`}
-                >
-                  info@kcvvelewijt.be
-                </a>
+                <div className="mt-2">
+                  <a
+                    href="mailto:info@kcvvelewijt.be"
+                    className={`${INLINE_LINK} break-all`}
+                  >
+                    info@kcvvelewijt.be
+                  </a>
+                </div>
               </div>
 
               {/* Cross-links */}
@@ -304,17 +311,19 @@ export function ContactPage({ keyContacts }: ContactPageProps = {}) {
                   {card.description}
                 </p>
               ) : null}
-              <a
-                href={`mailto:${card.email}`}
-                className={`${INLINE_LINK} break-all`}
-              >
-                <Envelope
-                  size={16}
-                  className="mr-1.5 align-middle"
-                  aria-hidden
-                />
-                {card.email}
-              </a>
+              <div className="mt-2">
+                <a
+                  href={`mailto:${card.email}`}
+                  className={`${INLINE_LINK} break-all`}
+                >
+                  <Envelope
+                    size={16}
+                    className="mr-1.5 align-middle"
+                    aria-hidden
+                  />
+                  {card.email}
+                </a>
+              </div>
             </TapedCard>
           ))}
         </div>
