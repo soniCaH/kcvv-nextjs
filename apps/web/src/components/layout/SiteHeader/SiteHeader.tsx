@@ -41,13 +41,31 @@ export interface SiteHeaderProps {
  */
 const NAV_LABEL_TRUNCATE = "block max-w-[14ch] truncate";
 
+/**
+ * The desktop row's chrome type: uppercase mono stepping 11 → 13 → 14px at
+ * `xl` / `2xl`. Shared verbatim by the nav links and the `Word lid` CTA,
+ * which sit in the same row and are bound by the same limit.
+ *
+ * Exempt from the type ramp (DESIGN.md "The Chrome Fits The Bar Rule",
+ * #2664): the row must never wrap at `lg` (#2409), so these sizes answer a
+ * fit constraint rather than a reading hierarchy. Two of the three steps
+ * have no token at all — 11px is `text-label`'s size but neither its
+ * tracking nor its weight, and 13px has nothing — so no role token can
+ * describe the ramp and none is minted for it. Sanctioned here, in one
+ * place, so #2418's lint has a single site to suppress.
+ */
+const CHROME_NAV_TYPE =
+  "font-mono text-[11px] font-semibold tracking-[0.04em] whitespace-nowrap uppercase no-underline transition-colors xl:text-[13px] 2xl:text-[14px]";
+
 const Wordmark = () => (
   <Link
     href="/"
     aria-label="KCVV Elewijt — home"
-    // `py-1 -my-1` — hit area only, no layout shift (#2394). Not named in the
-    // ticket; the walk measured it at 20px and it is the site's home link.
-    className="font-display -my-1 inline-block py-1 text-[20px] leading-none font-black whitespace-nowrap italic no-underline lg:text-[20px] xl:text-[24px] 2xl:text-[28px]"
+    // `py-1 -my-1` — hit area only, no layout shift (#2394). The 20/24/28px
+    // ramp is exempt under DESIGN.md "The Chrome Fits The Bar Rule" (#2664):
+    // a fit constraint, not a ramp step. Rendered in three places, but only
+    // the desktop row is still on screen at the xl/2xl steps.
+    className="font-display -my-1 inline-block py-1 text-[20px] leading-none font-black whitespace-nowrap italic no-underline xl:text-[24px] 2xl:text-[28px]"
   >
     <span className="text-ink">
       KCVV <span className="text-jersey-deep">Elewijt</span>
@@ -156,11 +174,13 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
                     aria-current={isActive(item.href) ? "page" : undefined}
                     data-nav-source="desktop"
                     className={cn(
-                      // `py-2 -my-2` — hit area only, no layout shift (#2394).
-                      // Desktop-only nav, so it never showed up in the 390px
-                      // walk, but it is the same 11px recipe the wordmark
-                      // above carries.
-                      "-my-2 py-2 font-mono text-[11px] font-semibold tracking-[0.04em] whitespace-nowrap uppercase no-underline transition-colors xl:text-[13px] 2xl:text-[14px]",
+                      // `py-2 -my-2` — hit area only, no layout shift (#2394):
+                      // the same negative-margin trick the wordmark uses, not
+                      // the same type recipe — that is 20px font-display, this
+                      // is 11px mono. Desktop-only, so it never showed up in
+                      // the 390px walk.
+                      "-my-2 py-2",
+                      CHROME_NAV_TYPE,
                       NAV_LABEL_TRUNCATE,
                       isActive(item.href)
                         ? "text-jersey-deep"
@@ -190,7 +210,10 @@ export function SiteHeader({ seniorTeams, className }: SiteHeaderProps) {
             <Link
               href="/club/word-lid"
               data-nav-source="desktop"
-              className="border-ink text-ink hover:border-jersey-deep hover:text-jersey-deep inline-flex items-center border px-2.5 py-1.5 font-mono text-[11px] font-semibold tracking-[0.04em] whitespace-nowrap uppercase no-underline transition-colors duration-150 xl:px-3.5 xl:py-2 xl:text-[13px] 2xl:text-[14px]"
+              className={cn(
+                "border-ink text-ink hover:border-jersey-deep hover:text-jersey-deep inline-flex items-center border px-2.5 py-1.5 duration-150 xl:px-3.5 xl:py-2",
+                CHROME_NAV_TYPE,
+              )}
             >
               Word lid
             </Link>
