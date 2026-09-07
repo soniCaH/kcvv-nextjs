@@ -12,16 +12,23 @@ const MANIFEST_RETRY = Schedule.exponential("100 millis").pipe(
 );
 
 /**
- * The manifest of ids the search index is believed to hold. Shared by the
- * nightly sweep's reconciliation step (`sanity-index-sync.ts`) and the
- * webhook's upsert path (`webhooks/index-handler.ts`) — a sweep alone only
- * ever records "what matched a query during a sweep window," which misses a
- * document whose entire visible life fits between two sweeps (an article
- * published and unpublished the same day; `unpublishAt` passing fires no
- * webhook of its own, so nothing else would ever record it left). Every
- * successful upsert — sweep or webhook — adds its id here, so the manifest
- * tracks what the index is believed to hold, not just what a sweep happened
- * to observe.
+ * The manifest of ids the search index is believed to hold: a single KV
+ * array value, written by the nightly sweep's reconciliation step
+ * (`sanity-index-sync.ts`) — the sweep is its only writer.
+ *
+ * A sweep alone only ever observes "what matched a query during this sweep
+ * window," which misses a document whose entire visible life fits between
+ * two sweeps (an article published and unpublished the same day;
+ * `unpublishAt` passing fires no webhook of its own, so nothing else would
+ * ever record it left). The webhook's upsert path closes that gap — not by
+ * writing the manifest array directly, but by dropping a put-only "pending"
+ * marker per id (`pendingKey`, below), which the next sweep absorbs into the
+ * manifest before diffing and then deletes (#2831, #2856). Two concurrent
+ * webhooks for different ids write to two different marker keys, so there
+ * is no shared read to race on and no last-write-wins — the lost-update
+ * race a read-modify-write manifest update had is gone by construction, not
+ * mitigated by retrying (a retry re-reads the same stale cached value and
+ * loses the same way).
  *
  * Reads `PSD_CACHE` directly rather than through `KvCacheService`:
  * `KvCacheLive.get` swallows every KV error into the same `null` a genuinely
@@ -43,6 +50,20 @@ const MANIFEST_RETRY = Schedule.exponential("100 millis").pipe(
 export const manifestKey = (dataset: string) =>
   `search-index:manifest:${dataset}`;
 
+/**
+ * One id's pending-marker key. Put-only — the webhook writes it with no
+ * read, so there is nothing to race with a concurrent write to a
+ * *different* id's key. Writing the same marker twice (a re-edit of an
+ * already-indexed document) is idempotent by construction: same key, same
+ * value, no state to corrupt — unlike the old read-modify-write version,
+ * nothing here needs an `includes` check to avoid a duplicate.
+ */
+const pendingKey = (dataset: string, id: string) =>
+  `search-index:pending:${dataset}:${id}`;
+
+const pendingKeyPrefix = (dataset: string) =>
+  `search-index:pending:${dataset}:`;
+
 export class ManifestError extends Error {
   readonly _tag = "ManifestError" as const;
   constructor(
@@ -54,12 +75,13 @@ export class ManifestError extends Error {
 }
 
 // Reuses PSD_CACHE rather than provisioning a dedicated KV namespace for a
-// ~200-id list: no new wrangler.toml binding, nothing for a human to create
-// before merge.
+// ~200-id list plus a handful of pending markers: no new wrangler.toml
+// binding, nothing for a human to create before merge.
 // ponytail: revisit only if PSD_CACHE's own eviction policy (built for PSD
 // response caching) ever conflicts with a value this manifest expects to
 // persist indefinitely — HARD_TTL_LONG (365 days) is refreshed on every
-// write (sweep or webhook), so in practice it never lapses.
+// sweep write, and is also the marker TTL as a safety net if a sweep never
+// runs to absorb one.
 
 /**
  * Reads the manifest. An absent key is a genuine first run and resolves to
@@ -115,43 +137,36 @@ export const writeManifest = (
   });
 
 /**
- * Adds a single id to the manifest — the webhook's upsert path calls this
- * after a successful upsert so a document whose entire visible life fits
- * between two sweeps still gets tracked, and can therefore still be pruned
- * once it drops out.
+ * Marks an id as belonging in the manifest — the webhook's upsert path
+ * calls this after a successful upsert so a document whose entire visible
+ * life fits between two sweeps still gets tracked, and can therefore still
+ * be pruned once it drops out.
  *
- * Skips the write entirely when the id is already present — every edit of
- * an already-indexed document would otherwise re-write the whole manifest
- * to change nothing.
+ * A single put to a per-id key (see `pendingKey` above), not a
+ * read-modify-write of the manifest array — see the module docblock for
+ * why that closes the concurrent-webhook lost-update race (#2856) rather
+ * than just narrowing its window.
  *
- * Retries the whole read-modify-write on a transient failure (same backoff
- * as `UPSERT_RETRY`, above) before giving up. Still never fails the caller
- * even after retries exhaust: this is best-effort bookkeeping riding along
- * on a successful index write, not something a KV blip should turn into a
- * failed webhook response — and the write already moved off that response
- * path via `ctx.waitUntil` (`webhooks/index-handler.ts`), so there is no
- * budget here to wait on a durable queue even if one existed. Read-modify-
- * write, not atomic: a race with a concurrent sweep write can still drop one
- * side's addition after retries. Bounded and self-healing rather than
- * silent — the dropped id reappears the next time anything re-upserts it
- * (another edit, or a sweep that still matches it), it does not stay lost
- * the way a sweep-only observation would. Logged at ERROR once retries are
- * exhausted (not WARN) — by that point it's no longer routine.
+ * Retries the put on a transient failure (same backoff as `UPSERT_RETRY`)
+ * before giving up. Still never fails the caller even after retries
+ * exhaust: this is best-effort bookkeeping riding along on a successful
+ * index write, not something a KV blip should turn into a failed webhook
+ * response — and the write already moved off that response path via
+ * `ctx.waitUntil` (`webhooks/index-handler.ts`). Logged at ERROR once
+ * retries are exhausted (not WARN) — by that point it's no longer routine.
  */
 export const addToManifest = (
   kv: KVNamespace,
   dataset: string,
   id: string,
 ): Effect.Effect<void> =>
-  readManifest(kv, dataset)
-    .pipe(
-      Effect.flatMap((existing) =>
-        existing.includes(id)
-          ? Effect.void
-          : writeManifest(kv, dataset, [...existing, id]),
-      ),
-      Effect.retry(MANIFEST_RETRY),
-    )
+  Effect.tryPromise({
+    try: () =>
+      kv.put(pendingKey(dataset, id), "1", { expirationTtl: HARD_TTL_LONG }),
+    catch: (cause) =>
+      new ManifestError(`KV put failed: ${String(cause)}`, cause),
+  })
+    .pipe(Effect.retry(MANIFEST_RETRY))
     .pipe(
       Effect.catchAll((e) =>
         Effect.logError(
@@ -159,3 +174,71 @@ export const addToManifest = (
         ),
       ),
     );
+
+/**
+ * Lists every pending marker for this dataset, absorbed by the sweep before
+ * it diffs (`sanity-index-sync.ts`) — see the module docblock. Paginates
+ * via `list_complete`/`cursor` rather than assuming one page; the volume
+ * between sweeps is normally tiny, but nothing here should silently drop
+ * ids past KV's per-call `list` limit if it ever isn't.
+ */
+export const listPendingIds = (
+  kv: KVNamespace,
+  dataset: string,
+): Effect.Effect<
+  { readonly ids: string[]; readonly keys: string[] },
+  ManifestError
+> => {
+  const prefix = pendingKeyPrefix(dataset);
+  return Effect.tryPromise({
+    try: async () => {
+      const keys: string[] = [];
+      let cursor: string | undefined;
+      for (;;) {
+        const page: {
+          keys: { name: string }[];
+          list_complete: boolean;
+          cursor?: string;
+        } = await kv.list({ prefix, cursor });
+        for (const k of page.keys) keys.push(k.name);
+        if (page.list_complete) break;
+        cursor = page.cursor;
+      }
+      return keys;
+    },
+    catch: (cause) =>
+      new ManifestError(`KV list failed: ${String(cause)}`, cause),
+  }).pipe(
+    Effect.map((keys) => ({
+      keys,
+      ids: keys.map((k) => k.slice(prefix.length)),
+    })),
+  );
+};
+
+/**
+ * Deletes the pending-marker keys a sweep just absorbed into the manifest,
+ * so they don't accumulate. Best-effort: a failed delete just means the
+ * marker gets absorbed again next sweep — a no-op union, not a correctness
+ * problem — so failures are logged and swallowed rather than propagated.
+ */
+export const deletePendingKeys = (
+  kv: KVNamespace,
+  keys: readonly string[],
+): Effect.Effect<void> =>
+  Effect.forEach(
+    keys,
+    (key) =>
+      Effect.tryPromise({
+        try: () => kv.delete(key),
+        catch: (cause) =>
+          new ManifestError(`KV delete failed: ${String(cause)}`, cause),
+      }).pipe(
+        Effect.catchAll((e) =>
+          Effect.logWarning(
+            `[index-manifest] failed to delete absorbed marker ${key}: ${String(e)}`,
+          ),
+        ),
+      ),
+    { concurrency: 5, discard: true },
+  );

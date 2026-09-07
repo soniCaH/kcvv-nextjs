@@ -4,7 +4,12 @@ import { WorkerEnvTag } from "../env";
 import { sanityClientConfig } from "../sanity/config";
 import { datasetIndexMismatch } from "./dataset-index-guard";
 import { EmbeddingService } from "./embedding";
-import { readManifest, writeManifest } from "./index-manifest";
+import {
+  deletePendingKeys,
+  listPendingIds,
+  readManifest,
+  writeManifest,
+} from "./index-manifest";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
@@ -120,15 +125,26 @@ const PRUNE_SAFETY_FLOOR = 25;
 //
 // Vectorize exposes exactly upsert / query / getByIds / deleteByIds — no
 // list, no scan, no cursor. A delete must always be addressed by an id this
-// worker already knows, so "what should be pruned" has to come from two
+// worker already knows, so "what should be pruned" has to come from three
 // sources other than the index itself:
 //
 // 1. A KV manifest (index-manifest.ts) of ids the index is believed to
-//    hold, written by every successful upsert — this sweep's, or the
-//    webhook's. `previousManifest − currentIds` catches anything the
-//    manifest named that no longer matches, including a document deleted
-//    from Sanity outright (nothing else can ever name that id).
-// 2. The excluded-ids queries above — stateless and authoritative, so they
+//    hold — a single array, written only by this sweep.
+//    `effectivePreviousManifest − currentIds` catches anything it named
+//    that no longer matches, including a document deleted from Sanity
+//    outright (nothing else can ever name that id).
+// 2. Pending markers — the webhook's upsert path (webhooks/index-handler.ts)
+//    drops a put-only marker per id instead of read-modify-writing the
+//    manifest array directly (#2856: two concurrent webhooks racing one
+//    shared array is a lost-update bug a retry cannot fix, since a retry
+//    re-reads the same stale value). This sweep lists and absorbs every
+//    pending marker into `effectivePreviousManifest` BEFORE diffing — not
+//    just before writing — so a document whose entire visible life fit
+//    between two sweeps (published and unpublished the same day, with no
+//    sweep ever seeing it as current) is folded in and pruned by this same
+//    sweep's diff, then its marker key is deleted so it isn't absorbed
+//    again.
+// 3. The excluded-ids queries above — stateless and authoritative, so they
 //    also catch a document excluded before the manifest ever tracked it (a
 //    responsibility deactivated pre-dating this mechanism's first write).
 //
@@ -143,11 +159,14 @@ const PRUNE_SAFETY_FLOOR = 25;
 // up that pre-existing population is a separate, one-off, manually-run
 // exercise (see the PR description for the measured count).
 //
-// Cost per sweep: 2 extra GROQ reads (excluded ids) + 1 KV read + 1 KV
-// write (a single JSON array, currently ~166 ids / ~6.5 KB, far under KV's
-// 25 MB value cap), plus ceil(prunedCount / MAX_VECTORS_PER_UPSERT)
+// Cost per sweep: 2 extra GROQ reads (excluded ids) + 1 KV read + 1 KV list
+// (pending markers, normally near-empty) + 1 KV write (the manifest array,
+// currently ~166 ids / ~6.5 KB, far under KV's 25 MB value cap) + one KV
+// delete per absorbed marker, plus ceil(prunedCount / MAX_VECTORS_PER_UPSERT)
 // additional deleteByIds calls. Negligible against the ~175-subrequest
-// sweep this corpus already makes, dominated by embed calls.
+// sweep this corpus already makes, dominated by embed calls. Per webhook
+// call: one KV put replaces what used to be one KV get + one KV put — less
+// work, not more, and no shared key to contend on with another webhook.
 
 // ─── Options ─────────────────────────────────────────────────────────────────
 
@@ -423,8 +442,34 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
         );
       } else {
         const previousManifest = manifestRead.right;
+
+        // Absorb pending markers (webhook additions, #2856) BEFORE diffing,
+        // not just before writing — see the "Reconciliation" block comment
+        // above. Folding them in here is what lets a document whose entire
+        // life fit between two sweeps get pruned by THIS sweep's diff
+        // rather than waiting one more cycle. A failed list just means
+        // "nothing absorbed this sweep" — the markers themselves are
+        // untouched by a failed list (nothing was deleted), so they're
+        // retried next sweep; not worth failing the whole reconciliation
+        // over, unlike a failed manifest read.
+        const pendingRead = yield* Effect.either(
+          listPendingIds(env.PSD_CACHE, env.SANITY_DATASET),
+        );
+        if (Either.isLeft(pendingRead)) {
+          yield* Effect.logWarning(
+            `[search-sync] Could not list pending markers this sweep, will retry next time: ${String(pendingRead.left)}`,
+          );
+        }
+        const { ids: pendingIds, keys: pendingKeys } = Either.getOrElse(
+          pendingRead,
+          () => ({ ids: [] as string[], keys: [] as string[] }),
+        );
+        const effectivePreviousManifest = [
+          ...new Set([...previousManifest, ...pendingIds]),
+        ];
+
         const currentIdSet = new Set(currentIds);
-        const droppedFromManifest = previousManifest.filter(
+        const droppedFromManifest = effectivePreviousManifest.filter(
           (id) => !currentIdSet.has(id),
         );
 
@@ -449,7 +494,7 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
           droppedFromManifest.length >
           Math.max(
             PRUNE_SAFETY_FLOOR,
-            previousManifest.length * PRUNE_SAFETY_CAP_FRACTION,
+            effectivePreviousManifest.length * PRUNE_SAFETY_CAP_FRACTION,
           );
         const toDelete = [
           ...new Set([
@@ -463,7 +508,7 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
 
         if (manifestDropExceedsCap) {
           yield* Effect.logWarning(
-            `[search-sync] Refusing to prune ${droppedFromManifest.length} of ${previousManifest.length} manifest entries — exceeds the safety cap (max(${PRUNE_SAFETY_FLOOR}, ${PRUNE_SAFETY_CAP_FRACTION * 100}%)). Skipping the manifest-diff portion of this sweep's prune (excluded-ids deletes, if any, still proceed below — they're authoritative, not subject to this cap). This does not self-heal: investigate, then see apps/api/CLAUDE.md ("Releasing a stuck prune safety cap") for the release lever once the cause is understood.`,
+            `[search-sync] Refusing to prune ${droppedFromManifest.length} of ${effectivePreviousManifest.length} manifest entries — exceeds the safety cap (max(${PRUNE_SAFETY_FLOOR}, ${PRUNE_SAFETY_CAP_FRACTION * 100}%)). Skipping the manifest-diff portion of this sweep's prune (excluded-ids deletes, if any, still proceed below — they're authoritative, not subject to this cap). This does not self-heal: investigate, then see apps/api/CLAUDE.md ("Releasing a stuck prune safety cap") for the release lever once the cause is understood.`,
           );
         }
 
@@ -480,13 +525,25 @@ export const runSanityIndexSync = (options?: SyncOptions) =>
           );
         }
 
-        // (previousManifest ∪ currentIds) − confirmedDeleted — see the
-        // block comment above for why union, and why only confirmed.
-        const nextManifest = new Set([...previousManifest, ...currentIds]);
+        // (effectivePreviousManifest ∪ currentIds) − confirmedDeleted — see
+        // the block comment above for why union, and why only confirmed.
+        const nextManifest = new Set([
+          ...effectivePreviousManifest,
+          ...currentIds,
+        ]);
         for (const id of confirmedDeleted) nextManifest.delete(id);
         yield* writeManifest(env.PSD_CACHE, env.SANITY_DATASET, [
           ...nextManifest,
         ]);
+
+        // Only delete the markers once the manifest write they were folded
+        // into has actually landed — if writeManifest fails, this line
+        // never runs (the failure propagates and fails the sweep), so the
+        // markers survive to be absorbed again next time instead of being
+        // silently lost.
+        if (pendingKeys.length > 0) {
+          yield* deletePendingKeys(env.PSD_CACHE, pendingKeys);
+        }
       }
     }
   });

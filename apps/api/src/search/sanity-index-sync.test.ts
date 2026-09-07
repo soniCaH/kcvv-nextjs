@@ -13,7 +13,12 @@ import {
   type VectorRecord,
 } from "./vectorize";
 import { WorkerEnvTag, type WorkerEnv } from "../env";
-import { addToManifest, manifestKey, readManifest } from "./index-manifest";
+import {
+  addToManifest,
+  listPendingIds,
+  manifestKey,
+  readManifest,
+} from "./index-manifest";
 
 const FAKE_VECTOR = Array(1024).fill(0.1);
 
@@ -108,10 +113,13 @@ function makeVectorizeCapture(overrides?: Partial<VectorizeServiceInterface>) {
 
 /**
  * Stateful, in-memory KVNamespace so a test can run sweeps back to back and
- * have each see the manifest the last one wrote — real KV persists between
- * scheduled invocations, `{} as KVNamespace` (the env default) cannot
- * exercise that. `get`/`put` are mutable properties so a test can swap in a
- * failing implementation for one sweep and restore it afterward.
+ * have each see the manifest (and any pending markers) the last one wrote —
+ * real KV persists between scheduled invocations, `{} as KVNamespace` (the
+ * env default) cannot exercise that. `get`/`put` are mutable properties so
+ * a test can swap in a failing implementation for one sweep and restore it
+ * afterward. `list` supports the `prefix` filter `listPendingIds` uses
+ * (index-manifest.ts) — single page, `list_complete: true`, which is all a
+ * test-scale marker count ever needs.
  */
 function makeKvNamespaceMock(): KVNamespace & {
   readonly store: Map<string, string>;
@@ -123,6 +131,21 @@ function makeKvNamespaceMock(): KVNamespace & {
     put: (async (key: string, value: string) => {
       store.set(key, value);
     }) as KVNamespace["put"],
+    delete: (async (key: string) => {
+      store.delete(key);
+    }) as KVNamespace["delete"],
+    list: (async (opts?: { prefix?: string }) => {
+      const prefix = opts?.prefix ?? "";
+      const keys = [...store.keys()]
+        .filter((k) => k.startsWith(prefix))
+        .map((name) => ({ name }));
+      return {
+        keys,
+        list_complete: true,
+        cursor: undefined,
+        cacheStatus: null,
+      };
+    }) as KVNamespace["list"],
   };
   return mock as unknown as KVNamespace & {
     readonly store: Map<string, string>;
@@ -579,6 +602,41 @@ describe("runSanityIndexSync", () => {
       );
 
       expect(deleteCalls.flat()).toEqual(["transient-doc"]);
+    });
+
+    it("absorbs a marker written between sweeps into the manifest, and deletes its key so it isn't absorbed twice (#2856)", async () => {
+      const kv = makeKvNamespaceMock();
+
+      // Simulate the webhook registering an id via a pending marker
+      // (addToManifest) — no sweep has bootstrapped a manifest yet.
+      await Effect.runPromise(addToManifest(kv, "production", "webhook-added"));
+
+      // The sweep runs and the id still matches its query (unlike the
+      // "entire visible life fit between two sweeps" case above) — it
+      // should land in the manifest as a normal tracked id, not get pruned.
+      const { deleteCalls, mock } = makeVectorizeCapture();
+      await Effect.runPromise(
+        sweep(
+          {
+            fetchResponsibility: noopFetch([
+              { ...mockDoc, _id: "webhook-added" },
+            ]),
+          },
+          mock,
+          { SEARCH_INDEX_PRUNE_DRY_RUN: "false", PSD_CACHE: kv },
+        ),
+      );
+      expect(deleteCalls).toHaveLength(0);
+
+      const manifest = await Effect.runPromise(readManifest(kv, "production"));
+      expect(manifest).toContain("webhook-added");
+
+      // The marker key itself is gone — absorbed, not left to be absorbed
+      // (and no-op re-unioned) forever.
+      const pendingAfter = await Effect.runPromise(
+        listPendingIds(kv, "production"),
+      );
+      expect(pendingAfter.ids).toHaveLength(0);
     });
 
     it("deletes an inactive responsibility that predates the first manifest, via the excluded-ids query", async () => {

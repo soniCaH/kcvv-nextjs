@@ -347,11 +347,14 @@ const webhookEffect = (request: Request, webhookSecret: string) =>
         ),
       );
 
-    // 12. Track the id in the reconciliation manifest (#2831) — a document
+    // 12. Drop a pending marker for the id (#2831, #2856) — a document
     // whose entire visible life fits between two nightly sweeps (published
     // and unpublished the same day) would otherwise never appear in any
     // sweep's current-ids set, so no sweep could ever notice it dropped
-    // out. Handed back as `afterResponse` rather than awaited here: it
+    // out. The next sweep absorbs this marker into the reconciliation
+    // manifest and deletes it (search/index-manifest.ts) — this call does
+    // not write the manifest array itself. Handed back as `afterResponse`
+    // rather than awaited here: it
     // provably cannot change this response (`addToManifest` never fails
     // its caller), so there is no reason to add its KV round-trip latency
     // to every indexing webhook — the caller runs it via `ctx.waitUntil`.

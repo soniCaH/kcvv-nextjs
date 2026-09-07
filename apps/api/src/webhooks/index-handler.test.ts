@@ -5,7 +5,7 @@ import type { WorkerEnv } from "../env";
 import { TEST_SECRET, signPayload } from "../test-helpers/svix-signing";
 import { EmbeddingService } from "../search/embedding";
 import { VectorizeService } from "../search/vectorize";
-import { readManifest } from "../search/index-manifest";
+import { listPendingIds } from "../search/index-manifest";
 import {
   ARTICLE_INDEX_PROJECTION,
   ARTICLE_PUBLISHED_FILTER,
@@ -92,21 +92,42 @@ const upsertSpy = vi.fn<(vectors: unknown[]) => void>();
 const deleteByIdsSpy = vi.fn<(ids: string[]) => void>();
 
 /**
- * Stateful in-memory KVNamespace, for the one test that reads back what the
- * webhook's manifest write produced. Every other test uses `makeEnv()`'s
- * default `PSD_CACHE: {} as KVNamespace` — `addToManifest` swallows its own
- * KV errors, so a namespace that can't actually do the job still can't fail
- * the webhook response, which every other test's 200/expected-json assertion
- * already exercises for free.
+ * Stateful in-memory KVNamespace, for the tests that read back what the
+ * webhook's pending-marker write produced (via `listPendingIds`). Every
+ * other test uses `makeEnv()`'s default `PSD_CACHE: {} as KVNamespace` —
+ * `addToManifest` swallows its own KV errors, so a namespace that can't
+ * actually do the job still can't fail the webhook response, which every
+ * other test's 200/expected-json assertion already exercises for free.
  */
-function makeKvNamespaceMock(): KVNamespace {
+function makeKvNamespaceMock(): KVNamespace & {
+  readonly store: Map<string, string>;
+} {
   const store = new Map<string, string>();
-  return {
+  const mock = {
+    store,
     get: (async (key: string) => store.get(key) ?? null) as KVNamespace["get"],
     put: (async (key: string, value: string) => {
       store.set(key, value);
     }) as KVNamespace["put"],
-  } as unknown as KVNamespace;
+    delete: (async (key: string) => {
+      store.delete(key);
+    }) as KVNamespace["delete"],
+    list: (async (opts?: { prefix?: string }) => {
+      const prefix = opts?.prefix ?? "";
+      const keys = [...store.keys()]
+        .filter((k) => k.startsWith(prefix))
+        .map((name) => ({ name }));
+      return {
+        keys,
+        list_complete: true,
+        cursor: undefined,
+        cacheStatus: null,
+      };
+    }) as KVNamespace["list"],
+  };
+  return mock as unknown as KVNamespace & {
+    readonly store: Map<string, string>;
+  };
 }
 
 /**
@@ -114,10 +135,13 @@ function makeKvNamespaceMock(): KVNamespace {
  * calls before succeeding — simulates a transient KV failure for
  * `addToManifest`'s retry (index-manifest.ts's `MANIFEST_RETRY`).
  */
-function makeFlakyKvNamespaceMock(failCount: number): KVNamespace {
+function makeFlakyKvNamespaceMock(
+  failCount: number,
+): KVNamespace & { readonly store: Map<string, string> } {
   const store = new Map<string, string>();
   let attempts = 0;
-  return {
+  const mock = {
+    store,
     get: (async (key: string) => store.get(key) ?? null) as KVNamespace["get"],
     put: (async (key: string, value: string) => {
       attempts++;
@@ -126,7 +150,25 @@ function makeFlakyKvNamespaceMock(failCount: number): KVNamespace {
       }
       store.set(key, value);
     }) as KVNamespace["put"],
-  } as unknown as KVNamespace;
+    delete: (async (key: string) => {
+      store.delete(key);
+    }) as KVNamespace["delete"],
+    list: (async (opts?: { prefix?: string }) => {
+      const prefix = opts?.prefix ?? "";
+      const keys = [...store.keys()]
+        .filter((k) => k.startsWith(prefix))
+        .map((name) => ({ name }));
+      return {
+        keys,
+        list_complete: true,
+        cursor: undefined,
+        cacheStatus: null,
+      };
+    }) as KVNamespace["list"],
+  };
+  return mock as unknown as KVNamespace & {
+    readonly store: Map<string, string>;
+  };
 }
 
 function makeTestLayer(): WebhookLayer {
@@ -266,14 +308,16 @@ describe("handleIndexWebhook", () => {
     ]);
   });
 
-  it("records the id in the reconciliation manifest on a successful upsert (#2831)", async () => {
+  it("writes a pending marker for the id on a successful upsert (#2831, #2856)", async () => {
     // A document whose entire visible life fits between two nightly sweeps
     // (published and unpublished the same day) is never seen as "current" by
     // any sweep — the webhook's own upsert is the only thing that can ever
-    // register it, so the sweep after it drops out can still prune it.
-    // No ctx passed here, so handleIndexWebhook awaits the manifest write
-    // inline rather than firing it via ctx.waitUntil — see the "still
-    // returns a normal response" test below for the ctx-present path.
+    // register it, so the sweep after it drops out can still prune it. The
+    // webhook writes a put-only marker rather than the manifest array
+    // directly (#2856) — the next sweep absorbs it, see sanity-index-sync.test.ts.
+    // No ctx passed here, so handleIndexWebhook awaits the marker write
+    // inline rather than firing it via ctx.waitUntil — see the "hands the
+    // manifest write to ctx.waitUntil" test below for the ctx-present path.
     const kv = makeKvNamespaceMock();
 
     const sanityDoc = {
@@ -299,11 +343,11 @@ describe("handleIndexWebhook", () => {
     );
     expect(response.status).toBe(200);
 
-    const manifest = await Effect.runPromise(readManifest(kv, "production"));
-    expect(manifest).toEqual(["resp-transient"]);
+    const pending = await Effect.runPromise(listPendingIds(kv, "production"));
+    expect(pending.ids).toEqual(["resp-transient"]);
   });
 
-  it("retries a transient manifest-write failure and still records the id", async () => {
+  it("retries a transient marker-write failure and still records the id", async () => {
     const kv = makeFlakyKvNamespaceMock(1); // fails once, succeeds after
 
     mockSanityFetch.mockResolvedValue({
@@ -325,8 +369,56 @@ describe("handleIndexWebhook", () => {
     );
     expect(response.status).toBe(200);
 
-    const manifest = await Effect.runPromise(readManifest(kv, "production"));
-    expect(manifest).toEqual(["resp-retry"]);
+    const pending = await Effect.runPromise(listPendingIds(kv, "production"));
+    expect(pending.ids).toEqual(["resp-retry"]);
+  });
+
+  it("survives two concurrent webhook additions for different ids (#2856)", async () => {
+    // The defect this fix closes: a read-modify-write manifest update has
+    // both webhooks read the same array before either writes, so whichever
+    // writes last wins and the other addition is lost. A put-only marker
+    // per id has no shared read to race on. Genuinely concurrent — both
+    // requests are started before either is awaited — not sequential.
+    const kv = makeKvNamespaceMock();
+
+    // mockSanityFetch is shared by both in-flight requests; the marker key
+    // comes from the webhook payload's own `_id`, not from the fetched
+    // document, so one canned response works for both concurrent calls.
+    mockSanityFetch.mockImplementation(async () => ({
+      _id: "unused",
+      slug: "kantine",
+      title: "Kantine",
+      question: "Wie regelt de kantine?",
+      keywords: ["kantine", "bar"],
+      summary: "De kantine wordt beheerd door de evenementencommissie.",
+    }));
+
+    const bodyA = JSON.stringify({
+      _id: "concurrent-a",
+      _type: "responsibility",
+    });
+    const bodyB = JSON.stringify({
+      _id: "concurrent-b",
+      _type: "responsibility",
+    });
+    const [requestA, requestB] = await Promise.all([
+      makeSignedRequest(bodyA),
+      makeSignedRequest(bodyB),
+    ]);
+
+    // Start both before awaiting either.
+    const [responseA, responseB] = await Promise.all([
+      handleIndexWebhook(requestA, makeEnv({ PSD_CACHE: kv }), defaultLayer),
+      handleIndexWebhook(requestB, makeEnv({ PSD_CACHE: kv }), defaultLayer),
+    ]);
+
+    expect(responseA.status).toBe(200);
+    expect(responseB.status).toBe(200);
+
+    const pending = await Effect.runPromise(listPendingIds(kv, "production"));
+    expect(new Set(pending.ids)).toEqual(
+      new Set(["concurrent-a", "concurrent-b"]),
+    );
   });
 
   it("does not fail the webhook response when every manifest-write retry is exhausted", async () => {
@@ -390,8 +482,8 @@ describe("handleIndexWebhook", () => {
     expect(waitUntilCalls).toHaveLength(1);
 
     await waitUntilCalls[0];
-    const manifest = await Effect.runPromise(readManifest(kv, "production"));
-    expect(manifest).toEqual(["resp-async"]);
+    const pending = await Effect.runPromise(listPendingIds(kv, "production"));
+    expect(pending.ids).toEqual(["resp-async"]);
   });
 
   it("returns skipped_not_found when document is not in Sanity", async () => {
