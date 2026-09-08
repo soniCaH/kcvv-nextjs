@@ -98,7 +98,7 @@ export default {
       new URL(request.url).pathname === "/webhooks/index"
     ) {
       try {
-        return await handleIndexWebhook(request, env);
+        return await handleIndexWebhook(request, env, undefined, ctx);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         console.error("[webhook] unhandled error:", err);
@@ -128,7 +128,10 @@ export default {
     const envLayer = Layer.succeed(WorkerEnvTag, env);
 
     if (event.cron === "30 2 * * *") {
-      // Search embedding index sync — separate invocation budget
+      // Search embedding index sync — separate invocation budget. Its
+      // reconciliation step (#2831) reads/writes its id manifest via the
+      // PSD_CACHE binding directly (env, already in envLayer) rather than
+      // through KvCacheService.
       const layer = Layer.mergeAll(
         EmbeddingServiceLive,
         VectorizeServiceLive,
