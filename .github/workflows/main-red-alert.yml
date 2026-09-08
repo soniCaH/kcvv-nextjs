@@ -20,6 +20,18 @@ on:
     types: [completed]
     branches: [main]
 
+# Both watched workflows run on the same push to main, so a commit that breaks
+# them both fires two workflow_run events at once. Without this, each job would
+# see no open ci-failure issue and both would create one. A single fixed group
+# serialises them, so the second reads the issue the first just opened and
+# comments instead.
+#
+# cancel-in-progress stays false on purpose: cancelling would throw away a real
+# failure report, which is the one thing this workflow exists to deliver.
+concurrency:
+  group: main-red-alert
+  cancel-in-progress: false
+
 permissions:
   contents: read
   issues: write

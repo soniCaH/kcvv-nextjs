@@ -421,6 +421,11 @@ jobs:
     timeout-minutes: 15
     needs: [quality-checks]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Same shape as deploy-api-staging, which runs this scope on every PR and
+    # deploys for real — the only extra step here is `sanity deploy`, on
+    # SANITY_AUTH_TOKEN. Nothing in the job reads GITHUB_TOKEN past checkout.
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
