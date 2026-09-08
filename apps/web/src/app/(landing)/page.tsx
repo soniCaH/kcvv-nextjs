@@ -139,8 +139,7 @@ export default async function HomePage() {
   const [
     articlesResult,
     matchesResult,
-    bannersResult,
-    placeholderResult,
+    homepageResult,
     featuredEventResult,
     teamsResult,
   ] = await Promise.all([
@@ -172,29 +171,23 @@ export default async function HomePage() {
       ),
     ),
     runPromise(
+      // Banners + the off-season placeholder share one `homePage` document
+      // read (#2858 — folded from two independent round-trips). `degradeSection`,
+      // not `Effect.catchAll` — every Sanity read ends in `Effect.orDie`
+      // (`fetch-groq.ts`), so a repository method's error channel is `never`
+      // and a `catchAll` on one type-checks but never runs (review finding 1
+      // on #2505/PR #2852). A failed read now degrades both halves together,
+      // which is correct: they were always the same fetch under the hood.
       degradeSection(
         Effect.gen(function* () {
           const repo = yield* HomepageRepository;
-          return yield* repo.getBanners();
+          return yield* repo.getHomepage();
         }),
-        { bannerSlotA: null, bannerSlotB: null, bannerSlotC: null },
-        "[HomePage] banners read failed; falling back to empty slots.",
-      ),
-    ),
-    runPromise(
-      // No `revalidate`/`tags` here unlike `getBanners` — and needs none:
-      // `/api/revalidate`'s `case "homePage"` already clears the whole page
-      // on an editor's publish (#2505). `degradeSection`, not `Effect.catchAll`
-      // — every Sanity read ends in `Effect.orDie` (`fetch-groq.ts`), so a
-      // repository method's error channel is `never` and a `catchAll` on one
-      // type-checks but never runs (review finding 1 on #2505/PR #2852).
-      degradeSection(
-        Effect.gen(function* () {
-          const repo = yield* HomepageRepository;
-          return yield* repo.getPlaceholder();
-        }),
-        null,
-        "[HomePage] placeholder read failed; falling back to null.",
+        {
+          banners: { bannerSlotA: null, bannerSlotB: null, bannerSlotC: null },
+          placeholder: null,
+        },
+        "[HomePage] homepage (banners + placeholder) read failed; falling back to empty slots and no placeholder.",
       ),
     ),
     runPromise(
@@ -221,8 +214,8 @@ export default async function HomePage() {
 
   const articles = articlesResult;
   const matches = matchesResult ?? [];
-  const banners = bannersResult;
-  const placeholder = placeholderResult;
+  const banners = homepageResult.banners;
+  const placeholder = homepageResult.placeholder;
   const featuredEvent = featuredEventResult;
 
   // Senior teams (A/B) — drive the "Eerste ploegen" block and are de-duplicated

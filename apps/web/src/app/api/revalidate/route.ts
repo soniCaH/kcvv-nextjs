@@ -70,9 +70,10 @@ function targets(
       };
     case "sponsor":
       return { paths: ["/sponsors"], tags: [SANITY_TAGS.sponsors] };
-    // The homepage banners read (HOMEPAGE_BANNERS_QUERY) is tagged 'banners'
-    // and lives on '/'; it derefs `banner` docs from the `homePage` document,
-    // so either type changing must bust it.
+    // The homepage read (HOMEPAGE_QUERY — banners + the off-season placeholder,
+    // one fetch since #2858) is tagged 'banners' and lives on '/'; it derefs
+    // `banner` docs from the `homePage` document, so either type changing
+    // must bust it.
     case "homePage":
     case "banner":
       return { paths: ["/"], tags: [SANITY_TAGS.banners] };
