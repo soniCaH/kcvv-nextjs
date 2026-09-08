@@ -44,17 +44,19 @@ const meta = {
   component: TeamEditorial,
   parameters: { layout: "padded" },
   tags: ["autodocs", "vr"],
+  args: { teamLabel: "U8" },
 } satisfies Meta<typeof TeamEditorial>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Both blocks present, body carries a "Het verhaal" pull-quote. */
+/** Both blocks present, body carries a "Het verhaal" pull-quote. Trainingen
+ *  still routes to ProSoccerData — unconditional, not a fallback (#2637). */
 export const FullEditorial: Story = {
   args: { body, contactInfo },
 };
 
-/** Only the contact block — verhaal auto-hides. */
+/** Only the contact block — verhaal auto-hides, Trainingen stays on. */
 export const ContactOnly: Story = {
   args: { contactInfo },
 };
@@ -68,4 +70,13 @@ export const BodyNoPullquote: Story = {
       }),
     ],
   },
+};
+
+/**
+ * Routing state (#2637) — `body`/`contactInfo` both unset, the state all 26
+ * team documents are in today. Only "Trainingen" renders; the section still
+ * never returns `null` — this is the 18-of-18 state the ticket measures.
+ */
+export const TrainingRoutingOnly: Story = {
+  args: {},
 };
