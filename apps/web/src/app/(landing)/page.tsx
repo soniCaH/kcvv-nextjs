@@ -177,7 +177,10 @@ export default async function HomePage() {
       // (`fetch-groq.ts`), so a repository method's error channel is `never`
       // and a `catchAll` on one type-checks but never runs (review finding 1
       // on #2505/PR #2852). A failed read now degrades both halves together,
-      // which is correct: they were always the same fetch under the hood.
+      // where before either could survive the other's failure (two separate
+      // fetches, two separate Data Cache entries) — a real trade-off, not a
+      // no-op: they read the same document, so a failure that loses one would
+      // almost always lose the other anyway.
       degradeSection(
         Effect.gen(function* () {
           const repo = yield* HomepageRepository;
