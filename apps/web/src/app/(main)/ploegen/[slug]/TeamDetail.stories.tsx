@@ -40,6 +40,7 @@ import {
   StripedSeam,
   PageContainer,
   EmptyState,
+  SectionHeader,
 } from "@/components/design-system";
 import { deriveCompetitiveBlockState } from "@/lib/utils/competitive-block-state";
 
@@ -363,6 +364,7 @@ function TeamDetailAssembly({ competitive = "live" }: TeamDetailAssemblyProps) {
             </PageContainer>
           ) : (
             <PageContainer as="section" className="py-10">
+              <SectionHeader title="Klassement" size="display-md" />
               <StandingsSection
                 tables={standings}
                 divisionFull="Eerste Elftal A – 3e Nat. A"
@@ -373,6 +375,7 @@ function TeamDetailAssembly({ competitive = "live" }: TeamDetailAssemblyProps) {
 
           <StripedSeam colorPair="ink-cream" height="md" />
           <PageContainer as="section" className="py-10">
+            <SectionHeader title="Wedstrijden" size="display-md" />
             <TeamMatchesSection
               matches={scheduleMatches}
               teamSlug={TEAM_SLUG}
@@ -384,17 +387,25 @@ function TeamDetailAssembly({ competitive = "live" }: TeamDetailAssemblyProps) {
 
       <StripedSeam colorPair="ink-cream" height="md" />
       <PageContainer as="section" className="py-10">
+        <SectionHeader title="Spelers" size="display-md" />
         <SquadGrid players={players} />
       </PageContainer>
 
       <StripedSeam colorPair="ink-cream" height="md" />
       <PageContainer as="section" className="py-10">
+        <SectionHeader title="Staf" size="display-md" />
         <TeamStaff staff={staff} heading="Staf" />
       </PageContainer>
 
+      {/* Unconditional (#2637) — no `show*` gate, mirroring page.tsx. */}
       <StripedSeam colorPair="ink-cream" height="md" />
       <PageContainer as="section" className="py-10">
-        <TeamEditorial body={teamBody} contactInfo={contactInfo} />
+        <SectionHeader title="Trainingen & contact" size="display-md" />
+        <TeamEditorial
+          body={teamBody}
+          contactInfo={contactInfo}
+          teamLabel="A-ploeg"
+        />
       </PageContainer>
     </>
   );
