@@ -59,9 +59,9 @@ describe("ContactPage — Clubgegevens", () => {
   });
 
   // #2474 rule 4 — an action link (mailto:, Google Maps) is lowercase body
-  // type, so the highlighter marker binds. It keeps its Envelope/ArrowRight
-  // icon; only the affordance chrome (`hover:underline`) is replaced by the
-  // marker.
+  // type, so the highlighter marker binds. The mailto link keeps its
+  // Envelope icon as-is; only the affordance chrome (`hover:underline`) is
+  // replaced by the marker.
   it("gives the Maps and mailto action links the .prose-link marker", () => {
     render(<ContactPage />);
     const route = screen.getByRole("link", { name: /routebeschrijving/i });
@@ -70,6 +70,22 @@ describe("ContactPage — Clubgegevens", () => {
       name: /info@kcvvelewijt.be/i,
     });
     expect(infoLink).toHaveClass("prose-link");
+  });
+
+  // #2547 rule 2 amends #2474 rule 4 — the Maps link hands the visitor to a
+  // third party (Google Maps), so it earns the external mark instead of the
+  // bare Phosphor ArrowRight it used to carry. The mailto links stay outside
+  // this ticket's population (#2547 — "the mailto:/tel: family").
+  it("marks the Routebeschrijving link external, replacing its bare ArrowRight", () => {
+    render(<ContactPage />);
+    const route = screen.getByRole("link", { name: /routebeschrijving/i });
+    expect(route.textContent).toContain("(opent in een nieuw tabblad)");
+    expect(route.querySelector('svg[aria-hidden="true"]')).toBeTruthy();
+
+    const [infoLink] = screen.getAllByRole("link", {
+      name: /info@kcvvelewijt.be/i,
+    });
+    expect(infoLink.textContent).not.toContain("opent in een nieuw tabblad");
   });
 
   it("renders the general info mailto and both cross-links", () => {

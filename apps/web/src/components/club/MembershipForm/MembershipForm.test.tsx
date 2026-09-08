@@ -39,6 +39,18 @@ describe("MembershipForm", () => {
     expect(screen.getByLabelText(/E-mail/)).toBeInTheDocument();
   });
 
+  // #2547 rule 5 — an internal link never opens a new tab, so the external
+  // mark can go on meaning exactly one thing.
+  it("never opens the internal /privacy link in a new tab", () => {
+    render(<MembershipForm />);
+    const privacyLink = screen.getByRole("link", {
+      name: /privacyverklaring/i,
+    });
+    expect(privacyLink).toHaveAttribute("href", "/privacy");
+    expect(privacyLink).not.toHaveAttribute("target");
+    expect(privacyLink).not.toHaveAttribute("rel");
+  });
+
   it("reveals the medical-certificate checkbox only for player roles", () => {
     render(<MembershipForm />);
     expect(screen.queryByText(/medisch attest/i)).not.toBeInTheDocument();

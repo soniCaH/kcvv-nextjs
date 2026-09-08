@@ -60,7 +60,11 @@ describe("FeaturedSponsorCard", () => {
     expect(link).toHaveAttribute("href", base.url);
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
-    expect(screen.getByText("Bezoek website ↗")).toBeInTheDocument();
+    // #2547 rule 1 — the whole card is the link and its aria-label already
+    // names the destination, so the affordance text earns no external mark;
+    // the old literal ↗ dies.
+    expect(screen.getByText("Bezoek website")).toBeInTheDocument();
+    expect(screen.queryByText(/Bezoek website ↗/)).not.toBeInTheDocument();
   });
 
   it("falls back to the italic name in the inset when there is no logo", () => {
@@ -82,7 +86,7 @@ describe("FeaturedSponsorCard", () => {
   it("renders a static card with no link and no visit affordance when there is no url", () => {
     render(<FeaturedSponsorCard sponsor={{ ...base, url: undefined }} />);
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
-    expect(screen.queryByText("Bezoek website ↗")).not.toBeInTheDocument();
+    expect(screen.queryByText("Bezoek website")).not.toBeInTheDocument();
     // The card still renders its logo + name.
     expect(
       screen.getByAltText("Garage Peeters — sponsor KCVV Elewijt"),

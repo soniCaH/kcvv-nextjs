@@ -28,6 +28,14 @@ describe("UltrasHero", () => {
     expect(cta).toHaveAttribute("data-ultras-join");
   });
 
+  // #2547 rule 1 — the label already names the destination ("via Facebook"),
+  // so the control earns no external mark at all; the old literal ↗ dies.
+  it("carries no literal external-arrow character — the label already names Facebook", () => {
+    render(<UltrasHero joinHref={FB} />);
+    const cta = screen.getByRole("link", { name: /word lid via facebook/i });
+    expect(cta.textContent).not.toContain("↗");
+  });
+
   it("renders no up-link when none is passed", () => {
     render(<UltrasHero joinHref={FB} />);
     expect(screen.queryByTestId("up-link")).not.toBeInTheDocument();

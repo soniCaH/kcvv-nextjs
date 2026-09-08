@@ -203,6 +203,20 @@ describe("<ArticleBody>", () => {
     });
   });
 
+  describe("external mark (#2547 rules 3+4)", () => {
+    it("announces a non-social external link in Dutch, not English", () => {
+      const content = [
+        paragraph("First paragraph, plain (DropCap target)."),
+        paragraphWithLink("Bekijk", "https://www.voetbalvlaanderen.be"),
+      ];
+      const { container } = render(<ArticleBody content={content} />);
+      const link = container.querySelector("a.prose-link");
+      expect(link?.textContent).toContain("(opent in een nieuw tabblad)");
+      expect(link?.textContent).not.toContain("opens in new tab");
+      expect(link?.querySelector('svg[aria-hidden="true"]')).toBeTruthy();
+    });
+  });
+
   describe("h2 block serializer", () => {
     // h2 body headings delegate to <QASectionDivider> per the 5.d3 lock —
     // tests assert the delegation produces the divider's separator + title

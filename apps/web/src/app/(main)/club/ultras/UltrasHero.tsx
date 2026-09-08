@@ -90,7 +90,7 @@ export function UltrasHero({ joinHref, upLink }: UltrasHeroProps) {
             className: "bg-warm hover:bg-warm",
           })}
         >
-          Word lid via Facebook ↗
+          Word lid via Facebook
         </a>
       </PageContainer>
     </header>

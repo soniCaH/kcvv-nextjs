@@ -17,7 +17,8 @@ export interface FeaturedSponsorCardProps {
  *   dingbat.
  * - **Body:** logo inset (cream box, `border-2 border-ink`) → italic-display
  *   name → optional `description` blurb (~3-line clamp, omitted when absent) →
- *   mono "Bezoek website ↗" when `url` is present.
+ *   mono "Bezoek website" when `url` is present. No external mark: the card's
+ *   own `aria-label` already names the destination (#2547 rule 1).
  * - **Logo absent:** the italic-display name fills the inset.
  * - **Link:** when `url` is present the whole card is the link and presses down
  *   on hover (canonical paper-stamp); without a `url` it renders as a static
@@ -65,7 +66,7 @@ export function FeaturedSponsorCard({ sponsor }: FeaturedSponsorCardProps) {
           // brighter jersey-deep only reaches 3.73:1 on cream-soft (sub-AA);
           // jersey-deep-dark clears 4.5:1 while keeping the green-link cue.
           <span className="text-jersey-deep-dark mt-3 inline-block font-mono text-[12px] font-semibold tracking-[0.08em] uppercase">
-            Bezoek website ↗
+            Bezoek website
           </span>
         )}
       </div>

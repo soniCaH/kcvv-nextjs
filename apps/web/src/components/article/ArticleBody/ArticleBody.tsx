@@ -5,15 +5,11 @@ import type {
 } from "@portabletext/react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowSquareOut as ExternalLinkIcon,
-  FacebookLogo,
-  InstagramLogo,
-  X,
-} from "@/lib/icons.redesign";
+import { FacebookLogo, InstagramLogo, X } from "@/lib/icons.redesign";
 import type { ReactNode } from "react";
 import { DropCapParagraph } from "@/components/design-system/DropCapParagraph";
 import { EndMark } from "@/components/design-system/EndMark";
+import { ExternalMark } from "@/components/design-system/ExternalMark";
 import { PullQuote } from "@/components/design-system/PullQuote";
 import { QASectionDivider } from "@/components/design-system/QASectionDivider";
 import { SubjectAvatar } from "@/components/design-system/SubjectAvatar";
@@ -761,16 +757,7 @@ export function buildComponents({
             className="prose-link"
           >
             {children}
-            {isExternal ? (
-              <>
-                <ExternalLinkIcon
-                  aria-hidden="true"
-                  className="ml-0.5 inline-block align-baseline opacity-60"
-                  size="0.75em"
-                />
-                <span className="sr-only"> (opens in new tab)</span>
-              </>
-            ) : null}
+            {isExternal ? <ExternalMark /> : null}
           </a>
         );
       },
