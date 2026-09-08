@@ -43,6 +43,28 @@ git branch -d feat/issue-<N>   # safe — refuses if unmerged
 
 Leave worktrees whose PR is still open — those are under review. Report what you pruned.
 
+Two traps:
+
+- **Look before removing.** `--force` discards uncommitted work without asking. `git -C ../kcvv-issue-<N> status --porcelain` must print nothing first.
+- **A squash-merged branch makes `git branch -d` refuse**, because the squashed commit's patch-id does not match the branch's own commits. That refusal is not evidence work would be lost. Confirm the content actually landed, then force:
+
+```bash
+M=$(gh pr view "feat/issue-<N>" --json mergeCommit --jq '.mergeCommit.oid')
+git merge-base --is-ancestor "$M" origin/main && git branch -D feat/issue-<N>
+```
+
+### 0b. Report the human-only queue
+
+Operational follow-ups — a migration to run, a flag to flip, a KV namespace to create — ship _inside_ code PRs and leave no trace once the PR is merged and its body stops being read. Print them before computing the wave, because this is the one moment the user is already in this context:
+
+```bash
+gh issue list --label ready-for-human --state open --json number,title --jq '.[] | "#\(.number) \(.title)"'
+```
+
+Report that list above the proposed wave. `ready-for-human` (`docs/agents/triage-labels.md`) marks work the human implements — it carries no `ready` label, so step 1's gate already keeps it out of the wave.
+
+The other half of the rule: when a wave's own work ships an operational step, **file it as an issue labelled `ready-for-human` before closing the branch**. A note in a PR body is not tracking. #2871 exists because a migration shipped unrun with only a PR-body mention, and nothing would have surfaced it again.
+
 ### 1. Determine the wave
 
 If the user passed explicit issue numbers, put each one through the same gate the automatic path uses — a named issue is not a pre-approved one:
