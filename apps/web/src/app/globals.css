@@ -681,6 +681,30 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* ===== Text selection (#2610, decision-sheet §8 D0 — C6) =====
+     Jersey-deep ground, cream text — the site's one selection mark. Inverted
+     inside an ink or jersey-deep(-dark) band: on those grounds the default
+     jersey-deep highlight would sit at or near the surface's own colour and
+     the mark would go invisible (a jersey-deep card selecting jersey-deep-on
+     -jersey-deep shows no box at all), so `.bg-ink` / `.bg-jersey-deep` /
+     `.bg-jersey-deep-dark` descendants swap to a cream mark with jersey-deep
+     text instead. Scoped to the Tailwind background utilities those bands
+     actually render (`<TapedCard bg="ink">`, `<CtaBand>`, `<PageHero>`,
+     `<SearchMasthead>`, `<FirstTeamsBlock>`, dark `<MatchStripView>` rows,
+     the organigram hero/detail panel, `/club/ultras`), not a colour heuristic
+     — a future band adds its selector here rather than guessing from hue. */
+  ::selection {
+    background-color: var(--color-jersey-deep);
+    color: var(--color-cream);
+  }
+
+  .bg-ink ::selection,
+  .bg-jersey-deep ::selection,
+  .bg-jersey-deep-dark ::selection {
+    background-color: var(--color-cream);
+    color: var(--color-jersey-deep);
+  }
+
   html {
     /* Only hyphenate words >=8 chars, with >=4 chars before and after the
        break, so short Dutch words ("plezantste", "passie") wrap whole instead
