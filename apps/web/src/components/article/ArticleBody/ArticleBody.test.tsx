@@ -215,6 +215,22 @@ describe("<ArticleBody>", () => {
       expect(link?.textContent).not.toContain("opens in new tab");
       expect(link?.querySelector('svg[aria-hidden="true"]')).toBeTruthy();
     });
+
+    // #2547's own resolution comment, "Consequence for rule 4 worth
+    // flagging": a social link is exempt from the mark by rule 1 (the brand
+    // icon already names the destination), so under rule 4 — the sentence
+    // goes where the box goes — it loses its announcement rather than
+    // having it translated. No mark, no sentence, in any language.
+    it("carries no announcement at all on a social link — no box, no sentence, in either language", () => {
+      const content = [
+        paragraph("First paragraph, plain (DropCap target)."),
+        paragraphWithLink("Volg ons", "https://facebook.com/KCVVElewijt/"),
+      ];
+      const { container } = render(<ArticleBody content={content} />);
+      const link = container.querySelector('a[data-article-link="social"]');
+      expect(link?.textContent).not.toContain("opens in new tab");
+      expect(link?.textContent).not.toContain("opent in een nieuw tabblad");
+    });
   });
 
   describe("h2 block serializer", () => {

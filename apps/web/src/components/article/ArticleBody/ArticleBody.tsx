@@ -726,7 +726,7 @@ export function buildComponents({
         const isExternal = href.startsWith("http");
         const social = isExternal ? socialBrandFor(href) : null;
         if (social) {
-          const { Icon, label } = social;
+          const { Icon } = social;
           return (
             <a
               href={href}
@@ -742,7 +742,13 @@ export function buildComponents({
                 className="inline-block size-[1em] shrink-0"
               />
               {children}
-              <span className="sr-only"> ({label}, opens in new tab)</span>
+              {/* No <ExternalMark> and no sr-only announcement here — rule
+                  1 exempts a social link (the brand icon already names the
+                  destination), and #2547's "Consequence for rule 4"
+                  explicitly says the sentence goes where the box goes: no
+                  box, no sentence, in any language. This is the one line
+                  the chosen rule removes an existing assistive cue from,
+                  rather than translating it. */}
             </a>
           );
         }
