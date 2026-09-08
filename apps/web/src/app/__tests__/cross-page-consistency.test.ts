@@ -1439,17 +1439,25 @@ describe("rule 10 catches what it claims to (#2505)", () => {
  *   ticket's 9-file population — an *internal* link wearing the external
  *   arrow, which is the homepage critique map's defect to fix, not a swap
  *   this ticket makes.
- * - **A file that wires an anchor to a literal `target="_blank"` may not
- *   also carry a literal `→`.** File granularity, not per-element — the
- *   same trade-off rule 5 already makes for `BFF_SIGNAL`/
- *   `REVALIDATE_WINDOW`. Checked against every production file that
- *   legitimately renders `→` today (`Button`, `LinkButton`,
- *   `EditorialLink`, `NewsCard`, `EditorialHero`, `TicketStub`,
- *   `TeamFlagship`, `TeamStaff`, `HulpFinder`, `OrgPersonCard`,
- *   `OrganigramOverview`, …): none of them also render a literal
- *   `target="_blank"`, so the co-occurrence reads as a real defect
- *   whenever it fires, not a false positive on a file that happens to do
- *   both things in unrelated components.
+ * - **An anchor-like element (`<a>`/`<Link>`) that wires a literal
+ *   `target="_blank"` on its OWN opening tag may not also carry a literal
+ *   `→` in its OWN body.** Element-scoped, not file-scoped — a first
+ *   attempt at this rule was file-granular (like rule 5's `BFF_SIGNAL`/
+ *   `REVALIDATE_WINDOW` co-occurrence), and review round 1 caught that it
+ *   would fail correct code: `SiteFooter.tsx` already has `target="_blank"`
+ *   socials, so an ordinary, unrelated internal `Alle nieuws →` CTA added
+ *   anywhere else in that file would have failed a rule it never actually
+ *   broke. `hasRelatedInternalArrow` below finds each anchor-like opening
+ *   tag that itself carries `target="_blank"`, then reads only the text
+ *   between that tag and its own matching closer — `<a>`/`<Link>` never
+ *   self-nest in this codebase, so "the next `</a>` or `</Link>`" is
+ *   unambiguously that element's own closer, not a sibling's.
+ * - **No sr-only announcement is ever English again.** #2547 rule 4 — "the
+ *   sentence goes where the box goes" — is a site-wide invariant now that
+ *   `<ExternalMark>` exists, and review round 1 caught one surviving
+ *   English announcement this ticket's own `it.each` list never named:
+ *   `ArticleBody`'s social-link branch. `hasEnglishAnnouncement` below is
+ *   the regression guard for that class of miss, not just that one line.
  *
  * **What this cannot see**, named so nobody reads it as more: a
  * `target="_blank"` built from a spread object
@@ -1466,7 +1474,46 @@ describe("rule 10 catches what it claims to (#2505)", () => {
  */
 const EXTERNAL_ARROW_GLYPH = "↗";
 const INTERNAL_ARROW_GLYPH = "→";
-const TARGET_BLANK_LITERAL = /target="_blank"/;
+const ENGLISH_ANNOUNCEMENT = "opens in new tab";
+
+/** True when `source` contains the retired external-mark glyph ↗ at all. */
+function hasExternalArrowGlyph(source: string): boolean {
+  return source.includes(EXTERNAL_ARROW_GLYPH);
+}
+
+/** True when `source` still carries the pre-#2578 English sr-only
+ *  announcement anywhere — every announcement is Dutch now (rule 4). */
+function hasEnglishAnnouncement(source: string): boolean {
+  return source.includes(ENGLISH_ANNOUNCEMENT);
+}
+
+/** An anchor-like opening tag (`<a>` or `<Link>`) whose own attributes
+ *  carry a literal `target="_blank"` — group 1 captures the tag name so
+ *  the matching closer can be found. */
+const ANCHOR_LIKE_OPEN_WITH_BLANK = /<(a|Link)\b[^>]*\btarget="_blank"[^>]*>/g;
+
+/**
+ * True when an anchor-like element that wires its OWN literal
+ * `target="_blank"` also carries a literal `→` in its OWN body (the text
+ * between its opening tag and its own matching closing tag) — never a
+ * file-wide co-occurrence. `<a>`/`<Link>` don't self-nest in this
+ * codebase, so the next matching closer after an opening tag is
+ * unambiguously that element's own.
+ */
+function hasRelatedInternalArrow(source: string): boolean {
+  for (const match of source.matchAll(ANCHOR_LIKE_OPEN_WITH_BLANK)) {
+    const tagName = match[1]!;
+    const bodyStart = match.index + match[0].length;
+    const closeTag = `</${tagName}>`;
+    const closeIdx = source.indexOf(closeTag, bodyStart);
+    const body =
+      closeIdx === -1
+        ? source.slice(bodyStart)
+        : source.slice(bodyStart, closeIdx);
+    if (body.includes(INTERNAL_ARROW_GLYPH)) return true;
+  }
+  return false;
+}
 
 /**
  * Handed to #2402 by #2547's own resolution comment, not this ticket's
@@ -1487,19 +1534,22 @@ const externalArrowSources = productionSources.filter(
   (relPath) => !EXTERNAL_ARROW_EXEMPTIONS.has(relPath),
 );
 
-const targetBlankSources = productionSources.filter((relPath) =>
-  TARGET_BLANK_LITERAL.test(code.get(relPath)!),
-);
-
 describe("the external mark is <ExternalMark />, never a literal arrow (#2578)", () => {
   it.each(externalArrowSources)("%s — no literal ↗", (relPath) => {
-    expect(code.get(relPath)!.includes(EXTERNAL_ARROW_GLYPH)).toBe(false);
+    expect(hasExternalArrowGlyph(code.get(relPath)!)).toBe(false);
   });
 
-  it.each(targetBlankSources)(
-    '%s — a target="_blank" file carries no literal →',
+  it.each(productionSources)(
+    '%s — no target="_blank" element also carries a literal → in its own body',
     (relPath) => {
-      expect(code.get(relPath)!.includes(INTERNAL_ARROW_GLYPH)).toBe(false);
+      expect(hasRelatedInternalArrow(code.get(relPath)!)).toBe(false);
+    },
+  );
+
+  it.each(productionSources)(
+    "%s — every sr-only announcement is Dutch, never English",
+    (relPath) => {
+      expect(hasEnglishAnnouncement(code.get(relPath)!)).toBe(false);
     },
   );
 });
@@ -1514,7 +1564,7 @@ describe("rule 11's exemptions stay pinned to a real, still-live ↗ (#2578)", (
   it.each([...EXTERNAL_ARROW_EXEMPTIONS])(
     "%s — still actually carries ↗",
     (relPath) => {
-      expect(code.get(relPath)!.includes(EXTERNAL_ARROW_GLYPH)).toBe(true);
+      expect(hasExternalArrowGlyph(code.get(relPath)!)).toBe(true);
     },
   );
 });
@@ -1522,6 +1572,10 @@ describe("rule 11's exemptions stay pinned to a real, still-live ↗ (#2578)", (
 /**
  * The lists are derived, so an edit that emptied either would read as a
  * pass on every route — the same coverage pin rules 5, 9 and 10 carry.
+ * Every case below calls the actual detector functions the `it.each`
+ * blocks above call — not a re-derived inline expression — so inverting or
+ * deleting a detector's real behaviour fails these too, per review round 1
+ * finding 5.
  */
 describe("rule 11 catches what it claims to (#2578)", () => {
   it("covers every one of this ticket's 9 fixed files", () => {
@@ -1551,29 +1605,73 @@ describe("rule 11 catches what it claims to (#2578)", () => {
     );
   });
 
-  it("would flag a literal ↗ landing in an unexempted file", () => {
+  it("flags a literal ↗ landing in an unexempted file", () => {
     expect(
-      "export const X = () => <a>Bezoek ons <span aria-hidden>↗</span></a>;".includes(
-        EXTERNAL_ARROW_GLYPH,
+      hasExternalArrowGlyph(
+        "export const X = () => <a>Bezoek ons <span aria-hidden>↗</span></a>;",
       ),
     ).toBe(true);
   });
 
-  it('would flag a target="_blank" file that still carries a bare →', () => {
-    const offender = `<a href={x} target="_blank">Bestel <span aria-hidden>→</span></a>`;
-    expect(TARGET_BLANK_LITERAL.test(offender)).toBe(true);
-    expect(offender.includes(INTERNAL_ARROW_GLYPH)).toBe(true);
+  it("leaves a file with no ↗ at all alone", () => {
+    expect(
+      hasExternalArrowGlyph("export const X = () => <a>Bezoek ons</a>;"),
+    ).toBe(false);
   });
 
-  it('leaves a file alone that renders → with no target="_blank" in sight', () => {
+  it('flags a target="_blank" element that carries a bare → in its own body', () => {
+    const offender = `<a href={x} target="_blank">Bestel <span aria-hidden>→</span></a>`;
+    expect(hasRelatedInternalArrow(offender)).toBe(true);
+  });
+
+  it("flags the same defect on a next/link <Link>, not only a bare <a>", () => {
+    const offender = `<Link href={x} target="_blank">Bestel <span aria-hidden>→</span></Link>`;
+    expect(hasRelatedInternalArrow(offender)).toBe(true);
+  });
+
+  it('leaves an element alone that renders → with no target="_blank" on it', () => {
     const internal = `<a href="/kalender">Volledige kalender <span aria-hidden>→</span></a>`;
-    expect(TARGET_BLANK_LITERAL.test(internal)).toBe(false);
+    expect(hasRelatedInternalArrow(internal)).toBe(false);
+  });
+
+  // The exact false positive review round 1 caught: SiteFooter's own shape
+  // — a target="_blank" social link with no arrow in IT, and an unrelated
+  // internal → CTA living in a DIFFERENT element in the same file. A
+  // file-granular co-occurrence check would have flagged this; the
+  // element-scoped one must not.
+  it('does not flag an unrelated internal → CTA sharing a file with an unrelated target="_blank" social link', () => {
+    const siteFooterShape = `
+      <a href="https://facebook.com/KCVVElewijt" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+        <FacebookLogo aria-hidden="true" />
+      </a>
+      <Link href="/nieuws" className="prose-link">
+        Alle nieuws <span aria-hidden="true">→</span>
+      </Link>
+    `;
+    expect(hasRelatedInternalArrow(siteFooterShape)).toBe(false);
   });
 
   it('does not chase a target="_blank" built from a spread object', () => {
-    // ClubshopBanner's own shape — deliberately outside this rule's second
-    // arm, since the file is already a pinned ↗ exemption above.
+    // ClubshopBanner's own shape — `target: "_blank"` inside an object
+    // literal never matches the attribute-string pattern this rule reads,
+    // deliberately, since the file is already a pinned ↗ exemption above.
     const spread = `<LinkButton href={x} {...{ target: "_blank", rel: "noopener noreferrer" }}>Naar de shop <span>↗</span></LinkButton>`;
-    expect(TARGET_BLANK_LITERAL.test(spread)).toBe(false);
+    expect(hasRelatedInternalArrow(spread)).toBe(false);
+  });
+
+  it("flags the retired English sr-only announcement", () => {
+    expect(
+      hasEnglishAnnouncement(
+        '<span className="sr-only"> (Facebook, opens in new tab)</span>',
+      ),
+    ).toBe(true);
+  });
+
+  it("leaves the Dutch announcement alone", () => {
+    expect(
+      hasEnglishAnnouncement(
+        '<span className="sr-only"> (opent in een nieuw tabblad)</span>',
+      ),
+    ).toBe(false);
   });
 });
