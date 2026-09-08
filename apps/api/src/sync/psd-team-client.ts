@@ -1,6 +1,7 @@
 import { Context, Effect, Layer, Schema as S } from "effect";
 import { WorkerEnvTag } from "../env";
 import { KvCacheService } from "../cache/kv-cache";
+import { PsdGateService } from "../psd/gate";
 import {
   PsdClubStaffMember,
   PsdMember,
@@ -34,8 +35,7 @@ export class PsdTeamClientValidationError extends Error {
 }
 
 export type PsdTeamClientErrors =
-  | PsdTeamClientError
-  | PsdTeamClientValidationError;
+  PsdTeamClientError | PsdTeamClientValidationError;
 
 export interface PsdTeamClientInterface {
   readonly getRawTeams: () => Effect.Effect<
@@ -100,6 +100,7 @@ export const PsdTeamClientLive = Layer.effect(
   Effect.gen(function* () {
     const env = yield* WorkerEnvTag;
     const cache = yield* KvCacheService;
+    const gate = yield* PsdGateService;
     const base = env.PSD_API_BASE_URL;
 
     const psdHeaders = {
@@ -110,8 +111,20 @@ export const PsdTeamClientLive = Layer.effect(
       "Content-Type": "application/json",
     };
 
+    // Every PSD call passes the global gate first, exactly as the read path
+    // does (`psd/service.ts`). The nightly sync fans out across two concurrency
+    // boundaries — `runSync` runs members+staff at 2, and `paginateAll` below
+    // runs the remaining pages at 3 — so without a token those six in-flight
+    // calls sat entirely outside the ≤5/s worldwide budget (#2318).
+    //
+    // Pacing only. This does NOT put the sync inside incident alerting:
+    // `gate.reportOutcome` is called from the `TypedKvCache` refresh path
+    // (`cache/kv-cache.ts`) alone, and the sync never goes through one — it
+    // touches `KvCacheService` for `increment()` and nothing else. A sync that
+    // fails against a 429-ing PSD still opens no incident and pings no Slack.
     const countedFetch = <A, I>(url: string, schema: S.Schema<A, I>) =>
-      fetchJson(url, schema, psdHeaders).pipe(
+      gate.acquireToken.pipe(
+        Effect.zipRight(fetchJson(url, schema, psdHeaders)),
         Effect.ensuring(cache.increment()),
       );
 
