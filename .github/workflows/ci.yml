@@ -376,10 +376,16 @@ jobs:
     timeout-minutes: 15
     needs: quality-checks
     if: github.event_name == 'pull_request' && github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+    # Deploys with CLOUDFLARE_API_TOKEN; it never uses GITHUB_TOKEN for more
+    # than the checkout itself.
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6.0.10
@@ -419,6 +425,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6.0.10
