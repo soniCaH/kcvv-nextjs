@@ -1414,3 +1414,166 @@ describe("rule 10 catches what it claims to (#2505)", () => {
     ).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Rule 11 (#2578) — the external mark is <ExternalMark />, never a literal arrow
+// ---------------------------------------------------------------------------
+
+/**
+ * #2547's decision: the mark that tells a visitor a link hands them to a
+ * third party is `<ExternalMark />` — one primitive carrying the Phosphor
+ * glyph and the Dutch `sr-only` announcement together — never a bare arrow
+ * character typed into a span. Two arrows painted that role before this
+ * ticket: `↗` and, on exactly two ticket-shop CTAs, `→`. The guard holds
+ * two separate claims apart rather than banning either glyph outright,
+ * because `→` is also — far more often — the internal "stay on the site"
+ * glyph `<EditorialLink>`, `<Button>`, `<TicketStub>` and a dozen other
+ * components render at rest; banning it site-wide would be rule 9's own
+ * mistake in reverse, flagging correct code as a defect.
+ *
+ * - **`↗` never appears in shipped code.** Every production sighting of
+ *   this glyph, before this ticket, was the external mark — #2547's own
+ *   audit found no other user of it anywhere in the tree. Two sightings
+ *   are pinned exemptions below, not violations: both are homepage-owned
+ *   and both #2547 itself handed to #2402 rather than folding into this
+ *   ticket's 9-file population — an *internal* link wearing the external
+ *   arrow, which is the homepage critique map's defect to fix, not a swap
+ *   this ticket makes.
+ * - **A file that wires an anchor to a literal `target="_blank"` may not
+ *   also carry a literal `→`.** File granularity, not per-element — the
+ *   same trade-off rule 5 already makes for `BFF_SIGNAL`/
+ *   `REVALIDATE_WINDOW`. Checked against every production file that
+ *   legitimately renders `→` today (`Button`, `LinkButton`,
+ *   `EditorialLink`, `NewsCard`, `EditorialHero`, `TicketStub`,
+ *   `TeamFlagship`, `TeamStaff`, `HulpFinder`, `OrgPersonCard`,
+ *   `OrganigramOverview`, …): none of them also render a literal
+ *   `target="_blank"`, so the co-occurrence reads as a real defect
+ *   whenever it fires, not a false positive on a file that happens to do
+ *   both things in unrelated components.
+ *
+ * **What this cannot see**, named so nobody reads it as more: a
+ * `target="_blank"` built from a spread object
+ * (`{...{ target: "_blank" }}`, `ClubshopBanner`'s own shape) rather than
+ * the literal attribute string. Not chased on purpose — `ClubshopBanner`
+ * is itself one of the two pinned `↗` exemptions below, and it is
+ * #2402's file to fix, not this rule's to catch by a different door.
+ *
+ * **This file's own prose** uses `→` throughout (this docblock included)
+ * to explain the rule it enforces — that is exactly why `SELF` is excluded
+ * from `scannableSources`/`productionSources` upstream in this file, the
+ * same exclusion every other rule here already relies on. No special
+ * casing needed for rule 11.
+ */
+const EXTERNAL_ARROW_GLYPH = "↗";
+const INTERNAL_ARROW_GLYPH = "→";
+const TARGET_BLANK_LITERAL = /target="_blank"/;
+
+/**
+ * Handed to #2402 by #2547's own resolution comment, not this ticket's
+ * 9-file population — both render an *internal* link wearing the external
+ * mark. Pinned by file, mirroring rule 8's and rule 10's exemption tables.
+ */
+const EXTERNAL_ARROW_EXEMPTIONS = new Set([
+  // "Volledige kalender ↗" — an internal /kalender link. #2547: "under
+  // rule 5 its ↗ is simply false." Not this ticket's to fix.
+  "components/home/UpcomingMatches/UpcomingMatchesClient.tsx",
+  // A literal ↗ inside an inverted <LinkButton> whose label already names
+  // Brandsfit — rule 1 deletes it, but #2547 handed the whole file to
+  // #2402 rather than this ticket.
+  "components/home/ClubshopBanner/ClubshopBanner.tsx",
+]);
+
+const externalArrowSources = productionSources.filter(
+  (relPath) => !EXTERNAL_ARROW_EXEMPTIONS.has(relPath),
+);
+
+const targetBlankSources = productionSources.filter((relPath) =>
+  TARGET_BLANK_LITERAL.test(code.get(relPath)!),
+);
+
+describe("the external mark is <ExternalMark />, never a literal arrow (#2578)", () => {
+  it.each(externalArrowSources)("%s — no literal ↗", (relPath) => {
+    expect(code.get(relPath)!.includes(EXTERNAL_ARROW_GLYPH)).toBe(false);
+  });
+
+  it.each(targetBlankSources)(
+    '%s — a target="_blank" file carries no literal →',
+    (relPath) => {
+      expect(code.get(relPath)!.includes(INTERNAL_ARROW_GLYPH)).toBe(false);
+    },
+  );
+});
+
+/**
+ * The exemption list is itself pinned: an exemption that has genuinely lost
+ * its ↗ must have the entry removed (rule 8's own "no fewer, no more" bar),
+ * and this fails loudly the day that happens rather than quietly stop
+ * testing a file that no longer needs the carve-out.
+ */
+describe("rule 11's exemptions stay pinned to a real, still-live ↗ (#2578)", () => {
+  it.each([...EXTERNAL_ARROW_EXEMPTIONS])(
+    "%s — still actually carries ↗",
+    (relPath) => {
+      expect(code.get(relPath)!.includes(EXTERNAL_ARROW_GLYPH)).toBe(true);
+    },
+  );
+});
+
+/**
+ * The lists are derived, so an edit that emptied either would read as a
+ * pass on every route — the same coverage pin rules 5, 9 and 10 carry.
+ */
+describe("rule 11 catches what it claims to (#2578)", () => {
+  it("covers every one of this ticket's 9 fixed files", () => {
+    const fixed = [
+      "components/article/ArticleBody/ArticleBody.tsx",
+      "app/(main)/evenementen/[slug]/EventDetailCtas.tsx",
+      "components/article/blocks/EventDetailBlock/EventDetailBlock.tsx",
+      "components/article/blocks/EventFactInline/EventFactInline.tsx",
+      "components/club/ContactPage/ContactPage.tsx",
+      "app/(main)/club/ultras/UltrasHero.tsx",
+      "app/(main)/club/ultras/page.tsx",
+      "components/sponsors/FeaturedSponsorCard/FeaturedSponsorCard.tsx",
+      "components/club/MembershipForm/MembershipForm.tsx",
+    ];
+    expect(fixed).toHaveLength(9);
+    for (const file of fixed) {
+      expect(externalArrowSources).toContain(file);
+    }
+  });
+
+  it("does not flag the two files this ticket deliberately leaves for #2402", () => {
+    expect(externalArrowSources).not.toContain(
+      "components/home/UpcomingMatches/UpcomingMatchesClient.tsx",
+    );
+    expect(externalArrowSources).not.toContain(
+      "components/home/ClubshopBanner/ClubshopBanner.tsx",
+    );
+  });
+
+  it("would flag a literal ↗ landing in an unexempted file", () => {
+    expect(
+      "export const X = () => <a>Bezoek ons <span aria-hidden>↗</span></a>;".includes(
+        EXTERNAL_ARROW_GLYPH,
+      ),
+    ).toBe(true);
+  });
+
+  it('would flag a target="_blank" file that still carries a bare →', () => {
+    const offender = `<a href={x} target="_blank">Bestel <span aria-hidden>→</span></a>`;
+    expect(TARGET_BLANK_LITERAL.test(offender)).toBe(true);
+    expect(offender.includes(INTERNAL_ARROW_GLYPH)).toBe(true);
+  });
+
+  it('leaves a file alone that renders → with no target="_blank" in sight', () => {
+    const internal = `<a href="/kalender">Volledige kalender <span aria-hidden>→</span></a>`;
+    expect(TARGET_BLANK_LITERAL.test(internal)).toBe(false);
+  });
+
+  it('does not chase a target="_blank" built from a spread object', () => {
+    // ClubshopBanner's own shape — deliberately outside this rule's second
+    // arm, since the file is already a pinned ↗ exemption above.
+    const spread = `<LinkButton href={x} {...{ target: "_blank", rel: "noopener noreferrer" }}>Naar de shop <span>↗</span></LinkButton>`;
+    expect(TARGET_BLANK_LITERAL.test(spread)).toBe(false);
+  });
+});
