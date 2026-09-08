@@ -157,6 +157,12 @@ jobs:
               - 'apps/web/.storybook/**'
               - 'apps/web/public/**'
               - 'apps/web/package.json'
+              # The VR runner is built out of the lockfile too: a transitive
+              # bump can break it without a single source file changing.
+              # jest-runtime 30.5.1 killed all 206 suites this way (#2761) —
+              # that PR touched only lockfiles, so VR skipped and the break
+              # landed on main unseen.
+              - 'pnpm-lock.yaml'
 
   visual-regression:
     name: Visual Regression

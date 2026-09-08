@@ -117,6 +117,22 @@ input, textarea {
 const config: TestRunnerConfig = {
   setup() {
     expect.extend({ toMatchImageSnapshot });
+
+    // Tripwire for the module.register() workaround — see
+    // .storybook/allow-module-register.cjs for the full story. This file is
+    // loaded through Storybook's serverRequire, which is the very call that
+    // registers the loader, so by the time setup() runs the counter must have
+    // moved. Zero means Storybook stopped calling it and the workaround is
+    // dead code. Nothing else would ever tell us: no version is pinned, so
+    // Renovate has nothing to surface.
+    if (globalThis.__KCVV_MODULE_REGISTER_CALLS__ === 0) {
+      throw new Error(
+        "@storybook/test-runner no longer calls module.register(). The " +
+          "workaround is obsolete: delete apps/web/.storybook/" +
+          "allow-module-register.cjs, delete apps/web/.storybook/" +
+          "test-runner-jest.config.mjs, and remove this check.",
+      );
+    }
   },
   // `prepare` runs once per page lifecycle, BEFORE the test-runner's only
   // page.goto(iframe.html). Installing init scripts here guarantees they run
