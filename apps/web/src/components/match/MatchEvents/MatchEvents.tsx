@@ -415,8 +415,9 @@ function EventRow({
   const nameTint = highlighted ? "text-jersey-deep" : "text-ink";
   return (
     <div className="grid grid-cols-[36px_22px_1fr_1fr_22px_20px] items-center gap-3 py-3 md:gap-4">
-      {/* Minute — display-big numeric, tight tracking. */}
-      <span className="font-display-big text-ink text-[18px] leading-none font-black tracking-[-0.025em] tabular-nums">
+      {/* Minute — display-big numeric, tight tracking. lining-nums, not
+          tabular-nums (#2610) — the kit's tabular figures are inert. */}
+      <span className="font-display-big text-ink text-[18px] leading-none font-black tracking-[-0.025em] lining-nums">
         {formatMinute(event.minute, event.additionalTime)}
       </span>
 
@@ -482,7 +483,9 @@ function SingleSideEventRow({
 }) {
   return (
     <div className="grid grid-cols-[36px_22px_1fr] items-center gap-3 py-3 md:gap-4">
-      <span className="font-display-big text-ink text-[18px] leading-none font-black tracking-[-0.025em] tabular-nums">
+      {/* lining-nums, not tabular-nums (#2610) — the kit's tabular figures
+          are inert. */}
+      <span className="font-display-big text-ink text-[18px] leading-none font-black tracking-[-0.025em] lining-nums">
         {formatMinute(event.minute, event.additionalTime)}
       </span>
       <span className="flex items-center justify-center">

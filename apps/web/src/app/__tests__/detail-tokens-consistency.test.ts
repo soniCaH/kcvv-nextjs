@@ -6,8 +6,7 @@
  * bands, a hover that adds a border always reserving the width at rest, a
  * hovered underline thickening rather than jumping, and scores/tables in a
  * working figure set instead of the kit's inert `tabular-nums`. This file
- * grows by one `describe` block per detail as each lands — C6, S8, M6 so
- * far.
+ * grows by one `describe` block per detail as each lands — C6, S8, M6, Y4.
  *
  * This file is intentionally separate from `cross-page-consistency.test.ts`:
  * #2578 owns that file this wave, and every later ticket that wants a
@@ -144,4 +143,39 @@ describe("hover-underline-thicken exists and respects reduced motion (M6)", () =
     );
     expect(ownsHoverUnderline).toBe(true);
   });
+});
+
+// ---------------------------------------------------------------------------
+// Y4 — scores and tabulated numbers read in a consistent figure set;
+// tabular-nums never ships alone (measured inert on every face this site
+// uses — decision-sheet §8, docs/design/mockups/2516-numerals/candidates.html)
+// ---------------------------------------------------------------------------
+
+/**
+ * `font-mono` anywhere in the file is not evidence the *tabular-nums* span
+ * itself is mono — `MatchHero.tsx` carries both (`font-mono` on its
+ * unrelated competition meta line, `tabular-nums` on the display-big
+ * scoreline), and a file-wide "or font-mono" check missed exactly that
+ * combination during #2610's own TDD loop. So this is a named allowlist,
+ * not a heuristic: the two call sites where the tabular-nums span is
+ * genuinely monospaced by construction (Y4's other sanctioned fix, "the
+ * column goes mono") and needs no `lining-nums` alongside it.
+ */
+const MONO_TABULAR_EXCEPTIONS = new Set([
+  "components/layout/MatchStrip/MatchStripView.tsx",
+  "components/design-system/TextareaCounter/TextareaCounter.tsx",
+]);
+
+describe("tabular-nums never ships without lining-nums or a mono face (Y4)", () => {
+  it.each(productionSources)(
+    "%s — tabular-nums is not the whole fix",
+    (relPath) => {
+      const tokens = tokensByFile.get(relPath)!;
+      if (!tokens.has("tabular-nums")) return;
+
+      const worksAnotherWay =
+        tokens.has("lining-nums") || MONO_TABULAR_EXCEPTIONS.has(relPath);
+      expect(worksAnotherWay).toBe(true);
+    },
+  );
 });

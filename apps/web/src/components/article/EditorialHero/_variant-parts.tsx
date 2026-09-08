@@ -419,7 +419,10 @@ export function HeroMatchScoreBar({
         />
         <span
           className={cn(
-            "font-display-big text-ink min-w-[60px] text-center leading-none font-black tracking-[-0.01em] tabular-nums",
+            // lining-nums, not tabular-nums (#2610) — the inert figure-set
+            // fix; see globals.css's reserved-border block for the sibling
+            // decision this ships alongside.
+            "font-display-big text-ink min-w-[60px] text-center leading-none font-black tracking-[-0.01em] lining-nums",
             hasScore ? "text-[24px]" : "text-[16px]",
           )}
         >

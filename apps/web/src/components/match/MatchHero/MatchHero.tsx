@@ -189,7 +189,9 @@ function ScoreRegion({
       return (
         <div
           data-score-state="numeric"
-          className="font-display-big text-ink flex items-baseline gap-2 text-[34px] leading-none font-black tabular-nums"
+          // lining-nums, not tabular-nums (#2610): the kit's tabular figures
+          // are inert (no `tnum` feature); lining-nums is the working switch.
+          className="font-display-big text-ink flex items-baseline gap-2 text-[34px] leading-none font-black lining-nums"
         >
           {hasScores ? null : <span className="sr-only">vs</span>}
           <span aria-hidden={!hasScores}>

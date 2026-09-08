@@ -180,7 +180,9 @@ function AgendaMatchRow({ match }: { match: CalendarMatch }) {
         </span>
         {isPlayed && hasScore && (
           <span
-            className="font-display text-ink shrink-0 text-[15px] font-black tabular-nums"
+            // lining-nums, not tabular-nums (#2610) — the kit's tabular
+            // figures are inert.
+            className="font-display text-ink shrink-0 text-[15px] font-black lining-nums"
             style={
               underline ? { boxShadow: underline, padding: "0 4px" } : undefined
             }
