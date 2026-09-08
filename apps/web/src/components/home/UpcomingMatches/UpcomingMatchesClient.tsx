@@ -170,7 +170,10 @@ export const UpcomingMatchesClient = ({
           <Link
             href="/kalender"
             // `py-2 -my-2` — hit area only, no layout shift (#2394).
-            className="text-ink hover:text-jersey-deep -my-2 inline-flex items-center gap-1 py-2 font-mono text-sm font-bold tracking-wide uppercase underline-offset-4 hover:underline"
+            // `hover-underline-thicken` (#2610): underline is present at
+            // rest and thickens on hover, replacing the old `hover:underline`
+            // jump — see globals.css.
+            className="hover-underline-thicken text-ink hover:text-jersey-deep -my-2 inline-flex items-center gap-1 py-2 font-mono text-sm font-bold tracking-wide uppercase underline-offset-4"
           >
             Volledige kalender ↗
           </Link>

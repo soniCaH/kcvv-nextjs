@@ -869,6 +869,37 @@
    `focus-visible:border-*` anywhere must also declare a resting border-width
    token somewhere in the same file. */
 
+/* ===== Hover-thickens underline (#2610, decision-sheet §8 D0 — M6) =====
+   The underline is present (thin) at rest and only its
+   `text-decoration-thickness` changes on hover/focus — never added from
+   nothing, which is the jump this replaces. `text-decoration-thickness` does
+   not participate in layout, so the thicken costs nothing to reserve.
+   `.prose-link` above is NOT a consumer: its "underline" is a background-
+   image marker, not `text-decoration`, and stays on its own sweep mechanism.
+   Duration is the Motion Vocabulary's Chrome speed (DESIGN.md → Motion) —
+   the same speed `.prose-link`'s own colour transition above uses — because
+   this is a colour/border-class chrome change, not a fourth speed. Reduced
+   motion makes the transition itself absent (`transition: none`), the same
+   shape as `.prose-link`'s own reduced-motion block above: the rest/hover
+   thickness values still apply, they just stop animating between each
+   other. */
+.hover-underline-thicken {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-thickness 150ms var(--ease-out);
+}
+
+.hover-underline-thicken:hover,
+.hover-underline-thicken:focus-visible {
+  text-decoration-thickness: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-underline-thicken {
+    transition: none;
+  }
+}
+
 /* Full-bleed breakout utility — pulls an element to viewport width */
 .full-bleed {
   position: relative;

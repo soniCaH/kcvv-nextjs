@@ -6,7 +6,8 @@
  * bands, a hover that adds a border always reserving the width at rest, a
  * hovered underline thickening rather than jumping, and scores/tables in a
  * working figure set instead of the kit's inert `tabular-nums`. This file
- * grows by one `describe` block per detail as each lands — C6 first.
+ * grows by one `describe` block per detail as each lands — C6, S8, M6 so
+ * far.
  *
  * This file is intentionally separate from `cross-page-consistency.test.ts`:
  * #2578 owns that file this wave, and every later ticket that wants a
@@ -112,4 +113,35 @@ describe("a hover-added border reserves its width at rest (S8)", () => {
       expect(reservesWidth).toBe(true);
     },
   );
+});
+
+// ---------------------------------------------------------------------------
+// M6 — a hovered underline thickens, and the gesture is absent under
+// prefers-reduced-motion (the transition, not the end state)
+// ---------------------------------------------------------------------------
+
+describe("hover-underline-thicken exists and respects reduced motion (M6)", () => {
+  it("globals.css declares the thickness transition on the Chrome speed", () => {
+    expect(globalsCss).toMatch(
+      /\.hover-underline-thicken\s*{[^}]*text-decoration-thickness:\s*1px[^}]*transition:\s*text-decoration-thickness 150ms var\(--ease-out\)/,
+    );
+  });
+
+  it("globals.css thickens on hover and focus-visible", () => {
+    expect(globalsCss).toMatch(
+      /\.hover-underline-thicken:hover,\s*\n\.hover-underline-thicken:focus-visible\s*{[^}]*text-decoration-thickness:\s*2px/,
+    );
+  });
+
+  it("globals.css makes the transition absent (not shortened) under reduced motion", () => {
+    const reducedMotionBlocks = globalsCss.match(
+      /@media \(prefers-reduced-motion: reduce\) {[\s\S]*?\n}/g,
+    );
+    const ownsHoverUnderline = reducedMotionBlocks?.some(
+      (block) =>
+        block.includes(".hover-underline-thicken") &&
+        block.includes("transition: none"),
+    );
+    expect(ownsHoverUnderline).toBe(true);
+  });
 });
