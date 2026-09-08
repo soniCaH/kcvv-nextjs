@@ -854,6 +854,21 @@
   }
 }
 
+/* ===== Reserved hover borders (#2610, decision-sheet §8 D0 — S8) =====
+   Pure discipline, not a utility class: wherever a hover swaps a border's
+   colour, the resting state already carries the same border WIDTH (`border`,
+   `border-2`, or a `border-[…]` arbitrary value) — only the colour token
+   changes on `:hover` / `:focus-visible` / `:has(:hover)`. A width that
+   appears only on hover is what shifts a neighbour; a colour never does.
+   Every hover-adds-a-border site audited for #2610 already followed this
+   (`<SiteHeader>`'s "Word lid" pill, the organigram explorer chrome,
+   `<ArticleBody>`'s social-link chip, `fieldChrome.ts`'s 8-state form-field
+   machine, `<SharePage>`'s template picker) — there was no violation to
+   retrofit. `app/__tests__/detail-tokens-consistency.test.ts` holds the line
+   forward: a file that uses `hover:border-*` / `group-hover:border-*` /
+   `focus-visible:border-*` anywhere must also declare a resting border-width
+   token somewhere in the same file. */
+
 /* Full-bleed breakout utility — pulls an element to viewport width */
 .full-bleed {
   position: relative;
