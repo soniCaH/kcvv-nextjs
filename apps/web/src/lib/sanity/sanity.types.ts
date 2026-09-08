@@ -2795,6 +2795,5 @@ declare global {
 }
 // Lets @sanity/client releases that predate the global registry read it too
 declare module "@sanity/client" {
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Sanity TypeGen's own compat shim; regenerated verbatim by `sanity typegen generate` (#2858).
   interface SanityQueries extends globalThis.SanityQueries {}
 }
