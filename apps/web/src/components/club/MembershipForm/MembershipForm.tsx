@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useMemo, useState, type ReactNode } from "react";
 import {
   EMAIL_PATTERN,
@@ -440,9 +441,17 @@ export function MembershipForm({
             error={fieldErrors.privacyAccepted}
           >
             Ik aanvaard de{" "}
-            <a href="/privacy" className="prose-link underline">
+            {/* #2547 rule 5 — an internal link never opens a new tab, so a
+                plain <a> here (a hard same-tab navigation) is the wrong
+                instrument: it unmounts this form and every useState field
+                (including the Turnstile token) with it. next/link's
+                client-side navigation still unmounts the form on a route
+                change — the field loss is not eliminated, only no longer
+                compounded by a full page reload. Draft persistence across
+                that navigation is a design decision, not this ticket's. */}
+            <Link href="/privacy" className="prose-link underline">
               privacyverklaring
-            </a>
+            </Link>
             .
           </CheckboxField>
         </div>
