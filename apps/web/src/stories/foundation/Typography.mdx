@@ -50,7 +50,9 @@ async, each is backed by a metric-matched (`size-adjust`) fallback — `Freight 
 > `--font-display`; **body moved from Montserrat to Freight Sans Pro in #2174**
 > (`--font-family-body`), reversing master-design decision-log entry 19.
 > Freight Sans defaults to oldstyle figures in prose; stat surfaces opt into
-> tabular lining figures (`tabular-nums lining-nums`).
+> lining figures (`lining-nums`) — `tabular-nums` does nothing on any face
+> this site uses (the kit ships no `tnum` feature) and is not part of the
+> fix (#2610).
 
 ---
 
@@ -63,7 +65,7 @@ The samples below render live from the CSS variables.
 <FontSample label="font-body" cssVar="--font-family-body" size="1rem" weight={400} sample="De wedstrijd begint om 15:00. Alle supporters zijn welkom op het veld van KCVV Elewijt." note="Default body text (Freight Sans Pro)" />
 <FontSample label="font-mono" cssVar="--font-family-mono" size="1.25rem" weight={700} sample="2 — 1   90′   45+2′" note="Scores, timestamps, countdowns, keyboard shortcuts (IBM Plex Mono)" />
 
-> **Display vs Big — when to use which.** `--font-display` (Freight Display) is the default heading serif for all heading *text* — editorial headlines, section titles, hero lines, the italic accent word, and global `h1–h6` (weights 600–700). `--font-display-big` (Freight Big) is the heavier poster cut, **always `font-black` (900)**, reserved for the single largest heading tier (`<EditorialHeading size="display-2xl">`) and every big **number** — `<NumberDisplay>`, match scores, standings points, jersey-number discs, and monogram badges (numbers add `tabular-nums`).
+> **Display vs Big — when to use which.** `--font-display` (Freight Display) is the default heading serif for all heading *text* — editorial headlines, section titles, hero lines, the italic accent word, and global `h1–h6` (weights 600–700). `--font-display-big` (Freight Big) is the heavier poster cut, **always `font-black` (900)**, reserved for the single largest heading tier (`<EditorialHeading size="display-2xl">`) and every big **number** — `<NumberDisplay>`, match scores, standings points, jersey-number discs, and monogram badges (numbers add `lining-nums`, not `tabular-nums` — #2610).
 
 ---
 
