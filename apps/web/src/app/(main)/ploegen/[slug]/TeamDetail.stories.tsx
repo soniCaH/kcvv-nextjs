@@ -42,7 +42,10 @@ import {
   EmptyState,
   SectionHeader,
 } from "@/components/design-system";
-import { deriveCompetitiveBlockState } from "@/lib/utils/competitive-block-state";
+import {
+  deriveCompetitiveBlockState,
+  competitiveBlockHeadingLabel,
+} from "@/lib/utils/competitive-block-state";
 
 const KCVV_TEAM_ID = 1235;
 const TEAM_SLUG = "kcvv-elewijt-a";
@@ -364,7 +367,16 @@ function TeamDetailAssembly({ competitive = "live" }: TeamDetailAssemblyProps) {
             </PageContainer>
           ) : (
             <PageContainer as="section" className="py-10">
-              <SectionHeader title="Klassement" size="display-md" />
+              {/* Reads the same helper `page.tsx` reads
+                  (`sectionLabels.klassement`) rather than a hardcoded
+                  "Klassement" (#2637 review round 1) — `NoTablePublished`/
+                  `Numberless` render "De reeks", never "Klassement", and a
+                  literal string here would have shown the wrong heading on
+                  exactly the two stories that exist to demonstrate that. */}
+              <SectionHeader
+                title={competitiveBlockHeadingLabel(competitiveState) ?? ""}
+                size="display-md"
+              />
               <StandingsSection
                 tables={standings}
                 divisionFull="Eerste Elftal A – 3e Nat. A"

@@ -404,11 +404,19 @@ export default async function TeamPage({ params }: TeamPageProps) {
   // it empty. `teamBody`/`teamContact` still gate their own sub-blocks
   // independently inside that component.
 
-  // What the "Trainingen" routing sentence calls this team — the youth age
-  // code ("U8") where one exists, the resolved display name otherwise (a
-  // senior team like "A-ploeg" has no `ageGroup`). Resolved once here, not
-  // re-derived inside `<TeamEditorial>`.
-  const trainingRoutingLabel = team.ageGroup ?? team.displayName;
+  // What the "Trainingen" routing sentence calls this team — `displayName`
+  // alone (#2637 review round 1). `team.ageGroup` was tried here first and
+  // reverted: it is `computeAgeGroup(row.age)`, and `age` is a *competition
+  // band*, not the team's identity — exactly the bug `teamDisplayName()`
+  // exists to close (#2630/#2539: "three of the eighteen team pages used to
+  // head a different team than the one clicked"). Verified against
+  // production: `kcvve-u16` carries `age: "U17"`, so an `ageGroup` fallback
+  // would have headed the page "U16." and then told the visitor the
+  // trainingsuren van "U17" aren't up yet — the same identity bug, in the one
+  // sentence on the page this ticket added. `displayName` is already correct
+  // for every row (senior and youth alike), so there is nothing left to fall
+  // back from.
+  const trainingRoutingLabel = team.displayName;
 
   // One record for every section's label — the nav chip, each section's own
   // `aria-label` (on its focus target below) AND its `<SectionHeader>` all

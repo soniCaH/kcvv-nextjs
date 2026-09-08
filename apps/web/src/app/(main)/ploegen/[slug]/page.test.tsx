@@ -340,4 +340,32 @@ describe("/ploegen/[slug] heading sweep — every gated section gets a real <h2>
     // sibling in the flow, not swallowed behind a `null` return.
     expect(info?.tagName).toBe("SECTION");
   });
+
+  it("names the team in the Trainingen sentence by displayName, never ageGroup — pinned against the real production mismatch (kcvve-u16: age U17, displayName U16)", async () => {
+    mockFindBySlug.mockReturnValue(
+      Effect.succeed({
+        ...headingSweepTeamFixture(),
+        // The exact shape measured on production 2026: PSD's `age` (a
+        // competition band, shared across teams) disagrees with the team's
+        // own resolved identity. `ageGroup` is `computeAgeGroup(age)`, so an
+        // `ageGroup` fallback here would print "U17" — the same
+        // head-a-different-team bug `teamDisplayName()` exists to close
+        // (#2630/#2539) — in the one new sentence this ticket added.
+        age: "U17",
+        ageGroup: "U17",
+        displayName: "U16",
+      }),
+    );
+
+    const element = await TeamPage({
+      params: Promise.resolve({ slug: "kcvv-elewijt-u8" }),
+    });
+    render(element);
+
+    const info = document.getElementById("info");
+    expect(info?.textContent).toContain(
+      "De trainingsuren van U16 staan nog niet op de site.",
+    );
+    expect(info?.textContent).not.toContain("van U17");
+  });
 });

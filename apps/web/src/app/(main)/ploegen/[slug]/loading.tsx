@@ -15,6 +15,18 @@
  * auto-hide on empty data, so the skeleton only previews the always-present
  * hero + nav + a representative squad block. `min-h-screen` root preserved per
  * the envelope-drift guard.
+ *
+ * **Squad heading mirrored (#2637 review round 1).** The real `#spelers`
+ * section now renders a `<SectionHeader size="display-md">` (`mb-10`) above
+ * `<SquadGrid>` — this skeleton's squad preview mirrors that exact box
+ * (height + margin) so the grid doesn't jump down when the skeleton is
+ * replaced. The other four new `<h2>`s this ticket added (`#klassement`,
+ * `#wedstrijden`, `#staf`, `#info`) are deliberately NOT previewed here —
+ * unchanged from before #2637, this skeleton was already conservative about
+ * every section but squad, and giving those four sections their own
+ * skeleton rows (not just a heading placeholder, the whole section) is the
+ * loading-skeleton ticket's job, sequenced after this one per #2637's own
+ * "Not in scope" list.
  */
 
 import { cn } from "@/lib/utils/cn";
@@ -76,8 +88,12 @@ export default function TeamDetailLoading() {
 
       <StripedSeam colorPair="ink-cream" height="md" />
 
-      {/* SquadGrid — position-grouped: auto-fill minmax(140px,1fr) ink cards. */}
+      {/* SquadGrid — position-grouped: auto-fill minmax(140px,1fr) ink cards.
+          `<SectionHeader size="display-md">`'s own box (display-md line
+          height + `mb-10`) mirrored first, so the grid doesn't shift down
+          when the real heading replaces this bar (#2637 review round 1). */}
       <PageContainer as="section" className="py-10">
+        <Skeleton className="mb-10 h-8 w-32" />
         <div className="flex flex-col gap-8">
           {Array.from({ length: 2 }).map((_, group) => (
             <div key={group}>

@@ -52,10 +52,12 @@ export interface TeamEditorialProps {
   /** `team.contactInfo` Portable Text — contact block. */
   contactInfo?: PortableTextBlock[] | null;
   /**
-   * What to call this team in the Trainingen routing sentence — the
-   * resolved `team.ageGroup ?? team.displayName` ("U8" for a youth team,
-   * the full display name otherwise). Resolved once at the page boundary
-   * (`page.tsx`), not re-derived here.
+   * What to call this team in the Trainingen routing sentence —
+   * `team.displayName`, resolved once at the page boundary (`page.tsx`),
+   * not re-derived here. Deliberately never `team.ageGroup`: `age` is a
+   * competition band, not the team's identity (`teamDisplayName()`'s own
+   * docblock — #2630/#2539), and using it here reintroduced that exact bug
+   * in review round 1 (`kcvve-u16` carries `age: "U17"`).
    */
   teamLabel: string;
   className?: string;
