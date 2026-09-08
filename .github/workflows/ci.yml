@@ -49,6 +49,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
+        with:
+          # `pnpm install` runs lifecycle scripts for the onlyBuiltDependencies
+          # allowlist, and the build/test steps execute first-party and
+          # third-party code. Checkout persists GITHUB_TOKEN into .git/config by
+          # default, where any of that could read it — nothing in this job does a
+          # network git operation, so drop it.
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6.0.10
@@ -141,11 +148,16 @@ jobs:
     runs-on: ubuntu-latest
     # REDESIGN-DISABLED: gated off via the RUN_VISUAL_REGRESSION repo variable.
     if: ${{ vars.RUN_VISUAL_REGRESSION == 'true' && github.event_name == 'pull_request' }}
+    # Reading the diff is all this job does; paths-filter goes through the API.
+    permissions:
+      contents: read
     outputs:
       visual: ${{ steps.filter.outputs.visual }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Detect visual paths
         id: filter
@@ -193,6 +205,10 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.60.0-noble
       options: --user 0:0
+    # Installs dependencies and drives a browser over the built Storybook; it
+    # only ever reads the repo.
+    permissions:
+      contents: read
     env:
       # The container image already ships browsers under /ms-playwright. Suppress
       # @playwright/test's postinstall re-download to save ~150 MB and ~1 min.
@@ -200,6 +216,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6.0.10
