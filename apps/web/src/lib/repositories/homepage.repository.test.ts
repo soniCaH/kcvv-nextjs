@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { Effect } from "effect";
-import type {
-  HOMEPAGE_BANNERS_QUERY_RESULT,
-  HOMEPAGE_PLACEHOLDER_QUERY_RESULT,
-} from "../sanity/sanity.types";
+import type { HOMEPAGE_QUERY_RESULT } from "../sanity/sanity.types";
 
 // Mock the sanity client before importing the repository
 vi.mock("../sanity/client", () => ({
@@ -14,7 +11,7 @@ vi.mock("../sanity/client", () => ({
 
 import { sanityClient } from "../sanity/client";
 import {
-  HOMEPAGE_BANNERS_QUERY,
+  HOMEPAGE_QUERY,
   HomepageRepository,
   HomepageRepositoryLive,
   toPlaceholderVM,
@@ -30,9 +27,9 @@ function runWithRepo<A>(effect: Effect.Effect<A, never, HomepageRepository>) {
   return Effect.runPromise(Effect.provide(effect, HomepageRepositoryLive));
 }
 
-function makeBannersResult(
-  overrides: Partial<NonNullable<HOMEPAGE_BANNERS_QUERY_RESULT>> = {},
-): HOMEPAGE_BANNERS_QUERY_RESULT {
+function makeHomepageResult(
+  overrides: Partial<NonNullable<HOMEPAGE_QUERY_RESULT>> = {},
+): HOMEPAGE_QUERY_RESULT {
   return {
     bannerSlotA: {
       imageUrl: "https://cdn.sanity.io/banner-a.webp",
@@ -49,13 +46,14 @@ function makeBannersResult(
       alt: "Banner C alt",
       href: "https://example.com/c",
     },
+    matchesSliderPlaceholder: null,
     ...overrides,
   };
 }
 
-describe("HOMEPAGE_BANNERS_QUERY", () => {
+describe("HOMEPAGE_QUERY", () => {
   it("includes hotspot-aware CDN crop params for all three banner slots", () => {
-    const query = HOMEPAGE_BANNERS_QUERY as unknown as string;
+    const query = HOMEPAGE_QUERY as unknown as string;
     // Banners render in a fixed 6:1 `object-cover` frame (<BannerSlot>), so the
     // URL bakes a 6:1 focalpoint crop — otherwise the browser center-crops and
     // ignores the editorial hotspot (same bug fixed on article cover images).
@@ -66,17 +64,66 @@ describe("HOMEPAGE_BANNERS_QUERY", () => {
     expect(matches).toHaveLength(3);
     expect(query).toContain(`"imageUrl": image.asset->url + ${cropParams}`);
   });
+
+  it("also projects the matchesSliderPlaceholder fields (#2858 — folded into the same round-trip)", () => {
+    const query = HOMEPAGE_QUERY as unknown as string;
+    expect(query).toContain(
+      `"matchesSliderPlaceholder": matchesSliderPlaceholder`,
+    );
+    expect(query).toContain("nextSeasonKickoff");
+    expect(query).toContain("announcementText");
+    expect(query).toContain("announcementHref");
+    expect(query).toContain("highlightImage");
+  });
+
+  it('reads the homePage document exactly once (no second `[_type == "homePage"][0]` projection)', () => {
+    const query = HOMEPAGE_QUERY as unknown as string;
+    const documentReads = query.match(/\[_type == "homePage"\]\[0\]/g);
+    expect(documentReads).toHaveLength(1);
+  });
 });
 
 describe("HomepageRepository", () => {
-  describe("getBanners", () => {
-    it("maps all three banner slots correctly from GROQ result", async () => {
-      mockFetch.mockResolvedValueOnce(makeBannersResult());
+  describe("getHomepage", () => {
+    it("issues exactly one sanityClient.fetch call for both banners and the placeholder (#2858)", async () => {
+      mockFetch.mockResolvedValueOnce(makeHomepageResult());
 
-      const banners = await runWithRepo(
+      await runWithRepo(
         Effect.gen(function* () {
           const repo = yield* HomepageRepository;
-          return yield* repo.getBanners();
+          return yield* repo.getHomepage();
+        }),
+      );
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("carries getBanners's cache tag/revalidate treatment (already covered by /api/revalidate's homePage case)", async () => {
+      mockFetch.mockResolvedValueOnce(makeHomepageResult());
+
+      await runWithRepo(
+        Effect.gen(function* () {
+          const repo = yield* HomepageRepository;
+          return yield* repo.getHomepage();
+        }),
+      );
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        {},
+        {
+          next: { revalidate: 60 * 60 * 24, tags: ["banners"] },
+        },
+      );
+    });
+
+    it("maps all three banner slots correctly from the merged GROQ result", async () => {
+      mockFetch.mockResolvedValueOnce(makeHomepageResult());
+
+      const { banners } = await runWithRepo(
+        Effect.gen(function* () {
+          const repo = yield* HomepageRepository;
+          return yield* repo.getHomepage();
         }),
       );
 
@@ -99,13 +146,13 @@ describe("HomepageRepository", () => {
       });
     });
 
-    it("returns all-null fallback when homepage document is missing", async () => {
+    it("returns all-null banner fallback and a null placeholder when the homepage document is missing", async () => {
       mockFetch.mockResolvedValueOnce(null);
 
-      const banners = await runWithRepo(
+      const { banners, placeholder } = await runWithRepo(
         Effect.gen(function* () {
           const repo = yield* HomepageRepository;
-          return yield* repo.getBanners();
+          return yield* repo.getHomepage();
         }),
       );
 
@@ -114,17 +161,18 @@ describe("HomepageRepository", () => {
         bannerSlotB: null,
         bannerSlotC: null,
       });
+      expect(placeholder).toBeNull();
     });
 
     it("returns null for individual missing banner slots", async () => {
       mockFetch.mockResolvedValueOnce(
-        makeBannersResult({ bannerSlotA: null, bannerSlotC: null }),
+        makeHomepageResult({ bannerSlotA: null, bannerSlotC: null }),
       );
 
-      const banners = await runWithRepo(
+      const { banners } = await runWithRepo(
         Effect.gen(function* () {
           const repo = yield* HomepageRepository;
-          return yield* repo.getBanners();
+          return yield* repo.getHomepage();
         }),
       );
 
@@ -135,7 +183,7 @@ describe("HomepageRepository", () => {
 
     it("null imageUrl or alt in a slot produces null for that slot", async () => {
       mockFetch.mockResolvedValueOnce(
-        makeBannersResult({
+        makeHomepageResult({
           bannerSlotA: {
             imageUrl: null,
             alt: "Banner A alt",
@@ -144,64 +192,53 @@ describe("HomepageRepository", () => {
         }),
       );
 
-      const banners = await runWithRepo(
+      const { banners } = await runWithRepo(
         Effect.gen(function* () {
           const repo = yield* HomepageRepository;
-          return yield* repo.getBanners();
+          return yield* repo.getHomepage();
         }),
       );
 
       expect(banners.bannerSlotA).toBeNull();
     });
-  });
 
-  describe("getPlaceholder", () => {
-    it("returns null when homepage document is missing", async () => {
-      mockFetch.mockResolvedValueOnce(null);
+    it("returns null placeholder when matchesSliderPlaceholder is not set", async () => {
+      mockFetch.mockResolvedValueOnce(
+        makeHomepageResult({ matchesSliderPlaceholder: null }),
+      );
 
-      const placeholder = await runWithRepo(
+      const { placeholder } = await runWithRepo(
         Effect.gen(function* () {
           const repo = yield* HomepageRepository;
-          return yield* repo.getPlaceholder();
+          return yield* repo.getHomepage();
         }),
       );
 
       expect(placeholder).toBeNull();
     });
 
-    it("returns null when matchesSliderPlaceholder is not set", async () => {
-      mockFetch.mockResolvedValueOnce({ matchesSliderPlaceholder: null });
-
-      const placeholder = await runWithRepo(
-        Effect.gen(function* () {
-          const repo = yield* HomepageRepository;
-          return yield* repo.getPlaceholder();
-        }),
-      );
-
-      expect(placeholder).toBeNull();
-    });
-
-    it("maps all fields correctly when fully populated", async () => {
-      mockFetch.mockResolvedValueOnce({
-        matchesSliderPlaceholder: {
-          nextSeasonKickoff: "2026-08-10",
-          announcementText: "Kalender 25-26 volgende week online",
-          announcementHref: "https://example.com/kalender",
-          highlightImage: {
-            alt: "Supporters op de Driesstraat",
-            asset: {
-              url: "https://cdn.sanity.io/images/abc.jpg",
-              lqip: "data:image/jpeg;base64,/9j...",
+    it("maps all placeholder fields correctly when fully populated, alongside the banners", async () => {
+      mockFetch.mockResolvedValueOnce(
+        makeHomepageResult({
+          matchesSliderPlaceholder: {
+            nextSeasonKickoff: "2026-08-10",
+            announcementText: "Kalender 25-26 volgende week online",
+            announcementHref: "https://example.com/kalender",
+            highlightImage: {
+              alt: "Supporters op de Driesstraat",
+              asset: {
+                url: "https://cdn.sanity.io/images/abc.jpg",
+                lqip: "data:image/jpeg;base64,/9j...",
+              },
             },
           },
-        },
-      });
+        }),
+      );
 
-      const placeholder = await runWithRepo(
+      const { banners, placeholder } = await runWithRepo(
         Effect.gen(function* () {
           const repo = yield* HomepageRepository;
-          return yield* repo.getPlaceholder();
+          return yield* repo.getHomepage();
         }),
       );
 
@@ -215,8 +252,13 @@ describe("HomepageRepository", () => {
           lqip: "data:image/jpeg;base64,/9j...",
         },
       });
+      // The merge is real, not incidental — the banners half of the same
+      // fetch is still correctly mapped in the same call.
+      expect(banners.bannerSlotA).not.toBeNull();
     });
+  });
 
+  describe("toPlaceholderVM", () => {
     it("omits highlightImage when alt is missing", () => {
       const result = toPlaceholderVM({
         matchesSliderPlaceholder: {
@@ -231,7 +273,7 @@ describe("HomepageRepository", () => {
             },
           },
         },
-      } as HOMEPAGE_PLACEHOLDER_QUERY_RESULT);
+      } as HOMEPAGE_QUERY_RESULT);
 
       expect(result?.highlightImage).toBeUndefined();
     });
@@ -244,7 +286,7 @@ describe("HomepageRepository", () => {
           announcementHref: null,
           highlightImage: null,
         },
-      } as HOMEPAGE_PLACEHOLDER_QUERY_RESULT);
+      } as HOMEPAGE_QUERY_RESULT);
 
       expect(result?.nextSeasonKickoff).toBeUndefined();
       expect(result?.announcementText).toBe("Later meer info");
@@ -258,7 +300,7 @@ describe("HomepageRepository", () => {
           announcementHref: null,
           highlightImage: null,
         },
-      } as HOMEPAGE_PLACEHOLDER_QUERY_RESULT);
+      } as HOMEPAGE_QUERY_RESULT);
 
       expect(result?.nextSeasonKickoff).toEqual(new Date("2024-08-10"));
     });

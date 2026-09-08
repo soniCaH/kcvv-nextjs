@@ -87,8 +87,14 @@ vi.mock("@/lib/effect/services/BffService", async (importOriginal) => {
   };
 });
 
-const { mockGetPlaceholder } = vi.hoisted(() => ({
-  mockGetPlaceholder: vi.fn(),
+// `getHomepage` is the single merged read (#2858) — banners and the
+// placeholder now come back from one Effect, so a "placeholder read fails"
+// case is simulated by making the whole `getHomepage()` call die/succeed;
+// the banners half of the mocked return value is fixed to all-null slots,
+// same as the pre-merge `getBanners` mock, so these tests still isolate the
+// placeholder half.
+const { mockGetHomepage } = vi.hoisted(() => ({
+  mockGetHomepage: vi.fn(),
 }));
 
 vi.mock("@/lib/repositories/homepage.repository", async (importOriginal) => {
@@ -99,13 +105,7 @@ vi.mock("@/lib/repositories/homepage.repository", async (importOriginal) => {
   return {
     ...mod,
     HomepageRepositoryLive: Layer.succeed(mod.HomepageRepository, {
-      getBanners: () =>
-        Effect.succeed({
-          bannerSlotA: null,
-          bannerSlotB: null,
-          bannerSlotC: null,
-        }),
-      getPlaceholder: mockGetPlaceholder,
+      getHomepage: mockGetHomepage,
     }),
   };
 });
@@ -166,7 +166,7 @@ describe("/ — a failed placeholder read keeps the page (#2505 review finding 1
   });
 
   it("survives a placeholder read that dies (real Sanity defect shape) and falls back to the nothing-authored copy", async () => {
-    mockGetPlaceholder.mockReturnValue(
+    mockGetHomepage.mockReturnValue(
       Effect.die(new Error("Sanity is unreachable")),
     );
 
@@ -185,9 +185,13 @@ describe("/ — a failed placeholder read keeps the page (#2505 review finding 1
   });
 
   it("still renders the authored notice when the placeholder read succeeds", async () => {
-    mockGetPlaceholder.mockReturnValue(
+    mockGetHomepage.mockReturnValue(
       Effect.succeed({
-        announcementText: "Groenwit maakt zich klaar voor het nieuwe seizoen.",
+        banners: { bannerSlotA: null, bannerSlotB: null, bannerSlotC: null },
+        placeholder: {
+          announcementText:
+            "Groenwit maakt zich klaar voor het nieuwe seizoen.",
+        },
       }),
     );
 
@@ -245,7 +249,12 @@ const seniorTeamOnlyMatchFixture = {
 describe("/ — the agenda's outage signal is its own read (#2505 review finding 3)", () => {
   beforeEach(() => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    mockGetPlaceholder.mockReturnValue(Effect.succeed(null));
+    mockGetHomepage.mockReturnValue(
+      Effect.succeed({
+        banners: { bannerSlotA: null, bannerSlotB: null, bannerSlotC: null },
+        placeholder: null,
+      }),
+    );
     mockTeamsFindAll.mockReturnValue(Effect.succeed([]));
     mockGetMatches.mockReturnValue(Effect.die("not used by this suite"));
   });
