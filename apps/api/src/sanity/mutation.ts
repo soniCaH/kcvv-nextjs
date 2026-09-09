@@ -18,7 +18,15 @@ import { sanityClientConfig } from "./config";
 export const PSD_PLACEHOLDER_IMAGE_SHA1 =
   "6607821528ffa87bb0d39b159a7a4aa81dc78683";
 
-/** PSD id out of a `<type>-psd-<id>` reference, for entries written before `_key` was set. */
+/**
+ * PSD id out of a `<type>-psd-<id>` reference.
+ *
+ * This is the identity a team's array entries are matched on. The reference is
+ * the reliable half: the sync writes the psd id as `_key` too, but Studio
+ * assigns its own random key to a row an editor adds, so `_key` alone does not
+ * identify a member (#2892 review). Returns "" for anything that is not a
+ * psd-shaped reference, which `mergePreservingOrder` then ignores.
+ */
 function refSuffix(ref: string | undefined): string {
   return ref?.split("-psd-")[1] ?? "";
 }
@@ -449,12 +457,20 @@ export const SanityMutationLive = Layer.effect(
             }
           }
 
+          // The REFERENCE is the identity, not the `_key`. A row the sync wrote
+          // carries the psd id as its key, but a row an editor adds in Studio
+          // gets a Sanity-random key — so keying off `_key` first would read an
+          // editor-added staff member as unknown and append it last on the next
+          // sync. That is the very regression this fixes, in the workflow where
+          // an editor is most likely to be the one acting (#2892 review).
           const staffOrder = mergePreservingOrder(
-            existingStaff.map((e) => e._key ?? refSuffix(e.member?._ref)),
+            existingStaff.map(
+              (e) => refSuffix(e.member?._ref) || (e._key ?? ""),
+            ),
             doc.staffPsdIds,
           );
           const playerOrder = mergePreservingOrder(
-            existingPlayers.map((e) => e._key ?? refSuffix(e._ref)),
+            existingPlayers.map((e) => refSuffix(e._ref) || (e._key ?? "")),
             doc.playerPsdIds,
           );
 

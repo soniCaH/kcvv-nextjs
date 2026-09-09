@@ -340,6 +340,64 @@ describe("upsertTeam", () => {
     );
   });
 
+  it("keeps an editor-added staff row in place, whatever Studio keyed it (#2892 review)", async () => {
+    // Studio assigns its own random `_key` to a row an editor adds. Matching on
+    // `_key` first would read that row as unknown and shove it to the end on the
+    // next sync — the regression this fix exists for, in the workflow where an
+    // editor is the one acting. The reference is the identity.
+    mockGetDocument.mockResolvedValueOnce({
+      _id: "team-psd-42",
+      _type: "team",
+      staff: [
+        {
+          _key: "a3f9c1e07b24",
+          _type: "object",
+          member: { _type: "reference", _ref: "staffMember-psd-301" },
+          role: "trainer",
+        },
+        {
+          _key: "300",
+          _type: "object",
+          member: { _type: "reference", _ref: "staffMember-psd-300" },
+        },
+      ],
+    });
+
+    await run(
+      Effect.gen(function* () {
+        const mutation = yield* SanityMutation;
+        yield* mutation.upsertTeam({
+          psdId: "42",
+          name: "Eerste Elftal A",
+          slug: "eerste-elftal-a",
+          age: "A",
+          gender: "mannen",
+          footbelId: 183904,
+          playerPsdIds: [],
+          staffPsdIds: ["300", "301"],
+        });
+      }),
+    );
+
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        staff: [
+          {
+            _key: "301",
+            _type: "object",
+            member: { _type: "reference", _ref: "staffMember-psd-301" },
+            role: "trainer",
+          },
+          {
+            _key: "300",
+            _type: "object",
+            member: { _type: "reference", _ref: "staffMember-psd-300" },
+          },
+        ],
+      }),
+    );
+  });
+
   it("uses PSD order on a team that does not exist yet (#2892)", async () => {
     // No stored document means no editorial order to protect.
     mockGetDocument.mockResolvedValueOnce(undefined);
