@@ -51,11 +51,22 @@ export function SquadGrid({ players }: SquadGridProps) {
   if (players.length === 0) return null;
 
   const groups = partition(players);
+  // A single group separates nobody from a neighbour — the position
+  // headings gain a gate for exactly the same reason the position label
+  // itself did (#2638): rendering "Spelers" over the only group on a U9
+  // page (nobody's position is known) claims a distinction the data
+  // doesn't support. Two-plus groups keep their headings — that's the
+  // actual argument for the four buckets (U17, U19, the first team).
+  const hideHeading = groups.length === 1;
 
   return (
     <div data-testid="squad-grid" className="flex flex-col gap-8">
       {groups.map((group) => (
-        <PersonCardRun key={group.label} label={group.label}>
+        <PersonCardRun
+          key={group.label}
+          label={group.label}
+          hideHeading={hideHeading}
+        >
           {group.players.map((p) => (
             <PlayerCard
               key={p.id}

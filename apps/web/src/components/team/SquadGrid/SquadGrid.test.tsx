@@ -7,6 +7,7 @@
  *  - Trailing "Spelers" catch-all for unmapped positions (no player dropped)
  *  - Groups with no members are omitted
  *  - Every player renders a card
+ *  - Single-group gate (#2638): one group renders no heading; two or more still do
  */
 
 import { describe, it, expect } from "vitest";
@@ -66,11 +67,12 @@ describe("SquadGrid", () => {
   });
 
   it("omits groups that have no members", () => {
+    // A single resulting group also trips the no-heading gate below — this
+    // fixture (one Keeper only) covers both rules at once, so it's asserted
+    // via the group's card membership rather than a heading count.
     render(<SquadGrid players={[player("1", "Jonas", "Keeper", 1)]} />);
-    const headings = screen
-      .getAllByRole("heading", { level: 3 })
-      .map((h) => h.textContent);
-    expect(headings).toEqual(["Doelmannen"]);
+    const doelmannen = screen.getByRole("region", { name: "Doelmannen" });
+    expect(doelmannen.textContent).toContain("Jonas");
   });
 
   it("renders a card for every player", () => {
@@ -89,5 +91,37 @@ describe("SquadGrid", () => {
     );
     const spelersSection = screen.getByRole("region", { name: "Spelers" });
     expect(spelersSection.textContent).toContain("Onbekend");
+  });
+
+  it("renders no heading when the partition yields a single group (#2638)", () => {
+    // No player's position is known — every player lands in the one
+    // trailing "Spelers" catch-all, exactly the U9 shape the gate exists
+    // for. The region itself still carries the label as its accessible
+    // name; only the visible <h3> heading disappears.
+    render(
+      <SquadGrid
+        players={[
+          player("1", "Onbekend Een", undefined, 1),
+          player("2", "Onbekend Twee", undefined, 2),
+        ]}
+      />,
+    );
+    expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
+    expect(screen.getByRole("region", { name: "Spelers" })).toBeInTheDocument();
+  });
+
+  it("still renders headings when the partition yields two or more groups (#2638)", () => {
+    render(
+      <SquadGrid
+        players={[
+          player("1", "Jonas", "Keeper", 1),
+          player("7", "Onbekend", undefined, 21),
+        ]}
+      />,
+    );
+    const headings = screen
+      .getAllByRole("heading", { level: 3 })
+      .map((h) => h.textContent);
+    expect(headings).toEqual(["Doelmannen", "Spelers"]);
   });
 });
