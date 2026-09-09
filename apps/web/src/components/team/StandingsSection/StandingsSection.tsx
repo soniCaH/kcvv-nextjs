@@ -24,8 +24,10 @@ export interface StandingsSectionProps {
  *
  * Never two sections: #2540 gives `#klassement` exactly one `<h2>`, one
  * `StripedSeam` and one nav entry, and splitting the phases into two sections
- * breaks that invariant. The `<h2>` itself lands with the rest of the heading
- * sweep (#2637) and is not here yet.
+ * breaks that invariant. The `<h2>` itself landed with the rest of the
+ * heading sweep (#2637) — rendered by `page.tsx` via `<SectionHeader>`
+ * immediately above this component, not inside it (`page.tsx` already has
+ * the resolved `klassementLabel`, so this component doesn't need one).
  *
  * The parent only mounts this component once the competitive block's fixture
  * gate is open (#2636) — so unlike before #2636, this component never auto-

@@ -44,17 +44,19 @@ const meta = {
   component: TeamEditorial,
   parameters: { layout: "padded" },
   tags: ["autodocs", "vr"],
+  args: { teamLabel: "U8" },
 } satisfies Meta<typeof TeamEditorial>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Both blocks present, body carries a "Het verhaal" pull-quote. */
+/** Both blocks present, body carries a "Het verhaal" pull-quote. Trainingen
+ *  still routes to ProSoccerData — unconditional, not a fallback (#2637). */
 export const FullEditorial: Story = {
   args: { body, contactInfo },
 };
 
-/** Only the contact block — verhaal auto-hides. */
+/** Only the contact block — verhaal auto-hides, Trainingen stays on. */
 export const ContactOnly: Story = {
   args: { contactInfo },
 };
@@ -67,5 +69,37 @@ export const BodyNoPullquote: Story = {
         text: "Een beknopte ploegbeschrijving zonder uitgelicht citaat.",
       }),
     ],
+  },
+};
+
+/**
+ * Routing state (#2637) — `body`/`contactInfo` both unset, the state all 26
+ * team documents are in today. Only "Trainingen" renders; the section still
+ * never returns `null` — this is the 18-of-18 state the ticket measures.
+ */
+export const TrainingRoutingOnly: Story = {
+  args: {},
+};
+
+/**
+ * All three blocks together (#2637 review round 1) — a SEPARATE story from
+ * `FullEditorial`, not a duplicate. `FullEditorial`'s pullquote card pushes
+ * "Contact" past the 667px mobile capture fold (the VR runner's mobile
+ * viewport is fixed, same as every other tall VR-tagged story in this repo —
+ * `ArticleBody`'s own long-content stories capture "above the fold" too), so
+ * that story alone stopped regression-testing Contact at mobile width the
+ * moment Trainingen's height was added ahead of it. This story keeps the
+ * same three-block combination but with `BodyNoPullquote`'s short body (no
+ * lifted `<PullQuote>` card) so the full stack — Het verhaal, Trainingen,
+ * Contact — stays inside the mobile fold and stays under regression.
+ */
+export const AllBlocksCompact: Story = {
+  args: {
+    body: [
+      block({
+        text: "Een beknopte ploegbeschrijving zonder uitgelicht citaat.",
+      }),
+    ],
+    contactInfo,
   },
 };

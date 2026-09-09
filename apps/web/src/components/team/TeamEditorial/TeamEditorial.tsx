@@ -1,19 +1,32 @@
 /**
- * <TeamEditorial> — Phase 6.C editorial section for `/ploegen/[slug]`.
+ * <TeamEditorial> — Phase 6.C editorial section for `/ploegen/[slug]`,
+ * rendered under the page's own "Trainingen & contact" `<h2>` (#2637 —
+ * `page.tsx` owns that heading via `<SectionHeader>`, the same composition
+ * every other gated section uses; this component owns only the `<h3>`
+ * sub-blocks below it).
  *
- * Three independently auto-hiding blocks:
- *  - **Het verhaal** (`team.body`) — Portable Text prose. Reuses the 6.A
- *    `pullquote` decorator serializer (inline `<HighlighterStroke>`); the first
- *    pullquote run is lifted into a `<PullQuote>` card centred below the
- *    paragraph it echoes ("same text, two surfaces", 6.A.d5). It shares
- *    "Het verhaal"'s section rather than owning one of its own and sits in
- *    no aside column, so it renders at the default flow placement (cream)
- *    per #2515 rule 5 — not a jersey card kept for its old pixels.
- *    Attribution is intentionally omitted — a team has no single speaker
- *    and named-coach data is not fabricated (#1944 open Q).
- *  - **Contact** (`team.contactInfo`) — Portable Text prose.
+ * Three blocks, one always on:
+ *  - **Trainingen** — unconditional. `team.trainingSchedule` was deleted
+ *    outright by #2582 (field and all), so there is no CMS field left to
+ *    gate this on: the block always routes to ProSoccerData instead of
+ *    confessing an unfilled surface (#2637 decision comment, 2026-08-18).
+ *  - **Het verhaal** (`team.body`) — Portable Text prose, conditional.
+ *    Reuses the 6.A `pullquote` decorator serializer (inline
+ *    `<HighlighterStroke>`); the first pullquote run is lifted into a
+ *    `<PullQuote>` card centred below the paragraph it echoes ("same text,
+ *    two surfaces", 6.A.d5). It shares "Het verhaal"'s section rather than
+ *    owning one of its own and sits in no aside column, so it renders at
+ *    the default flow placement (cream) per #2515 rule 5 — not a jersey
+ *    card kept for its old pixels. Attribution is intentionally omitted —
+ *    a team has no single speaker and named-coach data is not fabricated
+ *    (#1944 open Q).
+ *  - **Contact** (`team.contactInfo`) — Portable Text prose, conditional.
  *
- * The whole section returns `null` when every block is empty.
+ * `body`/`contactInfo` keep their independent auto-hide (#2637 decision
+ * comment: "contactInfo and body keep their conditional behaviour") — an
+ * editor filling either one still wins over the routing copy by appearing
+ * alongside it, never replacing it. The section itself never returns
+ * `null` any more: Trainingen alone is enough to keep it on the page.
  */
 
 import { PortableText } from "@portabletext/react";
@@ -26,6 +39,8 @@ import { cn } from "@/lib/utils/cn";
 import { EditorialHeading } from "@/components/design-system/EditorialHeading";
 import { HighlighterStroke } from "@/components/design-system/HighlighterStroke";
 import { PullQuote } from "@/components/design-system/PullQuote";
+import { ArrowSquareOut } from "@/lib/icons.redesign";
+import { EXTERNAL_LINKS } from "@/lib/constants";
 import {
   findNthPullquoteText,
   hasRenderableBioContent,
@@ -36,6 +51,15 @@ export interface TeamEditorialProps {
   body?: PortableTextBlock[] | null;
   /** `team.contactInfo` Portable Text — contact block. */
   contactInfo?: PortableTextBlock[] | null;
+  /**
+   * What to call this team in the Trainingen routing sentence —
+   * `team.displayName`, resolved once at the page boundary (`page.tsx`),
+   * not re-derived here. Deliberately never `team.ageGroup`: `age` is a
+   * competition band, not the team's identity (`teamDisplayName()`'s own
+   * docblock — #2630/#2539), and using it here reintroduced that exact bug
+   * in review round 1 (`kcvve-u16` carries `age: "U17"`).
+   */
+  teamLabel: string;
   className?: string;
 }
 
@@ -58,12 +82,11 @@ function hasBody(body: PortableTextBlock[] | null | undefined): boolean {
 export function TeamEditorial({
   body,
   contactInfo,
+  teamLabel,
   className,
 }: TeamEditorialProps) {
   const showVerhaal = hasBody(body);
   const showContact = hasBody(contactInfo);
-
-  if (!showVerhaal && !showContact) return null;
 
   const pullquoteText = showVerhaal ? findNthPullquoteText(body!, 0) : null;
 
@@ -78,7 +101,7 @@ export function TeamEditorial({
       {showVerhaal ? (
         <section data-testid="team-editorial-verhaal">
           <EditorialHeading
-            level={2}
+            level={3}
             size="display-sm"
             emphasis={{ text: "." }}
           >
@@ -101,10 +124,39 @@ export function TeamEditorial({
         </section>
       ) : null}
 
+      {/* Unconditional (#2637) — the training half of the routing exception.
+          `team.trainingSchedule` no longer exists (#2582), so there is no
+          field left to gate this on: it always points at ProSoccerData
+          rather than confessing an unfilled CMS surface. */}
+      <section data-testid="team-editorial-training">
+        <EditorialHeading level={3} size="display-sm" emphasis={{ text: "." }}>
+          Trainingen
+        </EditorialHeading>
+        <p className="text-ink font-body mt-4 text-base leading-relaxed">
+          De trainingsuren van {teamLabel} staan nog niet op de site. Je vindt
+          ze in{" "}
+          <a
+            href={EXTERNAL_LINKS.psdDashboard}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="prose-link"
+          >
+            ProSoccerData
+            <ArrowSquareOut
+              aria-hidden="true"
+              className="ml-0.5 inline-block align-baseline opacity-60"
+              size="0.75em"
+            />
+            <span className="sr-only"> (opens in new tab)</span>
+          </a>
+          .
+        </p>
+      </section>
+
       {showContact ? (
         <section data-testid="team-editorial-contact">
           <EditorialHeading
-            level={2}
+            level={3}
             size="display-sm"
             emphasis={{ text: "." }}
           >
