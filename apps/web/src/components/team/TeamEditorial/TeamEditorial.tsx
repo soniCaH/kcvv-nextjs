@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils/cn";
 import { EditorialHeading } from "@/components/design-system/EditorialHeading";
 import { HighlighterStroke } from "@/components/design-system/HighlighterStroke";
 import { PullQuote } from "@/components/design-system/PullQuote";
-import { ArrowSquareOut } from "@/lib/icons.redesign";
+import { ExternalMark } from "@/components/design-system/ExternalMark";
 import { EXTERNAL_LINKS } from "@/lib/constants";
 import {
   findNthPullquoteText,
@@ -142,12 +142,7 @@ export function TeamEditorial({
             className="prose-link"
           >
             ProSoccerData
-            <ArrowSquareOut
-              aria-hidden="true"
-              className="ml-0.5 inline-block align-baseline opacity-60"
-              size="0.75em"
-            />
-            <span className="sr-only"> (opens in new tab)</span>
+            <ExternalMark />
           </a>
           .
         </p>
