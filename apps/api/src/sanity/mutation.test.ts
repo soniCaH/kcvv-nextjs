@@ -263,6 +263,120 @@ describe("upsertTeam", () => {
     );
   });
 
+  it("keeps the editorial order of staff and players, appending newcomers (#2892)", async () => {
+    // The editor ordered staff T1 → T2 → afgevaardigde in Studio, and players
+    // defenders → midfield → attackers. PSD reports its own order, plus one
+    // new signing (203) and one new staff member (303), and no longer reports
+    // the departed player 201.
+    mockGetDocument.mockResolvedValueOnce({
+      _id: "team-psd-42",
+      _type: "team",
+      staff: [
+        {
+          _key: "302",
+          _type: "object",
+          member: { _type: "reference", _ref: "staffMember-psd-302" },
+          role: "trainer",
+        },
+        {
+          _key: "300",
+          _type: "object",
+          member: { _type: "reference", _ref: "staffMember-psd-300" },
+        },
+      ],
+      players: [
+        { _type: "reference", _ref: "player-psd-202", _key: "202" },
+        { _type: "reference", _ref: "player-psd-200", _key: "200" },
+        { _type: "reference", _ref: "player-psd-201", _key: "201" },
+      ],
+    });
+
+    await run(
+      Effect.gen(function* () {
+        const mutation = yield* SanityMutation;
+        yield* mutation.upsertTeam({
+          psdId: "42",
+          name: "Eerste Elftal A",
+          slug: "eerste-elftal-a",
+          age: "A",
+          gender: "mannen",
+          footbelId: 183904,
+          // PSD's own order — deliberately different from the stored order.
+          playerPsdIds: ["200", "202", "203"],
+          staffPsdIds: ["300", "302", "303"],
+        });
+      }),
+    );
+
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        // 302 before 300, as the editor left it; 303 appended; role kept.
+        staff: [
+          {
+            _key: "302",
+            _type: "object",
+            member: { _type: "reference", _ref: "staffMember-psd-302" },
+            role: "trainer",
+          },
+          {
+            _key: "300",
+            _type: "object",
+            member: { _type: "reference", _ref: "staffMember-psd-300" },
+          },
+          {
+            _key: "303",
+            _type: "object",
+            member: { _type: "reference", _ref: "staffMember-psd-303" },
+          },
+        ],
+        // 202 before 200, as the editor left it; departed 201 dropped without
+        // disturbing the rest; new signing 203 appended.
+        players: [
+          { _type: "reference", _ref: "player-psd-202", _key: "202" },
+          { _type: "reference", _ref: "player-psd-200", _key: "200" },
+          { _type: "reference", _ref: "player-psd-203", _key: "203" },
+        ],
+      }),
+    );
+  });
+
+  it("uses PSD order on a team that does not exist yet (#2892)", async () => {
+    // No stored document means no editorial order to protect.
+    mockGetDocument.mockResolvedValueOnce(undefined);
+
+    await run(
+      Effect.gen(function* () {
+        const mutation = yield* SanityMutation;
+        yield* mutation.upsertTeam({
+          psdId: "99",
+          name: "Nieuwe Ploeg",
+          slug: "nieuwe-ploeg",
+          age: "U13",
+          gender: "mannen",
+          footbelId: null,
+          playerPsdIds: ["500", "501"],
+          staffPsdIds: ["600"],
+        });
+      }),
+    );
+
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        players: [
+          { _type: "reference", _ref: "player-psd-500", _key: "500" },
+          { _type: "reference", _ref: "player-psd-501", _key: "501" },
+        ],
+        staff: [
+          {
+            _key: "600",
+            _type: "object",
+            member: { _type: "reference", _ref: "staffMember-psd-600" },
+          },
+        ],
+      }),
+    );
+  });
+
   it("omits footbelId when null", async () => {
     await run(
       Effect.gen(function* () {

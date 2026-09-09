@@ -18,6 +18,37 @@ import { sanityClientConfig } from "./config";
 export const PSD_PLACEHOLDER_IMAGE_SHA1 =
   "6607821528ffa87bb0d39b159a7a4aa81dc78683";
 
+/** PSD id out of a `<type>-psd-<id>` reference, for entries written before `_key` was set. */
+function refSuffix(ref: string | undefined): string {
+  return ref?.split("-psd-")[1] ?? "";
+}
+
+/**
+ * Order a team's `staff[]` / `players[]` so that the editor's arrangement
+ * survives a sync.
+ *
+ * The order in these arrays is editorial data, not PSD data: it is the only
+ * way to say "T1 first, then T2" or "defenders, midfield, attackers". Rebuilding
+ * them from PSD's own order silently undid that on every nightly run (#2892).
+ *
+ * Members PSD still reports keep the position they already had; members PSD has
+ * added are appended in PSD's order, so a new signing appears rather than
+ * vanishing; members PSD no longer reports drop out without shifting the rest.
+ * An empty `existingKeys` — a team being created — yields PSD's order, because
+ * there is no editorial arrangement to protect yet.
+ *
+ * ponytail: O(n) with two sets; a squad is ~25 entries.
+ */
+export function mergePreservingOrder(
+  existingKeys: readonly string[],
+  psdIds: readonly string[],
+): string[] {
+  const wanted = new Set(psdIds);
+  const kept = existingKeys.filter((k) => k !== "" && wanted.has(k));
+  const keptSet = new Set(kept);
+  return [...kept, ...psdIds.filter((id) => !keptSet.has(id))];
+}
+
 // ─── Document shapes written to Sanity ───────────────────────────────────────
 
 export interface SanityPlayerDoc {
@@ -399,6 +430,9 @@ export const SanityMutationLive = Layer.effect(
                   role?: string;
                 }>
               | undefined) ?? [];
+          const existingPlayers =
+            (existing?.players as
+              Array<{ _key?: string; _ref?: string }> | undefined) ?? [];
           const existingRev = existing?._rev as string | undefined;
 
           // Build a lookup from staff member ref → existing role
@@ -409,7 +443,16 @@ export const SanityMutationLive = Layer.effect(
             }
           }
 
-          const staffArray = doc.staffPsdIds.map((id) => {
+          const staffOrder = mergePreservingOrder(
+            existingStaff.map((e) => e._key ?? refSuffix(e.member?._ref)),
+            doc.staffPsdIds,
+          );
+          const playerOrder = mergePreservingOrder(
+            existingPlayers.map((e) => e._key ?? refSuffix(e._ref)),
+            doc.playerPsdIds,
+          );
+
+          const staffArray = staffOrder.map((id) => {
             const ref = `staffMember-psd-${id}`;
             const existingRole = existingRoleByRef.get(ref);
             return {
@@ -430,7 +473,7 @@ export const SanityMutationLive = Layer.effect(
             age: doc.age,
             gender: doc.gender,
             footbelId: doc.footbelId,
-            players: doc.playerPsdIds.map((id) => ({
+            players: playerOrder.map((id) => ({
               _type: "reference",
               _ref: `player-psd-${id}`,
               _key: id,
