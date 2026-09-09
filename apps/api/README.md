@@ -77,9 +77,15 @@ To verify afterwards, query the **production** dataset directly — note that
 `apps/web/.env.local` points at `staging`, so sourcing the dataset from there
 silently checks the wrong database:
 
+**Do not filter straight after a dereference.** `count(players[]->[defined(psdImage)])`
+does not filter — it returns the whole dereferenced array, so the count always
+equals the squad size and a sync that landed nothing still reports 100%. Project
+the flag and count in the consumer instead:
+
 ```bash
 curl -sG "https://vhb33jaz.api.sanity.io/v2024-01-01/data/query/production" \
-  --data-urlencode 'query=*[_type=="team" && psdId=="1"][0]{name, "withPhoto": count(players[]->[defined(psdImage)])}'
+  --data-urlencode 'query=*[_type=="team" && psdId=="1"][0]{name, "p": players[]->{"img": defined(psdImage)}}' \
+  | python3 -c 'import json,sys; p=json.load(sys.stdin)["result"]["p"]; print(sum(1 for x in p if x["img"]), "of", len(p), "have a photo")'
 ```
 
 ## Deployment

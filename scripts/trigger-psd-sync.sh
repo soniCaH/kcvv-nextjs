@@ -8,6 +8,12 @@
 # Usage: ./scripts/trigger-psd-sync.sh <team-index>
 #        ./scripts/trigger-psd-sync.sh 0      # 0 = Eerste Elftallen A (PSD id 1)
 #
+# The index is a POSITION in PSD's getRawTeams() response, not a stable team id.
+# PSD does not document that ordering, so adding or reordering a team silently
+# shifts every index after it. The run prints `processing team N/21: <id> (<name>)`
+# — read it, and stop the run if it names a team you did not mean. Verified on
+# 2026-09-09: index 0 = id 1 Eerste Elftallen A, index 1 = id 2 Eerste Elftallen B.
+#
 # IT WRITES TO PRODUCTION SANITY. The cursor lives in the *preview* KV namespace
 # because `wrangler dev --remote` reads preview, but the Sanity credentials come
 # from apps/api/.dev.vars, which points at the production dataset. Preview KV,
@@ -35,6 +41,8 @@ TEAM_INDEX="${1:-}"
 if [ -z "${TEAM_INDEX}" ] || ! [[ "${TEAM_INDEX}" =~ ^[0-9]+$ ]]; then
   echo "usage: ./scripts/trigger-psd-sync.sh <team-index>" >&2
   echo "       0 = Eerste Elftallen A, 1 = Eerste Elftallen B, …" >&2
+  echo "       (a position in PSD's team list, not a team id — check the run's" >&2
+  echo "        'processing team N/M: <id> (<name>)' line)" >&2
   exit 64
 fi
 
@@ -55,7 +63,7 @@ SYNC_TIMEOUT_S=600
 # for interactive use — with this set, nothing real is synced.
 SERVER_CMD="${TRIGGER_PSD_SYNC_SERVER_CMD:-}"
 
-LOG="${TRIGGER_PSD_SYNC_LOG:-$(mktemp -t psd-sync)}"
+LOG="${TRIGGER_PSD_SYNC_LOG:-$(mktemp -t psd-sync.XXXXXX)}"
 : >"${LOG}"
 
 # ── say where this is about to write ──────────────────────────────────────────
@@ -63,11 +71,17 @@ LOG="${TRIGGER_PSD_SYNC_LOG:-$(mktemp -t psd-sync)}"
 # [vars], so it is what actually takes effect. Note this is NOT the same source
 # apps/web/.env.local uses — that one points at `staging`, and reading it to
 # verify a sync silently queries the wrong dataset (#2890).
+# `|| true` is load-bearing. The body ends in a pipeline, so under
+# `set -euo pipefail` a grep that matches nothing returns non-zero, and
+# `PROJECT_ID="$(read_var …)"` is a bare assignment that `set -e` aborts on.
+# The normal operator case hits it: `.dev.vars` exists holding only secrets
+# while the ids live in `wrangler.toml [vars]` — the script would die here with
+# no output at all, and the wrangler.toml fallback below could never run.
 read_var() {
   local key="$1" file="$2"
   [ -f "${file}" ] || return 0
-  grep -E "^[[:space:]]*${key}[[:space:]]*=" "${file}" | head -1 |
-    sed -E "s/^[^=]*=[[:space:]]*//; s/^[\"']//; s/[\"'][[:space:]]*$//"
+  { grep -E "^[[:space:]]*${key}[[:space:]]*=" "${file}" | head -1 |
+    sed -E "s/^[^=]*=[[:space:]]*//; s/^[\"']//; s/[\"'][[:space:]]*$//"; } || true
 }
 
 PROJECT_ID="$(read_var SANITY_PROJECT_ID "${API_DIR}/.dev.vars")"
@@ -143,14 +157,27 @@ echo "firing the sync…"
 curl -sS --get "http://localhost:${PORT}/__scheduled" --data-urlencode "cron=${CRON}" -o /dev/null
 
 # ── wait for the sync's own completion line ───────────────────────────────────
-# `team <id> (<name>): done` is the last thing a team's pass logs. Waiting for
-# it, rather than sleeping a fixed number of seconds, is what keeps the in-flight
-# image uploads from being cancelled.
+# `team <id> (<name>): done` is NOT the end of the pass — after it the effect
+# still writes three KV cycle-id keys, may run reconciliation, and advances the
+# cursor. Stopping there cancels all of that mid-`waitUntil`, which is the exact
+# truncation this script exists to avoid. `sync completed — cursor advanced to N`
+# (psd-sanity-sync.ts) is the genuine terminal line.
 echo "waiting for the sync to finish (up to ${SYNC_TIMEOUT_S}s)…"
 finished=0
+failed=0
 for _ in $(seq 1 "${SYNC_TIMEOUT_S}"); do
-  if grep -q "): done" "${LOG}"; then
+  if grep -q "cursor advanced to" "${LOG}"; then
     finished=1
+    break
+  fi
+  # Same liveness guard the readiness loop has: a crashed worker or a failed
+  # sync should report now, not after the full timeout.
+  if grep -q "Sync failed:" "${LOG}"; then
+    failed=1
+    break
+  fi
+  if ! kill -0 "${SERVER_PID}" 2>/dev/null; then
+    echo "the worker exited before the sync finished — see ${LOG}" >&2
     break
   fi
   sleep 1
@@ -173,7 +200,10 @@ ROSTER="$(grep -oE "team [0-9]+: [0-9]+ players, [0-9]+ staff" "${LOG}" | head -
 COMMITTED="$(count 'player=[0-9]+ patch committed')"
 UPTODATE="$(count 'player [0-9]+: image up-to-date')"
 PLACEHOLDER="$(count 'player=[0-9]+ bytes match PSD')"
-RATE_LIMITED="$(grep -c '429' "${LOG}" || true)"
+# Anchored to the actual failure text. A bare '429' matches a timestamp
+# (11:37:46.429Z), a body_bytes value, or a sha1 — a clean run reported one
+# phantom rate limit that way.
+RATE_LIMITED="$(grep -c 'image upload failed.*429' "${LOG}" || true)"
 FIRED="$(grep -c 'processing team [0-9]*/' "${LOG}" || true)"
 
 echo
@@ -188,6 +218,13 @@ echo "────────────────────────�
 
 if [ "${FIRED}" -gt 1 ]; then
   echo "⚠  the sync ran ${FIRED} times in one invocation — it must run once. See ${LOG}" >&2
+  exit 1
+fi
+
+if [ "${failed}" -eq 1 ]; then
+  echo "⚠  the sync reported a failure. Whatever committed above is safe." >&2
+  grep -m3 'Sync failed:' "${LOG}" >&2 || true
+  echo "   Log: ${LOG}" >&2
   exit 1
 fi
 

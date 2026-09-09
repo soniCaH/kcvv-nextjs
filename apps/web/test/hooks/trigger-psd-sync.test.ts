@@ -57,6 +57,11 @@ createServer((req, res) => {
     console.log("[uploadPlayerImage] player=101 patch committed — image upload complete");
     console.log("player 102: image up-to-date (hasPsdImage=true)");
     console.log("team 1 (Test Team): done");
+    // The genuine terminal line. The per-team "done" above fires before three
+    // KV writes, the reconciliation branch and the cursor advance, so the
+    // script deliberately waits for this one instead (#2890 review).
+    // No backticks in this block: it is all one template literal.
+    console.log("sync completed — cursor advanced to 1 (next: team index 1)");
   }
   res.writeHead(200).end("ok");
 }).listen(Number(port), () => {
