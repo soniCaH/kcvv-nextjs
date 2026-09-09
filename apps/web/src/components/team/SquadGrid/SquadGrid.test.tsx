@@ -178,22 +178,44 @@ describe("SquadGrid", () => {
       expect(numbersIn("Verdedigers")).toEqual(["2", "5", "9"]);
     });
 
+    it("falls back to lastName when two players share the same jerseyNumber", () => {
+      // Real shape (review, PR #2897): a mid-season departure and arrival
+      // both wearing 7, or a youth squad reusing a number — `players[]` is
+      // read-only, so nobody can resolve this by re-numbering. A shared
+      // number must not silently fall through to PSD's incoming order.
+      render(
+        <SquadGrid
+          players={[
+            player("1", "A", "Verdediger", 7, "Wouters"),
+            player("2", "B", "Verdediger", 7, "Aerts"),
+          ]}
+        />,
+      );
+      expect(lastNamesIn("Verdedigers")).toEqual(["Aerts", "Wouters"]);
+    });
+
     it("falls back to a locale-aware lastName collation when no player has a number", () => {
       render(
         <SquadGrid
           players={[
             player("1", "A", "Aanvaller", undefined, "Van Hóf"),
-            player("2", "B", "Aanvaller", undefined, "Aerts"),
-            player("3", "C", "Aanvaller", undefined, "Van Hof"),
+            player("2", "B", "Aanvaller", undefined, "Van Hog"),
+            player("3", "C", "Aanvaller", undefined, "Van Hoe"),
           ]}
         />,
       );
-      // Dutch collation: "Van Hof" sorts before "Van Hóf" (base letter
-      // equal, diacritic breaks the tie), both after "Aerts".
+      // A discriminating fixture: `Intl.Collator("nl")` and a bare `<`
+      // disagree on this trio. Collated: Hoe, Hóf, Hog (diacritic is a
+      // tiebreak on an otherwise-equal base letter, so "ó" sorts next to
+      // its own "o", ahead of the different base letter "g"). A bare `<`
+      // would instead give Hoe, Hog, Hóf — code-point order puts every
+      // accented character after every unaccented one. A fixture where the
+      // two agree (e.g. "Van Hof" vs "Van Hóf") would pass even without
+      // the collator and prove nothing about locale-awareness.
       expect(lastNamesIn("Aanvallers")).toEqual([
-        "Aerts",
-        "Van Hof",
+        "Van Hoe",
         "Van Hóf",
+        "Van Hog",
       ]);
     });
 
@@ -247,7 +269,15 @@ describe("SquadGrid", () => {
       ).toEqual(["1", "4", "Aerts", "Wouters"]);
     });
 
-    it("keeps a deterministic, stable order for two unnumbered players sharing a last name", () => {
+    it("renders both players when two unnumbered players share a last name, without crashing or dropping one", () => {
+      // Neither a number nor a lastName difference to order by. The AC
+      // asks only that this tie be covered by a test, not that it define a
+      // tertiary order (e.g. firstName) — so this asserts only what the
+      // comparator actually guarantees: no crash, no dropped player.
+      // Asserting a specific order here would encode `Array.prototype.sort`
+      // stability (i.e. the fixture's own input order) as if it were part
+      // of the spec, and it would start failing the moment a tiebreak is
+      // added.
       render(
         <SquadGrid
           players={[
@@ -256,14 +286,12 @@ describe("SquadGrid", () => {
           ]}
         />,
       );
-      // Neither a number nor a lastName difference to order by — the sort
-      // must not crash or drop a player, and (Array.prototype.sort being
-      // stable) the input's relative order survives the tie.
       const region = screen.getByRole("region", { name: "Doelmannen" });
       const firstNames = Array.from(
         region.querySelectorAll('[data-testid="player-card"]'),
       ).map((c) => c.querySelector(".font-semibold")?.textContent);
-      expect(firstNames).toEqual(["Wouter", "Monique"]);
+      expect(firstNames).toHaveLength(2);
+      expect(new Set(firstNames)).toEqual(new Set(["Wouter", "Monique"]));
     });
 
     it("keeps group order unchanged: keepers → defenders → midfield → attackers → catch-all", () => {

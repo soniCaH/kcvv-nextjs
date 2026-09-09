@@ -25,16 +25,21 @@ const CATCH_ALL_ID = "catch-all";
 const lastNameCollator = new Intl.Collator("nl");
 
 /**
- * Within-group squad order (#2894): `jerseyNumber` ascending, falling back
- * to a locale-aware `lastName` comparison when either side has no number.
- * Numbered players always sort before unnumbered ones — a partial roster
- * must not interleave the two. `jerseyNumber` is editorial and, measured
+ * Within-group squad order (#2894): `jerseyNumber` ascending, then
+ * `lastName` — both as the primary key's tiebreak (two players can share a
+ * number: a mid-season departure and arrival both wearing 7, or a youth
+ * squad reusing numbers, and the read-only field means nobody can fix it by
+ * hand) and as the fallback when either side has no number. Numbered
+ * players always sort before unnumbered ones — a partial roster must not
+ * interleave the two. `jerseyNumber` is editorial and, measured
  * 2026-09-09, unset on every active player, so on today's data this is
  * pure last-name order; it becomes number order as editors fill it in.
  */
 function compareSquadOrder(a: PlayerVM, b: PlayerVM): number {
   if (a.number !== undefined && b.number !== undefined) {
-    return a.number - b.number;
+    return (
+      a.number - b.number || lastNameCollator.compare(a.lastName, b.lastName)
+    );
   }
   if (a.number !== undefined) return -1;
   if (b.number !== undefined) return 1;
