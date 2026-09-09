@@ -6,7 +6,8 @@
  * TeamMatchesSection] → SquadGrid → TeamStaff → TeamEditorial → global
  * SponsorsBlock → RelatedRow → footer.
  * <StripedSeam> separates sections; every non-hero section auto-hides on
- * empty data (a U6 page degrades to hero + squad + staff).
+ * empty data (a U6 page degrades to hero + squad + staff) — EXCEPT the info
+ * section (#2637, see below), which always renders.
  *
  * #2443 resolution reorders the last two sections: `SponsorsSection` now
  * renders BEFORE `RelatedRow` (previously last) — the team page's last word
@@ -21,6 +22,14 @@
  * ranking read alone failed permanently, in which case it renders a failure
  * notice with no heading/id/nav-chip instead. See the comment beside
  * `competitiveState` below.
+ *
+ * **Every gated section carries a real `<h2>`** (#2637, via `<SectionHeader>`
+ * reading `sectionLabels`) — `#klassement`, `#wedstrijden`, `#spelers` and
+ * `#staf`. `#info` is the one exception to the auto-hide rule: it renders on
+ * every page, named "Trainingen & contact" in both its routing-only and its
+ * filled-in state, because `<TeamEditorial>`'s "Trainingen" block always
+ * routes to ProSoccerData — `team.trainingSchedule` no longer exists (#2582)
+ * to gate it on. See `<TeamEditorial>`'s own docblock.
  */
 
 import { Effect } from "effect";
@@ -42,6 +51,7 @@ import { isPermanentBffFailure } from "@/lib/effect/classify-bff-failure";
 import { degradeIfPermanent } from "@/lib/effect/degrade-if-permanent";
 import { StripedSeam } from "@/components/design-system/StripedSeam";
 import { PageContainer } from "@/components/design-system/PageContainer";
+import { SectionHeader } from "@/components/design-system/SectionHeader";
 import { UpLink } from "@/components/design-system/UpLink";
 import { EmptyState } from "@/components/design-system/EmptyState";
 import { TeamHero } from "@/components/team/TeamHero";
@@ -62,7 +72,6 @@ import { RelatedRow } from "@/components/related/RelatedRow";
 import { mergeRelatedRow } from "@/components/related/mergeRelatedRow";
 import { articleVMsToRelatedRowItems } from "@/lib/utils/article-related-items";
 import { TeamRepository } from "@/lib/repositories/team.repository";
-import { hasRenderableBioContent } from "@/lib/portable-text/findPullquoteText";
 import { transformMatchToSchedule } from "@/components/match";
 import {
   deriveCompetitiveBlockState,
@@ -389,25 +398,45 @@ export default async function TeamPage({ params }: TeamPageProps) {
   const showStaff = staff.length > 0;
   const showWedstrijden =
     inCompetition && hasVisibleMatches(scheduleMatches, now);
-  const showEditorial =
-    (teamBody !== null && hasRenderableBioContent(teamBody)) ||
-    (teamContact !== null && hasRenderableBioContent(teamContact));
+  // The info section no longer auto-hides (#2637): `team.trainingSchedule`
+  // was deleted outright by #2582, so `<TeamEditorial>`'s "Trainingen" block
+  // always routes to ProSoccerData — there is no field left that could make
+  // it empty. `teamBody`/`teamContact` still gate their own sub-blocks
+  // independently inside that component.
 
-  // One record for every section's label — the nav chip and each section's
-  // own `aria-label` (on its focus target below) read from the same value,
-  // so the two can never drift. Unlike the other four entries,
-  // `sectionLabels.klassement` CAN be null while `inCompetition` is true
-  // (#2795: the `ranking-unavailable` state opens the block for
+  // What the "Trainingen" routing sentence calls this team — `displayName`
+  // alone (#2637 review round 1). `team.ageGroup` was tried here first and
+  // reverted: it is `computeAgeGroup(row.age)`, and `age` is a *competition
+  // band*, not the team's identity — exactly the bug `teamDisplayName()`
+  // exists to close (#2630/#2539: "three of the eighteen team pages used to
+  // head a different team than the one clicked"). Verified against
+  // production: `kcvve-u16` carries `age: "U17"`, so an `ageGroup` fallback
+  // would have headed the page "U16." and then told the visitor the
+  // trainingsuren van "U17" aren't up yet — the same identity bug, in the one
+  // sentence on the page this ticket added. `displayName` is already correct
+  // for every row (senior and youth alike), so there is nothing left to fall
+  // back from.
+  const trainingRoutingLabel = team.displayName;
+
+  // One record for every section's label — the nav chip, each section's own
+  // `aria-label` (on its focus target below) AND its `<SectionHeader>` all
+  // read from the same value, so none of the three can ever drift apart
+  // (#2637 extends the #2636 invariant to the heading). Unlike the other
+  // four entries, `sectionLabels.klassement` CAN be null while `inCompetition`
+  // is true (#2795: the `ranking-unavailable` state opens the block for
   // `#wedstrijden` but has no klassement heading to give) — the render below
   // only reads `sectionLabels.klassement!` on the branch that renders
   // `<StandingsSection>`, which is gated on `klassementLabel !== null`
-  // separately from `inCompetition`.
+  // separately from `inCompetition`. `info` is renamed from "Info" (#2637):
+  // the section is now the ProSoccerData routing exception and keeps that one
+  // name in both its routing-only and its filled-in state — it never renames
+  // itself around its own content.
   const sectionLabels = {
     klassement: klassementLabel,
     wedstrijden: "Wedstrijden",
     spelers: "Spelers",
     staf: "Staf",
-    info: "Info",
+    info: "Trainingen & contact",
   } as const;
 
   // Three states render something in place of `#klassement` that is not a
@@ -420,7 +449,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
   // `#wedstrijden` is unaffected by any of this — it keeps its own nav entry
   // under `ranking-unavailable` because the fixtures still rendered in full.
   // Every other item here is kept in exact sync with what actually renders
-  // further down.
+  // further down. `info` has no gate at all any more (#2637) — it is in the
+  // list unconditionally, the same way its section below always renders.
   const navItems: TeamSectionNavItem[] = [
     // `sectionLabels.klassement` is the same value as `klassementLabel`,
     // but TS narrows the bare variable, not a property read off it — the
@@ -432,7 +462,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
     showWedstrijden && { id: "wedstrijden", label: sectionLabels.wedstrijden },
     showSquad && { id: "spelers", label: sectionLabels.spelers },
     showStaff && { id: "staf", label: sectionLabels.staf },
-    showEditorial && { id: "info", label: sectionLabels.info },
+    { id: "info", label: sectionLabels.info },
   ].filter((x): x is TeamSectionNavItem => x !== false);
 
   const analyticsParams = { team_slug: slug };
@@ -549,6 +579,10 @@ export default async function TeamPage({ params }: TeamPageProps) {
                 ariaLabel={sectionLabels.klassement!}
                 className="py-10 focus:outline-none"
               >
+                <SectionHeader
+                  title={sectionLabels.klassement!}
+                  size="display-md"
+                />
                 <StandingsSection
                   tables={standings}
                   divisionFull={team.divisionFull}
@@ -572,6 +606,10 @@ export default async function TeamPage({ params }: TeamPageProps) {
                   ariaLabel={sectionLabels.wedstrijden}
                   className="py-10 focus:outline-none"
                 >
+                  <SectionHeader
+                    title={sectionLabels.wedstrijden}
+                    size="display-md"
+                  />
                   <TeamMatchesSection
                     matches={scheduleMatches}
                     teamSlug={slug}
@@ -596,6 +634,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
               ariaLabel={sectionLabels.spelers}
               className="py-10 focus:outline-none"
             >
+              <SectionHeader title={sectionLabels.spelers} size="display-md" />
               <SquadGrid players={team.players} />
             </PageContainer>
           </TrackInView>
@@ -629,25 +668,33 @@ export default async function TeamPage({ params }: TeamPageProps) {
             ariaLabel={sectionLabels.staf}
             className="py-10 focus:outline-none"
           >
+            <SectionHeader title={sectionLabels.staf} size="display-md" />
             <TeamStaff staff={staff} heading="Staf" />
           </PageContainer>
         </>
       ) : null}
 
-      {showEditorial ? (
-        <>
-          <StripedSeam colorPair="ink-cream" height="md" />
-          <PageContainer
-            as="section"
-            id="info"
-            tabIndex={-1}
-            ariaLabel={sectionLabels.info}
-            className="py-10 focus:outline-none"
-          >
-            <TeamEditorial body={teamBody} contactInfo={teamContact} />
-          </PageContainer>
-        </>
-      ) : null}
+      {/* Unconditional (#2637) — the routing exception. Unlike every other
+          gated section here, this one has no `show*` flag: the seam and the
+          section always render, so an empty-but-present section never takes
+          its own seam down with it (the failure mode the other four hide
+          behind a `show*` gate). See `<TeamEditorial>`'s own docblock for why
+          it can never render `null`. */}
+      <StripedSeam colorPair="ink-cream" height="md" />
+      <PageContainer
+        as="section"
+        id="info"
+        tabIndex={-1}
+        ariaLabel={sectionLabels.info}
+        className="py-10 focus:outline-none"
+      >
+        <SectionHeader title={sectionLabels.info} size="display-md" />
+        <TeamEditorial
+          body={teamBody}
+          contactInfo={teamContact}
+          teamLabel={trainingRoutingLabel}
+        />
+      </PageContainer>
 
       {/* Sponsor logo wall now renders BEFORE the onward-navigation row
           (#2443 resolution) — the page's last word is a "keep going"

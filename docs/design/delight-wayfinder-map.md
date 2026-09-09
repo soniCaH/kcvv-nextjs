@@ -107,14 +107,13 @@ This is the site's most emotional recurring moment and its response is one soft 
 
 `aeed5e41` ([#1922](https://github.com/soniCaH/www.kcvvelewijt.be/issues/1922)) deleted the renderer out of `_legacy/` during the redesign. **Everything editor-facing survived:**
 
-| Half                 | Where                                                     | State                  |
-| -------------------- | --------------------------------------------------------- | ---------------------- |
-| Schema               | `packages/sanity-schemas/src/matchesSliderPlaceholder.ts` | **live**               |
-| Studio registration  | `index.ts:43,70,101` + `homePage.ts:43-45`                | **live, both studios** |
-| GROQ query           | `homepage.repository.ts:30` `HOMEPAGE_PLACEHOLDER_QUERY`  | **live**               |
-| View-model + fetcher | `toPlaceholderVM` `:97`, `getPlaceholder()` `:144`        | **live**               |
-| Renderer             | —                                                         | **deleted**            |
-| Call site            | `getPlaceholder()` is called from **nowhere**             | **none**               |
+| Half                 | Where                                                                                                                                                                            | State                  |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Schema               | `packages/sanity-schemas/src/matchesSliderPlaceholder.ts`                                                                                                                        | **live**               |
+| Studio registration  | `index.ts:43,70,101` + `homePage.ts:43-45`                                                                                                                                       | **live, both studios** |
+| GROQ query           | `homepage.repository.ts:17` `HOMEPAGE_QUERY` (merged with the banners projection, `HomepageVM` at `:117`, in [#2858](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2858)) | **live**               |
+| View-model + fetcher | `toPlaceholderVM` `:92`, `getHomepage()` `:139` (was `getPlaceholder()` — folded into one round-trip in #2858)                                                                   | **live**               |
+| Renderer             | —                                                                                                                                                                                | **deleted**            |
 
 So a volunteer editor can open Studio today, fill in "Aftrap nieuw seizoen" and a mededeling, publish — and nothing happens anywhere on the site. PRODUCT.md → Operating Context names this exact class of cost: _"Authoring friction is a real product constraint, not a nicety."_ An input that silently does nothing is worse than an absent one.
 
@@ -206,7 +205,7 @@ Ordered cheapest-and-most-constraining first. Nothing is claimed yet.
 5. **Reconnect or remove the orphaned off-season placeholder** · `wayfinder:task`
    **Not a design ticket and not blocked by 2** — this is a half-deleted feature with a live editor-facing input that does nothing. Three honest outcomes, and the ticket picks one:
    **(a) Restore.** `git show 8103b710` has the whole renderer, the four-mode `decisionRule.ts` and its tests. The rule is still sound and its Brussels-zone handling is correct for a Sanity date (the opposite rule to PSD kickoffs, which carry Belgian wall-clock in UTC fields — do not "fix" it). Restoring means reskinning 201 lines of pre-redesign markup into the current world, not pasting it back.
-   **(b) Rewire only.** Keep the schema and `getPlaceholder()`, drop the old component, and let `<FirstTeamsBlock>`'s existing held-open notice read the placeholder — heading from `nextSeasonKickoff`, body from `announcementText`. Much smaller, and it reuses the register [#2427](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2427) already locked.
+   **(b) Rewire only.** Keep the schema and `getHomepage()` (its `placeholder` half — merged with the banners read in [#2858](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2858)), drop the old component, and let `<FirstTeamsBlock>`'s existing held-open notice read the placeholder — heading from `nextSeasonKickoff`, body from `announcementText`. Much smaller, and it reuses the register [#2427](https://github.com/soniCaH/www.kcvvelewijt.be/issues/2427) already locked.
    **(c) Remove.** Delete the schema, the studio registration, the GROQ query and the view-model. Legitimate if the club would rather use `<BannerSlot>`, but it must be a decision — leaving it is the one option that is not.
    Whichever wins, **fix the neighbour too**: `upcomingMatchesSection` and `featuredEventSection` still go `null` on empty, so the off-season spine loses two bands. That is #2399's finding, unapplied.
    **Measure first**: how many days a year does the feed actually yield zero fixtures? Derive it from real data — do not inherit this map's discarded "about ten weeks."

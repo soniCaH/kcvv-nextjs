@@ -26,6 +26,14 @@ describe("<EventFactInline>", () => {
     expect(cta?.getAttribute("href")).toBe("https://example.com/inschrijven");
   });
 
+  it("marks the ticket CTA external — no literal arrow (#2547 rules 2+3)", () => {
+    render(<EventFactInline value={BASE} isPast={false} />);
+    const cta = screen.getByText("Inschrijven").closest("a");
+    expect(cta?.textContent).toContain("(opent in een nieuw tabblad)");
+    expect(cta?.querySelector('svg[aria-hidden="true"]')).toBeTruthy();
+    expect(cta?.textContent).not.toContain("→");
+  });
+
   it("renders the location + capacity meta on one line", () => {
     const { container } = render(
       <EventFactInline value={BASE} isPast={false} />,

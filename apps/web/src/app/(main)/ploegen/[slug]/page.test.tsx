@@ -236,3 +236,136 @@ describe("/ploegen/[slug] classifies a failed ranking read against the real BFF 
     expect(document.getElementById("wedstrijden")).not.toBeNull();
   });
 });
+
+/**
+ * #2637 — every gated section gains a real `<h2>`, and the info section
+ * becomes the unconditional "Trainingen & contact" routing exception.
+ *
+ * A youth team with a squad + staff, no official fixture this season (the
+ * competitive block collapses to `<CompetitiveStatusLine>`, which — per
+ * #2540/#2636 — earns no `<h2>`/id/nav entry of its own), and no `body`/
+ * `contactInfo` — the state all 26 team documents are in today (measured
+ * 2026-08-18). Pins the exact heading outline #2637's acceptance criteria
+ * give for this case: `H1 → h2 Spelers → h2 Staf → h2 Trainingen & contact`.
+ * `<SponsorsSection>` is stubbed to `null` above (pre-existing harness
+ * constraint — an async Server Component with no local Suspense boundary),
+ * so the sponsor wall's own heading is out of reach here and out of this
+ * ticket's scope regardless.
+ */
+function headingSweepTeamFixture(): TeamDetailVM {
+  return {
+    id: "team-u8",
+    name: "KCVV Elewijt U8",
+    displayName: "U8",
+    slug: "kcvv-elewijt-u8",
+    age: "U8",
+    psdId: "9501",
+    footbelId: null,
+    division: null,
+    divisionFull: null,
+    tagline: undefined,
+    teamType: "youth",
+    ageGroup: "U8",
+    teamImageUrl: null,
+    body: null,
+    contactInfo: null,
+    players: [
+      { id: "p1", firstName: "Jef", lastName: "Peeters", position: "Keeper" },
+    ],
+    staff: [
+      { id: "s1", firstName: "Marc", lastName: "Van Damme", role: "Trainer" },
+    ],
+  };
+}
+
+describe("/ploegen/[slug] heading sweep — every gated section gets a real <h2> (#2637)", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockFindBySlug.mockReset();
+    mockGetMatches.mockReset();
+    mockGetRanking.mockReset();
+    // No official fixture this season — the competitive block collapses to
+    // the status line, which renders no `<h2>` of its own (#2540/#2636).
+    mockGetMatches.mockReturnValue(Effect.succeed([]));
+    mockGetRanking.mockReturnValue(Effect.succeed([]));
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("youth page with squad + staff, no competitive block, no body/contactInfo: H1 → h2 Spelers → h2 Staf → h2 Trainingen & contact", async () => {
+    mockFindBySlug.mockReturnValue(Effect.succeed(headingSweepTeamFixture()));
+
+    const element = await TeamPage({
+      params: Promise.resolve({ slug: "kcvv-elewijt-u8" }),
+    });
+    render(element);
+
+    const headings = screen
+      .getAllByRole("heading")
+      .map((h) => ({ level: Number(h.tagName.slice(1)), text: h.textContent }));
+
+    const h1 = headings.find((h) => h.level === 1);
+    expect(h1?.text).toContain("U8");
+
+    // Filtered to this ticket's own three headings, in relative order —
+    // the youth-only "Sluit je aan" enrolment CTA (`<TeamEnrolmentCta>`)
+    // also renders its own `<h2>` between #spelers and #staf; that section
+    // predates #2637 and is out of scope here.
+    const ownHeadings = headings
+      .filter((h) => h.level === 2)
+      .map((h) => h.text)
+      .filter((text): text is string =>
+        ["Spelers.", "Staf.", "Trainingen & contact."].includes(text ?? ""),
+      );
+    expect(ownHeadings).toEqual(["Spelers.", "Staf.", "Trainingen & contact."]);
+
+    // The competitive block is genuinely closed — no #klassement/#wedstrijden
+    // section, real fixtures/ranking notwithstanding.
+    expect(document.getElementById("klassement")).toBeNull();
+    expect(document.getElementById("wedstrijden")).toBeNull();
+
+    // Measured outcome: the info section renders even with body/contactInfo
+    // both unset — the routing copy alone keeps it on the page.
+    const info = document.getElementById("info");
+    expect(info).not.toBeNull();
+    expect(info?.textContent).toContain(
+      "De trainingsuren van U8 staan nog niet op de site.",
+    );
+
+    // The seam survives an empty-but-present section: `<StripedSeam>` has no
+    // stable DOM hook of its own, so this asserts on the invariant that
+    // matters — the `#info` section itself still renders as a section
+    // sibling in the flow, not swallowed behind a `null` return.
+    expect(info?.tagName).toBe("SECTION");
+  });
+
+  it("names the team in the Trainingen sentence by displayName, never ageGroup — pinned against the real production mismatch (kcvve-u16: age U17, displayName U16)", async () => {
+    mockFindBySlug.mockReturnValue(
+      Effect.succeed({
+        ...headingSweepTeamFixture(),
+        // The exact shape measured on production 2026: PSD's `age` (a
+        // competition band, shared across teams) disagrees with the team's
+        // own resolved identity. `ageGroup` is `computeAgeGroup(age)`, so an
+        // `ageGroup` fallback here would print "U17" — the same
+        // head-a-different-team bug `teamDisplayName()` exists to close
+        // (#2630/#2539) — in the one new sentence this ticket added.
+        age: "U17",
+        ageGroup: "U17",
+        displayName: "U16",
+      }),
+    );
+
+    const element = await TeamPage({
+      params: Promise.resolve({ slug: "kcvv-elewijt-u8" }),
+    });
+    render(element);
+
+    const info = document.getElementById("info");
+    expect(info?.textContent).toContain(
+      "De trainingsuren van U16 staan nog niet op de site.",
+    );
+    expect(info?.textContent).not.toContain("van U17");
+  });
+});

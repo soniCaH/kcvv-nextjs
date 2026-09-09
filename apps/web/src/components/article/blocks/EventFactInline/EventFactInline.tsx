@@ -1,6 +1,7 @@
 import { TapedCard } from "@/components/design-system/TapedCard";
 import { MonoLabel } from "@/components/design-system/MonoLabel";
 import { EditorialLink } from "@/components/design-system/EditorialLink";
+import { ExternalMark } from "@/components/design-system/ExternalMark";
 import { getButtonClasses } from "@/components/design-system/Button";
 import { cn } from "@/lib/utils/cn";
 import { capitalize } from "@/lib/utils/capitalize";
@@ -230,9 +231,7 @@ export function EventFactInline({
               )}
             >
               {ticketLabel}
-              <span aria-hidden="true" className="ml-1">
-                →
-              </span>
+              <ExternalMark />
             </a>
           ) : null}
 

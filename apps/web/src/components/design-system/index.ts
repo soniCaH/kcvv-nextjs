@@ -115,6 +115,10 @@ export type { DividerProps, DividerStyle, DividerColor } from "./Divider";
 export { EndMark } from "./EndMark";
 export type { EndMarkProps } from "./EndMark";
 
+// ExternalMark
+export { ExternalMark } from "./ExternalMark";
+export type { ExternalMarkProps } from "./ExternalMark";
+
 // HighlighterStroke
 export { HighlighterStroke } from "./HighlighterStroke";
 export type {

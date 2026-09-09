@@ -8,7 +8,7 @@ import { EventHero, type EventHeroProps } from "./EventHero";
 type StoryArgs = Omit<EventHeroProps, "cover" | "ctas"> & {
   /** Render the tilted+taped cover figure (placeholder image). */
   withCover?: boolean;
-  /** Also render the external "Reserveer ↗" CTA (the agenda CTA is always present). */
+  /** Also render the external "Reserveer" CTA (the agenda CTA is always present). */
   hasExternalLink?: boolean;
 };
 

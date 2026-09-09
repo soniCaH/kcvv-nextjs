@@ -41,19 +41,28 @@ export interface TeamSectionNavProps {
  *
  * **Not permanently inert (#2444, corrected by #2478 and #2489).** #2444
  * originally reasoned this row "ships three items forever" and gave it a
- * control arrow in a rail reserved at every width ≥768px. Measured at full
- * section count (`Klassement · Wedstrijden · Spelers · Staf · Info`, #2478),
- * it overflows only below 430px — never at a width the old rail reserved —
- * and today's three-item row is **pre-season**, not permanent: two of the
- * five auto-hiding sections (`Klassement`, `Info`) are currently absent
- * because no team has published klassement or editorial data yet, not
- * because they don't exist. #2489's final rule replaces the fixed rail with
- * one that follows real overflow at every width — the same `<ScrollRail>`
- * "row of discrete things" idiom `<FilterTabs>` uses (nav items a visitor
- * taps): a 40px gutter on both sides exactly when the track overflows, the
- * spent direction disabled in place rather than unmounted. On today's
- * three-item data the arrow essentially never mounts; it is ready the
- * moment a fourth or fifth section makes the row overflow.
+ * control arrow in a rail reserved at every width ≥768px. #2478 measured the
+ * five-item row (`Klassement · Wedstrijden · Spelers · Staf · Info`) and
+ * found it overflowed only below ~430px viewport width — never at a width
+ * the old rail reserved — with the three-item row (`Wedstrijden · Spelers ·
+ * Staf`) the far more common case: two of the five auto-hiding sections
+ * (`Klassement`, `Info`) were absent on every team page at the time, because
+ * no team had published klassement or editorial data yet, not because they
+ * don't exist. #2489's final rule replaces the fixed rail with one that
+ * follows real overflow at every width — the same `<ScrollRail>` "row of
+ * discrete things" idiom `<FilterTabs>` uses (nav items a visitor taps): a
+ * 40px gutter on both sides exactly when the track overflows, the spent
+ * direction disabled in place rather than unmounted.
+ *
+ * **Re-measured (#2637).** `Info` is renamed `Trainingen & contact` and, per
+ * that ticket, no longer auto-hides — every team page now carries the full
+ * five-item row (`Klassement`'s own presence still varies with the
+ * competitive-block state). At the exact chip markup/classes this component
+ * renders, the five-item row now overflows below **~570px** viewport width
+ * (up from ~430px measured for the shorter `Info` label) — an ordinary
+ * phone in portrait, not an edge case. The arrow mounts routinely now,
+ * rather than "essentially never" as this docblock previously (and, as of
+ * #2637, incorrectly) claimed.
  */
 export function TeamSectionNav({ items }: TeamSectionNavProps) {
   if (items.length <= 1) return null;
