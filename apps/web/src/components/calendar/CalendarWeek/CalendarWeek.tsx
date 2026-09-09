@@ -133,8 +133,10 @@ function WeekMatchCard({ match }: { match: CalendarMatch }) {
             {match.time}
           </span>
         )}
+        {/* lining-nums, not tabular-nums (#2610) — the kit's tabular figures
+            are inert. */}
         {match.scoreDisplay.type === "score" && (
-          <span className="text-ink font-display text-[11px] font-bold tabular-nums">
+          <span className="text-ink font-display text-[11px] font-bold lining-nums">
             {match.scoreDisplay.home}-{match.scoreDisplay.away}
           </span>
         )}

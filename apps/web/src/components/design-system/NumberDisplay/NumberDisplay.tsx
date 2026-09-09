@@ -46,9 +46,12 @@ export function NumberDisplay({
   const numberSection = (
     <span
       className={cn(
-        // Tabular lining figures (#2174): equal-width, full-height digits so
-        // stat numbers read uniformly (vs the oldstyle default used in prose).
-        "font-display-big inline-flex items-baseline gap-1.5 font-black lining-nums tabular-nums",
+        // Lining figures (#2174, tabular-nums dropped in #2610): equal-height
+        // digits so stat numbers read uniformly (vs the oldstyle default used
+        // in prose). `tabular-nums` did nothing here — the kit ships no
+        // `tnum` feature on any face this site uses — so it's removed rather
+        // than kept as dead weight.
+        "font-display-big inline-flex items-baseline gap-1.5 font-black lining-nums",
         SIZE_CLASS[size],
         TONE_CLASS[tone],
       )}

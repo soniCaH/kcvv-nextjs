@@ -112,3 +112,33 @@ export const WithTournament: Story = {
     weekStart: "2026-03-23",
   },
 };
+
+/**
+ * A finished match with a score, among the week's scheduled ones (#2610) —
+ * `weekMatches` above only exercises `scoreDisplay: { type: "vs" }`, so no
+ * story previously rendered the `{ type: "score" }` branch this row's
+ * lining-nums fix touches.
+ */
+export const WithPlayedMatch: Story = {
+  args: {
+    matches: [
+      ...weekMatches,
+      {
+        id: 3,
+        date: "2026-03-25T20:00:00",
+        time: "20:00",
+        homeTeam: kcvv,
+        awayTeam: { id: 4, name: "SK Londerzeel" },
+        scoreDisplay: { type: "score", home: 3, away: 1 },
+        status: "finished",
+        competition: "Beker van Vlaanderen",
+        team: "A-ploeg",
+        isHome: true,
+        isPlaceholder: false,
+        kind: "match",
+      },
+    ],
+    events: weekEvents,
+    weekStart: "2026-03-23",
+  },
+};

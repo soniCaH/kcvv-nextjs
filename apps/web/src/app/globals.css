@@ -681,6 +681,63 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* ===== Text selection (#2610, decision-sheet §8 D0 — C6) =====
+     Jersey-deep ground, cream text — the site's one selection mark. Inverted
+     inside an ink or jersey-deep(-dark) band: on those grounds the default
+     jersey-deep highlight would sit at or near the surface's own colour and
+     the mark would go invisible (a jersey-deep card selecting jersey-deep-on
+     -jersey-deep shows no box at all), so `.bg-ink` / `.bg-jersey-deep` /
+     `.bg-jersey-deep-dark` swap to a cream mark with jersey-deep text
+     instead. Scoped to the Tailwind background utilities those bands
+     actually render (`<TapedCard bg="ink">`, `<CtaBand>`, `<PageHero>`,
+     `<SearchMasthead>`, `<FirstTeamsBlock>`, dark `<MatchStripView>` rows,
+     the organigram hero/detail panel, `/club/ultras`), not a colour heuristic
+     — a future band adds its selector here rather than guessing from hue.
+
+     Both forms of each selector are needed: the descendant form (a space
+     before `::selection`) covers text inside a child element, but a band's
+     OWN text node — e.g. `<OrgPersonCard>`'s `bg-jersey-deep` role pill,
+     `<CalendarSubscribePanel>`'s `bg-jersey-deep` copy button, both of which
+     render their label as a direct child of the coloured element itself —
+     needs the bare `.bg-X::selection` form too, or it falls through to the
+     un-inverted default and goes invisible on its own background (#2610
+     review, round 1). */
+  ::selection {
+    background-color: var(--color-jersey-deep);
+    color: var(--color-cream);
+  }
+
+  .bg-ink::selection,
+  .bg-ink ::selection,
+  .bg-jersey-deep::selection,
+  .bg-jersey-deep ::selection,
+  .bg-jersey-deep-dark::selection,
+  .bg-jersey-deep-dark ::selection {
+    background-color: var(--color-cream);
+    color: var(--color-jersey-deep);
+  }
+
+  /* A light card nested inside a dark band — `<TicketStub>`'s `bg-cream`
+     stub rendered inside /evenementen's `bg-jersey-deep-dark` page wrapper
+     is the audited case — would otherwise inherit the inversion above via
+     the descendant selector and paint cream-on-cream: the same defect,
+     upside down. `.bg-cream` / `.bg-cream-soft` / `.bg-cream-deep` revert to
+     the default (un-inverted) mark; equal specificity to the block above,
+     so declaring it after wins the cascade for any element that is a
+     descendant of BOTH a dark band and a nested light surface. Two levels
+     of nesting only — a dark element a third level deep, inside a light
+     card, inside a dark band, would need its own override; not a case
+     #2610's audit found (#2610 review, round 1). */
+  .bg-cream::selection,
+  .bg-cream ::selection,
+  .bg-cream-soft::selection,
+  .bg-cream-soft ::selection,
+  .bg-cream-deep::selection,
+  .bg-cream-deep ::selection {
+    background-color: var(--color-jersey-deep);
+    color: var(--color-cream);
+  }
+
   html {
     /* Only hyphenate words >=8 chars, with >=4 chars before and after the
        break, so short Dutch words ("plezantste", "passie") wrap whole instead
@@ -827,6 +884,67 @@
 @media (prefers-reduced-motion: reduce) {
   .prose-link {
     transition: color 150ms var(--ease-out);
+  }
+}
+
+/* ===== Reserved hover borders (#2610, decision-sheet §8 D0 — S8) =====
+   Pure discipline, not a utility class: wherever a hover swaps a border's
+   colour, the resting state already carries the same border WIDTH (`border`,
+   `border-2`, or a `border-[…]` arbitrary value) — only the colour token
+   changes on `:hover` / `:focus-visible` / `:has(:hover)`. A width that
+   appears only on hover is what shifts a neighbour; a colour never does.
+   Every hover-adds-a-border site audited for #2610 already followed this
+   (`<SiteHeader>`'s "Word lid" pill, the organigram explorer chrome,
+   `<ArticleBody>`'s social-link chip, `fieldChrome.ts`'s 8-state form-field
+   machine, `<SharePage>`'s template picker) — there was no violation to
+   retrofit. `app/__tests__/detail-tokens-consistency.test.ts` holds the line
+   forward: a file that uses `hover:border-*` / `group-hover:border-*` /
+   `focus-visible:border-*` anywhere must also declare a resting border-width
+   token somewhere in the same file. */
+
+/* ===== Hover-thickens underline (#2610, decision-sheet §8 D0 — M6) =====
+   The underline is present (thin) at rest and only its
+   `text-decoration-thickness` changes on hover/focus — never added from
+   nothing, which is the jump this replaces. `text-decoration-thickness` does
+   not participate in layout, so the thicken costs nothing to reserve.
+   `.prose-link` above is NOT a consumer: its "underline" is a background-
+   image marker, not `text-decoration`, and stays on its own sweep mechanism.
+   Duration is the Motion Vocabulary's Chrome speed (DESIGN.md → Motion) —
+   the same speed `.prose-link`'s own colour transition above uses — because
+   this is a colour/border-class chrome change, not a fourth speed. Reduced
+   motion makes the transition itself absent (setting `transition-property:
+   none`), the same shape as `.prose-link`'s own reduced-motion block above:
+   the rest/hover thickness values still apply, they just stop animating
+   between each other.
+
+   Declared inside `@layer components` (unlike `.prose-link`, which is
+   deliberately unlayered to beat the typography plugin): this is a new
+   public utility a consumer will compose with Tailwind classes, so it must
+   lose the cascade to a later `no-underline` / `decoration-2` /
+   `transition-colors` utility rather than silently defeat them the way an
+   unlayered rule would (#2610 review, round 1). The transition properties
+   are declared as longhands rather than the `transition` shorthand for the
+   same reason — the shorthand resets `transition-property` to `all`'s
+   complement for every OTHER animatable property too, which would silently
+   cancel a `transition-colors` a consumer adds alongside this class. */
+@layer components {
+  .hover-underline-thicken {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    transition-property: text-decoration-thickness;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out);
+  }
+
+  .hover-underline-thicken:hover,
+  .hover-underline-thicken:focus-visible {
+    text-decoration-thickness: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hover-underline-thicken {
+      transition-property: none;
+    }
   }
 }
 

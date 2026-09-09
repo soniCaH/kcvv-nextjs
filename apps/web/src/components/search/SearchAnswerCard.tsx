@@ -85,7 +85,9 @@ export function SearchAnswerCard({ answer, sources }: SearchAnswerCardProps) {
             <li key={`${source.href}-${index}`}>
               <Link
                 href={source.href}
-                className="text-jersey-deep focus-visible:outline-jersey-deep font-mono text-[11px] font-semibold underline-offset-2 outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                // `hover-underline-thicken` (#2610): underline present at
+                // rest, thickens on hover/focus rather than jumping in.
+                className="hover-underline-thicken text-jersey-deep focus-visible:outline-jersey-deep font-mono text-[11px] font-semibold underline-offset-2 outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
               >
                 {source.title}
               </Link>
