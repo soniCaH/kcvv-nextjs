@@ -200,7 +200,23 @@ It is read-only — no checkout, no working-tree change. It reports which branch
 
 Its third section is the one that matters most, because it reports a collision `git merge-tree` structurally cannot see: a branch that adds a **rule** paired with a branch that adds **code the rule will scan**, sharing no file. That pairing is a path heuristic, not a proof — proving it means merging the pair and running the suite, which needs a checkout and an install this script deliberately avoids. So when it names a pair, act on it:
 
-**Whichever of the pair you merge second must be re-checked against the updated `main` before it lands** — merge `origin/main` into that branch and run `pnpm --filter @kcvv/web check-all` locally. Re-running its CI is _not_ enough and neither is `gh run rerun`: a PR's checks are computed against the `main` it forked from, and a rerun replays that same stale merge. Only a fresh push of a branch that actually contains current `main` gives you a real answer.
+**Whichever of the pair you merge second must be re-checked against the updated `main` before it lands.** Fetch first — a remote-tracking ref left over from before the other branch merged is exactly the stale tree you are trying to test against:
+
+```bash
+git fetch origin main
+git -C ../kcvv-issue-<N> merge origin/main
+```
+
+Then run the check that actually covers the side that changed. `check-all` is not universal:
+
+| Where the change lives                     | What to run                                                                                                                                                                                              |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/src`                             | `pnpm --filter @kcvv/web check-all`                                                                                                                                                                      |
+| any other `apps/*/src` or `packages/*/src` | `pnpm lint && pnpm type-check && pnpm test && pnpm build` from the repo root — **`check-all` exists only in `apps/web` and `packages/sanity-studio`**, so the web script proves nothing about `apps/api` |
+| `.husky/`, `.claude/hooks/`                | `pnpm --filter @kcvv/web test` — `apps/web/test/hooks/` is those scripts' only home and rides that suite                                                                                                 |
+| `commitlint.config.js`                     | no automated test covers it; make a deliberately malformed commit in a scratch worktree and confirm it is refused                                                                                        |
+
+Re-running its CI is _not_ enough and neither is `gh run rerun`: a PR's checks are computed against the `main` it forked from, and a rerun replays that same stale merge. Only a fresh push of a branch that actually contains current `main` gives you a real answer.
 
 Tell the user the safe merge order: everything that collides with nothing merges in any order, and each colliding pair gets one merged first, the other rebased after.
 
