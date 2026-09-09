@@ -9,6 +9,9 @@
  *  - Every player renders a card
  *  - Single-group gate (#2638): a lone catch-all renders no heading; a lone
  *    REAL position bucket keeps its heading; two or more groups always do
+ *  - Within-group order (#2894): jerseyNumber ascending, falling back to a
+ *    locale-aware lastName collation; numbered before unnumbered; applies to
+ *    the catch-all "Spelers" group too
  */
 
 import { describe, it, expect } from "vitest";
@@ -21,11 +24,12 @@ function player(
   firstName: string,
   position: string | undefined,
   number?: number,
+  lastName = "Test",
 ): PlayerVM {
   return {
     id,
     firstName,
-    lastName: "Test",
+    lastName,
     position,
     number,
     href: `/spelers/${id}`,
@@ -142,5 +146,148 @@ describe("SquadGrid", () => {
       .getAllByRole("heading", { level: 3 })
       .map((h) => h.textContent);
     expect(headings).toEqual(["Doelmannen", "Spelers"]);
+  });
+
+  describe("Within-group order (#2894)", () => {
+    /** The numbers rendered by the "Doelmannen" region's cards, in DOM order. */
+    function numbersIn(regionName: string): string[] {
+      const region = screen.getByRole("region", { name: regionName });
+      return Array.from(
+        region.querySelectorAll('[data-testid="player-card-number"]'),
+      ).map((el) => el.textContent ?? "");
+    }
+
+    /** The last names rendered by a region's cards, in DOM order. */
+    function lastNamesIn(regionName: string): string[] {
+      const region = screen.getByRole("region", { name: regionName });
+      return Array.from(region.querySelectorAll("em")).map(
+        (el) => el.textContent ?? "",
+      );
+    }
+
+    it("orders an all-numbered group by jerseyNumber ascending", () => {
+      render(
+        <SquadGrid
+          players={[
+            player("1", "Senne", "Verdediger", 9),
+            player("2", "Bram", "Verdediger", 2),
+            player("3", "Yanni", "Verdediger", 5),
+          ]}
+        />,
+      );
+      expect(numbersIn("Verdedigers")).toEqual(["2", "5", "9"]);
+    });
+
+    it("falls back to a locale-aware lastName collation when no player has a number", () => {
+      render(
+        <SquadGrid
+          players={[
+            player("1", "A", "Aanvaller", undefined, "Van Hóf"),
+            player("2", "B", "Aanvaller", undefined, "Aerts"),
+            player("3", "C", "Aanvaller", undefined, "Van Hof"),
+          ]}
+        />,
+      );
+      // Dutch collation: "Van Hof" sorts before "Van Hóf" (base letter
+      // equal, diacritic breaks the tie), both after "Aerts".
+      expect(lastNamesIn("Aanvallers")).toEqual([
+        "Aerts",
+        "Van Hof",
+        "Van Hóf",
+      ]);
+    });
+
+    it("sorts numbered players before unnumbered ones in a mixed group", () => {
+      render(
+        <SquadGrid
+          players={[
+            player("1", "A", "Middenvelder", undefined, "Aerts"),
+            player("2", "B", "Middenvelder", 7),
+            player("3", "C", "Middenvelder", undefined, "Bosmans"),
+            player("4", "D", "Middenvelder", 3),
+          ]}
+        />,
+      );
+      const region = screen.getByRole("region", { name: "Middenvelders" });
+      const cards = Array.from(
+        region.querySelectorAll('[data-testid="player-card"]'),
+      );
+      // Numbered (3, 7) first in ascending order, then unnumbered
+      // (Aerts, Bosmans) in last-name order.
+      expect(
+        cards.map(
+          (c) =>
+            c.querySelector('[data-testid="player-card-number"]')
+              ?.textContent ?? c.querySelector("em")?.textContent,
+        ),
+      ).toEqual(["3", "7", "Aerts", "Bosmans"]);
+    });
+
+    it("applies the same order to the trailing catch-all Spelers group", () => {
+      render(
+        <SquadGrid
+          players={[
+            player("1", "A", undefined, undefined, "Wouters"),
+            player("2", "B", undefined, 4),
+            player("3", "C", undefined, undefined, "Aerts"),
+            player("4", "D", undefined, 1),
+          ]}
+        />,
+      );
+      const region = screen.getByRole("region", { name: "Spelers" });
+      const cards = Array.from(
+        region.querySelectorAll('[data-testid="player-card"]'),
+      );
+      expect(
+        cards.map(
+          (c) =>
+            c.querySelector('[data-testid="player-card-number"]')
+              ?.textContent ?? c.querySelector("em")?.textContent,
+        ),
+      ).toEqual(["1", "4", "Aerts", "Wouters"]);
+    });
+
+    it("keeps a deterministic, stable order for two unnumbered players sharing a last name", () => {
+      render(
+        <SquadGrid
+          players={[
+            player("1", "Wouter", "Keeper", undefined, "Peeters"),
+            player("2", "Monique", "Keeper", undefined, "Peeters"),
+          ]}
+        />,
+      );
+      // Neither a number nor a lastName difference to order by — the sort
+      // must not crash or drop a player, and (Array.prototype.sort being
+      // stable) the input's relative order survives the tie.
+      const region = screen.getByRole("region", { name: "Doelmannen" });
+      const firstNames = Array.from(
+        region.querySelectorAll('[data-testid="player-card"]'),
+      ).map((c) => c.querySelector(".font-semibold")?.textContent);
+      expect(firstNames).toEqual(["Wouter", "Monique"]);
+    });
+
+    it("keeps group order unchanged: keepers → defenders → midfield → attackers → catch-all", () => {
+      render(
+        <SquadGrid
+          players={[
+            player("1", "A", "Aanvaller", 9),
+            player("2", "B", undefined, 1, "Aerts"),
+            player("3", "C", "Keeper", 1),
+            player("4", "D", "Verdediger", 4),
+            player("5", "E", "Middenvelder", 8),
+          ]}
+        />,
+      );
+      const headings = screen
+        .getAllByRole("heading", { level: 3 })
+        .map((h) => h.textContent);
+      expect(headings).toEqual([
+        "Doelmannen",
+        "Verdedigers",
+        "Middenvelders",
+        "Aanvallers",
+        "Spelers",
+      ]);
+    });
   });
 });
