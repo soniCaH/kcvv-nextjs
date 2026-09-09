@@ -98,13 +98,14 @@ describe("PlayerRepository", () => {
       expect(p.position).toBe("Keeper");
     });
 
-    it("position fallback: position → positionPsd → undefined (#2567)", async () => {
-      // When position is null, falls back to positionPsd
+    it("position fallback: position → mapped positionPsd → undefined (#2638)", async () => {
+      // When position is null, falls back to the mapped positionPsd — PSD
+      // sends its four `bestPosition` values lowercase, English.
       mockFetch.mockResolvedValueOnce([
         makePlayerRow({
           keeper: false,
           position: null,
-          positionPsd: "Verdediger",
+          positionPsd: "defender",
         }),
       ]);
 
@@ -128,6 +129,66 @@ describe("PlayerRepository", () => {
         }),
       );
       expect(p2.position).toBeUndefined();
+    });
+
+    it("maps all four PSD positionPsd values, case-insensitively", async () => {
+      mockFetch.mockResolvedValueOnce([
+        makePlayerRow({
+          _id: "p-gk",
+          keeper: false,
+          position: null,
+          positionPsd: "GOALKEEPER",
+        }),
+        makePlayerRow({
+          _id: "p-def",
+          keeper: false,
+          position: null,
+          positionPsd: "Defender",
+        }),
+        makePlayerRow({
+          _id: "p-mid",
+          keeper: false,
+          position: null,
+          positionPsd: "midfielder",
+        }),
+        makePlayerRow({
+          _id: "p-att",
+          keeper: false,
+          position: null,
+          positionPsd: "attacker",
+        }),
+      ]);
+
+      const players = await runWithRepo(
+        Effect.gen(function* () {
+          const repo = yield* PlayerRepository;
+          return yield* repo.findAll();
+        }),
+      );
+      expect(players.map((p) => p.position)).toEqual([
+        "Keeper",
+        "Verdediger",
+        "Middenvelder",
+        "Aanvaller",
+      ]);
+    });
+
+    it("a future unmapped positionPsd value degrades to undefined, never raw English (#2638)", async () => {
+      mockFetch.mockResolvedValueOnce([
+        makePlayerRow({
+          keeper: false,
+          position: null,
+          positionPsd: "wing-back",
+        }),
+      ]);
+
+      const [p] = await runWithRepo(
+        Effect.gen(function* () {
+          const repo = yield* PlayerRepository;
+          return yield* repo.findAll();
+        }),
+      );
+      expect(p.position).toBeUndefined();
     });
 
     it("position fallback: keeper null treated as false, unfilled position stays undefined", async () => {

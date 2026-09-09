@@ -44,15 +44,43 @@ export const PLAYER_BY_PSD_ID_QUERY =
   }
 }`);
 
+/**
+ * PSD's `bestPosition` values — four lowercase English strings, matched
+ * case-insensitively since PSD casing has drifted before — mapped to the
+ * same Dutch vocabulary the editorial `position` field already uses
+ * (#2638). Lives in the repository, not the BFF: team, player and staff
+ * data reach this page straight from the content store, with no BFF hop on
+ * this path (#2538). An unmapped value (a future `wing-back`) is a miss,
+ * not an entry — `resolvePositionPsd` below returns `undefined` for it, the
+ * same path as absence, rather than shipping raw English to the page.
+ */
+const POSITION_LABELS: Record<string, string> = {
+  goalkeeper: "Keeper",
+  defender: "Verdediger",
+  midfielder: "Middenvelder",
+  attacker: "Aanvaller",
+};
+
+function resolvePositionPsd(
+  positionPsd: string | null | undefined,
+): string | undefined {
+  const key = positionPsd?.trim().toLowerCase();
+  return key ? POSITION_LABELS[key] : undefined;
+}
+
 export interface PlayerVM {
   id: string;
   firstName: string;
   lastName: string;
   /**
-   * Editorial position label. Absent when no editor has authored it and PSD's
-   * `bestPosition` is also empty (#2567) — never defaulted to a generic
-   * literal, so an unset position is distinguishable from an authored one on
-   * every consuming surface (`PlayerHero`'s meta row, `PlayerCard`'s label,
+   * Resolution order: keeper flag → editorial position → mapped PSD
+   * `bestPosition` (via `POSITION_LABELS`) → `undefined` (#2638). Absent
+   * when no editor has authored a position, PSD's `bestPosition` is empty,
+   * or PSD sends a value `POSITION_LABELS` doesn't recognise — never
+   * defaulted to a generic literal ("Speler" was rejected: it would make a
+   * display string a control value for every consuming surface's
+   * comparisons), so a lookup miss takes the same path as absence on every
+   * consuming surface (`PlayerHero`'s meta row, `PlayerCard`'s label,
    * `SquadGrid`'s grouping).
    */
   position?: string;
@@ -106,7 +134,7 @@ export function toPlayerVM(
 ): PlayerVM {
   const position = row.keeper
     ? "Keeper"
-    : (row.position ?? row.positionPsd ?? undefined);
+    : (row.position ?? resolvePositionPsd(row.positionPsd) ?? undefined);
 
   // The team's own name, resolved the same way its page resolves it — a
   // profile that says `KCVVE  U15` beside a page headed `U15` is the drift
