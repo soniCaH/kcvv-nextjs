@@ -65,7 +65,16 @@ function resolvePositionPsd(
   positionPsd: string | null | undefined,
 ): string | undefined {
   const key = positionPsd?.trim().toLowerCase();
-  return key ? POSITION_LABELS[key] : undefined;
+  // `Object.hasOwn` guard, not a bare index: `POSITION_LABELS` is an object
+  // literal, so it inherits `Object.prototype`. A bare lookup on an inherited
+  // key (`constructor`, `__proto__`, `toString`) returns a function or an
+  // object rather than `undefined`, which the `Record<string, string>` type
+  // hides — and `positionPsd` is upstream free text from PSD, so the key is
+  // never ours to trust. Own properties only; everything else degrades to no
+  // label, the same path as absence (#2638).
+  return key && Object.hasOwn(POSITION_LABELS, key)
+    ? POSITION_LABELS[key]
+    : undefined;
 }
 
 export interface PlayerVM {

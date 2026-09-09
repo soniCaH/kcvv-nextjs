@@ -191,6 +191,41 @@ describe("PlayerRepository", () => {
       expect(p.position).toBeUndefined();
     });
 
+    it("an inherited key never resolves to a label (#2889 review)", async () => {
+      // POSITION_LABELS is an object literal, so a bare index on an inherited
+      // key returns Object.prototype's member rather than undefined — and
+      // positionPsd is upstream free text. Own properties only.
+      mockFetch.mockResolvedValueOnce([
+        makePlayerRow({
+          keeper: false,
+          position: null,
+          positionPsd: "__proto__",
+        }),
+        makePlayerRow({
+          keeper: false,
+          position: null,
+          positionPsd: "constructor",
+        }),
+        makePlayerRow({
+          keeper: false,
+          position: null,
+          positionPsd: "toString",
+        }),
+      ]);
+
+      const players = await runWithRepo(
+        Effect.gen(function* () {
+          const repo = yield* PlayerRepository;
+          return yield* repo.findAll();
+        }),
+      );
+      expect(players.map((p) => p.position)).toEqual([
+        undefined,
+        undefined,
+        undefined,
+      ]);
+    });
+
     it("position fallback: keeper null treated as false, unfilled position stays undefined", async () => {
       mockFetch.mockResolvedValueOnce([
         makePlayerRow({ keeper: null, position: null, positionPsd: null }),
