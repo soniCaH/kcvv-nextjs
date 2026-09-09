@@ -406,7 +406,7 @@ function TeamDetailAssembly({ competitive = "live" }: TeamDetailAssemblyProps) {
       <StripedSeam colorPair="ink-cream" height="md" />
       <PageContainer as="section" className="py-10">
         <SectionHeader title="Staf" size="display-md" />
-        <TeamStaff staff={staff} heading="Staf" />
+        <TeamStaff staff={staff} heading="Staf" unlabelledNotice />
       </PageContainer>
 
       {/* Unconditional (#2637) — no `show*` gate, mirroring page.tsx. */}

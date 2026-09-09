@@ -1,4 +1,6 @@
 import { PlayerCard, PersonCardRun } from "@/components/team/SquadGrid";
+import { ExternalMark } from "@/components/design-system/ExternalMark";
+import { EXTERNAL_LINKS } from "@/lib/constants";
 
 export interface TeamStaffMemberData {
   id: string;
@@ -24,6 +26,15 @@ export interface TeamStaffProps {
   staff: readonly TeamStaffMemberData[];
   /** The run's own word — forwarded to `<PersonCardRun>`'s `label` (#2575 review). "Staf" on the team page, "De leden" on a board page. */
   heading: string;
+  /**
+   * Render a one-line notice beneath the cards, routing to ProSoccerData,
+   * when any member's function fails to resolve to a label (#2638). Team-
+   * page-only: ProSoccerData is PSD's dashboard, and board members aren't
+   * PSD-tracked, so `<BestuurPage>` leaves this at its default `false` —
+   * `resolveFunctionLabel`'s `null` still hides the function line on a
+   * board card, it just doesn't earn the whole section a footnote there.
+   */
+  unlabelledNotice?: boolean;
 }
 
 // PSD function codes → readable Dutch labels. Mirrors the organigram role codes.
@@ -47,13 +58,16 @@ const ROLE_BUCKET_LABELS: Record<string, string> = {
  *   3. functionTitle null, role is a known bucket → bucket label (Trainer / …)
  *   4. functionTitle null, role is free text → pass the role through verbatim
  *      (board titles "Voorzitter" / "Secretaris" / … live in `role`; their
- *      `functionTitle` is PSD-empty, so without this they'd fall to "Staf")
- *   5. nothing usable → "Staf"
+ *      `functionTitle` is PSD-empty, so without this they'd fall to null)
+ *   5. nothing usable → null (#2638) — the card omits the function line
+ *      entirely rather than shipping a last-resort "Staf" that classifies
+ *      nobody. Steps 1–4 are unchanged: `role` is empty club-wide today
+ *      but is the board's path elsewhere.
  */
 export function resolveFunctionLabel(
   functionTitle: string | null | undefined,
   role: string | null | undefined,
-): string {
+): string | null {
   const ft = functionTitle?.trim();
   if (ft) {
     return FUNCTION_CODE_LABELS[ft.toUpperCase()] ?? ft;
@@ -62,33 +76,74 @@ export function resolveFunctionLabel(
   if (roleText) {
     return ROLE_BUCKET_LABELS[roleText.toLowerCase()] ?? roleText;
   }
-  return "Staf";
+  return null;
 }
 
 /**
  * `<TeamStaff>` — one `<PersonCardRun>` of the shared `<PlayerCard>`
  * (#2477), `garment="coat"` for the imageless fallback (#2485). Renders on
  * `/ploegen/[slug]` and, via `<BestuurPage>`, on the three board routes.
+ *
+ * Cards are ordered labelled-first, unlabelled-after (#2638), each part
+ * keeping the order the page composed it in — a filter-and-concat rather
+ * than a sort, so nothing depends on comparator stability. On a U9 that
+ * puts the two named roles at the top and reads the remaining three as
+ * helpers, rather than scattering two facts through three blanks.
  */
-export function TeamStaff({ staff, heading }: TeamStaffProps) {
+export function TeamStaff({
+  staff,
+  heading,
+  unlabelledNotice = false,
+}: TeamStaffProps) {
   if (staff.length === 0) return null;
 
+  const resolved = staff.map((member) => ({
+    member,
+    label: resolveFunctionLabel(member.functionTitle, member.role),
+  }));
+  const ordered = [
+    ...resolved.filter((r) => r.label !== null),
+    ...resolved.filter((r) => r.label === null),
+  ];
+  const hasUnlabelled = resolved.some((r) => r.label === null);
+
   return (
-    <PersonCardRun label={heading} data-testid="team-staff-grid">
-      {staff.map((member) => (
-        <PlayerCard
-          key={member.id}
-          id={member.id}
-          firstName={member.firstName}
-          lastName={member.lastName}
-          position={resolveFunctionLabel(member.functionTitle, member.role)}
-          photoUrl={member.imageUrl?.trim() || undefined}
-          href={member.href?.trim() || undefined}
-          garment="coat"
-          blendPhoto={false}
-          linkAffordance
-        />
-      ))}
-    </PersonCardRun>
+    <>
+      <PersonCardRun label={heading} data-testid="team-staff-grid">
+        {ordered.map(({ member, label }) => (
+          <PlayerCard
+            key={member.id}
+            id={member.id}
+            firstName={member.firstName}
+            lastName={member.lastName}
+            position={label ?? undefined}
+            photoUrl={member.imageUrl?.trim() || undefined}
+            href={member.href?.trim() || undefined}
+            garment="coat"
+            blendPhoto={false}
+            linkAffordance
+          />
+        ))}
+      </PersonCardRun>
+
+      {unlabelledNotice && hasUnlabelled ? (
+        <p
+          data-testid="team-staff-gap-notice"
+          className="text-ink font-body mt-4 text-base leading-relaxed"
+        >
+          Niet elke functie is ingevuld. Wie welke rol heeft, weet je zeker via{" "}
+          <a
+            href={EXTERNAL_LINKS.psdDashboard}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="prose-link"
+          >
+            ProSoccerData
+            <ExternalMark />
+          </a>
+          .
+        </p>
+      ) : null}
+    </>
   );
 }
