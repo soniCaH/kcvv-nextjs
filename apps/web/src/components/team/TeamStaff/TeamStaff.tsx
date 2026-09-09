@@ -27,12 +27,17 @@ export interface TeamStaffProps {
   /** The run's own word — forwarded to `<PersonCardRun>`'s `label` (#2575 review). "Staf" on the team page, "De leden" on a board page. */
   heading: string;
   /**
-   * Render a one-line notice beneath the cards, routing to ProSoccerData,
-   * when any member's function fails to resolve to a label (#2638). Team-
-   * page-only: ProSoccerData is PSD's dashboard, and board members aren't
-   * PSD-tracked, so `<BestuurPage>` leaves this at its default `false` —
-   * `resolveFunctionLabel`'s `null` still hides the function line on a
-   * board card, it just doesn't earn the whole section a footnote there.
+   * Gates two repairs for a PSD data gap, together (#2638 review): the
+   * labelled-first reorder AND the one-line ProSoccerData notice beneath
+   * the cards. Both are a response to *missing PSD data*, so both stay off
+   * the same switch. Team-page-only: ProSoccerData is PSD's dashboard, and
+   * board members aren't PSD-tracked — `<BestuurPage>` leaves this at its
+   * default `false`, which means an editor's hand-curated `staff[]` order
+   * on `/club/bestuur` etc. is never silently overridden, and the section
+   * never earns a footnote it has no PSD authority to make. Card-level
+   * `resolveFunctionLabel` still returns `null` and the function line still
+   * omits on a board card either way — this prop only controls the reorder
+   * and the notice, not the per-card label itself.
    */
   unlabelledNotice?: boolean;
 }
@@ -84,11 +89,15 @@ export function resolveFunctionLabel(
  * (#2477), `garment="coat"` for the imageless fallback (#2485). Renders on
  * `/ploegen/[slug]` and, via `<BestuurPage>`, on the three board routes.
  *
- * Cards are ordered labelled-first, unlabelled-after (#2638), each part
- * keeping the order the page composed it in — a filter-and-concat rather
- * than a sort, so nothing depends on comparator stability. On a U9 that
- * puts the two named roles at the top and reads the remaining three as
- * helpers, rather than scattering two facts through three blanks.
+ * When `unlabelledNotice` is set, cards are ordered labelled-first,
+ * unlabelled-after (#2638), each part keeping the order the page composed
+ * it in — a filter-and-concat rather than a sort, so nothing depends on
+ * comparator stability. On a U9 that puts the two named roles at the top
+ * and reads the remaining three as helpers, rather than scattering two
+ * facts through three blanks. When it's unset (the board-page default),
+ * cards keep the caller's own order — a curated Sanity `staff[]` ordering
+ * is never silently overridden by a repair for data the board isn't
+ * PSD-tracked to have anyway (#2638 review).
  */
 export function TeamStaff({
   staff,
@@ -101,10 +110,12 @@ export function TeamStaff({
     member,
     label: resolveFunctionLabel(member.functionTitle, member.role),
   }));
-  const ordered = [
-    ...resolved.filter((r) => r.label !== null),
-    ...resolved.filter((r) => r.label === null),
-  ];
+  const ordered = unlabelledNotice
+    ? [
+        ...resolved.filter((r) => r.label !== null),
+        ...resolved.filter((r) => r.label === null),
+      ]
+    : resolved;
   const hasUnlabelled = resolved.some((r) => r.label === null);
 
   return (

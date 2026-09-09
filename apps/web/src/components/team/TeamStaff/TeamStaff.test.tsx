@@ -4,9 +4,9 @@
  * Covers:
  *  - resolveFunctionLabel: code map / passthrough / role-bucket fallback / null (#2638)
  *  - Auto-hides (null) when staff empty
- *  - Labelled-first, unlabelled-after ordering (#2638)
- *  - The unlabelled-notice line: gated by `unlabelledNotice`, only when any
- *    member is unlabelled (#2638)
+ *  - Labelled-first, unlabelled-after ordering AND the unlabelled-notice
+ *    line both gated by `unlabelledNotice` — off by default, so a curated
+ *    board-page order is never silently reordered (#2638, #2638 review)
  *  - `heading` drives the run's heading text + accessible name — no baked
  *    default (#2575 review)
  *  - One shared <PlayerCard> per member, garment="coat", blendPhoto={false},
@@ -172,7 +172,7 @@ describe("TeamStaff", () => {
     expect(card.querySelector("p.font-mono")).toBeNull();
   });
 
-  it("orders labelled cards before unlabelled ones, stable within each part (#2638)", () => {
+  it("orders labelled cards before unlabelled ones, stable within each part, when unlabelledNotice is set (#2638)", () => {
     render(
       <TeamStaff
         staff={[
@@ -182,6 +182,7 @@ describe("TeamStaff", () => {
           { ...STAFF[1]! },
         ]}
         heading="Staf"
+        unlabelledNotice
       />,
     );
     const names = screen
@@ -195,6 +196,34 @@ describe("TeamStaff", () => {
     expect(names[2]).toContain("Een");
     expect(names[3]).toContain("Onbekend");
     expect(names[3]).toContain("Twee");
+  });
+
+  it("keeps the caller's own order — never reordering — when unlabelledNotice is unset, the board default (#2638 review)", () => {
+    // A board page's `staff[]` order is editor-curated in Sanity. Without
+    // `unlabelledNotice` (the `<BestuurPage>` default), that order must
+    // survive untouched even though this fixture mixes labelled and
+    // unlabelled members — the reorder is a repair for a PSD data gap and
+    // stays behind the same gate as the notice it's paired with.
+    render(
+      <TeamStaff
+        staff={[
+          { id: "u1", firstName: "Onbekend", lastName: "Een" },
+          { ...STAFF[0]! },
+          { id: "u2", firstName: "Onbekend", lastName: "Twee" },
+          { ...STAFF[1]! },
+        ]}
+        heading="De leden"
+      />,
+    );
+    const names = screen
+      .getAllByTestId("player-card")
+      .map((card) => card.textContent);
+    expect(names[0]).toContain("Onbekend");
+    expect(names[0]).toContain("Een");
+    expect(names[1]).toContain("Karel");
+    expect(names[2]).toContain("Onbekend");
+    expect(names[2]).toContain("Twee");
+    expect(names[3]).toContain("Bea");
   });
 
   describe("unlabelled notice (#2638)", () => {
