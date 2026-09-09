@@ -18,6 +18,45 @@ import { sanityClientConfig } from "./config";
 export const PSD_PLACEHOLDER_IMAGE_SHA1 =
   "6607821528ffa87bb0d39b159a7a4aa81dc78683";
 
+/**
+ * PSD id out of a `<type>-psd-<id>` reference.
+ *
+ * This is the identity a team's array entries are matched on. The reference is
+ * the reliable half: the sync writes the psd id as `_key` too, but Studio
+ * assigns its own random key to a row an editor adds, so `_key` alone does not
+ * identify a member (#2892 review). Returns "" for anything that is not a
+ * psd-shaped reference, which `mergePreservingOrder` then ignores.
+ */
+function refSuffix(ref: string | undefined): string {
+  return ref?.split("-psd-")[1] ?? "";
+}
+
+/**
+ * Order a team's `staff[]` / `players[]` so that the editor's arrangement
+ * survives a sync.
+ *
+ * The order in these arrays is editorial data, not PSD data: it is the only
+ * way to say "T1 first, then T2" or "defenders, midfield, attackers". Rebuilding
+ * them from PSD's own order silently undid that on every nightly run (#2892).
+ *
+ * Members PSD still reports keep the position they already had; members PSD has
+ * added are appended in PSD's order, so a new signing appears rather than
+ * vanishing; members PSD no longer reports drop out without shifting the rest.
+ * An empty `existingKeys` — a team being created — yields PSD's order, because
+ * there is no editorial arrangement to protect yet.
+ *
+ * ponytail: O(n) with two sets; a squad is ~25 entries.
+ */
+export function mergePreservingOrder(
+  existingKeys: readonly string[],
+  psdIds: readonly string[],
+): string[] {
+  const wanted = new Set(psdIds);
+  const kept = existingKeys.filter((k) => k !== "" && wanted.has(k));
+  const keptSet = new Set(kept);
+  return [...kept, ...psdIds.filter((id) => !keptSet.has(id))];
+}
+
 // ─── Document shapes written to Sanity ───────────────────────────────────────
 
 export interface SanityPlayerDoc {
@@ -136,7 +175,13 @@ export class SanityMutation extends Context.Tag("SanityMutation")<
  * Upsert strategy: createIfNotExists sets the document skeleton on first run.
  * patch().set() overwrites only PSD-sourced fields — never touches editorial
  * fields (transparentImage, celebrationImage, position, bio).
- * Both `players` and `staff` on team documents are sync-owned (readOnly in Studio).
+ *
+ * Team membership is sync-owned — PSD decides who is on a team. Team *order* is
+ * not: `staff[]` is editable in Studio and its order is the only way to say
+ * "T1 first, then T2", so `upsertTeam` preserves it (#2892). `players[]` is
+ * `readOnly: true` in the schema, so no editor sets its order today; it is
+ * preserved on the same code path anyway, so a PSD reshuffle does not churn the
+ * document.
  */
 export const SanityMutationLive = Layer.effect(
   SanityMutation,
@@ -399,6 +444,9 @@ export const SanityMutationLive = Layer.effect(
                   role?: string;
                 }>
               | undefined) ?? [];
+          const existingPlayers =
+            (existing?.players as
+              Array<{ _key?: string; _ref?: string }> | undefined) ?? [];
           const existingRev = existing?._rev as string | undefined;
 
           // Build a lookup from staff member ref → existing role
@@ -409,7 +457,24 @@ export const SanityMutationLive = Layer.effect(
             }
           }
 
-          const staffArray = doc.staffPsdIds.map((id) => {
+          // The REFERENCE is the identity, not the `_key`. A row the sync wrote
+          // carries the psd id as its key, but a row an editor adds in Studio
+          // gets a Sanity-random key — so keying off `_key` first would read an
+          // editor-added staff member as unknown and append it last on the next
+          // sync. That is the very regression this fixes, in the workflow where
+          // an editor is most likely to be the one acting (#2892 review).
+          const staffOrder = mergePreservingOrder(
+            existingStaff.map(
+              (e) => refSuffix(e.member?._ref) || (e._key ?? ""),
+            ),
+            doc.staffPsdIds,
+          );
+          const playerOrder = mergePreservingOrder(
+            existingPlayers.map((e) => refSuffix(e._ref) || (e._key ?? "")),
+            doc.playerPsdIds,
+          );
+
+          const staffArray = staffOrder.map((id) => {
             const ref = `staffMember-psd-${id}`;
             const existingRole = existingRoleByRef.get(ref);
             return {
@@ -430,7 +495,7 @@ export const SanityMutationLive = Layer.effect(
             age: doc.age,
             gender: doc.gender,
             footbelId: doc.footbelId,
-            players: doc.playerPsdIds.map((id) => ({
+            players: playerOrder.map((id) => ({
               _type: "reference",
               _ref: `player-psd-${id}`,
               _key: id,
