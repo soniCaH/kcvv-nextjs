@@ -1,0 +1,215 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { act, render, screen } from "@testing-library/react";
+import { SectionWipeReveal } from "./SectionWipeReveal";
+
+const RUN_CLASS = "section-wipe-reveal--run";
+
+function stubMatchMedia(matches: boolean): void {
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
+}
+
+/** Below the fold — top past the viewport, so the "already visible" check
+ * is false and the component arms an observer. */
+function mockOffscreenRect(): void {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+    top: 2000,
+    bottom: 2100,
+    left: 0,
+    right: 0,
+    width: 0,
+    height: 100,
+    x: 0,
+    y: 2000,
+    toJSON: () => ({}),
+  });
+}
+
+/** Inside the viewport at mount. */
+function mockOnscreenRect(): void {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+    top: 100,
+    bottom: 300,
+    left: 0,
+    right: 0,
+    width: 0,
+    height: 200,
+    x: 0,
+    y: 100,
+    toJSON: () => ({}),
+  });
+}
+
+let observerInstance: MockIntersectionObserver | null = null;
+
+class MockIntersectionObserver {
+  callback: IntersectionObserverCallback;
+  options?: IntersectionObserverInit;
+  observed: Element[] = [];
+  observe = vi.fn((el: Element) => {
+    this.observed.push(el);
+  });
+  disconnect = vi.fn();
+  unobserve = vi.fn();
+  takeRecords = vi.fn(() => []);
+  root: Element | Document | null = null;
+  rootMargin = "";
+  thresholds: ReadonlyArray<number> = [];
+
+  constructor(
+    callback: IntersectionObserverCallback,
+    options?: IntersectionObserverInit,
+  ) {
+    this.callback = callback;
+    this.options = options;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    observerInstance = this;
+  }
+}
+
+describe("SectionWipeReveal", () => {
+  beforeEach(() => {
+    observerInstance = null;
+    stubMatchMedia(false);
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+    mockOffscreenRect();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("renders its children", () => {
+    render(
+      <SectionWipeReveal>
+        <p data-testid="child">Hello</p>
+      </SectionWipeReveal>,
+    );
+    expect(screen.getByTestId("child")).toHaveTextContent("Hello");
+  });
+
+  it("observes the container when it is not already visible at mount", () => {
+    render(
+      <SectionWipeReveal>
+        <p>Content</p>
+      </SectionWipeReveal>,
+    );
+    expect(observerInstance).not.toBeNull();
+    expect(observerInstance!.observe).toHaveBeenCalledTimes(1);
+  });
+
+  it("configures the observer with threshold 0.1 and rootMargin '0px 0px -10% 0px'", () => {
+    render(
+      <SectionWipeReveal>
+        <p>Content</p>
+      </SectionWipeReveal>,
+    );
+    expect(observerInstance?.options?.threshold).toBe(0.1);
+    expect(observerInstance?.options?.rootMargin).toBe("0px 0px -10% 0px");
+  });
+
+  it("adds the --run class when the section intersects, and stops observing it", () => {
+    const { container } = render(
+      <SectionWipeReveal>
+        <p>Content</p>
+      </SectionWipeReveal>,
+    );
+    const host = container.firstElementChild as HTMLElement;
+    expect(host).not.toHaveClass(RUN_CLASS);
+
+    act(() => {
+      observerInstance!.callback(
+        [
+          {
+            isIntersecting: true,
+            target: host,
+            intersectionRatio: 1,
+            boundingClientRect: {} as DOMRectReadOnly,
+            intersectionRect: {} as DOMRectReadOnly,
+            rootBounds: null,
+            time: 0,
+          },
+        ],
+        observerInstance as unknown as IntersectionObserver,
+      );
+    });
+
+    expect(host).toHaveClass(RUN_CLASS);
+    expect(observerInstance!.unobserve).toHaveBeenCalledWith(host);
+  });
+
+  it("does not arm an observer, and never adds --run, for a section already visible at first paint", () => {
+    mockOnscreenRect();
+    const { container } = render(
+      <SectionWipeReveal>
+        <p data-testid="child">Content</p>
+      </SectionWipeReveal>,
+    );
+
+    expect(observerInstance).toBeNull();
+    expect(screen.getByTestId("child")).toBeVisible();
+    expect(container.firstElementChild).not.toHaveClass(RUN_CLASS);
+  });
+
+  it("does not instantiate an observer when prefers-reduced-motion is reduce", () => {
+    stubMatchMedia(true);
+    const { container } = render(
+      <SectionWipeReveal>
+        <p data-testid="child">Content</p>
+      </SectionWipeReveal>,
+    );
+
+    expect(observerInstance).toBeNull();
+    expect(screen.getByTestId("child")).toBeVisible();
+    expect(container.firstElementChild).not.toHaveClass(RUN_CLASS);
+  });
+
+  it("degrades to fully visible when IntersectionObserver is unsupported", () => {
+    vi.stubGlobal("IntersectionObserver", undefined);
+    const { container } = render(
+      <SectionWipeReveal>
+        <p data-testid="child">Content</p>
+      </SectionWipeReveal>,
+    );
+
+    expect(screen.getByTestId("child")).toBeVisible();
+    expect(container.firstElementChild).not.toHaveClass(RUN_CLASS);
+  });
+
+  it("degrades to fully visible when the observer is armed but its callback never fires", () => {
+    // Deliberately breaking the trigger: the observer is constructed and
+    // observe() is called, but nothing ever invokes its callback — the
+    // real-world stand-in for "the observer never firing" (#2623 AC).
+    const { container } = render(
+      <SectionWipeReveal>
+        <p data-testid="child">Content</p>
+      </SectionWipeReveal>,
+    );
+
+    expect(observerInstance).not.toBeNull();
+    expect(observerInstance!.observe).toHaveBeenCalledTimes(1);
+    // No callback invocation happens here — by design.
+    expect(screen.getByTestId("child")).toBeVisible();
+    expect(container.firstElementChild).not.toHaveClass(RUN_CLASS);
+  });
+
+  it("disconnects the observer on unmount", () => {
+    const { unmount } = render(
+      <SectionWipeReveal>
+        <p>Content</p>
+      </SectionWipeReveal>,
+    );
+    expect(observerInstance).not.toBeNull();
+    unmount();
+    expect(observerInstance!.disconnect).toHaveBeenCalledTimes(1);
+  });
+});
