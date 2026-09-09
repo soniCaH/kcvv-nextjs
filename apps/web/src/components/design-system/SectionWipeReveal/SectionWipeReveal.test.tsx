@@ -48,6 +48,22 @@ function mockOnscreenRect(): void {
   });
 }
 
+/** Scrolled PAST — bottom at/above the viewport top, e.g. a back-navigation
+ * that restores scroll to the foot of the page. */
+function mockScrolledPastRect(): void {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+    top: -300,
+    bottom: -100,
+    left: 0,
+    right: 0,
+    width: 0,
+    height: 200,
+    x: 0,
+    y: -300,
+    toJSON: () => ({}),
+  });
+}
+
 let observerInstance: MockIntersectionObserver | null = null;
 
 class MockIntersectionObserver {
@@ -158,6 +174,37 @@ describe("SectionWipeReveal", () => {
     expect(observerInstance).toBeNull();
     expect(screen.getByTestId("child")).toBeVisible();
     expect(container.firstElementChild).not.toHaveClass(RUN_CLASS);
+  });
+
+  it("does not arm an observer, and never adds --run, for a section already scrolled past at mount", () => {
+    // e.g. a back-navigation that restores scroll to the foot of the page —
+    // the section is above the viewport, not below it, but it is content
+    // the visitor already read and must not replay the wipe on.
+    mockScrolledPastRect();
+    const { container } = render(
+      <SectionWipeReveal>
+        <p data-testid="child">Content</p>
+      </SectionWipeReveal>,
+    );
+
+    expect(observerInstance).toBeNull();
+    expect(screen.getByTestId("child")).toBeVisible();
+    expect(container.firstElementChild).not.toHaveClass(RUN_CLASS);
+  });
+
+  it("passes className straight through, unmerged", () => {
+    // Regression guard: a single-argument cn(className) call buys the
+    // #2769 tailwind-merge hazard for no benefit — match the
+    // ArticleBodyMotion peer and assign the prop directly.
+    const { container } = render(
+      <SectionWipeReveal className="text-body-md bg-cream-soft">
+        <p>Content</p>
+      </SectionWipeReveal>,
+    );
+    expect(container.firstElementChild).toHaveClass(
+      "text-body-md",
+      "bg-cream-soft",
+    );
   });
 
   it("does not instantiate an observer when prefers-reduced-motion is reduce", () => {

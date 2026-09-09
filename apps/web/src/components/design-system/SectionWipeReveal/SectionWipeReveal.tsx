@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
-import { cn } from "@/lib/utils/cn";
 
 const MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 const RUN_CLASS = "section-wipe-reveal--run";
@@ -27,15 +26,23 @@ export interface SectionWipeRevealProps {
  * observer that is created but never calls back) is the plain, unclipped
  * children. The only class this component ever adds is `--run`, which
  * *triggers* the entrance animation (`clip-path` keyframe, `animation-fill-
- * mode: both`, so the "from" clip applies atomically the instant the class
- * lands — no unclipped flash before the sweep starts). Skipping any class
- * addition is therefore always safe: it just means the section renders in
- * its final, fully-visible state, which is the correct degrade.
+ * mode: backwards` — NOT `both`/`forwards`, which would keep the final
+ * `inset(0 0 0 0)` clip applied forever after the sweep and silently slice
+ * every offset shadow, rotated corner and focus ring on an edge tile;
+ * `backwards` only affects the zero-length delay before the animation
+ * starts, so the "no unclipped flash" property holds and the element still
+ * reverts to a genuinely unclipped resting state once the sweep finishes —
+ * see `globals.css`, #2888 review round 1). Skipping any class addition is
+ * therefore always safe: it just means the section renders in its final,
+ * fully-visible state, which is the correct degrade.
  *
- * A section already inside the viewport at mount is measured with
+ * A section already inside the viewport at mount — including one scrolled
+ * *past* (bottom above the viewport, e.g. a back-navigation that restores
+ * scroll to the foot of the page) — is measured with
  * `getBoundingClientRect()` before the observer is ever created — if it is
- * already visible, no observer is attached and `--run` can never be added,
- * so it never animates in after the fact.
+ * already visible (or already been scrolled past), no observer is attached
+ * and `--run` can never be added, so it never animates in on content the
+ * visitor already read.
  */
 export function SectionWipeReveal({
   children,
@@ -49,14 +56,17 @@ export function SectionWipeReveal({
     if (window.matchMedia(MOTION_QUERY).matches) return;
     if (typeof IntersectionObserver === "undefined") return;
 
-    // Already visible on first paint — never arm the observer, so this
-    // section can never receive --run and can never animate in after the
-    // fact.
+    // Only a section entirely BELOW the viewport at mount still needs the
+    // observer. Already visible and already scrolled past (bottom at or
+    // above the viewport top — e.g. a back-navigation that restores scroll
+    // to the foot of the page) are treated the same: never arm the
+    // observer, so the section can never receive --run and can never
+    // animate in on content the visitor already read.
     const viewportHeight =
       window.innerHeight || document.documentElement.clientHeight;
     const rect = node.getBoundingClientRect();
-    const alreadyVisible = rect.top < viewportHeight && rect.bottom > 0;
-    if (alreadyVisible) return;
+    const notYetInView = rect.top >= viewportHeight;
+    if (!notYetInView) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -73,7 +83,7 @@ export function SectionWipeReveal({
   }, []);
 
   return (
-    <div ref={ref} className={cn(className)}>
+    <div ref={ref} className={className}>
       {children}
     </div>
   );
