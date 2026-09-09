@@ -222,7 +222,27 @@ function extractBalanced(
         }
         continue;
       }
-      if (top === "${") {
+      // "${" (a template interpolation) and "{" (a code brace nested inside
+      // one) follow the same rules: ordinary code, where a `{` nests and a
+      // `}` closes the innermost one. `classTokens` below already models
+      // this; `extractBalanced` did not (CodeRabbit round 3).
+      //
+      // Honest scope: this is a PARITY fix, not a proven bug fix. Without the
+      // nesting push the state machine really does pop "${" on an object
+      // literal's own `}` — but the span still comes out identical, because
+      // the enclosing backtick re-absorbs the mis-parsed run and the depth
+      // counter (which only advances while the stack is empty) does the real
+      // work. Probed old-vs-new across five shapes — object literal in an
+      // interpolation, a block brace, a nested template, a `}` inside a
+      // string, and no template at all — and every span matched byte for
+      // byte, so no fixture here can fail without it. Kept anyway: two
+      // scanners reading the same syntax by different rules is the exact
+      // trap that silently exempted 10 files in round 1.
+      if (top === "${" || top === "{") {
+        if (ch === "{") {
+          stack.push("{");
+          continue;
+        }
         if (ch === "}") {
           stack.pop();
           continue;
@@ -315,11 +335,14 @@ function findBagSpans(source: string): string[] {
   for (const m of source.matchAll(/\[/g)) {
     const span = extractBalanced(source, m.index, "[", "]");
     if (!span) continue;
-    const after = source.slice(
-      m.index + span.length,
-      m.index + span.length + 8,
-    );
-    if (/^\s*\.join\(/.test(after)) spans.push(span);
+    // Skip whatever whitespace separates `]` from `.join(` rather than
+    // peeking a fixed number of characters: an 8-char window leaves room for
+    // `.join(` plus only two spaces, so a formatted array whose `.join(" ")`
+    // sits on the next line at any normal indent was silently not a bag
+    // (CodeRabbit round 3). Walking the run is exact and stays linear.
+    let after = m.index + span.length;
+    while (after < source.length && /\s/.test(source[after]!)) after++;
+    if (source.startsWith(".join(", after)) spans.push(span);
   }
 
   return spans;
@@ -451,6 +474,32 @@ describe("findBagSpans / extractBalanced — expression-scoping fixtures (#2610 
     expect(hoverBag).not.toBe(widthBag);
     expect(hoverBag.has("border-2")).toBe(false);
     expect(hoverBag.has("border")).toBe(false);
+  });
+});
+
+describe("findBagSpans / extractBalanced — round 3 fixtures (CodeRabbit)", () => {
+  it('an array `.join(" ")` is a bag however much whitespace precedes it', () => {
+    // The old fixed 8-character lookahead fit `.join(` plus two spaces, so a
+    // prettier-formatted array whose `.join()` lands on the next line at any
+    // normal indent was silently not a bag at all.
+    const source = [
+      "const cls = [",
+      '  "border-2",',
+      '  "hover:border-ink",',
+      "]",
+      '          .join(" ");',
+    ].join("\n");
+    const spans = findBagSpans(source);
+    const bag = spans.find((sp) => sp.includes("hover:border-ink"));
+    expect(bag).toBeDefined();
+    expect(bag).toContain("border-2");
+  });
+
+  it("an array NOT followed by .join() is still not a bag", () => {
+    const source = 'const notClasses = ["border-2", "hover:border-ink"];';
+    expect(
+      findBagSpans(source).some((sp) => sp.includes("hover:border-ink")),
+    ).toBe(false);
   });
 });
 
