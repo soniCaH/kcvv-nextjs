@@ -46,50 +46,291 @@ const productionSources = sourceFiles.filter(
 );
 
 /**
- * Strip comments WITHOUT touching string contents — a single alternation
- * that tries a string literal before a comment at every position, so a
- * `"https://…"` string is consumed whole (and re-emitted verbatim) before
- * the bare `//` inside it can ever be read as a line-comment opener. Two
- * separate regexes (comments first, strings second) get this wrong: a
- * naive `COMMENT` pass strips from the first `//` — including one inside a
- * string literal — to end of line, eating the string's own closing quote
- * and leaving every subsequent quote in the file mismatched, so
- * `classTokens` returns near-garbage for the rest of that file (#2610
- * review, round 1 — reproduced on 10 of 322 production files, all silently
- * exempted from both S8 and Y4 by the bug). Same technique as
- * `cross-page-consistency.test.ts`'s own `COMMENT_OR_STRING`.
- */
-const COMMENT_OR_STRING =
-  /"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|`(?:\\[\s\S]|[^`\\])*`|\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
-
-/**
- * Split a class list across a `cn()` call's several string-literal
- * arguments (ternary branches included) into one bag of tokens rather than
- * reading one string at a time — the real code does exactly this (e.g.
- * `OrganigramExplorer.tsx`'s text-size buttons carry the resting `border`
- * in one branch and `hover:border-cream` in another). File-scoped, matching
- * `cross-page-consistency.test.ts`'s own granularity: a rule this coarse
- * cannot catch a hover-border added in a file with no resting border
- * anywhere else in it, but it never flags a legitimate split, and it holds
- * the line against the pattern this project has none of today.
+ * Split a string of source text into class-name tokens: every whitespace-
+ * run inside a `"…"` / `'…'` string, or inside the STATIC portions of a
+ * `` `…` `` template literal, becomes a token boundary. Comments (`//…`,
+ * `/* … *‍/`) are skipped. A single character-by-character scan, not a
+ * regex — regex string-matching (this file's round-1 fix) gets comments
+ * right but cannot get backtick interpolation right: `` `${cond ? "a" :
+ * "b"}` `` is not "one opaque string", because `"a"` and `"b"` are
+ * themselves ordinary string literals nested inside the `${}` CODE region,
+ * not template text. Treating the whole backtick span as one blob and
+ * whitespace-splitting it (round 1's approach) glues a stray quote onto
+ * whichever word sits at a nested string's own edge — reproduced on
+ * SharePage's exact shape, where the ternary's second branch ends
+ * `…bg-cream"}` with no whitespace between the closing quote and the `}`,
+ * so no edge-trim regex can recover the clean `bg-cream` token (#2610
+ * review, round 2). This scanner instead walks the STATIC template text
+ * and each `${…}` interpolation separately: static text is tokenised
+ * directly; a `${…}` region is scanned as ordinary code, whose own nested
+ * strings (and, in principle, nested backticks) are found and tokenised
+ * the same recursive way, while a nested `{`/`}` (an object literal, a
+ * block) inside the interpolation is depth-tracked rather than mistaken
+ * for the interpolation's own closing brace.
  */
 function classTokens(source: string): Set<string> {
   const tokens = new Set<string>();
-  for (const match of source.matchAll(COMMENT_OR_STRING)) {
-    const raw = match[0];
-    if (raw.startsWith("/")) continue; // a comment — discard, keep scanning
-    for (const token of raw.slice(1, -1).split(/\s+/)) {
+  let buf = "";
+
+  const flush = () => {
+    if (!buf) return;
+    for (const token of buf.split(/\s+/)) {
       if (token) tokens.add(token);
     }
+    buf = "";
+  };
+
+  // Stack of active contexts, innermost last: a quote char (content is
+  // being buffered), "${" (template interpolation — ordinary code rules,
+  // buffering suspended), or "{" (a nested code brace inside "${", e.g. an
+  // object literal — depth-tracked so it doesn't close the interpolation).
+  const stack: Array<'"' | "'" | "`" | "${" | "{"> = [];
+
+  for (let i = 0; i < source.length; i++) {
+    const ch = source[i]!;
+    const top = stack[stack.length - 1];
+
+    if (top === '"' || top === "'") {
+      if (ch === "\\") {
+        i++;
+        continue; // escape sequence — not a token boundary either way
+      }
+      if (ch === top) {
+        flush();
+        stack.pop();
+        continue;
+      }
+      buf += ch;
+      continue;
+    }
+
+    if (top === "`") {
+      if (ch === "\\") {
+        i++;
+        continue;
+      }
+      if (ch === "`") {
+        flush();
+        stack.pop();
+        continue;
+      }
+      if (ch === "$" && source[i + 1] === "{") {
+        flush(); // static text collected so far in this template
+        stack.push("${");
+        i++;
+        continue;
+      }
+      buf += ch;
+      continue;
+    }
+
+    if (top === "${" || top === "{") {
+      // Ordinary code, not template text — no tokens buffered here
+      // directly; nested strings/backticks recurse through the same
+      // machine above. `{` nests (object literal, block); `}` closes
+      // whichever of "{" / "${" is innermost.
+      if (ch === "/" && source[i + 1] === "/") {
+        const nl = source.indexOf("\n", i);
+        i = nl === -1 ? source.length : nl;
+        continue;
+      }
+      if (ch === "/" && source[i + 1] === "*") {
+        const end = source.indexOf("*/", i + 2);
+        i = end === -1 ? source.length : end + 1;
+        continue;
+      }
+      if (ch === '"' || ch === "'" || ch === "`") {
+        stack.push(ch);
+        continue;
+      }
+      if (ch === "{") {
+        stack.push("{");
+        continue;
+      }
+      if (ch === "}") {
+        stack.pop();
+        continue;
+      }
+      continue;
+    }
+
+    // Top level — no active string/template/interpolation.
+    if (ch === "/" && source[i + 1] === "/") {
+      const nl = source.indexOf("\n", i);
+      i = nl === -1 ? source.length : nl;
+      continue;
+    }
+    if (ch === "/" && source[i + 1] === "*") {
+      const end = source.indexOf("*/", i + 2);
+      i = end === -1 ? source.length : end + 1;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") {
+      stack.push(ch);
+      continue;
+    }
+    // Any other top-level character (code) carries no class names.
   }
+  flush();
+
   return tokens;
 }
 
-const tokensByFile = new Map(
-  productionSources.map((relPath) => [
-    relPath,
-    classTokens(readFileSync(resolve(srcDir, relPath), "utf8")),
-  ]),
+/**
+ * Extract the source span from `openIndex` (pointing at `open`) to its
+ * matching `close`, honouring nested string/template literals — including
+ * `${}` interpolation inside a backtick, which can itself contain further
+ * nested strings and braces — and `//` / `/* *‍/` comments, so a bracket-
+ * shaped character inside any of those never closes the scan early. This
+ * is bracket/string/comment-aware, not a full parser: it has no notion of
+ * JSX, TypeScript types, or regex literals, but every pattern this project
+ * actually writes a class list in — a `className={…}` JSX expression, a
+ * bare `className="…"`, a `cn(…)` call, an array `.join(" ")` — resolves
+ * correctly under it. Verified against all 615 production `.ts`/`.tsx`
+ * files during #2610's review round 2: every hover-border-colour and
+ * `tabular-nums` token found by a whole-file scan also showed up inside at
+ * least one bag `findBagSpans` found for that file — zero orphans, zero
+ * silently-uncovered tokens.
+ */
+function extractBalanced(
+  source: string,
+  openIndex: number,
+  open: string,
+  close: string,
+): string | null {
+  let depth = 0;
+  const stack: string[] = [];
+
+  for (let i = openIndex; i < source.length; i++) {
+    const ch = source[i]!;
+
+    if (stack.length > 0) {
+      const top = stack[stack.length - 1];
+      if (top === "`") {
+        if (ch === "\\") {
+          i++;
+          continue;
+        }
+        if (ch === "`") {
+          stack.pop();
+          continue;
+        }
+        if (ch === "$" && source[i + 1] === "{") {
+          stack.push("${");
+          i++;
+          continue;
+        }
+        continue;
+      }
+      if (top === "${") {
+        if (ch === "}") {
+          stack.pop();
+          continue;
+        }
+        if (ch === '"' || ch === "'" || ch === "`") {
+          stack.push(ch);
+          continue;
+        }
+        if (ch === "\\") {
+          i++;
+          continue;
+        }
+        continue;
+      }
+      // top is a plain quote character (" or ')
+      if (ch === "\\") {
+        i++;
+        continue;
+      }
+      if (ch === top) {
+        stack.pop();
+        continue;
+      }
+      continue;
+    }
+
+    // Not inside any string/template — normal code scanning.
+    if (ch === "/" && source[i + 1] === "/") {
+      const nl = source.indexOf("\n", i);
+      i = nl === -1 ? source.length : nl;
+      continue;
+    }
+    if (ch === "/" && source[i + 1] === "*") {
+      const end = source.indexOf("*/", i + 2);
+      i = end === -1 ? source.length : end + 1;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") {
+      stack.push(ch);
+      continue;
+    }
+    if (ch === open) {
+      depth++;
+      continue;
+    }
+    if (ch === close) {
+      depth--;
+      if (depth === 0) return source.slice(openIndex, i + 1);
+      continue;
+    }
+  }
+  return null; // unterminated — caller discards
+}
+
+/**
+ * The class-list "expressions" `classTokens` scoping needs (#2610 review,
+ * round 2): each `className={…}` JSX attribute, each bare `className="…"`,
+ * each `cn(…)` call (inside or outside JSX — `button-styles.ts` and
+ * `press-down.ts` build a class string with no JSX at all), and each array
+ * literal immediately `.join(…)`'d (`fieldChrome.ts`'s `[…].join(" ")`
+ * state machine). Every one of these becomes ONE bag of tokens — a `cn()`
+ * call's several string-literal arguments, ternary branches included, read
+ * together rather than one string at a time, which is what makes
+ * `OrganigramExplorer.tsx`'s resting `border` (one branch) plus
+ * `hover:border-cream` (another branch) of the same call correctly count
+ * as reserved. A `className={cn(…)}` produces two overlapping bags (the
+ * outer JSX-expression span and the inner call span) — harmless
+ * redundancy, not a correctness problem, since a duplicate bag can only
+ * ever agree with itself.
+ */
+function findBagSpans(source: string): string[] {
+  const spans: string[] = [];
+
+  for (const m of source.matchAll(/className=\{/g)) {
+    const openIdx = m.index + m[0].length - 1;
+    const span = extractBalanced(source, openIdx, "{", "}");
+    if (span) spans.push(span);
+  }
+
+  for (const m of source.matchAll(/className="(?:\\[\s\S]|[^"\\])*"/g)) {
+    spans.push(m[0].slice("className=".length));
+  }
+
+  for (const m of source.matchAll(/\bcn\(/g)) {
+    const openIdx = m.index + m[0].length - 1;
+    const span = extractBalanced(source, openIdx, "(", ")");
+    if (span) spans.push(span);
+  }
+
+  for (const m of source.matchAll(/\[/g)) {
+    const span = extractBalanced(source, m.index, "[", "]");
+    if (!span) continue;
+    const after = source.slice(
+      m.index + span.length,
+      m.index + span.length + 8,
+    );
+    if (/^\s*\.join\(/.test(after)) spans.push(span);
+  }
+
+  return spans;
+}
+
+/** One bag of tokens per class-list expression found in a file. */
+const bagsByFile = new Map(
+  productionSources.map((relPath) => {
+    const source = readFileSync(resolve(srcDir, relPath), "utf8");
+    return [relPath, findBagSpans(source).map(classTokens)] as const;
+  }),
 );
 
 describe("classTokens — comment/string regression fixtures (#2610 review, round 1)", () => {
@@ -129,6 +370,87 @@ describe("classTokens — comment/string regression fixtures (#2610 review, roun
 
     expect(tokens.has("hover:border-should-not-count")).toBe(false);
     expect(tokens.has("border-2")).toBe(true);
+  });
+
+  it("does not leave a stray quote glued to a token at the edge of a ${ternary} inside a template literal", () => {
+    const source =
+      'const x = `border-2 px-4 ${cond ? "border-ink bg-jersey-deep" : "border-ink/30 hover:border-ink bg-cream"}`;';
+
+    const tokens = classTokens(source);
+
+    expect(tokens.has("border-2")).toBe(true);
+    expect(tokens.has("border-ink")).toBe(true);
+    expect(tokens.has("bg-jersey-deep")).toBe(true);
+    expect(tokens.has("hover:border-ink")).toBe(true);
+    expect(tokens.has("bg-cream")).toBe(true);
+    // No leftover quote-glued garbage tokens.
+    expect([...tokens].some((t) => t.includes('"'))).toBe(false);
+  });
+});
+
+describe("findBagSpans / extractBalanced — expression-scoping fixtures (#2610 review, round 2)", () => {
+  it("keeps a cn() call's ternary branches in one bag (OrganigramExplorer's shape)", () => {
+    const source = `
+      <button
+        className={cn(
+          "border px-1.5 py-0.5",
+          scaleStep === step
+            ? "border-warm bg-warm text-ink"
+            : "border-cream/40 text-cream hover:border-cream",
+        )}
+      />
+    `;
+    const bags = findBagSpans(source).map(classTokens);
+    const bag = bags.find(
+      (b) => b.has("border") && b.has("hover:border-cream"),
+    );
+    expect(bag).toBeDefined();
+  });
+
+  it("keeps a template literal's static prefix and its ${ternary} branches in one bag (SharePage's shape)", () => {
+    const source = [
+      "<button",
+      "  className={`flex-1 rounded-none border-2 px-4 ${",
+      "    aspect === opt.value",
+      '      ? "border-ink bg-jersey-deep text-cream"',
+      '      : "border-ink/30 text-ink-soft hover:border-ink bg-cream"',
+      "  }`}",
+      "/>",
+    ].join("\n");
+    const bags = findBagSpans(source).map(classTokens);
+    const bag = bags.find(
+      (b) => b.has("border-2") && b.has("hover:border-ink"),
+    );
+    expect(bag).toBeDefined();
+  });
+
+  it("keeps an array literal's entries in one bag when immediately .join()'d (fieldChrome.ts's shape)", () => {
+    const source = `
+      export const fieldChromeIdle = [
+        "border-2 bg-white",
+        "border-ink/30",
+        "hover:border-ink/40",
+      ].join(" ");
+    `;
+    const bags = findBagSpans(source).map(classTokens);
+    const bag = bags.find(
+      (b) => b.has("border-2") && b.has("hover:border-ink/40"),
+    );
+    expect(bag).toBeDefined();
+  });
+
+  it("does NOT bag two separate elements' className attributes together — a hover border on one element is not reserved by an unrelated width on another", () => {
+    const source = `
+      <span className="hover:border-ink text-ink" />
+      <div className="border-2 bg-cream" />
+    `;
+    const bags = findBagSpans(source).map(classTokens);
+    expect(bags).toHaveLength(2);
+    const hoverBag = bags.find((b) => b.has("hover:border-ink"))!;
+    const widthBag = bags.find((b) => b.has("border-2"))!;
+    expect(hoverBag).not.toBe(widthBag);
+    expect(hoverBag.has("border-2")).toBe(false);
+    expect(hoverBag.has("border")).toBe(false);
   });
 });
 
@@ -175,13 +497,15 @@ describe("::selection is jersey-deep-on-cream, inverted on dark bands (C6)", () 
 });
 
 // ---------------------------------------------------------------------------
-// S8 — a hover that adds a border reserves the width, on the SAME side, at
-// rest. Side-aware: `border-b` at rest does not reserve an all-sides hover
-// border, and the hover trigger includes responsive/has-[:hover] variants,
-// matching what the globals.css S8 comment claims is covered.
+// S8 — a hover that adds a border reserves the width, on the SAME side, in
+// the SAME class-list expression, at rest. Side-aware (an axis utility like
+// `border-x` normalises to its two concrete sides before comparing) and
+// expression-scoped (a resting width on an unrelated element in the same
+// file no longer counts), matching what the globals.css S8 comment claims.
 // ---------------------------------------------------------------------------
 
 type BorderSide = "all" | "t" | "r" | "b" | "l" | "x" | "y";
+type ConcreteSide = "t" | "r" | "b" | "l";
 
 /** Zero or more generic variant prefixes, then one of the variants the S8
  *  comment in globals.css actually claims: hover, group-hover,
@@ -211,7 +535,53 @@ function parseBorderUtility(
   return { side, kind };
 }
 
-describe("parseBorderUtility (#2610 review, round 1 — side-aware fixtures)", () => {
+/** Normalise an axis/all side onto the concrete edges it actually covers:
+ *  `x` → left + right, `y` → top + bottom, `all` → all four. A single side
+ *  maps to itself. Both the hover side and the resting side must go
+ *  through this before comparing — `border-x` at rest and `hover:border-l`
+ *  share no side name in common (`x` ≠ `l`) but DO cover each other once
+ *  expanded, and `border-x` must NOT be credited with covering
+ *  `hover:border-t` even though both mention no matching literal side
+ *  (#2610 review, round 2). */
+function expandSide(side: BorderSide): ConcreteSide[] {
+  switch (side) {
+    case "all":
+      return ["t", "r", "b", "l"];
+    case "x":
+      return ["l", "r"];
+    case "y":
+      return ["t", "b"];
+    default:
+      return [side];
+  }
+}
+
+function hoverBorderConcreteSides(bag: Set<string>): Set<ConcreteSide> {
+  const sides = new Set<ConcreteSide>();
+  for (const token of bag) {
+    if (!HOVER_VARIANT_PREFIX.test(token)) continue;
+    const rest = token.replace(HOVER_VARIANT_PREFIX, "");
+    const parsed = parseBorderUtility(rest);
+    if (parsed?.kind === "color") {
+      for (const s of expandSide(parsed.side)) sides.add(s);
+    }
+  }
+  return sides;
+}
+
+function restingBorderWidthConcreteSides(bag: Set<string>): Set<ConcreteSide> {
+  const sides = new Set<ConcreteSide>();
+  for (const token of bag) {
+    if (HOVER_VARIANT_PREFIX.test(token)) continue;
+    const parsed = parseBorderUtility(token);
+    if (parsed?.kind === "width") {
+      for (const s of expandSide(parsed.side)) sides.add(s);
+    }
+  }
+  return sides;
+}
+
+describe("parseBorderUtility / expandSide (#2610 review — side-aware fixtures)", () => {
   it.each<[string, BorderSide, "width" | "color"]>([
     ["border", "all", "width"],
     ["border-2", "all", "width"],
@@ -230,55 +600,53 @@ describe("parseBorderUtility (#2610 review, round 1 — side-aware fixtures)", (
   it("rejects a non-border token", () => {
     expect(parseBorderUtility("bg-ink")).toBeNull();
   });
+
+  it("a resting border-x covers a hover:border-l (round 2, finding 1)", () => {
+    const resting = restingBorderWidthConcreteSides(new Set(["border-x"]));
+    const hover = hoverBorderConcreteSides(new Set(["hover:border-l-ink"]));
+    for (const side of hover) expect(resting.has(side)).toBe(true);
+  });
+
+  it("a resting border-l + border-r together cover a hover:border-x (round 2, finding 1)", () => {
+    const resting = restingBorderWidthConcreteSides(
+      new Set(["border-l", "border-r"]),
+    );
+    const hover = hoverBorderConcreteSides(new Set(["hover:border-x-ink"]));
+    for (const side of hover) expect(resting.has(side)).toBe(true);
+  });
+
+  it("a resting border-x does NOT cover a hover:border-t (round 2, finding 1)", () => {
+    const resting = restingBorderWidthConcreteSides(new Set(["border-x"]));
+    const hover = hoverBorderConcreteSides(new Set(["hover:border-t-ink"]));
+    const covered = [...hover].every((side) => resting.has(side));
+    expect(covered).toBe(false);
+  });
+
+  it("fixture: an all-sides hover colour is NOT reserved by a single-side resting width", () => {
+    const bag = new Set(["border-b", "hover:border-ink"]);
+    const hover = hoverBorderConcreteSides(bag);
+    const resting = restingBorderWidthConcreteSides(bag);
+    expect(hover).toEqual(new Set(["t", "r", "b", "l"]));
+    const covered = [...hover].every((side) => resting.has(side));
+    expect(covered).toBe(false);
+  });
 });
 
-describe("a hover-added border reserves its width, on the same side, at rest (S8)", () => {
+describe("a hover-added border reserves its width, on the same side, in the same expression, at rest (S8)", () => {
   it.each(productionSources)(
-    "%s — every hover/focus-visible/has-[:hover] border colour has a matching resting border-width token in the same file",
+    "%s — every hover/focus-visible/has-[:hover] border colour has a matching resting border-width token in its own class-list expression",
     (relPath) => {
-      const tokens = tokensByFile.get(relPath)!;
-
-      const hoverColorSides = new Set<BorderSide>();
-      for (const token of tokens) {
-        if (!HOVER_VARIANT_PREFIX.test(token)) continue;
-        const rest = token.replace(HOVER_VARIANT_PREFIX, "");
-        const parsed = parseBorderUtility(rest);
-        if (parsed?.kind === "color") hoverColorSides.add(parsed.side);
-      }
-      if (hoverColorSides.size === 0) return;
-
-      const restingWidthSides = new Set<BorderSide>();
-      for (const token of tokens) {
-        if (HOVER_VARIANT_PREFIX.test(token)) continue;
-        const parsed = parseBorderUtility(token);
-        if (parsed?.kind === "width") restingWidthSides.add(parsed.side);
-      }
-
-      for (const side of hoverColorSides) {
-        const reserved =
-          restingWidthSides.has("all") || restingWidthSides.has(side);
-        expect(reserved).toBe(true);
+      const bags = bagsByFile.get(relPath)!;
+      for (const bag of bags) {
+        const hoverSides = hoverBorderConcreteSides(bag);
+        if (hoverSides.size === 0) continue;
+        const restingSides = restingBorderWidthConcreteSides(bag);
+        for (const side of hoverSides) {
+          expect(restingSides.has(side)).toBe(true);
+        }
       }
     },
   );
-
-  it("fixture: an all-sides hover colour is NOT reserved by a single-side resting width", () => {
-    const tokens = new Set(["border-b", "hover:border-ink"]);
-    const hoverSide = parseBorderUtility(
-      [...tokens]
-        .find((t) => HOVER_VARIANT_PREFIX.test(t))!
-        .replace(HOVER_VARIANT_PREFIX, ""),
-    )!.side;
-    const restingSides = new Set(
-      [...tokens]
-        .filter((t) => !HOVER_VARIANT_PREFIX.test(t))
-        .map((t) => parseBorderUtility(t))
-        .filter((p): p is NonNullable<typeof p> => p?.kind === "width")
-        .map((p) => p.side),
-    );
-    expect(hoverSide).toBe("all");
-    expect(restingSides.has("all") || restingSides.has(hoverSide)).toBe(false);
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -321,34 +689,32 @@ describe("hover-underline-thicken exists, is layered, and respects reduced motio
 // ---------------------------------------------------------------------------
 // Y4 — scores and tabulated numbers read in a consistent figure set;
 // tabular-nums never ships alone (measured inert on every face this site
-// uses — decision-sheet §8, docs/design/mockups/2516-numerals/candidates.html)
+// uses — decision-sheet §8, docs/design/mockups/2516-numerals/candidates.html).
+// Expression-scoped, like S8: `lining-nums` (or a mono face) must sit in the
+// SAME class-list expression as `tabular-nums`, not merely the same file.
 // ---------------------------------------------------------------------------
 
-/**
- * `font-mono` anywhere in the file is not evidence the *tabular-nums* span
- * itself is mono — `MatchHero.tsx` carries both (`font-mono` on its
- * unrelated competition meta line, `tabular-nums` on the display-big
- * scoreline), and a file-wide "or font-mono" check missed exactly that
- * combination during #2610's own TDD loop. So this is a named allowlist,
- * not a heuristic: the two call sites where the tabular-nums span is
- * genuinely monospaced by construction (Y4's other sanctioned fix, "the
- * column goes mono") and needs no `lining-nums` alongside it.
- */
-const MONO_TABULAR_EXCEPTIONS = new Set([
-  "components/layout/MatchStrip/MatchStripView.tsx",
-  "components/design-system/TextareaCounter/TextareaCounter.tsx",
-]);
-
-describe("tabular-nums never ships without lining-nums or a mono face (Y4)", () => {
+describe("tabular-nums never ships without lining-nums or a mono face, in the same expression (Y4)", () => {
   it.each(productionSources)(
-    "%s — tabular-nums is not the whole fix",
+    "%s — every tabular-nums finds lining-nums or font-mono in its own class-list expression",
     (relPath) => {
-      const tokens = tokensByFile.get(relPath)!;
-      if (!tokens.has("tabular-nums")) return;
-
-      const worksAnotherWay =
-        tokens.has("lining-nums") || MONO_TABULAR_EXCEPTIONS.has(relPath);
-      expect(worksAnotherWay).toBe(true);
+      const bags = bagsByFile.get(relPath)!;
+      for (const bag of bags) {
+        if (!bag.has("tabular-nums")) continue;
+        const worksAnotherWay = bag.has("lining-nums") || bag.has("font-mono");
+        expect(worksAnotherWay).toBe(true);
+      }
     },
   );
+
+  it("fixture: tabular-nums on one element is not excused by lining-nums on an unrelated one", () => {
+    const source = `
+      <span className="font-display tabular-nums" />
+      <span className="lining-nums" />
+    `;
+    const bags = findBagSpans(source).map(classTokens);
+    const tabularBag = bags.find((b) => b.has("tabular-nums"))!;
+    expect(tabularBag.has("lining-nums")).toBe(false);
+    expect(tabularBag.has("font-mono")).toBe(false);
+  });
 });
