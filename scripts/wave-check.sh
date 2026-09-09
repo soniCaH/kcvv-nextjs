@@ -36,7 +36,13 @@ merge_check() {
 # ── collect the open PR head branches ─────────────────────────────────────────
 # Capture first and check the exit status: a gh failure inside a process
 # substitution would otherwise read as "no open PRs" and report all-clear.
-if ! PR_BRANCHES=$(gh pr list --state open --limit 100 --json headRefName --jq '.[].headRefName' 2>&1); then
+# WAVE_CHECK_BRANCHES exists so the fixture test can drive this script without a
+# GitHub round-trip: newline-separated branch names, used verbatim in place of
+# the `gh` call. Not for interactive use — a hand-typed list silently checks the
+# wrong wave.
+if [ -n "${WAVE_CHECK_BRANCHES:-}" ]; then
+  PR_BRANCHES="${WAVE_CHECK_BRANCHES}"
+elif ! PR_BRANCHES=$(gh pr list --state open --limit 100 --json headRefName --jq '.[].headRefName' 2>&1); then
   echo "gh pr list failed: ${PR_BRANCHES}" >&2
   exit 1
 fi
@@ -102,4 +108,58 @@ if [ "$FOUND" -eq 0 ]; then
 else
   echo ""
   echo "Merge one of each colliding pair, then rebase the other before merging it."
+fi
+echo ""
+
+# ── 3. Does one branch add a RULE that another branch's new code must satisfy? ─
+# merge-tree is blind to this: the two branches share no file, so it reports a
+# clean pair and you merge both — then main goes red on the combination. That is
+# exactly how #2882 (which added a guard banning English sr-only text) and #2880
+# (which added an English sr-only string) took main down, twenty seconds apart,
+# each green on its own branch.
+#
+# ponytail: a heuristic on paths, not a proof. Proving it means merging the pair
+# and running the suite, which needs a checkout and an install — everything this
+# script deliberately is not. So it names the risk and the one action that
+# settles it, and stays read-only.
+RULE_SURFACE='(^|/)(eslint\.config\.|commitlint\.config\.)|(^|/)__tests__/[^/]*consistency[^/]*\.test\.ts$|^\.husky/|^\.claude/hooks/'
+CODE_SURFACE='^(apps|packages)/[^/]+/src/'
+
+# Files a branch changed relative to where it left main.
+changed_files() {
+  git diff --name-only "$(git merge-base origin/main "origin/$1")" "origin/$1"
+}
+
+echo "── rule vs code (merge-tree cannot see these) ──"
+SEMANTIC=0
+for a in "${CLEAN[@]}"; do
+  a_files=$(changed_files "$a")
+  a_rules=$(printf '%s\n' "$a_files" | grep -E "$RULE_SURFACE" || true)
+  [ -n "$a_rules" ] || continue
+
+  consumers=()
+  for b in "${CLEAN[@]}"; do
+    [ "$b" != "$a" ] || continue
+    if changed_files "$b" | grep -qE "$CODE_SURFACE"; then
+      consumers+=("$b")
+    fi
+  done
+  [ ${#consumers[@]} -gt 0 ] || continue
+
+  SEMANTIC=1
+  printf "  RULE      %s changes a rule surface:\n" "$a"
+  printf '%s\n' "$a_rules" | sed 's/^/              /'
+  printf "            these branches add code that rule will scan:\n"
+  printf '              %s\n' "${consumers[@]}"
+done
+
+if [ "$SEMANTIC" -eq 0 ]; then
+  echo "  none — no branch in this wave adds a rule another one must satisfy."
+else
+  echo ""
+  echo "Whichever of a listed pair you merge SECOND must be re-checked against the"
+  echo "updated main before it lands: merge origin/main into it and run"
+  echo "\`pnpm --filter @kcvv/web check-all\`. Re-running its old CI is not enough —"
+  echo "a PR's checks are computed against the main it forked from, and"
+  echo "\`gh run rerun\` replays that same stale merge."
 fi
