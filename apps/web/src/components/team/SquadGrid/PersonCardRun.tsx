@@ -14,6 +14,15 @@ export interface PersonCardRunProps {
   children: ReactNode;
   /** Forwarded to the card-grid element, for a caller that needs to query it directly. */
   "data-testid"?: string;
+  /**
+   * Suppress the visible `<h3>` heading while keeping `label` as the
+   * section's `aria-label` (#2638). `<SquadGrid>`'s single-group gate: a
+   * heading that separates nobody from the group next to it is the same
+   * lie as a label that classifies nobody — there is no group next to it
+   * to separate from. Default `false`; `<TeamStaff>` never sets this, its
+   * one run always carries a real heading.
+   */
+  hideHeading?: boolean;
 }
 
 /**
@@ -32,12 +41,15 @@ export function PersonCardRun({
   label,
   children,
   "data-testid": dataTestId,
+  hideHeading = false,
 }: PersonCardRunProps) {
   return (
     <section aria-label={label}>
-      <h3 className="text-ink-muted border-paper-edge mb-3 border-b pb-1.5 font-mono text-[11px] tracking-[0.1em] uppercase">
-        {label}
-      </h3>
+      {hideHeading ? null : (
+        <h3 className="text-ink-muted border-paper-edge mb-3 border-b pb-1.5 font-mono text-[11px] tracking-[0.1em] uppercase">
+          {label}
+        </h3>
+      )}
       <div
         data-testid={dataTestId}
         className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-4"

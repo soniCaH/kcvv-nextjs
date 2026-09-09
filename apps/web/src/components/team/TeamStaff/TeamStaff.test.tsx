@@ -2,8 +2,11 @@
  * TeamStaff unit tests.
  *
  * Covers:
- *  - resolveFunctionLabel: code map / passthrough / role-bucket fallback / "Staf"
+ *  - resolveFunctionLabel: code map / passthrough / role-bucket fallback / null (#2638)
  *  - Auto-hides (null) when staff empty
+ *  - Labelled-first, unlabelled-after ordering AND the unlabelled-notice
+ *    line both gated by `unlabelledNotice` — off by default, so a curated
+ *    board-page order is never silently reordered (#2638, #2638 review)
  *  - `heading` drives the run's heading text + accessible name — no baked
  *    default (#2575 review)
  *  - One shared <PlayerCard> per member, garment="coat", blendPhoto={false},
@@ -53,14 +56,14 @@ describe("resolveFunctionLabel", () => {
     expect(resolveFunctionLabel("", "Penningmeester")).toBe("Penningmeester");
   });
 
-  it("falls back to 'Staf' when nothing usable is present", () => {
-    expect(resolveFunctionLabel(undefined, undefined)).toBe("Staf");
-    expect(resolveFunctionLabel("", "")).toBe("Staf");
+  it("returns null — not a last-resort literal — when nothing usable is present (#2638)", () => {
+    expect(resolveFunctionLabel(undefined, undefined)).toBeNull();
+    expect(resolveFunctionLabel("", "")).toBeNull();
   });
 
   it("handles null inputs (raw CMS nullable fields)", () => {
     expect(resolveFunctionLabel(null, "trainer")).toBe("Trainer");
-    expect(resolveFunctionLabel(null, null)).toBe("Staf");
+    expect(resolveFunctionLabel(null, null)).toBeNull();
   });
 
   it("prefers functionTitle over role bucket", () => {
@@ -152,5 +155,106 @@ describe("TeamStaff", () => {
       screen.getByTestId("player-card-figure").getAttribute("data-state"),
     ).toBe("illustration");
     expect(screen.getByTestId("player-card").tagName).toBe("DIV");
+  });
+
+  it("omits the function line — not a placeholder — for an unlabelled member (#2638)", () => {
+    // `heading` deliberately isn't "Staf" here: that word is also the
+    // section's own heading text, and this assertion is about the
+    // per-card function line, not the run's heading.
+    render(
+      <TeamStaff
+        staff={[{ id: "3", firstName: "Wout", lastName: "Wit" }]}
+        heading="De leden"
+      />,
+    );
+    expect(screen.queryByText("Staf")).toBeNull();
+    const card = screen.getByTestId("player-card");
+    expect(card.querySelector("p.font-mono")).toBeNull();
+  });
+
+  it("orders labelled cards before unlabelled ones, stable within each part, when unlabelledNotice is set (#2638)", () => {
+    render(
+      <TeamStaff
+        staff={[
+          { id: "u1", firstName: "Onbekend", lastName: "Een" },
+          { ...STAFF[0]! },
+          { id: "u2", firstName: "Onbekend", lastName: "Twee" },
+          { ...STAFF[1]! },
+        ]}
+        heading="Staf"
+        unlabelledNotice
+      />,
+    );
+    const names = screen
+      .getAllByTestId("player-card")
+      .map((card) => card.textContent);
+    // Labelled (Karel, Bea) first — in their original relative order —
+    // then the unlabelled (Onbekend Een, Onbekend Twee), also in order.
+    expect(names[0]).toContain("Karel");
+    expect(names[1]).toContain("Bea");
+    expect(names[2]).toContain("Onbekend");
+    expect(names[2]).toContain("Een");
+    expect(names[3]).toContain("Onbekend");
+    expect(names[3]).toContain("Twee");
+  });
+
+  it("keeps the caller's own order — never reordering — when unlabelledNotice is unset, the board default (#2638 review)", () => {
+    // A board page's `staff[]` order is editor-curated in Sanity. Without
+    // `unlabelledNotice` (the `<BestuurPage>` default), that order must
+    // survive untouched even though this fixture mixes labelled and
+    // unlabelled members — the reorder is a repair for a PSD data gap and
+    // stays behind the same gate as the notice it's paired with.
+    render(
+      <TeamStaff
+        staff={[
+          { id: "u1", firstName: "Onbekend", lastName: "Een" },
+          { ...STAFF[0]! },
+          { id: "u2", firstName: "Onbekend", lastName: "Twee" },
+          { ...STAFF[1]! },
+        ]}
+        heading="De leden"
+      />,
+    );
+    const names = screen
+      .getAllByTestId("player-card")
+      .map((card) => card.textContent);
+    expect(names[0]).toContain("Onbekend");
+    expect(names[0]).toContain("Een");
+    expect(names[1]).toContain("Karel");
+    expect(names[2]).toContain("Onbekend");
+    expect(names[2]).toContain("Twee");
+    expect(names[3]).toContain("Bea");
+  });
+
+  describe("unlabelled notice (#2638)", () => {
+    const withOneUnlabelled = [
+      ...STAFF,
+      { id: "u1", firstName: "Onbekend", lastName: "Een" },
+    ];
+
+    it("renders the ProSoccerData routing line when unlabelledNotice is set and someone is unlabelled", () => {
+      render(
+        <TeamStaff staff={withOneUnlabelled} heading="Staf" unlabelledNotice />,
+      );
+      const notice = screen.getByTestId("team-staff-gap-notice");
+      expect(notice.textContent).toContain("Niet elke functie is ingevuld");
+      expect(notice.textContent).toContain("opent in een nieuw tabblad");
+      const link = screen.getByRole("link", { name: /ProSoccerData/ });
+      expect(link).toHaveAttribute(
+        "href",
+        "https://kcvv.prosoccerdata.com/dashboard",
+      );
+      expect(link).toHaveAttribute("target", "_blank");
+    });
+
+    it("stays silent when unlabelledNotice is set but every member is labelled", () => {
+      render(<TeamStaff staff={STAFF} heading="Staf" unlabelledNotice />);
+      expect(screen.queryByTestId("team-staff-gap-notice")).toBeNull();
+    });
+
+    it("stays silent when someone is unlabelled but unlabelledNotice is not set — the board default", () => {
+      render(<TeamStaff staff={withOneUnlabelled} heading="De leden" />);
+      expect(screen.queryByTestId("team-staff-gap-notice")).toBeNull();
+    });
   });
 });
