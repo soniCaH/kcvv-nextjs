@@ -167,7 +167,13 @@ export class SanityMutation extends Context.Tag("SanityMutation")<
  * Upsert strategy: createIfNotExists sets the document skeleton on first run.
  * patch().set() overwrites only PSD-sourced fields — never touches editorial
  * fields (transparentImage, celebrationImage, position, bio).
- * Both `players` and `staff` on team documents are sync-owned (readOnly in Studio).
+ *
+ * Team membership is sync-owned — PSD decides who is on a team. Team *order* is
+ * not: `staff[]` is editable in Studio and its order is the only way to say
+ * "T1 first, then T2", so `upsertTeam` preserves it (#2892). `players[]` is
+ * `readOnly: true` in the schema, so no editor sets its order today; it is
+ * preserved on the same code path anyway, so a PSD reshuffle does not churn the
+ * document.
  */
 export const SanityMutationLive = Layer.effect(
   SanityMutation,
