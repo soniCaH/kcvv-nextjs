@@ -86,3 +86,46 @@ export const WithDetailLinks: Story = {
 export const BoardHeading: Story = {
   args: { staff: withPhotos, heading: "De leden" },
 };
+
+/**
+ * Fully labelled — every card resolves a function, so the notice never
+ * renders even with `unlabelledNotice` on (#2638).
+ */
+export const FullyLabelled: Story = {
+  args: { staff: withPhotos, unlabelledNotice: true },
+};
+
+/**
+ * Partially labelled — some cards resolve no function (ordered last), so
+ * the ProSoccerData routing line renders beneath the grid (#2638). The
+ * `kcvve-u9` shape: two named roles, three helpers.
+ */
+export const PartiallyLabelled: Story = {
+  args: {
+    staff: [
+      { id: "1", firstName: "Wendy", lastName: "Voorzitter", role: "trainer" },
+      {
+        id: "2",
+        firstName: "Piet",
+        lastName: "Coördinator",
+        functionTitle: "TVJO",
+      },
+      { id: "3", firstName: "Sofie", lastName: "Helper" },
+      { id: "4", firstName: "Bram", lastName: "Helper" },
+      { id: "5", firstName: "Kris", lastName: "Helper" },
+    ],
+    unlabelledNotice: true,
+  },
+};
+
+/** No labels — every card omits the function line, and the routing line still renders once (#2638). */
+export const NoLabels: Story = {
+  args: {
+    staff: [
+      { id: "1", firstName: "Sofie", lastName: "Helper" },
+      { id: "2", firstName: "Bram", lastName: "Helper" },
+      { id: "3", firstName: "Kris", lastName: "Helper" },
+    ],
+    unlabelledNotice: true,
+  },
+};
