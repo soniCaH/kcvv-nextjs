@@ -64,4 +64,14 @@ describe("PersonCardRun", () => {
       screen.getByTestId("my-grid").className.replace(/\s+/g, " "),
     ).toContain("grid-cols-[repeat(auto-fill,minmax(140px,1fr))]");
   });
+
+  it("suppresses the visible heading but keeps the region's accessible name when hideHeading is set (#2638)", () => {
+    render(
+      <PersonCardRun label="Spelers" hideHeading>
+        <div>card</div>
+      </PersonCardRun>,
+    );
+    expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
+    expect(screen.getByRole("region", { name: "Spelers" })).toBeInTheDocument();
+  });
 });

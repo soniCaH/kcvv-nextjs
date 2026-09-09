@@ -29,20 +29,19 @@ export default function ArticleDetailLoading() {
       <LoadingAnnouncement label="Artikel laden…" />
 
       {/* Up-link — real, unshimmered: its label is fixed copy, not data
-          (review round 2, #2570). Mirrors the real page's own bare
-          container (no invented padding — `EditorialHero`'s own `pt-10`
-          below already supplies the gap). */}
-      <PageContainer width="default">
+          (review round 2, #2570). Mirrors the real page's own container:
+          the container owns the top air (`pt-12 lg:pt-16`), and no bottom
+          padding here — `<EditorialHeroShell>`'s own flat `pt-12 pb-6`
+          below already supplies the gap (#2876). */}
+      <PageContainer width="default" className="pt-12 lg:pt-16">
         <UpLink href="/nieuws" label="Nieuws" />
       </PageContainer>
 
       {/* EditorialHero footprint — wide (1040): kicker + headline + lead beside
-          a framed cover figure. */}
-      <PageContainer
-        as="section"
-        className="pt-10 pb-6 md:pt-14 md:pb-8"
-        aria-hidden="true"
-      >
+          a framed cover figure. Padding matches `<EditorialHeroShell>`'s own
+          flat `pt-12 pb-6` exactly, so nothing shifts when the real hero
+          replaces this skeleton (#2876). */}
+      <PageContainer as="section" className="pt-12 pb-6" aria-hidden="true">
         <div className="grid grid-cols-1 items-center gap-x-10 gap-y-8 md:grid-cols-[1.15fr_1fr]">
           <div className="flex flex-col gap-4">
             <Skeleton className="h-3 w-28" />

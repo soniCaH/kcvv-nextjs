@@ -269,10 +269,14 @@ A player's playing position. Determined by fallback hierarchy:
 
 1. `keeper === true` → **Keeper**
 2. `position` (editorial, manual) → one of the enum values, **including `Speler`**
-3. `positionPsd` (from PSD `bestPosition`) → free text
-4. Neither set → **absent**, not defaulted
+3. `positionPsd` (from PSD `bestPosition`) → looked up in `POSITION_LABELS`
+   (`player.repository.ts`), case-insensitively, against PSD's four
+   lowercase values — a miss (a future PSD value the map doesn't carry,
+   e.g. `wing-back`) is **not** passed through as raw English; it falls to
+   step 4 (#2638)
+4. Neither set, or step 3 misses → **absent**, not defaulted
 
-Code no longer fills an unset position with a generic literal — see **The Writer Rule** in `apps/web/CLAUDE.md`. `PlayerHero`'s meta row and `PlayerCard`'s label both render an unset position as absent, distinguishable from an authored one (#2567). `SquadGrid`'s trailing group is different: its `"Spelers"` heading is a **UI label for "unmapped or unauthored"**, not a rendering of the datum itself, so a player who was deliberately authored `Speler` and a player with no position at all land under the identical heading — measured 2026-08-17, that catch-all holds 184 of 231 active players (80%). The rule's "distinguishable from an authored one" guarantee holds at the field and at the two labelled surfaces above; it does not extend to this grouping heading.
+Code no longer fills an unset position with a generic literal — see **The Writer Rule** in `apps/web/CLAUDE.md`. `PlayerHero`'s meta row and `PlayerCard`'s label both render an unset position as absent, distinguishable from an authored one (#2567). `SquadGrid`'s trailing group is different: its `"Spelers"` heading is a **UI label for "unmapped or unauthored"**, not a rendering of the datum itself, so a player who was deliberately authored `Speler` and a player with no position at all land under the identical heading — measured 2026-09-09, that catch-all holds 228 of 277 active players (82%). The rule's "distinguishable from an authored one" guarantee holds at the field and at the two labelled surfaces above; it does not extend to this grouping heading. `SquadGrid` itself gains a companion gate the same day (#2638): when the position partition yields a single group, the grid renders that group without a heading — a heading that separates nobody is the same lie as a label that classifies nobody.
 
 `Speler` itself is **not removed from the dropdown** — it stays a deliberate, authored choice (`packages/sanity-schemas/src/player.ts`'s `position` enum), distinct from an unset field. It is the honest answer for U6–U9, where no finer position exists yet (#2535): an editor picking `Speler` for a young player and an editor never opening the field are now distinguishable, which is the whole point of removing the code-level default.
 
@@ -281,8 +285,10 @@ Code no longer fills an unset position with a generic literal — see **The Writ
 | `goalkeeper`                     | Keeper       |
 | `defender`                       | Verdediger   |
 | `midfielder`                     | Middenvelder |
-| `forward`                        | Aanvaller    |
+| `attacker`                       | Aanvaller    |
 | `player` (editorial, e.g. U6–U9) | Speler       |
+
+The `positionPsd` row is PSD's own `bestPosition` value, measured live against production Sanity on 2026-09-09 (`array::unique(*[_type=="player"].positionPsd)`) — `attacker`, not `forward`; corrected here from an earlier, unverified version of this table.
 
 ---
 
