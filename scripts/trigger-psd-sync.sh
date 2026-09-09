@@ -1,0 +1,238 @@
+#!/bin/bash
+# Trigger the PSD → Sanity sync for ONE team, by hand.
+#
+# The nightly cron (02:00 UTC) walks one team per night. This is for when an
+# editor has just filled in portraits or positions in ProSoccerData and wants
+# them on the site now, without waiting for tonight.
+#
+# Usage: ./scripts/trigger-psd-sync.sh <team-index>
+#        ./scripts/trigger-psd-sync.sh 0      # 0 = Eerste Elftallen A (PSD id 1)
+#
+# The index is a POSITION in PSD's getRawTeams() response, not a stable team id.
+# PSD does not document that ordering, so adding or reordering a team silently
+# shifts every index after it. The run prints `processing team N/21: <id> (<name>)`
+# — read it, and stop the run if it names a team you did not mean. Verified on
+# 2026-09-09: index 0 = id 1 Eerste Elftallen A, index 1 = id 2 Eerste Elftallen B.
+#
+# IT WRITES TO PRODUCTION SANITY. The cursor lives in the *preview* KV namespace
+# because `wrangler dev --remote` reads preview, but the Sanity credentials come
+# from apps/api/.dev.vars, which points at the production dataset. Preview KV,
+# production data. The script prints the target before it writes so you can see
+# this rather than remember it.
+#
+# A 429 on a portrait upload is NOT fatal — that player retries on the nightly
+# cron, or on your next run of this script.
+#
+# ponytail: polls a log file rather than exposing a status endpoint. The worker
+# has no health route and adding one for a hand-run operator tool is not worth
+# it; if this ever needs to be non-interactive, give the worker a /healthz.
+set -euo pipefail
+
+# Job control, so the server we launch becomes its own process-group leader and
+# `kill -- -PID` reaches the whole tree. Without it, killing the wrapper leaves
+# the real server orphaned and still holding the port — `pnpm exec` spawns
+# wrangler as a child, and wrangler spawns workerd under that.
+set -m
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+API_DIR="${REPO_ROOT}/apps/api"
+
+TEAM_INDEX="${1:-}"
+if [ -z "${TEAM_INDEX}" ] || ! [[ "${TEAM_INDEX}" =~ ^[0-9]+$ ]]; then
+  echo "usage: ./scripts/trigger-psd-sync.sh <team-index>" >&2
+  echo "       0 = Eerste Elftallen A, 1 = Eerste Elftallen B, …" >&2
+  echo "       (a position in PSD's team list, not a team id — check the run's" >&2
+  echo "        'processing team N/M: <id> (<name>)' line)" >&2
+  exit 64
+fi
+
+PORT="${TRIGGER_PSD_SYNC_PORT:-8800}"
+CRON="0 2 * * *"
+CURSOR_KEY="sync:team-cursor"
+
+# How long to wait for the sync to report `done` before giving up and
+# summarising what did land. The whole sync runs inside ctx.waitUntil() and
+# `scheduled()` returns immediately, so killing wrangler early cancels uploads
+# still in flight — that is the bug this script exists to not repeat (#2890).
+READY_TIMEOUT_S=120
+SYNC_TIMEOUT_S=600
+
+# Fixture hook for apps/web/test/hooks/trigger-psd-sync.test.ts: replaces the
+# wrangler launch with a stub server AND skips the KV cursor write, so the test
+# can assert the cron fires exactly once without a Cloudflare round-trip. Not
+# for interactive use — with this set, nothing real is synced.
+SERVER_CMD="${TRIGGER_PSD_SYNC_SERVER_CMD:-}"
+
+LOG="${TRIGGER_PSD_SYNC_LOG:-$(mktemp -t psd-sync.XXXXXX)}"
+: >"${LOG}"
+
+# ── say where this is about to write ──────────────────────────────────────────
+# Read from .dev.vars first: `wrangler dev` prefers it over wrangler.toml's
+# [vars], so it is what actually takes effect. Note this is NOT the same source
+# apps/web/.env.local uses — that one points at `staging`, and reading it to
+# verify a sync silently queries the wrong dataset (#2890).
+# `|| true` is load-bearing. The body ends in a pipeline, so under
+# `set -euo pipefail` a grep that matches nothing returns non-zero, and
+# `PROJECT_ID="$(read_var …)"` is a bare assignment that `set -e` aborts on.
+# The normal operator case hits it: `.dev.vars` exists holding only secrets
+# while the ids live in `wrangler.toml [vars]` — the script would die here with
+# no output at all, and the wrangler.toml fallback below could never run.
+read_var() {
+  local key="$1" file="$2"
+  [ -f "${file}" ] || return 0
+  { grep -E "^[[:space:]]*${key}[[:space:]]*=" "${file}" | head -1 |
+    sed -E "s/^[^=]*=[[:space:]]*//; s/^[\"']//; s/[\"'][[:space:]]*$//"; } || true
+}
+
+PROJECT_ID="$(read_var SANITY_PROJECT_ID "${API_DIR}/.dev.vars")"
+DATASET="$(read_var SANITY_DATASET "${API_DIR}/.dev.vars")"
+[ -n "${PROJECT_ID}" ] || PROJECT_ID="$(read_var SANITY_PROJECT_ID "${API_DIR}/wrangler.toml")"
+[ -n "${DATASET}" ] || DATASET="$(read_var SANITY_DATASET "${API_DIR}/wrangler.toml")"
+
+echo "──────────────────────────────────────────────"
+echo " PSD → Sanity sync, team index ${TEAM_INDEX}"
+echo " Sanity project : ${PROJECT_ID:-<unknown>}"
+echo " Sanity dataset : ${DATASET:-<unknown>}"
+if [ "${DATASET}" = "production" ]; then
+  echo " ⚠  This writes to PRODUCTION. Not a dry run."
+fi
+echo " Log            : ${LOG}"
+echo "──────────────────────────────────────────────"
+
+# ── point the cursor at the requested team ────────────────────────────────────
+# --preview is not optional. `wrangler dev --remote` reads the PREVIEW KV
+# namespace; without the flag this writes production KV and the run syncs
+# whatever team the preview cursor happened to be on.
+if [ -n "${SERVER_CMD}" ]; then
+  echo "fixture mode — skipping the KV cursor write"
+else
+  echo "setting cursor to ${TEAM_INDEX}…"
+  (cd "${API_DIR}" && pnpm exec wrangler kv key put \
+    --binding PSD_CACHE --preview "${CURSOR_KEY}" "${TEAM_INDEX}" --remote >/dev/null)
+fi
+
+# ── start the worker ──────────────────────────────────────────────────────────
+if [ -n "${SERVER_CMD}" ]; then
+  ( eval "${SERVER_CMD}" ) >>"${LOG}" 2>&1 &
+else
+  (cd "${API_DIR}" && pnpm exec wrangler dev --remote --test-scheduled \
+    --port "${PORT}") >>"${LOG}" 2>&1 &
+fi
+SERVER_PID=$!
+
+# Kill the process GROUP first (see `set -m` above). Falling back to the bare
+# PID keeps this working if job control is ever unavailable, at the cost of
+# possibly orphaning a child.
+cleanup() {
+  kill -- -"${SERVER_PID}" 2>/dev/null || kill "${SERVER_PID}" 2>/dev/null || true
+  wait "${SERVER_PID}" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# ── wait for readiness WITHOUT firing the cron ────────────────────────────────
+# `/__scheduled` is the trigger, not a health endpoint — probing it *is* running
+# the sync. An earlier ad-hoc version used it as its readiness check and fired
+# two concurrent syncs over the same team (#2890). Watch the log instead: it
+# costs no request at all.
+echo "waiting for the worker…"
+ready=0
+for _ in $(seq 1 "${READY_TIMEOUT_S}"); do
+  if grep -q "Ready on http://localhost:${PORT}" "${LOG}"; then
+    ready=1
+    break
+  fi
+  if ! kill -0 "${SERVER_PID}" 2>/dev/null; then
+    echo "the worker exited before it was ready — see ${LOG}" >&2
+    exit 1
+  fi
+  sleep 1
+done
+if [ "${ready}" -ne 1 ]; then
+  echo "the worker never reported ready within ${READY_TIMEOUT_S}s — see ${LOG}" >&2
+  exit 1
+fi
+
+# ── fire the cron, exactly once ───────────────────────────────────────────────
+echo "firing the sync…"
+curl -sS --get "http://localhost:${PORT}/__scheduled" --data-urlencode "cron=${CRON}" -o /dev/null
+
+# ── wait for the sync's own completion line ───────────────────────────────────
+# `team <id> (<name>): done` is NOT the end of the pass — after it the effect
+# still writes three KV cycle-id keys, may run reconciliation, and advances the
+# cursor. Stopping there cancels all of that mid-`waitUntil`, which is the exact
+# truncation this script exists to avoid. `sync completed — cursor advanced to N`
+# (psd-sanity-sync.ts) is the genuine terminal line.
+echo "waiting for the sync to finish (up to ${SYNC_TIMEOUT_S}s)…"
+finished=0
+failed=0
+for _ in $(seq 1 "${SYNC_TIMEOUT_S}"); do
+  if grep -q "cursor advanced to" "${LOG}"; then
+    finished=1
+    break
+  fi
+  # Same liveness guard the readiness loop has: a crashed worker or a failed
+  # sync should report now, not after the full timeout.
+  if grep -q "Sync failed:" "${LOG}"; then
+    failed=1
+    break
+  fi
+  if ! kill -0 "${SERVER_PID}" 2>/dev/null; then
+    echo "the worker exited before the sync finished — see ${LOG}" >&2
+    break
+  fi
+  sleep 1
+done
+
+cleanup
+trap - EXIT
+
+# ── summary ───────────────────────────────────────────────────────────────────
+# `|| true` is load-bearing: under `set -euo pipefail` a grep that matches
+# nothing fails the whole pipeline and kills the script — so a clean run with
+# zero 429s would die here instead of printing the summary.
+count() {
+  grep -oE "$1" "${LOG}" 2>/dev/null | grep -oE '[0-9]+' | sort -u | wc -l |
+    tr -d ' ' || true
+}
+
+TEAM_LINE="$(grep -oE "processing team [0-9]+/[0-9]+: .*" "${LOG}" | head -1 || true)"
+ROSTER="$(grep -oE "team [0-9]+: [0-9]+ players, [0-9]+ staff" "${LOG}" | head -1 || true)"
+COMMITTED="$(count 'player=[0-9]+ patch committed')"
+UPTODATE="$(count 'player [0-9]+: image up-to-date')"
+PLACEHOLDER="$(count 'player=[0-9]+ bytes match PSD')"
+# Anchored to the actual failure text. A bare '429' matches a timestamp
+# (11:37:46.429Z), a body_bytes value, or a sha1 — a clean run reported one
+# phantom rate limit that way.
+RATE_LIMITED="$(grep -c 'image upload failed.*429' "${LOG}" || true)"
+FIRED="$(grep -c 'processing team [0-9]*/' "${LOG}" || true)"
+
+echo
+echo "──────────────────────────────────────────────"
+[ -n "${TEAM_LINE}" ] && echo " ${TEAM_LINE}"
+[ -n "${ROSTER}" ] && echo " ${ROSTER}"
+echo " images committed        : ${COMMITTED}"
+echo " already up to date      : ${UPTODATE}"
+echo " PSD placeholder skipped : ${PLACEHOLDER}   (illustration fallback renders)"
+echo " rate-limited (429)      : ${RATE_LIMITED}   (non-fatal, retries next run)"
+echo "──────────────────────────────────────────────"
+
+if [ "${FIRED}" -gt 1 ]; then
+  echo "⚠  the sync ran ${FIRED} times in one invocation — it must run once. See ${LOG}" >&2
+  exit 1
+fi
+
+if [ "${failed}" -eq 1 ]; then
+  echo "⚠  the sync reported a failure. Whatever committed above is safe." >&2
+  grep -m3 'Sync failed:' "${LOG}" >&2 || true
+  echo "   Log: ${LOG}" >&2
+  exit 1
+fi
+
+if [ "${finished}" -ne 1 ]; then
+  echo "⚠  the sync did not report done within ${SYNC_TIMEOUT_S}s." >&2
+  echo "   Whatever committed above is safe; re-run to finish the rest." >&2
+  echo "   Log: ${LOG}" >&2
+  exit 1
+fi
+
+echo "done. log: ${LOG}"
