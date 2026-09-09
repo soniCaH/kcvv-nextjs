@@ -29,10 +29,11 @@ export default function ArticleDetailLoading() {
       <LoadingAnnouncement label="Artikel laden…" />
 
       {/* Up-link — real, unshimmered: its label is fixed copy, not data
-          (review round 2, #2570). Mirrors the real page's own bare
-          container (no invented padding — `EditorialHero`'s own `pt-10`
-          below already supplies the gap). */}
-      <PageContainer width="default">
+          (review round 2, #2570). Mirrors the real page's own container:
+          the container owns the top air (`pt-12 lg:pt-16`), and no bottom
+          padding here — `EditorialHero`'s own `pt-10` below already
+          supplies the gap (#2876). */}
+      <PageContainer width="default" className="pt-12 lg:pt-16">
         <UpLink href="/nieuws" label="Nieuws" />
       </PageContainer>
 
