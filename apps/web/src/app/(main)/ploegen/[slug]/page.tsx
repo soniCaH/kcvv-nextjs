@@ -677,7 +677,10 @@ export default async function TeamPage({ params }: TeamPageProps) {
             className="py-10 focus:outline-none"
           >
             <SectionHeader title={sectionLabels.staf} size="display-md" />
-            <TeamStaff staff={staff} heading="Staf" />
+            {/* `unlabelledNotice` (#2638): ProSoccerData is PSD's
+                dashboard, so the routing line only makes sense on a team
+                page — `<BestuurPage>` leaves it at the default `false`. */}
+            <TeamStaff staff={staff} heading="Staf" unlabelledNotice />
           </PageContainer>
         </>
       ) : null}
