@@ -514,7 +514,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
           routes (`/spelers/[slug]`, `/wedstrijd/[matchId]`) already carry,
           so the chip clears the full-bleed `<MatchStripSlot>` band above it
           instead of butting against it (#2876). No bottom padding here —
-          `<TeamHero>`'s own `py-8` supplies the gap below the chip. */}
+          `<TeamHero>`'s own `py-8 sm:py-12` (passed via `className` below)
+          supplies the gap below the chip. */}
       <PageContainer className="pt-12 lg:pt-16">
         <UpLink href="/ploegen" label="Ploegen" />
         <TeamHero

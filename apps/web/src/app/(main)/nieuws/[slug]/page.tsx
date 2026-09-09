@@ -533,7 +533,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           matching the sibling detail routes) — `<UpLink>` still carries none
           of its own (review round 2). No bottom padding here — the hero's
           own `pt-12` immediately below already supplies the gap, the same
-          way `<TeamHero>`'s own `py-8` does for `/ploegen/[slug]` (#2876). */}
+          way `<TeamHero>`'s own `py-8 sm:py-12` does for
+          `/ploegen/[slug]` (#2876). */}
       <PageContainer width="default" className="pt-12 lg:pt-16">
         <UpLink href="/nieuws" label="Nieuws" />
       </PageContainer>
