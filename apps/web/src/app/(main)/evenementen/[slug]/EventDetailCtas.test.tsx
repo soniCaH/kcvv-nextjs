@@ -128,6 +128,23 @@ describe("EventDetailCtas", () => {
     });
   });
 
+  it("marks the Reserveer CTA external (#2547 rule 2) but never the agenda button (rule 1 — no off-site act)", () => {
+    render(
+      <EventDetailCtas
+        {...baseProps}
+        externalUrl="https://tickets.example.com"
+      />,
+    );
+    const reserveerLink = screen.getByRole("link", { name: /Reserveer/i });
+    expect(reserveerLink.textContent).toContain("(opent in een nieuw tabblad)");
+    expect(reserveerLink.querySelector('svg[aria-hidden="true"]')).toBeTruthy();
+    expect(reserveerLink.textContent).not.toContain("↗");
+
+    const agendaButton = screen.getByRole("button", { name: /Zet in agenda/i });
+    expect(agendaButton.textContent).not.toContain("↗");
+    expect(agendaButton.querySelector('svg[aria-hidden="true"]')).toBeFalsy();
+  });
+
   it("mints the .ics UID via the shared buildEventUid(eventId) scheme", async () => {
     const user = userEvent.setup();
     render(<EventDetailCtas {...baseProps} />);

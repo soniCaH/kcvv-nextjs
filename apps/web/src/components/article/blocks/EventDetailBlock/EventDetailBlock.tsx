@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 import { PortableText, type PortableTextBlock } from "@portabletext/react";
 import { TapedCard } from "@/components/design-system";
 import { MonoLabel } from "@/components/design-system/MonoLabel";
+import { ExternalMark } from "@/components/design-system/ExternalMark";
 import { getButtonClasses } from "@/components/design-system/Button";
 import {
   DEFAULT_TICKET_LABEL,
@@ -445,9 +446,7 @@ export function EventDetailBlock({
                     )}
                   >
                     {ticketLabel}
-                    <span aria-hidden="true" className="ml-1">
-                      →
-                    </span>
+                    <ExternalMark />
                   </a>
                 ) : null}
                 {calendarUrl ? (
@@ -462,6 +461,7 @@ export function EventDetailBlock({
                     )}
                   >
                     Zet in agenda
+                    <ExternalMark />
                   </a>
                 ) : null}
               </div>

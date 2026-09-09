@@ -43,6 +43,17 @@ describe("/club/ultras page", () => {
     );
   });
 
+  // #2547 rule 1 — the visible text already is the destination
+  // ("facebook.com/KCVV.ULTRAS.55"), so the control earns no external mark;
+  // the old literal ↗ dies.
+  it("carries no literal external-arrow character on the Facebook CTA", () => {
+    render(<UltrasPage />);
+    const cta = screen.getByRole("link", {
+      name: /facebook\.com\/kcvv\.ultras\.55/i,
+    });
+    expect(cta.textContent).not.toContain("↗");
+  });
+
   it("renders the raffle callout stats", () => {
     render(<UltrasPage />);
 

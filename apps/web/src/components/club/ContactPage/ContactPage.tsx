@@ -35,6 +35,7 @@ import {
 } from "@/lib/icons.redesign";
 import {
   EditorialHeading,
+  ExternalMark,
   PageContainer,
   StripedSeam,
   TapedCard,
@@ -112,9 +113,12 @@ const ICON_TITLE = "text-ink text-[1.05rem] font-bold";
 // action link (opening a mail client or Google Maps) is not going
 // elsewhere on the site, so it takes no arrow-CTA treatment — it is
 // lowercase body type, which is what lets the highlighter marker
-// (`.prose-link`) bind (#2474 rule 4). The icon (Envelope/ArrowRight) is
-// each call site's own, kept as-is — spaced with its own margin, not a
-// flex gap: `.prose-link`'s marker relies on `box-decoration-break: clone`
+// (`.prose-link`) bind (#2474 rule 4). The mailto links keep their own
+// Envelope icon, kept as-is; the Maps link hands the visitor to a third
+// party, so it carries `<ExternalMark>` instead of the bare `ArrowRight`
+// it used to (#2547 rule 2 amends #2474 rule 4). Each icon is
+// spaced with its own margin, not a flex gap: `.prose-link`'s marker relies
+// on `box-decoration-break: clone`
 // to repaint per line fragment on a wrapped link (the `break-all` mailtos
 // below can wrap), which only works on a normal inline box. `inline-flex`
 // makes the anchor atomic — it never fragments, so a wrapped address would
@@ -247,11 +251,7 @@ export function ContactPage({ keyContacts }: ContactPageProps = {}) {
                     className={INLINE_LINK}
                   >
                     Routebeschrijving
-                    <ArrowRight
-                      size={14}
-                      className="ml-1.5 align-middle"
-                      aria-hidden
-                    />
+                    <ExternalMark />
                   </a>
                 </div>
               </div>

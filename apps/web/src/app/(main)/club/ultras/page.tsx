@@ -166,7 +166,7 @@ export default function UltrasPage() {
                 data-ultras-join
                 className={getButtonClasses({ variant: "primary", size: "md" })}
               >
-                facebook.com/KCVV.ULTRAS.55 ↗
+                facebook.com/KCVV.ULTRAS.55
               </a>
             </div>
           </UltrasSection>

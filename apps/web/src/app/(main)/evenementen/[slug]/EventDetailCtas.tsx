@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils/cn";
+import { ExternalMark } from "@/components/design-system/ExternalMark";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { buildEventIcs } from "@/lib/utils/event-ics";
 import { buildEventUid } from "@/lib/utils/event-uid";
@@ -43,8 +44,9 @@ const CTA_BASE = cn(
 
 /**
  * The two centred CTAs under the `<EventHero>` title:
- *  - **Reserveer ↗** (warm fill) — renders only when `externalUrl` is set;
- *    opens the external reservation/ticket link in a new tab.
+ *  - **Reserveer** + `<ExternalMark>` (warm fill) — renders only when
+ *    `externalUrl` is set; opens the external reservation/ticket link in a
+ *    new tab (#2547 rule 2 — the act happens off-site, so it earns the mark).
  *  - **＋ Zet in agenda** (cream outline) — always present; builds a client-side
  *    `.ics` blob and triggers a download (no BFF — lock §3.5 / PRD §7).
  *
@@ -111,7 +113,7 @@ export function EventDetailCtas({
           className={cn(CTA_BASE, "bg-warm text-ink")}
         >
           {reserveLabel}
-          <span aria-hidden="true">↗</span>
+          <ExternalMark />
         </a>
       )}
 

@@ -239,6 +239,24 @@ describe("<EventDetailBlock>", () => {
     expect(cta?.getAttribute("href")).toContain("action=TEMPLATE");
   });
 
+  it("marks both off-site CTAs external — the ticket link and the Google Calendar link (#2547 rules 2+3)", () => {
+    const { container } = render(
+      <EventDetailBlock
+        value={singleDay({ ticketUrl: "https://example.com/tickets" })}
+        isPast={false}
+      />,
+    );
+    const ticket = container.querySelector('[data-event-detail-cta="ticket"]');
+    const calendar = container.querySelector(
+      '[data-event-detail-cta="calendar"]',
+    );
+    expect(ticket?.textContent).toContain("(opent in een nieuw tabblad)");
+    expect(ticket?.querySelector('svg[aria-hidden="true"]')).toBeTruthy();
+    expect(ticket?.textContent).not.toContain("→");
+    expect(calendar?.textContent).toContain("(opent in een nieuw tabblad)");
+    expect(calendar?.querySelector('svg[aria-hidden="true"]')).toBeTruthy();
+  });
+
   const calendarDates = (container: HTMLElement): string | null => {
     const href = container
       .querySelector('[data-event-detail-cta="calendar"]')
